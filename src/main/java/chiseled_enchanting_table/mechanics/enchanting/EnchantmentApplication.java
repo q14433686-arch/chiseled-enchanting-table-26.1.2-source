@@ -1,0 +1,156 @@
+package chiseled_enchanting_table.mechanics.enchanting;
+
+import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
+import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
+import chiseled_enchanting_table.utils.EnchantmentWithLevel;
+import java.util.HashSet;
+import net.minecraft.core.Holder;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.level.Level;
+
+/**
+ * Real-enchantment gameplay mechanic for the chiseled enchanting menu: applying unlocked
+ * enchantments, and transferring an enchantment from an enchanted book. Lives in
+ * {@code mechanics.enchanting} so this logic is decoupled from the menu container, the transformation
+ * mechanic, and the wire payloads.
+ */
+public final class EnchantmentApplication {
+    private EnchantmentApplication() {}
+
+    /** Apply one of the menu's unlocked enchantments to the enchantable item. */
+    public static boolean apply(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
+        boolean exist = false;
+        for (EnchantmentWithLevel e : handler.unlocked_enchantements) {
+            if (e.enchantment_id().equals(payload.enchantment_id()) && e.enchantment_level() == payload.enchantment_level()) {
+                exist = true;
+                break;
+            }
+        }
+        if (!exist) {
+            return false;
+        }
+
+        Level world = handler.world();
+        ItemStack enchantable_item = handler.get_enchantable_item();
+        int enchantment_level = payload.enchantment_level();
+        Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
+        if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(enchantable_item))) {
+            return false;
+        }
+        if (!handler.applyEnchantementCondition(payload)) {
+            return false;
+        }
+
+        ItemEnchantments.Mutable newEnchantmentsComponent = new ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item));
+        var keys = new HashSet<>(newEnchantmentsComponent.keySet());
+        for (var key : keys) {
+            if (!Enchantment.areCompatible(key, enchantment)) {
+                newEnchantmentsComponent.set(key, 0); // remove conflicting
+            }
+        }
+        newEnchantmentsComponent.set(enchantment, enchantment_level);
+
+        if (enchantable_item.is(Items.BOOK)) {
+            ItemStack stack = enchantable_item.transmuteCopy(Items.ENCHANTED_BOOK, 1);
+            handler.setEnchantableSlot(stack);
+            enchantable_item = handler.get_enchantable_item();
+        }
+
+        ItemStack target = enchantable_item;
+        EnchantmentHelper.updateEnchantments(target, m -> {
+            var mKeys = new HashSet<>(m.keySet());
+            for (var k : mKeys) m.set(k, 0);
+            for (var key : newEnchantmentsComponent.keySet()) {
+                m.set(key, newEnchantmentsComponent.getLevel(key));
+            }
+        });
+
+        finish(handler);
+        return true;
+    }
+
+    /** Transfer an enchantment from the enchanted book in the cost slot to the enchantable item. */
+    public static boolean applyFromBook(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
+        Level world = handler.world();
+        ItemStack enchanted_book = handler.get_cost_item();
+        ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchanted_book);
+        boolean exists = false;
+        for (var entry : enchantments.entrySet()) {
+            if (ChiseledEnchantingTableScreenHandler.EnchantmentToIdentifier(entry.getKey()).equals(payload.enchantment_id()) && entry.getIntValue() == payload.enchantment_level()) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            return false;
+        }
+
+        ItemStack enchantable_item = handler.get_enchantable_item();
+        int enchantment_level = payload.enchantment_level();
+        Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
+        if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(enchantable_item))) {
+            return false;
+        }
+
+        ItemEnchantments.Mutable new_enchanted_book_enchants = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        for (var entry : enchantments.entrySet()) {
+            if (!ChiseledEnchantingTableScreenHandler.EnchantmentToIdentifier(entry.getKey()).equals(payload.enchantment_id())) {
+                new_enchanted_book_enchants.set(entry.getKey(), entry.getIntValue());
+            }
+        }
+        EnchantmentHelper.updateEnchantments(enchanted_book, m -> {
+            var keys = new HashSet<>(m.keySet());
+            for (var k : keys) m.set(k, 0); // clear
+            for (var entry : new_enchanted_book_enchants.keySet()) m.set(entry, new_enchanted_book_enchants.getLevel(entry));
+        });
+
+        if (EnchantmentHelper.getEnchantmentsForCrafting(enchanted_book).isEmpty()) {
+            handler.setCostSlot(enchanted_book.transmuteCopy(Items.BOOK, 1));
+        }
+
+        ItemEnchantments.Mutable newEnchantmentsComponent = new ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item));
+        if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK))) {
+            var keys = new HashSet<>(newEnchantmentsComponent.keySet());
+            for (var key : keys) {
+                if (!Enchantment.areCompatible(key, enchantment)) {
+                    newEnchantmentsComponent.set(key, 0); // remove conflicting
+                }
+            }
+        }
+        newEnchantmentsComponent.set(enchantment, enchantment_level);
+
+        if (enchantable_item.is(Items.BOOK)) {
+            ItemStack stack = enchantable_item.transmuteCopy(Items.ENCHANTED_BOOK, 1);
+            handler.setEnchantableSlot(stack);
+            enchantable_item = handler.get_enchantable_item();
+        }
+
+        ItemStack target = enchantable_item;
+        EnchantmentHelper.updateEnchantments(target, m -> {
+            var keys = new HashSet<>(m.keySet());
+            for (var k : keys) m.set(k, 0);
+            for (var key : newEnchantmentsComponent.keySet()) {
+                m.set(key, newEnchantmentsComponent.getLevel(key));
+            }
+        });
+
+        finish(handler);
+        return true;
+    }
+
+    private static void finish(ChiseledEnchantingTableScreenHandler handler) {
+        Player player = handler.player;
+        Level world = handler.world();
+        handler.markInventoryChanged();
+        player.awardStat(Stats.ENCHANT_ITEM);
+        world.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 2.0F, world.getRandom().nextFloat() * 0.1F + 0.9F);
+    }
+}

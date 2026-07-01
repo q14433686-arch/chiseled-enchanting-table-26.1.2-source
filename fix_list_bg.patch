@@ -1,0 +1,14 @@
+--- src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java
++++ src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java
+@@ -82,6 +82,11 @@
+         return focusedIndex;
+     }
+ 
++    @Override
++    protected void extractListBackground(GuiGraphicsExtractor ctx) {
++        // Do nothing to prevent black/dirt background
++    }
++
+     public void resumeNavigation(int index) {
+         if (index >= 0 && index < this.children().size()) {
+             var focusedEntry = this.children().get(index);

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B ",
+    "DCD",
+    "OOO"
+  ],
+  "key": {
+    "B": "minecraft:book",
+    "D": "minecraft:diamond_block",
+    "O": "minecraft:obsidian",
+    "C": "minecraft:chiseled_bookshelf"
+  },
+  "result": {
+    "id": "chiseled_enchanting_table:chiseled_enchanting_table",
+    "count": 1
+  }
+}

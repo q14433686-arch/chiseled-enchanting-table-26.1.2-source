@@ -1,0 +1,18 @@
+--- src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java
++++ src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java
+@@ -231,6 +231,15 @@
+             return serverSendApplyEnchant();
+         }
+ 
++        @Override
++        public boolean isMouseOver(double mouseX, double mouseY) {
++            int index = parent.children().indexOf(this);
++            int top = parent.getRowTop(index);
++            int bottom = parent.getRowBottom(index);
++            int left = parent.getRowLeft();
++            int right = parent.getRowRight();
++            return mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom;
++        }
++
+         @Override
+         public void extractContent(GuiGraphicsExtractor ctx, int mouseX, int mouseY, boolean hovered, float delta) {

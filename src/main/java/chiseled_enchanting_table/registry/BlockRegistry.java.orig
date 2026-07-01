@@ -1,0 +1,58 @@
+package chiseled_enchanting_table.registry;
+
+import java.util.function.Function;
+
+import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.chiseledEnchantingTable.ChiseledEnchantingTableBlock;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import net.minecraft.world.level.material.MapColor;
+
+public class BlockRegistry {
+
+    public static final Block CHISELED_ENCHANTING_TABLE = register(
+        "chiseled_enchanting_table",
+        ChiseledEnchantingTableBlock::new,
+        BlockBehaviour.Properties.of()
+            .mapColor(MapColor.COLOR_PURPLE)
+            .instrument(NoteBlockInstrument.BASEDRUM)
+            .requiresCorrectToolForDrops()
+            .lightLevel(state -> 7)
+            .strength(5.0F, 1200.0F),
+        true
+    );
+
+    private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory, BlockBehaviour.Properties settings, boolean shouldRegisterItem) {
+        ResourceKey<Block> blockKey = keyOfBlock(name);
+        Block block = blockFactory.apply(settings.setId(blockKey));
+
+        if (shouldRegisterItem) {
+            ResourceKey<Item> itemKey = keyOfItem(name);
+            BlockItem blockItem = new BlockItem(block, new Item.Properties().setId(itemKey));
+            Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
+        }
+
+        return Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+    }
+
+    private static ResourceKey<Block> keyOfBlock(String name) {
+        return ResourceKey.create(Registries.BLOCK, ChiseledEnchantingTable.identifier(name));
+    }
+
+    private static ResourceKey<Item> keyOfItem(String name) {
+        return ResourceKey.create(Registries.ITEM, ChiseledEnchantingTable.identifier(name));
+    }
+
+    public static void init() {
+        net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(net.minecraft.world.item.CreativeModeTabs.FUNCTIONAL_BLOCKS).register((parameters, output) -> {
+            output.accept(CHISELED_ENCHANTING_TABLE.asItem());
+        });
+    }
+}

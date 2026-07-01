@@ -1,0 +1,75 @@
+--- src/main/java/chiseled_enchanting_table/chiseledEnchantingTable/ChiseledEnchantingTableScreenHandler.java
++++ src/main/java/chiseled_enchanting_table/chiseledEnchantingTable/ChiseledEnchantingTableScreenHandler.java
+@@ -25,6 +25,9 @@
+ import net.minecraft.sounds.SoundSource;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.world.level.Level;
++import net.minecraft.world.inventory.ContainerInput;
++import java.util.Optional;
++import chiseled_enchanting_table.utils.InventoryUtils;
+ import net.minecraft.world.Container;
+ import net.minecraft.world.SimpleContainer;
+ import net.minecraft.world.inventory.Slot;
+@@ -375,6 +378,59 @@
+         this.clearContainer(player, this.inventory);
+     }
+ 
++    @Override
++    public void clicked(int slotIndex, int button, ContainerInput actionType, Player player) {
++        if (actionType == ContainerInput.QUICK_MOVE) {
++            if (slotIndex < 0 || slotIndex >= this.slots.size()) return;
++            ItemStack clickedStack = this.getSlot(slotIndex).getItem();
++            if (clickedStack.isEmpty()) return;
++            if ((slotIndex == COST_SLOT) || (slotIndex == ENCHANTABLE_SLOT) ) {
++                InventoryUtils.insertItem(this.player, clickedStack, Optional.empty());
++                clickedStack.setCount(0);
++                this.inventory.setChanged();
++                this.player.getInventory().setChanged();
++                return;
++            }
++            ItemStack clickedStackNoEnchant = clickedStack.copy();
++            EnchantmentHelper.updateEnchantments(clickedStackNoEnchant, m -> {
++                var keys = new java.util.HashSet<>(m.keySet());
++                for(var k: keys) m.set(k, 0);
++            });
++            boolean isBook = clickedStackNoEnchant.is(Items.BOOK) || clickedStackNoEnchant.is(Items.ENCHANTED_BOOK);
++            
++            if (clickedStackNoEnchant.isEnchantable() || (isBook && !this.getSlot(ENCHANTABLE_SLOT).hasItem())) {
++                ItemStack tempStack = clickedStack.copy();
++                this.getSlot(slotIndex).set(this.getSlot(ENCHANTABLE_SLOT).getItem());
++                this.getSlot(ENCHANTABLE_SLOT).set(tempStack);
++
++                if (this.getSlot(ENCHANTABLE_SLOT).getItem().getCount() > 1) {
++                    ItemStack overflow = this.getSlot(ENCHANTABLE_SLOT).getItem().copy();
++                    overflow.setCount(overflow.getCount() - 1);
++                    this.getSlot(ENCHANTABLE_SLOT).getItem().setCount(1);
++                    if (!this.getSlot(slotIndex).hasItem()) {
++                        this.getSlot(slotIndex).set(overflow);
++                    } else {
++                        if (!this.moveItemStackTo(overflow, 2, 38, true)) {
++                            this.player.drop(overflow, false);
++                        }
++                    }
++                }
++            } else {
++                if (!this.getSlot(COST_SLOT).hasItem()) {
++                    this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT+1, false);
++                } else {
++                    ItemStack costSlotStack = this.getSlot(COST_SLOT).getItem();
++                    if (ItemStack.isSameItemSameComponents(clickedStack, costSlotStack)) {
++                        this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT+1, false);
++                    } else {
++                        InventoryUtils.insertItem(this.player, costSlotStack, Optional.of(slotIndex));
++                        costSlotStack.setCount(0);
++                    }
++                }
++            }
++            this.inventory.setChanged();
++            this.player.getInventory().setChanged();
++            return;
++        }
++        super.clicked(slotIndex, button, actionType, player);
++    }
++
+     @Override
+     public ItemStack quickMoveStack(Player player, int index) {

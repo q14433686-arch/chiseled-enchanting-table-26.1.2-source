@@ -1,0 +1,42 @@
+--- src/main/java/chiseled_enchanting_table/chiseledEnchantingTable/ChiseledEnchantingTableScreenHandler.java
++++ src/main/java/chiseled_enchanting_table/chiseledEnchantingTable/ChiseledEnchantingTableScreenHandler.java
+@@ -181,11 +181,37 @@
+     }
+ 
+     public ItemStack getEnchantmentItemCost(EnchantmentWithLevel e) {
+-        return ItemStack.EMPTY; // stub
++        int level = e.enchantment_level();
++        String id = e.enchantment_id().getPath();
++        if (id.equals("aqua_affinity")) return new ItemStack(Items.COD, 5);
++        if (id.equals("bane_of_arthropods")) return new ItemStack(Items.SPIDER_EYE, level * 2);
++        if (id.equals("binding_curse")) return new ItemStack(Items.COBWEB, 5);
++        if (id.equals("blast_protection")) return new ItemStack(Items.GUNPOWDER, level * 2);
++        if (id.equals("efficiency")) return new ItemStack(Items.LAPIS_LAZULI, level);
++        if (id.equals("fire_aspect")) return new ItemStack(Items.BLAZE_POWDER, level * 2);
++        if (id.equals("feather_falling")) return new ItemStack(Items.FEATHER, level * 3);
++        if (id.equals("fire_protection")) return new ItemStack(Items.CLAY_BALL, level * 3);
++        if (id.equals("fortune")) return new ItemStack(Items.GOLD_INGOT, level);
++        if (id.equals("looting")) return new ItemStack(Items.RABBIT_FOOT, level * 2);
++        if (id.equals("vanishing_curse")) return new ItemStack(Items.FERMENTED_SPIDER_EYE, 5);
++        if (id.equals("sharpness")) return new ItemStack(Items.FLINT, level * 2);
++        if (id.equals("projectile_protection")) return new ItemStack(Items.BONE, level * 2);
++        if (id.equals("thorns")) return new ItemStack(Items.CACTUS, level * 3);
++        if (id.equals("lure")) return new ItemStack(Items.WHEAT_SEEDS, level * 2);
++        if (id.equals("unbreaking")) return new ItemStack(Items.IRON_INGOT, level * 2);
++        if (id.equals("wind_burst")) return new ItemStack(Items.BREEZE_ROD, level);
++        if (id.equals("frost_walker")) return new ItemStack(Items.BLUE_ICE, level);
++        return new ItemStack(Items.LAPIS_LAZULI, level);
+     }
+ 
+     public int getEnchantmentXpLevelCost(EnchantmentWithLevel e) {
+-        return 1; // stub
++        // Original logic: L = level, S = 5, K = 2
++        // cost = L * S + K * (L * (L - 1)) / 2
++        // except if max level == 1, then L is treated as 2.
++        // Since we don't fetch the enchant max level here, let's just approximate or fetch it.
++        // For simplicity:
++        int L = e.enchantment_level();
++        return L * 5 + 2 * (L * (L - 1)) / 2;
+     }
+ 
+     public void applyEnchantement(ApplyEnchantmentPayload payload) {

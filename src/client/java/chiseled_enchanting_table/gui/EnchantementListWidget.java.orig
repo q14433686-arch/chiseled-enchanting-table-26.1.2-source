@@ -1,0 +1,358 @@
+package chiseled_enchanting_table.gui;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import chiseled_enchanting_table.utils.CustomDrawContext;
+import chiseled_enchanting_table.utils.EnchantmentWithLevel;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractSelectionList;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import chiseled_enchanting_table.chiseledEnchantingTable.ChiseledEnchantingTableScreenHandler;
+import chiseled_enchanting_table.chiseledEnchantingTable.ChiseledEnchantingTableScreenHandler.ApplyEnchantmentPayload;
+
+public class EnchantementListWidget extends AbstractSelectionList<EnchantementListWidget.EnchantUiEntry> {
+    public Set<EnchantmentWithLevel> unlocked_enchantements = null;
+    public ItemStack enchantable_item;
+    public ItemStack cost_item_stack;
+    public Player player;
+    public ChiseledEnchantingTableScreenHandler handler;
+    
+    public EnchantementListWidget(
+        Minecraft client,
+        ChiseledEnchantingTableScreenHandler handler,
+        int width,
+        int height,
+        int y,
+        int itemHeight
+    ) {
+        super(client, width, height, y, itemHeight);
+        this.handler = handler;
+        this.enchantable_item = handler.get_enchantable_item();
+        this.cost_item_stack = handler.get_cost_item();
+        this.unlocked_enchantements = handler.unlocked_enchantements;
+        this.player = handler.player;
+        this.setFocused(null);
+    }
+
+    public static Holder<Enchantment> IdentifierToEnchantment(Identifier id, Player player) {
+        RegistryAccess registryAccess = player.level().registryAccess();
+        Registry<Enchantment> registry = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
+        return registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, id));
+    }
+
+    public static Identifier EnchantmentToIdentifier(Holder<Enchantment> enchant, Player player) {
+        return enchant.unwrapKey().get().identifier();
+    }
+
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        // Default empty narration
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
+        if (keyCode == 257 || keyCode == 335) { // Enter key
+            var focusedEntry = this.getFocused();
+            if (focusedEntry != null) {
+                focusedEntry.serverSendApplyEnchant();
+            }
+        }
+        return super.keyPressed(event);
+    }
+
+    public int saveNavigationIfSameItem(ItemStack enchantable_item, ItemStack cost_item_stack) {
+        var previousIsBook = this.cost_item_stack.is(Items.ENCHANTED_BOOK) || this.cost_item_stack.is(Items.BOOK);
+        var nextIsBook     =      cost_item_stack.is(Items.ENCHANTED_BOOK) ||      cost_item_stack.is(Items.BOOK);
+        if (previousIsBook) return -1;
+        if (nextIsBook) return -1;
+        var focusedIndex = -1;
+        if (ItemStack.isSameItem(enchantable_item, this.enchantable_item)) {
+            var focused = this.getFocused();
+            if (focused != null) {
+                focusedIndex = this.children().indexOf(focused);
+            }
+        }
+        return focusedIndex;
+    }
+
+    @Override
+    protected void extractListBackground(GuiGraphicsExtractor ctx) {
+        // Do nothing to prevent black/dirt background
+    }
+
+    @Override
+    public int getRowWidth() {
+        return this.width;
+    }
+
+    @Override
+    public int getRowLeft() {
+        return this.getX();
+    }
+
+    @Override
+    public int getRowRight() {
+        return this.getRowLeft() + this.getRowWidth();
+    }
+
+    @Override
+    protected int scrollBarX() {
+        return this.getX() + this.width;
+    }
+
+    public void resumeNavigation(int index) {
+        if (index >= 0 && index < this.children().size()) {
+            var focusedEntry = this.children().get(index);
+            this.setFocused(focusedEntry);
+        }
+    }
+
+    public void updateEntry(ItemStack enchantable_item, ItemStack cost_item_stack) {
+        var navigationIndex = saveNavigationIfSameItem(enchantable_item, cost_item_stack);
+
+        this.clearEntries();
+        if (navigationIndex == -1) {
+            this.setScrollAmount(0);
+        }
+        this.enchantable_item = enchantable_item;
+        var enchantFromBook = cost_item_stack.is(Items.ENCHANTED_BOOK);
+        
+        Set<EnchantmentWithLevel> available_enchantements = new HashSet<>();
+        if (enchantFromBook) {
+            ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(cost_item_stack);
+            for (var entry : enchantments.entrySet()) {
+                available_enchantements.add(new EnchantmentWithLevel(
+                    EnchantmentToIdentifier(entry.getKey(), this.player),
+                    entry.getIntValue()
+                ));
+            }
+        } else if (!cost_item_stack.is(Items.BOOK) && unlocked_enchantements != null) {
+            available_enchantements = unlocked_enchantements;
+        }
+
+        available_enchantements.stream().filter(enchantWithLevel -> {
+            Holder<Enchantment> enchant = IdentifierToEnchantment(enchantWithLevel.enchantment_id(), this.player);
+            return enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchant.value().canEnchant(enchantable_item);
+        }).sorted((e1, e2) -> {
+            Holder<Enchantment> ench1 = IdentifierToEnchantment(e1.enchantment_id(), this.player);
+            Holder<Enchantment> ench2 = IdentifierToEnchantment(e2.enchantment_id(), this.player);
+            String name1 = Enchantment.getFullname(ench1, 1).getString();
+            String name2 = Enchantment.getFullname(ench2, 1).getString();
+            int nameComparison = name1.compareTo(name2);
+            if (nameComparison != 0) return nameComparison;
+            return Integer.compare(e1.enchantment_level(), e2.enchantment_level());
+        }).forEach(enchantWithLevel -> {
+            var cost = enchantFromBook ? ItemStack.EMPTY : this.handler.getEnchantmentItemCost(enchantWithLevel); 
+            var xpCost = enchantFromBook ? 0 : this.handler.getEnchantmentXpLevelCost(enchantWithLevel);
+            this.addEntry(new EnchantUiEntry(minecraft, this.handler, enchantWithLevel, cost, xpCost, this));
+        });
+        resumeNavigation(navigationIndex);
+    }
+
+    public static class EnchantUiEntry extends AbstractSelectionList.Entry<EnchantUiEntry> {
+        public ItemStack enchantable_item;
+        public ItemStack cost_item_stack;
+        public int enchant_level;
+        public Holder<Enchantment> enchantment;
+        public Identifier enchantment_id;
+        public ItemStack cost;
+        public int xp_level_cost;
+        public Minecraft client;
+        public Player player;
+        public ArrayList<EnchantmentWithLevel> overridenEnchant;
+        public OptionalInt sameEnchantLevelDiff = OptionalInt.empty();
+        public ChiseledEnchantingTableScreenHandler handler;
+        public EnchantementListWidget parent;
+        
+        public EnchantUiEntry(
+            Minecraft client,
+            ChiseledEnchantingTableScreenHandler handler,
+            EnchantmentWithLevel enchantWithLevel,
+            ItemStack cost,
+            int xp_level_cost,
+            EnchantementListWidget parent
+        ) {
+            super();
+            this.client = client;
+            this.handler = handler;
+            this.parent = parent;
+            this.enchantable_item = handler.get_enchantable_item();
+            this.cost_item_stack = handler.get_cost_item();
+            this.player = handler.player;
+            this.enchantment_id = enchantWithLevel.enchantment_id();
+            this.enchant_level = enchantWithLevel.enchantment_level();
+            this.cost = cost;
+            this.xp_level_cost = xp_level_cost;
+            this.enchantment = IdentifierToEnchantment(enchantWithLevel.enchantment_id(), this.player);
+            
+            this.overridenEnchant = new ArrayList<>();
+            ItemEnchantments currentEnchants = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
+            for (var entry : currentEnchants.entrySet()) {
+                if (!Enchantment.areCompatible(entry.getKey(), this.enchantment)) {
+                    this.overridenEnchant.add(new EnchantmentWithLevel(
+                        EnchantmentToIdentifier(entry.getKey(), this.player),
+                        entry.getIntValue()
+                    ));
+                }
+            }
+
+            var overridenFirst = overridenEnchant.stream().findFirst();
+            if (overridenFirst.isPresent()) {
+                var enchant = overridenFirst.get();
+                if (enchant.enchantment_id().equals(this.enchantment_id)) {
+                    this.sameEnchantLevelDiff = OptionalInt.of(this.enchant_level - enchant.enchantment_level());
+                }
+            }
+        }
+
+        public boolean enchantAlreadyExist() {
+            return sameEnchantLevelDiff.isPresent() && sameEnchantLevelDiff.getAsInt() == 0;
+        }
+        
+        public boolean canEnchant() {
+            return xpConditionMet() && itemCostConditionMet() && !enchantAlreadyExist();
+        }
+
+        public boolean xpConditionMet() {
+            return player.getAbilities().instabuild || player.experienceLevel >= xp_level_cost;
+        }
+
+        public boolean itemCostConditionMet() {
+            return player.getAbilities().instabuild || cost.isEmpty() || (ItemStack.isSameItemSameComponents(cost, cost_item_stack) && cost_item_stack.getCount() >= cost.getCount());
+        }
+
+        public boolean serverSendApplyEnchant() {
+            if (!this.canEnchant()) return false;
+            ClientPlayNetworking.send(new ApplyEnchantmentPayload(enchantment_id, enchant_level));
+            return true;
+        }
+    
+        @Override
+        public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDouble) {
+            return serverSendApplyEnchant();
+        }
+
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            int index = parent.children().indexOf(this);
+            int top = parent.getRowTop(index);
+            int bottom = parent.getRowBottom(index);
+            int left = parent.getRowLeft();
+            int right = parent.getRowRight();
+            return mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom;
+        }
+
+        @Override
+        public void extractContent(GuiGraphicsExtractor ctx, int mouseX, int mouseY, boolean hovered, float delta) {
+            var tr = client.font;
+            var dx = this.getX() + 1;
+            var dw = 140 - 2;
+            var dh = this.getHeight();
+            var dy = this.getY();
+            
+            var lightGrey   = 0xFF919191;
+            var grey        = 0xFF717171;
+            var darkGrey    = 0xFF313131;
+            var isFocused = parent.getFocused() == this;
+            var backgroundColor =
+                !canEnchant()   ? darkGrey  :
+                hovered         ? lightGrey : 
+                                  grey;
+            var xpGreenColor    = 0xFF55FF55;
+            var redColor        = 0xFFEE0000;
+            var whiteColor      = 0xFFFFFFFF;
+            var cyanColor       = 0xFF00FFFF;
+            var lightRedColor   = 0xFFFFCCCC;
+            var lightGreenColor = 0xFFCCFFCC;
+            
+            var xpCostText = String.valueOf(xp_level_cost);
+            
+            var textWidth = client.font.width(xpCostText);
+            var textX = dx + dw - 5 - textWidth;
+            var textY = dy + (dh - client.font.lineHeight) / 2;
+
+            var itemX = dx + 4;
+            var itemY = dy + 4;
+
+            var enchantmentName = Enchantment.getFullname(this.enchantment, enchant_level).getString();
+            var enchantmentX = itemX + 20;
+            var enchantmentY = dy + 2 + client.font.lineHeight / 3;
+            
+            var firstOverridenEnchant = this.overridenEnchant.stream().findFirst();
+
+            ctx.fill(dx, dy, dx + dw, dy + dh, backgroundColor);
+            draw3dBorder(ctx, dx, dy, dw, dh, isFocused);
+            ctx.item(cost, itemX, itemY);
+            CustomDrawContext.drawItemInSlotWithColor(ctx, tr, cost, itemX, itemY, itemCostConditionMet() ? whiteColor : redColor);
+            renderText(ctx, enchantmentName, enchantmentX, enchantmentY, (float)2.0f/3.0f, whiteColor);
+            var overridenEnchantmentX = itemX + 20;
+            var overridenEnchantmentY = dy + dh - 2 - client.font.lineHeight;
+            if (enchantAlreadyExist()) {
+                renderText(ctx, "✔ " + enchantmentName, overridenEnchantmentX, overridenEnchantmentY, (float)2.0f/3.0f, cyanColor);
+            } else if (sameEnchantLevelDiff.isPresent() && sameEnchantLevelDiff.getAsInt() > 0) {
+                var enchant = firstOverridenEnchant.get();
+                var enchant_entry = IdentifierToEnchantment(enchant.enchantment_id(), this.player);
+                var overridenEnchantmentName = Enchantment.getFullname(enchant_entry, enchant.enchantment_level()).getString();
+                renderText(ctx, "⬆ " + overridenEnchantmentName, overridenEnchantmentX, overridenEnchantmentY, (float)2.0f/3.0f, lightGreenColor);
+            } else if (sameEnchantLevelDiff.isPresent() && sameEnchantLevelDiff.getAsInt() < 0) {
+                var enchant = firstOverridenEnchant.get();
+                var enchant_entry = IdentifierToEnchantment(enchant.enchantment_id(), this.player);
+                var overridenEnchantmentName = Enchantment.getFullname(enchant_entry, enchant.enchantment_level()).getString();
+                renderText(ctx, "⬇ " + overridenEnchantmentName, overridenEnchantmentX, overridenEnchantmentY, (float)2.0f/3.0f, lightRedColor);
+            } else if (firstOverridenEnchant.isPresent() && !enchantable_item.is(Items.ENCHANTED_BOOK)) {
+                var enchant = firstOverridenEnchant.get();
+                var enchant_entry = IdentifierToEnchantment(enchant.enchantment_id(), this.player);
+                var overridenEnchantmentName = Enchantment.getFullname(enchant_entry, enchant.enchantment_level()).getString();
+                renderText(ctx, "✖ " + overridenEnchantmentName, overridenEnchantmentX, overridenEnchantmentY, (float)2.0f/3.0f, lightRedColor); 
+            }
+            ctx.text(client.font, xpCostText, textX, textY, xpConditionMet() ? xpGreenColor : redColor, true);
+        }
+
+        public void draw3dBorder(GuiGraphicsExtractor ctx, int x, int y, int width, int height, boolean isFocused) {
+            var darkColor   = isFocused ? 0xff888811 : 0xff111111;
+            var cornerColor = isFocused ? 0xffaaaa22 : 0xff333333;
+            var lightColor  = isFocused ? 0xffcccc22 : 0xff444444;
+
+            ctx.fill(x, y, x + width, y + 1, darkColor);
+            ctx.fill(x, y + 1, x + 1, y + height - 1, darkColor);
+
+            ctx.fill(x, y + height - 1, x + width, y + height, lightColor);
+            ctx.fill(x + width - 1, y + 1, x + width, y + height - 1, lightColor);
+
+            ctx.fill(x + width - 1, y, x + width, y + 1, cornerColor);
+            ctx.fill(x, y + height - 1, x + 1, y + height, cornerColor);
+        }
+
+        public void renderText(GuiGraphicsExtractor drawContext, String text, int x, int y, float scale, int color) {
+            var matrixStack = drawContext.pose();
+            matrixStack.pushMatrix();
+            matrixStack.scale(scale, scale);
+            var scaledX = Math.round(x / scale);
+            var scaledY = Math.round(y / scale);
+            drawContext.text(client.font, text, (int) scaledX, (int) scaledY, color, true);
+            matrixStack.popMatrix();
+        }
+    }
+}

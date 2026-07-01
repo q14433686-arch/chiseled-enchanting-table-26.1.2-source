@@ -1,0 +1,10 @@
+--- src/main/java/chiseled_enchanting_table/registry/BlockRegistry.java
++++ src/main/java/chiseled_enchanting_table/registry/BlockRegistry.java
+@@ -53,7 +53,7 @@
+ 
+     public static void init() {
+-        net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(net.minecraft.world.item.CreativeModeTabs.FUNCTIONAL_BLOCKS).register((parameters, output) -> {
++        net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(net.minecraft.world.item.CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> {
+             output.accept(CHISELED_ENCHANTING_TABLE.asItem());
+         });
+     }

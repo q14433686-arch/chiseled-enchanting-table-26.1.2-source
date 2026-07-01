@@ -1,0 +1,82 @@
+package chiseled_enchanting_table.gui;
+
+import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.chiseledEnchantingTable.ChiseledEnchantingTableScreenHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.client.input.KeyEvent;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+
+@Environment(EnvType.CLIENT)
+public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<ChiseledEnchantingTableScreenHandler> {
+
+    public static final Identifier SLOT_TEXTURE = Identifier.withDefaultNamespace("textures/gui/sprites/container/slot.png");
+    private static final Identifier BACKGROUND = ChiseledEnchantingTable.identifier("gui/chiseled_enchanting_table.png");
+    
+    private EnchantementListWidget scrollContainer;
+
+    public int inventory_size;
+    public int hotbar_size;
+
+    public ChiseledEnchantingTableScreen(ChiseledEnchantingTableScreenHandler handler, Inventory inventory, Component title) {
+        super(handler, inventory, title, 340, 166);
+        this.hotbar_size = Inventory.getSelectionSize();
+        this.inventory_size = inventory.getContainerSize();
+        
+        handler.onContentChangedCallback = () -> {
+            this.scrollContainer.updateEntry(handler.get_enchantable_item(), handler.get_cost_item());
+        };
+        this.scrollContainer = new EnchantementListWidget(
+            Minecraft.getInstance(),
+            handler,
+            153,
+            140,
+            150,
+            25
+        );
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        this.addRenderableWidget(this.scrollContainer);
+        this.scrollContainer.updateSizeAndPosition(153, 140, this.leftPos + 7, this.topPos + 18);
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        this.scrollContainer.keyPressed(event);
+        return super.keyPressed(event);
+    }
+
+    @Override
+    public boolean keyReleased(KeyEvent event) {
+        this.scrollContainer.keyReleased(event);
+        return super.keyReleased(event);
+    }
+
+    @Override
+    public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
+        super.extractBackground(ctx, mouseX, mouseY, partialTick);
+        int i = this.leftPos;
+        int j = this.topPos;
+        ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 340.0f/512.0f, 0.0f, 166.0f/256.0f);
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+    }
+
+    @Override
+    protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
+        context.text(this.font, this.title, this.titleLabelX, this.titleLabelY, 4210752);
+    }
+}

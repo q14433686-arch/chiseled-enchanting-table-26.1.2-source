@@ -1,0 +1,33 @@
+--- src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java
++++ src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java
+@@ -21,6 +21,7 @@
+ import net.minecraft.core.RegistryAccess;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.resources.Identifier;
++import net.minecraft.client.gui.narration.NarrationElementOutput;
+ import chiseled_enchanting_table.chiseledEnchantingTable.ChiseledEnchantingTableScreenHandler;
+ import chiseled_enchanting_table.chiseledEnchantingTable.ChiseledEnchantingTableScreenHandler.ApplyEnchantmentPayload;
+ 
+@@ -48,15 +49,20 @@
+ 
+     public static Holder<Enchantment> IdentifierToEnchantment(Identifier id, Player player) {
+         RegistryAccess registryAccess = player.level().registryAccess();
+-        Registry<Enchantment> registry = registryAccess.registryOrThrow(Registries.ENCHANTMENT);
+-        return registry.getHolder(ResourceKey.create(Registries.ENCHANTMENT, id)).orElseThrow();
++        Registry<Enchantment> registry = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
++        return registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, id));
+     }
+ 
+     public static Identifier EnchantmentToIdentifier(Holder<Enchantment> enchant, Player player) {
+-        return enchant.unwrapKey().get().location();
++        return enchant.unwrapKey().get().identifier();
+     }
+ 
+     @Override
++    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
++        // Default empty narration
++    }
++
++    @Override
+     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+         if (keyCode == 257 || keyCode == 335) { // Enter key

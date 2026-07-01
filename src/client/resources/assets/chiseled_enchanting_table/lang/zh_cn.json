@@ -1,0 +1,7 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "纂刻附魔台",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "纂刻附魔台",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "纂刻附魔台",
+  "gui.chiseled_enchanting_table.book_upgrade.combine": "合书升阶：%s",
+  "gui.chiseled_enchanting_table.book_upgrade.research": "材料升阶：%s"
+}

@@ -1,0 +1,32 @@
+--- src/main/java/chiseled_enchanting_table/chiseledEnchantingTable/ChiseledEnchantingTableBlock.java
++++ src/main/java/chiseled_enchanting_table/chiseledEnchantingTable/ChiseledEnchantingTableBlock.java
+@@ -8,6 +8,7 @@
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.Level;
+ import net.minecraft.world.level.block.BaseEntityBlock;
++import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.RenderShape;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+@@ -21,6 +22,7 @@
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.network.chat.Component;
+ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedMenuProvider;
++import chiseled_enchanting_table.utils.EnchantmentFinder;
+ import chiseled_enchanting_table.chiseledEnchantingTable.ChiseledEnchantingTableScreenHandler.AvailableEnchantmentPayload;
+ import chiseled_enchanting_table.utils.Advancement;
+ import chiseled_enchanting_table.utils.BlockPosStream;
+@@ -83,8 +85,12 @@
+     }
+ 
+     public Set<EnchantmentWithLevel> get_unlocked_enchantements(BlockState state, Level level, BlockPos pos) {
+-        // TODO P2/P3: restore nearby chiseled-bookshelf scanning after enchantment component/API migration.
+-        return Set.of();
++        return BlockPosStream.streamPosInRadius(pos, 2)
++            .flatMap(p -> {
++                BlockEntity be = level.getBlockEntity(p);
++                if (!(be instanceof ChiseledBookShelfBlockEntity cbsbe)) return Stream.empty();
++                return EnchantmentFinder.streamAllEnchantements(cbsbe, level);
++            }).collect(Collectors.toSet());
+     }
+ }

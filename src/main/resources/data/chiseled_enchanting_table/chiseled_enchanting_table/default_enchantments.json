@@ -1,0 +1,15 @@
+{
+  "comment": "Baseline unlock table. 'values' lists explicit enchantment+level entries; 'tags' expands to every enchantment present in a vanilla/modded tag at lookup time (resolved against the live registry, so third-party enchantment mods are picked up automatically without editing this file). The default tag rule uses vanilla's own #minecraft:in_enchanting_table tag -- the exact tag the vanilla enchanting table itself reads, and the documented extension point for mods (its content defaults to '#minecraft:non_treasure', so switching from non_treasure to in_enchanting_table is a pure superset for vanilla -- it changes nothing on its own, but a mod that appends its own enchantments directly into in_enchanting_table.json (a common pattern, since non_treasure is meant to stay a vanilla-only list) is now picked up too. 'values' below only needs the *treasure* enchantments this table intentionally also unlocks by default (frost_walker, mending, soul_speed, swift_sneak, binding_curse, vanishing_curse, wind_burst are normally treasure-only in vanilla, i.e. NOT in in_enchanting_table). The UI still filters by item compatibility (canEnchant), so this just controls what is *offered*, not what fits a given item.",
+  "values": [
+    { "enchantment": "minecraft:frost_walker", "level": 1 },
+    { "enchantment": "minecraft:binding_curse", "level": 1 },
+    { "enchantment": "minecraft:soul_speed", "level": 1 },
+    { "enchantment": "minecraft:swift_sneak", "level": 1 },
+    { "enchantment": "minecraft:mending", "level": 1 },
+    { "enchantment": "minecraft:vanishing_curse", "level": 1 },
+    { "enchantment": "minecraft:wind_burst", "level": 1 }
+  ],
+  "tags": [
+    { "tag": "#minecraft:in_enchanting_table", "level": 1 }
+  ]
+}

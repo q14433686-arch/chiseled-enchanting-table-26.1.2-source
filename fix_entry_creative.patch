@@ -1,0 +1,16 @@
+--- src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java
++++ src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java
+@@ -211,11 +211,11 @@
+         }
+ 
+         public boolean xpConditionMet() {
+-            return player.experienceLevel >= xp_level_cost;
++            return player.getAbilities().instabuild || player.experienceLevel >= xp_level_cost;
+         }
+ 
+         public boolean itemCostConditionMet() {
+-            return cost.isEmpty() || (ItemStack.isSameItemSameComponents(cost, cost_item_stack) && cost_item_stack.getCount() >= cost.getCount());
++            return player.getAbilities().instabuild || cost.isEmpty() || (ItemStack.isSameItemSameComponents(cost, cost_item_stack) && cost_item_stack.getCount() >= cost.getCount());
+         }
+ 
+         public boolean serverSendApplyEnchant() {

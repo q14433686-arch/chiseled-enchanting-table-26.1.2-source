@@ -1,0 +1,19 @@
+{
+	"required": true,
+	"package": "chiseled_enchanting_table.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"accessor.ItemAccessor",
+		"anvil.RemoveEnchantMerge",
+		"anvil.RemoveXpCostScaling",
+		"chiseled_bookshelf.AddRandomTick",
+		"enchanting_table.DisableBookEnchanting",
+		"structureProcessor.bookshelfReplacer.InjectIn_StructurePlacementData",
+		"structureProcessor.bookshelfReplacer.InjectIn_StructurePool_Projection",
+		"structureProcessor.bookshelfReplacer.InjectIn_WorldChunk",
+		"structureProcessor.bookshelfReplacer.MarkBookshelfForPostProcessing"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

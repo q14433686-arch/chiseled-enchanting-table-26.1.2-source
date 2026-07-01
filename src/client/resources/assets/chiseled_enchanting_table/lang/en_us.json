@@ -1,0 +1,7 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "Chiseled Enchanting Table",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "Chiseled Enchanting Table",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "Chiseled Enchanting Table",
+  "gui.chiseled_enchanting_table.book_upgrade.combine": "Combine Upgrade: %s",
+  "gui.chiseled_enchanting_table.book_upgrade.research": "Research Upgrade: %s"
+}

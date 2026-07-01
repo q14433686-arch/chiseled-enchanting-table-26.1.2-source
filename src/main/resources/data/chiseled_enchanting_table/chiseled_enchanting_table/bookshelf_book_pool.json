@@ -1,0 +1,17 @@
+{
+  "_comment": "Weighted 6-slot fill for chiseled bookshelves placed by the structure processor. See docs/EXTENDING.md. Schema v2: book_count / enchanted_book_probability / enchanted_book_selection.",
+  "_schema_version": 2,
+  "book_count": {
+    "min": 3,
+    "max": 5
+  },
+  "enchanted_book_probability": 0.03,
+  "enchanted_book_selection": {
+    "_comment": "Per-candidate weight = base_weight (from loot_injections.json) * vanilla_weight_factor(Enchantment.getWeight()) * max_level_weight_ratio ^ relative_level. relative_level = (level-1)/(maxLevel-1) for maxLevel>1, else 0 -- so a book at its enchantment's max level (Sharpness V, Blast Protection IV, Mending I, ...) all get the same relative_level=1 penalty regardless of the numeric level, and Mending (maxLevel=1) is never level-penalised at all. max_level_weight_ratio=0.1 means a max-level book is ~1/10 as likely to appear as a level-1 book of the same enchantment, with an exponential curve in between.",
+    "enchant_pool_source": "loot_injections",
+    "use_base_weight": true,
+    "use_vanilla_weight_factor": true,
+    "max_level_weight_ratio": 0.1
+  },
+  "enchant_sets": []
+}
