@@ -6,7 +6,7 @@ Why this exists
 ---------------
 P15 shipped a bug where the block dropped nothing when mined, because the block loot
 table lived at the *old plural* path ``data/<ns>/loot_tables/blocks/...`` and had empty
-pools. Minecraft 26.1.2 expects the *singular* path ``data/<ns>/loot_table/blocks/...``
+pools. Minecraft 26.2 expects the *singular* path ``data/<ns>/loot_table/blocks/...``
 (same singularisation as ``recipe`` and ``advancement``), so the file was silently never
 loaded. This script encodes that whole class of "silently wrong data-pack layout / empty
 content" mistakes so it can be caught in CI instead of in a live client.
@@ -27,7 +27,7 @@ Tier 1 (offline, deterministic, FAILS the build):
     with one of these tags (e.g. the vanilla ``#minecraft:non_treasure`` default) is picked
     up automatically, so this check only has to guard against typos in the tag id itself.
 
-Tier 2 (best-effort, needs the MC 26.1.2 jar and/or extra mod jars; WARNS only):
+Tier 2 (best-effort, needs the MC 26.2 jar and/or extra mod jars; WARNS only):
   * Item / enchantment ids referenced by recipe + transformations + costs exist either
     in this mod's own registry namespace, somewhere in the vanilla data jar, or in one of
     the ``--extra-jar`` paths (e.g. a third-party enchantment mod's jar, for ids like
@@ -105,7 +105,7 @@ def check_datapack_dir_naming() -> None:
             if os.path.isdir(legacy_path):
                 singular = next(s for s, p in SINGULAR_DIRS.items() if p == legacy)
                 err(
-                    f"legacy data-pack dir '{ns}/{legacy}/' found; MC 26.1.2 expects "
+                    f"legacy data-pack dir '{ns}/{legacy}/' found; MC 26.2 expects "
                     f"'{ns}/{singular}/' (singular). Files here are silently ignored."
                 )
         # tags: tags/block not tags/blocks, tags/item not tags/items
@@ -516,8 +516,8 @@ def find_mc_jar(explicit: str | None) -> str | None:
         return explicit
     home = os.path.expanduser("~")
     for cand in (
-        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.1.2", "minecraft-extracted_server.jar"),
-        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.1.2", "minecraft-common.jar"),
+        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.2", "minecraft-extracted_server.jar"),
+        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.2", "minecraft-common.jar"),
     ):
         if os.path.isfile(cand):
             return cand
@@ -548,7 +548,7 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
     if mc_jar:
         known |= collect_vanilla_ids(mc_jar)
     else:
-        warn("MC 26.1.2 jar not found; skipping vanilla id existence check (Tier 2)")
+        warn("MC 26.2 jar not found; skipping vanilla id existence check (Tier 2)")
     for extra_jar in extra_jars:
         known |= collect_jar_ids(extra_jar)
 
@@ -567,7 +567,7 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mc-jar", help="path to the MC 26.1.2 extracted jar for Tier 2 checks")
+    parser.add_argument("--mc-jar", help="path to the MC 26.2 extracted jar for Tier 2 checks")
     parser.add_argument(
         "--extra-jar",
         action="append",

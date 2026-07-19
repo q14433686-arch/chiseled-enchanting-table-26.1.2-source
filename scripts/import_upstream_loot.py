@@ -95,7 +95,7 @@ if arch_block:
 
 # Upstream still uses the pre-1.17 flat path "chests/village_armorer"; 1.17+ moved every villager
 # workstation to the "village/village_<job>" sub-path. Normalise here so the exported JSON hits
-# the actual 26.1.2 loot table ids.
+# the actual 26.2 loot table ids.
 UPSTREAM_ID_FIXES = {
     "village_armorer": "village/village_armorer",
 }
