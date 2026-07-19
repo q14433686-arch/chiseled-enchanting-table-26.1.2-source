@@ -3,10 +3,12 @@
 > **Date:** 2026-07-19 · **Branch:** `arena/019f7982-chiseled-enchanting-table-26-1` (26.2 variant)
 > **Scope:** Turn the existing 26.1.2 unofficial port into a Minecraft **26.2** Fabric build.
 > **Verdict:** _Not_ a pure version-declaration bump, but the change surface is small and
-> concentrated: ~5 build/metadata files definitely change; the mod's source uses only high-level
-> APIs that are confirmed present in 26.2, so no speculative source rewrite is warranted — but
-> **2–3 client/structure files must be confirmed by a live compile against 26.2 mappings**
-> (not possible in this headless sandbox: no JDK, no route to the Mojang/Fabric maven).
+> concentrated. The 26.2 **structure-processor rework** (`StructureProcessor` → interface,
+> `StructureProcessorType` de-generified, codec registered into
+> `BuiltInRegistries.STRUCTURE_PROCESSOR`) has been **ported** (see §3.3). The client renderer/GUI
+> use high-level APIs confirmed present in 26.2 and were left as-is; they still need a
+> `compileClientJava` pass to confirm exact signatures (not runnable in this headless sandbox: no
+> JDK, no route to the Mojang/Fabric maven).
 
 ---
 
@@ -105,14 +107,30 @@ the client render-state/GUI surface and the vanilla-signature mixins:
      container-screen variant, **not** the `Gui`-class variant that changed) and the
      `GuiGraphicsExtractor.text/blit` overloads are unchanged.
 
-3. **Structure / vanilla mixins** (`src/main/.../mixin/**`, active set in
-   `chiseled-enchanting-table-port.mixins.json`)
-   - Reference vanilla method signatures: `AnvilMenu.createResult`, `EnchantmentMenu.slotsChanged`,
-     `ChiseledBookShelfBlock` random tick, `StructurePlaceSettings.getProcessors()`,
-     `StructureTemplatePool.Projection.getProcessors()`, `StructurePiece.placeBlock(...)`,
-     `LevelChunk.postProcessGeneration(ServerLevel)`.
-   - _Check at compile/runtime:_ these signatures are the most likely to drift in a registration/structure-focused
-     update. Mixins fail loud (a `defaultRequire = 1` config), so a failed apply surfaces immediately.
+3. **Structure processor subsystem** — **PORTED for 26.2 (fixed).** 26.2 turned `StructureProcessor`
+   into an interface, removed `getType()`/`StructureProcessorType.register(String, MapCodec)`,
+   de-generified `StructureProcessorType`, added a `BlockPos` (relative template position) parameter
+   to `processBlock`, and moved registration to `BuiltInRegistries.STRUCTURE_PROCESSOR`
+   (`Registry<MapCodec<? extends StructureProcessor>>`). Applied changes:
+   - `mechanics/structure/BookshelfReplacerProcessor.java`: `extends`→`implements StructureProcessor`;
+     `getType()`→`codec()` returning `CODEC`; `processBlock` gained the `BlockPos templatePos`
+     parameter (unused; body unchanged); `finalizeProcessing` signature was already correct.
+   - `registry/StructureProcessorRegistry.java`: registers `BookshelfReplacerProcessor.CODEC` via
+     `Registry.register(BuiltInRegistries.STRUCTURE_PROCESSOR, id, codec)`.
+   - The structure mixins (`StructurePlaceSettingsMixin`, `StructureTemplatePoolProjectionMixin`,
+     `StructurePieceMarkMixin`, `LevelChunkPostProcessMixin`) needed **no change** — their earlier
+     errors were cascades of the `extends`-on-an-interface failure; `ChunkAccess.markPosForPostprocessing`
+     still exists in 26.2.
+
+### 3.4 Remaining gate — `compileClientJava`
+
+The first local build failed at `:compileJava` (the structure errors above), so the client source set
+was never reached. After the structure fix, the next gate is `compileClientJava`, covering the
+renderer/GUI files in §3.3 items 1–2 (`ChiseledEnchantingTableBlockEntityRenderer`,
+`ChiseledEnchantingTableScreen` + list widget/row renderers). These use only high-level APIs the
+primer confirms present in 26.2 (`SubmitNodeCollector.submitModel`, `GuiGraphicsExtractor.text/blit`,
+`EnchantTableRenderState`, `AbstractContainerScreen.extract*`), so no change is expected — but a real
+compile must confirm.
 
 ---
 

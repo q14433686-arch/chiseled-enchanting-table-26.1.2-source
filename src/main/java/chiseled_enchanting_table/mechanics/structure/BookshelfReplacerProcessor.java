@@ -1,7 +1,6 @@
 package chiseled_enchanting_table.mechanics.structure;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
-import chiseled_enchanting_table.registry.StructureProcessorRegistry;
 import com.mojang.serialization.MapCodec;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +12,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessorType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
 /**
@@ -36,7 +34,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
  *       {@link chiseled_enchanting_table.mixin.structure.LevelChunkPostProcessMixin}).</li>
  * </ul>
  */
-public class BookshelfReplacerProcessor extends StructureProcessor {
+public class BookshelfReplacerProcessor implements StructureProcessor {
     public static final BookshelfReplacerProcessor INSTANCE = new BookshelfReplacerProcessor();
     public static final MapCodec<BookshelfReplacerProcessor> CODEC = MapCodec.unit(() -> INSTANCE);
 
@@ -49,8 +47,8 @@ public class BookshelfReplacerProcessor extends StructureProcessor {
     private BookshelfReplacerProcessor() {}
 
     @Override
-    protected StructureProcessorType<?> getType() {
-        return StructureProcessorRegistry.BOOKSHELF_REPLACER;
+    public MapCodec<BookshelfReplacerProcessor> codec() {
+        return CODEC;
     }
 
     @Override
@@ -58,7 +56,7 @@ public class BookshelfReplacerProcessor extends StructureProcessor {
         net.minecraft.world.level.LevelReader world,
         BlockPos pos,
         BlockPos pivot,
-        StructureTemplate.StructureBlockInfo originalBlockInfo,
+        BlockPos templatePos,
         StructureTemplate.StructureBlockInfo currentBlockInfo,
         StructurePlaceSettings data
     ) {
