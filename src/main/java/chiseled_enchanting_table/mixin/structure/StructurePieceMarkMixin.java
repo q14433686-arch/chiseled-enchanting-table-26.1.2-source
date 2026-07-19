@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * {@code (x, y, z)} arguments to {@link StructurePiece#placeBlock} are <b>piece-local</b>, not
  * world coordinates. Internally vanilla immediately converts them via
  * {@link StructurePiece#getWorldPos} (which factors in the piece's rotation, mirror, and origin).
- * We <b>must</b> do the same before calling {@code markPosForPostprocessing}, otherwise we mark a
+ * We <b>must</b> do the same before calling {@code markPosForPostProcessing}, otherwise we mark a
  * random chunk somewhere near {@code (0,0,0)} in the world and the mixin fires but has zero
  * effect. That's what happened in the previous round — the mixin was being hit, so testing
  * "confirmed the mixin fires", but the marks landed off-target.</p>
@@ -50,6 +50,6 @@ public class StructurePieceMarkMixin {
         // Copy to an immutable BlockPos so the mutable one returned by getWorldPos can't be
         // recycled under us if vanilla reuses it later in the same call.
         BlockPos frozenPos = worldPos.immutable();
-        level.getChunk(frozenPos).markPosForPostprocessing(frozenPos);
+        level.getChunk(frozenPos).markPosForPostProcessing(frozenPos);
     }
 }

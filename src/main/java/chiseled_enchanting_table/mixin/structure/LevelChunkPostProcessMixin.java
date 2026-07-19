@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * fluid/neighbour-update pass consumes them.</p>
  *
  * <p><b>Why {@link ProtoChunk#unpackOffsetCoordinates}:</b> the packed-short encoding used by
- * {@link net.minecraft.world.level.chunk.ChunkAccess#markPosForPostprocessing} (actually
+ * {@link net.minecraft.world.level.chunk.ChunkAccess#markPosForPostProcessing} (actually
  * implemented in {@link ProtoChunk#packOffsetCoordinates}) is not a trivial
  * {@code (y<<8)|(z<<4)|x} layout; using vanilla's own unpacker is both correct-by-construction
  * and future-proof against any encoding tweak. This is exactly what vanilla
