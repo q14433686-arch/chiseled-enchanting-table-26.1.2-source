@@ -6,7 +6,7 @@ Why this exists
 ---------------
 P15 shipped a bug where the block dropped nothing when mined, because the block loot
 table lived at the *old plural* path ``data/<ns>/loot_tables/blocks/...`` and had empty
-pools. Minecraft 26.2 expects the *singular* path ``data/<ns>/loot_table/blocks/...``
+pools. Minecraft 26.x expects the *singular* path ``data/<ns>/loot_table/blocks/...``
 (same singularisation as ``recipe`` and ``advancement``), so the file was silently never
 loaded. This script encodes that whole class of "silently wrong data-pack layout / empty
 content" mistakes so it can be caught in CI instead of in a live client.
@@ -17,6 +17,9 @@ Tier 1 (offline, deterministic, FAILS the build):
   * Data-pack directory naming uses the modern singular convention.
   * No stale plural directories (loot_tables / recipes / advancements / tags/*s).
   * Block loot tables have non-empty pools and drop something.
+  * All loot tables use the 26.3 schema dialect (single ``condition`` object, ``modifier``
+    instead of ``functions``, ``type`` keys inside condition/function objects). The legacy
+    shape is silently not loaded by 26.3 (blocks drop as purple-black nameless items).
   * All ``*.json`` under src parse.
   * The JSON item_transformations table matches the Java built-in fallback (no drift
     between the two sources of truth).
@@ -27,7 +30,7 @@ Tier 1 (offline, deterministic, FAILS the build):
     with one of these tags (e.g. the vanilla ``#minecraft:non_treasure`` default) is picked
     up automatically, so this check only has to guard against typos in the tag id itself.
 
-Tier 2 (best-effort, needs the MC 26.2 jar and/or extra mod jars; WARNS only):
+Tier 2 (best-effort, needs the MC 26.3 jar and/or extra mod jars; WARNS only):
   * Item / enchantment ids referenced by recipe + transformations + costs exist either
     in this mod's own registry namespace, somewhere in the vanilla data jar, or in one of
     the ``--extra-jar`` paths (e.g. a third-party enchantment mod's jar, for ids like
@@ -105,7 +108,7 @@ def check_datapack_dir_naming() -> None:
             if os.path.isdir(legacy_path):
                 singular = next(s for s, p in SINGULAR_DIRS.items() if p == legacy)
                 err(
-                    f"legacy data-pack dir '{ns}/{legacy}/' found; MC 26.2 expects "
+                    f"legacy data-pack dir '{ns}/{legacy}/' found; MC 26.x expects "
                     f"'{ns}/{singular}/' (singular). Files here are silently ignored."
                 )
         # tags: tags/block not tags/blocks, tags/item not tags/items
@@ -142,6 +145,61 @@ def check_block_loot_tables_drop_something() -> None:
             err(f"block loot table pools have no entries (drops nothing): {rel}")
     if not found_any:
         warn("no block loot tables found under any '<ns>/loot_table/blocks/'")
+
+
+def _walk_loot_nodes(node, path, hits) -> None:
+    """Recursively collect schema violations of the 26.3 loot-table JSON dialect.
+
+    26.3 rewrote the loot JSON schema (see docs/reports/PORTING_26_3_REPORT.md):
+      * pool/entry/table level ``conditions: [...]`` array  -> single ``condition`` object
+        (multiple go through ``{"type": "minecraft:all_of", "terms": [...]}``);
+      * ``functions: [...]`` array                          -> ``modifier`` (object, or array of
+        objects);
+      * inside condition/function objects the type key is now ``type`` (was ``condition`` /
+        ``function`` when that value was a primitive id).
+    The legacy shape is **silently not loaded** by 26.3 — blocks turn into purple-black
+    nameless items — so this must be caught offline, not in a live client.
+    """
+    if isinstance(node, list):
+        for item in node:
+            _walk_loot_nodes(item, path, hits)
+        return
+    if not isinstance(node, dict):
+        return
+    if "conditions" in node and isinstance(node.get("conditions"), list):
+        hits.append(f"{path}: legacy 'conditions' array (26.3 wants a single 'condition' object; "
+                    f"wrap multiples in minecraft:all_of)")
+    if "functions" in node and isinstance(node.get("functions"), list):
+        hits.append(f"{path}: legacy 'functions' array (26.3 wants 'modifier')")
+    if "function" in node and isinstance(node.get("function"), str) and "type" not in node:
+        hits.append(f"{path}: legacy 'function': \"<id>\" key (26.3 wants 'type' inside a modifier object)")
+    if "condition" in node and isinstance(node.get("condition"), str) and "type" not in node:
+        hits.append(f"{path}: legacy 'condition': \"<id>\" key (26.3 wants 'type')")
+    for value in node.values():
+        _walk_loot_nodes(value, path, hits)
+
+
+def check_loot_table_schema_26_3() -> None:
+    """Tier 1: all vanilla-schema loot tables use the 26.3 dialect (see above)."""
+    found_any = False
+    for ns in os.listdir(DATA_ROOT) if os.path.isdir(DATA_ROOT) else []:
+        loot_root = os.path.join(DATA_ROOT, ns, "loot_table")
+        if not os.path.isdir(loot_root):
+            continue
+        for path in glob.glob(os.path.join(loot_root, "**", "*.json"), recursive=True):
+            found_any = True
+            rel = os.path.relpath(path, REPO)
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    data = json.load(fh)
+            except Exception:  # already reported by parse check
+                continue
+            hits: list[str] = []
+            _walk_loot_nodes(data, rel, hits)
+            for h in hits:
+                err(f"loot table not in 26.3 schema: {h}")
+    if not found_any:
+        warn("no loot tables found under any '<ns>/loot_table/'")
 
 
 def check_transformation_json_matches_java() -> None:
@@ -516,8 +574,8 @@ def find_mc_jar(explicit: str | None) -> str | None:
         return explicit
     home = os.path.expanduser("~")
     for cand in (
-        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.2", "minecraft-extracted_server.jar"),
-        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.2", "minecraft-common.jar"),
+        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.3", "minecraft-extracted_server.jar"),
+        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.3", "minecraft-common.jar"),
     ):
         if os.path.isfile(cand):
             return cand
@@ -548,7 +606,7 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
     if mc_jar:
         known |= collect_vanilla_ids(mc_jar)
     else:
-        warn("MC 26.2 jar not found; skipping vanilla id existence check (Tier 2)")
+        warn("MC 26.3 jar not found; skipping vanilla id existence check (Tier 2)")
     for extra_jar in extra_jars:
         known |= collect_jar_ids(extra_jar)
 
@@ -567,7 +625,7 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mc-jar", help="path to the MC 26.2 extracted jar for Tier 2 checks")
+    parser.add_argument("--mc-jar", help="path to the MC 26.3 extracted jar for Tier 2 checks")
     parser.add_argument(
         "--extra-jar",
         action="append",
@@ -580,6 +638,7 @@ def main() -> int:
     check_json_parses()
     check_datapack_dir_naming()
     check_block_loot_tables_drop_something()
+    check_loot_table_schema_26_3()
     check_transformation_json_matches_java()
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()

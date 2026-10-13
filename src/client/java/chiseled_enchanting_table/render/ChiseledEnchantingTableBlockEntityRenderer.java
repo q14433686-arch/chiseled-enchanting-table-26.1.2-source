@@ -53,8 +53,8 @@ public class ChiseledEnchantingTableBlockEntityRenderer implements BlockEntityRe
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.75F, 0.5F);
         poseStack.translate(0.0F, 0.1F + Mth.sin((double)(renderState.time * 0.1F)) * 0.01F, 0.0F);
-        poseStack.mulPose(Axis.YP.rotation(-renderState.yRot));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(80.0F));
+        poseStack.rotate(Axis.YP.rotation(-renderState.yRot));
+        poseStack.rotate(Axis.ZP.rotationDegrees(80.0F));
 
         float leftPage = Mth.frac(renderState.flip + 0.25F) * 1.6F - 0.3F;
         float rightPage = Mth.frac(renderState.flip + 0.75F) * 1.6F - 0.3F;

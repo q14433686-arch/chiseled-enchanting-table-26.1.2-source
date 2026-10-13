@@ -1,17 +1,17 @@
-# Chiseled Enchanting Table — Unofficial 26.2 Port
+# Chiseled Enchanting Table — Unofficial 26.3 Port
 
 ![Chiseled enchanting table banner](./banner.png)
 
 > ⚠️ **Unofficial community port.** This repository is a community-maintained, unofficial port of
 > [Sacramentix/chiseled-enchanting-table](https://github.com/Sacramentix/chiseled-enchanting-table)
-> updated to **Minecraft 26.2** on Fabric. It is **not affiliated with, endorsed by, or
+> updated to **Minecraft 26.3** on Fabric. It is **not affiliated with, endorsed by, or
 > maintained by the original author**. All credit for the original mod design, code, and assets
 > belongs to Sacramentix and is used under the original [MIT License](LICENSE). Please direct
 > bug reports about this port to **this** repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`),
 > not to the upstream project.
 
-**Current version:** `1.0.2` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
-**Target:** Minecraft `26.2`, Fabric Loader `>=0.19.3`, Fabric API `0.155.2+26.2`, Java `>=25`.
+**Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+**Target:** Minecraft `26.3`, Fabric Loader `>=0.19.5`, Fabric API `0.160.7+26.3`, Java `>=25`.
 
 A Minecraft Fabric mod that enhances the enchanting experience.
 
@@ -23,10 +23,10 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 
 ## Installation
 
-Grab the latest `chiseled-enchanting-table-1.0.2.jar` from
-`release_output/chiseled_enchanting_table_1_0_2/` (or build it yourself with
+Grab the latest `chiseled-enchanting-table-1.1.0.jar` from
+`release_output/chiseled_enchanting_table_1_1_0/` (or build it yourself with
 `./gradlew build` using JDK 25 — see `NEXT_TASK.md` for the exact command chain) and drop it into
-your Fabric `mods/` folder alongside Fabric API `0.155.2+26.2`.
+your Fabric `mods/` folder alongside Fabric API `0.160.7+26.3`.
 
 This unofficial port is **not** currently published to Modrinth or CurseForge under the original
 mod's listing. If a release is published, it will be under the unofficial-port repository's own

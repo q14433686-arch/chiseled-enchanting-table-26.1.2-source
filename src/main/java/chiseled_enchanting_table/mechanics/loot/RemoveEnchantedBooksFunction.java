@@ -18,8 +18,9 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
  * alongside ours (user decision "keep_both"). This function exists purely as a codec-registered
  * utility so a data pack or integration mod can opt-in per loot table by writing:
  * <pre>{
- *   "function": "chiseled_enchanting_table:remove_enchanted_books"
+ *   "modifier": { "type": "chiseled_enchanting_table:remove_enchanted_books" }
  * }</pre>
+ * (26.3 loot schema; pre-26.3 packs wrote {@code "functions": [{"function": "..."}]})
  * inside a vanilla-loot-table override, without needing our Java code to strip anything.</p>
  *
  * <p>Registered in {@link chiseled_enchanting_table.registry.LootRegistry} alongside the injector.</p>

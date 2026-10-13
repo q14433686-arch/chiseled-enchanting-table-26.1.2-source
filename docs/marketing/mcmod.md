@@ -1,4 +1,4 @@
-# MC百科 (mcmod.cn) 收录文案 — 纂刻附魔台 (Chiseled Enchanting Table) — 非官方 26.1.2 移植版 `1.0.2`
+# MC百科 (mcmod.cn) 收录文案 — 纂刻附魔台 (Chiseled Enchanting Table) — 非官方 26.3 移植版 `1.1.0`
 
 > 用于在 [mcmod.cn](https://www.mcmod.cn/) 提交本移植版的「模组」资料。下文按 MC百科编辑器
 > 实际字段顺序排列；正文段落使用百科支持的 BBCode 友好的纯文本/Markdown 风格，提交时按需转成
@@ -9,7 +9,7 @@
 ## 提交前须知（给编辑/提交者看）
 
 1. **本条目为非官方移植版**。如果 MC百科已经存在 Sacramentix 原版（1.21.x 线）的「纂刻附魔台」
-   条目，请**新建一个独立条目**或在原条目下新增「非官方 26.1.2 移植版」分支说明，不要直接覆盖
+   条目，请**新建一个独立条目**或在原条目下新增「非官方 26.3 移植版」分支说明，不要直接覆盖
    原条目的版本信息。
 2. 提交时**务必勾选「非官方移植」**（若有该字段；没有则在简介与正文开头明确写出）。
 3. 原作者：Sacramentix（MIT 协议）。移植者：q14433686-arch。
@@ -23,21 +23,21 @@
 | 字段 | 填写内容 |
 |---|---|
 | 模组中文名 | 纂刻附魔台 |
-| 模组原名 | Chiseled Enchanting Table (Unofficial 26.1.2 Port) |
+| 模组原名 | Chiseled Enchanting Table (Unofficial 26.3 Port) |
 | 模组缩写 / 简称 | CET（沿用社区习惯，可空） |
 | Mod ID | `chiseled-enchanting-table` |
-| 作者 | Sacramentix（原作者） / q14433686-arch（26.1.2 非官方移植） |
+| 作者 | Sacramentix（原作者） / q14433686-arch（26.3 非官方移植） |
 | MOD类型 | 冒险 / 实用 / 魔法（按 MC百科分类自选 1-2 项） |
 | 运行环境 | 客户端 + 服务端（两端均需安装） |
 | 模组加载器 | Fabric |
-| 支持的 MC 版本 | 26.1.2 |
-| 前置 Mod | Fabric API `0.151.0+26.1.2` |
+| 支持的 MC 版本 | 26.3 |
+| 前置 Mod | Fabric API `0.160.7+26.3` |
 | 协议 | MIT |
-| 源代码 | https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source |
+| 源代码 | https://github.com/q14433686-arch/chiseled-enchanting-table-26.3-source |
 | 上游（原作者）项目 | https://modrinth.com/mod/chiseled-enchanting-table |
 | 反馈 / Issue | 移植版仓库 Issues（**勿到上游报本移植版的 bug**） |
 
-> 提示：此 26.1.2 移植版相对上游 `0.2.x` 已**移除 Fabric Language Kotlin 前置**，前置只剩
+> 提示：此 26.3 移植版相对上游 `0.2.x` 已**移除 Fabric Language Kotlin 前置**，前置只剩
 > Fabric API。MC百科前置 Mod 字段请按上述实际情况填写。
 
 ---
@@ -45,7 +45,7 @@
 ## 简介（短简介，30~120 字，用于模组列表卡片）
 
 ```
-⚠ 非官方社区移植版（仅适配 Minecraft 26.1.2）。原作者 Sacramentix，本仓库仅负责移植，与原作者
+⚠ 非官方社区移植版（仅适配 Minecraft 26.3）。原作者 Sacramentix，本仓库仅负责移植，与原作者
 无隶属关系。本模组重做了附魔获取流程：通过纂刻书架收集附魔书来"永久解锁"对应附魔，再使用纂刻
 附魔台从列表里直接挑选附魔施加到装备上，无随机性、无重 roll，并消耗对应附魔书与少量经验/材料。
 ```
@@ -54,11 +54,11 @@
 
 ## 模组介绍（正文 — 复制进 MC百科正文编辑器即可）
 
-> ⚠ **非官方社区移植版声明**：本条目对应的版本（`1.0.2`，仅适配 Minecraft `26.1.2` / Fabric）
+> ⚠ **非官方社区移植版声明**：本条目对应的版本（`1.1.0`，仅适配 Minecraft `26.3` / Fabric）
 > 是 Sacramentix 原作 *Chiseled Enchanting Table* 的**非官方社区移植版**，仅负责把代码、数据更新到
-> 26.1.2 工具链。**与原作者无任何隶属、授权或背书关系**。
+> 26.3 工具链。**与原作者无任何隶属、授权或背书关系**。
 > 原模组的设计、代码、贴图等版权归 Sacramentix 所有，依 [MIT 协议](https://github.com/Sacramentix/chiseled-enchanting-table/blob/main/LICENSE)使用。
-> **与本 26.1.2 移植版相关的反馈/bug，请到[移植版仓库](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source) Issues 提交，不要打扰原作者。**
+> **与本 26.3 移植版相关的反馈/bug，请到[移植版仓库](https://github.com/q14433686-arch/chiseled-enchanting-table-26.3-source) Issues 提交，不要打扰原作者。**
 
 ### 📖 概述
 
@@ -90,12 +90,12 @@
 
 ### 🔄 与原版（上游 1.21.x）的区别
 
-| 项 | 上游 `0.2.x`（1.21.x） | 本非官方 26.1.2 移植版 `1.0.2` |
+| 项 | 上游 `0.2.x`（1.21.x） | 本非官方 26.3 移植版 `1.1.0` |
 |---|---|---|
-| MC 版本 | 1.21.1 – 1.21.8 | **26.1.2** |
+| MC 版本 | 1.21.1 – 1.21.8 | **26.3** |
 | Java | 21 | **25** |
-| Fabric Loader | 上游对应版本 | **0.19.3** |
-| Fabric API | 上游对应版本 | **0.151.0+26.1.2** |
+| Fabric Loader | 上游对应版本 | **0.19.5** |
+| Fabric API | 上游对应版本 | **0.160.7+26.3** |
 | Fabric Language Kotlin 前置 | **需要** | **不需要**（已移除） |
 | 默认解锁附魔 | 硬编码列表 | JSON 数据驱动 + `#minecraft:non_treasure` tag 自动展开（兼容第三方附魔 mod） |
 | 附魔成本 / 物品转化 | 部分硬编码 | 全部 JSON 数据驱动，便于整合包/数据包改值 |
@@ -121,12 +121,12 @@
 以下上游已有但本移植端尚未重新接通的内容（1.0.x 已解开的项已从此列表移除）：
 
 - **铁砧 mixin**（`RemoveEnchantMerge`, `RemoveXpCostScaling`）—— 原版铁砧行为目前未被修改，上游的
-  "禁止同级附魔书铁砧合成升级"这条平衡改动尚未在 26.1.2 上重新验证；
+  "禁止同级附魔书铁砧合成升级"这条平衡改动尚未在 26.3 上重新验证；
 - **附魔书架的环境粒子/音效**（上游 `ChiseledBookshelfTick` 提供的当书架里有附魔书时的悬浮
   附魔粒子）暂未接通；
 - **第三方 mod 集成层**（如 Colorful Books 联动）暂未移植；
 - **独立多槽位消耗面板**——额外消耗物品目前仍从玩家主背包静默扣除，尚无独立 UI 展示。见
-  `NEXT_TASK.md` 中 1.0.2 排期。
+  `NEXT_TASK.md` 中 1.1.0 排期。
 
 请在反馈时一并理解这些是**已知边界**，不是 bug。
 
@@ -136,8 +136,8 @@
   [Modrinth](https://modrinth.com/mod/chiseled-enchanting-table) /
   [GitHub](https://github.com/Sacramentix/chiseled-enchanting-table)。如果你喜欢这个模组，**请
   务必也去支持原作者**。
-- **本 26.1.2 非官方移植**：q14433686-arch。
-  源码：<https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source>。
+- **本 26.3 非官方移植**：q14433686-arch。
+  源码：<https://github.com/q14433686-arch/chiseled-enchanting-table-26.3-source>。
 - **协议**：MIT，与上游一致。
 
 ---
@@ -147,7 +147,7 @@
 ### 方块：纂刻附魔台 (Chiseled Enchanting Table)
 
 - **类型**：方块 / 功能性方块
-- **MOD**：纂刻附魔台 (非官方 26.1.2 移植版)
+- **MOD**：纂刻附魔台 (非官方 26.3 移植版)
 - **简介**：替代原版附魔台的功能方块。打开后呈现一份"可选附魔列表"，列表内容由附魔台周围
   纂刻书架中插入的附魔书 + 一份默认解锁集（对应 `#minecraft:non_treasure` 标签 + 少量宝藏附魔）
   共同决定。施加附魔会消耗对应附魔书，以及界面显示的经验和材料。空输入槽时会显示内置的少量
@@ -171,7 +171,7 @@
 - [ ] 已链接到上游原作者项目（Modrinth / GitHub）
 - [ ] 已注明协议为 MIT 且与上游一致
 - [ ] 反馈/Issue 链接指向**移植版仓库**而非上游
-- [ ] MC 版本字段填的是 **26.1.2** 且仅有 26.1.2
+- [ ] MC 版本字段填的是 **26.3** 且仅有 26.3
 - [ ] 前置 Mod 字段**只有 Fabric API**（已移除 Kotlin 前置，请勿照搬上游的前置列表）
 - [ ] 加载器选 **Fabric**
 - [ ] 已上传图标/横幅（可使用仓库根目录 `icon.png` / `banner.png`）

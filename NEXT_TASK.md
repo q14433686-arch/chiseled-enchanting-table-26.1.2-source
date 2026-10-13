@@ -1,32 +1,49 @@
-# Next Task: post-1.0.2 backlog
+# Next Task: 26.3 line backlog
 
-> **Unofficial community port.** All instructions below apply to the unofficial 26.1.2 port
+> **Unofficial community port.** All instructions below apply to the unofficial 26.3 port
 > (this repository). The upstream `Sacramentix/chiseled-enchanting-table` project is not affected
 > by this version line.
 
-**Current mod version:** `1.0.2`. See `CURRENT_BASELINE.md` for the currently-shipping
-capability boundary and `CHANGELOG.md` for the 1.0.2 fix list. The latest rounds restored upstream
-balance/ambience parity and added a localized advancement guide pass.
+**Current mod version:** `1.1.0` (Minecraft 26.3). See `CURRENT_BASELINE.md` for the currently-shipping
+capability boundary, `CHANGELOG.md` for the 1.1.0 retarget list, and
+`docs/reports/PORTING_26_3_REPORT.md` for the 26.2→26.3 impact assessment + borrowed-manual index.
 
-## How to build 1.0.2 from a fresh clone
+## A0. One-time: install the staged CI (maintainer action, blocking for the compile loop)
+
+The GitHub App token cannot push `.github/workflows/*`. Copy the four files from
+[`docs/ci/`](docs/ci/README.md) into `.github/workflows/` via the GitHub web UI in one commit:
+`compile-check.yml` (new), `build.yml` (replace), `consistency.yml` (new), `publish.yml` (replace).
+After that, arena-branch pushes compile on CI and the sandbox reads
+`build-reports/compile-java.log` back via the Contents API — that is the 26.3 compile oracle.
+
+## How to build 1.1.0 from a fresh clone
 
 The source tree is Gradle + Loom + Fabric API + Java 25:
 
 ```bash
 # Install/provide Java 25 first. If apt is unavailable, download/extract a JDK 25 tarball
-# and point JAVA_HOME at it; this sandbox used /home/user/jdkwork/jdk-25.0.3.
+# and point JAVA_HOME at it; 26.3 needs Java 25 (unchanged from 26.2).
 chmod +x ./gradlew
 python3 scripts/compat_check.py                     # offline data-pack sanity (Tier 1 must pass)
+bash scripts/check_release_consistency.sh           # version surfaces must agree
 JAVA_HOME=/path/to/jdk-25 ./gradlew --no-daemon --max-workers=1 \
     -Dorg.gradle.jvmargs='-Xmx1536m -Dfile.encoding=UTF-8' build --rerun-tasks --stacktrace
 ```
 
 Artefacts land in `build/libs/`; release staging is under
-`release_output/chiseled_enchanting_table_1_0_2/`.
+`release_output/chiseled_enchanting_table_1_1_0/` (create on first release build).
+Network-restricted sandbox? Do the compile on GitHub Actions instead and read the log back
+(`docs/ci/README.md` 的 compile-log 回推用法)。
 
 ## Open items (roughly in priority order)
 
-### A. Live-verify restored mixins and advancement guide
+### A. Live-verify 26.3 port + restored mixins and advancement guide
+
+26.3-specific first (`docs/reports/PORTING_26_3_REPORT.md` §6): start the game once and confirm
+no `InvalidInjectionException` at mixin APPLY (compile cannot catch target drift); mine the table
+and confirm exactly one named drop (26.3 loot schema live proof); on a dedicated server check
+whether the table recipe is visible in the recipe book/JEI (known 26.3 recipe-sync change,
+functional impact none). Then the standing checklist:
 
 These compile and package, but still need real-client confirmation:
 

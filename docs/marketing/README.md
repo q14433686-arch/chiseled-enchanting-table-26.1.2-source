@@ -1,7 +1,7 @@
 # Marketing / Listing Copy
 
-This folder holds ready-to-paste listing copy for the unofficial **Chiseled Enchanting Table — 26.1.2 port**
-(`1.0.2`) on three platforms. Always paste verbatim from these files so the "unofficial port"
+This folder holds ready-to-paste listing copy for the unofficial **Chiseled Enchanting Table — 26.3 port**
+(`1.1.0`) on three platforms. Always paste verbatim from these files so the "unofficial port"
 status, author credit, and version target stay consistent everywhere.
 
 | File | Target |
@@ -12,14 +12,14 @@ status, author credit, and version target stay consistent everywhere.
 
 ## Project facts to keep consistent (do not edit per-platform without updating here too)
 
-- **Display name:** Chiseled Enchanting Table — Unofficial 26.1.2 Port
+- **Display name:** Chiseled Enchanting Table — Unofficial 26.3 Port
 - **Original mod:** [Sacramentix/chiseled-enchanting-table](https://github.com/Sacramentix/chiseled-enchanting-table) — MIT
 - **Original mod (Modrinth):** <https://modrinth.com/mod/chiseled-enchanting-table>
-- **This port (source repo):** <https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source>
-- **Port version:** `1.0.2`
-- **Minecraft target:** `26.1.2`
-- **Loader:** Fabric Loader `>=0.19.3`
-- **Required:** Fabric API `0.151.0+26.1.2`
+- **This port (source repo):** <https://github.com/q14433686-arch/chiseled-enchanting-table-26.3-source>
+- **Port version:** `1.1.0`
+- **Minecraft target:** `26.3`
+- **Loader:** Fabric Loader `>=0.19.5`
+- **Required:** Fabric API `0.160.7+26.3`
 - **Java:** `>=25`
 - **Side:** client & server (both required)
 - **License:** MIT (inherited from upstream)
@@ -28,7 +28,7 @@ status, author credit, and version target stay consistent everywhere.
 ## Cover artwork (ready to upload)
 
 All three platforms need a square icon. Use the staged copies under
-`release_output/chiseled_enchanting_table_1_0_2/`:
+`release_output/chiseled_enchanting_table_1_1_0/`:
 
 | File | Size | Use for |
 |---|---|---|
@@ -36,7 +36,7 @@ All three platforms need a square icon. Use the staged copies under
 | `cover-banner.png` | 660 845 B PNG | Optional gallery banner / first screenshot on Modrinth and CurseForge; MC百科 「封面图」(240×150 会被自动拉伸) 也可裁剪后使用 |
 
 The same `cover-icon-256.png` bytes are already embedded inside
-`chiseled-enchanting-table-1.0.2.jar` at `assets/chiseled-enchanting-table/icon.png`, so the
+`chiseled-enchanting-table-1.1.0.jar` at `assets/chiseled-enchanting-table/icon.png`, so the
 in-game mods-list entry matches the platform listings.
 
 ### Platform-specific icon notes
@@ -54,11 +54,11 @@ in-game mods-list entry matches the platform listings.
 
 ## Universal "unofficial port" disclaimer (paste at the top of every listing)
 
-> This is an **unofficial community port** of Sacramentix's *Chiseled Enchanting Table* to Minecraft 26.1.2.
+> This is an **unofficial community port** of Sacramentix's *Chiseled Enchanting Table* to Minecraft 26.3.
 > It is **not affiliated with, endorsed by, or maintained by the original author**.
 > All original mod design, code, and assets © Sacramentix, used under the MIT License.
-> Please direct bug reports about this 26.1.2 port to **this** repository, not to the upstream project.
+> Please direct bug reports about this 26.3 port to **this** repository, not to the upstream project.
 
-> 本项目是 Sacramentix 制作的 *Chiseled Enchanting Table* 模组的 **非官方社区移植版**，仅用于将其更新到 Minecraft 26.1.2。
+> 本项目是 Sacramentix 制作的 *Chiseled Enchanting Table* 模组的 **非官方社区移植版**，仅用于将其更新到 Minecraft 26.3。
 > **与原作者无任何隶属或背书关系**，原模组的设计、代码与资源版权归 Sacramentix 所有，依 MIT 协议使用。
-> 与本 26.1.2 移植版相关的 bug 请到本仓库反馈，不要打扰原作者。
+> 与本 26.3 移植版相关的 bug 请到本仓库反馈，不要打扰原作者。

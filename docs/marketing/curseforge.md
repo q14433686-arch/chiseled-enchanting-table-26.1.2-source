@@ -1,4 +1,4 @@
-# CurseForge listing — Chiseled Enchanting Table (Unofficial 26.1.2 Port) `1.0.2`
+# CurseForge listing — Chiseled Enchanting Table (Unofficial 26.3 Port) `1.1.0`
 
 > Paste copy for the CurseForge project page. CurseForge's description editor accepts a Markdown-ish
 > dialect but renders to HTML; BBCode-style tags do not work. Headings, bold, italics, lists, and
@@ -9,13 +9,13 @@
 ## Project name
 
 ```
-Chiseled Enchanting Table (Unofficial 26.1.2 Port)
+Chiseled Enchanting Table (Unofficial 26.3 Port)
 ```
 
 ## Summary (≤255 chars)
 
 ```
-Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraft 26.1.2 (Fabric). No-RNG enchanting via a custom table that unlocks enchantments from nearby chiseled bookshelves. Not affiliated with the original author.
+Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraft 26.3 (Fabric). No-RNG enchanting via a custom table that unlocks enchantments from nearby chiseled bookshelves. Not affiliated with the original author.
 ```
 
 ## CurseForge metadata to set
@@ -23,17 +23,17 @@ Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraf
 - **Categories:** Adventure and RPG, Magic, Map and Information (pick the closest two CurseForge
   actually offers under Fabric — usually "Magic" + "Adventure and RPG").
 - **Mod loaders:** Fabric
-- **Game versions:** 26.1.2
+- **Game versions:** 26.3
 - **License:** MIT
 - **Client / Server:** Required on both
-- **Source URL:** https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source
-- **Issues URL:** https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues
+- **Source URL:** https://github.com/q14433686-arch/chiseled-enchanting-table-26.3-source
+- **Issues URL:** https://github.com/q14433686-arch/chiseled-enchanting-table-26.3-source/issues
 
 ## Dependencies (set in CurseForge "Relations")
 
 | Slug | Type | Notes |
 |---|---|---|
-| `fabric-api` | Required | Tested against `0.151.0+26.1.2`. |
+| `fabric-api` | Required | Tested against `0.160.7+26.3`. |
 | `chiseled-enchanting-table` (Sacramentix) | "Required parent" / "Similar project" | Mark as the **original / upstream** this is ported from. |
 
 *(This port no longer requires Fabric Language Kotlin even though upstream `0.2.x` did.)*
@@ -50,12 +50,12 @@ Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraf
 # Full description (paste into CurseForge's description editor)
 
 > ⚠️ **Unofficial community port.** This is an **unofficial** community port of Sacramentix's
-> *Chiseled Enchanting Table* to Minecraft **26.1.2** on Fabric. It is **not affiliated with,
+> *Chiseled Enchanting Table* to Minecraft **26.3** on Fabric. It is **not affiliated with,
 > endorsed by, or maintained by the original author**. All original mod design, code, and assets
 > © Sacramentix, used under the MIT License.
 >
-> **Please direct bug reports about this 26.1.2 port to
-> [this GitHub repository](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source),
+> **Please direct bug reports about this 26.3 port to
+> [this GitHub repository](https://github.com/q14433686-arch/chiseled-enchanting-table-26.3-source),
 > not to the upstream project page or to Sacramentix directly.**
 
 ---
@@ -91,11 +91,11 @@ Replaces vanilla enchanting RNG with a **deterministic, library-driven** workflo
 5. Some recipes have **no item input** — those are item transformations. Pay the listed cost and
    the table gives you the output item.
 
-## What's different in this 26.1.2 port
+## What's different in this 26.3 port
 
 Compared to upstream's `0.2.x` line:
 
-- **Toolchain:** Minecraft `26.1.2`, Fabric Loader `0.19.3`, Fabric API `0.151.0+26.1.2`,
+- **Toolchain:** Minecraft `26.3`, Fabric Loader `0.19.5`, Fabric API `0.160.7+26.3`,
   Loom `1.16.3`, Gradle `9.4.1`, **Java 25** required.
 - **Fabric Language Kotlin dependency dropped** — only Fabric API is required at runtime.
 - **Fully data-driven content**: default unlocks, enchantment costs, item transformations, the
@@ -111,7 +111,7 @@ Compared to upstream's `0.2.x` line:
 
 ## Compatibility status
 
-- **Vanilla 26.1.2 + Fabric API 0.151.0:** all core paths verified live — place block, open
+- **Vanilla 26.3 + Fabric API 0.160.7+26.3:** all core paths verified live — place block, open
   menu, scroll list, apply enchantment, apply transformation, apply from book, mining drop,
   floating book renderer, chest loot injection, structure bookshelf replacement in villages /
   mansions / ancient cities / stronghold libraries, XP deduction (vanilla-anvil-style points).
@@ -124,7 +124,7 @@ Compared to upstream's `0.2.x` line:
 
 ## Known port-side temporary boundaries
 
-Small set carried over from the porting work and still parked pending 26.1.2 verification:
+Small set carried over from the porting work and still parked pending 26.3 verification:
 
 - **Legacy anvil mixins** (`RemoveEnchantMerge`, `RemoveXpCostScaling`) — vanilla anvil combining
   behaviour is currently unchanged from vanilla.
@@ -132,7 +132,7 @@ Small set carried over from the porting work and still parked pending 26.1.2 ver
   from upstream's `ChiseledBookshelfTick` is not yet wired.
 - **Third-party mod integration layer** (e.g. Colorful Books integration) — not yet ported.
 - **Dedicated multi-slot cost panel** — additional-cost items are still consumed silently from
-  the player's main inventory. Tracked in the source repo's `NEXT_TASK.md` for the 1.0.2 line.
+  the player's main inventory. Tracked in the source repo's `NEXT_TASK.md` for the 1.1.0 line.
 
 ## Credits
 
@@ -140,6 +140,6 @@ Small set carried over from the porting work and still parked pending 26.1.2 ver
   Original page: [Modrinth](https://modrinth.com/mod/chiseled-enchanting-table) /
   [GitHub](https://github.com/Sacramentix/chiseled-enchanting-table). If you enjoy this mod,
   please go support the original author too.
-- **Unofficial 26.1.2 port:** `q14433686-arch`.
-  Source: <https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source>.
+- **Unofficial 26.3 port:** `q14433686-arch`.
+  Source: <https://github.com/q14433686-arch/chiseled-enchanting-table-26.3-source>.
 - **License:** MIT, same as upstream.

@@ -1,22 +1,52 @@
 # Changelog
 
-> **Unofficial community port.** This changelog covers the unofficial 26.2 port maintained at
+> **Unofficial community port.** This changelog covers the unofficial 26.3 port maintained at
 > `q14433686-arch/chiseled-enchanting-table-26.1.2-source`. It is not affiliated with or endorsed
 > by the original author (Sacramentix). The original mod remains MIT-licensed; this port re-uses
-> the original code/assets under that licence and updates them to the 26.2 toolchain.
+> the original code/assets under that licence and updates them to the 26.3 toolchain.
 
-Only the current release is kept here. Historical pre-`1.0.2` porting rounds and older release notes
-are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
+Only the current release and the previous release are kept here. Older release notes are archived
+under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
-> **26.2 branch (2026-07-19):** This line now targets **Minecraft 26.2**. Toolchain bumped to
-> Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Gradle `9.5.1`; Fabric Loader stays `0.19.3`
-> and `mod_version` stays `1.0.2`. See
-> [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md) for the full impact
-> assessment. The mod uses only high-level APIs confirmed present in 26.2, so no source rewrite was
-> attempted; a live `./gradlew build` against 26.2 mappings is still required to confirm the
-> renderer / GUI / structure-mixin signatures (2–3 files, listed in the report).
+> **26.3 branch (2026-10-13):** This line now targets **Minecraft 26.3** as `1.1.0`. Toolchain
+> bumped to Fabric Loader `0.19.5` + Fabric API `0.160.7+26.3` (Loom `1.17-SNAPSHOT`, Java 25
+> unchanged). See [`docs/reports/PORTING_26_3_REPORT.md`](docs/reports/PORTING_26_3_REPORT.md) for
+> the full impact assessment (3 source touch-points, one loot-table schema migration, and the new
+> TaCZ-style CI gate). The previous 26.2 line stays at `1.0.2` (tag `chiseled-enchanting-table-26.2`).
 
-## [1.0.2] - 2026-07-01
+## [1.1.0] - 2026-10-13 — Unofficial 26.3 Port
+
+### Retarget
+
+- Minecraft `26.2` → `26.3`; Fabric Loader `0.19.3` → `0.19.5`; Fabric API `0.155.2+26.2` →
+  `0.160.7+26.3`. Mod version `1.0.2` → `1.1.0` (new MC target = minor bump).
+- Source adaptation (26.2→26.3 API deltas that actually hit this codebase, verified against the
+  sister-repo porting manuals):
+  - removed the `Block#codec()` override (and its now-unused `CODEC` field) from
+    `ChiseledEnchantingTableBlock` — 26.3 dropped the abstract method;
+  - `PoseStack#mulPose` → `PoseStack#rotate` in the floating-book block-entity renderer;
+  - dropped an unused `blaze3d.pipeline.RenderPipeline` import from the table screen
+    (`blaze3d.pipeline` moved to `renderpearl.api.pipeline` in 26.3, but the import was dead).
+- Migrated `loot_table/blocks/chiseled_enchanting_table.json` to the 26.3 loot schema
+  (singular `condition` object / `modifier` instead of `functions` / `type` keys). The legacy
+  shape is **silently ignored** by 26.3 (block would drop as a purple-black nameless item); the
+  copy function is now `minecraft:copy_name` (behaviour-identical to the old custom-name-only
+  `copy_components`).
+
+### Tooling / CI (adopted from TaCZ_Refabricated_Unofficial's conventions)
+
+- New version-consistency gate `scripts/check_release_consistency.sh` (gradle.properties ↔
+  README ↔ fabric.mod.json ↔ publish.yml) plus staged GitHub workflows under `docs/ci/`
+  (`compile-check` with sandbox log write-back, `build` with jar artifacts + static checks,
+  `consistency`, and a version-aligned `publish`) awaiting the maintainer's one-time manual
+  copy into `.github/workflows/` (the sandbox App token cannot push workflow files).
+- `scripts/compat_check.py` gained a Tier-1 26.3 loot-schema check so the silent-load-failure
+  class is caught offline.
+- Fixed pre-existing drift the new gate immediately flagged: `publish.yml` was still pinned at
+  26.1.2; registered the orphaned client mixin config; deleted the stale legacy
+  `chiseled-enchanting-table.mixins.json` (superseded by `-port.mixins.json`, never registered).
+
+## [1.0.2] - 2026-07-01 — Unofficial 26.2 line
 
 ### Upstream parity and balance
 

@@ -2,54 +2,63 @@
 
 > **Unofficial community port.** This repository is an unofficial community port of
 > [Sacramentix/chiseled-enchanting-table](https://github.com/Sacramentix/chiseled-enchanting-table)
-> to Minecraft **26.1.2** on Fabric. It is **not affiliated with, endorsed by, or maintained by
+> to Minecraft **26.3** on Fabric. It is **not affiliated with, endorsed by, or maintained by
 > the original author**. All credit for the original mod design and assets belongs to Sacramentix
-> (MIT licensed); this port only updates the code/data to the 26.2 toolchain.
+> (MIT licensed); this port only updates the code/data to the 26.3 toolchain.
 
-> **26.2 branch (2026-07-19):** This line now targets **Minecraft 26.2**. Version declarations were
-> bumped (see `docs/reports/PORTING_26_2_REPORT.md` for the full 26.1.2→26.2 impact assessment).
-> The mod uses only high-level APIs confirmed present in 26.2, so no source rewrite was attempted;
-> a live `./gradlew build` against 26.2 mappings is still required to confirm the renderer / GUI /
-> structure-mixin signatures (2–3 files listed in that report). The previous 26.1.2 state is
-> preserved in git history (commit `8ecc4d2`).
+> **26.3 branch (2026-10-13):** This line now targets **Minecraft 26.3** as mod version
+> **`1.1.0`** (see `docs/reports/PORTING_26_3_REPORT.md` for the full 26.2→26.3 impact
+> assessment and the borrowed-manual index). Source touch-points: 3 files (dropped
+> `Block#codec()`, `PoseStack#mulPose`→`rotate`, removed a dead blaze3d import) plus the 26.3
+> loot-table JSON schema migration. TaCZ_Refabricated-style CI (compile-check log write-back /
+> build+static-checks / version-consistency) is staged under `docs/ci/` pending the maintainer's
+> manual copy into `.github/workflows/`. The previous 26.2 state (`1.0.2`, tag
+> `chiseled-enchanting-table-26.2`) is preserved on branch `chiseled-enchanting-table-26.2-source`.
 
-**Date:** 2026-07-19
-**Minecraft Version:** 26.2
-**Fabric Loader:** 0.19.3
-**Fabric API:** 0.155.2+26.2
+**Date:** 2026-10-13
+**Minecraft Version:** 26.3
+**Fabric Loader:** 0.19.5
+**Fabric API:** 0.160.7+26.3
 **Gradle:** 9.5.1
 **Loom:** 1.17
-**Java:** 25.0.3 (verified this round with user-space Oracle JDK at `/home/user/jdks/jdk-25`; system image still defaults to JDK 11)
-**Mod Version:** `1.0.2`  *(unofficial-port versioning, see "Versioning" below)*
+**Java:** 25 (unchanged; 26.3 minimum)
+**Mod Version:** `1.1.0`  *(unofficial-port versioning, see "Versioning" below)*
 
 ## Versioning
 
-This repository currently publishes the unofficial 26.1.2 port as **`1.0.2`**. Earlier internal
+This repository currently publishes the unofficial 26.3 port as **`1.1.0`**. A new Minecraft
+target bumps the minor segment (1.0.2 = 26.2 line, 1.1.0 = 26.3 line). Earlier internal
 porting labels are treated as historical implementation notes only; current metadata, release
-artefacts, documentation, and marketing copy should all refer to `1.0.2`.
+artefacts, documentation, and marketing copy should all refer to `1.1.0`.
 
 ## Current Source-Truth Snapshot (what the code/data actually contains today)
 
 ### Build / packaging
-- `gradle.properties`: `mod_version=1.0.2`, `minecraft_version=26.2`,
-  `loader_version=0.19.3`, `fabric_version=0.155.2+26.2`. Build tooling: Loom `1.17-SNAPSHOT`,
+- `gradle.properties`: `mod_version=1.1.0`, `minecraft_version=26.3`,
+  `loader_version=0.19.5`, `fabric_version=0.160.7+26.3`. Build tooling: Loom `1.17-SNAPSHOT`,
   Gradle wrapper `9.5.1`.
 - `src/main/resources/fabric.mod.json`:
-  - `version: "${version}"` (substituted by Loom to `1.0.2`).
-  - `name`: `Chiseled Enchanting Table (Unofficial 26.2 Port)`.
+  - `version: "${version}"` (substituted by Loom to `1.1.0`).
+  - `name`: `Chiseled Enchanting Table (Unofficial 26.3 Port)`.
   - `description`: explicitly states this is an unofficial port and not affiliated with the
     original author.
   - `authors`: original `Sacramentix` plus the unofficial-port maintainer `q14433686-arch`.
   - `contact.sources`: this port's GitHub; `contact.homepage`: original upstream.
-  - `depends`: `fabricloader >=0.19.3`, `minecraft 26.2`, `java >=25`, `fabric-api *`.
-  - `mixins: ["chiseled-enchanting-table-port.mixins.json"]` — the port config now uses package
+  - `depends`: `fabricloader >=0.19.5`, `minecraft 26.3`, `java >=25`, `fabric-api *`.
+  - `mixins: ["chiseled-enchanting-table-port.mixins.json",
+    "chiseled-enchanting-table.client.mixins.json"]` — the port config uses package
     `chiseled_enchanting_table.mixin` and declares 8 active mixins: 5 structure mixins, vanilla
     enchanting-table book blocking, narrow anvil enchanted-book same-level merge blocking, and
     chiseled-bookshelf random-tick ambience.
   - `custom.chiseled_enchanting_table:port_notes`: documents the unofficial-port status and the
-    current 1.0.2 mixin/loot/structure boundary.
-- `.github/workflows/publish.yml`: **pending manual apply** (GitHub App token lacks `workflows`
-  permission) — should become `MINECRAFT_VERSION: 26.2`, `RELEASE_NAME: ... (Unofficial 26.2 Port)`.
+    current 1.1.0 mixin/loot/structure boundary.
+- Workflows: GitHub App token lacks `workflows` permission, so the TaCZ-style CI set
+  (`compile-check.yml` / `build.yml` / `consistency.yml` / version-aligned `publish.yml`) is
+  staged under `docs/ci/` awaiting the maintainer's manual copy into `.github/workflows/`.
+  `publish.yml` staged copy carries `MINECRAFT_VERSION: 26.3`, `VERSION: 1.1.0`,
+  `RELEASE_NAME: ... (Unofficial 26.3 Port)`.
+- `scripts/check_release_consistency.sh` (version-consistency gate) and the extended
+  `scripts/compat_check.py` (26.3 loot-schema Tier-1 check) are in-tree and active.
 
 ### Source layout
 - `chiseled_enchanting_table.block.*` — `ChiseledEnchantingTableBlock`,
@@ -139,16 +148,16 @@ artefacts, documentation, and marketing copy should all refer to `1.0.2`.
     outcome — visible books in the shelves — is what needs the next round of live testing).
 
 ### Release artifacts (this round)
-Staged under `release_output/chiseled_enchanting_table_1_0_2/`:
-- `chiseled-enchanting-table-1.0.2.jar` (in-jar icon matches the 256×256 cover)
-- `chiseled-enchanting-table-1.0.2-sources.jar`
-- `chiseled-enchanting-table-1.0.2-source.zip` (working-tree zip; excludes
+Not staged yet: the sandbox has no JDK and cannot resolve `maven.*`, so the 1.1.0 jars come from
+GitHub Actions (`build` workflow artifact `chiseled-enchanting-table-<sha>`, or a local
+`./gradlew build` with JDK 25). Once built, stage under `release_output/chiseled_enchanting_table_1_1_0/`:
+- `chiseled-enchanting-table-1.1.0.jar` (in-jar icon matches the 256×256 cover)
+- `chiseled-enchanting-table-1.1.0-sources.jar`
+- `chiseled-enchanting-table-1.1.0-source.zip` (working-tree zip; excludes
   `.git/`, `.gradle/`, `build/`, `release_output/`).
-- `cover-icon-256.png` — 256×256 RGBA cover icon, ready to upload to Modrinth / CurseForge /
-  MC百科 directly.
-- `cover-banner.png` — repo root banner, staged alongside for optional gallery use.
+- `cover-icon-256.png` / `cover-banner.png` — carry over from `chiseled_enchanting_table_1_0_2/`.
 
-Release output is consolidated under the current `1_0_2` directory; older internal porting-round artefact directories are not part of the current release output.
+The 26.2 line's release output stays under `chiseled_enchanting_table_1_0_2/`.
 
 ## Verified This Session (2026-07-01)
 
@@ -190,3 +199,37 @@ live world. The full list is kept in `docs/reports/CURRENT_AGENT_BRIEF.md`.
 
 - Book combine upgrade now explicitly replaces the cost-slot enchanted book with a plain book after the upgrade, matching the expected visible consumption behavior.
 - Validation: `compileJava compileClientJava`, `compat_check.py`, and `build --rerun-tasks` all passed.
+
+
+## Verified This Session (2026-10-13) — 26.3 retarget round
+
+Goal: port to Minecraft 26.3, with the {UN}TACZR-style CI established **first** (per user).
+
+- CI (borrowed from TaCZ_Refabricated_Unofficial conventions): staged `docs/ci/` workflow set
+  (compile-check log write-back / build+static checks / version-consistency / version-aligned
+  publish) + `scripts/check_release_consistency.sh`; maintainer manual copy into
+  `.github/workflows/` still pending (App token lacks `workflows` permission — push rejected
+  2026-10-13, confirming the need for the staging convention). Legacy `build.yml` kept running
+  on the branch: full `./gradlew build` green on the pre-port tree (2026-10-13 run 38419503723).
+- The new gates immediately caught: `publish.yml` 26.1.2 drift (fixed in the staged copy),
+  orphan `chiseled-enchanting-table.client.mixins.json` (now registered), stale legacy
+  `chiseled-enchanting-table.mixins.json` (deleted).
+- 26.3 retarget: `gradle.properties` (26.3 / 0.19.5 / 0.160.7+26.3 / 1.1.0), `fabric.mod.json`
+  (depends + cover strings), README / CHANGELOG / this file.
+- Source (3 touch-points per `docs/reports/PORTING_26_3_REPORT.md`): dropped `Block#codec()`
+  override + `CODEC` field in `ChiseledEnchantingTableBlock`; `PoseStack#mulPose` → `rotate` ×2
+  in the block-entity renderer; removed dead `blaze3d.pipeline.RenderPipeline` import from the
+  table screen.
+- Loot table JSON migrated to the 26.3 schema (`condition` singular / `modifier` / `type`);
+  `compat_check.py` gained a Tier-1 legacy-shape detector (positive + negative self-test done).
+- Pending: CI compile of the 26.3 tree (needs `compile-check.yml` live, or the legacy `build`
+  workflow's step-level signal), mixin APPLY validation, and the §6 live checklist in the
+  porting report.
+
+## Client-Only / Live-Game Validation Still Pending (26.3)
+
+Requires a real MC 26.3 + Fabric 0.19.5 runtime: mod-metadata load; all 8 active mixins applying
+without `InvalidInjectionException`; block mining drops exactly one named table (26.3 loot schema
+live proof); table UI / floating book / enchantment application; bookshelf ambience; structure
+bookshelf replacement; dedicated-server recipe-book visibility of the table recipe (known 26.3
+recipe-sync change); plus the standing 1.0.2-era live checklist in `NEXT_TASK.md` §A.
