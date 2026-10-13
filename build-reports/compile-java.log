@@ -1,9 +1,9 @@
-commit: d4f34aa67755bcb84acfb7da96bd8067feb29c5d
+commit: a9181132dc7a0e77177f3604a36da1b12500e901
 branch: arena/2e402cd9-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
 loader: 0.19.5
 ---
-/home/runner/work/_temp/188073f2-bee2-4115-9759-8ab9143d8e55.sh: line 10: ./gradlew: Permission denied
+/home/runner/work/_temp/2fe86345-0342-444c-8a95-9bbc0775c901.sh: line 10: ./gradlew: Permission denied
 
 == job status: failure ==
