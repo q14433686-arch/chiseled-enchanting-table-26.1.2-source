@@ -1,30 +1,78 @@
-# Next Task: post-1.0.2 backlog
+# Next Task: post-1.0.3 backlog (Minecraft 26.3 line)
 
-> **Unofficial community port.** All instructions below apply to the unofficial 26.1.2 port
+> **Unofficial community port.** All instructions below apply to the unofficial 26.3 port
 > (this repository). The upstream `Sacramentix/chiseled-enchanting-table` project is not affected
 > by this version line.
 
-**Current mod version:** `1.0.2`. See `CURRENT_BASELINE.md` for the currently-shipping
-capability boundary and `CHANGELOG.md` for the 1.0.2 fix list. The latest rounds restored upstream
-balance/ambience parity and added a localized advancement guide pass.
+**Current mod version:** `1.0.3` · **Minecraft:** `26.3` · **Fabric API:** `0.162.0+26.3` ·
+**Loader:** `0.19.5`. See `CURRENT_BASELINE.md` for the currently-shipping capability boundary,
+`CHANGELOG.md` for the 1.0.3 change list, and
+`docs/reports/PORTING_26_3_REPORT.md` for the 26.2→26.3 migration evidence.
 
-## How to build 1.0.2 from a fresh clone
+## How to build 1.0.3 from a fresh clone
 
 The source tree is Gradle + Loom + Fabric API + Java 25:
 
 ```bash
 # Install/provide Java 25 first. If apt is unavailable, download/extract a JDK 25 tarball
-# and point JAVA_HOME at it; this sandbox used /home/user/jdkwork/jdk-25.0.3.
+# and point JAVA_HOME at it.
 chmod +x ./gradlew
-python3 scripts/compat_check.py                     # offline data-pack sanity (Tier 1 must pass)
+
+# Offline gates — these three run anywhere (no network, no Gradle):
+python3 scripts/ci_static_checks.py                 # mixin configs + registered-mixin-compiled + lang parity
+python3 scripts/compat_check.py                     # data-pack schema / drift (Tier 1 must pass)
+bash scripts/check_release_consistency.sh --strict  # version declarations agree
+
 JAVA_HOME=/path/to/jdk-25 ./gradlew --no-daemon --max-workers=1 \
     -Dorg.gradle.jvmargs='-Xmx1536m -Dfile.encoding=UTF-8' build --rerun-tasks --stacktrace
 ```
 
-Artefacts land in `build/libs/`; release staging is under
-`release_output/chiseled_enchanting_table_1_0_2/`.
+Artefacts land in `build/libs/`. **If you cannot run Gradle** (sandbox without maven access), push
+the branch: once the CI triad is installed (see A-1 below), the `compile-check` workflow compiles
+both source sets on Actions and writes the log back to the branch — read it with
+
+```bash
+gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>" \
+    --jq '.content' | base64 -d | tail -60
+```
 
 ## Open items (roughly in priority order)
+
+### A-1. Install the CI triad (blocked on a permission, not on code)
+
+The triad is written and staged in `docs/ci/` because pushing `.github/workflows/*` is rejected for
+the current GitHub App token (`refusing to allow a GitHub App to create or update workflow ...
+without 'workflows' permission`). To activate:
+
+```bash
+bash docs/ci/install.sh                 # copies the 4 files into .github/workflows/
+git add .github/workflows && git commit -m "ci: install the 26.3 CI triad" && git push
+```
+
+This also lands the 26.3 `publish.yml` (`MINECRAFT_VERSION: 26.3`, `VERSION: 1.0.3`) that the 26.2
+round could not push. Until then, `check_release_consistency.sh` reports those three as warnings
+instead of failures — it will start failing the moment the staged copy drifts.
+
+### A0. 26.3-specific runtime verification (new this round)
+
+A green `compile-check` only proves the mixin **target classes** exist. The following need a real
+26.3 client/server:
+
+1. **Mixin method-level injection**: watch `latest.log` for `@Inject`/`@ModifyReturnValue` failures
+   on the 5 structure mixins plus `AnvilMenu.createResult`, `EnchantmentMenu.slotsChanged` and the
+   chiseled-bookshelf random-tick override.
+2. **Floating book under OIT**: 26.3 replaced "Improved Transparency" with OIT (26.3-snapshot-2).
+   Compare the book with F3+X on and off; also break the table to confirm the new
+   `submitCrumblingOverlay` path renders the crack.
+3. **Chest / archaeology loot injection** still rolls in-world (the injector now builds pools with
+   `ContextIntProviders` / `UniformContainerBase`).
+4. **Block drop**: mining the table must still drop itself with a preserved custom name — this is
+   the one loot table migrated to the 26.3 `condition`/`modifier` schema.
+5. **Advancement load**: `craft` / `root` must load (they moved to `recipe_crafted.recipes`);
+   a bad key here logs a data-load error instead of crashing.
+6. **Payload round-trip**: open the menu on a dedicated server + client pair — the available-options
+   payload now hand-rolls its VarInt-prefixed collections (`FriendlyByteBuf` helpers are gone in
+   26.3), so this is the one place a wire-format mistake would show up as a decode error.
 
 ### A. Live-verify restored mixins and advancement guide
 
@@ -52,18 +100,18 @@ applied. The proper fix is a dedicated multi-slot cost panel in the menu.
 
 Scope: menu layout, `AbstractContainerMenu` slot registration, `quickMoveStack` behaviour,
 network protocol, client renderer, and a live-test pass. This is the largest remaining UI change
-and should be its own release (probably `1.0.2`).
+and should be its own release (probably `1.1.0`).
 
 ### C. Remaining parked legacy / integration items
 
 - `mixin/anvil/RemoveXpCostScaling.java` — broader upstream anvil XP/prior-work-cost tweak. Keep
-  separate from 1.0.2's narrow same-level book merge block.
+  separate from the narrow same-level book merge block. Still needs its own 26.3 mapping pass.
 - `mixin/accessor/ItemAccessor.java` — old enchanted-book stack-size/component accessor; high
   compatibility risk, do not enable casually.
 - `chiseled_enchanting_table.integration.*` — Colorful Books integration; should remain opt-in and
   only load when the target mod is present.
 - `color_table` advancement trigger: JSON/lang exists, but the dye interaction path still needs a
-  dedicated code pass if table recolouring is meant to be live in 26.1.2.
+  dedicated code pass if table recolouring is meant to be live in 26.3.
 - Vanilla enchanting-table-style bookshelf-to-table particles may still be considered visual polish.
   Floating book animation is treated as implemented per current user feedback and should not be
   listed as a blocker unless a new regression is reported.
@@ -73,21 +121,25 @@ and should be its own release (probably `1.0.2`).
 Cross-check that every data file under
 `src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/` is documented in
 [`docs/EXTENDING.md`](docs/EXTENDING.md) and covered by a Tier-1 schema check in
-`scripts/compat_check.py`. As of 1.0.2 all six (default_enchantments, enchantment_costs,
-item_transformations, loot_injections, bookshelf_book_pool, book_upgrades) are covered — keep it that way when
-adding new data files.
+`scripts/compat_check.py`. All six (default_enchantments, enchantment_costs,
+item_transformations, loot_injections, bookshelf_book_pool, book_upgrades) are covered — keep it that
+way when adding new data files.
 
 ## Validation required after any change
 
+- `python3 scripts/ci_static_checks.py` — mixin configs resolve, registered mixins are compiled,
+  `en_us`/`zh_cn` keys match.
 - `python3 scripts/compat_check.py` (Tier 1 must pass; pass `--extra-jar <path>` when testing
   alongside a specific third-party mod to also exercise Tier 2 id-existence coverage for its ids).
+  Loot tables must stay on the 26.3 schema (`condition`/`modifier` + `type`) and advancements on
+  `recipe_crafted.recipes`.
+- `bash scripts/check_release_consistency.sh --strict` when any version/Minecraft declaration moved.
 - JSON syntax validation for changed JSON files.
-- `./gradlew build --rerun-tasks`.
+- `./gradlew build --rerun-tasks` — or, where Gradle cannot run, the `compile-check` workflow log.
 - Jar metadata / resource spot check: `version` matches `gradle.properties`, name still marked
   Unofficial, `mixins` list matches the intended config.
-- Refresh `release_output/chiseled_enchanting_table_<version>/` if source / resource / jar bytes
-  changed. Directory name follows `chiseled_enchanting_table_<version with _ for .>`, e.g.
-  `chiseled_enchanting_table_1_0_2` for `1.0.2`, `chiseled_enchanting_table_1_0_2` for `1.0.2`.
+- If release staging is wanted, use `release_output/chiseled_enchanting_table_<version with _ for .>`
+  (i.e. `chiseled_enchanting_table_1_0_3`); no such directory is committed today.
 - If the source-of-truth for an in-game gameplay tuning changes (probabilities, cost formulas,
   book-count ranges, ...), update the concrete live-test expectations above so the next live-test
   round has an unambiguous target.

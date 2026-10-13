@@ -1,0 +1,47 @@
+#!/usr/bin/env sh
+# pre-commit：版本一致性 + 静态检查【提醒】——只警告，绝不阻断提交。
+#
+# 设计原则（沿用姊妹仓 TaCZ_Refabricated_Unofficial）：分多次提交（先改 gradle、再改 README）
+# 是正常工作方式，不应被禁止。这里只负责「让你不会忘」，把关交给 CI 的 --strict 检查。
+
+changed=$(git diff --cached --name-only)
+
+case "$changed" in
+  *gradle.properties*|*README.md*|*fabric.mod.json*|*publish.yml*)
+    bash scripts/check_release_consistency.sh >/tmp/_cet_consistency.log 2>&1
+    findings=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/_cet_consistency.log | grep -E '^[[:space:]]+FAIL')
+    if [ -n "$findings" ]; then
+      echo ""
+      echo "──────────────────────────────────────────────────────────"
+      echo " Reminder: version declarations are currently out of sync."
+      echo ""
+      printf '%s\n' "$findings" | sed 's/^/   /'
+      echo ""
+      echo " If you are committing in steps (version bump now, README later), ignore this."
+      echo " Before releasing, this must pass: bash scripts/check_release_consistency.sh --strict"
+      echo "──────────────────────────────────────────────────────────"
+      echo ""
+    fi
+    ;;
+esac
+
+case "$changed" in
+  *mixins*.json*|*build.gradle*|*lang/*.json*|*src/main/resources/data/*)
+    if command -v python3 >/dev/null 2>&1; then
+      python3 scripts/ci_static_checks.py --porcelain >/tmp/_cet_static.log 2>&1
+      if [ -s /tmp/_cet_static.log ]; then
+        echo ""
+        echo "──────────────────────────────────────────────────────────"
+        echo " Reminder: static checks currently fail (CI will block on these)."
+        echo ""
+        sed 's/^/   /' /tmp/_cet_static.log
+        echo ""
+        echo "──────────────────────────────────────────────────────────"
+        echo ""
+      fi
+    fi
+    ;;
+esac
+
+# 永远放行。
+exit 0

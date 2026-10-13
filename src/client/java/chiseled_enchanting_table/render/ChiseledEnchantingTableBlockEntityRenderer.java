@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.state.EnchantTableRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.sprite.SpriteGetter;
 import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.util.Mth;
@@ -53,8 +54,10 @@ public class ChiseledEnchantingTableBlockEntityRenderer implements BlockEntityRe
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.75F, 0.5F);
         poseStack.translate(0.0F, 0.1F + Mth.sin((double)(renderState.time * 0.1F)) * 0.01F, 0.0F);
-        poseStack.mulPose(Axis.YP.rotation(-renderState.yRot));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(80.0F));
+        // 26.3: PoseStack#mulPose(Quaternionf) is gone; vanilla's own EnchantTableRenderer now calls
+        // rotate(Axis, radians) / rotateDegrees(Axis, degrees) directly.
+        poseStack.rotate(Axis.YP, -renderState.yRot);
+        poseStack.rotateDegrees(Axis.ZP, 80.0F);
 
         float leftPage = Mth.frac(renderState.flip + 0.25F) * 1.6F - 0.3F;
         float rightPage = Mth.frac(renderState.flip + 0.75F) * 1.6F - 0.3F;
@@ -64,18 +67,31 @@ public class ChiseledEnchantingTableBlockEntityRenderer implements BlockEntityRe
             Mth.clamp(rightPage, 0.0F, 1.0F),
             renderState.open
         );
+        // 26.3: submitModel lost its trailing breakProgress parameter (9 args now); the crumbling
+        // overlay is submitted separately through order(1), exactly like vanilla does.
         submitNodeCollector.submitModel(
             this.bookModel,
             bookState,
             poseStack,
             renderState.lightCoords,
-            net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,
+            OverlayTexture.NO_OVERLAY,
             -1,
             BOOK_TEXTURE,
             this.sprites,
-            0,
-            renderState.breakProgress
+            0
         );
+        if (renderState.breakProgress != null) {
+            submitNodeCollector.order(1).submitCrumblingOverlay(
+                this.bookModel,
+                bookState,
+                poseStack,
+                BOOK_TEXTURE.renderType(this.bookModel.renderType()),
+                renderState.lightCoords,
+                OverlayTexture.NO_OVERLAY,
+                -1,
+                renderState.breakProgress
+            );
+        }
         poseStack.popPose();
     }
 }

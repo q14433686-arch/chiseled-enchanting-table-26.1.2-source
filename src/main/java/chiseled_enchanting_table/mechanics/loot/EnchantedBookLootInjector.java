@@ -18,10 +18,10 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.entries.EmptyLootItem;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
-import net.minecraft.world.level.storage.loot.entries.LootPoolSingletonContainer;
+import net.minecraft.world.level.storage.loot.entries.UniformContainerBase;
 import net.minecraft.world.level.storage.loot.functions.SetEnchantmentsFunction;
 import net.minecraft.world.level.storage.loot.functions.SetLoreFunction;
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
 
 /**
  * Applies {@link ChiseledEnchantingTableData#lootInjections()} to vanilla loot tables via
@@ -81,10 +81,10 @@ public final class EnchantedBookLootInjector {
     }
 
     private static LootPool.Builder buildPool(LootInjection injection, HolderGetter<Enchantment> enchantmentLookup) {
-        LootPool.Builder pool = LootPool.lootPool().setRolls(ConstantValue.exactly(injection.rolls()));
+        LootPool.Builder pool = LootPool.lootPool().setRolls(ContextIntProviders.exactly(injection.rolls()));
         boolean addedAny = false;
         for (LootInjectionEntry entry : injection.entries()) {
-            LootPoolSingletonContainer.Builder<?> singleton;
+            UniformContainerBase.Builder<?> singleton;
             if (entry.empty()) {
                 singleton = EmptyLootItem.emptyItem();
             } else {
@@ -105,7 +105,7 @@ public final class EnchantedBookLootInjector {
                 // registering a per-level pool instead.
                 singleton = LootItem.lootTableItem(Items.ENCHANTED_BOOK)
                     .apply(new SetEnchantmentsFunction.Builder()
-                        .withEnchantment(holder.get(), ConstantValue.exactly(entry.level())))
+                        .withEnchantment(holder.get(), ContextIntProviders.exactly(entry.level())))
                     .apply(SetLoreFunction.setLore().addLine(LORE));
             }
             pool.add(singleton.setWeight(entry.weight()));

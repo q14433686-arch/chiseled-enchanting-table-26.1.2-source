@@ -1,4 +1,6 @@
 plugins {
+    // 26.3: Loom stays on the 1.17 line — FabricMC/fabric's own 26.3 branch pins fabric-loom 1.17.20
+    // (gradle/libs.versions.toml@26.3), so no major upgrade is needed for this Minecraft line.
     id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
     id 'java-library'
     id 'maven-publish'
@@ -85,6 +87,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
+    // Minecraft 26.3 still requires Java 25 (Fabric API 0.162.0+26.3 depends on java >=25).
     options.release = 25
     options.encoding = 'UTF-8'
 }

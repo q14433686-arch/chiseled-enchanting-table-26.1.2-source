@@ -1,20 +1,65 @@
 # Changelog
 
-> **Unofficial community port.** This changelog covers the unofficial 26.2 port maintained at
+> **Unofficial community port.** This changelog covers the unofficial 26.3 port maintained at
 > `q14433686-arch/chiseled-enchanting-table-26.1.2-source`. It is not affiliated with or endorsed
 > by the original author (Sacramentix). The original mod remains MIT-licensed; this port re-uses
-> the original code/assets under that licence and updates them to the 26.2 toolchain.
+> the original code/assets under that licence and updates them to the 26.3 toolchain.
 
-Only the current release is kept here. Historical pre-`1.0.2` porting rounds and older release notes
+Only the current release and the previous one are kept here. Older porting rounds and release notes
 are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
-> **26.2 branch (2026-07-19):** This line now targets **Minecraft 26.2**. Toolchain bumped to
-> Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Gradle `9.5.1`; Fabric Loader stays `0.19.3`
-> and `mod_version` stays `1.0.2`. See
-> [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md) for the full impact
-> assessment. The mod uses only high-level APIs confirmed present in 26.2, so no source rewrite was
-> attempted; a live `./gradlew build` against 26.2 mappings is still required to confirm the
-> renderer / GUI / structure-mixin signatures (2–3 files, listed in the report).
+> **26.3 branch (2026-10-13):** This line now targets **Minecraft 26.3** — Fabric API
+> `0.162.0+26.3`, Fabric Loader `0.19.5`, Loom `1.17-SNAPSHOT`, Java 25, `mod_version` `1.0.3`.
+> See [`docs/reports/PORTING_26_3_REPORT.md`](docs/reports/PORTING_26_3_REPORT.md) for the
+> evidence-backed impact assessment (Fabric API side: 10 imported classes, 9 byte-identical and 1
+> javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
+> providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
+
+## [1.0.3] - 2026-10-13
+
+### Minecraft 26.3 port
+
+- **Renderer:** `PoseStack#mulPose(Quaternionf)` is gone in 26.3 — the floating book now rotates via
+  `rotate(Axis.YP, radians)` / `rotateDegrees(Axis.ZP, degrees)`, matching vanilla's own
+  `EnchantTableRenderer`.
+- **Renderer:** `SubmitNodeCollector#submitModel` lost its trailing break-progress parameter (9 args
+  now); the crumbling overlay is submitted separately through `order(1).submitCrumblingOverlay(...)`,
+  so breaking the table still shows the crack overlay.
+- **Loot:** migrated to the 26.3 loot builder API — `ContextIntProviders.exactly(...)` replaces
+  `ConstantValue.exactly(...)` and `UniformContainerBase.Builder` replaces
+  `LootPoolSingletonContainer.Builder`.
+- **Loot:** `RemoveEnchantedBooksFunction` now takes the 26.3 `Optional<Holder<LootItemCondition>>`
+  condition instead of a condition list.
+- **Networking:** `FriendlyByteBuf`'s collection helpers (`writeCollection` / `readCollection` /
+  `readList`) were removed in 26.3; the available-options payload hand-rolls the same VarInt-prefixed
+  wire format. No protocol change for clients on the same build.
+- **Client:** dropped a dead `com.mojang.blaze3d.pipeline.RenderPipeline` import (that package moved
+  to `com.mojang.renderpearl.api.pipeline` in 26.3; the screen never used it).
+
+### Data-pack schemas
+
+- Block loot table moved to the 26.3 schema: singular `condition` / `modifier` dispatched on `type`
+  (the 26.2 `conditions[]` / `functions[]` arrays are silently ignored by 26.3).
+- `recipe_crafted` advancements (`craft`, `root`) migrated from `recipe_id` to the required
+  `recipes` list — the old key no longer exists in 26.3, which made those advancements fail to load.
+- `craft.json`'s `show_toast` / `announce_to_chat` moved from the top level into `display`, where
+  26.3 (and vanilla) actually reads them — the intended "no toast, no chat" now applies.
+
+### Tooling / CI
+
+- Added the TACZR-style CI triad: `compile-check.yml` (compiles **both** source sets on Actions and
+  pushes `build-reports/compile-java.log` back to `arena/**` branches), `build.yml` (static gates →
+  full build → jar artifact) and `consistency.yml` (version gate).
+- Added `scripts/ci_static_checks.py`: mixin configs must resolve to real sources, a mixin registered
+  in `fabric.mod.json` must not be excluded from compilation by `build.gradle`, and `en_us`/`zh_cn`
+  key sets must match.
+- Added `scripts/check_release_consistency.sh`: keeps `gradle.properties`, `README.md`,
+  `fabric.mod.json` and `publish.yml` in sync. On the pre-port tree it immediately flagged the
+  long-standing `publish.yml` drift (`MINECRAFT_VERSION: 26.1.2` vs `minecraft_version=26.2`), which
+  is now fixed.
+- Added a warn-only pre-commit reminder (`.githooks/pre-commit` + `scripts/install-hooks.sh`).
+- `scripts/compat_check.py` gained Tier-1 guards for both 26.3 data schemas (negative-tested against
+  the pre-port files: 7 failures).
 
 ## [1.0.2] - 2026-07-01
 

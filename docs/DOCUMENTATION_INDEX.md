@@ -1,9 +1,9 @@
 # Documentation Index
 
-> **Unofficial community port.** All documents indexed below describe the unofficial 26.1.2 port
+> **Unofficial community port.** All documents indexed below describe the unofficial 26.3 port
 > in this repository. It is not affiliated with or endorsed by the original author of
 > [`chiseled-enchanting-table`](https://github.com/Sacramentix/chiseled-enchanting-table).
-> Current version: **`1.0.2`**.
+> Current version: **`1.0.3`** (Minecraft 26.3).
 
 ## Read these first
 
@@ -47,9 +47,18 @@ Used when publishing an updated release; keeps every platform aligned.
 - [`marketing/curseforge.md`](marketing/curseforge.md) — CurseForge summary + full description.
 - [`marketing/mcmod.md`](marketing/mcmod.md) — MC百科 (mcmod.cn) 中文简介与介绍正文.
 
+## Minecraft-line porting reports
+
+Read these when moving this port to a new Minecraft version. The 26.3 report is the current one and
+also documents the CI triad that makes a sandbox-side port verifiable.
+
+- [**26.2 → 26.3 port** (current line, incl. the 26.3 data-schema migration)](reports/PORTING_26_3_REPORT.md)
+- [26.1.2 → 26.2 impact assessment](reports/PORTING_26_2_REPORT.md)
+- [CI triad (staged workflows + how to install them)](ci/README.md)
+
 ## Historical porting reports
 
-These document how the port was built up before the current `1.0.2` release line. They previously
+These document how the port was built up before the current `1.0.3` release line. They previously
 corresponded to `0.2.3+26.1.2-pNN` internal `mod_version` values; those labels are kept inside the
 report bodies as a historical record only, not as live version numbers.
 

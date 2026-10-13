@@ -6,7 +6,7 @@ Why this exists
 ---------------
 P15 shipped a bug where the block dropped nothing when mined, because the block loot
 table lived at the *old plural* path ``data/<ns>/loot_tables/blocks/...`` and had empty
-pools. Minecraft 26.2 expects the *singular* path ``data/<ns>/loot_table/blocks/...``
+pools. Minecraft 26.3 expects the *singular* path ``data/<ns>/loot_table/blocks/...``
 (same singularisation as ``recipe`` and ``advancement``), so the file was silently never
 loaded. This script encodes that whole class of "silently wrong data-pack layout / empty
 content" mistakes so it can be caught in CI instead of in a live client.
@@ -27,7 +27,7 @@ Tier 1 (offline, deterministic, FAILS the build):
     with one of these tags (e.g. the vanilla ``#minecraft:non_treasure`` default) is picked
     up automatically, so this check only has to guard against typos in the tag id itself.
 
-Tier 2 (best-effort, needs the MC 26.2 jar and/or extra mod jars; WARNS only):
+Tier 2 (best-effort, needs the MC 26.3 jar and/or extra mod jars; WARNS only):
   * Item / enchantment ids referenced by recipe + transformations + costs exist either
     in this mod's own registry namespace, somewhere in the vanilla data jar, or in one of
     the ``--extra-jar`` paths (e.g. a third-party enchantment mod's jar, for ids like
@@ -105,7 +105,7 @@ def check_datapack_dir_naming() -> None:
             if os.path.isdir(legacy_path):
                 singular = next(s for s, p in SINGULAR_DIRS.items() if p == legacy)
                 err(
-                    f"legacy data-pack dir '{ns}/{legacy}/' found; MC 26.2 expects "
+                    f"legacy data-pack dir '{ns}/{legacy}/' found; MC 26.3 expects "
                     f"'{ns}/{singular}/' (singular). Files here are silently ignored."
                 )
         # tags: tags/block not tags/blocks, tags/item not tags/items
@@ -142,6 +142,121 @@ def check_block_loot_tables_drop_something() -> None:
             err(f"block loot table pools have no entries (drops nothing): {rel}")
     if not found_any:
         warn("no block loot tables found under any '<ns>/loot_table/blocks/'")
+
+
+def iter_data_json(kind: str):
+    """Yield (namespace, path, parsed json) for every '<ns>/<kind>/**/*.json'."""
+    for ns in os.listdir(DATA_ROOT) if os.path.isdir(DATA_ROOT) else []:
+        root = os.path.join(DATA_ROOT, ns, kind)
+        if not os.path.isdir(root):
+            continue
+        for path in glob.glob(os.path.join(root, "**", "*.json"), recursive=True):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    yield ns, path, json.load(fh)
+            except Exception:  # already reported by the parse check
+                continue
+
+
+def check_loot_tables_use_26_3_schema() -> None:
+    """26.3 collapsed the loot schema: pools/entries carry a singular `condition` / `modifier`
+    dispatched on `type`, instead of the 26.2 `conditions[]` / `functions[]` arrays dispatched on
+    `condition` / `function`. Old files still parse as JSON but silently lose their contents.
+
+    Evidence (MC 26.3 sources):
+      LootPool.CODEC                 -> optionalFieldOf("condition") / optionalFieldOf("modifier")
+      LootPoolEntryContainer         -> commonFields(): "condition" + "modifier"
+      LootItemFunctions.DIRECT_CODEC -> byNameCodec().dispatch(...)  => dispatch key is "type"
+    """
+
+    def walk(node, rel: str, where: str) -> None:
+        if isinstance(node, list):
+            for index, item in enumerate(node):
+                walk(item, rel, f"{where}[{index}]")
+            return
+        if not isinstance(node, dict):
+            return
+
+        for plural, singular in (("conditions", "condition"), ("functions", "modifier")):
+            if plural in node:
+                err(
+                    f"{rel}: {where} uses the 26.2 '{plural}' array; MC 26.3 expects the singular "
+                    f"'{singular}' field (a single object, or a list of objects) — the array is "
+                    f"silently ignored"
+                )
+
+        for legacy_key in ("function",):
+            if legacy_key in node:
+                err(
+                    f"{rel}: {where} uses '{legacy_key}' as a dispatch key; MC 26.3 dispatches "
+                    f"loot functions on 'type'"
+                )
+
+        for key in ("condition", "modifier"):
+            if key not in node:
+                continue
+            value = node[key]
+            if isinstance(value, str):
+                err(
+                    f"{rel}: {where}['{key}'] is the bare string '{value}'; MC 26.3 expects an "
+                    f"object such as {{\"type\": \"{value}\"}}"
+                )
+            elif isinstance(value, dict) and "type" not in value:
+                err(f"{rel}: {where}['{key}'] is missing its 'type' dispatch key")
+
+        for value in node.values():
+            walk(value, rel, where)
+
+    for _ns, path, data in iter_data_json("loot_table"):
+        rel = os.path.relpath(path, REPO)
+        for index, pool in enumerate(data.get("pools") or []):
+            walk(pool, rel, f"pools[{index}]")
+
+
+ADVANCEMENT_TOP_KEYS = {
+    "parent", "display", "rewards", "criteria", "requirements", "sends_telemetry_event",
+}
+DISPLAY_KEYS = {
+    "icon", "title", "description", "background", "frame", "show_toast", "announce_to_chat", "hidden",
+}
+
+
+def check_advancements_use_26_3_schema() -> None:
+    """26.3 advancement schema checks.
+
+    * `minecraft:recipe_crafted` now takes `recipes` (a list of recipe ids/holders) instead of the
+      26.2 `recipe_id` string — RecipeCraftedTrigger.TriggerInstance.CODEC has no `recipe_id` field,
+      so the old form fails to load the advancement.
+    * `show_toast` / `announce_to_chat` are DisplayInfo fields; Advancement.CODEC only knows
+      parent / display / rewards / criteria / requirements / sends_telemetry_event.
+    """
+    for _ns, path, data in iter_data_json("advancement"):
+        rel = os.path.relpath(path, REPO)
+
+        for key in sorted(set(data) - ADVANCEMENT_TOP_KEYS):
+            hint = " (it belongs inside 'display')" if key in DISPLAY_KEYS else ""
+            err(f"{rel}: unknown top-level advancement key '{key}'{hint}")
+
+        display = data.get("display")
+        if isinstance(display, dict):
+            for key in sorted(set(display) - DISPLAY_KEYS):
+                err(f"{rel}: unknown display key '{key}'")
+
+        for name, criterion in (data.get("criteria") or {}).items():
+            if not isinstance(criterion, dict):
+                continue
+            if criterion.get("trigger") != "minecraft:recipe_crafted":
+                continue
+            conditions = criterion.get("conditions") or {}
+            if "recipe_id" in conditions:
+                err(
+                    f"{rel}: criteria '{name}' uses 'recipe_id'; MC 26.3 renamed it to "
+                    f"'recipes' (a list, e.g. [\"namespace:path\"])"
+                )
+            elif "recipes" not in conditions:
+                err(f"{rel}: criteria '{name}' (recipe_crafted) is missing the required 'recipes' list")
+            elif not isinstance(conditions["recipes"], list):
+                err(f"{rel}: criteria '{name}' 'recipes' must be a list of recipe ids")
 
 
 def check_transformation_json_matches_java() -> None:
@@ -516,8 +631,8 @@ def find_mc_jar(explicit: str | None) -> str | None:
         return explicit
     home = os.path.expanduser("~")
     for cand in (
-        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.2", "minecraft-extracted_server.jar"),
-        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.2", "minecraft-common.jar"),
+        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.3", "minecraft-extracted_server.jar"),
+        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.3", "minecraft-common.jar"),
     ):
         if os.path.isfile(cand):
             return cand
@@ -548,7 +663,7 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
     if mc_jar:
         known |= collect_vanilla_ids(mc_jar)
     else:
-        warn("MC 26.2 jar not found; skipping vanilla id existence check (Tier 2)")
+        warn("MC 26.3 jar not found; skipping vanilla id existence check (Tier 2)")
     for extra_jar in extra_jars:
         known |= collect_jar_ids(extra_jar)
 
@@ -567,7 +682,7 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mc-jar", help="path to the MC 26.2 extracted jar for Tier 2 checks")
+    parser.add_argument("--mc-jar", help="path to the MC 26.3 extracted jar for Tier 2 checks")
     parser.add_argument(
         "--extra-jar",
         action="append",
@@ -580,6 +695,8 @@ def main() -> int:
     check_json_parses()
     check_datapack_dir_naming()
     check_block_loot_tables_drop_something()
+    check_loot_tables_use_26_3_schema()
+    check_advancements_use_26_3_schema()
     check_transformation_json_matches_java()
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()

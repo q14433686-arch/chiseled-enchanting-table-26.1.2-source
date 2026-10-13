@@ -105,13 +105,30 @@ public final class ChiseledEnchantingMenuPayloads {
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
-            buf.writeCollection(unlocked_enchantements, (target, value) -> EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode((RegistryFriendlyByteBuf) target, value));
-            buf.writeCollection(transformations, (target, value) -> TransformationDisplay.write((RegistryFriendlyByteBuf) target, value));
+            // 26.3 removed the FriendlyByteBuf collection helpers (writeCollection / readCollection /
+            // readList — the same wave that removed readMap/writeMap). Hand-roll the identical wire
+            // format: a VarInt length prefix followed by the elements.
+            buf.writeVarInt(unlocked_enchantements.size());
+            for (EnchantmentWithLevel value : unlocked_enchantements) {
+                EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode(buf, value);
+            }
+            buf.writeVarInt(transformations.size());
+            for (TransformationDisplay value : transformations) {
+                TransformationDisplay.write(buf, value);
+            }
         }
 
         private static AvailableEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
-            Set<EnchantmentWithLevel> unlocked = buf.readCollection(HashSet::new, source -> EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode((RegistryFriendlyByteBuf) source));
-            List<TransformationDisplay> transformations = buf.readList(source -> TransformationDisplay.read((RegistryFriendlyByteBuf) source));
+            int enchantmentCount = buf.readVarInt();
+            Set<EnchantmentWithLevel> unlocked = new HashSet<>(Math.max(16, enchantmentCount * 2));
+            for (int i = 0; i < enchantmentCount; i++) {
+                unlocked.add(EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode(buf));
+            }
+            int transformationCount = buf.readVarInt();
+            List<TransformationDisplay> transformations = new ArrayList<>(transformationCount);
+            for (int i = 0; i < transformationCount; i++) {
+                transformations.add(TransformationDisplay.read(buf));
+            }
             return new AvailableEnchantmentPayload(unlocked, transformations);
         }
 
