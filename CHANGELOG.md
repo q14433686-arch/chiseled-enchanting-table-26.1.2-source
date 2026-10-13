@@ -49,6 +49,10 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
 - Block loot table moved to the 26.3 schema: singular `condition` / `modifier` dispatched on `type`
   (the 26.2 `conditions[]` / `functions[]` arrays are silently ignored by 26.3).
+- **World-load blocker fixed:** `craft.json` carried `display.background` while also having a
+  `parent`. 26.3's `Advancement.validate()` rejects that outright ("Only advancement roots can have
+  background"), the whole `minecraft:advancement` registry fails to load and the world refuses to
+  open. 26.2 ignored the key. `scripts/compat_check.py` now guards both directions of that rule.
 - `recipe_crafted` advancements (`craft`, `root`) migrated from `recipe_id` to the required
   `recipes` list — the old key no longer exists in 26.3, which made those advancements fail to load.
 - `craft.json`'s `show_toast` / `announce_to_chat` moved from the top level into `display`, where
@@ -58,16 +62,19 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
 - Added the TACZR-style CI triad: `compile-check.yml` (compiles **both** source sets on Actions and
   pushes `build-reports/compile-java.log` back to `arena/**` branches), `build.yml` (static gates →
-  full build → jar artifact) and `consistency.yml` (version gate). ⚠️ These are **staged under
-  [`docs/ci/`](docs/ci/README.md)**, not installed — this sandbox's token cannot write
-  `.github/workflows/`. Run `bash docs/ci/install.sh` from an identity with the `workflows` scope.
+  full build → jar artifact) and `consistency.yml` (version gate). **Installed and live in
+  `.github/workflows/` as of 2026-10-14**; `docs/ci/` keeps byte-identical reference copies and
+  `bash docs/ci/install.sh --check` reports drift.
 - **26.3 build verified green on GitHub Actions** (run `38431074401`, commit `1bc7e77`): all 8 steps
   `success`, `:compileJava` + `:compileClientJava` + `remapJar` clean, artifact `Artifacts`
   (295,720 bytes) uploaded.
-- Added a temporary CI error bridge to `gradlew`: under `GITHUB_ACTIONS=true` it tees the build to
-  `build-reports/compile-java.log` and re-emits failures as chunked `::error` annotations, because
-  the Actions log-blob domain is unreachable from this sandbox and annotations are the only readable
-  channel. Delete it once `compile-check.yml` is installed (its log write-back supersedes it).
+- `gradlew` is now committed executable (`100644` → `100755`; it had been non-executable since the
+  26.2 baseline, which only worked because `build.yml` runs `chmod +x` first — `compile-check.yml`
+  calls `./gradlew` directly and died with `Permission denied`).
+- A temporary `gradlew` error bridge (build failures re-emitted as chunked `::error` annotations,
+  because the Actions log-blob domain is unreachable from the sandbox) carried the two compile
+  fixes above, and was **removed again** once `compile-check.yml`'s log write-back went live.
+  `gradlew` is once more byte-identical to the 26.2 baseline apart from the exec bit.
 - Added `scripts/ci_static_checks.py`: mixin configs must resolve to real sources, a mixin registered
   in `fabric.mod.json` must not be excluded from compilation by `build.gradle`, and `en_us`/`zh_cn`
   key sets must match.
@@ -77,7 +84,8 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
   is now fixed.
 - Added a warn-only pre-commit reminder (`.githooks/pre-commit` + `scripts/install-hooks.sh`).
 - `scripts/compat_check.py` gained Tier-1 guards for both 26.3 data schemas (negative-tested against
-  the pre-port files: 7 failures).
+  the pre-port files: 7 failures), plus the advancement root/`background` rule — negative-tested by
+  re-adding the key to `craft.json`, which the gate now fails.
 
 ## [1.0.2] - 2026-07-01
 

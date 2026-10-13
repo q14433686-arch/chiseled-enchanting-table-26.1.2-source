@@ -236,24 +236,24 @@ hard-won comments (log push-back via Contents API instead of `git push`; no `/` 
 `paths-ignore: build-reports/**` to stop the log commit re-triggering the workflow; only `arena/**`
 gets log commits).
 
-> **Where the files live:** they are staged in **`docs/ci/`**, not `.github/workflows/`. The push
-> was rejected outright:
+> **Where the files live:** `.github/workflows/`, live since **2026-10-14**. The sandbox push was
+> originally rejected —
 >
 > ```
 > ! [remote rejected] arena/2e402cd9-chiseled-enchanting-table-26-1 (refusing to allow a GitHub App
 >   to create or update workflow `.github/workflows/build.yml` without `workflows` permission)
 > ```
 >
-> Same blocker as the 26.2 round. `bash docs/ci/install.sh` copies all four into place;
-> `bash docs/ci/install.sh --check` reports drift without writing. Details:
-> [`../ci/README.md`](../ci/README.md).
+> — so the maintainer applied them by hand; `docs/ci/` keeps byte-identical reference copies and
+> `bash docs/ci/install.sh --check` reports drift without writing (currently all four `ok`).
+> Details: [`../ci/README.md`](../ci/README.md).
 
-| Staged file | Purpose |
+| File | Purpose |
 |---|---|
-| `docs/ci/compile-check.yml` | `compileJava compileClientJava` on Actions, then writes `build-reports/compile-java.log` back to `arena/**` via the Contents API. This is the only compile-verification channel available to a sandbox without maven access. Differs from TACZR by compiling **both** source sets — this repo splits `main` and `client`, so compiling only `main` would silently skip the whole GUI/renderer half. |
-| `docs/ci/build.yml` | static gates (no network) → full `./gradlew build` → jar artifact, 14-day retention. |
-| `docs/ci/consistency.yml` | version gate that also fires on docs-only changes (`build.yml` `paths-ignore`s `*.md`). |
-| `docs/ci/publish.yml` | the release workflow with the version bump the 26.2 round could not land (`MINECRAFT_VERSION: 26.3`, `VERSION: 1.0.3`). |
+| `.github/workflows/compile-check.yml` | `compileJava compileClientJava` on Actions, then writes `build-reports/compile-java.log` back to `arena/**` via the Contents API. This is the only compile-verification channel available to a sandbox without maven access. Differs from TACZR by compiling **both** source sets — this repo splits `main` and `client`, so compiling only `main` would silently skip the whole GUI/renderer half. |
+| `.github/workflows/build.yml` | static gates (no network) → full `./gradlew build` → jar artifact, 14-day retention. |
+| `.github/workflows/consistency.yml` | version gate that also fires on docs-only changes (`build.yml` `paths-ignore`s `*.md`). |
+| `.github/workflows/publish.yml` | the release workflow with the version bump the 26.2 round could not land (`MINECRAFT_VERSION: 26.3`, `VERSION: 1.0.3`). |
 | `scripts/ci_static_checks.py` | mixin configs resolve to real `.java` files; **a mixin registered in `fabric.mod.json` must not be excluded by `build.gradle`** (that combination ships a config pointing at a class that is not in the jar → startup crash); `en_us`/`zh_cn` key parity. |
 | `scripts/check_release_consistency.sh` | `gradle.properties` ↔ `README.md` ↔ `fabric.mod.json` ↔ `publish.yml`. |
 | `.githooks/pre-commit` + `scripts/install-hooks.sh` | warn-only local reminder; never blocks a commit. |
@@ -268,15 +268,17 @@ FAIL: publish.yml RELEASE_NAME does not mention '26.2'
 — i.e. the drift that `docs/reports/PORTING_26_2_REPORT.md` §2 had to record as "pending manual
 apply" is now caught automatically.
 
-Because `.github/workflows/publish.yml` still cannot be written, the gate has an explicit, narrow
-escape hatch: a stale `publish.yml` is a **warning** when `docs/ci/publish.yml` already carries the
-correct values, and a hard **failure** otherwise. All three states were exercised:
+While the workflows were still unpushable the gate had an explicit, narrow escape hatch: a stale
+`publish.yml` counted as a **warning** when `docs/ci/publish.yml` already carried the correct values,
+and a hard **failure** otherwise. All three states were exercised, and the escape hatch is what kept
+the gate honest during the port:
 
 | state | result |
 |---|---|
-| branch as pushed (stale `publish.yml`, correct staged copy) | `9 passed, 3 warned, 0 failed`, `--strict` exit **0** |
+| branch while `publish.yml` was unpushable (stale live copy, correct staged copy) | `9 passed, 3 warned, 0 failed`, `--strict` exit **0** |
 | staged copy installed into `.github/workflows/` | `12 passed, 0 warned, 0 failed`, exit **0** |
 | staged copy broken (`VERSION: 9.9.9`) | `3 failed`, `--strict` exit **1** |
+| **branch now (triad installed)** | `12 passed, 0 warned, 0 failed`, `--strict` exit **0** |
 
 ---
 
@@ -289,7 +291,6 @@ correct values, and a hard **failure** otherwise. All three states were exercise
 
 | Item | Why it is open | How to close it |
 |---|---|---|
-| CI triad is not active | pushing `.github/workflows/*` needs the `workflows` token permission | `bash docs/ci/install.sh` from a permitted identity |
 | **Mixin method-level injection points** | a green compile only proves the target *classes* exist; `@Inject(method=…)` descriptors are resolved at runtime | launch MC 26.3 and check the log for `@Inject` failures; the 5 structure mixins + anvil/enchanting-table/bookshelf mixins are the ones to watch |
 | Live behaviour: menu open, enchant, transformation, book upgrades, XP deduction | runtime only | live test list in `NEXT_TASK.md` §A |
 | Floating-book renderer visuals under 26.3 OIT | OIT replaced "Improved Transparency" in 26.3-snapshot-2; the book is a small translucent-ish overlay, no known impact, but nobody has looked | F3+X both states next to a chiseled table |
@@ -325,10 +326,31 @@ vanilla's choice for server-initiated drops (`ServerPlaceRecipe`, `AdvancementRe
 next porting round must diff *every* `net.minecraft` call site against the target version, or simply
 compile early — CI is the only complete check, which is why the CI was built before the port.
 
-**Result:** after those two fixes the whole tree compiles clean — run `38431074401` on commit `1bc7e77` is green end to end
-(`:compileJava`, `:compileClientJava`, `remapJar`, artifact 295,720 bytes, two deprecation
-warnings). The bridge stays in `gradlew` (inert unless a build fails) until `compile-check.yml`
-can be installed.
+**Result:** after those two fixes the whole tree compiles clean — run `38431074401` on commit
+`1bc7e77` is green end to end (`:compileJava`, `:compileClientJava`, `remapJar`, artifact
+295,720 bytes, two deprecation warnings).
+
+The bridge was **removed** once `compile-check.yml` went live (2026-10-14) and its log write-back
+proved itself — `gradlew` is byte-identical to the 26.2 baseline again apart from the exec bit.
+
+### What the first world load caught (compile-green is not load-green)
+
+A green `:compileJava` says nothing about the data pack. The first 26.3 world load died before the
+player could spawn:
+
+```
+> Errors in registry minecraft:advancement:
+>> Errors in element chiseled_enchanting_table:craft:
+Caused by: java.lang.IllegalStateException: Only advancement roots can have background
+[Render thread/WARN]: Failed to load level data or datapacks, can't proceed with server load
+```
+
+`craft.json` has `parent: minecraft:story/mine_diamond` *and* `display.background`, and 26.3's
+`Advancement.validate()` (`Advancement.java:59-68`) rejects both directions of that rule — a visible
+root without a background and a child with one are hard parse errors, not warnings. One bad element
+takes the whole `minecraft:advancement` registry down with it, which is why the world would not open
+at all. 26.2 ignored the key silently, so this survived two rounds of review; the fix is one deleted
+line, and `scripts/compat_check.py` now fails on either direction.
 
 ### How CI failures are read from this sandbox
 

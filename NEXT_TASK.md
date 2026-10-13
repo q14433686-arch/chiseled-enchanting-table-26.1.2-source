@@ -34,19 +34,9 @@ Artefacts land in `build/libs/`.
 > artifact `Artifacts` = 295,720 bytes). Two `warning` annotations remain (deprecation notes only).
 > What is *not* yet verified is everything at runtime — see §B.
 
-**If you cannot run Gradle** (sandbox without maven access), push the branch. Until the CI triad is
-installed (see A-1 below) failures come back as `::error` **annotations** through the temporary
-`gradlew` bridge, because the Actions log-blob domain is unreachable from the sandbox:
-
-```bash
-SHA=<commit sha>
-CID=$(gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/commits/$SHA/check-runs" --jq '.check_runs[0].id')
-gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/check-runs/$CID/annotations?per_page=100" \
-    --jq '.[] | select(.annotation_level=="failure") | .message'
-```
-
-Once the triad *is* installed, the `compile-check` workflow compiles both source sets and writes the
-full log back to the branch instead:
+**If you cannot run Gradle** (sandbox without maven access), push the branch: the `compile-check`
+workflow compiles **both** source sets and writes the log back to the branch, which is the only
+compile channel that works from a sandbox (the Actions log-blob domain is unreachable from it):
 
 ```bash
 gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>" \
@@ -55,25 +45,27 @@ gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/bu
 
 ## Open items (roughly in priority order)
 
-### A-1. Install the CI triad (blocked on a permission, not on code)
+### A-1. ~~Install the CI triad~~ — **done 2026-10-14**
 
-The triad is written and staged in `docs/ci/` because pushing `.github/workflows/*` is rejected for
-the current GitHub App token (`refusing to allow a GitHub App to create or update workflow ...
-without 'workflows' permission`). To activate:
+All four workflows are live in `.github/workflows/` (applied by the maintainer; the sandbox token is
+still refused `workflows` write access). The 26.3 `publish.yml` (`MINECRAFT_VERSION: 26.3`,
+`VERSION: 1.0.3`) landed with them, so `check_release_consistency.sh --strict` now reports
+`12 passed, 0 warned, 0 failed`. `docs/ci/` keeps byte-identical reference copies:
 
 ```bash
-bash docs/ci/install.sh                 # copies the 4 files into .github/workflows/
-git add .github/workflows && git commit -m "ci: install the 26.3 CI triad" && git push
+bash docs/ci/install.sh --check          # reports MISSING / DRIFT per file; exits 1 on drift
+bash docs/ci/install.sh                  # re-apply after an intentional change
 ```
 
-This also lands the 26.3 `publish.yml` (`MINECRAFT_VERSION: 26.3`, `VERSION: 1.0.3`) that the 26.2
-round could not push. Until then, `check_release_consistency.sh` reports those three as warnings
-instead of failures — it will start failing the moment the staged copy drifts.
+Only a maintainer can re-apply them — the sandbox cannot push anything under `.github/workflows/`.
 
 ### A0. 26.3-specific runtime verification (new this round)
 
-A green `compile-check` only proves the mixin **target classes** exist. The following need a real
-26.3 client/server:
+A green `compile-check` only proves the mixin **target classes** exist. The first real 26.3 client
+already proved that point the hard way: the build was green and the world still would not open —
+`chiseled_enchanting_table:craft` carried `display.background` on a *child* advancement, which 26.3
+rejects outright (see `docs/reports/PORTING_26_3_REPORT.md` §8). That one is fixed. The rest still
+need a real 26.3 client/server:
 
 1. **Mixin method-level injection**: watch `latest.log` for `@Inject`/`@ModifyReturnValue` failures
    on the 5 structure mixins plus `AnvilMenu.createResult`, `EnchantmentMenu.slotsChanged` and the

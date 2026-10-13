@@ -1,38 +1,40 @@
-# CI triad — staged for manual apply
+# CI triad — installed; these are the reference copies
 
-These four workflow files are **written, reviewed and ready**, but they cannot be committed to
-`.github/workflows/` from this environment:
+**Status (2026-10-14): all four workflows are live in `.github/workflows/`.** `bash
+docs/ci/install.sh --check` reports `ok` for every one of them.
 
-```
-! [remote rejected] (refusing to allow a GitHub App to create or update workflow
-  `.github/workflows/build.yml` without `workflows` permission)
-```
+The files in this directory are **byte-identical reference copies**, kept for two reasons:
 
-The push token is a GitHub App installation token scoped without `workflows: write`, so *any*
-change under `.github/workflows/` is rejected. This is the same blocker that left
-`publish.yml` on `MINECRAFT_VERSION: 26.1.2` during the 26.2 round (recorded in
-[`../reports/PORTING_26_2_REPORT.md`](../reports/PORTING_26_2_REPORT.md) §2).
+1. The development sandbox still cannot write workflow files — its GitHub App installation token has
+   no `workflows: write`, so any push touching `.github/workflows/` is rejected:
 
-## Install (one command, needs a token with `workflows` scope)
+   ```
+   ! [remote rejected] (refusing to allow a GitHub App to create or update workflow
+     `.github/workflows/build.yml` without `workflows` permission)
+   ```
+
+   A `PUT` through the Contents API fails the same way (`403 Resource not accessible by
+   integration`). Only a maintainer can change CI, so the intended state has to be reviewable and
+   re-appliable from somewhere that is not `.github/workflows/`.
+2. `scripts/check_release_consistency.sh` reads `docs/ci/publish.yml` as the version source of truth
+   when the live copy cannot be updated, so the two must be able to agree.
+
+## Drift check and re-apply
 
 ```bash
-bash docs/ci/install.sh          # copies the four files into .github/workflows/ and shows the diff
-git add .github/workflows && git commit -m "ci: install the 26.3 CI triad"
-git push
+bash docs/ci/install.sh --check   # MISSING / DRIFT per file; exit 1 without writing anything
+bash docs/ci/install.sh           # copy the four files into .github/workflows/ and show the diff
 ```
 
-Or copy them by hand / through the GitHub web editor:
-
-| staged file | target | status |
+| reference copy | target | status |
 |---|---|---|
-| `docs/ci/compile-check.yml` | `.github/workflows/compile-check.yml` | **new** |
-| `docs/ci/build.yml` | `.github/workflows/build.yml` | **replaces** the current 26.2-era build workflow |
-| `docs/ci/consistency.yml` | `.github/workflows/consistency.yml` | **new** |
-| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | **replaces** (bumps `MINECRAFT_VERSION: 26.1.2` → `26.3`, `VERSION: 1.0.3`, release name) |
+| `docs/ci/compile-check.yml` | `.github/workflows/compile-check.yml` | installed, identical |
+| `docs/ci/build.yml` | `.github/workflows/build.yml` | installed, identical |
+| `docs/ci/consistency.yml` | `.github/workflows/consistency.yml` | installed, identical |
+| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed, identical (`26.3` / `1.0.3`) |
 
-Alternatively: grant the GitHub App `Workflows: read & write` on this repository
-(Settings → Actions → General → Workflow permissions is *not* the setting; it is the App
-installation's repository permissions), then re-run this session's push.
+**After changing CI, edit the copy here first, then have a maintainer apply it** — otherwise
+`--check` will report drift on the next run and the sandbox has no way to reconcile it.
 
 ## What each workflow does
 
@@ -54,37 +56,40 @@ Design, comments and lessons are ported from the sister repository
   `paths-ignore`s `*.md` and would never see a README-only version drift.
 * **`publish.yml`** — unchanged apart from the version bump; still manual (`workflow_dispatch`).
 
-## Until they are installed
+## Reading CI results from the sandbox
 
-The workflow that *is* live on the remote (`.github/workflows/build.yml`, 26.2 era) already runs
-`python3 scripts/compat_check.py` and `./gradlew build` on every push, so the 26.3 port still gets
-a compile signal — just without the log push-back, the static gates and the artifact naming rules.
-The three static gates can always be run locally:
+The Actions **log blob** domain (`results-receiver.actions.githubusercontent.com`) is unreachable
+from the sandbox — `gh run view --log-failed` and `gh api .../runs/{id}/logs` both die with `EOF`.
+Two channels do work:
+
+```bash
+# 1. the compile log the workflow commits back (primary — full javac/Gradle output)
+gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>" \
+    --jq '.content' | base64 -d | tail -60
+
+# 2. step-level results, for "which step failed and how long did it take"
+gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/<run id>/jobs" \
+    --jq '.jobs[0].steps[] | "\(.name): \(.conclusion)"'
+```
+
+The checks/annotations API is a third option, but it only carries what a problem matcher or an
+explicit `::error` produced. A temporary `gradlew` bridge used to emit those (it is what surfaced
+the two 26.3 `:compileJava` breaks); it was **removed** once this workflow's log write-back proved
+itself, so `gradlew` is plain again.
+
+### `./gradlew: Permission denied`
+
+`compile-check.yml` invokes `./gradlew` directly, without the `chmod +x` step that `build.yml` has.
+`gradlew` is therefore committed executable (`100755`) — it had been `100644` since the 26.2
+baseline, which only ever worked because `build.yml` chmods first. If that error comes back, check
+`git ls-files -s gradlew` before suspecting the workflow.
+
+## The static gates run anywhere
+
+No Gradle, no network:
 
 ```bash
 python3 scripts/ci_static_checks.py
 python3 scripts/compat_check.py
 bash scripts/check_release_consistency.sh --strict
 ```
-
-### Reading CI failures without the Actions logs
-
-The Actions **log blob** domain (`results-receiver.actions.githubusercontent.com`) is unreachable from
-the development sandbox — `gh run view --log-failed` and `gh api .../runs/{id}/logs` both die with
-`EOF`, and a `PUT` to `.github/workflows/*` via the Contents API returns
-`403 Resource not accessible by integration`. The **checks/annotations** API *is* reachable, so
-`gradlew` carries a temporary bridge: under `GITHUB_ACTIONS=true` it tees the build into
-`build-reports/compile-java.log` and re-emits the failure as `::error` annotations (chunked into at
-most 10 multi-line annotations — GitHub's per-step annotation cap). Outside Actions the bridge is
-inert and `gradlew` still `exec`s Gradle directly.
-
-```bash
-SHA=<commit sha>
-CID=$(gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/commits/$SHA/check-runs" \
-      --jq '.check_runs[0].id')
-gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/check-runs/$CID/annotations?per_page=100" \
-   --jq '.[] | select(.annotation_level=="failure") | .message'
-```
-
-**Delete the bridge from `gradlew` once `compile-check.yml` is installed** — that workflow commits
-`build-reports/compile-java.log` back to the branch, which supersedes it.

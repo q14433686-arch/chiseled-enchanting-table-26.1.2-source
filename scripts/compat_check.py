@@ -229,6 +229,12 @@ def check_advancements_use_26_3_schema() -> None:
       so the old form fails to load the advancement.
     * `show_toast` / `announce_to_chat` are DisplayInfo fields; Advancement.CODEC only knows
       parent / display / rewards / criteria / requirements / sends_telemetry_event.
+    * `display.background` is root-only. `Advancement.validate()` returns
+      "Only advancement roots can have background" for a child that carries one (and
+      "Visible advancement roots must have background" for a visible root that does not).
+      Both are hard parse errors: the whole `minecraft:advancement` registry fails to load and the
+      world refuses to open ("Failed to load level data or datapacks, can't proceed with
+      server load"). 26.2 ignored the key silently, which is how it survived until now.
     """
     for _ns, path, data in iter_data_json("advancement"):
         rel = os.path.relpath(path, REPO)
@@ -241,6 +247,19 @@ def check_advancements_use_26_3_schema() -> None:
         if isinstance(display, dict):
             for key in sorted(set(display) - DISPLAY_KEYS):
                 err(f"{rel}: unknown display key '{key}'")
+
+            is_root = not data.get("parent")
+            if is_root and "background" not in display:
+                err(
+                    f"{rel}: visible advancement root has no 'display.background' "
+                    f"(26.3: 'Visible advancement roots must have background')"
+                )
+            elif not is_root and "background" in display:
+                err(
+                    f"{rel}: non-root advancement carries 'display.background' "
+                    f"(26.3: 'Only advancement roots can have background'); delete the key, the "
+                    f"parent owns the tab background"
+                )
 
         for name, criterion in (data.get("criteria") or {}).items():
             if not isinstance(criterion, dict):

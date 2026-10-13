@@ -54,7 +54,7 @@ also documents the CI triad that makes a sandbox-side port verifiable.
 
 - [**26.2 → 26.3 port** (current line, incl. the 26.3 data-schema migration)](reports/PORTING_26_3_REPORT.md)
 - [26.1.2 → 26.2 impact assessment](reports/PORTING_26_2_REPORT.md)
-- [CI triad (staged workflows + how to install them)](ci/README.md)
+- [CI triad (installed workflows, reference copies + drift check)](ci/README.md)
 
 ## Historical porting reports
 

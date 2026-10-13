@@ -42,17 +42,16 @@ CI mirrors the triad used by the sister port `q14433686-arch/TaCZ_Refabricated_U
 this port is developed in a sandbox that cannot reach `maven.fabricmc.net` and therefore cannot
 compile locally — the compile has to happen on Actions and the log has to come back to the branch.
 
-> ⚠️ The triad is **written and staged in [`docs/ci/`](docs/ci/README.md)**, not yet in
-> `.github/workflows/`: pushing workflow files is rejected for a GitHub App token without the
-> `workflows` permission. Install with `bash docs/ci/install.sh` (or grant the App
-> `Workflows: read & write`). Until then only the pre-existing build workflow runs.
+> ✅ **Installed 2026-10-14** — all four workflows are live in `.github/workflows/`. The sandbox
+> token still cannot write workflow files, so the maintainer applied them by hand; `docs/ci/` keeps
+> byte-identical reference copies and `bash docs/ci/install.sh --check` reports any drift.
 
-| Workflow (staged) | What it does | Trigger |
+| Workflow | What it does | Trigger |
 |---|---|---|
-| [`docs/ci/compile-check.yml`](docs/ci/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API (Actions log blobs are unreachable from the sandbox) | push to `arena/**` / release branches, PRs |
-| [`docs/ci/build.yml`](docs/ci/build.yml) | static gates first (no network needed), then full `./gradlew build` + jar artifact (14 days) | push / PR |
-| [`docs/ci/consistency.yml`](docs/ci/consistency.yml) | version gate for "bumped one place, forgot the other four" | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml` |
-| [`docs/ci/publish.yml`](docs/ci/publish.yml) | manual `workflow_dispatch` release to GitHub / Modrinth (version-bumped to 26.3 / 1.0.3) | manual |
+| [`compile-check.yml`](.github/workflows/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API (Actions log blobs are unreachable from the sandbox) | push to `arena/**` / release branches, PRs |
+| [`build.yml`](.github/workflows/build.yml) | static gates first (no network needed), then full `./gradlew build` + jar artifact (14 days) | push / PR |
+| [`consistency.yml`](.github/workflows/consistency.yml) | version gate for "bumped one place, forgot the other four" | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml` |
+| [`publish.yml`](.github/workflows/publish.yml) | manual `workflow_dispatch` release to GitHub / Modrinth (version-bumped to 26.3 / 1.0.3) | manual |
 
 The three static gates run in seconds and need no Gradle, so they also work offline:
 

@@ -5,7 +5,6 @@
         },
         "title": "Chiseled enchanting!",
         "description": "Craft your first chiseled enchanting table.",
-        "background": "minecraft:block/crying_obsidian",
         "show_toast": false,
         "announce_to_chat": false
     },
