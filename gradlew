@@ -248,4 +248,61 @@ eval "set -- $(
         tr '\n' ' '
     )" '"$@"'
 
+# --- CI error bridge (temporary; see docs/ci/README.md) -----------------------
+# In GitHub Actions only: capture the console log and surface failures as
+# ::error annotations. Rationale: the Actions log blob domain is unreachable
+# from the arena sandbox (gh run view --log dies with EOF), but the checks /
+# annotations API is reachable - so annotations are the only channel through
+# which the sandbox can read *why* a build failed. Once docs/ci/compile-check.yml
+# is installed (its build-reports/compile-java.log write-back supersedes this),
+# this block can be deleted. Outside GitHub Actions it does exactly nothing.
+if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+    LOG_DIR="build-reports"
+    mkdir -p "$LOG_DIR"
+    LOG="$LOG_DIR/compile-java.log"
+    "$JAVACMD" "$@" > "$LOG" 2>&1
+    status=$?
+    cat "$LOG"
+    echo "" >> "$LOG"
+    echo "== gradlew exit: $status ==" >> "$LOG"
+    if [ "$status" -ne 0 ]; then
+        python3 - "$LOG" <<'PYEOF'
+import re, sys
+lines = open(sys.argv[1], encoding="utf-8", errors="replace").read().splitlines()
+
+def emit(kind, msg):
+    msg = msg.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")[:400]
+    print(f"::{kind}::{msg}")
+
+picked = []
+for l in lines:
+    if ("Could not find" in l or "Could not resolve" in l or "No matching variant" in l
+            or "has been compiled by a more recent" in l or "Execution failed for task" in l):
+        picked.append(l.strip())
+w = next((i for i, l in enumerate(lines) if "What went wrong" in l), None)
+if w is not None:
+    for l in lines[w + 1:w + 10]:
+        if l.strip():
+            picked.append(l.strip())
+for l in lines:
+    if re.search(r"\.java:\d+: error:", l) or re.search(r"\berror:", l):
+        picked.append(l.strip())
+if not picked:
+    picked = [l.strip() for l in lines[-40:] if l.strip()][:10]
+seen, n = set(), 0
+for p in picked:
+    if p in seen:
+        continue
+    seen.add(p)
+    emit("error", p)
+    n += 1
+    if n >= 10:
+        break
+if n == 0:
+    emit("error", "gradlew failed; details in build-reports/compile-java.log")
+PYEOF
+    fi
+    exit "$status"
+fi
+
 exec "$JAVACMD" "$@"
