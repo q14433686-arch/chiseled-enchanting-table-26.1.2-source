@@ -27,9 +27,26 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew --no-daemon --max-workers=1 \
     -Dorg.gradle.jvmargs='-Xmx1536m -Dfile.encoding=UTF-8' build --rerun-tasks --stacktrace
 ```
 
-Artefacts land in `build/libs/`. **If you cannot run Gradle** (sandbox without maven access), push
-the branch: once the CI triad is installed (see A-1 below), the `compile-check` workflow compiles
-both source sets on Actions and writes the log back to the branch — read it with
+Artefacts land in `build/libs/`.
+
+> **Build status (2026-10-13):** the 26.3 tree **compiles and packages green on GitHub Actions** —
+> run `38431074401` on commit `1bc7e77`, workflow `build.yml`, all 8 steps `success` (`:compileJava`, `:compileClientJava`, `remapJar`,
+> artifact `Artifacts` = 295,720 bytes). Two `warning` annotations remain (deprecation notes only).
+> What is *not* yet verified is everything at runtime — see §B.
+
+**If you cannot run Gradle** (sandbox without maven access), push the branch. Until the CI triad is
+installed (see A-1 below) failures come back as `::error` **annotations** through the temporary
+`gradlew` bridge, because the Actions log-blob domain is unreachable from the sandbox:
+
+```bash
+SHA=<commit sha>
+CID=$(gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/commits/$SHA/check-runs" --jq '.check_runs[0].id')
+gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/check-runs/$CID/annotations?per_page=100" \
+    --jq '.[] | select(.annotation_level=="failure") | .message'
+```
+
+Once the triad *is* installed, the `compile-check` workflow compiles both source sets and writes the
+full log back to the branch instead:
 
 ```bash
 gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>" \

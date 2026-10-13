@@ -61,6 +61,9 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
   full build → jar artifact) and `consistency.yml` (version gate). ⚠️ These are **staged under
   [`docs/ci/`](docs/ci/README.md)**, not installed — this sandbox's token cannot write
   `.github/workflows/`. Run `bash docs/ci/install.sh` from an identity with the `workflows` scope.
+- **26.3 build verified green on GitHub Actions** (run `38431074401`, commit `1bc7e77`): all 8 steps
+  `success`, `:compileJava` + `:compileClientJava` + `remapJar` clean, artifact `Artifacts`
+  (295,720 bytes) uploaded.
 - Added a temporary CI error bridge to `gradlew`: under `GITHUB_ACTIONS=true` it tees the build to
   `build-reports/compile-java.log` and re-emits failures as chunked `::error` annotations, because
   the Actions log-blob domain is unreachable from this sandbox and annotations are the only readable

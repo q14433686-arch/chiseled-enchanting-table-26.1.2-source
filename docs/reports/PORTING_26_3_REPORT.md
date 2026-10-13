@@ -282,10 +282,14 @@ correct values, and a hard **failure** otherwise. All three states were exercise
 
 ## 7. Not verified (honest list)
 
+> **Compile is no longer on this list.** run `38431074401` on commit `1bc7e77`, workflow `build.yml`, every step `success`:
+> `:compileJava`, `:compileClientJava`, `remapJar` and the artifact upload (295,720 bytes).
+> The two breaks that got in the way are recorded in §8.
+
+
 | Item | Why it is open | How to close it |
 |---|---|---|
 | CI triad is not active | pushing `.github/workflows/*` needs the `workflows` token permission | `bash docs/ci/install.sh` from a permitted identity |
-| Compile of the whole tree | the pre-existing remote `build.yml` runs `./gradlew build` on push, but its logs are unreadable from this sandbox; failures are recovered from annotations via the temporary `gradlew` bridge (§8) | run `38428863077` failed `:compileJava`; first break found and fixed (`LivingEntity#drop`), iteration continues until the annotations come back empty |
 | **Mixin method-level injection points** | a green compile only proves the target *classes* exist; `@Inject(method=…)` descriptors are resolved at runtime | launch MC 26.3 and check the log for `@Inject` failures; the 5 structure mixins + anvil/enchanting-table/bookshelf mixins are the ones to watch |
 | Live behaviour: menu open, enchant, transformation, book upgrades, XP deduction | runtime only | live test list in `NEXT_TASK.md` §A |
 | Floating-book renderer visuals under 26.3 OIT | OIT replaced "Improved Transparency" in 26.3-snapshot-2; the book is a small translucent-ish overlay, no known impact, but nobody has looked | F3+X both states next to a chiseled table |
@@ -320,6 +324,11 @@ vanilla's choice for server-initiated drops (`ServerPlaceRecipe`, `AdvancementRe
 **Lesson recorded on purpose:** a call-site arity change is invisible to import-level auditing. The
 next porting round must diff *every* `net.minecraft` call site against the target version, or simply
 compile early — CI is the only complete check, which is why the CI was built before the port.
+
+**Result:** after those two fixes the whole tree compiles clean — run `38431074401` on commit `1bc7e77` is green end to end
+(`:compileJava`, `:compileClientJava`, `remapJar`, artifact 295,720 bytes, two deprecation
+warnings). The bridge stays in `gradlew` (inert unless a build fails) until `compile-check.yml`
+can be installed.
 
 ### How CI failures are read from this sandbox
 

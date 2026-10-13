@@ -72,6 +72,10 @@ Five places must agree on the version/Minecraft declarations — `gradle.propert
 - `.github/workflows/`: the TACZR-style CI triad (`compile-check.yml`, new `build.yml`,
   `consistency.yml`) is **written and staged under `docs/ci/`** for the same reason; see
   `docs/ci/README.md`.
+- **CI status:** the pre-existing remote `build.yml` runs on every push and is **green** for 26.3 —
+  run `38431074401` on commit `1bc7e77`, all 8 steps `success`, artifact `Artifacts` (295,720 bytes) uploaded. So `:compileJava`,
+  `:compileClientJava` and `remapJar` all pass on the 26.3 pins; the still-uninstalled triad only
+  adds the static gates, the log write-back and the artifact naming rules.
 
 ### Source layout
 - `chiseled_enchanting_table.block.*` — `ChiseledEnchantingTableBlock`,
