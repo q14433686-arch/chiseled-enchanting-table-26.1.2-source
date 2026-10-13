@@ -297,12 +297,13 @@ correct values, and a hard **failure** otherwise. All three states were exercise
 ## 8. What CI caught that static review missed
 
 Static review (greps against decompiled 26.3 sources + a Fabric API blob comparison) found every
-change this repo *imported*. It did **not** find a signature change on a class the repo only
-*calls*:
+change this repo *imported*. It did **not** find signature changes on classes the repo only *calls*
+or *extends* — both of these came out of `:compileJava`, not out of a grep:
 
 | # | Break | Where | Status |
 |---|-------|-------|--------|
 | 1 | `LivingEntity#drop(ItemStack, boolean)` gained a third `Prediction` parameter (`net.minecraft.util.Prediction`, values `PREDICTED` / `SERVER_ONLY`) | `utils/InventoryUtils.java:59`, `menu/ChiseledEnchantingTableScreenHandler.java:469` | fixed — both pass `Prediction.PREDICTED` |
+| 2 | `Block.simpleCodec(...)` and the `protected MapCodec<? extends Block> codec()` override are **gone** — 26.3 has no per-block codec at all (vanilla `EnchantingTableBlock` carries no `CODEC` field) | `block/ChiseledEnchantingTableBlock.java:51,62` | fixed — `CODEC` field, `codec()` override and the now-unused `MapCodec` import deleted |
 
 Evidence for the new signature (`net/minecraft/world/entity/LivingEntity.java:764` in 26.3):
 

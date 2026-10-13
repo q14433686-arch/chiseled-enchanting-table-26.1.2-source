@@ -276,7 +276,7 @@ import sys
 log_path, root = sys.argv[1], sys.argv[2]
 lines = open(log_path, encoding="utf-8", errors="replace").read().splitlines()
 
-ERROR_RE = re.compile(r"^(?P<path>.*?\.java):(?P<line>\d+): (?P<kind>error|warning): (?P<msg>.*)$")
+ERROR_RE = re.compile(r"^\s*(?P<path>.*?\.java):(?P<line>\d+): (?P<kind>error|warning): (?P<msg>.*)$")
 RESOLUTION_KEYS = (
     "Could not find", "Could not resolve", "No matching variant", "Could not download",
     "has been compiled by a more recent", "Unsupported class file", "Execution failed for task",
@@ -317,7 +317,8 @@ for i, line in enumerate(lines):
     for extra in lines[i + 1:i + 5]:
         # only javac's own indented context lines (symbol:/location:/required:/found:),
         # never the compiler's trailing summary ("2 errors") or the next diagnostic
-        if not extra.startswith((" ", "\t")) or ERROR_RE.match(extra):
+        if (not extra.startswith((" ", "\t")) or ERROR_RE.match(extra)
+                or ": error:" in extra or ": warning:" in extra):
             break
         picked.append("    " + extra.strip())
 

@@ -8,7 +8,6 @@ import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.registry.EntityRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
-import com.mojang.serialization.MapCodec;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -48,7 +47,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
-    public static final MapCodec<ChiseledEnchantingTableBlock> CODEC = simpleCodec(ChiseledEnchantingTableBlock::new);
+    // 26.3 removed the per-block codec entirely: Block no longer declares simpleCodec(...)/codec()
+    // and vanilla's own EnchantingTableBlock carries no CODEC field, so nothing to override here.
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
     public static final List<BlockPos> POWER_PROVIDER_OFFSETS = BlockPos.betweenClosedStream(-2, 0, -2, 2, 1, 2).filter(pos -> {
@@ -57,11 +57,6 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     public ChiseledEnchantingTableBlock(BlockBehaviour.Properties settings) {
         super(settings);
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
     }
 
     @Override

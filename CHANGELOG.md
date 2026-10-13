@@ -40,6 +40,10 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
   [`docs/reports/PORTING_26_3_REPORT.md`](docs/reports/PORTING_26_3_REPORT.md) §8.
 - **Client:** dropped a dead `com.mojang.blaze3d.pipeline.RenderPipeline` import (that package moved
   to `com.mojang.renderpearl.api.pipeline` in 26.3; the screen never used it).
+- **Block:** 26.3 removed the per-block codec entirely — `Block.simpleCodec(...)` no longer exists and
+  vanilla's own `EnchantingTableBlock` carries no `CODEC` field — so the table block's `CODEC` field
+  and `codec()` override are gone. (`StructureProcessor#codec()` and
+  `LootItemConditionalFunction#codec()` still exist and are untouched.)
 
 ### Data-pack schemas
 
