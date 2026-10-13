@@ -66,3 +66,25 @@ python3 scripts/ci_static_checks.py
 python3 scripts/compat_check.py
 bash scripts/check_release_consistency.sh --strict
 ```
+
+### Reading CI failures without the Actions logs
+
+The Actions **log blob** domain (`results-receiver.actions.githubusercontent.com`) is unreachable from
+the development sandbox — `gh run view --log-failed` and `gh api .../runs/{id}/logs` both die with
+`EOF`, and a `PUT` to `.github/workflows/*` via the Contents API returns
+`403 Resource not accessible by integration`. The **checks/annotations** API *is* reachable, so
+`gradlew` carries a temporary bridge: under `GITHUB_ACTIONS=true` it tees the build into
+`build-reports/compile-java.log` and re-emits the failure as `::error` annotations (chunked into at
+most 10 multi-line annotations — GitHub's per-step annotation cap). Outside Actions the bridge is
+inert and `gradlew` still `exec`s Gradle directly.
+
+```bash
+SHA=<commit sha>
+CID=$(gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/commits/$SHA/check-runs" \
+      --jq '.check_runs[0].id')
+gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/check-runs/$CID/annotations?per_page=100" \
+   --jq '.[] | select(.annotation_level=="failure") | .message'
+```
+
+**Delete the bridge from `gradlew` once `compile-check.yml` is installed** — that workflow commits
+`build-reports/compile-java.log` back to the branch, which supersedes it.

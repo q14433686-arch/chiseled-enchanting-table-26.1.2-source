@@ -285,7 +285,7 @@ correct values, and a hard **failure** otherwise. All three states were exercise
 | Item | Why it is open | How to close it |
 |---|---|---|
 | CI triad is not active | pushing `.github/workflows/*` needs the `workflows` token permission | `bash docs/ci/install.sh` from a permitted identity |
-| Compile of the whole tree | needs Gradle + maven access | the pre-existing build workflow runs `./gradlew build` on push; once the triad is installed, read `build-reports/compile-java.log` on this branch |
+| Compile of the whole tree | the pre-existing remote `build.yml` runs `./gradlew build` on push, but its logs are unreadable from this sandbox; failures are recovered from annotations via the temporary `gradlew` bridge (§8) | run `38428863077` failed `:compileJava`; first break found and fixed (`LivingEntity#drop`), iteration continues until the annotations come back empty |
 | **Mixin method-level injection points** | a green compile only proves the target *classes* exist; `@Inject(method=…)` descriptors are resolved at runtime | launch MC 26.3 and check the log for `@Inject` failures; the 5 structure mixins + anvil/enchanting-table/bookshelf mixins are the ones to watch |
 | Live behaviour: menu open, enchant, transformation, book upgrades, XP deduction | runtime only | live test list in `NEXT_TASK.md` §A |
 | Floating-book renderer visuals under 26.3 OIT | OIT replaced "Improved Transparency" in 26.3-snapshot-2; the book is a small translucent-ish overlay, no known impact, but nobody has looked | F3+X both states next to a chiseled table |
@@ -294,7 +294,51 @@ correct values, and a hard **failure** otherwise. All three states were exercise
 
 ---
 
-## 8. Sources (reproducible)
+## 8. What CI caught that static review missed
+
+Static review (greps against decompiled 26.3 sources + a Fabric API blob comparison) found every
+change this repo *imported*. It did **not** find a signature change on a class the repo only
+*calls*:
+
+| # | Break | Where | Status |
+|---|-------|-------|--------|
+| 1 | `LivingEntity#drop(ItemStack, boolean)` gained a third `Prediction` parameter (`net.minecraft.util.Prediction`, values `PREDICTED` / `SERVER_ONLY`) | `utils/InventoryUtils.java:59`, `menu/ChiseledEnchantingTableScreenHandler.java:469` | fixed — both pass `Prediction.PREDICTED` |
+
+Evidence for the new signature (`net/minecraft/world/entity/LivingEntity.java:764` in 26.3):
+
+```java
+public @Nullable ItemEntity drop(ItemStack itemStack, boolean thrownFromHand, Prediction prediction) {
+    this.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, prediction != Prediction.PREDICTED);
+```
+
+`Prediction.PREDICTED` was chosen because both call sites sit inside the menu's `clicked(...)` path,
+which is exactly where vanilla's own `AbstractContainerMenu` drops items
+(`AbstractContainerMenu.java:455,458,547,568,576` all pass `Prediction.PREDICTED`). `SERVER_ONLY` is
+vanilla's choice for server-initiated drops (`ServerPlaceRecipe`, `AdvancementRewards`).
+
+**Lesson recorded on purpose:** a call-site arity change is invisible to import-level auditing. The
+next porting round must diff *every* `net.minecraft` call site against the target version, or simply
+compile early — CI is the only complete check, which is why the CI was built before the port.
+
+### How CI failures are read from this sandbox
+
+The Actions **log-blob** domain (`results-receiver.actions.githubusercontent.com`) is unreachable
+from the sandbox, so `gh run view --log-failed` and `gh api .../runs/{id}/logs` both die with `EOF`.
+The **checks/annotations** API is reachable, so `gradlew` now re-emits build failures as `::error`
+annotations (see `docs/ci/README.md`). Read them with:
+
+```bash
+SHA=<commit sha>
+CID=$(gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/commits/$SHA/check-runs" \
+      --jq '.check_runs[0].id')
+gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/check-runs/$CID/annotations?per_page=100" \
+   --jq '.[] | select(.annotation_level=="failure") | .message'
+```
+
+This is how run `38428863077` (36 s `build` step failure, artifact step skipped) and the sister
+branch's `:compileJava` errors were diagnosed without a single readable log line.
+
+## 9. Sources (reproducible)
 
 ```bash
 # Fabric API blob comparison

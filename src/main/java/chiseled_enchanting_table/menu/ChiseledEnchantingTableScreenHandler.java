@@ -34,6 +34,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Items;
+import net.minecraft.util.Prediction;
 
 /**
  * The chiseled enchanting menu container.
@@ -463,7 +464,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                         this.getSlot(slotIndex).set(overflow);
                     } else {
                         if (!this.moveItemStackTo(overflow, 2, 38, true)) {
-                            this.player.drop(overflow, false);
+                            // 26.3: drop(ItemStack, boolean, Prediction); container-click drops are
+                            // client-predicted, matching vanilla AbstractContainerMenu.
+                            this.player.drop(overflow, false, Prediction.PREDICTED);
                         }
                     }
                 }

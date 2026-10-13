@@ -33,6 +33,11 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 - **Networking:** `FriendlyByteBuf`'s collection helpers (`writeCollection` / `readCollection` /
   `readList`) were removed in 26.3; the available-options payload hand-rolls the same VarInt-prefixed
   wire format. No protocol change for clients on the same build.
+- **Item handling:** `LivingEntity#drop(ItemStack, boolean)` gained a third `Prediction` parameter in
+  26.3. Both overflow-drop call sites (`InventoryUtils.insertItem` and the enchanting-table slot
+  handler) now pass `Prediction.PREDICTED`, which is what vanilla's own `AbstractContainerMenu`
+  passes for container-click drops. Found by CI, not by static review — see
+  [`docs/reports/PORTING_26_3_REPORT.md`](docs/reports/PORTING_26_3_REPORT.md) §8.
 - **Client:** dropped a dead `com.mojang.blaze3d.pipeline.RenderPipeline` import (that package moved
   to `com.mojang.renderpearl.api.pipeline` in 26.3; the screen never used it).
 
@@ -49,7 +54,13 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
 - Added the TACZR-style CI triad: `compile-check.yml` (compiles **both** source sets on Actions and
   pushes `build-reports/compile-java.log` back to `arena/**` branches), `build.yml` (static gates →
-  full build → jar artifact) and `consistency.yml` (version gate).
+  full build → jar artifact) and `consistency.yml` (version gate). ⚠️ These are **staged under
+  [`docs/ci/`](docs/ci/README.md)**, not installed — this sandbox's token cannot write
+  `.github/workflows/`. Run `bash docs/ci/install.sh` from an identity with the `workflows` scope.
+- Added a temporary CI error bridge to `gradlew`: under `GITHUB_ACTIONS=true` it tees the build to
+  `build-reports/compile-java.log` and re-emits failures as chunked `::error` annotations, because
+  the Actions log-blob domain is unreachable from this sandbox and annotations are the only readable
+  channel. Delete it once `compile-check.yml` is installed (its log write-back supersedes it).
 - Added `scripts/ci_static_checks.py`: mixin configs must resolve to real sources, a mixin registered
   in `fabric.mod.json` must not be excluded from compilation by `build.gradle`, and `en_us`/`zh_cn`
   key sets must match.
