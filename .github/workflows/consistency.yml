@@ -1,0 +1,45 @@
+name: Version consistency
+# Version gate — ported from TaCZ_Refabricated_Unofficial (.github/workflows/consistency.yml).
+#
+# build.yml 也跑同一个脚本，但它 paths-ignore 掉了 *.md：「只改 README」的提交测不到。
+# 版本号漂移的历史事故正是这一类（26.2 那轮 publish.yml 停在 26.1.2 没人发现），
+# 所以本流程必须独立存在，并且覆盖 publish.yml 本身。
+on:
+  push:
+    branches:
+      - 'arena/**'
+      - 'chiseled-enchanting-table-26.1.2-source'
+      - '26.**'
+      - 'main'
+    paths:
+      - 'gradle.properties'
+      - 'README.md'
+      - 'src/main/resources/fabric.mod.json'
+      - '.github/workflows/publish.yml'
+      - 'scripts/check_release_consistency.sh'
+  pull_request:
+    paths:
+      - 'gradle.properties'
+      - 'README.md'
+      - 'src/main/resources/fabric.mod.json'
+      - '.github/workflows/publish.yml'
+      - 'scripts/check_release_consistency.sh'
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: gradle.properties / README / fabric.mod.json / publish.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: run consistency gate
+        run: bash scripts/check_release_consistency.sh --strict
+      - name: failure hint
+        if: failure()
+        run: |
+          echo "::error::Version declarations are out of sync."
+          echo "::error::Sync these five places: gradle.properties (mod_version / minecraft_version / loader_version / fabric_version),"
+          echo "::error::README.md (title, '**Current version:**', '**Target:**', Fabric API blurb, jar filename),"
+          echo "::error::src/main/resources/fabric.mod.json (depends.minecraft, name, description, port_notes),"
+          echo "::error::.github/workflows/publish.yml (MINECRAFT_VERSION, VERSION, RELEASE_NAME)."
+          echo "::error::Reproduce locally: bash scripts/check_release_consistency.sh"
