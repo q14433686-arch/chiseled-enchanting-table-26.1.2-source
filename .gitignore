@@ -44,3 +44,7 @@ replay_*.log
 libs/
 
 .devcontainer/
+
+# CI compile-log write-back (created by the compile-check workflow via the
+# GitHub Contents API; see docs/ci/README.md). Never commit by hand.
+build-reports/

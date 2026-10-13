@@ -1,0 +1,44 @@
+name: Version consistency
+# 版本一致性守门：改了 gradle.properties 却忘了同步 README / fabric.mod.json /
+# publish.yml 时，PR 会红。移植自 TaCZ_Refabricated_Unofficial 的 consistency.yml (v2)：
+# arena/** 也触发（版本号改动都发生在 arena 工作分支上）；build.yml 虽然也跑同一脚本，
+# 但它 paths-ignore 掉了 *.md，「只改 README」的提交测不到 —— 本流程必须独立存在。
+on:
+  push:
+    branches:
+      - 'arena/**'
+      - 'chiseled-enchanting-table-26.1.2-source'
+      - '26.2'
+      - '26.3'
+      - '26.3(main)'
+      - 'main'
+    paths:
+      - 'gradle.properties'
+      - 'README.md'
+      - 'src/main/resources/fabric.mod.json'
+      - '.github/workflows/publish.yml'
+      - 'scripts/check_release_consistency.sh'
+  pull_request:
+    paths:
+      - 'gradle.properties'
+      - 'README.md'
+      - 'src/main/resources/fabric.mod.json'
+      - '.github/workflows/publish.yml'
+      - 'scripts/check_release_consistency.sh'
+  workflow_dispatch:
+jobs:
+  check:
+    name: README 与 gradle.properties 版本一致性
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 检查当前分支
+        run: bash scripts/check_release_consistency.sh
+      - name: 失败提示
+        if: failure()
+        run: |
+          echo "::error::README.md / fabric.mod.json / publish.yml 与 gradle.properties 的版本号不一致。"
+          echo "::error::请同步以下位置："
+          echo "::error::README.md 顶部 H1 的『Unofficial <mc> Port』/「Current version:」行 /「Target:」行"
+          echo "::error::fabric.mod.json 的 name 封面文案、depends.minecraft、depends.fabricloader"
+          echo "::error::.github/workflows/publish.yml 的 VERSION / MINECRAFT_VERSION / RELEASE_NAME"

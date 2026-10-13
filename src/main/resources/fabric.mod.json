@@ -24,7 +24,8 @@
 		]
 	},
 	"mixins": [
-		"chiseled-enchanting-table-port.mixins.json"
+		"chiseled-enchanting-table-port.mixins.json",
+		"chiseled-enchanting-table.client.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.19.3",
