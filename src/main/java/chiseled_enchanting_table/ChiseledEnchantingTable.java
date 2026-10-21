@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.menu.EnchantCostSync;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.EntityRegistry;
 import chiseled_enchanting_table.registry.LootRegistry;
@@ -24,6 +25,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
         // TODO P3: restore loot-table and structure-processor hooks after source/API migration.
 
         ChiseledEnchantingTableData.init();
+        EnchantCostSync.init();
         BlockRegistry.init();
         EntityRegistry.init();
         ScreenHandlerRegistry.init();

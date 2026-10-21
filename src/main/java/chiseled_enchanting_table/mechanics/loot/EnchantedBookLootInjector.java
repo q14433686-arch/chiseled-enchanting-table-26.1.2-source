@@ -46,7 +46,19 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
  * effectively does nothing — the feature is fully data-driven.</p>
  */
 public final class EnchantedBookLootInjector {
-    private static final Component LORE = Component.literal("Chiseled Enchanting Table")
+    /**
+     * Lore line stamped on every injected enchanted book.
+     *
+     * <p>Translatable, not a literal — same reasoning as
+     * {@link chiseled_enchanting_table.mechanics.structure.BookshelfBookFiller}: the component is
+     * stored in the stack and resolved per client, so a book rolled by a dedicated server reads in
+     * each player's own language. The 26.3 side converted the bookshelf filler's copy of this
+     * string; this is the second (chest-loot) copy of the same stamp.
+     * {@link RemoveEnchantedBooksFunction} detects "ours" by <i>having</i> a lore line, not by
+     * matching its text, so the switch is behaviour-preserving.</p>
+     */
+    private static final Component LORE = Component
+        .translatable("book.chiseled_enchanting_table.lore")
         .withStyle(style -> style.withColor(0x800080));
 
     private EnchantedBookLootInjector() {}

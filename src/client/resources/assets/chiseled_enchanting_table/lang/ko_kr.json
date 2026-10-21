@@ -1,0 +1,17 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "조각된 마법 부여대",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "조각된 마법 부여대",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "조각된 마법 부여대",
+  "gui.chiseled_enchanting_table.book_upgrade.combine": "조합 강화: %s",
+  "gui.chiseled_enchanting_table.book_upgrade.research": "연구 강화: %s",
+  "book.chiseled_enchanting_table.lore": "조각된 마법 부여대",
+  "jei.chiseled_enchanting_table.category.enchanting": "조각 마법 부여",
+  "jei.chiseled_enchanting_table.tooltip.xp": "비용: 경험치 %s 레벨",
+  "jei.chiseled_enchanting_table.tooltip.cost_hint": "재료는 여러 허용 아이템 중 하나일 수 있습니다",
+  "jei.chiseled_enchanting_table.tooltip.cost_synced": "재료 비용은 서버가 당신을 위해 계산한 값입니다",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "마법이 부여된 책은 근처의 조각된 책장에 있어야 합니다",
+  "jei.chiseled_enchanting_table.tooltip.conflicts": "충돌하는 마법 부여를 대체합니다: %s",
+  "jei.chiseled_enchanting_table.info.station": "조각된 마법 부여대는 근처 조각된 책장에서 마법 부여를 적용합니다. 범위 안의 책장에 마법이 부여된 책을 넣은 뒤 부여대의 목록에서 항목을 고르세요.",
+  "jei.chiseled_enchanting_table.info.bookshelf": "부여대 범위 안의 조각된 책장이 사용 가능한 마법 부여를 제공합니다. 칸에 있는 책 하나마다 해당 마법 부여가 해금됩니다.",
+  "jei.chiseled_enchanting_table.info.book": "마법이 부여된 책은 근처 조각된 책장에 보관하는 동안 해당 마법 부여를 해금합니다. 재료 칸의 책에서 마법 부여를 적용하면 그 책은 소모됩니다."
+}

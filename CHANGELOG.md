@@ -5,8 +5,148 @@
 > by the original author (Sacramentix). The original mod remains MIT-licensed; this port re-uses
 > the original code/assets under that licence and updates them to the 26.1.2 toolchain.
 
-Only the current release is kept here. Historical pre-`1.0.2` porting rounds and older release notes
-are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
+Only the current release and the previous one are kept here. Historical pre-`1.0.2` porting rounds
+and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
+
+> **1.0.3 on this branch (2026-10-21):** this is **not** a Minecraft port — the line still targets
+> **Minecraft 26.1.2** with the same toolchain (Fabric Loader `0.19.3`, Fabric API
+> `0.151.0+26.1.2`, Loom `1.16-SNAPSHOT`, Gradle wrapper 9.4.1, Java 25). `1.0.3` is the back-port
+> of everything version-independent that landed on the sister `26.3` branch after the shared `1.0.2`
+> baseline, adapted to the 26.1.2 API and data schemas. The change-by-change mapping — including
+> what was deliberately *not* taken because it is 26.3-only — is in
+> [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
+
+## [1.0.3] - 2026-10-21
+
+### Fixed — worldgen deadlock / unloadable chunks ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3))
+
+- **Structure-placed bookshelves are no longer filled from a worldgen worker thread against the live
+  `ServerLevel`.** `BookshelfReplacerProcessor#finalizeProcessing` used to unwrap the `WorldGenRegion`
+  and then call `getBlockState` / `getBlockEntity` / `setBlock` on the chunk that was *currently being
+  generated*. For an off-thread caller that read goes through `ServerChunkCache#getChunk`, which does
+  `supplyAsync(..., mainThreadProcessor).join()` while the server thread sits in `managedBlock`
+  waiting for the same chunk — a hard deadlock: server keeps running, world stops, no log, no crash,
+  work is lost, the world cannot be saved. Deterministic with Distant Horizons' `FEATURES` LOD
+  generator (its own thread pool), intermittent on vanilla/C2ME workers.
+- The fill is now **pure** (`BookshelfBookFiller.computeFill` + `toBlockEntityTag`: pool JSON +
+  enchantment registry + seed only) and travels inside the finished `StructureBlockInfo`
+  (slot-occupied state + block-entity NBT) that vanilla's `StructureTemplate.placeInWorld` applies.
+- **Template-placed chiseled bookshelves are actually filled now.** Previously the fill ran against a
+  chunk that was not placed yet, so village libraries / mansions / ancient cities kept coming out
+  *empty* — the second half of the same bug.
+- **The shelf-facing heuristic moved to the server thread**: `finalizeProcessing` marks the position
+  for chunk post-processing and `LevelChunkPostProcessMixin` calls
+  `BookshelfBookFiller.applyFacingToPlacedBookshelf` once the chunk starts ticking, so the score-based
+  rubric sees the finished geometry (a piece's own walls are still in the template during worldgen).
+  If the mark is unavailable the shelf keeps its books and the template's rotated default facing.
+- **Live-world fills are server-thread-only and never load a chunk.** `applyToPlacedBookshelf` /
+  `applyFacingToPlacedBookshelf` log one error and no-op when called off-thread, and neighbour scans
+  use `ServerChunkCache#getChunkNow`, so an unloaded neighbour counts as "unknown" instead of
+  triggering a synchronous chunk load. Slot contents are written through `getItems()` rather than
+  `setItem()`, so enchanted books are no longer subject to the `#minecraft:bookshelf_books`
+  re-validation / per-slot state rewrite.
+- 26.1.2-specific adaptation of the same fix (this branch keeps `StructureProcessor` as an abstract
+  class with `getType()`, `processBlock(..., StructureBlockInfo originalBlockInfo, ...)`, the
+  lower-case `ChunkAccess#markPosForPostprocessing`, and no `processBlockInfos` clipping — so the
+  deferred facing pass skips positions outside the worldgen region).
+  Full analysis: [`docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md`](docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md).
+
+### Added — JEI and REI integration (bidirectional enchantment lookup)
+
+- **New viewer category** (`chiseled_enchanting_table:enchanting`) modelling the mechanic as a
+  two-input recipe — `[target item] + [enchanted book] + [material] -> [enchanted item]` — which is
+  what gives both query directions from one dataset: focus an enchanted book to list every item it
+  can enchant, focus an item to list every book that works on it. Catalysts are the chiseled
+  enchanting table and the chiseled bookshelf; the category also lists XP cost, material cost,
+  conflicting enchantments, and the "book must sit in a nearby chiseled bookshelf" requirement
+  (live world state, so a tooltip/info line rather than an ingredient).
+- **Shared, viewer-agnostic index** — `compat/EnchantQueryIndex` derives one row per
+  (enchantment, level) from the live registries (`Enchantment#canEnchant`, so modded items and
+  universal-enchant datapacks are included), plus the mod's own cost tables.
+- **Enchanted-book subtypes on JEI** (`STORED_ENCHANTMENTS`) so each enchantment is its own
+  searchable JEI entry; REI already distinguishes enchanted books by stored enchantment in its own
+  default plugin, so no registration is needed there.
+- Both viewers are `compileOnly` and optional: `enable_jei=false` / `enable_rei=false` in
+  `gradle.properties` (or `-Penable_jei=false` / `-Penable_rei=false`) exclude the respective
+  adapter from the build; nothing is required at runtime. Coordinates for this line:
+  `mezz.jei:jei-26.1.2-fabric` (JEI's `26.1` branch pins `minecraftVersion=26.1.2`),
+  `me.shedaniel:RoughlyEnoughItems-api-fabric:26.1.+`, `me.shedaniel.cloth:basic-math:0.6.1`,
+  `dev.architectury:architectury-fabric:20.0.6`. The adapter sources are byte-identical to the 26.3
+  branch: both viewers' API files were diffed between their own `26.1` and `26.3` branches first and
+  differ only in javadoc `@since` numbers (JEI) or not at all (REI).
+  See [`docs/reports/VIEWER_INTEGRATION_JEI_REI.md`](docs/reports/VIEWER_INTEGRATION_JEI_REI.md).
+
+### Added — server-authoritative enchantment costs (S2C)
+
+- The material cost could not be shown truthfully before: the cost table is server data
+  (`PackType.SERVER_DATA`) and the chosen option is salted with the player UUID. The server now
+  resolves one row per (enchantment, level) for the joining player and sends
+  `chiseled_enchanting_table:enchant_cost_table` on join and after every successful data-pack reload;
+  the client caches it (`SyncedEnchantmentCosts`, cleared on disconnect) and both the viewers and the
+  table's own GUI read it — so a dedicated server with a customised `enchantment_costs.json` shows
+  the real cost instead of the jar defaults. Server-side resolution is unchanged and the client-side
+  read is guarded by `world.isClientSide()`, so a LAN host can never show one player another player's
+  salted option.
+
+### Added — localization
+
+- Nine more languages alongside `en_us` / `zh_cn`: `de_de`, `es_es`, `fr_fr`, `it_it`, `ja_jp`,
+  `ko_kr`, `pt_br`, `ru_ru`, `zh_tw` (15 keys each, exact parity — now enforced by CI).
+- The lore line stamped on generated enchanted books is translatable
+  (`book.chiseled_enchanting_table.lore`) instead of a hardcoded English literal, so a book generated
+  by a server reads in each player's own language. Converted in **both** places the stamp is written:
+  the structure bookshelf filler (as on the 26.3 branch) and the chest-loot injector (which the 26.3
+  fix missed).
+
+### Fixed — advancement data
+
+- `advancement/craft.json` carried `display.background` while also having a `parent`, and had
+  `show_toast` / `announce_to_chat` at the **top level**. 26.1.2 ignores all three keys (the intended
+  "no toast, no chat" never applied); in 26.3 the background one is a hard load error that stops the
+  world from opening. The background key is gone (the parent owns the tab background) and the two
+  flags moved into `display`, where `DisplayInfo` actually reads them.
+- **Kept `recipe_id`** in `recipe_crafted` criteria: 26.3 renamed it to a required `recipes` list,
+  which is a schema change of that Minecraft version, not a fix. `scripts/compat_check.py` now fails
+  if a 26.3-shaped advancement or loot table is copied into this branch.
+
+### Tooling / CI (new on this branch)
+
+- Added the CI triad, live in `.github/workflows/` with byte-identical reference copies in `docs/ci/`
+  and a drift check (`bash docs/ci/install.sh --check`): `compile-check.yml` (compiles **both** source
+  sets on Actions and pushes `build-reports/compile-java.log` back to `arena/**` branches — the only
+  compile-verification channel for a sandbox without maven access), `build.yml` (static gates →
+  full build → jar artifact, **plus a `no-viewers` job** that compiles with both viewers disabled so
+  the optional-dependency escape hatch cannot rot), `consistency.yml` (version gate) and
+  `publish.yml` (manual, `26.1.2` / `1.0.3`).
+- Added `scripts/ci_static_checks.py`: mixin configs must resolve to real sources, a mixin registered
+  in `fabric.mod.json` must not be excluded from compilation by `build.gradle`, every `lang/*.json`
+  must have exactly the `en_us` key set, and (warn-only) relative markdown links must resolve.
+- Added `scripts/check_release_consistency.sh`: keeps `gradle.properties`, `README.md`,
+  `fabric.mod.json`, `.github/workflows/publish.yml` and `docs/ci/publish.yml` in sync.
+- Added a warn-only pre-commit reminder (`.githooks/pre-commit` + `scripts/install-hooks.sh`).
+- `scripts/compat_check.py` gained Tier-1 gates for the **26.1.2** loot-table and advancement
+  schemas — the inverse of the 26.3 branch's gates, negative-tested against both the pre-fix
+  `craft.json` (3 failures) and the 26.3 versions of `craft.json` + the block loot table
+  (3 failures).
+- `gradlew` is committed executable (`100644` → `100755`); `compile-check.yml` calls `./gradlew`
+  directly and would otherwise die with `Permission denied`.
+- Documentation: `docs/EXTENDING.md` now describes the `BookshelfBookFiller` two-halves split
+  (pure/worldgen vs server-thread) and its default-unlock tag was corrected to the shipped
+  `#minecraft:in_enchanting_table`; `docs/DOCUMENTATION_INDEX.md` gained the current-round report
+  section; `CURRENT_BASELINE.md` / `NEXT_TASK.md` were re-synced with the tree (including the
+  correction that the advancement display strings are *not* localised yet).
+
+### Validation
+
+- `python3 scripts/ci_static_checks.py` → PASS. `python3 scripts/compat_check.py` → PASS.
+  `bash scripts/check_release_consistency.sh --strict` → PASS (12 checks).
+  `bash docs/ci/install.sh --check` → ok ×4. All eight workflow YAMLs parse.
+- Compile: **not runnable in the dev sandbox** (no JDK, no maven access) — `compile-check.yml` /
+  `build.yml` on the sync commit are the verification channel; the result is written back to
+  `build-reports/compile-java.log` and recorded in the sync report §7.
+- In-game verification still open: the deadlock reproduction (fresh world, affected structure chunks,
+  ideally with Distant Horizons), filled + correctly facing shelves, JEI/REI checklists, and the
+  dedicated-server cost-sync pass.
 
 ## [1.0.2] - 2026-07-01
 

@@ -26,6 +26,18 @@ Tier 1 (offline, deterministic, FAILS the build):
     ``docs/COMPATIBILITY.md``): any third-party enchantment mod that tags its enchantments
     with one of these tags (e.g. the vanilla ``#minecraft:non_treasure`` default) is picked
     up automatically, so this check only has to guard against typos in the tag id itself.
+  * Loot tables use the **26.1.2** schema: plural ``conditions[]`` / ``functions[]`` arrays
+    dispatched on the ``condition`` / ``function`` string keys. Minecraft 26.3 collapsed this
+    to a singular ``condition`` / ``modifier`` dispatched on ``type``, so a 26.3 data file
+    copied into this branch fails *silently* (unknown keys are ignored, the drop just loses
+    its condition/function). This is deliberately the inverse of the 26.3 branch's guard.
+  * Advancements use the **26.1.2** schema: only the six keys ``Advancement.CODEC`` reads,
+    ``show_toast`` / ``announce_to_chat`` inside ``display`` (they are ``DisplayInfo`` fields,
+    top-level copies are ignored), ``display.background`` on roots only, and
+    ``minecraft:recipe_crafted`` conditions keyed on ``recipe_id`` (26.3 renamed it to a
+    required ``recipes`` list — see ``docs/reports/PORTING_26_3_REPORT.md`` §5.2 on that
+    branch, and ``docs/reports/SYNC_FROM_26_3_REPORT.md`` here for why this branch keeps
+    ``recipe_id``).
 
 Tier 2 (best-effort, needs the MC 26.1.2 jar and/or extra mod jars; WARNS only):
   * Item / enchantment ids referenced by recipe + transformations + costs exist either
@@ -142,6 +154,165 @@ def check_block_loot_tables_drop_something() -> None:
             err(f"block loot table pools have no entries (drops nothing): {rel}")
     if not found_any:
         warn("no block loot tables found under any '<ns>/loot_table/blocks/'")
+
+
+def iter_data_json(kind: str):
+    """Yield (namespace, path, parsed json) for every '<ns>/<kind>/**/*.json'."""
+    for ns in os.listdir(DATA_ROOT) if os.path.isdir(DATA_ROOT) else []:
+        root = os.path.join(DATA_ROOT, ns, kind)
+        if not os.path.isdir(root):
+            continue
+        for path in glob.glob(os.path.join(root, "**", "*.json"), recursive=True):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    yield ns, path, json.load(fh)
+            except Exception:  # already reported by the parse check
+                continue
+
+
+def check_loot_tables_use_26_1_2_schema() -> None:
+    """26.1.2 loot schema: plural ``conditions[]`` / ``functions[]`` arrays, each element
+    dispatched on the ``condition`` / ``function`` **string** key.
+
+    Why this gate exists on *this* branch: the 26.3 line migrated the same files to the
+    collapsed schema (singular ``condition`` / ``modifier`` dispatched on ``type``). Copying a
+    26.3 data file here — or copying a 26.1.2 file there — parses as JSON, loads without an
+    error, and silently drops the condition/function, which is exactly the failure mode that
+    produced the P15 "block drops nothing" bug this script was written for. Each branch therefore
+    guards its own direction; this is the 26.1.2 one.
+
+    Evidence for the 26.1.2 form: this repository's own block loot table shipped and live-tested
+    as ``conditions: [{"condition": "minecraft:survives_explosion"}]`` +
+    ``functions: [{"function": "minecraft:copy_components", ...}]`` (1.0.2 baseline, see
+    ``CURRENT_BASELINE.md``); the 26.3 branch's ``PORTING_26_3_REPORT.md`` §5.1 documents the
+    rename as a 26.3 change.
+    """
+
+    def walk(node, rel: str, where: str) -> None:
+        if isinstance(node, list):
+            for index, item in enumerate(node):
+                walk(item, rel, f"{where}[{index}]")
+            return
+        if not isinstance(node, dict):
+            return
+
+        for singular, plural, dispatch in (
+            ("condition", "conditions", "condition"),
+            ("modifier", "functions", "function"),
+        ):
+            if singular not in node:
+                continue
+            value = node[singular]
+            # A *string* "condition" is the 26.1.2 dispatch key of one element inside a
+            # "conditions" array ({"condition": "minecraft:survives_explosion"}), which is exactly
+            # what this branch must keep. Anything else — an object/list under "condition", or any
+            # "modifier" key at all — is the collapsed MC 26.3 form.
+            is_26_1_2_dispatch = singular == "condition" and isinstance(value, str) and value
+            if is_26_1_2_dispatch:
+                continue
+            err(
+                f"{rel}: {where} uses the MC 26.3 singular '{singular}' field; 26.1.2 reads the "
+                f"plural '{plural}' array, whose elements dispatch on a '{dispatch}' **string** "
+                f"(e.g. {{\"{dispatch}\": \"minecraft:...\"}}) — the 26.3 form is silently ignored here"
+            )
+
+        for plural, dispatch in (("conditions", "condition"), ("functions", "function")):
+            if plural not in node:
+                continue
+            value = node[plural]
+            if not isinstance(value, list):
+                err(f"{rel}: {where}['{plural}'] must be an array in 26.1.2, found {type(value).__name__}")
+                continue
+            for index, element in enumerate(value):
+                if not isinstance(element, dict):
+                    err(f"{rel}: {where}['{plural}'][{index}] must be an object")
+                    continue
+                key = element.get(dispatch)
+                if not isinstance(key, str) or not key:
+                    err(
+                        f"{rel}: {where}['{plural}'][{index}] is missing its '{dispatch}' string "
+                        f"dispatch key (26.1.2 form, e.g. {{\"{dispatch}\": \"minecraft:...\"}})"
+                    )
+
+        for key, value in node.items():
+            if isinstance(value, list):
+                for index, item in enumerate(value):
+                    walk(item, rel, f"{where}.{key}[{index}]")
+            else:
+                walk(value, rel, f"{where}.{key}")
+
+    for _ns, path, data in iter_data_json("loot_table"):
+        rel = os.path.relpath(path, REPO)
+        for index, pool in enumerate(data.get("pools") or []):
+            walk(pool, rel, f"pools[{index}]")
+
+
+ADVANCEMENT_TOP_KEYS = {
+    "parent", "display", "rewards", "criteria", "requirements", "sends_telemetry_event",
+}
+DISPLAY_KEYS = {
+    "icon", "title", "description", "background", "frame", "show_toast", "announce_to_chat", "hidden",
+}
+
+
+def check_advancements_use_26_1_2_schema() -> None:
+    """26.1.2 advancement schema checks (synced from the 26.3 branch, version-adjusted).
+
+    * ``Advancement.CODEC`` only reads ``parent`` / ``display`` / ``rewards`` / ``criteria`` /
+      ``requirements`` / ``sends_telemetry_event``. ``show_toast`` and ``announce_to_chat`` are
+      ``DisplayInfo`` fields: at the top level they are ignored, i.e. the intended
+      "no toast, no chat" silently does not happen. This was true on the 26.3 line and it is
+      true here, so the guard is identical.
+    * ``display.background`` belongs to roots only. 26.1.2 ignores it on a child; **26.3 rejects
+      it outright** ("Only advancement roots can have background"), which fails the whole
+      ``minecraft:advancement`` registry and makes the world refuse to open. Keeping the key out
+      here means this branch's data files stay forward-compatible with the 26.3 line.
+    * ``minecraft:recipe_crafted`` takes ``recipe_id`` on this Minecraft line. 26.3 replaced it
+      with a required ``recipes`` list; the inverse guard below catches a blind copy of a 26.3
+      advancement file, which would fail to load the advancement here.
+    """
+    for _ns, path, data in iter_data_json("advancement"):
+        rel = os.path.relpath(path, REPO)
+
+        for key in sorted(set(data) - ADVANCEMENT_TOP_KEYS):
+            hint = " (it belongs inside 'display')" if key in DISPLAY_KEYS else ""
+            err(f"{rel}: unknown top-level advancement key '{key}'{hint}")
+
+        display = data.get("display")
+        if isinstance(display, dict):
+            for key in sorted(set(display) - DISPLAY_KEYS):
+                err(f"{rel}: unknown display key '{key}'")
+
+            is_root = not data.get("parent")
+            if is_root and "background" not in display:
+                err(
+                    f"{rel}: visible advancement root has no 'display.background' "
+                    f"(the tab would have no background; 26.3 rejects this outright: "
+                    f"'Visible advancement roots must have background')"
+                )
+            elif not is_root and "background" in display:
+                err(
+                    f"{rel}: non-root advancement carries 'display.background' "
+                    f"(ignored by 26.1.2, a hard load error in 26.3: 'Only advancement roots can "
+                    f"have background'); delete the key, the parent owns the tab background"
+                )
+
+        for name, criterion in (data.get("criteria") or {}).items():
+            if not isinstance(criterion, dict):
+                continue
+            if criterion.get("trigger") != "minecraft:recipe_crafted":
+                continue
+            conditions = criterion.get("conditions") or {}
+            if "recipes" in conditions:
+                err(
+                    f"{rel}: criteria '{name}' uses the MC 26.3 'recipes' list; 26.1.2 reads "
+                    f"'recipe_id' (a single recipe id string) — the 26.3 form makes this "
+                    f"advancement fail to load here"
+                )
+            elif "recipe_id" not in conditions:
+                err(f"{rel}: criteria '{name}' (recipe_crafted) is missing 'recipe_id'")
+            elif not isinstance(conditions["recipe_id"], str):
+                err(f"{rel}: criteria '{name}' 'recipe_id' must be a single recipe id string")
 
 
 def check_transformation_json_matches_java() -> None:
@@ -580,6 +751,8 @@ def main() -> int:
     check_json_parses()
     check_datapack_dir_naming()
     check_block_loot_tables_drop_something()
+    check_loot_tables_use_26_1_2_schema()
+    check_advancements_use_26_1_2_schema()
     check_transformation_json_matches_java()
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()
