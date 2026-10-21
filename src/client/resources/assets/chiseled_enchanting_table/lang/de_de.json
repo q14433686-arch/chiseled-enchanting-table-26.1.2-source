@@ -1,0 +1,14 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "Gemeißelter Zaubertisch",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "Gemeißelter Zaubertisch",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "Gemeißelter Zaubertisch",
+  "book.chiseled_enchanting_table.lore": "Gemeißelter Zaubertisch",
+  "jei.chiseled_enchanting_table.category.enchanting": "Gemeißeltes Verzaubern",
+  "jei.chiseled_enchanting_table.tooltip.xp": "Kosten: %s Erfahrungsstufen",
+  "jei.chiseled_enchanting_table.tooltip.cost_hint": "Der Materialaufwand kann eines von mehreren zulässigen Items sein",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Das verzauberte Buch muss in einem nahegelegenen gemeißelten Bücherregal liegen",
+  "jei.chiseled_enchanting_table.tooltip.conflicts": "Ersetzt widersprüchliche Verzauberungen: %s",
+  "jei.chiseled_enchanting_table.info.station": "Der gemeißelte Zaubertisch überträgt eine Verzauberung aus einem nahegelegenen gemeißelten Bücherregal. Lege verzauberte Bücher in Bücherregale in Reichweite und wähle dann einen Eintrag in der Liste des Tisches.",
+  "jei.chiseled_enchanting_table.info.bookshelf": "Gemeißelte Bücherregale in Reichweite des Tisches liefern die verfügbaren Verzauberungen. Jedes Buch in einem Regalfach schaltet seine Verzauberung frei.",
+  "jei.chiseled_enchanting_table.info.book": "Verzauberte Bücher schalten ihre Verzauberung frei, solange sie in einem nahegelegenen gemeißelten Bücherregal liegen. Wird eine Verzauberung aus dem Buch im Materialfach angewendet, wird das Buch verbraucht."
+}

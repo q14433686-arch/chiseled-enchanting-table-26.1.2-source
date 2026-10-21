@@ -1,0 +1,14 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "Mesa de encantamento cinzelada",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "Mesa de encantamento cinzelada",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "Mesa de encantamento cinzelada",
+  "book.chiseled_enchanting_table.lore": "Mesa de encantamento cinzelada",
+  "jei.chiseled_enchanting_table.category.enchanting": "Encantamento cinzelado",
+  "jei.chiseled_enchanting_table.tooltip.xp": "Custo: %s níveis de experiência",
+  "jei.chiseled_enchanting_table.tooltip.cost_hint": "O custo de materiais pode ser um entre vários itens aceitos",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "O livro encantado precisa estar em uma estante cinzelada por perto",
+  "jei.chiseled_enchanting_table.tooltip.conflicts": "Substitui encantamentos incompatíveis: %s",
+  "jei.chiseled_enchanting_table.info.station": "A mesa de encantamento cinzelada aplica um encantamento de uma estante cinzelada próxima. Coloque livros encantados nas estantes ao alcance e escolha uma opção na lista da mesa.",
+  "jei.chiseled_enchanting_table.info.bookshelf": "Estantes cinzeladas ao alcance da mesa fornecem os encantamentos disponíveis. Cada livro em um espaço libera seu encantamento.",
+  "jei.chiseled_enchanting_table.info.book": "Livros encantados liberam seu encantamento enquanto estiverem guardados em uma estante cinzelada próxima. Aplicar um encantamento a partir do livro no espaço de material consome esse livro."
+}

@@ -1,0 +1,14 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "雕紋附魔台",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "雕紋附魔台",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "雕紋附魔台",
+  "book.chiseled_enchanting_table.lore": "雕紋附魔台",
+  "jei.chiseled_enchanting_table.category.enchanting": "雕紋附魔",
+  "jei.chiseled_enchanting_table.tooltip.xp": "消耗：%s 級經驗",
+  "jei.chiseled_enchanting_table.tooltip.cost_hint": "材料消耗可能是數種可接受物品之一",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "附魔書必須放在附近的雕紋書架中",
+  "jei.chiseled_enchanting_table.tooltip.conflicts": "會取代衝突附魔：%s",
+  "jei.chiseled_enchanting_table.info.station": "雕紋附魔台會從附近的雕紋書架取用附魔。把附魔書放進作用範圍內的雕紋書架，然後在附魔台的清單中選擇項目。",
+  "jei.chiseled_enchanting_table.info.bookshelf": "附魔台作用範圍內的雕紋書架提供可用的附魔。書架每格中的一本書即可解鎖對應附魔。",
+  "jei.chiseled_enchanting_table.info.book": "附魔書放在附近的雕紋書架中即可解鎖其附魔。從材料格中的書施加附魔時會消耗這本書。"
+}

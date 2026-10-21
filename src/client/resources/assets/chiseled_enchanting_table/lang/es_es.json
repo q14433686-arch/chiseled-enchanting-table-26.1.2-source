@@ -1,0 +1,14 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "Mesa de encantamientos cincelada",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "Mesa de encantamientos cincelada",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "Mesa de encantamientos cincelada",
+  "book.chiseled_enchanting_table.lore": "Mesa de encantamientos cincelada",
+  "jei.chiseled_enchanting_table.category.enchanting": "Encantamiento cincelado",
+  "jei.chiseled_enchanting_table.tooltip.xp": "Coste: %s niveles de experiencia",
+  "jei.chiseled_enchanting_table.tooltip.cost_hint": "El coste de materiales puede ser uno de varios objetos aceptados",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "El libro encantado debe estar en una estantería cincelada cercana",
+  "jei.chiseled_enchanting_table.tooltip.conflicts": "Sustituye encantamientos incompatibles: %s",
+  "jei.chiseled_enchanting_table.info.station": "La mesa de encantamientos cincelada aplica un encantamiento de una estantería cincelada cercana. Coloca libros encantados en las estanterías a su alcance y elige una opción en la lista de la mesa.",
+  "jei.chiseled_enchanting_table.info.bookshelf": "Las estanterías cinceladas al alcance de la mesa proporcionan los encantamientos disponibles. Cada libro en una ranura desbloquea su encantamiento.",
+  "jei.chiseled_enchanting_table.info.book": "Los libros encantados desbloquean su encantamiento mientras estén guardados en una estantería cincelada cercana. Aplicar un encantamiento desde el libro de la ranura de material consume ese libro."
+}

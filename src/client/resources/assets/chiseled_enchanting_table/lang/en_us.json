@@ -11,5 +11,6 @@
   "jei.chiseled_enchanting_table.tooltip.conflicts": "Replaces conflicting enchantments: %s",
   "jei.chiseled_enchanting_table.info.station": "The chiseled enchanting table applies an enchantment from a nearby chiseled bookshelf. Place enchanted books inside chiseled bookshelves within range, then pick an option in the table's list.",
   "jei.chiseled_enchanting_table.info.bookshelf": "Chiseled bookshelves within range of the table supply the enchantments you can apply. Each book in a shelf slot unlocks its enchantment.",
-  "jei.chiseled_enchanting_table.info.book": "Enchanted books unlock their enchantment while stored in a nearby chiseled bookshelf. Applying an enchantment from a book in the cost slot consumes the book."
+  "jei.chiseled_enchanting_table.info.book": "Enchanted books unlock their enchantment while stored in a nearby chiseled bookshelf. Applying an enchantment from a book in the cost slot consumes the book.",
+  "book.chiseled_enchanting_table.lore": "Chiseled Enchanting Table"
 }

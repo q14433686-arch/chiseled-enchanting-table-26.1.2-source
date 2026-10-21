@@ -1,0 +1,14 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "彫刻されたエンチャントテーブル",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "彫刻されたエンチャントテーブル",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "彫刻されたエンチャントテーブル",
+  "book.chiseled_enchanting_table.lore": "彫刻されたエンチャントテーブル",
+  "jei.chiseled_enchanting_table.category.enchanting": "彫刻エンチャント",
+  "jei.chiseled_enchanting_table.tooltip.xp": "コスト: 経験値 %s レベル",
+  "jei.chiseled_enchanting_table.tooltip.cost_hint": "材料は複数の許容アイテムのうちの1つです",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "エンチャントの本は近くの彫刻された本棚に入れておく必要があります",
+  "jei.chiseled_enchanting_table.tooltip.conflicts": "競合するエンチャントを置き換えます: %s",
+  "jei.chiseled_enchanting_table.info.station": "彫刻されたエンチャントテーブルは、近くの彫刻された本棚からエンチャントを付与します。範囲内の本棚にエンチャントの本を入れ、テーブルの一覧から項目を選んでください。",
+  "jei.chiseled_enchanting_table.info.bookshelf": "テーブルの範囲内にある彫刻された本棚が、利用できるエンチャントを供給します。スロットの本1冊ごとに対応するエンチャントが解放されます。",
+  "jei.chiseled_enchanting_table.info.book": "エンチャントの本は近くの彫刻された本棚に入れておくと、そのエンチャントが解放されます。材料スロットの本からエンチャントを付与すると、その本は消費されます。"
+}
