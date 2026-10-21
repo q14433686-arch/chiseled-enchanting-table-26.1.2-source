@@ -302,3 +302,27 @@ needed. Fixed with `status=0` + `|| status=$?`. The same step now also records t
 coordinates of `compileClasspath` / `clientCompileClasspath` in `build-reports/compile-java.log`,
 which is what makes a floating `jei_version` / `rei_version` traceable at all (the sandbox can read
 that file and nothing else).
+
+### 7.4 State after the fix
+
+- `53fab49` compiles green on CI (`build` and `compile-check` both success).
+- The new log section proves the pins do what they claim and makes the floating coordinates visible
+  in the same file:
+
+```
+=== resolved coordinates (compileClasspath / clientCompileClasspath) ===
+--- compileClasspath ---
+dev.architectury:architectury-fabric:22.0.3
+me.shedaniel.cloth:basic-math:0.6.1
+me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.+ -> 26.3.824
+mezz.jei:jei-26.3-fabric:latest.release -> 31.16.0.87
+net.fabricmc.fabric-api:fabric-api:0.162.0+26.3
+```
+
+  i.e. the build's own `fabric-api 0.162.0+26.3` is still what the main source set compiles against,
+  and no second Fabric API version appears at all. (Those two `->` arrows are the open item from the
+  sync report: `jei_version=latest.release` and `rei_version=26.3.+` resolved to `31.16.0.87` and
+  `26.3.824` today. Pinning them is now a two-line change with evidence attached, deliberately not
+  done in this commit.)
+- Cross-branch: `docs/patches/26.2-viewer-toolchain-and-subtype.patch` carries §6 + §7 to the 26.2
+  line (verified to apply cleanly against `81a2a2a`); the 26.1.2 line already had all of it.
