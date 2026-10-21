@@ -39,10 +39,15 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
  * lying in a nearby chiseled bookshelf: that is live world state, so it belongs in the viewer's info
  * page / catalyst list, not in the recipe.</p>
  *
- * <p><b>Cost caveat.</b> {@link ChiseledEnchantingTableData#itemCosts(EnchantmentWithLevel, String,
- * int)} is salted with the player UUID at runtime, which picks among the alternative cost options.
- * The index resolves costs with an empty salt, i.e. the canonical/first option. Viewers should treat
- * the shown material as one of the accepted options, not as the only one.</p>
+ * <p><b>Costs are server-authoritative when available.</b>
+ * {@link ChiseledEnchantingTableData#itemCosts(EnchantmentWithLevel, String, int)} is salted with the
+ * player UUID, which picks among the alternative cost options — and the table itself comes from a
+ * server data pack, so a client cannot necessarily reproduce it. The server therefore resolves every
+ * (enchantment, level) row for the joining player and ships it in {@code EnchantCostTablePayload};
+ * {@link SyncedEnchantmentCosts} caches it and this index prefers it. Only when nothing was synced
+ * (single-player before the join payload lands, or a viewer rebuilt without a server) does the index
+ * fall back to the canonical empty-salt option, and then {@link Entry#serverCosts()} is {@code false}
+ * so the adapter can say so in its tooltip.</p>
  */
 public final class EnchantQueryIndex {
     private EnchantQueryIndex() {}
@@ -59,6 +64,9 @@ public final class EnchantQueryIndex {
      * @param itemCosts      canonical material cost stacks (first one is the primary cost)
      * @param xpLevelCost    XP-level cost for this level
      * @param conflicts      enchantments this one is mutually exclusive with
+     * @param serverCosts    {@code true} when {@code itemCosts}/{@code xpLevelCost} came from the
+     *                       server's resolved table for this player, {@code false} when they are the
+     *                       canonical local fallback
      */
     public record Entry(
         Identifier enchantmentId,
@@ -67,7 +75,8 @@ public final class EnchantQueryIndex {
         List<ItemStack> supportedItems,
         List<ItemStack> itemCosts,
         int xpLevelCost,
-        List<Identifier> conflicts
+        List<Identifier> conflicts,
+        boolean serverCosts
     ) {
         /** The enchanted book a player would need for this row. */
         public ItemStack bookStack(Holder<Enchantment> enchantment) {
@@ -87,13 +96,13 @@ public final class EnchantQueryIndex {
     }
 
     /**
-     * Builds every (enchantment, level) row. Safe on the client: it only reads the synced
-     * enchantment/item/item-component registries.
+     * Builds every (enchantment, level) row. Safe on the client: it only reads registries plus
+     * {@link SyncedEnchantmentCosts}.
      *
-     * <p>Anything the authoritative server-side datapack changed in {@code enchantment_costs.json}
-     * is reflected when this runs on a client whose data was synced from the server (single-player
-     * and LAN always are; on a dedicated server the client uses its own copy, which is why the mod
-     * ships the same defaults in the jar).</p>
+     * <p>Costs come from the payload the server pushed for this player, so a datapack-customised
+     * {@code enchantment_costs.json} (and the player's own salted option) are reflected even on a
+     * dedicated server. Without a synced table the canonical empty-salt option is used and
+     * {@link Entry#serverCosts()} reports {@code false}.</p>
      */
     public static List<Entry> build(HolderLookup.Provider registries) {
         HolderLookup.RegistryLookup<Enchantment> enchantments =
@@ -135,14 +144,20 @@ public final class EnchantQueryIndex {
 
             for (int level = 1; level <= maxLevel; level++) {
                 EnchantmentWithLevel key = new EnchantmentWithLevel(id, level);
+                // Prefer the server-resolved numbers for this player; the empty-salt option is only
+                // the fallback for a client that has no synced table.
+                Optional<SyncedEnchantmentCosts.Cost> synced = SyncedEnchantmentCosts.find(id, level);
                 entries.add(new Entry(
                     id,
                     level,
                     maxLevel,
                     List.copyOf(supported),
-                    List.copyOf(ChiseledEnchantingTableData.itemCosts(key, "", maxLevel)),
-                    ChiseledEnchantingTableData.xpCost(key, maxLevel),
-                    List.copyOf(conflicts)
+                    synced.map(SyncedEnchantmentCosts.Cost::itemCosts)
+                        .orElseGet(() -> List.copyOf(ChiseledEnchantingTableData.itemCosts(key, "", maxLevel))),
+                    synced.map(SyncedEnchantmentCosts.Cost::xpLevelCost)
+                        .orElseGet(() -> ChiseledEnchantingTableData.xpCost(key, maxLevel)),
+                    List.copyOf(conflicts),
+                    synced.isPresent()
                 ));
             }
         }

@@ -41,7 +41,18 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
   adapter from the build; nothing is required at runtime. The REI adapter additionally needs
   `me.shedaniel.cloth:basic-math` and `dev.architectury:architectury-fabric` as compile-only
   dependencies, because REI's own interfaces leak `me.shedaniel.math` and Architectury fluid types.
-- All viewer strings go through the mod's existing translation keys, which ship in 11 languages.
+- **Server-authoritative costs (S2C)** — the material cost could not be shown truthfully before: the
+  cost table is server data (`PackType.SERVER_DATA`) and the chosen option is salted with the player
+  UUID. The server now resolves one row per (enchantment, level) for the joining player and sends
+  `chiseled_enchanting_table:enchant_cost_table` on join and after every successful data-pack reload;
+  the client caches it (`SyncedEnchantmentCosts`, cleared on disconnect) and both the viewers and the
+  table's own GUI read it, so a dedicated server with a customised `enchantment_costs.json` shows the
+  real cost instead of the jar defaults. Server-side resolution is unchanged and the client-side read
+  is guarded by `world.isClientSide()`, so a LAN host can never show one player another player's
+  salted option.
+- All viewer strings go through the mod's existing translation keys, which ship in 11 languages —
+  including the new server-cost tooltip line, and the two book-upgrade GUI labels that were still
+  English-only in 9 of them.
 - See [`docs/reports/VIEWER_INTEGRATION_JEI_REI.md`](docs/reports/VIEWER_INTEGRATION_JEI_REI.md)
   (verified API surface for both viewers, compile-classpath notes, in-game checklist).
 

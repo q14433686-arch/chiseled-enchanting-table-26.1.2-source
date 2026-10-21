@@ -27,7 +27,8 @@ public record EnchantingRecipe(
     ItemStack book,
     List<ItemStack> costItems,
     int xpLevelCost,
-    List<Identifier> conflictingEnchantments
+    List<Identifier> conflictingEnchantments,
+    boolean serverCosts
 ) {
     /**
      * Builds one row from the shared index. {@code holder} is needed to stamp the enchantment onto
@@ -44,7 +45,8 @@ public record EnchantingRecipe(
             book,
             entry.itemCosts(),
             entry.xpLevelCost(),
-            entry.conflicts()
+            entry.conflicts(),
+            entry.serverCosts()
         );
     }
 

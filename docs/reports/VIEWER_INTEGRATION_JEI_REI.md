@@ -39,9 +39,39 @@ it:
     matches the mod's "applying an enchantment can override a conflicting one" behaviour.
 - `forItem(...)` / `forBook(...)` helpers for adapters that want to pre-filter.
 
-**Cost caveat (documented in code and in the UI tooltip):** the menu salts cost selection with the
-player UUID, so a player may be offered a different *option* than the canonical one the viewer shows.
-Viewers should present the material slot as "one of the accepted options".
+### 2.1 Costs are whatever the server says (S2C sync)
+
+The material cost is not derivable on the client:
+
+- the cost *table* is a server data-pack file — `ChiseledEnchantingTableData` is registered on
+  `PackType.SERVER_DATA`, so a dedicated server's customised `enchantment_costs.json` never reaches
+  the client;
+- the cost *option* is salted with the player UUID
+  (`stablePositiveHash(id:level:maxLevel:uuid:option) % options.size()`), so even the same table
+  yields a per-player answer.
+
+So the server resolves one row per (enchantment, level) with the joining player's UUID and ships it:
+
+| Piece | File | Role |
+| --- | --- | --- |
+| `EnchantCostTablePayload` | `chiseled_enchanting_table/menu/EnchantCostTablePayload.java` | S2C payload, id `chiseled_enchanting_table:enchant_cost_table`; hand-rolled wire format (`Identifier` + VarInts) because every cost is a plain `item + count` |
+| `EnchantCostSync` | `.../menu/EnchantCostSync.java` | registers `PayloadTypeRegistry.clientboundPlay()`, pushes the table on `ServerPlayConnectionEvents.JOIN` and after every successful `ServerLifecycleEvents.END_DATA_PACK_RELOAD` (so `/reload` does not leave stale costs); `ServerPlayNetworking.canSend` keeps vanilla clients out |
+| `SyncedEnchantmentCosts` | `.../compat/SyncedEnchantmentCosts.java` | client-side cache, cleared on `ClientPlayConnectionEvents.DISCONNECT` |
+
+Consumers:
+
+- **Viewers** — `EnchantQueryIndex.build(...)` prefers the synced row and only falls back to the
+  canonical empty-salt option when nothing was synced; `Entry#serverCosts()` records which one it
+  used, so the tooltip says either "resolved by the server for you"
+  (`jei.chiseled_enchanting_table.tooltip.cost_synced`) or the older "may be one of several accepted
+  items" line.
+- **The table's own GUI** — `ChiseledEnchantingTableScreenHandler` reads the same cache for
+  `OptionType.ENCHANTMENT` rows, guarded by `world.isClientSide()`: the server always resolves
+  locally (so a LAN host can never hand one player another player's salted option), while a client
+  shows exactly what the server will charge. This also fixes the previous behaviour where a dedicated
+  server with a customised cost table showed jar-default costs in the GUI.
+- Transformations and book upgrades are *not* in the payload — they stay server-resolved at use time,
+  because their rows are not part of the viewer catalogue.
 
 **What cannot be a recipe:** the rule "the enchanted book must be lying in a nearby chiseled
 bookshelf" is live world state. It is expressed as a tooltip line + info pages, not as an ingredient.
@@ -170,5 +200,9 @@ list through `EnchantQueryIndex.conflictSummary(...)`, so translations stay in o
      bookshelf rule and the conflicts line;
   5. install JEI **and** REI together → both categories coexist, no duplicate class or entrypoint
      error.
+- Cost sync (both viewers): join a **dedicated server** whose `enchantment_costs.json` differs from
+  the jar (e.g. swap lapis for amethyst) → the viewer row, the tooltip and the table GUI all show
+  amethyst; run `/reload` after editing the file → costs update without reconnecting; leave the
+  server → the cache is cleared (single-player afterwards shows its own costs again).
 - Gates: `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict` pass on
   the same commit.

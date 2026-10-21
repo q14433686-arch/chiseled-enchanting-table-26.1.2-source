@@ -88,7 +88,11 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
 
     private static Component[] tooltipLines(ReiEnchantingDisplay display) {
         List<Component> lines = new ArrayList<>(4);
-        lines.add(Component.translatable("jei.chiseled_enchanting_table.tooltip.cost_hint"));
+        lines.add(Component.translatable(
+            display.serverCosts()
+                ? "jei.chiseled_enchanting_table.tooltip.cost_synced"
+                : "jei.chiseled_enchanting_table.tooltip.cost_hint"
+        ));
         lines.add(Component.translatable("jei.chiseled_enchanting_table.tooltip.bookshelf"));
         if (!display.conflicts().isEmpty()) {
             lines.add(Component.translatable(

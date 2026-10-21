@@ -103,7 +103,9 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
             "jei.chiseled_enchanting_table.tooltip.xp", recipe.xpLevelCost()
         ));
         tooltip.add(Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.cost_hint"
+            recipe.serverCosts()
+                ? "jei.chiseled_enchanting_table.tooltip.cost_synced"
+                : "jei.chiseled_enchanting_table.tooltip.cost_hint"
         ));
         tooltip.add(Component.translatable(
             "jei.chiseled_enchanting_table.tooltip.bookshelf"

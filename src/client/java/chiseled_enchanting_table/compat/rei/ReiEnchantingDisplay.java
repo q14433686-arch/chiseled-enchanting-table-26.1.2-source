@@ -99,6 +99,11 @@ public final class ReiEnchantingDisplay implements Display {
         return row.conflicts();
     }
 
+    /** Whether the costs on this row came from the server's resolved table for this player. */
+    public boolean serverCosts() {
+        return row.serverCosts();
+    }
+
     /**
      * Representative output: the first supported item with the enchantment applied. A book target
      * becomes an enchanted book, which is what the table actually produces in that case.

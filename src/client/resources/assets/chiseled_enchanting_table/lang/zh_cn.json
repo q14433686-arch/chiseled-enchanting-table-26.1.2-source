@@ -7,6 +7,7 @@
   "jei.chiseled_enchanting_table.category.enchanting": "纂刻附魔",
   "jei.chiseled_enchanting_table.tooltip.xp": "消耗：%s 级经验",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "材料消耗可能是若干种可接受物品之一",
+  "jei.chiseled_enchanting_table.tooltip.cost_synced": "材料消耗为服务器为你实际计算的结果",
   "jei.chiseled_enchanting_table.tooltip.bookshelf": "附魔书必须放在附近的雕纹书架里",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "会替换冲突附魔：%s",
   "jei.chiseled_enchanting_table.info.station": "纂刻附魔台会从附近的雕纹书架中取用附魔。把附魔书放进作用范围内的雕纹书架，然后在附魔台的列表中挑选一项。",

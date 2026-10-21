@@ -116,7 +116,11 @@ Five places must agree on the version/Minecraft declarations — `gradle.propert
   answers both "book → items" and "item → books". Optional: `enable_jei=false` /
   `enable_rei=false` drop the respective adapter from the build; REI additionally needs
   `me.shedaniel.cloth:basic-math` + `dev.architectury:architectury-fabric` at compile time only.
-  See `docs/reports/VIEWER_INTEGRATION_JEI_REI.md`.
+  Costs are server-authoritative: `menu.EnchantCostTablePayload` + `menu.EnchantCostSync` push a
+  per-player resolved table (`chiseled_enchanting_table:enchant_cost_table`) on join and after each
+  data-pack reload, `compat.SyncedEnchantmentCosts` caches it on the client, and both the viewers and
+  `ChiseledEnchantingTableScreenHandler` read it (the latter only when `world.isClientSide()`).
+  See `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §2.1.
 - `chiseled_enchanting_table.menu.*` — `ChiseledEnchantingTableScreenHandler`,
   `ChiseledEnchantingMenuPayloads` (`OptionType`, `TransformationDisplay`,
   `AvailableEnchantmentPayload`, `ApplyEnchantmentPayload`), `AvailableOption`

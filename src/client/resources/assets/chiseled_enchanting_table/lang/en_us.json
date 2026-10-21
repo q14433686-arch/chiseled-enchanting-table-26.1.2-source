@@ -7,6 +7,7 @@
   "jei.chiseled_enchanting_table.category.enchanting": "Chiseled Enchanting",
   "jei.chiseled_enchanting_table.tooltip.xp": "Cost: %s XP levels",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "Material cost may be one of several accepted items",
+  "jei.chiseled_enchanting_table.tooltip.cost_synced": "Material cost as resolved by the server for you",
   "jei.chiseled_enchanting_table.tooltip.bookshelf": "The enchanted book must be placed in a nearby chiseled bookshelf",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "Replaces conflicting enchantments: %s",
   "jei.chiseled_enchanting_table.info.station": "The chiseled enchanting table applies an enchantment from a nearby chiseled bookshelf. Place enchanted books inside chiseled bookshelves within range, then pick an option in the table's list.",
