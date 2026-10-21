@@ -17,6 +17,25 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
 ## [Unreleased]
 
+### Added — JEI integration (bidirectional enchantment lookup)
+
+- **New viewer category** (`chiseled_enchanting_table:enchanting`) modelling the mechanic as a
+  two-input recipe — `[target item] + [enchanted book] + [material] -> [enchanted item]` — which is
+  what gives both query directions from one dataset: focus an enchanted book to list every item it
+  can enchant, focus an item to list every book that works on it. Catalysts are the chiseled
+  enchanting table and the chiseled bookshelf; the category also lists XP cost, material cost,
+  conflicting enchantments, and the "book must sit in a nearby chiseled bookshelf" requirement
+  (live world state, so a tooltip/info line rather than an ingredient).
+- **Shared, viewer-agnostic index** — `compat/EnchantQueryIndex` derives one row per
+  (enchantment, level) from the live registries (`Enchantment#canEnchant`, so modded items and
+  universal-enchant datapacks are included), plus the mod's own cost tables. REI will reuse it.
+- **Enchanted-book subtypes** (`STORED_ENCHANTMENTS`) so each enchantment is its own searchable JEI
+  entry — also improves book display in other mods' recipes.
+- JEI is `compileOnly` and optional: `enable_jei=false` in `gradle.properties` (or
+  `-Penable_jei=false`) excludes the adapter from the build; nothing is required at runtime.
+- See [`docs/reports/VIEWER_INTEGRATION_JEI_REI.md`](docs/reports/VIEWER_INTEGRATION_JEI_REI.md)
+  (REI status + verified API surface included).
+
 ### Fixed — worldgen deadlock (integrated server freeze)
 
 - **`BookshelfReplacerProcessor#finalizeProcessing` no longer touches the live `ServerLevel`.**

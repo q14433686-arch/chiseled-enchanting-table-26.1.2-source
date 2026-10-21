@@ -110,6 +110,11 @@ Five places must agree on the version/Minecraft declarations — `gradle.propert
     `BookshelfReplacerProcessor.postProcessBookshelf` (plain `BOOKSHELF` → full fill) or
     `postProcessFilledBookshelf` (already-filled `CHISELED_BOOKSHELF` → facing refinement only).
     Both run on the server thread; the live-world filler refuses to run anywhere else.
+- `chiseled_enchanting_table.compat.EnchantQueryIndex` + `compat.jei.*` — recipe-viewer support.
+  The index is viewer-agnostic (registry + `enchantment_costs.json` only); the JEI adapter turns each
+  (enchantment, level) row into a two-input recipe so a single category answers both
+  "book → items" and "item → books". Optional: `enable_jei=false` drops it from the build. REI is
+  scoped but not implemented (see `docs/reports/VIEWER_INTEGRATION_JEI_REI.md`).
 - `chiseled_enchanting_table.menu.*` — `ChiseledEnchantingTableScreenHandler`,
   `ChiseledEnchantingMenuPayloads` (`OptionType`, `TransformationDisplay`,
   `AvailableEnchantmentPayload`, `ApplyEnchantmentPayload`), `AvailableOption`
