@@ -1,0 +1,1027 @@
+diff --git a/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java b/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java
+--- a/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java
++++ b/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java
+@@ -9,21 +9,30 @@
+ import java.util.Collections;
+ import java.util.List;
+ import java.util.Optional;
++import java.util.concurrent.atomic.AtomicBoolean;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+ import net.minecraft.core.Holder;
+ import net.minecraft.core.HolderGetter;
++import net.minecraft.core.HolderLookup;
++import net.minecraft.core.NonNullList;
++import net.minecraft.core.SectionPos;
+ import net.minecraft.core.component.DataComponents;
+ import net.minecraft.core.registries.Registries;
++import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.resources.ResourceKey;
++import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
++import net.minecraft.util.ProblemReporter;
+ import net.minecraft.util.RandomSource;
++import net.minecraft.world.ContainerHelper;
+ import net.minecraft.world.item.ItemStack;
+ import net.minecraft.world.item.Items;
+ import net.minecraft.world.item.component.ItemLore;
+ import net.minecraft.world.item.enchantment.Enchantment;
+ import net.minecraft.world.item.enchantment.EnchantmentHelper;
++import net.minecraft.world.level.LevelReader;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.entity.BlockEntity;
+@@ -31,11 +40,40 @@
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+ import net.minecraft.world.level.block.state.properties.BooleanProperty;
++import net.minecraft.world.level.chunk.LevelChunk;
++import net.minecraft.world.level.storage.TagValueOutput;
++import org.jetbrains.annotations.Nullable;
+ 
+ /**
+  * Fills a placed chiseled bookshelf with 3–5 books (user-tunable range) and picks a facing whose
+  * <b>front face is toward air</b>.
+  *
++ * <p><b>Thread-safety contract (read this before calling anything here):</b> this class is split
++ * into a <i>pure</i> half and a <i>live-world</i> half, because two very different callers need
++ * the same data:</p>
++ * <ul>
++ *   <li>{@link #computeFill} / {@link #toBlockEntityTag} are <b>pure</b>: they only read the
++ *       datapack-driven book pool, the enchantment registry (via a {@link HolderGetter}) and the
++ *       {@link RandomSource} they are given. They never touch a level, so they are safe to call
++ *       from a worldgen worker thread — which is exactly what
++ *       {@link BookshelfReplacerProcessor#finalizeProcessing} does when it writes the finished
++ *       shelf (state + block-entity NBT) straight into the {@code StructureBlockInfo} list.</li>
++ *   <li>{@link #applyToPlacedBookshelf} / {@link #applyFacingToPlacedBookshelf} write to a
++ *       <i>live</i> {@link ServerLevel} and are therefore <b>server-thread only</b>; both refuse
++ *       to run anywhere else (see {@link #requireServerThread}) instead of blocking on a chunk
++ *       that the worldgen worker is itself generating.</li>
++ * </ul>
++ *
++ * <p><b>Why this split exists:</b> the previous implementation called the live-world fill from
++ * {@code StructureProcessor#finalizeProcessing}, i.e. from a worldgen worker thread, with the
++ * real {@code ServerLevel} unwrapped from the {@code WorldGenRegion}. For every shelf that meant
++ * {@code level.getBlockState(pos)} / {@code level.getBlockEntity(pos)} on the chunk that was
++ * <i>currently being generated</i>, which is by definition not {@code FULL} in the chunk cache:
++ * the worker blocked in {@code CompletableFuture.join()} while the server thread waited for the
++ * same chunk future. Under Distant Horizons' FEATURES LOD generator (its own thread pool, outside
++ * the vanilla scheduler) that was a deterministic hard deadlock. See
++ * {@code docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md}.</p>
++ *
+  * <p><b>Fill algorithm (schema v2):</b></p>
+  * <ol>
+  *   <li>Pick {@code N ∈ [minBooks, maxBooks]} uniformly (default 3-5).</li>
+@@ -56,8 +94,8 @@
+  * bugs for:
+  * <ul>
+  *   <li>Back is a chest / half-slab / stairs / another shelf: {@code isFaceSturdy} returns
+- *       {@code false} for these, so v2 rejected them and fell back to the default facing —
+- *       which under template-pool rotation looked "random" across pieces.</li>
++ *       {@code false} for these, so v2 rejected them and fell back to the default facing — which
++ *       under template-pool rotation looked "random" across pieces.</li>
+  *   <li>Corridor with side walls but nothing behind (chest room aisle, wide library isle): v2
+  *       picked "back to a side wall" because that was the only axis with a sturdy back, even
+  *       though the row of adjacent shelves face along the perpendicular axis.</li>
+@@ -82,13 +120,19 @@
+  * <ul>
+  *   <li>Shelf with chest behind: v2 → fall back to default (rotated randomly by template).
+  *       v3 → chest back gets +1, side/front scoring still identifies the open direction. Fixed.</li>
+- *   <li>Shelf between two side blocks, front & back air: v2 → picks "back toward a side block".
++ *   <li>Shelf between two side blocks, front &amp; back air: v2 → picks "back toward a side block".
+  *       v3 → E/W sides now score +1 each ({@code +2} corridor bonus) on the N-S axis, whereas
+  *       facing INTO the side block fails the hard filter. Shelf faces along the corridor axis.
+  *       Fixed.</li>
+  * </ul>
++ * <p>The facing pass only runs <b>after</b> the structure piece (and its neighbours) are actually
++ * placed — see {@link #applyFacingToPlacedBookshelf}. During worldgen the piece's own walls are
++ * still in the template, not in the world, so scoring there would see an empty room.</p>
+  */
+ public final class BookshelfBookFiller {
++    /** Block-entity id written into the structure-tag path, matching vanilla template NBT. */
++    public static final String BOOKSHELF_BLOCK_ENTITY_ID = "minecraft:chiseled_bookshelf";
++
+     private static final Component LORE = Component.literal("Chiseled Enchanting Table")
+         .withStyle(style -> style.withColor(0x800080));
+ 
+@@ -101,50 +145,52 @@
+         BlockStateProperties.SLOT_5_OCCUPIED,
+     };
+ 
++    private static final int SLOT_COUNT = SLOT_OCCUPIED.length;
++
++    /** One-shot latch so a mis-threaded caller logs once instead of once per shelf. */
++    private static final AtomicBoolean OFF_THREAD_WARNING_LOGGED = new AtomicBoolean();
++
+     private BookshelfBookFiller() {}
+ 
+     /**
+-     * Called from both filler paths (template-pool `finalizeProcessing` and stronghold-library
+-     * `postProcessBookshelf`). Handles state swap (if the block is still a plain bookshelf),
+-     * facing picking, and 6-slot item fill.
++     * Result of one fill roll: the chiseled-bookshelf {@link BlockState} with the six
++     * {@code slot_*_occupied} properties already applied, plus the six slot contents.
++     *
++     * <p>{@code state} keeps whatever {@code facing} the caller passed in — deciding the facing is
++     * a separate, main-thread-only step (see {@link #applyFacingToPlacedBookshelf}).</p>
+      */
+-    public static void applyToPlacedBookshelf(ServerLevel level, BlockPos pos, RandomSource random) {
+-        BlockState existing = level.getBlockState(pos);
+-        boolean freshlyReplaced = false;
+-        if (existing.is(Blocks.BOOKSHELF)) {
+-            existing = Blocks.CHISELED_BOOKSHELF.defaultBlockState();
+-            freshlyReplaced = true;
+-        } else if (!existing.is(Blocks.CHISELED_BOOKSHELF)) {
+-            return; // Not something we should touch.
+-        }
++    public record Fill(BlockState state, NonNullList<ItemStack> items) {}
+ 
+-        // Pick a facing whose front is toward air (see class javadoc). Uses the same RandomSource
+-        // as the fill so a fixed positional seed keeps the outcome deterministic across regens.
+-        Direction facing = pickFrontFacing(level, pos, random)
+-            .orElse(existing.getValue(BlockStateProperties.HORIZONTAL_FACING));
+-        BlockState chiseled = existing.setValue(BlockStateProperties.HORIZONTAL_FACING, facing);
+-        if (freshlyReplaced || chiseled != existing) {
+-            level.setBlock(pos, chiseled, Block.UPDATE_CLIENTS);
+-        }
++    // ---------------------------------------------------------------------------------------
++    // Pure half — safe on any thread, including worldgen workers.
++    // ---------------------------------------------------------------------------------------
+ 
++    /**
++     * Rolls the book contents for one shelf. Pure: reads only the datapack pool, the given
++     * enchantment lookup and the given {@link RandomSource}; never touches a level.
++     *
++     * @param baseState a {@link Blocks#CHISELED_BOOKSHELF} state (its {@code facing} is preserved)
++     */
++    public static Fill computeFill(
++        BlockState baseState,
++        RandomSource random,
++        HolderGetter<Enchantment> enchantmentLookup
++    ) {
+         BookshelfBookPool pool = ChiseledEnchantingTableData.bookshelfBookPool();
+-        HolderGetter<Enchantment> enchantmentLookup =
+-            level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+ 
+         // Compute the book count and choose which slots receive a book.
+-        int minBooks = Math.max(0, Math.min(6, pool.minBooks()));
+-        int maxBooks = Math.max(minBooks, Math.min(6, pool.maxBooks()));
++        int minBooks = Math.max(0, Math.min(SLOT_COUNT, pool.minBooks()));
++        int maxBooks = Math.max(minBooks, Math.min(SLOT_COUNT, pool.maxBooks()));
+         int bookCount = minBooks == maxBooks
+             ? minBooks
+             : minBooks + random.nextInt(maxBooks - minBooks + 1);
+ 
+-        List<Integer> slotOrder = new ArrayList<>(6);
+-        for (int i = 0; i < 6; i++) slotOrder.add(i);
++        List<Integer> slotOrder = new ArrayList<>(SLOT_COUNT);
++        for (int i = 0; i < SLOT_COUNT; i++) slotOrder.add(i);
+         Collections.shuffle(slotOrder, new java.util.Random(random.nextLong()));
+         List<Integer> occupiedSlots = slotOrder.subList(0, bookCount);
+ 
+-        ItemStack[] slots = new ItemStack[6];
+-        for (int i = 0; i < 6; i++) slots[i] = ItemStack.EMPTY;
++        NonNullList<ItemStack> items = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY);
+         // Pre-aggregate enchant candidates once per shelf so we don't redo the O(N_injections)
+         // walk per book.
+         List<WeightedEntry> enchantCandidates = pool.enchantedBookProbability() > 0.0
+@@ -152,43 +198,148 @@
+             : List.of();
+         for (int occupiedSlot : occupiedSlots) {
+             boolean enchanted = random.nextDouble() < pool.enchantedBookProbability();
+-            slots[occupiedSlot] = (enchanted && !enchantCandidates.isEmpty())
++            items.set(occupiedSlot, (enchanted && !enchantCandidates.isEmpty())
+                 ? pickWeightedEnchantedBook(random, enchantCandidates)
+-                : new ItemStack(Items.BOOK);
++                : new ItemStack(Items.BOOK));
+         }
+ 
+-        // Commit to the block entity + block state.
+-        BlockEntity be = level.getBlockEntity(pos);
+-        if (!(be instanceof ChiseledBookShelfBlockEntity cbsbe)) {
++        BlockState state = baseState;
++        for (int slot = 0; slot < SLOT_COUNT; slot++) {
++            state = state.setValue(SLOT_OCCUPIED[slot], !items.get(slot).isEmpty());
++        }
++        return new Fill(state, items);
++    }
++
++    /**
++     * Encodes the slot contents exactly the way {@link ChiseledBookShelfBlockEntity} persists them
++     * ({@code ContainerHelper.saveAllItems} → {@code Items: [{Slot, id, count, components}, ...]}),
++     * so vanilla's {@code StructureTemplate.placeInWorld} can hand the tag to
++     * {@code BlockEntity#loadWithComponents} when the shelf is actually placed.
++     *
++     * <p>Uses {@link TagValueOutput#createWithContext} so the item components (enchantments,
++     * lore, …) are encoded through registry-aware ops — no datapack/registry lookup is required on
++     * the calling thread beyond the {@code registries} argument itself.</p>
++     */
++    public static CompoundTag toBlockEntityTag(NonNullList<ItemStack> items, HolderLookup.Provider registries) {
++        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
++        ContainerHelper.saveAllItems(output, items, true);
++        CompoundTag tag = output.buildResult();
++        // Vanilla template NBT carries the block-entity id; loadWithComponents ignores it, but
++        // keeping it makes the generated tag indistinguishable from a hand-built structure file.
++        tag.putString("id", BOOKSHELF_BLOCK_ENTITY_ID);
++        return tag;
++    }
++
++    // ---------------------------------------------------------------------------------------
++    // Live-world half — server thread only.
++    // ---------------------------------------------------------------------------------------
++
++    /**
++     * Main-thread enrichment path: turns a placed plain {@link Blocks#BOOKSHELF} (stronghold
++     * libraries and friends) into a filled chiseled bookshelf, or re-fills an already chiseled one.
++     *
++     * <p><b>Server thread only.</b> Worldgen must never reach this method: see the class javadoc.
++     * Callers in worldgen land ({@code finalizeProcessing}) use {@link #computeFill} +
++     * {@link #toBlockEntityTag} instead and let vanilla place the finished block.</p>
++     */
++    public static void applyToPlacedBookshelf(ServerLevel level, BlockPos pos, RandomSource random) {
++        if (!requireServerThread(level, "applyToPlacedBookshelf")) return;
++
++        BlockState existing = level.getBlockState(pos);
++        boolean replacePlainBookshelf = false;
++        if (existing.is(Blocks.BOOKSHELF)) {
++            existing = Blocks.CHISELED_BOOKSHELF.defaultBlockState();
++            replacePlainBookshelf = true;
++        } else if (!existing.is(Blocks.CHISELED_BOOKSHELF)) {
++            return; // Not something we should touch.
++        }
++
++        // Pick a facing whose front is toward air (see class javadoc). Uses the same RandomSource
++        // as the fill so a fixed positional seed keeps the outcome deterministic across regens.
++        Direction facing = pickFrontFacing(level, pos)
++            .orElse(existing.getValue(BlockStateProperties.HORIZONTAL_FACING));
++        BlockState base = existing.setValue(BlockStateProperties.HORIZONTAL_FACING, facing);
++        Fill fill = computeFill(
++            base,
++            random,
++            level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
++        );
++        if (replacePlainBookshelf || fill.state() != base) {
++            level.setBlock(pos, fill.state(), Block.UPDATE_CLIENTS);
++        }
++
++        // Commit to the block entity. Items are written through getItems() rather than setItem():
++        // setItem() re-validates against #minecraft:bookshelf_books and then rewrites the whole
++        // block state per slot, which is both redundant (we already computed the state) and
++        // stricter than the NBT-load path vanilla itself uses for structures.
++        BlockEntity blockEntity = level.getBlockEntity(pos);
++        if (!(blockEntity instanceof ChiseledBookShelfBlockEntity shelf)) {
+             ChiseledEnchantingTable.LOGGER.warn(
+                 "applyToPlacedBookshelf: expected ChiseledBookShelfBlockEntity at {}, got {}",
+-                pos, be == null ? "null" : be.getClass().getSimpleName()
++                pos, blockEntity == null ? "null" : blockEntity.getClass().getSimpleName()
+             );
+             return;
+         }
+-
+-        BlockState updated = chiseled;
+-        for (int i = 0; i < 6; i++) {
+-            cbsbe.setItem(i, slots[i]);
+-            updated = updated.setValue(SLOT_OCCUPIED[i], !slots[i].isEmpty());
++        NonNullList<ItemStack> target = shelf.getItems();
++        for (int slot = 0; slot < SLOT_COUNT; slot++) {
++            target.set(slot, fill.items().get(slot));
+         }
+-        if (updated != chiseled) {
+-            level.setBlock(pos, updated, Block.UPDATE_CLIENTS);
++        shelf.setChanged();
++    }
++
++    /**
++     * Main-thread facing refinement for a shelf whose books were already written during worldgen
++     * (the {@code StructureBlockInfo} NBT path). Runs once the piece is fully placed, so the
++     * neighbour scan sees the real geometry — including the walls that belong to the same piece.
++     *
++     * <p><b>Server thread only.</b> Does nothing when the shelf is gone, buried, or already faces
++     * the best direction.</p>
++     */
++    public static void applyFacingToPlacedBookshelf(ServerLevel level, BlockPos pos) {
++        if (!requireServerThread(level, "applyFacingToPlacedBookshelf")) return;
++
++        BlockState state = level.getBlockState(pos);
++        if (!state.is(Blocks.CHISELED_BOOKSHELF)) return;
++
++        Direction currentFacing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
++        Optional<Direction> best = pickFrontFacing(level, pos);
++        if (best.isEmpty() || best.get() == currentFacing) return;
++        level.setBlock(pos, state.setValue(BlockStateProperties.HORIZONTAL_FACING, best.get()), Block.UPDATE_CLIENTS);
++    }
++
++    /**
++     * Refuses to run off the server thread. The pre-fix code did exactly that from worldgen and
++     * deadlocked the integrated server; a loud no-op is strictly better than a frozen game, and
++     * keeps any future re-introduction of the pattern visible in the log instead of in a thread
++     * dump.
++     */
++    private static boolean requireServerThread(ServerLevel level, String caller) {
++        MinecraftServer server = level.getServer();
++        if (server != null && server.isSameThread()) return true;
++        if (OFF_THREAD_WARNING_LOGGED.compareAndSet(false, true)) {
++            ChiseledEnchantingTable.LOGGER.error(
++                "{} was called off the server thread ({}). Refusing to read/write the live level: "
++                    + "worldgen must build the filled shelf through "
++                    + "BookshelfReplacerProcessor#finalizeProcessing instead.",
++                caller, Thread.currentThread().getName()
++            );
+         }
+-        cbsbe.setChanged();
++        return false;
+     }
+ 
+     /**
+      * See class javadoc, "Facing algorithm (v3)". Returns {@link Optional#empty()} to signal
+      * "the shelf is fully buried, keep the caller's default facing".
+      *
+-     * <p>{@code random} is accepted (rather than being removed from the signature) so a future
+-     * tweak can, e.g., break ties on truly-symmetrical arrangements randomly instead of by
+-     * fixed order. The current implementation is fully deterministic — same position, same
+-     * choice — which is the whole point of the "shelves in a row should all face the same way"
+-     * requirement.</p>
++     * <p>Fully deterministic — same position, same geometry, same choice — which is the whole
++     * point of the "shelves in a row should all face the same way" requirement.</p>
++     *
++     * <p>Reads go through {@link #getLoadedBlockState}, which never loads or generates a chunk.
++     * A neighbour in an unloaded chunk counts as "unknown": it fails the hard filter when it is
++     * the front (we never rotate a shelf into a chunk we cannot see) and contributes no backing
++     * or side score otherwise.</p>
+      */
+-    private static Optional<Direction> pickFrontFacing(ServerLevel level, BlockPos pos, RandomSource random) {
++    private static Optional<Direction> pickFrontFacing(LevelReader level, BlockPos pos) {
+         // Fixed iteration order gives every shelf in the same corridor the same tie-break
+         // outcome. Order matches the intent of the class javadoc: axes X then Z, negative then
+         // positive within each axis (WEST, EAST, NORTH, SOUTH).
+@@ -197,11 +348,11 @@
+         };
+         Direction best = null;
+         int bestScore = Integer.MIN_VALUE;
+-        for (Direction d : order) {
+-            int score = scoreFrontFacing(level, pos, d);
++        for (Direction direction : order) {
++            int score = scoreFrontFacing(level, pos, direction);
+             if (score > bestScore) {
+                 bestScore = score;
+-                best = d;
++                best = direction;
+             }
+         }
+         // A score of Integer.MIN_VALUE means the hard filter rejected every direction (all four
+@@ -233,10 +384,13 @@
+      * the best side score (+3), an open axis <em>always</em> wins over a wall-behind on the
+      * perpendicular axis. That's the ranking the user asked for.</p>
+      */
+-    private static int scoreFrontFacing(ServerLevel level, BlockPos pos, Direction front) {
++    private static int scoreFrontFacing(LevelReader level, BlockPos pos, Direction front) {
+         // Hard filter: never point the book side into a non-air block (chest, wall, slab, ...).
++        // Unknown (chunk not loaded) counts as "blocked" — rotating blindly is the one thing the
++        // player would notice.
+         BlockPos frontPos = pos.relative(front);
+-        if (!level.getBlockState(frontPos).isAir()) return Integer.MIN_VALUE;
++        BlockState frontState = getLoadedBlockState(level, frontPos);
++        if (frontState == null || !frontState.isAir()) return Integer.MIN_VALUE;
+ 
+         int score = 0;
+ 
+@@ -245,26 +399,29 @@
+         // ordering; two shelves in the same open geometry independently arrive at the same
+         // answer.
+         BlockPos backPos = pos.relative(front.getOpposite());
+-        BlockState backState = level.getBlockState(backPos);
+-        if (backState.isAir()) {
+-            // The front is air (hard filter), and now we know the back is air too — this axis
+-            // is fully open.
+-            score += 100;
+-        } else if (backState.isFaceSturdy(level, backPos, front)) {
+-            score += 10;
+-        } else {
+-            // Non-air non-sturdy back (chest / slab / other shelf / stairs): still a valid
+-            // "backing" visually. Beats no-backing and loses to open-axis.
+-            score += 6;
++        BlockState backState = getLoadedBlockState(level, backPos);
++        if (backState != null) {
++            if (backState.isAir()) {
++                // The front is air (hard filter), and now we know the back is air too — this axis
++                // is fully open.
++                score += 100;
++            } else if (backState.isFaceSturdy(level, backPos, front)) {
++                score += 10;
++            } else {
++                // Non-air non-sturdy back (chest / slab / other shelf / stairs): still a valid
++                // "backing" visually. Beats no-backing and loses to open-axis.
++                score += 6;
++            }
+         }
+ 
+         // Perpendicular side scoring. Tie-break only (weights are all under +10). Two walled
+         // sides (corridor along front-back axis) mildly beats one walled side.
+-        Direction.Axis perpAxis = front.getAxis() == Direction.Axis.X ? Direction.Axis.Z : Direction.Axis.X;
+-        Direction sideA = Direction.get(Direction.AxisDirection.NEGATIVE, perpAxis);
++        Direction.Axis perpendicularAxis =
++            front.getAxis() == Direction.Axis.X ? Direction.Axis.Z : Direction.Axis.X;
++        Direction sideA = Direction.get(Direction.AxisDirection.NEGATIVE, perpendicularAxis);
+         Direction sideB = sideA.getOpposite();
+-        boolean sideAWalled = !level.getBlockState(pos.relative(sideA)).isAir();
+-        boolean sideBWalled = !level.getBlockState(pos.relative(sideB)).isAir();
++        boolean sideAWalled = isNonAir(getLoadedBlockState(level, pos.relative(sideA)));
++        boolean sideBWalled = isNonAir(getLoadedBlockState(level, pos.relative(sideB)));
+         if (sideAWalled && sideBWalled) {
+             score += 3;
+         } else if (sideAWalled || sideBWalled) {
+@@ -274,6 +431,32 @@
+         return score;
+     }
+ 
++    private static boolean isNonAir(@Nullable BlockState state) {
++        return state != null && !state.isAir();
++    }
++
++    /**
++     * Reads a block state <b>without ever loading or generating a chunk</b>; {@code null} means
++     * "not currently loaded, treat as unknown".
++     *
++     * <p>{@code ServerChunkCache#getChunkNow} is the vanilla accessor for exactly this: it is a
++     * pure cache lookup (and returns {@code null} off the server thread, which the callers have
++     * already excluded). Using {@code level.getBlockState(pos)} here would synchronously load the
++     * neighbour chunk — the classic "loading a chunk from inside chunk generation" hazard.</p>
++     */
++    private static @Nullable BlockState getLoadedBlockState(LevelReader level, BlockPos pos) {
++        if (!(level instanceof ServerLevel serverLevel)) return null;
++        LevelChunk chunk = serverLevel.getChunkSource().getChunkNow(
++            SectionPos.blockToSectionCoord(pos.getX()),
++            SectionPos.blockToSectionCoord(pos.getZ())
++        );
++        return chunk == null ? null : chunk.getBlockState(pos);
++    }
++
++    // ---------------------------------------------------------------------------------------
++    // Weighted enchant selection
++    // ---------------------------------------------------------------------------------------
++
+     /**
+      * Pre-aggregates the enchanted-book candidate pool for one shelf. Walks
+      * {@code loot_injections.json} once, filtering to non-empty non-special entries, resolves each
+@@ -315,19 +498,19 @@
+ 
+     private static ItemStack pickWeightedEnchantedBook(RandomSource random, List<WeightedEntry> candidates) {
+         double total = 0.0;
+-        for (WeightedEntry e : candidates) total += e.weight;
++        for (WeightedEntry entry : candidates) total += entry.weight;
+         if (total <= 0.0) return new ItemStack(Items.BOOK);
+         double roll = random.nextDouble() * total;
+-        double cum = 0.0;
++        double cumulative = 0.0;
+         WeightedEntry picked = candidates.get(candidates.size() - 1);
+-        for (WeightedEntry e : candidates) {
+-            cum += e.weight;
+-            if (roll < cum) { picked = e; break; }
++        for (WeightedEntry entry : candidates) {
++            cumulative += entry.weight;
++            if (roll < cumulative) { picked = entry; break; }
+         }
+         ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK);
+         int level = picked.level;
+-        Holder<Enchantment> h = picked.holder;
+-        EnchantmentHelper.updateEnchantments(stack, mutable -> mutable.set(h, level));
++        Holder<Enchantment> holder = picked.holder;
++        EnchantmentHelper.updateEnchantments(stack, mutable -> mutable.set(holder, level));
+         stack.set(DataComponents.LORE, new ItemLore(List.of(LORE)));
+         return stack;
+     }
+
+diff --git a/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java b/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java
+--- a/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java
++++ b/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java
+@@ -5,11 +5,19 @@
+ import java.util.ArrayList;
+ import java.util.List;
+ import net.minecraft.core.BlockPos;
++import net.minecraft.core.HolderGetter;
++import net.minecraft.core.SectionPos;
++import net.minecraft.core.registries.Registries;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.util.RandomSource;
++import net.minecraft.world.item.enchantment.Enchantment;
+ import net.minecraft.world.level.ServerLevelAccessor;
++import net.minecraft.world.level.WorldGenLevel;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.state.BlockState;
++import net.minecraft.world.level.chunk.ChunkAccess;
++import net.minecraft.world.level.chunk.status.ChunkStatus;
++import net.minecraft.world.level.chunk.ProtoChunk;
+ import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
+ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+@@ -20,18 +28,32 @@
+  * whose contents are chosen from
+  * {@link chiseled_enchanting_table.data.ChiseledEnchantingTableData#bookshelfBookPool()}.
+  *
+- * <p><b>Design:</b> the actual book stacks need a live enchantment {@link net.minecraft.core.Holder}
+- * lookup, which requires a {@link ServerLevel} — not available from
+- * {@link #processBlock}. So this class splits the work in two:</p>
++ * <p><b>Design (post-deadlock-fix, see
++ * {@code docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md}):</b> both hooks of this processor run
++ * on a <i>worldgen worker thread</i> during the {@code FEATURES} decoration stage, inside a
++ * {@link net.minecraft.server.level.WorldGenRegion}. The rule for both is the same and absolute:
++ * <b>never touch the real {@link ServerLevel}, never read/write the live chunk cache.</b> The real
++ * level does not contain the chunk being generated yet, so any read there blocks the worker on a
++ * future that only the (blocked) server thread could complete — a hard deadlock under mods that
++ * generate chunks on their own pool (Distant Horizons' {@code FEATURES} LOD generator, C2ME).</p>
++ *
+  * <ul>
+  *   <li>{@link #processBlock} rewrites {@code BOOKSHELF} entries in the template block-info list
+- *       to {@code CHISELED_BOOKSHELF} block states (empty, no NBT). This is what actually lands
+- *       in the world when the template is placed.</li>
+- *   <li>{@link #finalizeProcessing} runs afterwards with a {@link ServerLevelAccessor} and calls
+- *       {@link BookshelfBookFiller#applyToPlacedBookshelf(ServerLevel, BlockPos, RandomSource)}
+- *       on every position we rewrote, so the same enrichment logic is shared with the
+- *       stronghold-library post-processing path (via
+- *       {@link chiseled_enchanting_table.mixin.structure.LevelChunkPostProcessMixin}).</li>
++ *       to empty {@code CHISELED_BOOKSHELF} block states. Pure data, no world access.</li>
++ *   <li>{@link #finalizeProcessing} rolls the book contents with
++ *       {@link BookshelfBookFiller#computeFill} (pure: pool JSON + enchantment registry + the
++ *       positional seed) and returns a new {@link StructureTemplate.StructureBlockInfo} carrying
++ *       the finished block state and the block-entity NBT. Vanilla's
++ *       {@code StructureTemplate.placeInWorld} then places the block and loads the NBT into the
++ *       freshly created block entity — on whichever thread owns the generation step, with no
++ *       cross-chunk read anywhere.</li>
++ *   <li>The facing heuristic needs the <i>finished</i> geometry (a piece's own walls are still in
++ *       the template during {@code finalizeProcessing}), so it is deferred: {@code finalizeProcessing}
++ *       marks the position for chunk post-processing and
++ *       {@link chiseled_enchanting_table.mixin.structure.LevelChunkPostProcessMixin} calls
++ *       {@link BookshelfBookFiller#applyFacingToPlacedBookshelf} from the server thread once the
++ *       chunk becomes ticking. If that mark is ever unavailable the shelf still keeps its books —
++ *       only the facing stays at the template's rotated default.</li>
+  * </ul>
+  */
+ public class BookshelfReplacerProcessor implements StructureProcessor {
+@@ -63,19 +85,27 @@
+         if (!REPLACEMENT_ENABLED) return currentBlockInfo;
+         BlockState state = currentBlockInfo.state();
+         if (!state.is(Blocks.BOOKSHELF)) return currentBlockInfo;
+-        // Rewrite to an empty chiseled bookshelf; the fill happens in finalizeProcessing where a
+-        // ServerLevelAccessor is available (needed for the dynamic enchantment registry lookup).
++        // Rewrite to an empty chiseled bookshelf; the fill happens in finalizeProcessing, which
++        // turns the entry into a completely finished shelf (state + block-entity NBT).
+         BlockState chiseled = Blocks.CHISELED_BOOKSHELF.defaultBlockState();
+         return new StructureTemplate.StructureBlockInfo(currentBlockInfo.pos(), chiseled, null);
+     }
+ 
+     /**
+-     * Called after all blocks in this piece are placed. We revisit every position we rewrote in
+-     * {@link #processBlock} and enrich the chiseled bookshelf with items + updated slot state.
++     * Called after every block of the current piece-slice has been processed, still on the worldgen
++     * worker thread. Replaces each empty chiseled-bookshelf entry with a finished one: the state
++     * gains the {@code slot_*_occupied} properties and the entry gains the block-entity NBT with
++     * the book stacks.
++     *
++     * <p><b>No world access.</b> {@code level} is only used for its registry access (the dynamic
++     * enchantment lookup) and its seed; both are plain field reads. The book stacks are attached to
++     * the returned {@link StructureTemplate.StructureBlockInfo}, and vanilla applies them when it
++     * places the block — see {@code StructureTemplate#placeInWorld}, which calls
++     * {@code BlockEntity#loadWithComponents(blockInfo.nbt)} right after {@code setBlock}.</p>
+      */
+     @Override
+     public List<StructureTemplate.StructureBlockInfo> finalizeProcessing(
+-        ServerLevelAccessor world,
++        ServerLevelAccessor level,
+         BlockPos pos,
+         BlockPos pivot,
+         List<StructureTemplate.StructureBlockInfo> originalBlockInfos,
+@@ -83,20 +113,29 @@
+         StructurePlaceSettings data
+     ) {
+         if (!REPLACEMENT_ENABLED) return currentBlockInfos;
+-        ServerLevel level = world.getLevel();
++
++        long seed = worldSeed(level);
++        HolderGetter<Enchantment> enchantments = null;
+         List<StructureTemplate.StructureBlockInfo> result = new ArrayList<>(currentBlockInfos.size());
+         for (StructureTemplate.StructureBlockInfo info : currentBlockInfos) {
+-            if (info.state().is(Blocks.CHISELED_BOOKSHELF) && info.nbt() == null) {
+-                // Positional seed keeps world generation deterministic (same seed -> same fill).
+-                RandomSource random = RandomSource.create(
+-                    level.getSeed()
+-                        ^ ((long) info.pos().getX() * 341873128712L)
+-                        ^ ((long) info.pos().getY() * 132897987541L)
+-                        ^ info.pos().getZ()
+-                );
+-                BookshelfBookFiller.applyToPlacedBookshelf(level, info.pos(), random);
++            if (!info.state().is(Blocks.CHISELED_BOOKSHELF) || info.nbt() != null) {
++                result.add(info);
++                continue;
++            }
++            if (enchantments == null) {
++                enchantments = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+             }
+-            result.add(info);
++            // Positional seed keeps world generation deterministic (same seed + same position ->
++            // same fill), and matches the seed the main-thread post-process path uses.
++            RandomSource random = RandomSource.create(seedFor(seed, info.pos()));
++            BookshelfBookFiller.Fill fill = BookshelfBookFiller.computeFill(info.state(), random, enchantments);
++            result.add(new StructureTemplate.StructureBlockInfo(
++                info.pos(),
++                fill.state(),
++                BookshelfBookFiller.toBlockEntityTag(fill.items(), level.registryAccess())
++            ));
++            // Deferred (server-thread) facing pass; best effort, see the class javadoc.
++            markForFacingPass(level, info.pos());
+         }
+         return result;
+     }
+@@ -105,16 +144,74 @@
+      * Called by {@link chiseled_enchanting_table.mixin.structure.LevelChunkPostProcessMixin} for
+      * every block previously flagged by
+      * {@link chiseled_enchanting_table.mixin.structure.StructurePieceMarkMixin} that still resolves
+-     * to a plain bookshelf. Delegates to {@link BookshelfBookFiller}.
++     * to a plain bookshelf (programmatic pieces such as stronghold libraries). Delegates to
++     * {@link BookshelfBookFiller#applyToPlacedBookshelf} — this runs on the server thread.
+      */
+     public static void postProcessBookshelf(ServerLevel level, BlockPos pos) {
+         if (!REPLACEMENT_ENABLED) return;
+-        RandomSource random = RandomSource.create(
+-            level.getSeed()
+-                ^ ((long) pos.getX() * 341873128712L)
+-                ^ ((long) pos.getY() * 132897987541L)
+-                ^ pos.getZ()
+-        );
++        RandomSource random = RandomSource.create(seedFor(level.getSeed(), pos));
+         BookshelfBookFiller.applyToPlacedBookshelf(level, pos, random);
+     }
++
++    /**
++     * Called by the same mixin for a chiseled bookshelf that was already filled during worldgen
++     * (template path). Only the facing is (re)decided, now that the piece and its neighbours are
++     * actually placed. Server thread.
++     */
++    public static void postProcessFilledBookshelf(ServerLevel level, BlockPos pos) {
++        if (!REPLACEMENT_ENABLED) return;
++        BookshelfBookFiller.applyFacingToPlacedBookshelf(level, pos);
++    }
++
++    /** Deterministic per-position seed; shared by both fill paths. */
++    private static long seedFor(long worldSeed, BlockPos pos) {
++        return worldSeed
++            ^ ((long) pos.getX() * 341873128712L)
++            ^ ((long) pos.getY() * 132897987541L)
++            ^ pos.getZ();
++    }
++
++    /**
++     * Reads the world seed without reaching through to the live {@link ServerLevel} when we are in
++     * a worldgen region ({@link WorldGenLevel#getSeed()} is a cached field, copied by
++     * {@code WorldGenRegion} at construction). The {@code getLevel()} fallback only happens for
++     * non-worldgen callers such as {@code /place structure}, which run on the server thread anyway.
++     */
++    private static long worldSeed(ServerLevelAccessor level) {
++        return level instanceof WorldGenLevel worldGenLevel
++            ? worldGenLevel.getSeed()
++            : level.getLevel().getSeed();
++    }
++
++    /**
++     * Marks {@code pos} for the deferred facing pass. Only {@link ProtoChunk}s can hold that mark
++     * (vanilla's {@code ChunkAccess#markPosForPostProcessing} is a logging no-op on anything else),
++     * and only chunks that are actually part of the current worldgen region can be reached at all —
++     * hence the guard-catch rather than a hard failure: losing the mark costs a facing heuristic,
++     * not the shelf.
++     */
++    private static void markForFacingPass(ServerLevelAccessor level, BlockPos pos) {
++        // Only worldgen regions carry ProtoChunks with a live post-processing queue. Anything else
++        // (a /place or structure-block placement against a real ServerLevel) must not be touched
++        // from here: ServerChunkCache#getChunk is a managedBlock call even for a pure lookup.
++        if (!(level instanceof WorldGenLevel)) return;
++        try {
++            ChunkAccess chunk = level.getChunk(
++                SectionPos.blockToSectionCoord(pos.getX()),
++                SectionPos.blockToSectionCoord(pos.getZ()),
++                ChunkStatus.EMPTY,
++                false
++            );
++            if (chunk instanceof ProtoChunk protoChunk) {
++                protoChunk.markPosForPostProcessing(pos);
++            }
++        } catch (RuntimeException exception) {
++            // Position outside this generation step's region (e.g. a processor chain that opts
++            // into whole-piece state evaluation). Books are already attached; skip the facing pass.
++            ChiseledEnchantingTable.LOGGER.debug(
++                "chiseled-enchanting-table: skipped bookshelf facing pass at {} ({})",
++                pos, exception.toString()
++            );
++        }
++    }
+ }
+
+diff --git a/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java b/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java
+--- a/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java
++++ b/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java
+@@ -6,6 +6,7 @@
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.block.Blocks;
++import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.chunk.LevelChunk;
+ import net.minecraft.world.level.chunk.ProtoChunk;
+ import org.spongepowered.asm.mixin.Mixin;
+@@ -14,9 +15,29 @@
+ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+ 
+ /**
+- * Tier-2 injection consumer: runs at the top of chunk post-processing and replaces any block
+- * previously flagged by {@link StructurePieceMarkMixin} that still resolves to a plain bookshelf
+- * with a filled chiseled bookshelf via {@link BookshelfReplacerProcessor#postProcessBookshelf}.
++ * Tier-2 injection consumer: runs at the top of chunk post-processing and handles the two
++ * worldgen-deferred bookshelf cases on the <b>server thread</b>, where touching the live level is
++ * safe:
++ *
++ * <ul>
++ *   <li><b>Plain {@code BOOKSHELF}</b> — flagged by
++ *       {@link StructurePieceMarkMixin} (programmatic pieces such as stronghold libraries, whose
++ *       blocks are written straight into the world instead of through a template). Full fill via
++ *       {@link BookshelfReplacerProcessor#postProcessBookshelf}.</li>
++ *   <li><b>{@code CHISELED_BOOKSHELF}</b> — flagged by
++ *       {@link BookshelfReplacerProcessor#finalizeProcessing} (template pieces). The books are
++ *       already in the placed block entity; only the facing heuristic runs here, via
++ *       {@link BookshelfReplacerProcessor#postProcessFilledBookshelf}, because it needs the
++ *       <i>finished</i> geometry (the piece's own walls are still in the template while the
++ *       processor runs).</li>
++ * </ul>
++ *
++ * <p><b>Why this cannot move back into worldgen:</b> historically the template path did the whole
++ * fill from {@code finalizeProcessing} against the real {@code ServerLevel}, which blocks a
++ * worldgen worker on the chunk it is itself generating — see
++ * {@code docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md}. This hook is only reached from
++ * {@code ChunkMap#prepareTickingChunk}, i.e. after the chunk is {@code FULL} and on the main
++ * thread, so {@code getBlockState}/{@code setBlock} here cannot deadlock.</p>
+  *
+  * <p><b>Why {@code @At("HEAD")}, not {@code @At("TAIL")}:</b> vanilla's
+  * {@link LevelChunk#postProcessGeneration} iterates the {@code postProcessing} lists and calls
+@@ -26,8 +47,8 @@
+  * fluid/neighbour-update pass consumes them.</p>
+  *
+  * <p><b>Why {@link ProtoChunk#unpackOffsetCoordinates}:</b> the packed-short encoding used by
+- * {@link net.minecraft.world.level.chunk.ChunkAccess#markPosForPostProcessing} (actually
+- * implemented in {@link ProtoChunk#packOffsetCoordinates}) is not a trivial
++ * {@link net.minecraft.world.level.chunk.ChunkAccess#markPosForPostProcessing}
++ * (actually implemented in {@link ProtoChunk#packOffsetCoordinates}) is not a trivial
+  * {@code (y<<8)|(z<<4)|x} layout; using vanilla's own unpacker is both correct-by-construction
+  * and future-proof against any encoding tweak. This is exactly what vanilla
+  * {@link LevelChunk#postProcessGeneration} calls internally when it drains the lists.</p>
+@@ -46,8 +67,11 @@
+             for (int i = 0; i < section.size(); i++) {
+                 short packed = section.getShort(i);
+                 BlockPos pos = ProtoChunk.unpackOffsetCoordinates(packed, sectionY, chunkPos);
+-                if (self.getBlockState(pos).is(Blocks.BOOKSHELF)) {
++                BlockState state = self.getBlockState(pos);
++                if (state.is(Blocks.BOOKSHELF)) {
+                     BookshelfReplacerProcessor.postProcessBookshelf(level, pos);
++                } else if (state.is(Blocks.CHISELED_BOOKSHELF)) {
++                    BookshelfReplacerProcessor.postProcessFilledBookshelf(level, pos);
+                 }
+             }
+         }
+
+diff --git a/docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md b/docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md
+new file mode 100644
+--- /dev/null
++++ b/docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md
+@@ -0,0 +1,236 @@
++# Worldgen bookshelf fill: hard deadlock fix (Minecraft 26.2 / mod 1.0.2 line)
++
++> **Scope.** Fix for the integrated-server freeze reported against this unofficial 26.2 port:
++> `BookshelfReplacerProcessor#finalizeProcessing` touching the live `ServerLevel` from a worldgen
++> worker thread. Affects `mechanics/structure/BookshelfReplacerProcessor`,
++> `mechanics/structure/BookshelfBookFiller` and `mixin/structure/LevelChunkPostProcessMixin`.
++>
++> **Status:** patch generated against the `chiseled-enchanting-table-26.2-source` branch
++> (see the branch notes below and §7). **Compile and runtime verification are both still
++> open on this branch** — the `compile-check` workflow does not build it, and there is no
++> client in the authoring sandbox.
++
++> **Branch notes.** Generated on 2026-10-22 from the 26.3 write-up (source commits
++> `55a62fc` + the `ChunkStatus` package fix on the 26.3 line); the code in this patch is
++> adapted to the `26.2` API.
++>
++> **This branch:** identical API surface to 26.3 for everything this patch touches (`StructureProcessor` interface with `codec()`, `ChunkStatus` in `net.minecraft.world.level.chunk.status`, `ChunkAccess#markPosForPostProcessing`). The three files are the 26.3 fix verbatim.
++
++## 1. Symptom
++
++With Distant Horizons (`chunkGeneratorMode = FEATURES`, `generatorPlan = SURFACE_THEN_CHUNKS`) the
++integrated server freezes completely while distant terrain is generated: no TPS, no log output, no
++crash, world cannot be saved. A thread dump (stable across 3 dumps, 5 s apart) shows every
++`DH-World Gen Thread` parked in `CompletableFuture.join()` below
++`BookshelfBookFiller.applyToPlacedBookshelf`, and the server thread parked in a nested
++`ServerChunkCache.getChunkBlocking` / `BlockableEventLoop.managedBlock` chain.
++
++The same chain also appears on a vanilla/C2ME `Worker-Main` thread, so the unsafe cross-thread
++access existed without DH — DH only turns an occasional stall into a deterministic deadlock because
++it generates chunks on its own pool instead of the vanilla chunk scheduler.
++
++## 2. Root cause
++
++### 2.1 What the vanilla 26.2 API actually hands a processor
++
++Verified against decompiled Minecraft 26.2 sources (`net.minecraft.world.level.levelgen.structure.
++templatesystem.StructureTemplate`):
++
++```java
++public static List<StructureBlockInfo> processBlockInfos(
++        ServerLevelAccessor level, BlockPos position, BlockPos referencePos,
++        StructurePlaceSettings settings, List<StructureBlockInfo> blockInfoList) {
++    ...
++    for (StructureBlockInfo blockInfo : blockInfoList) {
++        BlockPos blockPos = StructureTemplate.calculateRelativePosition(settings, blockInfo.pos)
++                                               .offset(position);          // ← ABSOLUTE world pos
++        if (processOnlyInCurrentChunk && chunkBb != null && !chunkBb.isInside(blockPos)) continue;
++        StructureBlockInfo processedBlockInfo = new StructureBlockInfo(blockPos, blockInfo.state, ...);
++        while (processedBlockInfo != null && iterator.hasNext()) {
++            processedBlockInfo = iterator.next().processBlock(level, position, referencePos,
++                                                              blockInfo.pos, processedBlockInfo, settings);
++        }
++        ...
++    }
++    for (StructureProcessor processor : settings.getProcessors()) {
++        processedBlockInfoList = processor.finalizeProcessing(
++                level, position, referencePos, originalBlockInfoList, processedBlockInfoList, settings);
++    }
++    ...
++}
++```
++
++Three consequences matter here:
++
++1. `finalizeProcessing` runs **on the worldgen worker thread**, inside a `WorldGenRegion`
++   (`ChunkGenerator#applyBiomeDecoration` → `StructureStart#placeInChunk`).
++   `StructureProcessor#evaluatesEntirePieceState()` defaults to `false`, so the list handed to us
++   is clipped to the **chunk currently being generated**.
++2. The positions in `processedBlockInfoList` are **absolute world positions** — and, because of the
++   clipping above, they are positions inside the chunk that is *right now* being generated.
++3. Block states are rotated/mirrored by `placeInWorld` **after** processing
++   (`blockInfo.state.mirror(settings.getMirror()).rotate(settings.getRotation())`), and the
++   optional `blockInfo.nbt` is handed to `BlockEntity#loadWithComponents` immediately after
++   `setBlock`. So a processor may legitimately attach a finished block-entity tag to the info and
++   let vanilla place it.
++
++### 2.2 What the mod did
++
++```java
++ServerLevel level = world.getLevel();                 // WorldGenRegion → real level
++...
++BookshelfBookFiller.applyToPlacedBookshelf(level, info.pos(), random);
++    BlockState existing = level.getBlockState(pos);   // ServerChunkCache.getChunk(...)
++    ... level.setBlock(pos, ...); level.getBlockEntity(pos);
++```
++
++For a chunk that is mid-generation, `ServerChunkCache#getChunk` cannot be a cache hit. In 26.2 it
++is explicitly off-thread-aware:
++
++```java
++public @Nullable ChunkAccess getChunk(int x, int z, ChunkStatus targetStatus, boolean loadOrGenerate) {
++    if (Thread.currentThread() != this.mainThread) {
++        return CompletableFuture.supplyAsync(() -> this.getChunk(x, z, targetStatus, loadOrGenerate),
++                                             this.mainThreadProcessor).join();   // ← blocks forever
++    }
++    ...
++    this.mainThreadProcessor.managedBlock(serverFuture::isDone);               // ← server side
++```
++
++The worker blocks in `join()`; the server thread that is supposed to complete that future is itself
++blocked in `managedBlock` waiting for the chunk the worker is "generating". Classic
++producer/consumer cycle across the two thread pools — hence the freeze with no crash and no log.
++
++Reading neighbours through the same real level was equally wrong (`getBlockState` on the four
++neighbours of a shelf on a chunk border). And **the worldgen-side alternative would not have been
++safe either**: `WorldGenRegion#getBlockState` throws a `ReportedException`
++("Requested chunk unavailable during world generation") for anything outside the generating step's
++cache — a hard crash, not a fallback. `WorldGenRegion` also logs
++`warnIfReadOutsideWriteZone` for out-of-write-zone reads.
++
++### 2.3 Second-order bug found while fixing it
++
++Because the processor ran the *live-world* fill, the template path's outcome depended on
++`level.getBlockState(info.pos())` returning a bookshelf at a position that was, by construction,
++not yet placed. In practice villages/mansions/ancient cities got an **empty** chiseled bookshelf
++(the `processBlock` rewrite did land), while the fill either no-op'd, blocked, or — once the chunk
++happened to be generatable — ran against a chunk that vanilla then overwrote. The deferred
++"stronghold library" path (`StructurePieceMarkMixin` → `LevelChunkPostProcessMixin`) is the only
++one that was filling shelves, and only for programmatic pieces.
++
++## 3. Fix
++
++Three changes, in order of importance.
++
++### 3.1 The fill is now pure, and is written into the `StructureBlockInfo` list
++
++`BookshelfReplacerProcessor#finalizeProcessing` no longer touches a level at all:
++
++```java
++RandomSource random = RandomSource.create(seedFor(worldSeed, info.pos()));
++BookshelfBookFiller.Fill fill = BookshelfBookFiller.computeFill(info.state(), random, enchantments);
++result.add(new StructureBlockInfo(info.pos(), fill.state(),
++        BookshelfBookFiller.toBlockEntityTag(fill.items(), level.registryAccess())));
++```
++
++* `computeFill(...)` is a pure roll: datapack pool + `HolderGetter<Enchantment>` +
++  `RandomSource`. It returns the chiseled-bookshelf state with the six `slot_*_occupied`
++  properties applied plus the six slot stacks.
++* `toBlockEntityTag(...)` writes the tag exactly the way
++  `ChiseledBookShelfBlockEntity#saveAdditional` does — `ContainerHelper.saveAllItems` into a
++  `TagValueOutput` created with **registry-aware ops**
++  (`TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registryAccess)`), which yields
++  `{id, Items: [{Slot, id, count, components}, …]}`. Vanilla's `placeInWorld` feeds that tag
++  straight into `loadWithComponents`, on whichever thread owns the generation step.
++* The only things read from the passed `ServerLevelAccessor` are `registryAccess()` and the seed
++  (`WorldGenLevel#getSeed()`, a field `WorldGenRegion` copies at construction). No chunk, no block
++  entity, no `setBlock`.
++* The seed is still `worldSeed ^ mix(position)`, so world generation stays deterministic per
++  position and the two fill paths (template + post-process) derive identical rolls for the same
++  block.
++
++### 3.2 The facing heuristic is deferred to the server thread
++
++The v3 facing algorithm needs the **finished** geometry: while a processor runs, the piece's own
++walls are still in the template, not in the world. So:
++
++* `finalizeProcessing` marks each filled position for chunk post-processing
++  (`ProtoChunk#markPosForPostProcessing`, reached through the `WorldGenRegion` only, guarded by
++  `instanceof WorldGenLevel` and a `try/catch` for the clipping-disabled case — losing the mark
++  costs a facing pick, never the books).
++* `LevelChunkPostProcessMixin` (already `@At("HEAD")` of `LevelChunk#postProcessGeneration`, i.e.
++  server thread, chunk `FULL`) now handles both states:
++  * `BOOKSHELF` → `postProcessBookshelf` (full fill: stronghold libraries, unchanged),
++  * `CHISELED_BOOKSHELF` → `postProcessFilledBookshelf` (facing only, books already in the NBT).
++* Post-processing runs from `ChunkMap#prepareTickingChunk`, i.e. when the chunk starts ticking. The
++  player only ever sees the refined facing, and an unloaded/unvisited chunk keeps the template's
++  rotated default facing instead of losing its books.
++
++### 3.3 Live-world access is now explicitly server-thread-only and never loads a chunk
++
++* `BookshelfBookFiller.applyToPlacedBookshelf` / `applyFacingToPlacedBookshelf` start with
++  `requireServerThread(level, …)`: off-thread calls log **one** error and return instead of
++  blocking. If some future code path regresses, the failure mode becomes a log line, not a frozen
++  server.
++* Neighbour reads go through `getLoadedBlockState(...)`, a `ServerChunkCache#getChunkNow` lookup —
++  a pure cache read that returns `null` off-thread and never generates. An unknown neighbour fails
++  the "front must be air" hard filter (we never rotate a shelf into a chunk we cannot see) and
++  contributes no backing/side score otherwise.
++* Slot contents are committed through `ChiseledBookShelfBlockEntity#getItems()`, not `setItem()`:
++  `setItem` re-validates against `#minecraft:bookshelf_books` and rewrites the whole block state
++  once per slot, which is both redundant (the state was computed already) and stricter than the
++  NBT-load path vanilla uses for structures.
++
++## 4. Behaviour delta
++
++| Case | Before | After |
++| --- | --- | --- |
++| Template structures (villages, mansions, ancient cities, trial chambers) | Empty chiseled bookshelf, or a worldgen-thread stall/deadlock while trying to fill it | Shelf is filled during placement (books in the block-entity NBT), no live-world access |
++| Same, facing | Template-rotated default facing (the fill almost never reached the shelf) | Default facing at generation, corrected on the server thread when the chunk starts ticking |
++| Stronghold libraries / programmatic pieces | Filled on the server thread at chunk post-processing | Unchanged path, now guarded (server thread + non-loading neighbour reads) |
++| Any future off-thread call into the live filler | Silent deadlock risk | One error log line, no-op |
++| Determinism | Seed = `worldSeed ^ mix(pos)`, but the fill rarely applied | Same seed formula, applied on both paths, so a shelf always rolls the same books for its position |
++
++## 5. Explicitly *not* changed
++
++* Book-selection weights, `bookshelf_book_pool.json` schema, enchanted-book lore stamp.
++* The v3 facing rubric itself (open axis +100, sturdy back +10, non-sturdy back +6, sides +3/+1,
++  fixed WEST → EAST → NORTH → SOUTH tie-break).
++* `processBlock`'s `BOOKSHELF` → `CHISELED_BOOKSHELF` rewrite and `REPLACEMENT_ENABLED`.
++* The mixin set. No new mixin was needed; `LevelChunkPostProcessMixin` grew one `else if` branch.
++
++## 6. Why not the other two suggestions from the report
++
++* **"Use the passed `ServerLevelAccessor` and guard for positions outside the generation area."**
++  Right idea, but 26.2's `WorldGenRegion#getBlockState` *throws*
++  (`ReportedException: Requested chunk unavailable during world generation`) instead of failing
++  fast, and inside the write zone it sees pre-placement terrain — the piece's own walls are not
++  there yet, so the facing rubric would score an empty room. Pure-data fill + deferred facing keeps
++  both properties.
++* **"Defer the whole fill to a main-thread hook."** That is what the stronghold path does, and it
++  works — but it makes the *books* depend on the post-processing pipeline firing for every chunk.
++  Filling in the info list means a shelf can never come out empty; the deferred hook then only
++  polishes the facing.
++
++## 7. Verification
++
++Done in this round (no client available in the sandbox):
++
++* `python3 scripts/ci_static_checks.py` → `PASS` (mixin configs, 17 declared mixin reference(s), lang
++  parity).
++* `python3 scripts/compat_check.py` → `PASS` (Tier 1; Tier 2 skipped, no MC jar).
++* `bash scripts/check_release_consistency.sh --strict` → `12 passed, 0 warned, 0 failed`.
++* Compile: **not** verified from this patch. The `compile-check` workflow's push filter does not
++  cover this branch, so apply the patch and run `./gradlew build --rerun-tasks` before
++  releasing (or add the branch to the workflow's `on.push.branches` list).
++
++Still open (needs a real client):
++
++1. DH + C2ME + Lithium world, `FEATURES`/`SURFACE_THEN_CHUNKS`, generate distant terrain while
++   flying: no freeze, `jstack` shows no `DH-World Gen Thread` in `CompletableFuture.join()` under
++   `BookshelfReplacerProcessor`.
++2. A village library / mansion library / ancient-city shelf: books present, `slot_*_occupied`
++   matches the contents, shelf faces the open side.
++3. Stronghold library regression pass (post-process path).
++4. A world with `bookshelf_book_pool.json` `book_count = {min: 0, max: 0}` still swaps the plain
++   bookshelf for an empty chiseled one.

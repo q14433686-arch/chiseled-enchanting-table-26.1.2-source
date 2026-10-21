@@ -16,7 +16,16 @@ base {
 repositories {
     maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
     mavenCentral()
+    // JEI publishes `mezz.jei:jei-<mc>-fabric` here (verified against JEI's own buildSrc:
+    // JeiProject.kt adds exactly this repository for its plugin builds).
+    maven { name = 'BlameJared'; url = 'https://maven.blamejared.com' }
+    maven { name = 'Shedaniel'; url = 'https://maven.shedaniel.me' }
+    maven { name = 'Architectury'; url = 'https://maven.architectury.dev' }
 }
+
+/** Optional viewer integration toggles (see gradle.properties). */
+def jeiEnabled = project.findProperty('enable_jei') != 'false'
+def reiEnabled = project.findProperty('enable_rei') != 'false'
 
 loom {
     splitEnvironmentSourceSets()
@@ -63,6 +72,15 @@ sourceSets {
     }
     client {
         java {
+            // Optional JEI integration. Excluded when `-Penable_jei=false` so an environment that
+            // cannot resolve JEI's maven still builds (the fabric.mod.json entrypoint is only
+            // touched when JEI is actually installed).
+            if (!jeiEnabled) {
+                exclude 'chiseled_enchanting_table/compat/jei/**'
+            }
+            if (!reiEnabled) {
+                exclude 'chiseled_enchanting_table/compat/rei/**'
+            }
             // P3 first establishes a client compile slice. Full UI/renderer migration is still parked.
             //exclude 'chiseled_enchanting_table/gui/**'
             // P7: renderer restored for floating book smoke path.
@@ -76,6 +94,26 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    if (jeiEnabled) {
+        // compileOnly by design: JEI is never required at runtime, the plugin is only loaded
+        // through the `jei_mod_plugin` entrypoint when JEI itself is installed.
+        // Plain `compileOnly` (not `modCompileOnly`): the 26.x lines are unobfuscated — this repo
+        // already puts fabric-api on `implementation` for the same reason — so there is nothing to
+        // remap, and Loom 1.17 does not even create the `modCompileOnly` configuration here.
+        compileOnly("mezz.jei:jei-${project.minecraft_version}-fabric:${project.jei_version}")
+    }
+
+    if (reiEnabled) {
+        // Same rationale as JEI: compileOnly, unobfuscated 26.x line.
+        compileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${project.rei_version}")
+        // REI's api artifact does not re-export two libraries its own interfaces leak:
+        //   - me.shedaniel.math (Point/Rectangle), from shedaniel's cloth basic-math;
+        //   - dev.architectury (fluid types referenced by EntryStack/EntryStacks).
+        // REI ships both at runtime, so they are compile-time only here as well.
+        compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}")
+        compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}")
+    }
 }
 
 processResources {

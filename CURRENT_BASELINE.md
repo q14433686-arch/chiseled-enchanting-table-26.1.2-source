@@ -91,16 +91,36 @@ Five places must agree on the version/Minecraft declarations — `gradle.propert
 - `chiseled_enchanting_table.mechanics.structure.{BookshelfReplacerProcessor, BookshelfBookFiller}`
   — structure bookshelf replacement processor + weighted book fill; called from **5 mixins**
   under `chiseled_enchanting_table.mixin.structure.*` (4 injectors + 1 accessor).
-  `REPLACEMENT_ENABLED = true`. Two-phase pipeline:
+  `REPLACEMENT_ENABLED = true`. Two-phase pipeline, **worldgen-safe by contract**: nothing in the
+  `finalizeProcessing`/`processBlock` path may touch the real `ServerLevel` (a worldgen worker
+  reading the chunk it is generating deadlocks the server — see
+  [`docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md`](docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md)).
   - **Template-pool path** (villages / mansions / ancient cities): `processBlock` swaps
-    `BOOKSHELF` → empty `CHISELED_BOOKSHELF` at placement, then `finalizeProcessing` uses a
-    `ServerLevelAccessor` to resolve the dynamic enchantment registry and fill the 6 slots.
+    `BOOKSHELF` → empty `CHISELED_BOOKSHELF`, then `finalizeProcessing` resolves the dynamic
+    enchantment registry through the passed `ServerLevelAccessor` (registry + seed only) and
+    returns a finished `StructureBlockInfo` — state with `slot_*_occupied` **plus** the
+    block-entity NBT (`ContainerHelper.saveAllItems` layout). Vanilla's `placeInWorld` applies the
+    tag, so the books are never written to a live chunk from a worker thread. The position is also
+    marked for post-processing so the server thread can refine the facing once the piece is placed.
   - **Programmatic path** (stronghold libraries): `StructurePieceMarkMixin` (uses
     `StructurePieceAccessor` invoker to convert piece-local → world coords via vanilla
     `getWorldPos`) marks the position; `LevelChunkPostProcessMixin` at `@At("HEAD")` iterates the
     still-full `postProcessing` lists using vanilla's own
     `ProtoChunk.unpackOffsetCoordinates(short, int sectionY, ChunkPos)` and delegates to
-    `BookshelfReplacerProcessor.postProcessBookshelf`, which reuses the same filler.
+    `BookshelfReplacerProcessor.postProcessBookshelf` (plain `BOOKSHELF` → full fill) or
+    `postProcessFilledBookshelf` (already-filled `CHISELED_BOOKSHELF` → facing refinement only).
+    Both run on the server thread; the live-world filler refuses to run anywhere else.
+- `chiseled_enchanting_table.compat.EnchantQueryIndex` + `compat.jei.*` + `compat.rei.*` —
+  recipe-viewer support. The index is viewer-agnostic (registry + `enchantment_costs.json` only);
+  each adapter turns every (enchantment, level) row into a two-input recipe so a single category
+  answers both "book → items" and "item → books". Optional: `enable_jei=false` /
+  `enable_rei=false` drop the respective adapter from the build; REI additionally needs
+  `me.shedaniel.cloth:basic-math` + `dev.architectury:architectury-fabric` at compile time only.
+  Costs are server-authoritative: `menu.EnchantCostTablePayload` + `menu.EnchantCostSync` push a
+  per-player resolved table (`chiseled_enchanting_table:enchant_cost_table`) on join and after each
+  data-pack reload, `compat.SyncedEnchantmentCosts` caches it on the client, and both the viewers and
+  `ChiseledEnchantingTableScreenHandler` read it (the latter only when `world.isClientSide()`).
+  See `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §2.1.
 - `chiseled_enchanting_table.menu.*` — `ChiseledEnchantingTableScreenHandler`,
   `ChiseledEnchantingMenuPayloads` (`OptionType`, `TransformationDisplay`,
   `AvailableEnchantmentPayload`, `ApplyEnchantmentPayload`), `AvailableOption`

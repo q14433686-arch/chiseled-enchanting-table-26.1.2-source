@@ -1,0 +1,17 @@
+{
+  "block.chiseled_enchanting_table.chiseled_enchanting_table": "Резной стол зачарования",
+  "item.chiseled_enchanting_table.chiseled_enchanting_table": "Резной стол зачарования",
+  "container.chiseled_enchanting_table.chiseled_enchanting_table": "Резной стол зачарования",
+  "gui.chiseled_enchanting_table.book_upgrade.combine": "Улучшение объединением: %s",
+  "gui.chiseled_enchanting_table.book_upgrade.research": "Улучшение исследованием: %s",
+  "book.chiseled_enchanting_table.lore": "Резной стол зачарования",
+  "jei.chiseled_enchanting_table.category.enchanting": "Резное зачарование",
+  "jei.chiseled_enchanting_table.tooltip.xp": "Стоимость: %s уровней опыта",
+  "jei.chiseled_enchanting_table.tooltip.cost_hint": "Материалом может быть один из нескольких допустимых предметов",
+  "jei.chiseled_enchanting_table.tooltip.cost_synced": "Стоимость материалов рассчитана сервером для вас",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Зачарованная книга должна лежать в ближайшем резном книжном шкафу",
+  "jei.chiseled_enchanting_table.tooltip.conflicts": "Заменяет несовместимые зачарования: %s",
+  "jei.chiseled_enchanting_table.info.station": "Резной стол зачарования применяет зачарование из ближайшего резного книжного шкафа. Положите зачарованные книги в шкафы в радиусе действия, затем выберите строку в списке стола.",
+  "jei.chiseled_enchanting_table.info.bookshelf": "Резные книжные шкафы в радиусе действия стола дают доступные зачарования. Каждая книга в ячейке открывает своё зачарование.",
+  "jei.chiseled_enchanting_table.info.book": "Зачарованные книги открывают своё зачарование, пока лежат в ближайшем резном книжном шкафу. При применении зачарования из книги в ячейке материала книга расходуется."
+}

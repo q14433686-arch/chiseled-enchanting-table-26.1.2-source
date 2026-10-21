@@ -242,6 +242,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public ItemStack getEnchantmentItemCost(EnchantmentWithLevel e, OptionType type) {
+        List<ItemStack> synced = syncedCosts(e, type);
+        if (synced != null) {
+            return synced.isEmpty() ? ItemStack.EMPTY : synced.getFirst();
+        }
         if (type == OptionType.BOOK_COMBINE_UPGRADE) {
             return ItemStack.EMPTY;
         }
@@ -259,6 +263,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public List<ItemStack> getEnchantmentItemCosts(EnchantmentWithLevel e, OptionType type) {
+        List<ItemStack> synced = syncedCosts(e, type);
+        if (synced != null) {
+            return synced;
+        }
         if (type == OptionType.BOOK_COMBINE_UPGRADE) {
             return java.util.List.of();
         }
@@ -279,6 +287,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public List<ItemStack> getAdditionalEnchantmentItemCosts(EnchantmentWithLevel e, OptionType type) {
+        List<ItemStack> synced = syncedCosts(e, type);
+        if (synced != null) {
+            return synced.size() <= 1 ? java.util.List.of() : java.util.List.copyOf(synced.subList(1, synced.size()));
+        }
         if (type == OptionType.BOOK_COMBINE_UPGRADE) {
             return java.util.List.of();
         }
@@ -296,6 +308,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public int getEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
+        var serverRow = syncedRow(e, type);
+        if (serverRow != null) {
+            return serverRow.xpLevelCost();
+        }
         if (type == OptionType.BOOK_COMBINE_UPGRADE) {
             return ChiseledEnchantingTableData.bookCombineXpCost(e, getEnchantmentMaxLevel(e));
         }
@@ -306,6 +322,27 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             return ChiseledEnchantingTableData.transformationXpCost(e.enchantment_id());
         }
         return ChiseledEnchantingTableData.xpCost(e, getEnchantmentMaxLevel(e));
+    }
+
+    /**
+     * Server-resolved cost row for this player, when the client received one.
+     *
+     * <p>Only meaningful on the physical client: the server always resolves costs from its own data
+     * (and for the player who owns the menu), so reading a client-synced row there could hand one
+     * player another player's salted option on a LAN host. Hence the {@code isClientSide} guard.</p>
+     */
+    private chiseled_enchanting_table.compat.SyncedEnchantmentCosts.Cost syncedRow(EnchantmentWithLevel e, OptionType type) {
+        if (!this.world.isClientSide() || type != OptionType.ENCHANTMENT) {
+            return null;
+        }
+        return chiseled_enchanting_table.compat.SyncedEnchantmentCosts
+            .find(e.enchantment_id(), e.enchantment_level())
+            .orElse(null);
+    }
+
+    private List<ItemStack> syncedCosts(EnchantmentWithLevel e, OptionType type) {
+        var row = syncedRow(e, type);
+        return row == null ? null : row.itemCosts();
     }
 
     private int getEnchantmentMaxLevel(EnchantmentWithLevel e) {
