@@ -36,6 +36,34 @@ release page, not the upstream listing.
 
 Once installed, the Chiseled Enchanting Table will be available in your game. Craft it using the new recipe and start enchanting!
 
+## Continuous integration
+
+CI mirrors the triad used by the sister port `q14433686-arch/TaCZ_Refabricated_Unofficial`, because
+this port is developed in a sandbox that cannot reach `maven.fabricmc.net` and therefore cannot
+compile locally — the compile has to happen on Actions.
+
+> **Staged reference copies (`docs/ci/`):** the sandbox GitHub App token cannot write workflow files,
+> so the four reference workflows live in `docs/ci/` and `bash docs/ci/install.sh` applies them to
+> `.github/workflows/`.
+
+| Workflow | What it does | Trigger |
+|---|---|---|
+| [`compile-check.yml`](docs/ci/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API | push to `arena/**` / release branches, PRs |
+| [`build.yml`](docs/ci/build.yml) | static gates first (no network needed), then full `./gradlew build` + jar artifact (14 days) | push / PR |
+| [`consistency.yml`](docs/ci/consistency.yml) | version gate for "bumped one place, forgot the other four" | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml` |
+| [`publish.yml`](docs/ci/publish.yml) | manual `workflow_dispatch` release to GitHub / Modrinth (`26.2` / `1.0.2`) | manual |
+
+The three static gates run in seconds and need no Gradle, so they also work offline:
+
+```bash
+python3 scripts/ci_static_checks.py                 # mixin configs resolvable + registered mixins not excluded + en_us/zh_cn key parity
+python3 scripts/compat_check.py                     # data-pack schema / JSON-vs-Java drift (Tier 1)
+bash scripts/check_release_consistency.sh --strict  # gradle.properties / README / fabric.mod.json / publish.yml agree
+```
+
+Optional warn-only pre-commit reminder: `bash scripts/install-hooks.sh` (it never blocks a commit;
+CI is the real gate).
+
 ## Forge (or other modloader) port
 
 Not planned at the moment.

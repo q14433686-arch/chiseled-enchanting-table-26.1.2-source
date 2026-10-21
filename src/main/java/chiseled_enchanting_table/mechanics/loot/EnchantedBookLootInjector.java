@@ -46,7 +46,8 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
  * effectively does nothing — the feature is fully data-driven.</p>
  */
 public final class EnchantedBookLootInjector {
-    private static final Component LORE = Component.literal("Chiseled Enchanting Table")
+    private static final Component LORE = Component
+        .translatable("book.chiseled_enchanting_table.lore")
         .withStyle(style -> style.withColor(0x800080));
 
     private EnchantedBookLootInjector() {}

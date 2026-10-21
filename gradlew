@@ -248,4 +248,103 @@ eval "set -- $(
         tr '\n' ' '
     )" '"$@"'
 
+# --- CI error bridge (temporary) ----------------------------------------------
+# GitHub Actions only. The Actions *log blob* domain is unreachable from the
+# development sandbox (gh run view --log dies with EOF), but the checks /
+# annotations API *is* reachable -- so build failures are surfaced as ::error
+# annotations, the only channel through which the sandbox can read WHY a build
+# failed. GitHub allows 10 error annotations per step, so the error text is
+# chunked into at most 10 multi-line annotations instead of one per error.
+# The full log is kept at build-reports/compile-java.log either way.
+#
+# Superseded by docs/ci/compile-check.yml (which commits the log back to the
+# branch through the Contents API) as soon as that workflow can be installed;
+# this block can then be deleted. Outside GitHub Actions it does nothing at all.
+if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+    LOG_DIR="$APP_HOME/build-reports"
+    mkdir -p "$LOG_DIR"
+    LOG="$LOG_DIR/compile-java.log"
+    "$JAVACMD" "$@" > "$LOG" 2>&1
+    status=$?
+    cat "$LOG"
+    printf '\n== gradlew exit: %s ==\n' "$status" >> "$LOG"
+    if [ "$status" -ne 0 ]; then
+        python3 - "$LOG" "$APP_HOME" <<'BRIDGE_PY_EOF'
+import re
+import sys
+
+log_path, root = sys.argv[1], sys.argv[2]
+lines = open(log_path, encoding="utf-8", errors="replace").read().splitlines()
+
+ERROR_RE = re.compile(r"^\s*(?P<path>.*?\.java):(?P<line>\d+): (?P<kind>error|warning): (?P<msg>.*)$")
+RESOLUTION_KEYS = (
+    "Could not find", "Could not resolve", "No matching variant", "Could not download",
+    "has been compiled by a more recent", "Unsupported class file", "Execution failed for task",
+    "A problem occurred", "Plugin [id:", "Cannot resolve external dependency",
+)
+LIMIT = 1300
+MAX_CHUNKS = 10
+
+
+def esc(text):
+    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def shorten(path):
+    return path.replace(root, "").lstrip("/")
+
+
+picked = []
+
+# 1) Gradle's own diagnosis block
+start = next((i for i, l in enumerate(lines) if "What went wrong" in l), None)
+if start is not None:
+    picked.extend(l.rstrip() for l in lines[start:start + 12] if l.strip())
+
+# 2) dependency / toolchain resolution problems
+for line in lines:
+    if any(key in line for key in RESOLUTION_KEYS):
+        stripped = line.strip()
+        if stripped not in picked:
+            picked.append(stripped)
+
+# 3) javac errors plus the context lines javac prints under them
+for i, line in enumerate(lines):
+    match = ERROR_RE.match(line)
+    if not match or match.group("kind") != "error":
+        continue
+    picked.append("%s:%s: %s" % (shorten(match.group("path")), match.group("line"), match.group("msg")))
+    for extra in lines[i + 1:i + 5]:
+        # only javac's own indented context lines (symbol:/location:/required:/found:),
+        # never the compiler's trailing summary ("2 errors") or the next diagnostic
+        if (not extra.startswith((" ", "\t")) or ERROR_RE.match(extra)
+                or ": error:" in extra or ": warning:" in extra):
+            break
+        picked.append("    " + extra.strip())
+
+if not picked:
+    picked = [l.rstrip() for l in lines[-30:] if l.strip()]
+
+chunks, current, size = [], [], 0
+for item in picked:
+    if size + len(item) + 1 > LIMIT and current:
+        chunks.append("\n".join(current))
+        current, size = [], 0
+        if len(chunks) >= MAX_CHUNKS:
+            break
+    current.append(item)
+    size += len(item) + 1
+if current and len(chunks) < MAX_CHUNKS:
+    chunks.append("\n".join(current))
+
+total = len(chunks)
+if not chunks:
+    print("::error::gradlew failed with no recognisable error output; see build-reports/compile-java.log")
+for index, chunk in enumerate(chunks, start=1):
+    print("::error title=build failure %d/%d::%s" % (index, total, esc(chunk)))
+BRIDGE_PY_EOF
+    fi
+    exit "$status"
+fi
+
 exec "$JAVACMD" "$@"

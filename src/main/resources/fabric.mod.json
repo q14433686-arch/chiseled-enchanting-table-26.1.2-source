@@ -1,39 +1,48 @@
 {
-	"schemaVersion": 1,
-	"id": "chiseled-enchanting-table",
-	"version": "${version}",
-	"name": "Chiseled Enchanting Table (Unofficial 26.2 Port)",
-	"description": "Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraft 26.2 / Fabric. Not affiliated with or endorsed by the original author. A rework of enchantment progression: you can now enchant your gear using enchanted books placed in nearby chiseled bookshelves using a chiseled enchanting table.",
-	"authors": [
-		"Sacramentix (original mod)",
-		"q14433686-arch (unofficial 26.2 port)"
-	],
-	"contact": {
-		"sources": "https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source",
-		"homepage": "https://github.com/Sacramentix/chiseled-enchanting-table"
-	},
-	"license": "MIT",
-	"icon": "assets/chiseled-enchanting-table/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"main": [
-			"chiseled_enchanting_table.ChiseledEnchantingTable"
-		],
-		"client": [
-			"chiseled_enchanting_table.ChiseledEnchantingTableClient"
-		]
-	},
-	"mixins": [
-		"chiseled-enchanting-table-port.mixins.json"
-	],
-	"depends": {
-		"fabricloader": ">=0.19.3",
-		"minecraft": "26.2",
-		"java": ">=25",
-		"fabric-api": "*"
-	},
-	"suggests": {},
-	"custom": {
-		"chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.2. 1.0.2 stable: JSON-driven chest / archaeology loot injection, live structure bookshelf replacement/fill, score-based shelf-facing, vanilla-anvil-style XP point deduction, restored vanilla enchanting-table book blocking, restored narrow anvil book+book same-level merge blocking, and restored enchanted-book chiseled-bookshelf random-tick particles/sound. Active mixins live in chiseled-enchanting-table-port.mixins.json. Still parked: broader anvil XP-cost tweak, Colorful Books integration, enchanted-book stack-size accessor, and remaining visual/advancement polish. See CURRENT_BASELINE.md for the full capability boundary and docs/EXTENDING.md for data-driven customisation entry points."
-	}
+  "schemaVersion": 1,
+  "id": "chiseled-enchanting-table",
+  "version": "${version}",
+  "name": "Chiseled Enchanting Table (Unofficial 26.2 Port)",
+  "description": "Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraft 26.2 / Fabric. Not affiliated with or endorsed by the original author. A rework of enchantment progression: you can now enchant your gear using enchanted books placed in nearby chiseled bookshelves using a chiseled enchanting table.",
+  "authors": [
+    "Sacramentix (original mod)",
+    "q14433686-arch (unofficial 26.2 port)"
+  ],
+  "contact": {
+    "sources": "https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source",
+    "homepage": "https://github.com/Sacramentix/chiseled-enchanting-table"
+  },
+  "license": "MIT",
+  "icon": "assets/chiseled-enchanting-table/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "chiseled_enchanting_table.ChiseledEnchantingTable"
+    ],
+    "client": [
+      "chiseled_enchanting_table.ChiseledEnchantingTableClient"
+    ],
+    "jei_mod_plugin": [
+      "chiseled_enchanting_table.compat.jei.ChiseledEnchantingJeiPlugin"
+    ],
+    "rei_client": [
+      "chiseled_enchanting_table.compat.rei.ChiseledEnchantingReiPlugin"
+    ]
+  },
+  "mixins": [
+    "chiseled-enchanting-table-port.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "jei": "*",
+    "rei": "*"
+  },
+  "custom": {
+    "chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.2. 1.0.2: JSON-driven chest / archaeology loot injection, worldgen-safe structure bookshelf replacement/fill (pure StructureBlockInfo fill + deferred server-thread facing pass), vanilla-anvil-style XP point deduction, restored vanilla enchanting-table book blocking, restored narrow anvil book+book same-level merge blocking, restored enchanted-book chiseled-bookshelf random-tick particles/sound, optional JEI & REI recipe-viewer integration, server-authoritative enchantment cost sync (S2C), and 11 locales with translatable book lore. Active mixins live in chiseled-enchanting-table-port.mixins.json. Still parked: broader anvil XP-cost tweak, Colorful Books integration, enchanted-book stack-size accessor. See CURRENT_BASELINE.md for the capability boundary and docs/EXTENDING.md for data-driven customisation entry points."
+  }
 }

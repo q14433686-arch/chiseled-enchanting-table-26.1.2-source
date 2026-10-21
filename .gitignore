@@ -44,3 +44,7 @@ replay_*.log
 libs/
 
 .devcontainer/
+
+# python
+__pycache__/
+*.pyc

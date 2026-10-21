@@ -199,11 +199,22 @@ generating villages / mansions / ancient cities / stronghold libraries.
   level, and single-level enchantments (Mending, Silk Touch, Infinity) are never level-
   penalised at all.
 
-**Java entry point:** `mechanics.structure.BookshelfBookFiller.applyToPlacedBookshelf(
-ServerLevel, BlockPos, RandomSource)` — the enrichment path used by both the template-pool
-processor (`BookshelfReplacerProcessor#finalizeProcessing`) and the mark-and-post-process
-mixin pipeline (stronghold libraries via `StructurePieceMarkMixin` +
-`LevelChunkPostProcessMixin`).
+**Java entry points:** `mechanics.structure.BookshelfBookFiller` is split in two halves because
+one of them runs on worldgen workers and one on the server thread:
+
+- `computeFill(BlockState, RandomSource, HolderGetter<Enchantment>)` → `Fill(state, items)` and
+  `toBlockEntityTag(NonNullList<ItemStack>, HolderLookup.Provider)` — **pure**, no level access.
+  This is what `BookshelfReplacerProcessor#finalizeProcessing` uses: it returns a finished
+  `StructureBlockInfo` (slot-occupied state + block-entity NBT) that vanilla places. Never call
+  a level from there; the chunk being generated is not in the chunk cache, and reading it from a
+  worker thread deadlocks the server
+  ([report](reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md)).
+- `applyToPlacedBookshelf(ServerLevel, BlockPos, RandomSource)` and
+  `applyFacingToPlacedBookshelf(ServerLevel, BlockPos)` — **server thread only** (they log one
+  error and no-op anywhere else). Used by the mark-and-post-process mixin pipeline (stronghold
+  libraries via `StructurePieceMarkMixin` + `LevelChunkPostProcessMixin`) and for the deferred
+  facing pass on template-placed shelves. Neighbour reads there use
+  `ServerChunkCache#getChunkNow`, so an unloaded neighbour is "unknown", never a chunk load.
 
 ### 6. Loot-item function utility (registry entry, not JSON)
 
