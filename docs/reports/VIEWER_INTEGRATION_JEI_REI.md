@@ -200,6 +200,8 @@ list through `EnchantQueryIndex.conflictSummary(...)`, so translations stay in o
      bookshelf rule and the conflicts line;
   5. install JEI **and** REI together → both categories coexist, no duplicate class or entrypoint
      error.
+- Cost sync compiles green on CI: `6e10544`, `:compileJava` + `:compileClientJava`
+  BUILD SUCCESSFUL (payload in the main source set, receiver in the client source set).
 - Cost sync (both viewers): join a **dedicated server** whose `enchantment_costs.json` differs from
   the jar (e.g. swap lapis for amethyst) → the viewer row, the tooltip and the table GUI all show
   amethyst; run `/reload` after editing the file → costs update without reconnecting; leave the
