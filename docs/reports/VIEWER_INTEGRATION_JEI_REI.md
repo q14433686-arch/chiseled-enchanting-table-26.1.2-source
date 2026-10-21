@@ -1,8 +1,9 @@
 # Recipe-viewer integration: JEI (shipped) and REI (planned)
 
-> **Status.** JEI integration is implemented and compiles green on CI (`build` + `compile-check`,
-> commit `1b38fcc`). REI is **not implemented yet** — this document records what is verified about
-> its 26.3 API and what the adapter has to do, so the next pass is mechanical rather than exploratory.
+> **Status.** JEI integration is implemented, compiles green on CI and was verified in-game by the
+> maintainer. REI: the adapter source exists (`src/client/java/.../compat/rei/`) and its API jar
+> resolves, but it is **gated off** (`enable_rei=false`) because three compile-time details are still
+> open — see §4.1. Nothing about the shipped build depends on REI.
 
 ## 1. The query both viewers answer
 
@@ -97,6 +98,21 @@ Verified on the `26.3` branch of `shedaniel/RoughlyEnoughItems` (default branch 
 | Row model | implement `Display`: `getInputEntries()`, `getOutputEntries()`, `getCategoryIdentifier()`, `getSerializer()` |
 | Serializer | `DisplaySerializer.of(MapCodec<D>, StreamCodec<RegistryFriendlyByteBuf, D>)` |
 | Entries | `EntryStack.of(EntryType, value)`, `EntryIngredient.of(...)` |
+
+### 4.1 What the first compile round proved (and what is left)
+
+First real compile with `enable_rei=true` (run on `aa79aee`) resolved
+`me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.+` from `maven.shedaniel.me`, so the coordinate and
+the 26.3 artifact are correct. Three concrete errors remain:
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| `package me.shedaniel.math does not exist` (`Point`, `Rectangle`) | that package is not re-exported by the api artifact | add the matching `me.shedaniel.math` artifact, or avoid `Point`/`Rectangle` by writing a `Renderer` |
+| `cannot access FluidStack` at `EntryStacks.of(ItemStack)` | `EntryStacks` overloads reference `dev.architectury.fluid.FluidStack` | add architectury to the compile classpath, or use `EntryStack.of(VanillaEntryTypes.ITEM, stack)` |
+| `cannot infer type-variable(s) D` at `CategoryRegistry#addWorkstations` | generic signature differs from the older REI line | read the 26.3 signature off the resolved jar |
+
+The adapter files are kept in the tree (excluded from compilation while `enable_rei=false`) so the
+next pass only has to fix these three points rather than start over.
 
 Work items for the REI pass:
 
