@@ -49,8 +49,13 @@ artefacts, documentation, and marketing copy should all refer to `1.0.2`.
     chiseled-bookshelf random-tick ambience.
   - `custom.chiseled_enchanting_table:port_notes`: documents the unofficial-port status and the
     current 1.0.2 mixin/loot/structure boundary.
-- `.github/workflows/publish.yml`: **pending manual apply** (GitHub App token lacks `workflows`
-  permission) — should become `MINECRAFT_VERSION: 26.2`, `RELEASE_NAME: ... (Unofficial 26.2 Port)`.
+- `.github/workflows/publish.yml`: staged in `docs/ci/publish.yml` (`MINECRAFT_VERSION: 26.2`,
+  `VERSION: 1.0.2`, `RELEASE_NAME: ... (Unofficial 26.2 Port)`), ready to apply with
+  `bash docs/ci/install.sh` using a maintainer token that has `workflows` write permission.
+- **CI status (2026-10-21):** GitHub Actions `build` workflow (run `39663201859`, commit `8b00060`)
+  is **green** on Minecraft 26.2 — `compat_check.py`, `:compileJava`, `:compileClientJava`,
+  `remapJar` (with both JEI 26.2 and REI 26.2 enabled), and artifact upload (`369,768` bytes) all
+  succeeded.
 
 ### Source layout
 - `chiseled_enchanting_table.block.*` — `ChiseledEnchantingTableBlock`,

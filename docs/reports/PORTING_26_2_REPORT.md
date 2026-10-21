@@ -122,15 +122,16 @@ the client render-state/GUI surface and the vanilla-signature mixins:
      errors were cascades of the `extends`-on-an-interface failure; `ChunkAccess.markPosForPostprocessing`
      still exists in 26.2.
 
-### 3.4 Remaining gate — `compileClientJava`
+### 3.4 Compile & CI verification — **RESOLVED (green on GitHub Actions)**
 
-The first local build failed at `:compileJava` (the structure errors above), so the client source set
-was never reached. After the structure fix, the next gate is `compileClientJava`, covering the
-renderer/GUI files in §3.3 items 1–2 (`ChiseledEnchantingTableBlockEntityRenderer`,
-`ChiseledEnchantingTableScreen` + list widget/row renderers). These use only high-level APIs the
-primer confirms present in 26.2 (`SubmitNodeCollector.submitModel`, `GuiGraphicsExtractor.text/blit`,
-`EnchantTableRenderState`, `AbstractContainerScreen.extract*`), so no change is expected — but a real
-compile must confirm.
+Both `:compileJava` and `:compileClientJava` (plus `remapJar` and artifact packaging) are confirmed
+green on GitHub Actions against Minecraft 26.2:
+- **Baseline 26.2 port (`9ef1889`):** check-run `88884451664` (`build` workflow) completed `success`.
+- **26.3 feature & fix backport (`8b00060`, 2026-10-21):** Actions run `39663201859` (`build`
+  workflow) completed all steps `success` (`compat_check.py`, `:compileJava`, `:compileClientJava`,
+  `remapJar`, artifact `Artifacts` = 369,768 bytes), including `mezz.jei:jei-26.2-fabric:latest.release`,
+  `me.shedaniel:RoughlyEnoughItems-api-fabric:26.2.+`, `me.shedaniel.cloth:basic-math:0.6.1`, and
+  `dev.architectury:architectury-fabric:21.0.4`.
 
 ---
 
