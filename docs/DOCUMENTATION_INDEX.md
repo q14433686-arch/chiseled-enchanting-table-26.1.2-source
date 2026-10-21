@@ -13,14 +13,23 @@ Roughly in the order a new contributor should walk them:
 2. [`../CURRENT_BASELINE.md`](../CURRENT_BASELINE.md) — canonical source of truth for
    *currently-shipping* capabilities, build config, package layout, and active temporary
    boundaries. Update this whenever the code / data / build changes.
-3. [`EXTENDING.md`](EXTENDING.md) — every data-driven extension point (all 5 JSON files under
+3. [`EXTENDING.md`](EXTENDING.md) — every data-driven extension point (all 6 JSON files under
    `data/<ns>/chiseled_enchanting_table/`), their schemas, their Java entry points, and how to
-   add a new one. Also documents the singular-directory 26.x data-pack trap.
+   add a new one. Also documents the singular-directory 26.x data-pack trap and the
+   worldgen-worker vs server-thread split in `BookshelfBookFiller`.
 4. [`../NEXT_TASK.md`](../NEXT_TASK.md) — the open backlog. Every completed live-verification
    round graduates out of NEXT_TASK; only the still-open items stay.
-5. [`COMPATIBILITY.md`](COMPATIBILITY.md) — cross-mod compatibility investigation for
-   third-party enchantment / anvil mods (Ore Enchants-style, Universal Enchants-style, Merge
-   Enchantments-style). Explains why the mod is designed the way it is.
+5. [`ci/README.md`](ci/README.md) — the CI triad: what each workflow gates, why `docs/ci/`
+   keeps byte-identical reference copies, and how to read a compile result from a sandbox with
+   no maven access.
+
+   *(The cross-mod compatibility write-up that older revisions of this index linked as
+   `COMPATIBILITY.md` — third-party enchantment / anvil mods, Ore Enchants-style, Universal
+   Enchants-style, Merge Enchantments-style — is **not present in this snapshot** on any branch
+   of the repository; `scripts/ci_static_checks.py` reports the reference as a dangling link
+   (warn-only) until the document is restored. The design conclusions it described are still
+   live in the code: tag-driven default unlocks in `default_enchantments.json`, see
+   [`EXTENDING.md`](EXTENDING.md) §1.)*
 
 ## Release notes
 
@@ -80,9 +89,11 @@ class shaped this way".
 - [P16 loot fix and compat tooling](reports/PORTING_26_1_2_P16_LOOT_FIX_AND_COMPAT_TOOLING_REPORT.md)
 - [P17 retire legacy block package](reports/PORTING_26_1_2_P17_BLOCK_PACKAGE_REPORT.md)
 - [P18 typed available-option model](reports/PORTING_26_1_2_P18_AVAILABLE_OPTION_MODEL_REPORT.md)
-- [P19 cross-mod enchantment compatibility](reports/PORTING_26_1_2_P19_CROSS_MOD_COMPATIBILITY_REPORT.md)
+- P19 cross-mod enchantment compatibility — *report file not present in this snapshot*
+  (`reports/PORTING_26_1_2_P19_CROSS_MOD_COMPATIBILITY_REPORT.md`); the round is summarised in
+  [`CHANGELOG_HISTORY.md`](CHANGELOG_HISTORY.md)
 - [Agent Execution Brief](reports/CURRENT_AGENT_BRIEF.md)
 
 *(Note: `JSON_EXTENSION_SPEC_1_1_3.md` and `EXTENDING_HERBCRAFT.md` are not natively part of
-this specific mod's repository and have been omitted; `EXTENDING.md` / `COMPATIBILITY.md`
-above are this mod's equivalents.)*
+this specific mod's repository and have been omitted; `EXTENDING.md` above is this mod's
+equivalent.)*
