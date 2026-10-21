@@ -3,7 +3,7 @@
 > **Unofficial community port.** All documents indexed below describe the unofficial 26.2 port
 > in this repository. It is not affiliated with or endorsed by the original author of
 > [`chiseled-enchanting-table`](https://github.com/Sacramentix/chiseled-enchanting-table).
-> Current version: **`1.0.2`** (Minecraft 26.2).
+> Current version: **`1.0.3`** (Minecraft 26.2).
 
 ## Read these first
 

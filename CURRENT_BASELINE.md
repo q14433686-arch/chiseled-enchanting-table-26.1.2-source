@@ -21,22 +21,22 @@
 **Gradle:** 9.5.1
 **Loom:** 1.17
 **Java:** 25
-**Mod Version:** `1.0.2`  *(unofficial-port versioning, see "Versioning" below)*
+**Mod Version:** `1.0.3`  *(unofficial-port versioning, see "Versioning" below)*
 
 ## Versioning
 
-This repository currently publishes the unofficial 26.1.2 port as **`1.0.2`**. Earlier internal
+This repository currently publishes the unofficial 26.2 port as **`1.0.3`**. Earlier internal
 porting labels are treated as historical implementation notes only; current metadata, release
-artefacts, documentation, and marketing copy should all refer to `1.0.2`.
+artefacts, documentation, and marketing copy should all refer to `1.0.3`.
 
 ## Current Source-Truth Snapshot (what the code/data actually contains today)
 
 ### Build / packaging
-- `gradle.properties`: `mod_version=1.0.2`, `minecraft_version=26.2`,
+- `gradle.properties`: `mod_version=1.0.3`, `minecraft_version=26.2`,
   `loader_version=0.19.3`, `fabric_version=0.155.2+26.2`. Build tooling: Loom `1.17-SNAPSHOT`,
   Gradle wrapper `9.5.1`.
 - `src/main/resources/fabric.mod.json`:
-  - `version: "${version}"` (substituted by Loom to `1.0.2`).
+  - `version: "${version}"` (substituted by Loom to `1.0.3`).
   - `name`: `Chiseled Enchanting Table (Unofficial 26.2 Port)`.
   - `description`: explicitly states this is an unofficial port and not affiliated with the
     original author.
@@ -48,9 +48,9 @@ artefacts, documentation, and marketing copy should all refer to `1.0.2`.
     enchanting-table book blocking, narrow anvil enchanted-book same-level merge blocking, and
     chiseled-bookshelf random-tick ambience.
   - `custom.chiseled_enchanting_table:port_notes`: documents the unofficial-port status and the
-    current 1.0.2 mixin/loot/structure boundary.
+    current 1.0.3 mixin/loot/structure/viewer boundary.
 - `.github/workflows/publish.yml`: staged in `docs/ci/publish.yml` (`MINECRAFT_VERSION: 26.2`,
-  `VERSION: 1.0.2`, `RELEASE_NAME: ... (Unofficial 26.2 Port)`), ready to apply with
+  `VERSION: 1.0.3`, `RELEASE_NAME: ... (Unofficial 26.2 Port)`), ready to apply with
   `bash docs/ci/install.sh` using a maintainer token that has `workflows` write permission.
 - **CI status (2026-10-21):** GitHub Actions `build` workflow (run `39663201859`, commit `8b00060`)
   is **green** on Minecraft 26.2 — `compat_check.py`, `:compileJava`, `:compileClientJava`,

@@ -1,4 +1,4 @@
-# Worldgen bookshelf fill: hard deadlock fix (Minecraft 26.2 / mod 1.0.2 line)
+# Worldgen bookshelf fill: hard deadlock fix (Minecraft 26.2 / mod 1.0.3 line)
 
 > **Scope.** Fix for the integrated-server freeze reported against this unofficial 26.2 port:
 > `BookshelfReplacerProcessor#finalizeProcessing` touching the live `ServerLevel` from a worldgen

@@ -10,7 +10,7 @@
 > bug reports about this port to **this** repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`),
 > not to the upstream project.
 
-**Current version:** `1.0.2` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+**Current version:** `1.0.3` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
 **Target:** Minecraft `26.2`, Fabric Loader `>=0.19.3`, Fabric API `0.155.2+26.2`, Java `>=25`.
 
 A Minecraft Fabric mod that enhances the enchanting experience.
@@ -23,8 +23,8 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 
 ## Installation
 
-Grab the latest `chiseled-enchanting-table-1.0.2.jar` from
-`release_output/chiseled_enchanting_table_1_0_2/` (or build it yourself with
+Grab the latest `chiseled-enchanting-table-1.0.3.jar` from
+`release_output/chiseled_enchanting_table_1_0_3/` (or build it yourself with
 `./gradlew build` using JDK 25 — see `NEXT_TASK.md` for the exact command chain) and drop it into
 your Fabric `mods/` folder alongside Fabric API `0.155.2+26.2`.
 
@@ -51,7 +51,7 @@ compile locally — the compile has to happen on Actions.
 | [`compile-check.yml`](docs/ci/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API | push to `arena/**` / release branches, PRs |
 | [`build.yml`](docs/ci/build.yml) | static gates first (no network needed), then full `./gradlew build` + jar artifact (14 days) | push / PR |
 | [`consistency.yml`](docs/ci/consistency.yml) | version gate for "bumped one place, forgot the other four" | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml` |
-| [`publish.yml`](docs/ci/publish.yml) | manual `workflow_dispatch` release to GitHub / Modrinth (`26.2` / `1.0.2`) | manual |
+| [`publish.yml`](docs/ci/publish.yml) | manual `workflow_dispatch` release to GitHub / Modrinth (`26.2` / `1.0.3`) | manual |
 
 The three static gates run in seconds and need no Gradle, so they also work offline:
 

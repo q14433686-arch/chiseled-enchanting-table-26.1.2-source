@@ -10,11 +10,11 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
 > **26.2 branch (2026-07-19, synced 2026-10-21):** This line targets **Minecraft 26.2**. Toolchain
 > uses Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Gradle `9.5.1`, Fabric Loader `0.19.3`, and
-> `mod_version` `1.0.2`. See [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md)
+> `mod_version` `1.0.3`. See [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md)
 > for the 26.2 port details. On 2026-10-21 all feature additions and fixes from the `26.3` branch
 > were synced back to this `26.2` line with 26.2 API/schema compatibility.
 
-## [Unreleased]
+## [1.0.3] - 2026-10-21
 
 ### Added — JEI and REI integration (bidirectional enchantment lookup)
 

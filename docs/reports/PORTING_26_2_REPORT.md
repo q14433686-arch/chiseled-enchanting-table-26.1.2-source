@@ -22,7 +22,7 @@
 | Loom | `1.16-SNAPSHOT` | `1.17-SNAPSHOT` | ✅ |
 | Gradle wrapper | `9.4.1` | `9.5.1` | ✅ |
 | Java | `25` | `25` | ❌ |
-| mod_version | `1.0.2` | `1.0.2` (kept by decision) | ❌ |
+| mod_version | `1.0.2` | `1.0.3` | ✅ |
 
 Sources:
 - Fabric "Fabric for Minecraft 26.2" article — Loom 1.17, Gradle 9.5.1, loader still 0.19.3:

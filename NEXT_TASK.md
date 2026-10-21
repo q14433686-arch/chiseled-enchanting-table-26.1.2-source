@@ -1,14 +1,14 @@
-# Next Task: post-1.0.2 backlog (Minecraft 26.2 line)
+# Next Task: post-1.0.3 backlog (Minecraft 26.2 line)
 
 > **Unofficial community port.** All instructions below apply to the unofficial 26.2 port
 > (this repository). The upstream `Sacramentix/chiseled-enchanting-table` project is not affected
 > by this version line.
 
-**Current mod version:** `1.0.2` · **Minecraft:** `26.2` · **Fabric API:** `0.155.2+26.2` ·
+**Current mod version:** `1.0.3` · **Minecraft:** `26.2` · **Fabric API:** `0.155.2+26.2` ·
 **Loader:** `0.19.3`. See `CURRENT_BASELINE.md` for the currently-shipping capability boundary and
-`CHANGELOG.md` for the 1.0.2 + 26.3-synced fix list.
+`CHANGELOG.md` for the 1.0.3 + 26.3-synced fix list.
 
-## How to build 1.0.2 from a fresh clone
+## How to build 1.0.3 from a fresh clone
 
 The source tree is Gradle + Loom + Fabric API + Java 25:
 
