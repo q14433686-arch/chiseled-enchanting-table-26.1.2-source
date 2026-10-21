@@ -59,6 +59,7 @@ jobs:
       - name: compile main + client source sets
         run: |
           mkdir -p build-reports
+          chmod +x ./gradlew 2>/dev/null || true
           {
             echo "commit: ${{ github.sha }}"
             echo "branch: ${{ github.ref_name }}"
