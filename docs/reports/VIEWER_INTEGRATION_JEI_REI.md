@@ -94,23 +94,29 @@ Verified API notes for JEI on 26.2 (`26.2` branch, Fabric subproject, `fabricLoa
   `addInvisibleIngredients(role)`; slots accept `addItemStack` / `addItemStacks`.
 - `IRecipeCategory#getTooltip(ITooltipBuilder, T, IRecipeSlotsView, double, double)`; the builder
   takes `FormattedText`, and `Component` is a `FormattedText`.
-- Enchanted-book subtypes: `ISubtypeRegistration#registerFromDataComponentTypes(Item,
-  DataComponentType...)` with `DataComponents.STORED_ENCHANTMENTS` — no hand-written interpreter.
-- Registration hooks used: `registerCategories`, `registerRecipes`, `registerRecipeCatalysts`,
-  `registerItemSubtypes`.
+- Enchanted-book subtypes: **do not register one**. JEI's own `VanillaPlugin` already registers
+  `EnchantedBookSubtypeInterpreter.INSTANCE` for `Items.ENCHANTED_BOOK`
+  (`Library/.../plugins/vanilla/VanillaPlugin.java`, `registerItemSubtypes`), and a second
+  registration via `ISubtypeRegistration#registerFromDataComponentTypes(Items.ENCHANTED_BOOK,
+  DataComponents.STORED_ENCHANTMENTS)` causes `SubtypeRegistration` to log
+  `[ERROR] An interpreter is already registered for this: minecraft:enchanted_book` (with a
+  synthetic `IllegalArgumentException` stack trace) on every world load and discard ours anyway.
+  Per-enchantment book entries keep working through JEI's built-in interpreter.
+- Registration hooks used: `registerCategories`, `registerRecipes`, `registerRecipeCatalysts`
+  (no `registerItemSubtypes`).
 
 Build wiring:
 
 - repository `https://maven.blamejared.com` (this is the maven JEI's own `buildSrc` configures);
-- `compileOnly("mezz.jei:jei-26.2-fabric:${jei_version}")` — **plain `compileOnly`, not
-  `modCompileOnly`**: the 26.x line is unobfuscated (which is why this repo already puts
-  `fabric-api` on plain `implementation`), and the first CI run confirmed Loom 1.17 does not even
-  create a `modCompileOnly` configuration;
+- `compileOnly("mezz.jei:jei-26.2-fabric:${jei_version}", toolchainPins)` — **plain `compileOnly`,
+  not `modCompileOnly`**, with `toolchainPins` excluding `net.fabricmc.fabric-api`, `net.fabricmc`,
+  and `com.mojang` so the viewer's POM can never displace the build's pinned Fabric API / loader /
+  Minecraft jars (§6.1);
 - `enable_jei` in `gradle.properties` (default `true`): setting `-Penable_jei=false` excludes
   `chiseled_enchanting_table/compat/jei/**` from the client source set, which is the escape hatch for
   an environment that cannot reach the maven;
-- `jei_version=latest.release` — resolves and compiles today; **pin the exact version once you
-  release**, because a future JEI build can break a compile-only adapter silently;
+- `jei_version=30.47.0.239` — pinned to the exact coordinate verified by `compile-check.yml` on
+  2026-10-22 (§6), so future upstream JEI builds cannot break this compile-only adapter silently;
 - `fabric.mod.json`: `jei_mod_plugin` entrypoint + `"suggests": {"jei": "*"}`. JEI is never required
   at runtime and a missing JEI never touches the class.
 
@@ -165,15 +171,20 @@ settled now:
 All three are `compileOnly` and gated by `enable_rei`, exactly like the JEI API; REI supplies them at
 runtime.
 
-### 4.2 Book subtypes in REI need no work
+### 4.2 Book subtypes in both JEI and REI need no work
 
-JEI needed an explicit subtype registration (`registerFromDataComponentTypes(...,
-STORED_ENCHANTMENTS)`). REI has no equivalent registration to make: its own default plugin already
-registers an enchanted-book comparator on the stored enchantment
-(`default-plugin/src/main/java/me/shedaniel/rei/plugin/common/DefaultPlugin.java`,
-`registerItemComparators(... registry.register((context, stack) -> …, Items.ENCHANTED_BOOK))` on
-26.3). Books with different enchantments therefore already render as distinct, separately searchable
-entries in REI — the mod only has to put the right book in the input slot, which it does.
+Neither viewer needs an explicit subtype registration from this mod:
+- **JEI:** JEI's own `VanillaPlugin` already registers `EnchantedBookSubtypeInterpreter.INSTANCE`
+  for `Items.ENCHANTED_BOOK`. Registering a duplicate via `registerFromDataComponentTypes(...,
+  STORED_ENCHANTMENTS)` logs `[ERROR] An interpreter is already registered for this:
+  minecraft:enchanted_book` on every world load and is discarded (`ChiseledEnchantingJeiPlugin`
+  intentionally omits `registerItemSubtypes`).
+- **REI:** REI's own default plugin already registers an enchanted-book comparator on the stored
+  enchantment (`default-plugin/src/main/java/me/shedaniel/rei/plugin/common/DefaultPlugin.java`,
+  `registerItemComparators(... registry.register((context, stack) -> …, Items.ENCHANTED_BOOK))`).
+
+Books with different enchantments therefore already render as distinct, separately searchable
+entries in both JEI and REI — the mod only has to put the right book in the input slot, which it does.
 
 ### 4.3 Layout
 
@@ -205,5 +216,38 @@ list through `EnchantQueryIndex.conflictSummary(...)`, so translations stay in o
   the jar (e.g. swap lapis for amethyst) → the viewer row, the tooltip and the table GUI all show
   amethyst; run `/reload` after editing the file → costs update without reconnecting; leave the
   server → the cache is cleared (single-player afterwards shows its own costs again).
-- Gates: `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict` pass on
-  the same commit.
+- Gates: `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict`, and
+  `docs/ci/install.sh --check` pass on the same commit.
+
+## 6. Resolved coordinates on 26.2 and toolchain exclusions (`toolchainPins`)
+
+`compile-check.yml` records the exact coordinates resolved on `compileClasspath` and
+`clientCompileClasspath` into `build-reports/compile-java.log`. On 2026-10-22 (commit `61b2431`,
+check run `119488382287`), the 26.2 build resolved:
+
+| Dependency | Floating spec | Resolved on 2026-10-22 | Pinned in `gradle.properties` |
+| --- | --- | --- | --- |
+| `mezz.jei:jei-26.2-fabric` | `latest.release` | `30.47.0.239` | `30.47.0.239` |
+| `me.shedaniel:RoughlyEnoughItems-api-fabric` | `26.2.+` | `26.2.821` | `26.2.821` |
+| `me.shedaniel.cloth:basic-math` | `0.6.1` | `0.6.1` | `0.6.1` |
+| `dev.architectury:architectury-fabric` | `21.0.4` | `21.0.4` | `21.0.4` |
+| `net.fabricmc.fabric-api:fabric-api` | `0.155.2+26.2` | `0.155.2+26.2` (**unchanged**) | `0.155.2+26.2` |
+| `net.fabricmc:fabric-loader` | `0.19.3` | `0.19.3` (**unchanged**) | `0.19.3` |
+
+Both floating viewer coordinates are now pinned in `gradle.properties` (`jei_version=30.47.0.239`,
+`rei_version=26.2.821`). In `jei-26.2-fabric:30.47.0.239`, `IIngredientAcceptor#addItemStack` is
+`@Deprecated(forRemoval = true)` (producing the two javac warnings at `EnchantingRecipeCategory.java`
+lines 60 and 71); when bumping `jei_version` in the future, migrate `addItemStack(stack)` →
+`add(stack)` in the same commit.
+
+### 6.1 Why `toolchainPins` excludes `net.fabricmc.fabric-api`, `net.fabricmc`, and `com.mojang`
+
+As discovered on the `26.1.2` sister branch (`18b851a`), a viewer artifact's POM can transitively
+depend on a newer Fabric API or loader for a different Minecraft version. Because Loom applies
+Fabric API's declared `injected_interfaces` (such as `EntityFluidExtension` on `Entity`) when
+preparing the Minecraft jar, a transitive Fabric API version bump causes `compileJava` to fail in
+the **main** source set (`cannot access EntityFluidExtension`). All four viewer `compileOnly`
+dependencies in `build.gradle` therefore share the `toolchainPins` exclusion closure so optional
+viewer POMs can never move this build's pinned `fabric-api` (`0.155.2+26.2`), `fabric-loader`
+(`0.19.3`), or `com.mojang` libraries.
+

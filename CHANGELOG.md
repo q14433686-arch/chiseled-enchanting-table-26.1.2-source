@@ -28,19 +28,21 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 - **Shared, viewer-agnostic index** — `compat/EnchantQueryIndex` derives one row per
   (enchantment, level) from the live registries (`Enchantment#canEnchant`, so modded items and
   universal-enchant datapacks are included), plus the mod's own cost tables.
-- **REI adapter** (`compat/rei/*`, `rei_client` entrypoint) rendering the same rows from the same
-  index: three input slots (items / book / material), arrow, output, XP line, and a tooltip carrying
-  the cost caveat, the bookshelf rule and the conflict list. REI already distinguishes enchanted
-  books by stored enchantment in its own default plugin, so each enchantment level is a separate,
-  searchable entry there without extra registration.
-- **Enchanted-book subtypes on JEI** (`STORED_ENCHANTMENTS`) so each enchantment is its own
-  searchable JEI entry — also improves book display in other mods' recipes.
+- **Enchanted-book subtypes come free in both viewers**: REI's default plugin already registers a
+  stored-enchantment comparator and JEI's own `VanillaPlugin` already registers an
+  `EnchantedBookSubtypeInterpreter` for `Items.ENCHANTED_BOOK`, so each enchantment is its own
+  searchable entry without this mod registering anything. (The 26.3 adapter originally called
+  `registerFromDataComponentTypes(..., STORED_ENCHANTMENTS)`; JEI rejects the duplicate with an
+  `[ERROR] An interpreter is already registered for this: minecraft:enchanted_book` on every world
+  load and discards it — removed here.)
 - Both viewers are `compileOnly` and optional: `enable_jei=false` / `enable_rei=false` in
   `gradle.properties` (or `-Penable_jei=false` / `-Penable_rei=false`) exclude the respective
-  adapter from the build; nothing is required at runtime. On 26.2, JEI resolves
-  `mezz.jei:jei-26.2-fabric:latest.release` and REI resolves
-  `me.shedaniel:RoughlyEnoughItems-api-fabric:26.2.+` along with compile-only
-  `me.shedaniel.cloth:basic-math:0.6.1` and `dev.architectury:architectury-fabric:21.0.4`.
+  adapter from the build; nothing is required at runtime. On 26.2, coordinates are pinned to
+  `mezz.jei:jei-26.2-fabric:30.47.0.239` and
+  `me.shedaniel:RoughlyEnoughItems-api-fabric:26.2.821` along with compile-only
+  `me.shedaniel.cloth:basic-math:0.6.1` and `dev.architectury:architectury-fabric:21.0.4`, all
+  configured with `toolchainPins` (`exclude group: 'net.fabricmc.fabric-api'`, `'net.fabricmc'`,
+  `'com.mojang'`) so viewer POMs never displace the pinned Fabric API (`0.155.2+26.2`).
 - **Server-authoritative costs (S2C)** — the material cost could not be shown truthfully before: the
   cost table is server data (`PackType.SERVER_DATA`) and the chosen option is salted with the player
   UUID. The server now resolves one row per (enchantment, level) for the joining player and sends
@@ -82,7 +84,10 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
   and 26.2 loot-table schema (`conditions[]` / `functions[]`).
 - **Tooling / CI:** synced `scripts/ci_static_checks.py`, `scripts/check_release_consistency.sh`,
   26.2 schema guards in `scripts/compat_check.py`, `.githooks/pre-commit`, `scripts/install-hooks.sh`,
-  executable `gradlew` (`100755`), and staged 26.2 CI workflows in `docs/ci/`.
+  executable `gradlew` (`100755`), and installed all four 26.2 CI workflows (`compile-check.yml`,
+  `build.yml`, `consistency.yml`, `publish.yml`) into both `docs/ci/` and `.github/workflows/`
+  (including `bash -e`-safe `status=0` + `|| status=$?` status capture, resolved coordinate logging,
+  failure `compile-deps.log` upload, and the `no-viewers` build job).
 
 ## [1.0.2] - 2026-07-01
 

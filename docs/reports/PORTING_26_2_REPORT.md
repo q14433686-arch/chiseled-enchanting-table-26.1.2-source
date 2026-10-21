@@ -127,11 +127,15 @@ the client render-state/GUI surface and the vanilla-signature mixins:
 Both `:compileJava` and `:compileClientJava` (plus `remapJar` and artifact packaging) are confirmed
 green on GitHub Actions against Minecraft 26.2:
 - **Baseline 26.2 port (`9ef1889`):** check-run `88884451664` (`build` workflow) completed `success`.
-- **26.3 feature & fix backport (`8b00060`, 2026-10-21):** Actions run `39663201859` (`build`
-  workflow) completed all steps `success` (`compat_check.py`, `:compileJava`, `:compileClientJava`,
-  `remapJar`, artifact `Artifacts` = 369,768 bytes), including `mezz.jei:jei-26.2-fabric:latest.release`,
-  `me.shedaniel:RoughlyEnoughItems-api-fabric:26.2.+`, `me.shedaniel.cloth:basic-math:0.6.1`, and
-  `dev.architectury:architectury-fabric:21.0.4`.
+- **26.3 feature & fix backport (`8b00060` / `796664a`, 2026-10-21):** Actions run `39663201859`
+  and check-run `119447310534` (`build` workflow) completed all steps `success` (`compat_check.py`,
+  `:compileJava`, `:compileClientJava`, `remapJar`, artifact `Artifacts` = 369,768 bytes).
+- **26.1.2 sister-branch fixes & CI triad (`61b2431`, 2026-10-22):** `compile-check`
+  (`119488382287`), `build` (`119488381220` static + `119488433821` gradle build + `119488433668`
+  no-viewers), and `consistency` (`119488380920`) all completed `success`, resolving and pinning
+  `mezz.jei:jei-26.2-fabric:30.47.0.239`, `me.shedaniel:RoughlyEnoughItems-api-fabric:26.2.821`,
+  `me.shedaniel.cloth:basic-math:0.6.1`, and `dev.architectury:architectury-fabric:21.0.4` with
+  `toolchainPins` exclusions (`net.fabricmc.fabric-api`, `net.fabricmc`, `com.mojang`).
 
 ---
 

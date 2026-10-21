@@ -49,13 +49,16 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
     chiseled-bookshelf random-tick ambience.
   - `custom.chiseled_enchanting_table:port_notes`: documents the unofficial-port status and the
     current 1.0.3 mixin/loot/structure/viewer boundary.
-- `.github/workflows/publish.yml`: staged in `docs/ci/publish.yml` (`MINECRAFT_VERSION: 26.2`,
-  `VERSION: 1.0.3`, `RELEASE_NAME: ... (Unofficial 26.2 Port)`), ready to apply with
-  `bash docs/ci/install.sh` using a maintainer token that has `workflows` write permission.
-- **CI status (2026-10-21):** GitHub Actions `build` workflow (run `39663201859`, commit `8b00060`)
-  is **green** on Minecraft 26.2 — `compat_check.py`, `:compileJava`, `:compileClientJava`,
-  `remapJar` (with both JEI 26.2 and REI 26.2 enabled), and artifact upload (`369,768` bytes) all
-  succeeded.
+- `.github/workflows/` and `docs/ci/`: all four 26.2 workflows (`compile-check.yml`, `build.yml`,
+  `consistency.yml`, `publish.yml`) are installed and verified byte-identical via
+  `bash docs/ci/install.sh --check` (`MINECRAFT_VERSION: 26.2`, `VERSION: 1.0.3`,
+  `RELEASE_NAME: ... (Unofficial 26.2 Port)`).
+- **CI status (2026-10-22):** GitHub Actions `compile-check`, `build` (including `static`,
+  `gradle build`, and `no-viewers`), and `consistency` workflows are **all green** on Minecraft
+  26.2 — `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict`,
+  `:compileJava`, `:compileClientJava`, `remapJar` (with pinned `jei-26.2-fabric:30.47.0.239` and
+  `RoughlyEnoughItems-api-fabric:26.2.821` plus `toolchainPins` exclusions), and `-Penable_jei=false
+  -Penable_rei=false` all succeeded.
 
 ### Source layout
 - `chiseled_enchanting_table.block.*` — `ChiseledEnchantingTableBlock`,
@@ -93,9 +96,13 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
   recipe-viewer support. The index is viewer-agnostic (registry + `enchantment_costs.json` only);
   each adapter turns every (enchantment, level) row into a two-input recipe so a single category
   answers both "book → items" and "item → books". Optional: `enable_jei=false` /
-  `enable_rei=false` drop the respective adapter from the build; REI additionally needs
-  `me.shedaniel.cloth:basic-math` + `dev.architectury:architectury-fabric` at compile time only
-  (`26.2.+` / `0.6.1` / `21.0.4`).
+  `enable_rei=false` drop the respective adapter from the build; all four viewer `compileOnly`
+  dependencies (`mezz.jei:jei-26.2-fabric:30.47.0.239`,
+  `me.shedaniel:RoughlyEnoughItems-api-fabric:26.2.821`, `me.shedaniel.cloth:basic-math:0.6.1`,
+  `dev.architectury:architectury-fabric:21.0.4`) share `toolchainPins` exclusions
+  (`net.fabricmc.fabric-api`, `net.fabricmc`, `com.mojang`). `ChiseledEnchantingJeiPlugin`
+  intentionally omits `registerItemSubtypes` because JEI's own `VanillaPlugin` already registers
+  `EnchantedBookSubtypeInterpreter.INSTANCE` for `Items.ENCHANTED_BOOK`.
   Costs are server-authoritative: `menu.EnchantCostTablePayload` + `menu.EnchantCostSync` push a
   per-player resolved table (`chiseled_enchanting_table:enchant_cost_table`) on join and after each
   successful data-pack reload; `compat.SyncedEnchantmentCosts` caches it on the client (cleared on
