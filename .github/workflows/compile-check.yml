@@ -57,18 +57,75 @@ jobs:
       - name: compile main + client source sets
         run: |
           mkdir -p build-reports
+          chmod +x ./gradlew 2>/dev/null || true
           {
             echo "commit: ${{ github.sha }}"
             echo "branch: ${{ github.ref_name }}"
             echo "minecraft: $(grep -E '^minecraft_version=' gradle.properties | cut -d= -f2)"
             echo "fabric-api: $(grep -E '^fabric_version=' gradle.properties | cut -d= -f2)"
             echo "loader: $(grep -E '^loader_version=' gradle.properties | cut -d= -f2)"
+            echo "jei: $(grep -E '^enable_jei=' gradle.properties | cut -d= -f2) / $(grep -E '^jei_version=' gradle.properties | cut -d= -f2)"
+            echo "rei: $(grep -E '^enable_rei=' gradle.properties | cut -d= -f2) / $(grep -E '^rei_version=' gradle.properties | cut -d= -f2)"
             echo "---"
           } > build-reports/compile-java.log
+          # Actions 的默认 shell 是 `bash -e`：裸写 `./gradlew ...` 后面跟 `status=$?` 是死代码，
+          # 编译失败时脚本会在那一行直接退出（本仓 1.0.3 第一次失败的日志里就没有 exit code 行），
+          # 下面的失败诊断也就永远不会生成。必须用 `|| status=$?` 把退出码接住。
+          status=0
           ./gradlew compileJava compileClientJava --console=plain --stacktrace --no-daemon \
-            >> build-reports/compile-java.log 2>&1
-          status=$?
+            >> build-reports/compile-java.log 2>&1 || status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
+          # 把「浮动坐标」这次实际解析成了什么记进日志：jei_version=latest.release 与
+          # rei_version=26.3.+ 都会随上游发布漂移，而沙箱读不到 maven，也读不到 Actions 的
+          # 日志 blob。没有这一段，「昨天能编、今天不能编」无从追溯，也没法把它们钉成确切版本；
+          # 同理，viewer 的 POM 是否又把 fabric-api 顶掉了，也只能从这里看出来。
+          {
+            echo ""
+            echo "=== resolved coordinates (compileClasspath / clientCompileClasspath) ==="
+          } >> build-reports/compile-java.log
+          for CFG in compileClasspath clientCompileClasspath; do
+            echo "--- $CFG ---" >> build-reports/compile-java.log
+            ./gradlew -q dependencies --configuration "$CFG" --console=plain --no-daemon 2>&1 \
+              | grep -E "mezz\.jei|me\.shedaniel|dev\.architectury|net\.fabricmc|com\.mojang" \
+              | sed -E 's/^[^A-Za-z]*//; s/ \(c\)$//; s/ \(\*\)$//' | sort -u \
+              >> build-reports/compile-java.log || true
+          done
+          if [ "$status" -ne 0 ]; then
+            # 失败时再回写一份依赖图。沙箱读不到 Actions 的日志 blob 域，build-reports/ 下的
+            # 文件是唯一的排障通道，所以「为什么失败」也必须落盘，而不是只留在 run 页面里。
+            # 经验教训：错误可能根本不在源码里 —— 可选依赖（JEI / REI / architectury）的 POM 会把
+            # fabric-api / loader / minecraft 的版本顶掉，而 Loom 的 injected_interfaces 是按
+            # fabric-api 的内容改写 Minecraft 类的，于是 main 源集会报
+            # "cannot access EntityFluidExtension"。
+            DEPS=build-reports/compile-deps.log
+            {
+              echo "commit: ${{ github.sha }}"
+              echo "branch: ${{ github.ref_name }}"
+              echo "gradle exit code: $status"
+              echo ""
+              echo "=== dependencyInsight: net.fabricmc.fabric-api on compileClasspath ==="
+            } > "$DEPS"
+            ./gradlew -q dependencyInsight --configuration compileClasspath \
+              --dependency net.fabricmc.fabric-api --console=plain --no-daemon >> "$DEPS" 2>&1 || true
+            {
+              echo ""
+              echo "=== dependencyInsight: net.fabricmc.fabric-api on clientCompileClasspath ==="
+            } >> "$DEPS"
+            ./gradlew -q dependencyInsight --configuration clientCompileClasspath \
+              --dependency net.fabricmc.fabric-api --console=plain --no-daemon >> "$DEPS" 2>&1 || true
+            {
+              echo ""
+              echo "=== dependencies --configuration compileClasspath (first 400 lines) ==="
+            } >> "$DEPS"
+            ./gradlew -q dependencies --configuration compileClasspath --console=plain --no-daemon 2>&1 \
+              | head -n 400 >> "$DEPS" || true
+            {
+              echo ""
+              echo "=== dependencies --configuration clientCompileClasspath (first 400 lines) ==="
+            } >> "$DEPS"
+            ./gradlew -q dependencies --configuration clientCompileClasspath --console=plain --no-daemon 2>&1 \
+              | head -n 400 >> "$DEPS" || true
+          fi
           exit $status
 
       - name: Push compile log back via contents API

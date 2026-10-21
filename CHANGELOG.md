@@ -34,8 +34,9 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
   the cost caveat, the bookshelf rule and the conflict list. REI already distinguishes enchanted
   books by stored enchantment in its own default plugin, so each enchantment level is a separate,
   searchable entry there without extra registration.
-- **Enchanted-book subtypes on JEI** (`STORED_ENCHANTMENTS`) so each enchantment is its own
-  searchable JEI entry — also improves book display in other mods' recipes.
+- **Per-enchantment enchanted-book entries on JEI** — supplied by JEI's own vanilla subtype
+  interpreter; this mod registers none of its own (see the fix below, which removes a redundant
+  registration that made JEI log an ERROR on every world load).
 - Both viewers are `compileOnly` and optional: `enable_jei=false` / `enable_rei=false` in
   `gradle.properties` (or `-Penable_jei=false` / `-Penable_rei=false`) exclude the respective
   adapter from the build; nothing is required at runtime. The REI adapter additionally needs
@@ -55,6 +56,27 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
   English-only in 9 of them.
 - See [`docs/reports/VIEWER_INTEGRATION_JEI_REI.md`](docs/reports/VIEWER_INTEGRATION_JEI_REI.md)
   (verified API surface for both viewers, compile-classpath notes, in-game checklist).
+
+### Fixed — viewer integration hardening
+
+- **Viewer POMs can no longer move this build's toolchain.** All four viewer `compileOnly`
+  dependencies (JEI, REI, cloth `basic-math`, `architectury-fabric`) now carry a shared
+  `toolchainPins` closure excluding `net.fabricmc.fabric-api`, `net.fabricmc` and `com.mojang`. Loom
+  builds the Minecraft jar javac sees by applying Fabric API's declared `injected_interfaces`, so a
+  viewer that transitively upgraded Fabric API to another Minecraft line used to kill the *main*
+  source set with `cannot access EntityFluidExtension` — observed on the 26.1.2 sister branch. This
+  branch only escaped it because its own `fabric-api 0.162.0+26.3` happened to win the version
+  conflict.
+- **No more per-load JEI ERROR.** `ChiseledEnchantingJeiPlugin#registerItemSubtypes` registered an
+  enchanted-book subtype interpreter that JEI's own `VanillaPlugin` already provides, which made JEI
+  log `An interpreter is already registered for this: minecraft:enchanted_book` plus a stack trace
+  on every world load and then discard ours. The override is gone; per-enchantment book entries are
+  unchanged (they come from JEI's own interpreter), with a comment in place so it is not re-added.
+- **`compile-check.yml` no longer loses its failure output.** It ran under Actions' default `bash -e`,
+  so `status=$?` after `./gradlew …` was dead code: on failure the step exited before writing the
+  exit code or the dependency dump. Now `status=0` + `|| status=$?` catches it, and the step records
+  the resolved `compileClasspath` / `clientCompileClasspath` coordinates in
+  `build-reports/compile-java.log` so a floating viewer version is traceable.
 
 ### Fixed — worldgen deadlock (integrated server freeze)
 
