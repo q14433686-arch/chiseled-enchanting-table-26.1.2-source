@@ -56,6 +56,12 @@ not a code defect.
   "only `arena/**` gets log commits" (release branches stay clean). The log header now also records
   the `enable_jei` / `enable_rei` toggles and their versions, because a viewer-artifact resolution
   failure is a *dependency* failure and must be distinguishable from a source failure at a glance.
+  When the compile fails it also commits back `build-reports/compile-deps.log` — `dependencyInsight`
+  for `net.fabricmc.fabric-api` on both compile classpaths plus the first 400 lines of each full
+  dependency tree. That file exists because the first 1.0.3 run failed with
+  `cannot access EntityFluidExtension`: a *viewer's* transitive fabric-api had displaced the pinned
+  one, and Loom's interface injections (which rewrite the Minecraft classes javac sees) followed it.
+  Without a committed dependency graph that class of failure is undiagnosable from the sandbox.
 * **`build.yml`** — three offline static gates (`ci_static_checks.py`, `compat_check.py`,
   `check_release_consistency.sh --strict`) in a fast `static` job, then a `gradle build` job that
   uploads the jar as a 14-day artifact.
@@ -86,6 +92,10 @@ Two channels do work:
 # 1. the compile log the workflow commits back (primary — full javac/Gradle output)
 gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>" \
     --jq '.content' | base64 -d | tail -60
+
+# 1b. on a compile failure, the dependency graph that goes with it (only committed when it fails)
+gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-deps.log?ref=<branch>" \
+    --jq '.content' | base64 -d | head -80
 
 # 2. step-level results, for "which step failed and how long did it take"
 gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/<run id>/jobs" \

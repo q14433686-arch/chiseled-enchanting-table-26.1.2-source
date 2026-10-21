@@ -74,6 +74,42 @@ jobs:
             >> build-reports/compile-java.log 2>&1
           status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
+          if [ "$status" -ne 0 ]; then
+            # 失败时再回写一份依赖图。沙箱读不到 Actions 的日志 blob 域，build-reports/ 下的
+            # 文件是唯一的排障通道，所以「为什么失败」也必须落盘，而不是只留在 run 页面里。
+            # 经验教训（1.0.3 第一次 compile-check）：错误可能根本不在源码里 ——
+            # 可选依赖（JEI / REI / architectury）的 POM 会把 fabric-api / loader / minecraft
+            # 的版本顶掉，而 Loom 的 injected_interfaces 是按 fabric-api 的内容改写 Minecraft
+            # 类的，于是 main 源集会报 "cannot access EntityFluidExtension"。
+            DEPS=build-reports/compile-deps.log
+            {
+              echo "commit: ${{ github.sha }}"
+              echo "branch: ${{ github.ref_name }}"
+              echo "gradle exit code: $status"
+              echo ""
+              echo "=== dependencyInsight: net.fabricmc.fabric-api on compileClasspath ==="
+            } > "$DEPS"
+            ./gradlew -q dependencyInsight --configuration compileClasspath \
+              --dependency net.fabricmc.fabric-api --console=plain --no-daemon >> "$DEPS" 2>&1 || true
+            {
+              echo ""
+              echo "=== dependencyInsight: net.fabricmc.fabric-api on clientCompileClasspath ==="
+            } >> "$DEPS"
+            ./gradlew -q dependencyInsight --configuration clientCompileClasspath \
+              --dependency net.fabricmc.fabric-api --console=plain --no-daemon >> "$DEPS" 2>&1 || true
+            {
+              echo ""
+              echo "=== dependencies --configuration compileClasspath (first 400 lines) ==="
+            } >> "$DEPS"
+            ./gradlew -q dependencies --configuration compileClasspath --console=plain --no-daemon 2>&1 \
+              | head -n 400 >> "$DEPS" || true
+            {
+              echo ""
+              echo "=== dependencies --configuration clientCompileClasspath (first 400 lines) ==="
+            } >> "$DEPS"
+            ./gradlew -q dependencies --configuration clientCompileClasspath --console=plain --no-daemon 2>&1 \
+              | head -n 400 >> "$DEPS" || true
+          fi
           exit $status
 
       - name: Push compile log back via contents API
@@ -82,20 +118,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # 日志可能很大，只保留头 200 行 + 尾 800 行
-          LOG=build-reports/compile-java.log
-          LINES=$(wc -l < "$LOG")
-          if [ "$LINES" -gt 1000 ]; then
-            { head -n 200 "$LOG"; echo "...[truncated ${LINES} lines total]..."; tail -n 800 "$LOG"; } > /tmp/log-trimmed
-            mv /tmp/log-trimmed "$LOG"
-          fi
-          echo "" >> "$LOG"
-          echo "== job status: ${{ job.status }} ==" >> "$LOG"
           BRANCH="${{ github.ref_name }}"
-          SHA=$(gh api "repos/${{ github.repository }}/contents/$LOG?ref=$BRANCH" --jq .sha 2>/dev/null || true)
-          ARGS=(-X PUT "repos/${{ github.repository }}/contents/$LOG"
-                -f message="ci-log: compile result (${{ job.status }}) for ${{ github.sha }}"
-                -f branch="$BRANCH"
-                -f content="$(base64 -w0 "$LOG")")
-          if [ -n "$SHA" ]; then ARGS+=(-f sha="$SHA"); fi
-          gh api "${ARGS[@]}" --jq .commit.sha
+          # compile-deps.log 只在编译失败时存在；两个文件都走同样的「截断 + 单文件 PUT」流程
+          for LOG in build-reports/compile-java.log build-reports/compile-deps.log; do
+            [ -f "$LOG" ] || continue
+            case "$LOG" in
+              *compile-deps.log) KIND="dependency report" ;;
+              *)                 KIND="compile result (${{ job.status }})" ;;
+            esac
+            # 日志可能很大，只保留头 200 行 + 尾 800 行
+            LINES=$(wc -l < "$LOG")
+            if [ "$LINES" -gt 1000 ]; then
+              { head -n 200 "$LOG"; echo "...[truncated ${LINES} lines total]..."; tail -n 800 "$LOG"; } > /tmp/log-trimmed
+              mv /tmp/log-trimmed "$LOG"
+            fi
+            echo "" >> "$LOG"
+            echo "== job status: ${{ job.status }} ==" >> "$LOG"
+            SHA=$(gh api "repos/${{ github.repository }}/contents/$LOG?ref=$BRANCH" --jq .sha 2>/dev/null || true)
+            ARGS=(-X PUT "repos/${{ github.repository }}/contents/$LOG"
+                  -f message="ci-log: ${KIND} for ${{ github.sha }}"
+                  -f branch="$BRANCH"
+                  -f content="$(base64 -w0 "$LOG")")
+            if [ -n "$SHA" ]; then ARGS+=(-f sha="$SHA"); fi
+            gh api "${ARGS[@]}" --jq .commit.sha
+          done
