@@ -158,8 +158,10 @@ list through `EnchantQueryIndex.conflictSummary(...)`, so translations stay in o
 
 - JEI: compiles green on CI and **verified in-game by the maintainer** — category appears under the
   table and the bookshelf, book → items and item → books both work, book subtypes are searchable.
-- REI: compiles green on CI once `enable_rei=true` (api + `basic-math` + `architectury-fabric`
-  resolve, all three source files compile). **Not verified in-game yet** — needs the same manual pass:
+- REI: compiles green on CI with `enable_rei=true` — run on `ae1fed5`, `:compileJava` and
+  `:compileClientJava` BUILD SUCCESSFUL, with `RoughlyEnoughItems-api-fabric:26.3.+`,
+  `cloth basic-math:0.6.1` and `architectury-fabric:22.0.3` all resolving from their mavens.
+  **Not verified in-game yet** — needs the same manual pass:
   1. install REI only (no JEI) → no crash, the category appears under the table and the bookshelf;
   2. focus an enchanted book → item list; focus a diamond sword → book list (both directions come
      from the two input slots);
