@@ -1,9 +1,9 @@
-# Recipe-viewer integration: JEI (shipped) and REI (planned)
+# Recipe-viewer integration: JEI and REI (both implemented)
 
-> **Status.** JEI integration is implemented, compiles green on CI and was verified in-game by the
-> maintainer. REI: the adapter source exists (`src/client/java/.../compat/rei/`) and its API jar
-> resolves, but it is **gated off** (`enable_rei=false`) because three compile-time details are still
-> open — see §4.1. Nothing about the shipped build depends on REI.
+> **Status.** Both adapters are implemented and compile green on CI. JEI was verified in-game by the
+> maintainer; REI still needs that manual pass (§5). Both are `compileOnly` integrations gated by
+> gradle properties (`enable_jei` / `enable_rei`, both `true`), so neither viewer is ever a runtime
+> dependency and `-Penable_rei=false` still builds.
 
 ## 1. The query both viewers answer
 
@@ -84,62 +84,89 @@ Build wiring:
 - `fabric.mod.json`: `jei_mod_plugin` entrypoint + `"suggests": {"jei": "*"}`. JEI is never required
   at runtime and a missing JEI never touches the class.
 
-## 4. REI (next)
+## 4. REI (implemented)
 
-Verified on the `26.3` branch of `shedaniel/RoughlyEnoughItems` (default branch is still `26.2`;
-`26.3` exists with `base_version=26.3`, `minecraft_version=26.3`, `fabricloader_version=0.19.5`).
+Verified against the `26.3` branch of `shedaniel/RoughlyEnoughItems` (default branch is still `26.2`;
+`26.3` exists with `base_version=26.3`, `minecraft_version=26.3`, `fabricloader_version=0.19.5`) and by
+a real compile on CI.
 
-| Need | API (26.3) |
+| Piece | File |
 | --- | --- |
-| Plugin | `me.shedaniel.rei.api.client.plugins.REIClientPlugin` (`registerCategories`, `registerDisplays`) |
-| Category | `DisplayCategory<T extends Display>` — `getCategoryIdentifier()`, `getTitle()`, `getIcon()`, `setupDisplay(T, Rectangle)`, `getDisplayWidth/Height` |
-| Category id | `CategoryIdentifier.of(Identifier)` |
-| Registration | `CategoryRegistry#add(DisplayCategory)`; `DisplayRegistry` (via `DisplayConsumer#add(Display)`) |
-| Row model | implement `Display`: `getInputEntries()`, `getOutputEntries()`, `getCategoryIdentifier()`, `getSerializer()` |
-| Serializer | `DisplaySerializer.of(MapCodec<D>, StreamCodec<RegistryFriendlyByteBuf, D>)` |
-| Entries | `EntryStack.of(EntryType, value)`, `EntryIngredient.of(...)` |
+| Plugin (`REIClientPlugin`) | `src/client/java/.../compat/rei/ChiseledEnchantingReiPlugin.java` |
+| Category | `.../compat/rei/ReiEnchantingCategory.java` |
+| Row model (`Display`) | `.../compat/rei/ReiEnchantingDisplay.java` |
 
-### 4.1 What the first compile round proved (and what is left)
+API facts that matter (26.3 names, not the older `MatrixStack`-era API):
 
-First real compile with `enable_rei=true` (run on `aa79aee`) resolved
-`me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.+` from `maven.shedaniel.me`, so the coordinate and
-the 26.3 artifact are correct. Three concrete errors remain:
+- `REIClientPlugin#registerCategories(CategoryRegistry)` / `#registerDisplays(DisplayRegistry)`;
+  entrypoint id `rei_client` in `fabric.mod.json`.
+- `DisplayCategory<T extends Display>`: `getCategoryIdentifier()`, `getTitle()`, `getIcon()`
+  (returns `me.shedaniel.rei.api.client.gui.Renderer`), `setupDisplay(T, Rectangle)`,
+  `getDisplayWidth(T)`, `getDisplayHeight()`. `DisplayCategoryView` only declares
+  `getDisplayRenderer` and `setupDisplay`, so everything else is optional.
+- `CategoryIdentifier.of(Identifier)`; `CategoryRegistry#add(DisplayCategory)`;
+  `DisplayRegistry#add(Display)` (inherited from `DisplayConsumer`).
+- **`DisplayRegistry#addWorkstations(CategoryIdentifier<D>, EntryIngredient...)`** — the varargs are
+  `EntryIngredient`, not `EntryStack`. Wrapping each catalyst stack in
+  `EntryIngredient.of(EntryStack...)` is what makes the call type-check; passing bare stacks fails
+  with `cannot infer type-variable(s) D`.
+- `Display`: `getInputEntries()`, `getOutputEntries()`, `getCategoryIdentifier()`,
+  `getDisplayLocation()`, `getSerializer()`. `getSerializer()` is `@Nullable`, so a client-only
+  display returns `null` — no codecs, nothing persisted or synced.
+- Entries: `EntryStack.of(VanillaEntryTypes.ITEM, stack)`, `EntryIngredient.of(EntryStack)` /
+  `of(Iterable<? extends EntryStack<? extends T>>)`. `EntryIngredient` *is* a
+  `List<EntryStack<?>>`, so it can be handed straight to `Slot#entries(Collection)`.
+- Widgets: `Widgets.createRecipeBase(Rectangle)`, `createSlot(Point)` (`.entries(...)`,
+  `.markInput()`, `.markOutput()`), `createArrow(Point)`, `createLabel(Point, Component)`
+  (`.tooltip(Component...)`). `Point`/`Rectangle` live in `me.shedaniel.math` (cloth basic-math).
 
-| Error | Cause | Fix |
+### 4.1 Compile classpath: the api artifact alone is not enough
+
+The first compile round (`aa79aee`) resolved `me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.+` from
+`maven.shedaniel.me`, so the coordinate was right, but produced three error classes. All three are
+settled now:
+
+| Error | Cause | Resolution |
 | --- | --- | --- |
-| `package me.shedaniel.math does not exist` (`Point`, `Rectangle`) | that package is not re-exported by the api artifact | add the matching `me.shedaniel.math` artifact, or avoid `Point`/`Rectangle` by writing a `Renderer` |
-| `cannot access FluidStack` at `EntryStacks.of(ItemStack)` | `EntryStacks` overloads reference `dev.architectury.fluid.FluidStack` | add architectury to the compile classpath, or use `EntryStack.of(VanillaEntryTypes.ITEM, stack)` |
-| `cannot infer type-variable(s) D` at `CategoryRegistry#addWorkstations` | generic signature differs from the older REI line | read the 26.3 signature off the resolved jar |
+| `package me.shedaniel.math does not exist` (`Point`, `Rectangle`) | that package is **not** re-exported by the api artifact; it comes from shedaniel's cloth `basic-math` | `compileOnly("me.shedaniel.cloth:basic-math:0.6.1")` (`rei_math_version`) |
+| `cannot access FluidStack` (`EntryStacks.of(ItemStack)`) | `EntryStacks`/`EntryStack` leak `dev.architectury.fluid.FluidStack` and `dev.architectury.utils.Env` | `compileOnly("dev.architectury:architectury-fabric:22.0.3")` (`rei_architectury_version`), **and** the adapter uses `EntryStack.of(VanillaEntryTypes.ITEM, …)` so it does not depend on those overloads at all |
+| `cannot infer type-variable(s) D` at `addWorkstations` | signature is `(CategoryIdentifier<D>, EntryIngredient...)`, not `(…, EntryStack...)` | wrap every catalyst in `EntryIngredient.of(...)` |
 
-The adapter files are kept in the tree (excluded from compilation while `enable_rei=false`) so the
-next pass only has to fix these three points rather than start over.
+All three are `compileOnly` and gated by `enable_rei`, exactly like the JEI API; REI supplies them at
+runtime.
 
-Work items for the REI pass:
+### 4.2 Book subtypes in REI need no work
 
-1. `ReiEnchantingDisplay implements Display` — reuse `EnchantQueryIndex.Entry`, build
-   `EntryIngredient`s from item stacks / the book.
-2. `ReiEnchantingDisplayCategory implements DisplayCategory<ReiEnchantingDisplay>` — renderer via
-   `Widgets.createSlot(...)` + `Widgets.createArrow(...)` + `Widgets.createRecipeBase(bounds)`
-   (needs `me.shedaniel.math.Rectangle`), title/icon from the existing lang keys.
-3. Plugin class implementing `REIClientPlugin`; entrypoint `rei_client` in `fabric.mod.json`.
-4. Gradle: `maven { url "https://maven.shedaniel.me/" }` +
-   `compileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${rei_version}")`, gated by
-   `enable_rei` exactly like JEI. **Unverified:** the exact artifact/version string
-   (`26.3.<build>`); REI publishes via its own `unified-publishing` setup, so expect one CI round to
-   settle it.
-5. Book subtypes: REI's equivalent of JEI's subtype interpreter is its entry/`EntryStack` handling;
-   verify whether `STORED_ENCHANTMENTS` needs an explicit subtype rule before relying on "focus a
-   book".
+JEI needed an explicit subtype registration (`registerFromDataComponentTypes(...,
+STORED_ENCHANTMENTS)`). REI has no equivalent registration to make: its own default plugin already
+registers an enchanted-book comparator on the stored enchantment
+(`default-plugin/src/main/java/me/shedaniel/rei/plugin/common/DefaultPlugin.java`,
+`registerItemComparators(... registry.register((context, stack) -> …, Items.ENCHANTED_BOOK))` on
+26.3). Books with different enchantments therefore already render as distinct, separately searchable
+entries in REI — the mod only has to put the right book in the input slot, which it does.
+
+### 4.3 Layout
+
+Mirrors the JEI category so the two viewers look the same: three input slots (target items as one
+ingredient of alternatives, the level-specific book, the material cost when the enchantment has one),
+an arrow, and the output. The row of text under the slots is the XP cost; its tooltip carries what a
+recipe cannot express — "the material is one of several accepted options", "the book must lie in a
+nearby chiseled bookshelf", and the comma-separated conflicts list. Both adapters build the conflict
+list through `EnchantQueryIndex.conflictSummary(...)`, so translations stay in one place.
 
 ## 5. Verification state
 
-- JEI: `compile-check` + `build` green on CI (both source sets and `remapJar`), `ci_static_checks`,
-  `compat_check` and `check_release_consistency.sh --strict` all pass.
-- **Not verified: in-game.** No client in the authoring sandbox. Manual pass needed:
-  1. install JEI only → no crash without the mod's blocks in a world; the category appears under the
-     table and the bookshelf;
-  2. focus an enchanted book → items list; focus a diamond sword → book list;
-  3. search `Sharpness` → returns the enchantment-level books (subtype interpreter working);
-  4. tooltip shows XP, cost, conflicts and the "book must be in a bookshelf" line;
-  5. a pack with `#minecraft:bookshelf_books`-only books or a modded enchantment appears with the
-     right items (index is registry-driven).
+- JEI: compiles green on CI and **verified in-game by the maintainer** — category appears under the
+  table and the bookshelf, book → items and item → books both work, book subtypes are searchable.
+- REI: compiles green on CI once `enable_rei=true` (api + `basic-math` + `architectury-fabric`
+  resolve, all three source files compile). **Not verified in-game yet** — needs the same manual pass:
+  1. install REI only (no JEI) → no crash, the category appears under the table and the bookshelf;
+  2. focus an enchanted book → item list; focus a diamond sword → book list (both directions come
+     from the two input slots);
+  3. search `Sharpness` → enchantment-level books are distinct entries (REI's default comparator);
+  4. the XP line under the slots shows the level cost and its tooltip shows the cost caveat, the
+     bookshelf rule and the conflicts line;
+  5. install JEI **and** REI together → both categories coexist, no duplicate class or entrypoint
+     error.
+- Gates: `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict` pass on
+  the same commit.

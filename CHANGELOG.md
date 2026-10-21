@@ -17,7 +17,7 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
 ## [Unreleased]
 
-### Added — JEI integration (bidirectional enchantment lookup)
+### Added — JEI and REI integration (bidirectional enchantment lookup)
 
 - **New viewer category** (`chiseled_enchanting_table:enchanting`) modelling the mechanic as a
   two-input recipe — `[target item] + [enchanted book] + [material] -> [enchanted item]` — which is
@@ -29,12 +29,21 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 - **Shared, viewer-agnostic index** — `compat/EnchantQueryIndex` derives one row per
   (enchantment, level) from the live registries (`Enchantment#canEnchant`, so modded items and
   universal-enchant datapacks are included), plus the mod's own cost tables. REI will reuse it.
-- **Enchanted-book subtypes** (`STORED_ENCHANTMENTS`) so each enchantment is its own searchable JEI
-  entry — also improves book display in other mods' recipes.
-- JEI is `compileOnly` and optional: `enable_jei=false` in `gradle.properties` (or
-  `-Penable_jei=false`) excludes the adapter from the build; nothing is required at runtime.
+- **REI adapter** (`compat/rei/*`, `rei_client` entrypoint) rendering the same rows from the same
+  index: three input slots (items / book / material), arrow, output, XP line, and a tooltip carrying
+  the cost caveat, the bookshelf rule and the conflict list. REI already distinguishes enchanted
+  books by stored enchantment in its own default plugin, so each enchantment level is a separate,
+  searchable entry there without extra registration.
+- **Enchanted-book subtypes on JEI** (`STORED_ENCHANTMENTS`) so each enchantment is its own
+  searchable JEI entry — also improves book display in other mods' recipes.
+- Both viewers are `compileOnly` and optional: `enable_jei=false` / `enable_rei=false` in
+  `gradle.properties` (or `-Penable_jei=false` / `-Penable_rei=false`) exclude the respective
+  adapter from the build; nothing is required at runtime. The REI adapter additionally needs
+  `me.shedaniel.cloth:basic-math` and `dev.architectury:architectury-fabric` as compile-only
+  dependencies, because REI's own interfaces leak `me.shedaniel.math` and Architectury fluid types.
+- All viewer strings go through the mod's existing translation keys, which ship in 11 languages.
 - See [`docs/reports/VIEWER_INTEGRATION_JEI_REI.md`](docs/reports/VIEWER_INTEGRATION_JEI_REI.md)
-  (REI status + verified API surface included).
+  (verified API surface for both viewers, compile-classpath notes, in-game checklist).
 
 ### Fixed — worldgen deadlock (integrated server freeze)
 

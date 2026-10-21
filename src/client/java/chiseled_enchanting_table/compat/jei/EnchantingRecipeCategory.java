@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.compat.jei;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.compat.EnchantQueryIndex;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
@@ -14,7 +15,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -109,17 +109,10 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
             "jei.chiseled_enchanting_table.tooltip.bookshelf"
         ));
         if (!recipe.conflictingEnchantments().isEmpty()) {
-            MutableComponent conflicts = Component.empty();
-            boolean first = true;
-            for (Identifier id : recipe.conflictingEnchantments()) {
-                if (!first) conflicts.append(Component.literal(", "));
-                conflicts.append(Component.translatable(
-                    "enchantment." + id.getNamespace() + "." + id.getPath()
-                ));
-                first = false;
-            }
+            // Shared with the REI adapter so both viewers render the same translated list.
             tooltip.add(Component.translatable(
-                "jei.chiseled_enchanting_table.tooltip.conflicts", conflicts
+                "jei.chiseled_enchanting_table.tooltip.conflicts",
+                EnchantQueryIndex.conflictSummary(recipe.conflictingEnchantments())
             ));
         }
     }

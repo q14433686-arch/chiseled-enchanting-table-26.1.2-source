@@ -107,6 +107,12 @@ dependencies {
     if (reiEnabled) {
         // Same rationale as JEI: compileOnly, unobfuscated 26.x line.
         compileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${project.rei_version}")
+        // REI's api artifact does not re-export two libraries its own interfaces leak:
+        //   - me.shedaniel.math (Point/Rectangle), from shedaniel's cloth basic-math;
+        //   - dev.architectury (fluid types referenced by EntryStack/EntryStacks).
+        // REI ships both at runtime, so they are compile-time only here as well.
+        compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}")
+        compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}")
     }
 }
 

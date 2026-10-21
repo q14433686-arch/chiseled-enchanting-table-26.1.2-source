@@ -11,6 +11,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -179,5 +181,27 @@ public final class EnchantQueryIndex {
         return registries.lookupOrThrow(Registries.ENCHANTMENT).get(
             net.minecraft.resources.ResourceKey.create(Registries.ENCHANTMENT, enchantmentId)
         );
+    }
+
+    /**
+     * Translation key of an enchantment. The mod adds no enchantments of its own, so every row
+     * resolves through the vanilla convention and is therefore translated by whatever language file
+     * provides it (vanilla, the mod that adds the enchantment, or a datapack resource pack).
+     */
+    public static String nameKey(Identifier enchantmentId) {
+        return "enchantment." + enchantmentId.getNamespace() + "." + enchantmentId.getPath();
+    }
+
+    /**
+     * Comma separated, translated names of {@code conflicts} — shared by both viewer adapters so the
+     * conflict tooltip reads identically in JEI and REI (and stays in one place for i18n).
+     */
+    public static Component conflictSummary(List<Identifier> conflicts) {
+        MutableComponent summary = Component.empty();
+        for (int i = 0; i < conflicts.size(); i++) {
+            if (i > 0) summary.append(Component.literal(", "));
+            summary.append(Component.translatable(nameKey(conflicts.get(i))));
+        }
+        return summary;
     }
 }
