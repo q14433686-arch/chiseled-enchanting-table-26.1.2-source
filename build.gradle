@@ -16,7 +16,13 @@ base {
 repositories {
     maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
     mavenCentral()
+    // JEI publishes `mezz.jei:jei-<mc>-fabric` here (verified against JEI's own buildSrc:
+    // JeiProject.kt adds exactly this repository for its plugin builds).
+    maven { name = 'BlameJared'; url = 'https://maven.blamejared.com' }
 }
+
+/** Optional viewer integration toggles (see gradle.properties). */
+def jeiEnabled = project.findProperty('enable_jei') != 'false'
 
 loom {
     splitEnvironmentSourceSets()
@@ -63,6 +69,12 @@ sourceSets {
     }
     client {
         java {
+            // Optional JEI integration. Excluded when `-Penable_jei=false` so an environment that
+            // cannot resolve JEI's maven still builds (the fabric.mod.json entrypoint is only
+            // touched when JEI is actually installed).
+            if (!jeiEnabled) {
+                exclude 'chiseled_enchanting_table/compat/jei/**'
+            }
             // P3 first establishes a client compile slice. Full UI/renderer migration is still parked.
             //exclude 'chiseled_enchanting_table/gui/**'
             // P7: renderer restored for floating book smoke path.
@@ -76,6 +88,12 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    if (jeiEnabled) {
+        // compileOnly by design: JEI is never required at runtime, the plugin is only loaded
+        // through the `jei_mod_plugin` entrypoint when JEI itself is installed.
+        modCompileOnly("mezz.jei:jei-${project.minecraft_version}-fabric:${project.jei_version}")
+    }
 }
 
 processResources {
