@@ -35,8 +35,8 @@ The sync was therefore done per change, in this order:
 | 1 | **Worldgen bookshelf deadlock fix** (`55a62fc`, + `6a8efac`) — [issue #3 "Chuck soft crashes"](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3) | applied via the 26.1.2 patch: `BookshelfBookFiller`, `BookshelfReplacerProcessor`, `LevelChunkPostProcessMixin`, `docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md` | the patch is the 26.3 branch's own 26.1.2 adaptation: `StructureProcessor` is still an **abstract class** here (`getType()`, `processBlock(..., StructureBlockInfo originalBlockInfo, ...)`), `ChunkAccess#markPosForPostprocessing` keeps the lower-case spelling, and `processBlockInfos` is **not** clipped to the generating chunk (the deferred facing pass skips out-of-region positions) |
 | 2 | **Translatable book lore + 9 more languages** (`f55cc8f`) | `BookshelfBookFiller.LORE` → `Component.translatable("book.chiseled_enchanting_table.lore")`; `de_de`, `es_es`, `fr_fr`, `it_it`, `ja_jp`, `ko_kr`, `pt_br`, `ru_ru`, `zh_tw` added; `en_us`/`zh_cn` extended | none needed — language files are version-independent. **Extended** to the second copy of the same stamp, see §4.1 |
 | 3 | **Server-authoritative enchantment costs (S2C)** (`6e10544`) | `menu/EnchantCostTablePayload`, `menu/EnchantCostSync`, `compat/SyncedEnchantmentCosts`, `ChiseledEnchantingTable#onInitialize`, `ChiseledEnchantingTableClient`, and the four cost getters in `ChiseledEnchantingTableScreenHandler` | none — the cost-resolution block of the handler is now **byte-identical** to the 26.3 branch (`diff` of the `---- Cost resolution ----` region is empty). 26.1.2 still has `FriendlyByteBuf#writeCollection`, so `ChiseledEnchantingMenuPayloads` keeps using it; the new payload was hand-rolled on the 26.3 side anyway |
-| 4 | **JEI integration** (`9da6787`, `1b38fcc`) | `compat/EnchantQueryIndex` (main), `compat/jei/*` (client), `build.gradle`, `gradle.properties`, `fabric.mod.json` (`jei_mod_plugin` + `suggests`) | coordinate only: `mezz.jei:jei-${minecraft_version}-fabric` resolves to **`jei-26.1.2-fabric`** here (JEI's `26.1` branch pins `minecraftVersion=26.1.2` and names the publication `"${modId}-${minecraftVersion}-fabric"`). Adapter sources unchanged — JEI's API files were diffed between its `26.1` and `26.3` branches: 5 of 10 byte-identical, the other 5 differ **only** in `@since` javadoc numbers (`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §3.1) |
-| 5 | **REI integration** (`aa79aee`, `004433b`, `ae1fed5`) | `compat/rei/*` (client), `rei_client` entrypoint, the three compile-only deps | coordinates/versions only: `rei_version=26.1.+` (REI's `26.1` branch: `base_version=26.1`, `minecraft_version=26.1.2`), `rei_architectury_version=20.0.6` (REI 26.1's own `architectury_version`; 26.3 uses 22.0.3), `rei_math_version=0.6.1` (Minecraft-independent). All **eleven** REI API files the adapter touches are byte-identical between REI's `26.1` and `26.3` branches, as are `api/build.gradle` and `settings.gradle` (§4 of the same report) |
+| 4 | **JEI integration** (`9da6787`, `1b38fcc`) | `compat/EnchantQueryIndex` (main), `compat/jei/*` (client), `build.gradle`, `gradle.properties`, `fabric.mod.json` (`jei_mod_plugin` + `suggests`) | coordinate only: `mezz.jei:jei-${minecraft_version}-fabric` resolves to **`jei-26.1.2-fabric`** here (JEI's `26.1` branch pins `minecraftVersion=26.1.2` and names the publication `"${modId}-${minecraftVersion}-fabric"`). Adapter sources unchanged — JEI's API files were diffed between its `26.1` and `26.3` branches: 5 of 10 byte-identical, the other 5 differ **only** in `@since` javadoc numbers (`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §3.1). `jei_version` is **pinned** to `29.47.0.111` (what `latest.release` resolved to in CI) rather than left floating — §8 finding 8 |
+| 5 | **REI integration** (`aa79aee`, `004433b`, `ae1fed5`) | `compat/rei/*` (client), `rei_client` entrypoint, the three compile-only deps | coordinates/versions only: `rei_version=26.1.+` (REI's `26.1` branch: `base_version=26.1`, `minecraft_version=26.1.2`), `rei_architectury_version=20.0.6` (REI 26.1's own `architectury_version`; 26.3 uses 22.0.3), `rei_math_version=0.6.1` (Minecraft-independent; CI confirmed the coordinate exists). All **eleven** REI API files the adapter touches are byte-identical between REI's `26.1` and `26.3` branches, as are `api/build.gradle` and `settings.gradle` (§4 of the same report). `rei_version` is pinned to `26.1.819` — §8 finding 8. **All four viewer dependencies carry toolchain exclusions** that the 26.3 branch does not need — §8 finding 7 |
 | 6 | **CI triad** (`78c5582`, `d110449`, maintainer uploads `a918113`/`d4f34aa`) | `.github/workflows/{build,compile-check,consistency,publish}.yml` + byte-identical `docs/ci/` copies + `docs/ci/install.sh` + `docs/ci/README.md` + `.githooks/pre-commit` + `scripts/install-hooks.sh` + `scripts/ci_static_checks.py` + `scripts/check_release_consistency.sh` | branch filters (`arena/**`, `chiseled-enchanting-table-26.1.2-source`, `main` — the 26.3 copies' `26.**` entry is meaningless on a branch that runs its own copy, so it was dropped); `publish.yml` env `26.1.2` / `1.0.3`; lang-parity gate widened (§4.2); one extra CI job (§4.3). Details: [`../ci/README.md`](../ci/README.md) |
 | 7 | **Data-pack schema gates** in `scripts/compat_check.py` (`2f4be58`) | two new Tier-1 gates + the `iter_data_json` helper | **inverted on purpose** (§4.4): they now enforce the *26.1.2* schema and fail on the 26.3 form |
 | 8 | **Advancement `craft.json` fix** (`2f4be58`) | `display.background` removed from the child advancement; `show_toast` / `announce_to_chat` moved into `display` | `recipe_id` **kept** (26.3 renamed it to a required `recipes` list — that rename is a 26.3 schema change, not a fix). The two halves that *were* taken are version-independent: top-level `show_toast`/`announce_to_chat` are ignored by `Advancement.CODEC` on every modern line, and a child `display.background` is ignored here but is a **hard world-load error** in 26.3, so removing it makes this branch's data forward-compatible |
@@ -193,21 +193,36 @@ Run in the dev sandbox (no JDK, no Gradle, no maven access — `java` is not ins
 | all changed/added JSON | parse-clean |
 | JEI/REI API drift vs the viewers' own `26.1` branches | none (§3.1 / §4.1 of the viewer report) — this is what makes the byte-identical adapter port defensible without a local compiler |
 
+### 7.1 CI result (2026-10-21) — green after two fixes
+
+Only GitHub Actions can resolve `maven.fabricmc.net`, `maven.blamejared.com`, `maven.shedaniel.me`
+and `maven.architectury.dev`, so the compile verdict came from there. `compile-check.yml` writes
+`build-reports/compile-java.log` back to this `arena/**` branch; read it with
+`gh api repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch> --jq .content | base64 -d | tail -80`.
+
+| Commit | compile-check | build.yml | What it proved |
+| --- | --- | --- | --- |
+| `5df4b57` (workflows only) | failure `39666332527` | failure `39666332547` | the write-back channel works (a `ci-log:` commit landed), but every job died at `./gradlew: Permission denied` — `gradlew` was still `100644` |
+| `c0c0dc2` (full sync) | failure `39666575031` | failure `39666575035` | static gates + `no-viewers` green; compiling **with** JEI/REI failed in the *main* source set: `cannot access EntityFluidExtension` (§8 finding 7) |
+| `18b851a` (viewer exclusions) | success `39667707099` | success `39667707142` | both source sets compile with the viewers on; `remapJar` + sources jar produced |
+| `315fb6e` (log hardening) | success `39668301472` | success `39668301133` | `BUILD SUCCESSFUL in 1m 12s`, 2 warnings (JEI deprecations); resolved coordinates recorded — `jei-26.1.2-fabric:29.47.0.111`, `RoughlyEnoughItems-api-fabric:26.1.819`, `basic-math:0.6.1`, `architectury-fabric:20.0.6`, `fabric-api:0.151.0+26.1.2` unchanged |
+
+`consistency.yml` is green as well (run `39666575001`, `12 passed, 0 warned, 0 failed`); it only
+triggers on version-relevant paths, so it did not re-run for the last two commits.
+
+So: **the whole 1.0.3 sync compiles on the 26.1.2 line**, including both viewer adapters, and the
+optional-dependency escape hatch compiles too. Details and the upgrade notes for the pinned viewer
+coordinates: `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.
+
 Open, and why:
 
-1. **Compile** — only GitHub Actions can resolve `maven.fabricmc.net`, `maven.blamejared.com`,
-   `maven.shedaniel.me` and `maven.architectury.dev`. `compile-check.yml` writes
-   `build-reports/compile-java.log` back to this `arena/**` branch; read it with
-   `gh api repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch> --jq .content | base64 -d | tail -80`.
-   This report and the two other docs' "verification" lines are to be updated with the run id once it
-   is green (the 26.3 branch keeps the same kind of `ci-log:` / `docs: record the green … run`
-   commits).
-2. **In-game** — the deadlock fix needs a fresh world with the affected structure chunks (the
+1. **In-game** — the deadlock fix needs a fresh world with the affected structure chunks (the
    reporter's case: a mesa village with Distant Horizons' `FEATURES` LOD generator); the shelves must
    come out *filled* and correctly facing; JEI/REI need the §5 checklist in the viewer report; the
    cost sync needs a dedicated server with a modified `enchantment_costs.json`.
-3. **`publish.yml` is manual** (`workflow_dispatch`) and needs the `PUBLISH_*` secrets; nothing in
-   this sync can be validated by running it.
+2. **`publish.yml` is manual** (`workflow_dispatch`) and needs the `PUBLISH_*` secrets; nothing in
+   this sync can be validated by running it. Its `build` job is the same Gradle invocation that
+   `build.yml` just proved green, so the risk is confined to the release/secret plumbing.
 
 ## 8. Findings worth a follow-up (discovered while syncing, not fixed here)
 
@@ -237,3 +252,32 @@ Open, and why:
 5. **`docs/marketing/*` still describes 1.0.2** (Modrinth / CurseForge / MC百科 listing copy). Not
    touched here: those files are release copy for a published listing, and this port is not
    published (`README.md` says so). They need a pass before any `publish.yml` run.
+6. **`compile-check.yml` on the 26.3 branch has dead status-capture code.** GitHub Actions runs
+   `run:` steps with `bash -e`, so
+
+   ```bash
+   ./gradlew compileJava … >> "$LOG" 2>&1
+   status=$?          # never reached when Gradle fails
+   ```
+
+   aborts at the failing command: the log this branch got back for `c0c0dc2` contains no
+   `gradle exit code` line at all. Anything placed after that line for the failure case — here, the
+   dependency-report write-back — never runs exactly when it is needed. Fixed on this branch with
+   `status=0` + `|| status=$?` (commit `315fb6e`); the 26.3 copy still has the bug.
+7. **A viewer's POM can displace the pinned Fabric API and break the *main* source set.** This
+   branch needed `exclude group: 'net.fabricmc.fabric-api' / 'net.fabricmc' / 'com.mojang'` on all
+   four viewer `compileOnly` dependencies; without them `compileJava` fails with
+   `cannot access EntityFluidExtension`, because Loom builds the Minecraft jar javac sees by applying
+   Fabric API's declared interface injections, and a transitively-upgraded Fabric API changes what
+   gets injected. Full analysis: `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.1. The 26.3 branch
+   compiles green *without* the exclusions only because its `fabric-api 0.162.0+26.3` already wins
+   its own version conflict — porting the exclusions back would make it robust against the next
+   viewer release. This is the one divergence in §4 that is worth pushing upstream to the sister
+   branch.
+8. **Floating `compileOnly` coordinates.** Both branches shipped `jei_version=latest.release` and a
+   `+`-suffixed `rei_version`, i.e. a build that can break with no commit in this repository. JEI has
+   already deleted `IIngredientAcceptor#addItemStack` on its `26.1` branch — the pinned
+   `29.47.0.111` still has it as `@Deprecated(forRemoval = true)`, which is the two warnings in the
+   green log. Pinned here (29.47.0.111 / 26.1.819) with the migration path documented; `compile-check`
+   now records the resolved coordinates in the log so a future bump is a two-line change with
+   evidence. The 26.3 branch still floats.

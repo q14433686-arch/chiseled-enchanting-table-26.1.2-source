@@ -240,12 +240,19 @@ Verified here (no network needed, run in the dev sandbox):
 - The JEI/REI API surfaces were diffed against the viewers' own `26.1` branches (§3.1, §4.1); the
   adapter sources are byte-identical to the 26.3 branch, which CI compiled green there.
 
-Pending (this branch has no compile history of its own yet):
+Now green (2026-10-21, commit `315fb6e`, branch `arena/3ae35b5e-chiseled-enchanting-table-26-1`):
 
-1. `compile-check.yml` green on the sync commit — the only channel that can resolve
-   `maven.fabricmc.net`, `maven.blamejared.com` and `maven.shedaniel.me`. Read it back with
+1. `compile-check.yml` run `39668301472` → success: `compileJava` + `compileClientJava` with both
+   viewers enabled, `BUILD SUCCESSFUL in 1m 12s`. Read it back with
    `gh api repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>`.
-2. `build.yml`'s `no-viewers` job green (`-Penable_jei=false -Penable_rei=false`).
+2. `build.yml` run `39668301133` → all three jobs success, including `no-viewers`
+   (`-Penable_jei=false -Penable_rei=false`), so the escape hatch compiles too.
+
+The first attempt (run `39666575031`, commit `c0c0dc2`) failed with both viewers enabled while
+`no-viewers` was green — see §6 for the cause and the fix.
+
+Pending (needs a real client):
+
 3. In-game on Minecraft 26.1.2, JEI only: the category appears under the table and the bookshelf;
    book → items and item → books both work; enchanted-book subtypes are searchable.
 4. In-game, REI only: same pass, plus search `Sharpness` → per-level books are distinct entries.
@@ -254,3 +261,71 @@ Pending (this branch has no compile history of its own yet):
    swap lapis for amethyst) → the viewer row, the tooltip and the table GUI all show amethyst;
    `/reload` after editing the file → costs update without reconnecting; leave the server → the cache
    is cleared (single-player afterwards shows its own costs again).
+
+## 6. What CI actually resolved, and the one build.gradle change it forced
+
+`compile-check.yml` now appends the resolved coordinates of every compile classpath to
+`build-reports/compile-java.log`, because the two viewer coordinates in `gradle.properties` were
+floating and the sandbox can reach neither maven nor the Actions log-blob domain. Run `39668301472`
+(commit `315fb6e`) resolved:
+
+| Coordinate | Requested | Resolved |
+| --- | --- | --- |
+| `mezz.jei:jei-26.1.2-fabric` | `latest.release` | `29.47.0.111` |
+| `me.shedaniel:RoughlyEnoughItems-api-fabric` | `26.1.+` | `26.1.819` |
+| `me.shedaniel.cloth:basic-math` | `0.6.1` | `0.6.1` (coordinate confirmed to exist — §4.2 had it as unverified) |
+| `dev.architectury:architectury-fabric` | `20.0.6` | `20.0.6` |
+| `net.fabricmc.fabric-api:fabric-api` | `0.151.0+26.1.2` | `0.151.0+26.1.2` (**unchanged** — see below) |
+| `net.fabricmc:fabric-loader` | `0.19.3` | `0.19.3` |
+
+Both floating coordinates are now **pinned** to the resolved versions in `gradle.properties`. A
+`compileOnly` coordinate has no runtime effect (the user's own JEI/REI is what loads), so floating it
+buys nothing and risks everything: JEI's `26.1` branch has already deleted
+`IIngredientAcceptor#addItemStack`, which `EnchantingRecipeCategory` calls at lines 60 and 71 — in
+`29.47.0.111` it is `@Deprecated(forRemoval = true)`, which is exactly the two javac warnings the
+green run reports. When the pin is bumped, migrate in the same commit:
+`addItemStack(stack)` → `add(stack)`, and check `addItemStacks(list)` (used at lines 59 and 67; also
+absent from JEI's current `26.1` source, where the equivalent is
+`addIngredients(VanillaTypes.ITEM_STACK, list)`).
+
+### 6.1 Why the first compile with viewers failed, and the exclusion that fixed it
+
+Run `39666575031` (commit `c0c0dc2`) failed in the **main** source set — not in `compat/jei` or
+`compat/rei`:
+
+```
+src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:101:
+    error: cannot access EntityFluidExtension
+            player.openMenu(provider);
+  class file for net.fabricmc.fabric.api.registry.fluid.EntityFluidExtension not found
+```
+
+while `build.yml`'s `no-viewers` job (`-Penable_jei=false -Penable_rei=false`) compiled both source
+sets green in the same push. So the ported code was fine; adding the viewer jars to the compile
+classpath was what broke it.
+
+`EntityFluidExtension` lives in Fabric API's `fabric-content-registries-v0` module, whose
+`fabric.mod.json` declares it as an **interface injection** into
+`net.minecraft.world.entity.Entity`. Loom applies those injections when it prepares the Minecraft
+jar that javac compiles against, so *every* `player.…` / `entity.…` expression in the mod needs that
+class file on the classpath. The viewer artifacts are ordinary Gradle dependencies with POMs of
+their own, and one of them dragged in a Fabric API for a different Minecraft version; our
+`0.151.0+26.1.2` is the lowest version in that graph, so Gradle's conflict resolution replaced it,
+and the injected interface no longer had a matching class file behind it.
+
+Fix (`build.gradle`, commit `18b851a`): all four viewer `compileOnly` dependencies are configured
+with a shared closure that excludes `net.fabricmc.fabric-api`, `net.fabricmc` (loader /
+intermediary) and `com.mojang` (Minecraft + Mojang libraries). This build pins those three itself;
+an optional viewer has no business moving them. The `fabric-api: 0.151.0+26.1.2` row in the table
+above is the proof that it held.
+
+Two notes for the sister branches:
+
+* The 26.3 branch declares the same four dependencies without exclusions and compiles green — only
+  because its own `fabric-api 0.162.0+26.3` is already the highest version in its graph. The
+  exclusions are harmless there and would make the build robust against the next viewer release;
+  this is a divergence *worth* porting back, unlike most of §8 of the sync report.
+* The precise displacing version was never captured: the workflow's `status=$?` was dead code under
+  Actions' `bash -e`, so the dependency-report block did not run on that failure (fixed in
+  `315fb6e`, which is also what produced the table above). The diagnosis therefore rests on
+  "viewers off → green, viewers on → red, viewers on with Fabric API pinned → green".

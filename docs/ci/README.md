@@ -18,11 +18,45 @@ two reasons:
    ```
 
    A `PUT` through the Contents API fails the same way (`403 Resource not accessible by integration`).
-   The development sandbox runs with such a token, so the intended CI state has to be reviewable and
-   re-appliable from somewhere that is *not* `.github/workflows/`. This is exactly why the 26.3
-   branch keeps the same directory.
+   That is what the 26.3 branch hit, which is why it keeps this directory. **Re-tested for this
+   branch on 2026-10-21: the sandbox token *did* have the permission** — commit `5df4b57` pushed all
+   four workflow files normally, and the runs started immediately. So here `docs/ci/` is not a
+   workaround but a reviewable source of truth with a drift check; if a future token lacks the
+   permission again, `bash docs/ci/install.sh` from a permitted checkout is still the recovery path.
 2. `scripts/check_release_consistency.sh` reads `docs/ci/publish.yml` as the version source of truth
    when the live copy cannot be updated, so the two must be able to agree.
+
+## Status on this branch (2026-10-21)
+
+Green, on commit `315fb6e` of `arena/3ae35b5e-chiseled-enchanting-table-26-1`:
+
+| Workflow | Run | Result |
+| --- | --- | --- |
+| `compile-check.yml` | `39668301472` | success — `compileJava` + `compileClientJava`, `BUILD SUCCESSFUL in 1m 12s`, 2 warnings (JEI `addItemStack` deprecated-for-removal) |
+| `build.yml` · static checks | `39668301133` | success — all three offline gates |
+| `build.yml` · gradle build | `39668301133` | success — `remapJar` + sources jar uploaded as an Actions artifact |
+| `build.yml` · no-viewers | `39668301133` | success — `-Penable_jei=false -Penable_rei=false` |
+| `consistency.yml` | `39666575001` | success — `12 passed, 0 warned, 0 failed` |
+
+The two runs before that are instructive and are the reason this file documents the failures as well
+as the passes:
+
+* `5df4b57` (workflows only, no source changes yet) — everything failed at `./gradlew: Permission
+  denied`, because `gradlew` was still committed `100644` at that point. Fixed by committing the mode
+  (`git update-index --chmod=+x gradlew`) *and* by `chmod +x ./gradlew` inside the workflows, so the
+  jobs no longer depend on the mode surviving a checkout.
+* `c0c0dc2` (full sync) — `no-viewers` and the static gates were green, but compiling **with** the
+  viewers failed in the *main* source set:
+  `cannot access EntityFluidExtension` at `ChiseledEnchantingTableBlock.java:101`. Cause: the viewer
+  dependencies' POMs displaced the pinned Fabric API, and Loom's interface injections (which rewrite
+  the Minecraft classes javac compiles against) followed the displaced one —
+  `fabric-content-registries-v0` injects `net.fabricmc.fabric.api.registry.fluid.EntityFluidExtension`
+  into `net.minecraft.world.entity.Entity`, so any `player.…` call needs that class file. Fixed in
+  `18b851a` by excluding `net.fabricmc.fabric-api`, `net.fabricmc` and `com.mojang` from all four
+  viewer `compileOnly` dependencies. The same log also proved a latent bug in the workflow itself:
+  Actions runs `run:` steps with `bash -e`, so `status=$?` after a failing `./gradlew` is dead code —
+  the failure log had no `gradle exit code` line, and the dependency-report block would never have
+  run when it was needed. Now `|| status=$?`.
 
 ## Drift check and re-apply
 

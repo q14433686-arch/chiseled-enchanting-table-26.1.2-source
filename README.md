@@ -77,9 +77,14 @@ and by this repository's own `26.3` branch, because this port is developed in a 
 reach `maven.fabricmc.net` (nor the JEI/REI mavens) and therefore cannot compile locally — the
 compile has to happen on Actions and the log has to come back to the branch.
 
+**Status: green.** `compile-check` run `39668301472` and all three `build.yml` jobs (static gates →
+full build → `no-viewers`) in run `39668301133`, on commit `315fb6e` (2026-10-21):
+`BUILD SUCCESSFUL in 1m 12s` with JEI and REI enabled, 2 deprecation warnings from JEI's API.
+`docs/ci/README.md` records the two failed runs before that and what each one taught us.
+
 | Workflow | What it does | Trigger |
 |---|---|---|
-| [`compile-check.yml`](.github/workflows/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API (Actions log blobs are unreachable from the sandbox) | push to `arena/**` / this branch, PRs |
+| [`compile-check.yml`](.github/workflows/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API (Actions log blobs are unreachable from the sandbox). The log also records which artifact versions the floating viewer coordinates resolved to, and a failure additionally commits back `build-reports/compile-deps.log` with the dependency graph | push to `arena/**` / this branch, PRs |
 | [`build.yml`](.github/workflows/build.yml) | static gates first (no network needed) → full `./gradlew build` + jar artifact (14 days), plus a **`no-viewers`** job that compiles with `-Penable_jei=false -Penable_rei=false` | push / PR |
 | [`consistency.yml`](.github/workflows/consistency.yml) | version gate for "bumped one place, forgot the other four", plus a warn-only `docs/ci` drift check | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml`, `docs/ci/publish.yml` |
 | [`publish.yml`](.github/workflows/publish.yml) | manual release to GitHub / Modrinth (`MINECRAFT_VERSION: 26.1.2`, `VERSION: 1.0.3`) | `workflow_dispatch` only |

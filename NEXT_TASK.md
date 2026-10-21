@@ -51,12 +51,20 @@ To build without the optional viewers (offline-friendly, and what CI's `no-viewe
 ./gradlew build -Penable_jei=false -Penable_rei=false
 ```
 
+`jei_version` (`29.47.0.111`) and `rei_version` (`26.1.819`) are pinned to what CI resolved. Bumping
+either is a deliberate act: JEI has already removed `IIngredientAcceptor#addItemStack` on its `26.1`
+branch (it is deprecated-for-removal in the pinned jar, which is the two warnings in the green log),
+so a bump must migrate `EnchantingRecipeCategory`'s `addItemStack` / `addItemStacks` calls in the
+same commit — see `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.
+
 ## Open items (roughly in priority order)
 
 ### A0. 1.0.3-specific runtime verification (new this round — start here)
 
-Nothing in the 1.0.3 sync has been in a real client yet. A green `compile-check` only proves the
-code compiles and the mixin **target classes** exist.
+**Compilation is settled**: `compile-check.yml` run `39668301472` and all three `build.yml` jobs in
+run `39668301133` are green on commit `315fb6e` (both source sets, JEI + REI enabled, plus the
+`no-viewers` escape hatch). Nothing in the 1.0.3 sync has been in a real client yet, and a green
+`compile-check` only proves the code compiles and the mixin **target classes** exist.
 
 1. **Worldgen deadlock fix** ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)):
    on a **fresh** world, fly into an affected structure chunk — the reporter's reproduction is a mesa
@@ -174,6 +182,12 @@ branch:
 - `26.2` has **no CI at all** and never received the deadlock fix as a commit — only as
   `docs/patches/26.2-worldgen-bookshelf-deadlock.patch` on the `26.3` branch. Applying it there is
   the single highest-value follow-up in this list: the same freeze affects that line.
+- `26.3` declares the four viewer `compileOnly` dependencies **without** the toolchain exclusions
+  this branch needs, and its `compile-check.yml` still has the dead `status=$?` under `bash -e`. Both
+  are worth porting *back* (sync report §8 findings 6 and 7) — they are the only two divergences
+  where this branch is strictly more robust.
+- Both branches still float `jei_version=latest.release` / a `+`-suffixed `rei_version`; this branch
+  pinned them (29.47.0.111 / 26.1.819) and records the resolved coordinates in the CI log.
 - `docs/marketing/*` on this branch still describes `1.0.2`; update before any `publish.yml` run.
 - Committed debris on all three branches: `*.java.orig` / `*.java.rej` under `src/`, and root-level
   `fix*.patch` / `fix_*.py` / `adapted_handler.java` / `Dummy.class` / `Dummy.java` /

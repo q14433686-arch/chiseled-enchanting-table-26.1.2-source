@@ -128,8 +128,21 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
   schemas — the inverse of the 26.3 branch's gates, negative-tested against both the pre-fix
   `craft.json` (3 failures) and the 26.3 versions of `craft.json` + the block loot table
   (3 failures).
-- `gradlew` is committed executable (`100644` → `100755`); `compile-check.yml` calls `./gradlew`
-  directly and would otherwise die with `Permission denied`.
+- `gradlew` is committed executable (`100644` → `100755`), and the workflows `chmod +x` it anyway —
+  the first run on this branch died with `./gradlew: Permission denied` before the mode was fixed.
+- All four viewer `compileOnly` dependencies now exclude `net.fabricmc.fabric-api`, `net.fabricmc`
+  and `com.mojang`. Without that, a viewer's POM upgrades the pinned Fabric API, Loom's interface
+  injections follow it, and the **main** source set fails to compile with
+  `cannot access EntityFluidExtension` — which is exactly how the first full CI run on this branch
+  failed while the same push's `no-viewers` job was green.
+- `jei_version` / `rei_version` are pinned to what CI resolved (`29.47.0.111` / `26.1.819`) instead
+  of floating (`latest.release` / `26.1.+`), and `compile-check.yml` records the resolved coordinates
+  of both compile classpaths in the log it commits back, so a bump is a deliberate, evidenced change.
+- `compile-check.yml` captures Gradle's exit status with `|| status=$?`: Actions runs `run:` steps
+  under `bash -e`, so the previous `status=$?` line was dead code and the failure-only dependency
+  report would never have been written. On failure it now also commits back
+  `build-reports/compile-deps.log` (`dependencyInsight` for Fabric API on both classpaths plus the
+  first 400 lines of each dependency tree).
 - Documentation: `docs/EXTENDING.md` now describes the `BookshelfBookFiller` two-halves split
   (pure/worldgen vs server-thread) and its default-unlock tag was corrected to the shipped
   `#minecraft:in_enchanting_table`; `docs/DOCUMENTATION_INDEX.md` gained the current-round report
@@ -141,9 +154,14 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 - `python3 scripts/ci_static_checks.py` → PASS. `python3 scripts/compat_check.py` → PASS.
   `bash scripts/check_release_consistency.sh --strict` → PASS (12 checks).
   `bash docs/ci/install.sh --check` → ok ×4. All eight workflow YAMLs parse.
-- Compile: **not runnable in the dev sandbox** (no JDK, no maven access) — `compile-check.yml` /
-  `build.yml` on the sync commit are the verification channel; the result is written back to
-  `build-reports/compile-java.log` and recorded in the sync report §7.
+- **Compile: green on GitHub Actions**, 2026-10-21, commit `315fb6e` — `compile-check.yml` run
+  `39668301472` (`compileJava` + `compileClientJava`, `BUILD SUCCESSFUL in 1m 12s`, 2 JEI
+  deprecation warnings) and `build.yml` run `39668301133` (static gates, full `build` with
+  `remapJar` + sources jar artifact, and the `no-viewers` job) all success; `consistency.yml` run
+  `39666575001` success. The dev sandbox itself has no JDK and no maven access, so Actions is the
+  compile channel: its log is committed back to the branch as `build-reports/compile-java.log`, and
+  the two preceding runs (what each proved, and the two build fixes they forced) are tabled in
+  `docs/reports/SYNC_FROM_26_3_REPORT.md` §7.1.
 - In-game verification still open: the deadlock reproduction (fresh world, affected structure chunks,
   ideally with Distant Horizons), filled + correctly facing shelves, JEI/REI checklists, and the
   dedicated-server cost-sync pass.

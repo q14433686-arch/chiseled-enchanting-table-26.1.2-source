@@ -35,13 +35,23 @@ carry the same `mod_version`: the number answers "which feature set", the branch
 ### Build / packaging
 - `gradle.properties`: `mod_version=1.0.3`, `minecraft_version=26.1.2`,
   `loader_version=0.19.3`, `fabric_version=0.151.0+26.1.2`, plus the optional-viewer block
-  (`enable_jei=true`, `jei_version=latest.release`, `enable_rei=true`, `rei_version=26.1.+`,
+  (`enable_jei=true`, `jei_version=29.47.0.111`, `enable_rei=true`, `rei_version=26.1.819`,
   `rei_math_version=0.6.1`, `rei_architectury_version=20.0.6`) — each value's provenance is
-  commented in the file itself.
+  commented in the file itself. The two viewer versions are **pinned to what CI actually resolved**
+  on 2026-10-21 rather than left floating (`latest.release` / `26.1.+`): a `compileOnly` coordinate
+  has no runtime effect, so floating only buys the ability to break without a commit here
+  (`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6).
 - `build.gradle`: Loom `1.16-SNAPSHOT`; three extra repositories (BlameJared / Shedaniel /
-  Architectury) and three `compileOnly` viewer dependencies behind `enable_jei` / `enable_rei`;
-  the client source set excludes `compat/jei/**` and `compat/rei/**` when the matching toggle is
-  `false`. `options.release = 25`, Java 25 source/target, `withSourcesJar()`.
+  Architectury) and four `compileOnly` viewer dependencies behind `enable_jei` / `enable_rei`
+  (JEI, REI api, cloth basic-math, architectury-fabric); the client source set excludes
+  `compat/jei/**` and `compat/rei/**` when the matching toggle is `false`. `options.release = 25`,
+  Java 25 source/target, `withSourcesJar()`.
+  Every viewer dependency is configured with a shared `toolchainPins` closure that excludes
+  `net.fabricmc.fabric-api`, `net.fabricmc` and `com.mojang`: without it a viewer's POM upgrades the
+  Fabric API out from under Loom's interface injections and the **main** source set stops compiling
+  (`cannot access EntityFluidExtension`). The 26.3 branch declares the same dependencies without
+  exclusions and only escapes the failure because its Fabric API is already the newest in its graph —
+  `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.1, sync report §8 finding 7.
 - `src/main/resources/fabric.mod.json`:
   - `version: "${version}"` (substituted by Loom to `1.0.3`).
   - `name`: `Chiseled Enchanting Table (Unofficial 26.1.2 Port)`.
@@ -281,10 +291,13 @@ all unreachable), so `./gradlew` cannot even resolve dependencies. Verification 
   `minecraftVersion=26.1.2`), `me.shedaniel:RoughlyEnoughItems-api-fabric:26.1.+`,
   `dev.architectury:architectury-fabric:20.0.6` (REI `26.1`'s own `architectury_version`),
   `me.shedaniel.cloth:basic-math:0.6.1`.
-- **Compile**: delegated to `compile-check.yml` / `build.yml` on the sync commit. The log is written
-  back to this branch as `build-reports/compile-java.log`; record the run id here and in the sync
-  report §7 once it is green (the 26.3 branch keeps the same `ci-log:` / "docs: record the green …
-  run" commit pattern).
+- **Compile: GREEN on GitHub Actions.** `compile-check.yml` run `39668301472` and all three
+  `build.yml` jobs (static gates, full `build`, `no-viewers`) in run `39668301133`, both on commit
+  `315fb6e`, 2026-10-21 — `BUILD SUCCESSFUL in 1m 12s` for `compileJava` + `compileClientJava` with
+  JEI and REI enabled, 2 warnings (JEI `addItemStack` deprecated-for-removal; nothing from the
+  structure/menu/compat code). `consistency.yml` run `39666575001` green. The log is committed back
+  to the branch as `build-reports/compile-java.log` (plus `compile-deps.log` on failure) — the two
+  earlier runs and what each one proved are tabled in the sync report §7.1.
 
 ## Verified for 1.0.2 (2026-07-01)
 

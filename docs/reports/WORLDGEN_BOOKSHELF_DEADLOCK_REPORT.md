@@ -1,14 +1,15 @@
-# Worldgen bookshelf fill: hard deadlock fix (Minecraft 26.1.2 / mod 1.0.2 line)
+# Worldgen bookshelf fill: hard deadlock fix (Minecraft 26.1.2 / mod 1.0.3 line)
 
 > **Scope.** Fix for the integrated-server freeze reported against this unofficial 26.1.2 port:
 > `BookshelfReplacerProcessor#finalizeProcessing` touching the live `ServerLevel` from a worldgen
 > worker thread. Affects `mechanics/structure/BookshelfReplacerProcessor`,
 > `mechanics/structure/BookshelfBookFiller` and `mixin/structure/LevelChunkPostProcessMixin`.
 >
-> **Status:** patch generated against the `chiseled-enchanting-table-26.1.2-source` branch
-> (see the branch notes below and §7). **Compile and runtime verification are both still
-> open on this branch** — the `compile-check` workflow does not build it, and there is no
-> client in the authoring sandbox.
+> **Status:** applied to branch `arena/3ae35b5e-chiseled-enchanting-table-26-1` (mod 1.0.3) and
+> **compiles green on GitHub Actions** — `compile-check` run `39668301472` and all three `build.yml`
+> jobs on commit `315fb6e`, 2026-10-21 (§7). **Runtime verification is still open**: there is no
+> Minecraft client in the authoring sandbox, so the freeze reproduction and the "shelves come out
+> filled and correctly facing" check have not been run (§7, and `NEXT_TASK.md` §A0.1).
 
 > **Branch notes.** Generated on 2026-10-22 from the 26.3 write-up (source commits
 > `55a62fc` + the `ChunkStatus` package fix on the 26.3 line); the code in this patch is
@@ -220,9 +221,15 @@ Done in this round (no client available in the sandbox):
   parity).
 * `python3 scripts/compat_check.py` → `PASS` (Tier 1; Tier 2 skipped, no MC jar).
 * `bash scripts/check_release_consistency.sh --strict` → `12 passed, 0 warned, 0 failed`.
-* Compile: **not** verified from this patch. The `compile-check` workflow's push filter does not
-  cover this branch, so apply the patch and run `./gradlew build --rerun-tasks` before
-  releasing (or add the branch to the workflow's `on.push.branches` list).
+* Compile: **green on GitHub Actions** (the sandbox has no JDK, so this is the only channel).
+  `compile-check.yml` run `39668301472` on commit `315fb6e` — `compileJava` + `compileClientJava`,
+  `BUILD SUCCESSFUL in 1m 12s`; `build.yml` run `39668301133` — static gates, full `build`
+  (`remapJar` + sources jar artifact) and the `no-viewers` job all success. The workflow's push
+  filter covers `arena/**`, `chiseled-enchanting-table-26.1.2-source` and `main`, and the log is
+  committed back to the branch as `build-reports/compile-java.log`.
+* The two javac warnings in that log are JEI deprecations in `compat/jei/EnchantingRecipeCategory`,
+  unrelated to this fix (`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6). No warning or error comes
+  from `mechanics/structure/**` or `mixin/structure/**`.
 
 Still open (needs a real client):
 
