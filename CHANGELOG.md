@@ -15,6 +15,34 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
+## [Unreleased]
+
+### Fixed — worldgen deadlock (integrated server freeze)
+
+- **`BookshelfReplacerProcessor#finalizeProcessing` no longer touches the live `ServerLevel`.**
+  It used to unwrap the `WorldGenRegion`, then call `getBlockState` / `getBlockEntity` /
+  `setBlock` on the chunk that was *currently being generated*. In 26.3 that read is
+  `ServerChunkCache#getChunk`, which for an off-thread caller does
+  `supplyAsync(..., mainThreadProcessor).join()`, while the server thread sits in
+  `managedBlock` waiting for the same chunk. With Distant Horizons' `FEATURES` LOD generator
+  (its own thread pool) all workers deadlocked deterministically: no TPS, no log, unsavable
+  world. The fill now only reads the datapack pool + enchantment registry + seed, and returns a
+  finished `StructureBlockInfo` (state with `slot_*_occupied` + block-entity NBT), which vanilla
+  places. Same fix also makes template-placed shelves actually *filled* — previously the fill ran
+  against a chunk that was not placed yet, so villages/mansions kept empty chiseled bookshelves.
+  See [`docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md`](docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md).
+- **The shelf-facing heuristic moved to the server thread.** `finalizeProcessing` marks the
+  position for chunk post-processing; `LevelChunkPostProcessMixin` then calls
+  `BookshelfBookFiller.applyFacingToPlacedBookshelf` when the chunk starts ticking, so the v3
+  rubric sees the finished geometry (a piece's own walls are still in the template during
+  worldgen). If the mark is unavailable the shelf keeps its books and the template's rotated
+  default facing.
+- **Live-world fills are now server-thread-only and never load a chunk.** The fillers log one
+  error and no-op when called off-thread, and neighbour scans use `ServerChunkCache#getChunkNow`
+  (an unloaded neighbour counts as "unknown" instead of triggering a synchronous chunk load).
+  Slot contents are written through `getItems()` rather than `setItem()`, so enchanted books are
+  no longer subject to the `#minecraft:bookshelf_books` re-validation / per-slot state rewrite.
+
 ## [1.0.3] - 2026-10-13
 
 ### Minecraft 26.3 port
