@@ -63,9 +63,13 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 - **Shared, viewer-agnostic index** — `compat/EnchantQueryIndex` derives one row per
   (enchantment, level) from the live registries (`Enchantment#canEnchant`, so modded items and
   universal-enchant datapacks are included), plus the mod's own cost tables.
-- **Enchanted-book subtypes on JEI** (`STORED_ENCHANTMENTS`) so each enchantment is its own
-  searchable JEI entry; REI already distinguishes enchanted books by stored enchantment in its own
-  default plugin, so no registration is needed there.
+- **Enchanted-book subtypes come free in both viewers**: REI's default plugin already registers a
+  stored-enchantment comparator and JEI's own `VanillaPlugin` already registers an
+  `EnchantedBookSubtypeInterpreter` for `Items.ENCHANTED_BOOK`, so each enchantment is its own
+  searchable entry without this mod registering anything. (The 26.3 adapter this was ported from did
+  call `registerFromDataComponentTypes(..., STORED_ENCHANTMENTS)`; JEI rejects the duplicate with an
+  `An interpreter is already registered` ERROR and discards it — found in a real client log and
+  removed here.)
 - Both viewers are `compileOnly` and optional: `enable_jei=false` / `enable_rei=false` in
   `gradle.properties` (or `-Penable_jei=false` / `-Penable_rei=false`) exclude the respective
   adapter from the build; nothing is required at runtime. Coordinates for this line:

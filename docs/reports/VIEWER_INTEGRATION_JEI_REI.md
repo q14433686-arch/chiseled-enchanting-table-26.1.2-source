@@ -123,10 +123,10 @@ API notes (unchanged from the 26.3 report, re-verified against `26.1`):
   `addInvisibleIngredients(role)`; slots accept `addItemStack` / `addItemStacks`.
 - `IRecipeCategory#getTooltip(ITooltipBuilder, T, IRecipeSlotsView, double, double)`; the builder
   takes `FormattedText`, and `Component` is a `FormattedText`.
-- Enchanted-book subtypes: `ISubtypeRegistration#registerFromDataComponentTypes(Item,
-  DataComponentType...)` with `DataComponents.STORED_ENCHANTMENTS` — no hand-written interpreter.
-- Registration hooks used: `registerCategories`, `registerRecipes`, `registerRecipeCatalysts`,
-  `registerItemSubtypes`.
+- Enchanted-book subtypes: **not registered by us** — JEI's own `VanillaPlugin` already registers
+  `EnchantedBookSubtypeInterpreter.INSTANCE` for `Items.ENCHANTED_BOOK`, so per-enchantment book
+  entries work out of the box (§7.2: registering a second one logs an ERROR and is discarded).
+- Registration hooks used: `registerCategories`, `registerRecipes`, `registerRecipeCatalysts`.
 
 Build wiring on this line:
 
@@ -210,15 +210,17 @@ over, with the version-appropriate coordinates:
 All three are `compileOnly` and gated by `enable_rei`, exactly like the JEI API; REI supplies them at
 runtime.
 
-### 4.3 Book subtypes in REI need no work
+### 4.3 Book subtypes need no work in either viewer
 
-JEI needed an explicit subtype registration (`registerFromDataComponentTypes(...,
-STORED_ENCHANTMENTS)`). REI has no equivalent registration to make: its own default plugin already
-registers an enchanted-book comparator on the stored enchantment
+Neither viewer needs a registration from this mod. REI's own default plugin already registers an
+enchanted-book comparator on the stored enchantment
 (`default-plugin/src/main/java/me/shedaniel/rei/plugin/common/DefaultPlugin.java`,
 `registerItemComparators(... registry.register((context, stack) -> …, Items.ENCHANTED_BOOK))`).
 Books with different enchantments therefore already render as distinct, separately searchable
-entries in REI — the mod only has to put the right book in the input slot, which it does.
+entries in REI — the mod only has to put the right book in the input slot, which it does. JEI is the
+same story via `EnchantedBookSubtypeInterpreter`; the 26.3 adapter this was ported from did register
+`STORED_ENCHANTMENTS` explicitly, which is why the first real-client log carried an
+`An interpreter is already registered for this: minecraft:enchanted_book` ERROR (§7.2).
 
 ### 4.4 Layout
 
@@ -334,3 +336,90 @@ Two notes for the sister branches:
   Actions' `bash -e`, so the dependency-report block did not run on that failure (fixed in
   `315fb6e`, which is also what produced the table above). The diagnosis therefore rests on
   "viewers off → green, viewers on → red, viewers on with Fabric API pinned → green".
+
+## 7. First real-client evidence (2026-10-22, `RawOutput.log`)
+
+A tester ran the 1.0.3 jar in a real client and uploaded the log to the repository root as
+`RawOutput.log` (commit `fcf5108`, 499 lines, Windows 11, 2026-10-22 04:39). Environment: Minecraft
+`26.1.2`, Fabric Loader `0.19.3`, **Fabric API `0.155.2+26.1.2`** (newer than the `0.151.0+26.1.2`
+this mod compiles against — fine, `fabric.mod.json` depends on `fabric-api: *`), Java `25.0.3`,
+**JEI `29.29.0.77`** (older than the `29.47.0.111` compile pin — also fine, `compileOnly` creates no
+runtime requirement), Sodium `0.9.1+mc26.1.2`, Iris `1.11.3+mc26.1.2`, Distant Horizons `3.3.3`,
+TaCZ + three gun packs. No REI in this run. The mod list shows
+`chiseled-enchanting-table: Chiseled Enchanting Table (Unofficial 26.1.2 Port) 1.0.3`, and the data
+pack is active.
+
+### 7.1 What the viewer integration did in-game
+
+```
+[04:39:31] [Render thread/INFO]: Starting JEI...
+[04:39:31] [Render thread/INFO]: Registering categories...            took 13.14 milliseconds
+[04:39:31] [Render thread/INFO]: Registering recipe catalysts...      took 552.9 microseconds
+[04:39:31] [Render thread/INFO]: Registering recipes: chiseled_enchanting_table:jei_plugin took 12.73 milliseconds
+[04:39:31] [Render thread/INFO]: Starting JEI took 795.2 milliseconds
+```
+
+So the plugin loaded through the `jei_mod_plugin` entrypoint, the category and both catalysts
+registered, and `EnchantQueryIndex` produced rows against a live registry without error — items 3 of
+§5's checklist is now partly verified (registration side). What the crash prevented (§7.3) is the
+interaction side: focusing a book / an item and reading the rows.
+
+### 7.2 The one real defect this log exposed: a redundant JEI subtype registration
+
+```
+[04:39:31] [Render thread/ERROR]: An interpreter is already registered for this: minecraft:enchanted_book
+java.lang.IllegalArgumentException
+	at mezz.jei.library.load.registration.SubtypeRegistration.registerSubtypeInterpreter(SubtypeRegistration.java:33)
+	at mezz.jei.library.load.registration.SubtypeRegistration.registerFromDataComponentTypes(SubtypeRegistration.java:40)
+	at chiseled_enchanting_table.compat.jei.ChiseledEnchantingJeiPlugin.registerItemSubtypes(ChiseledEnchantingJeiPlugin.java:99)
+```
+
+Not fatal — `SubtypeRegistration` *logs* that `IllegalArgumentException` for its stack trace and
+carries on (`Registering item subtypes took 3.774 milliseconds` follows immediately), and JEI's own
+interpreter wins regardless. But it is an ERROR plus a stack trace on **every** world load, and it
+buys nothing: JEI's `VanillaPlugin.registerItemSubtypes` already registers
+`EnchantedBookSubtypeInterpreter.INSTANCE` for `Items.ENCHANTED_BOOK`
+(`Library/src/main/java/mezz/jei/library/plugins/vanilla/VanillaPlugin.java`, line 183 on JEI's
+`26.1` branch). `ISubtypeRegistration` exposes no "is one already registered?" query, so the only
+correct fix is not to register one. **Fixed**: the override is gone from
+`ChiseledEnchantingJeiPlugin`, with a comment recording why so it does not get re-added.
+
+Per-enchantment book entries — the thing the registration was there for — keep working through JEI's
+own interpreter, exactly as §4.3 already described for REI. Both sister branches (`26.3`, `26.2`)
+still carry the redundant call: sync report §8 finding 9.
+
+### 7.3 The crash itself is Distant Horizons ↔ Iris, not this mod
+
+```
+[04:39:31] [Render thread/ERROR]: Unreported exception thrown!
+java.lang.NoSuchMethodError: 'boolean net.irisshaders.iris.api.v0.IrisApi.isReverseZDuringShaders()'
+	at com.seibel.distanthorizons.fabric.wrappers.modAccessor.IrisAccessor.isReverseZDuringShaders(IrisAccessor.java:48)
+	at com.seibel.distanthorizons.common.render.openGl.GlDhRenderApiDefinition.getDepthDirection(GlDhRenderApiDefinition.java:43)
+	at com.seibel.distanthorizons.core.util.RenderUtil.setDhProjectionMatrix(RenderUtil.java:99)
+	at com.seibel.distanthorizons.core.api.internal.ClientApi.renderLodLayer(ClientApi.java:533)
+	at net.minecraft.client.renderer.chunk.ChunkSectionsToRender.handler$zeh000$distanthorizons$renderDeferredLayerHead(...)
+	at net.irisshaders.iris.shadows.ShadowRenderer.renderShadows(ShadowRenderer.java:510)
+	at net.minecraft.client.renderer.LevelRenderer.renderLevel(LevelRenderer.java:532)
+	at net.minecraft.client.Minecraft.renderFrame(Minecraft.java:1433)
+```
+
+`Description: Unexpected error`, on the first rendered frame after join
+(`crash-reports/crash-2026-10-22_04.39.32-client.txt`). **There is not one `chiseled_enchanting_table`
+frame in the trace**, and the failure is a missing method on *Iris's* API class, called by
+*Distant Horizons'* Iris accessor: DH `3.3.3` expects `IrisApi.isReverseZDuringShaders()`, which the
+installed Iris `1.11.3+mc26.1.2` does not have. Iris's own `26.1` branch does have it — added
+2026-09-12 in `ceea597` "Add this stub for 26.1" — so the installed Iris build predates the API stub
+that this DH version compiles against.
+
+Workarounds for the tester, in order of usefulness: update Iris to the newest `mc26.1.2` build (one
+that contains `isReverseZDuringShaders`); or downgrade Distant Horizons to a version whose
+`IrisAccessor` does not call it; or, to unblock in-game verification of *this* mod immediately,
+disable the Iris shader pack (or DH's LOD rendering) and re-enter the world. Nothing in this
+repository can fix a DH↔Iris API mismatch.
+
+### 7.4 Still unverified after this run
+
+Because the client died on the first frame: book/item focusing in JEI (§5 item 3), the whole REI
+pass (§5 item 4), both viewers together (§5 item 5), the dedicated-server cost sync (§5 item 6), and
+— most importantly — the structure bookshelf fills the deadlock fix was written for
+(`WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md` §7).

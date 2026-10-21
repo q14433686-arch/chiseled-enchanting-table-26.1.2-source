@@ -67,6 +67,16 @@ green on commit `da77188` — both source sets, JEI + REI enabled, pinned viewer
 resolved. Nothing in the 1.0.3 sync has been in a real client yet, and a green
 `compile-check` only proves the code compiles and the mixin **target classes** exist.
 
+0. **Blocker for everything below, and it is not this mod:** the tester's client crashes on the first
+   rendered frame with `NoSuchMethodError: net.irisshaders.iris.api.v0.IrisApi.isReverseZDuringShaders()`
+   — Distant Horizons `3.3.3` calling an Iris API method that the installed Iris `1.11.3+mc26.1.2`
+   does not have (log: `RawOutput.log`, commit `fcf5108`; analysis in
+   [`docs/reports/VIEWER_INTEGRATION_JEI_REI.md`](docs/reports/VIEWER_INTEGRATION_JEI_REI.md) §7.3 —
+   Iris's own `26.1` branch gained that method on 2026-09-12, so the installed Iris build predates
+   it). Update Iris to a newer `mc26.1.2` build, downgrade DH, or disable the shader pack / DH LOD
+   rendering to get in-world. The same log does confirm two things we needed: worldgen with DH active
+   reached the join **without freezing**, and JEI loaded our category, catalysts and recipes
+   (`Registering recipes: chiseled_enchanting_table:jei_plugin took 12.73 milliseconds`).
 1. **Worldgen deadlock fix** ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)):
    on a **fresh** world, fly into an affected structure chunk — the reporter's reproduction is a mesa
    village with Distant Horizons (`chunkGeneratorMode = FEATURES`). Expect: no freeze, world saves,
@@ -77,7 +87,9 @@ resolved. Nothing in the 1.0.3 sync has been in a real client yet, and a green
    something is still calling the live-world half from a worker.
 2. **JEI**: category `Chiseled Enchanting` appears under both the table and the chiseled bookshelf;
    focus an enchanted book → every item it can enchant; focus a diamond sword → every book that works
-   on it; enchanted books are distinct searchable entries per enchantment.
+   on it; enchanted books are distinct searchable entries per enchantment (those subtypes come from
+   JEI's own `EnchantedBookSubtypeInterpreter` — this mod no longer registers a duplicate, viewer
+   report §7.2). Registration is already confirmed by `RawOutput.log`; the interaction half is not.
 3. **REI**: same pass with REI only (no JEI), then with **both** installed — two categories coexist,
    no duplicate class / entrypoint error.
 4. **Cost sync**: dedicated server whose `enchantment_costs.json` differs from the jar (e.g. swap

@@ -223,6 +223,17 @@ Open, and why:
    reporter's case: a mesa village with Distant Horizons' `FEATURES` LOD generator); the shelves must
    come out *filled* and correctly facing; JEI/REI need the §5 checklist in the viewer report; the
    cost sync needs a dedicated server with a modified `enchantment_costs.json`.
+
+   A first real-client run happened on 2026-10-22 (`RawOutput.log`, commit `fcf5108`, uploaded by the
+   tester). Good news: the mod loaded, its data parsed (`7 default enchantments, 1 default-unlock tag
+   rules, 43 item cost overrides, 2 transformations, 41 loot injections`), advancements loaded with
+   no parse error, JEI registered our category/catalysts/recipes in 12.73 ms, and worldgen with
+   Distant Horizons active reached the join without freezing. Bad news: the client then crashed on
+   the first rendered frame — `NoSuchMethodError: IrisApi.isReverseZDuringShaders()`, Distant
+   Horizons 3.3.3 against Iris 1.11.3+mc26.1.2, **no frame from this mod in the trace** (viewer
+   report §7.3). The run also exposed one genuine defect of ours, now fixed: a redundant JEI
+   enchanted-book subtype registration that JEI rejects with an ERROR on every load (§8 finding 8,
+   viewer report §7.2).
 2. **`publish.yml` is manual** (`workflow_dispatch`) and needs the `PUBLISH_*` secrets; nothing in
    this sync can be validated by running it. Its `build` job is the same Gradle invocation that
    `build.yml` just proved green, so the risk is confined to the release/secret plumbing.
@@ -277,7 +288,16 @@ Open, and why:
    its own version conflict — porting the exclusions back would make it robust against the next
    viewer release. This is the one divergence in §4 that is worth pushing upstream to the sister
    branch.
-8. **Floating `compileOnly` coordinates.** Both branches shipped `jei_version=latest.release` and a
+8. **JEI's enchanted-book subtype registration is redundant** — and it is redundant on all three
+   branches. `ChiseledEnchantingJeiPlugin.registerItemSubtypes` calls
+   `registerFromDataComponentTypes(Items.ENCHANTED_BOOK, DataComponents.STORED_ENCHANTMENTS)`, but
+   JEI's own `VanillaPlugin` already registers `EnchantedBookSubtypeInterpreter.INSTANCE` for that
+   item, and `SubtypeRegistration` answers a duplicate with
+   `[ERROR] An interpreter is already registered for this: minecraft:enchanted_book` plus a synthetic
+   `IllegalArgumentException` stack trace, then discards ours. A tester's real 26.1.2 client log
+   (`RawOutput.log`, commit `fcf5108`) shows exactly that on every world load; the override is
+   removed here (viewer report §7.2), and `26.3` / `26.2` still have it.
+9. **Floating `compileOnly` coordinates.** Both branches shipped `jei_version=latest.release` and a
    `+`-suffixed `rei_version`, i.e. a build that can break with no commit in this repository. JEI has
    already deleted `IIngredientAcceptor#addItemStack` on its `26.1` branch — the pinned
    `29.47.0.111` still has it as `@Deprecated(forRemoval = true)`, which is the two warnings in the

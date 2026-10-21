@@ -232,11 +232,24 @@ Done in this round (no client available in the sandbox):
   unrelated to this fix (`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6). No warning or error comes
   from `mechanics/structure/**` or `mixin/structure/**`.
 
+First real-client signal (2026-10-22, `RawOutput.log`, commit `fcf5108`): a tester entered a save
+with **Distant Horizons 3.3.3 active** on Minecraft 26.1.2 / loader 0.19.3 and this mod at 1.0.3.
+`Started DhWorld of type [CLIENT_SERVER]`, spawn preparation ran to 57% (`准备生成区域中：57%`) and the
+player joined at `(-6.5, 107.0, 10.5)` — i.e. **no freeze during worldgen with DH installed**, which
+is the symptom this fix targets. That is encouraging but *not* a pass: the client then crashed on the
+first rendered frame for an unrelated reason (Distant Horizons calling
+`IrisApi.isReverseZDuringShaders()`, which the installed Iris `1.11.3+mc26.1.2` does not have —
+`NoSuchMethodError`, zero `chiseled_enchanting_table` frames; analysis in
+`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §7.3), so no structure chunk with chiseled bookshelves
+was ever reached. Items 1–4 below are all still open.
+
 Still open (needs a real client):
 
 1. DH + C2ME + Lithium world, `FEATURES`/`SURFACE_THEN_CHUNKS`, generate distant terrain while
    flying: no freeze, `jstack` shows no `DH-World Gen Thread` in `CompletableFuture.join()` under
-   `BookshelfReplacerProcessor`.
+   `BookshelfReplacerProcessor`. **To get in-world at all, the tester first has to resolve the
+   DH↔Iris mismatch** (update Iris to a build that has `isReverseZDuringShaders`, downgrade DH, or
+   disable the shader pack / DH LOD rendering).
 2. A village library / mansion library / ancient-city shelf: books present, `slot_*_occupied`
    matches the contents, shelf faces the open side.
 3. Stronghold library regression pass (post-process path).
