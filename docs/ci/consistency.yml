@@ -1,5 +1,6 @@
 name: Version consistency
-# Version gate — ported from TaCZ_Refabricated_Unofficial (.github/workflows/consistency.yml).
+# Version gate — ported from TaCZ_Refabricated_Unofficial (.github/workflows/consistency.yml)
+# via the 26.3 branch of this repository.
 #
 # build.yml 也跑同一个脚本，但它 paths-ignore 掉了 *.md：「只改 README」的提交测不到。
 # 版本号漂移的历史事故正是这一类（26.2 那轮 publish.yml 停在 26.1.2 没人发现），
@@ -8,15 +9,15 @@ on:
   push:
     branches:
       - 'arena/**'
-      - 'chiseled-enchanting-table-26.1.2-source'
       - 'chiseled-enchanting-table-26.2-source'
-      - '26.**'
+      - '26.2'
       - 'main'
     paths:
       - 'gradle.properties'
       - 'README.md'
       - 'src/main/resources/fabric.mod.json'
       - '.github/workflows/publish.yml'
+      - 'docs/ci/publish.yml'
       - 'scripts/check_release_consistency.sh'
   pull_request:
     paths:
@@ -24,6 +25,7 @@ on:
       - 'README.md'
       - 'src/main/resources/fabric.mod.json'
       - '.github/workflows/publish.yml'
+      - 'docs/ci/publish.yml'
       - 'scripts/check_release_consistency.sh'
   workflow_dispatch:
 
@@ -35,12 +37,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: run consistency gate
         run: bash scripts/check_release_consistency.sh --strict
+      - name: CI reference-copy drift (warn-only)
+        # docs/ci/ holds byte-identical reference copies of the four workflows. A GitHub App token
+        # without `workflows: write` cannot create or update .github/workflows/, so on this branch
+        # the reference copies can legitimately be *ahead* of the installed ones — that is a
+        # maintainer action, not a code defect, hence warn-only instead of a red gate.
+        run: |
+          if bash docs/ci/install.sh --check; then
+            echo "docs/ci and .github/workflows agree"
+          else
+            echo "::warning::.github/workflows is behind docs/ci — run 'bash docs/ci/install.sh' and push with a token that has the 'workflows' permission (see docs/ci/README.md)"
+          fi
       - name: failure hint
         if: failure()
         run: |
-          echo "::error::Version declarations are out of sync."
+          echo "::error::Version declarations are out of sync (or docs/ci drifted from .github/workflows)."
           echo "::error::Sync these five places: gradle.properties (mod_version / minecraft_version / loader_version / fabric_version),"
           echo "::error::README.md (title, '**Current version:**', '**Target:**', Fabric API blurb, jar filename),"
           echo "::error::src/main/resources/fabric.mod.json (depends.minecraft, name, description, port_notes),"
           echo "::error::.github/workflows/publish.yml (MINECRAFT_VERSION, VERSION, RELEASE_NAME)."
-          echo "::error::Reproduce locally: bash scripts/check_release_consistency.sh"
+          echo "::error::Reproduce locally: bash scripts/check_release_consistency.sh && bash docs/ci/install.sh --check"

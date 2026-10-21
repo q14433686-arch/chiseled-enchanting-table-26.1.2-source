@@ -3,10 +3,10 @@ name: Publish on GitHub, CurseForge & Modrinth
 on: [ workflow_dispatch ]
 
 env:
-  MINECRAFT_VERSION: 26.1.2
+  MINECRAFT_VERSION: 26.2
   JAVA_VERSION: 25
-  VERSION: 1.0.2
-  RELEASE_NAME:  Chiseled Enchanting Table 1.0.2 (Unofficial 26.1.2 Port)
+  VERSION: 1.0.3
+  RELEASE_NAME:  Chiseled Enchanting Table 1.0.3 (Unofficial 26.2 Port)
   MODRINTH_ID: ${{ secrets.PUBLISH_MODRINTH_ID }}
   MODRINTH_TOKEN: ${{ secrets.PUBLISH_MODRINTH_TOKEN }}
   # CURSEFORGE_ID: ${{ secrets.PUBLISH_CURSEFORGE_ID }}

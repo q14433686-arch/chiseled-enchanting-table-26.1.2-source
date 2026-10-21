@@ -25,6 +25,22 @@ repositories {
 def jeiEnabled = project.findProperty('enable_jei') != 'false'
 def reiEnabled = project.findProperty('enable_rei') != 'false'
 
+/**
+ * Dependency-configuration closure for the optional recipe viewers: a viewer's POM must never move
+ * *this* mod's toolchain. Minecraft, fabric-loader and Fabric API are all pinned above, and
+ * Fabric API is load-bearing at compile time in a way that is easy to miss — Loom reads the
+ * `injected_interfaces` declared by fabric-api's modules and rewrites the Minecraft classes
+ * accordingly (e.g. `Entity implements net.fabricmc.fabric.api.registry.fluid.EntityFluidExtension`,
+ * from `fabric-content-registries-v0`). If a viewer transitively upgrades fabric-api to a build for
+ * a different Minecraft version, javac sees interfaces that the resolved jar no longer supplies and
+ * the *main* source set dies with "cannot access EntityFluidExtension / class file ... not found".
+ */
+def toolchainPins = {
+    exclude group: 'net.fabricmc.fabric-api'   // Fabric API: pinned by this build (fabric_version)
+    exclude group: 'net.fabricmc'              // fabric-loader / intermediary: pinned above
+    exclude group: 'com.mojang'                // Minecraft + Mojang libraries: provided by Loom
+}
+
 loom {
     splitEnvironmentSourceSets()
 
@@ -99,18 +115,18 @@ dependencies {
         // Plain `compileOnly` (not `modCompileOnly`): the 26.x lines are unobfuscated — this repo
         // already puts fabric-api on `implementation` for the same reason — so there is nothing to
         // remap, and Loom 1.17 does not even create the `modCompileOnly` configuration here.
-        compileOnly("mezz.jei:jei-${project.minecraft_version}-fabric:${project.jei_version}")
+        compileOnly("mezz.jei:jei-${project.minecraft_version}-fabric:${project.jei_version}", toolchainPins)
     }
 
     if (reiEnabled) {
         // Same rationale as JEI: compileOnly, unobfuscated 26.x line.
-        compileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${project.rei_version}")
+        compileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${project.rei_version}", toolchainPins)
         // REI's api artifact does not re-export two libraries its own interfaces leak:
         //   - me.shedaniel.math (Point/Rectangle), from shedaniel's cloth basic-math;
         //   - dev.architectury (fluid types referenced by EntryStack/EntryStacks).
         // REI ships both at runtime, so they are compile-time only here as well.
-        compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}")
-        compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}")
+        compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}", toolchainPins)
+        compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}", toolchainPins)
     }
 }
 

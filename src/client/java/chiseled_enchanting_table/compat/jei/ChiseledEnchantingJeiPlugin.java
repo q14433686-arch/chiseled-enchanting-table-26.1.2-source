@@ -8,11 +8,9 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
-import mezz.jei.api.registration.ISubtypeRegistration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -32,9 +30,11 @@ import net.minecraft.world.level.block.Blocks;
  *       directions.</li>
  *   <li>Catalysts: the chiseled enchanting table and the chiseled bookshelf, so the category shows up
  *       under {@code Recipes} for those blocks.</li>
- *   <li>Item subtypes for enchanted books, so two books with different enchantments are distinct JEI
- *       entries (and searchable by enchantment name) — this also improves every other mod's book
- *       display.</li>
+ *   <li>Nothing for enchanted-book subtypes — deliberately. Two books with different enchantments
+ *       are already distinct JEI entries because JEI's own {@code VanillaPlugin} registers an
+ *       {@code EnchantedBookSubtypeInterpreter} for {@code Items.ENCHANTED_BOOK}; registering a
+ *       second one only produces an ERROR line and is discarded. See the comment where the
+ *       {@code registerItemSubtypes} override used to be.</li>
  *   <li>Info pages explaining the two things a recipe cannot express: the book must sit in a nearby
  *       chiseled bookshelf, and applying an enchantment can displace conflicting ones.</li>
  * </ul>
@@ -89,18 +89,24 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
         );
     }
 
-    /**
-     * Makes enchanted books distinct JEI entries per enchantment. Without this every enchanted book
-     * collapses into one entry, which would make the "focus a book → see what it can enchant" half
-     * of the feature unusable.
-     */
-    @Override
-    public void registerItemSubtypes(ISubtypeRegistration registration) {
-        registration.registerFromDataComponentTypes(
-            net.minecraft.world.item.Items.ENCHANTED_BOOK,
-            DataComponents.STORED_ENCHANTMENTS
-        );
-    }
+    // Deliberately no `registerItemSubtypes` override here.
+    //
+    // This class used to call `registration.registerFromDataComponentTypes(Items.ENCHANTED_BOOK,
+    // DataComponents.STORED_ENCHANTMENTS)` so that two enchanted books with different enchantments
+    // would be distinct JEI entries. That is redundant: JEI's own VanillaPlugin already registers
+    // `EnchantedBookSubtypeInterpreter.INSTANCE` for `Items.ENCHANTED_BOOK`
+    // (Library/.../plugins/vanilla/VanillaPlugin.java, `registerItemSubtypes`), and
+    // `SubtypeRegistration.registerSubtypeInterpreter` reacts to a second registration by logging
+    //
+    //     [ERROR] An interpreter is already registered for this: minecraft:enchanted_book
+    //     java.lang.IllegalArgumentException  (synthetic, for the stack trace only — nothing throws)
+    //
+    // and then *discarding* ours, i.e. JEI's interpreter wins either way. Observed in a real 26.1.2
+    // client log with JEI 29.29.0.77 (see docs/reports/VIEWER_INTEGRATION_JEI_REI.md §7): an ERROR
+    // line plus a stack trace on every world load, for no behavioural gain. `ISubtypeRegistration`
+    // offers no way to ask whether an interpreter is already present, so the only correct fix is not
+    // to register one. Per-enchantment book entries — and therefore the "focus a book → see what it
+    // can enchant" half of this integration — keep working through JEI's own interpreter.
 
     // ---------------------------------------------------------------------------------------
     // Index plumbing
