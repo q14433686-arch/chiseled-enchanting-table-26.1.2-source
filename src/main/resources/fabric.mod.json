@@ -24,6 +24,9 @@
     ],
     "jei_mod_plugin": [
       "chiseled_enchanting_table.compat.jei.ChiseledEnchantingJeiPlugin"
+    ],
+    "rei_client": [
+      "chiseled_enchanting_table.compat.rei.ChiseledEnchantingReiPlugin"
     ]
   },
   "mixins": [
@@ -36,7 +39,8 @@
     "fabric-api": "*"
   },
   "suggests": {
-    "jei": "*"
+    "jei": "*",
+    "rei": "*"
   },
   "custom": {
     "chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.3. 1.0.3: JSON-driven chest / archaeology loot injection, live structure bookshelf replacement/fill, score-based shelf-facing, vanilla-anvil-style XP point deduction, vanilla enchanting-table book blocking, narrow anvil book+book same-level merge blocking, and enchanted-book chiseled-bookshelf random-tick particles/sound. 26.3 adaptations: renderpearl-era PoseStack#rotate/rotateDegrees, 9-arg SubmitNodeCollector#submitModel plus a separate crumbling-overlay submit, ContextIntProviders/UniformContainerBase loot builder API, Optional<Holder<LootItemCondition>> conditional loot functions, hand-rolled payload collection codecs (FriendlyByteBuf collection helpers removed), 26.3 loot-table schema (condition/modifier + type) and recipe_crafted 'recipes' list. Active mixins live in chiseled-enchanting-table-port.mixins.json. Still parked: broader anvil XP-cost tweak, Colorful Books integration, enchanted-book stack-size accessor. See CURRENT_BASELINE.md for the capability boundary, docs/reports/PORTING_26_3_REPORT.md for the migration evidence, and docs/EXTENDING.md for data-driven customisation entry points."
