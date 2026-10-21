@@ -1,4 +1,7 @@
 plugins {
+    // 26.1.2 line: Loom stays on 1.16 — the toolchain that the 1.0.2 build was verified with.
+    // (The 26.3 branch moved to 1.17 because FabricMC/fabric's own 26.3 branch pins it; nothing
+    // synced from there needs a newer Loom here.)
     id 'net.fabricmc.fabric-loom' version '1.16-SNAPSHOT'
     id 'java-library'
     id 'maven-publish'
@@ -14,6 +17,34 @@ base {
 repositories {
     maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
     mavenCentral()
+    // Optional recipe viewers (compile-only, see gradle.properties). JEI publishes
+    // `mezz.jei:jei-<mc>-fabric` to BlameJared; REI and its leaked compile-time types
+    // (me.shedaniel.math, dev.architectury) come from the two below.
+    maven { name = 'BlameJared'; url = 'https://maven.blamejared.com' }
+    maven { name = 'Shedaniel'; url = 'https://maven.shedaniel.me' }
+    maven { name = 'Architectury'; url = 'https://maven.architectury.dev' }
+}
+
+/** Optional viewer integration toggles (see gradle.properties). */
+def jeiEnabled = project.findProperty('enable_jei') != 'false'
+def reiEnabled = project.findProperty('enable_rei') != 'false'
+
+/**
+ * Dependency-configuration closure for the optional recipe viewers: a viewer's POM must never move
+ * *this* mod's toolchain. Minecraft, fabric-loader and Fabric API are all pinned above, and
+ * Fabric API is load-bearing at compile time in a way that is easy to miss — Loom reads the
+ * `injected_interfaces` declared by fabric-api's modules and rewrites the Minecraft classes
+ * accordingly (e.g. `Entity implements net.fabricmc.fabric.api.registry.fluid.EntityFluidExtension`,
+ * from `fabric-content-registries-v0`). If a viewer transitively upgrades fabric-api to a build for
+ * a different Minecraft version, javac sees interfaces that the resolved jar no longer supplies and
+ * the *main* source set dies with "cannot access EntityFluidExtension / class file ... not found" —
+ * exactly what the first 1.0.3 compile-check run produced. The 26.3 branch does not need these
+ * exclusions only because its own fabric-api (0.162.0+26.3) already wins its version conflict.
+ */
+def toolchainPins = {
+    exclude group: 'net.fabricmc.fabric-api'   // Fabric API: pinned by this build (fabric_version)
+    exclude group: 'net.fabricmc'              // fabric-loader / intermediary: pinned above
+    exclude group: 'com.mojang'                // Minecraft + Mojang libraries: provided by Loom
 }
 
 loom {
@@ -61,6 +92,15 @@ sourceSets {
     }
     client {
         java {
+            // Optional JEI / REI integration. Excluded when `-Penable_jei=false` /
+            // `-Penable_rei=false` so an environment that cannot resolve those mavens still builds
+            // (the fabric.mod.json entrypoints are only invoked when the viewer is installed).
+            if (!jeiEnabled) {
+                exclude 'chiseled_enchanting_table/compat/jei/**'
+            }
+            if (!reiEnabled) {
+                exclude 'chiseled_enchanting_table/compat/rei/**'
+            }
             // P3 first establishes a client compile slice. Full UI/renderer migration is still parked.
             //exclude 'chiseled_enchanting_table/gui/**'
             // P7: renderer restored for floating book smoke path.
@@ -74,6 +114,26 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    if (jeiEnabled) {
+        // compileOnly by design: JEI is never required at runtime, the plugin is only loaded
+        // through the `jei_mod_plugin` entrypoint when JEI itself is installed.
+        // Plain `compileOnly` (not `modCompileOnly`): the 26.x lines are unobfuscated — this repo
+        // already puts fabric-api on `implementation` for the same reason — so there is nothing to
+        // remap.
+        compileOnly("mezz.jei:jei-${project.minecraft_version}-fabric:${project.jei_version}", toolchainPins)
+    }
+
+    if (reiEnabled) {
+        // Same rationale as JEI: compileOnly, unobfuscated 26.x line.
+        compileOnly("me.shedaniel:RoughlyEnoughItems-api-fabric:${project.rei_version}", toolchainPins)
+        // REI's api artifact does not re-export two libraries its own interfaces leak:
+        //   - me.shedaniel.math (Point/Rectangle), from shedaniel's cloth basic-math;
+        //   - dev.architectury (fluid types referenced by EntryStack/EntryStacks).
+        // REI ships both at runtime, so they are compile-time only here as well.
+        compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}", toolchainPins)
+        compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}", toolchainPins)
+    }
 }
 
 processResources {
@@ -85,6 +145,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
+    // Minecraft 26.1.2 requires Java 25 (Fabric API 0.151.0+26.1.2 depends on java >=25).
     options.release = 25
     options.encoding = 'UTF-8'
 }

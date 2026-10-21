@@ -21,6 +21,12 @@
 		],
 		"client": [
 			"chiseled_enchanting_table.ChiseledEnchantingTableClient"
+		],
+		"jei_mod_plugin": [
+			"chiseled_enchanting_table.compat.jei.ChiseledEnchantingJeiPlugin"
+		],
+		"rei_client": [
+			"chiseled_enchanting_table.compat.rei.ChiseledEnchantingReiPlugin"
 		]
 	},
 	"mixins": [
@@ -32,8 +38,11 @@
 		"java": ">=25",
 		"fabric-api": "*"
 	},
-	"suggests": {},
+	"suggests": {
+		"jei": "*",
+		"rei": "*"
+	},
 	"custom": {
-		"chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.1.2. 1.0.2 stable: JSON-driven chest / archaeology loot injection, live structure bookshelf replacement/fill, score-based shelf-facing, vanilla-anvil-style XP point deduction, restored vanilla enchanting-table book blocking, restored narrow anvil book+book same-level merge blocking, and restored enchanted-book chiseled-bookshelf random-tick particles/sound. Active mixins live in chiseled-enchanting-table-port.mixins.json. Still parked: broader anvil XP-cost tweak, Colorful Books integration, enchanted-book stack-size accessor, and remaining visual/advancement polish. See CURRENT_BASELINE.md for the full capability boundary and docs/EXTENDING.md for data-driven customisation entry points."
+		"chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.1.2. 1.0.3 syncs the 26.3 branch's fixes and features onto this line: the worldgen bookshelf deadlock fix (structure bookshelves are now filled from the StructureBlockInfo, never from the live level off the server thread, so template-placed chiseled bookshelves are actually filled and chunk generation can no longer freeze the integrated server), server-authoritative enchantment costs synced to the client on join and after every data-pack reload, optional JEI and REI integration (bidirectional enchanted-book <-> item lookup over one shared index), translatable book lore, and 11 shipped languages. Still 26.1.2-native, deliberately NOT taken from the 26.3 branch: StructureProcessor as an abstract class with getType(), ChunkAccess#markPosForPostprocessing spelling, the ConstantValue/LootPoolSingletonContainer loot builder API, List<LootItemCondition> conditional loot functions, FriendlyByteBuf collection helpers, the per-block MapCodec, LivingEntity#drop(ItemStack, boolean), the plural loot_table schema (conditions[]/functions[] dispatched on condition/function) and recipe_crafted 'recipe_id'. 1.0.2 base: JSON-driven chest / archaeology loot injection, live structure bookshelf replacement/fill, score-based shelf-facing, vanilla-anvil-style XP point deduction, restored vanilla enchanting-table book blocking, restored narrow anvil book+book same-level merge blocking, and restored enchanted-book chiseled-bookshelf random-tick particles/sound. Active mixins live in chiseled-enchanting-table-port.mixins.json. Still parked: broader anvil XP-cost tweak, Colorful Books integration, enchanted-book stack-size accessor, and remaining visual/advancement polish. See CURRENT_BASELINE.md for the full capability boundary, docs/reports/SYNC_FROM_26_3_REPORT.md for what was synced from the 26.3 branch and what was adapted, and docs/EXTENDING.md for data-driven customisation entry points."
 	}
 }

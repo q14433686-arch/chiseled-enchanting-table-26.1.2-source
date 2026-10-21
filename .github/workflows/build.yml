@@ -1,0 +1,125 @@
+name: build
+# Full build + artifact upload, ported from TaCZ_Refabricated_Unofficial (.github/workflows/build.yml)
+# via the 26.3 branch of this repository, then re-adapted to the 26.1.2 line.
+#
+# compile-check.yml 只跑 compileJava/compileClientJava，测不出 processResources / remapJar
+# 阶段的失败，也不产 jar。本流程跑 ./gradlew build 并把 jar 上传为 Actions artifact（留 14 天）
+# —— 直接用途：给需要实测的人一个下载链接；每轮改动随手有可实测的构建。
+#
+# 编译之前先跑三个便宜的静态校验（秒级，且不依赖 Gradle 能解析依赖）：
+#   1. scripts/ci_static_checks.py  — mixin 配置完整性 + 「已注册 mixin 不能被 build.gradle 排除」+ 语言键齐平
+#   2. scripts/compat_check.py      — 数据包 schema / JSON-Java 漂移（Tier 1 必须通过）
+#   3. scripts/check_release_consistency.sh --strict — 版本号五处同步（gradle/README/fabric.mod.json/publish.yml）
+# 这三个脚本在沙箱里也能跑（不需要外网），所以本地提交前就能自查。
+#
+# 与 26.3 分支的差别（本行特有）：多一个 no-viewers 编译 job。JEI/REI 在 26.1.2 这条线上是
+# compileOnly 的可选依赖（gradle.properties: enable_jei / enable_rei），必须保证关掉它们之后
+# client source set 仍然能编译 —— 那是 maven.blamejared.com / maven.shedaniel.me 不可达时的
+# 唯一逃生通道，不能只在文档里写着「可以关」。
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - 'arena/**'
+      - 'chiseled-enchanting-table-26.1.2-source'
+      - 'main'
+    paths-ignore:
+      - 'build-reports/**'
+      - 'docs/**'
+      - '*.md'
+  pull_request:
+    paths-ignore:
+      - 'build-reports/**'
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: static checks (no network needed)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: mixin config integrity + registered-mixin-compiled + lang key parity
+        run: python3 scripts/ci_static_checks.py
+
+      - name: compatibility / data-pack sanity check
+        run: python3 scripts/compat_check.py
+
+      - name: version consistency
+        run: bash scripts/check_release_consistency.sh --strict
+
+  build:
+    name: gradle build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: static
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: setup jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: build
+        run: ./gradlew build --console=plain --stacktrace --no-daemon
+
+      - name: capture build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          # artifact 名不能含 '/'，所以不能直接用 github.ref_name（arena/xxx 带斜杠，
+          # 姊妹仓首跑就是这样失败的）。分支名在 run 页面本来就有，名字里只放 sha 前缀。
+          name: chiseled-enchanting-table-${{ github.sha }}
+          path: |
+            build/libs/*.jar
+            !build/libs/*-sources.jar
+          retention-days: 14
+          if-no-files-found: error
+
+  no-viewers:
+    # 逃生通道验证：JEI/REI 全部关掉时，client source set 仍必须编译通过。
+    name: compile without JEI/REI (optional-dependency escape hatch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: static
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: setup jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: compile main + client with both viewers disabled
+        run: ./gradlew compileJava compileClientJava -Penable_jei=false -Penable_rei=false --console=plain --stacktrace --no-daemon

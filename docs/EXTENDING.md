@@ -36,16 +36,25 @@ data/<namespace>/
 ```json
 {
   "values": [ { "enchantment": "minecraft:sharpness", "level": 1 } ],
-  "tags":   [ { "tag": "#minecraft:non_treasure", "level": 1 } ]
+  "tags":   [ { "tag": "#minecraft:in_enchanting_table", "level": 1 } ]
 }
 ```
 
 - `values` — explicit `{enchantment, level}` list. Loaded without needing the world's dynamic
   registries; use this for a hand-picked default set.
 - `tags` — expands at lookup time to every enchantment in the tag (accepts `#namespace:path`
-  or bare `namespace:path`). The default `#minecraft:non_treasure` matches the tag the vanilla
-  enchanting table itself uses, so any well-behaved enchantment-adding mod is picked up with no
-  configuration. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full cross-mod investigation.
+  or bare `namespace:path`). The shipped default is **`#minecraft:in_enchanting_table`** — the tag
+  the vanilla enchanting table itself reads, and the documented extension point for mods. Its
+  content defaults to `#minecraft:non_treasure`, so this is a pure superset of the older
+  `non_treasure` default that this section used to document: on its own it changes nothing, but a
+  mod that appends its own enchantments directly to `in_enchanting_table.json` (a common pattern,
+  because `non_treasure` is meant to stay a vanilla-only list) is now picked up too. Either way a
+  well-behaved enchantment-adding mod needs no configuration here.
+  *(The cross-mod compatibility write-up that older revisions linked as `COMPATIBILITY.md` is not
+  present in this snapshot on any branch of the repository; `scripts/ci_static_checks.py` reports
+  the reference as a dangling link until it is restored. The behaviour it described is the tag
+  expansion above, and `scripts/compat_check.py`'s `check_default_enchantment_tags_well_formed()`
+  is its executable form.)*
 
 **Java entry point:** `ChiseledEnchantingTableData.defaultEnchantments(HolderGetter<Enchantment>)`
 combines the `values` list with a live tag expansion; the no-arg overload only returns the
@@ -199,11 +208,22 @@ generating villages / mansions / ancient cities / stronghold libraries.
   level, and single-level enchantments (Mending, Silk Touch, Infinity) are never level-
   penalised at all.
 
-**Java entry point:** `mechanics.structure.BookshelfBookFiller.applyToPlacedBookshelf(
-ServerLevel, BlockPos, RandomSource)` — the enrichment path used by both the template-pool
-processor (`BookshelfReplacerProcessor#finalizeProcessing`) and the mark-and-post-process
-mixin pipeline (stronghold libraries via `StructurePieceMarkMixin` +
-`LevelChunkPostProcessMixin`).
+**Java entry points:** `mechanics.structure.BookshelfBookFiller` is split in two halves because
+one of them runs on worldgen workers and one on the server thread:
+
+- `computeFill(BlockState, RandomSource, HolderGetter<Enchantment>)` → `Fill(state, items)` and
+  `toBlockEntityTag(NonNullList<ItemStack>, HolderLookup.Provider)` — **pure**, no level access.
+  This is what `BookshelfReplacerProcessor#finalizeProcessing` uses: it returns a finished
+  `StructureBlockInfo` (slot-occupied state + block-entity NBT) that vanilla places. Never call
+  a level from there; the chunk being generated is not in the chunk cache, and reading it from a
+  worker thread deadlocks the server
+  ([report](reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md)).
+- `applyToPlacedBookshelf(ServerLevel, BlockPos, RandomSource)` and
+  `applyFacingToPlacedBookshelf(ServerLevel, BlockPos)` — **server thread only** (they log one
+  error and no-op anywhere else). Used by the mark-and-post-process mixin pipeline (stronghold
+  libraries via `StructurePieceMarkMixin` + `LevelChunkPostProcessMixin`) and for the deferred
+  facing pass on template-placed shelves. Neighbour reads there use
+  `ServerChunkCache#getChunkNow`, so an unloaded neighbour is "unknown", never a chunk load.
 
 ### 6. Loot-item function utility (registry entry, not JSON)
 
