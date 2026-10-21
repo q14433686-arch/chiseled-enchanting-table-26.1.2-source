@@ -77,10 +77,11 @@ and by this repository's own `26.3` branch, because this port is developed in a 
 reach `maven.fabricmc.net` (nor the JEI/REI mavens) and therefore cannot compile locally — the
 compile has to happen on Actions and the log has to come back to the branch.
 
-**Status: green.** `compile-check` run `39668301472` and all three `build.yml` jobs (static gates →
-full build → `no-viewers`) in run `39668301133`, on commit `315fb6e` (2026-10-21):
-`BUILD SUCCESSFUL in 1m 12s` with JEI and REI enabled, 2 deprecation warnings from JEI's API.
-`docs/ci/README.md` records the two failed runs before that and what each one taught us.
+**Status: green.** On commit `da77188` (2026-10-21): `compile-check` run `39670181582`
+(`BUILD SUCCESSFUL in 48s`, `compileJava` + `compileClientJava` with JEI and REI enabled, 2
+deprecation warnings from JEI's API), `build.yml` run `39670181557` (static gates → full build + jar
+artifact → `no-viewers`), `consistency.yml` run `39670181572`. `docs/ci/README.md` records the
+history, including the two failed runs and what each one taught us.
 
 | Workflow | What it does | Trigger |
 |---|---|---|

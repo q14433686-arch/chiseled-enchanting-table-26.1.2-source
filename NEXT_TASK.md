@@ -61,9 +61,10 @@ same commit — see `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.
 
 ### A0. 1.0.3-specific runtime verification (new this round — start here)
 
-**Compilation is settled**: `compile-check.yml` run `39668301472` and all three `build.yml` jobs in
-run `39668301133` are green on commit `315fb6e` (both source sets, JEI + REI enabled, plus the
-`no-viewers` escape hatch). Nothing in the 1.0.3 sync has been in a real client yet, and a green
+**Compilation is settled**: `compile-check.yml` run `39670181582`, `build.yml` run `39670181557`
+(all three jobs: static gates, full build, `no-viewers`) and `consistency.yml` run `39670181572` are
+green on commit `da77188` — both source sets, JEI + REI enabled, pinned viewer coordinates
+resolved. Nothing in the 1.0.3 sync has been in a real client yet, and a green
 `compile-check` only proves the code compiles and the mixin **target classes** exist.
 
 1. **Worldgen deadlock fix** ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)):

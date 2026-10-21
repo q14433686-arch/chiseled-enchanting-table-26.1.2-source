@@ -291,11 +291,13 @@ all unreachable), so `./gradlew` cannot even resolve dependencies. Verification 
   `minecraftVersion=26.1.2`), `me.shedaniel:RoughlyEnoughItems-api-fabric:26.1.+`,
   `dev.architectury:architectury-fabric:20.0.6` (REI `26.1`'s own `architectury_version`),
   `me.shedaniel.cloth:basic-math:0.6.1`.
-- **Compile: GREEN on GitHub Actions.** `compile-check.yml` run `39668301472` and all three
-  `build.yml` jobs (static gates, full `build`, `no-viewers`) in run `39668301133`, both on commit
-  `315fb6e`, 2026-10-21 — `BUILD SUCCESSFUL in 1m 12s` for `compileJava` + `compileClientJava` with
-  JEI and REI enabled, 2 warnings (JEI `addItemStack` deprecated-for-removal; nothing from the
-  structure/menu/compat code). `consistency.yml` run `39666575001` green. The log is committed back
+- **Compile: GREEN on GitHub Actions.** On commit `da77188`, 2026-10-21: `compile-check.yml` run
+  `39670181582` (`BUILD SUCCESSFUL in 48s` for `compileJava` + `compileClientJava` with JEI and REI
+  enabled, 2 warnings — JEI `addItemStack` deprecated-for-removal, nothing from the
+  structure/menu/compat code), `build.yml` run `39670181557` (static gates, full `build` with
+  `remapJar` + sources jar artifact, `no-viewers`), `consistency.yml` run `39670181572`. The
+  previous commit `315fb6e` was green too (runs `39668301472` / `39668301133`) and is the run whose
+  log supplied the pinned viewer versions. The log is committed back
   to the branch as `build-reports/compile-java.log` (plus `compile-deps.log` on failure) — the two
   earlier runs and what each one proved are tabled in the sync report §7.1.
 

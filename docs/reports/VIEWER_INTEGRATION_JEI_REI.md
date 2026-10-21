@@ -269,14 +269,19 @@ Pending (needs a real client):
 floating and the sandbox can reach neither maven nor the Actions log-blob domain. Run `39668301472`
 (commit `315fb6e`) resolved:
 
-| Coordinate | Requested | Resolved |
-| --- | --- | --- |
-| `mezz.jei:jei-26.1.2-fabric` | `latest.release` | `29.47.0.111` |
-| `me.shedaniel:RoughlyEnoughItems-api-fabric` | `26.1.+` | `26.1.819` |
-| `me.shedaniel.cloth:basic-math` | `0.6.1` | `0.6.1` (coordinate confirmed to exist — §4.2 had it as unverified) |
-| `dev.architectury:architectury-fabric` | `20.0.6` | `20.0.6` |
-| `net.fabricmc.fabric-api:fabric-api` | `0.151.0+26.1.2` | `0.151.0+26.1.2` (**unchanged** — see below) |
-| `net.fabricmc:fabric-loader` | `0.19.3` | `0.19.3` |
+| Coordinate | Requested (then) | Resolved | Pinned now |
+| --- | --- | --- | --- |
+| `mezz.jei:jei-26.1.2-fabric` | `latest.release` | `29.47.0.111` | `29.47.0.111` |
+| `me.shedaniel:RoughlyEnoughItems-api-fabric` | `26.1.+` | `26.1.819` | `26.1.819` |
+| `me.shedaniel.cloth:basic-math` | `0.6.1` | `0.6.1` (coordinate confirmed to exist — §4.2 had it as unverified) | `0.6.1` |
+| `dev.architectury:architectury-fabric` | `20.0.6` | `20.0.6` | `20.0.6` |
+| `net.fabricmc.fabric-api:fabric-api` | `0.151.0+26.1.2` | `0.151.0+26.1.2` (**unchanged** — see below) | — |
+| `net.fabricmc:fabric-loader` | `0.19.3` | `0.19.3` | — |
+
+The pins were then verified by their own run: `39670181582` on commit `da77188` resolved
+`mezz.jei:jei-26.1.2-fabric:29.47.0.111` and `me.shedaniel:RoughlyEnoughItems-api-fabric:26.1.819`
+with no `->` redirect (`BUILD SUCCESSFUL in 48s`, same two warnings), i.e. those exact artifacts
+exist on the two viewers' mavens.
 
 Both floating coordinates are now **pinned** to the resolved versions in `gradle.properties`. A
 `compileOnly` coordinate has no runtime effect (the user's own JEI/REI is what loads), so floating it

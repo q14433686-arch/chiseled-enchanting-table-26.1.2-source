@@ -154,11 +154,12 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 - `python3 scripts/ci_static_checks.py` → PASS. `python3 scripts/compat_check.py` → PASS.
   `bash scripts/check_release_consistency.sh --strict` → PASS (12 checks).
   `bash docs/ci/install.sh --check` → ok ×4. All eight workflow YAMLs parse.
-- **Compile: green on GitHub Actions**, 2026-10-21, commit `315fb6e` — `compile-check.yml` run
-  `39668301472` (`compileJava` + `compileClientJava`, `BUILD SUCCESSFUL in 1m 12s`, 2 JEI
-  deprecation warnings) and `build.yml` run `39668301133` (static gates, full `build` with
-  `remapJar` + sources jar artifact, and the `no-viewers` job) all success; `consistency.yml` run
-  `39666575001` success. The dev sandbox itself has no JDK and no maven access, so Actions is the
+- **Compile: green on GitHub Actions**, 2026-10-21 — on commit `da77188`, `compile-check.yml` run
+  `39670181582` (`compileJava` + `compileClientJava`, `BUILD SUCCESSFUL in 48s`, 2 JEI deprecation
+  warnings), `build.yml` run `39670181557` (static gates, full `build` with `remapJar` + sources jar
+  artifact, and the `no-viewers` job) and `consistency.yml` run `39670181572` all success; the
+  preceding commit `315fb6e` was green as well (runs `39668301472` / `39668301133`) and is the run
+  that produced the pinned viewer versions. The dev sandbox itself has no JDK and no maven access, so Actions is the
   compile channel: its log is committed back to the branch as `build-reports/compile-java.log`, and
   the two preceding runs (what each proved, and the two build fixes they forced) are tabled in
   `docs/reports/SYNC_FROM_26_3_REPORT.md` §7.1.

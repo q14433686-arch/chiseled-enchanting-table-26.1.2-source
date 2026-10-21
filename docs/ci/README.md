@@ -28,7 +28,11 @@ two reasons:
 
 ## Status on this branch (2026-10-21)
 
-Green, on commit `315fb6e` of `arena/3ae35b5e-chiseled-enchanting-table-26-1`:
+Green, on commit `da77188` of `arena/3ae35b5e-chiseled-enchanting-table-26-1` — `compile-check` run
+`39670181582` (`BUILD SUCCESSFUL in 48s`), `build` run `39670181557` (all three jobs),
+`consistency` run `39670181572`. That commit pins the two viewer coordinates, so this run is also
+the proof that `jei-26.1.2-fabric:29.47.0.111` and `RoughlyEnoughItems-api-fabric:26.1.819` exist
+and resolve. The run before it, on `315fb6e`, is the one that produced the numbers:
 
 | Workflow | Run | Result |
 | --- | --- | --- |

@@ -206,12 +206,15 @@ and `maven.architectury.dev`, so the compile verdict came from there. `compile-c
 | `c0c0dc2` (full sync) | failure `39666575031` | failure `39666575035` | static gates + `no-viewers` green; compiling **with** JEI/REI failed in the *main* source set: `cannot access EntityFluidExtension` (§8 finding 7) |
 | `18b851a` (viewer exclusions) | success `39667707099` | success `39667707142` | both source sets compile with the viewers on; `remapJar` + sources jar produced |
 | `315fb6e` (log hardening) | success `39668301472` | success `39668301133` | `BUILD SUCCESSFUL in 1m 12s`, 2 warnings (JEI deprecations); resolved coordinates recorded — `jei-26.1.2-fabric:29.47.0.111`, `RoughlyEnoughItems-api-fabric:26.1.819`, `basic-math:0.6.1`, `architectury-fabric:20.0.6`, `fabric-api:0.151.0+26.1.2` unchanged |
+| `da77188` (pins + docs) | success `39670181582` | success `39670181557` | the pinned coordinates are real and resolve exactly (`BUILD SUCCESSFUL in 48s`, same 2 warnings); `consistency.yml` run `39670181572` green too |
 
 `consistency.yml` is green as well (run `39666575001`, `12 passed, 0 warned, 0 failed`); it only
 triggers on version-relevant paths, so it did not re-run for the last two commits.
 
 So: **the whole 1.0.3 sync compiles on the 26.1.2 line**, including both viewer adapters, and the
-optional-dependency escape hatch compiles too. Details and the upgrade notes for the pinned viewer
+optional-dependency escape hatch compiles too. The last row is the pin check — `gradle.properties`
+now asks for `29.47.0.111` / `26.1.819` explicitly, and the log shows them resolving without a
+`->` redirect, i.e. those exact artifacts exist in the two viewers' mavens. Details and the upgrade notes for the pinned viewer
 coordinates: `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.
 
 Open, and why:

@@ -222,9 +222,10 @@ Done in this round (no client available in the sandbox):
 * `python3 scripts/compat_check.py` → `PASS` (Tier 1; Tier 2 skipped, no MC jar).
 * `bash scripts/check_release_consistency.sh --strict` → `12 passed, 0 warned, 0 failed`.
 * Compile: **green on GitHub Actions** (the sandbox has no JDK, so this is the only channel).
-  `compile-check.yml` run `39668301472` on commit `315fb6e` — `compileJava` + `compileClientJava`,
-  `BUILD SUCCESSFUL in 1m 12s`; `build.yml` run `39668301133` — static gates, full `build`
-  (`remapJar` + sources jar artifact) and the `no-viewers` job all success. The workflow's push
+  `compile-check.yml` run `39670181582` on commit `da77188` — `compileJava` + `compileClientJava`,
+  `BUILD SUCCESSFUL in 48s`; `build.yml` run `39670181557` — static gates, full `build`
+  (`remapJar` + sources jar artifact) and the `no-viewers` job all success. (The previous commit
+  `315fb6e` was green as well: runs `39668301472` / `39668301133`.) The workflow's push
   filter covers `arena/**`, `chiseled-enchanting-table-26.1.2-source` and `main`, and the log is
   committed back to the branch as `build-reports/compile-java.log`.
 * The two javac warnings in that log are JEI deprecations in `compat/jei/EnchantingRecipeCategory`,
