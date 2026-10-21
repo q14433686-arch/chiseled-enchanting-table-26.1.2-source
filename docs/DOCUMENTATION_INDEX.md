@@ -1,9 +1,9 @@
 # Documentation Index
 
-> **Unofficial community port.** All documents indexed below describe the unofficial 26.1.2 port
+> **Unofficial community port.** All documents indexed below describe the unofficial 26.2 port
 > in this repository. It is not affiliated with or endorsed by the original author of
 > [`chiseled-enchanting-table`](https://github.com/Sacramentix/chiseled-enchanting-table).
-> Current version: **`1.0.2`**.
+> Current version: **`1.0.3`** (Minecraft 26.2).
 
 ## Read these first
 
@@ -46,6 +46,13 @@ Used when publishing an updated release; keeps every platform aligned.
 - [`marketing/modrinth.md`](marketing/modrinth.md) — Modrinth summary + full description.
 - [`marketing/curseforge.md`](marketing/curseforge.md) — CurseForge summary + full description.
 - [`marketing/mcmod.md`](marketing/mcmod.md) — MC百科 (mcmod.cn) 中文简介与介绍正文.
+
+## Minecraft-line & feature reports
+
+- [26.1.2 → 26.2 impact assessment & port report](reports/PORTING_26_2_REPORT.md)
+- [Worldgen bookshelf fill deadlock fix (thread rules for `finalizeProcessing`)](reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md)
+- [Recipe-viewer integration: JEI and REI + S2C cost sync](reports/VIEWER_INTEGRATION_JEI_REI.md)
+- [CI triad (reference copies + drift check)](ci/README.md)
 
 ## Historical porting reports
 

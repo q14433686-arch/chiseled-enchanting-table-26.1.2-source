@@ -144,6 +144,116 @@ def check_block_loot_tables_drop_something() -> None:
         warn("no block loot tables found under any '<ns>/loot_table/blocks/'")
 
 
+def iter_data_json(kind: str):
+    """Yield (namespace, path, parsed json) for every '<ns>/<kind>/**/*.json'."""
+    for ns in os.listdir(DATA_ROOT) if os.path.isdir(DATA_ROOT) else []:
+        root = os.path.join(DATA_ROOT, ns, kind)
+        if not os.path.isdir(root):
+            continue
+        for path in glob.glob(os.path.join(root, "**", "*.json"), recursive=True):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    yield ns, path, json.load(fh)
+            except Exception:  # already reported by the parse check
+                continue
+
+
+def check_loot_tables_use_26_2_schema() -> None:
+    """26.2 loot schema: pools/entries carry `conditions[]` / `functions[]` arrays dispatched on
+    `condition` / `function` (as opposed to the 26.3 singular `condition` / `modifier` dispatched
+    on `type`). Guard against accidentally backporting the 26.3 schema onto the 26.2 branch.
+    """
+
+    def walk_pool_or_entry(node, rel: str, where: str) -> None:
+        if not isinstance(node, dict):
+            return
+
+        if "modifier" in node:
+            err(
+                f"{rel}: {where} uses the 26.3 'modifier' field; MC 26.2 expects the 'functions' "
+                f"array (dispatched on 'function')"
+            )
+        if "condition" in node and not isinstance(node["condition"], str):
+            err(
+                f"{rel}: {where} uses the 26.3 singular 'condition' object/list; MC 26.2 expects "
+                f"the 'conditions' array"
+            )
+
+        for index, cond in enumerate(node.get("conditions") or []):
+            if isinstance(cond, dict) and "condition" not in cond:
+                err(f"{rel}: {where}.conditions[{index}] is missing its 'condition' dispatch key")
+
+        for index, func in enumerate(node.get("functions") or []):
+            if isinstance(func, dict) and "function" not in func:
+                err(f"{rel}: {where}.functions[{index}] is missing its 'function' dispatch key")
+
+        for index, entry in enumerate(node.get("entries") or []):
+            walk_pool_or_entry(entry, rel, f"{where}.entries[{index}]")
+
+    for _ns, path, data in iter_data_json("loot_table"):
+        rel = os.path.relpath(path, REPO)
+        for index, pool in enumerate(data.get("pools") or []):
+            walk_pool_or_entry(pool, rel, f"pools[{index}]")
+
+
+ADVANCEMENT_TOP_KEYS = {
+    "parent", "display", "rewards", "criteria", "requirements", "sends_telemetry_event",
+}
+DISPLAY_KEYS = {
+    "icon", "title", "description", "background", "frame", "show_toast", "announce_to_chat", "hidden",
+}
+
+
+def check_advancements_use_26_2_schema() -> None:
+    """26.2 advancement schema checks.
+
+    * `minecraft:recipe_crafted` in 26.2 takes `recipe_id` (a single recipe id string), not the
+      26.3 `recipes` list.
+    * `show_toast` / `announce_to_chat` are DisplayInfo fields; Advancement.CODEC only knows
+      parent / display / rewards / criteria / requirements / sends_telemetry_event.
+    * `display.background` is root-only (child advancements must not carry `display.background`,
+      and visible roots must carry one).
+    """
+    for _ns, path, data in iter_data_json("advancement"):
+        rel = os.path.relpath(path, REPO)
+
+        for key in sorted(set(data) - ADVANCEMENT_TOP_KEYS):
+            hint = " (it belongs inside 'display')" if key in DISPLAY_KEYS else ""
+            err(f"{rel}: unknown top-level advancement key '{key}'{hint}")
+
+        display = data.get("display")
+        if isinstance(display, dict):
+            for key in sorted(set(display) - DISPLAY_KEYS):
+                err(f"{rel}: unknown display key '{key}'")
+
+            is_root = not data.get("parent")
+            if is_root and "background" not in display:
+                err(
+                    f"{rel}: visible advancement root has no 'display.background' "
+                    f"('Visible advancement roots must have background')"
+                )
+            elif not is_root and "background" in display:
+                err(
+                    f"{rel}: non-root advancement carries 'display.background' "
+                    f"('Only advancement roots can have background'); delete the key, the "
+                    f"parent owns the tab background"
+                )
+
+        for name, criterion in (data.get("criteria") or {}).items():
+            if not isinstance(criterion, dict):
+                continue
+            if criterion.get("trigger") != "minecraft:recipe_crafted":
+                continue
+            conditions = criterion.get("conditions") or {}
+            if "recipes" in conditions:
+                err(
+                    f"{rel}: criteria '{name}' uses the 26.3 'recipes' list; MC 26.2 expects "
+                    f"'recipe_id' (a single recipe id string)"
+                )
+            elif "recipe_id" not in conditions or not isinstance(conditions["recipe_id"], str):
+                err(f"{rel}: criteria '{name}' (recipe_crafted) is missing the required 'recipe_id' string")
+
+
 def check_transformation_json_matches_java() -> None:
     """The item_transformations.json must mirror the Java built-in fallback so a missing
     datapack file and the bundled file behave identically."""
@@ -580,6 +690,8 @@ def main() -> int:
     check_json_parses()
     check_datapack_dir_naming()
     check_block_loot_tables_drop_something()
+    check_loot_tables_use_26_2_schema()
+    check_advancements_use_26_2_schema()
     check_transformation_json_matches_java()
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()

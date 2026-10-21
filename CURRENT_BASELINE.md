@@ -6,36 +6,37 @@
 > the original author**. All credit for the original mod design and assets belongs to Sacramentix
 > (MIT licensed); this port only updates the code/data to the 26.2 toolchain.
 
-> **26.2 branch (2026-07-19):** This line now targets **Minecraft 26.2**. Version declarations were
-> bumped (see `docs/reports/PORTING_26_2_REPORT.md` for the full 26.1.2→26.2 impact assessment).
-> The mod uses only high-level APIs confirmed present in 26.2, so no source rewrite was attempted;
-> a live `./gradlew build` against 26.2 mappings is still required to confirm the renderer / GUI /
-> structure-mixin signatures (2–3 files listed in that report). The previous 26.1.2 state is
-> preserved in git history (commit `8ecc4d2`).
+> **26.2 branch (2026-07-19, synced 2026-10-21):** This line targets **Minecraft 26.2**. See
+> `docs/reports/PORTING_26_2_REPORT.md` for the 26.1.2→26.2 port details. On 2026-10-21, all
+> feature additions and fixes from the `26.3` branch were synced to this `26.2` line with 26.2
+> compatibility: worldgen bookshelf deadlock fix (`WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md`), JEI &
+> REI integration (`VIEWER_INTEGRATION_JEI_REI.md`), server-resolved enchantment cost sync (S2C),
+> 11 language files + translatable book lore, `craft.json` advancement fixes, and the offline CI
+> static / release-consistency gates (`docs/ci/`).
 
-**Date:** 2026-07-19
+**Date:** 2026-10-21
 **Minecraft Version:** 26.2
 **Fabric Loader:** 0.19.3
 **Fabric API:** 0.155.2+26.2
 **Gradle:** 9.5.1
 **Loom:** 1.17
-**Java:** 25.0.3 (verified this round with user-space Oracle JDK at `/home/user/jdks/jdk-25`; system image still defaults to JDK 11)
-**Mod Version:** `1.0.2`  *(unofficial-port versioning, see "Versioning" below)*
+**Java:** 25
+**Mod Version:** `1.0.3`  *(unofficial-port versioning, see "Versioning" below)*
 
 ## Versioning
 
-This repository currently publishes the unofficial 26.1.2 port as **`1.0.2`**. Earlier internal
+This repository currently publishes the unofficial 26.2 port as **`1.0.3`**. Earlier internal
 porting labels are treated as historical implementation notes only; current metadata, release
-artefacts, documentation, and marketing copy should all refer to `1.0.2`.
+artefacts, documentation, and marketing copy should all refer to `1.0.3`.
 
 ## Current Source-Truth Snapshot (what the code/data actually contains today)
 
 ### Build / packaging
-- `gradle.properties`: `mod_version=1.0.2`, `minecraft_version=26.2`,
+- `gradle.properties`: `mod_version=1.0.3`, `minecraft_version=26.2`,
   `loader_version=0.19.3`, `fabric_version=0.155.2+26.2`. Build tooling: Loom `1.17-SNAPSHOT`,
   Gradle wrapper `9.5.1`.
 - `src/main/resources/fabric.mod.json`:
-  - `version: "${version}"` (substituted by Loom to `1.0.2`).
+  - `version: "${version}"` (substituted by Loom to `1.0.3`).
   - `name`: `Chiseled Enchanting Table (Unofficial 26.2 Port)`.
   - `description`: explicitly states this is an unofficial port and not affiliated with the
     original author.
@@ -47,9 +48,14 @@ artefacts, documentation, and marketing copy should all refer to `1.0.2`.
     enchanting-table book blocking, narrow anvil enchanted-book same-level merge blocking, and
     chiseled-bookshelf random-tick ambience.
   - `custom.chiseled_enchanting_table:port_notes`: documents the unofficial-port status and the
-    current 1.0.2 mixin/loot/structure boundary.
-- `.github/workflows/publish.yml`: **pending manual apply** (GitHub App token lacks `workflows`
-  permission) — should become `MINECRAFT_VERSION: 26.2`, `RELEASE_NAME: ... (Unofficial 26.2 Port)`.
+    current 1.0.3 mixin/loot/structure/viewer boundary.
+- `.github/workflows/publish.yml`: staged in `docs/ci/publish.yml` (`MINECRAFT_VERSION: 26.2`,
+  `VERSION: 1.0.3`, `RELEASE_NAME: ... (Unofficial 26.2 Port)`), ready to apply with
+  `bash docs/ci/install.sh` using a maintainer token that has `workflows` write permission.
+- **CI status (2026-10-21):** GitHub Actions `build` workflow (run `39663201859`, commit `8b00060`)
+  is **green** on Minecraft 26.2 — `compat_check.py`, `:compileJava`, `:compileClientJava`,
+  `remapJar` (with both JEI 26.2 and REI 26.2 enabled), and artifact upload (`369,768` bytes) all
+  succeeded.
 
 ### Source layout
 - `chiseled_enchanting_table.block.*` — `ChiseledEnchantingTableBlock`,
@@ -64,20 +70,40 @@ artefacts, documentation, and marketing copy should all refer to `1.0.2`.
 - `chiseled_enchanting_table.mechanics.structure.{BookshelfReplacerProcessor, BookshelfBookFiller}`
   — structure bookshelf replacement processor + weighted book fill; called from **5 mixins**
   under `chiseled_enchanting_table.mixin.structure.*` (4 injectors + 1 accessor).
-  `REPLACEMENT_ENABLED = true`. Two-phase pipeline:
+  `REPLACEMENT_ENABLED = true`. Two-phase pipeline, **worldgen-safe by contract**: nothing in the
+  `finalizeProcessing`/`processBlock` path may touch the real `ServerLevel` (a worldgen worker
+  reading the chunk it is generating deadlocks the server — see
+  [`docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md`](docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md)).
   - **Template-pool path** (villages / mansions / ancient cities): `processBlock` swaps
-    `BOOKSHELF` → empty `CHISELED_BOOKSHELF` at placement, then `finalizeProcessing` uses a
-    `ServerLevelAccessor` to resolve the dynamic enchantment registry and fill the 6 slots.
+    `BOOKSHELF` → empty `CHISELED_BOOKSHELF`, then `finalizeProcessing` resolves the dynamic
+    enchantment registry through the passed `ServerLevelAccessor` (registry + seed only) and
+    returns a finished `StructureBlockInfo` — state with `slot_*_occupied` **plus** the
+    block-entity NBT (`ContainerHelper.saveAllItems` layout). Vanilla's `placeInWorld` applies the
+    tag, so the books are never written to a live chunk from a worker thread. The position is also
+    marked for post-processing so the server thread can refine the facing once the piece is placed.
   - **Programmatic path** (stronghold libraries): `StructurePieceMarkMixin` (uses
     `StructurePieceAccessor` invoker to convert piece-local → world coords via vanilla
     `getWorldPos`) marks the position; `LevelChunkPostProcessMixin` at `@At("HEAD")` iterates the
     still-full `postProcessing` lists using vanilla's own
     `ProtoChunk.unpackOffsetCoordinates(short, int sectionY, ChunkPos)` and delegates to
-    `BookshelfReplacerProcessor.postProcessBookshelf`, which reuses the same filler.
+    `BookshelfReplacerProcessor.postProcessBookshelf` (plain `BOOKSHELF` → full fill) or
+    `postProcessFilledBookshelf` (already-filled `CHISELED_BOOKSHELF` → facing refinement only).
+    Both run on the server thread; the live-world filler refuses to run anywhere else.
+- `chiseled_enchanting_table.compat.EnchantQueryIndex` + `compat.jei.*` + `compat.rei.*` —
+  recipe-viewer support. The index is viewer-agnostic (registry + `enchantment_costs.json` only);
+  each adapter turns every (enchantment, level) row into a two-input recipe so a single category
+  answers both "book → items" and "item → books". Optional: `enable_jei=false` /
+  `enable_rei=false` drop the respective adapter from the build; REI additionally needs
+  `me.shedaniel.cloth:basic-math` + `dev.architectury:architectury-fabric` at compile time only
+  (`26.2.+` / `0.6.1` / `21.0.4`).
+  Costs are server-authoritative: `menu.EnchantCostTablePayload` + `menu.EnchantCostSync` push a
+  per-player resolved table (`chiseled_enchanting_table:enchant_cost_table`) on join and after each
+  successful data-pack reload; `compat.SyncedEnchantmentCosts` caches it on the client (cleared on
+  disconnect) and both the viewers and `ChiseledEnchantingTableScreenHandler` read it.
 - `chiseled_enchanting_table.menu.*` — `ChiseledEnchantingTableScreenHandler`,
   `ChiseledEnchantingMenuPayloads` (`OptionType`, `TransformationDisplay`,
   `AvailableEnchantmentPayload`, `ApplyEnchantmentPayload`), `AvailableOption`
-  (typed enchantment vs. transformation).
+  (typed enchantment vs. transformation), `EnchantCostSync`, `EnchantCostTablePayload`.
 - `chiseled_enchanting_table.registry.*` — `BlockRegistry`, `EntityRegistry`,
   `ScreenHandlerRegistry`, `StructureProcessorRegistry`.
 - `chiseled_enchanting_table.utils.*` — `Advancement`, `BlockPosStream`, `EnchantmentFinder`,

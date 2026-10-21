@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,9 +15,29 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Tier-2 injection consumer: runs at the top of chunk post-processing and replaces any block
- * previously flagged by {@link StructurePieceMarkMixin} that still resolves to a plain bookshelf
- * with a filled chiseled bookshelf via {@link BookshelfReplacerProcessor#postProcessBookshelf}.
+ * Tier-2 injection consumer: runs at the top of chunk post-processing and handles the two
+ * worldgen-deferred bookshelf cases on the <b>server thread</b>, where touching the live level is
+ * safe:
+ *
+ * <ul>
+ *   <li><b>Plain {@code BOOKSHELF}</b> — flagged by
+ *       {@link StructurePieceMarkMixin} (programmatic pieces such as stronghold libraries, whose
+ *       blocks are written straight into the world instead of through a template). Full fill via
+ *       {@link BookshelfReplacerProcessor#postProcessBookshelf}.</li>
+ *   <li><b>{@code CHISELED_BOOKSHELF}</b> — flagged by
+ *       {@link BookshelfReplacerProcessor#finalizeProcessing} (template pieces). The books are
+ *       already in the placed block entity; only the facing heuristic runs here, via
+ *       {@link BookshelfReplacerProcessor#postProcessFilledBookshelf}, because it needs the
+ *       <i>finished</i> geometry (the piece's own walls are still in the template while the
+ *       processor runs).</li>
+ * </ul>
+ *
+ * <p><b>Why this cannot move back into worldgen:</b> historically the template path did the whole
+ * fill from {@code finalizeProcessing} against the real {@code ServerLevel}, which blocks a
+ * worldgen worker on the chunk it is itself generating — see
+ * {@code docs/reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md}. This hook is only reached from
+ * {@code ChunkMap#prepareTickingChunk}, i.e. after the chunk is {@code FULL} and on the main
+ * thread, so {@code getBlockState}/{@code setBlock} here cannot deadlock.</p>
  *
  * <p><b>Why {@code @At("HEAD")}, not {@code @At("TAIL")}:</b> vanilla's
  * {@link LevelChunk#postProcessGeneration} iterates the {@code postProcessing} lists and calls
@@ -26,8 +47,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * fluid/neighbour-update pass consumes them.</p>
  *
  * <p><b>Why {@link ProtoChunk#unpackOffsetCoordinates}:</b> the packed-short encoding used by
- * {@link net.minecraft.world.level.chunk.ChunkAccess#markPosForPostProcessing} (actually
- * implemented in {@link ProtoChunk#packOffsetCoordinates}) is not a trivial
+ * {@link net.minecraft.world.level.chunk.ChunkAccess#markPosForPostProcessing}
+ * (actually implemented in {@link ProtoChunk#packOffsetCoordinates}) is not a trivial
  * {@code (y<<8)|(z<<4)|x} layout; using vanilla's own unpacker is both correct-by-construction
  * and future-proof against any encoding tweak. This is exactly what vanilla
  * {@link LevelChunk#postProcessGeneration} calls internally when it drains the lists.</p>
@@ -46,8 +67,11 @@ public class LevelChunkPostProcessMixin {
             for (int i = 0; i < section.size(); i++) {
                 short packed = section.getShort(i);
                 BlockPos pos = ProtoChunk.unpackOffsetCoordinates(packed, sectionY, chunkPos);
-                if (self.getBlockState(pos).is(Blocks.BOOKSHELF)) {
+                BlockState state = self.getBlockState(pos);
+                if (state.is(Blocks.BOOKSHELF)) {
                     BookshelfReplacerProcessor.postProcessBookshelf(level, pos);
+                } else if (state.is(Blocks.CHISELED_BOOKSHELF)) {
+                    BookshelfReplacerProcessor.postProcessFilledBookshelf(level, pos);
                 }
             }
         }

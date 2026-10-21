@@ -10,7 +10,7 @@
 > bug reports about this port to **this** repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`),
 > not to the upstream project.
 
-**Current version:** `1.0.2` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+**Current version:** `1.0.3` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
 **Target:** Minecraft `26.2`, Fabric Loader `>=0.19.3`, Fabric API `0.155.2+26.2`, Java `>=25`.
 
 A Minecraft Fabric mod that enhances the enchanting experience.
@@ -23,8 +23,8 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 
 ## Installation
 
-Grab the latest `chiseled-enchanting-table-1.0.2.jar` from
-`release_output/chiseled_enchanting_table_1_0_2/` (or build it yourself with
+Grab the latest `chiseled-enchanting-table-1.0.3.jar` from
+`release_output/chiseled_enchanting_table_1_0_3/` (or build it yourself with
 `./gradlew build` using JDK 25 — see `NEXT_TASK.md` for the exact command chain) and drop it into
 your Fabric `mods/` folder alongside Fabric API `0.155.2+26.2`.
 
@@ -35,6 +35,34 @@ release page, not the upstream listing.
 ## Usage
 
 Once installed, the Chiseled Enchanting Table will be available in your game. Craft it using the new recipe and start enchanting!
+
+## Continuous integration
+
+CI mirrors the triad used by the sister port `q14433686-arch/TaCZ_Refabricated_Unofficial`, because
+this port is developed in a sandbox that cannot reach `maven.fabricmc.net` and therefore cannot
+compile locally — the compile has to happen on Actions.
+
+> **Staged reference copies (`docs/ci/`):** the sandbox GitHub App token cannot write workflow files,
+> so the four reference workflows live in `docs/ci/` and `bash docs/ci/install.sh` applies them to
+> `.github/workflows/`.
+
+| Workflow | What it does | Trigger |
+|---|---|---|
+| [`compile-check.yml`](docs/ci/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API | push to `arena/**` / release branches, PRs |
+| [`build.yml`](docs/ci/build.yml) | static gates first (no network needed), then full `./gradlew build` + jar artifact (14 days) | push / PR |
+| [`consistency.yml`](docs/ci/consistency.yml) | version gate for "bumped one place, forgot the other four" | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml` |
+| [`publish.yml`](docs/ci/publish.yml) | manual `workflow_dispatch` release to GitHub / Modrinth (`26.2` / `1.0.3`) | manual |
+
+The three static gates run in seconds and need no Gradle, so they also work offline:
+
+```bash
+python3 scripts/ci_static_checks.py                 # mixin configs resolvable + registered mixins not excluded + en_us/zh_cn key parity
+python3 scripts/compat_check.py                     # data-pack schema / JSON-vs-Java drift (Tier 1)
+bash scripts/check_release_consistency.sh --strict  # gradle.properties / README / fabric.mod.json / publish.yml agree
+```
+
+Optional warn-only pre-commit reminder: `bash scripts/install-hooks.sh` (it never blocks a commit;
+CI is the real gate).
 
 ## Forge (or other modloader) port
 

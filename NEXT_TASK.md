@@ -1,22 +1,25 @@
-# Next Task: post-1.0.2 backlog
+# Next Task: post-1.0.3 backlog (Minecraft 26.2 line)
 
-> **Unofficial community port.** All instructions below apply to the unofficial 26.1.2 port
+> **Unofficial community port.** All instructions below apply to the unofficial 26.2 port
 > (this repository). The upstream `Sacramentix/chiseled-enchanting-table` project is not affected
 > by this version line.
 
-**Current mod version:** `1.0.2`. See `CURRENT_BASELINE.md` for the currently-shipping
-capability boundary and `CHANGELOG.md` for the 1.0.2 fix list. The latest rounds restored upstream
-balance/ambience parity and added a localized advancement guide pass.
+**Current mod version:** `1.0.3` · **Minecraft:** `26.2` · **Fabric API:** `0.155.2+26.2` ·
+**Loader:** `0.19.3`. See `CURRENT_BASELINE.md` for the currently-shipping capability boundary and
+`CHANGELOG.md` for the 1.0.3 + 26.3-synced fix list.
 
-## How to build 1.0.2 from a fresh clone
+## How to build 1.0.3 from a fresh clone
 
 The source tree is Gradle + Loom + Fabric API + Java 25:
 
 ```bash
-# Install/provide Java 25 first. If apt is unavailable, download/extract a JDK 25 tarball
-# and point JAVA_HOME at it; this sandbox used /home/user/jdkwork/jdk-25.0.3.
 chmod +x ./gradlew
-python3 scripts/compat_check.py                     # offline data-pack sanity (Tier 1 must pass)
+
+# Offline gates — these three run anywhere (no network, no Gradle):
+python3 scripts/ci_static_checks.py                 # mixin configs + registered-mixin-compiled + lang parity
+python3 scripts/compat_check.py                     # data-pack schema / drift (Tier 1 must pass)
+bash scripts/check_release_consistency.sh --strict  # version declarations agree
+
 JAVA_HOME=/path/to/jdk-25 ./gradlew --no-daemon --max-workers=1 \
     -Dorg.gradle.jvmargs='-Xmx1536m -Dfile.encoding=UTF-8' build --rerun-tasks --stacktrace
 ```
