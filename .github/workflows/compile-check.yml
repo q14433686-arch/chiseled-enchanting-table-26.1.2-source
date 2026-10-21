@@ -70,10 +70,27 @@ jobs:
             echo "rei: $(grep -E '^enable_rei=' gradle.properties | cut -d= -f2) / $(grep -E '^rei_version=' gradle.properties | cut -d= -f2)"
             echo "---"
           } > build-reports/compile-java.log
+          # Actions 的默认 shell 是 `bash -e`：裸写 `./gradlew ...` 后面跟 `status=$?` 是死代码，
+          # 编译失败时脚本会在那一行直接退出（1.0.3 第一次失败的日志里就没有 exit code 行），
+          # 下面的失败诊断也就永远不会生成。必须用 `|| status=$?` 把退出码接住。
+          status=0
           ./gradlew compileJava compileClientJava --console=plain --stacktrace --no-daemon \
-            >> build-reports/compile-java.log 2>&1
-          status=$?
+            >> build-reports/compile-java.log 2>&1 || status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
+          # 把「浮动坐标」这次实际解析成了什么记进日志：jei_version=latest.release 与
+          # rei_version=26.1.+ 都会随上游发布漂移，而沙箱读不到 maven，也读不到 Actions 的
+          # 日志 blob。没有这一段，「昨天能编、今天不能编」无从追溯，也没法把它们钉成确切版本。
+          {
+            echo ""
+            echo "=== resolved coordinates (compileClasspath / clientCompileClasspath) ==="
+          } >> build-reports/compile-java.log
+          for CFG in compileClasspath clientCompileClasspath; do
+            echo "--- $CFG ---" >> build-reports/compile-java.log
+            ./gradlew -q dependencies --configuration "$CFG" --console=plain --no-daemon 2>&1 \
+              | grep -E "mezz\.jei|me\.shedaniel|dev\.architectury|net\.fabricmc|com\.mojang" \
+              | sed -E 's/^[^A-Za-z]*//; s/ \(c\)$//; s/ \(\*\)$//' | sort -u \
+              >> build-reports/compile-java.log || true
+          done
           if [ "$status" -ne 0 ]; then
             # 失败时再回写一份依赖图。沙箱读不到 Actions 的日志 blob 域，build-reports/ 下的
             # 文件是唯一的排障通道，所以「为什么失败」也必须落盘，而不是只留在 run 页面里。
