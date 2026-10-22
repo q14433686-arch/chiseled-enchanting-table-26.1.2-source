@@ -14,29 +14,21 @@ import net.minecraft.resources.Identifier;
 
 /**
  * Networking payloads and the option-type model for the chiseled enchanting menu.
- *
- * <p>Architecture note (P15): payload/wire semantics live in the {@code menu} package, separated
- * from both the menu logic ({@code AbstractContainerMenu}) and the gameplay mechanics
- * ({@code mechanics.*}). This makes the wire contract — and the explicit enchantment-vs-transformation
- * discriminator — a first-class, isolated concern.</p>
  */
 public final class ChiseledEnchantingMenuPayloads {
     private ChiseledEnchantingMenuPayloads() {}
 
     public static final Identifier AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("available_chiseled_enchantment");
     public static final Identifier APPLY_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("apply_chiseled_enchantment");
+    public static final Identifier REROLL_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("reroll_epiphany");
+    public static final Identifier FREEZE_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("freeze_epiphany");
 
-    /**
-     * Option kinds carried by {@link ApplyEnchantmentPayload}. This makes the payload semantics
-     * explicit instead of inferring "is this a transformation?" from a data lookup on the server.
-     * <p>The string token is what travels over the wire so future kinds can be added without
-     * breaking older clients (unknown tokens fall back to {@link #ENCHANTMENT}).</p>
-     */
     public enum OptionType {
         ENCHANTMENT("enchantment"),
         TRANSFORMATION("transformation"),
         BOOK_COMBINE_UPGRADE("book_combine_upgrade"),
-        BOOK_RESEARCH_UPGRADE("book_research_upgrade");
+        BOOK_RESEARCH_UPGRADE("book_research_upgrade"),
+        TREASURE_EPIPHANY("treasure_epiphany");
 
         private final String token;
 
@@ -58,12 +50,6 @@ public final class ChiseledEnchantingMenuPayloads {
         }
     }
 
-    /**
-     * Compact, client-displayable description of a data-driven item transformation. Synced from the
-     * server when the menu opens so the client UI can render correct names and filter by input item
-     * even for datapack-defined transformations the client never loaded itself (e.g. on a dedicated
-     * server). Costs stay server-authoritative.
-     */
     public record TransformationDisplay(Identifier id, Identifier input_item, Identifier output_item, int level) {
         public static void write(RegistryFriendlyByteBuf buf, TransformationDisplay value) {
             buf.writeIdentifier(value.id());
@@ -81,14 +67,31 @@ public final class ChiseledEnchantingMenuPayloads {
         }
     }
 
-    public record AvailableEnchantmentPayload(Set<EnchantmentWithLevel> unlocked_enchantements, List<TransformationDisplay> transformations) implements CustomPacketPayload {
-        public static final CustomPacketPayload.Type<AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_PAYLOAD_ID = new CustomPacketPayload.Type<>(AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID);
+    public record AvailableEnchantmentPayload(
+        Set<EnchantmentWithLevel> unlocked_enchantements,
+        List<TransformationDisplay> transformations,
+        int xp_discount_percent,
+        int regular_bookshelves,
+        int chiseled_book_count,
+        int epiphany_seed
+    ) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_PAYLOAD_ID =
+            new CustomPacketPayload.Type<>(AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_CODEC =
             CustomPacketPayload.codec(AvailableEnchantmentPayload::write, AvailableEnchantmentPayload::read);
 
-        /** Backwards-friendly constructor that derives the transformation table from loaded data. */
         public AvailableEnchantmentPayload(Set<EnchantmentWithLevel> unlocked_enchantements) {
-            this(unlocked_enchantements, buildTransformationDisplays());
+            this(unlocked_enchantements, buildTransformationDisplays(), 0, 0, 0, 1);
+        }
+
+        public AvailableEnchantmentPayload(
+            Set<EnchantmentWithLevel> unlocked_enchantements,
+            int xp_discount_percent,
+            int regular_bookshelves,
+            int chiseled_book_count,
+            int epiphany_seed
+        ) {
+            this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, epiphany_seed);
         }
 
         private static List<TransformationDisplay> buildTransformationDisplays() {
@@ -107,12 +110,20 @@ public final class ChiseledEnchantingMenuPayloads {
         private void write(RegistryFriendlyByteBuf buf) {
             buf.writeCollection(unlocked_enchantements, (target, value) -> EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode((RegistryFriendlyByteBuf) target, value));
             buf.writeCollection(transformations, (target, value) -> TransformationDisplay.write((RegistryFriendlyByteBuf) target, value));
+            buf.writeVarInt(Math.max(0, xp_discount_percent));
+            buf.writeVarInt(Math.max(0, regular_bookshelves));
+            buf.writeVarInt(Math.max(0, chiseled_book_count));
+            buf.writeInt(epiphany_seed);
         }
 
         private static AvailableEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
             Set<EnchantmentWithLevel> unlocked = buf.readCollection(HashSet::new, source -> EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode((RegistryFriendlyByteBuf) source));
             List<TransformationDisplay> transformations = buf.readList(source -> TransformationDisplay.read((RegistryFriendlyByteBuf) source));
-            return new AvailableEnchantmentPayload(unlocked, transformations);
+            int xpDiscountPercent = buf.readVarInt();
+            int regularBookshelves = buf.readVarInt();
+            int chiseledBookCount = buf.readVarInt();
+            int epiphanySeed = buf.readInt();
+            return new AvailableEnchantmentPayload(unlocked, transformations, xpDiscountPercent, regularBookshelves, chiseledBookCount, epiphanySeed);
         }
 
         @Override
@@ -126,7 +137,6 @@ public final class ChiseledEnchantingMenuPayloads {
         public static final StreamCodec<RegistryFriendlyByteBuf, ApplyEnchantmentPayload> APPLY_CHISELED_ENCHANTMENT_CODEC =
             CustomPacketPayload.codec(ApplyEnchantmentPayload::write, ApplyEnchantmentPayload::read);
 
-        /** Backwards-friendly constructor that defaults to a real enchantment option. */
         public ApplyEnchantmentPayload(Identifier enchantment_id, int enchantment_level) {
             this(OptionType.ENCHANTMENT, enchantment_id, enchantment_level);
         }
@@ -147,6 +157,30 @@ public final class ChiseledEnchantingMenuPayloads {
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
             return APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID;
+        }
+    }
+
+    public record RerollEpiphanyPayload() implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<RerollEpiphanyPayload> TYPE =
+            new CustomPacketPayload.Type<>(REROLL_EPIPHANY_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, RerollEpiphanyPayload> CODEC =
+            CustomPacketPayload.codec((payload, buf) -> {}, buf -> new RerollEpiphanyPayload());
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record FreezeEpiphanyPayload() implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<FreezeEpiphanyPayload> TYPE =
+            new CustomPacketPayload.Type<>(FREEZE_EPIPHANY_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, FreezeEpiphanyPayload> CODEC =
+            CustomPacketPayload.codec((payload, buf) -> {}, buf -> new FreezeEpiphanyPayload());
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
         }
     }
 }

@@ -6,9 +6,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Renders a real-enchantment list row: the enchantment full name, its costs, and an optional
- * annotation line describing how it interacts with an enchantment already on the item
- * (already present / upgrade / downgrade / conflict).
+ * Renders a real-enchantment or Treasure Epiphany list row using cohesive painted plaque sprites.
  */
 public final class EnchantmentRowRenderer {
     private EnchantmentRowRenderer() {}
@@ -20,10 +18,12 @@ public final class EnchantmentRowRenderer {
         GuiGraphicsExtractor ctx,
         Minecraft client,
         int dx, int dy, int dw, int dh,
+        boolean isEpiphany,
         boolean isFocused,
         boolean hovered,
         boolean canEnchant,
-        boolean itemCostMet,
+        boolean primaryCostMet,
+        List<Boolean> additionalCostsMet,
         boolean xpMet,
         String enchantmentName,
         ItemStack primaryCost,
@@ -31,17 +31,34 @@ public final class EnchantmentRowRenderer {
         int xpCost,
         OverrideAnnotation annotation
     ) {
-        int background = RowRenderSupport.backgroundColor(canEnchant, hovered);
-        RowRenderSupport.drawChrome(ctx, dx, dy, dw, dh, background, isFocused);
+        RowRenderSupport.drawPlaque(
+            ctx,
+            dx,
+            dy,
+            dw,
+            dh,
+            isEpiphany ? RowRenderSupport.RowVisualStyle.EPIPHANY : RowRenderSupport.RowVisualStyle.STANDARD,
+            canEnchant,
+            hovered,
+            isFocused
+        );
 
-        int itemX = dx + 4;
-        int itemY = dy + 4;
-        RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, itemCostMet);
-        RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, dx + dw - 48, itemY, itemCostMet);
+        int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
+        int itemY = dy + RowRenderSupport.COST_OFFSET_Y;
+        RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+        RowRenderSupport.drawAdditionalCosts(
+            ctx,
+            client,
+            additionalCosts,
+            additionalCostsMet,
+            dx + dw - RowRenderSupport.ADDITIONAL_COST_RIGHT_MARGIN,
+            itemY
+        );
 
-        int nameX = itemX + 20;
-        int nameY = dy + 2 + client.font.lineHeight / 3;
-        RowRenderSupport.renderScaledText(ctx, client, enchantmentName, nameX, nameY, 2.0f / 3.0f, RowRenderSupport.WHITE);
+        int nameX = itemX + 19;
+        int nameY = dy + 3 + client.font.lineHeight / 3;
+        int titleColor = isEpiphany ? RowRenderSupport.EPIPHANY_GOLD : RowRenderSupport.WHITE;
+        RowRenderSupport.renderScaledText(ctx, client, enchantmentName, nameX, nameY, 2.0f / 3.0f, titleColor);
 
         if (annotation != null) {
             int subY = dy + dh - 2 - client.font.lineHeight;

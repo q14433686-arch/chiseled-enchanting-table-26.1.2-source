@@ -3,8 +3,12 @@
     "icon": {
       "id": "minecraft:chiseled_bookshelf"
     },
-    "title": "Enchant RNG begone!",
-    "description": "Place an enchanted book in a nearby chiseled bookshelf to unlock the enchantment.",
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.unlock_new_enchant.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.unlock_new_enchant.description"
+    },
     "frame": "task",
     "show_toast": true,
     "announce_to_chat": true,

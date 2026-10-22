@@ -1,48 +1,760 @@
 {
-  "schema_version": 1,
+  "_comment": "Master-Tome library progression: combine two same-tier books for zero materials + 0.6x XP, OR research the next Master-Tome tier directly using any of 3 biome-diverse thematic catalysts.",
   "combine_route": {
     "enabled": true,
-    "mode": "vanilla_anvil_like",
-    "xp_cost_multiplier_of_vanilla_like": 1.0
+    "xp_cost_multiplier_of_vanilla_like": 0.6
   },
   "research_route": {
     "enabled": true,
-    "xp_cost_multiplier_of_direct_enchant": 0.5,
-    "material_cost_multiplier_of_direct_enchant": 0.5,
-    "default_material_cost": { "item": "minecraft:lapis_lazuli", "count_per_level": 1 },
+    "xp_cost_multiplier_of_direct_enchant": 1.4,
+    "material_cost_multiplier_of_direct_enchant": 1.0,
+    "default_material_cost": {
+      "options": [
+        {
+          "item": "minecraft:lapis_lazuli",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:amethyst_shard",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:emerald",
+          "count_per_level": 1
+        },
+        {
+          "item": "chiseled_enchanting_table:arcane_catalyst",
+          "count": 1
+        }
+      ]
+    },
     "enchantment_overrides": {
-      "minecraft:sharpness": { "theme": "weapon_damage", "material_cost": { "item": "minecraft:flint", "count_per_level": 1 } },
-      "minecraft:smite": { "theme": "undead", "material_cost": { "item": "minecraft:bone", "count_per_level": 1 } },
-      "minecraft:bane_of_arthropods": { "theme": "arthropod", "material_cost": { "item": "minecraft:spider_eye", "count_per_level": 1 } },
-      "minecraft:impaling": { "theme": "trident", "material_cost": { "item": "minecraft:prismarine_shard", "count_per_level": 1 } },
-      "minecraft:power": { "theme": "projectile_damage", "material_cost": { "item": "minecraft:arrow", "count_per_level": 2 } },
-      "minecraft:protection": { "theme": "protection", "material_cost": { "item": "minecraft:iron_ingot", "count_per_level": 1 } },
-      "minecraft:fire_protection": { "theme": "fire_protection", "material_cost": { "item": "minecraft:magma_cream", "count_per_level": 1 } },
-      "minecraft:blast_protection": { "theme": "blast_protection", "material_cost": { "item": "minecraft:gunpowder", "count_per_level": 2 } },
-      "minecraft:projectile_protection": { "theme": "projectile_protection", "material_cost": { "item": "minecraft:feather", "count_per_level": 2 } },
-      "minecraft:feather_falling": { "theme": "falling", "material_cost": { "item": "minecraft:feather", "count_per_level": 2 } },
-      "minecraft:efficiency": { "theme": "tool_speed", "material_cost": { "item": "minecraft:redstone", "count_per_level": 1 } },
-      "minecraft:fortune": { "theme": "luck", "material_cost": { "item": "minecraft:emerald", "count_per_level": 1 } },
-      "minecraft:looting": { "theme": "luck", "material_cost": { "item": "minecraft:emerald", "count_per_level": 1 } },
-      "minecraft:luck_of_the_sea": { "theme": "water_luck", "material_cost": { "item": "minecraft:prismarine_crystals", "count_per_level": 1 } },
-      "minecraft:lure": { "theme": "fishing", "material_cost": { "item": "minecraft:string", "count_per_level": 2 } },
-      "minecraft:respiration": { "theme": "water", "material_cost": { "item": "minecraft:pufferfish", "count_per_level": 1 } },
-      "minecraft:aqua_affinity": { "theme": "water", "material_cost": { "item": "minecraft:prismarine_crystals", "count": 1 } },
-      "minecraft:depth_strider": { "theme": "water_movement", "material_cost": { "item": "minecraft:prismarine_shard", "count_per_level": 1 } },
-      "minecraft:frost_walker": { "theme": "ice_movement", "material_cost": { "item": "minecraft:blue_ice", "count": 1 } },
-      "minecraft:soul_speed": { "theme": "soul_movement", "material_cost": { "item": "minecraft:soul_sand", "count_per_level": 2 } },
-      "minecraft:swift_sneak": { "theme": "stealth_movement", "material_cost": { "item": "minecraft:rabbit_foot", "count_per_level": 1 } },
-      "minecraft:unbreaking": { "theme": "durability", "material_cost": { "item": "minecraft:amethyst_shard", "count_per_level": 1 } },
-      "minecraft:fire_aspect": { "theme": "fire", "material_cost": { "item": "minecraft:blaze_powder", "count_per_level": 1 } },
-      "minecraft:flame": { "theme": "fire", "material_cost": { "item": "minecraft:blaze_powder", "count_per_level": 1 } },
-      "minecraft:punch": { "theme": "knockback", "material_cost": { "item": "minecraft:slime_ball", "count_per_level": 1 } },
-      "minecraft:knockback": { "theme": "knockback", "material_cost": { "item": "minecraft:slime_ball", "count_per_level": 1 } },
-      "minecraft:quick_charge": { "theme": "crossbow", "material_cost": { "item": "minecraft:copper_ingot", "count_per_level": 1 } },
-      "minecraft:piercing": { "theme": "crossbow", "material_cost": { "item": "minecraft:iron_nugget", "count_per_level": 4 } },
-      "minecraft:multishot": { "theme": "crossbow", "material_cost": { "item": "minecraft:firework_rocket", "count": 1 } },
-      "minecraft:density": { "theme": "mace", "material_cost": { "item": "minecraft:heavy_core", "count": 1 } },
-      "minecraft:breach": { "theme": "mace", "material_cost": { "item": "minecraft:wind_charge", "count_per_level": 1 } },
-      "minecraft:wind_burst": { "theme": "mace_wind", "material_cost": { "item": "minecraft:breeze_rod", "count_per_level": 1 } }
+      "minecraft:protection": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:iron_ingot",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:obsidian",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:amethyst_shard",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:fire_protection": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:magma_cream",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:blaze_powder",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:obsidian",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:blast_protection": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:gunpowder",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:obsidian",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:crying_obsidian",
+              "count_per_level": 1
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:projectile_protection": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:flint",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:target",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:leather",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:feather_falling": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:feather",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:phantom_membrane",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:wind_charge",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:thorns": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:cactus",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:sweet_berries",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:prismarine_shard",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:respiration": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:pufferfish",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:prismarine_crystals",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:dried_kelp_block",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:depth_strider": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:prismarine_shard",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:nautilus_shell",
+              "count": 1
+            },
+            {
+              "item": "minecraft:glow_ink_sac",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:frost_walker": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:blue_ice",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:packed_ice",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:snow_block",
+              "count_per_level": 8
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:soul_speed": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:soul_sand",
+              "count_per_level": 8
+            },
+            {
+              "item": "minecraft:quartz",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:ghast_tear",
+              "count": 1
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:swift_sneak": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:echo_shard",
+              "count": 1
+            },
+            {
+              "item": "minecraft:sculk_catalyst",
+              "count": 1
+            },
+            {
+              "item": "minecraft:amethyst_block",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:sharpness": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:quartz",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:iron_ingot",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:amethyst_shard",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:smite": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:rotten_flesh",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:bone",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:gold_ingot",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:bane_of_arthropods": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:spider_eye",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:string",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:fermented_spider_eye",
+              "count_per_level": 1
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:knockback": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:slime_ball",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:piston",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:wind_charge",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:fire_aspect": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:blaze_powder",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:magma_cream",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:fire_charge",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:looting": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:emerald",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:gold_ingot",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:rabbit_foot",
+              "count": 1
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:sweeping_edge": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:iron_ingot",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:feather",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:amethyst_shard",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:efficiency": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:redstone",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:copper_ingot",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:gold_ingot",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:unbreaking": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:obsidian",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:amethyst_shard",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:iron_ingot",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:fortune": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:emerald",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:lapis_block",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:diamond",
+              "count": 1
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:power": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:flint",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:string",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:quartz",
+              "count_per_level": 4
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:punch": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:slime_ball",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:gunpowder",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:wind_charge",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:impaling": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:prismarine_shard",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:cod",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:nautilus_shell",
+              "count": 1
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:loyalty": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:ender_pearl",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:lead",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:prismarine_crystals",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:riptide": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:prismarine_crystals",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:nautilus_shell",
+              "count": 1
+            },
+            {
+              "item": "minecraft:wind_charge",
+              "count_per_level": 4
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:piercing": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:flint",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:arrow",
+              "count_per_level": 8
+            },
+            {
+              "item": "minecraft:amethyst_shard",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:quick_charge": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:redstone",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:sugar",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:string",
+              "count_per_level": 5
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:density": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:breeze_rod",
+              "count": 1
+            },
+            {
+              "item": "minecraft:iron_block",
+              "count": 1
+            },
+            {
+              "item": "minecraft:obsidian",
+              "count_per_level": 3
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:breach": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:breeze_rod",
+              "count": 1
+            },
+            {
+              "item": "minecraft:quartz",
+              "count_per_level": 5
+            },
+            {
+              "item": "minecraft:copper_ingot",
+              "count_per_level": 6
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:wind_burst": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:breeze_rod",
+              "count_per_level": 1
+            },
+            {
+              "item": "minecraft:wind_charge",
+              "count_per_level": 6
+            },
+            {
+              "item": "minecraft:phantom_membrane",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:luck_of_the_sea": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:prismarine_crystals",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:emerald",
+              "count_per_level": 2
+            },
+            {
+              "item": "minecraft:glow_ink_sac",
+              "count_per_level": 2
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      },
+      "minecraft:lure": {
+        "material_cost": {
+          "options": [
+            {
+              "item": "minecraft:salmon",
+              "count_per_level": 3
+            },
+            {
+              "item": "minecraft:string",
+              "count_per_level": 4
+            },
+            {
+              "item": "minecraft:glow_berries",
+              "count_per_level": 4
+            },
+            {
+              "item": "chiseled_enchanting_table:arcane_catalyst",
+              "count": 1
+            }
+          ]
+        }
+      }
     }
   }
 }

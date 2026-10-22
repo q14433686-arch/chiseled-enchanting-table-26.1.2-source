@@ -42,10 +42,15 @@ public final class ItemTransformationApplication {
 
         Player player = handler.player;
         Level world = handler.world();
-        handler.setEnchantableSlot(rule.outputStack(input.getCount()));
+        ItemStack outStack = rule.outputStack(input.getCount());
+        handler.setEnchantableSlot(outStack);
         handler.markInventoryChanged();
         player.awardStat(Stats.ENCHANT_ITEM);
         world.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 2.0F, world.getRandom().nextFloat() * 0.1F + 0.9F);
+        chiseled_enchanting_table.utils.Advancement.give(player, "transmute_item");
+        if (outStack.is(net.minecraft.world.item.Items.ENCHANTED_GOLDEN_APPLE)) {
+            chiseled_enchanting_table.utils.Advancement.give(player, "enchanted_golden_apple");
+        }
         return true;
     }
 }

@@ -1,0 +1,163 @@
+{
+  "_comment": "Unified Treasure Epiphany & Cryo-Arcane Freeze system. Treasure pool includes all 11 special enchantments plus #minecraft:treasure (excluding curses). Both trigger probability AND maximum simultaneous Epiphany slots scale with Wooden Bookshelves AND Stored Master Tomes. All non-catalyst routes require dual materials; 1x Arcane Synthesis Crystal bypasses as a single item.",
+  "min_regular_bookshelves": 32,
+  "base_chance": 0.30,
+  "chance_per_extra_bookshelf": 0.01,
+  "chance_per_master_tome": 0.02,
+  "max_chance": 0.85,
+  "max_slots_cap": 4,
+  "score_per_extra_slot": 12,
+  "cycle_ticks": 12000,
+  "freeze_duration_ticks": 24000,
+  "max_freeze_ticks": 72000,
+  "freeze_xp_levels": 1,
+  "freeze_cost_options": [
+    { "item": "minecraft:blue_ice", "count": 4 },
+    { "item": "minecraft:packed_ice", "count": 16 },
+    { "item": "minecraft:amethyst_block", "count": 4 },
+    { "item": "minecraft:crying_obsidian", "count": 2 }
+  ],
+  "reroll_xp_levels": 2,
+  "reroll_cost_options": [
+    { "item": "minecraft:lapis_lazuli", "count": 4 },
+    { "item": "minecraft:amethyst_shard", "count": 4 }
+  ],
+  "treasure_enchantments": [
+    "minecraft:aqua_affinity",
+    "minecraft:flame",
+    "minecraft:multishot",
+    "minecraft:channeling",
+    "minecraft:silk_touch",
+    "minecraft:infinity",
+    "minecraft:mending",
+    "minecraft:frost_walker",
+    "minecraft:soul_speed",
+    "minecraft:swift_sneak",
+    "minecraft:wind_burst"
+  ],
+  "treasure_tags": [
+    "#minecraft:treasure"
+  ],
+  "exclude_tags": [
+    "#minecraft:curse"
+  ],
+  "default_xp_levels": 25,
+  "default_material_cost": {
+    "options": [
+      { "item": "minecraft:diamond", "count": 8, "extra": { "item": "minecraft:amethyst_shard", "count": 12 } },
+      { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+    ]
+  },
+  "treasure_costs": {
+    "minecraft:aqua_affinity": {
+      "xp_levels": 18,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:nautilus_shell", "count": 2, "extra": { "item": "minecraft:prismarine_shard", "count": 8 } },
+          { "item": "minecraft:prismarine_crystals", "count": 8, "extra": { "item": "minecraft:diamond", "count": 4 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:flame": {
+      "xp_levels": 20,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:blaze_rod", "count": 4, "extra": { "item": "minecraft:arrow", "count": 16 } },
+          { "item": "minecraft:magma_cream", "count": 6, "extra": { "item": "minecraft:fire_charge", "count": 8 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:multishot": {
+      "xp_levels": 20,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:spectral_arrow", "count": 16, "extra": { "item": "minecraft:diamond", "count": 4 } },
+          { "item": "minecraft:arrow", "count": 32, "extra": { "item": "minecraft:amethyst_shard", "count": 12 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:channeling": {
+      "xp_levels": 22,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:copper_block", "count": 4, "extra": { "item": "minecraft:prismarine_crystals", "count": 8 } },
+          { "item": "minecraft:lightning_rod", "count": 4, "extra": { "item": "minecraft:nautilus_shell", "count": 2 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:silk_touch": {
+      "xp_levels": 24,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:diamond", "count": 6, "extra": { "item": "minecraft:string", "count": 16 } },
+          { "item": "minecraft:honeycomb", "count": 8, "extra": { "item": "minecraft:emerald_block", "count": 4 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:infinity": {
+      "xp_levels": 26,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:ender_pearl", "count": 8, "extra": { "item": "minecraft:diamond", "count": 4 } },
+          { "item": "minecraft:ender_eye", "count": 4, "extra": { "item": "minecraft:amethyst_shard", "count": 16 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:mending": {
+      "xp_levels": 28,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:diamond", "count": 8, "extra": { "item": "minecraft:amethyst_shard", "count": 16 } },
+          { "item": "minecraft:experience_bottle", "count": 24, "extra": { "item": "minecraft:emerald", "count": 8 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:frost_walker": {
+      "xp_levels": 22,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:blue_ice", "count": 12, "extra": { "item": "minecraft:amethyst_shard", "count": 8 } },
+          { "item": "minecraft:packed_ice", "count": 32, "extra": { "item": "minecraft:diamond", "count": 4 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:soul_speed": {
+      "xp_levels": 22,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:ghast_tear", "count": 6, "extra": { "item": "minecraft:soul_sand", "count": 16 } },
+          { "item": "minecraft:crying_obsidian", "count": 10, "extra": { "item": "minecraft:quartz", "count": 16 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:swift_sneak": {
+      "xp_levels": 24,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:echo_shard", "count": 4, "extra": { "item": "minecraft:sculk", "count": 16 } },
+          { "item": "minecraft:sculk_catalyst", "count": 2, "extra": { "item": "minecraft:amethyst_shard", "count": 12 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    },
+    "minecraft:wind_burst": {
+      "xp_levels": 26,
+      "material_cost": {
+        "options": [
+          { "item": "minecraft:breeze_rod", "count": 6, "extra": { "item": "minecraft:wind_charge", "count": 16 } },
+          { "item": "minecraft:wind_charge", "count": 32, "extra": { "item": "minecraft:diamond", "count": 4 } },
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+        ]
+      }
+    }
+  }
+}
