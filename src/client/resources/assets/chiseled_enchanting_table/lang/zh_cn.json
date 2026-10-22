@@ -46,5 +46,18 @@
   "gui.chiseled_enchanting_table.epiphany.progress": "宝藏顿悟进度：普通书架 %s / %s（满额概率刷出专属宝藏附魔）",
   "gui.chiseled_enchanting_table.epiphany.reroll_title": "↻ 重铸宝藏顿悟（当前触发率 %s%%）",
   "gui.chiseled_enchanting_table.epiphany.reroll_cost": "点击立即刷新：%s 级经验 + 任选其一：",
-  "gui.chiseled_enchanting_table.epiphany.auto_hint": "每日黎明或每次完成附魔后也会自动刷新"
+  "gui.chiseled_enchanting_table.epiphany.auto_hint": "每 10 分钟自然轮转或每次附魔后刷新（冻结期间锁定）",
+  "jei.chiseled_enchanting_table.info.catalyst": "秘法凝晶由钻石块、绿宝石块、金块、紫水晶块、青金石块与哭泣的黑曜石凝炼而成。所有宝藏附魔仅可通过雕纹书架母本或 ≥32 个普通书架触发的「秘法顿悟」显现，且常规路线均需双材料；唯有「秘法凝晶」可单材料直接替代。",
+  "gui.chiseled_enchanting_table.epiphany.panel_stats": "顿悟 %s%% · 上限 %s",
+  "gui.chiseled_enchanting_table.epiphany.panel_locked": "顿悟书架 %s / %s",
+  "gui.chiseled_enchanting_table.epiphany.panel_wake": "唤醒度 %s%%",
+  "gui.chiseled_enchanting_table.epiphany.timer_cycle": "⏳ 轮转 %s",
+  "gui.chiseled_enchanting_table.epiphany.timer_frozen": "❄ 冻结 %s",
+  "gui.chiseled_enchanting_table.epiphany.slots_line": "单件同出上限：%s 项（随普通书架与雕纹母本数提升）",
+  "gui.chiseled_enchanting_table.epiphany.freeze_title": "❄ 凝滞冻结宝藏顿悟（每次 +%s 分钟）",
+  "gui.chiseled_enchanting_table.epiphany.freeze_cost": "点击冻结当前顿悟：%s 级经验 + 任选其一：",
+  "gui.chiseled_enchanting_table.epiphany.frozen_remaining": "❄ 当前已冻结剩余：%s（上限 %s 分钟）",
+  "gui.chiseled_enchanting_table.epiphany.cycle_remaining": "⏳ 距下次秘法自然轮转：%s",
+  "gui.chiseled_enchanting_table.epiphany.freeze_hint": "冻结期间普通附魔与时间轮转不会刷新顿悟；铭刻顿悟宝藏或手动重铸后解除",
+  "gui.chiseled_enchanting_table.epiphany.treasure_rule": "宝藏附魔仅限雕纹母本或 ≥32 书架顿悟解锁，需双材料（秘法凝晶例外）"
 }

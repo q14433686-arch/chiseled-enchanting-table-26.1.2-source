@@ -32,6 +32,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     private Component customName;
     public volatile int color = -1;
     public volatile int epiphanySeed = 0;
+    public volatile long epiphanyFreezeUntilGameTime = 0L;
+    public volatile int frozenCycleIndex = 0;
 
     // Vanilla enchanting-table-style book animation state, copied as data fields so the 26.1 renderer can use it.
     public int time;
@@ -69,6 +71,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         super.saveAdditional(output);
         output.putInt("color", color);
         output.putInt("epiphanySeed", epiphanySeed);
+        output.putLong("epiphanyFreezeUntil", epiphanyFreezeUntilGameTime);
+        output.putInt("frozenCycleIndex", frozenCycleIndex);
         output.storeNullable("CustomName", net.minecraft.network.chat.ComponentSerialization.CODEC, customName);
     }
 
@@ -77,6 +81,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         super.loadAdditional(input);
         int newColor = input.getIntOr("color", -1);
         this.epiphanySeed = input.getIntOr("epiphanySeed", 0);
+        this.epiphanyFreezeUntilGameTime = input.getLongOr("epiphanyFreezeUntil", 0L);
+        this.frozenCycleIndex = input.getIntOr("frozenCycleIndex", 0);
         boolean colorChanged = this.color != newColor;
         this.color = newColor;
         this.customName = parseCustomNameSafe(input, "CustomName");
@@ -93,6 +99,36 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             this.setChanged();
         }
         return this.epiphanySeed;
+    }
+
+    public boolean isEpiphanyFrozen(long gameTime) {
+        return this.epiphanyFreezeUntilGameTime > gameTime;
+    }
+
+    public long remainingFreezeTicks(long gameTime) {
+        return Math.max(0L, this.epiphanyFreezeUntilGameTime - gameTime);
+    }
+
+    public int activeCycleIndex(long gameTime, int cycleTicks) {
+        if (isEpiphanyFrozen(gameTime)) {
+            return this.frozenCycleIndex & 0xFFFF;
+        }
+        return (int) ((gameTime / Math.max(200L, cycleTicks)) & 0xFFFFL);
+    }
+
+    public void addFreezeTicks(long gameTime, int cycleTicks, int addTicks, int maxTicks) {
+        if (!isEpiphanyFrozen(gameTime)) {
+            this.frozenCycleIndex = (int) ((gameTime / Math.max(200L, cycleTicks)) & 0xFFFFL);
+            this.epiphanyFreezeUntilGameTime = gameTime + Math.min(maxTicks, addTicks);
+        } else {
+            this.epiphanyFreezeUntilGameTime = Math.min(gameTime + maxTicks, this.epiphanyFreezeUntilGameTime + addTicks);
+        }
+        this.setChanged();
+    }
+
+    public int clearFreezeAndAdvanceSeed() {
+        this.epiphanyFreezeUntilGameTime = 0L;
+        return advanceEpiphanySeed();
     }
 
     public int advanceEpiphanySeed() {

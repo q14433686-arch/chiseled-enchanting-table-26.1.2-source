@@ -75,6 +75,19 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 }
             });
         });
+        PayloadTypeRegistry.serverboundPlay().register(
+            ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload.TYPE,
+            ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload.CODEC
+        );
+        ServerPlayNetworking.registerGlobalReceiver(ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload.TYPE, (payload, ctx) -> {
+            var player = ctx.player();
+            var server = ctx.server();
+            server.execute(() -> {
+                if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler chiseledEnchantingTableScreenHandler) {
+                    chiseledEnchantingTableScreenHandler.freezeEpiphany();
+                }
+            });
+        });
     }
 
     public Runnable onContentChangedCallback = () -> {};
@@ -84,7 +97,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public final int regularBookshelves;
     public final int chiseledBookCount;
     private int epiphanySeed;
-    private int syncedWorldDay;
+    private int syncedCycleIndex;
+    private int syncedCountdownSeconds;
+    private boolean syncedFrozen;
     /** Server-synced transformation table, keyed by transformation id. Used by client UI. */
     public final java.util.Map<Identifier, TransformationDisplay> transformationDisplays;
     private final Level world;
@@ -118,7 +133,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.regularBookshelves = Math.max(0, payload.regular_bookshelves());
         this.chiseledBookCount = Math.max(0, payload.chiseled_book_count());
         this.epiphanySeed = payload.epiphany_seed();
-        this.syncedWorldDay = (int) (playerInventory.player.level().getGameTime() / 24000L);
+        this.syncedCycleIndex = (int) ((playerInventory.player.level().getGameTime() / 12000L) & 0xFFFFL);
+        this.syncedCountdownSeconds = 600;
+        this.syncedFrozen = false;
         java.util.Map<Identifier, TransformationDisplay> displays = new java.util.HashMap<>();
         for (TransformationDisplay display : payload.transformations()) {
             displays.put(display.id(), display);
@@ -189,7 +206,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             }
         }
 
-        // Sync 32-bit epiphanySeed + 16-bit worldDay from server -> client automatically.
+        // DataSlots 0..4 sync 32-bit epiphanySeed, active cycle index, live countdown (seconds), and Stasis Freeze state.
         this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
             @Override
             public int get() {
@@ -215,12 +232,34 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
             @Override
             public int get() {
-                return (int) ((world.getGameTime() / 24000L) & 0xFFFFL);
+                return serverActiveCycleIndex() & 0xFFFF;
             }
 
             @Override
             public void set(int value) {
-                syncedWorldDay = value & 0xFFFF;
+                syncedCycleIndex = value & 0xFFFF;
+            }
+        });
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return Math.min(32767, Math.max(0, serverCountdownSeconds()));
+            }
+
+            @Override
+            public void set(int value) {
+                syncedCountdownSeconds = Math.max(0, value);
+            }
+        });
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return serverIsFrozen() ? 1 : 0;
+            }
+
+            @Override
+            public void set(int value) {
+                syncedFrozen = (value != 0);
             }
         });
     }
@@ -236,10 +275,56 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return holder[0];
     }
 
-    public void advanceTableEpiphanySeed() {
+    private boolean serverIsFrozen() {
+        boolean[] holder = new boolean[] { false };
         this.access.execute((lvl, pos) -> {
             if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
-                this.epiphanySeed = be.advanceEpiphanySeed();
+                holder[0] = be.isEpiphanyFrozen(lvl.getGameTime());
+            }
+        });
+        return holder[0];
+    }
+
+    private int serverActiveCycleIndex() {
+        int cycleTicks = epiphanyCycleTicks();
+        int[] holder = new int[] { (int) ((this.world.getGameTime() / Math.max(200L, cycleTicks)) & 0xFFFFL) };
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                holder[0] = be.activeCycleIndex(lvl.getGameTime(), cycleTicks);
+            }
+        });
+        return holder[0];
+    }
+
+    private int serverCountdownSeconds() {
+        int cycleTicks = Math.max(200, epiphanyCycleTicks());
+        int[] holder = new int[] { (int) (((cycleTicks - (this.world.getGameTime() % cycleTicks)) + 19L) / 20L) };
+        this.access.execute((lvl, pos) -> {
+            long gt = lvl.getGameTime();
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be
+                && be.isEpiphanyFrozen(gt)) {
+                holder[0] = (int) ((be.remainingFreezeTicks(gt) + 19L) / 20L);
+            }
+        });
+        return holder[0];
+    }
+
+    public boolean isEpiphanyFrozen() {
+        return this.world.isClientSide() ? this.syncedFrozen : serverIsFrozen();
+    }
+
+    public int countdownSeconds() {
+        return this.world.isClientSide() ? this.syncedCountdownSeconds : serverCountdownSeconds();
+    }
+
+    public void advanceTableEpiphanySeed(boolean consumedEpiphanyOrForceClearFreeze) {
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                if (consumedEpiphanyOrForceClearFreeze) {
+                    this.epiphanySeed = be.clearFreezeAndAdvanceSeed();
+                } else if (!be.isEpiphanyFrozen(lvl.getGameTime())) {
+                    this.epiphanySeed = be.advanceEpiphanySeed();
+                }
             } else {
                 this.epiphanySeed = this.epiphanySeed * 1664525 + 1013904223;
             }
@@ -250,7 +335,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     @Override
     public void setData(int id, int data) {
         super.setData(id, data);
-        if (this.onContentChangedCallback != null) {
+        // Only rebuild scroll list when seed (0/1), cycle (2), or frozen state (4) changes — NOT every second on timer tick (3).
+        if (id != 3 && this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
         }
     }
@@ -429,8 +515,44 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     public double epiphanyChance() {
         return this.world.isClientSide()
-            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyChance(this.regularBookshelves)
-            : ChiseledEnchantingTableData.treasureEpiphanyChance(this.regularBookshelves);
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyChance(this.regularBookshelves, this.chiseledBookCount)
+            : ChiseledEnchantingTableData.treasureEpiphanyChance(this.regularBookshelves, this.chiseledBookCount);
+    }
+
+    public int epiphanyMaxSlots() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyMaxSlots(this.regularBookshelves, this.chiseledBookCount)
+            : ChiseledEnchantingTableData.treasureEpiphanyMaxSlots(this.regularBookshelves, this.chiseledBookCount);
+    }
+
+    public int epiphanyCycleTicks() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyCycleTicks()
+            : ChiseledEnchantingTableData.treasureEpiphanyCycleTicks();
+    }
+
+    public int epiphanyFreezeDurationTicks() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyFreezeDurationTicks()
+            : ChiseledEnchantingTableData.treasureEpiphanyFreezeDurationTicks();
+    }
+
+    public int epiphanyMaxFreezeTicks() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyMaxFreezeTicks()
+            : ChiseledEnchantingTableData.treasureEpiphanyMaxFreezeTicks();
+    }
+
+    public int epiphanyFreezeXpLevels() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyFreezeXpLevels()
+            : ChiseledEnchantingTableData.treasureEpiphanyFreezeXpLevels();
+    }
+
+    public List<ItemStack> epiphanyFreezeCosts() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyFreezeCosts()
+            : ChiseledEnchantingTableData.treasureEpiphanyFreezeCostOptions();
     }
 
     public int epiphanyRerollXpLevels() {
@@ -445,70 +567,84 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             : ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions();
     }
 
+    public boolean isTreasureEnchantment(Holder.Reference<Enchantment> holder) {
+        if (holder.is(CURSE_TAG)) return false;
+        Identifier id = holder.key().identifier();
+        Set<Identifier> explicit = this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.explicitTreasureIds()
+            : ChiseledEnchantingTableData.treasureEpiphanyExplicitIds();
+        return holder.is(TREASURE_TAG) || explicit.contains(id);
+    }
+
     /**
-     * Deterministically resolves the active Grand Library Treasure Epiphany (at most ONE matching
-     * positive treasure enchantment at Level 1) for {@code targetStack}, identically on server & client.
+     * Deterministically resolves all active Grand Library Treasure Epiphanies (1..epiphanyMaxSlots()
+     * distinct matching Treasure Enchantments at Level 1) identically on server & client.
      */
-    @org.jetbrains.annotations.Nullable
-    public EnchantmentWithLevel computeActiveTreasureEpiphany(ItemStack targetStack) {
+    public List<EnchantmentWithLevel> computeActiveTreasureEpiphanies(ItemStack targetStack) {
         int minShelves = epiphanyMinBookshelves();
-        if (this.regularBookshelves < minShelves || targetStack.isEmpty() || targetStack.is(Items.ENCHANTED_BOOK)) {
-            return null;
+        int maxSlots = epiphanyMaxSlots();
+        if (this.regularBookshelves < minShelves || maxSlots <= 0 || targetStack.isEmpty() || targetStack.is(Items.ENCHANTED_BOOK)) {
+            return List.of();
         }
         boolean isBlankBook = targetStack.is(Items.BOOK);
         var registry = this.world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-        java.util.List<Identifier> eligible = new java.util.ArrayList<>();
+        java.util.List<Identifier> pool = new java.util.ArrayList<>();
         for (Holder.Reference<Enchantment> holder : registry.listElements().toList()) {
-            if (!holder.is(TREASURE_TAG) || holder.is(CURSE_TAG)) continue;
+            if (!isTreasureEnchantment(holder)) continue;
             Identifier id = holder.key().identifier();
             if (this.unlocked_enchantements.contains(new EnchantmentWithLevel(id, 1))) continue;
             if (isBlankBook || holder.value().canEnchant(targetStack)) {
-                eligible.add(id);
+                pool.add(id);
             }
         }
-        if (eligible.isEmpty()) {
-            return null;
+        if (pool.isEmpty()) {
+            return List.of();
         }
-        eligible.sort(java.util.Comparator.comparing(Identifier::toString));
+        pool.sort(java.util.Comparator.comparing(Identifier::toString));
 
         int seed = this.world.isClientSide() ? this.epiphanySeed : currentServerEpiphanySeed();
-        int day = this.world.isClientSide() ? this.syncedWorldDay : (int) ((this.world.getGameTime() / 24000L) & 0xFFFFL);
+        int cycle = this.world.isClientSide() ? this.syncedCycleIndex : serverActiveCycleIndex();
         Identifier itemId = BuiltInRegistries.ITEM.getKey(targetStack.getItem());
-        long h = 0x9E3779B97F4A7C15L;
-        h = splitMix64(h ^ Integer.toUnsignedLong(seed));
-        h = splitMix64(h ^ Integer.toUnsignedLong(day));
-        h = splitMix64(h ^ this.player.getUUID().getMostSignificantBits());
-        h = splitMix64(h ^ this.player.getUUID().getLeastSignificantBits());
-        h = splitMix64(h ^ itemId.toString().hashCode());
+        long baseHash = 0x9E3779B97F4A7C15L;
+        baseHash = splitMix64(baseHash ^ Integer.toUnsignedLong(seed));
+        baseHash = splitMix64(baseHash ^ Integer.toUnsignedLong(cycle));
+        baseHash = splitMix64(baseHash ^ this.player.getUUID().getMostSignificantBits());
+        baseHash = splitMix64(baseHash ^ this.player.getUUID().getLeastSignificantBits());
+        baseHash = splitMix64(baseHash ^ itemId.toString().hashCode());
 
-        double roll = ((h >>> 11) * (1.0 / (1L << 53)));
-        if (roll >= epiphanyChance()) {
-            return null;
+        double baseProb = epiphanyChance();
+        java.util.List<EnchantmentWithLevel> out = new java.util.ArrayList<>(maxSlots);
+        double slotFactor = 1.0;
+        for (int slotIdx = 0; slotIdx < maxSlots && !pool.isEmpty(); slotIdx++) {
+            long h = splitMix64(baseHash ^ (0x517CC1B727220A95L * (slotIdx + 1L)));
+            double roll = ((h >>> 11) * (1.0 / (1L << 53)));
+            if (roll < baseProb * slotFactor) {
+                long pickHash = splitMix64(h ^ 0xBF58476D1CE4E5B9L);
+                int index = (int) Long.remainderUnsigned(pickHash, pool.size());
+                Identifier chosen = pool.remove(index);
+                out.add(new EnchantmentWithLevel(chosen, 1));
+            }
+            slotFactor *= 0.78;
         }
-        long pickHash = splitMix64(h ^ 0xBF58476D1CE4E5B9L);
-        int index = (int) (Long.remainderUnsigned(pickHash, eligible.size()));
-        return new EnchantmentWithLevel(eligible.get(index), 1);
+        return List.copyOf(out);
     }
 
     public boolean matchesActiveTreasureEpiphany(ApplyEnchantmentPayload payload) {
         if (payload.option_type() != OptionType.TREASURE_EPIPHANY || payload.enchantment_level() != 1) {
             return false;
         }
-        EnchantmentWithLevel active = computeActiveTreasureEpiphany(get_enchantable_item());
-        return active != null && active.enchantment_id().equals(payload.enchantment_id()) && active.enchantment_level() == payload.enchantment_level();
-    }
-
-    public boolean canAffordRerollEpiphany() {
-        if (this.regularBookshelves < epiphanyMinBookshelves()) return false;
-        if (this.player.getAbilities().instabuild) return true;
-        if (this.player.experienceLevel < epiphanyRerollXpLevels()) return false;
-        return findAffordableRerollStack() != null;
+        for (EnchantmentWithLevel active : computeActiveTreasureEpiphanies(get_enchantable_item())) {
+            if (active.enchantment_id().equals(payload.enchantment_id()) && active.enchantment_level() == payload.enchantment_level()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @org.jetbrains.annotations.Nullable
-    private ItemStack findAffordableRerollStack() {
+    private ItemStack findAffordableSingleOption(List<ItemStack> options) {
         ItemStack costSlot = get_cost_item();
-        for (ItemStack opt : epiphanyRerollCosts()) {
+        for (ItemStack opt : options) {
             if (opt.isEmpty()) continue;
             int total = 0;
             if (ItemStack.isSameItemSameComponents(costSlot, opt)) {
@@ -527,6 +663,84 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return null;
     }
 
+    private void consumeSingleStackOption(ItemStack req) {
+        int remaining = req.getCount();
+        ItemStack costSlot = get_cost_item();
+        if (ItemStack.isSameItemSameComponents(costSlot, req)) {
+            int take = Math.min(remaining, costSlot.getCount());
+            costSlot.shrink(take);
+            remaining -= take;
+        }
+        for (int slot = 0; slot < this.player.getInventory().getContainerSize() && remaining > 0; slot++) {
+            ItemStack inv = this.player.getInventory().getItem(slot);
+            if (ItemStack.isSameItemSameComponents(inv, req)) {
+                int take = Math.min(remaining, inv.getCount());
+                inv.shrink(take);
+                remaining -= take;
+            }
+        }
+        this.inventory.setChanged();
+        this.player.getInventory().setChanged();
+    }
+
+    public boolean canAffordRerollEpiphany() {
+        if (this.regularBookshelves < epiphanyMinBookshelves()) return false;
+        if (this.player.getAbilities().instabuild) return true;
+        if (this.player.experienceLevel < epiphanyRerollXpLevels()) return false;
+        return findAffordableSingleOption(epiphanyRerollCosts()) != null;
+    }
+
+    public boolean canAffordFreezeEpiphany() {
+        if (this.regularBookshelves < epiphanyMinBookshelves()) return false;
+        int maxSec = Math.max(10, epiphanyMaxFreezeTicks() / 20);
+        if (isEpiphanyFrozen() && countdownSeconds() >= maxSec - 2) return false;
+        if (this.player.getAbilities().instabuild) return true;
+        if (this.player.experienceLevel < epiphanyFreezeXpLevels()) return false;
+        return findAffordableSingleOption(epiphanyFreezeCosts()) != null;
+    }
+
+    public boolean freezeEpiphany() {
+        if (!canAffordFreezeEpiphany()) {
+            return false;
+        }
+        if (!this.player.getAbilities().instabuild) {
+            int xpLevels = epiphanyFreezeXpLevels();
+            if (xpLevels > 0) {
+                this.player.giveExperiencePoints(-XpCostConversion.pointsForLevelCost(this.player, xpLevels));
+            }
+            ItemStack req = findAffordableSingleOption(epiphanyFreezeCosts());
+            if (req != null) {
+                consumeSingleStackOption(req);
+            }
+        }
+        int cycleTicks = epiphanyCycleTicks();
+        int addTicks = epiphanyFreezeDurationTicks();
+        int maxTicks = epiphanyMaxFreezeTicks();
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                be.addFreezeTicks(lvl.getGameTime(), cycleTicks, addTicks, maxTicks);
+            }
+        });
+        this.broadcastChanges();
+        this.world.playSound(
+            null,
+            this.player.blockPosition(),
+            net.minecraft.sounds.SoundEvents.GLASS_PLACE,
+            net.minecraft.sounds.SoundSource.BLOCKS,
+            1.0F,
+            1.35F
+        );
+        this.world.playSound(
+            null,
+            this.player.blockPosition(),
+            net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_RESONATE,
+            net.minecraft.sounds.SoundSource.BLOCKS,
+            1.2F,
+            0.85F
+        );
+        return true;
+    }
+
     public boolean rerollEpiphany() {
         if (!canAffordRerollEpiphany()) {
             return false;
@@ -536,28 +750,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             if (xpLevels > 0) {
                 this.player.giveExperiencePoints(-XpCostConversion.pointsForLevelCost(this.player, xpLevels));
             }
-            ItemStack req = findAffordableRerollStack();
+            ItemStack req = findAffordableSingleOption(epiphanyRerollCosts());
             if (req != null) {
-                int remaining = req.getCount();
-                ItemStack costSlot = get_cost_item();
-                if (ItemStack.isSameItemSameComponents(costSlot, req)) {
-                    int take = Math.min(remaining, costSlot.getCount());
-                    costSlot.shrink(take);
-                    remaining -= take;
-                }
-                for (int slot = 0; slot < this.player.getInventory().getContainerSize() && remaining > 0; slot++) {
-                    ItemStack inv = this.player.getInventory().getItem(slot);
-                    if (ItemStack.isSameItemSameComponents(inv, req)) {
-                        int take = Math.min(remaining, inv.getCount());
-                        inv.shrink(take);
-                        remaining -= take;
-                    }
-                }
-                this.inventory.setChanged();
-                this.player.getInventory().setChanged();
+                consumeSingleStackOption(req);
             }
         }
-        advanceTableEpiphanySeed();
+        advanceTableEpiphanySeed(true);
         this.world.playSound(
             null,
             this.player.blockPosition(),

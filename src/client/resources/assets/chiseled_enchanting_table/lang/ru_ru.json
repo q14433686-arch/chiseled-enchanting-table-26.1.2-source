@@ -46,5 +46,18 @@
   "gui.chiseled_enchanting_table.epiphany.progress": "Озарение сокровищ: %s / %s книжных полок",
   "gui.chiseled_enchanting_table.epiphany.reroll_title": "↻ Обновить озарение сокровищ (шанс %s%%)",
   "gui.chiseled_enchanting_table.epiphany.reroll_cost": "Нажмите для обновления: %s ур. опыта + любой из:",
-  "gui.chiseled_enchanting_table.epiphany.auto_hint": "Также обновляется на рассвете или после зачарования"
+  "gui.chiseled_enchanting_table.epiphany.auto_hint": "Refreshes every 10 min or after enchanting unless frozen",
+  "jei.chiseled_enchanting_table.info.catalyst": "Arcane Synthesis Crystal is condensed from Diamond, Emerald, Gold, Amethyst, Lapis Blocks and Crying Obsidian. All Treasure Enchantments only appear via Chiseled Bookshelf Master Tomes or >= 32 Wooden Bookshelf Epiphanies and require two materials — except Arcane Synthesis Crystal, which works alone.",
+  "gui.chiseled_enchanting_table.epiphany.panel_stats": "Epiphany %s%% · Max %s",
+  "gui.chiseled_enchanting_table.epiphany.panel_locked": "Shelves %s / %s",
+  "gui.chiseled_enchanting_table.epiphany.panel_wake": "Awaken %s%%",
+  "gui.chiseled_enchanting_table.epiphany.timer_cycle": "⏳ %s",
+  "gui.chiseled_enchanting_table.epiphany.timer_frozen": "❄ %s",
+  "gui.chiseled_enchanting_table.epiphany.slots_line": "Simultaneous cap: %s (scales with Bookshelves & Master Tomes)",
+  "gui.chiseled_enchanting_table.epiphany.freeze_title": "❄ Freeze Treasure Epiphany (+%s min)",
+  "gui.chiseled_enchanting_table.epiphany.freeze_cost": "Click to freeze active Epiphany: %s XP levels + any of:",
+  "gui.chiseled_enchanting_table.epiphany.frozen_remaining": "❄ Stasis active: %s remaining (max %s min)",
+  "gui.chiseled_enchanting_table.epiphany.cycle_remaining": "⏳ Next natural cycle in: %s",
+  "gui.chiseled_enchanting_table.epiphany.freeze_hint": "Locks active Epiphanies against timers & normal enchants until claimed or re-rolled",
+  "gui.chiseled_enchanting_table.epiphany.treasure_rule": "Treasure enchants require Master Tome or >=32-shelf Epiphany & dual materials (Catalyst exempt)"
 }

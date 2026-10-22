@@ -57,6 +57,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     private static Set<EnchantmentWithLevel> defaultEnchantmentValues = builtInDefaultEnchantments();
     private static List<DefaultEnchantmentTagRule> defaultEnchantmentTags = builtInDefaultEnchantmentTags();
+    private static Set<Identifier> defaultExcludedIds = builtInExcludedTreasureIds();
+    private static List<Identifier> defaultExcludedTags = builtInExcludedTags();
     private static CostTables costTables = CostTables.builtInFallback();
     private static Map<Identifier, ItemTransformation> itemTransformations = builtInItemTransformations();
     private static List<LootInjection> lootInjections = List.of();
@@ -88,11 +90,29 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * by hand.
      */
     public static Set<EnchantmentWithLevel> defaultEnchantments(HolderGetter<Enchantment> enchantmentLookup) {
-        Set<EnchantmentWithLevel> result = new HashSet<>(defaultEnchantmentValues);
+        Set<Identifier> excluded = new HashSet<>(defaultExcludedIds);
+        excluded.addAll(treasureEpiphanyRules.explicitTreasureIds());
+        for (Identifier exTag : defaultExcludedTags) {
+            TagKey<Enchantment> tagKey = TagKey.create(Registries.ENCHANTMENT, exTag);
+            enchantmentLookup.get(tagKey).ifPresent(named -> named.stream().forEach(holder ->
+                holder.unwrapKey().ifPresent(key -> excluded.add(key.identifier()))
+            ));
+        }
+
+        Set<EnchantmentWithLevel> result = new HashSet<>();
+        for (EnchantmentWithLevel explicit : defaultEnchantmentValues) {
+            if (!excluded.contains(explicit.enchantment_id())) {
+                result.add(explicit);
+            }
+        }
         for (DefaultEnchantmentTagRule rule : defaultEnchantmentTags) {
             TagKey<Enchantment> tagKey = TagKey.create(Registries.ENCHANTMENT, rule.tagId());
             enchantmentLookup.get(tagKey).ifPresent(named -> named.stream().forEach(holder ->
-                holder.unwrapKey().ifPresent(key -> result.add(new EnchantmentWithLevel(key.identifier(), rule.level())))
+                holder.unwrapKey().ifPresent(key -> {
+                    if (!excluded.contains(key.identifier())) {
+                        result.add(new EnchantmentWithLevel(key.identifier(), rule.level()));
+                    }
+                })
             ));
         }
         return result;
@@ -182,12 +202,52 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return treasureEpiphanyRules.chancePerExtraBookshelf();
     }
 
+    public static double treasureEpiphanyPerTomeChance() {
+        return treasureEpiphanyRules.chancePerMasterTome();
+    }
+
     public static double treasureEpiphanyMaxChance() {
         return treasureEpiphanyRules.maxChance();
     }
 
-    public static double treasureEpiphanyChance(int regularBookshelves) {
-        return treasureEpiphanyRules.chanceFor(regularBookshelves);
+    public static int treasureEpiphanyMaxSlotsCap() {
+        return treasureEpiphanyRules.maxSlotsCap();
+    }
+
+    public static int treasureEpiphanyScorePerSlot() {
+        return treasureEpiphanyRules.scorePerExtraSlot();
+    }
+
+    public static int treasureEpiphanyCycleTicks() {
+        return treasureEpiphanyRules.cycleTicks();
+    }
+
+    public static int treasureEpiphanyFreezeDurationTicks() {
+        return treasureEpiphanyRules.freezeDurationTicks();
+    }
+
+    public static int treasureEpiphanyMaxFreezeTicks() {
+        return treasureEpiphanyRules.maxFreezeTicks();
+    }
+
+    public static int treasureEpiphanyFreezeXpLevels() {
+        return treasureEpiphanyRules.freezeXpLevels();
+    }
+
+    public static List<ItemStack> treasureEpiphanyFreezeCostOptions() {
+        return treasureEpiphanyRules.freezeStacks();
+    }
+
+    public static Set<Identifier> treasureEpiphanyExplicitIds() {
+        return treasureEpiphanyRules.explicitTreasureIds();
+    }
+
+    public static double treasureEpiphanyChance(int regularBookshelves, int chiseledBooks) {
+        return treasureEpiphanyRules.chanceFor(regularBookshelves, chiseledBooks);
+    }
+
+    public static int treasureEpiphanyMaxSlots(int regularBookshelves, int chiseledBooks) {
+        return treasureEpiphanyRules.maxSlotsFor(regularBookshelves, chiseledBooks);
     }
 
     public static int treasureEpiphanyRerollXpLevels() {
@@ -301,6 +361,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         DefaultEnchantmentTable loadedDefaults = loadDefaultEnchantments(resourceManager);
         defaultEnchantmentValues = loadedDefaults.values();
         defaultEnchantmentTags = loadedDefaults.tags();
+        defaultExcludedIds = loadedDefaults.excludedIds();
+        defaultExcludedTags = loadedDefaults.excludedTags();
         costTables = loadCostTables(resourceManager);
         itemTransformations = loadItemTransformations(resourceManager);
         lootInjections = loadLootInjections(resourceManager);
@@ -366,10 +428,31 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 }
             }
 
+            Set<Identifier> excludedIds = new HashSet<>();
+            JsonArray excludeArr = root.getAsJsonArray("exclude");
+            if (excludeArr != null) {
+                for (JsonElement element : excludeArr) {
+                    excludedIds.add(parseIdentifier(element.getAsString()));
+                }
+            }
+
+            List<Identifier> excludedTags = new ArrayList<>();
+            JsonArray excludeTagArr = root.getAsJsonArray("exclude_tags");
+            if (excludeTagArr != null) {
+                for (JsonElement element : excludeTagArr) {
+                    excludedTags.add(parseIdentifier(stripTagPrefix(element.getAsString())));
+                }
+            }
+
             if (loadedValues.isEmpty() && loadedTags.isEmpty()) {
                 return builtInDefaultEnchantmentTable();
             }
-            return new DefaultEnchantmentTable(loadedValues, List.copyOf(loadedTags));
+            return new DefaultEnchantmentTable(
+                loadedValues,
+                List.copyOf(loadedTags),
+                Set.copyOf(excludedIds),
+                List.copyOf(excludedTags)
+            );
         } catch (Exception e) {
             ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback defaults", DEFAULT_ENCHANTMENTS_ID, e);
             return builtInDefaultEnchantmentTable();
@@ -454,12 +537,45 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return List.of(new DefaultEnchantmentTagRule(Identifier.withDefaultNamespace("in_enchanting_table"), 1));
     }
 
-    private static DefaultEnchantmentTable builtInDefaultEnchantmentTable() {
-        return new DefaultEnchantmentTable(builtInDefaultEnchantments(), builtInDefaultEnchantmentTags());
+    private static Set<Identifier> builtInExcludedTreasureIds() {
+        return Set.of(
+            Identifier.withDefaultNamespace("aqua_affinity"),
+            Identifier.withDefaultNamespace("flame"),
+            Identifier.withDefaultNamespace("multishot"),
+            Identifier.withDefaultNamespace("channeling"),
+            Identifier.withDefaultNamespace("silk_touch"),
+            Identifier.withDefaultNamespace("infinity"),
+            Identifier.withDefaultNamespace("mending"),
+            Identifier.withDefaultNamespace("frost_walker"),
+            Identifier.withDefaultNamespace("soul_speed"),
+            Identifier.withDefaultNamespace("swift_sneak"),
+            Identifier.withDefaultNamespace("wind_burst")
+        );
     }
 
-    /** Parsed {@code default_enchantments.json} contents: explicit values plus tag-expansion rules. */
-    private record DefaultEnchantmentTable(Set<EnchantmentWithLevel> values, List<DefaultEnchantmentTagRule> tags) {}
+    private static List<Identifier> builtInExcludedTags() {
+        return List.of(
+            Identifier.withDefaultNamespace("treasure"),
+            Identifier.withDefaultNamespace("curse")
+        );
+    }
+
+    private static DefaultEnchantmentTable builtInDefaultEnchantmentTable() {
+        return new DefaultEnchantmentTable(
+            builtInDefaultEnchantments(),
+            builtInDefaultEnchantmentTags(),
+            builtInExcludedTreasureIds(),
+            builtInExcludedTags()
+        );
+    }
+
+    /** Parsed {@code default_enchantments.json} contents: explicit values plus tag-expansion & treasure-exclusion rules. */
+    private record DefaultEnchantmentTable(
+        Set<EnchantmentWithLevel> values,
+        List<DefaultEnchantmentTagRule> tags,
+        Set<Identifier> excludedIds,
+        List<Identifier> excludedTags
+    ) {}
 
     /** One {@code tags} entry: every enchantment in {@code tagId} unlocks at {@code level}. */
     private record DefaultEnchantmentTagRule(Identifier tagId, int level) {}
@@ -834,18 +950,46 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         int minRegularBookshelves,
         double baseChance,
         double chancePerExtraBookshelf,
+        double chancePerMasterTome,
         double maxChance,
+        int maxSlotsCap,
+        int scorePerExtraSlot,
+        int cycleTicks,
+        int freezeDurationTicks,
+        int maxFreezeTicks,
+        int freezeXpLevels,
+        List<ItemCostOption> freezeOptions,
         int rerollXpLevels,
         List<ItemCostOption> rerollOptions,
+        Set<Identifier> explicitTreasureIds,
         int defaultXpLevels,
         ItemCostRule defaultMaterialCost,
         Map<Identifier, TreasureEpiphanyEntry> entries
     ) {
         static TreasureEpiphanyRules fromJson(JsonObject root) {
             int minShelves = intOr(root, "min_regular_bookshelves", 32);
-            double base = root.has("base_chance") ? root.get("base_chance").getAsDouble() : 0.35;
-            double perExtra = root.has("chance_per_extra_bookshelf") ? root.get("chance_per_extra_bookshelf").getAsDouble() : 0.015;
-            double cap = root.has("max_chance") ? root.get("max_chance").getAsDouble() : 0.65;
+            double base = root.has("base_chance") ? root.get("base_chance").getAsDouble() : 0.30;
+            double perExtra = root.has("chance_per_extra_bookshelf") ? root.get("chance_per_extra_bookshelf").getAsDouble() : 0.01;
+            double perTome = root.has("chance_per_master_tome") ? root.get("chance_per_master_tome").getAsDouble() : 0.02;
+            double cap = root.has("max_chance") ? root.get("max_chance").getAsDouble() : 0.85;
+            int maxSlots = Math.max(1, intOr(root, "max_slots_cap", 4));
+            int scoreStep = Math.max(1, intOr(root, "score_per_extra_slot", 12));
+            int cycTicks = Math.max(200, intOr(root, "cycle_ticks", 12000));
+            int frzTicks = Math.max(200, intOr(root, "freeze_duration_ticks", 24000));
+            int maxFrzTicks = Math.max(frzTicks, intOr(root, "max_freeze_ticks", 72000));
+            int frzXp = Math.max(0, intOr(root, "freeze_xp_levels", 1));
+            List<ItemCostOption> frzOpts = new ArrayList<>();
+            if (root.has("freeze_cost_options")) {
+                for (JsonElement el : root.getAsJsonArray("freeze_cost_options")) {
+                    frzOpts.add(ItemCostOption.fromJson(el.getAsJsonObject()));
+                }
+            }
+            if (frzOpts.isEmpty()) {
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("blue_ice"), 4, 0, 0, 0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("packed_ice"), 16, 0, 0, 0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("amethyst_block"), 4, 0, 0, 0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("crying_obsidian"), 2, 0, 0, 0, List.of()));
+            }
             int rerollXp = intOr(root, "reroll_xp_levels", 2);
             List<ItemCostOption> rerollOpts = new ArrayList<>();
             if (root.has("reroll_cost_options")) {
@@ -856,6 +1000,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             if (rerollOpts.isEmpty()) {
                 rerollOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 4, 0, 0, 0, List.of()));
                 rerollOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("amethyst_shard"), 4, 0, 0, 0, List.of()));
+            }
+            Set<Identifier> explicitIds = new HashSet<>(builtInExcludedTreasureIds());
+            if (root.has("treasure_enchantments")) {
+                for (JsonElement el : root.getAsJsonArray("treasure_enchantments")) {
+                    explicitIds.add(parseIdentifier(el.getAsString()));
+                }
             }
             int defaultXp = intOr(root, "default_xp_levels", 25);
             ItemCostRule defaultCost = root.has("default_material_cost")
@@ -868,12 +1018,16 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                     JsonObject val = e.getValue().getAsJsonObject();
                     int xp = intOr(val, "xp_levels", defaultXp);
                     ItemCostRule mat = val.has("material_cost") ? ItemCostRule.fromJson(val.getAsJsonObject("material_cost")) : defaultCost;
-                    map.put(parseIdentifier(e.getKey()), new TreasureEpiphanyEntry(xp, mat));
+                    Identifier id = parseIdentifier(e.getKey());
+                    explicitIds.add(id);
+                    map.put(id, new TreasureEpiphanyEntry(xp, mat));
                 }
             }
             return new TreasureEpiphanyRules(
-                Math.max(1, minShelves), base, perExtra, cap, Math.max(0, rerollXp),
-                List.copyOf(rerollOpts), defaultXp, defaultCost, Map.copyOf(map)
+                Math.max(1, minShelves), base, perExtra, perTome, cap,
+                maxSlots, scoreStep, cycTicks, frzTicks, maxFrzTicks, frzXp,
+                List.copyOf(frzOpts), Math.max(0, rerollXp), List.copyOf(rerollOpts),
+                Set.copyOf(explicitIds), defaultXp, defaultCost, Map.copyOf(map)
             );
         }
 
@@ -881,19 +1035,22 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             String json = """
                 {
                   "min_regular_bookshelves": 32,
-                  "base_chance": 0.35,
-                  "chance_per_extra_bookshelf": 0.015,
-                  "max_chance": 0.65,
+                  "base_chance": 0.30,
+                  "chance_per_extra_bookshelf": 0.01,
+                  "chance_per_master_tome": 0.02,
+                  "max_chance": 0.85,
+                  "max_slots_cap": 4,
+                  "score_per_extra_slot": 12,
+                  "cycle_ticks": 12000,
+                  "freeze_duration_ticks": 24000,
+                  "max_freeze_ticks": 72000,
+                  "freeze_xp_levels": 1,
                   "reroll_xp_levels": 2,
-                  "reroll_cost_options": [
-                    { "item": "minecraft:lapis_lazuli", "count": 4 },
-                    { "item": "minecraft:amethyst_shard", "count": 4 }
-                  ],
                   "default_xp_levels": 25,
                   "default_material_cost": {
                     "options": [
-                      { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
-                      { "item": "minecraft:diamond", "count": 8 }
+                      { "item": "minecraft:diamond", "count": 8, "extra": { "item": "minecraft:amethyst_shard", "count": 12 } },
+                      { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
                     ]
                   },
                   "treasure_costs": {}
@@ -902,10 +1059,27 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             return fromJson(GSON.fromJson(json, JsonObject.class));
         }
 
-        double chanceFor(int regularBookshelves) {
+        double chanceFor(int regularBookshelves, int chiseledBooks) {
             if (regularBookshelves < minRegularBookshelves) return 0.0;
-            double raw = baseChance + (regularBookshelves - minRegularBookshelves) * chancePerExtraBookshelf;
+            double raw = baseChance
+                + (regularBookshelves - minRegularBookshelves) * chancePerExtraBookshelf
+                + Math.max(0, chiseledBooks) * chancePerMasterTome;
             return Math.max(0.0, Math.min(maxChance, raw));
+        }
+
+        int maxSlotsFor(int regularBookshelves, int chiseledBooks) {
+            if (regularBookshelves < minRegularBookshelves) return 0;
+            int score = Math.max(0, regularBookshelves - minRegularBookshelves) + Math.max(0, chiseledBooks) * 2;
+            return Math.min(maxSlotsCap, 1 + score / scorePerExtraSlot);
+        }
+
+        List<ItemStack> freezeStacks() {
+            Identifier dummy = Identifier.withDefaultNamespace("mending");
+            List<ItemStack> out = new ArrayList<>(freezeOptions.size());
+            for (ItemCostOption opt : freezeOptions) {
+                out.add(opt.toSingleStack(dummy, 1, 1, ""));
+            }
+            return List.copyOf(out);
         }
 
         List<ItemStack> rerollStacks() {

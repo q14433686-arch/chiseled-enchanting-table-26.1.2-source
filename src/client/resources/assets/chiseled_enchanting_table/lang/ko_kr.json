@@ -46,5 +46,18 @@
   "gui.chiseled_enchanting_table.epiphany.progress": "보물 깨달음 진행도: 일반 책장 %s / %s",
   "gui.chiseled_enchanting_table.epiphany.reroll_title": "↻ 보물 깨달음 재추첨 (확률 %s%%)",
   "gui.chiseled_enchanting_table.epiphany.reroll_cost": "클릭하여 새로고침: %s 레벨 + 택1:",
-  "gui.chiseled_enchanting_table.epiphany.auto_hint": "새벽이 밝거나 마법 부여 완료 시에도 자동 갱신됩니다"
+  "gui.chiseled_enchanting_table.epiphany.auto_hint": "10분 주기 또는 마법 부여 후 갱신 (동결 시 유지)",
+  "jei.chiseled_enchanting_table.info.catalyst": "비법 응결정은 만능 보물 촉매입니다. 모든 보물 마법은 조각된 책장 원본 또는 책장 32개 이상의 비법 돈오에서만 등장하며 기본 2종 재료가 필요하지만 비법 응결정은 단독 사용 가능합니다.",
+  "gui.chiseled_enchanting_table.epiphany.panel_stats": "돈오 %s%% · 상한 %s",
+  "gui.chiseled_enchanting_table.epiphany.panel_locked": "책장 %s / %s",
+  "gui.chiseled_enchanting_table.epiphany.panel_wake": "각성 %s%%",
+  "gui.chiseled_enchanting_table.epiphany.timer_cycle": "⏳ %s",
+  "gui.chiseled_enchanting_table.epiphany.timer_frozen": "❄ %s",
+  "gui.chiseled_enchanting_table.epiphany.slots_line": "동시 출현 상한: %s개 (일반 책장 및 원본 수 비례)",
+  "gui.chiseled_enchanting_table.epiphany.freeze_title": "❄ 보물 돈오 동결 (+%s분)",
+  "gui.chiseled_enchanting_table.epiphany.freeze_cost": "클릭하여 동결: %s 레벨 + 택1:",
+  "gui.chiseled_enchanting_table.epiphany.frozen_remaining": "❄ 동결 남은 시간: %s (최대 %s분)",
+  "gui.chiseled_enchanting_table.epiphany.cycle_remaining": "⏳ 다음 자연 갱신: %s",
+  "gui.chiseled_enchanting_table.epiphany.freeze_hint": "동결 중에는 일반 마법 부여나 시간 경과로 바뀌지 않습니다",
+  "gui.chiseled_enchanting_table.epiphany.treasure_rule": "보물 마법은 원본/돈오 전용이며 2종 재료 필요 (비법 응결정 예외)"
 }

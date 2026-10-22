@@ -5,7 +5,9 @@ import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -20,7 +22,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 
 /**
  * Server -> client cost table carrying ALL player-selectable material alternatives (`costOptions`),
- * book-upgrade flags, and Grand Library Treasure Epiphany settings & costs.
+ * book-upgrade flags, and Grand Library Treasure Epiphany & Stasis Freeze settings and costs.
  */
 public record EnchantCostTablePayload(
     boolean combineEnabled,
@@ -28,9 +30,18 @@ public record EnchantCostTablePayload(
     int epiphanyMinBookshelves,
     double epiphanyBaseChance,
     double epiphanyPerShelfChance,
+    double epiphanyPerTomeChance,
     double epiphanyMaxChance,
+    int epiphanyMaxSlotsCap,
+    int epiphanyScorePerSlot,
+    int epiphanyCycleTicks,
+    int epiphanyFreezeDurationTicks,
+    int epiphanyMaxFreezeTicks,
+    int epiphanyFreezeXpLevels,
+    List<ItemStack> epiphanyFreezeCosts,
     int epiphanyRerollXpLevels,
     List<ItemStack> epiphanyRerollCosts,
+    Set<Identifier> explicitTreasureIds,
     List<CostEntry> costs
 ) implements CustomPacketPayload {
     public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table");
@@ -102,11 +113,42 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves(),
             ChiseledEnchantingTableData.treasureEpiphanyBaseChance(),
             ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance(),
+            ChiseledEnchantingTableData.treasureEpiphanyPerTomeChance(),
             ChiseledEnchantingTableData.treasureEpiphanyMaxChance(),
+            ChiseledEnchantingTableData.treasureEpiphanyMaxSlotsCap(),
+            ChiseledEnchantingTableData.treasureEpiphanyScorePerSlot(),
+            ChiseledEnchantingTableData.treasureEpiphanyCycleTicks(),
+            ChiseledEnchantingTableData.treasureEpiphanyFreezeDurationTicks(),
+            ChiseledEnchantingTableData.treasureEpiphanyMaxFreezeTicks(),
+            ChiseledEnchantingTableData.treasureEpiphanyFreezeXpLevels(),
+            ChiseledEnchantingTableData.treasureEpiphanyFreezeCostOptions(),
             ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels(),
             ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions(),
+            ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(),
             List.copyOf(entries)
         );
+    }
+
+    private static void writeStacks(RegistryFriendlyByteBuf buf, List<ItemStack> stacks) {
+        buf.writeVarInt(stacks.size());
+        for (ItemStack s : stacks) {
+            buf.writeIdentifier(BuiltInRegistries.ITEM.getKey(s.getItem()));
+            buf.writeVarInt(s.getCount());
+        }
+    }
+
+    private static List<ItemStack> readStacks(RegistryFriendlyByteBuf buf) {
+        int n = buf.readVarInt();
+        List<ItemStack> list = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            Identifier itemId = buf.readIdentifier();
+            int count = buf.readVarInt();
+            Item item = BuiltInRegistries.ITEM.getValue(itemId);
+            if (item != null) {
+                list.add(new ItemStack(item, Math.max(1, count)));
+            }
+        }
+        return List.copyOf(list);
     }
 
     private void write(RegistryFriendlyByteBuf buf) {
@@ -115,12 +157,20 @@ public record EnchantCostTablePayload(
         buf.writeVarInt(epiphanyMinBookshelves);
         buf.writeDouble(epiphanyBaseChance);
         buf.writeDouble(epiphanyPerShelfChance);
+        buf.writeDouble(epiphanyPerTomeChance);
         buf.writeDouble(epiphanyMaxChance);
+        buf.writeVarInt(epiphanyMaxSlotsCap);
+        buf.writeVarInt(epiphanyScorePerSlot);
+        buf.writeVarInt(epiphanyCycleTicks);
+        buf.writeVarInt(epiphanyFreezeDurationTicks);
+        buf.writeVarInt(epiphanyMaxFreezeTicks);
+        buf.writeVarInt(epiphanyFreezeXpLevels);
+        writeStacks(buf, epiphanyFreezeCosts);
         buf.writeVarInt(epiphanyRerollXpLevels);
-        buf.writeVarInt(epiphanyRerollCosts.size());
-        for (ItemStack rerollStack : epiphanyRerollCosts) {
-            buf.writeIdentifier(BuiltInRegistries.ITEM.getKey(rerollStack.getItem()));
-            buf.writeVarInt(rerollStack.getCount());
+        writeStacks(buf, epiphanyRerollCosts);
+        buf.writeVarInt(explicitTreasureIds.size());
+        for (Identifier id : explicitTreasureIds) {
+            buf.writeIdentifier(id);
         }
         buf.writeVarInt(costs.size());
         for (CostEntry entry : costs) {
@@ -130,11 +180,7 @@ public record EnchantCostTablePayload(
             buf.writeVarInt(Math.max(0, entry.xpLevelCost()));
             buf.writeVarInt(entry.costOptions().size());
             for (List<ItemStack> bundle : entry.costOptions()) {
-                buf.writeVarInt(bundle.size());
-                for (ItemStack stack : bundle) {
-                    buf.writeIdentifier(BuiltInRegistries.ITEM.getKey(stack.getItem()));
-                    buf.writeVarInt(stack.getCount());
-                }
+                writeStacks(buf, bundle);
             }
         }
     }
@@ -145,17 +191,21 @@ public record EnchantCostTablePayload(
         int minShelves = buf.readVarInt();
         double baseChance = buf.readDouble();
         double perShelfChance = buf.readDouble();
+        double perTomeChance = buf.readDouble();
         double maxChance = buf.readDouble();
+        int maxSlotsCap = buf.readVarInt();
+        int scorePerSlot = buf.readVarInt();
+        int cycleTicks = buf.readVarInt();
+        int freezeDurationTicks = buf.readVarInt();
+        int maxFreezeTicks = buf.readVarInt();
+        int freezeXpLevels = buf.readVarInt();
+        List<ItemStack> freezeCosts = readStacks(buf);
         int rerollXp = buf.readVarInt();
-        int rerollCount = buf.readVarInt();
-        List<ItemStack> rerollCosts = new ArrayList<>(rerollCount);
-        for (int i = 0; i < rerollCount; i++) {
-            Identifier itemId = buf.readIdentifier();
-            int count = buf.readVarInt();
-            Item item = BuiltInRegistries.ITEM.getValue(itemId);
-            if (item != null) {
-                rerollCosts.add(new ItemStack(item, Math.max(1, count)));
-            }
+        List<ItemStack> rerollCosts = readStacks(buf);
+        int treasureIdCount = buf.readVarInt();
+        Set<Identifier> treasureIds = new HashSet<>(treasureIdCount * 2);
+        for (int i = 0; i < treasureIdCount; i++) {
+            treasureIds.add(buf.readIdentifier());
         }
         OptionType[] optionValues = OptionType.values();
         int rowCount = buf.readVarInt();
@@ -169,26 +219,19 @@ public record EnchantCostTablePayload(
             int optionCount = buf.readVarInt();
             List<List<ItemStack>> options = new ArrayList<>(optionCount);
             for (int o = 0; o < optionCount; o++) {
-                int stackCount = buf.readVarInt();
-                List<ItemStack> bundle = new ArrayList<>(stackCount);
-                for (int c = 0; c < stackCount; c++) {
-                    Identifier itemId = buf.readIdentifier();
-                    int count = buf.readVarInt();
-                    Item item = BuiltInRegistries.ITEM.getValue(itemId);
-                    if (item != null) {
-                        bundle.add(new ItemStack(item, Math.max(1, count)));
-                    }
-                }
+                List<ItemStack> bundle = readStacks(buf);
                 if (!bundle.isEmpty()) {
-                    options.add(List.copyOf(bundle));
+                    options.add(bundle);
                 }
             }
             entries.add(new CostEntry(optionType, id, level, xpLevelCost, List.copyOf(options)));
         }
         return new EnchantCostTablePayload(
             combineEnabled, researchEnabled,
-            minShelves, baseChance, perShelfChance, maxChance, rerollXp, List.copyOf(rerollCosts),
-            List.copyOf(entries)
+            minShelves, baseChance, perShelfChance, perTomeChance, maxChance,
+            maxSlotsCap, scorePerSlot, cycleTicks, freezeDurationTicks, maxFreezeTicks,
+            freezeXpLevels, freezeCosts, rerollXp, rerollCosts,
+            Set.copyOf(treasureIds), List.copyOf(entries)
         );
     }
 

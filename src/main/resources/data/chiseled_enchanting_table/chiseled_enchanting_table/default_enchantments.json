@@ -1,10 +1,27 @@
 {
-  "_comment": "Two-track progression baseline: standard table enchantments (#minecraft:in_enchanting_table) start unlocked at level 1 and scale with Wooden Bookshelves up to ceil(maxLevel / 2). Graduation tiers and Treasure enchantments require placing Master Tomes into nearby Chiseled Bookshelves.",
+  "_comment": "Two-track progression baseline: standard multi-level table enchantments start at level 1 and scale with Wooden Bookshelves up to ceil(maxLevel / 2). All 11 Treasure / pinnacle enchantments are strictly excluded here so they ONLY appear via (1) a Master Tome in a nearby Chiseled Bookshelf OR (2) Grand Library Treasure Epiphany (>= 32 Wooden Bookshelves).",
   "values": [],
   "tags": [
     {
       "tag": "#minecraft:in_enchanting_table",
       "level": 1
     }
+  ],
+  "exclude": [
+    "minecraft:aqua_affinity",
+    "minecraft:flame",
+    "minecraft:multishot",
+    "minecraft:channeling",
+    "minecraft:silk_touch",
+    "minecraft:infinity",
+    "minecraft:mending",
+    "minecraft:frost_walker",
+    "minecraft:soul_speed",
+    "minecraft:swift_sneak",
+    "minecraft:wind_burst"
+  ],
+  "exclude_tags": [
+    "#minecraft:treasure",
+    "#minecraft:curse"
   ]
 }

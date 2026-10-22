@@ -88,6 +88,10 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             List.of(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)),
             Component.translatable("jei.chiseled_enchanting_table.info.book")
         );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(chiseled_enchanting_table.registry.ItemRegistry.ARCANE_CATALYST)),
+            Component.translatable("jei.chiseled_enchanting_table.info.catalyst")
+        );
     }
 
     @Override

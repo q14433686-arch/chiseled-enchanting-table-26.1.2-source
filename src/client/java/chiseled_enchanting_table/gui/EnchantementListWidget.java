@@ -209,8 +209,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     options.add(AvailableOption.enchantment(e));
                 }
             }
-            EnchantmentWithLevel epiphany = this.handler.computeActiveTreasureEpiphany(enchantable_item);
-            if (epiphany != null) {
+            for (EnchantmentWithLevel epiphany : this.handler.computeActiveTreasureEpiphanies(enchantable_item)) {
                 options.add(AvailableOption.treasureEpiphany(epiphany.enchantment_id(), epiphany.enchantment_level()));
             }
         }

@@ -21,6 +21,7 @@ public final class ChiseledEnchantingMenuPayloads {
     public static final Identifier AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("available_chiseled_enchantment");
     public static final Identifier APPLY_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("apply_chiseled_enchantment");
     public static final Identifier REROLL_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("reroll_epiphany");
+    public static final Identifier FREEZE_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("freeze_epiphany");
 
     public enum OptionType {
         ENCHANTMENT("enchantment"),
@@ -164,6 +165,18 @@ public final class ChiseledEnchantingMenuPayloads {
             new CustomPacketPayload.Type<>(REROLL_EPIPHANY_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, RerollEpiphanyPayload> CODEC =
             CustomPacketPayload.codec((payload, buf) -> {}, buf -> new RerollEpiphanyPayload());
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record FreezeEpiphanyPayload() implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<FreezeEpiphanyPayload> TYPE =
+            new CustomPacketPayload.Type<>(FREEZE_EPIPHANY_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, FreezeEpiphanyPayload> CODEC =
+            CustomPacketPayload.codec((payload, buf) -> {}, buf -> new FreezeEpiphanyPayload());
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {

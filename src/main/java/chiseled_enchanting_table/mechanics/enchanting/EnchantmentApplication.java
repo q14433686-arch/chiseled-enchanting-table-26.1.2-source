@@ -78,7 +78,8 @@ public final class EnchantmentApplication {
             }
         });
 
-        handler.advanceTableEpiphanySeed();
+        boolean consumedEpiphany = payload.option_type() == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.TREASURE_EPIPHANY;
+        handler.advanceTableEpiphanySeed(consumedEpiphany);
         finish(handler);
         if (target.is(Items.ENCHANTED_BOOK)) {
             Advancement.give(handler.player, "enchant_to_book");

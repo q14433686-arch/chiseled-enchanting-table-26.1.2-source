@@ -38,13 +38,25 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
     (emitting every level `1..k`), required for graduation tiers (`IV/V`, max `III`, max `II`) and
     permanent Treasure unlocks, while granting **`-2%` XP cost per stored Enchanted Book** (combined
     Library Resonance cap **`-35% XP`**), displayed live in the embossed opaque header pill.
-  - **Grand Library Treasure Epiphany (`treasure_epiphany.json`, `≥32` Wooden Bookshelves)**:
-    surrounding a Chiseled Enchanting Table with **32 or more Wooden Bookshelves** (`35%` base chance
-    at 32 shelves, `+1.5%` per extra shelf up to `65%` at 52+ shelves) enables **Arcane Epiphany**,
-    manifesting **1 matching positive Treasure Enchantment (`Level I`)** for the target item or blank
-    Book even before owning its Master Tome — refreshing naturally at Dawn (`24000t`), after any
-    enchantment, or via the clickable header **`↻` Refresh button** (`2 XP Levels + 4× Lapis Lazuli /
-    Amethyst Shard`).
+  - **Strict Two-Path Treasure Gate, Dual Scaling & Stasis Freeze Panel (`treasure_epiphany.json`)**:
+    - **Strict Two-Path Gate**: All 11 Treasure / pinnacle enchantments (`aqua_affinity`, `flame`,
+      `multishot`, `channeling`, `silk_touch`, `infinity`, `mending`, `frost_walker`, `soul_speed`,
+      `swift_sneak`, `wind_burst`) plus `#minecraft:treasure` are strictly excluded from default unlocks
+      and only ever appear via **(1) Master Tome in a nearby Chiseled Bookshelf** OR **(2) Grand Library
+      Treasure Epiphany (`≥ 32` Wooden Bookshelves)**.
+    - **Dual Scaling (Bookshelves + Master Tomes)**: Both Epiphany proc chance (`30% + 1%/shelf +
+      2%/Master Tome`, capped at `85%`) and maximum simultaneous compatible Epiphanies (`1..4` slots)
+      scale dynamically with nearby Wooden Bookshelves and stored Master Tomes.
+    - **Dual-Material Treasure Economy (`arcane_catalyst` Exception)**: Every Treasure enchantment
+      requires **two thematic materials (`primary` + `extra`)** across both daily Master-Tome inscribing
+      and Epiphany ritual inscribing — with **`1× Arcane Synthesis Crystal` (`秘法凝晶`)** as the sole
+      single-material universal bypass.
+    - **Explicit Painted Sanctum & Stasis Freeze Panel (`gui/epiphany_panel.png`,
+      `gui/epiphany_panel_frozen.png`, `gui/btn_freeze.png`, `gui/btn_reroll.png`)**: Added a dedicated
+      `118 × 62` upper-right panel with a live **`MM:SS` countdown bar** (`10:00` cycle), a **`[❄]`
+      Stasis Freeze button** (`1 XP Level + 4× Blue Ice / 16× Packed Ice / 4× Amethyst Block /
+      2× Crying Obsidian` for `+20:00` up to `60:00`, locking active Epiphanies against timers and
+      normal enchants), and a **`[↻]` Reroll button**.
   - **Universal Expensive Synthesis Catalyst (`chiseled_enchanting_table:arcane_catalyst`)**: added
     the craftable **Arcane Synthesis Crystal / 秘法凝晶** (`1× Diamond Block + 2× Emerald Block +
     1× Gold Block + 2× Amethyst Block + 2× Lapis Block + 1× Crying Obsidian`), accepted universally

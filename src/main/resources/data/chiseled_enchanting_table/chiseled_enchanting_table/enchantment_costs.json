@@ -1,287 +1,106 @@
 {
-  "_comment": "Daily gear-inscribing economy: fast, affordable, repeatable costs with full player choice across multiple arcane currencies (zero per-player UUID lock-in). Heavy one-time thematic investments belong to Master-Tome upgrades in book_upgrades.json.",
+  "_comment": "Daily gear-inscribing economy: standard non-treasure enchantments use single-slot player-choice currencies (Lapis / Amethyst / Emerald). All Treasure enchantments require TWO thematic materials (primary in cost slot + extra in inventory) EXCEPT 1x Arcane Synthesis Crystal (chiseled_enchanting_table:arcane_catalyst), which bypasses the second material as a single-item universal catalyst.",
   "xp": {
     "level_one_cost": 2,
     "common_max_cost": 10,
     "rare_single_level_cost": 10,
     "overrides": {
-      "minecraft:aqua_affinity": {
-        "1": 6
-      },
-      "minecraft:flame": {
-        "1": 8
-      },
-      "minecraft:multishot": {
-        "1": 8
-      },
-      "minecraft:channeling": {
-        "1": 9
-      },
-      "minecraft:silk_touch": {
-        "1": 10
-      },
-      "minecraft:infinity": {
-        "1": 12
-      },
-      "minecraft:mending": {
-        "1": 12
-      },
-      "minecraft:frost_walker": {
-        "1": 6,
-        "2": 10
-      },
-      "minecraft:soul_speed": {
-        "1": 5,
-        "2": 8,
-        "3": 11
-      },
-      "minecraft:swift_sneak": {
-        "1": 5,
-        "2": 8,
-        "3": 11
-      },
-      "minecraft:wind_burst": {
-        "1": 6,
-        "2": 9,
-        "3": 12
-      }
+      "minecraft:aqua_affinity": { "1": 7 },
+      "minecraft:flame": { "1": 8 },
+      "minecraft:multishot": { "1": 8 },
+      "minecraft:channeling": { "1": 9 },
+      "minecraft:silk_touch": { "1": 10 },
+      "minecraft:infinity": { "1": 12 },
+      "minecraft:mending": { "1": 12 },
+      "minecraft:frost_walker": { "1": 6, "2": 10 },
+      "minecraft:soul_speed": { "1": 5, "2": 8, "3": 11 },
+      "minecraft:swift_sneak": { "1": 5, "2": 8, "3": 11 },
+      "minecraft:wind_burst": { "1": 6, "2": 9, "3": 12 }
     }
   },
   "default_item_cost": {
     "options": [
-      {
-        "item": "minecraft:lapis_lazuli",
-        "count_per_level": 2
-      },
-      {
-        "item": "minecraft:amethyst_shard",
-        "count_per_level": 2
-      },
-      {
-        "item": "minecraft:emerald",
-        "count_per_level": 1
-      }
+      { "item": "minecraft:lapis_lazuli", "count_per_level": 2 },
+      { "item": "minecraft:amethyst_shard", "count_per_level": 2 },
+      { "item": "minecraft:emerald", "count_per_level": 1 }
     ]
   },
   "item_costs": {
     "minecraft:aqua_affinity": {
       "options": [
-        {
-          "item": "minecraft:lapis_lazuli",
-          "count": 4
-        },
-        {
-          "item": "minecraft:prismarine_shard",
-          "count": 3
-        },
-        {
-          "item": "minecraft:nautilus_shell",
-          "count": 1
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:prismarine_shard", "count": 4, "extra": { "item": "minecraft:lapis_lazuli", "count": 4 } },
+        { "item": "minecraft:nautilus_shell", "count": 1, "extra": { "item": "minecraft:prismarine_crystals", "count": 4 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:flame": {
       "options": [
-        {
-          "item": "minecraft:lapis_lazuli",
-          "count": 4
-        },
-        {
-          "item": "minecraft:blaze_powder",
-          "count": 3
-        },
-        {
-          "item": "minecraft:fire_charge",
-          "count": 3
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:blaze_powder", "count": 3, "extra": { "item": "minecraft:arrow", "count": 8 } },
+        { "item": "minecraft:fire_charge", "count": 3, "extra": { "item": "minecraft:lapis_lazuli", "count": 4 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:multishot": {
       "options": [
-        {
-          "item": "minecraft:lapis_lazuli",
-          "count": 5
-        },
-        {
-          "item": "minecraft:amethyst_shard",
-          "count": 4
-        },
-        {
-          "item": "minecraft:spectral_arrow",
-          "count": 8
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:spectral_arrow", "count": 8, "extra": { "item": "minecraft:amethyst_shard", "count": 4 } },
+        { "item": "minecraft:arrow", "count": 16, "extra": { "item": "minecraft:emerald", "count": 4 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:channeling": {
       "options": [
-        {
-          "item": "minecraft:amethyst_shard",
-          "count": 5
-        },
-        {
-          "item": "minecraft:copper_ingot",
-          "count": 8
-        },
-        {
-          "item": "minecraft:prismarine_crystals",
-          "count": 4
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:copper_ingot", "count": 8, "extra": { "item": "minecraft:prismarine_crystals", "count": 4 } },
+        { "item": "minecraft:lightning_rod", "count": 2, "extra": { "item": "minecraft:amethyst_shard", "count": 6 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:silk_touch": {
       "options": [
-        {
-          "item": "minecraft:amethyst_shard",
-          "count": 6
-        },
-        {
-          "item": "minecraft:lapis_lazuli",
-          "count": 8
-        },
-        {
-          "item": "minecraft:emerald",
-          "count": 4
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:amethyst_shard", "count": 6, "extra": { "item": "minecraft:string", "count": 8 } },
+        { "item": "minecraft:emerald", "count": 4, "extra": { "item": "minecraft:honeycomb", "count": 4 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:infinity": {
       "options": [
-        {
-          "item": "minecraft:amethyst_shard",
-          "count": 8
-        },
-        {
-          "item": "minecraft:ender_pearl",
-          "count": 4
-        },
-        {
-          "item": "minecraft:emerald",
-          "count": 6
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:ender_pearl", "count": 4, "extra": { "item": "minecraft:amethyst_shard", "count": 8 } },
+        { "item": "minecraft:emerald", "count": 6, "extra": { "item": "minecraft:arrow", "count": 16 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:mending": {
       "options": [
-        {
-          "item": "minecraft:amethyst_shard",
-          "count": 8
-        },
-        {
-          "item": "minecraft:emerald",
-          "count": 6
-        },
-        {
-          "item": "minecraft:experience_bottle",
-          "count": 4
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:amethyst_shard", "count": 8, "extra": { "item": "minecraft:lapis_lazuli", "count": 6 } },
+        { "item": "minecraft:emerald", "count": 6, "extra": { "item": "minecraft:experience_bottle", "count": 2 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:frost_walker": {
       "options": [
-        {
-          "item": "minecraft:lapis_lazuli",
-          "count_per_level": 3
-        },
-        {
-          "item": "minecraft:packed_ice",
-          "count_per_level": 4
-        },
-        {
-          "item": "minecraft:amethyst_shard",
-          "count_per_level": 3
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:blue_ice", "count_per_level": 2, "extra": { "item": "minecraft:lapis_lazuli", "count_per_level": 4 } },
+        { "item": "minecraft:packed_ice", "count_per_level": 6, "extra": { "item": "minecraft:amethyst_shard", "count_per_level": 3 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:soul_speed": {
       "options": [
-        {
-          "item": "minecraft:lapis_lazuli",
-          "count_per_level": 3
-        },
-        {
-          "item": "minecraft:quartz",
-          "count_per_level": 6
-        },
-        {
-          "item": "minecraft:soul_soil",
-          "count_per_level": 8
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:quartz", "count_per_level": 6, "extra": { "item": "minecraft:soul_sand", "count_per_level": 4 } },
+        { "item": "minecraft:crying_obsidian", "count_per_level": 2, "extra": { "item": "minecraft:lapis_lazuli", "count_per_level": 3 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:swift_sneak": {
       "options": [
-        {
-          "item": "minecraft:amethyst_shard",
-          "count_per_level": 3
-        },
-        {
-          "item": "minecraft:echo_shard",
-          "count": 1
-        },
-        {
-          "item": "minecraft:sculk",
-          "count_per_level": 4
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:echo_shard", "count": 1, "extra": { "item": "minecraft:amethyst_shard", "count_per_level": 4 } },
+        { "item": "minecraft:sculk", "count_per_level": 4, "extra": { "item": "minecraft:lapis_lazuli", "count_per_level": 4 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     },
     "minecraft:wind_burst": {
       "options": [
-        {
-          "item": "minecraft:amethyst_shard",
-          "count_per_level": 3
-        },
-        {
-          "item": "minecraft:wind_charge",
-          "count_per_level": 4
-        },
-        {
-          "item": "minecraft:breeze_rod",
-          "count": 1
-        },
-        {
-          "item": "chiseled_enchanting_table:arcane_catalyst",
-          "count": 1
-        }
+        { "item": "minecraft:breeze_rod", "count": 1, "extra": { "item": "minecraft:amethyst_shard", "count_per_level": 4 } },
+        { "item": "minecraft:wind_charge", "count_per_level": 6, "extra": { "item": "minecraft:lapis_lazuli", "count_per_level": 4 } },
+        { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
       ]
     }
   }

@@ -8,13 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
  * Client-side cache of the server's resolved multi-option cost rows, book-upgrade flags,
- * and Grand Library Treasure Epiphany configuration.
+ * and Grand Library Treasure Epiphany & Stasis Freeze configuration.
  */
 public final class SyncedEnchantmentCosts {
     public record Cost(int xpLevelCost, List<List<ItemStack>> costOptions) {
@@ -28,12 +29,7 @@ public final class SyncedEnchantmentCosts {
     private static volatile Map<Key, Cost> rows = Map.of();
     private static volatile Boolean combineEnabledOverride = null;
     private static volatile Boolean researchEnabledOverride = null;
-    private static volatile Integer epiphanyMinBookshelvesOverride = null;
-    private static volatile Double epiphanyBaseChanceOverride = null;
-    private static volatile Double epiphanyPerShelfChanceOverride = null;
-    private static volatile Double epiphanyMaxChanceOverride = null;
-    private static volatile Integer epiphanyRerollXpOverride = null;
-    private static volatile List<ItemStack> epiphanyRerollCostsOverride = null;
+    private static volatile EnchantCostTablePayload syncedPayload = null;
     private static final List<Runnable> LISTENERS = new CopyOnWriteArrayList<>();
 
     private SyncedEnchantmentCosts() {}
@@ -59,12 +55,7 @@ public final class SyncedEnchantmentCosts {
         rows = Map.copyOf(next);
         combineEnabledOverride = payload.combineEnabled();
         researchEnabledOverride = payload.researchEnabled();
-        epiphanyMinBookshelvesOverride = payload.epiphanyMinBookshelves();
-        epiphanyBaseChanceOverride = payload.epiphanyBaseChance();
-        epiphanyPerShelfChanceOverride = payload.epiphanyPerShelfChance();
-        epiphanyMaxChanceOverride = payload.epiphanyMaxChance();
-        epiphanyRerollXpOverride = payload.epiphanyRerollXpLevels();
-        epiphanyRerollCostsOverride = payload.epiphanyRerollCosts();
+        syncedPayload = payload;
         notifyListeners();
     }
 
@@ -87,30 +78,70 @@ public final class SyncedEnchantmentCosts {
     }
 
     public static int epiphanyMinBookshelves() {
-        Integer synced = epiphanyMinBookshelvesOverride;
-        return synced != null ? synced : ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves();
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyMinBookshelves() : ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves();
     }
 
-    public static double epiphanyChance(int regularBookshelves) {
-        int minShelves = epiphanyMinBookshelves();
-        if (regularBookshelves < minShelves) return 0.0;
-        Double base = epiphanyBaseChanceOverride;
-        Double per = epiphanyPerShelfChanceOverride;
-        Double max = epiphanyMaxChanceOverride;
-        if (base != null && per != null && max != null) {
-            return Math.max(0.0, Math.min(max, base + (regularBookshelves - minShelves) * per));
+    public static double epiphanyChance(int regularBookshelves, int chiseledBooks) {
+        EnchantCostTablePayload p = syncedPayload;
+        if (p != null) {
+            if (regularBookshelves < p.epiphanyMinBookshelves()) return 0.0;
+            double raw = p.epiphanyBaseChance()
+                + (regularBookshelves - p.epiphanyMinBookshelves()) * p.epiphanyPerShelfChance()
+                + Math.max(0, chiseledBooks) * p.epiphanyPerTomeChance();
+            return Math.max(0.0, Math.min(p.epiphanyMaxChance(), raw));
         }
-        return ChiseledEnchantingTableData.treasureEpiphanyChance(regularBookshelves);
+        return ChiseledEnchantingTableData.treasureEpiphanyChance(regularBookshelves, chiseledBooks);
+    }
+
+    public static int epiphanyMaxSlots(int regularBookshelves, int chiseledBooks) {
+        EnchantCostTablePayload p = syncedPayload;
+        if (p != null) {
+            if (regularBookshelves < p.epiphanyMinBookshelves()) return 0;
+            int score = Math.max(0, regularBookshelves - p.epiphanyMinBookshelves()) + Math.max(0, chiseledBooks) * 2;
+            return Math.min(p.epiphanyMaxSlotsCap(), 1 + score / Math.max(1, p.epiphanyScorePerSlot()));
+        }
+        return ChiseledEnchantingTableData.treasureEpiphanyMaxSlots(regularBookshelves, chiseledBooks);
+    }
+
+    public static int epiphanyCycleTicks() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyCycleTicks() : ChiseledEnchantingTableData.treasureEpiphanyCycleTicks();
+    }
+
+    public static int epiphanyFreezeDurationTicks() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyFreezeDurationTicks() : ChiseledEnchantingTableData.treasureEpiphanyFreezeDurationTicks();
+    }
+
+    public static int epiphanyMaxFreezeTicks() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyMaxFreezeTicks() : ChiseledEnchantingTableData.treasureEpiphanyMaxFreezeTicks();
+    }
+
+    public static int epiphanyFreezeXpLevels() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyFreezeXpLevels() : ChiseledEnchantingTableData.treasureEpiphanyFreezeXpLevels();
+    }
+
+    public static List<ItemStack> epiphanyFreezeCosts() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyFreezeCosts() : ChiseledEnchantingTableData.treasureEpiphanyFreezeCostOptions();
     }
 
     public static int epiphanyRerollXpLevels() {
-        Integer synced = epiphanyRerollXpOverride;
-        return synced != null ? synced : ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels();
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyRerollXpLevels() : ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels();
     }
 
     public static List<ItemStack> epiphanyRerollCosts() {
-        List<ItemStack> synced = epiphanyRerollCostsOverride;
-        return synced != null ? synced : ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions();
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyRerollCosts() : ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions();
+    }
+
+    public static Set<Identifier> explicitTreasureIds() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.explicitTreasureIds() : ChiseledEnchantingTableData.treasureEpiphanyExplicitIds();
     }
 
     public static boolean isEmpty() {
@@ -121,12 +152,7 @@ public final class SyncedEnchantmentCosts {
         rows = Map.of();
         combineEnabledOverride = null;
         researchEnabledOverride = null;
-        epiphanyMinBookshelvesOverride = null;
-        epiphanyBaseChanceOverride = null;
-        epiphanyPerShelfChanceOverride = null;
-        epiphanyMaxChanceOverride = null;
-        epiphanyRerollXpOverride = null;
-        epiphanyRerollCostsOverride = null;
+        syncedPayload = null;
         notifyListeners();
     }
 

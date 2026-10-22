@@ -46,5 +46,18 @@
   "gui.chiseled_enchanting_table.epiphany.progress": "トレジャー閃き進捗：本棚 %s / %s",
   "gui.chiseled_enchanting_table.epiphany.reroll_title": "↻ トレジャー閃きを再抽選（発生率 %s%%）",
   "gui.chiseled_enchanting_table.epiphany.reroll_cost": "クリックで再抽選：%s レベル + いずれか1種：",
-  "gui.chiseled_enchanting_table.epiphany.auto_hint": "夜明けまたはエンチャント実行時にも自動更新されます"
+  "gui.chiseled_enchanting_table.epiphany.auto_hint": "10分周期または付与後に更新（凍結中を除く）",
+  "jei.chiseled_enchanting_table.info.catalyst": "秘法凝晶は万能宝蔵触媒です。すべての宝蔵エンチャントは模様入り本棚の原典または本棚32個以上の「秘法頓悟」でのみ出現し、通常は2種類の素材が必要ですが、秘法凝晶のみ単体で代用できます。",
+  "gui.chiseled_enchanting_table.epiphany.panel_stats": "頓悟 %s%% · 上限 %s",
+  "gui.chiseled_enchanting_table.epiphany.panel_locked": "本棚 %s / %s",
+  "gui.chiseled_enchanting_table.epiphany.panel_wake": "覚醒 %s%%",
+  "gui.chiseled_enchanting_table.epiphany.timer_cycle": "⏳ %s",
+  "gui.chiseled_enchanting_table.epiphany.timer_frozen": "❄ %s",
+  "gui.chiseled_enchanting_table.epiphany.slots_line": "同時出現上限：%s枠（本棚数と原典数で増加）",
+  "gui.chiseled_enchanting_table.epiphany.freeze_title": "❄ 宝蔵頓悟を凍結（+%s分）",
+  "gui.chiseled_enchanting_table.epiphany.freeze_cost": "クリックで凍結：%s XPレベル + いずれか：",
+  "gui.chiseled_enchanting_table.epiphany.frozen_remaining": "❄ 凍結残り時間：%s（最大 %s分）",
+  "gui.chiseled_enchanting_table.epiphany.cycle_remaining": "⏳ 次の自然更新まで：%s",
+  "gui.chiseled_enchanting_table.epiphany.freeze_hint": "凍結中は時間経過や通常付与で変化せず、頓悟付与または再抽選で解除",
+  "gui.chiseled_enchanting_table.epiphany.treasure_rule": "宝蔵付与は原典または頓悟限定・2素材必要（秘法凝晶は単体可）"
 }
