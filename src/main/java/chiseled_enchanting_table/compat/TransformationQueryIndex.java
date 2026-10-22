@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.compat;
 
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
@@ -75,6 +76,9 @@ public final class TransformationQueryIndex {
     }
 
     public static List<Entry> build() {
+        var resonanceCfg = SyncedEnchantmentCosts.libraryResonanceConfig();
+        boolean hasSyncedPayload = !SyncedEnchantmentCosts.isEmpty();
+
         List<Object[]> tuples = new ArrayList<>(ChiseledEnchantingTableData.transformationDisplayTuples());
         tuples.sort(Comparator.comparing(t -> ((Identifier) t[0]).toString()));
 
@@ -84,6 +88,8 @@ public final class TransformationQueryIndex {
             Identifier inputId = (Identifier) tuple[1];
             Identifier outputId = (Identifier) tuple[2];
             int level = (Integer) tuple[3];
+            int minReq = tuple.length > 5 ? (Integer) tuple[5] : ChiseledEnchantingTableData.transformationMinRequiredLevel(id);
+            int dedLvls = tuple.length > 6 ? (Integer) tuple[6] : ChiseledEnchantingTableData.transformationDeductedLevels(id);
 
             Item inputItem = BuiltInRegistries.ITEM.getValue(inputId);
             Item outputItem = BuiltInRegistries.ITEM.getValue(outputId);
@@ -99,10 +105,12 @@ public final class TransformationQueryIndex {
                 .orElseGet(() -> ChiseledEnchantingTableData.transformationCostOptions(id));
 
             XpRequirement xpReq = XpCostConversion.forTransformation(
+                resonanceCfg,
                 id,
                 rawXp,
                 0,
-                ChiseledEnchantingTableData.transformationMinPlayerLevel(id)
+                minReq,
+                dedLvls
             );
             results.add(new Entry(
                 id,
@@ -116,35 +124,54 @@ public final class TransformationQueryIndex {
         }
         if (SyncedEnchantmentCosts.disenchantEnabled()) {
             Identifier sampleId = Identifier.withDefaultNamespace("sharpness");
-            int sampleRefund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                .essencePotentialFromParams(5, 5, 1, false, SyncedEnchantmentCosts.disenchantRefundScale());
+            int sampleRefund = DisenchantmentApplication.essencePotentialFromParams(
+                resonanceCfg,
+                5,
+                5,
+                1,
+                false,
+                SyncedEnchantmentCosts.disenchantRefundScale()
+            );
             results.add(new Entry(
-                chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.DISENCHANT_ALL_ID,
+                DisenchantmentApplication.DISENCHANT_ALL_ID,
                 1,
                 new ItemStack(Items.ENCHANTED_BOOK),
                 List.of(),
                 new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME),
                 XpRequirement.refund(sampleRefund),
-                true
+                hasSyncedPayload
             ));
+
+            var syncedStrip = SyncedEnchantmentCosts.find(OptionType.STRIP_SINGLE_ENCHANTMENT, sampleId, 3);
+            int stripRaw = syncedStrip.map(SyncedEnchantmentCosts.Cost::xpLevelCost)
+                .orElseGet(() -> ChiseledEnchantingTableData.targetedStripXpCost(sampleId, 3, 5));
+            List<List<ItemStack>> stripOptions = syncedStrip.map(SyncedEnchantmentCosts.Cost::costOptions)
+                .orElseGet(() -> ChiseledEnchantingTableData.targetedStripCostOptions(sampleId, 3, 5));
             results.add(new Entry(
-                chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.STRIP_SINGLE_ID,
+                DisenchantmentApplication.STRIP_SINGLE_ID,
                 1,
                 new ItemStack(Items.ENCHANTED_BOOK),
-                ChiseledEnchantingTableData.targetedStripCostOptions(sampleId, 3, 5),
+                stripOptions,
                 new ItemStack(Items.ENCHANTED_BOOK),
-                XpCostConversion.forTargetedCleanse(3, 5, ChiseledEnchantingTableData.targetedStripXpCost(sampleId, 3, 5), 0),
-                true
+                XpCostConversion.forTargetedCleanse(resonanceCfg, 3, 5, stripRaw, 0),
+                syncedStrip.isPresent()
             ));
+
             if (SyncedEnchantmentCosts.disenchantAllowCursePurge()) {
+                Identifier curseSampleId = Identifier.withDefaultNamespace("binding_curse");
+                var syncedCurse = SyncedEnchantmentCosts.find(OptionType.PURGE_CURSE, curseSampleId, 1);
+                int curseRaw = syncedCurse.map(SyncedEnchantmentCosts.Cost::xpLevelCost)
+                    .orElseGet(ChiseledEnchantingTableData::cursePurgeXpCost);
+                List<List<ItemStack>> curseOptions = syncedCurse.map(SyncedEnchantmentCosts.Cost::costOptions)
+                    .orElseGet(() -> ChiseledEnchantingTableData.cursePurgeCostOptions(curseSampleId));
                 results.add(new Entry(
-                    chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.PURGE_CURSE_ID,
+                    DisenchantmentApplication.PURGE_CURSE_ID,
                     1,
                     new ItemStack(Items.ENCHANTED_BOOK),
-                    ChiseledEnchantingTableData.cursePurgeCostOptions(sampleId),
+                    curseOptions,
                     new ItemStack(Items.ENCHANTED_BOOK),
-                    XpCostConversion.forFullArcaneRitual(ChiseledEnchantingTableData.cursePurgeXpCost(), 0),
-                    true
+                    XpCostConversion.forFullArcaneRitual(resonanceCfg, curseRaw, 0),
+                    syncedCurse.isPresent()
                 ));
             }
         }

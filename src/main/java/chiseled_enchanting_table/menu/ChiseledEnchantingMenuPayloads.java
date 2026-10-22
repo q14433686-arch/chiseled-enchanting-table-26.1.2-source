@@ -62,10 +62,22 @@ public final class ChiseledEnchantingMenuPayloads {
         boolean input_is_tag,
         Identifier output_item,
         int level,
-        int min_player_level
+        int min_player_level,
+        int deducted_levels
     ) {
         public TransformationDisplay(Identifier id, Identifier input_item, Identifier output_item, int level) {
-            this(id, input_item, false, output_item, level, 1);
+            this(id, input_item, false, output_item, level, 1, 0);
+        }
+
+        public TransformationDisplay(
+            Identifier id,
+            Identifier input_item,
+            boolean input_is_tag,
+            Identifier output_item,
+            int level,
+            int min_player_level
+        ) {
+            this(id, input_item, input_is_tag, output_item, level, min_player_level, 0);
         }
 
         public static void write(RegistryFriendlyByteBuf buf, TransformationDisplay value) {
@@ -75,6 +87,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeIdentifier(value.output_item());
             buf.writeInt(value.level());
             buf.writeVarInt(Math.max(1, value.min_player_level()));
+            buf.writeVarInt(Math.max(0, value.deducted_levels()));
         }
 
         public static TransformationDisplay read(RegistryFriendlyByteBuf buf) {
@@ -84,7 +97,8 @@ public final class ChiseledEnchantingMenuPayloads {
             Identifier output = buf.readIdentifier();
             int level = buf.readInt();
             int minPlayerLevel = Math.max(1, buf.readVarInt());
-            return new TransformationDisplay(id, input, isTag, output, level, minPlayerLevel);
+            int deductedLevels = Math.max(0, buf.readVarInt());
+            return new TransformationDisplay(id, input, isTag, output, level, minPlayerLevel, deductedLevels);
         }
     }
 
@@ -145,13 +159,15 @@ public final class ChiseledEnchantingMenuPayloads {
             for (Object[] tuple : ChiseledEnchantingTableData.transformationDisplayTuples()) {
                 boolean isTag = tuple.length > 4 && Boolean.TRUE.equals(tuple[4]);
                 int minLvl = tuple.length > 5 ? (int) tuple[5] : 1;
+                int dedLvl = tuple.length > 6 ? (int) tuple[6] : 0;
                 displays.add(new TransformationDisplay(
                     (Identifier) tuple[0],
                     (Identifier) tuple[1],
                     isTag,
                     (Identifier) tuple[2],
                     (int) tuple[3],
-                    minLvl
+                    minLvl,
+                    dedLvl
                 ));
             }
             return List.copyOf(displays);

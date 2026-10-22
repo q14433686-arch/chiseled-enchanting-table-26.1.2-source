@@ -336,7 +336,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 transformation.outputItemId(),
                 transformation.level(),
                 transformation.inputIsTag(),
-                transformation.minPlayerLevel()
+                transformation.minRequiredLevel(),
+                transformation.deductedLevels()
             });
         }
         return List.copyOf(result);
@@ -389,9 +390,18 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return transformation == null ? 0 : transformation.xpCost();
     }
 
-    public static int transformationMinPlayerLevel(Identifier id) {
+    public static int transformationMinRequiredLevel(Identifier id) {
         ItemTransformation transformation = itemTransformations.get(id);
-        return transformation == null ? 1 : transformation.minPlayerLevel();
+        return transformation == null ? 1 : transformation.minRequiredLevel();
+    }
+
+    public static int transformationMinPlayerLevel(Identifier id) {
+        return transformationMinRequiredLevel(id);
+    }
+
+    public static int transformationDeductedLevels(Identifier id) {
+        ItemTransformation transformation = itemTransformations.get(id);
+        return transformation == null ? 0 : transformation.deductedLevels();
     }
 
     /**
@@ -434,6 +444,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         shelfGatesConfig = loadShelfGatesConfig(resourceManager);
         libraryResonanceConfig = loadLibraryResonanceConfig(resourceManager);
         chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.verifyRuntimeConservation(
+            libraryResonanceConfig,
             disenchantingRules.xpRefundScale()
         );
         ChiseledEnchantingTable.LOGGER.info(
@@ -570,24 +581,29 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
     }
 
-    private static Map<Identifier, ItemTransformation> builtInItemTransformations() {
-        String json = """
-            {
-              "values": [
-                { "id": "chiseled_enchanting_table:blank_overwrite", "input": "chiseled_enchanting_table:depleted_tome", "output": "minecraft:book", "level": 1, "xp_cost": 1, "primary_cost": { "item": "minecraft:paper", "count": 2 }, "cost_options": [ { "item": "minecraft:paper", "count": 2 }, { "item": "minecraft:bone_meal", "count": 2 }, { "item": "minecraft:lapis_lazuli", "count": 2 }, { "item": "minecraft:emerald", "count": 2 }, { "item": "minecraft:ink_sac", "count": 2 }, { "item": "minecraft:glow_ink_sac", "count": 2 }, { "item": "minecraft:amethyst_shard", "count": 2 } ] },
-                { "id": "chiseled_enchanting_table:enchanted_golden_apple", "input": "minecraft:golden_apple", "output": "minecraft:enchanted_golden_apple", "level": 1, "xp_cost": 8, "primary_cost": { "item": "minecraft:gold_block", "count": 8 }, "additional_costs": [ { "item": "minecraft:emerald", "count": 14 } ] },
-                { "id": "chiseled_enchanting_table:experience_bottle", "input": "minecraft:glass_bottle", "output": "minecraft:experience_bottle", "level": 1, "xp_cost": 2, "min_player_level": 3, "primary_cost": { "item": "minecraft:lapis_lazuli", "count": 8 }, "additional_costs": [ { "item": "minecraft:amethyst_shard", "count": 2 } ] },
-                { "id": "chiseled_enchanting_table:totem_of_undying", "input": "minecraft:emerald_block", "output": "minecraft:totem_of_undying", "level": 1, "xp_cost": 12, "primary_cost": { "item": "minecraft:gold_block", "count": 4 }, "additional_costs": [ { "item": "minecraft:ghast_tear", "count": 1 }, { "item": "minecraft:amethyst_shard", "count": 5 } ] },
-                { "id": "chiseled_enchanting_table:trident", "input": "minecraft:diamond_sword", "output": "minecraft:trident", "level": 1, "xp_cost": 10, "primary_cost": { "item": "minecraft:nautilus_shell", "count": 1 }, "additional_costs": [ { "item": "minecraft:prismarine_shard", "count": 3 }, { "item": "minecraft:prismarine_crystals", "count": 2 } ] },
-                { "id": "chiseled_enchanting_table:echo_shard", "input": "minecraft:amethyst_shard", "output": "minecraft:echo_shard", "level": 1, "xp_cost": 5, "primary_cost": { "item": "minecraft:sculk", "count": 4 }, "additional_costs": [ { "item": "minecraft:crying_obsidian", "count": 2 } ] }
-              ]
+    private static JsonObject readBundledJsonObject(String fileName) {
+        String resourcePath = "/data/chiseled_enchanting_table/chiseled_enchanting_table/" + fileName;
+        try (var stream = ChiseledEnchantingTableData.class.getResourceAsStream(resourcePath)) {
+            if (stream != null) {
+                try (Reader reader = new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)) {
+                    return JsonParser.parseReader(reader).getAsJsonObject();
+                }
             }
-            """;
+        } catch (Exception e) {
+            ChiseledEnchantingTable.LOGGER.error("Failed to read bundled default resource {}", resourcePath, e);
+        }
+        return new JsonObject();
+    }
+
+    private static Map<Identifier, ItemTransformation> builtInItemTransformations() {
         Map<Identifier, ItemTransformation> fallback = new HashMap<>();
-        JsonArray values = GSON.fromJson(json, JsonObject.class).getAsJsonArray("values");
-        for (JsonElement element : values) {
-            ItemTransformation transformation = ItemTransformation.fromJson(element.getAsJsonObject());
-            fallback.put(transformation.id(), transformation);
+        JsonObject root = readBundledJsonObject("item_transformations.json");
+        JsonArray values = root.getAsJsonArray("values");
+        if (values != null) {
+            for (JsonElement element : values) {
+                ItemTransformation transformation = ItemTransformation.fromJson(element.getAsJsonObject());
+                fallback.put(transformation.id(), transformation);
+            }
         }
         return Map.copyOf(fallback);
     }
@@ -643,7 +659,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         Identifier outputItemId,
         int level,
         int xpCost,
-        int minPlayerLevel,
+        int minRequiredLevel,
+        int deductedLevels,
         ItemCostOption primaryCost,
         List<ItemCostOption> additionalCosts,
         List<ItemCostOption> alternativePrimaryOptions
@@ -666,10 +683,15 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 level,
                 xpCost,
                 1,
+                0,
                 primaryCost,
                 additionalCosts,
                 alternativePrimaryOptions
             );
+        }
+
+        public int minPlayerLevel() {
+            return minRequiredLevel;
         }
 
         static ItemTransformation fromJson(JsonObject json) {
@@ -679,8 +701,15 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             Identifier input = parseIdentifier(stripTagPrefix(rawInput));
             Identifier output = parseIdentifier(json.get("output").getAsString());
             int level = intOr(json, "level", intOr(json, "count", 1));
-            int xpCost = intOr(json, "xp_cost", intOr(json, "xp_levels", 0));
-            int minPlayerLevel = Math.max(1, intOr(json, "min_player_level", 1));
+            int xpCost = intOr(json, "required_player_level", intOr(json, "xp_cost", intOr(json, "xp_levels", 0)));
+            int minRequiredLevel = Math.max(
+                1,
+                intOr(json, "min_required_level", intOr(json, "min_player_level", 1))
+            );
+            int deductedLevels = Math.max(
+                0,
+                intOr(json, "deducted_levels", intOr(json, "min_deduction_levels", 0))
+            );
             List<ItemCostOption> additionalCosts = new ArrayList<>();
             if (json.has("additional_costs")) {
                 for (JsonElement element : json.getAsJsonArray("additional_costs")) {
@@ -705,7 +734,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 output,
                 Math.max(1, level),
                 Math.max(0, xpCost),
-                minPlayerLevel,
+                minRequiredLevel,
+                deductedLevels,
                 primaryCost,
                 List.copyOf(additionalCosts),
                 List.copyOf(altOptions)
@@ -1627,36 +1657,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         int curseXpCost,
         ItemCostRule curseMaterialCost
     ) {
-        private static final String BUILT_IN_JSON = """
-            {
-              "enabled": true,
-              "allow_curse_purge": true,
-              "xp_refund_scale": 1.0,
-              "targeted_strip": {
-                "xp_cost_min": 3,
-                "xp_cost_max": 10,
-                "options": [
-                  { "item": "chiseled_enchanting_table:cleansing_grit", "base_count": 1, "max_level_count": 3, "level_exponent": 1.15, "extras": [ { "item": "minecraft:lapis_lazuli", "base_count": 2, "max_level_count": 6, "level_exponent": 1.15 } ] },
-                  { "item": "chiseled_enchanting_table:cleansing_grit", "base_count": 1, "max_level_count": 3, "level_exponent": 1.15, "extras": [ { "item": "minecraft:glow_ink_sac", "base_count": 1, "max_level_count": 3, "level_exponent": 1.1 } ] },
-                  { "item": "chiseled_enchanting_table:cleansing_grit", "base_count": 1, "max_level_count": 3, "level_exponent": 1.15, "extras": [ { "item": "minecraft:amethyst_shard", "base_count": 1, "max_level_count": 3, "level_exponent": 1.1 } ] },
-                  { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
-                  { "item": "minecraft:amethyst_shard", "base_count": 4, "max_level_count": 12, "level_exponent": 1.15, "extras": [ { "item": "minecraft:lapis_lazuli", "base_count": 6, "max_level_count": 18, "level_exponent": 1.15 } ] }
-                ]
-              },
-              "curse_purge": {
-                "xp_cost": 12,
-                "options": [
-                  { "item": "chiseled_enchanting_table:cleansing_grit", "count": 3, "extras": [ { "item": "minecraft:ghast_tear", "count": 1 } ] },
-                  { "item": "chiseled_enchanting_table:cleansing_grit", "count": 2, "extras": [ { "item": "minecraft:golden_apple", "count": 1 } ] },
-                  { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
-                  { "item": "minecraft:ghast_tear", "count": 2, "extras": [ { "item": "minecraft:golden_apple", "count": 2 } ] }
-                ]
-              }
-            }
-            """;
-
         static DisenchantingRules builtInFallback() {
-            return fromJson(JsonParser.parseString(BUILT_IN_JSON).getAsJsonObject());
+            return fromJson(readBundledJsonObject("disenchanting.json"));
         }
 
         static DisenchantingRules fromJson(JsonObject root) {
@@ -1664,18 +1666,31 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             boolean allowCurse = boolOr(root, "allow_curse_purge", true);
             double scale = Math.max(0.0, Math.min(1.0, doubleOr(root, "xp_refund_scale", 1.0)));
 
+            JsonObject bundled = null;
             JsonObject stripObj = root.has("targeted_strip") ? root.getAsJsonObject("targeted_strip") : new JsonObject();
             int stripMin = Math.max(1, intOr(stripObj, "xp_cost_min", intOr(stripObj, "xp_levels", 3)));
             int stripMax = Math.max(stripMin, intOr(stripObj, "xp_cost_max", Math.max(stripMin, 10)));
-            ItemCostRule stripCost = (stripObj.has("options") || stripObj.has("cost_options"))
-                ? ItemCostRule.fromJson(stripObj)
-                : builtInFallback().stripMaterialCost;
+            ItemCostRule stripCost;
+            if (stripObj.has("options") || stripObj.has("cost_options")) {
+                stripCost = ItemCostRule.fromJson(stripObj);
+            } else {
+                bundled = readBundledJsonObject("disenchanting.json");
+                JsonObject bundledStrip = bundled.has("targeted_strip") ? bundled.getAsJsonObject("targeted_strip") : new JsonObject();
+                stripCost = ItemCostRule.fromJson(bundledStrip);
+            }
 
             JsonObject curseObj = root.has("curse_purge") ? root.getAsJsonObject("curse_purge") : new JsonObject();
             int curseXp = Math.max(1, intOr(curseObj, "xp_cost", intOr(curseObj, "xp_levels", 12)));
-            ItemCostRule curseCost = (curseObj.has("options") || curseObj.has("cost_options"))
-                ? ItemCostRule.fromJson(curseObj)
-                : builtInFallback().curseMaterialCost;
+            ItemCostRule curseCost;
+            if (curseObj.has("options") || curseObj.has("cost_options")) {
+                curseCost = ItemCostRule.fromJson(curseObj);
+            } else {
+                if (bundled == null) {
+                    bundled = readBundledJsonObject("disenchanting.json");
+                }
+                JsonObject bundledCurse = bundled.has("curse_purge") ? bundled.getAsJsonObject("curse_purge") : new JsonObject();
+                curseCost = ItemCostRule.fromJson(bundledCurse);
+            }
 
             return new DisenchantingRules(
                 enabled, allowCurse, scale,

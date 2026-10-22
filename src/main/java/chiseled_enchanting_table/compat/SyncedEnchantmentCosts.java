@@ -131,6 +131,7 @@ public final class SyncedEnchantmentCosts {
 
     public static double epiphanyChance(int regularBookshelves, int chiseledBooks) {
         return LibraryResonance.epiphanyProbability(
+            libraryResonanceConfig(),
             regularBookshelves,
             epiphanyMinBookshelves(),
             epiphanyBaseChance(),
@@ -144,6 +145,7 @@ public final class SyncedEnchantmentCosts {
 
     public static int epiphanyMaxSlots(int regularBookshelves, int chiseledBooks) {
         return LibraryResonance.epiphanyMaxSlots(
+            libraryResonanceConfig(),
             regularBookshelves,
             epiphanyMinBookshelves(),
             epiphanyMaxSlotsCap(),

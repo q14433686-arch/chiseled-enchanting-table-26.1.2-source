@@ -48,9 +48,9 @@ public final class BookUpgradeApplication {
         if (targetEnchants.getLevel(enchantment) != sourceLevel || costEnchants.getLevel(enchantment) != sourceLevel) return false;
 
         EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), targetLevel);
-        int xpCost = handler.getEnchantmentXpLevelCost(ewl, OptionType.BOOK_COMBINE_UPGRADE);
-        if (!canAffordXp(handler, xpCost)) return false;
-        deductXp(handler, xpCost);
+        var xpReq = handler.resolveEffectiveXpRequirement(ewl, OptionType.BOOK_COMBINE_UPGRADE);
+        if (!xpReq.isMetBy(handler.player)) return false;
+        XpCostConversion.deductXp(handler.player, xpReq);
 
         ItemEnchantments.Mutable merged = new ItemEnchantments.Mutable(targetEnchants);
         for (var entry : costEnchants.entrySet()) {
@@ -115,61 +115,13 @@ public final class BookUpgradeApplication {
         });
     }
 
-    private static boolean canAffordXp(ChiseledEnchantingTableScreenHandler handler, int levelCost) {
-        return handler.player.getAbilities().instabuild || handler.player.experienceLevel >= levelCost;
-    }
-
-    private static void deductXp(ChiseledEnchantingTableScreenHandler handler, int levelCost) {
-        if (!handler.player.getAbilities().instabuild && levelCost > 0) {
-            handler.player.giveExperiencePoints(-XpCostConversion.pointsForLevelCost(handler.player, levelCost));
-        }
-    }
-
-    private static boolean canAffordItems(ChiseledEnchantingTableScreenHandler handler, List<ItemStack> costs) {
-        if (handler.player.getAbilities().instabuild) return true;
-        if (costs.isEmpty()) return false;
-        ItemStack primary = costs.getFirst();
-        ItemStack costSlot = handler.get_cost_item();
-        if (primary.isEmpty() || !ItemStack.isSameItemSameComponents(primary, costSlot) || costSlot.getCount() < primary.getCount()) return false;
-        for (int i = 1; i < costs.size(); i++) {
-            if (countInInventory(handler, costs.get(i)) < costs.get(i).getCount()) return false;
-        }
-        return true;
-    }
-
-    private static void deductItems(ChiseledEnchantingTableScreenHandler handler, List<ItemStack> costs) {
-        if (handler.player.getAbilities().instabuild) return;
-        ItemStack primary = costs.getFirst();
-        handler.get_cost_item().shrink(primary.getCount());
-        for (int i = 1; i < costs.size(); i++) {
-            consumeFromInventory(handler, costs.get(i).copy());
-        }
-        handler.player.getInventory().setChanged();
-    }
-
-    private static int countInInventory(ChiseledEnchantingTableScreenHandler handler, ItemStack required) {
-        int found = 0;
-        for (int slot = 0; slot < handler.player.getInventory().getContainerSize(); slot++) {
-            ItemStack candidate = handler.player.getInventory().getItem(slot);
-            if (ItemStack.isSameItemSameComponents(candidate, required)) found += candidate.getCount();
-        }
-        return found;
-    }
-
-    private static void consumeFromInventory(ChiseledEnchantingTableScreenHandler handler, ItemStack required) {
-        for (int slot = 0; slot < handler.player.getInventory().getContainerSize() && !required.isEmpty(); slot++) {
-            ItemStack candidate = handler.player.getInventory().getItem(slot);
-            if (ItemStack.isSameItemSameComponents(candidate, required)) {
-                int consumed = Math.min(candidate.getCount(), required.getCount());
-                candidate.shrink(consumed);
-                required.shrink(consumed);
-            }
-        }
-    }
-
     private static void finish(ChiseledEnchantingTableScreenHandler handler) {
-        handler.markInventoryChanged();
+        handler.inventory.setChanged();
+        handler.slotsChanged(handler.inventory);
         handler.player.awardStat(Stats.ENCHANT_ITEM);
-        handler.world().playSound(null, handler.player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 2.0F, handler.world().getRandom().nextFloat() * 0.1F + 0.9F);
+        handler.access.execute((world, pos) -> world.playSound(
+            null, pos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS,
+            1.0F, world.getRandom().nextFloat() * 0.1F + 0.9F
+        ));
     }
 }

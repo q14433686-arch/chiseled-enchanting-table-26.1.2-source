@@ -109,11 +109,20 @@ public class TransformationRecipeCategory extends AbstractRecipeCategory<Transfo
         double mouseY
     ) {
         var xpReq = recipe.xpRequirement();
-        tooltip.add(Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
-            xpReq.requiredLevel(),
-            xpReq.deductedLevels()
-        ));
+        if (xpReq.isRefund()) {
+            tooltip.add(Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_refund"));
+        } else if (xpReq.vanillaTierMode()) {
+            tooltip.add(Component.translatable(
+                "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+                xpReq.requiredLevel(),
+                xpReq.deductedLevels()
+            ));
+        } else {
+            tooltip.add(Component.translatable(
+                "jei.chiseled_enchanting_table.tooltip.xp_full",
+                xpReq.deductedLevels()
+            ));
+        }
         tooltip.add(Component.translatable(
             recipe.serverCosts()
                 ? "jei.chiseled_enchanting_table.tooltip.cost_synced"

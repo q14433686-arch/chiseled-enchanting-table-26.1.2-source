@@ -69,25 +69,38 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             && (state.is(REGULAR_BOOKSHELVES_TAG) || state.is(net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER));
     }
 
+    private static final java.util.concurrent.ConcurrentHashMap<Long, List<BlockPos>> SCAN_OFFSETS_CACHE =
+        new java.util.concurrent.ConcurrentHashMap<>();
+    private static final int ANIMATE_PARTICLE_SAMPLE_BUDGET = 16;
+
     public static List<BlockPos> getScanOffsets(
         chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config cfg
     ) {
-        int rx = cfg == null ? 3 : Math.max(1, cfg.horizontalScanRadius());
-        int ry = cfg == null ? 2 : Math.max(0, cfg.verticalScanRadius());
-        int capacity = Math.max(8, (2 * rx + 1) * (2 * rx + 1) * (2 * ry + 1) - 1);
-        java.util.ArrayList<BlockPos> offsets = new java.util.ArrayList<>(capacity);
-        for (int dx = -rx; dx <= rx; dx++) {
-            for (int dy = -ry; dy <= ry; dy++) {
-                for (int dz = -rx; dz <= rx; dz++) {
-                    if (dx == 0 && dy == 0 && dz == 0) continue;
-                    offsets.add(new BlockPos(dx, dy, dz));
+        int rx = cfg == null ? 3 : Math.max(1, Math.min(
+            chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS,
+            cfg.horizontalScanRadius()
+        ));
+        int ry = cfg == null ? 2 : Math.max(0, Math.min(
+            chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS,
+            cfg.verticalScanRadius()
+        ));
+        long key = (((long) rx) << 32) | (ry & 0xFFFFFFFFL);
+        return SCAN_OFFSETS_CACHE.computeIfAbsent(key, ignored -> {
+            int capacity = Math.max(8, (2 * rx + 1) * (2 * rx + 1) * (2 * ry + 1) - 1);
+            java.util.ArrayList<BlockPos> offsets = new java.util.ArrayList<>(capacity);
+            for (int dx = -rx; dx <= rx; dx++) {
+                for (int dy = -ry; dy <= ry; dy++) {
+                    for (int dz = -rx; dz <= rx; dz++) {
+                        if (dx == 0 && dy == 0 && dz == 0) continue;
+                        offsets.add(new BlockPos(dx, dy, dz));
+                    }
                 }
             }
-        }
-        return offsets;
+            return List.copyOf(offsets);
+        });
     }
 
-    public static final List<BlockPos> POWER_PROVIDER_OFFSETS = List.copyOf(getScanOffsets(null));
+    public static final List<BlockPos> POWER_PROVIDER_OFFSETS = getScanOffsets(null);
 
     private static boolean hasOccupiedChiseledSlot(BlockState state) {
         for (var prop : net.minecraft.world.level.block.ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES) {
@@ -128,13 +141,16 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         var sg = level.isClientSide()
             ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.shelfGatesConfig()
             : ChiseledEnchantingTableData.shelfGatesConfig();
-        List<BlockPos> offsets = (sg.horizontalScanRadius() == 3 && sg.verticalScanRadius() == 2)
-            ? POWER_PROVIDER_OFFSETS
-            : getScanOffsets(sg);
-        for (BlockPos offset : offsets) {
+        List<BlockPos> offsets = getScanOffsets(sg);
+        if (offsets.isEmpty()) {
+            return;
+        }
+        int samples = Math.min(ANIMATE_PARTICLE_SAMPLE_BUDGET, offsets.size());
+        for (int i = 0; i < samples; i++) {
+            BlockPos offset = offsets.get(random.nextInt(offsets.size()));
             boolean vanillaRing = Math.max(Math.abs(offset.getX()), Math.abs(offset.getZ())) <= 2
                 && offset.getY() >= 0 && offset.getY() <= 1;
-            if (random.nextInt(vanillaRing ? 16 : 24) != 0) {
+            if (!vanillaRing && random.nextInt(2) != 0) {
                 continue;
             }
             BlockPos shelfPos = pos.offset(offset);
@@ -291,26 +307,24 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     }
 
     public Set<EnchantmentWithLevel> get_unlocked_enchantements(BlockState state, Level level, BlockPos pos) {
-        Map<Identifier, Integer> highestLevels = new HashMap<>();
         ShelfPower shelfPower = calculateShelfPower(level, pos);
+        return getUnlockedEnchantmentsFromPower(level, shelfPower);
+    }
 
-        // Track 1 (Wooden Bookshelves): scale default baseline smoothly up to the mid-tier ceiling
-        // ceil(maxLevel / 2.0) at +1 per 5 wooden bookshelves. Graduation tiers always require
-        // Master Tomes stored in Chiseled Bookshelves.
+    private Set<EnchantmentWithLevel> getUnlockedEnchantmentsFromPower(Level level, ShelfPower shelfPower) {
+        Map<Identifier, Integer> highestLevels = new HashMap<>();
+
+        // Track 1 (Wooden Bookshelves): scale default baseline smoothly along the blank cap curve.
         for (EnchantmentWithLevel base : this.enchantments_unlocked_by_default(level)) {
             mergeHighestLevel(highestLevels, withWoodenShelfBoost(level, base, shelfPower.regularBookshelves()));
         }
 
-        // Track 2 (Chiseled Bookshelves): unlock each stored Master Tome 1:1 up to its stored book level.
-        streamLibraryPositions(pos)
-            .forEach(p -> {
-                BlockEntity be = level.getBlockEntity(p);
-                if (be instanceof ChiseledBookShelfBlockEntity cbsbe) {
-                    EnchantmentFinder.streamAllEnchantements(cbsbe, level)
-                        .map(enchantment -> clampToMaxLevel(level, enchantment))
-                        .forEach(enchantment -> mergeHighestLevel(highestLevels, enchantment));
-                }
-            });
+        // Track 3 (Chiseled Bookshelves): unlock each stored Master Tome 1:1 from the already-scanned map.
+        for (Map.Entry<Identifier, Integer> entry : shelfPower.storedMasterLevels().entrySet()) {
+            if (entry.getValue() > 0) {
+                mergeHighestLevel(highestLevels, new EnchantmentWithLevel(entry.getKey(), entry.getValue()));
+            }
+        }
 
         java.util.HashSet<EnchantmentWithLevel> unlocked = new java.util.HashSet<>();
         for (Map.Entry<Identifier, Integer> entry : highestLevels.entrySet()) {
@@ -326,20 +340,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         chiseled_enchanting_table.mechanics.resonance.LibraryResonance.MAX_TOTAL_XP_DISCOUNT_PERCENT;
 
     private static java.util.stream.Stream<BlockPos> streamLibraryPositions(BlockPos origin) {
-        var cfg = ChiseledEnchantingTableData.shelfGatesConfig();
-        int rx = cfg == null ? 3 : Math.max(1, cfg.horizontalScanRadius());
-        int ry = cfg == null ? 2 : Math.max(0, cfg.verticalScanRadius());
-        int capacity = Math.max(8, (2 * rx + 1) * (2 * rx + 1) * (2 * ry + 1) - 1);
-        java.util.ArrayList<BlockPos> list = new java.util.ArrayList<>(capacity);
-        for (int dx = -rx; dx <= rx; dx++) {
-            for (int dy = -ry; dy <= ry; dy++) {
-                for (int dz = -rx; dz <= rx; dz++) {
-                    if (dx == 0 && dy == 0 && dz == 0) continue;
-                    list.add(origin.offset(dx, dy, dz));
-                }
-            }
-        }
-        return list.stream();
+        List<BlockPos> cachedOffsets = getScanOffsets(ChiseledEnchantingTableData.shelfGatesConfig());
+        return cachedOffsets.stream().map(origin::offset);
     }
 
     public static chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload computeLiveShelfState(
@@ -349,7 +351,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         BlockState state = level.getBlockState(pos);
         ShelfPower shelfPower = calculateShelfPower(level, pos);
         Set<EnchantmentWithLevel> unlocked = state.getBlock() instanceof ChiseledEnchantingTableBlock cetb
-            ? cetb.get_unlocked_enchantements(state, level, pos)
+            ? cetb.getUnlockedEnchantmentsFromPower(level, shelfPower)
             : Set.of();
         return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
             unlocked,

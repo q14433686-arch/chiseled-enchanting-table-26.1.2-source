@@ -130,6 +130,14 @@ dependencies {
         compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}", toolchainPins)
         compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}", toolchainPins)
     }
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 processResources {

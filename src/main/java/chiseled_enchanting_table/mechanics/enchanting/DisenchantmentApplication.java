@@ -9,6 +9,8 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -29,18 +31,17 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Unified, single-source disenchanting, step-down downgrading, targeted single-trait stripping,
- * and curse purification mechanic with proven inductive XP conservation across all levels {@code 1..255}.
+ * and curse purification mechanic with cached inductive XP conservation across all levels {@code 1..255}.
  *
  * <p>Conservation theorem: for every {@code M >= 1}, {@code 1 <= k <= M}, and {@code 1 <= a < k}:
  * <pre>
  *   0 = V(0) &lt;= V(1) &lt;= ... &lt;= V(M)
- *   V(k) &lt;= minPointsRequired(MasterTome(0 -&gt; k, maxDiscount)) - SAFETY_MARGIN
- *   V(k) - V(a) &lt;= minPointsRequired(MasterTome(a -&gt; k, maxDiscount)) - SAFETY_MARGIN
+ *   V(k) &lt;= minPointsRequired(MasterTome(cfg, 0 -&gt; k, maxDiscount)) - SAFETY_MARGIN
+ *   V(k) - V(a) &lt;= minPointsRequired(MasterTome(cfg, a -&gt; k, maxDiscount)) - SAFETY_MARGIN
  * </pre>
- * Because {@link XpCostConversion#forMasterTomeEnchant} and
- * {@link XpCostConversion#forIncrementalMasterTomeEnchant} are called directly as the single source
- * of truth and every non-Master-Tome ritual requires at least those XP thresholds/deductions, no full
- * or partial cycle can ever generate net-positive XP.</p>
+ * All client/server callers pass their authoritative {@link LibraryResonance.Config} explicitly and
+ * share the memoized potential table {@link #buildPotentialTable} so dedicated-server overrides and
+ * {@code M = 255} menus stay fast and strictly consistent.</p>
  */
 public final class DisenchantmentApplication {
     public static final Identifier DISENCHANT_ALL_ID = ChiseledEnchantingTable.identifier("disenchant_all");
@@ -53,7 +54,22 @@ public final class DisenchantmentApplication {
     private static final TagKey<Enchantment> TREASURE_TAG =
         TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("treasure"));
 
+    private record PotentialCacheKey(
+        int maxLevel,
+        int anvilCost,
+        boolean treasure,
+        long scaleBits,
+        int maxDiscount,
+        long creditBits
+    ) {}
+
+    private static final ConcurrentHashMap<PotentialCacheKey, int[]> POTENTIAL_CACHE = new ConcurrentHashMap<>();
+
     private DisenchantmentApplication() {}
+
+    public static void clearPotentialCache() {
+        POTENTIAL_CACHE.clear();
+    }
 
     public static boolean isCurse(Holder<Enchantment> holder) {
         return holder != null && holder.is(CURSE_TAG);
@@ -73,12 +89,22 @@ public final class DisenchantmentApplication {
     }
 
     public static int essencePotential(Holder<Enchantment> holder, int level, double refundScale) {
+        return essencePotential(LibraryResonance.activeServerConfig(), holder, level, refundScale);
+    }
+
+    public static int essencePotential(
+        LibraryResonance.Config resonanceCfg,
+        Holder<Enchantment> holder,
+        int level,
+        double refundScale
+    ) {
         if (holder == null || level <= 0 || isCurse(holder) || refundScale <= 0.0) {
             return 0;
         }
         int maxLevel = Math.max(1, holder.value().getMaxLevel());
         int clampedLevel = Math.min(level, maxLevel);
         return essencePotentialFromParams(
+            resonanceCfg,
             maxLevel,
             clampedLevel,
             holder.value().getAnvilCost(),
@@ -87,10 +113,6 @@ public final class DisenchantmentApplication {
         );
     }
 
-    /**
-     * Pure inductive essence potential {@code V(E, L)} strictly bounded below every full and
-     * single/multi-step Master Tome XP cost across {@code M in [1..255]}.
-     */
     public static int essencePotentialFromParams(
         int maxLevel,
         int clampedLevel,
@@ -98,28 +120,80 @@ public final class DisenchantmentApplication {
         boolean treasure,
         double refundScale
     ) {
-        double clampedScale = Math.max(0.0, Math.min(1.0, Double.isFinite(refundScale) ? refundScale : 1.0));
-        if (clampedLevel <= 0 || clampedScale <= 0.0) {
+        return essencePotentialFromParams(
+            LibraryResonance.activeServerConfig(),
+            maxLevel,
+            clampedLevel,
+            anvilCost,
+            treasure,
+            refundScale
+        );
+    }
+
+    public static int essencePotentialFromParams(
+        LibraryResonance.Config resonanceCfg,
+        int maxLevel,
+        int clampedLevel,
+        int anvilCost,
+        boolean treasure,
+        double refundScale
+    ) {
+        if (clampedLevel <= 0) {
             return 0;
         }
         int cappedMax = Math.max(1, maxLevel);
         int target = Math.min(clampedLevel, cappedMax);
-        int maxDiscount = LibraryResonance.activeConfig().maxTotalXpDiscountPercent();
-        double rarity = Math.min(1.45, Math.max(1.00, 1.0 + 0.18 * Math.log(Math.max(1, anvilCost))))
+        int[] v = buildPotentialTable(resonanceCfg, cappedMax, anvilCost, treasure, refundScale);
+        return v[target];
+    }
+
+    /**
+     * Authoritative memoized potential table {@code V[0..cappedMax]} for all runtime, UI, recipe
+     * viewer, reload self-check, and JUnit conservation proof callers.
+     */
+    public static int[] buildPotentialTable(
+        LibraryResonance.Config resonanceCfg,
+        int maxLevel,
+        int anvilCost,
+        boolean treasure,
+        double refundScale
+    ) {
+        LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
+        int cappedMax = Math.max(1, maxLevel);
+        double clampedScale = Math.max(0.0, Math.min(1.0, Double.isFinite(refundScale) ? refundScale : 1.0));
+        if (clampedScale <= 0.0) {
+            return new int[cappedMax + 1];
+        }
+        int safeAnvil = Math.max(1, anvilCost);
+        int maxDiscount = cfg.maxTotalXpDiscountPercent();
+        var key = new PotentialCacheKey(
+            cappedMax,
+            safeAnvil,
+            treasure,
+            Double.doubleToLongBits(clampedScale),
+            maxDiscount,
+            Double.doubleToLongBits(cfg.incrementalStepCreditFactor())
+        );
+        int[] cached = POTENTIAL_CACHE.get(key);
+        if (cached != null) {
+            return cached;
+        }
+
+        double rarity = Math.min(1.45, Math.max(1.00, 1.0 + 0.18 * Math.log(safeAnvil)))
             * (treasure ? 1.15 : 1.0);
         double baseMax = cappedMax == 1 ? 34.0 : 48.0;
 
-        int[] v = new int[target + 1];
-        for (int k = 1; k <= target; k++) {
+        int[] v = new int[cappedMax + 1];
+        for (int k = 1; k <= cappedMax; k++) {
             double r = (double) k / (double) cappedMax;
             int desired = (int) Math.round(clampedScale * baseMax * rarity * Math.pow(r, 1.65));
             int fullMin = XpCostConversion.minPointsRequired(
-                XpCostConversion.forMasterTomeEnchant(k, cappedMax, 0, maxDiscount)
+                XpCostConversion.forMasterTomeEnchant(cfg, k, cappedMax, 0, maxDiscount)
             );
             int cap = Math.max(0, fullMin - CONSERVATION_SAFETY_MARGIN_POINTS);
             for (int a = 1; a < k; a++) {
                 int stepMin = XpCostConversion.minPointsRequired(
-                    XpCostConversion.forIncrementalMasterTomeEnchant(a, k, cappedMax, 0, maxDiscount)
+                    XpCostConversion.forIncrementalMasterTomeEnchant(cfg, a, k, cappedMax, 0, maxDiscount)
                 );
                 int stepCap = Math.max(0, v[a] + stepMin - CONSERVATION_SAFETY_MARGIN_POINTS);
                 if (stepCap < cap) {
@@ -129,31 +203,51 @@ public final class DisenchantmentApplication {
             int bounded = Math.min(desired, cap);
             v[k] = Math.max(v[k - 1], bounded);
         }
-        return v[target];
+        if (POTENTIAL_CACHE.size() >= 512) {
+            POTENTIAL_CACHE.clear();
+        }
+        POTENTIAL_CACHE.put(key, v);
+        return v;
+    }
+
+    public static void verifyRuntimeConservation(double refundScale) {
+        verifyRuntimeConservation(LibraryResonance.activeServerConfig(), refundScale);
     }
 
     /**
-     * Runtime conservation self-check run automatically on datapack reload.
+     * Runtime conservation self-check run automatically on datapack reload: verifies BOTH full wipe
+     * {@code (0 -> k)} AND every incremental step {@code (a -> k)} across probe levels up to {@code 255}.
      */
-    public static void verifyRuntimeConservation(double refundScale) {
-        int maxDiscount = LibraryResonance.activeConfig().maxTotalXpDiscountPercent();
-        int[] probeMaxLevels = {1, 2, 3, 4, 5, 6, 8, 10, 15, 30, 100, 255};
+    public static void verifyRuntimeConservation(LibraryResonance.Config resonanceCfg, double refundScale) {
+        clearPotentialCache();
+        LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
+        int maxDiscount = cfg.maxTotalXpDiscountPercent();
+        int[] probeMaxLevels = {1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 64, 100, 127, 150, 255};
         int[] probeAnvilCosts = {1, 2, 4, 8, 25, 100};
         for (int m : probeMaxLevels) {
             for (int anvil : probeAnvilCosts) {
                 for (boolean treas : new boolean[] {false, true}) {
-                    int prev = 0;
+                    int[] v = buildPotentialTable(cfg, m, anvil, treas, refundScale);
                     for (int k = 1; k <= m; k++) {
-                        int vk = essencePotentialFromParams(m, k, anvil, treas, refundScale);
                         int fullMin = XpCostConversion.minPointsRequired(
-                            XpCostConversion.forMasterTomeEnchant(k, m, 0, maxDiscount)
+                            XpCostConversion.forMasterTomeEnchant(cfg, k, m, 0, maxDiscount)
                         );
-                        if (vk < prev || vk > fullMin) {
+                        if (v[k] < v[k - 1] || v[k] > fullMin) {
                             throw new IllegalStateException(
-                                "Disenchant XP conservation violated at M=" + m + ", k=" + k + ": V=" + vk + ", minFull=" + fullMin
+                                "Disenchant XP conservation violated at M=" + m + ", k=" + k + ": V=" + v[k] + ", minFull=" + fullMin
                             );
                         }
-                        prev = vk;
+                        for (int a = 1; a < k; a++) {
+                            int stepMin = XpCostConversion.minPointsRequired(
+                                XpCostConversion.forIncrementalMasterTomeEnchant(cfg, a, k, m, 0, maxDiscount)
+                            );
+                            if (v[k] - v[a] > stepMin) {
+                                throw new IllegalStateException(
+                                    "Disenchant step conservation violated at M=" + m + ", " + a + "->" + k
+                                        + ": dV=" + (v[k] - v[a]) + ", stepMin=" + stepMin
+                                );
+                            }
+                        }
                     }
                 }
             }
@@ -161,15 +255,33 @@ public final class DisenchantmentApplication {
     }
 
     public static int refundForStepDown(Holder<Enchantment> holder, int currentLevel, int targetLevel, double refundScale) {
+        return refundForStepDown(LibraryResonance.activeServerConfig(), holder, currentLevel, targetLevel, refundScale);
+    }
+
+    public static int refundForStepDown(
+        LibraryResonance.Config resonanceCfg,
+        Holder<Enchantment> holder,
+        int currentLevel,
+        int targetLevel,
+        double refundScale
+    ) {
         if (holder == null || isCurse(holder) || currentLevel <= targetLevel || targetLevel < 0) {
             return 0;
         }
-        int curV = essencePotential(holder, currentLevel, refundScale);
-        int nextV = targetLevel == 0 ? 0 : essencePotential(holder, targetLevel, refundScale);
+        int curV = essencePotential(resonanceCfg, holder, currentLevel, refundScale);
+        int nextV = targetLevel == 0 ? 0 : essencePotential(resonanceCfg, holder, targetLevel, refundScale);
         return Math.max(0, curV - nextV);
     }
 
     public static int totalFullDisenchantRefund(ItemStack stack, double refundScale) {
+        return totalFullDisenchantRefund(LibraryResonance.activeServerConfig(), stack, refundScale);
+    }
+
+    public static int totalFullDisenchantRefund(
+        LibraryResonance.Config resonanceCfg,
+        ItemStack stack,
+        double refundScale
+    ) {
         if (stack.isEmpty()) {
             return 0;
         }
@@ -181,7 +293,7 @@ public final class DisenchantmentApplication {
         for (var entry : enchantments.entrySet()) {
             Holder<Enchantment> holder = entry.getKey();
             if (!isCurse(holder)) {
-                sum += essencePotential(holder, entry.getIntValue(), refundScale);
+                sum += essencePotential(resonanceCfg, holder, entry.getIntValue(), refundScale);
             }
         }
         return sum;
@@ -229,201 +341,170 @@ public final class DisenchantmentApplication {
         if (nonCurseCount <= 0) {
             return;
         }
-        double scale = ChiseledEnchantingTableData.disenchantRefundScale();
-        int refundPoints = totalFullDisenchantRefund(target, scale);
+        var cfg = menu.libraryResonanceConfig();
+        int totalRefund = totalFullDisenchantRefund(cfg, target, menu.disenchantRefundScale());
 
-        boolean hasRemainingCurse = false;
+        ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
         for (var entry : current.entrySet()) {
-            if (isCurse(entry.getKey()) && entry.getIntValue() > 0) {
-                hasRemainingCurse = true;
-                break;
+            if (isCurse(entry.getKey())) {
+                next.set(entry.getKey(), entry.getIntValue());
             }
         }
 
-        if (target.is(Items.ENCHANTED_BOOK) && !hasRemainingCurse) {
-            menu.setEnchantableSlot(new ItemStack(BlockRegistry.DEPLETED_TOME, Math.max(1, target.getCount())));
-        } else {
-            EnchantmentHelper.updateEnchantments(target, mutable -> {
-                var snapshot = new java.util.HashSet<>(mutable.keySet());
-                for (Holder<Enchantment> h : snapshot) {
-                    if (!isCurse(h)) {
-                        mutable.set(h, 0);
-                    }
-                }
-            });
-            resetAnvilRepairPenalty(target);
-        }
-
-        grantRefundAndFeedback(menu, refundPoints, SoundEvents.GRINDSTONE_USE, 1.08F);
+        ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        menu.setEnchantableSlot(resulting);
+        spawnOrAwardRefund(menu, totalRefund);
+        playCleanseFeedback(menu, 1.15f);
         Advancement.give(menu.player, "cleanse_enchantment");
-        menu.markInventoryChanged();
-        menu.broadcastChanges();
     }
 
     private static void applyDowngrade(
         ChiseledEnchantingTableScreenHandler menu,
         ItemStack target,
-        Identifier enchantmentId,
-        int nextLevel
+        Identifier targetId,
+        int desiredLevel
     ) {
-        Holder<Enchantment> holder = resolveEnchantment(menu, enchantmentId);
-        if (holder == null || isCurse(holder)) {
-            return;
-        }
         ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(target);
-        int curLvl = current.getLevel(holder);
-        if (curLvl <= 1 || nextLevel < 1 || nextLevel >= curLvl) {
+        Holder<Enchantment> matched = findHolderById(current, targetId);
+        if (matched == null || isCurse(matched)) {
             return;
         }
-        int refundPoints = refundForStepDown(holder, curLvl, nextLevel, ChiseledEnchantingTableData.disenchantRefundScale());
+        int curLvl = current.getLevel(matched);
+        if (desiredLevel <= 0 || desiredLevel >= curLvl) {
+            return;
+        }
+        var cfg = menu.libraryResonanceConfig();
+        int refund = refundForStepDown(cfg, matched, curLvl, desiredLevel, menu.disenchantRefundScale());
 
-        EnchantmentHelper.updateEnchantments(target, mutable -> mutable.set(holder, nextLevel));
-        decayAnvilRepairPenalty(target);
+        ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        for (var entry : current.entrySet()) {
+            if (entry.getKey().equals(matched)) {
+                next.set(matched, desiredLevel);
+            } else {
+                next.set(entry.getKey(), entry.getIntValue());
+            }
+        }
 
-        grantRefundAndFeedback(menu, refundPoints, SoundEvents.GRINDSTONE_USE, 1.24F);
+        ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        menu.setEnchantableSlot(resulting);
+        spawnOrAwardRefund(menu, refund);
+        playCleanseFeedback(menu, 1.05f);
         Advancement.give(menu.player, "cleanse_enchantment");
-        menu.markInventoryChanged();
-        menu.broadcastChanges();
     }
 
     private static void applyTargetedStrip(
         ChiseledEnchantingTableScreenHandler menu,
         ItemStack target,
-        Identifier enchantmentId
+        Identifier targetId
     ) {
-        Holder<Enchantment> holder = resolveEnchantment(menu, enchantmentId);
-        if (holder == null || isCurse(holder)) {
-            return;
-        }
         ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(target);
-        int curLvl = current.getLevel(holder);
-        if (curLvl <= 0) {
+        Holder<Enchantment> matched = findHolderById(current, targetId);
+        if (matched == null || isCurse(matched)) {
             return;
         }
-        if (current.size() == 1) {
-            applyFullDisenchant(menu, target);
-            return;
-        }
-
-        EnchantmentWithLevel ewl = new EnchantmentWithLevel(enchantmentId, curLvl);
+        int curLvl = current.getLevel(matched);
+        var ewl = new EnchantmentWithLevel(targetId, curLvl);
         var xpReq = menu.resolveEffectiveXpRequirement(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT);
-        if (!xpReq.isMetBy(menu.player)) {
+        List<ItemStack> affordableBundle = menu.findMatchingAffordableCostBundle(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT);
+        if (!xpReq.isMetBy(menu.player) || (!menu.player.getAbilities().instabuild && affordableBundle == null)) {
             return;
         }
-        var matchedBundle = menu.findMatchingAffordableCostBundle(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT);
-        if (!menu.player.getAbilities().instabuild && matchedBundle == null) {
-            return;
-        }
-        if (!menu.player.getAbilities().instabuild) {
-            XpCostConversion.deductXp(menu.player, xpReq);
-            menu.deductMatchedBundle(matchedBundle);
+
+        XpCostConversion.deductXp(menu.player, xpReq);
+        menu.deductMatchedBundle(affordableBundle);
+
+        ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        for (var entry : current.entrySet()) {
+            if (!entry.getKey().equals(matched)) {
+                next.set(entry.getKey(), entry.getIntValue());
+            }
         }
 
-        EnchantmentHelper.updateEnchantments(target, mutable -> mutable.set(holder, 0));
-        decayAnvilRepairPenalty(target);
-        if (target.is(Items.ENCHANTED_BOOK) && EnchantmentHelper.getEnchantmentsForCrafting(target).isEmpty()) {
-            menu.setEnchantableSlot(new ItemStack(BlockRegistry.DEPLETED_TOME, Math.max(1, target.getCount())));
-        }
-
-        menu.world().playSound(null, menu.player.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.9F, 1.15F);
-        menu.world().playSound(null, menu.player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.0F, 1.25F);
+        ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        menu.setEnchantableSlot(resulting);
+        playCleanseFeedback(menu, 0.95f);
         Advancement.give(menu.player, "cleanse_enchantment");
-        menu.markInventoryChanged();
-        menu.broadcastChanges();
     }
 
     private static void applyCursePurge(
         ChiseledEnchantingTableScreenHandler menu,
         ItemStack target,
-        Identifier enchantmentId
+        Identifier targetId
     ) {
-        if (!ChiseledEnchantingTableData.disenchantAllowCursePurge()) {
-            return;
-        }
-        Holder<Enchantment> holder = resolveEnchantment(menu, enchantmentId);
-        if (holder == null || !isCurse(holder)) {
+        if (!menu.disenchantAllowCursePurge()) {
             return;
         }
         ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(target);
-        int curLvl = current.getLevel(holder);
-        if (curLvl <= 0) {
+        Holder<Enchantment> matched = findHolderById(current, targetId);
+        if (matched == null || !isCurse(matched)) {
             return;
         }
-
-        EnchantmentWithLevel ewl = new EnchantmentWithLevel(enchantmentId, curLvl);
+        var ewl = new EnchantmentWithLevel(targetId, current.getLevel(matched));
         var xpReq = menu.resolveEffectiveXpRequirement(ewl, OptionType.PURGE_CURSE);
-        if (!xpReq.isMetBy(menu.player)) {
+        List<ItemStack> affordableBundle = menu.findMatchingAffordableCostBundle(ewl, OptionType.PURGE_CURSE);
+        if (!xpReq.isMetBy(menu.player) || (!menu.player.getAbilities().instabuild && affordableBundle == null)) {
             return;
         }
-        var matchedBundle = menu.findMatchingAffordableCostBundle(ewl, OptionType.PURGE_CURSE);
-        if (!menu.player.getAbilities().instabuild && matchedBundle == null) {
-            return;
-        }
-        if (!menu.player.getAbilities().instabuild) {
-            XpCostConversion.deductXp(menu.player, xpReq);
-            menu.deductMatchedBundle(matchedBundle);
-        }
 
-        EnchantmentHelper.updateEnchantments(target, mutable -> mutable.set(holder, 0));
-        decayAnvilRepairPenalty(target);
-        if (target.is(Items.ENCHANTED_BOOK) && EnchantmentHelper.getEnchantmentsForCrafting(target).isEmpty()) {
-            menu.setEnchantableSlot(new ItemStack(BlockRegistry.DEPLETED_TOME, Math.max(1, target.getCount())));
-        }
+        XpCostConversion.deductXp(menu.player, xpReq);
+        menu.deductMatchedBundle(affordableBundle);
 
-        menu.world().playSound(null, menu.player.blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.BLOCKS, 0.85F, 1.4F);
-        menu.world().playSound(null, menu.player.blockPosition(), SoundEvents.TOTEM_USE, SoundSource.BLOCKS, 0.45F, 1.35F);
-        Advancement.give(menu.player, "purge_curse");
-        menu.markInventoryChanged();
-        menu.broadcastChanges();
-    }
-
-    private static Holder<Enchantment> resolveEnchantment(ChiseledEnchantingTableScreenHandler menu, Identifier id) {
-        try {
-            return ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(id, menu.world());
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    private static void resetAnvilRepairPenalty(ItemStack stack) {
-        stack.set(DataComponents.REPAIR_COST, 0);
-    }
-
-    private static void decayAnvilRepairPenalty(ItemStack stack) {
-        Integer cur = stack.get(DataComponents.REPAIR_COST);
-        if (cur != null && cur > 0) {
-            stack.set(DataComponents.REPAIR_COST, Math.max(0, (cur - 1) / 2));
-        }
-    }
-
-    private static void grantRefundAndFeedback(
-        ChiseledEnchantingTableScreenHandler menu,
-        int refundPoints,
-        net.minecraft.sounds.SoundEvent primarySound,
-        float pitch
-    ) {
-        Player player = menu.player;
-        if (refundPoints > 0 && !player.getAbilities().instabuild) {
-            if (menu.world() instanceof ServerLevel serverLevel) {
-                BlockPos tablePos = menu.tableBlockPos();
-                Vec3 spawnPos = tablePos != null
-                    ? new Vec3(tablePos.getX() + 0.5, tablePos.getY() + 0.92, tablePos.getZ() + 0.5)
-                    : player.position().add(0.0, 0.65, 0.0);
-                ExperienceOrb.award(serverLevel, spawnPos, refundPoints);
-            } else {
-                player.giveExperiencePoints(refundPoints);
+        ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        for (var entry : current.entrySet()) {
+            if (!entry.getKey().equals(matched)) {
+                next.set(entry.getKey(), entry.getIntValue());
             }
         }
-        menu.world().playSound(null, player.blockPosition(), primarySound, SoundSource.BLOCKS, 0.9F, pitch);
-        if (refundPoints > 0) {
-            menu.world().playSound(
-                null,
-                player.blockPosition(),
-                SoundEvents.EXPERIENCE_ORB_PICKUP,
-                SoundSource.PLAYERS,
-                0.65F,
-                1.12F
-            );
+
+        ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        menu.setEnchantableSlot(resulting);
+        playCleanseFeedback(menu, 0.72f);
+        Advancement.give(menu.player, "purge_curse");
+    }
+
+    private static Holder<Enchantment> findHolderById(ItemEnchantments enchantments, Identifier id) {
+        for (var entry : enchantments.entrySet()) {
+            if (entry.getKey().unwrapKey().map(k -> k.identifier().equals(id)).orElse(false)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    private static ItemStack finishEnchantmentWrite(ItemStack source, ItemEnchantments remaining) {
+        if (source.is(Items.ENCHANTED_BOOK) && remaining.isEmpty()) {
+            return new ItemStack(BlockRegistry.DEPLETED_TOME, 1);
+        }
+        ItemStack copy = source.copy();
+        if (copy.is(Items.ENCHANTED_BOOK)) {
+            copy.set(DataComponents.STORED_ENCHANTMENTS, remaining);
+        } else {
+            copy.set(DataComponents.ENCHANTMENTS, remaining);
+        }
+        return copy;
+    }
+
+    private static void spawnOrAwardRefund(ChiseledEnchantingTableScreenHandler menu, int refundPoints) {
+        if (refundPoints <= 0) {
+            return;
+        }
+        Player player = menu.player;
+        if (player.level() instanceof ServerLevel serverLevel) {
+            BlockPos tablePos = menu.tableBlockPos();
+            Vec3 spawnPos = tablePos != null
+                ? Vec3.atCenterOf(tablePos).add(0.0, 0.85, 0.0)
+                : player.position().add(0.0, 0.5, 0.0);
+            ExperienceOrb.award(serverLevel, spawnPos, refundPoints);
+        }
+    }
+
+    private static void playCleanseFeedback(ChiseledEnchantingTableScreenHandler menu, float pitch) {
+        Player player = menu.player;
+        if (player.level() instanceof ServerLevel serverLevel) {
+            BlockPos pos = menu.tableBlockPos();
+            BlockPos soundPos = pos != null ? pos : player.blockPosition();
+            serverLevel.playSound(null, soundPos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.85f, pitch);
+            serverLevel.playSound(null, soundPos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.90f, 1.15f);
         }
     }
 }

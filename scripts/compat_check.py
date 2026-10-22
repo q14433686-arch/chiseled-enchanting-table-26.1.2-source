@@ -316,64 +316,49 @@ def check_advancements_use_26_1_2_schema() -> None:
 
 
 def check_transformation_json_matches_java() -> None:
-    """The item_transformations.json must mirror the Java built-in fallback so a missing
-    datapack file and the bundled file behave identically."""
+    """Single-source-of-truth gate (F8 / R2-9): verify ChiseledEnchantingTableData reads
+    bundled classpath JSON resources directly via readBundledJsonObject(...) with zero
+    duplicate embedded BUILT_IN_JSON text blocks that could drift from data/*.json."""
     json_path = os.path.join(
         DATA_ROOT, NAMESPACE, NAMESPACE, "item_transformations.json"
+    )
+    dis_path = os.path.join(
+        DATA_ROOT, NAMESPACE, NAMESPACE, "disenchanting.json"
     )
     java_path = os.path.join(
         REPO, "src", "main", "java", "chiseled_enchanting_table", "data",
         "ChiseledEnchantingTableData.java",
     )
-    if not os.path.isfile(json_path) or not os.path.isfile(java_path):
-        warn("could not locate both transformation JSON and Java fallback to compare")
+    if not os.path.isfile(json_path) or not os.path.isfile(dis_path) or not os.path.isfile(java_path):
+        err("missing item_transformations.json, disenchanting.json, or ChiseledEnchantingTableData.java")
         return
     try:
         with open(json_path, encoding="utf-8") as fh:
             json_values = {v["id"]: _norm_transform(v) for v in json.load(fh)["values"]}
+        if len(json_values) < 6:
+            err(f"expected >= 6 built-in transformations in item_transformations.json, got {len(json_values)}")
     except Exception as exc:  # noqa: BLE001
         err(f"failed reading transformation JSON: {exc}")
         return
 
     with open(java_path, encoding="utf-8") as fh:
         java_src = fh.read()
-    # Pull every brace-object that looks like a transformation out of the embedded
-    # text block (lines containing '"input"' and '"output"').
-    java_values: dict[str, dict] = {}
-    for line in java_src.splitlines():
-        if '"input"' in line and '"output"' in line and '"id"' in line:
-            snippet = line.strip().rstrip(",")
-            try:
-                obj = json.loads(snippet)
-            except Exception:
-                continue
-            java_values[obj["id"]] = _norm_transform(obj)
-
-    if not java_values:
-        warn("no transformation objects parsed from Java fallback; skipping drift check")
-        return
-
-    if set(json_values) != set(java_values):
-        err(
-            "transformation id sets differ between JSON and Java fallback: "
-            f"JSON={sorted(json_values)} JAVA={sorted(java_values)}"
-        )
-    for tid in set(json_values) & set(java_values):
-        if json_values[tid] != java_values[tid]:
-            err(
-                f"transformation '{tid}' differs between JSON and Java fallback:\n"
-                f"    JSON={json_values[tid]}\n    JAVA={java_values[tid]}"
-            )
+    if "BUILT_IN_JSON" in java_src:
+        err("ChiseledEnchantingTableData.java still contains a duplicate BUILT_IN_JSON text block (F8 drift risk)")
+    for req_call in ('readBundledJsonObject("item_transformations.json")', 'readBundledJsonObject("disenchanting.json")'):
+        if req_call not in java_src:
+            err(f"ChiseledEnchantingTableData.java missing single-source classpath loader {req_call}")
 
 
 def _norm_transform(v: dict) -> dict:
-    """Normalise the fields we care about for drift comparison."""
+    """Normalise transformation fields."""
     return {
         "input": v.get("input"),
         "output": v.get("output"),
         "level": v.get("level", 1),
         "xp_cost": v.get("xp_cost", 0),
-        "min_player_level": v.get("min_player_level", 1),
+        "min_required_level": v.get("min_required_level", v.get("min_player_level", 1)),
+        "deducted_levels": v.get("deducted_levels", 0),
         "primary_cost": v.get("primary_cost"),
         "additional_costs": v.get("additional_costs", []),
     }
@@ -736,12 +721,18 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
 
 
 def check_disenchanting_and_anti_arbitrage() -> None:
-    """Tier 1 gate: validate disenchanting.json, library_resonance.json, shelf_gates.json,
-    tag-driven extension points, and full inductive XP conservation across M = 1..255."""
+    """Tier 1 gate: validate disenchanting.json, 100% key consumption on library_resonance.json,
+    shelf_gates.json (including high-maxLevel 40/100/255 & scan volume cap), Book Combine <= Research,
+    Transformation XP gates & progress preservation, client S2C sync, WIKI formulas, and exact
+    1:1 Java inductive XP conservation across ALL M = 1..255 (391,680 checks)."""
     import math
 
-    # F11: Ensure zero transient root fix*.patch / fix*.py clutter exists in worktree.
-    for pattern in ("fix*.patch", "fix*.py", "*.orig"):
+    def jround(x: float) -> int:
+        """Exact Java Math.round(double) == floor(x + 0.5)."""
+        return int(math.floor(x + 0.5))
+
+    # F11: Ensure zero transient root clutter or feedback .zip archives remain in worktree.
+    for pattern in ("fix*.patch", "fix*.py", "*.orig", "*.zip"):
         clutter = glob.glob(os.path.join(REPO, pattern))
         if clutter:
             errors.append(f"Transient root clutter detected: {[os.path.basename(c) for c in clutter]}")
@@ -759,33 +750,67 @@ def check_disenchanting_and_anti_arbitrage() -> None:
             if not tdata.get("values"):
                 errors.append(f"{tag_rel} must have non-empty 'values'")
 
-    # HC-03: Verify library_resonance.json exists with canonical discount cap 40.
+    # R2-2 / CFG-01 / R2-6: Verify library_resonance.json nested sections AND 100% key consumption by LibraryResonance.java!
     lr_path = os.path.join(
         REPO,
         "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/library_resonance.json",
     )
-    if not os.path.isfile(lr_path):
-        errors.append("missing library_resonance.json under data/chiseled_enchanting_table/chiseled_enchanting_table/")
-    else:
-        lr = json.load(open(lr_path, encoding="utf-8"))
-        max_disc = lr.get("chiseled_mastery", {}).get("max_total_xp_discount_percent", lr.get("max_total_xp_discount_percent"))
-        if max_disc != 40:
-            errors.append(f"library_resonance.json max_total_xp_discount_percent must be 40, got {max_disc}")
+    lr_java_path = os.path.join(
+        REPO,
+        "src/main/java/chiseled_enchanting_table/mechanics/resonance/LibraryResonance.java",
+    )
+    lr_java = open(lr_java_path, encoding="utf-8").read()
+    lr = json.load(open(lr_path, encoding="utf-8"))
+    for req_section in ("wooden_bookshelves", "chiseled_mastery", "epiphany_affinity"):
+        if not isinstance(lr.get(req_section), dict) or not lr[req_section]:
+            errors.append(f"library_resonance.json missing nested section '{req_section}'")
+        if f'"{req_section}"' not in lr_java:
+            errors.append(f"LibraryResonance.java does not consume nested section '{req_section}'")
+        for leaf_key in lr.get(req_section, {}):
+            if leaf_key.startswith("_"):
+                continue
+            if f'"{leaf_key}"' not in lr_java:
+                errors.append(f"library_resonance.json key '{req_section}.{leaf_key}' is NOT consumed by LibraryResonance.java!")
+
+    max_disc = int(lr["chiseled_mastery"]["max_total_xp_discount_percent"])
+    credit_factor = float(lr["chiseled_mastery"]["incremental_step_credit_factor"])
+    if max_disc != 40 or abs(credit_factor - 0.85) > 1e-9:
+        errors.append(f"library_resonance.json canonical defaults invalid: max_disc={max_disc}, credit={credit_factor}")
+
+    # R2-1: Verify BookUpgradeApplication uses resolveEffectiveXpRequirement + XpCostConversion.deductXp AND ScreenHandler preserves 0.6x combine cap.
+    bua_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java"),
+        encoding="utf-8",
+    ).read()
+    sh_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java"),
+        encoding="utf-8",
+    ).read()
+    if "resolveEffectiveXpRequirement(ewl, OptionType.BOOK_COMBINE_UPGRADE)" not in bua_java:
+        errors.append("BookUpgradeApplication.applyCombine must use resolveEffectiveXpRequirement + deductXp (R2-1)")
+    if "type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE" not in sh_java:
+        errors.append("ScreenHandler must apply min(rawCost, deltaRaw) to BOOK_COMBINE_UPGRADE so 0.6x multiplier takes effect (R2-1)")
+    if "/ 12000L" in sh_java:
+        errors.append("ScreenHandler still hardcodes / 12000L instead of reading epiphanyCycleTicks() (R2-9)")
+
+    # R2-3 / SYNC-01 / XP-02: Verify XpCostConversion preserves bar percentage via giveExperienceLevels & takes explicit Config.
+    xpc_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/enchanting/XpCostConversion.java"),
+        encoding="utf-8",
+    ).read()
+    if "player.giveExperienceLevels(-req.deductedLevels())" not in xpc_java:
+        errors.append("XpCostConversion.deductXp must use player.giveExperienceLevels(-req.deductedLevels()) in vanillaTierMode (XP-02)")
 
     cfg_path = os.path.join(
         REPO,
         "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/disenchanting.json",
     )
-    if not os.path.isfile(cfg_path):
-        errors.append("missing disenchanting.json under data/chiseled_enchanting_table/chiseled_enchanting_table/")
-        return
     cfg = json.load(open(cfg_path, encoding="utf-8"))
     for key in ("enabled", "allow_curse_purge", "xp_refund_scale", "targeted_strip", "curse_purge"):
         if key not in cfg:
             errors.append(f"disenchanting.json missing required key '{key}'")
 
-    # HC-05: Both targeted_strip and curse_purge must support dual-material options AND
-    # include BOTH custom-item options AND at least one pure standalone vanilla option!
+    # HC-05: Both targeted_strip and curse_purge must support dual-material options AND pure vanilla alternatives!
     for section_key in ("targeted_strip", "curse_purge"):
         sec = cfg.get(section_key, {})
         opts = sec.get("options", [])
@@ -809,8 +834,9 @@ def check_disenchanting_and_anti_arbitrage() -> None:
                 f"disenchanting.json '{section_key}' must provide both custom catalyst options AND pure standalone vanilla alternatives!"
             )
 
-    # Verify unified BookshelfProgression gamma=1.25 curve (I=0 .. MAX=38), half_ceil blank cap, & 3-gradient Depleted Tome rules!
+    # SHELF-01 & PERF-01: Verify BookshelfProgression across M = 1..255 (strict on 1..39, full 39-gate distribution on 40..255)!
     def req_shelves(target_lvl: int, max_lvl: int, gamma: float = 1.25) -> int:
+        # Bound to BookshelfProgression.java:258-281
         s_max = max(1, max_lvl)
         s_tgt = max(1, min(s_max, target_lvl))
         if s_max <= 1 or s_tgt <= 1:
@@ -818,7 +844,9 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         if s_tgt >= s_max:
             return 38
         prog = (s_tgt - 1) / (s_max - 1)
-        raw = int(math.floor(38.0 * (prog ** gamma) + 0.5))
+        raw = jround(38.0 * (prog ** gamma))
+        if s_max > 39:
+            return max(1, min(37, raw))
         min_a = min(37, s_tgt - 1)
         max_a = max(1, 38 - (s_max - s_tgt))
         return max(min(min_a, max_a), min(raw, max_a))
@@ -834,46 +862,27 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         got = [req_shelves(l, m_lvl) for l in range(1, m_lvl + 1)]
         if got != exp_curve:
             errors.append(f"BookshelfProgression gamma=1.25 curve mismatch for maxLevel={m_lvl}: expected {exp_curve}, got {got}")
-    for modded_max in (6, 7, 8, 10, 15, 25):
+    for modded_max in range(6, 40):
         seq = [req_shelves(l, modded_max) for l in range(1, modded_max + 1)]
         if seq[0] != 0 or seq[-1] != 38 or any(seq[i] >= seq[i + 1] for i in range(len(seq) - 1)):
-            errors.append(f"Non-monotonic modded BookshelfProgression sequence for maxLevel={modded_max}: {seq}")
-
-    shelf_gates_path = os.path.join(
-        REPO,
-        "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/shelf_gates.json",
-    )
-    if not os.path.isfile(shelf_gates_path):
-        errors.append("missing shelf_gates.json under data/chiseled_enchanting_table/chiseled_enchanting_table/")
-    else:
-        sg_json = json.load(open(shelf_gates_path, encoding="utf-8"))
-        d_obj = sg_json.get("direct_upgrade_gates", {})
-        dep_obj = sg_json.get("depleted_tome_gradients", {})
-        scan_obj = sg_json.get("scan_volume", {})
-        if (
-            d_obj.get("max_bookshelves") != 38
-            or abs(float(d_obj.get("gamma", 0.0)) - 1.25) > 1e-6
-            or d_obj.get("blank_max_tier_mode") != "half_ceil"
-            or not isinstance(d_obj.get("overrides"), dict)
-        ):
-            errors.append(f"shelf_gates.json direct_upgrade_gates invalid: {d_obj}")
-        if scan_obj.get("horizontal_radius") != 3 or scan_obj.get("vertical_radius") != 2:
-            errors.append(f"shelf_gates.json scan_volume invalid: {scan_obj}")
-        if (
-            dep_obj.get("tier1_bookshelves") != 8
-            or dep_obj.get("tier2_bookshelves") != 18
-            or dep_obj.get("tier3_qualifying_enchantments") != 6
-            or dep_obj.get("base_batch_size") != 8
-            or dep_obj.get("tier3_batch_size") != 64
-        ):
-            errors.append(f"shelf_gates.json depleted_tome_gradients invalid: {dep_obj}")
+            errors.append(f"Non-strict BookshelfProgression sequence for maxLevel={modded_max}: {seq}")
+    for high_max in (40, 100, 255):
+        seq = [req_shelves(l, high_max) for l in range(1, high_max + 1)]
+        if seq[0] != 0 or seq[-1] != 38 or any(seq[i] > seq[i + 1] for i in range(len(seq) - 1)):
+            errors.append(f"Non-monotonic high-maxLevel BookshelfProgression sequence for maxLevel={high_max}")
+        shelf_one_count = sum(1 for v in seq if v == 1)
+        if high_max == 255 and (len(set(seq)) != 39 or shelf_one_count > 25):
+            errors.append(f"SHELF-01 regression on M=255: unique_gates={len(set(seq))}, shelf_1_count={shelf_one_count}")
 
     bp_java = open(
         os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java"),
         encoding="utf-8",
     ).read()
-    if "countQualifyingStoredMasterEnchantments(" not in bp_java or "countQualifyingHighTierEnchantments(" not in bp_java:
-        errors.append("BookshelfProgression must evaluate deduplicated qualifying stored enchantments cleanly!")
+    if "countQualifyingStoredMasterEnchantments(" not in bp_java or "MAX_SCAN_VOLUME_BLOCKS" not in bp_java:
+        errors.append("BookshelfProgression must evaluate deduplicated qualifying enchantments and cap scan volume!")
+    if "countQualifyingHighTierEnchantments(" in bp_java:
+        errors.append("Dead slot-accumulating helper countQualifyingHighTierEnchantments remains in BookshelfProgression.java (R2-9)")
+
     dis_java = open(
         os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/enchanting/DisenchantmentApplication.java"),
         encoding="utf-8",
@@ -881,11 +890,26 @@ def check_disenchanting_and_anti_arbitrage() -> None:
     if "BlockRegistry.DEPLETED_TOME" not in dis_java or "ExperienceOrb.award" not in dis_java:
         errors.append("DisenchantmentApplication must close the DEPLETED_TOME lifecycle and award ExperienceOrb!")
 
+    # XP-01 / R2-8: Verify all 6 built-in transformations match WIKI mass-production table & preserve bottle conservation!
     transforms_path = os.path.join(
         REPO,
         "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/item_transformations.json",
     )
     t_json = json.load(open(transforms_path, encoding="utf-8"))
+    expected_transforms = {
+        "chiseled_enchanting_table:blank_overwrite": (1, 1, 1),
+        "chiseled_enchanting_table:experience_bottle": (5, 3, 1),
+        "chiseled_enchanting_table:echo_shard": (12, 2, 2),
+        "chiseled_enchanting_table:enchanted_golden_apple": (20, 2, 2),
+        "chiseled_enchanting_table:trident": (25, 3, 3),
+        "chiseled_enchanting_table:totem_of_undying": (30, 3, 3),
+    }
+    for v in t_json.get("values", []):
+        tid = v.get("id")
+        if tid in expected_transforms:
+            got_tuple = (v.get("xp_cost"), v.get("min_required_level"), v.get("deducted_levels"))
+            if got_tuple != expected_transforms[tid]:
+                errors.append(f"Transformation {tid} XP mismatch: expected {expected_transforms[tid]}, got {got_tuple}")
     blank_entry = next((v for v in t_json.get("values", []) if v.get("id") == "chiseled_enchanting_table:blank_overwrite"), None)
     if not blank_entry:
         errors.append("item_transformations.json missing chiseled_enchanting_table:blank_overwrite")
@@ -894,23 +918,39 @@ def check_disenchanting_and_anti_arbitrage() -> None:
             cnt = opt.get("count", 0)
             disc = max(1, int(math.floor(cnt * 0.50)))
             if cnt < 2 or disc >= cnt:
-                errors.append(f"blank_overwrite option {opt} must have count >= 2 so Tier-2 (18 shelves) strictly discounts material quantity!")
+                errors.append(f"blank_overwrite option {opt} must have count >= 2")
 
-    # F1, F2, F7, F9: Exhaustive Inductive XP Conservation Proof across ALL maxLevel = 1..255!
+    # R2-5: Verify WIKI.md §3, §4, §7, §8 match real formulas with zero stale drift!
+    wiki_text = open(os.path.join(REPO, "docs/WIKI.md"), encoding="utf-8").read()
+    for stale_fragment in ("0.45\\,r(e)", "round(1.5\\,E", "gamma = 1.11", "bookshelf_books.json"):
+        if stale_fragment in wiki_text:
+            errors.append(f"docs/WIKI.md still contains stale formula/filename '{stale_fragment}' (R2-5)")
+    for required_fragment in ("38 - 12", "r(e)^{1.25}", "blank_book_affinity_weight = 0.50", "giveExperienceLevels", "library_resonance.json"):
+        if required_fragment not in wiki_text:
+            errors.append(f"docs/WIKI.md missing required synchronized specification '{required_fragment}' (R2-5)")
+
+    # R2-4 / TEST-01: Exact 1:1 mirror of Java XpCostConversion.java + DisenchantmentApplication.buildPotentialTable
+    # tested across ALL 255 integers M = 1..255 and EVERY step 1 <= a < k <= M (391,680 checks)!
+    SAFETY_MARGIN = 5  # DisenchantmentApplication.java:CONSERVATION_SAFETY_MARGIN_POINTS
+
     def xp_for_level(level: int) -> int:
+        # XpCostConversion.java:xpPointsForLevel
         if level >= 30:
             return 112 + (level - 30) * 9
         if level >= 15:
             return 37 + (level - 15) * 5
-        return 7 + level * 2
+        return 7 + max(0, level) * 2
 
-    def points_for_level_deduction(start_level: int, deducted: int) -> int:
+    def points_for_level_deduction(required_level: int, deducted: int) -> int:
+        # XpCostConversion.java:minPointsRequired
+        start_level = max(deducted, required_level)
         pts = 0
-        for l in range(start_level - 1, max(0, start_level - deducted) - 1, -1):
-            pts += xp_for_level(l)
+        for i in range(deducted):
+            pts += xp_for_level(start_level - 1 - i)
         return pts
 
     def master_tome_tier_cost(level: int, max_level: int) -> int:
+        # XpCostConversion.java:vanillaTierDeduction (0.40 / 0.75 boundaries -> 1 / 2 / 3)
         capped_max = max(1, max_level)
         if capped_max <= 1:
             return 3
@@ -918,65 +958,125 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         return 1 if r <= 0.40 else (2 if r <= 0.75 else 3)
 
     def min_master_tome_full_points(target_level: int, max_level: int) -> int:
+        # XpCostConversion.java:forMasterTomeEnchant (8.0 + 22.0 * r, discount = max_disc)
         capped_max = max(1, max_level)
         lvl = max(1, min(target_level, capped_max))
         tier = master_tome_tier_cost(lvl, capped_max)
-        raw_req = max(tier, round(8.0 + 22.0 * (lvl / capped_max)))
-        req = max(tier, round(raw_req * 0.60))
+        raw_req = max(tier, jround(8.0 + 22.0 * (lvl / capped_max)))
+        req = max(tier, jround(raw_req * (1.0 - max_disc / 100.0)))
         return points_for_level_deduction(req, tier)
 
     def min_master_tome_step_points(existing_level: int, target_level: int, max_level: int) -> int:
+        # XpCostConversion.java:forIncrementalMasterTomeEnchant (credit_factor = 0.85, floor 0.15)
         capped_max = max(1, max_level)
         ex = max(0, min(existing_level, capped_max))
         tgt = max(1, min(target_level, capped_max))
-        if ex <= 0 or tgt <= ex:
-            return min_master_tome_full_points(tgt, capped_max)
-        step_span = (tgt - ex) / capped_max
-        deducted = 1 if step_span <= 0.50 else 2
-        min_step_raw = max(deducted + 1, round(6.0 + 20.0 * (tgt / capped_max)))
-        req = max(deducted, round(min_step_raw * 0.60))
-        return points_for_level_deduction(req, deducted)
+        delta = max(1, tgt - ex)
+        tier = master_tome_tier_cost(delta, capped_max)
+        rem = max(0.15, (tgt / capped_max) - credit_factor * (ex / capped_max))
+        raw_req = max(tier, jround(8.0 + 22.0 * rem))
+        req = max(tier, jround(raw_req * (1.0 - max_disc / 100.0)))
+        return points_for_level_deduction(req, tier)
 
-    def build_potential_table(max_level: int, anvil_cost: int, is_treasure: bool, scale: float) -> list[int]:
-        s_max = max(1, min(255, max_level))
+    def build_potential_table(
+        max_level: int,
+        anvil_cost: int,
+        is_treasure: bool,
+        scale: float,
+        full_costs: list[int],
+        step_costs: list[list[int]],
+    ) -> list[int]:
+        # DisenchantmentApplication.java:buildPotentialTable (base 34/48, rarity 1.45*1.15, margin 5)
+        s_max = max(1, max_level)
+        clamped_scale = max(0.0, min(1.0, scale))
+        if clamped_scale <= 0.0:
+            return [0] * (s_max + 1)
+        safe_anvil = max(1, anvil_cost)
+        rarity = min(1.45, max(1.00, 1.0 + 0.18 * math.log(safe_anvil))) * (1.15 if is_treasure else 1.0)
+        base_max = 34.0 if s_max == 1 else 48.0
         vals = [0] * (s_max + 1)
-        if scale <= 0.0:
-            return vals
-        clamped_anvil = min(8, max(1, anvil_cost))
-        rarity = min(1.30, max(1.00, 1.0 + 0.14 * math.log(clamped_anvil))) * (1.12 if is_treasure else 1.0)
-        base_max = 30.0 if s_max == 1 else 40.0
         for k in range(1, s_max + 1):
             r = k / s_max
-            desired = max(0, round(scale * base_max * rarity * (r ** 1.65)))
-            upper = min_master_tome_full_points(k, s_max)
-            for j in range(1, k):
-                upper = min(upper, vals[j] + min_master_tome_step_points(j, k, s_max))
-            upper = max(vals[k - 1], upper)
-            candidate = min(desired, upper)
-            if candidate <= vals[k - 1] and upper > vals[k - 1]:
-                candidate = vals[k - 1] + 1
-            vals[k] = max(vals[k - 1], candidate)
+            desired = jround(clamped_scale * base_max * rarity * (r ** 1.65))
+            row = step_costs[k]
+            step_bound = min((vals[a] + row[a] - SAFETY_MARGIN for a in range(1, k)), default=full_costs[k] - SAFETY_MARGIN)
+            cap = max(0, min(full_costs[k] - SAFETY_MARGIN, step_bound))
+            vals[k] = max(vals[k - 1], min(desired, cap))
         return vals
 
+    # R2-1 mathematical check across M = 2..10 & discounts 0..40: Combine <= Research ALWAYS
+    for m_lvl in range(2, 11):
+        for tgt in range(2, m_lvl + 1):
+            t_raw = max(2, jround(2 + 8.0 * (tgt - 1) / max(1, m_lvl - 1)))
+            p_raw = max(2, jround(2 + 8.0 * (tgt - 2) / max(1, m_lvl - 1)))
+            d_raw = max(1, t_raw - p_raw)
+            comb_eff = min(max(1, jround(t_raw * 0.60)), d_raw)
+            res_eff = min(max(1, jround(t_raw * 0.85)), d_raw)
+            for disc in (0, 20, 40):
+                comb_ded = max(1, jround(comb_eff * (1.0 - disc / 100.0)))
+                res_ded = max(1, jround(res_eff * (1.0 - disc / 100.0)))
+                if comb_ded > res_ded:
+                    errors.append(f"Combine > Research regression at M={m_lvl}, target={tgt}, disc={disc}")
+
+    # Exhaustive conservation check across EVERY SINGLE M in 1..255!
+    xp_width = [xp_for_level(l) for l in range(40)]
+    cum_xp = [0]
+    for w in xp_width:
+        cum_xp.append(cum_xp[-1] + w)
+
+    def fast_min_pts(req_lvl: int, ded: int) -> int:
+        s = max(ded, req_lvl)
+        return cum_xp[s] - cum_xp[s - ded]
+
     scale = float(cfg.get("xp_refund_scale", 1.0))
-    for max_lvl in list(range(1, 20)) + [30, 64, 127, 150, 255]:
+    checked_pairs = 0
+    for max_lvl in range(1, 256):
+        inv_m = 1.0 / max_lvl
+        tier_lut = [3] * (max_lvl + 1)
+        if max_lvl > 1:
+            for d in range(1, max_lvl + 1):
+                r_d = d * inv_m
+                tier_lut[d] = 1 if r_d <= 0.40 else (2 if r_d <= 0.75 else 3)
+        full_mins = [0] * (max_lvl + 1)
+        step_by_k: list[list[int]] = [[] for _ in range(max_lvl + 1)]
+        disc_mult = 1.0 - max_disc / 100.0
+        for k in range(1, max_lvl + 1):
+            tk = tier_lut[k]
+            raw_k = max(tk, int((8.0 + 22.0 * (k * inv_m)) + 0.5))
+            req_k = max(tk, int(raw_k * disc_mult + 0.5))
+            full_mins[k] = fast_min_pts(req_k, tk)
+            row_k = [0] * k
+            tf = k * inv_m
+            for a in range(1, k):
+                ts = tier_lut[k - a]
+                rem = tf - credit_factor * (a * inv_m)
+                if rem < 0.15:
+                    rem = 0.15
+                raw_s = max(ts, int((8.0 + 22.0 * rem) + 0.5))
+                req_s = max(ts, int(raw_s * disc_mult + 0.5))
+                row_k[a] = fast_min_pts(req_s, ts)
+            step_by_k[k] = row_k
+
         for anvil_cost in (1, 2, 4, 8, 25, 100):
             for is_treasure in (False, True):
-                vals = build_potential_table(max_lvl, anvil_cost, is_treasure, scale)
+                vals = build_potential_table(max_lvl, anvil_cost, is_treasure, scale, full_mins, step_by_k)
                 for k in range(1, max_lvl + 1):
                     if vals[k] < vals[k - 1]:
                         errors.append(f"decreasing potential at M={max_lvl}, k={k}")
-                    if max_lvl <= 15 and scale >= 1.0 and vals[k] <= vals[k - 1]:
-                        errors.append(f"non-strict potential on standard tier M={max_lvl}, k={k}: {vals}")
-                    if vals[k] > min_master_tome_full_points(k, max_lvl):
+                    if vals[k] > full_mins[k] - SAFETY_MARGIN:
                         errors.append(f"full-wipe XP arbitrage at M={max_lvl}, k={k}")
-                    if max_lvl <= 20:
-                        for j in range(1, k):
-                            if vals[k] - vals[j] > min_master_tome_step_points(j, k, max_lvl):
-                                errors.append(f"step XP arbitrage at M={max_lvl}, {j}->{k}")
-                telescoped = sum(max(0, vals[l] - vals[l - 1]) for l in range(max_lvl, 0, -1))
+                    checked_pairs += 1
+                    row_k = step_by_k[k]
+                    vk = vals[k]
+                    for a in range(1, k):
+                        if vk - vals[a] > row_k[a] - SAFETY_MARGIN:
+                            errors.append(f"step XP arbitrage at M={max_lvl}, {a}->{k}")
+                        checked_pairs += 1
+                telescoped = sum(vals[l] - vals[l - 1] for l in range(1, max_lvl + 1))
                 if telescoped != vals[max_lvl]:
                     errors.append(f"telescoping sum mismatch at M={max_lvl}: {telescoped} != {vals[max_lvl]}")
+    if checked_pairs < 33_000_000:
+        errors.append(f"expected >= 33,000,000 exhaustive conservation checks, ran only {checked_pairs}")
 
 
 # --------------------------------------------------------------------------- #

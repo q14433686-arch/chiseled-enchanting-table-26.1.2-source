@@ -131,11 +131,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     ) {
         super(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, syncId);
         this.access = access;
+        this.player = playerInventory.player;
+        this.world = playerInventory.player.level();
         this.unlocked_enchantements = new HashSet<>(payload.unlocked_enchantements());
         this.xpDiscountPercent = Math.max(
             0,
             Math.min(
-                chiseled_enchanting_table.mechanics.resonance.LibraryResonance.activeConfig().maxTotalXpDiscountPercent(),
+                this.libraryResonanceConfig().maxTotalXpDiscountPercent(),
                 payload.xp_discount_percent()
             )
         );
@@ -146,16 +148,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             ? java.util.Map.of()
             : java.util.Map.copyOf(payload.stored_master_levels());
         this.epiphanySeed = payload.epiphany_seed();
-        this.syncedCycleIndex = (int) ((playerInventory.player.level().getGameTime() / 12000L) & 0xFFFFL);
-        this.syncedCountdownSeconds = 600;
+        long cycleTicks = Math.max(1L, this.epiphanyCycleTicks());
+        this.syncedCycleIndex = (int) ((this.world.getGameTime() / cycleTicks) & 0xFFFFL);
+        this.syncedCountdownSeconds = (int) Math.max(1L, cycleTicks / 20L);
         this.syncedFrozen = false;
         java.util.Map<Identifier, TransformationDisplay> displays = new java.util.HashMap<>();
         for (TransformationDisplay display : payload.transformations()) {
             displays.put(display.id(), display);
         }
         this.transformationDisplays = java.util.Map.copyOf(displays);
-        this.player = playerInventory.player;
-        this.world = playerInventory.player.level();
 
         int inventorySlotStartX = 172;
         int inventorySlotStartY = 84;
@@ -994,10 +995,18 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return resolveEffectiveXpRequirement(e, type);
     }
 
+    public int syncedTransformationDeductedLevels(Identifier id) {
+        TransformationDisplay display = this.transformationDisplays.get(id);
+        return display != null && display.deducted_levels() > 0
+            ? display.deducted_levels()
+            : ChiseledEnchantingTableData.transformationDeductedLevels(id);
+    }
+
     public XpCostConversion.XpRequirement resolveEffectiveXpRequirement(EnchantmentWithLevel e, OptionType type) {
+        var resonanceCfg = libraryResonanceConfig();
         if (type == OptionType.DISENCHANT_ALL) {
             int totalRefund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                .totalFullDisenchantRefund(get_enchantable_item(), disenchantRefundScale());
+                .totalFullDisenchantRefund(resonanceCfg, get_enchantable_item(), disenchantRefundScale());
             return XpCostConversion.XpRequirement.refund(totalRefund);
         }
         if (type == OptionType.DOWNGRADE_ENCHANTMENT) {
@@ -1005,7 +1014,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 Holder<Enchantment> holder = IdentifierToEnchantment(e.enchantment_id(), this.world);
                 int cur = currentTargetEnchantLevel(e.enchantment_id());
                 int refund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                    .refundForStepDown(holder, cur, e.enchantment_level(), disenchantRefundScale());
+                    .refundForStepDown(resonanceCfg, holder, cur, e.enchantment_level(), disenchantRefundScale());
                 return XpCostConversion.XpRequirement.refund(refund);
             } catch (Exception ignored) {
                 return XpCostConversion.XpRequirement.FREE;
@@ -1018,7 +1027,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 try {
                     Holder<Enchantment> holder = IdentifierToEnchantment(e.enchantment_id(), this.world);
                     int refund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                        .essencePotential(holder, curMap.getLevel(holder), disenchantRefundScale());
+                        .essencePotential(resonanceCfg, holder, curMap.getLevel(holder), disenchantRefundScale());
                     return XpCostConversion.XpRequirement.refund(refund);
                 } catch (Exception ignored) {
                     return XpCostConversion.XpRequirement.FREE;
@@ -1027,21 +1036,23 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             int rawStrip = getBaseEnchantmentXpLevelCost(e, OptionType.STRIP_SINGLE_ENCHANTMENT);
             int maxLvl = getEnchantmentMaxLevel(e);
             int stripDiscount = effectiveXpDiscountPercent(e.enchantment_id(), OptionType.STRIP_SINGLE_ENCHANTMENT);
-            return XpCostConversion.forTargetedCleanse(e.enchantment_level(), maxLvl, rawStrip, stripDiscount);
+            return XpCostConversion.forTargetedCleanse(resonanceCfg, e.enchantment_level(), maxLvl, rawStrip, stripDiscount);
         }
         if (type == OptionType.PURGE_CURSE) {
             int rawPurge = getBaseEnchantmentXpLevelCost(e, OptionType.PURGE_CURSE);
-            return XpCostConversion.forFullArcaneRitual(rawPurge, this.xpDiscountPercent);
+            return XpCostConversion.forFullArcaneRitual(resonanceCfg, rawPurge, this.xpDiscountPercent);
         }
 
         int rawCost = getBaseEnchantmentXpLevelCost(e, type);
         int discount = effectiveXpDiscountPercent(e.enchantment_id(), type);
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
             var baseTransformXp = XpCostConversion.forTransformation(
+                resonanceCfg,
                 e.enchantment_id(),
                 rawCost,
                 discount,
-                syncedTransformationMinPlayerLevel(e.enchantment_id())
+                syncedTransformationMinPlayerLevel(e.enchantment_id()),
+                syncedTransformationDeductedLevels(e.enchantment_id())
             );
             if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(e.enchantment_id())) {
                 return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
@@ -1061,13 +1072,19 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         );
         if (existingLevel > 0 && e.enchantment_level() > existingLevel) {
             if (storedMasterLevel(e.enchantment_id()) >= e.enchantment_level()
-                && (type == OptionType.ENCHANTMENT || type == OptionType.BOOK_RESEARCH_UPGRADE)) {
+                && (type == OptionType.ENCHANTMENT
+                    || type == OptionType.BOOK_RESEARCH_UPGRADE
+                    || type == OptionType.BOOK_COMBINE_UPGRADE)) {
                 int fullRaw = getBaseEnchantmentXpLevelCost(e, OptionType.ENCHANTMENT);
+                int effectiveMasterRaw = type == OptionType.BOOK_COMBINE_UPGRADE
+                    ? Math.min(rawCost, fullRaw)
+                    : fullRaw;
                 return XpCostConversion.forIncrementalMasterTomeEnchant(
+                    resonanceCfg,
                     existingLevel,
                     e.enchantment_level(),
                     maxLvl,
-                    fullRaw,
+                    effectiveMasterRaw,
                     discount
                 );
             }
@@ -1080,8 +1097,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 OptionType.ENCHANTMENT
             );
             int deltaRaw = Math.max(1, targetRaw - prevRaw);
-            int effectiveRaw = (type == OptionType.BOOK_RESEARCH_UPGRADE) ? Math.min(rawCost, deltaRaw) : deltaRaw;
+            int effectiveRaw = (type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE)
+                ? Math.min(rawCost, deltaRaw)
+                : deltaRaw;
             return XpCostConversion.forFullArcaneEnchantOrUpgrade(
+                resonanceCfg,
                 existingLevel,
                 e.enchantment_level(),
                 maxLvl,
@@ -1091,9 +1111,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
 
         if (isMasterTomeBacked(e, type)) {
-            return XpCostConversion.forMasterTomeEnchant(e.enchantment_level(), maxLvl, rawCost, discount);
+            return XpCostConversion.forMasterTomeEnchant(resonanceCfg, e.enchantment_level(), maxLvl, rawCost, discount);
         }
         return XpCostConversion.forFullArcaneEnchantOrUpgrade(
+            resonanceCfg,
             0,
             e.enchantment_level(),
             maxLvl,
@@ -1135,6 +1156,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyMaxChance()
             : ChiseledEnchantingTableData.treasureEpiphanyMaxChance();
         return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.epiphanyProbability(
+            libraryResonanceConfig(),
             this.regularBookshelves,
             epiphanyMinBookshelves(),
             base,
@@ -1158,6 +1180,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyScorePerSlot()
             : ChiseledEnchantingTableData.treasureEpiphanyScorePerSlot();
         return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.epiphanyMaxSlots(
+            libraryResonanceConfig(),
             this.regularBookshelves,
             epiphanyMinBookshelves(),
             cap,
@@ -1261,7 +1284,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
         double totalUnits = totalMasteryUnits();
         double affinityUnits = affinityMasteryUnits(targetStack);
+        var resonanceCfg = libraryResonanceConfig();
         double resScore = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.epiphanyResonanceScore(
+            resonanceCfg,
             this.regularBookshelves,
             minShelves,
             totalUnits,
@@ -1282,6 +1307,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 int minTier = Math.min(maxLvl, storedLvl + 1);
                 double ownR = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.relativeMastery(storedLvl, maxLvl);
                 int tier = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.rollEpiphanyTier(
+                    resonanceCfg,
                     splitMix64(pickHash ^ 0x94D049BB133111EBL),
                     minTier,
                     maxLvl,

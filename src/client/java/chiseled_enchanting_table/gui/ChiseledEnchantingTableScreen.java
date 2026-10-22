@@ -696,6 +696,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             if (isOverCleanseAllButton(mouseX, mouseY)) {
                 int refund = DisenchantmentApplication.totalFullDisenchantRefund(
+                    this.menu.libraryResonanceConfig(),
                     this.menu.get_enchantable_item(),
                     this.menu.disenchantRefundScale()
                 );
@@ -788,7 +789,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     ItemStack target = this.menu.get_enchantable_item();
                     int totalTraits = EnchantmentHelper.getEnchantmentsForCrafting(target).size();
                     int nonCurse = DisenchantmentApplication.countNonCurseEnchantments(target);
-                    int refund = DisenchantmentApplication.totalFullDisenchantRefund(target, this.menu.disenchantRefundScale());
+                    int refund = DisenchantmentApplication.totalFullDisenchantRefund(
+                        this.menu.libraryResonanceConfig(),
+                        target,
+                        this.menu.disenchantRefundScale()
+                    );
                     List<Component> tip = new ArrayList<>();
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_title")
                         .withStyle(ChatFormatting.AQUA));
@@ -894,7 +899,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ItemStack target = this.menu.get_enchantable_item();
                 int totalTraits = EnchantmentHelper.getEnchantmentsForCrafting(target).size();
                 int nonCurse = DisenchantmentApplication.countNonCurseEnchantments(target);
-                int refund = DisenchantmentApplication.totalFullDisenchantRefund(target, this.menu.disenchantRefundScale());
+                int refund = DisenchantmentApplication.totalFullDisenchantRefund(
+                    this.menu.libraryResonanceConfig(),
+                    target,
+                    this.menu.disenchantRefundScale()
+                );
 
                 Component header = Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_title");
                 drawAutoScaledText(context, header, lx, ly + 10, 0.85f, 98, 0xFF9EFFDB);

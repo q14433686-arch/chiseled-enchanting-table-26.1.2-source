@@ -227,11 +227,15 @@ public record EnchantCostTablePayload(
         buf.writeVarInt(lr.maxGlobalMasteryDiscountPercent());
         buf.writeVarInt(lr.maxBaseXpDiscountPercent());
         buf.writeVarInt(lr.maxSpecificEnchantBonusPercent());
+        buf.writeDouble(lr.specificEnchantExponent());
         buf.writeVarInt(lr.maxTotalXpDiscountPercent());
         buf.writeDouble(lr.masteryUnitExponent());
         buf.writeDouble(lr.globalMasteryMultiplier());
         buf.writeDouble(lr.masterTomeUpgradeMaterialMultiplier());
         buf.writeDouble(lr.shelfUpgradeMaterialMultiplier());
+        buf.writeDouble(lr.epiphanyProbabilityGlobalWeight());
+        buf.writeDouble(lr.epiphanyProbabilityAffinityWeight());
+        buf.writeDouble(lr.blankBookAffinityWeight());
         buf.writeDouble(lr.epiphanyShelfScoreFactor());
         buf.writeDouble(lr.epiphanyGlobalMasteryScoreFactor());
         buf.writeDouble(lr.epiphanyAffinityMasteryScoreFactor());
@@ -318,7 +322,11 @@ public record EnchantCostTablePayload(
             buf.readVarInt(),
             buf.readVarInt(),
             buf.readVarInt(),
+            buf.readDouble(),
             buf.readVarInt(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
             buf.readDouble(),
             buf.readDouble(),
             buf.readDouble(),

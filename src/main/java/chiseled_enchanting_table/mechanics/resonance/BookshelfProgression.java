@@ -15,10 +15,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 
 /**
  * Data-driven progression formulas connecting regular bookshelves and Chiseled Bookshelves to:
@@ -29,9 +26,10 @@ import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
  *   <li><b>Track 2 — Direct Category Upgrade</b> ({@link #maxUnlockedDirectTier}): once an item or
  *       Enchanted Book already carries {@code existingLevel >= 1}, regular bookshelves unlock step
  *       upgrades all the way to {@code MAX} at {@code 38} shelves ({@code [0, 7, 16, 27, 38]} for
- *       {@code maxLevel = 5}, {@code [0, 9, 21, 38]} for {@code maxLevel = 4}, {@code [0, 16, 38]}
- *       for {@code maxLevel = 3}, {@code [0, 38]} for {@code maxLevel = 2}, {@code [0]} for
- *       {@code maxLevel = 1}, and strictly monotonic for any modded {@code maxLevel}).</li>
+ *       {@code maxLevel = 5}, {@code [0, 10, 23, 38]} for {@code maxLevel = 4}, {@code [0, 16, 38]}
+ *       for {@code maxLevel = 3}, {@code [0, 38]} for {@code maxLevel = 2}, strictly increasing
+ *       for {@code 1 <= maxLevel <= anchor + 1}, and smoothly distributed across all {@code 39}
+ *       discrete shelf counts {@code 0..anchor} when {@code maxLevel > anchor + 1}).</li>
  *   <li><b>Depleted Tome 3-Gradient Restoration</b> ({@link DepletedTomeTier}): linear batch
  *       conversion with configurable batch sizes and deduplicated distinct high-tier Master Tome
  *       qualification ({@code M <= 1 -> 1}, {@code M == 2 -> 2}, {@code M >= 3 -> M - 1}).</li>
@@ -40,6 +38,9 @@ import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 public final class BookshelfProgression {
     public static final int DEFAULT_SCAN_HORIZONTAL_RADIUS = 3;
     public static final int DEFAULT_SCAN_VERTICAL_RADIUS = 2;
+    public static final int MAX_SCAN_HORIZONTAL_RADIUS = 8;
+    public static final int MAX_SCAN_VERTICAL_RADIUS = 6;
+    public static final int MAX_SCAN_VOLUME_BLOCKS = 2048;
     public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = 38;
     public static final double DIRECT_TIER_CURVE_EXPONENT = 1.25;
 
@@ -116,6 +117,19 @@ public final class BookshelfProgression {
             DEFAULT_TIER3_BATCH_SIZE
         );
 
+        public Config {
+            horizontalScanRadius = clampInt(horizontalScanRadius, 1, MAX_SCAN_HORIZONTAL_RADIUS);
+            verticalScanRadius = clampInt(verticalScanRadius, 0, MAX_SCAN_VERTICAL_RADIUS);
+            while (verticalScanRadius > 0
+                && scanVolumeBlocks(horizontalScanRadius, verticalScanRadius) > MAX_SCAN_VOLUME_BLOCKS) {
+                verticalScanRadius--;
+            }
+            while (horizontalScanRadius > 1
+                && scanVolumeBlocks(horizontalScanRadius, verticalScanRadius) > MAX_SCAN_VOLUME_BLOCKS) {
+                horizontalScanRadius--;
+            }
+        }
+
         public Config(
             boolean directGatesEnabled,
             int maxDirectBookshelves,
@@ -143,6 +157,12 @@ public final class BookshelfProgression {
             );
         }
 
+        public static int scanVolumeBlocks(int rx, int ry) {
+            int sx = 2 * Math.max(1, rx) + 1;
+            int sy = 2 * Math.max(0, ry) + 1;
+            return Math.max(0, sx * sx * sy - 1);
+        }
+
         public static Config fromJson(JsonObject root) {
             if (root == null) {
                 return DEFAULT;
@@ -152,10 +172,10 @@ public final class BookshelfProgression {
             if (root.has("scan_volume") && root.get("scan_volume").isJsonObject()) {
                 JsonObject sv = root.getAsJsonObject("scan_volume");
                 if (sv.has("horizontal_radius")) {
-                    hRadius = clampInt(sv.get("horizontal_radius").getAsInt(), 1, 16);
+                    hRadius = clampInt(sv.get("horizontal_radius").getAsInt(), 1, MAX_SCAN_HORIZONTAL_RADIUS);
                 }
                 if (sv.has("vertical_radius")) {
-                    vRadius = clampInt(sv.get("vertical_radius").getAsInt(), 0, 16);
+                    vRadius = clampInt(sv.get("vertical_radius").getAsInt(), 0, MAX_SCAN_VERTICAL_RADIUS);
                 }
             }
 
@@ -277,6 +297,18 @@ public final class BookshelfProgression {
         return requiredBookshelvesForDirectTier(targetLevel, maxLevel, maxBookshelvesCap, DIRECT_TIER_CURVE_EXPONENT);
     }
 
+    /**
+     * Maps {@code targetLevel in [1..maxLevel]} onto discrete shelf gates {@code [0..cap]}:
+     * <ul>
+     *   <li>When {@code maxLevel <= cap + 1} (all standard &amp; modded enchantments up to {@code 39} tiers
+     *       at default {@code cap = 38}), enough discrete shelf states exist so every tier has a strictly
+     *       increasing integer requirement.</li>
+     *   <li>When {@code maxLevel > cap + 1} (e.g. {@code maxLevel = 40..255}), only {@code cap + 1}
+     *       shelf states exist; intermediate levels map smoothly along {@code round(cap * progress^exp)}
+     *       clamped to {@code [1..cap-1]}, distributing tiers evenly across all {@code 39} shelf states
+     *       instead of collapsing lower tiers onto {@code 1} shelf.</li>
+     * </ul>
+     */
     public static int requiredBookshelvesForDirectTier(
         int targetLevel,
         int maxLevel,
@@ -295,6 +327,9 @@ public final class BookshelfProgression {
         double exp = Double.isFinite(curveExponent) ? Math.max(0.5, curveExponent) : DIRECT_TIER_CURVE_EXPONENT;
         double progress = (double) (safeTarget - 1) / (double) (safeMax - 1);
         int raw = (int) Math.floor(cap * Math.pow(progress, exp) + 0.5);
+        if (safeMax > cap + 1) {
+            return Math.max(1, Math.min(cap - 1, raw));
+        }
         int minAllowed = Math.min(cap - 1, safeTarget - 1);
         int maxAllowed = Math.max(1, cap - (safeMax - safeTarget));
         return Math.max(Math.min(minAllowed, maxAllowed), Math.min(raw, maxAllowed));
@@ -343,11 +378,6 @@ public final class BookshelfProgression {
         return unlocked;
     }
 
-    /**
-     * Track 1 cap for blank items/books without an existing category or Master Tome:
-     * follows the exact same monotonic {@link #maxUnlockedDirectTier} curve so no inversion can
-     * ever occur, capped at {@code ceil(maxLevel / 2)} under {@link BlankMaxTierMode#HALF_CEIL}.
-     */
     public static int maxBlankWoodenTier(
         Config config,
         Identifier enchantmentId,
@@ -408,38 +438,6 @@ public final class BookshelfProgression {
             }
         }
         return qualifyingCount;
-    }
-
-    public static int countQualifyingHighTierEnchantments(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return 0;
-        }
-        ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(stack);
-        if (enchantments.isEmpty()) {
-            return 0;
-        }
-        int qualifyingCount = 0;
-        for (var entry : enchantments.entrySet()) {
-            Holder<Enchantment> holder = entry.getKey();
-            if (holder.is(CURSE_TAG)) continue;
-            int lvl = entry.getIntValue();
-            int maxLvl = Math.max(1, holder.value().getMaxLevel());
-            if (lvl >= minQualifyingHighTierLevel(maxLvl)) {
-                qualifyingCount++;
-            }
-        }
-        return qualifyingCount;
-    }
-
-    public static int countQualifyingHighTierEnchantmentsInShelf(ChiseledBookShelfBlockEntity shelf) {
-        if (shelf == null) {
-            return 0;
-        }
-        int count = 0;
-        for (int i = 0; i < shelf.getContainerSize(); i++) {
-            count += countQualifyingHighTierEnchantments(shelf.getItem(i));
-        }
-        return count;
     }
 
     public static DepletedTomeTier resolveDepletedTomeTier(

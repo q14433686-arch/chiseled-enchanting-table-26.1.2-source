@@ -279,8 +279,9 @@ public final class RowRenderSupport {
 
         if (req.isRefund()) {
             ctx.blit(XP_REFUND_ORB, iconX, iconY, iconX + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
-            String label = "+" + req.refundPoints();
-            renderRightAlignedCenteredYText(ctx, client, label, textLeftLimit, textRightEdge, midY, 0.60f, XP_GREEN);
+            String label = req.refundPoints() > 0 ? ("+" + req.refundPoints()) : "0 XP";
+            int refundColor = req.refundPoints() > 0 ? XP_GREEN : 0xFFA2C4BC;
+            renderRightAlignedCenteredYText(ctx, client, label, textLeftLimit, textRightEdge, midY, 0.60f, refundColor);
             return;
         }
 

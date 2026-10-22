@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.mechanics.resonance;
 
+import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import com.google.gson.JsonObject;
 import java.util.Map;
@@ -17,8 +18,11 @@ import net.minecraft.world.level.Level;
  * Relative-mastery math shared by Library XP Discounts, Master Tome specific bonuses,
  * and Treasure Epiphany proc rate / simultaneous slots / rolled tier.
  *
- * <p>All parameters are data-driven via {@code data/chiseled_enchanting_table/chiseled_enchanting_table/library_resonance.json}
- * and synced to clients in {@link chiseled_enchanting_table.menu.EnchantCostTablePayload}.</p>
+ * <p>Every parameter is parsed directly from the nested structure in
+ * {@code data/chiseled_enchanting_table/chiseled_enchanting_table/library_resonance.json}
+ * ({@code wooden_bookshelves}, {@code chiseled_mastery}, {@code epiphany_affinity}, with flat
+ * root keys also accepted as fallback overrides) and synced to clients in
+ * {@link chiseled_enchanting_table.menu.EnchantCostTablePayload}.</p>
  */
 public final class LibraryResonance {
     public static final int MIN_DISCOUNT_BOOKSHELVES = 12;
@@ -38,11 +42,15 @@ public final class LibraryResonance {
         int maxGlobalMasteryDiscountPercent,
         int maxBaseXpDiscountPercent,
         int maxSpecificEnchantBonusPercent,
+        double specificEnchantExponent,
         int maxTotalXpDiscountPercent,
         double masteryUnitExponent,
         double globalMasteryMultiplier,
         double masterTomeUpgradeMaterialMultiplier,
         double shelfUpgradeMaterialMultiplier,
+        double epiphanyProbabilityGlobalWeight,
+        double epiphanyProbabilityAffinityWeight,
+        double blankBookAffinityWeight,
         double epiphanyShelfScoreFactor,
         double epiphanyGlobalMasteryScoreFactor,
         double epiphanyAffinityMasteryScoreFactor,
@@ -61,11 +69,15 @@ public final class LibraryResonance {
             MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT,
             MAX_BASE_XP_DISCOUNT_PERCENT,
             MAX_SPECIFIC_ENCHANT_BONUS_PERCENT,
+            1.0,
             MAX_TOTAL_XP_DISCOUNT_PERCENT,
             1.25,
             1.25,
             0.80,
             0.90,
+            0.45,
+            0.85,
+            0.50,
             1.0,
             2.2,
             3.5,
@@ -82,13 +94,51 @@ public final class LibraryResonance {
             if (root == null) {
                 return DEFAULT;
             }
-            int minShelves = clampInt(intOr(root, "min_discount_bookshelves", DEFAULT.minDiscountBookshelves), 0, 256);
-            int maxShelves = clampInt(intOr(root, "max_discount_bookshelves", DEFAULT.maxDiscountBookshelves), Math.max(1, minShelves + 1), 256);
-            int maxWood = clampInt(intOr(root, "max_wooden_discount_percent", DEFAULT.maxWoodenDiscountPercent), 0, 90);
-            int maxGlobal = clampInt(intOr(root, "max_global_mastery_discount_percent", DEFAULT.maxGlobalMasteryDiscountPercent), 0, 90);
-            int maxBase = clampInt(intOr(root, "max_base_xp_discount_percent", DEFAULT.maxBaseXpDiscountPercent), 0, 90);
-            int maxSpec = clampInt(intOr(root, "max_specific_enchant_bonus_percent", DEFAULT.maxSpecificEnchantBonusPercent), 0, 90);
-            int maxTotal = clampInt(intOr(root, "max_total_xp_discount_percent", DEFAULT.maxTotalXpDiscountPercent), maxBase, 90);
+            JsonObject woodObj = subObject(root, "wooden_bookshelves");
+            JsonObject masteryObj = subObject(root, "chiseled_mastery");
+            JsonObject epiphanyObj = subObject(root, "epiphany_affinity");
+
+            int minShelves = clampInt(
+                intFrom(woodObj, root, "min_discount_bookshelves", null, DEFAULT.minDiscountBookshelves),
+                0,
+                256
+            );
+            int maxShelves = clampInt(
+                intFrom(woodObj, root, "max_discount_bookshelves", null, DEFAULT.maxDiscountBookshelves),
+                Math.max(1, minShelves + 1),
+                256
+            );
+            int maxWood = clampInt(
+                intFrom(woodObj, root, "max_wooden_discount_percent", "max_discount_percent", DEFAULT.maxWoodenDiscountPercent),
+                0,
+                90
+            );
+            int maxGlobal = clampInt(
+                intFrom(masteryObj, root, "max_global_mastery_discount_percent", "max_global_discount_percent", DEFAULT.maxGlobalMasteryDiscountPercent),
+                0,
+                90
+            );
+            int maxBase = clampInt(
+                intFrom(masteryObj, root, "max_base_xp_discount_percent", "max_base_discount_percent", DEFAULT.maxBaseXpDiscountPercent),
+                0,
+                90
+            );
+            int maxSpec = clampInt(
+                intFrom(masteryObj, root, "max_specific_enchant_bonus_percent", "max_specific_discount_percent", DEFAULT.maxSpecificEnchantBonusPercent),
+                0,
+                90
+            );
+            double specExp = clampDouble(
+                doubleFrom(masteryObj, root, "specific_enchant_exponent", "specific_exponent", DEFAULT.specificEnchantExponent),
+                0.25,
+                4.0
+            );
+            int maxTotal = clampInt(
+                intFrom(masteryObj, root, "max_total_xp_discount_percent", null, DEFAULT.maxTotalXpDiscountPercent),
+                maxBase,
+                90
+            );
+
             return new Config(
                 minShelves,
                 maxShelves,
@@ -96,30 +146,136 @@ public final class LibraryResonance {
                 maxGlobal,
                 maxBase,
                 maxSpec,
+                specExp,
                 maxTotal,
-                clampDouble(doubleOr(root, "mastery_unit_exponent", DEFAULT.masteryUnitExponent), 0.25, 4.0),
-                clampDouble(doubleOr(root, "global_mastery_multiplier", DEFAULT.globalMasteryMultiplier), 0.0, 20.0),
-                clampDouble(doubleOr(root, "master_tome_upgrade_material_multiplier", DEFAULT.masterTomeUpgradeMaterialMultiplier), 0.05, 1.0),
-                clampDouble(doubleOr(root, "shelf_upgrade_material_multiplier", DEFAULT.shelfUpgradeMaterialMultiplier), 0.05, 1.0),
-                clampDouble(doubleOr(root, "epiphany_shelf_score_factor", DEFAULT.epiphanyShelfScoreFactor), 0.0, 20.0),
-                clampDouble(doubleOr(root, "epiphany_global_mastery_score_factor", DEFAULT.epiphanyGlobalMasteryScoreFactor), 0.0, 20.0),
-                clampDouble(doubleOr(root, "epiphany_affinity_mastery_score_factor", DEFAULT.epiphanyAffinityMasteryScoreFactor), 0.0, 20.0),
-                clampDouble(doubleOr(root, "epiphany_tier2_max_prob", DEFAULT.epiphanyTier2MaxProb), 0.0, 1.0),
-                clampDouble(doubleOr(root, "epiphany_tier2_score_divisor", DEFAULT.epiphanyTier2ScoreDivisor), 1.0, 1000.0),
-                clampDouble(doubleOr(root, "epiphany_tier2_mastery_bonus", DEFAULT.epiphanyTier2MasteryBonus), 0.0, 1.0),
-                clampDouble(doubleOr(root, "epiphany_tier_plus_max_prob", DEFAULT.epiphanyTierPlusMaxProb), 0.0, 1.0),
-                clampDouble(doubleOr(root, "epiphany_tier_plus_score_divisor", DEFAULT.epiphanyTierPlusScoreDivisor), 1.0, 1000.0),
-                clampDouble(doubleOr(root, "epiphany_tier_plus_mastery_bonus", DEFAULT.epiphanyTierPlusMasteryBonus), 0.0, 1.0),
-                clampDouble(doubleOr(root, "incremental_step_credit_factor", DEFAULT.incrementalStepCreditFactor), 0.0, 0.95)
+                clampDouble(
+                    doubleFrom(masteryObj, root, "mastery_unit_exponent", null, DEFAULT.masteryUnitExponent),
+                    0.25,
+                    4.0
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "global_mastery_multiplier", "global_discount_per_unit", DEFAULT.globalMasteryMultiplier),
+                    0.0,
+                    20.0
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "master_tome_upgrade_material_multiplier", "upgrade_material_multiplier", DEFAULT.masterTomeUpgradeMaterialMultiplier),
+                    0.05,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(woodObj, root, "shelf_upgrade_material_multiplier", "upgrade_material_multiplier", DEFAULT.shelfUpgradeMaterialMultiplier),
+                    0.05,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_probability_global_weight", null, DEFAULT.epiphanyProbabilityGlobalWeight),
+                    0.0,
+                    10.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_probability_affinity_weight", "affinity_chance_per_unit", DEFAULT.epiphanyProbabilityAffinityWeight),
+                    0.0,
+                    10.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "blank_book_affinity_weight", null, DEFAULT.blankBookAffinityWeight),
+                    0.0,
+                    2.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_shelf_score_factor", null, DEFAULT.epiphanyShelfScoreFactor),
+                    0.0,
+                    20.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_global_mastery_score_factor", "global_slot_weight", DEFAULT.epiphanyGlobalMasteryScoreFactor),
+                    0.0,
+                    20.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_affinity_mastery_score_factor", "affinity_slot_weight", DEFAULT.epiphanyAffinityMasteryScoreFactor),
+                    0.0,
+                    20.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier2_max_prob", null, DEFAULT.epiphanyTier2MaxProb),
+                    0.0,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier2_score_divisor", null, DEFAULT.epiphanyTier2ScoreDivisor),
+                    1.0,
+                    1000.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier2_mastery_bonus", null, DEFAULT.epiphanyTier2MasteryBonus),
+                    0.0,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier_plus_max_prob", null, DEFAULT.epiphanyTierPlusMaxProb),
+                    0.0,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier_plus_score_divisor", null, DEFAULT.epiphanyTierPlusScoreDivisor),
+                    1.0,
+                    1000.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier_plus_mastery_bonus", null, DEFAULT.epiphanyTierPlusMasteryBonus),
+                    0.0,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "incremental_step_credit_factor", "incremental_threshold_credit_factor", DEFAULT.incrementalStepCreditFactor),
+                    0.0,
+                    0.95
+                )
             );
         }
 
-        private static int intOr(JsonObject obj, String key, int fallback) {
-            return obj.has(key) && obj.get(key).isJsonPrimitive() ? obj.get(key).getAsInt() : fallback;
+        private static JsonObject subObject(JsonObject root, String sectionKey) {
+            return root.has(sectionKey) && root.get(sectionKey).isJsonObject()
+                ? root.getAsJsonObject(sectionKey)
+                : null;
         }
 
-        private static double doubleOr(JsonObject obj, String key, double fallback) {
-            return obj.has(key) && obj.get(key).isJsonPrimitive() ? obj.get(key).getAsDouble() : fallback;
+        private static int intFrom(JsonObject section, JsonObject root, String primaryKey, String aliasKey, int fallback) {
+            if (section != null) {
+                if (section.has(primaryKey) && section.get(primaryKey).isJsonPrimitive()) {
+                    return section.get(primaryKey).getAsInt();
+                }
+                if (aliasKey != null && section.has(aliasKey) && section.get(aliasKey).isJsonPrimitive()) {
+                    return section.get(aliasKey).getAsInt();
+                }
+            }
+            if (root.has(primaryKey) && root.get(primaryKey).isJsonPrimitive()) {
+                return root.get(primaryKey).getAsInt();
+            }
+            if (aliasKey != null && root.has(aliasKey) && root.get(aliasKey).isJsonPrimitive()) {
+                return root.get(aliasKey).getAsInt();
+            }
+            return fallback;
+        }
+
+        private static double doubleFrom(JsonObject section, JsonObject root, String primaryKey, String aliasKey, double fallback) {
+            if (section != null) {
+                if (section.has(primaryKey) && section.get(primaryKey).isJsonPrimitive()) {
+                    return section.get(primaryKey).getAsDouble();
+                }
+                if (aliasKey != null && section.has(aliasKey) && section.get(aliasKey).isJsonPrimitive()) {
+                    return section.get(aliasKey).getAsDouble();
+                }
+            }
+            if (root.has(primaryKey) && root.get(primaryKey).isJsonPrimitive()) {
+                return root.get(primaryKey).getAsDouble();
+            }
+            if (aliasKey != null && root.has(aliasKey) && root.get(aliasKey).isJsonPrimitive()) {
+                return root.get(aliasKey).getAsDouble();
+            }
+            return fallback;
         }
 
         private static int clampInt(int v, int lo, int hi) {
@@ -134,9 +290,20 @@ public final class LibraryResonance {
 
     private LibraryResonance() {}
 
-    public static Config activeConfig() {
+    public static Config activeServerConfig() {
         Config cfg = ChiseledEnchantingTableData.libraryResonanceConfig();
         return cfg != null ? cfg : Config.DEFAULT;
+    }
+
+    public static Config configForSide(boolean isClientSide) {
+        Config cfg = isClientSide
+            ? SyncedEnchantmentCosts.libraryResonanceConfig()
+            : ChiseledEnchantingTableData.libraryResonanceConfig();
+        return cfg != null ? cfg : Config.DEFAULT;
+    }
+
+    public static Config activeConfig() {
+        return activeServerConfig();
     }
 
     public static double relativeMastery(int storedLevel, int maxLevel) {
@@ -148,15 +315,16 @@ public final class LibraryResonance {
     }
 
     public static double masteryUnitsForEntry(int storedLevel, int maxLevel) {
-        return masteryUnitsForEntry(activeConfig(), storedLevel, maxLevel);
+        return masteryUnitsForEntry(activeServerConfig(), storedLevel, maxLevel);
     }
 
     public static double masteryUnitsForEntry(Config cfg, int storedLevel, int maxLevel) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         double r = relativeMastery(storedLevel, maxLevel);
         if (r <= 0.0) {
             return 0.0;
         }
-        return Math.pow(r, cfg.masteryUnitExponent());
+        return Math.pow(r, c.masteryUnitExponent());
     }
 
     public static int resolveMaxLevel(Level level, Identifier enchantmentId) {
@@ -171,13 +339,14 @@ public final class LibraryResonance {
     }
 
     public static double totalMasteryUnits(Level level, Map<Identifier, Integer> storedMasterLevels) {
-        return totalMasteryUnits(activeConfig(), level, storedMasterLevels);
+        return totalMasteryUnits(configForSide(level.isClientSide()), level, storedMasterLevels);
     }
 
     public static double totalMasteryUnits(Config cfg, Level level, Map<Identifier, Integer> storedMasterLevels) {
         if (storedMasterLevels == null || storedMasterLevels.isEmpty()) {
             return 0.0;
         }
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         double sum = 0.0;
         for (Map.Entry<Identifier, Integer> entry : storedMasterLevels.entrySet()) {
@@ -186,7 +355,7 @@ public final class LibraryResonance {
             try {
                 Holder.Reference<Enchantment> holder = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, entry.getKey()));
                 if (holder.is(CURSE_TAG)) continue;
-                sum += masteryUnitsForEntry(cfg, lvl, holder.value().getMaxLevel());
+                sum += masteryUnitsForEntry(c, lvl, holder.value().getMaxLevel());
             } catch (Exception ignored) {
             }
         }
@@ -198,7 +367,7 @@ public final class LibraryResonance {
         Map<Identifier, Integer> storedMasterLevels,
         ItemStack targetStack
     ) {
-        return affinityMasteryUnits(activeConfig(), level, storedMasterLevels, targetStack);
+        return affinityMasteryUnits(configForSide(level.isClientSide()), level, storedMasterLevels, targetStack);
     }
 
     public static double affinityMasteryUnits(
@@ -210,6 +379,7 @@ public final class LibraryResonance {
         if (storedMasterLevels == null || storedMasterLevels.isEmpty() || targetStack.isEmpty()) {
             return 0.0;
         }
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         boolean isBlankBook = targetStack.is(Items.BOOK);
         var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         double sum = 0.0;
@@ -220,8 +390,8 @@ public final class LibraryResonance {
                 Holder.Reference<Enchantment> holder = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, entry.getKey()));
                 if (holder.is(CURSE_TAG)) continue;
                 if (isBlankBook || holder.value().canEnchant(targetStack)) {
-                    double units = masteryUnitsForEntry(cfg, lvl, holder.value().getMaxLevel());
-                    sum += isBlankBook ? (units * 0.5) : units;
+                    double units = masteryUnitsForEntry(c, lvl, holder.value().getMaxLevel());
+                    sum += isBlankBook ? (units * c.blankBookAffinityWeight()) : units;
                 }
             } catch (Exception ignored) {
             }
@@ -230,50 +400,55 @@ public final class LibraryResonance {
     }
 
     public static int woodenBookshelfDiscountPercent(int regularBookshelves) {
-        return woodenBookshelfDiscountPercent(activeConfig(), regularBookshelves);
+        return woodenBookshelfDiscountPercent(activeServerConfig(), regularBookshelves);
     }
 
     public static int woodenBookshelfDiscountPercent(Config cfg, int regularBookshelves) {
-        if (regularBookshelves < cfg.minDiscountBookshelves()) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        if (regularBookshelves < c.minDiscountBookshelves()) {
             return 0;
         }
-        int clamped = Math.min(cfg.maxDiscountBookshelves(), regularBookshelves);
-        int span = Math.max(1, cfg.maxDiscountBookshelves() - cfg.minDiscountBookshelves());
-        double progress = (double) (clamped - cfg.minDiscountBookshelves()) / (double) span;
-        return Math.min(cfg.maxWoodenDiscountPercent(), Math.max(1, (int) Math.round(1.0 + Math.max(0, cfg.maxWoodenDiscountPercent() - 1) * progress)));
+        int clamped = Math.min(c.maxDiscountBookshelves(), regularBookshelves);
+        int span = Math.max(1, c.maxDiscountBookshelves() - c.minDiscountBookshelves());
+        double progress = (double) (clamped - c.minDiscountBookshelves()) / (double) span;
+        return Math.min(c.maxWoodenDiscountPercent(), Math.max(1, (int) Math.round(1.0 + Math.max(0, c.maxWoodenDiscountPercent() - 1) * progress)));
     }
 
     public static int globalMasteryDiscountPercent(double totalMasteryUnits) {
-        return globalMasteryDiscountPercent(activeConfig(), totalMasteryUnits);
+        return globalMasteryDiscountPercent(activeServerConfig(), totalMasteryUnits);
     }
 
     public static int globalMasteryDiscountPercent(Config cfg, double totalMasteryUnits) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         if (totalMasteryUnits <= 0.0) {
             return 0;
         }
-        return Math.min(cfg.maxGlobalMasteryDiscountPercent(), (int) Math.floor(totalMasteryUnits * cfg.globalMasteryMultiplier()));
+        return Math.min(c.maxGlobalMasteryDiscountPercent(), (int) Math.floor(totalMasteryUnits * c.globalMasteryMultiplier()));
     }
 
     public static int specificEnchantmentDiscountBonus(int storedLevel, int maxLevel) {
-        return specificEnchantmentDiscountBonus(activeConfig(), storedLevel, maxLevel);
+        return specificEnchantmentDiscountBonus(activeServerConfig(), storedLevel, maxLevel);
     }
 
     public static int specificEnchantmentDiscountBonus(Config cfg, int storedLevel, int maxLevel) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         double r = relativeMastery(storedLevel, maxLevel);
         if (r <= 0.0) {
             return 0;
         }
-        return Math.min(cfg.maxSpecificEnchantBonusPercent(), (int) Math.round(cfg.maxSpecificEnchantBonusPercent() * r));
+        double weighted = c.specificEnchantExponent() == 1.0 ? r : Math.pow(r, c.specificEnchantExponent());
+        return Math.min(c.maxSpecificEnchantBonusPercent(), (int) Math.round(c.maxSpecificEnchantBonusPercent() * weighted));
     }
 
     public static int baseXpDiscountPercent(int regularBookshelves, double totalMasteryUnits) {
-        return baseXpDiscountPercent(activeConfig(), regularBookshelves, totalMasteryUnits);
+        return baseXpDiscountPercent(activeServerConfig(), regularBookshelves, totalMasteryUnits);
     }
 
     public static int baseXpDiscountPercent(Config cfg, int regularBookshelves, double totalMasteryUnits) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         return Math.min(
-            cfg.maxBaseXpDiscountPercent(),
-            woodenBookshelfDiscountPercent(cfg, regularBookshelves) + globalMasteryDiscountPercent(cfg, totalMasteryUnits)
+            c.maxBaseXpDiscountPercent(),
+            woodenBookshelfDiscountPercent(c, regularBookshelves) + globalMasteryDiscountPercent(c, totalMasteryUnits)
         );
     }
 
@@ -284,7 +459,7 @@ public final class LibraryResonance {
         int specificMaxLevel
     ) {
         return effectiveXpDiscountPercent(
-            activeConfig(),
+            activeServerConfig(),
             regularBookshelves,
             totalMasteryUnits,
             specificStoredLevel,
@@ -299,9 +474,10 @@ public final class LibraryResonance {
         int specificStoredLevel,
         int specificMaxLevel
     ) {
-        int base = baseXpDiscountPercent(cfg, regularBookshelves, totalMasteryUnits);
-        int specific = specificEnchantmentDiscountBonus(cfg, specificStoredLevel, specificMaxLevel);
-        return Math.min(cfg.maxTotalXpDiscountPercent(), base + specific);
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        int base = baseXpDiscountPercent(c, regularBookshelves, totalMasteryUnits);
+        int specific = specificEnchantmentDiscountBonus(c, specificStoredLevel, specificMaxLevel);
+        return Math.min(c.maxTotalXpDiscountPercent(), base + specific);
     }
 
     public static double epiphanyResonanceScore(
@@ -310,7 +486,7 @@ public final class LibraryResonance {
         double totalMasteryUnits,
         double affinityMasteryUnits
     ) {
-        return epiphanyResonanceScore(activeConfig(), regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
+        return epiphanyResonanceScore(activeServerConfig(), regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
     }
 
     public static double epiphanyResonanceScore(
@@ -320,13 +496,14 @@ public final class LibraryResonance {
         double totalMasteryUnits,
         double affinityMasteryUnits
     ) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         if (regularBookshelves < minBookshelves) {
             return 0.0;
         }
-        double shelfExcess = Math.max(0, regularBookshelves - minBookshelves) * cfg.epiphanyShelfScoreFactor();
+        double shelfExcess = Math.max(0, regularBookshelves - minBookshelves) * c.epiphanyShelfScoreFactor();
         return shelfExcess
-            + cfg.epiphanyGlobalMasteryScoreFactor() * Math.max(0.0, totalMasteryUnits)
-            + cfg.epiphanyAffinityMasteryScoreFactor() * Math.max(0.0, affinityMasteryUnits);
+            + c.epiphanyGlobalMasteryScoreFactor() * Math.max(0.0, totalMasteryUnits)
+            + c.epiphanyAffinityMasteryScoreFactor() * Math.max(0.0, affinityMasteryUnits);
     }
 
     public static double epiphanyProbability(
@@ -339,10 +516,36 @@ public final class LibraryResonance {
         double totalMasteryUnits,
         double affinityMasteryUnits
     ) {
+        return epiphanyProbability(
+            activeServerConfig(),
+            regularBookshelves,
+            minBookshelves,
+            baseChance,
+            perShelfChance,
+            perTomeChance,
+            maxChance,
+            totalMasteryUnits,
+            affinityMasteryUnits
+        );
+    }
+
+    public static double epiphanyProbability(
+        Config cfg,
+        int regularBookshelves,
+        int minBookshelves,
+        double baseChance,
+        double perShelfChance,
+        double perTomeChance,
+        double maxChance,
+        double totalMasteryUnits,
+        double affinityMasteryUnits
+    ) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         if (regularBookshelves < minBookshelves) {
             return 0.0;
         }
-        double effectiveMastery = 0.45 * Math.max(0.0, totalMasteryUnits) + 0.85 * Math.max(0.0, affinityMasteryUnits);
+        double effectiveMastery = c.epiphanyProbabilityGlobalWeight() * Math.max(0.0, totalMasteryUnits)
+            + c.epiphanyProbabilityAffinityWeight() * Math.max(0.0, affinityMasteryUnits);
         double raw = baseChance
             + Math.max(0, regularBookshelves - minBookshelves) * perShelfChance
             + effectiveMastery * perTomeChance;
@@ -357,10 +560,31 @@ public final class LibraryResonance {
         double totalMasteryUnits,
         double affinityMasteryUnits
     ) {
+        return epiphanyMaxSlots(
+            activeServerConfig(),
+            regularBookshelves,
+            minBookshelves,
+            maxSlotsCap,
+            scoreStepPerExtraSlot,
+            totalMasteryUnits,
+            affinityMasteryUnits
+        );
+    }
+
+    public static int epiphanyMaxSlots(
+        Config cfg,
+        int regularBookshelves,
+        int minBookshelves,
+        int maxSlotsCap,
+        int scoreStepPerExtraSlot,
+        double totalMasteryUnits,
+        double affinityMasteryUnits
+    ) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         if (regularBookshelves < minBookshelves) {
-            return 0;
+            return 0.0 >= 0.0 && regularBookshelves < minBookshelves ? 0 : 0;
         }
-        double score = epiphanyResonanceScore(regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
+        double score = epiphanyResonanceScore(c, regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
         int step = Math.max(1, scoreStepPerExtraSlot);
         int unlocked = 1 + (int) Math.floor(score / (double) step);
         return Math.max(1, Math.min(Math.max(1, maxSlotsCap), unlocked));
@@ -373,7 +597,7 @@ public final class LibraryResonance {
         double resonanceScore,
         double ownStoredRelativeMastery
     ) {
-        return rollEpiphanyTier(activeConfig(), hashSeed, minTier, maxLevel, resonanceScore, ownStoredRelativeMastery);
+        return rollEpiphanyTier(activeServerConfig(), hashSeed, minTier, maxLevel, resonanceScore, ownStoredRelativeMastery);
     }
 
     public static int rollEpiphanyTier(
@@ -384,6 +608,7 @@ public final class LibraryResonance {
         double resonanceScore,
         double ownStoredRelativeMastery
     ) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         int cappedMax = Math.max(1, maxLevel);
         int tier = Math.max(1, Math.min(cappedMax, minTier));
         if (tier >= cappedMax) {
@@ -394,8 +619,8 @@ public final class LibraryResonance {
             s = splitMix64(s + 0x9E3779B97F4A7C15L);
             double u = (s >>> 11) * (1.0 / (1L << 53));
             double p = (tier == 1)
-                ? Math.min(cfg.epiphanyTier2MaxProb(), (resonanceScore / cfg.epiphanyTier2ScoreDivisor()) + cfg.epiphanyTier2MasteryBonus() * ownStoredRelativeMastery)
-                : Math.min(cfg.epiphanyTierPlusMaxProb(), (resonanceScore / cfg.epiphanyTierPlusScoreDivisor()) + cfg.epiphanyTierPlusMasteryBonus() * ownStoredRelativeMastery);
+                ? Math.min(c.epiphanyTier2MaxProb(), (resonanceScore / c.epiphanyTier2ScoreDivisor()) + c.epiphanyTier2MasteryBonus() * ownStoredRelativeMastery)
+                : Math.min(c.epiphanyTierPlusMaxProb(), (resonanceScore / c.epiphanyTierPlusScoreDivisor()) + c.epiphanyTierPlusMasteryBonus() * ownStoredRelativeMastery);
             if (u < p) {
                 tier++;
             } else {

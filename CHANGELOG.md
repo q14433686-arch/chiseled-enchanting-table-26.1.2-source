@@ -18,6 +18,16 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ## [1.1.0] - 2026-10-23
 
+### Round 2 Deep Code & Configuration Audit Remediation (`ZIP 3` & `ZIP 4`)
+
+- **Fixed Book Combine Upgrade Triple Regression (`R2-1`)**: `BookUpgradeApplication#applyCombine` now resolves and deducts `XpRequirement.deductedLevels()` via `resolveEffectiveXpRequirement` (matching UI tooltips and Research Upgrade instead of deducting `requiredLevel()`), and `ChiseledEnchantingTableScreenHandler` applies `min(rawCost, deltaRaw)` to `BOOK_COMBINE_UPGRADE` so `book_upgrades.json`'s `0.6×` multiplier takes full effect (`Combine <= Research` locked by JUnit 5 & CI gates).
+- **Unified `library_resonance.json` Nested Schema, Full Key Coverage & Client S2C Sync (`R2-2`, `R2-3`, `R2-6`, `CFG-01`, `SYNC-01`)**: `LibraryResonance.Config#fromJson` now parses all 3 nested objects (`wooden_bookshelves`, `chiseled_mastery`, `epiphany_affinity`, plus flat/legacy aliases) including configurable `epiphany_probability_global_weight`, `epiphany_probability_affinity_weight`, and `blank_book_affinity_weight`; all shared math & client/JEI/REI callers accept explicit synced `LibraryResonance.Config` (`EnchantCostTablePayload` extended symmetrically).
+- **Aligned Item Transformation XP Thresholds, Bottle Conservation & Vanilla Bar Percentage (`XP-01`, `XP-02`, `R2-8`)**: separated transformation `xp_cost` (`required_player_level`), `min_required_level` (`min_player_level` alias), and `deducted_levels` across `item_transformations.json`, UI, JEI/REI, and `WIKI.md` (`1/1`, `5/1` with `Lv.3` floor `>= 11 XP`, `12/2`, `20/2`, `25/3`, `30/3`), and made `vanillaTierMode` call `player.giveExperienceLevels(-deductedLevels)` to preserve exact fractional bar progress.
+- **High-Tier Modded Progression (`SHELF-01`), Scan Volume Budgeting (`PERF-01`), `M = 255` `0 XP` Display (`XP-03`), Single-Source Fallbacks (`F8` / `R2-9`), JEI/REI Sync (`JEI-01`), & Compiled JUnit 5 Verification (`R2-4` / `TEST-01`)**:
+  - Distributed `maxLevel > 39` (`40..255`) smoothly across all `39` shelf gates `0..38` instead of collapsing `217` tiers onto `1` shelf;
+  - Capped scan volume (`<= 2048` blocks), cached offset lists, deduplicated `computeLiveShelfState` & `get_unlocked_enchantements` to a single scan, and budgeted client `animateTick` particle sampling (`16` samples/tick);
+  - Memoized `DisenchantmentApplication#buildPotentialTable`, verified every `1 <= a < k <= M` step in `verifyRuntimeConservation`, displayed `0 XP` cleanly on quantized zero-refund downgrade rows, removed duplicate `BUILT_IN_JSON` text blocks via `readBundledJsonObject(...)` and dead slot helpers, fixed `epiphanyCycleTicks()` on client menu init, and added `EconomyAndConfigVerificationTest` (`JUnit 5`) + `33,423,360` 1:1 checks in `scripts/compat_check.py`.
+
 ### Security, Economy & Architecture Hardening — Full Audit Resolution (`ZIP 1` & `ZIP 2`)
 
 - **Closed All Infinite XP Arbitrage Loops & Proved Inductive Conservation (`M = 1..255`)**:

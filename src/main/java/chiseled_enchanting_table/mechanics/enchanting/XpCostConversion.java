@@ -8,6 +8,9 @@ import net.minecraft.world.entity.player.Player;
 /**
  * Authoritative Minecraft XP level <-> XP point math shared by server deduction, client tooltips,
  * JEI/REI recipe viewers, and single-source disenchantment conservation verification.
+ *
+ * <p>All methods accept an explicit {@link LibraryResonance.Config} so dedicated-server datapack
+ * overrides synced via {@code SyncedEnchantmentCosts} match server calculations 1:1 on clients.</p>
  */
 public final class XpCostConversion {
     public record XpRequirement(
@@ -16,8 +19,20 @@ public final class XpCostConversion {
         int deductedLevels,
         int discountPercent,
         boolean vanillaTierMode,
-        int refundPoints
+        int refundPoints,
+        boolean refundMode
     ) {
+        public XpRequirement(
+            int rawRequiredLevel,
+            int requiredLevel,
+            int deductedLevels,
+            int discountPercent,
+            boolean vanillaTierMode,
+            int refundPoints
+        ) {
+            this(rawRequiredLevel, requiredLevel, deductedLevels, discountPercent, vanillaTierMode, refundPoints, refundPoints > 0);
+        }
+
         public XpRequirement(
             int rawRequiredLevel,
             int requiredLevel,
@@ -25,17 +40,17 @@ public final class XpCostConversion {
             int discountPercent,
             boolean vanillaTierMode
         ) {
-            this(rawRequiredLevel, requiredLevel, deductedLevels, discountPercent, vanillaTierMode, 0);
+            this(rawRequiredLevel, requiredLevel, deductedLevels, discountPercent, vanillaTierMode, 0, false);
         }
 
-        public static final XpRequirement FREE = new XpRequirement(0, 0, 0, 0, false, 0);
+        public static final XpRequirement FREE = new XpRequirement(0, 0, 0, 0, false, 0, false);
 
         public static XpRequirement refund(int points) {
-            return new XpRequirement(0, 0, 0, 0, false, Math.max(0, points));
+            return new XpRequirement(0, 0, 0, 0, false, Math.max(0, points), true);
         }
 
         public boolean isRefund() {
-            return refundPoints > 0;
+            return refundMode || refundPoints > 0;
         }
 
         public boolean isMetBy(Player player) {
@@ -77,9 +92,12 @@ public final class XpCostConversion {
     }
 
     /**
-     * Exact minimum XP points deducted when a player with zero fractional bar at {@code req.requiredLevel()}
-     * pays {@code req.deductedLevels()}. Because {@link #xpPointsForLevel(int)} is strictly increasing in
-     * level, higher player levels always deduct at least this many XP points.
+     * Exact minimum XP points deducted when a player at {@code req.requiredLevel()} pays
+     * {@code req.deductedLevels()}. Because {@link #xpPointsForLevel(int)} is monotonically
+     * non-decreasing in level, both {@code player.giveExperienceLevels(-d)} (which preserves fractional
+     * bar percentage {@code p} and therefore removes {@code sum W(j) + p*(W(L) - W(L-d))}) AND
+     * {@link #pointsForLevelCost(Player, int)} ALWAYS deduct at least this many XP points for every
+     * {@code L >= req.requiredLevel()} and every {@code p in [0, 1)}.
      */
     public static int minPointsRequired(XpRequirement req) {
         if (req == null || req.isRefund() || req.deductedLevels() <= 0) {
@@ -110,11 +128,19 @@ public final class XpCostConversion {
         if (player.getAbilities().instabuild) {
             return;
         }
-        if (req.refundPoints() > 0) {
-            player.giveExperiencePoints(req.refundPoints());
+        if (req.isRefund()) {
+            if (req.refundPoints() > 0) {
+                player.giveExperiencePoints(req.refundPoints());
+            }
             return;
         }
         if (req.deductedLevels() <= 0) {
+            return;
+        }
+        if (req.vanillaTierMode()) {
+            // Genuine vanilla mass-production behavior: subtracts exact whole levels while preserving
+            // fractional experience bar percentage (e.g. Lv.30 @ 99% -> Lv.29 @ 99%).
+            player.giveExperienceLevels(-req.deductedLevels());
             return;
         }
         int pts = pointsForLevelCost(player, req.deductedLevels());
@@ -139,11 +165,21 @@ public final class XpCostConversion {
     }
 
     public static XpRequirement forMasterTomeEnchant(int level, int maxLevel, int rawCost, int discountPercent) {
+        return forMasterTomeEnchant(LibraryResonance.activeServerConfig(), level, maxLevel, rawCost, discountPercent);
+    }
+
+    public static XpRequirement forMasterTomeEnchant(
+        LibraryResonance.Config resonanceCfg,
+        int level,
+        int maxLevel,
+        int rawCost,
+        int discountPercent
+    ) {
         int clampedMax = Math.max(1, maxLevel);
         int tierCost = vanillaTierDeduction(level, clampedMax);
         int minThreshold = Math.max(tierCost, (int) Math.round(8.0 + 22.0 * ((double) Math.min(clampedMax, level) / (double) clampedMax)));
         int rawThreshold = rawCost > 0 ? Math.max(minThreshold, rawCost) : minThreshold;
-        int clampedDiscount = clampDiscount(discountPercent);
+        int clampedDiscount = clampDiscount(resonanceCfg, discountPercent);
         int requiredThreshold = Math.max(tierCost, (int) Math.round(rawThreshold * (1.0 - clampedDiscount / 100.0)));
         return new XpRequirement(rawThreshold, requiredThreshold, tierCost, clampedDiscount, true);
     }
@@ -155,10 +191,29 @@ public final class XpCostConversion {
         int rawTargetCost,
         int discountPercent
     ) {
+        return forIncrementalMasterTomeEnchant(
+            LibraryResonance.activeServerConfig(),
+            existingLevel,
+            targetLevel,
+            maxLevel,
+            rawTargetCost,
+            discountPercent
+        );
+    }
+
+    public static XpRequirement forIncrementalMasterTomeEnchant(
+        LibraryResonance.Config resonanceCfg,
+        int existingLevel,
+        int targetLevel,
+        int maxLevel,
+        int rawTargetCost,
+        int discountPercent
+    ) {
+        LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
         int clampedMax = Math.max(1, maxLevel);
         int deltaLevels = Math.max(1, targetLevel - Math.max(0, existingLevel));
         int tierCost = vanillaTierDeduction(deltaLevels, clampedMax);
-        double credit = LibraryResonance.activeConfig().incrementalStepCreditFactor();
+        double credit = cfg.incrementalStepCreditFactor();
         double targetFraction = (double) Math.min(clampedMax, targetLevel) / (double) clampedMax;
         double prevFraction = (double) Math.min(clampedMax, Math.max(0, existingLevel)) / (double) clampedMax;
         double remainingFraction = Math.max(0.15, targetFraction - credit * prevFraction);
@@ -167,35 +222,48 @@ public final class XpCostConversion {
             ? Math.max(tierCost, (int) Math.round(rawTargetCost * (targetFraction <= 0 ? 1.0 : remainingFraction / targetFraction)))
             : minStepThreshold;
         int rawThreshold = Math.max(minStepThreshold, scaledRaw);
-        int clampedDiscount = clampDiscount(discountPercent);
+        int clampedDiscount = clampDiscount(cfg, discountPercent);
         int requiredThreshold = Math.max(tierCost, (int) Math.round(rawThreshold * (1.0 - clampedDiscount / 100.0)));
         return new XpRequirement(Math.max(1, rawThreshold), requiredThreshold, tierCost, clampedDiscount, true);
     }
 
     public static XpRequirement forTargetedCleanse(int level, int maxLevel, int rawCost, int discountPercent) {
+        return forTargetedCleanse(LibraryResonance.activeServerConfig(), level, maxLevel, rawCost, discountPercent);
+    }
+
+    public static XpRequirement forTargetedCleanse(
+        LibraryResonance.Config resonanceCfg,
+        int level,
+        int maxLevel,
+        int rawCost,
+        int discountPercent
+    ) {
         int clampedMax = Math.max(1, maxLevel);
         int tierCost = vanillaTierDeduction(level, clampedMax);
         int baseThreshold = Math.max(tierCost, Math.max(4, rawCost));
-        int clampedDiscount = clampDiscount(discountPercent);
+        int clampedDiscount = clampDiscount(resonanceCfg, discountPercent);
         int requiredThreshold = Math.max(tierCost, (int) Math.round(baseThreshold * (1.0 - clampedDiscount / 100.0)));
         return new XpRequirement(baseThreshold, requiredThreshold, tierCost, clampedDiscount, true);
     }
 
     public static XpRequirement forFullArcaneRitual(int rawCost, int discountPercent) {
+        return forFullArcaneRitual(LibraryResonance.activeServerConfig(), rawCost, discountPercent);
+    }
+
+    public static XpRequirement forFullArcaneRitual(
+        LibraryResonance.Config resonanceCfg,
+        int rawCost,
+        int discountPercent
+    ) {
         int clampedRaw = Math.max(0, rawCost);
         if (clampedRaw == 0) {
             return XpRequirement.FREE;
         }
-        int clampedDiscount = clampDiscount(discountPercent);
+        int clampedDiscount = clampDiscount(resonanceCfg, discountPercent);
         int deducted = Math.max(1, (int) Math.round(clampedRaw * (1.0 - clampedDiscount / 100.0)));
         return new XpRequirement(clampedRaw, deducted, deducted, clampedDiscount, false);
     }
 
-    /**
-     * Full arcane ritual for a known target enchantment tier {@code (existingLevel -> targetLevel / maxLevel)}
-     * without a Master Tome: guarantees non-Master-Tome rituals always require at least as much player XP
-     * threshold & level deduction as the Master Tome path, closing low-level upgrade-wipe loops.
-     */
     public static XpRequirement forFullArcaneEnchantOrUpgrade(
         int existingLevel,
         int targetLevel,
@@ -203,13 +271,32 @@ public final class XpCostConversion {
         int rawCost,
         int discountPercent
     ) {
-        XpRequirement base = forFullArcaneRitual(rawCost, discountPercent);
+        return forFullArcaneEnchantOrUpgrade(
+            LibraryResonance.activeServerConfig(),
+            existingLevel,
+            targetLevel,
+            maxLevel,
+            rawCost,
+            discountPercent
+        );
+    }
+
+    public static XpRequirement forFullArcaneEnchantOrUpgrade(
+        LibraryResonance.Config resonanceCfg,
+        int existingLevel,
+        int targetLevel,
+        int maxLevel,
+        int rawCost,
+        int discountPercent
+    ) {
+        LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
+        XpRequirement base = forFullArcaneRitual(cfg, rawCost, discountPercent);
         if (rawCost <= 0) {
             return XpRequirement.FREE;
         }
         XpRequirement masterFloor = existingLevel > 0
-            ? forIncrementalMasterTomeEnchant(existingLevel, targetLevel, maxLevel, 0, discountPercent)
-            : forMasterTomeEnchant(targetLevel, maxLevel, 0, discountPercent);
+            ? forIncrementalMasterTomeEnchant(cfg, existingLevel, targetLevel, maxLevel, 0, discountPercent)
+            : forMasterTomeEnchant(cfg, targetLevel, maxLevel, 0, discountPercent);
         int deducted = Math.max(base.deductedLevels(), masterFloor.deductedLevels());
         int required = Math.max(deducted, Math.max(base.requiredLevel(), masterFloor.requiredLevel()));
         int rawShown = Math.max(base.rawRequiredLevel(), masterFloor.rawRequiredLevel());
@@ -218,10 +305,12 @@ public final class XpCostConversion {
 
     public static XpRequirement forTransformation(Identifier transformationId, int rawCost, int discountPercent) {
         return forTransformation(
+            LibraryResonance.activeServerConfig(),
             transformationId,
             rawCost,
             discountPercent,
-            ChiseledEnchantingTableData.transformationMinPlayerLevel(transformationId)
+            ChiseledEnchantingTableData.transformationMinRequiredLevel(transformationId),
+            ChiseledEnchantingTableData.transformationDeductedLevels(transformationId)
         );
     }
 
@@ -229,20 +318,45 @@ public final class XpCostConversion {
         Identifier transformationId,
         int rawCost,
         int discountPercent,
-        int configuredMinPlayerLevel
+        int minRequiredLevel
     ) {
-        int clampedRaw = Math.max(0, rawCost);
+        return forTransformation(
+            LibraryResonance.activeServerConfig(),
+            transformationId,
+            rawCost,
+            discountPercent,
+            minRequiredLevel,
+            ChiseledEnchantingTableData.transformationDeductedLevels(transformationId)
+        );
+    }
+
+    public static XpRequirement forTransformation(
+        LibraryResonance.Config resonanceCfg,
+        Identifier transformationId,
+        int rawThresholdLevel,
+        int discountPercent,
+        int minRequiredLevel,
+        int configuredDeductedLevels
+    ) {
+        int clampedRaw = Math.max(0, rawThresholdLevel);
         if (clampedRaw == 0) {
             return XpRequirement.FREE;
         }
-        int clampedDiscount = clampDiscount(discountPercent);
-        int minDeducted = Math.max(1, configuredMinPlayerLevel);
-        int deducted = Math.max(minDeducted, (int) Math.round(clampedRaw * (1.0 - clampedDiscount / 100.0)));
-        return new XpRequirement(clampedRaw, deducted, deducted, clampedDiscount, false);
+        int tierCost = configuredDeductedLevels > 0
+            ? configuredDeductedLevels
+            : (clampedRaw <= 1 ? 1 : vanillaTierDeduction(clampedRaw, 30));
+        int minGate = Math.max(tierCost, Math.max(1, minRequiredLevel));
+        int clampedDiscount = clampDiscount(resonanceCfg, discountPercent);
+        int requiredThreshold = Math.max(minGate, (int) Math.round(clampedRaw * (1.0 - clampedDiscount / 100.0)));
+        return new XpRequirement(clampedRaw, requiredThreshold, tierCost, clampedDiscount, true);
     }
 
     public static int clampDiscount(int discountPercent) {
-        int cap = LibraryResonance.activeConfig().maxTotalXpDiscountPercent();
-        return Math.max(0, Math.min(cap, discountPercent));
+        return clampDiscount(LibraryResonance.activeServerConfig(), discountPercent);
+    }
+
+    public static int clampDiscount(LibraryResonance.Config resonanceCfg, int discountPercent) {
+        LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
+        return Math.max(0, Math.min(cfg.maxTotalXpDiscountPercent(), discountPercent));
     }
 }

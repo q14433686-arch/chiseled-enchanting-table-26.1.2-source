@@ -439,7 +439,12 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             Holder<Enchantment> holder = holdersById.get(id);
             int curLvl = current.getLevel(holder);
             String headerTitle = Enchantment.getFullname(holder, curLvl).getString();
-            int traitEssence = DisenchantmentApplication.essencePotential(holder, curLvl, this.handler.disenchantRefundScale());
+            int traitEssence = DisenchantmentApplication.essencePotential(
+                this.handler.libraryResonanceConfig(),
+                holder,
+                curLvl,
+                this.handler.disenchantRefundScale()
+            );
             boolean open = isCategoryExpanded(id);
 
             this.addEntry(EnchantUiEntry.categoryEntry(
