@@ -125,22 +125,23 @@ were taken verbatim (`git checkout <26.1.2 tip> -- <path>`, including the deleti
   measurement helper, not a draw call. The new UI code only uses these forms (checked call-by-call
   against the base tree that compiled green on 26.2).
 
-### 3.3 Residual risk (verified by CI, not locally)
+### 3.3 Residual risk — **closed by CI**
 
-The dev sandbox has no JDK and no route to `maven.fabricmc.net`, so this sync was validated with the
-three offline gates plus a file-by-file API audit; the real check is `compile-check` / `build` on
-Actions, which is why the log is committed back to the branch. The surfaces worth watching if a
-compile fails are, in order of likelihood:
+The dev sandbox has no JDK and no route to `maven.fabricmc.net`, so this sync was first validated
+with the three offline gates plus a file-by-file API audit; the real check was `compile-check` /
+`build` on Actions. **Both are green at commit `902e947`** (compile-check run `39818720349`,
+build run `39818720326` including the `static`, `gradle build` and `no-viewers` jobs,
+consistency run `39818720363`), so every surface that was flagged as uncertain compiled against
+26.2 exactly as written:
 
 1. `GuiGraphicsExtractor#setTooltipForNextFrame(Font, List<Component>, Optional<…>, int, int,
-   Identifier)` and `#enableScissor/#disableScissor` — new to this code base (the base tree drew no
-   custom tooltips and clipped nothing).
+   Identifier)` and `#enableScissor/#disableScissor` — the custom tooltips and the row/panel
+   clipping.
 2. `BlockColorRegistry.register(List.of(new BlockTintSource() { … }), Block)` +
-   `BlockEntity#getRenderData()` + `BlockAndTintGetter#getBlockEntityRenderData(BlockPos)` — the new
-   dye-tinting path.
-3. `DataComponents.DYE` (returns a `DyeColor`) in the table's `useItemOn` — the 26.1.2 line moved off
-   `DyeItem` deliberately; `DyeColor#getTextureDiffuseColor()` + `ARGB.average(int, int)` are used
-   for the blend.
+   `BlockEntity#getRenderData()` + `BlockAndTintGetter#getBlockEntityRenderData(BlockPos)` — the
+   dye-tinting path (this is one of the two deprecation notes javac emits, but it compiles).
+3. `DataComponents.DYE` (returns a `DyeColor`) in the table's `useItemOn` —
+   `DyeColor#getTextureDiffuseColor()` + `ARGB.average(int, int)` for the blend.
 4. `CompoundTag#getIntOr/getLongOr` + `CustomData` round-trip used for the persistent freeze.
 5. JEI `IIngredientAcceptor#add(ItemStack)` in the two category classes.
 
@@ -149,11 +150,17 @@ compile fails are, in order of likelihood:
 ## 4. Validation done in this round
 
 ```bash
-python3 scripts/ci_static_checks.py                 # PASS — 9 mixins, 98 lang keys x 11 locales, 35 md files
+python3 scripts/ci_static_checks.py                 # PASS — 9 mixins, 98 lang keys x 11 locales, 36 md files
 python3 scripts/compat_check.py                     # PASS — Tier 1 (now also validates book_upgrades.json
                                                     #        and treasure_epiphany.json; see §5)
 bash scripts/check_release_consistency.sh --strict  # PASS — 12 checks
 python3 -c "import json,glob;[json.load(open(p)) for p in glob.glob('src/**/*.json',recursive=True)]"
+
+# GitHub Actions (the real compile gate, since the sandbox has no JDK):
+#   compile-check 39818720349  — success (compileJava + compileClientJava, JEI 30.47.0.239 + REI 26.2.821)
+#   build         39818720326  — success (static checks, gradle build + remapJar + artifact, no-viewers)
+#   consistency   39818720363  — success
+#   => compiler log committed back as 68fc86e (build-reports/compile-java.log)
 ```
 
 Added in this round (Tier 1 coverage, `docs/EXTENDING.md` §7-§8): a shared cost-option validator

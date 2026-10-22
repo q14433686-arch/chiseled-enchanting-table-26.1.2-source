@@ -60,12 +60,16 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
   `consistency.yml`, `publish.yml`) are installed and verified byte-identical via
   `bash docs/ci/install.sh --check` (`MINECRAFT_VERSION: 26.2`, `VERSION: 1.0.3`,
   `RELEASE_NAME: ... (Unofficial 26.2 Port)`).
-- **CI status (2026-10-22):** GitHub Actions `compile-check`, `build` (including `static`,
-  `gradle build`, and `no-viewers`), and `consistency` workflows are **all green** on Minecraft
-  26.2 — `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict`,
+- **CI status (2026-10-22, 26.1.2 sync):** GitHub Actions `compile-check` (run `39818720349`),
+  `build` (run `39818720326` — `static`, `gradle build` and `no-viewers` jobs) and `consistency`
+  (run `39818720363`) are **all green** on Minecraft 26.2 at commit `902e947` — i.e.
+  `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict`,
   `:compileJava`, `:compileClientJava`, `remapJar` (with pinned `jei-26.2-fabric:30.47.0.239` and
-  `RoughlyEnoughItems-api-fabric:26.2.821` plus `toolchainPins` exclusions), and `-Penable_jei=false
-  -Penable_rei=false` all succeeded.
+  `RoughlyEnoughItems-api-fabric:26.2.821` plus `toolchainPins` exclusions) and
+  `-Penable_jei=false -Penable_rei=false` all succeeded with the synced feature set. The only javac
+  notes are deprecation notices (`ChiseledEnchantingTableClient` + `Note: Some input files use or
+  override a deprecated API`), no warnings-as-errors. The workflow committed the compiler log back
+  as `68fc86e` (`build-reports/compile-java.log`).
 
 ### Source layout
 - `chiseled_enchanting_table.block.*` — `ChiseledEnchantingTableBlock`,
