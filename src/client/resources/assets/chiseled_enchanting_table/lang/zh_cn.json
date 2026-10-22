@@ -122,8 +122,8 @@
   "gui.chiseled_enchanting_table.cleanse.panel_traits": "词条：%s 条（可洗 %s）",
   "gui.chiseled_enchanting_table.cleanse.panel_refund": "全洗 +%s 经验",
   "gui.chiseled_enchanting_table.cleanse.panel_rule_free": "• 全洗 / 降级：零耗材并返还经验点",
-  "gui.chiseled_enchanting_table.cleanse.panel_rule_strip": "• 定向单洗：消耗退魔砂等，保留其余附魔",
-  "gui.chiseled_enchanting_table.cleanse.panel_rule_curse": "• 破除诅咒：退魔砂 + 恶魂之泪或秘法凝晶",
+  "gui.chiseled_enchanting_table.cleanse.panel_rule_strip": "• 定向单洗：退魔砂（主槽）+ 青金石/墨囊/紫水晶",
+  "gui.chiseled_enchanting_table.cleanse.panel_rule_curse": "• 破除诅咒：退魔砂 + 恶魂之泪 / 金苹果",
   "gui.chiseled_enchanting_table.cleanse.panel_stats": "一键全洗可移除 %s 条附魔，返还 +%s 点经验",
   "gui.chiseled_enchanting_table.cleanse.btn_all_title": "✦ 一键全部洗去（非诅咒）",
   "gui.chiseled_enchanting_table.cleanse.btn_all_hint": "不消耗材料 · 诅咒需在列表中单独破除",
@@ -136,5 +136,6 @@
   "advancements.chiseled_enchanting_table.purge_curse.description": "在纂刻附魔台上成功破除一条诅咒附魔。",
   "jei.chiseled_enchanting_table.tooltip.xp_refund": "免费 · 返还经验点",
   "jei.chiseled_enchanting_table.tooltip.xp_full": "消耗：%s 级经验",
-  "jei.chiseled_enchanting_table.info.cleansing_grit": "由燧石、下界石英、发光墨囊与骨粉无序合成（每次 4 份）。在纂刻附魔台顶部的「退魔 · 洗练」页中，可保留其他词条单独抹除某一条废词条，或配合恶魂之泪破除诅咒。"
+  "jei.chiseled_enchanting_table.info.cleansing_grit": "由燧石、下界石英、发光墨囊与骨粉无序合成（每次 4 份）。在附魔台「退魔 · 洗练」页放入材料槽，配合背包中的青金石、发光墨囊或紫水晶碎片双材料消耗，可保留其他词条精准抹除单条废词条；配合恶魂之泪可破除诅咒。",
+  "gui.chiseled_enchanting_table.category.count": "%s 项"
 }

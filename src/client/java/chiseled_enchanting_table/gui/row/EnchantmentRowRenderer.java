@@ -7,8 +7,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Renders an enchantment, Treasure Epiphany, Cleanse, or Curse-Purge list row with strict
- * anti-overlap text bounds and hardware scissor clipping inside the plaque border.
+ * Renders an enchantment, Treasure Epiphany, Cleanse, or Curse-Purge list row with unified
+ * {@code midY} vertical centering and strict inner-border GPU scissor clipping.
  */
 public final class EnchantmentRowRenderer {
     private EnchantmentRowRenderer() {}
@@ -76,6 +76,7 @@ public final class EnchantmentRowRenderer {
 
         RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
         try {
+            float midY = RowRenderSupport.rowCenterY(dy, dh);
             boolean hasPrimary = !primaryCost.isEmpty();
             if (hasPrimary) {
                 int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
@@ -98,11 +99,20 @@ public final class EnchantmentRowRenderer {
             };
 
             if (annotation != null) {
-                RowRenderSupport.renderBoundedText(ctx, client, enchantmentName, nameX, dy + 4, 0.64f, maxTextW, titleColor);
-                RowRenderSupport.renderBoundedText(ctx, client, annotation.text(), nameX, dy + 12, 0.58f, maxTextW, annotation.color());
+                RowRenderSupport.renderTwoLineCenteredBlock(
+                    ctx,
+                    client,
+                    enchantmentName,
+                    titleColor,
+                    annotation.text(),
+                    annotation.color(),
+                    nameX,
+                    dy,
+                    dh,
+                    maxTextW
+                );
             } else {
-                int centeredY = dy + Math.round((dh - client.font.lineHeight * 0.66f) / 2.0f) + 1;
-                RowRenderSupport.renderBoundedText(ctx, client, enchantmentName, nameX, centeredY, 0.66f, maxTextW, titleColor);
+                RowRenderSupport.renderCenteredYText(ctx, client, enchantmentName, nameX, midY, 0.66f, maxTextW, titleColor);
             }
 
             RowRenderSupport.drawXpBadge(ctx, client, xpRequirement, dx, dw, dy, dh, xpMet);

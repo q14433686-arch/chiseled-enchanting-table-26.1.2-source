@@ -136,5 +136,6 @@
   "advancements.chiseled_enchanting_table.purge_curse.description": "Purge a binding or vanishing curse at a Chiseled Enchanting Table.",
   "jei.chiseled_enchanting_table.tooltip.xp_refund": "Free · Refunds XP points",
   "jei.chiseled_enchanting_table.tooltip.xp_full": "Cost: %s XP levels",
-  "jei.chiseled_enchanting_table.info.cleansing_grit": "Crafted 4 at a time from Flint, Nether Quartz, Glow Ink Sac, and Bone Meal. Used in the Cleanse tab of the Chiseled Enchanting Table to strip a single unwanted enchantment while keeping all others, or combined with a Ghast Tear to purge Curses."
+  "jei.chiseled_enchanting_table.info.cleansing_grit": "Crafted 4 at a time from Flint, Nether Quartz, Glow Ink Sac, and Bone Meal. Used in the Cleanse tab of the Chiseled Enchanting Table to strip a single unwanted enchantment while keeping all others, or combined with a Ghast Tear to purge Curses.",
+  "gui.chiseled_enchanting_table.category.count": "%s opt"
 }

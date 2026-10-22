@@ -750,6 +750,23 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         if key not in cfg:
             errors.append(f"disenchanting.json missing required key '{key}'")
 
+    # Verify EVERY option in targeted_strip and curse_purge uses canonical "options" + "extras"
+    # (dual-material design) AND involves chiseled_enchanting_table:cleansing_grit or arcane_catalyst!
+    for section_key in ("targeted_strip", "curse_purge"):
+        sec = cfg.get(section_key, {})
+        opts = sec.get("options", [])
+        if not opts:
+            errors.append(f"disenchanting.json '{section_key}' must define non-empty 'options' list")
+        for idx, opt in enumerate(opts):
+            extras = opt.get("extras", [])
+            if not extras:
+                errors.append(f"disenchanting.json '{section_key}.options[{idx}]' missing dual-material 'extras'")
+            involved = {opt.get("item")} | {ex.get("item") for ex in extras}
+            if section_key == "targeted_strip" and "chiseled_enchanting_table:cleansing_grit" not in involved:
+                errors.append(
+                    f"disenchanting.json 'targeted_strip.options[{idx}]' must require cleansing_grit: got {involved}"
+                )
+
     def xp_for_level(level: int) -> int:
         if level >= 30:
             return 112 + (level - 30) * 9

@@ -49,12 +49,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final Identifier TAB_CLEANSE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_active.png");
     private static final Identifier TAB_CLEANSE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_inactive.png");
 
-    // Top mode switcher tabs joined flush against the top stone frame.
-    private static final int TAB_W = 74;
+    // Top mode switcher tabs aligned pixel-for-pixel with the purple header cloth [x = 14 .. 167].
+    private static final int TAB_W = 75;
     private static final int TAB_H = 18;
     private static final int TAB_Y_OFFSET = -15;
-    private static final int TAB_INSCRIBE_X = 8;
-    private static final int TAB_CLEANSE_X = 86;
+    private static final int TAB_INSCRIBE_X = 14;
+    private static final int TAB_CLEANSE_X = 92;
 
     // Integrated Sanctum / Cleanse Console coordinates inside the cohesive 340x166 window chassis.
     private static final int PANEL_X = 214;
@@ -101,13 +101,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     protected void init() {
         super.init();
         this.addRenderableWidget(this.scrollContainer);
-        this.scrollContainer.updateSizeAndPosition(151, 140, this.leftPos + 7, this.topPos + 18);
+        this.scrollContainer.updateSizeAndPosition(151, 141, this.leftPos + 7, this.topPos + 17);
     }
 
     @Override
     protected void repositionElements() {
         super.repositionElements();
-        this.scrollContainer.updateSizeAndPosition(151, 140, this.leftPos + 7, this.topPos + 18);
+        this.scrollContainer.updateSizeAndPosition(151, 141, this.leftPos + 7, this.topPos + 17);
     }
 
     private boolean isOverInscribeTab(double mouseX, double mouseY) {
@@ -296,15 +296,16 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (cleanse && isOverInscribeTab(mouseX, mouseY)) {
             ctx.fill(inscribeX + 2, tabY + 2, inscribeX + TAB_W - 2, tabY + TAB_H - 3, 0x24FFE082);
         }
+        float tabVisualMidY = tabY + 8.0f;
         String tab1Text = Component.translatable("gui.chiseled_enchanting_table.tab.inscribe").getString();
-        RowRenderSupport.renderBoundedText(
+        RowRenderSupport.renderCenteredBoxText(
             ctx,
             this.minecraft,
             tab1Text,
-            inscribeX + 6,
-            tabY + 5,
+            inscribeX + 5,
+            TAB_W - 10,
+            tabVisualMidY,
             0.76f,
-            TAB_W - 12,
             cleanse ? 0xFFC2B2DC : 0xFFFFF0C8
         );
 
@@ -318,14 +319,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(this.menu.get_enchantable_item()).size();
             String baseLabel = Component.translatable("gui.chiseled_enchanting_table.tab.cleanse").getString();
             String tab2Text = traitCount > 0 ? (baseLabel + " (" + traitCount + ")") : baseLabel;
-            RowRenderSupport.renderBoundedText(
+            RowRenderSupport.renderCenteredBoxText(
                 ctx,
                 this.minecraft,
                 tab2Text,
-                cleanseX + 6,
-                tabY + 5,
+                cleanseX + 5,
+                TAB_W - 10,
+                tabVisualMidY,
                 0.76f,
-                TAB_W - 12,
                 cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC)
             );
         }
@@ -759,7 +760,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
-        RowRenderSupport.renderBoundedText(context, this.minecraft, this.title.getString(), 18, 6, 1.0f, 304, 0xFFFFF0C8);
+        // Purple stitched header cloth spans y = [1.0 .. 15.0] (center = 8.0); place visual ink center at 7.6f!
+        RowRenderSupport.renderCenteredYText(context, this.minecraft, this.title.getString(), 18, 7.6f, 0.94f, 300, 0xFFFFF0C8);
 
         int lx = PANEL_X + 10;
         int ly = PANEL_Y;

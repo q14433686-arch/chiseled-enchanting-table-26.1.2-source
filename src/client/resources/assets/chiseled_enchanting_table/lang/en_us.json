@@ -122,8 +122,8 @@
   "gui.chiseled_enchanting_table.cleanse.panel_traits": "Traits: %s (%s clean)",
   "gui.chiseled_enchanting_table.cleanse.panel_refund": "Wipe: +%s XP",
   "gui.chiseled_enchanting_table.cleanse.panel_rule_free": "• Full Wipe & Downgrade: 0 items · grants XP",
-  "gui.chiseled_enchanting_table.cleanse.panel_rule_strip": "• Strip 1 Trait: Cleansing Grit / Ink · keeps rest",
-  "gui.chiseled_enchanting_table.cleanse.panel_rule_curse": "• Purge Curse: Grit + Ghast Tear or Catalyst",
+  "gui.chiseled_enchanting_table.cleanse.panel_rule_strip": "• Strip 1 Trait: Cleansing Grit + secondary reagent",
+  "gui.chiseled_enchanting_table.cleanse.panel_rule_curse": "• Purge Curse: Cleansing Grit + Ghast Tear / Apple",
   "gui.chiseled_enchanting_table.cleanse.panel_stats": "Full wipe clears %s trait(s) for +%s XP",
   "gui.chiseled_enchanting_table.cleanse.btn_all_title": "✦ Disenchant All Non-Curse Traits",
   "gui.chiseled_enchanting_table.cleanse.btn_all_hint": "Costs 0 items · Curses remain unless purged directly",
@@ -136,5 +136,6 @@
   "advancements.chiseled_enchanting_table.purge_curse.description": "Purge a binding or vanishing curse at a Chiseled Enchanting Table.",
   "jei.chiseled_enchanting_table.tooltip.xp_refund": "Free · Refunds XP points",
   "jei.chiseled_enchanting_table.tooltip.xp_full": "Cost: %s XP levels",
-  "jei.chiseled_enchanting_table.info.cleansing_grit": "Crafted 4 at a time from Flint, Nether Quartz, Glow Ink Sac, and Bone Meal. Used in the Cleanse tab of the Chiseled Enchanting Table to strip a single unwanted enchantment while keeping all others, or combined with a Ghast Tear to purge Curses."
+  "jei.chiseled_enchanting_table.info.cleansing_grit": "Crafted 4 at a time from Flint, Nether Quartz, Glow Ink Sac, and Bone Meal. Place Cleansing Grit in the material slot with Lapis, Glow Ink, or Amethyst in your inventory to strip a single unwanted enchantment while keeping all others, or combine with a Ghast Tear to purge Curses.",
+  "gui.chiseled_enchanting_table.category.count": "%s opt"
 }

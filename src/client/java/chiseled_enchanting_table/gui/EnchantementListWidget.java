@@ -2,6 +2,7 @@ package chiseled_enchanting_table.gui;
 
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.gui.row.CategoryRowRenderer;
 import chiseled_enchanting_table.gui.row.EnchantmentRowRenderer;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.gui.row.TransformationRowRenderer;
@@ -14,7 +15,9 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -24,12 +27,15 @@ import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -50,6 +56,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     public Player player;
     public ChiseledEnchantingTableScreenHandler handler;
     private UiTabMode tabMode = UiTabMode.INSCRIBE;
+    private final Set<Identifier> expandedInscribeCategories = new HashSet<>();
+    private final Set<Identifier> expandedCleanseCategories = new HashSet<>();
+    private ItemStack lastTargetSnapshot = ItemStack.EMPTY;
 
     public EnchantementListWidget(
         Minecraft client,
@@ -81,6 +90,23 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
     }
 
+    public boolean isCategoryExpanded(Identifier categoryId) {
+        return (this.tabMode == UiTabMode.CLEANSE ? this.expandedCleanseCategories : this.expandedInscribeCategories)
+            .contains(categoryId);
+    }
+
+    public void toggleCategory(Identifier categoryId) {
+        Set<Identifier> set = (this.tabMode == UiTabMode.CLEANSE)
+            ? this.expandedCleanseCategories
+            : this.expandedInscribeCategories;
+        if (!set.remove(categoryId)) {
+            set.add(categoryId);
+        }
+        double savedScroll = this.scrollAmount();
+        this.updateEntry(this.handler.get_enchantable_item(), this.handler.get_cost_item());
+        this.setScrollAmount(Math.min(savedScroll, this.maxScrollAmount()));
+    }
+
     public static Holder<Enchantment> IdentifierToEnchantment(Identifier id, Player player) {
         RegistryAccess registryAccess = player.level().registryAccess();
         Registry<Enchantment> registry = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
@@ -89,6 +115,17 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
     public static Identifier EnchantmentToIdentifier(Holder<Enchantment> enchant, Player player) {
         return enchant.unwrapKey().get().identifier();
+    }
+
+    public static String baseEnchantmentName(Holder<Enchantment> ench) {
+        return ench.value().description().getString();
+    }
+
+    private static String romanNumeral(int level) {
+        if (level >= 1 && level <= 10) {
+            return Component.translatable("enchantment.level." + level).getString();
+        }
+        return String.valueOf(level);
     }
 
     public String displayName(AvailableOption option) {
@@ -255,7 +292,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return null;
         }
         for (EnchantUiEntry entry : this.children()) {
-            if (entry.isOverXpBadge(mouseX, mouseY)) {
+            if (!entry.is_category_header && entry.isOverXpBadge(mouseX, mouseY)) {
                 return entry;
             }
         }
@@ -277,23 +314,38 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     public void updateEntry(ItemStack enchantable_item, ItemStack cost_item_stack) {
+        boolean targetChanged = !ItemStack.isSameItem(enchantable_item, this.lastTargetSnapshot);
+        double previousScroll = this.scrollAmount();
         var navigationIndex = saveNavigationIfSameItem(enchantable_item, cost_item_stack);
 
         this.clearEntries();
-        if (navigationIndex == -1) {
+        if (targetChanged) {
             this.setScrollAmount(0);
+            this.lastTargetSnapshot = enchantable_item.copy();
         }
         this.enchantable_item = enchantable_item;
         this.cost_item_stack = cost_item_stack;
 
         if (this.tabMode == UiTabMode.CLEANSE) {
-            populateCleanseEntries(navigationIndex);
+            populateCleanseEntries(navigationIndex, targetChanged, previousScroll);
             return;
         }
-        populateInscribeEntries(navigationIndex);
+        populateInscribeEntries(navigationIndex, targetChanged, previousScroll);
     }
 
-    private void populateCleanseEntries(int navigationIndex) {
+    private void addActionEntry(AvailableOption opt, boolean nested, boolean lastChild) {
+        boolean enchantFromBook = this.cost_item_stack.is(Items.ENCHANTED_BOOK);
+        var ewl = opt.asEnchantmentWithLevel();
+        List<List<ItemStack>> costOpts = opt.isBookCombineUpgrade() || (enchantFromBook && !opt.isBookResearchUpgrade() && !opt.isCleanseOperation())
+            ? List.of()
+            : this.handler.getEffectiveItemCostOptions(ewl, opt.type());
+        var xpReq = (enchantFromBook && !opt.isBookUpgrade() && !opt.isCleanseOperation())
+            ? XpCostConversion.XpRequirement.FREE
+            : this.handler.resolveEffectiveXpRequirement(ewl, opt.type());
+        this.addEntry(EnchantUiEntry.actionEntry(minecraft, this.handler, opt, costOpts, xpReq, this, nested, lastChild));
+    }
+
+    private void populateCleanseEntries(int navigationIndex, boolean targetChanged, double previousScroll) {
         if (!this.handler.disenchantEnabled() || this.enchantable_item.isEmpty()) {
             return;
         }
@@ -302,50 +354,81 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return;
         }
 
-        List<AvailableOption> cleanseOptions = new ArrayList<>();
+        // 1. Standalone top-pinned Cleanse rows: Full Disenchant + any Curse Purge items
         int nonCurseCount = DisenchantmentApplication.countNonCurseEnchantments(this.enchantable_item);
         if (nonCurseCount >= 1) {
-            cleanseOptions.add(AvailableOption.disenchantAll(DisenchantmentApplication.DISENCHANT_ALL_ID));
+            addActionEntry(AvailableOption.disenchantAll(DisenchantmentApplication.DISENCHANT_ALL_ID), false, false);
         }
 
         List<Holder<Enchantment>> sortedKeys = new ArrayList<>(current.keySet());
-        sortedKeys.sort((a, b) -> {
-            String na = Enchantment.getFullname(a, 1).getString();
-            String nb = Enchantment.getFullname(b, 1).getString();
-            return na.compareTo(nb);
-        });
+        sortedKeys.sort((a, b) -> baseEnchantmentName(a).compareTo(baseEnchantmentName(b)));
 
         int totalTraits = current.size();
+        Map<Identifier, List<AvailableOption>> groupedCleanse = new LinkedHashMap<>();
+        Map<Identifier, Holder<Enchantment>> holdersById = new LinkedHashMap<>();
+
         for (Holder<Enchantment> holder : sortedKeys) {
             int curLvl = current.getLevel(holder);
             if (curLvl <= 0) continue;
             Identifier id = EnchantmentToIdentifier(holder, this.player);
             if (DisenchantmentApplication.isCurse(holder)) {
                 if (this.handler.disenchantAllowCursePurge()) {
-                    cleanseOptions.add(AvailableOption.purgeCurse(id, curLvl));
+                    addActionEntry(AvailableOption.purgeCurse(id, curLvl), false, false);
                 }
             } else {
-                // Free XP-refunding step-down options (e.g. V -> IV, V -> III, ..., V -> I)
+                List<AvailableOption> subRows = new ArrayList<>();
                 for (int nextLvl = curLvl - 1; nextLvl >= 1; nextLvl--) {
-                    cleanseOptions.add(AvailableOption.downgradeEnchantment(id, nextLvl));
+                    subRows.add(AvailableOption.downgradeEnchantment(id, nextLvl));
                 }
-                // Paid surgical single-trait removal when preserving >= 1 other enchantment on the item
                 if (totalTraits >= 2) {
-                    cleanseOptions.add(AvailableOption.stripSingleEnchantment(id, curLvl));
+                    subRows.add(AvailableOption.stripSingleEnchantment(id, curLvl));
+                }
+                if (!subRows.isEmpty()) {
+                    groupedCleanse.put(id, subRows);
+                    holdersById.put(id, holder);
                 }
             }
         }
 
-        for (AvailableOption opt : cleanseOptions) {
-            var ewl = opt.asEnchantmentWithLevel();
-            List<List<ItemStack>> costOpts = this.handler.getEffectiveItemCostOptions(ewl, opt.type());
-            var xpReq = this.handler.resolveEffectiveXpRequirement(ewl, opt.type());
-            this.addEntry(new EnchantUiEntry(minecraft, this.handler, opt, costOpts, xpReq, this));
+        // Auto-expand when there is only 1 collapsible trait on a newly placed item
+        if (targetChanged && groupedCleanse.size() == 1) {
+            this.expandedCleanseCategories.add(groupedCleanse.keySet().iterator().next());
         }
+
+        for (var groupEntry : groupedCleanse.entrySet()) {
+            Identifier id = groupEntry.getKey();
+            List<AvailableOption> children = groupEntry.getValue();
+            Holder<Enchantment> holder = holdersById.get(id);
+            int curLvl = current.getLevel(holder);
+            String headerTitle = Enchantment.getFullname(holder, curLvl).getString();
+            int traitEssence = DisenchantmentApplication.essencePotential(holder, curLvl, this.handler.disenchantRefundScale());
+            boolean open = isCategoryExpanded(id);
+
+            this.addEntry(EnchantUiEntry.categoryEntry(
+                minecraft,
+                this.handler,
+                id,
+                headerTitle,
+                I18n.get("gui.chiseled_enchanting_table.category.count", children.size()),
+                RowRenderSupport.JADE_MINT,
+                traitEssence,
+                true,
+                this
+            ));
+            if (open) {
+                for (int idx = 0; idx < children.size(); idx++) {
+                    addActionEntry(children.get(idx), true, idx == children.size() - 1);
+                }
+            }
+        }
+
         resumeNavigation(navigationIndex);
+        if (!targetChanged) {
+            this.setScrollAmount(Math.min(previousScroll, this.maxScrollAmount()));
+        }
     }
 
-    private void populateInscribeEntries(int navigationIndex) {
+    private void populateInscribeEntries(int navigationIndex, boolean targetChanged, double previousScroll) {
         var enchantFromBook = cost_item_stack.is(Items.ENCHANTED_BOOK);
         ItemEnchantments targetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
 
@@ -365,7 +448,6 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 for (EnchantmentWithLevel e : unlocked_enchantements) {
                     Holder<Enchantment> h = IdentifierToEnchantment(e.enchantment_id(), this.player);
                     int existingLvl = targetEnchantments.getLevel(h);
-                    // Hide downward rows from Inscribe mode — downgrading lives in Cleanse mode and refunds XP!
                     if (e.enchantment_level() >= existingLvl) {
                         options.add(AvailableOption.enchantment(e));
                         unlockedDirectSet.add(e);
@@ -395,8 +477,6 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     && !cost_item_stack.is(Items.ENCHANTED_BOOK)
                     && !cost_item_stack.is(Items.BOOK)
                     && !unlockedDirectSet.contains(new EnchantmentWithLevel(id, targetLevel))) {
-                    // Only emit a separate BOOK_RESEARCH_UPGRADE row when shelves/Master Tome do not already unlock targetLevel;
-                    // when unlocked directly, getEffectiveItemCostOptions already gives the strictly cheaper of both!
                     options.add(AvailableOption.bookResearchUpgrade(id, targetLevel));
                 }
             }
@@ -405,7 +485,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             options.add(AvailableOption.transformation(t.enchantment_id(), t.enchantment_level()));
         }
 
-        options.stream().filter(option -> {
+        List<AvailableOption> filtered = options.stream().filter(option -> {
             if (option.isTransformation()) {
                 return this.handler.syncedTransformationMatches(option.id(), enchantable_item);
             }
@@ -414,26 +494,94 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             }
             Holder<Enchantment> enchant = IdentifierToEnchantment(option.id(), this.player);
             return enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchant.value().canEnchant(enchantable_item);
-        }).sorted((o1, o2) -> {
-            int p1 = o1.isTreasureEpiphany() ? 0 : (o1.isTransformation() ? 1 : (o1.isBookUpgrade() ? 2 : 3));
-            int p2 = o2.isTreasureEpiphany() ? 0 : (o2.isTransformation() ? 1 : (o2.isBookUpgrade() ? 2 : 3));
-            if (p1 != p2) return Integer.compare(p1, p2);
-            String name1 = displayName(o1);
-            String name2 = displayName(o2);
-            int nameComparison = name1.compareTo(name2);
-            if (nameComparison != 0) return nameComparison;
-            return Integer.compare(o1.level(), o2.level());
-        }).forEach(option -> {
-            var ewl = option.asEnchantmentWithLevel();
-            List<List<ItemStack>> costOptions = option.isBookCombineUpgrade() || (enchantFromBook && !option.isBookResearchUpgrade())
-                ? List.of()
-                : this.handler.getEffectiveItemCostOptions(ewl, option.type());
-            var xpReq = (enchantFromBook && !option.isBookUpgrade())
-                ? XpCostConversion.XpRequirement.FREE
-                : this.handler.resolveEffectiveXpRequirement(ewl, option.type());
-            this.addEntry(new EnchantUiEntry(minecraft, this.handler, option, costOptions, xpReq, this));
-        });
+        }).toList();
+
+        // 1. Standalone top-pinned rows: ALL Treasure Epiphanies + Item Transformations (never collapsed!)
+        List<AvailableOption> pinnedTop = new ArrayList<>();
+        Map<Identifier, List<AvailableOption>> groupedEnchants = new LinkedHashMap<>();
+
+        filtered.stream()
+            .filter(o -> o.isTreasureEpiphany() || o.isTransformation())
+            .sorted((o1, o2) -> {
+                int p1 = o1.isTreasureEpiphany() ? 0 : 1;
+                int p2 = o2.isTreasureEpiphany() ? 0 : 1;
+                if (p1 != p2) return Integer.compare(p1, p2);
+                int c = displayName(o1).compareTo(displayName(o2));
+                return c != 0 ? c : Integer.compare(o1.level(), o2.level());
+            })
+            .forEach(pinnedTop::add);
+
+        filtered.stream()
+            .filter(o -> !o.isTreasureEpiphany() && !o.isTransformation())
+            .sorted((o1, o2) -> {
+                String n1 = baseEnchantmentName(IdentifierToEnchantment(o1.id(), this.player));
+                String n2 = baseEnchantmentName(IdentifierToEnchantment(o2.id(), this.player));
+                int c = n1.compareTo(n2);
+                if (c != 0) return c;
+                int lvlCmp = Integer.compare(o1.level(), o2.level());
+                if (lvlCmp != 0) return lvlCmp;
+                return Integer.compare(o1.type().ordinal(), o2.type().ordinal());
+            })
+            .forEach(opt -> groupedEnchants.computeIfAbsent(opt.id(), ignored -> new ArrayList<>()).add(opt));
+
+        for (AvailableOption pinned : pinnedTop) {
+            addActionEntry(pinned, false, false);
+        }
+
+        // Auto-expand when there is only 1 enchantment group available (e.g. single-book transfer/combine)
+        if (groupedEnchants.size() == 1) {
+            this.expandedInscribeCategories.add(groupedEnchants.keySet().iterator().next());
+        }
+
+        // 2. Per-attribute collapsible horizontal tabs with crisp ▶ / ▼ triangles & indented tier children
+        for (var groupEntry : groupedEnchants.entrySet()) {
+            Identifier enchId = groupEntry.getKey();
+            List<AvailableOption> children = groupEntry.getValue();
+            Holder<Enchantment> holder = IdentifierToEnchantment(enchId, this.player);
+            String categoryName = baseEnchantmentName(holder);
+            int curLvl = targetEnchantments.getLevel(holder);
+            int minTier = children.getFirst().level();
+            int maxTier = children.getLast().level();
+
+            String badgeText;
+            int badgeColor;
+            if (curLvl > 0 && maxTier > curLvl) {
+                badgeText = "\u2B06 " + romanNumeral(curLvl) + "\u2192" + romanNumeral(maxTier);
+                badgeColor = RowRenderSupport.LIGHT_GREEN;
+            } else if (curLvl > 0 && maxTier == curLvl) {
+                badgeText = "\u2714 " + romanNumeral(curLvl);
+                badgeColor = RowRenderSupport.CYAN;
+            } else if (minTier == maxTier) {
+                badgeText = romanNumeral(minTier);
+                badgeColor = RowRenderSupport.ARCANE_PURPLE;
+            } else {
+                badgeText = romanNumeral(minTier) + "\u2013" + romanNumeral(maxTier);
+                badgeColor = RowRenderSupport.EPIPHANY_GOLD;
+            }
+
+            boolean open = isCategoryExpanded(enchId);
+            this.addEntry(EnchantUiEntry.categoryEntry(
+                minecraft,
+                this.handler,
+                enchId,
+                categoryName,
+                badgeText,
+                badgeColor,
+                0,
+                false,
+                this
+            ));
+            if (open) {
+                for (int idx = 0; idx < children.size(); idx++) {
+                    addActionEntry(children.get(idx), true, idx == children.size() - 1);
+                }
+            }
+        }
+
         resumeNavigation(navigationIndex);
+        if (!targetChanged) {
+            this.setScrollAmount(Math.min(previousScroll, this.maxScrollAmount()));
+        }
     }
 
     public static class EnchantUiEntry extends AbstractSelectionList.Entry<EnchantUiEntry> {
@@ -441,6 +589,14 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public ItemStack cost_item_stack;
         public int enchant_level;
         public boolean is_transformation;
+        public boolean is_category_header;
+        public boolean nested_child;
+        public boolean last_child;
+        public boolean cleanse_theme;
+        public String category_title;
+        public String category_badge;
+        public int category_badge_color;
+        public int category_refund_points;
         public OptionType option_type;
         public Holder<Enchantment> enchantment;
         public Identifier enchantment_id;
@@ -454,6 +610,58 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public OptionalInt sameEnchantLevelDiff = OptionalInt.empty();
         public ChiseledEnchantingTableScreenHandler handler;
         public EnchantementListWidget parent;
+
+        public static EnchantUiEntry categoryEntry(
+            Minecraft client,
+            ChiseledEnchantingTableScreenHandler handler,
+            Identifier categoryId,
+            String categoryTitle,
+            String badgeText,
+            int badgeColor,
+            int refundPreviewPoints,
+            boolean cleanseTheme,
+            EnchantementListWidget parent
+        ) {
+            EnchantUiEntry entry = new EnchantUiEntry();
+            entry.client = client;
+            entry.handler = handler;
+            entry.parent = parent;
+            entry.enchantable_item = handler.get_enchantable_item();
+            entry.cost_item_stack = handler.get_cost_item();
+            entry.player = handler.player;
+            entry.is_category_header = true;
+            entry.cleanse_theme = cleanseTheme;
+            entry.enchantment_id = categoryId;
+            entry.category_title = categoryTitle;
+            entry.category_badge = badgeText;
+            entry.category_badge_color = badgeColor;
+            entry.category_refund_points = refundPreviewPoints;
+            entry.option_type = OptionType.ENCHANTMENT;
+            entry.cost_options = List.of();
+            entry.xp_requirement = XpCostConversion.XpRequirement.FREE;
+            entry.overridenEnchant = new ArrayList<>();
+            return entry;
+        }
+
+        public static EnchantUiEntry actionEntry(
+            Minecraft client,
+            ChiseledEnchantingTableScreenHandler handler,
+            AvailableOption option,
+            List<List<ItemStack>> costOptions,
+            XpCostConversion.XpRequirement xpRequirement,
+            EnchantementListWidget parent,
+            boolean nestedChild,
+            boolean lastChild
+        ) {
+            EnchantUiEntry entry = new EnchantUiEntry(client, handler, option, costOptions, xpRequirement, parent);
+            entry.nested_child = nestedChild;
+            entry.last_child = lastChild;
+            return entry;
+        }
+
+        private EnchantUiEntry() {
+            super();
+        }
 
         public EnchantUiEntry(
             Minecraft client,
@@ -496,6 +704,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     }
                 }
             }
+        }
+
+        private int effectiveDx() {
+            int base = this.getX() + 1;
+            return nested_child ? (base + RowRenderSupport.NESTED_CHILD_INDENT) : base;
+        }
+
+        private int effectiveDw() {
+            int base = this.getWidth() - 2;
+            return nested_child ? (base - RowRenderSupport.NESTED_CHILD_INDENT) : base;
         }
 
         public List<ItemStack> activeCostBundle() {
@@ -554,6 +772,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean canEnchant() {
+            if (is_category_header) return true;
             return xpConditionMet() && itemCostConditionMet() && !enchantAlreadyExist();
         }
 
@@ -610,22 +829,23 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         @Nullable
         public ItemStack hoveredCostItem(double mouseX, double mouseY) {
-            int dx = this.getX() + 1;
+            if (is_category_header) return null;
+            int dx = effectiveDx();
             int dy = this.getY();
-            int dw = this.getWidth() - 2;
+            int dw = effectiveDw();
             int dh = this.getHeight();
             if (mouseX < dx || mouseX > dx + dw || mouseY < dy || mouseY > dy + dh) {
                 return null;
             }
             int itemY = RowRenderSupport.costIconY(dy, dh);
             int iconSize = RowRenderSupport.COST_ICON_SIZE;
-            if (mouseY < itemY || mouseY > itemY + iconSize) {
+            if (mouseY < itemY - 1 || mouseY > itemY + iconSize + 1) {
                 return null;
             }
             ItemStack cost = activePrimaryCost();
             List<ItemStack> additional_costs = activeAdditionalCosts();
             int primaryX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
-            if (!cost.isEmpty() && mouseX >= primaryX && mouseX <= primaryX + iconSize) {
+            if (!cost.isEmpty() && mouseX >= primaryX - 1 && mouseX <= primaryX + iconSize + 2) {
                 return cost;
             }
             int shown = Math.min(2, additional_costs.size());
@@ -633,7 +853,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 int startX = RowRenderSupport.additionalCostStartX(dx, dw, shown);
                 for (int i = 0; i < shown; i++) {
                     int x = startX + i * RowRenderSupport.ADDITIONAL_COST_STRIDE;
-                    if (mouseX >= x && mouseX <= x + iconSize) {
+                    if (mouseX >= x - 1 && mouseX <= x + iconSize + 2) {
                         return additional_costs.get(i);
                     }
                 }
@@ -643,30 +863,32 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         @Nullable
         public List<List<ItemStack>> hoveredCostOptions(double mouseX, double mouseY) {
-            int dx = this.getX() + 1;
+            if (is_category_header) return null;
+            int dx = effectiveDx();
             int dy = this.getY();
-            int dw = this.getWidth() - 2;
+            int dw = effectiveDw();
             int dh = this.getHeight();
             if (mouseX < dx || mouseX > dx + dw || mouseY < dy || mouseY > dy + dh) {
                 return null;
             }
             int itemY = RowRenderSupport.costIconY(dy, dh);
             int iconSize = RowRenderSupport.COST_ICON_SIZE;
-            if (mouseY < itemY || mouseY > itemY + iconSize) {
+            if (mouseY < itemY - 1 || mouseY > itemY + iconSize + 1) {
                 return null;
             }
             ItemStack cost = activePrimaryCost();
             int primaryX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
-            if (!cost.isEmpty() && mouseX >= primaryX && mouseX <= primaryX + iconSize && cost_options.size() > 1) {
+            if (!cost.isEmpty() && mouseX >= primaryX - 1 && mouseX <= primaryX + iconSize + 2 && cost_options.size() > 1) {
                 return cost_options;
             }
             return null;
         }
 
         public boolean isOverXpBadge(double mouseX, double mouseY) {
-            int dx = this.getX() + 1;
+            if (is_category_header) return false;
+            int dx = effectiveDx();
             int dy = this.getY();
-            int dw = this.getWidth() - 2;
+            int dw = effectiveDw();
             int dh = this.getHeight();
             return mouseX >= dx + dw - RowRenderSupport.XP_BADGE_WIDTH
                 && mouseX <= dx + dw
@@ -675,6 +897,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean serverSendApplyEnchant() {
+            if (is_category_header) {
+                Minecraft.getInstance().getSoundManager().play(
+                    SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, parent.isCategoryExpanded(enchantment_id) ? 0.92F : 1.08F)
+                );
+                parent.toggleCategory(enchantment_id);
+                return true;
+            }
             if (!this.canEnchant()) return false;
             ClientPlayNetworking.send(new ApplyEnchantmentPayload(option_type, enchantment_id, enchant_level));
             return true;
@@ -742,11 +971,44 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         @Override
         public void extractContent(GuiGraphicsExtractor ctx, int mouseX, int mouseY, boolean hovered, float delta) {
-            var dx = this.getX() + 1;
-            var dw = this.getWidth() - 2;
-            var dh = this.getHeight();
-            var dy = this.getY();
-            var isFocused = parent.getFocused() == this;
+            int outerDx = this.getX() + 1;
+            int dy = this.getY();
+            int dh = this.getHeight();
+            boolean isFocused = parent.getFocused() == this;
+
+            if (is_category_header) {
+                CategoryRowRenderer.render(
+                    ctx,
+                    client,
+                    outerDx,
+                    dy,
+                    this.getWidth() - 2,
+                    dh,
+                    parent.isCategoryExpanded(enchantment_id),
+                    hovered,
+                    isFocused,
+                    cleanse_theme,
+                    category_title,
+                    category_badge,
+                    category_badge_color,
+                    category_refund_points
+                );
+                return;
+            }
+
+            if (nested_child) {
+                RowRenderSupport.drawTreeConnector(
+                    ctx,
+                    outerDx,
+                    dy,
+                    dh,
+                    last_child,
+                    parent.tabMode() == UiTabMode.CLEANSE
+                );
+            }
+
+            int dx = effectiveDx();
+            int dw = effectiveDw();
             boolean primaryMet = primaryCostMet();
             List<Boolean> additionalMet = additionalCostsAffordability();
             boolean xpMet = xpConditionMet();

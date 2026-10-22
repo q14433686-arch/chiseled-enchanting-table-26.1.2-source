@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Renders a transformation list row with strict anti-overlap text bounds and hardware scissor clipping.
+ * Renders a transformation list row with unified {@code midY} centering and inner-border scissor clipping.
  */
 public final class TransformationRowRenderer {
     private TransformationRowRenderer() {}
@@ -48,8 +48,18 @@ public final class TransformationRowRenderer {
 
             int nameX = dx + RowRenderSupport.NAME_OFFSET_X;
             int maxTextW = RowRenderSupport.availableTextWidth(dx, dw, additionalCosts.size());
-            RowRenderSupport.renderBoundedText(ctx, client, outputName, nameX, dy + 4, 0.64f, maxTextW, RowRenderSupport.TRANSFORM_GOLD);
-            RowRenderSupport.renderBoundedText(ctx, client, "\u2726 \u2192 " + outputName, nameX, dy + 12, 0.58f, maxTextW, RowRenderSupport.LIGHT_GREEN);
+            RowRenderSupport.renderTwoLineCenteredBlock(
+                ctx,
+                client,
+                outputName,
+                RowRenderSupport.TRANSFORM_GOLD,
+                "\u2726 \u2192 " + outputName,
+                RowRenderSupport.LIGHT_GREEN,
+                nameX,
+                dy,
+                dh,
+                maxTextW
+            );
 
             RowRenderSupport.drawXpBadge(ctx, client, xpRequirement, dx, dw, dy, dh, xpMet);
         } finally {

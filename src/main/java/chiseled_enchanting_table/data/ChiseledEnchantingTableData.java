@@ -878,6 +878,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 for (JsonElement option : optionArray) {
                     options.add(ItemCostOption.fromJson(option.getAsJsonObject()));
                 }
+            } else if (json.has("cost_options")) {
+                JsonArray optionArray = json.getAsJsonArray("cost_options");
+                for (JsonElement option : optionArray) {
+                    options.add(ItemCostOption.fromJson(option.getAsJsonObject()));
+                }
             } else if (json.has("item")) {
                 options.add(ItemCostOption.fromJson(json));
             }
@@ -938,6 +943,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             }
             if (json.has("extras")) {
                 JsonArray extraArray = json.getAsJsonArray("extras");
+                for (JsonElement extra : extraArray) {
+                    extras.add(fromJson(extra.getAsJsonObject()));
+                }
+            }
+            if (json.has("additional_costs")) {
+                JsonArray extraArray = json.getAsJsonArray("additional_costs");
                 for (JsonElement extra : extraArray) {
                     extras.add(fromJson(extra.getAsJsonObject()));
                 }
@@ -1461,19 +1472,19 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
               "targeted_strip": {
                 "xp_cost_min": 3,
                 "xp_cost_max": 10,
-                "cost_options": [
-                  { "item": "chiseled_enchanting_table:cleansing_grit", "base_count": 1, "max_level_count": 3, "level_exponent": 1.15 },
-                  { "item": "minecraft:glow_ink_sac", "base_count": 2, "max_level_count": 5, "level_exponent": 1.15, "additional_costs": [ { "item": "minecraft:quartz", "base_count": 1, "max_level_count": 2, "level_exponent": 1.0 } ] },
-                  { "item": "minecraft:flint", "base_count": 3, "max_level_count": 8, "level_exponent": 1.2, "additional_costs": [ { "item": "minecraft:bone_meal", "base_count": 2, "max_level_count": 4, "level_exponent": 1.1 } ] },
-                  { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+                "options": [
+                  { "item": "chiseled_enchanting_table:cleansing_grit", "base_count": 1, "max_level_count": 3, "level_exponent": 1.15, "extras": [ { "item": "minecraft:lapis_lazuli", "base_count": 2, "max_level_count": 6, "level_exponent": 1.15 } ] },
+                  { "item": "chiseled_enchanting_table:cleansing_grit", "base_count": 1, "max_level_count": 3, "level_exponent": 1.15, "extras": [ { "item": "minecraft:glow_ink_sac", "base_count": 1, "max_level_count": 3, "level_exponent": 1.1 } ] },
+                  { "item": "chiseled_enchanting_table:cleansing_grit", "base_count": 1, "max_level_count": 3, "level_exponent": 1.15, "extras": [ { "item": "minecraft:amethyst_shard", "base_count": 1, "max_level_count": 3, "level_exponent": 1.1 } ] },
+                  { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1, "extras": [ { "item": "chiseled_enchanting_table:cleansing_grit", "count": 1 } ] }
                 ]
               },
               "curse_purge": {
                 "xp_cost": 12,
-                "cost_options": [
-                  { "item": "chiseled_enchanting_table:cleansing_grit", "count": 2, "additional_costs": [ { "item": "minecraft:ghast_tear", "count": 1 } ] },
-                  { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
-                  { "item": "minecraft:ghast_tear", "count": 2, "additional_costs": [ { "item": "minecraft:golden_apple", "count": 1 } ] }
+                "options": [
+                  { "item": "chiseled_enchanting_table:cleansing_grit", "count": 3, "extras": [ { "item": "minecraft:ghast_tear", "count": 1 } ] },
+                  { "item": "chiseled_enchanting_table:cleansing_grit", "count": 2, "extras": [ { "item": "minecraft:golden_apple", "count": 1 } ] },
+                  { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1, "extras": [ { "item": "minecraft:ghast_tear", "count": 1 } ] }
                 ]
               }
             }
@@ -1491,13 +1502,13 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject stripObj = root.has("targeted_strip") ? root.getAsJsonObject("targeted_strip") : new JsonObject();
             int stripMin = Math.max(1, intOr(stripObj, "xp_cost_min", 3));
             int stripMax = Math.max(stripMin, intOr(stripObj, "xp_cost_max", 10));
-            ItemCostRule stripCost = stripObj.has("cost_options")
+            ItemCostRule stripCost = (stripObj.has("options") || stripObj.has("cost_options"))
                 ? ItemCostRule.fromJson(stripObj)
                 : builtInFallback().stripMaterialCost;
 
             JsonObject curseObj = root.has("curse_purge") ? root.getAsJsonObject("curse_purge") : new JsonObject();
             int curseXp = Math.max(1, intOr(curseObj, "xp_cost", 12));
-            ItemCostRule curseCost = curseObj.has("cost_options")
+            ItemCostRule curseCost = (curseObj.has("options") || curseObj.has("cost_options"))
                 ? ItemCostRule.fromJson(curseObj)
                 : builtInFallback().curseMaterialCost;
 

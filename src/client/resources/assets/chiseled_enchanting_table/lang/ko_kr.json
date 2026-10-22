@@ -122,7 +122,7 @@
   "gui.chiseled_enchanting_table.cleanse.panel_traits": "마법: %s개 (제거 가능 %s)",
   "gui.chiseled_enchanting_table.cleanse.panel_refund": "전체 제거 +%s XP",
   "gui.chiseled_enchanting_table.cleanse.panel_rule_free": "• 전체 제거 / 강등: 재료 0개 · 경험치 환급",
-  "gui.chiseled_enchanting_table.cleanse.panel_rule_strip": "• 단일 제거: 퇴마 모래 등으로 1개만 삭제",
+  "gui.chiseled_enchanting_table.cleanse.panel_rule_strip": "• 단일 제거: 퇴마 모래 + 보조 재료 (이중 소모)",
   "gui.chiseled_enchanting_table.cleanse.panel_rule_curse": "• 저주 정화: 퇴마 모래 + 가스트의 눈물 등",
   "gui.chiseled_enchanting_table.cleanse.panel_stats": "전체 제거 시 %s개 마법 해제 및 +%s XP 획득",
   "gui.chiseled_enchanting_table.cleanse.btn_all_title": "✦ 저주 제외 전체 제거",
@@ -136,5 +136,6 @@
   "advancements.chiseled_enchanting_table.purge_curse.description": "Purge a binding or vanishing curse at a Chiseled Enchanting Table.",
   "jei.chiseled_enchanting_table.tooltip.xp_refund": "Free · Refunds XP points",
   "jei.chiseled_enchanting_table.tooltip.xp_full": "Cost: %s XP levels",
-  "jei.chiseled_enchanting_table.info.cleansing_grit": "Crafted 4 at a time from Flint, Nether Quartz, Glow Ink Sac, and Bone Meal. Used in the Cleanse tab of the Chiseled Enchanting Table to strip a single unwanted enchantment while keeping all others, or combined with a Ghast Tear to purge Curses."
+  "jei.chiseled_enchanting_table.info.cleansing_grit": "Crafted 4 at a time from Flint, Nether Quartz, Glow Ink Sac, and Bone Meal. Used in the Cleanse tab of the Chiseled Enchanting Table to strip a single unwanted enchantment while keeping all others, or combined with a Ghast Tear to purge Curses.",
+  "gui.chiseled_enchanting_table.category.count": "%s개"
 }
