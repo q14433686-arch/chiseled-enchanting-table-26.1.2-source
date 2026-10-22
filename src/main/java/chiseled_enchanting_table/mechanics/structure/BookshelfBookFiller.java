@@ -481,8 +481,9 @@ public final class BookshelfBookFiller {
                 }
             }
         }
-        for (List<ChiseledEnchantingTableData.WeightedEnchantEntry> set : pool.enchantSets()) {
-            for (ChiseledEnchantingTableData.WeightedEnchantEntry entry : set) {
+        for (List<LootInjectionEntry> set : pool.enchantSets()) {
+            for (LootInjectionEntry entry : set) {
+                if (entry.empty()) continue;
                 appendWeightedCandidate(out, pool, lookup, entry.enchantmentId(), entry.level(), entry.weight());
             }
         }

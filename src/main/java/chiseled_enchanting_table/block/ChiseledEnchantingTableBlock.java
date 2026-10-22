@@ -30,7 +30,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.item.DyeItem;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.core.Holder;
@@ -141,10 +142,11 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         InteractionHand hand,
         BlockHitResult hit
     ) {
-        if (stack.getItem() instanceof DyeItem dyeItem
+        DyeColor dyeColor = stack.get(DataComponents.DYE);
+        if (dyeColor != null
             && level.getBlockEntity(pos) instanceof ChiseledEnchantingTableBlockEntity tableBlockEntity) {
             if (!level.isClientSide()) {
-                int newColor = dyeItem.getDyeColor().getTextureDiffuseColor();
+                int newColor = dyeColor.getTextureDiffuseColor();
                 int originalColor = tableBlockEntity.colorOrDefault();
                 tableBlockEntity.color = ARGB.average(newColor, originalColor) & 0x00FFFFFF;
                 if (!player.getAbilities().instabuild) {
