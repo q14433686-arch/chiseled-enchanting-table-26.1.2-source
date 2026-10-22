@@ -55,6 +55,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static final Identifier BOOK_UPGRADES_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/book_upgrades.json");
     private static final Identifier TREASURE_EPIPHANY_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/treasure_epiphany.json");
     private static final Identifier DISENCHANTING_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/disenchanting.json");
+    private static final Identifier SHELF_GATES_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/shelf_gates.json");
 
     private static Set<EnchantmentWithLevel> defaultEnchantmentValues = builtInDefaultEnchantments();
     private static List<DefaultEnchantmentTagRule> defaultEnchantmentTags = builtInDefaultEnchantmentTags();
@@ -67,6 +68,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static BookUpgradeRules bookUpgradeRules = BookUpgradeRules.builtInFallback();
     private static TreasureEpiphanyRules treasureEpiphanyRules = TreasureEpiphanyRules.builtInFallback();
     private static DisenchantingRules disenchantingRules = DisenchantingRules.builtInFallback();
+    private static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig =
+        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT;
 
     public static void init() {
         net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(PackType.SERVER_DATA)
@@ -399,6 +402,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         bookUpgradeRules = loadBookUpgradeRules(resourceManager);
         treasureEpiphanyRules = loadTreasureEpiphanyRules(resourceManager);
         disenchantingRules = loadDisenchantingRules(resourceManager);
+        shelfGatesConfig = loadShelfGatesConfig(resourceManager);
         ChiseledEnchantingTable.LOGGER.info(
             "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformations, {} loot injections",
             defaultEnchantmentValues.size(),
@@ -1439,6 +1443,52 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     public static List<List<ItemStack>> cursePurgeCostOptions(Identifier id) {
         return disenchantingRules.cursePurgeCostOptions(id);
+    }
+
+    public static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig() {
+        return shelfGatesConfig;
+    }
+
+    private static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config loadShelfGatesConfig(
+        ResourceManager resourceManager
+    ) {
+        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(SHELF_GATES_ID);
+        if (resource.isEmpty()) {
+            return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT;
+        }
+        try (Reader reader = resource.get().openAsReader()) {
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonObject directObj = root.has("direct_upgrade_gates") ? root.getAsJsonObject("direct_upgrade_gates") : new JsonObject();
+            boolean enabled = boolOr(directObj, "enabled", true);
+            int maxBookshelves = intOr(directObj, "max_bookshelves", 38);
+            double gamma = doubleOr(directObj, "gamma", 1.11);
+            Map<Identifier, List<Integer>> overrides = new HashMap<>();
+            if (directObj.has("overrides") && directObj.get("overrides").isJsonObject()) {
+                for (Map.Entry<String, JsonElement> e : directObj.getAsJsonObject("overrides").entrySet()) {
+                    Identifier enchId = Identifier.tryParse(e.getKey());
+                    if (enchId != null && e.getValue().isJsonArray()) {
+                        List<Integer> ladder = new ArrayList<>();
+                        for (JsonElement elem : e.getValue().getAsJsonArray()) {
+                            ladder.add(Math.max(0, elem.getAsInt()));
+                        }
+                        if (!ladder.isEmpty()) {
+                            overrides.put(enchId, List.copyOf(ladder));
+                        }
+                    }
+                }
+            }
+            JsonObject depObj = root.has("depleted_tome_gradients") ? root.getAsJsonObject("depleted_tome_gradients") : new JsonObject();
+            int t1 = intOr(depObj, "tier1_bookshelves", 8);
+            int t2 = intOr(depObj, "tier2_bookshelves", 18);
+            double mult = doubleOr(depObj, "tier2_material_multiplier", 0.50);
+            int t3Enchants = intOr(depObj, "tier3_qualifying_enchantments", 6);
+            return new chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config(
+                enabled, maxBookshelves, gamma, overrides, t1, t2, mult, t3Enchants
+            );
+        } catch (Exception e) {
+            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in shelf gate defaults", SHELF_GATES_ID, e);
+            return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT;
+        }
     }
 
     private static DisenchantingRules loadDisenchantingRules(ResourceManager resourceManager) {

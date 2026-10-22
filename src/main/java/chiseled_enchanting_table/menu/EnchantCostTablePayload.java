@@ -45,6 +45,7 @@ public record EnchantCostTablePayload(
     int epiphanyRerollXpLevels,
     List<ItemStack> epiphanyRerollCosts,
     Set<Identifier> explicitTreasureIds,
+    chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig,
     List<CostEntry> costs
 ) implements CustomPacketPayload {
     public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table");
@@ -145,6 +146,7 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels(),
             ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions(),
             ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(),
+            ChiseledEnchantingTableData.shelfGatesConfig(),
             List.copyOf(entries)
         );
     }
@@ -195,6 +197,24 @@ public record EnchantCostTablePayload(
         for (Identifier id : explicitTreasureIds) {
             buf.writeIdentifier(id);
         }
+        var sg = shelfGatesConfig == null
+            ? chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT
+            : shelfGatesConfig;
+        buf.writeBoolean(sg.directGatesEnabled());
+        buf.writeVarInt(sg.maxDirectBookshelves());
+        buf.writeDouble(sg.gamma());
+        buf.writeVarInt(sg.overrides().size());
+        for (var ov : sg.overrides().entrySet()) {
+            buf.writeIdentifier(ov.getKey());
+            buf.writeVarInt(ov.getValue().size());
+            for (int v : ov.getValue()) {
+                buf.writeVarInt(Math.max(0, v));
+            }
+        }
+        buf.writeVarInt(sg.tier1Bookshelves());
+        buf.writeVarInt(sg.tier2Bookshelves());
+        buf.writeDouble(sg.tier2MaterialMultiplier());
+        buf.writeVarInt(sg.tier3QualifyingEnchantments());
         buf.writeVarInt(costs.size());
         for (CostEntry entry : costs) {
             buf.writeVarInt(entry.optionType().ordinal());
@@ -233,6 +253,29 @@ public record EnchantCostTablePayload(
         for (int i = 0; i < treasureIdCount; i++) {
             treasureIds.add(buf.readIdentifier());
         }
+        boolean sgEnabled = buf.readBoolean();
+        int sgMax = buf.readVarInt();
+        double sgGamma = buf.readDouble();
+        int ovCount = buf.readVarInt();
+        java.util.Map<Identifier, List<Integer>> sgOverrides = new java.util.HashMap<>();
+        for (int i = 0; i < ovCount; i++) {
+            Identifier ovId = buf.readIdentifier();
+            int len = buf.readVarInt();
+            List<Integer> ladder = new ArrayList<>(len);
+            for (int j = 0; j < len; j++) {
+                ladder.add(Math.max(0, buf.readVarInt()));
+            }
+            if (!ladder.isEmpty()) {
+                sgOverrides.put(ovId, List.copyOf(ladder));
+            }
+        }
+        int sgT1 = buf.readVarInt();
+        int sgT2 = buf.readVarInt();
+        double sgMult = buf.readDouble();
+        int sgT3 = buf.readVarInt();
+        var sgConfig = new chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config(
+            sgEnabled, sgMax, sgGamma, sgOverrides, sgT1, sgT2, sgMult, sgT3
+        );
         OptionType[] optionValues = OptionType.values();
         int rowCount = buf.readVarInt();
         List<CostEntry> entries = new ArrayList<>(Math.max(16, rowCount));
@@ -258,7 +301,7 @@ public record EnchantCostTablePayload(
             minShelves, baseChance, perShelfChance, perTomeChance, maxChance,
             maxSlotsCap, scorePerSlot, cycleTicks, freezeDurationTicks, maxFreezeTicks,
             freezeXpLevels, freezeCosts, rerollXp, rerollCosts,
-            Set.copyOf(treasureIds), List.copyOf(entries)
+            Set.copyOf(treasureIds), sgConfig, List.copyOf(entries)
         );
     }
 

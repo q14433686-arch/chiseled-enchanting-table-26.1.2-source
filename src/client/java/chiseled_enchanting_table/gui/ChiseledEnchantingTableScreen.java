@@ -588,29 +588,50 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             var specialEntry = this.scrollContainer.hoveredSpecialRowEntry(mouseX, mouseY);
             if (specialEntry != null) {
+                if (specialEntry.shelf_locked && specialEntry.enchantment != null) {
+                    String lockedName = net.minecraft.world.item.enchantment.Enchantment
+                        .getFullname(specialEntry.enchantment, specialEntry.enchant_level)
+                        .getString();
+                    List<Component> lockTip = new ArrayList<>();
+                    lockTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.shelf_locked.tip_title",
+                        lockedName
+                    ).withStyle(ChatFormatting.GOLD));
+                    lockTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.shelf_locked.tip_req",
+                        this.menu.regularBookshelves,
+                        specialEntry.required_bookshelves
+                    ).withStyle(ChatFormatting.RED));
+                    lockTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.shelf_locked.tip_bypass"
+                    ).withStyle(ChatFormatting.GRAY));
+                    ctx.setTooltipForNextFrame(this.font, lockTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    return;
+                }
                 if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(specialEntry.enchantment_id)) {
                     var dtTier = this.menu.depletedTomeTier();
+                    var sg = this.menu.shelfGatesConfig();
                     int shelves = this.menu.regularBookshelves;
-                    int highBooks = this.menu.highTierChiseledBooks;
+                    int qualifyingEnchants = this.menu.qualifyingChiseledEnchantments();
                     List<Component> dtTip = new ArrayList<>();
                     dtTip.add(Component.translatable("gui.chiseled_enchanting_table.depleted_tome.tip_title")
                         .withStyle(ChatFormatting.GOLD));
                     dtTip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.depleted_tome.tip_g1",
                         shelves,
-                        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DEPLETED_TOME_TIER1_BOOKSHELVES
+                        sg.tier1Bookshelves()
                     ).withStyle(dtTier.ordinal() >= 1 ? ChatFormatting.GREEN : ChatFormatting.GRAY));
                     dtTip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.depleted_tome.tip_g2",
                         shelves,
-                        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DEPLETED_TOME_TIER2_BOOKSHELVES
+                        sg.tier2Bookshelves()
                     ).withStyle(dtTier.ordinal() >= 2 ? ChatFormatting.AQUA : ChatFormatting.GRAY));
                     dtTip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.depleted_tome.tip_g3",
                         shelves,
-                        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DEPLETED_TOME_TIER2_BOOKSHELVES,
-                        highBooks,
-                        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DEPLETED_TOME_TIER3_HIGH_BOOKS
+                        sg.tier2Bookshelves(),
+                        qualifyingEnchants,
+                        sg.tier3QualifyingEnchantments()
                     ).withStyle(dtTier == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.TIER_3_FREE
                         ? ChatFormatting.LIGHT_PURPLE
                         : ChatFormatting.GRAY));
@@ -622,9 +643,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         this.minecraft.level,
                         specialEntry.enchantment_id
                     );
+                    var sg = this.menu.shelfGatesConfig();
                     int shelves = this.menu.regularBookshelves;
                     int storedLvl = this.menu.storedMasterLevel(specialEntry.enchantment_id);
-                    int directCap = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.maxUnlockedDirectTier(maxLvl, shelves);
+                    int directCap = this.menu.maxUnlockedDirectTier(specialEntry.enchantment_id, maxLvl);
                     int effectiveCap = Math.min(maxLvl, Math.max(storedLvl, directCap));
                     List<Component> catTip = new ArrayList<>();
                     catTip.add(Component.literal(specialEntry.category_title + "  " + specialEntry.category_badge)
@@ -634,17 +656,20 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         effectiveCap,
                         maxLvl,
                         shelves,
-                        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.MAX_DIRECT_UPGRADE_BOOKSHELVES
+                        sg.maxDirectBookshelves()
                     ).withStyle(effectiveCap >= maxLvl ? ChatFormatting.GREEN : ChatFormatting.AQUA));
                     if (directCap < maxLvl) {
                         int nextTier = directCap + 1;
-                        int reqShelves = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
-                            .requiredBookshelvesForDirectTier(nextTier, maxLvl);
+                        int reqShelves = this.menu.requiredBookshelvesForDirectTier(
+                            specialEntry.enchantment_id,
+                            nextTier,
+                            maxLvl
+                        );
                         catTip.add(Component.translatable(
                             "gui.chiseled_enchanting_table.category.tip_next",
                             nextTier,
                             reqShelves,
-                            chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.MAX_DIRECT_UPGRADE_BOOKSHELVES
+                            sg.maxDirectBookshelves()
                         ).withStyle(ChatFormatting.YELLOW));
                     }
                     catTip.add(Component.translatable("gui.chiseled_enchanting_table.category.tip_master")
@@ -763,6 +788,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_stats", nonCurse, refund)
                             .withStyle(ChatFormatting.AQUA));
                     }
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_resonance")
+                        .withStyle(ChatFormatting.DARK_GRAY));
                     ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                     return;
                 }
@@ -771,6 +798,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 double totalUnits = this.menu.totalMasteryUnits();
                 double affinityUnits = this.menu.affinityMasteryUnits(this.menu.get_enchantable_item());
                 int minShelves = this.menu.epiphanyMinBookshelves();
+                var sg = this.menu.shelfGatesConfig();
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.title", this.menu.xpDiscountPercent)
                     .withStyle(ChatFormatting.GOLD));
@@ -791,9 +819,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ).withStyle(ChatFormatting.AQUA));
                 tip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.resonance.high_tier_books",
-                    this.menu.highTierChiseledBooks,
-                    chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DEPLETED_TOME_TIER3_HIGH_BOOKS
-                ).withStyle(this.menu.highTierChiseledBooks >= chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DEPLETED_TOME_TIER3_HIGH_BOOKS
+                    this.menu.qualifyingChiseledEnchantments(),
+                    sg.tier3QualifyingEnchantments()
+                ).withStyle(this.menu.qualifyingChiseledEnchantments() >= sg.tier3QualifyingEnchantments()
                     ? ChatFormatting.GREEN
                     : ChatFormatting.GRAY));
                 if (affinityUnits > 0.005) {

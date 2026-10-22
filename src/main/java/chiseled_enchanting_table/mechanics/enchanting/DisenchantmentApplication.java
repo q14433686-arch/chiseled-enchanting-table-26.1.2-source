@@ -4,22 +4,27 @@ import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
+import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.HashSet;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Universal, mod-compatible disenchanting, step-down downgrading, targeted trait removal,
@@ -152,10 +157,8 @@ public final class DisenchantmentApplication {
             }
         }
 
-        applyResultingEnchantmentsOrRestorePlainBook(handler, target, remaining);
-        if (refundPoints > 0) {
-            handler.player.giveExperiencePoints(refundPoints);
-        }
+        applyResultingEnchantmentsOrDepletedTome(handler, target, remaining);
+        grantRefundExperience(handler, refundPoints);
         playCleanseSounds(handler, false, true);
         return true;
     }
@@ -178,10 +181,8 @@ public final class DisenchantmentApplication {
         ItemEnchantments.Mutable updated = new ItemEnchantments.Mutable(current);
         updated.set(ench, targetLevel);
 
-        applyResultingEnchantmentsOrRestorePlainBook(handler, target, updated);
-        if (refundPoints > 0) {
-            handler.player.giveExperiencePoints(refundPoints);
-        }
+        applyResultingEnchantmentsOrDepletedTome(handler, target, updated);
+        grantRefundExperience(handler, refundPoints);
         playCleanseSounds(handler, false, true);
         return true;
     }
@@ -234,7 +235,7 @@ public final class DisenchantmentApplication {
             }
         }
 
-        applyResultingEnchantmentsOrRestorePlainBook(handler, target, updated);
+        applyResultingEnchantmentsOrDepletedTome(handler, target, updated);
         playCleanseSounds(handler, curse, false);
         Advancement.give(handler.player, "cleanse_enchantment");
         if (curse) {
@@ -243,18 +244,33 @@ public final class DisenchantmentApplication {
         return true;
     }
 
-    private static void applyResultingEnchantmentsOrRestorePlainBook(
+    private static void grantRefundExperience(ChiseledEnchantingTableScreenHandler handler, int refundPoints) {
+        if (refundPoints <= 0) {
+            return;
+        }
+        BlockPos tablePos = handler.tableBlockPos();
+        if (handler.world() instanceof ServerLevel serverLevel && tablePos != null) {
+            Vec3 spawnPos = serverLevel.getBlockState(tablePos.above()).isAir()
+                ? Vec3.atBottomCenterOf(tablePos).add(0.0, 1.05, 0.0)
+                : handler.player.position().add(0.0, 0.5, 0.0);
+            ExperienceOrb.award(serverLevel, spawnPos, refundPoints);
+        } else {
+            handler.player.giveExperiencePoints(refundPoints);
+        }
+    }
+
+    private static void applyResultingEnchantmentsOrDepletedTome(
         ChiseledEnchantingTableScreenHandler handler,
         ItemStack target,
         ItemEnchantments.Mutable updated
     ) {
         if (target.is(Items.ENCHANTED_BOOK) && updated.keySet().isEmpty()) {
-            ItemStack plainBook = new ItemStack(Items.BOOK, 1);
+            ItemStack depleted = new ItemStack(BlockRegistry.DEPLETED_TOME, 1);
             var customName = target.get(DataComponents.CUSTOM_NAME);
             if (customName != null) {
-                plainBook.set(DataComponents.CUSTOM_NAME, customName);
+                depleted.set(DataComponents.CUSTOM_NAME, customName);
             }
-            handler.setEnchantableSlot(plainBook);
+            handler.setEnchantableSlot(depleted);
             handler.markInventoryChanged();
             return;
         }

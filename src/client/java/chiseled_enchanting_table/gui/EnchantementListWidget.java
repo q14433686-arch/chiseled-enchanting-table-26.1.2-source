@@ -16,6 +16,7 @@ import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -310,6 +311,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             int dw = entry.is_category_header ? (entry.getWidth() - 2) : entry.effectiveDw();
             int dh = entry.getHeight();
             if (mouseX >= dx && mouseX <= dx + dw && mouseY >= dy && mouseY <= dy + dh) {
+                if (entry.shelf_locked) {
+                    return entry;
+                }
                 if (entry.is_category_header && !entry.cleanse_theme) {
                     return entry;
                 }
@@ -356,6 +360,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     private void addActionEntry(AvailableOption opt, boolean nested, boolean lastChild) {
+        addActionEntry(opt, nested, lastChild, false, 0);
+    }
+
+    private void addActionEntry(
+        AvailableOption opt,
+        boolean nested,
+        boolean lastChild,
+        boolean shelfLocked,
+        int requiredBookshelves
+    ) {
         boolean enchantFromBook = this.cost_item_stack.is(Items.ENCHANTED_BOOK);
         var ewl = opt.asEnchantmentWithLevel();
         List<List<ItemStack>> costOpts = opt.isBookCombineUpgrade() || (enchantFromBook && !opt.isBookResearchUpgrade() && !opt.isCleanseOperation())
@@ -364,7 +378,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         var xpReq = (enchantFromBook && !opt.isBookUpgrade() && !opt.isCleanseOperation())
             ? XpCostConversion.XpRequirement.FREE
             : this.handler.resolveEffectiveXpRequirement(ewl, opt.type());
-        this.addEntry(EnchantUiEntry.actionEntry(minecraft, this.handler, opt, costOpts, xpReq, this, nested, lastChild));
+        this.addEntry(EnchantUiEntry.actionEntry(
+            minecraft, this.handler, opt, costOpts, xpReq, this, nested, lastChild, shelfLocked, requiredBookshelves
+        ));
     }
 
     private void populateCleanseEntries(int navigationIndex, boolean targetChanged, double previousScroll) {
@@ -450,19 +466,30 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
     }
 
+    private boolean isDirectWoodenShelfEligible(Holder<Enchantment> holder, Identifier id) {
+        if (DisenchantmentApplication.isCurse(holder) || DisenchantmentApplication.isTreasure(holder)) {
+            return false;
+        }
+        return !SyncedEnchantmentCosts.explicitTreasureIds().contains(id);
+    }
+
+    private record DisplayOptionSlot(AvailableOption option, boolean shelfLocked, int requiredBookshelves) {}
+
     private void populateInscribeEntries(int navigationIndex, boolean targetChanged, double previousScroll) {
         var enchantFromBook = cost_item_stack.is(Items.ENCHANTED_BOOK);
         ItemEnchantments targetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
 
-        List<AvailableOption> options = new ArrayList<>();
+        List<DisplayOptionSlot> optionSlots = new ArrayList<>();
         Set<EnchantmentWithLevel> unlockedDirectSet = new HashSet<>();
+        Map<Identifier, Integer> maxAddedTierById = new LinkedHashMap<>();
 
         if (enchantFromBook) {
             ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(cost_item_stack);
             for (var entry : enchantments.entrySet()) {
                 int existingLvl = targetEnchantments.getLevel(entry.getKey());
                 if (entry.getIntValue() > existingLvl) {
-                    options.add(AvailableOption.enchantment(EnchantmentToIdentifier(entry.getKey(), this.player), entry.getIntValue()));
+                    Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
+                    optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(id, entry.getIntValue()), false, 0));
                 }
             }
         } else if (!cost_item_stack.is(Items.BOOK)) {
@@ -471,15 +498,20 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     Holder<Enchantment> h = IdentifierToEnchantment(e.enchantment_id(), this.player);
                     int existingLvl = targetEnchantments.getLevel(h);
                     if (e.enchantment_level() >= existingLvl) {
-                        options.add(AvailableOption.enchantment(e));
+                        optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(e), false, 0));
                         unlockedDirectSet.add(e);
+                        maxAddedTierById.merge(e.enchantment_id(), e.enchantment_level(), Math::max);
                     }
                 }
             }
             for (EnchantmentWithLevel epiphany : this.handler.computeActiveTreasureEpiphanies(enchantable_item)) {
                 Holder<Enchantment> h = IdentifierToEnchantment(epiphany.enchantment_id(), this.player);
                 if (epiphany.enchantment_level() > targetEnchantments.getLevel(h)) {
-                    options.add(AvailableOption.treasureEpiphany(epiphany.enchantment_id(), epiphany.enchantment_level()));
+                    optionSlots.add(new DisplayOptionSlot(
+                        AvailableOption.treasureEpiphany(epiphany.enchantment_id(), epiphany.enchantment_level()),
+                        false,
+                        0
+                    ));
                 }
             }
         }
@@ -494,21 +526,57 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
                 int targetLevel = level + 1;
                 if (combineEnabled && cost_item_stack.is(Items.ENCHANTED_BOOK) && costEnchantments.getLevel(entry.getKey()) == level) {
-                    options.add(AvailableOption.bookCombineUpgrade(id, targetLevel));
+                    optionSlots.add(new DisplayOptionSlot(AvailableOption.bookCombineUpgrade(id, targetLevel), false, 0));
+                    maxAddedTierById.merge(id, targetLevel, Math::max);
                 } else if (researchEnabled
                     && !cost_item_stack.is(Items.ENCHANTED_BOOK)
                     && !cost_item_stack.is(Items.BOOK)
-                    && this.handler.canDirectResearchUpgradeTo(id, targetLevel)
                     && !unlockedDirectSet.contains(new EnchantmentWithLevel(id, targetLevel))) {
-                    options.add(AvailableOption.bookResearchUpgrade(id, targetLevel));
+                    if (this.handler.canDirectResearchUpgradeTo(id, targetLevel)) {
+                        optionSlots.add(new DisplayOptionSlot(AvailableOption.bookResearchUpgrade(id, targetLevel), false, 0));
+                        maxAddedTierById.merge(id, targetLevel, Math::max);
+                    } else if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
+                        int reqShelves = this.handler.requiredBookshelvesForDirectTier(id, targetLevel, maxLevel);
+                        optionSlots.add(new DisplayOptionSlot(
+                            AvailableOption.bookResearchUpgrade(id, targetLevel),
+                            true,
+                            reqShelves
+                        ));
+                        maxAddedTierById.merge(id, targetLevel, Math::max);
+                    }
                 }
             }
         }
-        for (EnchantmentWithLevel t : this.handler.syncedTransformationsFor(enchantable_item)) {
-            options.add(AvailableOption.transformation(t.enchantment_id(), t.enchantment_level()));
+
+        // Surface greyed-out shelf-locked direct tiers (with exact bookshelf goal) rather than hiding goals!
+        if (!enchantFromBook && !cost_item_stack.is(Items.BOOK) && !ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+            Set<Identifier> candidateDirectIds = new LinkedHashSet<>(maxAddedTierById.keySet());
+            for (var entry : targetEnchantments.entrySet()) {
+                Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
+                if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
+                    candidateDirectIds.add(id);
+                }
+            }
+            for (Identifier enchId : candidateDirectIds) {
+                Holder<Enchantment> holder = IdentifierToEnchantment(enchId, this.player);
+                if (!isDirectWoodenShelfEligible(holder, enchId)) continue;
+                int maxLevel = Math.max(1, holder.value().getMaxLevel());
+                int existingLvl = targetEnchantments.getLevel(holder);
+                int unlockedTop = maxAddedTierById.getOrDefault(enchId, 0);
+                int startLocked = Math.max(unlockedTop + 1, Math.max(2, existingLvl + 1));
+                for (int lvl = startLocked; lvl <= maxLevel; lvl++) {
+                    int reqShelves = this.handler.requiredBookshelvesForDirectTier(enchId, lvl, maxLevel);
+                    optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(enchId, lvl), true, reqShelves));
+                }
+            }
         }
 
-        List<AvailableOption> filtered = options.stream().filter(option -> {
+        for (EnchantmentWithLevel t : this.handler.syncedTransformationsFor(enchantable_item)) {
+            optionSlots.add(new DisplayOptionSlot(AvailableOption.transformation(t.enchantment_id(), t.enchantment_level()), false, 0));
+        }
+
+        List<DisplayOptionSlot> filtered = optionSlots.stream().filter(slot -> {
+            AvailableOption option = slot.option();
             if (option.isTransformation()) {
                 return this.handler.syncedTransformationMatches(option.id(), enchantable_item);
             }
@@ -520,12 +588,14 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }).toList();
 
         // 1. Standalone top-pinned rows: ALL Treasure Epiphanies + Item Transformations (never collapsed!)
-        List<AvailableOption> pinnedTop = new ArrayList<>();
-        Map<Identifier, List<AvailableOption>> groupedEnchants = new LinkedHashMap<>();
+        List<DisplayOptionSlot> pinnedTop = new ArrayList<>();
+        Map<Identifier, List<DisplayOptionSlot>> groupedEnchants = new LinkedHashMap<>();
 
         filtered.stream()
-            .filter(o -> o.isTreasureEpiphany() || o.isTransformation())
-            .sorted((o1, o2) -> {
+            .filter(s -> s.option().isTreasureEpiphany() || s.option().isTransformation())
+            .sorted((s1, s2) -> {
+                AvailableOption o1 = s1.option();
+                AvailableOption o2 = s2.option();
                 int p1 = o1.isTreasureEpiphany() ? 0 : 1;
                 int p2 = o2.isTreasureEpiphany() ? 0 : 1;
                 if (p1 != p2) return Integer.compare(p1, p2);
@@ -535,8 +605,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             .forEach(pinnedTop::add);
 
         filtered.stream()
-            .filter(o -> !o.isTreasureEpiphany() && !o.isTransformation())
-            .sorted((o1, o2) -> {
+            .filter(s -> !s.option().isTreasureEpiphany() && !s.option().isTransformation())
+            .sorted((s1, s2) -> {
+                AvailableOption o1 = s1.option();
+                AvailableOption o2 = s2.option();
                 String n1 = baseEnchantmentName(IdentifierToEnchantment(o1.id(), this.player));
                 String n2 = baseEnchantmentName(IdentifierToEnchantment(o2.id(), this.player));
                 int c = n1.compareTo(n2);
@@ -545,13 +617,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 if (lvlCmp != 0) return lvlCmp;
                 return Integer.compare(o1.type().ordinal(), o2.type().ordinal());
             })
-            .forEach(opt -> groupedEnchants.computeIfAbsent(opt.id(), ignored -> new ArrayList<>()).add(opt));
+            .forEach(slot -> groupedEnchants.computeIfAbsent(slot.option().id(), ignored -> new ArrayList<>()).add(slot));
 
-        for (AvailableOption pinned : pinnedTop) {
-            addActionEntry(pinned, false, false);
+        for (DisplayOptionSlot pinned : pinnedTop) {
+            addActionEntry(pinned.option(), false, false, pinned.shelfLocked(), pinned.requiredBookshelves());
         }
 
-        // Auto-expand when there is only 1 enchantment group available (e.g. single-book transfer/combine)
+        // Auto-expand when there is only 1 enchantment group available (e.g. single-book transfer/combine/upgrade)
         if (groupedEnchants.size() == 1) {
             this.expandedInscribeCategories.add(groupedEnchants.keySet().iterator().next());
         }
@@ -559,21 +631,40 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         // 2. Per-attribute collapsible horizontal tabs with crisp ▶ / ▼ triangles & indented tier children
         for (var groupEntry : groupedEnchants.entrySet()) {
             Identifier enchId = groupEntry.getKey();
-            List<AvailableOption> children = groupEntry.getValue();
+            List<DisplayOptionSlot> children = groupEntry.getValue();
             Holder<Enchantment> holder = IdentifierToEnchantment(enchId, this.player);
             String categoryName = baseEnchantmentName(holder);
             int curLvl = targetEnchantments.getLevel(holder);
-            int minTier = children.getFirst().level();
-            int maxTier = children.getLast().level();
+            int minTier = children.getFirst().option().level();
+            int maxTier = children.getLast().option().level();
+            int maxUnlockedTier = children.stream()
+                .filter(s -> !s.shelfLocked())
+                .mapToInt(s -> s.option().level())
+                .max()
+                .orElse(0);
 
             String badgeText;
             int badgeColor;
-            if (curLvl > 0 && maxTier > curLvl) {
-                badgeText = "\u2B06 " + romanNumeral(curLvl) + "\u2192" + romanNumeral(maxTier);
+            if (curLvl > 0 && maxUnlockedTier > curLvl) {
+                badgeText = maxUnlockedTier < maxTier
+                    ? ("\u2B06 " + romanNumeral(curLvl) + "\u2192" + romanNumeral(maxUnlockedTier) + "/" + romanNumeral(maxTier))
+                    : ("\u2B06 " + romanNumeral(curLvl) + "\u2192" + romanNumeral(maxUnlockedTier));
                 badgeColor = RowRenderSupport.LIGHT_GREEN;
-            } else if (curLvl > 0 && maxTier == curLvl) {
+            } else if (curLvl > 0 && maxTier > curLvl && maxUnlockedTier <= curLvl) {
+                int nextReq = children.stream()
+                    .filter(s -> s.shelfLocked() && s.option().level() > curLvl)
+                    .mapToInt(DisplayOptionSlot::requiredBookshelves)
+                    .findFirst()
+                    .orElse(0);
+                badgeText = "\uD83D\uDD12 " + romanNumeral(curLvl + 1) + " (" + nextReq + ")";
+                badgeColor = RowRenderSupport.EPIPHANY_GOLD;
+            } else if (curLvl > 0 && maxUnlockedTier == curLvl) {
                 badgeText = "\u2714 " + romanNumeral(curLvl);
                 badgeColor = RowRenderSupport.CYAN;
+            } else if (maxUnlockedTier > 0 && maxUnlockedTier < maxTier) {
+                badgeText = (minTier == maxUnlockedTier ? romanNumeral(minTier) : (romanNumeral(minTier) + "\u2013" + romanNumeral(maxUnlockedTier)))
+                    + "/" + romanNumeral(maxTier);
+                badgeColor = RowRenderSupport.EPIPHANY_GOLD;
             } else if (minTier == maxTier) {
                 badgeText = romanNumeral(minTier);
                 badgeColor = RowRenderSupport.ARCANE_PURPLE;
@@ -596,7 +687,8 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             ));
             if (open) {
                 for (int idx = 0; idx < children.size(); idx++) {
-                    addActionEntry(children.get(idx), true, idx == children.size() - 1);
+                    DisplayOptionSlot child = children.get(idx);
+                    addActionEntry(child.option(), true, idx == children.size() - 1, child.shelfLocked(), child.requiredBookshelves());
                 }
             }
         }
@@ -615,6 +707,8 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public boolean is_category_header;
         public boolean nested_child;
         public boolean last_child;
+        public boolean shelf_locked;
+        public int required_bookshelves;
         public boolean cleanse_theme;
         public String category_title;
         public String category_badge;
@@ -674,11 +768,15 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             XpCostConversion.XpRequirement xpRequirement,
             EnchantementListWidget parent,
             boolean nestedChild,
-            boolean lastChild
+            boolean lastChild,
+            boolean shelfLocked,
+            int requiredBookshelves
         ) {
             EnchantUiEntry entry = new EnchantUiEntry(client, handler, option, costOptions, xpRequirement, parent);
             entry.nested_child = nestedChild;
             entry.last_child = lastChild;
+            entry.shelf_locked = shelfLocked;
+            entry.required_bookshelves = Math.max(0, requiredBookshelves);
             return entry;
         }
 
@@ -797,6 +895,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         public boolean canEnchant() {
             if (is_category_header) return true;
+            if (shelf_locked) return false;
             return xpConditionMet() && itemCostConditionMet() && !enchantAlreadyExist();
         }
 
@@ -949,6 +1048,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         private EnchantmentRowRenderer.OverrideAnnotation computeOverrideAnnotation(String enchantmentName) {
+            if (shelf_locked) {
+                return new EnchantmentRowRenderer.OverrideAnnotation(
+                    I18n.get(
+                        "gui.chiseled_enchanting_table.shelf_locked.row_sub",
+                        required_bookshelves,
+                        handler.regularBookshelves
+                    ),
+                    0xFFD4AD6A
+                );
+            }
             if (option_type == OptionType.DISENCHANT_ALL) {
                 String sub = enchantable_item.is(Items.ENCHANTED_BOOK)
                     ? I18n.get("gui.chiseled_enchanting_table.cleanse.all_sub_book")
@@ -1050,10 +1159,23 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 int subColor = RowRenderSupport.LIGHT_GREEN;
                 if (isBlankOverwrite) {
                     var dtTier = handler.depletedTomeTier();
+                    var sg = handler.shelfGatesConfig();
                     subText = switch (dtTier) {
-                        case BASELINE -> I18n.get("gui.chiseled_enchanting_table.depleted_tome.sub_t0", handler.regularBookshelves);
-                        case TIER_1_NO_XP -> I18n.get("gui.chiseled_enchanting_table.depleted_tome.sub_t1", handler.regularBookshelves);
-                        case TIER_2_DISCOUNT_MAT -> I18n.get("gui.chiseled_enchanting_table.depleted_tome.sub_t2", handler.highTierChiseledBooks);
+                        case BASELINE -> I18n.get(
+                            "gui.chiseled_enchanting_table.depleted_tome.sub_t0",
+                            handler.regularBookshelves,
+                            sg.tier1Bookshelves()
+                        );
+                        case TIER_1_NO_XP -> I18n.get(
+                            "gui.chiseled_enchanting_table.depleted_tome.sub_t1",
+                            handler.regularBookshelves,
+                            sg.tier2Bookshelves()
+                        );
+                        case TIER_2_DISCOUNT_MAT -> I18n.get(
+                            "gui.chiseled_enchanting_table.depleted_tome.sub_t2",
+                            handler.qualifyingChiseledEnchantments(),
+                            sg.tier3QualifyingEnchantments()
+                        );
                         case TIER_3_FREE -> I18n.get("gui.chiseled_enchanting_table.depleted_tome.sub_t3");
                     };
                     subColor = switch (dtTier) {
@@ -1099,6 +1221,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 primaryMet, additionalMet, xpMet, enchantmentName, cost, additional_costs, xp_requirement,
                 computeOverrideAnnotation(rawName)
             );
+            if (shelf_locked) {
+                ctx.fill(dx + 3, dy + 3, dx + dw - 3, dy + dh - 3, 0x380A0614);
+            }
         }
     }
 }

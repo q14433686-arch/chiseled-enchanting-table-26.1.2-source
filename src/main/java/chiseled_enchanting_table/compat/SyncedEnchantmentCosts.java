@@ -191,6 +191,13 @@ public final class SyncedEnchantmentCosts {
         return p != null ? p.explicitTreasureIds() : ChiseledEnchantingTableData.treasureEpiphanyExplicitIds();
     }
 
+    public static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig() {
+        EnchantCostTablePayload p = syncedPayload;
+        return (p != null && p.shelfGatesConfig() != null)
+            ? p.shelfGatesConfig()
+            : ChiseledEnchantingTableData.shelfGatesConfig();
+    }
+
     public static boolean isEmpty() {
         return rows.isEmpty();
     }

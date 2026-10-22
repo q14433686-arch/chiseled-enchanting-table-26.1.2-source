@@ -798,6 +798,40 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         if seq[0] != 0 or seq[-1] != 38 or any(seq[i] >= seq[i + 1] for i in range(len(seq) - 1)):
             errors.append(f"Non-monotonic modded BookshelfProgression sequence for maxLevel={modded_max}: {seq}")
 
+    shelf_gates_path = os.path.join(
+        REPO,
+        "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/shelf_gates.json",
+    )
+    if not os.path.isfile(shelf_gates_path):
+        errors.append("missing shelf_gates.json under data/chiseled_enchanting_table/chiseled_enchanting_table/")
+    else:
+        sg_json = json.load(open(shelf_gates_path, encoding="utf-8"))
+        d_obj = sg_json.get("direct_upgrade_gates", {})
+        dep_obj = sg_json.get("depleted_tome_gradients", {})
+        if d_obj.get("max_bookshelves") != 38 or not isinstance(d_obj.get("overrides"), dict):
+            errors.append(f"shelf_gates.json direct_upgrade_gates invalid: {d_obj}")
+        if (
+            dep_obj.get("tier1_bookshelves") != 8
+            or dep_obj.get("tier2_bookshelves") != 18
+            or dep_obj.get("tier3_qualifying_enchantments") != 6
+        ):
+            errors.append(f"shelf_gates.json depleted_tome_gradients invalid: {dep_obj}")
+
+    # Verify Chiseled Bookshelf counts TOTAL QUALIFYING ENCHANTMENTS across stored books (not book slots)
+    # and DisenchantmentApplication turns emptied Enchanted Books into DEPLETED_TOME + spawns ExperienceOrb!
+    bp_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java"),
+        encoding="utf-8",
+    ).read()
+    if "qualifyingCount++;" not in bp_java or "countQualifyingHighTierEnchantments(" not in bp_java:
+        errors.append("BookshelfProgression must count every qualifying stored enchantment on each book!")
+    dis_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/enchanting/DisenchantmentApplication.java"),
+        encoding="utf-8",
+    ).read()
+    if "BlockRegistry.DEPLETED_TOME" not in dis_java or "ExperienceOrb.award" not in dis_java:
+        errors.append("DisenchantmentApplication must close the DEPLETED_TOME lifecycle and award ExperienceOrb!")
+
     transforms_path = os.path.join(
         REPO,
         "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/item_transformations.json",

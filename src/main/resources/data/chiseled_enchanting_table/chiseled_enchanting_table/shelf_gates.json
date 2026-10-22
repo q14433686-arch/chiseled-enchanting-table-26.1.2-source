@@ -1,0 +1,15 @@
+{
+  "_comment": "Shelf progression gates for direct category tier unlocking (0..38 regular bookshelves) and 3-gradient Depleted Tome restoration.",
+  "direct_upgrade_gates": {
+    "enabled": true,
+    "max_bookshelves": 38,
+    "gamma": 1.11,
+    "overrides": {}
+  },
+  "depleted_tome_gradients": {
+    "tier1_bookshelves": 8,
+    "tier2_bookshelves": 18,
+    "tier2_material_multiplier": 0.5,
+    "tier3_qualifying_enchantments": 6
+  }
+}
