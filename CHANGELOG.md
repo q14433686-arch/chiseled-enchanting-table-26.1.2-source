@@ -15,7 +15,25 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
-## [Unreleased]
+## [1.1.0] — 2026-10-22
+
+Synced all current 26.1.2 gameplay, UI, assets and translations from `0304f9d` to
+Minecraft **26.3**, retaining the 26.3 toolchain and version-specific APIs/data schemas.
+
+- Dual-track 7×5×7 library resonance, Treasure Epiphany, reroll and persistent freeze.
+- Dual-mode XP costs, selectable multi-material bundles, Arcane Condensate, Depleted Tome,
+  Blank Overwrite, rebalanced book upgrades and item transformations (including trident).
+- Painted GUI, XP animations, dye-aware block/item appearance, converging bookshelf particles,
+  11-language plain-spoken text, expanded advancements and recipes.
+- Bidirectional JEI/REI transformation lookup alongside enchantment lookup.
+- Flat anvil prior-work penalty, stacked enchanted-book remainder preservation, and
+  depth-dependent mineshaft Efficiency books.
+- 26.3 adaptations: explicit collection codecs, prediction-aware overflow drops, optional
+  conditional loot holders, modern loot builders, `LootContext#getOptional`, and conversion
+  of every new loot/recipe-crafted advancement to the 26.3 schema.
+- See [sync report](docs/reports/SYNC_FROM_26_1_2_REPORT.md) and [player Wiki](docs/WIKI.md).
+
+## [1.0.3] — Previous baseline
 
 ### Added — JEI and REI integration (bidirectional enchantment lookup)
 

@@ -84,8 +84,6 @@ sourceSets {
             // anvil merge block restored. 1.0.3: chiseled-bookshelf random-tick ambient
             // particle/sound restored. Keep only the broader XP-cost anvil tweak parked until
             // it gets its own live-test pass.
-            exclude 'chiseled_enchanting_table/mixin/anvil/RemoveXpCostScaling.java'
-            exclude 'chiseled_enchanting_table/mixin/accessor/**'
             exclude 'chiseled_enchanting_table/mixin/structureProcessor/**'
             exclude 'chiseled_enchanting_table/modifyChestLootTable/**'
             exclude 'chiseled_enchanting_table/structureProcessor/**'

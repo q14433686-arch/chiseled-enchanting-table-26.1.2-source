@@ -1,31 +1,47 @@
 {
-    "display": {
-        "icon": {
-            "id": "chiseled_enchanting_table:chiseled_enchanting_table"
-        },
-        "title": "Chiseled enchanting!",
-        "description": "Craft your first chiseled enchanting table.",
-        "show_toast": false,
-        "announce_to_chat": false
+  "display": {
+    "icon": {
+      "id": "chiseled_enchanting_table:chiseled_enchanting_table"
     },
-    "parent": "minecraft:story/mine_diamond",
-    "criteria": {
-        "craft": {
-            "trigger": "minecraft:recipe_crafted",
-            "conditions": {
-                "recipes": [
-                    "chiseled_enchanting_table:chiseled_enchanting_table"
-                ],
-                "ingredients": [
-                    {}
-                ]
-            }
-        }
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.craft.title"
     },
-    "requirements": [
-        [
-            "craft"
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.craft.description"
+    },
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "parent": "minecraft:story/mine_diamond",
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "ingredients": [
+          {}
+        ],
+        "recipes": [
+          "chiseled_enchanting_table:chiseled_enchanting_table"
         ]
-    ],
-    "sends_telemetry_event": false
+      }
+    },
+    "upgrade": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "ingredients": [
+          {}
+        ],
+        "recipes": [
+          "chiseled_enchanting_table:chiseled_enchanting_table_upgrade"
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft",
+      "upgrade"
+    ]
+  ],
+  "sends_telemetry_event": false
 }

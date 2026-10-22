@@ -2,24 +2,31 @@
   "type": "minecraft:block",
   "pools": [
     {
-      "rolls": 1.0,
       "bonus_rolls": 0.0,
-      "condition": {
-        "type": "minecraft:survives_explosion"
-      },
+      "condition": [
+        {
+          "type": "minecraft:survives_explosion"
+        }
+      ],
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "chiseled_enchanting_table:chiseled_enchanting_table",
-          "modifier": {
-            "type": "minecraft:copy_components",
-            "source": "block_entity",
-            "include": [
-              "minecraft:custom_name"
-            ]
-          }
+          "modifier": [
+            {
+              "type": "minecraft:copy_components",
+              "include": [
+                "minecraft:custom_name",
+                "minecraft:dyed_color",
+                "minecraft:custom_data",
+                "minecraft:lore"
+              ],
+              "source": "block_entity"
+            }
+          ],
+          "name": "chiseled_enchanting_table:chiseled_enchanting_table"
         }
-      ]
+      ],
+      "rolls": 1.0
     }
   ],
   "random_sequence": "chiseled_enchanting_table:blocks/chiseled_enchanting_table"

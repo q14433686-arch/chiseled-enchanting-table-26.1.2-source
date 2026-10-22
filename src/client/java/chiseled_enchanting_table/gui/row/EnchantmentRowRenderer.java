@@ -1,14 +1,14 @@
 package chiseled_enchanting_table.gui.row;
 
+import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Renders a real-enchantment list row: the enchantment full name, its costs, and an optional
- * annotation line describing how it interacts with an enchantment already on the item
- * (already present / upgrade / downgrade / conflict).
+ * Renders a real-enchantment or Treasure Epiphany list row with strict anti-overlap text bounds
+ * and hardware scissor clipping inside the plaque border.
  */
 public final class EnchantmentRowRenderer {
     private EnchantmentRowRenderer() {}
@@ -20,34 +20,53 @@ public final class EnchantmentRowRenderer {
         GuiGraphicsExtractor ctx,
         Minecraft client,
         int dx, int dy, int dw, int dh,
+        boolean isEpiphany,
         boolean isFocused,
         boolean hovered,
         boolean canEnchant,
-        boolean itemCostMet,
+        boolean primaryCostMet,
+        List<Boolean> additionalCostsMet,
         boolean xpMet,
         String enchantmentName,
         ItemStack primaryCost,
         List<ItemStack> additionalCosts,
-        int xpCost,
+        XpRequirement xpRequirement,
         OverrideAnnotation annotation
     ) {
-        int background = RowRenderSupport.backgroundColor(canEnchant, hovered);
-        RowRenderSupport.drawChrome(ctx, dx, dy, dw, dh, background, isFocused);
+        RowRenderSupport.drawPlaque(
+            ctx,
+            dx,
+            dy,
+            dw,
+            dh,
+            isEpiphany ? RowRenderSupport.RowVisualStyle.EPIPHANY : RowRenderSupport.RowVisualStyle.STANDARD,
+            canEnchant,
+            hovered,
+            isFocused
+        );
 
-        int itemX = dx + 4;
-        int itemY = dy + 4;
-        RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, itemCostMet);
-        RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, dx + dw - 48, itemY, itemCostMet);
+        RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
+        try {
+            int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
+            int itemY = RowRenderSupport.costIconY(dy, dh);
+            RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+            RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, additionalCostsMet, dx, dw, itemY);
 
-        int nameX = itemX + 20;
-        int nameY = dy + 2 + client.font.lineHeight / 3;
-        RowRenderSupport.renderScaledText(ctx, client, enchantmentName, nameX, nameY, 2.0f / 3.0f, RowRenderSupport.WHITE);
+            int nameX = dx + RowRenderSupport.NAME_OFFSET_X;
+            int maxTextW = RowRenderSupport.availableTextWidth(dx, dw, additionalCosts.size());
+            int titleColor = isEpiphany ? RowRenderSupport.EPIPHANY_GOLD : RowRenderSupport.WHITE;
 
-        if (annotation != null) {
-            int subY = dy + dh - 2 - client.font.lineHeight;
-            RowRenderSupport.renderScaledText(ctx, client, annotation.text(), nameX, subY, 2.0f / 3.0f, annotation.color());
+            if (annotation != null) {
+                RowRenderSupport.renderBoundedText(ctx, client, enchantmentName, nameX, dy + 4, 0.64f, maxTextW, titleColor);
+                RowRenderSupport.renderBoundedText(ctx, client, annotation.text(), nameX, dy + 12, 0.58f, maxTextW, annotation.color());
+            } else {
+                int centeredY = dy + Math.round((dh - client.font.lineHeight * 0.66f) / 2.0f) + 1;
+                RowRenderSupport.renderBoundedText(ctx, client, enchantmentName, nameX, centeredY, 0.66f, maxTextW, titleColor);
+            }
+
+            RowRenderSupport.drawXpBadge(ctx, client, xpRequirement, dx, dw, dy, dh, xpMet);
+        } finally {
+            RowRenderSupport.endRowContentClip(ctx);
         }
-
-        RowRenderSupport.drawXpLabel(ctx, client, xpCost, dx, dw, dy, dh, xpMet);
     }
 }

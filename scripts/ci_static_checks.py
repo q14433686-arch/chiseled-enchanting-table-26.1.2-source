@@ -16,9 +16,21 @@ Tier B - registered mixins must actually be compiled
     the game crashes on startup with `ClassNotFoundException`. This gate makes that
     combination impossible to merge.
 
-Tier C - lang key parity
-    `en_us.json` and `zh_cn.json` must declare the same key set, otherwise one
-    locale silently shows raw translation keys.
+Tier C - lang key parity (all shipped languages)
+    `en_us.json` is the reference; **every** other `lang/*.json` must declare exactly
+    the same key set. The 26.3 branch only compared `en_us` against `zh_cn` because it
+    shipped two languages at the time it wrote this gate; this branch syncs the same gate
+    together with the nine extra languages from that branch, so it checks all of them.
+    Vanilla falls back per key to `en_us`, so a missing key is not fatal - but it is
+    invisible in game, which is exactly why it belongs in a cheap static gate.
+
+Tier D - dangling relative markdown links (WARN only, 26.1.2-line addition)
+    Every `[label](relative/path)` in a committed `*.md` must resolve to a file that
+    exists. Docs in this repository reference each other heavily (baseline -> reports ->
+    extending), and a snapshot-style branch can lose a file without anything noticing:
+    `docs/COMPATIBILITY.md` and the P19 cross-mod report are referenced from two documents
+    but are not in the tree on any branch. Reported as warnings, not failures, because a
+    missing *document* is never a build defect - but it should not stay invisible either.
 
 Usage:
     python3 scripts/ci_static_checks.py            # human readable, exit 1 on failure
@@ -48,6 +60,7 @@ MIXIN_SECTIONS = ("mixins", "client", "server")
 
 failures: list[str] = []
 notes: list[str] = []
+warnings: list[str] = []
 
 
 def fail(msg: str) -> None:
@@ -56,6 +69,11 @@ def fail(msg: str) -> None:
 
 def note(msg: str) -> None:
     notes.append(msg)
+
+
+def warn(msg: str) -> None:
+    """Advisory finding: printed, never counted as a failure (Tier D uses this)."""
+    warnings.append(msg)
 
 
 # --------------------------------------------------------------------------- #
@@ -173,21 +191,76 @@ def check_mixin_configs() -> None:
 
 def check_lang_parity() -> None:
     en_path = os.path.join(LANG_DIR, "en_us.json")
-    zh_path = os.path.join(LANG_DIR, "zh_cn.json")
-    for path in (en_path, zh_path):
-        if not os.path.exists(path):
-            fail(f"missing lang file: {os.path.relpath(path, REPO)}")
-            return
-    en = read_json(en_path)
-    zh = read_json(zh_path)
-    only_en = sorted(set(en) - set(zh))
-    only_zh = sorted(set(zh) - set(en))
-    for key in only_en:
-        fail(f"lang key '{key}' only in en_us.json")
-    for key in only_zh:
-        fail(f"lang key '{key}' only in zh_cn.json")
-    if not only_en and not only_zh:
-        note(f"lang parity ok ({len(en)} keys in en_us/zh_cn)")
+    if not os.path.exists(en_path):
+        fail(f"missing reference lang file: {os.path.relpath(en_path, REPO)}")
+        return
+    reference = read_json(en_path)
+    reference_keys = set(reference)
+
+    others = sorted(
+        os.path.basename(path)
+        for path in glob.glob(os.path.join(LANG_DIR, "*.json"))
+        if os.path.basename(path) != "en_us.json"
+    )
+    if not others:
+        note(f"lang parity ok (only en_us.json ships, {len(reference_keys)} keys)")
+        return
+
+    for name in others:
+        path = os.path.join(LANG_DIR, name)
+        try:
+            data = read_json(path)
+        except Exception as exc:  # noqa: BLE001
+            fail(f"{name}: invalid JSON: {exc}")
+            continue
+        keys = set(data)
+        for key in sorted(reference_keys - keys):
+            fail(f"lang key '{key}' is in en_us.json but missing from {name}")
+        for key in sorted(keys - reference_keys):
+            fail(f"lang key '{key}' is in {name} but not in en_us.json (stale or typo'd key)")
+        # A translated value that is byte-identical to English is allowed (some strings really are
+        # the same), so only an *empty* value is treated as an unfinished translation.
+        for key in sorted(keys & reference_keys):
+            if isinstance(data[key], str) and not data[key].strip():
+                fail(f"{name}: lang key '{key}' is empty")
+
+    note(f"lang parity ok ({len(reference_keys)} keys across en_us + {len(others)} language(s))")
+
+
+# --------------------------------------------------------------------------- #
+# Tier D (warn-only)
+# --------------------------------------------------------------------------- #
+
+LINK_RE = re.compile(r"\[([^\]]*)\]\(([^)\s]+)\)")
+
+
+def check_markdown_links() -> None:
+    """Relative markdown links must resolve. Warn-only: see the module docstring (Tier D)."""
+    dangling = 0
+    scanned = 0
+    for root, dirs, files in os.walk(REPO):
+        dirs[:] = [d for d in dirs if d not in {".git", "build", ".gradle", "run"}]
+        for name in files:
+            if not name.endswith(".md"):
+                continue
+            path = os.path.join(root, name)
+            scanned += 1
+            rel_path = os.path.relpath(path, REPO)
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    text = fh.read()
+            except OSError:
+                continue
+            for target in (m.group(2) for m in LINK_RE.finditer(text)):
+                clean = target.split("#")[0]
+                if not clean or clean.startswith(("http://", "https://", "mailto:")):
+                    continue
+                resolved = os.path.normpath(os.path.join(os.path.dirname(path), clean))
+                if not os.path.exists(resolved):
+                    dangling += 1
+                    warn(f"{rel_path}: dangling link '{target}' -> {os.path.relpath(resolved, REPO)} does not exist")
+    if dangling == 0:
+        note(f"markdown links ok ({scanned} file(s) scanned)")
 
 
 # --------------------------------------------------------------------------- #
@@ -199,19 +272,24 @@ def main() -> int:
 
     check_mixin_configs()
     check_lang_parity()
+    check_markdown_links()
 
     if args.porcelain:
         for msg in failures:
             print(f"FAIL\t{msg}")
+        for msg in warnings:
+            print(f"WARN\t{msg}")
     else:
         for msg in notes:
             print(f"ok:   {msg}")
+        for msg in warnings:
+            print(f"warn: {msg}")
         for msg in failures:
             print(f"FAIL: {msg}")
         if failures:
-            print(f"\nci_static_checks: FAILED ({len(failures)} failure(s))")
+            print(f"\nci_static_checks: FAILED ({len(failures)} failure(s), {len(warnings)} warning(s))")
         else:
-            print(f"\nci_static_checks: PASS ({len(notes)} check group(s))")
+            print(f"\nci_static_checks: PASS ({len(notes)} check group(s), {len(warnings)} warning(s))")
 
     return 1 if failures else 0
 
