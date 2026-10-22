@@ -53,7 +53,7 @@ public class DepthBasedEfficiencyFunction extends LootItemConditionalFunction {
         if (efficiency == null) return stack;
 
         int levelValue = 2;
-        Vec3 origin = context.getOptionalParameter(LootContextParams.ORIGIN);
+        Vec3 origin = context.getOptional(LootContextParams.ORIGIN);
         int topY = level.getSeaLevel();
         int bottomY = level.getMinY();
         if (origin != null && topY > bottomY) {
