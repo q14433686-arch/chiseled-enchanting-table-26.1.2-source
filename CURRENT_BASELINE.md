@@ -6,7 +6,7 @@
 > the original author**. All credit for the original mod design and assets belongs to Sacramentix
 > (MIT licensed); this port only updates the code/data to the 26.1.2 toolchain.
 
-**Date:** 2026-10-21
+**Date:** 2026-10-23
 **Minecraft Version:** 26.1.2
 **Fabric Loader:** 0.19.3
 **Fabric API:** 0.151.0+26.1.2
@@ -15,25 +15,24 @@
 **Java:** 25 required (`options.release = 25`). **No JDK exists in the current dev sandbox**, so this
 round was verified with the offline gates + CI instead of a local `./gradlew` run — see
 "Verified this session".
-**Mod Version:** `1.0.3`  *(unofficial-port versioning, see "Versioning" below)*
+**Mod Version:** `1.1.0`  *(unofficial-port versioning, see "Versioning" below)*
 
 ## Versioning
 
-This repository currently publishes the unofficial 26.1.2 port as **`1.0.3`**. Earlier internal
+This repository currently publishes the unofficial 26.1.2 port as **`1.1.0`**. Earlier internal
 porting labels are treated as historical implementation notes only; current metadata, release
-artefacts and documentation should all refer to `1.0.3`.
+artefacts and documentation should all refer to `1.1.0`.
 
-`1.0.3` on *this* branch is **not** a Minecraft port. It is the back-port of the sister `26.3`
-branch's version-independent fixes and features onto the 26.1.2 line, which is why both branches
-carry the same `mod_version`: the number answers "which feature set", the branch /
-`minecraft_version` answers "which Minecraft". Mapping and rationale:
-[`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
-`docs/marketing/*` still describes `1.0.2` and needs a pass before any publish run.
+`1.1.0` builds on the `1.0.3` back-port of the sister `26.3` branch's version-independent fixes and
+features onto the 26.1.2 line (mapping and rationale:
+[`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md)) and introduces
+the full 26.1.2 progression, Treasure Epiphany, dual-mode XP, custom GUI, bidirectional JEI/REI
+transformation categories, 11-locale plain-spoken localization overhaul, and [`docs/WIKI.md`](docs/WIKI.md).
 
 ## Current Source-Truth Snapshot (what the code/data actually contains today)
 
 ### Build / packaging
-- `gradle.properties`: `mod_version=1.0.3`, `minecraft_version=26.1.2`,
+- `gradle.properties`: `mod_version=1.1.0`, `minecraft_version=26.1.2`,
   `loader_version=0.19.3`, `fabric_version=0.151.0+26.1.2`, plus the optional-viewer block
   (`enable_jei=true`, `jei_version=29.47.0.111`, `enable_rei=true`, `rei_version=26.1.819`,
   `rei_math_version=0.6.1`, `rei_architectury_version=20.0.6`) — each value's provenance is
@@ -53,7 +52,7 @@ carry the same `mod_version`: the number answers "which feature set", the branch
   exclusions and only escapes the failure because its Fabric API is already the newest in its graph —
   `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.1, sync report §8 finding 7.
 - `src/main/resources/fabric.mod.json`:
-  - `version: "${version}"` (substituted by Loom to `1.0.3`).
+  - `version: "${version}"` (substituted by Loom to `1.1.0`).
   - `name`: `Chiseled Enchanting Table (Unofficial 26.1.2 Port)`.
   - `description`: explicitly states this is an unofficial port and not affiliated with the
     original author.
@@ -79,8 +78,8 @@ carry the same `mod_version`: the number answers "which feature set", the branch
   `arena/**` branches via the Contents API), `build.yml` (three offline static gates → full build →
   jar artifact, plus a `no-viewers` job that compiles with `-Penable_jei=false -Penable_rei=false`),
   `consistency.yml` (version gate + warn-only `docs/ci` drift check) and `publish.yml`
-  (`MINECRAFT_VERSION: 26.1.2`, `JAVA_VERSION: 25`, `VERSION: 1.0.3`,
-  `RELEASE_NAME: Chiseled Enchanting Table 1.0.3 (Unofficial 26.1.2 Port)`, `workflow_dispatch`
+  (`MINECRAFT_VERSION: 26.1.2`, `JAVA_VERSION: 25`, `VERSION: 1.1.0`,
+  `RELEASE_NAME: Chiseled Enchanting Table 1.1.0 (Unofficial 26.1.2 Port)`, `workflow_dispatch`
   only). Reference: [`docs/ci/README.md`](docs/ci/README.md).
 - `gradlew` is committed `100755` (was `100644`), because `compile-check.yml` calls `./gradlew`
   without a `chmod` step.

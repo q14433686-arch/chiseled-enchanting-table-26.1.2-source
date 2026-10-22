@@ -16,7 +16,7 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > what was deliberately *not* taken because it is 26.3-only — is in
 > [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
 
-## [1.0.3] - 2026-10-22
+## [1.1.0] - 2026-10-23
 
 ### Changed — Unified Progression, Library Resonance & Player-Choice Economy Overhaul (A × B × C)
 
@@ -177,6 +177,8 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
   detection, and hover item tooltips on cost icons in the table screen; fixed multi-material cost
   slots, visible XP labels, S2C cache invalidation, and zero-deprecation JEI/REI integration; and
   removed root scratch files / `*.orig` / `*.rej` / committed bytecode artifacts.
+
+## [1.0.3] - 2026-10-21
 
 ### Fixed — worldgen deadlock / unloadable chunks ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3))
 
