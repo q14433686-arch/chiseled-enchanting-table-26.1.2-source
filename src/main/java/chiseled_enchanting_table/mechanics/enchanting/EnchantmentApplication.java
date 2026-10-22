@@ -2,6 +2,7 @@ package chiseled_enchanting_table.mechanics.enchanting;
 
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
+import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.HashSet;
 import net.minecraft.core.Holder;
@@ -18,20 +19,22 @@ import net.minecraft.world.level.Level;
 
 /**
  * Real-enchantment gameplay mechanic for the chiseled enchanting menu: applying unlocked
- * enchantments, and transferring an enchantment from an enchanted book. Lives in
- * {@code mechanics.enchanting} so this logic is decoupled from the menu container, the transformation
- * mechanic, and the wire payloads.
+ * enchantments, and transferring an enchantment from an enchanted book.
  */
 public final class EnchantmentApplication {
     private EnchantmentApplication() {}
 
-    /** Apply one of the menu's unlocked enchantments to the enchantable item. */
+    /** Apply one of the menu's unlocked enchantments (or an active Grand Library Treasure Epiphany) to the enchantable item. */
     public static boolean apply(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
         boolean exist = false;
-        for (EnchantmentWithLevel e : handler.unlocked_enchantements) {
-            if (e.enchantment_id().equals(payload.enchantment_id()) && e.enchantment_level() == payload.enchantment_level()) {
-                exist = true;
-                break;
+        if (payload.option_type() == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.TREASURE_EPIPHANY) {
+            exist = handler.matchesActiveTreasureEpiphany(payload);
+        } else {
+            for (EnchantmentWithLevel e : handler.unlocked_enchantements) {
+                if (e.enchantment_id().equals(payload.enchantment_id()) && e.enchantment_level() == payload.enchantment_level()) {
+                    exist = true;
+                    break;
+                }
             }
         }
         if (!exist) {
@@ -40,6 +43,9 @@ public final class EnchantmentApplication {
 
         Level world = handler.world();
         ItemStack enchantable_item = handler.get_enchantable_item();
+        if (chiseled_enchanting_table.data.ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+            return false;
+        }
         int enchantment_level = payload.enchantment_level();
         Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
         if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(enchantable_item))) {
@@ -50,16 +56,23 @@ public final class EnchantmentApplication {
         }
 
         ItemEnchantments.Mutable newEnchantmentsComponent = new ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item));
-        var keys = new HashSet<>(newEnchantmentsComponent.keySet());
-        for (var key : keys) {
-            if (!Enchantment.areCompatible(key, enchantment)) {
-                newEnchantmentsComponent.set(key, 0); // remove conflicting
+        if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK))) {
+            var keys = new HashSet<>(newEnchantmentsComponent.keySet());
+            for (var key : keys) {
+                if (!Enchantment.areCompatible(key, enchantment)) {
+                    newEnchantmentsComponent.set(key, 0);
+                }
             }
         }
         newEnchantmentsComponent.set(enchantment, enchantment_level);
 
         if (enchantable_item.is(Items.BOOK)) {
-            ItemStack stack = enchantable_item.transmuteCopy(Items.ENCHANTED_BOOK, 1);
+            // Create a 100% canonical vanilla Enchanted Book so same-enchant books always stack cleanly up to 64!
+            ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK, 1);
+            var customName = enchantable_item.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+            if (customName != null) {
+                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
+            }
             handler.setEnchantableSlot(stack);
             enchantable_item = handler.get_enchantable_item();
         }
@@ -73,7 +86,16 @@ public final class EnchantmentApplication {
             }
         });
 
+        boolean consumedEpiphany = payload.option_type() == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.TREASURE_EPIPHANY;
+        handler.advanceTableEpiphanySeed(consumedEpiphany);
         finish(handler);
+        if (consumedEpiphany) {
+            Advancement.give(handler.player, "inscribe_epiphany");
+        }
+        if (target.is(Items.ENCHANTED_BOOK)) {
+            Advancement.give(handler.player, "enchant_to_book");
+            Advancement.checkBookMilestones(handler.player, world, target);
+        }
         return true;
     }
 
@@ -94,6 +116,9 @@ public final class EnchantmentApplication {
         }
 
         ItemStack enchantable_item = handler.get_enchantable_item();
+        if (chiseled_enchanting_table.data.ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+            return false;
+        }
         int enchantment_level = payload.enchantment_level();
         Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
         if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(enchantable_item))) {
@@ -108,12 +133,13 @@ public final class EnchantmentApplication {
         }
         EnchantmentHelper.updateEnchantments(enchanted_book, m -> {
             var keys = new HashSet<>(m.keySet());
-            for (var k : keys) m.set(k, 0); // clear
+            for (var k : keys) m.set(k, 0);
             for (var entry : new_enchanted_book_enchants.keySet()) m.set(entry, new_enchanted_book_enchants.getLevel(entry));
         });
 
         if (EnchantmentHelper.getEnchantmentsForCrafting(enchanted_book).isEmpty()) {
-            handler.setCostSlot(enchanted_book.transmuteCopy(Items.BOOK, 1));
+            // Drained source book becomes a stackable Depleted Tome requiring Blank Overwrite before reuse.
+            handler.setCostSlot(new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1));
         }
 
         ItemEnchantments.Mutable newEnchantmentsComponent = new ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item));
@@ -121,14 +147,18 @@ public final class EnchantmentApplication {
             var keys = new HashSet<>(newEnchantmentsComponent.keySet());
             for (var key : keys) {
                 if (!Enchantment.areCompatible(key, enchantment)) {
-                    newEnchantmentsComponent.set(key, 0); // remove conflicting
+                    newEnchantmentsComponent.set(key, 0);
                 }
             }
         }
         newEnchantmentsComponent.set(enchantment, enchantment_level);
 
         if (enchantable_item.is(Items.BOOK)) {
-            ItemStack stack = enchantable_item.transmuteCopy(Items.ENCHANTED_BOOK, 1);
+            ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK, 1);
+            var customName = enchantable_item.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+            if (customName != null) {
+                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
+            }
             handler.setEnchantableSlot(stack);
             enchantable_item = handler.get_enchantable_item();
         }
@@ -143,6 +173,11 @@ public final class EnchantmentApplication {
         });
 
         finish(handler);
+        Advancement.give(handler.player, "enchant_from_book");
+        if (target.is(Items.ENCHANTED_BOOK)) {
+            Advancement.give(handler.player, "transfer_enchanted_book");
+            Advancement.checkBookMilestones(handler.player, world, target);
+        }
         return true;
     }
 

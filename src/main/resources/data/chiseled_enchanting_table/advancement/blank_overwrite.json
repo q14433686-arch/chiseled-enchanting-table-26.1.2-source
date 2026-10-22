@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "chiseled_enchanting_table:depleted_tome"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.blank_overwrite.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.blank_overwrite.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:upgrade_enchanted_book",
+  "criteria": {
+    "blank_overwrite": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "blank_overwrite"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

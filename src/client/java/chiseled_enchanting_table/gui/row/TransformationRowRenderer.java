@@ -1,13 +1,13 @@
 package chiseled_enchanting_table.gui.row;
 
+import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Renders a transformation list row: input -> output item conversion. Unlike an enchantment row it
- * has no "overrides existing enchantment" annotation line; it just shows the output name plus costs.
+ * Renders a transformation list row with strict anti-overlap text bounds and hardware scissor clipping.
  */
 public final class TransformationRowRenderer {
     private TransformationRowRenderer() {}
@@ -19,29 +19,41 @@ public final class TransformationRowRenderer {
         boolean isFocused,
         boolean hovered,
         boolean canEnchant,
-        boolean itemCostMet,
+        boolean primaryCostMet,
+        List<Boolean> additionalCostsMet,
         boolean xpMet,
         String outputName,
         ItemStack primaryCost,
         List<ItemStack> additionalCosts,
-        int xpCost
+        XpRequirement xpRequirement
     ) {
-        int background = RowRenderSupport.backgroundColor(canEnchant, hovered);
-        RowRenderSupport.drawChrome(ctx, dx, dy, dw, dh, background, isFocused);
+        RowRenderSupport.drawPlaque(
+            ctx,
+            dx,
+            dy,
+            dw,
+            dh,
+            RowRenderSupport.RowVisualStyle.TRANSFORMATION,
+            canEnchant,
+            hovered,
+            isFocused
+        );
 
-        int itemX = dx + 4;
-        int itemY = dy + 4;
-        RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, itemCostMet);
-        RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, dx + dw - 48, itemY, itemCostMet);
+        RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
+        try {
+            int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
+            int itemY = RowRenderSupport.costIconY(dy, dh);
+            RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+            RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, additionalCostsMet, dx, dw, itemY);
 
-        int nameX = itemX + 20;
-        int nameY = dy + 2 + client.font.lineHeight / 3;
-        RowRenderSupport.renderScaledText(ctx, client, outputName, nameX, nameY, 2.0f / 3.0f, RowRenderSupport.WHITE);
+            int nameX = dx + RowRenderSupport.NAME_OFFSET_X;
+            int maxTextW = RowRenderSupport.availableTextWidth(dx, dw, additionalCosts.size());
+            RowRenderSupport.renderBoundedText(ctx, client, outputName, nameX, dy + 4, 0.64f, maxTextW, RowRenderSupport.TRANSFORM_GOLD);
+            RowRenderSupport.renderBoundedText(ctx, client, "\u2726 \u2192 " + outputName, nameX, dy + 12, 0.58f, maxTextW, RowRenderSupport.LIGHT_GREEN);
 
-        // Secondary line clarifies it is a conversion.
-        int subY = dy + dh - 2 - client.font.lineHeight;
-        RowRenderSupport.renderScaledText(ctx, client, "\u2192 " + outputName, nameX, subY, 2.0f / 3.0f, RowRenderSupport.LIGHT_GREEN);
-
-        RowRenderSupport.drawXpLabel(ctx, client, xpCost, dx, dw, dy, dh, xpMet);
+            RowRenderSupport.drawXpBadge(ctx, client, xpRequirement, dx, dw, dy, dh, xpMet);
+        } finally {
+            RowRenderSupport.endRowContentClip(ctx);
+        }
     }
 }

@@ -2,6 +2,8 @@ package chiseled_enchanting_table.compat.jei;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.EnchantQueryIndex;
+import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.compat.TransformationQueryIndex;
 import java.util.ArrayList;
 import java.util.List;
 import mezz.jei.api.IModPlugin;
@@ -45,6 +47,15 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
     private HolderLookup.Provider cachedRegistries;
     private List<EnchantQueryIndex.Entry> cachedIndex;
 
+    public ChiseledEnchantingJeiPlugin() {
+        SyncedEnchantmentCosts.addListener(this::invalidateCache);
+    }
+
+    private void invalidateCache() {
+        this.cachedIndex = null;
+        this.cachedRecipes = null;
+    }
+
     @Override
     public Identifier getPluginUid() {
         return ChiseledEnchantingTable.identifier("jei_plugin");
@@ -52,7 +63,11 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        registration.addRecipeCategories(new EnchantingRecipeCategory(registration.getJeiHelpers().getGuiHelper()));
+        var guiHelper = registration.getJeiHelpers().getGuiHelper();
+        registration.addRecipeCategories(
+            new EnchantingRecipeCategory(guiHelper),
+            new TransformationRecipeCategory(guiHelper)
+        );
     }
 
     @Override
@@ -60,6 +75,13 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
         List<EnchantingRecipe> recipes = recipes();
         if (!recipes.isEmpty()) {
             registration.addRecipes(EnchantingRecipeCategory.RECIPE_TYPE, recipes);
+        }
+        List<TransformationRecipe> transformations = TransformationQueryIndex.build()
+            .stream()
+            .map(TransformationRecipe::of)
+            .toList();
+        if (!transformations.isEmpty()) {
+            registration.addRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
         }
 
         List<ItemStack> stations = List.of(
@@ -78,6 +100,14 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             List.of(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)),
             Component.translatable("jei.chiseled_enchanting_table.info.book")
         );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.ARCANE_CATALYST)),
+            Component.translatable("jei.chiseled_enchanting_table.info.catalyst")
+        );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.DEPLETED_TOME)),
+            Component.translatable("jei.chiseled_enchanting_table.info.depleted_tome")
+        );
     }
 
     @Override
@@ -86,6 +116,10 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             EnchantingRecipeCategory.RECIPE_TYPE,
             BlockRegistry.CHISELED_ENCHANTING_TABLE,
             Blocks.CHISELED_BOOKSHELF
+        );
+        registration.addCraftingStation(
+            TransformationRecipeCategory.RECIPE_TYPE,
+            BlockRegistry.CHISELED_ENCHANTING_TABLE
         );
     }
 
@@ -123,8 +157,8 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             );
             return null;
         }
-        // Rebuild only when the registry identity changes (world switch / datapack reload).
-        if (cachedRegistries != provider) {
+        // Rebuild when registry identity changes OR when S2C cost sync invalidated the cache.
+        if (cachedRegistries != provider || cachedIndex == null) {
             cachedRegistries = provider;
             cachedIndex = EnchantQueryIndex.build(provider);
             cachedRecipes = null;
