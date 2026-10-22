@@ -42,16 +42,15 @@ public final class ReiEnchantingDisplay implements Display {
         this.row = row;
         this.enchantment = enchantment;
 
-        List<EntryIngredient> inputIngredients = new ArrayList<>(3);
+        List<EntryIngredient> inputIngredients = new ArrayList<>(4);
         // Slot 1: every supported item as alternatives in one ingredient — this is what makes the
         // row focusable from the item side.
         inputIngredients.add(EntryIngredient.of(stacks(row.supportedItems())));
         // Slot 2: the book for exactly this level, which makes the row focusable from the book side.
         inputIngredients.add(EntryIngredient.of(item(row.bookStack(enchantment))));
-        // Slot 3: the material cost. Some enchantments have no material cost; then the slot is
-        // simply absent instead of rendering an empty slot that could be focused.
-        if (!row.itemCosts().isEmpty()) {
-            inputIngredients.add(EntryIngredient.of(stacks(row.itemCosts())));
+        // Slots 3+: each required material stack in its own slot (not cycled as fake alternatives).
+        for (ItemStack costStack : row.itemCosts()) {
+            inputIngredients.add(EntryIngredient.of(item(costStack)));
         }
         this.inputs = List.copyOf(inputIngredients);
         this.outputs = List.of(EntryIngredient.of(item(result(enchantment))));

@@ -7,6 +7,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
@@ -138,6 +139,19 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
+            ItemStack hoveredCost = this.scrollContainer.hoveredCostItem(mouseX, mouseY);
+            if (hoveredCost != null && !hoveredCost.isEmpty()) {
+                ctx.setTooltipForNextFrame(
+                    this.font,
+                    this.getTooltipFromContainerItem(hoveredCost),
+                    hoveredCost.getTooltipImage(),
+                    mouseX,
+                    mouseY,
+                    hoveredCost.get(DataComponents.TOOLTIP_STYLE)
+                );
+            }
+        }
     }
 
     @Override

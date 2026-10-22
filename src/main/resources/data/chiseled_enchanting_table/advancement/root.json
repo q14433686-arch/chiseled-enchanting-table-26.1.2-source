@@ -1,27 +1,31 @@
 {
-    "display": {
-      "icon": {
-        "id": "chiseled_enchanting_table:chiseled_enchanting_table"
-      },
-      "title": "Chiseled journey begin!",
-      "description": "Craft your first chiseled enchanting table.",
-      "background": "minecraft:block/crying_obsidian"
+  "display": {
+    "icon": {
+      "id": "chiseled_enchanting_table:chiseled_enchanting_table"
     },
-    "criteria": {
-      "craft": {
-        "trigger": "minecraft:recipe_crafted",
-        "conditions": {
-          "recipe_id": "chiseled_enchanting_table:chiseled_enchanting_table",
-          "ingredients": [
-            {}
-          ]
-        }
-      }
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.root.title"
     },
-    "requirements": [
-        [
-            "craft"
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.root.description"
+    },
+    "background": "minecraft:block/crying_obsidian"
+  },
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "chiseled_enchanting_table:chiseled_enchanting_table",
+        "ingredients": [
+          {}
         ]
-    ],
-    "sends_telemetry_event": false
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft"
+    ]
+  ],
+  "sends_telemetry_event": false
 }

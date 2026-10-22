@@ -42,21 +42,20 @@ public final class XpCostConversion {
         int endLevel = Math.max(0, startLevel - levelCost);
         if (endLevel >= startLevel) return 0;
 
-        // Fractional part of the starting level: cost from the start position back down to the
-        // integer start level's floor.
-        double points = startProgress * xpNeededToReachNextLevelFrom(startLevel);
+        // Preserve the player's fractional bar (`experienceProgress`) across the level drop:
+        // start has `round(p * xpNeeded(startLevel))` points inside `startLevel`, while landing at
+        // `(endLevel, p)` retains `round(p * xpNeeded(endLevel))` points inside `endLevel`.
+        long startPartial = Math.round(startProgress * xpNeededToReachNextLevelFrom(startLevel));
+        long endPartial = Math.round(startProgress * xpNeededToReachNextLevelFrom(endLevel));
+        long points = startPartial - endPartial;
 
-        // Then every full level between (endLevel, startLevel] contributes its "cost to reach
-        // this level from the level below". Note that xpNeededToReachNextLevelFrom(L) is the XP
-        // needed to go FROM level L TO level L+1, so the amount released by dropping FROM level
-        // L+1 back TO level L is the same number.
+        // Every full level between [endLevel, startLevel) contributes its full bar size.
         for (int lvl = endLevel; lvl < startLevel; lvl++) {
             points += xpNeededToReachNextLevelFrom(lvl);
         }
-        // Clamp to a sane int and round up so we never under-charge by a fractional point.
-        long rounded = (long) Math.ceil(points);
-        if (rounded > Integer.MAX_VALUE) return Integer.MAX_VALUE;
-        return (int) rounded;
+        if (points <= 0L) return 0;
+        if (points > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        return (int) points;
     }
 
     /** XP needed to reach {@code level+1} starting from a filled-{@code level} state. */

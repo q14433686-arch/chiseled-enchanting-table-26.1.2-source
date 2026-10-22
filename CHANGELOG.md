@@ -16,7 +16,34 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > what was deliberately *not* taken because it is 26.3-only — is in
 > [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
 
-## [1.0.3] - 2026-10-21
+## [1.0.3] - 2026-10-22
+
+### Fixed — obvious port & runtime bugs, unported upstream features, UI/sync/viewer polish
+
+- **Restored complete Chiseled Enchanting Table dyeing & tinting pipeline**: right-clicking with a
+  `DyeItem` averages RGB color onto `ChiseledEnchantingTableBlockEntity`, syncs `ClientboundBlockEntityDataPacket`
+  + `getUpdateTag` + `getRenderData` to clients, tints the block (`BlockColorRegistry`) and item
+  model (`items/chiseled_enchanting_table.json`), preserves `minecraft:dyed_color` on break via
+  `loot_table/blocks/chiseled_enchanting_table.json`, and awards `color_table`.
+- **Restored Enchanted Book stack size of 64 & Anvil prior-work scaling removal**: registered
+  `DefaultItemComponentEvents.MODIFY` for `Items.ENCHANTED_BOOK` (`MAX_STACK_SIZE = 64`), protected
+  stacked enchanted books in `AnvilMenu#onTake` (`RemoveEnchantMerge`), and ported/enabled
+  `RemoveXpCostScaling` (`AnvilMenu#calculateIncreasedRepairCost`).
+- **Completed and localized all 10 advancements across all 11 languages**: added missing
+  `upgrade_enchanted_book.json` and `max_level_book.json`, wired missing `enchant_to_book`,
+  `enchant_from_book`, `transfer_enchanted_book`, and `all_enchant_book` triggers in
+  `EnchantmentApplication`, preserved mutually exclusive enchantments on books, fixed false-positive
+  `unlock_new_enchant` when no nearby chiseled bookshelf holds enchanted books, and added native
+  translations across all 11 `lang/*.json` files.
+- **Fixed XP, book-upgrade, loot, container, UI, and JEI/REI bugs**: atomic validation before XP
+  deduction in `BookUpgradeApplication#applyResearch`; preserved fractional `experienceProgress` in
+  `XpCostConversion`; restored Mineshaft `DepthBasedEfficiencyFunction` (Efficiency II–V by Y-depth)
+  and `BookshelfBookFiller` `enchant_sets` support; restored table-to-bookshelf `ParticleTypes.ENCHANT`
+  particles; fixed Shift-click slot index bug and `stillValid` range/block check in
+  `ChiseledEnchantingTableScreenHandler`; added per-item affordability coloring, accurate multi-conflict
+  detection, and hover item tooltips on cost icons in the table screen; fixed multi-material cost
+  slots, visible XP labels, S2C cache invalidation, and zero-deprecation JEI/REI integration; and
+  removed root scratch files / `*.orig` / `*.rej` / committed bytecode artifacts.
 
 ### Fixed — worldgen deadlock / unloadable chunks ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3))
 

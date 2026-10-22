@@ -5,6 +5,7 @@
   "mixins": [
     "enchanting_table.DisableBookEnchanting",
     "anvil.RemoveEnchantMerge",
+    "anvil.RemoveXpCostScaling",
     "chiseled_bookshelf.AddRandomTick",
     "structure.StructureTemplatePoolProjectionMixin",
     "structure.StructurePlaceSettingsMixin",

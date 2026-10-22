@@ -172,6 +172,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return Optional.ofNullable(itemTransformations.get(id));
     }
 
+    public static Set<Identifier> transformationIds() {
+        return itemTransformations.keySet();
+    }
+
     /**
      * Compact display table (id, input item, output item, level) for every loaded transformation.
      * The screen handler syncs this to the client when the menu opens so client UI no longer has to
@@ -471,7 +475,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             double researchMaterialMultiplier = doubleOr(research, "material_cost_multiplier_of_direct_enchant", 0.5D);
             ItemCostRule defaultResearchCost = research.has("default_material_cost")
                 ? ItemCostRule.fromJson(research.getAsJsonObject("default_material_cost"))
-                : ItemCostRule.single(Identifier.withDefaultNamespace("lapis_lazuli"), 1, 1, 0, 0);
+                : null;
             Map<Identifier, ItemCostRule> overrides = new HashMap<>();
             if (research.has("enchantment_overrides")) {
                 JsonObject entries = research.getAsJsonObject("enchantment_overrides");
@@ -521,11 +525,15 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
         List<ItemStack> researchCosts(EnchantmentWithLevel target, String salt, int maxLevel, List<ItemStack> directCosts) {
             ItemCostRule rule = researchOverrides.getOrDefault(target.enchantment_id(), defaultResearchCost);
-            List<ItemStack> themed = rule.toStacks(target.enchantment_id(), target.enchantment_level(), maxLevel, salt);
+            List<ItemStack> themed = rule == null ? List.of() : rule.toStacks(target.enchantment_id(), target.enchantment_level(), maxLevel, salt);
             if (themed.isEmpty() && !directCosts.isEmpty()) {
-                ItemStack discounted = directCosts.getFirst().copy();
-                discounted.setCount(Math.max(1, (int)Math.floor(discounted.getCount() * researchMaterialMultiplier)));
-                return List.of(discounted);
+                List<ItemStack> discounted = new ArrayList<>(directCosts.size());
+                for (ItemStack direct : directCosts) {
+                    ItemStack copy = direct.copy();
+                    copy.setCount(Math.max(1, (int)Math.floor(copy.getCount() * researchMaterialMultiplier)));
+                    discounted.add(copy);
+                }
+                return List.copyOf(discounted);
             }
             return themed;
         }

@@ -17,15 +17,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.item.DyeItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.core.Holder;
@@ -42,6 +47,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -65,14 +71,48 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     }
 
     @Override
+    protected boolean useShapeForLightOcclusion(BlockState state) {
+        return true;
+    }
+
+    @Override
     protected VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
         return SHAPE;
     }
 
     @Override
+    protected boolean isPathfindable(BlockState state, PathComputationType type) {
+        return false;
+    }
+
+    @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         super.animateTick(state, level, pos, random);
-        // TODO P3: restore bookshelf-to-table particle path checks after source migration.
+        for (BlockPos offset : POWER_PROVIDER_OFFSETS) {
+            if (random.nextInt(16) != 0) {
+                continue;
+            }
+            BlockPos shelfPos = pos.offset(offset);
+            if (!level.getBlockState(shelfPos).is(Blocks.CHISELED_BOOKSHELF)) {
+                continue;
+            }
+            BlockPos betweenPos = pos.offset(offset.getX() / 2, offset.getY(), offset.getZ() / 2);
+            if (!level.getBlockState(betweenPos).getCollisionShape(level, betweenPos).isEmpty()) {
+                continue;
+            }
+            if (level.getBlockEntity(shelfPos) instanceof ChiseledBookShelfBlockEntity cbsbe
+                && EnchantmentFinder.streamAllEnchantements(cbsbe, level).findAny().isPresent()) {
+                level.addParticle(
+                    ParticleTypes.ENCHANT,
+                    pos.getX() + 0.5D,
+                    pos.getY() + 2.0D,
+                    pos.getZ() + 0.5D,
+                    offset.getX() + random.nextFloat() - 0.5D,
+                    offset.getY() - random.nextFloat() - 1.0F,
+                    offset.getZ() + random.nextFloat() - 0.5D
+                );
+            }
+        }
     }
 
     @Override
@@ -89,6 +129,34 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return level.isClientSide() ? createTickerHelper(type, EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntity::tick) : null;
+    }
+
+    @Override
+    protected InteractionResult useItemOn(
+        ItemStack stack,
+        BlockState state,
+        Level level,
+        BlockPos pos,
+        Player player,
+        InteractionHand hand,
+        BlockHitResult hit
+    ) {
+        if (stack.getItem() instanceof DyeItem dyeItem
+            && level.getBlockEntity(pos) instanceof ChiseledEnchantingTableBlockEntity tableBlockEntity) {
+            if (!level.isClientSide()) {
+                int newColor = dyeItem.getDyeColor().getTextureDiffuseColor();
+                int originalColor = tableBlockEntity.colorOrDefault();
+                tableBlockEntity.color = ARGB.average(newColor, originalColor) & 0x00FFFFFF;
+                if (!player.getAbilities().instabuild) {
+                    stack.shrink(1);
+                }
+                tableBlockEntity.setChanged();
+                level.sendBlockUpdated(pos, state, state, Block.UPDATE_ALL | Block.UPDATE_IMMEDIATE);
+                Advancement.give(player, "color_table");
+            }
+            return InteractionResult.SUCCESS;
+        }
+        return super.useItemOn(stack, state, level, pos, player, hand, hit);
     }
 
     @Override
@@ -111,6 +179,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             return null;
         }
         Component title = tableBlockEntity.getDisplayName();
+        ShelfPower shelfPower = calculateShelfPower(level, pos);
         Set<EnchantmentWithLevel> unlockedEnchantments = this.get_unlocked_enchantements(state, level, pos);
         // The available set now carries only real enchantments. Transformations travel on their own
         // synced channel (TransformationDisplay) inside AvailableEnchantmentPayload, so they no longer
@@ -122,7 +191,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         return new ExtendedMenuProvider<AvailableEnchantmentPayload>() {
             @Override
             public AvailableEnchantmentPayload getScreenOpeningData(ServerPlayer player) {
-                if (!unlockedEnchantments.isEmpty()) {
+                if (shelfPower.chiseledBookshelvesWithBooks() > 0) {
                     Advancement.give(player, "unlock_new_enchant");
                 }
                 return new AvailableEnchantmentPayload(availableEnchantments);
@@ -136,7 +205,12 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             @Nullable
             @Override
             public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory, Player player) {
-                return new ChiseledEnchantingTableScreenHandler(syncId, playerInventory, new AvailableEnchantmentPayload(availableEnchantments));
+                return new ChiseledEnchantingTableScreenHandler(
+                    syncId,
+                    playerInventory,
+                    new AvailableEnchantmentPayload(availableEnchantments),
+                    ContainerLevelAccess.create(level, pos)
+                );
             }
         };
     }

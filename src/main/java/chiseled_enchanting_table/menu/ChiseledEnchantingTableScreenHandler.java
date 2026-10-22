@@ -9,6 +9,7 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchan
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay;
+import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.ScreenHandlerRegistry;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -68,6 +70,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     /** Server-synced transformation display table, keyed by transformation id. Used by client UI. */
     public final java.util.Map<Identifier, TransformationDisplay> transformationDisplays;
     private final Level world;
+    private final ContainerLevelAccess access;
 
     private final Container inventory = new SimpleContainer(2) {
         @Override
@@ -81,7 +84,17 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public static final int COST_SLOT = 1;
 
     public ChiseledEnchantingTableScreenHandler(int syncId, Inventory playerInventory, AvailableEnchantmentPayload payload) {
+        this(syncId, playerInventory, payload, ContainerLevelAccess.NULL);
+    }
+
+    public ChiseledEnchantingTableScreenHandler(
+        int syncId,
+        Inventory playerInventory,
+        AvailableEnchantmentPayload payload,
+        ContainerLevelAccess access
+    ) {
         super(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, syncId);
+        this.access = access;
         this.unlocked_enchantements = payload.unlocked_enchantements();
         java.util.Map<Identifier, TransformationDisplay> displays = new java.util.HashMap<>();
         for (TransformationDisplay display : payload.transformations()) {
@@ -331,11 +344,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
      * player another player's salted option on a LAN host. Hence the {@code isClientSide} guard.</p>
      */
     private chiseled_enchanting_table.compat.SyncedEnchantmentCosts.Cost syncedRow(EnchantmentWithLevel e, OptionType type) {
-        if (!this.world.isClientSide() || type != OptionType.ENCHANTMENT) {
+        if (!this.world.isClientSide()) {
             return null;
         }
         return chiseled_enchanting_table.compat.SyncedEnchantmentCosts
-            .find(e.enchantment_id(), e.enchantment_level())
+            .find(type, e.enchantment_id(), e.enchantment_level())
             .orElse(null);
     }
 
@@ -512,8 +525,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                     if (ItemStack.isSameItemSameComponents(clickedStack, costSlotStack)) {
                         this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT+1, false);
                     } else {
-                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, costSlotStack, java.util.Optional.of(slotIndex));
-                        costSlotStack.setCount(0);
+                        int containerSlot = this.getSlot(slotIndex).getContainerSlot();
+                        java.util.Optional<Integer> preferredSlot = (containerSlot >= 0 && containerSlot < 36)
+                            ? java.util.Optional.of(containerSlot)
+                            : java.util.Optional.empty();
+                        ItemStack returning = costSlotStack.copy();
+                        this.getSlot(COST_SLOT).set(ItemStack.EMPTY);
+                        this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT + 1, false);
+                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, returning, preferredSlot);
                     }
                 }
             }
@@ -530,6 +549,6 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     @Override
     public boolean stillValid(Player player) {
-        return true;
+        return stillValid(this.access, player, BlockRegistry.CHISELED_ENCHANTING_TABLE);
     }
 }
