@@ -110,15 +110,14 @@ public final class EnchantedBookLootInjector {
                     );
                     continue;
                 }
-                // Special: upstream's DepthBasedEfficiencyBuilder mapped y -> level. Our JSON schema
-                // still records this as a special-flagged entry; without the depth context reachable
-                // from LootTableEvents.MODIFY we fall back to the JSON-declared static level (which
-                // the auto-import defaults to 1). Depth-based scaling can be re-added later by
-                // registering a per-level pool instead.
-                singleton = LootItem.lootTableItem(Items.ENCHANTED_BOOK)
-                    .apply(new SetEnchantmentsFunction.Builder()
-                        .withEnchantment(holder.get(), ConstantValue.exactly(entry.level())))
-                    .apply(SetLoreFunction.setLore().addLine(LORE));
+                var itemBuilder = LootItem.lootTableItem(Items.ENCHANTED_BOOK);
+                if ("depth_based_efficiency".equals(entry.special())) {
+                    itemBuilder.apply(DepthBasedEfficiencyFunction::new);
+                } else {
+                    itemBuilder.apply(new SetEnchantmentsFunction.Builder()
+                        .withEnchantment(holder.get(), ConstantValue.exactly(entry.level())));
+                }
+                singleton = itemBuilder.apply(SetLoreFunction.setLore().addLine(LORE));
             }
             pool.add(singleton.setWeight(entry.weight()));
             addedAny = true;

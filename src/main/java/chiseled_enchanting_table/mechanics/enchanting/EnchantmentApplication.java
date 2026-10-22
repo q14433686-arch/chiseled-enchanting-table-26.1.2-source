@@ -2,6 +2,7 @@ package chiseled_enchanting_table.mechanics.enchanting;
 
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
+import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.HashSet;
 import net.minecraft.core.Holder;
@@ -18,20 +19,22 @@ import net.minecraft.world.level.Level;
 
 /**
  * Real-enchantment gameplay mechanic for the chiseled enchanting menu: applying unlocked
- * enchantments, and transferring an enchantment from an enchanted book. Lives in
- * {@code mechanics.enchanting} so this logic is decoupled from the menu container, the transformation
- * mechanic, and the wire payloads.
+ * enchantments, and transferring an enchantment from an enchanted book.
  */
 public final class EnchantmentApplication {
     private EnchantmentApplication() {}
 
-    /** Apply one of the menu's unlocked enchantments to the enchantable item. */
+    /** Apply one of the menu's unlocked enchantments (or an active Grand Library Treasure Epiphany) to the enchantable item. */
     public static boolean apply(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
         boolean exist = false;
-        for (EnchantmentWithLevel e : handler.unlocked_enchantements) {
-            if (e.enchantment_id().equals(payload.enchantment_id()) && e.enchantment_level() == payload.enchantment_level()) {
-                exist = true;
-                break;
+        if (payload.option_type() == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.TREASURE_EPIPHANY) {
+            exist = handler.matchesActiveTreasureEpiphany(payload);
+        } else {
+            for (EnchantmentWithLevel e : handler.unlocked_enchantements) {
+                if (e.enchantment_id().equals(payload.enchantment_id()) && e.enchantment_level() == payload.enchantment_level()) {
+                    exist = true;
+                    break;
+                }
             }
         }
         if (!exist) {
@@ -50,10 +53,12 @@ public final class EnchantmentApplication {
         }
 
         ItemEnchantments.Mutable newEnchantmentsComponent = new ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item));
-        var keys = new HashSet<>(newEnchantmentsComponent.keySet());
-        for (var key : keys) {
-            if (!Enchantment.areCompatible(key, enchantment)) {
-                newEnchantmentsComponent.set(key, 0); // remove conflicting
+        if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK))) {
+            var keys = new HashSet<>(newEnchantmentsComponent.keySet());
+            for (var key : keys) {
+                if (!Enchantment.areCompatible(key, enchantment)) {
+                    newEnchantmentsComponent.set(key, 0);
+                }
             }
         }
         newEnchantmentsComponent.set(enchantment, enchantment_level);
@@ -73,7 +78,12 @@ public final class EnchantmentApplication {
             }
         });
 
+        handler.advanceTableEpiphanySeed();
         finish(handler);
+        if (target.is(Items.ENCHANTED_BOOK)) {
+            Advancement.give(handler.player, "enchant_to_book");
+            Advancement.checkBookMilestones(handler.player, world, target);
+        }
         return true;
     }
 
@@ -108,7 +118,7 @@ public final class EnchantmentApplication {
         }
         EnchantmentHelper.updateEnchantments(enchanted_book, m -> {
             var keys = new HashSet<>(m.keySet());
-            for (var k : keys) m.set(k, 0); // clear
+            for (var k : keys) m.set(k, 0);
             for (var entry : new_enchanted_book_enchants.keySet()) m.set(entry, new_enchanted_book_enchants.getLevel(entry));
         });
 
@@ -121,7 +131,7 @@ public final class EnchantmentApplication {
             var keys = new HashSet<>(newEnchantmentsComponent.keySet());
             for (var key : keys) {
                 if (!Enchantment.areCompatible(key, enchantment)) {
-                    newEnchantmentsComponent.set(key, 0); // remove conflicting
+                    newEnchantmentsComponent.set(key, 0);
                 }
             }
         }
@@ -143,6 +153,11 @@ public final class EnchantmentApplication {
         });
 
         finish(handler);
+        Advancement.give(handler.player, "enchant_from_book");
+        if (target.is(Items.ENCHANTED_BOOK)) {
+            Advancement.give(handler.player, "transfer_enchanted_book");
+            Advancement.checkBookMilestones(handler.player, world, target);
+        }
         return true;
     }
 

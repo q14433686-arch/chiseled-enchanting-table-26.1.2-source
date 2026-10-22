@@ -16,7 +16,85 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > what was deliberately *not* taken because it is 26.3-only — is in
 > [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
 
-## [1.0.3] - 2026-10-21
+## [1.0.3] - 2026-10-22
+
+### Changed — Unified Progression, Library Resonance & Player-Choice Economy Overhaul (A × B × C)
+
+- **Smooth Early-Game Entry & Upgrade Recipes**:
+  - Reduced direct crafting recipe (`recipe/chiseled_enchanting_table.json`) from `2 × Diamond Block`
+    (18 diamonds) to **`2 × Diamond` + `1 × Book` + `1 × Chiseled Bookshelf` + `3 × Crying Obsidian`**.
+  - Added an **Upgrade Recipe** (`recipe/chiseled_enchanting_table_upgrade.json`:
+    `1 × Enchanting Table` + `1 × Chiseled Bookshelf` + `4 × Amethyst Shard` + `3 × Crying Obsidian`)
+    so existing vanilla Enchanting Tables upgrade cleanly with zero wasted diamonds; both recipes
+    grant `root` and `craft` advancements.
+- **Two-Track Bookshelf Progression & Library Resonance**:
+  - **Baseline (`default_enchantments.json`)**: `#minecraft:in_enchanting_table` enchantments start
+    unlocked at Level I (supporting third-party modded enchantments automatically); Treasure
+    enchantments require discovering a book and storing it in a nearby Chiseled Bookshelf.
+  - **Track 1 — Wooden Bookshelves (`radius 2`)**: smoothly raise default-unlocked enchantments by
+    `+1` per `5` shelves up to the mid-tier ceiling `ceil(maxLevel / 2)` (`V → III`, `IV → II`,
+    `III → II`, `II → I`) and grant **`-1%` XP cost per shelf** (up to `-10%`).
+  - **Track 2 — Chiseled Bookshelves**: unlock stored Master Tomes **1:1** up to `maxLevel`
+    (emitting every level `1..k`), required for graduation tiers (`IV/V`, max `III`, max `II`) and
+    permanent Treasure unlocks, while granting **`-2%` XP cost per stored Enchanted Book** (combined
+    Library Resonance cap **`-35% XP`**), displayed live in the embossed opaque header pill.
+  - **Grand Library Treasure Epiphany (`treasure_epiphany.json`, `≥32` Wooden Bookshelves)**:
+    surrounding a Chiseled Enchanting Table with **32 or more Wooden Bookshelves** (`35%` base chance
+    at 32 shelves, `+1.5%` per extra shelf up to `65%` at 52+ shelves) enables **Arcane Epiphany**,
+    manifesting **1 matching positive Treasure Enchantment (`Level I`)** for the target item or blank
+    Book even before owning its Master Tome — refreshing naturally at Dawn (`24000t`), after any
+    enchantment, or via the clickable header **`↻` Refresh button** (`2 XP Levels + 4× Lapis Lazuli /
+    Amethyst Shard`).
+  - **Universal Expensive Synthesis Catalyst (`chiseled_enchanting_table:arcane_catalyst`)**: added
+    the craftable **Arcane Synthesis Crystal / 秘法凝晶** (`1× Diamond Block + 2× Emerald Block +
+    1× Gold Block + 2× Amethyst Block + 2× Lapis Block + 1× Crying Obsidian`), accepted universally
+    alongside per-treasure thematic catalysts (`22–28 XP Levels`) and all Master-Tome Research upgrades.
+  - **Fixed item & UI rendering alpha / Z-fighting bugs**: fixed `0xFF` ARGB alpha channel on the
+    header Resonance badge pill (`ChiseledEnchantingTableScreen`), fixed opaque purple default dye
+    color (`-6283024` / `0xA020F0` default `DYED_COLOR`), converted cloth overlay PNGs to 8-bit truecolor
+    RGBA, and offset the cloth overlay element (`±0.02`) so inventory icons, held items, dropped
+    entities, and world blocks all display purple/dyed cloth cleanly with zero vanilla-red bleed.
+- **Dual Economy, Zero UUID Lock-In & Capped High-Level XP Curve**:
+  - Removed per-player UUID material lock-in: every option in `options[]` is simultaneously valid
+    for every player, cycled in JEI/REI and the table list, and pinned live as soon as a matching
+    material is placed into the cost slot.
+  - Separated **Daily Gear Inscribing** (`enchantment_costs.json`: `2–12` XP levels before library
+    discounts; player's choice of `Lapis Lazuli`, `Amethyst Shard`, or `Emerald`, plus thematic
+    alternatives for treasures) from one-time **Master-Tome Upgrades** (`book_upgrades.json`:
+    material-free `combine_route` at `0.6×` XP alongside `research_route` at `1.4×` XP with 3
+    biome-diverse alternatives across all 33 multi-level vanilla enchantments and zero `heavy_core`
+    softlocks).
+  - Capped per-level XP point width in `XpCostConversion` at vanilla Level `30` (`107` XP/level) so
+    high-level players are never penalized thousands of raw XP points for enchanting above Level 30.
+  - Increased worldgen structure Chiseled Bookshelf enchanted-book rate from `0.03` to `0.12`
+    (`max_level_weight_ratio: 0.15`) in `bookshelf_book_pool.json`.
+
+### Fixed — obvious port & runtime bugs, unported upstream features, UI/sync/viewer polish
+
+- **Restored complete Chiseled Enchanting Table dyeing & tinting pipeline**: right-clicking with a
+  `DyeItem` averages RGB color onto `ChiseledEnchantingTableBlockEntity`, syncs `ClientboundBlockEntityDataPacket`
+  + `getUpdateTag` + `getRenderData` to clients, tints the block (`BlockColorRegistry`) and item
+  model (`items/chiseled_enchanting_table.json`), preserves `minecraft:dyed_color` on break via
+  `loot_table/blocks/chiseled_enchanting_table.json`, and awards `color_table`.
+- **Restored Enchanted Book stack size of 64 & Anvil prior-work scaling removal**: registered
+  `DefaultItemComponentEvents.MODIFY` for `Items.ENCHANTED_BOOK` (`MAX_STACK_SIZE = 64`), protected
+  stacked enchanted books in `AnvilMenu#onTake` (`RemoveEnchantMerge`), and ported/enabled
+  `RemoveXpCostScaling` (`AnvilMenu#calculateIncreasedRepairCost`).
+- **Completed and localized all 10 advancements across all 11 languages**: added missing
+  `upgrade_enchanted_book.json` and `max_level_book.json`, wired missing `enchant_to_book`,
+  `enchant_from_book`, `transfer_enchanted_book`, and `all_enchant_book` triggers in
+  `EnchantmentApplication`, preserved mutually exclusive enchantments on books, fixed false-positive
+  `unlock_new_enchant` when no nearby chiseled bookshelf holds enchanted books, and added native
+  translations across all 11 `lang/*.json` files.
+- **Fixed XP, book-upgrade, loot, container, UI, and JEI/REI bugs**: atomic validation before XP
+  deduction in `BookUpgradeApplication#applyResearch`; preserved fractional `experienceProgress` in
+  `XpCostConversion`; restored Mineshaft `DepthBasedEfficiencyFunction` (Efficiency II–V by Y-depth)
+  and `BookshelfBookFiller` `enchant_sets` support; restored table-to-bookshelf `ParticleTypes.ENCHANT`
+  particles; fixed Shift-click slot index bug and `stillValid` range/block check in
+  `ChiseledEnchantingTableScreenHandler`; added per-item affordability coloring, accurate multi-conflict
+  detection, and hover item tooltips on cost icons in the table screen; fixed multi-material cost
+  slots, visible XP labels, S2C cache invalidation, and zero-deprecation JEI/REI integration; and
+  removed root scratch files / `*.orig` / `*.rej` / committed bytecode artifacts.
 
 ### Fixed — worldgen deadlock / unloadable chunks ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3))
 

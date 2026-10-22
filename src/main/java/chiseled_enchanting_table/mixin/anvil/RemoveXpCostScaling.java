@@ -1,19 +1,21 @@
 package chiseled_enchanting_table.mixin.anvil;
 
-import net.minecraft.screen.AnvilScreenHandler;
+import net.minecraft.world.inventory.AnvilMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-// This mixins disable the mechanic of upgrading an echant level using 2 similar enchant of samelevel
+/**
+ * Prevents the anvil's prior-work penalty (`DataComponents.REPAIR_COST`) from scaling
+ * exponentially (`2 * cost + 1`), keeping repeated anvil repairs and book applications
+ * flat instead of hitting "Too Expensive!".
+ */
+@Mixin(AnvilMenu.class)
+public abstract class RemoveXpCostScaling {
 
-@Mixin(AnvilScreenHandler.class)
-public class RemoveXpCostScaling {
-    
-    @Redirect(method = "updateResult()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/AnvilScreenHandler;getNextCost(I)I"))
-    private static int disableMergeEnchant(
-        int cost
-    ) {
-        return cost;
+	@Inject(method = "calculateIncreasedRepairCost", at = @At("HEAD"), cancellable = true)
+	private static void cet$keepFlatRepairCost(int oldRepairCost, CallbackInfoReturnable<Integer> cir) {
+		cir.setReturnValue(oldRepairCost);
 	}
-}   
+}

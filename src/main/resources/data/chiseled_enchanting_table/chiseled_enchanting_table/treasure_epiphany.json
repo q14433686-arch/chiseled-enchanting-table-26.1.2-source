@@ -1,0 +1,71 @@
+{
+  "_comment": "Grand Library Arcane Epiphany: when >= 32 Wooden Bookshelves surround the Chiseled Enchanting Table, placing an enchantable item or blank Book has a 35%..65% chance to manifest ONE matching Treasure Enchantment at Level I without owning its Master Tome yet. Refreshes naturally at Dawn, after any enchant, or on clicking the UI Refresh button.",
+  "min_regular_bookshelves": 32,
+  "base_chance": 0.35,
+  "chance_per_extra_bookshelf": 0.015,
+  "max_chance": 0.65,
+  "reroll_xp_levels": 2,
+  "reroll_cost_options": [
+    { "item": "minecraft:lapis_lazuli", "count": 4 },
+    { "item": "minecraft:amethyst_shard", "count": 4 }
+  ],
+  "default_xp_levels": 25,
+  "default_material_cost": {
+    "options": [
+      { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
+      { "item": "minecraft:diamond", "count": 8 }
+    ]
+  },
+  "treasure_costs": {
+    "minecraft:mending": {
+      "xp_levels": 28,
+      "material_cost": {
+        "options": [
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
+          { "item": "minecraft:diamond", "count": 8 },
+          { "item": "minecraft:experience_bottle", "count": 32 }
+        ]
+      }
+    },
+    "minecraft:wind_burst": {
+      "xp_levels": 26,
+      "material_cost": {
+        "options": [
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
+          { "item": "minecraft:breeze_rod", "count": 6 },
+          { "item": "minecraft:wind_charge", "count": 32 }
+        ]
+      }
+    },
+    "minecraft:swift_sneak": {
+      "xp_levels": 24,
+      "material_cost": {
+        "options": [
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
+          { "item": "minecraft:echo_shard", "count": 4 },
+          { "item": "minecraft:sculk_catalyst", "count": 2 }
+        ]
+      }
+    },
+    "minecraft:soul_speed": {
+      "xp_levels": 22,
+      "material_cost": {
+        "options": [
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
+          { "item": "minecraft:ghast_tear", "count": 6 },
+          { "item": "minecraft:crying_obsidian", "count": 12 }
+        ]
+      }
+    },
+    "minecraft:frost_walker": {
+      "xp_levels": 22,
+      "material_cost": {
+        "options": [
+          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
+          { "item": "minecraft:blue_ice", "count": 12 },
+          { "item": "minecraft:packed_ice", "count": 48 }
+        ]
+      }
+    }
+  }
+}

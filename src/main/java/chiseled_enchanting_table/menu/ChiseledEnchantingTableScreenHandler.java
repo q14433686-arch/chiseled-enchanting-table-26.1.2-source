@@ -9,6 +9,7 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchan
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay;
+import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.ScreenHandlerRegistry;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -60,14 +62,33 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 }
             });
         });
+        PayloadTypeRegistry.serverboundPlay().register(
+            ChiseledEnchantingMenuPayloads.RerollEpiphanyPayload.TYPE,
+            ChiseledEnchantingMenuPayloads.RerollEpiphanyPayload.CODEC
+        );
+        ServerPlayNetworking.registerGlobalReceiver(ChiseledEnchantingMenuPayloads.RerollEpiphanyPayload.TYPE, (payload, ctx) -> {
+            var player = ctx.player();
+            var server = ctx.server();
+            server.execute(() -> {
+                if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler chiseledEnchantingTableScreenHandler) {
+                    chiseledEnchantingTableScreenHandler.rerollEpiphany();
+                }
+            });
+        });
     }
 
     public Runnable onContentChangedCallback = () -> {};
     public Player player;
     public final Set<EnchantmentWithLevel> unlocked_enchantements;
-    /** Server-synced transformation display table, keyed by transformation id. Used by client UI. */
+    public final int xpDiscountPercent;
+    public final int regularBookshelves;
+    public final int chiseledBookCount;
+    private int epiphanySeed;
+    private int syncedWorldDay;
+    /** Server-synced transformation table, keyed by transformation id. Used by client UI. */
     public final java.util.Map<Identifier, TransformationDisplay> transformationDisplays;
     private final Level world;
+    private final ContainerLevelAccess access;
 
     private final Container inventory = new SimpleContainer(2) {
         @Override
@@ -81,8 +102,23 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public static final int COST_SLOT = 1;
 
     public ChiseledEnchantingTableScreenHandler(int syncId, Inventory playerInventory, AvailableEnchantmentPayload payload) {
+        this(syncId, playerInventory, payload, ContainerLevelAccess.NULL);
+    }
+
+    public ChiseledEnchantingTableScreenHandler(
+        int syncId,
+        Inventory playerInventory,
+        AvailableEnchantmentPayload payload,
+        ContainerLevelAccess access
+    ) {
         super(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, syncId);
+        this.access = access;
         this.unlocked_enchantements = payload.unlocked_enchantements();
+        this.xpDiscountPercent = Math.max(0, Math.min(35, payload.xp_discount_percent()));
+        this.regularBookshelves = Math.max(0, payload.regular_bookshelves());
+        this.chiseledBookCount = Math.max(0, payload.chiseled_book_count());
+        this.epiphanySeed = payload.epiphany_seed();
+        this.syncedWorldDay = (int) (playerInventory.player.level().getGameTime() / 24000L);
         java.util.Map<Identifier, TransformationDisplay> displays = new java.util.HashMap<>();
         for (TransformationDisplay display : payload.transformations()) {
             displays.put(display.id(), display);
@@ -151,6 +187,71 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                     inventorySlotStartY + row * slotFullSize
                 ));
             }
+        }
+
+        // Sync 32-bit epiphanySeed + 16-bit worldDay from server -> client automatically.
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return currentServerEpiphanySeed() & 0xFFFF;
+            }
+
+            @Override
+            public void set(int value) {
+                epiphanySeed = (epiphanySeed & 0xFFFF0000) | (value & 0xFFFF);
+            }
+        });
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return (currentServerEpiphanySeed() >>> 16) & 0xFFFF;
+            }
+
+            @Override
+            public void set(int value) {
+                epiphanySeed = (epiphanySeed & 0x0000FFFF) | ((value & 0xFFFF) << 16);
+            }
+        });
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return (int) ((world.getGameTime() / 24000L) & 0xFFFFL);
+            }
+
+            @Override
+            public void set(int value) {
+                syncedWorldDay = value & 0xFFFF;
+            }
+        });
+    }
+
+    private int currentServerEpiphanySeed() {
+        int[] holder = new int[] { this.epiphanySeed };
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                holder[0] = be.getOrInitEpiphanySeed();
+            }
+        });
+        this.epiphanySeed = holder[0];
+        return holder[0];
+    }
+
+    public void advanceTableEpiphanySeed() {
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                this.epiphanySeed = be.advanceEpiphanySeed();
+            } else {
+                this.epiphanySeed = this.epiphanySeed * 1664525 + 1013904223;
+            }
+        });
+        this.broadcastChanges();
+    }
+
+    @Override
+    public void setData(int id, int data) {
+        super.setData(id, data);
+        if (this.onContentChangedCallback != null) {
+            this.onContentChangedCallback.run();
         }
     }
 
@@ -236,25 +337,33 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     // ---- Cost resolution ----
 
+    public List<List<ItemStack>> getEnchantmentItemCostOptions(EnchantmentWithLevel e, OptionType type) {
+        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
+            return List.of();
+        }
+        var row = syncedRow(e, type);
+        if (row != null) {
+            return row.costOptions();
+        }
+        if (type == OptionType.TREASURE_EPIPHANY) {
+            return ChiseledEnchantingTableData.treasureEpiphanyCostOptions(e.enchantment_id());
+        }
+        if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
+            return ChiseledEnchantingTableData.bookResearchCostOptions(e, getEnchantmentMaxLevel(e));
+        }
+        if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
+            return ChiseledEnchantingTableData.transformationCostOptions(e.enchantment_id());
+        }
+        return ChiseledEnchantingTableData.itemCostOptions(e, getEnchantmentMaxLevel(e));
+    }
+
     public ItemStack getEnchantmentItemCost(EnchantmentWithLevel e) {
         return getEnchantmentItemCost(e, OptionType.ENCHANTMENT);
     }
 
     public ItemStack getEnchantmentItemCost(EnchantmentWithLevel e, OptionType type) {
-        List<ItemStack> synced = syncedCosts(e, type);
-        if (synced != null) {
-            return synced.isEmpty() ? ItemStack.EMPTY : synced.getFirst();
-        }
-        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
-            return ItemStack.EMPTY;
-        }
-        if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
-            return ChiseledEnchantingTableData.bookResearchPrimaryCost(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
-        }
-        if (ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            return ChiseledEnchantingTableData.transformationPrimaryCost(e.enchantment_id(), this.player.getStringUUID());
-        }
-        return ChiseledEnchantingTableData.itemCost(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
+        List<ItemStack> first = getEnchantmentItemCosts(e, type);
+        return first.isEmpty() ? ItemStack.EMPTY : first.getFirst();
     }
 
     public List<ItemStack> getEnchantmentItemCosts(EnchantmentWithLevel e) {
@@ -262,23 +371,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public List<ItemStack> getEnchantmentItemCosts(EnchantmentWithLevel e, OptionType type) {
-        List<ItemStack> synced = syncedCosts(e, type);
-        if (synced != null) {
-            return synced;
-        }
-        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
-            return java.util.List.of();
-        }
-        if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
-            return ChiseledEnchantingTableData.bookResearchCosts(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
-        }
-        if (ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            java.util.ArrayList<ItemStack> costs = new java.util.ArrayList<>();
-            costs.add(ChiseledEnchantingTableData.transformationPrimaryCost(e.enchantment_id(), this.player.getStringUUID()));
-            costs.addAll(ChiseledEnchantingTableData.transformationAdditionalCosts(e.enchantment_id(), this.player.getStringUUID()));
-            return java.util.List.copyOf(costs);
-        }
-        return ChiseledEnchantingTableData.itemCosts(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
+        List<List<ItemStack>> options = getEnchantmentItemCostOptions(e, type);
+        return options.isEmpty() ? List.of() : options.getFirst();
     }
 
     public List<ItemStack> getAdditionalEnchantmentItemCosts(EnchantmentWithLevel e) {
@@ -286,30 +380,21 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public List<ItemStack> getAdditionalEnchantmentItemCosts(EnchantmentWithLevel e, OptionType type) {
-        List<ItemStack> synced = syncedCosts(e, type);
-        if (synced != null) {
-            return synced.size() <= 1 ? java.util.List.of() : java.util.List.copyOf(synced.subList(1, synced.size()));
-        }
-        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
-            return java.util.List.of();
-        }
-        if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
-            return ChiseledEnchantingTableData.bookResearchAdditionalCosts(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
-        }
-        if (ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            return ChiseledEnchantingTableData.transformationAdditionalCosts(e.enchantment_id(), this.player.getStringUUID());
-        }
-        return ChiseledEnchantingTableData.additionalItemCosts(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
+        List<ItemStack> first = getEnchantmentItemCosts(e, type);
+        return first.size() <= 1 ? List.of() : List.copyOf(first.subList(1, first.size()));
     }
 
     public int getEnchantmentXpLevelCost(EnchantmentWithLevel e) {
         return getEnchantmentXpLevelCost(e, OptionType.ENCHANTMENT);
     }
 
-    public int getEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
+    public int getBaseEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
         var serverRow = syncedRow(e, type);
         if (serverRow != null) {
             return serverRow.xpLevelCost();
+        }
+        if (type == OptionType.TREASURE_EPIPHANY) {
+            return ChiseledEnchantingTableData.treasureEpiphanyXpCost(e.enchantment_id());
         }
         if (type == OptionType.BOOK_COMBINE_UPGRADE) {
             return ChiseledEnchantingTableData.bookCombineXpCost(e, getEnchantmentMaxLevel(e));
@@ -317,31 +402,186 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
             return ChiseledEnchantingTableData.bookResearchXpCost(e, getEnchantmentMaxLevel(e));
         }
-        if (ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
+        if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
             return ChiseledEnchantingTableData.transformationXpCost(e.enchantment_id());
         }
         return ChiseledEnchantingTableData.xpCost(e, getEnchantmentMaxLevel(e));
     }
 
+    public int getEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
+        int base = getBaseEnchantmentXpLevelCost(e, type);
+        if (type == OptionType.TREASURE_EPIPHANY || base <= 0 || this.xpDiscountPercent <= 0) {
+            return base;
+        }
+        return Math.max(1, Math.round(base * (100 - this.xpDiscountPercent) / 100.0f));
+    }
+
+    private static final net.minecraft.tags.TagKey<Enchantment> TREASURE_TAG =
+        net.minecraft.tags.TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("treasure"));
+    private static final net.minecraft.tags.TagKey<Enchantment> CURSE_TAG =
+        net.minecraft.tags.TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+
+    public int epiphanyMinBookshelves() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyMinBookshelves()
+            : ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves();
+    }
+
+    public double epiphanyChance() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyChance(this.regularBookshelves)
+            : ChiseledEnchantingTableData.treasureEpiphanyChance(this.regularBookshelves);
+    }
+
+    public int epiphanyRerollXpLevels() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyRerollXpLevels()
+            : ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels();
+    }
+
+    public List<ItemStack> epiphanyRerollCosts() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyRerollCosts()
+            : ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions();
+    }
+
     /**
-     * Server-resolved cost row for this player, when the client received one.
-     *
-     * <p>Only meaningful on the physical client: the server always resolves costs from its own data
-     * (and for the player who owns the menu), so reading a client-synced row there could hand one
-     * player another player's salted option on a LAN host. Hence the {@code isClientSide} guard.</p>
+     * Deterministically resolves the active Grand Library Treasure Epiphany (at most ONE matching
+     * positive treasure enchantment at Level 1) for {@code targetStack}, identically on server & client.
      */
+    @org.jetbrains.annotations.Nullable
+    public EnchantmentWithLevel computeActiveTreasureEpiphany(ItemStack targetStack) {
+        int minShelves = epiphanyMinBookshelves();
+        if (this.regularBookshelves < minShelves || targetStack.isEmpty() || targetStack.is(Items.ENCHANTED_BOOK)) {
+            return null;
+        }
+        boolean isBlankBook = targetStack.is(Items.BOOK);
+        var registry = this.world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        java.util.List<Identifier> eligible = new java.util.ArrayList<>();
+        for (Holder.Reference<Enchantment> holder : registry.listElements().toList()) {
+            if (!holder.is(TREASURE_TAG) || holder.is(CURSE_TAG)) continue;
+            Identifier id = holder.key().identifier();
+            if (this.unlocked_enchantements.contains(new EnchantmentWithLevel(id, 1))) continue;
+            if (isBlankBook || holder.value().canEnchant(targetStack)) {
+                eligible.add(id);
+            }
+        }
+        if (eligible.isEmpty()) {
+            return null;
+        }
+        eligible.sort(java.util.Comparator.comparing(Identifier::toString));
+
+        int seed = this.world.isClientSide() ? this.epiphanySeed : currentServerEpiphanySeed();
+        int day = this.world.isClientSide() ? this.syncedWorldDay : (int) ((this.world.getGameTime() / 24000L) & 0xFFFFL);
+        Identifier itemId = BuiltInRegistries.ITEM.getKey(targetStack.getItem());
+        long h = 0x9E3779B97F4A7C15L;
+        h = splitMix64(h ^ Integer.toUnsignedLong(seed));
+        h = splitMix64(h ^ Integer.toUnsignedLong(day));
+        h = splitMix64(h ^ this.player.getUUID().getMostSignificantBits());
+        h = splitMix64(h ^ this.player.getUUID().getLeastSignificantBits());
+        h = splitMix64(h ^ itemId.toString().hashCode());
+
+        double roll = ((h >>> 11) * (1.0 / (1L << 53)));
+        if (roll >= epiphanyChance()) {
+            return null;
+        }
+        long pickHash = splitMix64(h ^ 0xBF58476D1CE4E5B9L);
+        int index = (int) (Long.remainderUnsigned(pickHash, eligible.size()));
+        return new EnchantmentWithLevel(eligible.get(index), 1);
+    }
+
+    public boolean matchesActiveTreasureEpiphany(ApplyEnchantmentPayload payload) {
+        if (payload.option_type() != OptionType.TREASURE_EPIPHANY || payload.enchantment_level() != 1) {
+            return false;
+        }
+        EnchantmentWithLevel active = computeActiveTreasureEpiphany(get_enchantable_item());
+        return active != null && active.enchantment_id().equals(payload.enchantment_id()) && active.enchantment_level() == payload.enchantment_level();
+    }
+
+    public boolean canAffordRerollEpiphany() {
+        if (this.regularBookshelves < epiphanyMinBookshelves()) return false;
+        if (this.player.getAbilities().instabuild) return true;
+        if (this.player.experienceLevel < epiphanyRerollXpLevels()) return false;
+        return findAffordableRerollStack() != null;
+    }
+
+    @org.jetbrains.annotations.Nullable
+    private ItemStack findAffordableRerollStack() {
+        ItemStack costSlot = get_cost_item();
+        for (ItemStack opt : epiphanyRerollCosts()) {
+            if (opt.isEmpty()) continue;
+            int total = 0;
+            if (ItemStack.isSameItemSameComponents(costSlot, opt)) {
+                total += costSlot.getCount();
+            }
+            for (int slot = 0; slot < this.player.getInventory().getContainerSize(); slot++) {
+                ItemStack inv = this.player.getInventory().getItem(slot);
+                if (ItemStack.isSameItemSameComponents(inv, opt)) {
+                    total += inv.getCount();
+                }
+            }
+            if (total >= opt.getCount()) {
+                return opt;
+            }
+        }
+        return null;
+    }
+
+    public boolean rerollEpiphany() {
+        if (!canAffordRerollEpiphany()) {
+            return false;
+        }
+        if (!this.player.getAbilities().instabuild) {
+            int xpLevels = epiphanyRerollXpLevels();
+            if (xpLevels > 0) {
+                this.player.giveExperiencePoints(-XpCostConversion.pointsForLevelCost(this.player, xpLevels));
+            }
+            ItemStack req = findAffordableRerollStack();
+            if (req != null) {
+                int remaining = req.getCount();
+                ItemStack costSlot = get_cost_item();
+                if (ItemStack.isSameItemSameComponents(costSlot, req)) {
+                    int take = Math.min(remaining, costSlot.getCount());
+                    costSlot.shrink(take);
+                    remaining -= take;
+                }
+                for (int slot = 0; slot < this.player.getInventory().getContainerSize() && remaining > 0; slot++) {
+                    ItemStack inv = this.player.getInventory().getItem(slot);
+                    if (ItemStack.isSameItemSameComponents(inv, req)) {
+                        int take = Math.min(remaining, inv.getCount());
+                        inv.shrink(take);
+                        remaining -= take;
+                    }
+                }
+                this.inventory.setChanged();
+                this.player.getInventory().setChanged();
+            }
+        }
+        advanceTableEpiphanySeed();
+        this.world.playSound(
+            null,
+            this.player.blockPosition(),
+            net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,
+            net.minecraft.sounds.SoundSource.BLOCKS,
+            1.2F,
+            1.15F
+        );
+        return true;
+    }
+
+    private static long splitMix64(long z) {
+        z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
+        z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
+        return z ^ (z >>> 31);
+    }
+
     private chiseled_enchanting_table.compat.SyncedEnchantmentCosts.Cost syncedRow(EnchantmentWithLevel e, OptionType type) {
-        if (!this.world.isClientSide() || type != OptionType.ENCHANTMENT) {
+        if (!this.world.isClientSide()) {
             return null;
         }
         return chiseled_enchanting_table.compat.SyncedEnchantmentCosts
-            .find(e.enchantment_id(), e.enchantment_level())
+            .find(type, e.enchantment_id(), e.enchantment_level())
             .orElse(null);
-    }
-
-    private List<ItemStack> syncedCosts(EnchantmentWithLevel e, OptionType type) {
-        var row = syncedRow(e, type);
-        return row == null ? null : row.itemCosts();
     }
 
     private int getEnchantmentMaxLevel(EnchantmentWithLevel e) {
@@ -409,32 +649,53 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
     }
 
+    @org.jetbrains.annotations.Nullable
+    public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
+        if (this.player.getAbilities().instabuild) {
+            List<ItemStack> first = getEnchantmentItemCosts(ewl, type);
+            return first == null ? List.of() : first;
+        }
+        List<List<ItemStack>> options = getEnchantmentItemCostOptions(ewl, type);
+        ItemStack itemCostStack = this.get_cost_item();
+        for (List<ItemStack> bundle : options) {
+            if (bundle.isEmpty()) continue;
+            ItemStack primaryCost = bundle.getFirst();
+            if (!primaryCost.isEmpty()
+                && ItemStack.isSameItemSameComponents(itemCostStack, primaryCost)
+                && itemCostStack.getCount() >= primaryCost.getCount()
+                && hasAdditionalCosts(bundle)) {
+                return bundle;
+            }
+        }
+        return null;
+    }
+
+    public void deductMatchedBundle(List<ItemStack> matchedBundle) {
+        if (this.player.getAbilities().instabuild || matchedBundle == null || matchedBundle.isEmpty()) {
+            return;
+        }
+        this.get_cost_item().shrink(matchedBundle.getFirst().getCount());
+        consumeAdditionalCosts(matchedBundle);
+    }
+
     public boolean applyEnchantementCondition(ApplyEnchantmentPayload payload) {
         EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), payload.enchantment_level());
-        int xp_level_cost = getEnchantmentXpLevelCost(ewl);
+        OptionType effectiveType = payload.option_type();
+        if (effectiveType == OptionType.ENCHANTMENT && ChiseledEnchantingTableData.isTransformation(payload.enchantment_id())) {
+            effectiveType = OptionType.TRANSFORMATION;
+        }
+        int xp_level_cost = getEnchantmentXpLevelCost(ewl, effectiveType);
         if (this.player.experienceLevel < xp_level_cost && !player.getAbilities().instabuild) return false;
 
-        List<ItemStack> costs = getEnchantmentItemCosts(ewl);
-        ItemStack item_cost_stack = this.get_cost_item();
-        if (!player.getAbilities().instabuild) {
-            if (costs.isEmpty()) return false;
-            ItemStack primaryCost = costs.getFirst();
-            if (primaryCost.isEmpty() || !ItemStack.isSameItemSameComponents(item_cost_stack, primaryCost) || item_cost_stack.getCount() < primaryCost.getCount()) return false;
-            if (!hasAdditionalCosts(costs)) return false;
+        List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(ewl, effectiveType);
+        if (!player.getAbilities().instabuild && matchedBundle == null) {
+            return false;
         }
 
         if (!player.getAbilities().instabuild) {
-            // Deduct actual XP points corresponding to `xp_level_cost` player levels, matching
-            // vanilla anvil / enchanting-table behaviour, rather than a raw
-            // `giveExperienceLevels(-xp_level_cost)` which drops the player exactly N levels
-            // regardless of how much XP those levels were worth. That old behaviour under-
-            // charged low-level players and over-charged high-level ones by conflating
-            // "N levels" with "N units of some flat currency"; see the user report on this
-            // in CHANGELOG.md.
             int xpPointsToDeduct = XpCostConversion.pointsForLevelCost(this.player, xp_level_cost);
             this.player.giveExperiencePoints(-xpPointsToDeduct);
-            item_cost_stack.shrink(costs.getFirst().getCount());
-            consumeAdditionalCosts(costs);
+            deductMatchedBundle(matchedBundle);
         }
         return true;
     }
@@ -512,8 +773,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                     if (ItemStack.isSameItemSameComponents(clickedStack, costSlotStack)) {
                         this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT+1, false);
                     } else {
-                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, costSlotStack, java.util.Optional.of(slotIndex));
-                        costSlotStack.setCount(0);
+                        int containerSlot = this.getSlot(slotIndex).getContainerSlot();
+                        java.util.Optional<Integer> preferredSlot = (containerSlot >= 0 && containerSlot < 36)
+                            ? java.util.Optional.of(containerSlot)
+                            : java.util.Optional.empty();
+                        ItemStack returning = costSlotStack.copy();
+                        this.getSlot(COST_SLOT).set(ItemStack.EMPTY);
+                        this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT + 1, false);
+                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, returning, preferredSlot);
                     }
                 }
             }
@@ -530,6 +797,6 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     @Override
     public boolean stillValid(Player player) {
-        return true;
+        return stillValid(this.access, player, BlockRegistry.CHISELED_ENCHANTING_TABLE);
     }
 }

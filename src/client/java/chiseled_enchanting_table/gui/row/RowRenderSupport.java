@@ -7,12 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Shared drawing primitives for chiseled-enchanting list rows. Separating these out lets the
- * enchantment row and the transformation row each own their own content layout while reusing the
- * common chrome (background, 3D border, cost icons, scaled text, XP label).
- *
- * <p>Architecture note (P15): this is the {@code client/gui} decoupling of the previously
- * monolithic row renderer into a shared support class plus per-kind renderers.</p>
+ * Shared drawing primitives for chiseled-enchanting list rows.
  */
 public final class RowRenderSupport {
     public static final int LIGHT_GREY = 0xFF919191;
@@ -24,6 +19,11 @@ public final class RowRenderSupport {
     public static final int CYAN = 0xFF00FFFF;
     public static final int LIGHT_RED = 0xFFFFCCCC;
     public static final int LIGHT_GREEN = 0xFFCCFFCC;
+
+    public static final int PRIMARY_COST_OFFSET_X = 4;
+    public static final int COST_OFFSET_Y = 4;
+    public static final int ADDITIONAL_COST_RIGHT_MARGIN = 56;
+    public static final int ADDITIONAL_COST_STRIDE = 18;
 
     private RowRenderSupport() {}
 
@@ -43,11 +43,20 @@ public final class RowRenderSupport {
         CustomDrawContext.drawItemInSlotWithColor(ctx, client.font, cost, x, y, affordable ? WHITE : RED);
     }
 
-    /** Draw up to two additional cost icons starting at the right edge. */
-    public static void drawAdditionalCosts(GuiGraphicsExtractor ctx, Minecraft client, List<ItemStack> additionalCosts, int startX, int y, boolean affordable) {
-        for (int i = 0; i < Math.min(2, additionalCosts.size()); i++) {
+    /** Draw up to two additional cost icons starting near the right edge, with per-stack affordability coloring. */
+    public static void drawAdditionalCosts(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        List<ItemStack> additionalCosts,
+        List<Boolean> additionalAffordability,
+        int startX,
+        int y
+    ) {
+        int shown = Math.min(2, additionalCosts.size());
+        for (int i = 0; i < shown; i++) {
             ItemStack additionalCost = additionalCosts.get(i);
-            int x = startX + i * 18;
+            boolean affordable = i < additionalAffordability.size() && Boolean.TRUE.equals(additionalAffordability.get(i));
+            int x = startX + i * ADDITIONAL_COST_STRIDE;
             ctx.item(additionalCost, x, y);
             CustomDrawContext.drawItemInSlotWithColor(ctx, client.font, additionalCost, x, y, affordable ? WHITE : RED);
         }

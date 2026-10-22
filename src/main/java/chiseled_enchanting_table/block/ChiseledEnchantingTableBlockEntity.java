@@ -2,16 +2,22 @@ package chiseled_enchanting_table.block;
 
 import chiseled_enchanting_table.registry.EntityRegistry;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.storage.ValueInput;
@@ -20,11 +26,12 @@ import org.jetbrains.annotations.Nullable;
 
 public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements Nameable {
     private static final RandomSource RANDOM = RandomSource.create();
+    public static final int DEFAULT_COLOR = 0xFFA020F0;
 
     @Nullable
     private Component customName;
-    public int color = -1;
-    public final int DEFAULT_COLOR = 0xA020F0;
+    public volatile int color = -1;
+    public volatile int epiphanySeed = 0;
 
     // Vanilla enchanting-table-style book animation state, copied as data fields so the 26.1 renderer can use it.
     public int time;
@@ -43,22 +50,58 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     }
 
     @Override
+    public @Nullable Object getRenderData() {
+        return colorOrDefault();
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return this.saveCustomOnly(registries);
+    }
+
+    @Override
+    public @Nullable Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
-        if (color != -1) {
-            output.putInt("color", color);
-        }
+        output.putInt("color", color);
+        output.putInt("epiphanySeed", epiphanySeed);
         output.storeNullable("CustomName", net.minecraft.network.chat.ComponentSerialization.CODEC, customName);
     }
 
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        color = input.getIntOr("color", -1);
-        customName = parseCustomNameSafe(input, "CustomName");
-        if (level != null) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 0);
+        int newColor = input.getIntOr("color", -1);
+        this.epiphanySeed = input.getIntOr("epiphanySeed", 0);
+        boolean colorChanged = this.color != newColor;
+        this.color = newColor;
+        this.customName = parseCustomNameSafe(input, "CustomName");
+        if (colorChanged && level != null && level.isClientSide()) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL | Block.UPDATE_IMMEDIATE);
         }
+    }
+
+    public int getOrInitEpiphanySeed() {
+        if (this.epiphanySeed == 0) {
+            int init = (int) Mth.getSeed(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
+            if (init == 0) init = 1;
+            this.epiphanySeed = init;
+            this.setChanged();
+        }
+        return this.epiphanySeed;
+    }
+
+    public int advanceEpiphanySeed() {
+        int cur = getOrInitEpiphanySeed();
+        int next = cur * 1664525 + 1013904223;
+        if (next == 0) next = 1;
+        this.epiphanySeed = next;
+        this.setChanged();
+        return next;
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, ChiseledEnchantingTableBlockEntity blockEntity) {
@@ -122,9 +165,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     protected void applyImplicitComponents(DataComponentGetter components) {
         super.applyImplicitComponents(components);
         DyedItemColor dyedColor = components.get(DataComponents.DYED_COLOR);
-        if (dyedColor != null) {
-            this.color = dyedColor.rgb();
-        }
+        this.color = dyedColor != null ? (dyedColor.rgb() & 0x00FFFFFF) : -1;
         this.customName = components.get(DataComponents.CUSTOM_NAME);
     }
 
@@ -135,13 +176,14 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             componentMapBuilder.set(DataComponents.CUSTOM_NAME, this.customName);
         }
         if (this.color != -1) {
-            componentMapBuilder.set(DataComponents.DYED_COLOR, new DyedItemColor(this.color));
+            componentMapBuilder.set(DataComponents.DYED_COLOR, new DyedItemColor(this.color & 0x00FFFFFF));
         }
     }
 
     @Override
     public void removeComponentsFromTag(ValueOutput output) {
         output.discard("CustomName");
+        output.discard("color");
     }
 
     public DataComponentMap getAllComponents() {
@@ -149,6 +191,6 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     }
 
     public int colorOrDefault() {
-        return color == -1 ? DEFAULT_COLOR : color;
+        return color == -1 ? DEFAULT_COLOR : (0xFF000000 | (color & 0x00FFFFFF));
     }
 }

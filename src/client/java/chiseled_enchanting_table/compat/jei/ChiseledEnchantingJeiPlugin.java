@@ -2,6 +2,7 @@ package chiseled_enchanting_table.compat.jei;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.EnchantQueryIndex;
+import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import java.util.ArrayList;
 import java.util.List;
 import mezz.jei.api.IModPlugin;
@@ -44,6 +45,15 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
     private List<EnchantingRecipe> cachedRecipes;
     private HolderLookup.Provider cachedRegistries;
     private List<EnchantQueryIndex.Entry> cachedIndex;
+
+    public ChiseledEnchantingJeiPlugin() {
+        SyncedEnchantmentCosts.addListener(this::invalidateCache);
+    }
+
+    private void invalidateCache() {
+        this.cachedIndex = null;
+        this.cachedRecipes = null;
+    }
 
     @Override
     public Identifier getPluginUid() {
@@ -123,8 +133,8 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             );
             return null;
         }
-        // Rebuild only when the registry identity changes (world switch / datapack reload).
-        if (cachedRegistries != provider) {
+        // Rebuild when registry identity changes OR when S2C cost sync invalidated the cache.
+        if (cachedRegistries != provider || cachedIndex == null) {
             cachedRegistries = provider;
             cachedIndex = EnchantQueryIndex.build(provider);
             cachedRecipes = null;
