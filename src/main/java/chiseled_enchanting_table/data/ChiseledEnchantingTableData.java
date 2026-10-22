@@ -655,7 +655,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         public List<List<ItemStack>> alternativeBundles() {
             List<List<ItemStack>> bundles = new ArrayList<>(alternativePrimaryOptions.size());
             for (ItemCostOption opt : alternativePrimaryOptions) {
-                bundles.add(opt.toBundle(id, level, level));
+                bundles.add(List.of(opt.toSingleStack(id, level, level, "")));
             }
             return List.copyOf(bundles);
         }
