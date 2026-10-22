@@ -22,7 +22,7 @@
    - Anvil same-level book merges blocked, book→item works, stacked books lose only one,
      repeated repair penalty stays flat.
    - Mineshaft Efficiency depth scaling; structure shelf fill/facing (vanilla and DH worldgen).
-4. Pin exact **26.3** JEI/REI versions from verified CI dependency output before release;
-   26.1.2 viewer pins are intentionally not copied.
+4. Viewer dependencies are pinned to CI-verified **26.3** versions (JEI 31.16.0.89 /
+   REI 26.3.824). Upgrade them deliberately and rerun both viewer-enabled and disabled builds.
 
 Migration evidence: docs/reports/SYNC_FROM_26_1_2_REPORT.md.

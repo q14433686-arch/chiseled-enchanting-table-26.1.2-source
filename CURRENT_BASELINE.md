@@ -43,7 +43,7 @@ alternatives, book upgrades, Blank Overwrite and transformations.
 - Payload collections use explicit VarInt count + elements; overflow drops supply Prediction.
 - Loot tables use condition/modifier with type dispatch; recipe_crafted uses recipes lists.
 - Keep Minecraft, Loader, Fabric API, Loom, Gradle and Architectury on their **26.3** versions.
-  Do not reuse 26.1.2 JEI/REI artifact pins on this branch.
+  Verified 26.3 pins: JEI 31.16.0.89, REI 26.3.824. Do not reuse 26.1.2 viewer pins.
 
 ## Validation and release
 
@@ -55,3 +55,15 @@ Runtime smoke tests still require a 26.3 client/server; see NEXT_TASK.md.
 
 Version declarations must agree in gradle.properties, README.md, fabric.mod.json,
 publish workflow and its docs/ci copy. Do not copy historical compile reports from 26.1.2.
+
+## Verified sync build
+
+- `compile-check` run **39824070708**, source commit `7eb9827`: success for both main and client.
+- `build` run **39824070633**, same source: static checks, full Gradle build and the
+  no-JEI/no-REI compile job all succeeded. Artifact is available from that run.
+- JEI **31.16.0.89**, REI **26.3.824** resolved in that compile and are now pinned here;
+  the final pin-only build is independently checked by CI.
+- Offline: 12 release consistency checks, five sync regression tests, nine mixin references,
+  98 translation keys in each of 11 locales, Markdown links and Tier-1 compatibility all pass.
+- Tier-2 registry/tag existence checks need the Minecraft jar (unavailable in sandbox);
+  gameplay/runtime smoke tests have **not** been performed.

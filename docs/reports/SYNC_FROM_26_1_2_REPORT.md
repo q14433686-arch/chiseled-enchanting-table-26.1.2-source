@@ -50,3 +50,15 @@ the loot and advancement guards against legacy schemas.
 Java compile/build must be checked by GitHub Actions on this branch: sandbox network policy
 blocks Fabric/Mojang Maven. Previous 26.3 and source-branch green builds are not proof that
 this sync compiles. Runtime client/server validation remains a separate task (NEXT_TASK.md).
+
+### Observed CI results
+
+On source commit `7eb9827`, [compile-check 39824070708](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/39824070708)
+succeeded for main and client. [Build 39824070633](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/39824070633)
+passed all three jobs: offline static checks, full Gradle build and compilation without JEI/REI.
+The compile log records JEI 31.16.0.89 and REI 26.3.824; these exact 26.3 versions are now pinned
+instead of floating selectors. Runtime smoke tests are still outstanding, not implied by a build.
+
+The first intermediate compile (`91d7f1d`) still had the old block codec override; it was
+removed before the successful run and covered by the regression test. Any compile-deps report
+from that intermediate failure is historical, not a failure of the current source.
