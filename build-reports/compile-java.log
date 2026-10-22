@@ -1,27 +1,15 @@
-commit: ce999ad1e30a11264f63a00a2b8dd36382bfe4a0
-branch: arena/3ae35b5e-chiseled-enchanting-table-26-1
+commit: 45603828545eaf6d158e3bda3c648e860d63fca4
+branch: arena/a33d7fe9-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
 loader: 0.19.3
 jei: true / 29.47.0.111
 rei: true / 26.1.819
 ---
-Downloading https://services.gradle.org/distributions/gradle-9.4.1-bin.zip
-.............10%.............20%.............30%.............40%.............50%.............60%..............70%.............80%.............90%.............100%
 WARNING: A restricted method in java.lang.System has been called
 WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/home/runner/.gradle/wrapper/dists/gradle-9.4.1-bin/arn2x92ynaizyzdaamcbpbhtj/gradle-9.4.1/lib/native-platform-0.22-milestone-29.jar)
 WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
 WARNING: Restricted methods will be blocked in a future release unless native access is enabled
-
-
-Welcome to Gradle 9.4.1!
-
-Here are the highlights of this release:
- - Java 26 support
- - Non-class-based JVM tests
- - Enhanced console progress bar
-
-For more details see https://docs.gradle.org/9.4.1/release-notes.html
 
 To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
 Daemon will be stopped at the end of the build 
@@ -37,24 +25,13 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :classes
 
 > Task :compileClientJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/EnchantingRecipeCategory.java:60: warning: [removal] addItemStack(ItemStack) in IIngredientAcceptor has been deprecated and marked for removal
-        builder.addInputSlot(SLOT_ITEM, SLOT_BOOK).addItemStack(recipe.book());
-                                                  ^
-  where THIS is a type-variable:
-    THIS extends IIngredientAcceptor<THIS> declared in interface IIngredientAcceptor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/EnchantingRecipeCategory.java:71: warning: [removal] addItemStack(ItemStack) in IIngredientAcceptor has been deprecated and marked for removal
-        builder.addOutputSlot(SLOT_OUTPUT_X, 11).addItemStack(output);
-                                                ^
-  where THIS is a type-variable:
-    THIS extends IIngredientAcceptor<THIS> declared in interface IIngredientAcceptor
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-2 warnings
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792615752185.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792638742030.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 1m 4s
+BUILD SUCCESSFUL in 14s
 3 actionable tasks: 3 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0

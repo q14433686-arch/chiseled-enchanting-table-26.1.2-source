@@ -7,6 +7,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
@@ -138,10 +139,81 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
+            ItemStack hoveredCost = this.scrollContainer.hoveredCostItem(mouseX, mouseY);
+            if (hoveredCost != null && !hoveredCost.isEmpty()) {
+                java.util.List<Component> lines = new java.util.ArrayList<>(this.getTooltipFromContainerItem(hoveredCost));
+                java.util.List<java.util.List<ItemStack>> options = this.scrollContainer.hoveredCostOptions(mouseX, mouseY);
+                if (options != null && options.size() > 1) {
+                    lines.add(Component.translatable("gui.chiseled_enchanting_table.cost_alternatives.header")
+                        .withStyle(net.minecraft.ChatFormatting.GOLD));
+                    for (java.util.List<ItemStack> bundle : options) {
+                        if (bundle.isEmpty()) continue;
+                        ItemStack primary = bundle.getFirst();
+                        lines.add(Component.literal(" \u2022 " + primary.getCount() + "\u00d7 ")
+                            .append(primary.getHoverName())
+                            .withStyle(net.minecraft.ChatFormatting.GRAY));
+                    }
+                }
+                ctx.setTooltipForNextFrame(
+                    this.font,
+                    lines,
+                    hoveredCost.getTooltipImage(),
+                    mouseX,
+                    mouseY,
+                    hoveredCost.get(DataComponents.TOOLTIP_STYLE)
+                );
+                return;
+            }
+            if (isOverResonanceBadge(mouseX, mouseY)) {
+                int woodenBonus = Math.min(10, this.menu.regularBookshelves);
+                int chiseledBonus = this.menu.chiseledBookCount * 2;
+                java.util.List<Component> resonanceTooltip = java.util.List.of(
+                    Component.translatable("gui.chiseled_enchanting_table.resonance.title", this.menu.xpDiscountPercent)
+                        .withStyle(net.minecraft.ChatFormatting.GOLD),
+                    Component.translatable("gui.chiseled_enchanting_table.resonance.wooden", this.menu.regularBookshelves, woodenBonus)
+                        .withStyle(net.minecraft.ChatFormatting.GRAY),
+                    Component.translatable("gui.chiseled_enchanting_table.resonance.chiseled", this.menu.chiseledBookCount, chiseledBonus)
+                        .withStyle(net.minecraft.ChatFormatting.AQUA),
+                    Component.translatable("gui.chiseled_enchanting_table.resonance.cap")
+                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY)
+                );
+                ctx.setTooltipForNextFrame(
+                    this.font,
+                    resonanceTooltip,
+                    java.util.Optional.empty(),
+                    mouseX,
+                    mouseY,
+                    (Identifier) null
+                );
+            }
+        }
+    }
+
+    private boolean isOverResonanceBadge(double mouseX, double mouseY) {
+        if (this.menu.xpDiscountPercent <= 0 && this.menu.regularBookshelves <= 0 && this.menu.chiseledBookCount <= 0) {
+            return false;
+        }
+        Component badge = resonanceBadgeComponent();
+        int badgeWidth = this.font.width(badge);
+        int badgeX = this.leftPos + this.imageWidth - 8 - badgeWidth;
+        int badgeY = this.topPos + this.titleLabelY;
+        return mouseX >= badgeX - 2 && mouseX <= badgeX + badgeWidth + 2
+            && mouseY >= badgeY - 2 && mouseY <= badgeY + this.font.lineHeight + 2;
+    }
+
+    private Component resonanceBadgeComponent() {
+        return Component.translatable("gui.chiseled_enchanting_table.resonance.badge", this.menu.xpDiscountPercent);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         context.text(this.font, this.title, this.titleLabelX, this.titleLabelY, 4210752);
+        if (this.menu.xpDiscountPercent > 0 || this.menu.regularBookshelves > 0 || this.menu.chiseledBookCount > 0) {
+            Component badge = resonanceBadgeComponent();
+            int badgeX = this.imageWidth - 8 - this.font.width(badge);
+            int color = this.menu.xpDiscountPercent > 0 ? 0x1E6B3A : 0x555555;
+            context.text(this.font, badge, badgeX, this.titleLabelY, color, false);
+        }
     }
 }

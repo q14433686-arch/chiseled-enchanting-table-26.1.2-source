@@ -73,11 +73,57 @@ public final class EnchantQueryIndex {
         int level,
         int maxLevel,
         List<ItemStack> supportedItems,
-        List<ItemStack> itemCosts,
+        List<List<ItemStack>> costOptions,
         int xpLevelCost,
         List<Identifier> conflicts,
         boolean serverCosts
     ) {
+        public List<ItemStack> itemCosts() {
+            return costOptions.isEmpty() ? List.of() : costOptions.getFirst();
+        }
+
+        /** Every accepted primary-slot material alternative for this (enchantment, level) row. */
+        public List<ItemStack> primaryCostAlternatives() {
+            List<ItemStack> primaries = new ArrayList<>(costOptions.size());
+            for (List<ItemStack> bundle : costOptions) {
+                if (bundle.isEmpty() || bundle.getFirst().isEmpty()) continue;
+                ItemStack candidate = bundle.getFirst();
+                boolean duplicate = false;
+                for (ItemStack existing : primaries) {
+                    if (ItemStack.isSameItemSameComponents(existing, candidate) && existing.getCount() == candidate.getCount()) {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (!duplicate) {
+                    primaries.add(candidate);
+                }
+            }
+            return List.copyOf(primaries);
+        }
+
+        /** Optional secondary inventory materials (for multi-ingredient rows). */
+        public List<ItemStack> secondaryCostAlternatives() {
+            List<ItemStack> secondaries = new ArrayList<>();
+            for (List<ItemStack> bundle : costOptions) {
+                for (int i = 1; i < bundle.size(); i++) {
+                    ItemStack candidate = bundle.get(i);
+                    if (candidate.isEmpty()) continue;
+                    boolean duplicate = false;
+                    for (ItemStack existing : secondaries) {
+                        if (ItemStack.isSameItemSameComponents(existing, candidate) && existing.getCount() == candidate.getCount()) {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) {
+                        secondaries.add(candidate);
+                    }
+                }
+            }
+            return List.copyOf(secondaries);
+        }
+
         /** The enchanted book a player would need for this row. */
         public ItemStack bookStack(Holder<Enchantment> enchantment) {
             ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
@@ -152,8 +198,8 @@ public final class EnchantQueryIndex {
                     level,
                     maxLevel,
                     List.copyOf(supported),
-                    synced.map(SyncedEnchantmentCosts.Cost::itemCosts)
-                        .orElseGet(() -> List.copyOf(ChiseledEnchantingTableData.itemCosts(key, "", maxLevel))),
+                    synced.map(SyncedEnchantmentCosts.Cost::costOptions)
+                        .orElseGet(() -> ChiseledEnchantingTableData.itemCostOptions(key, maxLevel)),
                     synced.map(SyncedEnchantmentCosts.Cost::xpLevelCost)
                         .orElseGet(() -> ChiseledEnchantingTableData.xpCost(key, maxLevel)),
                     List.copyOf(conflicts),

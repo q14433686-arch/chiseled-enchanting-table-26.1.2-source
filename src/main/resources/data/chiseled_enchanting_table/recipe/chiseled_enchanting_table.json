@@ -7,8 +7,8 @@
   ],
   "key": {
     "B": "minecraft:book",
-    "D": "minecraft:diamond_block",
-    "O": "minecraft:obsidian",
+    "D": "minecraft:diamond",
+    "O": "minecraft:crying_obsidian",
     "C": "minecraft:chiseled_bookshelf"
   },
   "result": {

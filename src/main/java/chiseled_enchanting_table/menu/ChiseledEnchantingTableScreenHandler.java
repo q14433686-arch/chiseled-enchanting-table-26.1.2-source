@@ -9,6 +9,7 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchan
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay;
+import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.ScreenHandlerRegistry;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -65,9 +67,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public Runnable onContentChangedCallback = () -> {};
     public Player player;
     public final Set<EnchantmentWithLevel> unlocked_enchantements;
-    /** Server-synced transformation display table, keyed by transformation id. Used by client UI. */
+    public final int xpDiscountPercent;
+    public final int regularBookshelves;
+    public final int chiseledBookCount;
+    /** Server-synced transformation table, keyed by transformation id. Used by client UI. */
     public final java.util.Map<Identifier, TransformationDisplay> transformationDisplays;
     private final Level world;
+    private final ContainerLevelAccess access;
 
     private final Container inventory = new SimpleContainer(2) {
         @Override
@@ -81,8 +87,21 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public static final int COST_SLOT = 1;
 
     public ChiseledEnchantingTableScreenHandler(int syncId, Inventory playerInventory, AvailableEnchantmentPayload payload) {
+        this(syncId, playerInventory, payload, ContainerLevelAccess.NULL);
+    }
+
+    public ChiseledEnchantingTableScreenHandler(
+        int syncId,
+        Inventory playerInventory,
+        AvailableEnchantmentPayload payload,
+        ContainerLevelAccess access
+    ) {
         super(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, syncId);
+        this.access = access;
         this.unlocked_enchantements = payload.unlocked_enchantements();
+        this.xpDiscountPercent = Math.max(0, Math.min(35, payload.xp_discount_percent()));
+        this.regularBookshelves = Math.max(0, payload.regular_bookshelves());
+        this.chiseledBookCount = Math.max(0, payload.chiseled_book_count());
         java.util.Map<Identifier, TransformationDisplay> displays = new java.util.HashMap<>();
         for (TransformationDisplay display : payload.transformations()) {
             displays.put(display.id(), display);
@@ -236,25 +255,30 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     // ---- Cost resolution ----
 
+    public List<List<ItemStack>> getEnchantmentItemCostOptions(EnchantmentWithLevel e, OptionType type) {
+        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
+            return List.of();
+        }
+        var row = syncedRow(e, type);
+        if (row != null) {
+            return row.costOptions();
+        }
+        if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
+            return ChiseledEnchantingTableData.bookResearchCostOptions(e, getEnchantmentMaxLevel(e));
+        }
+        if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
+            return ChiseledEnchantingTableData.transformationCostOptions(e.enchantment_id());
+        }
+        return ChiseledEnchantingTableData.itemCostOptions(e, getEnchantmentMaxLevel(e));
+    }
+
     public ItemStack getEnchantmentItemCost(EnchantmentWithLevel e) {
         return getEnchantmentItemCost(e, OptionType.ENCHANTMENT);
     }
 
     public ItemStack getEnchantmentItemCost(EnchantmentWithLevel e, OptionType type) {
-        List<ItemStack> synced = syncedCosts(e, type);
-        if (synced != null) {
-            return synced.isEmpty() ? ItemStack.EMPTY : synced.getFirst();
-        }
-        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
-            return ItemStack.EMPTY;
-        }
-        if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
-            return ChiseledEnchantingTableData.bookResearchPrimaryCost(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
-        }
-        if (ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            return ChiseledEnchantingTableData.transformationPrimaryCost(e.enchantment_id(), this.player.getStringUUID());
-        }
-        return ChiseledEnchantingTableData.itemCost(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
+        List<ItemStack> first = getEnchantmentItemCosts(e, type);
+        return first.isEmpty() ? ItemStack.EMPTY : first.getFirst();
     }
 
     public List<ItemStack> getEnchantmentItemCosts(EnchantmentWithLevel e) {
@@ -262,23 +286,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public List<ItemStack> getEnchantmentItemCosts(EnchantmentWithLevel e, OptionType type) {
-        List<ItemStack> synced = syncedCosts(e, type);
-        if (synced != null) {
-            return synced;
-        }
-        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
-            return java.util.List.of();
-        }
-        if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
-            return ChiseledEnchantingTableData.bookResearchCosts(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
-        }
-        if (ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            java.util.ArrayList<ItemStack> costs = new java.util.ArrayList<>();
-            costs.add(ChiseledEnchantingTableData.transformationPrimaryCost(e.enchantment_id(), this.player.getStringUUID()));
-            costs.addAll(ChiseledEnchantingTableData.transformationAdditionalCosts(e.enchantment_id(), this.player.getStringUUID()));
-            return java.util.List.copyOf(costs);
-        }
-        return ChiseledEnchantingTableData.itemCosts(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
+        List<List<ItemStack>> options = getEnchantmentItemCostOptions(e, type);
+        return options.isEmpty() ? List.of() : options.getFirst();
     }
 
     public List<ItemStack> getAdditionalEnchantmentItemCosts(EnchantmentWithLevel e) {
@@ -286,27 +295,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public List<ItemStack> getAdditionalEnchantmentItemCosts(EnchantmentWithLevel e, OptionType type) {
-        List<ItemStack> synced = syncedCosts(e, type);
-        if (synced != null) {
-            return synced.size() <= 1 ? java.util.List.of() : java.util.List.copyOf(synced.subList(1, synced.size()));
-        }
-        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
-            return java.util.List.of();
-        }
-        if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
-            return ChiseledEnchantingTableData.bookResearchAdditionalCosts(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
-        }
-        if (ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            return ChiseledEnchantingTableData.transformationAdditionalCosts(e.enchantment_id(), this.player.getStringUUID());
-        }
-        return ChiseledEnchantingTableData.additionalItemCosts(e, this.player.getStringUUID(), getEnchantmentMaxLevel(e));
+        List<ItemStack> first = getEnchantmentItemCosts(e, type);
+        return first.size() <= 1 ? List.of() : List.copyOf(first.subList(1, first.size()));
     }
 
     public int getEnchantmentXpLevelCost(EnchantmentWithLevel e) {
         return getEnchantmentXpLevelCost(e, OptionType.ENCHANTMENT);
     }
 
-    public int getEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
+    public int getBaseEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
         var serverRow = syncedRow(e, type);
         if (serverRow != null) {
             return serverRow.xpLevelCost();
@@ -317,31 +314,27 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
             return ChiseledEnchantingTableData.bookResearchXpCost(e, getEnchantmentMaxLevel(e));
         }
-        if (ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
+        if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
             return ChiseledEnchantingTableData.transformationXpCost(e.enchantment_id());
         }
         return ChiseledEnchantingTableData.xpCost(e, getEnchantmentMaxLevel(e));
     }
 
-    /**
-     * Server-resolved cost row for this player, when the client received one.
-     *
-     * <p>Only meaningful on the physical client: the server always resolves costs from its own data
-     * (and for the player who owns the menu), so reading a client-synced row there could hand one
-     * player another player's salted option on a LAN host. Hence the {@code isClientSide} guard.</p>
-     */
+    public int getEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
+        int base = getBaseEnchantmentXpLevelCost(e, type);
+        if (base <= 0 || this.xpDiscountPercent <= 0) {
+            return base;
+        }
+        return Math.max(1, Math.round(base * (100 - this.xpDiscountPercent) / 100.0f));
+    }
+
     private chiseled_enchanting_table.compat.SyncedEnchantmentCosts.Cost syncedRow(EnchantmentWithLevel e, OptionType type) {
-        if (!this.world.isClientSide() || type != OptionType.ENCHANTMENT) {
+        if (!this.world.isClientSide()) {
             return null;
         }
         return chiseled_enchanting_table.compat.SyncedEnchantmentCosts
-            .find(e.enchantment_id(), e.enchantment_level())
+            .find(type, e.enchantment_id(), e.enchantment_level())
             .orElse(null);
-    }
-
-    private List<ItemStack> syncedCosts(EnchantmentWithLevel e, OptionType type) {
-        var row = syncedRow(e, type);
-        return row == null ? null : row.itemCosts();
     }
 
     private int getEnchantmentMaxLevel(EnchantmentWithLevel e) {
@@ -409,32 +402,53 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
     }
 
+    @org.jetbrains.annotations.Nullable
+    public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
+        if (this.player.getAbilities().instabuild) {
+            List<ItemStack> first = getEnchantmentItemCosts(ewl, type);
+            return first == null ? List.of() : first;
+        }
+        List<List<ItemStack>> options = getEnchantmentItemCostOptions(ewl, type);
+        ItemStack itemCostStack = this.get_cost_item();
+        for (List<ItemStack> bundle : options) {
+            if (bundle.isEmpty()) continue;
+            ItemStack primaryCost = bundle.getFirst();
+            if (!primaryCost.isEmpty()
+                && ItemStack.isSameItemSameComponents(itemCostStack, primaryCost)
+                && itemCostStack.getCount() >= primaryCost.getCount()
+                && hasAdditionalCosts(bundle)) {
+                return bundle;
+            }
+        }
+        return null;
+    }
+
+    public void deductMatchedBundle(List<ItemStack> matchedBundle) {
+        if (this.player.getAbilities().instabuild || matchedBundle == null || matchedBundle.isEmpty()) {
+            return;
+        }
+        this.get_cost_item().shrink(matchedBundle.getFirst().getCount());
+        consumeAdditionalCosts(matchedBundle);
+    }
+
     public boolean applyEnchantementCondition(ApplyEnchantmentPayload payload) {
         EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), payload.enchantment_level());
-        int xp_level_cost = getEnchantmentXpLevelCost(ewl);
+        OptionType effectiveType = payload.option_type();
+        if (effectiveType == OptionType.ENCHANTMENT && ChiseledEnchantingTableData.isTransformation(payload.enchantment_id())) {
+            effectiveType = OptionType.TRANSFORMATION;
+        }
+        int xp_level_cost = getEnchantmentXpLevelCost(ewl, effectiveType);
         if (this.player.experienceLevel < xp_level_cost && !player.getAbilities().instabuild) return false;
 
-        List<ItemStack> costs = getEnchantmentItemCosts(ewl);
-        ItemStack item_cost_stack = this.get_cost_item();
-        if (!player.getAbilities().instabuild) {
-            if (costs.isEmpty()) return false;
-            ItemStack primaryCost = costs.getFirst();
-            if (primaryCost.isEmpty() || !ItemStack.isSameItemSameComponents(item_cost_stack, primaryCost) || item_cost_stack.getCount() < primaryCost.getCount()) return false;
-            if (!hasAdditionalCosts(costs)) return false;
+        List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(ewl, effectiveType);
+        if (!player.getAbilities().instabuild && matchedBundle == null) {
+            return false;
         }
 
         if (!player.getAbilities().instabuild) {
-            // Deduct actual XP points corresponding to `xp_level_cost` player levels, matching
-            // vanilla anvil / enchanting-table behaviour, rather than a raw
-            // `giveExperienceLevels(-xp_level_cost)` which drops the player exactly N levels
-            // regardless of how much XP those levels were worth. That old behaviour under-
-            // charged low-level players and over-charged high-level ones by conflating
-            // "N levels" with "N units of some flat currency"; see the user report on this
-            // in CHANGELOG.md.
             int xpPointsToDeduct = XpCostConversion.pointsForLevelCost(this.player, xp_level_cost);
             this.player.giveExperiencePoints(-xpPointsToDeduct);
-            item_cost_stack.shrink(costs.getFirst().getCount());
-            consumeAdditionalCosts(costs);
+            deductMatchedBundle(matchedBundle);
         }
         return true;
     }
@@ -512,8 +526,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                     if (ItemStack.isSameItemSameComponents(clickedStack, costSlotStack)) {
                         this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT+1, false);
                     } else {
-                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, costSlotStack, java.util.Optional.of(slotIndex));
-                        costSlotStack.setCount(0);
+                        int containerSlot = this.getSlot(slotIndex).getContainerSlot();
+                        java.util.Optional<Integer> preferredSlot = (containerSlot >= 0 && containerSlot < 36)
+                            ? java.util.Optional.of(containerSlot)
+                            : java.util.Optional.empty();
+                        ItemStack returning = costSlotStack.copy();
+                        this.getSlot(COST_SLOT).set(ItemStack.EMPTY);
+                        this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT + 1, false);
+                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, returning, preferredSlot);
                     }
                 }
             }
@@ -530,6 +550,6 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     @Override
     public boolean stillValid(Player player) {
-        return true;
+        return stillValid(this.access, player, BlockRegistry.CHISELED_ENCHANTING_TABLE);
     }
 }

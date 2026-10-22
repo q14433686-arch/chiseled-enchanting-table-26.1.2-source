@@ -7,8 +7,7 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * Renders a real-enchantment list row: the enchantment full name, its costs, and an optional
- * annotation line describing how it interacts with an enchantment already on the item
- * (already present / upgrade / downgrade / conflict).
+ * annotation line describing how it interacts with an enchantment already on the item.
  */
 public final class EnchantmentRowRenderer {
     private EnchantmentRowRenderer() {}
@@ -23,7 +22,8 @@ public final class EnchantmentRowRenderer {
         boolean isFocused,
         boolean hovered,
         boolean canEnchant,
-        boolean itemCostMet,
+        boolean primaryCostMet,
+        List<Boolean> additionalCostsMet,
         boolean xpMet,
         String enchantmentName,
         ItemStack primaryCost,
@@ -34,10 +34,17 @@ public final class EnchantmentRowRenderer {
         int background = RowRenderSupport.backgroundColor(canEnchant, hovered);
         RowRenderSupport.drawChrome(ctx, dx, dy, dw, dh, background, isFocused);
 
-        int itemX = dx + 4;
-        int itemY = dy + 4;
-        RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, itemCostMet);
-        RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, dx + dw - 48, itemY, itemCostMet);
+        int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
+        int itemY = dy + RowRenderSupport.COST_OFFSET_Y;
+        RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+        RowRenderSupport.drawAdditionalCosts(
+            ctx,
+            client,
+            additionalCosts,
+            additionalCostsMet,
+            dx + dw - RowRenderSupport.ADDITIONAL_COST_RIGHT_MARGIN,
+            itemY
+        );
 
         int nameX = itemX + 20;
         int nameY = dy + 2 + client.font.lineHeight / 3;

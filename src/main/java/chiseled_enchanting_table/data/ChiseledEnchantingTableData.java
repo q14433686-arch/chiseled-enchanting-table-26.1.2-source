@@ -109,8 +109,13 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return costs.isEmpty() ? ItemStack.EMPTY : costs.getFirst();
     }
 
+    public static List<List<ItemStack>> itemCostOptions(EnchantmentWithLevel enchantmentWithLevel, int maxLevel) {
+        return costTables.itemCostOptions(enchantmentWithLevel, Math.max(1, maxLevel));
+    }
+
     public static List<ItemStack> itemCosts(EnchantmentWithLevel enchantmentWithLevel, String salt, int maxLevel) {
-        return costTables.itemCosts(enchantmentWithLevel, salt == null ? "" : salt, Math.max(1, maxLevel));
+        List<List<ItemStack>> options = itemCostOptions(enchantmentWithLevel, maxLevel);
+        return options.isEmpty() ? List.of() : options.getFirst();
     }
 
     public static List<ItemStack> additionalItemCosts(EnchantmentWithLevel enchantmentWithLevel, String salt, int maxLevel) {
@@ -143,8 +148,14 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return bookUpgradeRules.researchXpCost(target, Math.max(1, maxLevel), costTables.xpCost(target, Math.max(1, maxLevel)));
     }
 
+    public static List<List<ItemStack>> bookResearchCostOptions(EnchantmentWithLevel target, int maxLevel) {
+        int safeMax = Math.max(1, maxLevel);
+        return bookUpgradeRules.researchCostOptions(target, safeMax, costTables.itemCostOptions(target, safeMax));
+    }
+
     public static List<ItemStack> bookResearchCosts(EnchantmentWithLevel target, String salt, int maxLevel) {
-        return bookUpgradeRules.researchCosts(target, salt == null ? "" : salt, Math.max(1, maxLevel), costTables.itemCosts(target, salt == null ? "" : salt, Math.max(1, maxLevel)));
+        List<List<ItemStack>> options = bookResearchCostOptions(target, maxLevel);
+        return options.isEmpty() ? List.of() : options.getFirst();
     }
 
     public static ItemStack bookResearchPrimaryCost(EnchantmentWithLevel target, String salt, int maxLevel) {
@@ -172,6 +183,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return Optional.ofNullable(itemTransformations.get(id));
     }
 
+    public static Set<Identifier> transformationIds() {
+        return itemTransformations.keySet();
+    }
+
     /**
      * Compact display table (id, input item, output item, level) for every loaded transformation.
      * The screen handler syncs this to the client when the menu opens so client UI no longer has to
@@ -194,6 +209,15 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     public static boolean isTransformation(Identifier id) {
         return itemTransformations.containsKey(id);
+    }
+
+    public static List<List<ItemStack>> transformationCostOptions(Identifier id) {
+        ItemTransformation transformation = itemTransformations.get(id);
+        if (transformation == null) return List.of();
+        List<ItemStack> bundle = new ArrayList<>();
+        bundle.add(transformation.primaryCostStack(""));
+        bundle.addAll(transformation.additionalCostStacks(""));
+        return List.of(List.copyOf(bundle));
     }
 
     public static ItemStack transformationPrimaryCost(Identifier id, String salt) {
@@ -380,22 +404,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     private static Set<EnchantmentWithLevel> builtInDefaultEnchantments() {
-        Set<EnchantmentWithLevel> fallback = new HashSet<>();
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("protection"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("projectile_protection"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("fire_protection"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("blast_protection"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("efficiency"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("sharpness"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("smite"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("bane_of_arthropods"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("power"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("density"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("breach"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("impaling"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("piercing"), 1));
-        fallback.add(new EnchantmentWithLevel(Identifier.withDefaultNamespace("unbreaking"), 1));
-        return fallback;
+        return Set.of();
     }
 
     /** Built-in fallback tag rule: mirrors the actual tag the vanilla enchanting table reads (see
@@ -471,7 +480,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             double researchMaterialMultiplier = doubleOr(research, "material_cost_multiplier_of_direct_enchant", 0.5D);
             ItemCostRule defaultResearchCost = research.has("default_material_cost")
                 ? ItemCostRule.fromJson(research.getAsJsonObject("default_material_cost"))
-                : ItemCostRule.single(Identifier.withDefaultNamespace("lapis_lazuli"), 1, 1, 0, 0);
+                : null;
             Map<Identifier, ItemCostRule> overrides = new HashMap<>();
             if (research.has("enchantment_overrides")) {
                 JsonObject entries = research.getAsJsonObject("enchantment_overrides");
@@ -487,24 +496,19 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         static BookUpgradeRules builtInFallback() {
             String json = """
                 {
-                  \"combine_route\": { \"enabled\": true, \"xp_cost_multiplier_of_vanilla_like\": 1.0 },
-                  \"research_route\": {
-                    \"enabled\": true,
-                    \"xp_cost_multiplier_of_direct_enchant\": 0.5,
-                    \"material_cost_multiplier_of_direct_enchant\": 0.5,
-                    \"default_material_cost\": { \"item\": \"minecraft:lapis_lazuli\", \"count_per_level\": 1 },
-                    \"enchantment_overrides\": {
-                      \"minecraft:sharpness\": { \"material_cost\": { \"item\": \"minecraft:flint\", \"count_per_level\": 1 } },
-                      \"minecraft:smite\": { \"material_cost\": { \"item\": \"minecraft:bone\", \"count_per_level\": 1 } },
-                      \"minecraft:bane_of_arthropods\": { \"material_cost\": { \"item\": \"minecraft:spider_eye\", \"count_per_level\": 1 } },
-                      \"minecraft:fire_aspect\": { \"material_cost\": { \"item\": \"minecraft:blaze_powder\", \"count_per_level\": 1 } },
-                      \"minecraft:flame\": { \"material_cost\": { \"item\": \"minecraft:blaze_powder\", \"count_per_level\": 1 } },
-                      \"minecraft:respiration\": { \"material_cost\": { \"item\": \"minecraft:pufferfish\", \"count_per_level\": 1 } },
-                      \"minecraft:depth_strider\": { \"material_cost\": { \"item\": \"minecraft:prismarine_shard\", \"count_per_level\": 1 } },
-                      \"minecraft:frost_walker\": { \"material_cost\": { \"item\": \"minecraft:blue_ice\", \"count\": 1 } },
-                      \"minecraft:efficiency\": { \"material_cost\": { \"item\": \"minecraft:redstone\", \"count_per_level\": 1 } },
-                      \"minecraft:unbreaking\": { \"material_cost\": { \"item\": \"minecraft:amethyst_shard\", \"count_per_level\": 1 } }
-                    }
+                  "combine_route": { "enabled": true, "xp_cost_multiplier_of_vanilla_like": 0.6 },
+                  "research_route": {
+                    "enabled": true,
+                    "xp_cost_multiplier_of_direct_enchant": 1.4,
+                    "material_cost_multiplier_of_direct_enchant": 1.0,
+                    "default_material_cost": {
+                      "options": [
+                        { "item": "minecraft:lapis_lazuli", "count_per_level": 3 },
+                        { "item": "minecraft:amethyst_shard", "count_per_level": 2 },
+                        { "item": "minecraft:emerald", "count_per_level": 1 }
+                      ]
+                    },
+                    "enchantment_overrides": {}
                   }
                 }
                 """;
@@ -516,18 +520,29 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
 
         int researchXpCost(EnchantmentWithLevel target, int maxLevel, int directXpCost) {
-            return Math.max(1, (int)Math.floor(directXpCost * researchXpMultiplier));
+            return Math.max(1, (int)Math.round(directXpCost * researchXpMultiplier));
         }
 
-        List<ItemStack> researchCosts(EnchantmentWithLevel target, String salt, int maxLevel, List<ItemStack> directCosts) {
+        List<List<ItemStack>> researchCostOptions(EnchantmentWithLevel target, int maxLevel, List<List<ItemStack>> directCostOptions) {
             ItemCostRule rule = researchOverrides.getOrDefault(target.enchantment_id(), defaultResearchCost);
-            List<ItemStack> themed = rule.toStacks(target.enchantment_id(), target.enchantment_level(), maxLevel, salt);
-            if (themed.isEmpty() && !directCosts.isEmpty()) {
-                ItemStack discounted = directCosts.getFirst().copy();
-                discounted.setCount(Math.max(1, (int)Math.floor(discounted.getCount() * researchMaterialMultiplier)));
-                return List.of(discounted);
+            List<List<ItemStack>> themed = rule == null ? List.of() : rule.toBundles(target.enchantment_id(), target.enchantment_level(), maxLevel);
+            if (!themed.isEmpty()) {
+                return themed;
             }
-            return themed;
+            if (!directCostOptions.isEmpty()) {
+                List<List<ItemStack>> discountedBundles = new ArrayList<>(directCostOptions.size());
+                for (List<ItemStack> direct : directCostOptions) {
+                    List<ItemStack> discounted = new ArrayList<>(direct.size());
+                    for (ItemStack stack : direct) {
+                        ItemStack copy = stack.copy();
+                        copy.setCount(Math.max(1, (int)Math.round(copy.getCount() * researchMaterialMultiplier)));
+                        discounted.add(copy);
+                    }
+                    discountedBundles.add(List.copyOf(discounted));
+                }
+                return List.copyOf(discountedBundles);
+            }
+            return List.of();
         }
     }
 
@@ -536,7 +551,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             XpCostRule xpCostRule = root.has("xp") ? XpCostRule.fromJson(root.getAsJsonObject("xp")) : XpCostRule.defaults();
             ItemCostRule defaultItemCost = root.has("default_item_cost")
                 ? ItemCostRule.fromJson(root.getAsJsonObject("default_item_cost"))
-                : ItemCostRule.single(Identifier.withDefaultNamespace("lapis_lazuli"), 0, 2, 0, 0);
+                : ItemCostRule.single(Identifier.withDefaultNamespace("lapis_lazuli"), 0, 1, 0, 0);
 
             Map<Identifier, ItemCostRule> itemCosts = new HashMap<>();
             if (root.has("item_costs")) {
@@ -551,17 +566,22 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         static CostTables builtInFallback() {
             String json = """
                 {
-                  "xp": { "level_one_cost": 5, "common_max_cost": 25, "rare_single_level_cost": 35 },
-                  "default_item_cost": { "options": [{ "item": "minecraft:lapis_lazuli", "count_per_level": 2 }] },
+                  "xp": { "level_one_cost": 2, "common_max_cost": 10, "rare_single_level_cost": 12 },
+                  "default_item_cost": {
+                    "options": [
+                      { "item": "minecraft:lapis_lazuli", "count_per_level": 1 },
+                      { "item": "minecraft:amethyst_shard", "count_per_level": 1 }
+                    ]
+                  },
                   "item_costs": {}
                 }
                 """;
             return fromJson(GSON.fromJson(json, JsonObject.class));
         }
 
-        List<ItemStack> itemCosts(EnchantmentWithLevel enchantmentWithLevel, String salt, int maxLevel) {
+        List<List<ItemStack>> itemCostOptions(EnchantmentWithLevel enchantmentWithLevel, int maxLevel) {
             ItemCostRule itemCost = itemCosts.getOrDefault(enchantmentWithLevel.enchantment_id(), defaultItemCost);
-            return itemCost.toStacks(enchantmentWithLevel.enchantment_id(), enchantmentWithLevel.enchantment_level(), maxLevel, salt);
+            return itemCost.toBundles(enchantmentWithLevel.enchantment_id(), enchantmentWithLevel.enchantment_level(), maxLevel);
         }
 
         int xpCost(EnchantmentWithLevel enchantmentWithLevel, int maxLevel) {
@@ -571,13 +591,13 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     private record XpCostRule(int levelOneCost, int commonMaxCost, int rareSingleLevelCost, Map<Identifier, Map<Integer, Integer>> overrides) {
         static XpCostRule defaults() {
-            return new XpCostRule(5, 25, 35, Map.of());
+            return new XpCostRule(2, 10, 12, Map.of());
         }
 
         static XpCostRule fromJson(JsonObject json) {
-            int levelOneCost = intOr(json, "level_one_cost", 5);
-            int commonMaxCost = intOr(json, "common_max_cost", 25);
-            int rareSingleLevelCost = intOr(json, "rare_single_level_cost", 35);
+            int levelOneCost = intOr(json, "level_one_cost", 2);
+            int commonMaxCost = intOr(json, "common_max_cost", 10);
+            int rareSingleLevelCost = intOr(json, "rare_single_level_cost", 12);
             Map<Identifier, Map<Integer, Integer>> overrides = new HashMap<>();
             if (json.has("overrides")) {
                 JsonObject overrideRoot = json.getAsJsonObject("overrides");
@@ -642,16 +662,27 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             return new ItemCostRule(List.copyOf(options), Map.copyOf(levelOverrides), maxLevelOverride);
         }
 
-        List<ItemStack> toStacks(Identifier enchantmentId, int level, int maxLevel, String salt) {
+        List<List<ItemStack>> toBundles(Identifier enchantmentId, int level, int maxLevel) {
             ItemCostRule override = levelOverrides.get(level);
             if (override != null) {
-                return override.toStacks(enchantmentId, level, maxLevel, salt);
+                return override.toBundles(enchantmentId, level, maxLevel);
             }
             if (level >= maxLevel && maxLevelOverride != null) {
-                return maxLevelOverride.toStacks(enchantmentId, level, maxLevel, salt);
+                return maxLevelOverride.toBundles(enchantmentId, level, maxLevel);
             }
-            int index = stablePositiveHash(enchantmentId + ":" + level + ":" + maxLevel + ":" + salt + ":option") % options.size();
-            return options.get(index).toStacks(enchantmentId, level, maxLevel, salt);
+            List<List<ItemStack>> bundles = new ArrayList<>(options.size());
+            for (ItemCostOption opt : options) {
+                List<ItemStack> stacks = opt.toStacks(enchantmentId, level, maxLevel, "");
+                if (!stacks.isEmpty()) {
+                    bundles.add(stacks);
+                }
+            }
+            return List.copyOf(bundles);
+        }
+
+        List<ItemStack> toStacks(Identifier enchantmentId, int level, int maxLevel, String salt) {
+            List<List<ItemStack>> bundles = toBundles(enchantmentId, level, maxLevel);
+            return bundles.isEmpty() ? List.of() : bundles.getFirst();
         }
     }
 
@@ -694,8 +725,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             if (count > 0) {
                 computedCount = count;
             } else if (minCount > 0 && maxCount >= minCount) {
-                int spread = maxCount - minCount + 1;
-                computedCount = minCount + (stablePositiveHash(enchantmentId + ":" + level + ":" + maxLevel + ":" + salt + ":count:" + itemId) % spread);
+                computedCount = (minCount + maxCount + 1) / 2;
             } else {
                 computedCount = countPerLevel * Math.max(1, level);
             }

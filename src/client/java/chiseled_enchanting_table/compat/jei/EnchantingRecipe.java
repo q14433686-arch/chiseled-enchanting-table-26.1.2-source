@@ -25,7 +25,8 @@ public record EnchantingRecipe(
     int maxLevel,
     List<ItemStack> targetItems,
     ItemStack book,
-    List<ItemStack> costItems,
+    List<ItemStack> primaryCostAlternatives,
+    List<ItemStack> secondaryCostAlternatives,
     int xpLevelCost,
     List<Identifier> conflictingEnchantments,
     boolean serverCosts
@@ -43,7 +44,8 @@ public record EnchantingRecipe(
             entry.maxLevel(),
             entry.supportedItems(),
             book,
-            entry.itemCosts(),
+            entry.primaryCostAlternatives(),
+            entry.secondaryCostAlternatives(),
             entry.xpLevelCost(),
             entry.conflicts(),
             entry.serverCosts()
