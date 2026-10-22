@@ -163,14 +163,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         int colmumnLength = 3;
         int hotbarMargin = 4;
 
-        int cost_slot_gap = 4;
-        int enchantable_slot_gap = 12;
+        int enchantableSlotX = 183;
+        int enchantableSlotY = 28;
+        int costSlotX = 183;
+        int costSlotY = 57;
 
         this.addSlot(new Slot(
             this.inventory,
             ENCHANTABLE_SLOT,
-            inventorySlotStartX + slotSize + slotPadding*2,
-            inventorySlotStartY - slotSize * 2 - slotPadding*3 - cost_slot_gap - enchantable_slot_gap
+            enchantableSlotX,
+            enchantableSlotY
         ) {
             @Override
             public int getMaxStackSize(ItemStack stack) {
@@ -184,8 +186,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.addSlot(new Slot(
             this.inventory,
             COST_SLOT,
-            inventorySlotStartX + slotSize + slotPadding*2,
-            inventorySlotStartY - slotSize - slotPadding*2 - cost_slot_gap
+            costSlotX,
+            costSlotY
         ) {
             @Override
             public int getMaxStackSize(ItemStack stack) {

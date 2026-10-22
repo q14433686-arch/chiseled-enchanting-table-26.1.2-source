@@ -43,11 +43,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final int PANEL_W = 119;
     private static final int PANEL_H = 61;
 
-    private static final int BTN_SIZE = 15;
+    private static final int BTN_SIZE = 14;
     private static final int FREEZE_BTN_X = PANEL_X + 79;
-    private static final int FREEZE_BTN_Y = PANEL_Y + 34;
-    private static final int REROLL_BTN_X = PANEL_X + 96;
-    private static final int REROLL_BTN_Y = PANEL_Y + 34;
+    private static final int FREEZE_BTN_Y = PANEL_Y + 35;
+    private static final int REROLL_BTN_X = PANEL_X + 95;
+    private static final int REROLL_BTN_Y = PANEL_Y + 35;
 
     private EnchantementListWidget scrollContainer;
 
@@ -200,19 +200,20 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     /**
-     * Renders text cleanly within {@code maxWidth}: fits natively at 1.0x when short enough,
-     * and smoothly auto-scales down via {@link RowRenderSupport#renderScaledText} when wider,
-     * NEVER truncating digits (such as the ones digit of MM:SS seconds!).
+     * Renders text strictly within {@code maxWidth} at up to {@code maxScale}: smoothly shrinks
+     * to fit without truncating digits (such as {@code MM:SS} seconds), and ellipsizes only on
+     * extreme strings below {@code 0.48f}.
      */
-    private void drawAutoScaledText(GuiGraphicsExtractor ctx, Component text, int x, int y, int maxWidth, int argbColor) {
-        String raw = text.getString();
-        int w = this.font.width(raw);
-        if (w <= maxWidth || w <= 0) {
-            ctx.text(this.font, text, x, y, argbColor, true);
-        } else {
-            float scale = (float) maxWidth / (float) w;
-            RowRenderSupport.renderScaledText(ctx, this.minecraft, raw, x, y + Math.round((1.0f - scale) * 4.0f), scale, argbColor);
-        }
+    private void drawAutoScaledText(
+        GuiGraphicsExtractor ctx,
+        Component text,
+        int x,
+        int y,
+        float maxScale,
+        int maxWidth,
+        int argbColor
+    ) {
+        RowRenderSupport.renderBoundedText(ctx, this.minecraft, text.getString(), x, y, maxScale, maxWidth, argbColor);
     }
 
     @Override
@@ -228,59 +229,64 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         int py = j + PANEL_Y;
         ctx.blit(panelSprite, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
 
-        // Countdown / Awakening progress bar inside the recessed Sanctum readout.
-        int minShelves = Math.max(1, this.menu.epiphanyMinBookshelves());
-        boolean unlocked = this.menu.regularBookshelves >= minShelves;
-        int barX = px + 8;
-        int barY = py + 46;
-        int barW = 67;
-        int barH = 4;
-        ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC0A0614);
-        ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE1A122B);
+        ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
+        try {
+            // Countdown / Awakening progress bar inside the recessed Sanctum readout.
+            int minShelves = Math.max(1, this.menu.epiphanyMinBookshelves());
+            boolean unlocked = this.menu.regularBookshelves >= minShelves;
+            int barX = px + 10;
+            int barY = py + 45;
+            int barW = 65;
+            int barH = 4;
+            ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC0A0614);
+            ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE1A122B);
 
-        float ratio;
-        int fillMain;
-        int fillHighlight;
-        if (!unlocked) {
-            ratio = Mth.clamp((float) this.menu.regularBookshelves / (float) minShelves, 0.0f, 1.0f);
-            fillMain = 0xFF8C52E8;
-            fillHighlight = 0xFFD2B0FF;
-        } else if (frozen) {
-            int maxSec = Math.max(1, this.menu.epiphanyMaxFreezeTicks() / 20);
-            ratio = Mth.clamp((float) this.menu.countdownSeconds() / (float) maxSec, 0.0f, 1.0f);
-            fillMain = 0xFF3FD8FF;
-            fillHighlight = 0xFFC2FBFF;
-        } else {
-            int cycleSec = Math.max(1, this.menu.epiphanyCycleTicks() / 20);
-            ratio = Mth.clamp((float) this.menu.countdownSeconds() / (float) cycleSec, 0.0f, 1.0f);
-            fillMain = 0xFFC86BFF;
-            fillHighlight = 0xFFFFDF8E;
-        }
-        int filledW = Math.round(barW * ratio);
-        if (filledW > 0) {
-            ctx.fill(barX, barY, barX + filledW, barY + barH, fillMain);
-            ctx.fill(barX, barY, barX + filledW, barY + 1, fillHighlight);
-        }
+            float ratio;
+            int fillMain;
+            int fillHighlight;
+            if (!unlocked) {
+                ratio = Mth.clamp((float) this.menu.regularBookshelves / (float) minShelves, 0.0f, 1.0f);
+                fillMain = 0xFF8C52E8;
+                fillHighlight = 0xFFD2B0FF;
+            } else if (frozen) {
+                int maxSec = Math.max(1, this.menu.epiphanyMaxFreezeTicks() / 20);
+                ratio = Mth.clamp((float) this.menu.countdownSeconds() / (float) maxSec, 0.0f, 1.0f);
+                fillMain = 0xFF3FD8FF;
+                fillHighlight = 0xFFC2FBFF;
+            } else {
+                int cycleSec = Math.max(1, this.menu.epiphanyCycleTicks() / 20);
+                ratio = Mth.clamp((float) this.menu.countdownSeconds() / (float) cycleSec, 0.0f, 1.0f);
+                fillMain = 0xFFC86BFF;
+                fillHighlight = 0xFFFFDF8E;
+            }
+            int filledW = Math.round(barW * ratio);
+            if (filledW > 0) {
+                ctx.fill(barX, barY, barX + filledW, barY + barH, fillMain);
+                ctx.fill(barX, barY, barX + filledW, barY + 1, fillHighlight);
+            }
 
-        // Imported painted square icon buttons: [Freeze] and [Reroll].
-        int fx = i + FREEZE_BTN_X;
-        int fy = j + FREEZE_BTN_Y;
-        boolean canFreeze = this.menu.canAffordFreezeEpiphany();
-        ctx.blit(BTN_FREEZE, fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
-        if (!canFreeze) {
-            ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
-        } else if (isOverFreezeButton(mouseX, mouseY)) {
-            ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0x2C90F5FF);
-        }
+            // Imported painted square icon buttons: [Freeze] and [Reroll].
+            int fx = i + FREEZE_BTN_X;
+            int fy = j + FREEZE_BTN_Y;
+            boolean canFreeze = this.menu.canAffordFreezeEpiphany();
+            ctx.blit(BTN_FREEZE, fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+            if (!canFreeze) {
+                ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
+            } else if (isOverFreezeButton(mouseX, mouseY)) {
+                ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0x2C90F5FF);
+            }
 
-        int rx = i + REROLL_BTN_X;
-        int ry = j + REROLL_BTN_Y;
-        boolean canReroll = this.menu.canAffordRerollEpiphany();
-        ctx.blit(BTN_REROLL, rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
-        if (!canReroll) {
-            ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
-        } else if (isOverRerollButton(mouseX, mouseY)) {
-            ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0x2CFFE082);
+            int rx = i + REROLL_BTN_X;
+            int ry = j + REROLL_BTN_Y;
+            boolean canReroll = this.menu.canAffordRerollEpiphany();
+            ctx.blit(BTN_REROLL, rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+            if (!canReroll) {
+                ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
+            } else if (isOverRerollButton(mouseX, mouseY)) {
+                ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0x2CFFE082);
+            }
+        } finally {
+            ctx.disableScissor();
         }
     }
 
@@ -524,39 +530,44 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         // Warm gilded-ivory title rendered right atop the stitched royal-purple header cloth.
-        context.text(this.font, this.title, 18, 6, 0xFFFFF0C8, true);
+        RowRenderSupport.renderBoundedText(context, this.minecraft, this.title.getString(), 18, 6, 1.0f, 304, 0xFFFFF0C8);
 
-        int lx = PANEL_X + 8;
+        int lx = PANEL_X + 10;
         int ly = PANEL_Y;
         int minShelves = Math.max(1, this.menu.epiphanyMinBookshelves());
         boolean unlocked = this.menu.regularBookshelves >= minShelves;
         boolean frozen = this.menu.isEpiphanyFrozen();
 
-        Component resLine = Component.translatable("gui.chiseled_enchanting_table.resonance.badge", this.menu.xpDiscountPercent);
-        drawAutoScaledText(context, resLine, lx, ly + 8, 102, this.menu.xpDiscountPercent > 0 ? 0xFF7FFFB2 : 0xFFE2D8F5);
+        context.enableScissor(PANEL_X + 9, PANEL_Y + 9, PANEL_X + 110, PANEL_Y + 52);
+        try {
+            Component resLine = Component.translatable("gui.chiseled_enchanting_table.resonance.badge", this.menu.xpDiscountPercent);
+            drawAutoScaledText(context, resLine, lx, ly + 10, 0.85f, 98, this.menu.xpDiscountPercent > 0 ? 0xFF7FFFB2 : 0xFFE2D8F5);
 
-        if (unlocked) {
-            int pct = (int) Math.round(this.menu.epiphanyChance() * 100.0);
-            int maxSlots = Math.max(1, this.menu.epiphanyMaxSlots());
-            Component statLine = Component.translatable("gui.chiseled_enchanting_table.epiphany.panel_stats", pct, maxSlots);
-            drawAutoScaledText(context, statLine, lx, ly + 20, 102, 0xFFFFDF7E);
+            if (unlocked) {
+                int pct = (int) Math.round(this.menu.epiphanyChance() * 100.0);
+                int maxSlots = Math.max(1, this.menu.epiphanyMaxSlots());
+                Component statLine = Component.translatable("gui.chiseled_enchanting_table.epiphany.panel_stats", pct, maxSlots);
+                drawAutoScaledText(context, statLine, lx, ly + 22, 0.85f, 98, 0xFFFFDF7E);
 
-            String clock = formatClock(this.menu.countdownSeconds());
-            Component timerLine = frozen
-                ? Component.translatable("gui.chiseled_enchanting_table.epiphany.timer_frozen", clock)
-                : Component.translatable("gui.chiseled_enchanting_table.epiphany.timer_cycle", clock);
-            drawAutoScaledText(context, timerLine, lx, ly + 34, 68, frozen ? 0xFF74F3FF : 0xFFFFF2FF);
-        } else {
-            Component lockedLine = Component.translatable(
-                "gui.chiseled_enchanting_table.epiphany.panel_locked",
-                this.menu.regularBookshelves,
-                minShelves
-            );
-            drawAutoScaledText(context, lockedLine, lx, ly + 20, 102, 0xFFD4BEFF);
+                String clock = formatClock(this.menu.countdownSeconds());
+                Component timerLine = frozen
+                    ? Component.translatable("gui.chiseled_enchanting_table.epiphany.timer_frozen", clock)
+                    : Component.translatable("gui.chiseled_enchanting_table.epiphany.timer_cycle", clock);
+                drawAutoScaledText(context, timerLine, lx, ly + 34, 0.82f, 65, frozen ? 0xFF74F3FF : 0xFFFFF2FF);
+            } else {
+                Component lockedLine = Component.translatable(
+                    "gui.chiseled_enchanting_table.epiphany.panel_locked",
+                    this.menu.regularBookshelves,
+                    minShelves
+                );
+                drawAutoScaledText(context, lockedLine, lx, ly + 22, 0.85f, 98, 0xFFD4BEFF);
 
-            int wakePct = Math.min(100, Math.round(this.menu.regularBookshelves * 100.0f / minShelves));
-            Component wakeLine = Component.translatable("gui.chiseled_enchanting_table.epiphany.panel_wake", wakePct);
-            drawAutoScaledText(context, wakeLine, lx, ly + 34, 68, 0xFFB8A2E0);
+                int wakePct = Math.min(100, Math.round(this.menu.regularBookshelves * 100.0f / minShelves));
+                Component wakeLine = Component.translatable("gui.chiseled_enchanting_table.epiphany.panel_wake", wakePct);
+                drawAutoScaledText(context, wakeLine, lx, ly + 34, 0.82f, 65, 0xFFB8A2E0);
+            }
+        } finally {
+            context.disableScissor();
         }
     }
 }

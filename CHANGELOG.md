@@ -28,9 +28,10 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
     via `player.giveExperienceLevels(-tierCost)`, enabling seamless batch mass-production.
   - **Full-Level Arcane Infusion Coexistence & Distinct Badges**: un-enshrined base enchanting,
     Book Combine/Research Upgrades, and Treasure Epiphanies retain full XP curve deduction and
-    coexist side-by-side via custom pixel-art row badges (`gui/xp_orb_1..3.png` + `Lv.X` emerald
-    badge vs `gui/xp_ritual_flask.png` + `-XL` violet badge), rich hover formula breakdown tooltips,
-    and updated JEI/REI Master Tome category displays.
+    coexist side-by-side via horizontal centered pixel-art row badges (`gui/xp_orb_1..3.png` +
+    `Lv.X` vs `gui/xp_ritual_flask.png` + `-XL`), dynamic right-aligned secondary item icons,
+    bounded auto-scaling/ellipsizing text + hardware scissor clipping across all list rows and the
+    Sanctum panel, and centered input/material container slots `(183, 28)` / `(183, 57)`.
   - **Shaped Crafting Recipe (`8× Crying Obsidian`)**: added `recipe/crying_obsidian.json` and
     matching recipe unlock advancement (`8× minecraft:obsidian` border around `1× minecraft:ghast_tear`
     center -> `8× minecraft:crying_obsidian`).

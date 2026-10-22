@@ -7,7 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Renders a transformation list row using the painted alchemical transmutation plaque sprite.
+ * Renders a transformation list row with strict anti-overlap text bounds and hardware scissor clipping.
  */
 public final class TransformationRowRenderer {
     private TransformationRowRenderer() {}
@@ -39,25 +39,21 @@ public final class TransformationRowRenderer {
             isFocused
         );
 
-        int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
-        int itemY = dy + RowRenderSupport.COST_OFFSET_Y;
-        RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
-        RowRenderSupport.drawAdditionalCosts(
-            ctx,
-            client,
-            additionalCosts,
-            additionalCostsMet,
-            dx + dw - RowRenderSupport.ADDITIONAL_COST_RIGHT_MARGIN,
-            itemY
-        );
+        RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
+        try {
+            int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
+            int itemY = RowRenderSupport.costIconY(dy, dh);
+            RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+            RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, additionalCostsMet, dx, dw, itemY);
 
-        int nameX = itemX + 19;
-        int nameY = dy + 3 + client.font.lineHeight / 3;
-        RowRenderSupport.renderScaledText(ctx, client, outputName, nameX, nameY, 2.0f / 3.0f, RowRenderSupport.TRANSFORM_GOLD);
+            int nameX = dx + RowRenderSupport.NAME_OFFSET_X;
+            int maxTextW = RowRenderSupport.availableTextWidth(dx, dw, additionalCosts.size());
+            RowRenderSupport.renderBoundedText(ctx, client, outputName, nameX, dy + 4, 0.64f, maxTextW, RowRenderSupport.TRANSFORM_GOLD);
+            RowRenderSupport.renderBoundedText(ctx, client, "\u2726 \u2192 " + outputName, nameX, dy + 12, 0.58f, maxTextW, RowRenderSupport.LIGHT_GREEN);
 
-        int subY = dy + dh - 2 - client.font.lineHeight;
-        RowRenderSupport.renderScaledText(ctx, client, "\u2726 \u2192 " + outputName, nameX, subY, 2.0f / 3.0f, RowRenderSupport.LIGHT_GREEN);
-
-        RowRenderSupport.drawXpBadge(ctx, client, xpRequirement, dx, dw, dy, dh, xpMet);
+            RowRenderSupport.drawXpBadge(ctx, client, xpRequirement, dx, dw, dy, dh, xpMet);
+        } finally {
+            RowRenderSupport.endRowContentClip(ctx);
+        }
     }
 }

@@ -488,22 +488,25 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (mouseX < dx || mouseX > dx + dw || mouseY < dy || mouseY > dy + dh) {
                 return null;
             }
-            int itemY = dy + RowRenderSupport.COST_OFFSET_Y;
-            if (mouseY < itemY || mouseY > itemY + 16) {
+            int itemY = RowRenderSupport.costIconY(dy, dh);
+            int iconSize = RowRenderSupport.COST_ICON_SIZE;
+            if (mouseY < itemY || mouseY > itemY + iconSize) {
                 return null;
             }
             ItemStack cost = activePrimaryCost();
             List<ItemStack> additional_costs = activeAdditionalCosts();
             int primaryX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
-            if (!cost.isEmpty() && mouseX >= primaryX && mouseX <= primaryX + 16) {
+            if (!cost.isEmpty() && mouseX >= primaryX && mouseX <= primaryX + iconSize) {
                 return cost;
             }
-            int startX = dx + dw - RowRenderSupport.ADDITIONAL_COST_RIGHT_MARGIN;
             int shown = Math.min(2, additional_costs.size());
-            for (int i = 0; i < shown; i++) {
-                int x = startX + i * RowRenderSupport.ADDITIONAL_COST_STRIDE;
-                if (mouseX >= x && mouseX <= x + 16) {
-                    return additional_costs.get(i);
+            if (shown > 0) {
+                int startX = RowRenderSupport.additionalCostStartX(dx, dw, shown);
+                for (int i = 0; i < shown; i++) {
+                    int x = startX + i * RowRenderSupport.ADDITIONAL_COST_STRIDE;
+                    if (mouseX >= x && mouseX <= x + iconSize) {
+                        return additional_costs.get(i);
+                    }
                 }
             }
             return null;
@@ -518,13 +521,14 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (mouseX < dx || mouseX > dx + dw || mouseY < dy || mouseY > dy + dh) {
                 return null;
             }
-            int itemY = dy + RowRenderSupport.COST_OFFSET_Y;
-            if (mouseY < itemY || mouseY > itemY + 16) {
+            int itemY = RowRenderSupport.costIconY(dy, dh);
+            int iconSize = RowRenderSupport.COST_ICON_SIZE;
+            if (mouseY < itemY || mouseY > itemY + iconSize) {
                 return null;
             }
             ItemStack cost = activePrimaryCost();
             int primaryX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
-            if (!cost.isEmpty() && mouseX >= primaryX && mouseX <= primaryX + 16 && cost_options.size() > 1) {
+            if (!cost.isEmpty() && mouseX >= primaryX && mouseX <= primaryX + iconSize && cost_options.size() > 1) {
                 return cost_options;
             }
             return null;
@@ -608,15 +612,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     primaryMet, additionalMet, xpMet, rowTitle, cost, additional_costs, xp_requirement
                 );
             } else {
-                String enchantmentName = Enchantment.getFullname(this.enchantment, enchant_level).getString();
-                if (option_type == OptionType.TREASURE_EPIPHANY) enchantmentName = I18n.get("gui.chiseled_enchanting_table.treasure_epiphany", enchantmentName);
-                if (option_type == OptionType.BOOK_COMBINE_UPGRADE) enchantmentName = I18n.get("gui.chiseled_enchanting_table.book_upgrade.combine", enchantmentName);
-                if (option_type == OptionType.BOOK_RESEARCH_UPGRADE) enchantmentName = I18n.get("gui.chiseled_enchanting_table.book_upgrade.research", enchantmentName);
+                String rawName = Enchantment.getFullname(this.enchantment, enchant_level).getString();
+                String enchantmentName = rawName;
+                if (option_type == OptionType.TREASURE_EPIPHANY) enchantmentName = I18n.get("gui.chiseled_enchanting_table.treasure_epiphany", rawName);
+                if (option_type == OptionType.BOOK_COMBINE_UPGRADE) enchantmentName = I18n.get("gui.chiseled_enchanting_table.book_upgrade.combine", rawName);
+                if (option_type == OptionType.BOOK_RESEARCH_UPGRADE) enchantmentName = I18n.get("gui.chiseled_enchanting_table.book_upgrade.research", rawName);
                 EnchantmentRowRenderer.render(
                     ctx, client, dx, dy, dw, dh, option_type == OptionType.TREASURE_EPIPHANY,
                     isFocused, hovered, canEnchant(),
                     primaryMet, additionalMet, xpMet, enchantmentName, cost, additional_costs, xp_requirement,
-                    computeOverrideAnnotation(enchantmentName)
+                    computeOverrideAnnotation(rawName)
                 );
             }
         }

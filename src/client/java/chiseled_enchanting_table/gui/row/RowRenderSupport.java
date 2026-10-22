@@ -10,8 +10,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Shared drawing primitives for chiseled-enchanting list rows using cohesive imported plaque sprites
- * and custom pixel-art experience formula badges ({@code xp_orb_1..3} vs {@code xp_ritual_flask}).
+ * Shared drawing primitives for chiseled-enchanting list rows with hardware scissor clipping,
+ * bounded auto-scaling/ellipsizing text, compact centered item icons, and horizontal dual-mode XP badges.
  */
 public final class RowRenderSupport {
     private static final Identifier ROW_NORMAL = ChiseledEnchantingTable.identifier("gui/row_normal.png");
@@ -38,10 +38,11 @@ public final class RowRenderSupport {
     public static final int LIGHT_GREEN = 0xFFA8FFC4;
 
     public static final int PRIMARY_COST_OFFSET_X = 5;
-    public static final int COST_OFFSET_Y = 4;
-    public static final int XP_BADGE_WIDTH = 34;
-    public static final int ADDITIONAL_COST_RIGHT_MARGIN = 70;
-    public static final int ADDITIONAL_COST_STRIDE = 17;
+    public static final int COST_ICON_SIZE = 14;
+    public static final float COST_ICON_SCALE = COST_ICON_SIZE / 16.0f;
+    public static final int ADDITIONAL_COST_STRIDE = 15;
+    public static final int XP_BADGE_WIDTH = 42;
+    public static final int NAME_OFFSET_X = PRIMARY_COST_OFFSET_X + COST_ICON_SIZE + 3;
 
     public enum RowVisualStyle {
         STANDARD,
@@ -55,6 +56,37 @@ public final class RowRenderSupport {
         if (deductedTier <= 1) return XP_ORB_1;
         if (deductedTier == 2) return XP_ORB_2;
         return XP_ORB_3;
+    }
+
+    public static int costIconY(int dy, int dh) {
+        return dy + (dh - COST_ICON_SIZE) / 2;
+    }
+
+    public static int xpSeparatorX(int dx, int dw) {
+        return dx + dw - XP_BADGE_WIDTH;
+    }
+
+    /** Right-aligned start X for {@code shown} (1..2) secondary cost icons right next to the XP divider. */
+    public static int additionalCostStartX(int dx, int dw, int shownCount) {
+        int shown = Math.clamp(shownCount, 0, 2);
+        return xpSeparatorX(dx, dw) - 3 - shown * ADDITIONAL_COST_STRIDE;
+    }
+
+    /** Exact maximum pixel width available for title/subtitle before colliding with secondary items or XP badge. */
+    public static int availableTextWidth(int dx, int dw, int shownAdditionalCount) {
+        int shown = Math.clamp(shownAdditionalCount, 0, 2);
+        int rightLimit = shown > 0
+            ? additionalCostStartX(dx, dw, shown) - 3
+            : xpSeparatorX(dx, dw) - 4;
+        return Math.max(24, rightLimit - (dx + NAME_OFFSET_X));
+    }
+
+    public static void beginRowContentClip(GuiGraphicsExtractor ctx, int dx, int dy, int dw, int dh) {
+        ctx.enableScissor(dx + 2, dy + 2, dx + dw - 2, dy + dh - 2);
+    }
+
+    public static void endRowContentClip(GuiGraphicsExtractor ctx) {
+        ctx.disableScissor();
     }
 
     public static void drawPlaque(
@@ -82,39 +114,52 @@ public final class RowRenderSupport {
         }
     }
 
-    /** Draw the primary cost item at (x, y), tinted by whether it can be afforded. */
-    public static void drawPrimaryCost(GuiGraphicsExtractor ctx, Minecraft client, ItemStack cost, int x, int y, boolean affordable) {
-        ctx.item(cost, x, y);
-        CustomDrawContext.drawItemInSlotWithColor(ctx, client.font, cost, x, y, affordable ? WHITE : RED);
+    private static void drawCompactCostStack(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        ItemStack stack,
+        int x,
+        int y,
+        boolean affordable
+    ) {
+        if (stack.isEmpty()) return;
+        var pose = ctx.pose();
+        pose.pushMatrix();
+        pose.translate(x, y);
+        pose.scale(COST_ICON_SCALE, COST_ICON_SCALE);
+        ctx.item(stack, 0, 0);
+        CustomDrawContext.drawItemInSlotWithColor(ctx, client.font, stack, 0, 0, affordable ? WHITE : RED);
+        pose.popMatrix();
     }
 
-    /** Draw up to two additional cost icons starting near the right edge, with per-stack affordability coloring. */
+    /** Draw the primary cost item centered vertically within the plaque recess. */
+    public static void drawPrimaryCost(GuiGraphicsExtractor ctx, Minecraft client, ItemStack cost, int x, int y, boolean affordable) {
+        drawCompactCostStack(ctx, client, cost, x, y, affordable);
+    }
+
+    /** Draw up to two secondary cost icons flush against the XP badge divider. */
     public static void drawAdditionalCosts(
         GuiGraphicsExtractor ctx,
         Minecraft client,
         List<ItemStack> additionalCosts,
         List<Boolean> additionalAffordability,
-        int startX,
+        int dx,
+        int dw,
         int y
     ) {
         int shown = Math.min(2, additionalCosts.size());
+        if (shown <= 0) return;
+        int startX = additionalCostStartX(dx, dw, shown);
         for (int i = 0; i < shown; i++) {
             ItemStack additionalCost = additionalCosts.get(i);
             boolean affordable = i < additionalAffordability.size() && Boolean.TRUE.equals(additionalAffordability.get(i));
-            int x = startX + i * ADDITIONAL_COST_STRIDE;
-            ctx.item(additionalCost, x, y);
-            CustomDrawContext.drawItemInSlotWithColor(ctx, client.font, additionalCost, x, y, affordable ? WHITE : RED);
+            drawCompactCostStack(ctx, client, additionalCost, startX + i * ADDITIONAL_COST_STRIDE, y, affordable);
         }
     }
 
     /**
-     * Renders the right-hand dual-mode XP badge:
-     * <ul>
-     *   <li><b>Vanilla Mass-Production ({@code vanillaTierMode})</b>: 1/2/3 glowing emerald-gold orbs
-     *       on top + {@code Lv.X} player threshold below.</li>
-     *   <li><b>Arcane Full-Cost Ritual ({@code !vanillaTierMode})</b>: corked violet-gold arcane flask
-     *       on top + {@code -XL} full level deduction below.</li>
-     * </ul>
+     * Renders the horizontal side-by-side XP badge strictly inside the row plaque recess:
+     * {@code | [10x10 Orb / Flask]  Lv.30 / -28L} — zero vertical border overflow.
      */
     public static void drawXpBadge(
         GuiGraphicsExtractor ctx,
@@ -126,22 +171,23 @@ public final class RowRenderSupport {
         int dh,
         boolean xpMet
     ) {
-        int sepX = dx + dw - XP_BADGE_WIDTH;
-        ctx.fill(sepX, dy + 4, sepX + 1, dy + dh - 4, 0x389480B8);
-        int centerX = sepX + XP_BADGE_WIDTH / 2;
+        int sepX = xpSeparatorX(dx, dw);
+        ctx.fill(sepX, dy + 4, sepX + 1, dy + dh - 4, 0x429480B8);
 
         if (req.requiredLevel() <= 0 && req.deductedLevels() <= 0) {
             String freeText = "0L";
             float scale = 0.65f;
             int w = Math.round(client.font.width(freeText) * scale);
-            renderScaledText(ctx, client, freeText, centerX - w / 2, dy + 9, scale, XP_GREEN);
+            int centerX = sepX + XP_BADGE_WIDTH / 2;
+            int textY = dy + Math.round((dh - client.font.lineHeight * scale) / 2.0f) + 1;
+            renderScaledText(ctx, client, freeText, centerX - w / 2, textY, scale, XP_GREEN);
             return;
         }
 
         Identifier icon = req.vanillaTierMode() ? orbSprite(req.deductedLevels()) : XP_RITUAL_FLASK;
-        int iconSize = 11;
-        int iconX = centerX - iconSize / 2;
-        int iconY = dy + 2;
+        int iconSize = 10;
+        int iconX = sepX + 3;
+        int iconY = dy + (dh - iconSize) / 2;
         ctx.blit(icon, iconX, iconY, iconX + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
         if (!xpMet) {
             ctx.fill(iconX, iconY, iconX + iconSize, iconY + iconSize, 0x55120A16);
@@ -150,10 +196,51 @@ public final class RowRenderSupport {
         String label = req.vanillaTierMode()
             ? ("Lv." + req.requiredLevel())
             : ("-" + req.deductedLevels() + "L");
-        float scale = 0.58f;
-        int labelW = Math.round(client.font.width(label) * scale);
+        int textLeftLimit = iconX + iconSize + 2;
+        int textRightEdge = dx + dw - 7;
+        int availW = Math.max(10, textRightEdge - textLeftLimit);
+        int rawW = Math.max(1, client.font.width(label));
+        float scale = Math.min(0.60f, (float) availW / (float) rawW);
+        int scaledW = Math.round(rawW * scale);
+        int textX = textRightEdge - scaledW;
+        int textY = dy + Math.round((dh - client.font.lineHeight * scale) / 2.0f) + 1;
         int color = !xpMet ? RED : (req.vanillaTierMode() ? XP_GREEN : ARCANE_PURPLE);
-        renderScaledText(ctx, client, label, centerX - labelW / 2, dy + 15, scale, color);
+        renderScaledText(ctx, client, label, textX, textY, scale, color);
+    }
+
+    /**
+     * Renders text guaranteed never to exceed {@code maxWidth}: smoothly auto-scales down to
+     * {@code minScale} first, and cleanly ellipsizes only if still wider than {@code maxWidth}.
+     */
+    public static void renderBoundedText(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        String text,
+        int x,
+        int y,
+        float maxScale,
+        int maxWidth,
+        int color
+    ) {
+        if (text == null || text.isEmpty() || maxWidth <= 4) return;
+        int rawW = client.font.width(text);
+        if (rawW <= 0) return;
+
+        float minScale = 0.48f;
+        float scale = maxScale;
+        String finalStr = text;
+        if (rawW * scale > maxWidth) {
+            float needed = (float) maxWidth / (float) rawW;
+            if (needed >= minScale) {
+                scale = needed;
+            } else {
+                scale = minScale;
+                int maxRawPx = Math.max(8, Math.round(maxWidth / scale) - client.font.width("\u2026"));
+                finalStr = client.font.plainSubstrByWidth(text, maxRawPx) + "\u2026";
+            }
+        }
+        int yAdjust = Math.round((maxScale - scale) * client.font.lineHeight * 0.5f);
+        renderScaledText(ctx, client, finalStr, x, y + yAdjust, scale, color);
     }
 
     private static void drawFocusBorder(GuiGraphicsExtractor ctx, int x, int y, int width, int height) {
