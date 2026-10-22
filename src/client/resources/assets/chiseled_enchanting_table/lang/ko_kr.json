@@ -95,5 +95,6 @@
   "gui.chiseled_enchanting_table.xp_mode.full.consume": " • 실제 소모: %s 레벨 경험치 전량 차감 (현재 Lv.%s)",
   "gui.chiseled_enchanting_table.xp_mode.discount": " • 서고 공명 할인: -%s%% (기본 Lv.%s)",
   "gui.chiseled_enchanting_table.xp_mode.full.master_hint": " 💡 조각된 책장에 원본 마법서를 보관하면 1~3레벨 양산 공식으로 전환됩니다",
-  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "요구 Lv.%s · 소모 -%sL"
+  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "요구 Lv.%s · 소모 -%sL",
+  "jei.chiseled_enchanting_table.category.transformation": "아이템 변환"
 }

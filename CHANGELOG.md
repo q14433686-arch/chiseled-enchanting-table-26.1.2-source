@@ -20,6 +20,19 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ### Changed — Unified Progression, Library Resonance & Player-Choice Economy Overhaul (A × B × C)
 
+- **Plain-Spoken UI Copy, Trident Recipe Rebalance, Full-Library Glyph Particles, GitHub Wiki & JEI/REI Transformations**:
+  - **Trident Transformation Cost Rebalance**: streamlined `chiseled_enchanting_table:trident` to
+    `1× Nautilus Shell` + `3× Prismarine Shard` + `2× Prismarine Crystals`.
+  - **Full `7×5×7` Converging Glyph Particles**: fixed `ChiseledEnchantingTableBlock.animateTick`
+    (which previously checked client-unsynced shelf inventories and ignored wooden bookshelves) and
+    `ChiseledBookshelfTick` so both wooden bookshelves and occupied chiseled bookshelves across the
+    `7×5×7` library stream `ENCHANT` glyphs smoothly into the floating book atop the table.
+  - **Plain-Spoken In-Game Copy & `docs/WIKI.md`**: rewrote all UI labels, tooltips, and JEI/REI
+    descriptions across all 11 locales in concise, natural *Enchanting Infuser*-style prose, and
+    added a full gameplay & upstream-comparison guide in [`docs/WIKI.md`](docs/WIKI.md).
+  - **Bidirectional JEI & REI Item Transformations**: added `TransformationQueryIndex`,
+    `TransformationRecipeCategory`, and `ReiTransformationCategory` so all item transformations can
+    be queried forward (`R`) and backward (`U`) in both JEI and REI.
 - **Dual-Mode Coexisting XP Formula (`XpCostConversion.XpRequirement`) & Crying Obsidian Recipe**:
   - **Vanilla Enchanting Table Mass-Production Formula**: both **Item Transformations** and
     **Master Tome Inscribing** (`storedMasterLevel >= option.level()`) now use vanilla's

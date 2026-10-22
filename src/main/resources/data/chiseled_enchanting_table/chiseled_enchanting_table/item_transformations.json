@@ -57,10 +57,10 @@
       "output": "minecraft:trident",
       "level": 1,
       "xp_cost": 10,
-      "primary_cost": { "item": "minecraft:nautilus_shell", "count": 2 },
+      "primary_cost": { "item": "minecraft:nautilus_shell", "count": 1 },
       "additional_costs": [
-        { "item": "minecraft:prismarine_shard", "count": 16 },
-        { "item": "minecraft:prismarine_crystals", "count": 8 }
+        { "item": "minecraft:prismarine_shard", "count": 3 },
+        { "item": "minecraft:prismarine_crystals", "count": 2 }
       ]
     },
     {

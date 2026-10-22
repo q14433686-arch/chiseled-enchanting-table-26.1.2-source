@@ -95,5 +95,6 @@
   "gui.chiseled_enchanting_table.xp_mode.full.consume": " • 実際の消費：%s レベル分の経験値を完全消費（現在 Lv.%s）",
   "gui.chiseled_enchanting_table.xp_mode.discount": " • 書庫共鳴軽減：-%s%%（基本 Lv.%s）",
   "gui.chiseled_enchanting_table.xp_mode.full.master_hint": " 💡 模様入り本棚に原典を収めると 1〜3Lv 消費の量産式に切り替わります",
-  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "必要 Lv.%s · 消費 -%sL"
+  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "必要 Lv.%s · 消費 -%sL",
+  "jei.chiseled_enchanting_table.category.transformation": "アイテム変換"
 }

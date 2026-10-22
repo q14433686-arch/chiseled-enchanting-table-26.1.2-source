@@ -13,6 +13,8 @@
 **Current version:** `1.0.3` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
 **Target:** Minecraft `26.1.2`, Fabric Loader `>=0.19.3`, Fabric API `0.151.0+26.1.2`, Java `>=25`.
 
+📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)**
+
 `1.0.3` on this branch is the back-port of the sister `26.3` branch's fixes and features — the
 worldgen bookshelf deadlock fix ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)),
 optional JEI + REI integration, server-authoritative enchantment costs, 11 languages and the CI
@@ -25,12 +27,11 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 
 ## Concept
 
-* **Smooth entry & vanilla upgrade**: craft directly with `2 Diamonds + 1 Chiseled Bookshelf + 3 Crying Obsidian + 1 Book`, or upgrade an existing vanilla Enchanting Table with `4 Amethyst Shards + 1 Chiseled Bookshelf + 3 Crying Obsidian`.
-* **Two-track library progression, Grand Library Epiphany & Library Resonance (`-35% XP` cap)**:
-  * **Wooden Bookshelves** smoothly boost standard table enchantments (`#minecraft:in_enchanting_table`) up to mid-tier (`ceil(maxLevel / 2)`), grant `-1% XP` per shelf (up to `-10%`), and at **32+ Wooden Bookshelves** awaken **Treasure Epiphany** (`35%–65%` chance to manifest 1 item-matched Treasure Enchantment, refreshable at Dawn, after enchanting, or via the `↻` UI button).
-  * **Chiseled Bookshelves** turn every stored Enchanted Book into a permanent **Master Tome** unlocking tiers `1..k` directly and granting `-2% XP` per stored book (up to `-35%` combined discount).
-  * **Arcane Synthesis Crystal (`arcane_catalyst`)**: an expensive craftable universal catalyst accepted across all Treasure Epiphanies, Treasure inscriptions, and Master-Tome Research upgrades alongside thematic biome materials!
-* **Dual economy & full player choice**: daily gear inscribing stays fast and affordable with your choice of arcane materials (`Lapis Lazuli`, `Amethyst Shard`, `Emerald`, or thematic catalysts — zero per-player lock-in), while one-time Master-Tome upgrades let you either combine books for free or research higher tiers across 3 biome-diverse material routes per enchantment!
+* **Smooth entry & vanilla upgrade**: craft directly with `2 Diamonds + 1 Chiseled Bookshelf + 3 Crying Obsidian + 1 Book`, upgrade a vanilla Enchanting Table, or craft `8× Crying Obsidian` from `8× Obsidian + 1× Ghast Tear`.
+* **Two-track library progression & Dual-Mode XP Formula (see [`docs/WIKI.md`](docs/WIKI.md))**:
+  * **Wooden Bookshelves (`7×5×7`)** boost standard enchantments up to mid-tier (`ceil(maxLevel / 2)`), grant XP reduction starting at `12+` shelves, and at **`32+` Wooden Bookshelves** unlock **Treasure Epiphany** (with countdown, persistent lock, and manual refresh).
+  * **Chiseled Bookshelves (`7×5×7`)** turn stored Enchanted Books into permanent **Master Tomes** unlocking tiers `1..k` directly, adding global & per-enchantment XP discounts (up to **`-40%`**), and switching inscriptions into **Vanilla Mass-Production XP Mode (`1–3` levels deducted)**.
+  * **Bidirectional JEI & REI Support**: full recipe & usage lookup for both **Chiseled Enchanting** and **Item Transformations** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo Shard`, `Bottle o' Enchanting`, `Blank Overwrite`).
 
 ## Installation
 

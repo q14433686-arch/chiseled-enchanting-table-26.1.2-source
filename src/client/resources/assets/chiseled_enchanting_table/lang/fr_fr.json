@@ -87,13 +87,14 @@
   "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Tomes Maîtres : %s tomes complets -> +%s%% global (+15%% max par tome dédié)",
   "gui.chiseled_enchanting_table.resonance.affinity_line": "Tomes compatibles avec l'objet : %s (augmente chance et plafond)",
   "gui.chiseled_enchanting_table.resonance.specific_line": "Tome Maître Niv.%s/%s -> +%s%% réd. XP bonus (-%s%% total)",
-  "gui.chiseled_enchanting_table.xp_mode.free": "✦ Direct Tome Transfer: 0 XP Cost",
-  "gui.chiseled_enchanting_table.xp_mode.vanilla.title": "✦ Vanilla Mass-Production Formula (XP Orbs)",
-  "gui.chiseled_enchanting_table.xp_mode.vanilla.threshold": " • Required Level: Lv.%s+ (Current: Lv.%s)",
-  "gui.chiseled_enchanting_table.xp_mode.vanilla.consume": " • Actual Cost: Deducts only %s XP Level(s)",
-  "gui.chiseled_enchanting_table.xp_mode.full.title": "✦ Arcane Full-Infusion Formula (Ritual Flask)",
-  "gui.chiseled_enchanting_table.xp_mode.full.consume": " • Actual Cost: Deducts full %s XP Level(s) (Current: Lv.%s)",
-  "gui.chiseled_enchanting_table.xp_mode.discount": " • Library Resonance: -%s%% reduction (Base: Lv.%s)",
-  "gui.chiseled_enchanting_table.xp_mode.full.master_hint": " 💡 Store this Master Tome in a Chiseled Bookshelf to unlock 1–3 Lv mass-production!",
-  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "Req Lv.%s · Cost -%sL"
+  "gui.chiseled_enchanting_table.xp_mode.free": "Direct Book Transfer: 0 XP",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.title": "Vanilla XP Cost (1–3 Levels)",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.threshold": "Required Level: %s (Current: %s)",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.consume": "Levels Deducted: %s",
+  "gui.chiseled_enchanting_table.xp_mode.full.title": "Full XP Level Cost",
+  "gui.chiseled_enchanting_table.xp_mode.full.consume": "Levels Deducted: %s (Current: %s)",
+  "gui.chiseled_enchanting_table.xp_mode.discount": "Shelf Discount: -%s%% (Base: %s)",
+  "gui.chiseled_enchanting_table.xp_mode.full.master_hint": "Store this book in a Chiseled Bookshelf to reduce cost to 1–3 levels",
+  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "Req Lv.%s · Cost %sL",
+  "jei.chiseled_enchanting_table.category.transformation": "Item Transformation"
 }

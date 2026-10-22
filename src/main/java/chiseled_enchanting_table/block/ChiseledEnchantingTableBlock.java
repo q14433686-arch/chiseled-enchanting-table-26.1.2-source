@@ -58,9 +58,19 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public static final MapCodec<ChiseledEnchantingTableBlock> CODEC = simpleCodec(ChiseledEnchantingTableBlock::new);
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
-    public static final List<BlockPos> POWER_PROVIDER_OFFSETS = BlockPos.betweenClosedStream(-2, 0, -2, 2, 1, 2).filter(pos -> {
-        return Math.abs(pos.getX()) == 2 || Math.abs(pos.getZ()) == 2;
-    }).map(BlockPos::immutable).toList();
+    public static final List<BlockPos> POWER_PROVIDER_OFFSETS = BlockPos.betweenClosedStream(-3, -2, -3, 3, 2, 3)
+        .filter(pos -> !(pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0))
+        .map(BlockPos::immutable)
+        .toList();
+
+    private static boolean hasOccupiedChiseledSlot(BlockState state) {
+        for (var prop : net.minecraft.world.level.block.ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES) {
+            if (state.hasProperty(prop) && state.getValue(prop)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public ChiseledEnchantingTableBlock(BlockBehaviour.Properties settings) {
         super(settings);
@@ -90,29 +100,35 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         super.animateTick(state, level, pos, random);
         for (BlockPos offset : POWER_PROVIDER_OFFSETS) {
-            if (random.nextInt(16) != 0) {
+            boolean vanillaRing = Math.max(Math.abs(offset.getX()), Math.abs(offset.getZ())) <= 2
+                && offset.getY() >= 0 && offset.getY() <= 1;
+            if (random.nextInt(vanillaRing ? 16 : 24) != 0) {
                 continue;
             }
             BlockPos shelfPos = pos.offset(offset);
-            if (!level.getBlockState(shelfPos).is(Blocks.CHISELED_BOOKSHELF)) {
+            BlockState shelfState = level.getBlockState(shelfPos);
+            boolean activeShelf = shelfState.is(net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER)
+                || (shelfState.is(Blocks.CHISELED_BOOKSHELF) && hasOccupiedChiseledSlot(shelfState));
+            if (!activeShelf) {
                 continue;
             }
-            BlockPos betweenPos = pos.offset(offset.getX() / 2, offset.getY(), offset.getZ() / 2);
-            if (!level.getBlockState(betweenPos).getCollisionShape(level, betweenPos).isEmpty()) {
+            BlockPos betweenPos = pos.offset(
+                Integer.signum(offset.getX()),
+                net.minecraft.util.Mth.clamp(offset.getY(), 0, 1),
+                Integer.signum(offset.getZ())
+            );
+            if (!betweenPos.equals(shelfPos) && !level.getBlockState(betweenPos).getCollisionShape(level, betweenPos).isEmpty()) {
                 continue;
             }
-            if (level.getBlockEntity(shelfPos) instanceof ChiseledBookShelfBlockEntity cbsbe
-                && EnchantmentFinder.streamAllEnchantements(cbsbe, level).findAny().isPresent()) {
-                level.addParticle(
-                    ParticleTypes.ENCHANT,
-                    pos.getX() + 0.5D,
-                    pos.getY() + 2.0D,
-                    pos.getZ() + 0.5D,
-                    offset.getX() + random.nextFloat() - 0.5D,
-                    offset.getY() - random.nextFloat() - 1.0F,
-                    offset.getZ() + random.nextFloat() - 0.5D
-                );
-            }
+            level.addParticle(
+                ParticleTypes.ENCHANT,
+                pos.getX() + 0.5D,
+                pos.getY() + 2.0D,
+                pos.getZ() + 0.5D,
+                offset.getX() + random.nextFloat() - 0.5D,
+                offset.getY() - random.nextFloat() - 1.0F,
+                offset.getZ() + random.nextFloat() - 0.5D
+            );
         }
     }
 

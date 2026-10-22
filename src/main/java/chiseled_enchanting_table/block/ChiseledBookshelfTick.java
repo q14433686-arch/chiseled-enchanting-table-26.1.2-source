@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.block;
 
+import chiseled_enchanting_table.registry.BlockRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -11,10 +12,32 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.ChiseledBookShelfBlock;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 /** Server-side ambient effect for vanilla chiseled bookshelves that store enchanted books. */
 public final class ChiseledBookshelfTick {
     private ChiseledBookshelfTick() {}
+
+    @Nullable
+    private static BlockPos findNearestChiseledTable(ServerLevel level, BlockPos shelfPos) {
+        BlockPos best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dy = -2; dy <= 2; dy++) {
+                for (int dz = -3; dz <= 3; dz++) {
+                    BlockPos candidate = shelfPos.offset(dx, dy, dz);
+                    if (level.getBlockState(candidate).is(BlockRegistry.CHISELED_ENCHANTING_TABLE)) {
+                        double d = dx * dx + dy * dy + dz * dz;
+                        if (d < bestDist) {
+                            bestDist = d;
+                            best = candidate.immutable();
+                        }
+                    }
+                }
+            }
+        }
+        return best;
+    }
 
     public static void triggerParticleAndSoundIfEnchantedBook(
         BlockState state,
@@ -42,29 +65,32 @@ public final class ChiseledBookshelfTick {
             pos,
             SoundEvents.ENCHANTMENT_TABLE_USE,
             SoundSource.BLOCKS,
-            0.55F,
+            0.45F,
             0.85F + random.nextFloat() * 0.30F
         );
-        // ENCHANT particles are the same particle family used by vanilla enchanting-table
-        // bookshelf streams. In packet form they need a non-zero motion/target vector to be
-        // obvious; a simple count-spread packet with near-zero direction can be effectively
-        // invisible in-game even though the sound proves the random tick fired. Send a few exact
-        // particles drifting out from the shelf face, plus a tiny ENCHANTED_HIT sparkle fallback so
-        // the ambient cue remains visible on clients/resource packs where ENCHANT is very subtle.
-        for (int i = 0; i < 4; i++) {
-            double jitterSide = (random.nextDouble() - 0.5D) * 0.10D;
-            double jitterY = (random.nextDouble() - 0.5D) * 0.08D;
-            level.sendParticles(
-                ParticleTypes.ENCHANT,
-                x + right.getStepX() * jitterSide,
-                y + jitterY,
-                z + right.getStepZ() * jitterSide,
-                0,
-                facing.getStepX() * 0.35D,
-                0.08D + random.nextDouble() * 0.06D,
-                facing.getStepZ() * 0.35D,
-                1.0D
-            );
+
+        // ParticleTypes.ENCHANT treats (x, y, z) as the DESTINATION (table + (0.5, 2.0, 0.5)) and
+        // (dx, dy, dz) as the starting offset toward the bookshelf slot!
+        BlockPos tablePos = findNearestChiseledTable(level, pos);
+        if (tablePos != null) {
+            double destX = tablePos.getX() + 0.5D;
+            double destY = tablePos.getY() + 2.0D;
+            double destZ = tablePos.getZ() + 0.5D;
+            for (int i = 0; i < 4; i++) {
+                double jitterSide = (random.nextDouble() - 0.5D) * 0.14D;
+                double jitterY = (random.nextDouble() - 0.5D) * 0.12D;
+                level.sendParticles(
+                    ParticleTypes.ENCHANT,
+                    destX,
+                    destY,
+                    destZ,
+                    0,
+                    (x + right.getStepX() * jitterSide) - destX,
+                    (y + jitterY) - destY,
+                    (z + right.getStepZ() * jitterSide) - destZ,
+                    1.0D
+                );
+            }
         }
         level.sendParticles(
             ParticleTypes.ENCHANTED_HIT,

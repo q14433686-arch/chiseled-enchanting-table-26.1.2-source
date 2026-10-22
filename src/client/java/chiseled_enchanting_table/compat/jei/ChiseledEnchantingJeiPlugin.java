@@ -3,6 +3,7 @@ package chiseled_enchanting_table.compat.jei;
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.EnchantQueryIndex;
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.compat.TransformationQueryIndex;
 import java.util.ArrayList;
 import java.util.List;
 import mezz.jei.api.IModPlugin;
@@ -62,7 +63,11 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        registration.addRecipeCategories(new EnchantingRecipeCategory(registration.getJeiHelpers().getGuiHelper()));
+        var guiHelper = registration.getJeiHelpers().getGuiHelper();
+        registration.addRecipeCategories(
+            new EnchantingRecipeCategory(guiHelper),
+            new TransformationRecipeCategory(guiHelper)
+        );
     }
 
     @Override
@@ -70,6 +75,13 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
         List<EnchantingRecipe> recipes = recipes();
         if (!recipes.isEmpty()) {
             registration.addRecipes(EnchantingRecipeCategory.RECIPE_TYPE, recipes);
+        }
+        List<TransformationRecipe> transformations = TransformationQueryIndex.build()
+            .stream()
+            .map(TransformationRecipe::of)
+            .toList();
+        if (!transformations.isEmpty()) {
+            registration.addRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
         }
 
         List<ItemStack> stations = List.of(
@@ -104,6 +116,10 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             EnchantingRecipeCategory.RECIPE_TYPE,
             BlockRegistry.CHISELED_ENCHANTING_TABLE,
             Blocks.CHISELED_BOOKSHELF
+        );
+        registration.addCraftingStation(
+            TransformationRecipeCategory.RECIPE_TYPE,
+            BlockRegistry.CHISELED_ENCHANTING_TABLE
         );
     }
 
