@@ -49,7 +49,7 @@ public class ReiTransformationCategory implements DisplayCategory<ReiTransformat
     }
 
     @Override
-    public int getDisplayHeight(ReiTransformationDisplay display) {
+    public int getDisplayHeight() {
         return HEIGHT;
     }
 
