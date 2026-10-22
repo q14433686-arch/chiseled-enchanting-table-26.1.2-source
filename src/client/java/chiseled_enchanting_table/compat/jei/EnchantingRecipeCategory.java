@@ -2,16 +2,17 @@ package chiseled_enchanting_table.compat.jei;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.EnchantQueryIndex;
+import java.util.List;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.ITooltipBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
-import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.category.AbstractRecipeCategory;
 import mezz.jei.api.recipe.types.IRecipeType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -21,23 +22,22 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Blocks;
 
 /**
- * The single bidirectional category: {@code [target item] + [enchanted book] + [material] -> [enchanted item]}.
- *
- * <p>Because both the item and the book are real input slots, JEI derives both queries from it:
- * pressing {@code U} on an enchanted book lists every item it can enchant, and pressing {@code U} on
- * a sword lists every book that works on it. That is the whole point of modelling the mechanic as a
- * two-input recipe instead of two separate lookup screens.</p>
+ * Bidirectional category:
+ * {@code [target item] + [enchanted book] + [primary material] + [optional secondary material] -> [enchanted item]}.
  */
 public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingRecipe> {
     public static final Identifier UID = ChiseledEnchantingTable.identifier("enchanting");
 
-    private static final int WIDTH = 100;
-    private static final int HEIGHT = 42;
+    private static final int WIDTH = 128;
+    private static final int HEIGHT = 44;
 
-    private static final int SLOT_ITEM = 1;
-    private static final int SLOT_BOOK = 21;
-    private static final int SLOT_COST_X = 27;
-    private static final int SLOT_OUTPUT_X = 74;
+    private static final int SLOT_Y = 5;
+    private static final int SLOT_TARGET_X = 4;
+    private static final int SLOT_BOOK_X = 22;
+    private static final int SLOT_COST_1_X = 40;
+    private static final int SLOT_COST_2_X = 58;
+    private static final int ARROW_X = 80;
+    private static final int SLOT_OUTPUT_X = 104;
 
     public static final IRecipeType<EnchantingRecipe> RECIPE_TYPE =
         IRecipeType.create(UID.getNamespace(), UID.getPath(), EnchantingRecipe.class);
@@ -54,28 +54,47 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, EnchantingRecipe recipe, IFocusGroup focuses) {
-        // Target item: all items the enchantment supports share this row, so they are alternatives
-        // in one slot (this is what makes "item -> which books" work).
-        builder.addInputSlot(SLOT_ITEM, 1).addItemStacks(recipe.targetItems());
-        builder.addInputSlot(SLOT_ITEM, SLOT_BOOK).addItemStack(recipe.book());
+        builder.addInputSlot(SLOT_TARGET_X, SLOT_Y).addItemStacks(recipe.targetItems());
+        builder.addInputSlot(SLOT_BOOK_X, SLOT_Y).add(recipe.book());
 
-        if (recipe.costItems().isEmpty()) {
-            // Enchantments with no material cost still need a stable layout; keep the slot but
-            // hide it from focus so an empty slot cannot be "focused".
+        List<ItemStack> primaries = recipe.primaryCostAlternatives();
+        List<ItemStack> secondaries = recipe.secondaryCostAlternatives();
+        if (primaries.isEmpty()) {
             builder.addInvisibleIngredients(RecipeIngredientRole.INPUT);
         } else {
-            builder.addInputSlot(SLOT_COST_X, 11).addItemStacks(recipe.costItems());
+            builder.addInputSlot(SLOT_COST_1_X, SLOT_Y).addItemStacks(primaries);
+            if (!secondaries.isEmpty()) {
+                builder.addInputSlot(SLOT_COST_2_X, SLOT_Y).addItemStacks(secondaries);
+            }
         }
 
         ItemStack output = outputStack(recipe);
-        builder.addOutputSlot(SLOT_OUTPUT_X, 11).addItemStack(output);
+        builder.addOutputSlot(SLOT_OUTPUT_X, SLOT_Y).add(output);
     }
 
-    /**
-     * Representative output: the most "recognisable" supported item with the enchantment applied.
-     * A book target becomes an enchanted book (that is what the table actually produces), which is
-     * also why the row is still meaningful when the only supported items are books.
-     */
+    @Override
+    public void draw(
+        EnchantingRecipe recipe,
+        IRecipeSlotsView recipeSlotsView,
+        GuiGraphicsExtractor guiGraphics,
+        double mouseX,
+        double mouseY
+    ) {
+        var font = Minecraft.getInstance().font;
+        guiGraphics.text(font, "\u2192", ARROW_X, SLOT_Y + 4, 0xFF404040, false);
+        var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+            recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0
+        );
+        Identifier orb = chiseled_enchanting_table.gui.row.RowRenderSupport.orbSprite(xpReq.deductedLevels());
+        guiGraphics.blit(orb, SLOT_TARGET_X, 27, SLOT_TARGET_X + 10, 37, 0.0f, 1.0f, 0.0f, 1.0f);
+        Component xpText = Component.translatable(
+            "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+            xpReq.requiredLevel(),
+            xpReq.deductedLevels()
+        );
+        guiGraphics.text(font, xpText, SLOT_TARGET_X + 13, 29, 0xFF2E5B27, false);
+    }
+
     private static ItemStack outputStack(EnchantingRecipe recipe) {
         Holder<Enchantment> holder = Minecraft.getInstance().level == null
             ? null
@@ -99,8 +118,13 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
         double mouseX,
         double mouseY
     ) {
+        var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+            recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0
+        );
         tooltip.add(Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.xp", recipe.xpLevelCost()
+            "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+            xpReq.requiredLevel(),
+            xpReq.deductedLevels()
         ));
         tooltip.add(Component.translatable(
             recipe.serverCosts()
@@ -111,7 +135,6 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
             "jei.chiseled_enchanting_table.tooltip.bookshelf"
         ));
         if (!recipe.conflictingEnchantments().isEmpty()) {
-            // Shared with the REI adapter so both viewers render the same translated list.
             tooltip.add(Component.translatable(
                 "jei.chiseled_enchanting_table.tooltip.conflicts",
                 EnchantQueryIndex.conflictSummary(recipe.conflictingEnchantments())

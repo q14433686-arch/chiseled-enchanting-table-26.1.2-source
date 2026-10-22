@@ -13,7 +13,7 @@ Roughly in the order a new contributor should walk them:
 2. [`../CURRENT_BASELINE.md`](../CURRENT_BASELINE.md) — canonical source of truth for
    *currently-shipping* capabilities, build config, package layout, and active temporary
    boundaries. Update this whenever the code / data / build changes.
-3. [`EXTENDING.md`](EXTENDING.md) — every data-driven extension point (all 6 JSON files under
+3. [`EXTENDING.md`](EXTENDING.md) — every data-driven extension point (all 7 JSON files under
    `data/<ns>/chiseled_enchanting_table/`), their schemas, their Java entry points, and how to
    add a new one. Also documents the singular-directory 26.x data-pack trap and the
    worldgen-worker vs server-thread split in `BookshelfBookFiller`.
@@ -56,9 +56,17 @@ Used when publishing an updated release; keeps every platform aligned.
 - [`marketing/curseforge.md`](marketing/curseforge.md) — CurseForge summary + full description.
 - [`marketing/mcmod.md`](marketing/mcmod.md) — MC百科 (mcmod.cn) 中文简介与介绍正文.
 
+## Gameplay
+
+- [`WIKI.md`](WIKI.md) — full gameplay guide + upstream comparison (中文): the `7×5×7` two-track
+  bookshelf progression, dual-mode XP, yield-aware material curves, Master Tomes, Treasure
+  Epiphany/freeze/reroll, Depleted Tome & Blank Overwrite, every built-in transformation recipe,
+  and the JEI/REI query model.
+
 ## Minecraft-line & feature reports
 
 - [26.1.2 → 26.2 impact assessment & port report](reports/PORTING_26_2_REPORT.md)
+- [26.1.2-line feature sync onto 26.2 (change mapping + 26.2 adaptations)](reports/SYNC_FROM_26_1_2_SIDE_REPORT.md)
 - [Worldgen bookshelf fill deadlock fix (thread rules for `finalizeProcessing`)](reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md)
 - [Recipe-viewer integration: JEI and REI + S2C cost sync](reports/VIEWER_INTEGRATION_JEI_REI.md)
 - [CI triad (reference copies + drift check)](ci/README.md)

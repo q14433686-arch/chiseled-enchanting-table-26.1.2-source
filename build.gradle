@@ -70,13 +70,11 @@ sourceSets {
             //     BookshelfBookFiller.
             //   * block/ChiseledBookshelfTick                                                  —
             //     still deferred (adds enchant particles/sound over a chiseled bookshelf).
-            // Legacy upstream mixins still parked pending their own 26.1.2 mapping pass.
             // 1.0.2: vanilla enchanting-table book blocking and narrow book+book same-level
             // anvil merge block restored. 1.0.3: chiseled-bookshelf random-tick ambient
-            // particle/sound restored. Keep only the broader XP-cost anvil tweak parked until
-            // it gets its own live-test pass.
-            exclude 'chiseled_enchanting_table/mixin/anvil/RemoveXpCostScaling.java'
-            exclude 'chiseled_enchanting_table/mixin/accessor/**'
+            // particle/sound, the flat anvil prior-work penalty (`RemoveXpCostScaling`) and the
+            // whole 26.1.2-side A x B x C progression/economy/UI batch are active. The parked
+            // `mixin/accessor/ItemAccessor.java` was deleted (nothing used it any more).
             exclude 'chiseled_enchanting_table/mixin/structureProcessor/**'
             exclude 'chiseled_enchanting_table/modifyChestLootTable/**'
             exclude 'chiseled_enchanting_table/structureProcessor/**'

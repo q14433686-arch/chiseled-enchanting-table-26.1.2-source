@@ -8,13 +8,93 @@
 Only the current release is kept here. Historical pre-`1.0.2` porting rounds and older release notes
 are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
-> **26.2 branch (2026-07-19, synced 2026-10-21):** This line targets **Minecraft 26.2**. Toolchain
-> uses Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Gradle `9.5.1`, Fabric Loader `0.19.3`, and
-> `mod_version` `1.0.3`. See [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md)
-> for the 26.2 port details. On 2026-10-21 all feature additions and fixes from the `26.3` branch
-> were synced back to this `26.2` line with 26.2 API/schema compatibility.
+> **26.2 branch (2026-07-19, synced 2026-10-21 and 2026-10-22):** This line targets **Minecraft
+> 26.2**. Toolchain uses Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Gradle `9.5.1`, Fabric
+> Loader `0.19.3`, and `mod_version` `1.0.3`. See
+> [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md) for the 26.2 port
+> details. On **2026-10-21** all feature additions and fixes from the `26.3` branch were synced back
+> to this line with 26.2 API/schema compatibility; on **2026-10-22** the whole progression /
+> economy / UI overhaul that had landed on the sister `26.1.2` line was synced as well — the
+> change-by-change mapping and the 26.2 adaptations (notably: `ChatFormatting` no longer exists in
+> 26.2, so every styled line uses `Style#withColor(ARGB)`) are recorded in
+> [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md).
 
-## [1.0.3] - 2026-10-21
+## [1.0.3] - 2026-10-22
+
+### Synced — full `26.1.2`-line progression, economy & UI overhaul
+
+Ported from the sister `26.1.2` branch (see
+[`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md)).
+Minecraft, Loom, Gradle, Fabric API and the viewer coordinates are unchanged — this is a feature
+sync adapted to the 26.2 APIs, not a version bump.
+
+- **Two-track library progression (`7×5×7`)**: wooden bookshelves raise default-unlocked
+  enchantments by `+1` per `5` shelves up to `ceil(maxLevel / 2)`; enchanted books stored in
+  chiseled bookshelves become permanent **Master Tomes** that unlock every level `1..k` 1:1, and the
+  graduation tiers are only reachable through them. Treasure enchantments are gated behind either a
+  stored tome or a Grand-Library epiphany.
+- **`LibraryResonance` — relative-mastery discounts**: XP discounts start at `12` wooden shelves
+  (`2%`) and rise smoothly to `12%` at `32`, global mastery adds up to `13%`, per-enchantment
+  specialisation adds `round(15 * r^1.5)` with `r = level / maxLevel`, capped at `-40%`. The
+  mastery weights are mod-agnostic (`Enchantment#getMaxLevel`, `#canEnchant`), so modded
+  enchantments work out of the box.
+- **Dual-mode XP formula (`XpCostConversion.XpRequirement`)**: item transformations and
+  Master-Tome inscribing (when `storedMasterLevel >= option.level()`) use vanilla's enchanting-table
+  thresholds (`Lv.1..30`) but deduct only `1 / 2 / 3` levels — batch mass production. Base
+  enchanting, book combine/research upgrades and Treasure Epiphanies keep the full XP curve. The two
+  modes are distinguishable in the row badges: `gui/xp_orb_1..3.png` + `Lv.X` versus
+  `gui/xp_ritual_flask.png` + `-XL`.
+- **Yield-aware material curves**: every cost table now uses `base_count` / `max_level_count` /
+  `level_exponent` so the counts follow survival yield (`Lapis Lazuli > Emerald >> Amethyst Shard`)
+  and adapt to any modded `maxLevel` (e.g. `3→6→10→15→20` lapis, `2→5→8→13→18` emerald,
+  `1→2→4→6→8` amethyst shard for a 5-tier enchantment).
+- **Grand-Library Treasure Epiphany (`treasure_epiphany.json`)** at `>= 32` wooden bookshelves: proc
+  chance and simultaneous slot cap scale with shelves *and* stored Master Tomes, rolled tiers are
+  multi-level, and the whole panel can be **cryo-frozen** (persistent across mining/re-placing via
+  `CUSTOM_DATA` + `copy_components`, live `MM:SS` lore preview) or rerolled for materials.
+- **Depleted Tome & Blank Overwrite**: merging or draining an enchanted book yields a 64-stackable
+  `chiseled_enchanting_table:depleted_tome`; `blank_overwrite` cleanses up to 8 at once
+  (`1` XP level + a scribe reagent) back into canonical `minecraft:book`s and grants the *Tabula
+  Rasa* advancement. Enchanting a plain book now builds a canonical enchanted book so identical
+  books stack to `64`.
+- **New items & recipes**: `chiseled_enchanting_table:arcane_catalyst` (universal treasure-synthesis
+  catalyst, also accepted by Master-Tome research), `recipe/crying_obsidian.json`
+  (`8× Obsidian + 1× Ghast Tear → 8× Crying Obsidian`), a cheaper base recipe
+  (`2 Diamond + 1 Book + 1 Chiseled Bookshelf + 3 Crying Obsidian`) and an
+  upgrade recipe (`1 Enchanting Table + 1 Chiseled Bookshelf + 4 Amethyst Shard + 3 Crying
+  Obsidian`). The trident transformation is rebalanced to `1 Nautilus Shell + 3 Prismarine Shard +
+  2 Prismarine Crystals`.
+- **Viewers**: `TransformationQueryIndex` + `TransformationRecipeCategory` +
+  `ReiTransformationCategory` add bidirectional item-transformation lookup (`R`/`U`) next to the
+  existing enchantment category, which now shows the primary **and** secondary material slots and
+  the XP-tier badge; both categories drop their caches when the S2C cost table is re-synced.
+- **UI**: repainted full-window background (`680×332`), epiphany panel (normal/frozen), six row
+  plaques and the orb/flask XP badges; hardware scissor clipping plus auto-scaling/ellipsizing text
+  so rows can never overlap; `1:1` scrollbar thumb dragging; centered container slots `(183, 28)` /
+  `(183, 57)`; plain-spoken copy across all 11 locales; `docs/WIKI.md` gameplay + upstream
+  comparison guide.
+- **Table dyeing, particles, loot**: right-click dying now blends colours on the block entity,
+  syncs to clients (`getUpdateTag` / `getUpdateData` / `getRenderData`), tints block and item
+  (`BlockColorRegistry` + `items/chiseled_enchanting_table.json`) and survives breaking via the
+  block loot table; both wooden and occupied chiseled bookshelves inside the `7×5×7` volume stream
+  `ENCHANT` glyphs into the floating book; the Mineshaft `DepthBasedEfficiencyFunction` is restored
+  (Efficiency II–V by depth).
+- **Anvil**: `RemoveXpCostScaling` is re-enabled (flat prior-work penalty, no more exponential
+  "Too Expensive!"), and `RemoveEnchantMerge` now also preserves `count - 1` of a stacked enchanted
+  book placed in the right slot. The parked `mixin/accessor/ItemAccessor` was deleted.
+- **Advancements**: 18 in total (8 new: `transmute_item`, `enchanted_golden_apple`,
+  `arcane_catalyst`, `library_resonance`, `grand_library`, `freeze_epiphany`, `inscribe_epiphany`,
+  `multi_epiphany`), all localized; `root` additionally keys on the upgrade recipe.
+- **26.2 adaptations** (details in the sync report): `ChatFormatting` was removed from all three
+  files that used it and replaced with `Style#withColor(0xAARRGGBB)`; the 26.2 structure-processor
+  API, `markPosForPostProcessing`, the plural loot schema, `recipe_id` criteria, the two-argument
+  `LivingEntity#drop` and the pinned 26.2 viewer coordinates are all kept.
+- **Repo hygiene**: removed leftover scratch files (`Dummy.*`, `RawOutput.log`, `adapted_handler.java`,
+  `adapt_handler.py`, `append.py`, stale `fix*.patch`/`fix_*.py`, `*.orig`, `*.rej`, a committed
+  `.class`), the retired duplicate mixin configs, and `block/FloatingBook.java`.
+- **Data-pack tooling**: `scripts/compat_check.py` gained Tier-1 validators for
+  `book_upgrades.json` and `treasure_epiphany.json` plus a shared cost-option schema check, and both
+  files joined the Tier-2 referenced-id sweep.
 
 ### Added — JEI and REI integration (bidirectional enchantment lookup)
 

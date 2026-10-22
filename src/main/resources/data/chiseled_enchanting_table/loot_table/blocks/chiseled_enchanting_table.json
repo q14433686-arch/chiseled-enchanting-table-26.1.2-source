@@ -15,7 +15,10 @@
             {
               "function": "minecraft:copy_components",
               "include": [
-                "minecraft:custom_name"
+                "minecraft:custom_name",
+                "minecraft:dyed_color",
+                "minecraft:custom_data",
+                "minecraft:lore"
               ],
               "source": "block_entity"
             }

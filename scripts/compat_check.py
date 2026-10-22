@@ -470,6 +470,273 @@ def check_bookshelf_book_pool_well_formed() -> None:
                     err(f"bookshelf_book_pool.json: enchant_sets[{i}][{j}].weight must be a positive integer, got {weight!r}")
 
 
+def _check_cost_options(rel: str, options, where: str) -> None:
+    """Validate one ``options`` list of cost specs (shared by enchantment_costs.json,
+    book_upgrades.json, treasure_epiphany.json and item_transformations.json).
+
+    A spec is ``{item, ...count strategy...}`` where the count strategy is exactly one of
+
+    * ``count``                    — flat count;
+    * ``count_per_level``          — flat × level;
+    * ``min_count`` + ``max_count`` — uniform-random inside the deterministic per-player seed;
+    * ``base_count`` + ``max_level_count`` (+ optional ``level_exponent``) — smooth relative-tier
+      curve, auto-adapting to any ``maxLevel`` (the 26.1.2-side "yield-aware" rework; this is the
+      form the bundled data uses today).
+
+    ``extra`` / ``extras`` recursively add secondary items on top of the primary one.
+    """
+    if not isinstance(options, list) or not options:
+        err(f"{rel}: {where}.options must be a non-empty list")
+        return
+    for i, spec in enumerate(options):
+        if not isinstance(spec, dict):
+            err(f"{rel}: {where}.options[{i}] must be an object")
+            continue
+        item = spec.get("item")
+        if not isinstance(item, str) or not _RESOURCE_LOCATION_RE.match(item):
+            err(f"{rel}: {where}.options[{i}].item is not a valid item id: {item!r}")
+        strategies = [k for k in ("count", "count_per_level", "base_count") if k in spec]
+        if not strategies and not ("min_count" in spec and "max_count" in spec):
+            err(
+                f"{rel}: {where}.options[{i}] declares no count strategy "
+                "(count / count_per_level / min_count+max_count / base_count+max_level_count)"
+            )
+        for key in ("count", "count_per_level", "min_count", "max_count", "base_count", "max_level_count"):
+            value = spec.get(key)
+            if value is not None:
+                if not isinstance(value, int) or value < 0:
+                    err(f"{rel}: {where}.options[{i}].{key} must be a non-negative integer, got {value!r}")
+        exponent = spec.get("level_exponent")
+        if exponent is not None and not (isinstance(exponent, (int, float)) and float(exponent) > 0.0):
+            err(f"{rel}: {where}.options[{i}].level_exponent must be a positive number, got {exponent!r}")
+        if "base_count" in spec and "max_level_count" not in spec:
+            err(f"{rel}: {where}.options[{i}] uses base_count without max_level_count")
+        # `extras` is a nested spec list (each element is a full cost spec); `additional_costs`
+        # is a flat list of secondary add-ons consumed from the player inventory.
+        extras = spec.get("extras")
+        if extras is not None:
+            _check_cost_options(rel, extras, f"{where}.options[{i}].extras")
+        additional_costs = spec.get("additional_costs")
+        if additional_costs is not None:
+            if not isinstance(additional_costs, list):
+                err(f"{rel}: {where}.options[{i}].additional_costs must be a list")
+            else:
+                for j, additional in enumerate(additional_costs):
+                    if not isinstance(additional, dict):
+                        err(f"{rel}: {where}.options[{i}].additional_costs[{j}] must be an object")
+                        continue
+                    extra_item = additional.get("item")
+                    if not isinstance(extra_item, str) or not _RESOURCE_LOCATION_RE.match(extra_item):
+                        err(
+                            f"{rel}: {where}.options[{i}].additional_costs[{j}].item is not a valid "
+                            f"item id: {extra_item!r}"
+                        )
+
+
+def check_book_upgrades_well_formed() -> None:
+    """Validate ``book_upgrades.json`` (Tier 1). Structure:
+       { combine_route:  { enabled: bool, xp_cost_multiplier_of_vanilla_like: number },
+         research_route: { enabled: bool,
+                           xp_cost_multiplier_of_direct_enchant: number,
+                           material_cost_multiplier_of_direct_enchant: number,
+                           default_material_cost: { options: [...] },
+                           enchantment_overrides: { <enchantment id>: { material_cost: { options: [...] } } } } }.
+    """
+    rel = "book_upgrades.json"
+    path = os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, rel)
+    if not os.path.isfile(path):
+        return
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return  # already reported by check_json_parses
+    if not isinstance(data, dict):
+        err(f"{rel}: top level must be an object")
+        return
+
+    combine = data.get("combine_route")
+    if combine is not None:
+        if not isinstance(combine, dict):
+            err(f"{rel}: 'combine_route' must be an object")
+        else:
+            if "enabled" in combine and not isinstance(combine["enabled"], bool):
+                err(f"{rel}: combine_route.enabled must be a boolean, got {combine['enabled']!r}")
+            mult = combine.get("xp_cost_multiplier_of_vanilla_like")
+            if mult is not None and not (isinstance(mult, (int, float)) and float(mult) > 0.0):
+                err(f"{rel}: combine_route.xp_cost_multiplier_of_vanilla_like must be positive, got {mult!r}")
+
+    research = data.get("research_route")
+    if research is None:
+        return
+    if not isinstance(research, dict):
+        err(f"{rel}: 'research_route' must be an object")
+        return
+    if "enabled" in research and not isinstance(research["enabled"], bool):
+        err(f"{rel}: research_route.enabled must be a boolean, got {research['enabled']!r}")
+    for key in ("xp_cost_multiplier_of_direct_enchant", "material_cost_multiplier_of_direct_enchant"):
+        value = research.get(key)
+        if value is not None and not (isinstance(value, (int, float)) and float(value) > 0.0):
+            err(f"{rel}: research_route.{key} must be positive, got {value!r}")
+    default_cost = research.get("default_material_cost")
+    if isinstance(default_cost, dict):
+        _check_cost_options(rel, default_cost.get("options"), "research_route.default_material_cost")
+    elif default_cost is not None:
+        err(f"{rel}: research_route.default_material_cost must be an object")
+
+    overrides = research.get("enchantment_overrides")
+    if overrides is None:
+        return
+    if not isinstance(overrides, dict):
+        err(f"{rel}: research_route.enchantment_overrides must be an object")
+        return
+    for enchant, entry in overrides.items():
+        if not _RESOURCE_LOCATION_RE.match(enchant):
+            err(f"{rel}: research_route.enchantment_overrides key is not a valid enchantment id: {enchant!r}")
+            continue
+        if not isinstance(entry, dict):
+            err(f"{rel}: research_route.enchantment_overrides['{enchant}'] must be an object")
+            continue
+        material_cost = entry.get("material_cost")
+        if material_cost is not None:
+            if not isinstance(material_cost, dict):
+                err(f"{rel}: research_route.enchantment_overrides['{enchant}'].material_cost must be an object")
+            else:
+                _check_cost_options(
+                    rel,
+                    material_cost.get("options"),
+                    f"research_route.enchantment_overrides['{enchant}'].material_cost",
+                )
+        xp_levels = entry.get("xp_levels")
+        if xp_levels is not None and (not isinstance(xp_levels, int) or xp_levels < 0):
+            err(f"{rel}: research_route.enchantment_overrides['{enchant}'].xp_levels must be a non-negative integer")
+
+
+def check_treasure_epiphany_well_formed() -> None:
+    """Validate ``treasure_epiphany.json`` (Tier 1) — the Grand-Library Treasure Epiphany +
+    cryo-stasis freeze/reroll table.
+
+    Structure (all keys optional except the cost tables):
+      { min_regular_bookshelves: int>=0, base_chance: 0..1, chance_per_extra_bookshelf: >=0,
+        chance_per_master_tome: >=0, max_chance: 0..1, max_slots_cap: int in [1, 6],
+        score_per_extra_slot: int>=0, cycle_ticks: int>0, freeze_duration_ticks: int>0,
+        max_freeze_ticks: int>=freeze_duration_ticks, freeze_xp_levels: int>=0,
+        freeze_cost_options: [{item, count}], reroll_xp_levels: int>=0,
+        reroll_cost_options: [{item, count}], treasure_enchantments: [id],
+        treasure_tags: ["#id"], exclude_tags: ["#id"], default_xp_levels: int>=0,
+        default_material_cost: {options: [...]},
+        treasure_costs: {<enchantment id>: {xp_levels: int>=0, material_cost: {options: [...]}}} }
+    """
+    rel = "treasure_epiphany.json"
+    path = os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, rel)
+    if not os.path.isfile(path):
+        return
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return  # already reported by check_json_parses
+    if not isinstance(data, dict):
+        err(f"{rel}: top level must be an object")
+        return
+
+    for key in ("min_regular_bookshelves", "score_per_extra_slot", "freeze_xp_levels",
+                "reroll_xp_levels", "default_xp_levels"):
+        value = data.get(key)
+        if value is not None and (not isinstance(value, int) or value < 0):
+            err(f"{rel}: {key} must be a non-negative integer, got {value!r}")
+    for key in ("cycle_ticks", "freeze_duration_ticks", "max_freeze_ticks"):
+        value = data.get(key)
+        if value is not None and (not isinstance(value, int) or value <= 0):
+            err(f"{rel}: {key} must be a positive integer, got {value!r}")
+    freeze_ticks = data.get("freeze_duration_ticks")
+    max_freeze = data.get("max_freeze_ticks")
+    if isinstance(freeze_ticks, int) and isinstance(max_freeze, int) and max_freeze < freeze_ticks:
+        err(f"{rel}: max_freeze_ticks ({max_freeze}) must be >= freeze_duration_ticks ({freeze_ticks})")
+
+    for key in ("base_chance", "chance_per_extra_bookshelf", "chance_per_master_tome", "max_chance"):
+        value = data.get(key)
+        if value is not None and not (isinstance(value, (int, float)) and 0.0 <= float(value) <= 1.0):
+            err(f"{rel}: {key} must be a number in [0.0, 1.0], got {value!r}")
+    base_chance = data.get("base_chance")
+    max_chance = data.get("max_chance")
+    if isinstance(base_chance, (int, float)) and isinstance(max_chance, (int, float)) and max_chance < base_chance:
+        err(f"{rel}: max_chance ({max_chance}) must be >= base_chance ({base_chance})")
+
+    cap = data.get("max_slots_cap")
+    if cap is not None and (not isinstance(cap, int) or not 1 <= cap <= 6):
+        err(f"{rel}: max_slots_cap must be an integer in [1, 6], got {cap!r}")
+
+    # Freeze / reroll costs are *single-material* picks, i.e. flat {item, count} pairs.
+    for key in ("freeze_cost_options", "reroll_cost_options"):
+        options = data.get(key)
+        if options is None:
+            continue
+        if not isinstance(options, list) or not options:
+            err(f"{rel}: {key} must be a non-empty list")
+            continue
+        for i, option in enumerate(options):
+            if not isinstance(option, dict):
+                err(f"{rel}: {key}[{i}] must be an object")
+                continue
+            item = option.get("item")
+            if not isinstance(item, str) or not _RESOURCE_LOCATION_RE.match(item):
+                err(f"{rel}: {key}[{i}].item is not a valid item id: {item!r}")
+            count = option.get("count")
+            if not isinstance(count, int) or count <= 0:
+                err(f"{rel}: {key}[{i}].count must be a positive integer, got {count!r}")
+
+    enchantments = data.get("treasure_enchantments")
+    if enchantments is not None:
+        if not isinstance(enchantments, list):
+            err(f"{rel}: treasure_enchantments must be a list")
+        else:
+            for i, enchant in enumerate(enchantments):
+                if not isinstance(enchant, str) or not _RESOURCE_LOCATION_RE.match(enchant):
+                    err(f"{rel}: treasure_enchantments[{i}] is not a valid enchantment id: {enchant!r}")
+    for key in ("treasure_tags", "exclude_tags"):
+        tags = data.get(key)
+        if tags is None:
+            continue
+        if not isinstance(tags, list):
+            err(f"{rel}: {key} must be a list")
+            continue
+        for i, tag in enumerate(tags):
+            if isinstance(tag, str) and not tag.startswith("#"):
+                warn(f"{rel}: {key}[{i}] should be written as '#{tag}' (tags are prefixed with '#')")
+            tag_id = tag[1:] if isinstance(tag, str) and tag.startswith("#") else tag
+            if not isinstance(tag_id, str) or not _RESOURCE_LOCATION_RE.match(tag_id):
+                err(f"{rel}: {key}[{i}] is not a valid tag id: {tag!r}")
+
+    default_cost = data.get("default_material_cost")
+    if isinstance(default_cost, dict):
+        _check_cost_options(rel, default_cost.get("options"), "default_material_cost")
+    elif default_cost is not None:
+        err(f"{rel}: default_material_cost must be an object")
+
+    costs = data.get("treasure_costs")
+    if costs is None:
+        return
+    if not isinstance(costs, dict):
+        err(f"{rel}: treasure_costs must be an object")
+        return
+    for enchant, entry in costs.items():
+        if not _RESOURCE_LOCATION_RE.match(enchant):
+            err(f"{rel}: treasure_costs key is not a valid enchantment id: {enchant!r}")
+            continue
+        if not isinstance(entry, dict):
+            err(f"{rel}: treasure_costs['{enchant}'] must be an object")
+            continue
+        xp_levels = entry.get("xp_levels")
+        if xp_levels is not None and (not isinstance(xp_levels, int) or xp_levels < 0):
+            err(f"{rel}: treasure_costs['{enchant}'].xp_levels must be a non-negative integer")
+        material_cost = entry.get("material_cost")
+        if isinstance(material_cost, dict):
+            _check_cost_options(rel, material_cost.get("options"), f"treasure_costs['{enchant}'].material_cost")
+        elif material_cost is not None:
+            err(f"{rel}: treasure_costs['{enchant}'].material_cost must be an object")
+
+
 def check_default_enchantment_tags_well_formed() -> None:
     """Validate the `tags` extension in default_enchantments.json (the cross-mod compatibility
     hook: any enchantment mod that tags its enchantments with one of these is auto-included)."""
@@ -521,6 +788,9 @@ def collect_referenced_ids() -> set[str]:
         # U1: enchantment ids referenced by the new loot injection + bookshelf book pool JSONs.
         os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "loot_injections.json"),
         os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "bookshelf_book_pool.json"),
+        # The 26.1.2-side progression rework added these two item/enchantment-heavy tables.
+        os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "book_upgrades.json"),
+        os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "treasure_epiphany.json"),
     ]
     for path in targets:
         if os.path.isfile(path):
@@ -696,6 +966,8 @@ def main() -> int:
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()
     check_bookshelf_book_pool_well_formed()
+    check_book_upgrades_well_formed()
+    check_treasure_epiphany_well_formed()
     mc_jar = find_mc_jar(args.mc_jar)
     check_ids_exist(mc_jar, args.extra_jar)
     check_referenced_tags_exist(mc_jar, args.extra_jar)

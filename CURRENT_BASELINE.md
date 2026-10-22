@@ -2,19 +2,23 @@
 
 > **Unofficial community port.** This repository is an unofficial community port of
 > [Sacramentix/chiseled-enchanting-table](https://github.com/Sacramentix/chiseled-enchanting-table)
-> to Minecraft **26.1.2** on Fabric. It is **not affiliated with, endorsed by, or maintained by
+> to Minecraft **26.2** on Fabric. It is **not affiliated with, endorsed by, or maintained by
 > the original author**. All credit for the original mod design and assets belongs to Sacramentix
 > (MIT licensed); this port only updates the code/data to the 26.2 toolchain.
 
-> **26.2 branch (2026-07-19, synced 2026-10-21):** This line targets **Minecraft 26.2**. See
-> `docs/reports/PORTING_26_2_REPORT.md` for the 26.1.2→26.2 port details. On 2026-10-21, all
-> feature additions and fixes from the `26.3` branch were synced to this `26.2` line with 26.2
+> **26.2 branch (2026-07-19, synced 2026-10-21 and 2026-10-22):** This line targets **Minecraft
+> 26.2**. See `docs/reports/PORTING_26_2_REPORT.md` for the 26.1.2→26.2 port details. On 2026-10-21,
+> all feature additions and fixes from the `26.3` branch were synced to this `26.2` line with 26.2
 > compatibility: worldgen bookshelf deadlock fix (`WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md`), JEI &
 > REI integration (`VIEWER_INTEGRATION_JEI_REI.md`), server-resolved enchantment cost sync (S2C),
 > 11 language files + translatable book lore, `craft.json` advancement fixes, and the offline CI
-> static / release-consistency gates (`docs/ci/`).
+> static / release-consistency gates (`docs/ci/`). On **2026-10-22** the full progression / economy /
+> UI overhaul from the sister `26.1.2` line was synced on top of that baseline — see
+> `docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`. The one 26.2-forced source change in that sync:
+> **`ChatFormatting` no longer exists in 26.2**, so all styled text uses
+> `Style#withColor(0xAARRGGBB)` (vanilla RGB values preserved).
 
-**Date:** 2026-10-21
+**Date:** 2026-10-22
 **Minecraft Version:** 26.2
 **Fabric Loader:** 0.19.3
 **Fabric API:** 0.155.2+26.2
@@ -44,9 +48,12 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
   - `contact.sources`: this port's GitHub; `contact.homepage`: original upstream.
   - `depends`: `fabricloader >=0.19.3`, `minecraft 26.2`, `java >=25`, `fabric-api *`.
   - `mixins: ["chiseled-enchanting-table-port.mixins.json"]` — the port config now uses package
-    `chiseled_enchanting_table.mixin` and declares 8 active mixins: 5 structure mixins, vanilla
-    enchanting-table book blocking, narrow anvil enchanted-book same-level merge blocking, and
-    chiseled-bookshelf random-tick ambience.
+    `chiseled_enchanting_table.mixin` and declares **9** active mixins: 5 structure mixins, vanilla
+    enchanting-table book blocking, narrow anvil enchanted-book same-level merge blocking,
+    chiseled-bookshelf random-tick ambience, and the flat anvil prior-work penalty
+    (`anvil.RemoveXpCostScaling`, re-enabled on 2026-10-22). The parked `mixin/accessor/ItemAccessor`
+    and the retired `chiseled-enchanting-table.mixins.json` /
+    `chiseled-enchanting-table.client.mixins.json` configs are gone.
   - `custom.chiseled_enchanting_table:port_notes`: documents the unofficial-port status and the
     current 1.0.3 mixin/loot/structure/viewer boundary.
 - `.github/workflows/` and `docs/ci/`: all four 26.2 workflows (`compile-check.yml`, `build.yml`,
@@ -65,11 +72,21 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
   `ChiseledEnchantingTableBlockEntity`, `FloatingBook`, `ChiseledBookshelfTick`
   (the legacy mixed `chiseledEnchantingTable` package has been retired).
 - `chiseled_enchanting_table.data.ChiseledEnchantingTableData` — server-data reload listener that
-  loads JSON-driven default unlocks, costs, transformations.
+  loads JSON-driven default unlocks, costs, book upgrades, treasure epiphanies, transformations,
+  loot injections and the structure bookshelf pool — all seven data files.
+- `chiseled_enchanting_table.mechanics.resonance.LibraryResonance` — the two-track progression and
+  relative-mastery maths (`r = level / maxLevel`, `w(r) = 0.45r + 0.55r²`), the `>=12`-shelf
+  discount floor and the `-40%` cap. `mechanics.enchanting.XpCostConversion.XpRequirement` carries
+  both XP modes (vanilla mass-production tiers versus the full curve).
+- `chiseled_enchanting_table.compat.TransformationQueryIndex` — viewer-agnostic transformation rows
+  (input, primary/secondary cost alternatives, output, XP requirement) consumed by both the JEI and
+  REI transformation categories.
 - `chiseled_enchanting_table.mechanics.enchanting.EnchantmentApplication` and
   `chiseled_enchanting_table.mechanics.transformation.ItemTransformationApplication`.
 - `chiseled_enchanting_table.mechanics.loot.EnchantedBookLootInjector` +
-  `RemoveEnchantedBooksFunction` — chest-loot injection driven by `loot_injections.json`.
+  `RemoveEnchantedBooksFunction` + `DepthBasedEfficiencyFunction` — chest-loot injection driven by
+  `loot_injections.json`; entries flagged `special: "depth_based_efficiency"` roll Efficiency II–V
+  from the structure depth instead of a static level.
 - `chiseled_enchanting_table.mechanics.structure.{BookshelfReplacerProcessor, BookshelfBookFiller}`
   — structure bookshelf replacement processor + weighted book fill; called from **5 mixins**
   under `chiseled_enchanting_table.mixin.structure.*` (4 injectors + 1 accessor).
@@ -107,10 +124,12 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
   per-player resolved table (`chiseled_enchanting_table:enchant_cost_table`) on join and after each
   successful data-pack reload; `compat.SyncedEnchantmentCosts` caches it on the client (cleared on
   disconnect) and both the viewers and `ChiseledEnchantingTableScreenHandler` read it.
-- `chiseled_enchanting_table.menu.*` — `ChiseledEnchantingTableScreenHandler`,
-  `ChiseledEnchantingMenuPayloads` (`OptionType`, `TransformationDisplay`,
-  `AvailableEnchantmentPayload`, `ApplyEnchantmentPayload`), `AvailableOption`
-  (typed enchantment vs. transformation), `EnchantCostSync`, `EnchantCostTablePayload`.
+- `chiseled_enchanting_table.menu.*` — `ChiseledEnchantingTableScreenHandler` (now constructed with
+  a `ContainerLevelAccess`), `ChiseledEnchantingMenuPayloads` (`OptionType` incl.
+  `TREASURE_EPIPHANY`, `TransformationDisplay`, `AvailableEnchantmentPayload` carrying the shelf
+  power / epiphany seed / stored master levels, `ApplyEnchantmentPayload`,
+  `RerollEpiphanyPayload`, `FreezeEpiphanyPayload`), `AvailableOption` (typed enchantment vs.
+  transformation), `EnchantCostSync`, `EnchantCostTablePayload`.
 - `chiseled_enchanting_table.registry.*` — `BlockRegistry`, `EntityRegistry`,
   `ScreenHandlerRegistry`, `StructureProcessorRegistry`.
 - `chiseled_enchanting_table.utils.*` — `Advancement`, `BlockPosStream`, `EnchantmentFinder`,
@@ -124,7 +143,9 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
   `values` (small list of explicitly-unlocked vanilla treasure enchantments) + `tags`
   (default `#minecraft:non_treasure`, level 1) for cross-mod tag-driven unlocks.
 - `data/chiseled_enchanting_table/chiseled_enchanting_table/enchantment_costs.json` — per-level
-  item + XP costs, with the `scute` -> `turtle_scute` fix.
+  item + XP costs on the yield-aware curve (`options[]` of
+  `{item, base_count, max_level_count, level_exponent}`, plus `count` / `count_per_level` /
+  `min_count+max_count` for flat rules), with the `scute` -> `turtle_scute` fix.
 - `data/chiseled_enchanting_table/chiseled_enchanting_table/item_transformations.json` — JSON
   source of truth for item transformations; the compat check enforces no drift with the Java
   fallback table.
@@ -133,7 +154,8 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
   upstream `ReworkEnchantedBookChestLoot.java` by `scripts/import_upstream_loot.py`.
 - `data/chiseled_enchanting_table/chiseled_enchanting_table/bookshelf_book_pool.json` — v2 fill
   rules for structure-placed chiseled bookshelves: `book_count = { min: 3, max: 5 }`,
-  `enchanted_book_probability = 0.03`, and an `enchanted_book_selection` block that describes how
+  `enchanted_book_probability = 0.12`, `max_level_weight_ratio = 0.15`, and an
+  `enchanted_book_selection` block that describes how
   the enchanted-book candidate pool from `loot_injections.json` is weighted (base weight ×
   live-registry `Enchantment.getWeight()` × `maxLevelWeightRatio^relativeLevel` where
   `relativeLevel = (level-1)/(maxLevel-1)`). Single source of truth for "which enchanted books
@@ -147,26 +169,46 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
   upgrading books at the chiseled table, max-level books, book-to-item transfer, book-to-book
   transfer, and the hidden all-enchantments book challenge. English and Simplified Chinese strings
   live in the client lang files.
-- `data/chiseled_enchanting_table/chiseled_enchanting_table/book_upgrades.json` — JSON source for book-upgrade routes: anvil-like combine upgrades and themed-material research upgrades.
+- `data/chiseled_enchanting_table/chiseled_enchanting_table/book_upgrades.json` — JSON source for
+  book-upgrade routes: `combine_route` (material-free, `0.6×` XP) and `research_route`
+  (`1.4×` XP, `3` biome-diverse material alternatives per enchantment, `arcane_catalyst` accepted
+  universally), each material table on the same yield-aware curve.
+- `data/chiseled_enchanting_table/chiseled_enchanting_table/treasure_epiphany.json` — Grand-Library
+  Treasure Epiphany + cryo-stasis freeze/reroll table: `min_regular_bookshelves = 32`,
+  `base_chance` / per-bookshelf / per-tome chance scaling with a `max_chance` cap, `max_slots_cap`,
+  `cycle_ticks`, freeze/reroll XP + material options, the treasure id/tag lists, and per-treasure
+  cost overrides. Validated by `scripts/compat_check.py` (Tier 1).
+- `data/chiseled_enchanting_table/recipe/` — the chiseled table, the vanilla-table upgrade recipe,
+  the `8× Crying Obsidian` recipe and the Arcane Catalyst recipe; matching
+  `advancement/recipes/*.json` unlock files.
+- **18 advancements** under `data/chiseled_enchanting_table/advancement/`, all translatable in the
+  11 shipped locales; `root.json` keys on both the craft and the upgrade recipe.
 
 ### Tooling
 - `scripts/compat_check.py` — Tier 1 (offline, fails the build) covers singular-dir convention,
-  no stale plural dirs, non-empty block-loot pools, all-JSON parses, JSON/Java transformation
-  drift, and `default_enchantments.json` `tags` schema. Tier 2 (best-effort, warn-only) checks
-  id existence against `--mc-jar` and/or `--extra-jar` paths.
+  no stale plural dirs, non-empty block-loot pools, all-JSON parses, the 26.2 plural
+  `conditions[]`/`functions[]` loot schema, the 26.2 advancement schema (`recipe_id`,
+  root-only `background`, `show_toast`/`announce_to_chat` inside `display`), JSON/Java
+  transformation drift, `default_enchantments.json` `tags` schema, `loot_injections.json`,
+  `bookshelf_book_pool.json`, **`book_upgrades.json`**, **`treasure_epiphany.json`** and a shared
+  **cost-option** validator (`count` / `count_per_level` / `min_count+max_count` /
+  `base_count+max_level_count` + `level_exponent` + nested `extras` / `additional_costs`). Tier 2
+  (best-effort, warn-only) checks id and tag existence against `--mc-jar` and/or `--extra-jar`
+  paths, for all seven data files.
 
 ### Active Temporary Boundaries
 - Main-source exclusions still parked in `build.gradle`:
   - `chiseled_enchanting_table.integration.*` (third-party mod integration; port later as an
     opt-in layer)
-  - `mixin/anvil/RemoveXpCostScaling.java` (broader upstream anvil XP/prior-work-cost tweak; kept
-    separate from the now-restored same-level book merge block)
-  - `mixin/accessor.*` (old item-component / enchanted-book stack-size accessor still needs its own
-    26.1.2 mapping and compatibility pass)
   - Legacy `modifyChestLootTable/**`, `structureProcessor/**`, `utils/ChiseledBookshelfLootTable`
     (fully superseded by the JSON-driven injector + `mechanics/structure/*`)
+- Now active (previously parked): `mixin/anvil/RemoveXpCostScaling.java` (flat anvil prior-work
+  penalty) and `DefaultItemComponentEvents.MODIFY` for the 64-stack enchanted book. The
+  `mixin/accessor/ItemAccessor` was deleted rather than enabled.
 - Runtime feature gaps:
-  - Shelf-power formula final balancing.
+  - Full live-client gameplay validation of the 18 advancements, the epiphany freeze/reroll
+    round-trip and the dye pipeline is still pending; the three offline gates and the CI compile are
+    the only automated coverage in this sandbox.
   - Full live-client gameplay validation of the actual bookshelf fills in villages / mansions /
     strongholds / ancient cities is still pending (mixin call sites are verified; the fill
     outcome — visible books in the shelves — is what needs the next round of live testing).
@@ -209,9 +251,35 @@ This session added the localized advancement guide pass and rebuilt the release 
 - `release_output/chiseled_enchanting_table_1_0_2/` recreated with the current jars and a refreshed
   working-tree source zip.
 
+## Synced This Session (2026-10-22) — 26.1.2 line → 26.2 line
+
+- Synced the full `26.1.2`-line feature range (`09f854e..2f62762`): 135 paths, of which 126 had no
+  local counterpart and were taken verbatim (including deletions). The nine overlapping files were
+  merged by hand — see `docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md` §2.
+- 26.2 adaptations applied: `ChatFormatting` (removed in 26.2) → `Style#withColor(0xAARRGGBB)` in
+  `gui/ChiseledEnchantingTableScreen`, `block/ChiseledEnchantingTableBlockEntity` and
+  `registry/BlockRegistry`; the 26.2 structure-processor API, `ChunkAccess#markPosForPostProcessing`,
+  the plural loot schema, the `recipe_id` criterion, the two-argument `LivingEntity#drop` and the
+  pinned 26.2 viewer coordinates were kept.
+- `build.gradle`: re-enabled `mixin/anvil/RemoveXpCostScaling.java` and dropped the
+  `mixin/accessor/**` exclusion (the mixin itself is deleted).
+- `scripts/compat_check.py`: added Tier-1 validators for `book_upgrades.json` and
+  `treasure_epiphany.json`, a shared cost-option schema check, and extended the Tier-2 referenced-id
+  sweep to both files (negative-tested against deliberately malformed JSON).
+- Validation in this headless sandbox (no JDK, no maven):
+  - `python3 scripts/ci_static_checks.py` → **PASS** (9 mixin refs, 98 lang keys × 11 locales,
+    35 markdown files).
+  - `python3 scripts/compat_check.py` → **PASS** (2 warnings: no MC jar for Tier 2).
+  - `bash scripts/check_release_consistency.sh --strict` → **12 passed, 0 warned, 0 failed**.
+  - Every `*.json` under `src/` parses; every project-local `import` resolves; no stale references
+    to deleted classes (`FloatingBook`, `ItemAccessor`, `ItemRegistry`).
+  - `compileJava` / `compileClientJava` are exercised by the GitHub Actions `compile-check` /
+    `build` workflows (the sandbox cannot run Gradle); the resulting log lands in
+    `build-reports/compile-java.log`.
+
 ## Client-Only / Live-Game Validation Still Pending
 
-Same as the prior baseline — these require a real MC 26.1.2 + Fabric runtime and were not run in
+Same as the prior baseline — these require a real MC 26.2 + Fabric runtime and were not run in
 this headless sandbox: mod-metadata load, the restored balance / ambience mixins and advancement triggers/translations in a real
 Vanilla Enchanting Table / Anvil / Chiseled Bookshelf / Chiseled Enchanting Table setup, block placement, custom menu open, slot/scroll/floating book
 renderer, enchanting + transformation application, chiseled-bookshelf scanning, P19 tag-based

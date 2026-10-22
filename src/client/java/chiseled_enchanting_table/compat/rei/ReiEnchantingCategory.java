@@ -20,16 +20,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 
 /**
- * REI category for {@code [target item] + [enchanted book] + [material] → [enchanted item]}.
- *
- * <p>Layout mirrors the JEI category, and the title reuses the same translation key, so both viewers
- * show the same strings in every language the mod ships.</p>
+ * REI category for
+ * {@code [target item] + [enchanted book] + [primary material] + [optional secondary material] -> [enchanted item]}.
  */
 public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDisplay> {
     public static final CategoryIdentifier<ReiEnchantingDisplay> ID =
         CategoryIdentifier.of(ChiseledEnchantingTable.identifier("enchanting"));
 
-    private static final int WIDTH = 112;
+    private static final int WIDTH = 132;
     private static final int HEIGHT = 44;
 
     @Override
@@ -73,14 +71,22 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
         if (inputs.size() > 2) {
             widgets.add(slot(x + 40, y + 5, inputs.get(2)).markInput());
         }
-        widgets.add(Widgets.createArrow(new Point(x + 62, y + 6)));
-        widgets.add(slot(x + 84, y + 5, display.getOutputEntries().getFirst()).markOutput());
+        if (inputs.size() > 3) {
+            widgets.add(slot(x + 58, y + 5, inputs.get(3)).markInput());
+        }
+        widgets.add(Widgets.createArrow(new Point(x + 80, y + 5)));
+        widgets.add(slot(x + 108, y + 5, display.getOutputEntries().getFirst()).markOutput());
 
-        // Everything a recipe cannot express lives in one tooltip line under the slots: the XP cost,
-        // the "material cost is one of several options" caveat, the bookshelf rule, and conflicts.
+        var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+            display.row().level(), display.row().maxLevel(), display.xpLevelCost(), 0
+        );
         widgets.add(Widgets.createLabel(
-                new Point(x + 4, y + 27),
-                Component.translatable("jei.chiseled_enchanting_table.tooltip.xp", display.xpLevelCost())
+                new Point(x + WIDTH / 2, y + 28),
+                Component.translatable(
+                    "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+                    xpReq.requiredLevel(),
+                    xpReq.deductedLevels()
+                )
             )
             .tooltip(tooltipLines(display)));
         return widgets;

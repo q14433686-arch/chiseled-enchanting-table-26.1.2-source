@@ -1,65 +1,176 @@
 package chiseled_enchanting_table.mechanics.enchanting;
 
+import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Converts a "level cost" (an integer number of experience levels) into the actual XP-point
- * count that should be deducted, using vanilla's own level-to-point curve. This is the fix for
- * the user report "current implementation just decrements experienceLevel, which is a bad deal
- * for high-level players because their high levels are worth many more XP points than low ones"
- * — with this helper, deducting 5 "levels" from a level-30 player actually costs the same XP
- * points vanilla anvils/enchanting cost, not "5 levels regardless of what those levels contain".
+ * Dual-mode coexisting XP formula engine shared identically across Server, Client GUI, JEI, and REI:
  *
- * <p><b>Policy:</b> matches vanilla anvil / enchanting-table behaviour — the deduction consumes
- * the top {@code levelCost} levels' worth of XP from the player's current position. A level-30
- * player paying 5 levels loses XP equivalent to filling levels 26..30 (~365 points); a level-50
- * player paying 5 levels loses more (~635 points). This is the "high-level players pay more"
- * curve, which is what feels fair when the *quality* of what you're buying doesn't depend on
- * your level.</p>
- *
- * <p><b>Curve:</b> encodes vanilla's public
- * {@code Player#getXpNeededForNextLevel()} formula:
  * <ul>
- *   <li>level {@code < 16}: {@code 2·level + 7}</li>
- *   <li>level {@code < 31}: {@code 5·level - 38}</li>
- *   <li>level {@code >= 31}: {@code 9·level - 158}</li>
+ *   <li><b>Vanilla Table Mass-Production Mode ({@code vanillaTierMode = true})</b>:
+ *       Used for repeatable production — <b>Item Transformations</b> and <b>Master Tome Inscribing</b>
+ *       (when a nearby Chiseled Bookshelf stores {@code storedMasterLevel >= optionLevel}).
+ *       Mirrors vanilla's Enchanting Table formula: checks a player level threshold
+ *       ({@code requiredLevel}, up to {@code 30}, discounted by Library/Tome Resonance) while
+ *       deducting ONLY {@code 1 / 2 / 3} experience levels ({@code player.giveExperienceLevels(-tierCost)}).</li>
+ *   <li><b>Arcane Full-Cost Ritual Mode ({@code vanillaTierMode = false})</b>:
+ *       Used for non-mass-production breakthroughs — un-enshrined base enchanting, Book Combine/Research
+ *       Upgrades, and Treasure Epiphanies. Deducts full experience points along the capped level-30 curve.</li>
  * </ul>
- * Kept as a private static because it's stable vanilla data (unchanged since 1.7) and pulling
- * it out avoids needing an accessor for the vanilla static that computes it internally.</p>
  */
 public final class XpCostConversion {
+    private static final int MARGINAL_CAP_LEVEL = 30;
+    private static final Identifier EXP_BOTTLE_TRANSFORM_ID = ChiseledEnchantingTable.identifier("experience_bottle");
+
     private XpCostConversion() {}
 
     /**
-     * Returns the XP-point count that a "levelCost"-level deduction should consume, starting
-     * from the player's current XP position (level + progress fraction). Non-negative; 0 if
-     * levelCost is 0 or negative.
+     * Complete resolved XP requirement for any row in the Chiseled Enchanting Table.
+     *
+     * @param vanillaTierMode  true = Vanilla Enchanting Table formula (level threshold + 1..3 levels consumed);
+     *                         false = Full-Level Arcane Ritual formula (full level points deducted)
+     * @param requiredLevel    minimum {@code player.experienceLevel} needed to execute this row
+     * @param deductedLevels   actual XP levels consumed ({@code 1..3} in Vanilla mode; full cost in Arcane mode)
+     * @param rawRequiredLevel pre-discount threshold/cost before Library & Master Tome Resonance
+     * @param discountPercent  active total XP discount percentage applied ({@code 0..40})
      */
-    public static int pointsForLevelCost(Player player, int levelCost) {
-        if (levelCost <= 0) return 0;
-        int startLevel = player.experienceLevel;
-        float startProgress = player.experienceProgress; // 0.0..1.0, fraction of current level
-        int endLevel = Math.max(0, startLevel - levelCost);
-        if (endLevel >= startLevel) return 0;
+    public record XpRequirement(
+        boolean vanillaTierMode,
+        int requiredLevel,
+        int deductedLevels,
+        int rawRequiredLevel,
+        int discountPercent
+    ) {
+        public static final XpRequirement FREE = new XpRequirement(false, 0, 0, 0, 0);
 
-        // Fractional part of the starting level: cost from the start position back down to the
-        // integer start level's floor.
-        double points = startProgress * xpNeededToReachNextLevelFrom(startLevel);
-
-        // Then every full level between (endLevel, startLevel] contributes its "cost to reach
-        // this level from the level below". Note that xpNeededToReachNextLevelFrom(L) is the XP
-        // needed to go FROM level L TO level L+1, so the amount released by dropping FROM level
-        // L+1 back TO level L is the same number.
-        for (int lvl = endLevel; lvl < startLevel; lvl++) {
-            points += xpNeededToReachNextLevelFrom(lvl);
+        public boolean isMetBy(Player player) {
+            return player.getAbilities().instabuild || player.experienceLevel >= requiredLevel;
         }
-        // Clamp to a sane int and round up so we never under-charge by a fractional point.
-        long rounded = (long) Math.ceil(points);
-        if (rounded > Integer.MAX_VALUE) return Integer.MAX_VALUE;
-        return (int) rounded;
     }
 
-    /** XP needed to reach {@code level+1} starting from a filled-{@code level} state. */
+    /**
+     * Resolves Vanilla Enchanting Table tier cost ({@code 1..3} levels) and player level threshold
+     * ({@code 1..30} before discount) for Master Tome inscribing of ANY vanilla or modded enchantment
+     * with arbitrary {@code maxLevel >= 1}.
+     */
+    public static XpRequirement forMasterTomeEnchant(
+        int level,
+        int maxLevel,
+        int rawBaseXpCost,
+        int discountPercent
+    ) {
+        int safeMax = Math.max(1, maxLevel);
+        int safeLvl = Math.clamp(level, 1, safeMax);
+        int tierCost;
+        int rawThreshold;
+        if (safeMax == 1) {
+            tierCost = rawBaseXpCost >= 10 ? 3 : 2;
+            rawThreshold = tierCost == 3 ? 30 : 20;
+        } else {
+            double r = (double) safeLvl / (double) safeMax;
+            tierCost = r <= 0.4001 ? 1 : (r < 0.7999 ? 2 : 3);
+            rawThreshold = Math.clamp(Math.round(30.0f * (float) r), tierCost, 30);
+        }
+        int clampedDisc = Math.clamp(discountPercent, 0, 40);
+        int effectiveThreshold = clampedDisc > 0
+            ? Math.max(tierCost, Math.round(rawThreshold * (100 - clampedDisc) / 100.0f))
+            : rawThreshold;
+        return new XpRequirement(true, effectiveThreshold, tierCost, rawThreshold, clampedDisc);
+    }
+
+    /**
+     * Resolves Vanilla Enchanting Table tier cost ({@code 1..3} levels) and player level threshold
+     * for any built-in or datapack Item Transformation.
+     */
+    public static XpRequirement forTransformation(
+        Identifier transformationId,
+        int rawXpCost,
+        int discountPercent
+    ) {
+        if (rawXpCost <= 0) {
+            return XpRequirement.FREE;
+        }
+        int tierCost;
+        int rawThreshold;
+        int minDiscountedFloor;
+        if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(transformationId)) {
+            tierCost = 1;
+            rawThreshold = 1;
+            minDiscountedFloor = 1;
+        } else {
+            tierCost = rawXpCost <= 2 ? 1 : (rawXpCost <= 8 ? 2 : 3);
+            rawThreshold = Math.clamp(Math.round(rawXpCost * 2.5f), tierCost, 30);
+            // Guarantee Bottle o' Enchanting never drops below Lv.3 (11 XP >= max 11 XP drop).
+            minDiscountedFloor = EXP_BOTTLE_TRANSFORM_ID.equals(transformationId) ? Math.max(tierCost, 3) : tierCost;
+        }
+        int clampedDisc = Math.clamp(discountPercent, 0, 40);
+        int effectiveThreshold = clampedDisc > 0
+            ? Math.max(minDiscountedFloor, Math.round(rawThreshold * (100 - clampedDisc) / 100.0f))
+            : rawThreshold;
+        return new XpRequirement(true, effectiveThreshold, tierCost, rawThreshold, clampedDisc);
+    }
+
+    /**
+     * Resolves Full-Level Arcane Ritual cost for un-enshrined base enchants, book upgrades, and epiphanies.
+     */
+    public static XpRequirement forFullArcaneRitual(int rawXpCost, int discountPercent) {
+        if (rawXpCost <= 0) {
+            return XpRequirement.FREE;
+        }
+        int clampedDisc = Math.clamp(discountPercent, 0, 40);
+        int effective = clampedDisc > 0
+            ? Math.max(1, Math.round(rawXpCost * (100 - clampedDisc) / 100.0f))
+            : rawXpCost;
+        return new XpRequirement(false, effective, effective, rawXpCost, clampedDisc);
+    }
+
+    /**
+     * Deducts the resolved XP requirement from {@code player} on the server:
+     * <ul>
+     *   <li>{@code vanillaTierMode == true}: subtracts {@code 1..3} levels cleanly via
+     *       {@code player.giveExperienceLevels(-deductedLevels)}, preserving bar % progress.</li>
+     *   <li>{@code vanillaTierMode == false}: subtracts full XP points along the capped curve.</li>
+     * </ul>
+     */
+    public static void deductXp(Player player, XpRequirement requirement) {
+        if (player.getAbilities().instabuild || requirement.deductedLevels() <= 0) {
+            return;
+        }
+        if (requirement.vanillaTierMode()) {
+            player.giveExperienceLevels(-requirement.deductedLevels());
+        } else {
+            int xpPointsToDeduct = pointsForLevelCost(player, requirement.deductedLevels());
+            player.giveExperiencePoints(-xpPointsToDeduct);
+        }
+    }
+
+    public static int pointsForLevelCost(Player player, int levelCost) {
+        if (levelCost <= 0) return 0;
+        int actualStart = player.experienceLevel;
+        if (actualStart <= 0) return 0;
+
+        int effectiveStart = Math.min(actualStart, MARGINAL_CAP_LEVEL);
+        int effectiveCost = Math.min(levelCost, actualStart);
+        int effectiveEnd = Math.max(0, effectiveStart - effectiveCost);
+
+        float progress = player.experienceProgress;
+        long startPartial = Math.round(progress * xpNeededToReachNextLevelFrom(effectiveStart));
+        long endPartial = Math.round(progress * xpNeededToReachNextLevelFrom(effectiveEnd));
+        long points = startPartial - endPartial;
+
+        // If cost exceeds 30 while capped (e.g., datapack custom cost > 30), charge remaining levels at lv0.. cap floor.
+        for (int i = 0; i < effectiveCost; i++) {
+            int barLevel = Math.max(0, effectiveStart - 1 - i);
+            points += xpNeededToReachNextLevelFrom(barLevel);
+        }
+
+        if (points <= 0L) return 1;
+        if (points > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        return (int) points;
+    }
+
     private static int xpNeededToReachNextLevelFrom(int level) {
         if (level < 16) return 2 * level + 7;
         if (level < 31) return 5 * level - 38;

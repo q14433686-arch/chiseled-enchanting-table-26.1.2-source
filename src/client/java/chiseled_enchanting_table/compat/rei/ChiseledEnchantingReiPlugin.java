@@ -2,6 +2,7 @@ package chiseled_enchanting_table.compat.rei;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.EnchantQueryIndex;
+import chiseled_enchanting_table.compat.TransformationQueryIndex;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import java.util.List;
 import me.shedaniel.rei.api.client.plugins.REIClientPlugin;
@@ -28,13 +29,15 @@ public class ChiseledEnchantingReiPlugin implements REIClientPlugin {
     @Override
     public void registerCategories(CategoryRegistry registry) {
         registry.add(new ReiEnchantingCategory());
-        // Catalysts: both the table and the chiseled bookshelf, so "Recipes" on either block lists
-        // the whole catalogue. Note `addWorkstations` takes EntryIngredient varargs, not EntryStack:
-        // each ingredient is one alternative workstation.
+        registry.add(new ReiTransformationCategory());
         registry.addWorkstations(
             ReiEnchantingCategory.ID,
             EntryIngredient.of(entry(new ItemStack(BlockRegistry.CHISELED_ENCHANTING_TABLE))),
             EntryIngredient.of(entry(new ItemStack(Blocks.CHISELED_BOOKSHELF)))
+        );
+        registry.addWorkstations(
+            ReiTransformationCategory.ID,
+            EntryIngredient.of(entry(new ItemStack(BlockRegistry.CHISELED_ENCHANTING_TABLE)))
         );
     }
 
@@ -52,7 +55,15 @@ public class ChiseledEnchantingReiPlugin implements REIClientPlugin {
             registry.add(new ReiEnchantingDisplay(row, holder));
             added++;
         }
-        ChiseledEnchantingTable.LOGGER.debug("REI integration: registered {} enchanting displays", added);
+        List<TransformationQueryIndex.Entry> transforms = TransformationQueryIndex.build();
+        for (TransformationQueryIndex.Entry trans : transforms) {
+            registry.add(new ReiTransformationDisplay(trans));
+        }
+        ChiseledEnchantingTable.LOGGER.debug(
+            "REI integration: registered {} enchanting displays and {} transformation displays",
+            added,
+            transforms.size()
+        );
     }
 
     private static HolderLookup.Provider registries() {
