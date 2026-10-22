@@ -3,6 +3,9 @@
 > **Scope:** port every feature, fix, data file, asset and doc change that landed on the sister
 > `chiseled-enchanting-table-26.1.2-source` branch between the shared `1.0.3` baseline (`09f854e`,
 > the 26.3-feature back-port) and its tip (`2f62762`, PR #9), onto **this** `26.2` branch.
+> **Released as `1.1.0`** on this line — a minor bump over the shared `1.0.3` baseline because the
+> sync adds content (two data-pack files, two items, four recipes, eight advancements) without
+> changing the mod id, payload ids, data-pack paths or world saves; see `CHANGELOG.md`.
 > **Verdict:** the sync is feature-complete; the only remaining source delta between the lines is
 > the set of APIs that genuinely differ between Minecraft 26.1.2 and 26.2 (listed in §3), plus the
 > 26.2 toolchain pins (Loom `1.17`, Gradle `9.5.1`, Fabric API `0.155.2+26.2`, JEI
@@ -175,7 +178,11 @@ now also part of the Tier-2 referenced-id sweep.
 
 ## 5. Maintenance rule going forward
 
-The three branches (`26.1.2`, `26.2`, `26.3`) now share one feature set and one `1.0.3` SemVer.
+The three branches (`26.1.2`, `26.2`, `26.3`) now share one feature set. **SemVer has diverged on
+purpose:** this `26.2` line publishes that feature set as **`1.1.0`**, while the `26.1.2` and `26.3`
+branches still declare `1.0.3` for the same content. Bump those two to `1.1.0` on their next release
+so "which feature set is this" is again answerable from the version alone (their downloads, and the
+in-jar `version`, otherwise look older than they are).
 When a change lands on one of them:
 
 1. port the **data files, assets, lang files and gameplay logic** verbatim;

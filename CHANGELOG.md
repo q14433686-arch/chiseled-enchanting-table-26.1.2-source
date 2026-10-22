@@ -5,12 +5,12 @@
 > by the original author (Sacramentix). The original mod remains MIT-licensed; this port re-uses
 > the original code/assets under that licence and updates them to the 26.2 toolchain.
 
-Only the current release is kept here. Historical pre-`1.0.2` porting rounds and older release notes
-are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
+The current release and the two previous ones are kept here. Historical pre-`1.0.2` porting rounds
+and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
 > **26.2 branch (2026-07-19, synced 2026-10-21 and 2026-10-22):** This line targets **Minecraft
 > 26.2**. Toolchain uses Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Gradle `9.5.1`, Fabric
-> Loader `0.19.3`, and `mod_version` `1.0.3`. See
+> Loader `0.19.3`, and `mod_version` `1.1.0`. See
 > [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md) for the 26.2 port
 > details. On **2026-10-21** all feature additions and fixes from the `26.3` branch were synced back
 > to this line with 26.2 API/schema compatibility; on **2026-10-22** the whole progression /
@@ -19,14 +19,19 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > 26.2, so every styled line uses `Style#withColor(ARGB)`) are recorded in
 > [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md).
 
-## [1.0.3] - 2026-10-22
+## [1.1.0] - 2026-10-22
 
-### Synced — full `26.1.2`-line progression, economy & UI overhaul
+### Added — full `26.1.2`-line progression, economy & UI overhaul
 
 Ported from the sister `26.1.2` branch (see
 [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md)).
-Minecraft, Loom, Gradle, Fabric API and the viewer coordinates are unchanged — this is a feature
-sync adapted to the 26.2 APIs, not a version bump.
+Minecraft, Loom, Gradle, Fabric API and the viewer coordinates are unchanged: this is a feature
+release adapted to the 26.2 APIs, not a Minecraft port. `1.1.0` (minor) rather than `1.0.4`
+(patch) because it adds two data-pack files, two items, four recipes and eight advancements;
+the mod id, the seven data-pack paths and existing world saves are unchanged.
+
+The `1.0.3` content below (JEI/REI, S2C cost sync, worldgen deadlock fix, 11 languages) is
+included as-is.
 
 - **Two-track library progression (`7×5×7`)**: wooden bookshelves raise default-unlocked
   enchantments by `+1` per `5` shelves up to `ceil(maxLevel / 2)`; enchanted books stored in
@@ -95,6 +100,8 @@ sync adapted to the 26.2 APIs, not a version bump.
 - **Data-pack tooling**: `scripts/compat_check.py` gained Tier-1 validators for
   `book_upgrades.json` and `treasure_epiphany.json` plus a shared cost-option schema check, and both
   files joined the Tier-2 referenced-id sweep.
+
+## [1.0.3] - 2026-10-21
 
 ### Added — JEI and REI integration (bidirectional enchantment lookup)
 

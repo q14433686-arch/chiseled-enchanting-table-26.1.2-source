@@ -2,7 +2,7 @@
 
 Synced from the `26.3` and `26.1.2` branches of this repository (which adapted it from
 [`q14433686-arch/TaCZ_Refabricated_Unofficial`](https://github.com/q14433686-arch/TaCZ_Refabricated_Unofficial/tree/26.3/.github/workflows)),
-then adapted to Minecraft **26.2** / mod **1.0.3**.
+then adapted to Minecraft **26.2** / mod **1.1.0**.
 
 The files in this directory are **byte-identical reference copies** of `.github/workflows/`, kept for
 two reasons:
@@ -38,7 +38,7 @@ bash docs/ci/install.sh           # copy the four files into .github/workflows/ 
 | `docs/ci/compile-check.yml` | `.github/workflows/compile-check.yml` | installed (`ok`) |
 | `docs/ci/build.yml` | `.github/workflows/build.yml` | installed (`ok`) |
 | `docs/ci/consistency.yml` | `.github/workflows/consistency.yml` | installed (`ok`) |
-| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed (`ok`, `26.2` / `1.0.3`) |
+| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed (`ok`, `26.2` / `1.1.0`) |
 
 ## What each workflow does
 
@@ -55,7 +55,7 @@ bash docs/ci/install.sh           # copy the four files into .github/workflows/ 
 * **`consistency.yml`** — the five-place version gate and `docs/ci/install.sh --check` drift check on
   its own trigger set, because `build.yml` `paths-ignore`s `*.md`.
 * **`publish.yml`** — manual (`workflow_dispatch`) release workflow targeting Minecraft `26.2` /
-  mod version `1.0.3`.
+  mod version `1.1.0`.
 
 ## Reading CI results from the sandbox
 

@@ -25,22 +25,33 @@
 **Gradle:** 9.5.1
 **Loom:** 1.17
 **Java:** 25
-**Mod Version:** `1.0.3`  *(unofficial-port versioning, see "Versioning" below)*
+**Mod Version:** `1.1.0`  *(unofficial-port versioning, see "Versioning" below)*
 
 ## Versioning
 
-This repository currently publishes the unofficial 26.2 port as **`1.0.3`**. Earlier internal
+This repository currently publishes the unofficial 26.2 port as **`1.1.0`**. Earlier internal
 porting labels are treated as historical implementation notes only; current metadata, release
-artefacts, documentation, and marketing copy should all refer to `1.0.3`.
+artefacts, documentation, and marketing copy should all refer to `1.1.0`.
+
+`1.1.0` is a **minor** bump over `1.0.3` because it adds content (two data-pack files, two items,
+four recipes, eight advancements, two viewer categories' worth of transformation lookup) without
+breaking anything: the mod id, the seven data-pack paths under
+`data/chiseled_enchanting_table/chiseled_enchanting_table/`, the payload ids and existing world
+saves are unchanged.
+
+> **Cross-branch note:** the sister `26.1.2` and `26.3` branches still declare `1.0.3` for the same
+> feature set. They should be bumped to `1.1.0` on their next release so the version alone
+> identifies the feature set again — see
+> [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md) §5.
 
 ## Current Source-Truth Snapshot (what the code/data actually contains today)
 
 ### Build / packaging
-- `gradle.properties`: `mod_version=1.0.3`, `minecraft_version=26.2`,
+- `gradle.properties`: `mod_version=1.1.0`, `minecraft_version=26.2`,
   `loader_version=0.19.3`, `fabric_version=0.155.2+26.2`. Build tooling: Loom `1.17-SNAPSHOT`,
   Gradle wrapper `9.5.1`.
 - `src/main/resources/fabric.mod.json`:
-  - `version: "${version}"` (substituted by Loom to `1.0.3`).
+  - `version: "${version}"` (substituted by Loom to `1.1.0`).
   - `name`: `Chiseled Enchanting Table (Unofficial 26.2 Port)`.
   - `description`: explicitly states this is an unofficial port and not affiliated with the
     original author.
@@ -55,10 +66,10 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
     and the retired `chiseled-enchanting-table.mixins.json` /
     `chiseled-enchanting-table.client.mixins.json` configs are gone.
   - `custom.chiseled_enchanting_table:port_notes`: documents the unofficial-port status and the
-    current 1.0.3 mixin/loot/structure/viewer boundary.
+    current 1.1.0 mixin/loot/structure/viewer boundary.
 - `.github/workflows/` and `docs/ci/`: all four 26.2 workflows (`compile-check.yml`, `build.yml`,
   `consistency.yml`, `publish.yml`) are installed and verified byte-identical via
-  `bash docs/ci/install.sh --check` (`MINECRAFT_VERSION: 26.2`, `VERSION: 1.0.3`,
+  `bash docs/ci/install.sh --check` (`MINECRAFT_VERSION: 26.2`, `VERSION: 1.1.0`,
   `RELEASE_NAME: ... (Unofficial 26.2 Port)`).
 - **CI status (2026-10-22, 26.1.2 sync):** GitHub Actions `compile-check` (run `39818720349`),
   `build` (run `39818720326` — `static`, `gradle build` and `no-viewers` jobs) and `consistency`
@@ -218,16 +229,21 @@ artefacts, documentation, and marketing copy should all refer to `1.0.3`.
     outcome — visible books in the shelves — is what needs the next round of live testing).
 
 ### Release artifacts (this round)
-Staged under `release_output/chiseled_enchanting_table_1_0_2/`:
-- `chiseled-enchanting-table-1.0.2.jar` (in-jar icon matches the 256×256 cover)
-- `chiseled-enchanting-table-1.0.2-sources.jar`
-- `chiseled-enchanting-table-1.0.2-source.zip` (working-tree zip; excludes
+**Not re-staged yet for `1.1.0`.** The dev sandbox cannot run Gradle, so the release directory is
+generated from the `build` workflow's jar artifact (Actions → *build* → **Artifacts**, kept 14 days)
+on a machine with JDK 25. The expected layout is
+`release_output/chiseled_enchanting_table_1_1_0/`:
+- `chiseled-enchanting-table-1.1.0.jar` (in-jar icon matches the 256×256 cover)
+- `chiseled-enchanting-table-1.1.0-sources.jar`
+- `chiseled-enchanting-table-1.1.0-source.zip` (working-tree zip; excludes
   `.git/`, `.gradle/`, `build/`, `release_output/`).
 - `cover-icon-256.png` — 256×256 RGBA cover icon, ready to upload to Modrinth / CurseForge /
   MC百科 directly.
 - `cover-banner.png` — repo root banner, staged alongside for optional gallery use.
 
-Release output is consolidated under the current `1_0_2` directory; older internal porting-round artefact directories are not part of the current release output.
+Release output is consolidated under the current `1_1_0` directory; older internal porting-round
+artefact directories (including the `1_0_2` one still described by the historical block below) are
+not part of the current release output.
 
 ## Verified This Session (2026-07-01)
 

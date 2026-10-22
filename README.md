@@ -10,7 +10,7 @@
 > bug reports about this port to **this** repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`),
 > not to the upstream project.
 
-**Current version:** `1.0.3` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+**Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
 **Target:** Minecraft `26.2`, Fabric Loader `>=0.19.3`, Fabric API `0.155.2+26.2`, Java `>=25`.
 
 📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)**
@@ -23,9 +23,9 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 * Unlock new enchantment for chiseled enchanting table by placing enchanted book in nearby chiseled bookshelves
 * Explore your world to discover new enchanted books!
 
-## What 1.0.3 ships on this line
+## What 1.1.0 ships on this line
 
-`1.0.3` is the same feature set as the sister `26.1.2` and `26.3` branches, adapted to this
+`1.1.0` is the same feature set as the sister `26.1.2` and `26.3` branches, adapted to this
 Minecraft line. On this `26.2` branch it combines two syncs:
 
 1. the `26.3` back-port that landed on 2026-10-21 — worldgen bookshelf deadlock fix
@@ -63,9 +63,9 @@ Highlights:
 
 ## Installation
 
-Grab the latest `chiseled-enchanting-table-1.0.3.jar` from the `build` workflow's artifact on the
+Grab the latest `chiseled-enchanting-table-1.1.0.jar` from the `build` workflow's artifact on the
 branch you want (Actions → *build* → **Artifacts**, kept 14 days) or from
-`release_output/chiseled_enchanting_table_1_0_3/` when a release is staged there, and drop it into
+`release_output/chiseled_enchanting_table_1_1_0/` when a release is staged there, and drop it into
 your Fabric `mods/` folder alongside Fabric API `0.155.2+26.2`.
 
 To build it yourself: JDK 25 + network access to `maven.fabricmc.net` (the dev sandbox this port is
@@ -117,7 +117,7 @@ and by this repository's own `26.3` branch, because this port is developed in a 
 reach `maven.fabricmc.net` (nor the JEI/REI mavens) and therefore cannot compile locally — the
 compile has to happen on Actions and the log has to come back to the branch.
 
-**Status: green** on the `1.0.3` sync for Minecraft 26.2 — commit `902e947`, runs `39818720349`
+**Status: green** on the `1.1.0` sync for Minecraft 26.2 — commit `902e947`, runs `39818720349`
 (compile-check), `39818720326` (build: `static`, `gradle build`, `no-viewers`) and `39818720363`
 (consistency), with the compiler log committed back as `build-reports/compile-java.log`
 (`68fc86e`). See `docs/ci/README.md` for the history.
@@ -127,7 +127,7 @@ compile has to happen on Actions and the log has to come back to the branch.
 | [`compile-check.yml`](.github/workflows/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API (Actions log blobs are unreachable from the sandbox). The log also records which artifact versions the floating viewer coordinates resolved to, and a failure additionally commits back `build-reports/compile-deps.log` with the dependency graph | push to `arena/**` / this branch, PRs |
 | [`build.yml`](.github/workflows/build.yml) | static gates first (no network needed) → full `./gradlew build` + jar artifact (14 days), plus a **`no-viewers`** job that compiles with `-Penable_jei=false -Penable_rei=false` | push / PR |
 | [`consistency.yml`](.github/workflows/consistency.yml) | version gate for "bumped one place, forgot the other four", plus a warn-only `docs/ci` drift check | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml`, `docs/ci/publish.yml` |
-| [`publish.yml`](.github/workflows/publish.yml) | manual release to GitHub / Modrinth (`MINECRAFT_VERSION: 26.2`, `VERSION: 1.0.3`) | `workflow_dispatch` only |
+| [`publish.yml`](.github/workflows/publish.yml) | manual release to GitHub / Modrinth (`MINECRAFT_VERSION: 26.2`, `VERSION: 1.1.0`) | `workflow_dispatch` only |
 
 `docs/ci/` keeps byte-identical reference copies of all four, because a GitHub App token without
 `workflows: write` cannot create or update workflow files; `bash docs/ci/install.sh --check` reports

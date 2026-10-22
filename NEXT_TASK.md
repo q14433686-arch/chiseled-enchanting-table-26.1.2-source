@@ -1,16 +1,16 @@
-# Next Task: post-1.0.3 backlog (Minecraft 26.2 line)
+# Next Task: post-1.1.0 backlog (Minecraft 26.2 line)
 
 > **Unofficial community port.** All instructions below apply to the unofficial 26.2 port
 > (this repository). The upstream `Sacramentix/chiseled-enchanting-table` project is not affected
 > by this version line.
 
-**Current mod version:** `1.0.3` · **Minecraft:** `26.2` · **Fabric API:** `0.155.2+26.2` ·
+**Current mod version:** `1.1.0` · **Minecraft:** `26.2` · **Fabric API:** `0.155.2+26.2` ·
 **Loader:** `0.19.3`. See `CURRENT_BASELINE.md` for the currently-shipping capability boundary,
-`CHANGELOG.md` for the 1.0.3 content and
+`CHANGELOG.md` for the 1.1.0 content and
 `docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md` for the 2026-10-22 sync that brought the
 progression/economy/UI overhaul onto this line.
 
-## How to build 1.0.3 from a fresh clone
+## How to build 1.1.0 from a fresh clone
 
 The source tree is Gradle + Loom + Fabric API + Java 25:
 
@@ -27,7 +27,7 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew --no-daemon --max-workers=1 \
 ```
 
 Artefacts land in `build/libs/`; release staging is under
-`release_output/chiseled_enchanting_table_1_0_3/`.
+`release_output/chiseled_enchanting_table_1_1_0/`.
 
 ## Open items (roughly in priority order)
 
@@ -104,7 +104,7 @@ treasure_epiphany) are covered — keep it that way when adding new data files.
   Unofficial, `mixins` list matches the intended config.
 - Refresh `release_output/chiseled_enchanting_table_<version>/` if source / resource / jar bytes
   changed. Directory name follows `chiseled_enchanting_table_<version with _ for .>`, e.g.
-  `chiseled_enchanting_table_1_0_3` for `1.0.3`.
+  `chiseled_enchanting_table_1_1_0` for `1.1.0`.
 - If the source-of-truth for an in-game gameplay tuning changes (probabilities, cost formulas,
   book-count ranges, ...), update the concrete live-test expectations above so the next live-test
   round has an unambiguous target.
