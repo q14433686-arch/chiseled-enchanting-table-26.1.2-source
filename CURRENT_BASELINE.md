@@ -71,9 +71,11 @@ saves are unchanged.
   `consistency.yml`, `publish.yml`) are installed and verified byte-identical via
   `bash docs/ci/install.sh --check` (`MINECRAFT_VERSION: 26.2`, `VERSION: 1.1.0`,
   `RELEASE_NAME: ... (Unofficial 26.2 Port)`).
-- **CI status (2026-10-22, 26.1.2 sync):** GitHub Actions `compile-check` (run `39818720349`),
-  `build` (run `39818720326` — `static`, `gradle build` and `no-viewers` jobs) and `consistency`
-  (run `39818720363`) are **all green** on Minecraft 26.2 at commit `902e947` — i.e.
+- **CI status (2026-10-22, 1.1.0):** GitHub Actions `compile-check` (run `39819932191`), `build`
+  (run `39819932163` — `static`, `gradle build` and `no-viewers` jobs) and `consistency`
+  (run `39819931994`) are **all green** on Minecraft 26.2 at commit `9f2046c` (the `1.1.0`
+  version bump), and the same three workflows were green at `902e947` (runs `39818720349` /
+  `39818720326` / `39818720363`) for the feature sync itself — i.e.
   `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict`,
   `:compileJava`, `:compileClientJava`, `remapJar` (with pinned `jei-26.2-fabric:30.47.0.239` and
   `RoughlyEnoughItems-api-fabric:26.2.821` plus `toolchainPins` exclusions) and

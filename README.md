@@ -117,10 +117,11 @@ and by this repository's own `26.3` branch, because this port is developed in a 
 reach `maven.fabricmc.net` (nor the JEI/REI mavens) and therefore cannot compile locally — the
 compile has to happen on Actions and the log has to come back to the branch.
 
-**Status: green** on the `1.1.0` sync for Minecraft 26.2 — commit `902e947`, runs `39818720349`
-(compile-check), `39818720326` (build: `static`, `gradle build`, `no-viewers`) and `39818720363`
-(consistency), with the compiler log committed back as `build-reports/compile-java.log`
-(`68fc86e`). See `docs/ci/README.md` for the history.
+**Status: green** on `1.1.0` for Minecraft 26.2 — commit `9f2046c`, runs `39819932191`
+(compile-check), `39819932163` (build: `static`, `gradle build`, `no-viewers`) and `39819931994`
+(consistency); the feature-sync commit `902e947` was verified by runs `39818720349` /
+`39818720326` / `39818720363`. The compiler log is committed back as
+`build-reports/compile-java.log`. See `docs/ci/README.md` for the history.
 
 | Workflow | What it does | Trigger |
 |---|---|---|
