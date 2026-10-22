@@ -1,4 +1,4 @@
-commit: 7c0fbc8c8c3672fc3a6888c9f1973a9d8c1f3ef4
+commit: 763a027cbcc551ab3a4d24b485f275a90cbb7d26
 branch: arena/d0fffdab-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -27,11 +27,11 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :compileClientJava
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792713023669.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792713133058.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 17s
+BUILD SUCCESSFUL in 13s
 3 actionable tasks: 3 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
