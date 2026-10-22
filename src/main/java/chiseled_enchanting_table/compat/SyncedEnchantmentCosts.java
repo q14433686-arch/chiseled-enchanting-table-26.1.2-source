@@ -180,7 +180,7 @@ public final class SyncedEnchantmentCosts {
 
     public static int epiphanyRerollXpLevels() {
         EnchantCostTablePayload p = syncedPayload;
-        return p != null ? p.epiphanyRerollXpLevels() : ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions();
+        return p != null ? p.epiphanyRerollXpLevels() : ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels();
     }
 
     public static List<ItemStack> epiphanyRerollCosts() {

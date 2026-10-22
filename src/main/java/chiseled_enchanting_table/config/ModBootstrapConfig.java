@@ -36,6 +36,10 @@ public final class ModBootstrapConfig {
         return enchantedBookStackSize;
     }
 
+    public static ModBootstrapConfig load() {
+        return get();
+    }
+
     public static ModBootstrapConfig get() {
         ModBootstrapConfig current = instance;
         if (current == null) {
