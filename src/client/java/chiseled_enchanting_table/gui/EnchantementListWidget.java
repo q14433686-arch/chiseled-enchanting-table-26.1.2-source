@@ -463,34 +463,6 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return null;
         }
 
-        @Nullable
-        public ItemStack hoveredCostItem(double mouseX, double mouseY) {
-            int dx = this.getX() + 1;
-            int dy = this.getY();
-            int dw = this.getWidth() - 2;
-            int dh = this.getHeight();
-            if (mouseX < dx || mouseX > dx + dw || mouseY < dy || mouseY > dy + dh) {
-                return null;
-            }
-            int itemY = dy + RowRenderSupport.COST_OFFSET_Y;
-            if (mouseY < itemY || mouseY > itemY + 16) {
-                return null;
-            }
-            int primaryX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
-            if (!cost.isEmpty() && mouseX >= primaryX && mouseX <= primaryX + 16) {
-                return cost;
-            }
-            int startX = dx + dw - RowRenderSupport.ADDITIONAL_COST_RIGHT_MARGIN;
-            int shown = Math.min(2, additional_costs.size());
-            for (int i = 0; i < shown; i++) {
-                int x = startX + i * RowRenderSupport.ADDITIONAL_COST_STRIDE;
-                if (mouseX >= x && mouseX <= x + 16) {
-                    return additional_costs.get(i);
-                }
-            }
-            return null;
-        }
-
         public boolean serverSendApplyEnchant() {
             if (!this.canEnchant()) return false;
             ClientPlayNetworking.send(new ApplyEnchantmentPayload(option_type, enchantment_id, enchant_level));
