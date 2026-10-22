@@ -1,12 +1,12 @@
 # Current Baseline
 
-**Date:** 2026-10-22  
-**Minecraft Version:** 26.3  
-**Fabric Loader:** 0.19.5  
-**Fabric API:** 0.162.0+26.3  
-**Gradle:** 9.5.1  
-**Loom:** 1.17-SNAPSHOT  
-**Java:** 25  
+**Date:** 2026-10-22
+**Minecraft Version:** 26.3
+**Fabric Loader:** 0.19.5
+**Fabric API:** 0.162.0+26.3
+**Gradle:** 9.5.1
+**Loom:** 1.17-SNAPSHOT
+**Java:** 25
 **Mod Version:** `1.1.0`
 
 This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not affiliated

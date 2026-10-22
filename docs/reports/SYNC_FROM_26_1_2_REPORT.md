@@ -10,7 +10,7 @@ resonance, Treasure Epiphany and persisted freezing/reroll, XP modes, material b
 Arcane Condensate, Depleted Tome/Blank Overwrite, book upgrades, transformed-item economy,
 painted GUI and XP animations, dye tint, 7×5×7 converging particles, new recipes/advancements,
 11-locale copy, bidirectional transformation viewers, flat anvil penalty and stacked book fix,
-depth-based mineshaft Efficiency. Player documentation is in ../WIKI.md.
+depth-based mineshaft Efficiency. Player documentation is in [the Wiki](../WIKI.md).
 
 CI improvements include a viewer-disabled compile job, dependency-log writeback,
 all-locale key parity, documentation link warnings, workflow copy drift detection.
@@ -24,6 +24,7 @@ copied. Existing 26.3 migration reports are retained, not deleted by the upstrea
 | Toolchain | Keep MC 26.3, loader 0.19.5, Fabric API 0.162.0+26.3, Loom 1.17, Gradle 9.5.1, Java 25 |
 | Viewers | Keep 26.3 artifact coordinates and Architectury 22.0.3, not 26.1.2's pinned artifacts |
 | Structure processor/registry/mixins | Retain interface + codec(), STRUCTURE_PROCESSOR codec registry, template BlockPos argument, capital-P markPosForPostProcessing |
+| Table block | Omit removed simpleCodec/codec override while retaining all new dye, particle and interaction behaviour |
 | Book renderer | Retain rotate/rotateDegrees, nine-argument submitModel and separate crumbling-overlay submission |
 | Loot builder | Convert imported injector to ContextIntProviders and UniformContainerBase without losing new depth-based function or translated lore |
 | Custom depth loot function | Optional<Holder<LootItemCondition>> constructor instead of list; LootContext#getOptional instead of getOptionalParameter |

@@ -18,6 +18,9 @@ spec.loader.exec_module(compat)
 
 class SyncContracts(unittest.TestCase):
     def test_target_api_contracts(self):
+        block = (MAIN / 'block/ChiseledEnchantingTableBlock.java').read_text()
+        self.assertNotIn('simpleCodec(', block)
+        self.assertNotIn('protected MapCodec', block)
         processor = (MAIN / 'mechanics/structure/BookshelfReplacerProcessor.java').read_text()
         self.assertIn('implements StructureProcessor', processor)
         self.assertIn('BlockPos templatePos', processor)

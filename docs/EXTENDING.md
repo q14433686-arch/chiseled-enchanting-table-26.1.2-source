@@ -9,7 +9,7 @@ Every data file below is loaded by the `SimpleSynchronousResourceReloadListener`
 (`src/main/resources/data/<ns>/...`) and any user datapack that overrides these paths flow
 through the same loader; the last override wins by pack order.
 
-## Data-pack layout (MC 26.1.2 — singular directories!)
+## Data-pack layout (MC 26.3 — singular directories!)
 
 ```
 data/<namespace>/
@@ -36,16 +36,25 @@ data/<namespace>/
 ```json
 {
   "values": [ { "enchantment": "minecraft:sharpness", "level": 1 } ],
-  "tags":   [ { "tag": "#minecraft:non_treasure", "level": 1 } ]
+  "tags":   [ { "tag": "#minecraft:in_enchanting_table", "level": 1 } ]
 }
 ```
 
 - `values` — explicit `{enchantment, level}` list. Loaded without needing the world's dynamic
   registries; use this for a hand-picked default set.
 - `tags` — expands at lookup time to every enchantment in the tag (accepts `#namespace:path`
-  or bare `namespace:path`). The default `#minecraft:non_treasure` matches the tag the vanilla
-  enchanting table itself uses, so any well-behaved enchantment-adding mod is picked up with no
-  configuration. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full cross-mod investigation.
+  or bare `namespace:path`). The shipped default is **`#minecraft:in_enchanting_table`** — the tag
+  the vanilla enchanting table itself reads, and the documented extension point for mods. Its
+  content defaults to `#minecraft:non_treasure`, so this is a pure superset of the older
+  `non_treasure` default that this section used to document: on its own it changes nothing, but a
+  mod that appends its own enchantments directly to `in_enchanting_table.json` (a common pattern,
+  because `non_treasure` is meant to stay a vanilla-only list) is now picked up too. Either way a
+  well-behaved enchantment-adding mod needs no configuration here.
+  *(The cross-mod compatibility write-up that older revisions linked as `COMPATIBILITY.md` is not
+  present in this snapshot on any branch of the repository; `scripts/ci_static_checks.py` reports
+  the reference as a dangling link until it is restored. The behaviour it described is the tag
+  expansion above, and `scripts/compat_check.py`'s `check_default_enchantment_tags_well_formed()`
+  is its executable form.)*
 
 **Java entry point:** `ChiseledEnchantingTableData.defaultEnchantments(HolderGetter<Enchantment>)`
 combines the `values` list with a live tag expansion; the no-arg overload only returns the
