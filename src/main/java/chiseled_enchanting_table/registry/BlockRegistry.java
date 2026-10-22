@@ -1,19 +1,23 @@
 package chiseled_enchanting_table.registry;
 
+import java.util.List;
 import java.util.function.Function;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.block.ChiseledEnchantingTableBlock;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
@@ -41,6 +45,21 @@ public class BlockRegistry {
             settings
                 .rarity(Rarity.RARE)
                 .component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true)
+        )
+    );
+
+    public static final Item DEPLETED_TOME = registerItem(
+        "depleted_tome",
+        settings -> new Item(
+            settings
+                .rarity(Rarity.UNCOMMON)
+                .component(
+                    DataComponents.LORE,
+                    new ItemLore(List.of(
+                        Component.translatable("item.chiseled_enchanting_table.depleted_tome.lore")
+                            .withStyle(style -> style.withItalic(false).withColor(ChatFormatting.LIGHT_PURPLE))
+                    ))
+                )
         )
     );
 
@@ -80,9 +99,11 @@ public class BlockRegistry {
         net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> {
             output.accept(CHISELED_ENCHANTING_TABLE.asItem());
             output.accept(ARCANE_CATALYST);
+            output.accept(DEPLETED_TOME);
         });
         net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS).register(output -> {
             output.accept(ARCANE_CATALYST);
+            output.accept(DEPLETED_TOME);
         });
     }
 }

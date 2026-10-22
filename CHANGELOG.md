@@ -20,6 +20,19 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ### Changed — Unified Progression, Library Resonance & Player-Choice Economy Overhaul (A × B × C)
 
+- **Depleted Tome (`chiseled_enchanting_table:depleted_tome`) & Blank Overwrite (`blank_overwrite`)**:
+  - Fixed a component-pollution stacking bug where `ItemStack#transmuteCopy` left residual
+    `STORED_ENCHANTMENTS` / glint data patches on drained `minecraft:book`s and re-enchanted
+    `minecraft:enchanted_book`s, preventing stacking with clean items.
+  - Merging or fully stripping an Enchanted Book now yields a 64-stackable **Depleted Tome**
+    (`褪魔残卷`) bearing scorched arcane residue that cannot be directly re-enchanted or crafted with
+    until cleansed via **Blank Overwrite** (`chiseled_enchanting_table:blank_overwrite`, batchable up
+    to `8` tomes at once for `1` XP level + any scribe reagent: `2× Paper`, `2× Bone Meal`,
+    `1× Ink Sac`, `1× Glow Ink Sac`, or `1× Amethyst Shard`), restoring canonical component-free
+    `minecraft:book`s and granting the **Tabula Rasa** (`blank_overwrite`) advancement. Existing
+    saves' residual `minecraft:book` items are also detected and can be cleansed via Blank Overwrite.
+  - Enchanting a `minecraft:book` now constructs a canonical `new ItemStack(Items.ENCHANTED_BOOK, 1)`
+    (preserving custom names only) so identical Enchanted Books always stack cleanly up to `64`.
 - **Smooth Early-Game Entry & Upgrade Recipes**:
   - Reduced direct crafting recipe (`recipe/chiseled_enchanting_table.json`) from `2 × Diamond Block`
     (18 diamonds) to **`2 × Diamond` + `1 × Book` + `1 × Chiseled Bookshelf` + `3 × Crying Obsidian`**.

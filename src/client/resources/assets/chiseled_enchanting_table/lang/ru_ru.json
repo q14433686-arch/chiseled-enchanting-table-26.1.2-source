@@ -76,5 +76,11 @@
   "advancements.chiseled_enchanting_table.inscribe_epiphany.title": "Seize the Epiphany",
   "advancements.chiseled_enchanting_table.inscribe_epiphany.description": "Inscribe a Treasure Epiphany enchantment onto an item or book.",
   "advancements.chiseled_enchanting_table.multi_epiphany.title": "Astral Convergence",
-  "advancements.chiseled_enchanting_table.multi_epiphany.description": "Expand your library and Master Tomes until a single item manifests at least 2 Treasure Epiphanies at once."
+  "advancements.chiseled_enchanting_table.multi_epiphany.description": "Expand your library and Master Tomes until a single item manifests at least 2 Treasure Epiphanies at once.",
+  "item.chiseled_enchanting_table.depleted_tome": "Истощённый фолиант",
+  "item.chiseled_enchanting_table.depleted_tome.lore": "Хранит следы чар — очистите через «Чистую перезапись»",
+  "gui.chiseled_enchanting_table.blank_overwrite": "Чистая перезапись: %s",
+  "advancements.chiseled_enchanting_table.blank_overwrite.title": "Чистый лист",
+  "advancements.chiseled_enchanting_table.blank_overwrite.description": "Очистите истощённый фолиант с помощью «Чистой перезаписи» на резном чародейском столе",
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Остаётся после слияния или извлечения чар из чародейской книги (стакается до 64). До 8 фолиантов за раз можно очистить через «Чистую перезапись» (1 уровень опыта + бумага, костная мука, чернильный мешок, светящийся чернильный мешок или осколок аметиста) в обычные книги."
 }

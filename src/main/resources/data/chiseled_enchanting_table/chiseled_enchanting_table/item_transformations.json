@@ -1,6 +1,21 @@
 {
   "values": [
     {
+      "id": "chiseled_enchanting_table:blank_overwrite",
+      "input": "chiseled_enchanting_table:depleted_tome",
+      "output": "minecraft:book",
+      "level": 1,
+      "xp_cost": 1,
+      "primary_cost": { "item": "minecraft:paper", "count": 2 },
+      "cost_options": [
+        { "item": "minecraft:paper", "count": 2 },
+        { "item": "minecraft:bone_meal", "count": 2 },
+        { "item": "minecraft:ink_sac", "count": 1 },
+        { "item": "minecraft:glow_ink_sac", "count": 1 },
+        { "item": "minecraft:amethyst_shard", "count": 1 }
+      ]
+    },
+    {
       "id": "chiseled_enchanting_table:enchanted_golden_apple",
       "input": "minecraft:golden_apple",
       "output": "minecraft:enchanted_golden_apple",

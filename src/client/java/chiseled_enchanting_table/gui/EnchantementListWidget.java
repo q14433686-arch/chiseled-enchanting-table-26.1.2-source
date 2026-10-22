@@ -70,7 +70,11 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
     public String displayName(AvailableOption option) {
         if (option.isTransformation()) {
-            return this.handler.syncedTransformationOutputName(option.id());
+            String out = this.handler.syncedTransformationOutputName(option.id());
+            if (option.id().equals(chiseled_enchanting_table.data.ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)) {
+                return I18n.get("gui.chiseled_enchanting_table.blank_overwrite", out);
+            }
+            return out;
         }
         String name = Enchantment.getFullname(IdentifierToEnchantment(option.id(), this.player), option.level()).getString();
         if (option.isTreasureEpiphany()) return I18n.get("gui.chiseled_enchanting_table.treasure_epiphany", name);
@@ -245,6 +249,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         options.stream().filter(option -> {
             if (option.isTransformation()) {
                 return this.handler.syncedTransformationMatches(option.id(), enchantable_item);
+            }
+            if (chiseled_enchanting_table.data.ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+                return false;
             }
             Holder<Enchantment> enchant = IdentifierToEnchantment(option.id(), this.player);
             return enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchant.value().canEnchant(enchantable_item);
@@ -538,9 +545,12 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
             if (is_transformation) {
                 String outputName = handler.syncedTransformationOutputName(this.enchantment_id);
+                String rowTitle = this.enchantment_id.equals(chiseled_enchanting_table.data.ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)
+                    ? I18n.get("gui.chiseled_enchanting_table.blank_overwrite", outputName)
+                    : outputName;
                 TransformationRowRenderer.render(
                     ctx, client, dx, dy, dw, dh, isFocused, hovered, canEnchant(),
-                    primaryMet, additionalMet, xpMet, outputName, cost, additional_costs, xp_level_cost
+                    primaryMet, additionalMet, xpMet, rowTitle, cost, additional_costs, xp_level_cost
                 );
             } else {
                 String enchantmentName = Enchantment.getFullname(this.enchantment, enchant_level).getString();

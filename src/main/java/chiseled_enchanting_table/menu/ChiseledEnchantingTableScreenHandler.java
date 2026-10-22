@@ -163,7 +163,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             inventorySlotStartY - slotSize * 2 - slotPadding*3 - cost_slot_gap - enchantable_slot_gap
         ) {
             @Override
-            public int getMaxStackSize() {
+            public int getMaxStackSize(ItemStack stack) {
+                if (stack.is(BlockRegistry.DEPLETED_TOME)) {
+                    return 8;
+                }
                 return 1;
             }
         });
@@ -392,7 +395,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         for (TransformationDisplay display : this.transformationDisplays.values()) {
             Item inputItem = BuiltInRegistries.ITEM.getValue(display.input_item());
-            if (!input.isEmpty() && inputItem != null && input.is(inputItem)) {
+            boolean matched = (!input.isEmpty() && inputItem != null && input.is(inputItem))
+                || (display.id().equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID) && ChiseledEnchantingTableData.isResidualBook(input));
+            if (matched) {
                 result.add(new EnchantmentWithLevel(display.id(), display.level()));
             }
         }
@@ -404,6 +409,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         TransformationDisplay display = this.transformationDisplays.get(id);
         if (display == null) {
             return ChiseledEnchantingTableData.itemTransformation(id).map(rule -> rule.matchesInput(input)).orElse(false);
+        }
+        if (id.equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID) && ChiseledEnchantingTableData.isResidualBook(input)) {
+            return true;
         }
         Item inputItem = BuiltInRegistries.ITEM.getValue(display.input_item());
         return !input.isEmpty() && inputItem != null && input.is(inputItem);
@@ -586,7 +594,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public List<EnchantmentWithLevel> computeActiveTreasureEpiphanies(ItemStack targetStack) {
         int minShelves = epiphanyMinBookshelves();
         int maxSlots = epiphanyMaxSlots();
-        if (this.regularBookshelves < minShelves || maxSlots <= 0 || targetStack.isEmpty() || targetStack.is(Items.ENCHANTED_BOOK)) {
+        if (this.regularBookshelves < minShelves
+            || maxSlots <= 0
+            || targetStack.isEmpty()
+            || targetStack.is(Items.ENCHANTED_BOOK)
+            || ChiseledEnchantingTableData.isResidualBook(targetStack)) {
             return List.of();
         }
         boolean isBlankBook = targetStack.is(Items.BOOK);
@@ -943,22 +955,39 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 this.player.getInventory().setChanged();
                 return;
             }
+            ItemStack existingTarget = this.getSlot(ENCHANTABLE_SLOT).getItem();
+            if (clickedStack.is(BlockRegistry.DEPLETED_TOME)
+                && existingTarget.is(BlockRegistry.DEPLETED_TOME)
+                && existingTarget.getCount() < 8) {
+                int space = 8 - existingTarget.getCount();
+                int move = Math.min(space, clickedStack.getCount());
+                existingTarget.grow(move);
+                clickedStack.shrink(move);
+                this.inventory.setChanged();
+                this.player.getInventory().setChanged();
+                return;
+            }
+
             ItemStack clickedStackNoEnchant = clickedStack.copy();
             EnchantmentHelper.updateEnchantments(clickedStackNoEnchant, m -> {
                 var keys = new java.util.HashSet<>(m.keySet());
                 for(var k: keys) m.set(k, 0);
             });
             boolean isBook = clickedStackNoEnchant.is(Items.BOOK) || clickedStackNoEnchant.is(Items.ENCHANTED_BOOK);
+            boolean isDedicatedTransformInput = clickedStack.is(BlockRegistry.DEPLETED_TOME)
+                || ChiseledEnchantingTableData.isResidualBook(clickedStack)
+                || (!this.getSlot(ENCHANTABLE_SLOT).hasItem() && !this.syncedTransformationsFor(clickedStack).isEmpty());
 
-            if (clickedStackNoEnchant.isEnchantable() || (isBook && !this.getSlot(ENCHANTABLE_SLOT).hasItem())) {
+            if (clickedStackNoEnchant.isEnchantable() || isDedicatedTransformInput || (isBook && !this.getSlot(ENCHANTABLE_SLOT).hasItem())) {
                 ItemStack tempStack = clickedStack.copy();
+                int maxAllowed = this.getSlot(ENCHANTABLE_SLOT).getMaxStackSize(tempStack);
                 this.getSlot(slotIndex).set(this.getSlot(ENCHANTABLE_SLOT).getItem());
                 this.getSlot(ENCHANTABLE_SLOT).set(tempStack);
 
-                if (this.getSlot(ENCHANTABLE_SLOT).getItem().getCount() > 1) {
+                if (this.getSlot(ENCHANTABLE_SLOT).getItem().getCount() > maxAllowed) {
                     ItemStack overflow = this.getSlot(ENCHANTABLE_SLOT).getItem().copy();
-                    overflow.setCount(overflow.getCount() - 1);
-                    this.getSlot(ENCHANTABLE_SLOT).getItem().setCount(1);
+                    overflow.setCount(overflow.getCount() - maxAllowed);
+                    this.getSlot(ENCHANTABLE_SLOT).getItem().setCount(maxAllowed);
                     if (!this.getSlot(slotIndex).hasItem()) {
                         this.getSlot(slotIndex).set(overflow);
                     } else {

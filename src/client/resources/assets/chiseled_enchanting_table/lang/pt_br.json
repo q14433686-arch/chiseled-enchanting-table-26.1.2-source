@@ -76,5 +76,11 @@
   "advancements.chiseled_enchanting_table.inscribe_epiphany.title": "Seize the Epiphany",
   "advancements.chiseled_enchanting_table.inscribe_epiphany.description": "Inscribe a Treasure Epiphany enchantment onto an item or book.",
   "advancements.chiseled_enchanting_table.multi_epiphany.title": "Astral Convergence",
-  "advancements.chiseled_enchanting_table.multi_epiphany.description": "Expand your library and Master Tomes until a single item manifests at least 2 Treasure Epiphanies at once."
+  "advancements.chiseled_enchanting_table.multi_epiphany.description": "Expand your library and Master Tomes until a single item manifests at least 2 Treasure Epiphanies at once.",
+  "item.chiseled_enchanting_table.depleted_tome": "Tomo Exaurido",
+  "item.chiseled_enchanting_table.depleted_tome.lore": "Marcado por resíduos arcanos — purifique via Sobrescrita em Branco",
+  "gui.chiseled_enchanting_table.blank_overwrite": "Sobrescrita em Branco: %s",
+  "advancements.chiseled_enchanting_table.blank_overwrite.title": "Tabula Rasa",
+  "advancements.chiseled_enchanting_table.blank_overwrite.description": "Purifique um Tomo Exaurido com Sobrescrita em Branco na Mesa de Encantamentos Cinzelada para restaurar um Livro limpo",
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Resta ao fundir ou extrair encantamentos de um Livro Encantado (empilhável até 64). Purifique até 8 de uma vez via Sobrescrita em Branco (1 nível de XP + papel, farinha de osso, bolsa de tinta, bolsa de tinta brilhante ou fragmento de ametista) em Livros normais."
 }

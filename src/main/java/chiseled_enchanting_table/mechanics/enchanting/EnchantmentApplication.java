@@ -43,6 +43,9 @@ public final class EnchantmentApplication {
 
         Level world = handler.world();
         ItemStack enchantable_item = handler.get_enchantable_item();
+        if (chiseled_enchanting_table.data.ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+            return false;
+        }
         int enchantment_level = payload.enchantment_level();
         Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
         if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(enchantable_item))) {
@@ -64,7 +67,12 @@ public final class EnchantmentApplication {
         newEnchantmentsComponent.set(enchantment, enchantment_level);
 
         if (enchantable_item.is(Items.BOOK)) {
-            ItemStack stack = enchantable_item.transmuteCopy(Items.ENCHANTED_BOOK, 1);
+            // Create a 100% canonical vanilla Enchanted Book so same-enchant books always stack cleanly up to 64!
+            ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK, 1);
+            var customName = enchantable_item.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+            if (customName != null) {
+                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
+            }
             handler.setEnchantableSlot(stack);
             enchantable_item = handler.get_enchantable_item();
         }
@@ -108,6 +116,9 @@ public final class EnchantmentApplication {
         }
 
         ItemStack enchantable_item = handler.get_enchantable_item();
+        if (chiseled_enchanting_table.data.ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+            return false;
+        }
         int enchantment_level = payload.enchantment_level();
         Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
         if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(enchantable_item))) {
@@ -127,7 +138,8 @@ public final class EnchantmentApplication {
         });
 
         if (EnchantmentHelper.getEnchantmentsForCrafting(enchanted_book).isEmpty()) {
-            handler.setCostSlot(enchanted_book.transmuteCopy(Items.BOOK, 1));
+            // Drained source book becomes a stackable Depleted Tome requiring Blank Overwrite before reuse.
+            handler.setCostSlot(new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1));
         }
 
         ItemEnchantments.Mutable newEnchantmentsComponent = new ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item));
@@ -142,7 +154,11 @@ public final class EnchantmentApplication {
         newEnchantmentsComponent.set(enchantment, enchantment_level);
 
         if (enchantable_item.is(Items.BOOK)) {
-            ItemStack stack = enchantable_item.transmuteCopy(Items.ENCHANTED_BOOK, 1);
+            ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK, 1);
+            var customName = enchantable_item.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+            if (customName != null) {
+                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
+            }
             handler.setEnchantableSlot(stack);
             enchantable_item = handler.get_enchantable_item();
         }

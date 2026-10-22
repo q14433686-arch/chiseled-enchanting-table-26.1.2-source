@@ -65,7 +65,8 @@ public final class BookUpgradeApplication {
         merged.set(enchantment, targetLevel);
         writeEnchantments(targetBook, merged);
 
-        handler.setCostSlot(costBook.transmuteCopy(Items.BOOK, 1));
+        // Drained source book carries arcane residue and becomes a stackable Depleted Tome requiring Blank Overwrite.
+        handler.setCostSlot(new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1));
         finish(handler);
         Advancement.give(handler.player, "upgrade_enchanted_book");
         Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());

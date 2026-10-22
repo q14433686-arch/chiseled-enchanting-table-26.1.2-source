@@ -92,6 +92,10 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             List.of(new ItemStack(BlockRegistry.ARCANE_CATALYST)),
             Component.translatable("jei.chiseled_enchanting_table.info.catalyst")
         );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.DEPLETED_TOME)),
+            Component.translatable("jei.chiseled_enchanting_table.info.depleted_tome")
+        );
     }
 
     @Override

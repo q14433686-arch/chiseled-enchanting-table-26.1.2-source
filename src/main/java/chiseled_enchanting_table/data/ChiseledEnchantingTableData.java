@@ -309,9 +309,28 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return itemTransformations.containsKey(id);
     }
 
+    public static final Identifier BLANK_OVERWRITE_ID = ChiseledEnchantingTable.identifier("blank_overwrite");
+
+    /**
+     * Returns true if {@code stack} is a {@code depleted_tome} OR a legacy pre-fix {@code minecraft:book}
+     * carrying leftover enchantment/glint components from an earlier merge/strip operation.
+     */
+    public static boolean isResidualBook(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        if (stack.is(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME)) return true;
+        if (!stack.is(Items.BOOK)) return false;
+        if (stack.has(net.minecraft.core.component.DataComponents.STORED_ENCHANTMENTS)) return true;
+        if (stack.has(net.minecraft.core.component.DataComponents.ENCHANTMENT_GLINT_OVERRIDE)) return true;
+        var direct = stack.get(net.minecraft.core.component.DataComponents.ENCHANTMENTS);
+        return direct != null && !direct.isEmpty();
+    }
+
     public static List<List<ItemStack>> transformationCostOptions(Identifier id) {
         ItemTransformation transformation = itemTransformations.get(id);
         if (transformation == null) return List.of();
+        if (!transformation.alternativePrimaryOptions().isEmpty()) {
+            return transformation.alternativeBundles();
+        }
         List<ItemStack> bundle = new ArrayList<>();
         bundle.add(transformation.primaryCostStack(""));
         bundle.addAll(transformation.additionalCostStacks(""));
@@ -507,6 +526,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         String json = """
             {
               "values": [
+                { "id": "chiseled_enchanting_table:blank_overwrite", "input": "chiseled_enchanting_table:depleted_tome", "output": "minecraft:book", "level": 1, "xp_cost": 1, "primary_cost": { "item": "minecraft:paper", "count": 2 }, "cost_options": [ { "item": "minecraft:paper", "count": 2 }, { "item": "minecraft:bone_meal", "count": 2 }, { "item": "minecraft:ink_sac", "count": 1 }, { "item": "minecraft:glow_ink_sac", "count": 1 }, { "item": "minecraft:amethyst_shard", "count": 1 } ] },
                 { "id": "chiseled_enchanting_table:enchanted_golden_apple", "input": "minecraft:golden_apple", "output": "minecraft:enchanted_golden_apple", "level": 1, "xp_cost": 3, "primary_cost": { "item": "minecraft:gold_block", "count": 8 }, "additional_costs": [ { "item": "minecraft:emerald", "min_count": 2, "max_count": 5 } ] },
                 { "id": "chiseled_enchanting_table:experience_bottle", "input": "minecraft:glass_bottle", "output": "minecraft:experience_bottle", "level": 1, "xp_cost": 1, "primary_cost": { "item": "minecraft:lapis_lazuli", "count": 6 }, "additional_costs": [ { "item": "minecraft:amethyst_shard", "count": 2 } ] },
                 { "id": "chiseled_enchanting_table:totem_of_undying", "input": "minecraft:emerald_block", "output": "minecraft:totem_of_undying", "level": 1, "xp_cost": 12, "primary_cost": { "item": "minecraft:gold_block", "count": 4 }, "additional_costs": [ { "item": "minecraft:ghast_tear", "count": 1 }, { "item": "minecraft:amethyst_shard", "count": 8 } ] },
@@ -583,7 +603,16 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     /** One {@code tags} entry: every enchantment in {@code tagId} unlocks at {@code level}. */
     private record DefaultEnchantmentTagRule(Identifier tagId, int level) {}
 
-    public record ItemTransformation(Identifier id, Identifier inputItemId, Identifier outputItemId, int level, int xpCost, ItemCostOption primaryCost, List<ItemCostOption> additionalCosts) {
+    public record ItemTransformation(
+        Identifier id,
+        Identifier inputItemId,
+        Identifier outputItemId,
+        int level,
+        int xpCost,
+        ItemCostOption primaryCost,
+        List<ItemCostOption> additionalCosts,
+        List<ItemCostOption> alternativePrimaryOptions
+    ) {
         static ItemTransformation fromJson(JsonObject json) {
             Identifier id = parseIdentifier(json.get("id").getAsString());
             Identifier input = parseIdentifier(json.get("input").getAsString());
@@ -597,11 +626,38 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                     additionalCosts.add(ItemCostOption.fromJson(element.getAsJsonObject()));
                 }
             }
-            return new ItemTransformation(id, input, output, Math.max(1, level), Math.max(0, xpCost), primaryCost, List.copyOf(additionalCosts));
+            List<ItemCostOption> altOptions = new ArrayList<>();
+            if (json.has("cost_options")) {
+                for (JsonElement element : json.getAsJsonArray("cost_options")) {
+                    altOptions.add(ItemCostOption.fromJson(element.getAsJsonObject()));
+                }
+            }
+            return new ItemTransformation(
+                id,
+                input,
+                output,
+                Math.max(1, level),
+                Math.max(0, xpCost),
+                primaryCost,
+                List.copyOf(additionalCosts),
+                List.copyOf(altOptions)
+            );
         }
 
         public boolean matchesInput(ItemStack stack) {
-            return !stack.isEmpty() && BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(inputItemId);
+            if (stack.isEmpty()) return false;
+            if (id.equals(BLANK_OVERWRITE_ID) && isResidualBook(stack)) {
+                return true;
+            }
+            return BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(inputItemId);
+        }
+
+        public List<List<ItemStack>> alternativeBundles() {
+            List<List<ItemStack>> bundles = new ArrayList<>(alternativePrimaryOptions.size());
+            for (ItemCostOption opt : alternativePrimaryOptions) {
+                bundles.add(opt.toBundle(id, level, level));
+            }
+            return List.copyOf(bundles);
         }
 
         public ItemStack outputStack(int count) {

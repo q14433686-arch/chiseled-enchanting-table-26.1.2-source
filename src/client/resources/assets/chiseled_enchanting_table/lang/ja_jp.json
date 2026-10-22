@@ -76,5 +76,11 @@
   "advancements.chiseled_enchanting_table.inscribe_epiphany.title": "霊光の刻印",
   "advancements.chiseled_enchanting_table.inscribe_epiphany.description": "秘法頓悟で出現した宝蔵エンチャントを刻印する。",
   "advancements.chiseled_enchanting_table.multi_epiphany.title": "群星の共鳴",
-  "advancements.chiseled_enchanting_table.multi_epiphany.description": "1つのアイテムに同時に2つ以上の宝蔵頓悟を出現させる。"
+  "advancements.chiseled_enchanting_table.multi_epiphany.description": "1つのアイテムに同時に2つ以上の宝蔵頓悟を出現させる。",
+  "item.chiseled_enchanting_table.depleted_tome": "魔力枯れの残巻",
+  "item.chiseled_enchanting_table.depleted_tome.lore": "魔力の残滓が刻まれている — 彫模様のエンチャント台で「空白上書き」を行うと再利用可能",
+  "gui.chiseled_enchanting_table.blank_overwrite": "空白上書き：%s",
+  "advancements.chiseled_enchanting_table.blank_overwrite.title": "白紙還し",
+  "advancements.chiseled_enchanting_table.blank_overwrite.description": "彫模様のエンチャント台で「空白上書き」を行い、魔力枯れの残巻を新品の本へ浄化する",
+  "jei.chiseled_enchanting_table.info.depleted_tome": "エンチャントの本の統合や魔力抽出後に残る巻物（最大64個スタック）。最大8冊まで一度に「空白上書き」（1レベル＋紙・骨粉・イカスミ・輝くイカスミ・アメジストの欠片のいずれか）で通常の本へ戻せます。"
 }

@@ -76,5 +76,11 @@
   "advancements.chiseled_enchanting_table.inscribe_epiphany.title": "灵光铭刻",
   "advancements.chiseled_enchanting_table.inscribe_epiphany.description": "将一次「秘法顿悟」刷出的宝藏附魔成功铭刻到装备或书本上。",
   "advancements.chiseled_enchanting_table.multi_epiphany.title": "群星共鸣",
-  "advancements.chiseled_enchanting_table.multi_epiphany.description": "扩建书阁与雕纹母本，使同一件物品同时顿悟出至少 2 项宝藏附魔。"
+  "advancements.chiseled_enchanting_table.multi_epiphany.description": "扩建书阁与雕纹母本，使同一件物品同时顿悟出至少 2 项宝藏附魔。",
+  "item.chiseled_enchanting_table.depleted_tome": "褪魔残卷",
+  "item.chiseled_enchanting_table.depleted_tome.lore": "铭痕残留，需于纂刻附魔台经「空白覆写」涤除后方可再度附魔或合成",
+  "gui.chiseled_enchanting_table.blank_overwrite": "空白覆写：%s",
+  "advancements.chiseled_enchanting_table.blank_overwrite.title": "洗尽铅华",
+  "advancements.chiseled_enchanting_table.blank_overwrite.description": "在纂刻附魔台上对褪魔残卷施行「空白覆写」，涤除残余铭痕并还原为崭新的书",
+  "jei.chiseled_enchanting_table.info.depleted_tome": "附魔书在合书升阶或剥离全部魔咒后遗留的残卷（可堆叠至 64）。无法直接附魔或参与合成；将其放入纂刻附魔台（单次最多 8 本），消耗 1 级经验与任一涤墨材料（2×纸 / 2×骨粉 / 1×墨囊 / 1×发光墨囊 / 1×紫水晶碎片）即可经「空白覆写」还原为纯净可堆叠的普通书。"
 }
