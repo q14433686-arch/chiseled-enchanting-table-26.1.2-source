@@ -10,7 +10,7 @@
 > bug reports about this port to **this** repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`),
 > not to the upstream project.
 
-**Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+**Current version:** `1.1.1` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
 **Target:** Minecraft `26.3`, Fabric Loader `>=0.19.5`, Fabric API `0.162.0+26.3`, Java `>=25`.
 
 📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)**
@@ -33,9 +33,9 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 
 ## Installation
 
-Grab the latest `chiseled-enchanting-table-1.1.0.jar` from the `build` workflow's artifact on the
+Grab the latest `chiseled-enchanting-table-1.1.1.jar` from the `build` workflow's artifact on the
 branch you want (Actions → *build* → **Artifacts**, kept 14 days) or from
-`release_output/chiseled_enchanting_table_1_1_0/` when a release is staged there, and drop it into
+`release_output/chiseled_enchanting_table_1_1_1/` when a release is staged there, and drop it into
 your Fabric `mods/` folder alongside Fabric API `0.162.0+26.3`.
 
 To build it yourself: JDK 25 + network access to `maven.fabricmc.net` (the dev sandbox this port is

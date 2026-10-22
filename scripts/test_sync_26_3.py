@@ -86,6 +86,53 @@ class SyncContracts(unittest.TestCase):
                 compat.check_advancements_use_26_3_schema()
                 self.assertEqual(err.called, should_fail)
 
+    def test_runtime_log_condition_array_regression(self):
+        for condition, should_fail in [
+            ([{'type': 'minecraft:survives_explosion'}], True),
+            ({'type': 'minecraft:survives_explosion'}, False),
+            ({'type': 'minecraft:all_of', 'terms': [
+                {'type': 'minecraft:survives_explosion'}]}, False),
+        ]:
+            with self.subTest(condition=condition):
+                data = {'pools': [{'condition': condition}]}
+                with patch.object(compat, 'iter_data_json', return_value=[('test', 'test.json', data)]), \
+                     patch.object(compat, 'err') as err:
+                    compat.check_loot_tables_use_26_3_schema()
+                    self.assertEqual(err.called, should_fail)
+
+    def test_recipe_unlocked_requires_recipes(self):
+        for conditions, should_fail in [
+            ({'recipe': 'test:recipe'}, True),
+            ({}, True),
+            ({'recipes': 'test:recipe'}, True),
+            ({'recipes': ['test:recipe']}, False),
+        ]:
+            with self.subTest(conditions=conditions):
+                data = {'criteria': {'has_the_recipe': {
+                    'trigger': 'minecraft:recipe_unlocked', 'conditions': conditions}}}
+                with patch.object(compat, 'iter_data_json', return_value=[('test', 'test.json', data)]), \
+                     patch.object(compat, 'err') as err:
+                    compat.check_advancements_use_26_3_schema()
+                    self.assertEqual(err.called, should_fail)
+
+    def test_bundled_datapack_passes_schema_checks(self):
+        with patch.object(compat, 'err') as err:
+            compat.check_loot_tables_use_26_3_schema()
+            compat.check_advancements_use_26_3_schema()
+            self.assertEqual(err.call_args_list, [])
+        loot = json.loads((DATA / 'loot_table/blocks/chiseled_enchanting_table.json').read_text())
+        modifier = loot['pools'][0]['entries'][0]['modifier']
+        self.assertEqual(modifier['source'], 'block_entity')
+        self.assertTrue({'minecraft:custom_name', 'minecraft:dyed_color',
+                         'minecraft:custom_data', 'minecraft:lore'} <= set(modifier['include']))
+
+    def test_modifier_sequence_still_allowed(self):
+        data = {'pools': [{'modifier': [{'type': 'minecraft:copy_components'}]}]}
+        with patch.object(compat, 'iter_data_json', return_value=[('test', 'test.json', data)]), \
+             patch.object(compat, 'err') as err:
+            compat.check_loot_tables_use_26_3_schema()
+            self.assertFalse(err.called)
+
 
 if __name__ == '__main__':
     unittest.main()

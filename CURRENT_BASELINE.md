@@ -7,7 +7,7 @@
 **Gradle:** 9.5.1
 **Loom:** 1.17-SNAPSHOT
 **Java:** 25
-**Mod Version:** `1.1.0`
+**Mod Version:** `1.1.1`
 
 This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not affiliated
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
@@ -73,3 +73,11 @@ Final pinned-dependency verification (source commit `a0412e9`):
 all three jobs successfully (static checks, full Gradle build, no-viewers compilation).
 `build-reports/compile-java.log` records both exact pinned viewer versions and
 `BUILD SUCCESSFUL`. This confirms compilation/packaging, not in-game runtime behaviour.
+
+## 1.1.1 world-load hotfix (2026-10-23)
+
+User runtime log exposed two missed data-codec changes: recipe_unlocked needs recipes,
+and loot condition takes a single predicate holder (not an array). Both bundled files are
+fixed, preserving all copy-components fields including freeze data. The offline gates now
+cover both exact failures. Historical green compilation above did not validate datapack codecs.
+See docs/reports/WORLD_LOAD_1_1_1_HOTFIX.md. Runtime retest is still required.

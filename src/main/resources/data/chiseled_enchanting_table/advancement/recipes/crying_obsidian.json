@@ -14,7 +14,9 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipe": "chiseled_enchanting_table:crying_obsidian"
+        "recipes": [
+          "chiseled_enchanting_table:crying_obsidian"
+        ]
       }
     }
   },

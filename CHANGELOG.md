@@ -15,6 +15,17 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
+## [1.1.1] — 2026-10-23
+
+### Fixed — save/world entry blocked by datapack registry errors
+
+- Recipe-unlock advancement now uses the 26.3 `recipes` holder list instead of `recipe`.
+- Table block loot now uses a single `condition` object rather than an invalid predicate array.
+  Keeps custom name, dye, custom data (including freeze state) and lore when mined.
+- Schema gates and regression tests now reproduce both failures from the user's runtime log;
+  valid inline modifier sequences remain supported.
+- This fixes packaged data; no save editing or world deletion is required.
+
 ## [1.1.0] — 2026-10-22
 
 Synced all current 26.1.2 gameplay, UI, assets and translations from `0304f9d` to

@@ -181,7 +181,7 @@ def check_loot_tables_use_26_3_schema() -> None:
             if plural in node:
                 err(
                     f"{rel}: {where} uses the 26.2 '{plural}' array; MC 26.3 expects the singular "
-                    f"'{singular}' field (a single object, or a list of objects) — the array is "
+                    f"'{singular}' field — the legacy plural array is "
                     f"silently ignored"
                 )
 
@@ -196,11 +196,13 @@ def check_loot_tables_use_26_3_schema() -> None:
             if key not in node:
                 continue
             value = node[key]
-            if isinstance(value, str):
-                err(
-                    f"{rel}: {where}['{key}'] is the bare string '{value}'; MC 26.3 expects an "
-                    f"object such as {{\"type\": \"{value}\"}}"
-                )
+            # Conditions use a single Holder, NOT a HolderSet. In contrast,
+            # modifier accepts an inline SequenceFunction list (LootItemFunctions.DIRECT_CODEC).
+            if key == "condition" and isinstance(value, list):
+                err(f"{rel}: {where}['condition'] must be a single predicate object/reference, "
+                    "not an array (26.3: Not a JSON object); use minecraft:all_of for multiple predicates")
+            elif not isinstance(value, (dict, str, list)):
+                err(f"{rel}: {where}['{key}'] has an invalid value")
             elif isinstance(value, dict) and "type" not in value:
                 err(f"{rel}: {where}['{key}'] is missing its 'type' dispatch key")
 
@@ -227,6 +229,7 @@ def check_advancements_use_26_3_schema() -> None:
     * `minecraft:recipe_crafted` now takes `recipes` (a list of recipe ids/holders) instead of the
       26.2 `recipe_id` string — RecipeCraftedTrigger.TriggerInstance.CODEC has no `recipe_id` field,
       so the old form fails to load the advancement.
+    * `minecraft:recipe_unlocked` also requires `recipes`, not the old `recipe` string.
     * `show_toast` / `announce_to_chat` are DisplayInfo fields; Advancement.CODEC only knows
       parent / display / rewards / criteria / requirements / sends_telemetry_event.
     * `display.background` is root-only. `Advancement.validate()` returns
@@ -264,16 +267,18 @@ def check_advancements_use_26_3_schema() -> None:
         for name, criterion in (data.get("criteria") or {}).items():
             if not isinstance(criterion, dict):
                 continue
-            if criterion.get("trigger") != "minecraft:recipe_crafted":
+            trigger = criterion.get("trigger")
+            if trigger not in ("minecraft:recipe_crafted", "minecraft:recipe_unlocked"):
                 continue
             conditions = criterion.get("conditions") or {}
-            if "recipe_id" in conditions:
+            legacy_key = "recipe_id" if trigger == "minecraft:recipe_crafted" else "recipe"
+            if legacy_key in conditions:
                 err(
-                    f"{rel}: criteria '{name}' uses 'recipe_id'; MC 26.3 renamed it to "
+                    f"{rel}: criteria '{name}' ({trigger}) uses '{legacy_key}'; MC 26.3 renamed it to "
                     f"'recipes' (a list, e.g. [\"namespace:path\"])"
                 )
             elif "recipes" not in conditions:
-                err(f"{rel}: criteria '{name}' (recipe_crafted) is missing the required 'recipes' list")
+                err(f"{rel}: criteria '{name}' ({trigger}) is missing the required 'recipes' list")
             elif not isinstance(conditions["recipes"], list):
                 err(f"{rel}: criteria '{name}' 'recipes' must be a list of recipe ids")
 
