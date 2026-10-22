@@ -63,6 +63,21 @@ public class BlockRegistry {
         )
     );
 
+    public static final Item CLEANSING_GRIT = registerItem(
+        "cleansing_grit",
+        settings -> new Item(
+            settings
+                .rarity(Rarity.UNCOMMON)
+                .component(
+                    DataComponents.LORE,
+                    new ItemLore(List.of(
+                        Component.translatable("item.chiseled_enchanting_table.cleansing_grit.lore")
+                            .withStyle(style -> style.withItalic(false).withColor(ChatFormatting.AQUA))
+                    ))
+                )
+        )
+    );
+
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory, BlockBehaviour.Properties settings, boolean shouldRegisterItem) {
         ResourceKey<Block> blockKey = keyOfBlock(name);
         Block block = blockFactory.apply(settings.setId(blockKey));
@@ -99,10 +114,12 @@ public class BlockRegistry {
         net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> {
             output.accept(CHISELED_ENCHANTING_TABLE.asItem());
             output.accept(ARCANE_CATALYST);
+            output.accept(CLEANSING_GRIT);
             output.accept(DEPLETED_TOME);
         });
         net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS).register(output -> {
             output.accept(ARCANE_CATALYST);
+            output.accept(CLEANSING_GRIT);
             output.accept(DEPLETED_TOME);
         });
     }

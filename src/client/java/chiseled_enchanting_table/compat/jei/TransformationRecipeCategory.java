@@ -77,14 +77,27 @@ public class TransformationRecipeCategory extends AbstractRecipeCategory<Transfo
         var font = Minecraft.getInstance().font;
         guiGraphics.text(font, "\u2192", ARROW_X, SLOT_Y + 4, 0xFF404040, false);
         var xpReq = recipe.xpRequirement();
-        Identifier orb = RowRenderSupport.orbSprite(xpReq.deductedLevels());
+        if (xpReq.isRefund()) {
+            guiGraphics.blit(RowRenderSupport.XP_REFUND_ORB, SLOT_INPUT_X, 27, SLOT_INPUT_X + 10, 37, 0.0f, 1.0f, 0.0f, 1.0f);
+            Component xpText = Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_refund");
+            guiGraphics.text(font, xpText, SLOT_INPUT_X + 13, 29, 0xFF1E7A46, false);
+            return;
+        }
+        Identifier orb = xpReq.vanillaTierMode()
+            ? RowRenderSupport.orbSprite(xpReq.deductedLevels())
+            : RowRenderSupport.XP_RITUAL_FLASK;
         guiGraphics.blit(orb, SLOT_INPUT_X, 27, SLOT_INPUT_X + 10, 37, 0.0f, 1.0f, 0.0f, 1.0f);
-        Component xpText = Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
-            xpReq.requiredLevel(),
-            xpReq.deductedLevels()
-        );
-        guiGraphics.text(font, xpText, SLOT_INPUT_X + 13, 29, 0xFF2E5B27, false);
+        Component xpText = xpReq.vanillaTierMode()
+            ? Component.translatable(
+                "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+                xpReq.requiredLevel(),
+                xpReq.deductedLevels()
+            )
+            : Component.translatable(
+                "jei.chiseled_enchanting_table.tooltip.xp_full",
+                xpReq.deductedLevels()
+            );
+        guiGraphics.text(font, xpText, SLOT_INPUT_X + 13, 29, xpReq.vanillaTierMode() ? 0xFF2E5B27 : 0xFF6B3FA0, false);
     }
 
     @Override

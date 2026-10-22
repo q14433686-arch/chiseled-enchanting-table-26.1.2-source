@@ -734,6 +734,77 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
             warn(f"referenced id '{rid}' not seen in vanilla data jar or any --extra-jar (verify it exists)")
 
 
+def check_disenchanting_and_anti_arbitrage() -> None:
+    """Tier 1 gate: validate disenchanting.json schema and prove disenchant anti-arbitrage + incremental discount invariants."""
+    import math
+
+    cfg_path = os.path.join(
+        REPO,
+        "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/disenchanting.json",
+    )
+    if not os.path.isfile(cfg_path):
+        errors.append("missing disenchanting.json under data/chiseled_enchanting_table/chiseled_enchanting_table/")
+        return
+    cfg = json.load(open(cfg_path, encoding="utf-8"))
+    for key in ("enabled", "allow_curse_purge", "xp_refund_scale", "targeted_strip", "curse_purge"):
+        if key not in cfg:
+            errors.append(f"disenchanting.json missing required key '{key}'")
+
+    def xp_for_level(level: int) -> int:
+        if level >= 30:
+            return 112 + (level - 30) * 9
+        if level >= 15:
+            return 37 + (level - 15) * 5
+        return 7 + level * 2
+
+    def min_master_tome_enchant_points(max_level: int, target_level: int) -> int:
+        capped_max = max(1, max_level)
+        lvl = max(1, min(target_level, capped_max))
+        tier = 3 if capped_max <= 1 else (1 if lvl / capped_max <= 0.40 else (2 if lvl / capped_max <= 0.75 else 3))
+        raw_req = max(tier, round(8 + 22 * (lvl / capped_max)))
+        # Even at maximum -40% resonance discount:
+        req = max(tier, round(raw_req * 0.60))
+        pts = 0
+        for l in range(req - 1, req - tier - 1, -1):
+            pts += xp_for_level(l)
+        return pts
+
+    def essence_potential(max_level: int, level: int, anvil_cost: int, is_treasure: bool, scale: float = 1.0) -> int:
+        if level <= 0 or scale <= 0.0:
+            return 0
+        capped_max = max(1, max_level)
+        clamped_lvl = min(level, capped_max)
+        r = clamped_lvl / capped_max
+        rarity = min(1.45, max(1.00, 1.0 + 0.18 * math.log(max(1, anvil_cost)))) * (1.15 if is_treasure else 1.0)
+        base_max = 34.0 if capped_max == 1 else 48.0
+        raw = round(scale * base_max * rarity * math.pow(r, 1.65))
+        return max(clamped_lvl, raw)
+
+    scale = float(cfg.get("xp_refund_scale", 1.0))
+    for max_lvl in range(1, 11):
+        for anvil_cost in (1, 2, 4, 8, 25, 100):
+            for is_treasure in (False, True):
+                vals = [essence_potential(max_lvl, l, anvil_cost, is_treasure, scale) for l in range(0, max_lvl + 1)]
+                for l in range(1, max_lvl + 1):
+                    if vals[l] <= vals[l - 1]:
+                        errors.append(
+                            f"non-monotonic essence potential at max={max_lvl}, L={l}, anvil={anvil_cost}: {vals}"
+                        )
+                    min_cost = min_master_tome_enchant_points(max_lvl, l)
+                    if vals[l] > min_cost:
+                        errors.append(
+                            f"XP arbitrage detected at max={max_lvl}, L={l}, anvil={anvil_cost}, treasure={is_treasure}: "
+                            f"refund {vals[l]} > min master-tome cost {min_cost}"
+                        )
+                # Telescoping step-down sum must match direct full wipe identically:
+                if max_lvl >= 2:
+                    step_sum = sum(max(1, vals[l] - vals[l - 1]) for l in range(max_lvl, 1, -1)) + vals[1]
+                    if step_sum != vals[max_lvl]:
+                        errors.append(
+                            f"step-down telescoping mismatch at max={max_lvl}: step_sum={step_sum} != full={vals[max_lvl]}"
+                        )
+
+
 # --------------------------------------------------------------------------- #
 
 def main() -> int:
@@ -757,6 +828,7 @@ def main() -> int:
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()
     check_bookshelf_book_pool_well_formed()
+    check_disenchanting_and_anti_arbitrage()
     mc_jar = find_mc_jar(args.mc_jar)
     check_ids_exist(mc_jar, args.extra_jar)
     check_referenced_tags_exist(mc_jar, args.extra_jar)

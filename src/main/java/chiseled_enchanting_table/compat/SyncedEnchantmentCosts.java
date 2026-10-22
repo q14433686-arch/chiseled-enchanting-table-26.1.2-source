@@ -77,6 +77,21 @@ public final class SyncedEnchantmentCosts {
         return synced != null ? synced : ChiseledEnchantingTableData.bookResearchEnabled();
     }
 
+    public static boolean disenchantEnabled() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.disenchantEnabled() : ChiseledEnchantingTableData.disenchantEnabled();
+    }
+
+    public static boolean disenchantAllowCursePurge() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.disenchantAllowCursePurge() : ChiseledEnchantingTableData.disenchantAllowCursePurge();
+    }
+
+    public static double disenchantRefundScale() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.disenchantRefundScale() : ChiseledEnchantingTableData.disenchantRefundScale();
+    }
+
     public static int epiphanyMinBookshelves() {
         EnchantCostTablePayload p = syncedPayload;
         return p != null ? p.epiphanyMinBookshelves() : ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves();

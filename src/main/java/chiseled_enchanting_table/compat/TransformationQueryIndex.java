@@ -109,6 +109,38 @@ public final class TransformationQueryIndex {
                 serverCosts
             ));
         }
+        if (SyncedEnchantmentCosts.disenchantEnabled()) {
+            Identifier sampleId = Identifier.withDefaultNamespace("sharpness");
+            results.add(new Entry(
+                chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.DISENCHANT_ALL_ID,
+                1,
+                new ItemStack(Items.ENCHANTED_BOOK),
+                List.of(),
+                new ItemStack(Items.BOOK),
+                XpRequirement.refund(24),
+                true
+            ));
+            results.add(new Entry(
+                chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.STRIP_SINGLE_ID,
+                1,
+                new ItemStack(Items.ENCHANTED_BOOK),
+                ChiseledEnchantingTableData.targetedStripCostOptions(sampleId, 3, 5),
+                new ItemStack(Items.ENCHANTED_BOOK),
+                XpCostConversion.forTargetedCleanse(3, 5, ChiseledEnchantingTableData.targetedStripXpCost(sampleId, 3, 5), 0),
+                true
+            ));
+            if (SyncedEnchantmentCosts.disenchantAllowCursePurge()) {
+                results.add(new Entry(
+                    chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.PURGE_CURSE_ID,
+                    1,
+                    new ItemStack(Items.ENCHANTED_BOOK),
+                    ChiseledEnchantingTableData.cursePurgeCostOptions(sampleId),
+                    new ItemStack(Items.ENCHANTED_BOOK),
+                    XpCostConversion.forFullArcaneRitual(ChiseledEnchantingTableData.cursePurgeXpCost(), 0),
+                    true
+                ));
+            }
+        }
         return List.copyOf(results);
     }
 }

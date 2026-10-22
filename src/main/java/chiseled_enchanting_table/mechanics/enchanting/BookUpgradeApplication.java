@@ -87,12 +87,12 @@ public final class BookUpgradeApplication {
         if (current.getLevel(enchantment) != sourceLevel) return false;
 
         EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), targetLevel);
-        int xpCost = handler.getEnchantmentXpLevelCost(ewl, OptionType.BOOK_RESEARCH_UPGRADE);
+        var xpReq = handler.resolveEffectiveXpRequirement(ewl, OptionType.BOOK_RESEARCH_UPGRADE);
         List<ItemStack> matchedBundle = handler.findMatchingAffordableCostBundle(ewl, OptionType.BOOK_RESEARCH_UPGRADE);
 
         // Validate BOTH XP and any player-chosen material alternative atomically before consuming either.
-        if (!canAffordXp(handler, xpCost) || (!handler.player.getAbilities().instabuild && matchedBundle == null)) return false;
-        deductXp(handler, xpCost);
+        if (!xpReq.isMetBy(handler.player) || (!handler.player.getAbilities().instabuild && matchedBundle == null)) return false;
+        XpCostConversion.deductXp(handler.player, xpReq);
         handler.deductMatchedBundle(matchedBundle);
 
         ItemEnchantments.Mutable upgraded = new ItemEnchantments.Mutable(current);

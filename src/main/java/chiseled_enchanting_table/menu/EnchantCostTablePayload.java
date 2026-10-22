@@ -27,6 +27,9 @@ import net.minecraft.world.item.enchantment.Enchantment;
 public record EnchantCostTablePayload(
     boolean combineEnabled,
     boolean researchEnabled,
+    boolean disenchantEnabled,
+    boolean disenchantAllowCursePurge,
+    double disenchantRefundScale,
     int epiphanyMinBookshelves,
     double epiphanyBaseChance,
     double epiphanyPerShelfChance,
@@ -80,6 +83,20 @@ public record EnchantCostTablePayload(
                     ChiseledEnchantingTableData.xpCost(key, maxLevel),
                     ChiseledEnchantingTableData.itemCostOptions(key, maxLevel)
                 ));
+                entries.add(new CostEntry(
+                    OptionType.STRIP_SINGLE_ENCHANTMENT,
+                    id,
+                    level,
+                    ChiseledEnchantingTableData.targetedStripXpCost(id, level, maxLevel),
+                    ChiseledEnchantingTableData.targetedStripCostOptions(id, level, maxLevel)
+                ));
+                entries.add(new CostEntry(
+                    OptionType.PURGE_CURSE,
+                    id,
+                    level,
+                    ChiseledEnchantingTableData.cursePurgeXpCost(),
+                    ChiseledEnchantingTableData.cursePurgeCostOptions(id)
+                ));
                 if (level >= 2) {
                     entries.add(new CostEntry(
                         OptionType.BOOK_COMBINE_UPGRADE,
@@ -110,6 +127,9 @@ public record EnchantCostTablePayload(
         return new EnchantCostTablePayload(
             ChiseledEnchantingTableData.bookCombineEnabled(),
             ChiseledEnchantingTableData.bookResearchEnabled(),
+            ChiseledEnchantingTableData.disenchantEnabled(),
+            ChiseledEnchantingTableData.disenchantAllowCursePurge(),
+            ChiseledEnchantingTableData.disenchantRefundScale(),
             ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves(),
             ChiseledEnchantingTableData.treasureEpiphanyBaseChance(),
             ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance(),
@@ -154,6 +174,9 @@ public record EnchantCostTablePayload(
     private void write(RegistryFriendlyByteBuf buf) {
         buf.writeBoolean(combineEnabled);
         buf.writeBoolean(researchEnabled);
+        buf.writeBoolean(disenchantEnabled);
+        buf.writeBoolean(disenchantAllowCursePurge);
+        buf.writeDouble(disenchantRefundScale);
         buf.writeVarInt(epiphanyMinBookshelves);
         buf.writeDouble(epiphanyBaseChance);
         buf.writeDouble(epiphanyPerShelfChance);
@@ -188,6 +211,9 @@ public record EnchantCostTablePayload(
     private static EnchantCostTablePayload read(RegistryFriendlyByteBuf buf) {
         boolean combineEnabled = buf.readBoolean();
         boolean researchEnabled = buf.readBoolean();
+        boolean disenchantEnabled = buf.readBoolean();
+        boolean disenchantAllowCursePurge = buf.readBoolean();
+        double disenchantRefundScale = buf.readDouble();
         int minShelves = buf.readVarInt();
         double baseChance = buf.readDouble();
         double perShelfChance = buf.readDouble();
@@ -228,6 +254,7 @@ public record EnchantCostTablePayload(
         }
         return new EnchantCostTablePayload(
             combineEnabled, researchEnabled,
+            disenchantEnabled, disenchantAllowCursePurge, disenchantRefundScale,
             minShelves, baseChance, perShelfChance, perTomeChance, maxChance,
             maxSlotsCap, scorePerSlot, cycleTicks, freezeDurationTicks, maxFreezeTicks,
             freezeXpLevels, freezeCosts, rerollXp, rerollCosts,

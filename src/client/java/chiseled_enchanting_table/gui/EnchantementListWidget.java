@@ -1,15 +1,19 @@
 package chiseled_enchanting_table.gui;
 
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.row.EnchantmentRowRenderer;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.gui.row.TransformationRowRenderer;
+import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
+import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.menu.AvailableOption;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -35,11 +39,17 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.jetbrains.annotations.Nullable;
 
 public class EnchantementListWidget extends AbstractSelectionList<EnchantementListWidget.EnchantUiEntry> {
+    public enum UiTabMode {
+        INSCRIBE,
+        CLEANSE
+    }
+
     public Set<EnchantmentWithLevel> unlocked_enchantements = null;
     public ItemStack enchantable_item;
     public ItemStack cost_item_stack;
     public Player player;
     public ChiseledEnchantingTableScreenHandler handler;
+    private UiTabMode tabMode = UiTabMode.INSCRIBE;
 
     public EnchantementListWidget(
         Minecraft client,
@@ -58,6 +68,19 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         this.setFocused(null);
     }
 
+    public UiTabMode tabMode() {
+        return this.tabMode;
+    }
+
+    public void setTabMode(UiTabMode nextMode) {
+        if (nextMode != null && this.tabMode != nextMode) {
+            this.tabMode = nextMode;
+            this.setFocused(null);
+            this.setScrollAmount(0);
+            this.updateEntry(this.handler.get_enchantable_item(), this.handler.get_cost_item());
+        }
+    }
+
     public static Holder<Enchantment> IdentifierToEnchantment(Identifier id, Player player) {
         RegistryAccess registryAccess = player.level().registryAccess();
         Registry<Enchantment> registry = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
@@ -69,14 +92,29 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     public String displayName(AvailableOption option) {
+        if (option.isDisenchantAll()) {
+            return I18n.get("gui.chiseled_enchanting_table.cleanse.all_row");
+        }
         if (option.isTransformation()) {
             String out = this.handler.syncedTransformationOutputName(option.id());
-            if (option.id().equals(chiseled_enchanting_table.data.ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)) {
+            if (option.id().equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)) {
                 return I18n.get("gui.chiseled_enchanting_table.blank_overwrite", out);
             }
             return out;
         }
-        String name = Enchantment.getFullname(IdentifierToEnchantment(option.id(), this.player), option.level()).getString();
+        Holder<Enchantment> ench = IdentifierToEnchantment(option.id(), this.player);
+        String name = Enchantment.getFullname(ench, option.level()).getString();
+        if (option.isDowngrade()) {
+            int curLvl = this.handler.currentTargetEnchantLevel(option.id());
+            String curName = Enchantment.getFullname(ench, Math.max(option.level() + 1, curLvl)).getString();
+            return I18n.get("gui.chiseled_enchanting_table.cleanse.downgrade_row", curName, name);
+        }
+        if (option.isStripSingle()) {
+            return I18n.get("gui.chiseled_enchanting_table.cleanse.strip_row", name);
+        }
+        if (option.isPurgeCurse()) {
+            return I18n.get("gui.chiseled_enchanting_table.cleanse.curse_row", name);
+        }
         if (option.isTreasureEpiphany()) return I18n.get("gui.chiseled_enchanting_table.treasure_epiphany", name);
         if (option.isBookCombineUpgrade()) return I18n.get("gui.chiseled_enchanting_table.book_upgrade.combine", name);
         if (option.isBookResearchUpgrade()) return I18n.get("gui.chiseled_enchanting_table.book_upgrade.research", name);
@@ -247,26 +285,101 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
         this.enchantable_item = enchantable_item;
         this.cost_item_stack = cost_item_stack;
+
+        if (this.tabMode == UiTabMode.CLEANSE) {
+            populateCleanseEntries(navigationIndex);
+            return;
+        }
+        populateInscribeEntries(navigationIndex);
+    }
+
+    private void populateCleanseEntries(int navigationIndex) {
+        if (!this.handler.disenchantEnabled() || this.enchantable_item.isEmpty()) {
+            return;
+        }
+        ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(this.enchantable_item);
+        if (current.isEmpty()) {
+            return;
+        }
+
+        List<AvailableOption> cleanseOptions = new ArrayList<>();
+        int nonCurseCount = DisenchantmentApplication.countNonCurseEnchantments(this.enchantable_item);
+        if (nonCurseCount >= 1) {
+            cleanseOptions.add(AvailableOption.disenchantAll(DisenchantmentApplication.DISENCHANT_ALL_ID));
+        }
+
+        List<Holder<Enchantment>> sortedKeys = new ArrayList<>(current.keySet());
+        sortedKeys.sort((a, b) -> {
+            String na = Enchantment.getFullname(a, 1).getString();
+            String nb = Enchantment.getFullname(b, 1).getString();
+            return na.compareTo(nb);
+        });
+
+        int totalTraits = current.size();
+        for (Holder<Enchantment> holder : sortedKeys) {
+            int curLvl = current.getLevel(holder);
+            if (curLvl <= 0) continue;
+            Identifier id = EnchantmentToIdentifier(holder, this.player);
+            if (DisenchantmentApplication.isCurse(holder)) {
+                if (this.handler.disenchantAllowCursePurge()) {
+                    cleanseOptions.add(AvailableOption.purgeCurse(id, curLvl));
+                }
+            } else {
+                // Free XP-refunding step-down options (e.g. V -> IV, V -> III, ..., V -> I)
+                for (int nextLvl = curLvl - 1; nextLvl >= 1; nextLvl--) {
+                    cleanseOptions.add(AvailableOption.downgradeEnchantment(id, nextLvl));
+                }
+                // Paid surgical single-trait removal when preserving >= 1 other enchantment on the item
+                if (totalTraits >= 2) {
+                    cleanseOptions.add(AvailableOption.stripSingleEnchantment(id, curLvl));
+                }
+            }
+        }
+
+        for (AvailableOption opt : cleanseOptions) {
+            var ewl = opt.asEnchantmentWithLevel();
+            List<List<ItemStack>> costOpts = this.handler.getEffectiveItemCostOptions(ewl, opt.type());
+            var xpReq = this.handler.resolveEffectiveXpRequirement(ewl, opt.type());
+            this.addEntry(new EnchantUiEntry(minecraft, this.handler, opt, costOpts, xpReq, this));
+        }
+        resumeNavigation(navigationIndex);
+    }
+
+    private void populateInscribeEntries(int navigationIndex) {
         var enchantFromBook = cost_item_stack.is(Items.ENCHANTED_BOOK);
+        ItemEnchantments targetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
 
         List<AvailableOption> options = new ArrayList<>();
+        Set<EnchantmentWithLevel> unlockedDirectSet = new HashSet<>();
+
         if (enchantFromBook) {
             ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(cost_item_stack);
             for (var entry : enchantments.entrySet()) {
-                options.add(AvailableOption.enchantment(EnchantmentToIdentifier(entry.getKey(), this.player), entry.getIntValue()));
+                int existingLvl = targetEnchantments.getLevel(entry.getKey());
+                if (entry.getIntValue() > existingLvl) {
+                    options.add(AvailableOption.enchantment(EnchantmentToIdentifier(entry.getKey(), this.player), entry.getIntValue()));
+                }
             }
         } else if (!cost_item_stack.is(Items.BOOK)) {
             if (unlocked_enchantements != null) {
                 for (EnchantmentWithLevel e : unlocked_enchantements) {
-                    options.add(AvailableOption.enchantment(e));
+                    Holder<Enchantment> h = IdentifierToEnchantment(e.enchantment_id(), this.player);
+                    int existingLvl = targetEnchantments.getLevel(h);
+                    // Hide downward rows from Inscribe mode — downgrading lives in Cleanse mode and refunds XP!
+                    if (e.enchantment_level() >= existingLvl) {
+                        options.add(AvailableOption.enchantment(e));
+                        unlockedDirectSet.add(e);
+                    }
                 }
             }
             for (EnchantmentWithLevel epiphany : this.handler.computeActiveTreasureEpiphanies(enchantable_item)) {
-                options.add(AvailableOption.treasureEpiphany(epiphany.enchantment_id(), epiphany.enchantment_level()));
+                Holder<Enchantment> h = IdentifierToEnchantment(epiphany.enchantment_id(), this.player);
+                if (epiphany.enchantment_level() > targetEnchantments.getLevel(h)) {
+                    options.add(AvailableOption.treasureEpiphany(epiphany.enchantment_id(), epiphany.enchantment_level()));
+                }
             }
         }
         if (enchantable_item.is(Items.ENCHANTED_BOOK)) {
-            ItemEnchantments targetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
             ItemEnchantments costEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(cost_item_stack);
             boolean combineEnabled = SyncedEnchantmentCosts.combineEnabled();
             boolean researchEnabled = SyncedEnchantmentCosts.researchEnabled();
@@ -278,7 +391,12 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 int targetLevel = level + 1;
                 if (combineEnabled && cost_item_stack.is(Items.ENCHANTED_BOOK) && costEnchantments.getLevel(entry.getKey()) == level) {
                     options.add(AvailableOption.bookCombineUpgrade(id, targetLevel));
-                } else if (researchEnabled && !cost_item_stack.is(Items.ENCHANTED_BOOK) && !cost_item_stack.is(Items.BOOK)) {
+                } else if (researchEnabled
+                    && !cost_item_stack.is(Items.ENCHANTED_BOOK)
+                    && !cost_item_stack.is(Items.BOOK)
+                    && !unlockedDirectSet.contains(new EnchantmentWithLevel(id, targetLevel))) {
+                    // Only emit a separate BOOK_RESEARCH_UPGRADE row when shelves/Master Tome do not already unlock targetLevel;
+                    // when unlocked directly, getEffectiveItemCostOptions already gives the strictly cheaper of both!
                     options.add(AvailableOption.bookResearchUpgrade(id, targetLevel));
                 }
             }
@@ -291,14 +409,14 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (option.isTransformation()) {
                 return this.handler.syncedTransformationMatches(option.id(), enchantable_item);
             }
-            if (chiseled_enchanting_table.data.ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+            if (ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
                 return false;
             }
             Holder<Enchantment> enchant = IdentifierToEnchantment(option.id(), this.player);
             return enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchant.value().canEnchant(enchantable_item);
         }).sorted((o1, o2) -> {
-            int p1 = o1.isTreasureEpiphany() ? 0 : (o1.isTransformation() ? 1 : 2);
-            int p2 = o2.isTreasureEpiphany() ? 0 : (o2.isTransformation() ? 1 : 2);
+            int p1 = o1.isTreasureEpiphany() ? 0 : (o1.isTransformation() ? 1 : (o1.isBookUpgrade() ? 2 : 3));
+            int p2 = o2.isTreasureEpiphany() ? 0 : (o2.isTransformation() ? 1 : (o2.isBookUpgrade() ? 2 : 3));
             if (p1 != p2) return Integer.compare(p1, p2);
             String name1 = displayName(o1);
             String name2 = displayName(o2);
@@ -309,10 +427,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             var ewl = option.asEnchantmentWithLevel();
             List<List<ItemStack>> costOptions = option.isBookCombineUpgrade() || (enchantFromBook && !option.isBookResearchUpgrade())
                 ? List.of()
-                : this.handler.getEnchantmentItemCostOptions(ewl, option.type());
+                : this.handler.getEffectiveItemCostOptions(ewl, option.type());
             var xpReq = (enchantFromBook && !option.isBookUpgrade())
-                ? chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement.FREE
-                : this.handler.resolveXpRequirement(ewl, option.type());
+                ? XpCostConversion.XpRequirement.FREE
+                : this.handler.resolveEffectiveXpRequirement(ewl, option.type());
             this.addEntry(new EnchantUiEntry(minecraft, this.handler, option, costOptions, xpReq, this));
         });
         resumeNavigation(navigationIndex);
@@ -327,7 +445,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public Holder<Enchantment> enchantment;
         public Identifier enchantment_id;
         public List<List<ItemStack>> cost_options;
-        public chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement xp_requirement;
+        public XpCostConversion.XpRequirement xp_requirement;
         public int xp_level_cost;
         public Minecraft client;
         public Player player;
@@ -342,7 +460,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             ChiseledEnchantingTableScreenHandler handler,
             AvailableOption option,
             List<List<ItemStack>> cost_options,
-            chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement xp_requirement,
+            XpCostConversion.XpRequirement xp_requirement,
             EnchantementListWidget parent
         ) {
             super();
@@ -359,10 +477,12 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             this.cost_options = cost_options == null ? List.of() : List.copyOf(cost_options);
             this.xp_requirement = xp_requirement;
             this.xp_level_cost = xp_requirement.requiredLevel();
-            this.enchantment = this.is_transformation ? null : IdentifierToEnchantment(option.id(), this.player);
+            this.enchantment = (this.is_transformation || option.isDisenchantAll())
+                ? null
+                : IdentifierToEnchantment(option.id(), this.player);
 
             this.overridenEnchant = new ArrayList<>();
-            if (this.enchantment != null) {
+            if (this.enchantment != null && !option.isCleanseOperation()) {
                 ItemEnchantments currentEnchants = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
                 int currentSameLevel = currentEnchants.getLevel(this.enchantment);
                 if (currentSameLevel > 0) {
@@ -408,9 +528,15 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return bundle.size() <= 1 ? List.of() : bundle.subList(1, bundle.size());
         }
 
+        private boolean isFreeCleanseRow() {
+            return option_type == OptionType.DISENCHANT_ALL
+                || option_type == OptionType.DOWNGRADE_ENCHANTMENT
+                || (option_type == OptionType.STRIP_SINGLE_ENCHANTMENT && cost_options.isEmpty());
+        }
+
         private boolean isBundleFullyAffordable(List<ItemStack> bundle) {
             if (player.getAbilities().instabuild) return true;
-            if (bundle.isEmpty()) return cost_item_stack.is(Items.ENCHANTED_BOOK);
+            if (bundle.isEmpty()) return isFreeCleanseRow() || cost_item_stack.is(Items.ENCHANTED_BOOK);
             ItemStack primary = bundle.getFirst();
             if (primary.isEmpty()
                 || !ItemStack.isSameItemSameComponents(primary, cost_item_stack)
@@ -432,11 +558,14 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean xpConditionMet() {
+            if (xp_requirement.isRefund() || (xp_requirement.requiredLevel() <= 0 && xp_requirement.deductedLevels() <= 0)) {
+                return true;
+            }
             return player.getAbilities().instabuild || player.experienceLevel >= xp_level_cost;
         }
 
         public boolean primaryCostMet() {
-            if (player.getAbilities().instabuild) return true;
+            if (player.getAbilities().instabuild || isFreeCleanseRow()) return true;
             ItemStack cost = activePrimaryCost();
             if (cost.isEmpty() && cost_item_stack.is(Items.ENCHANTED_BOOK)) return true;
             return !cost.isEmpty()
@@ -467,7 +596,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean itemCostConditionMet() {
-            if (player.getAbilities().instabuild) return true;
+            if (player.getAbilities().instabuild || isFreeCleanseRow()) return true;
             if (cost_options.isEmpty()) {
                 return cost_item_stack.is(Items.ENCHANTED_BOOK);
             }
@@ -567,17 +696,40 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         private EnchantmentRowRenderer.OverrideAnnotation computeOverrideAnnotation(String enchantmentName) {
+            if (option_type == OptionType.DISENCHANT_ALL) {
+                String sub = enchantable_item.is(Items.ENCHANTED_BOOK)
+                    ? I18n.get("gui.chiseled_enchanting_table.cleanse.all_sub_book")
+                    : I18n.get("gui.chiseled_enchanting_table.cleanse.all_sub_item");
+                return new EnchantmentRowRenderer.OverrideAnnotation(sub, RowRenderSupport.LIGHT_GREEN);
+            }
+            if (option_type == OptionType.DOWNGRADE_ENCHANTMENT) {
+                return new EnchantmentRowRenderer.OverrideAnnotation(
+                    I18n.get("gui.chiseled_enchanting_table.cleanse.downgrade_sub"),
+                    RowRenderSupport.LIGHT_GREEN
+                );
+            }
+            if (option_type == OptionType.STRIP_SINGLE_ENCHANTMENT) {
+                int kept = Math.max(1, EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item).size() - 1);
+                return new EnchantmentRowRenderer.OverrideAnnotation(
+                    I18n.get("gui.chiseled_enchanting_table.cleanse.strip_sub", kept),
+                    RowRenderSupport.CYAN
+                );
+            }
+            if (option_type == OptionType.PURGE_CURSE) {
+                return new EnchantmentRowRenderer.OverrideAnnotation(
+                    I18n.get("gui.chiseled_enchanting_table.cleanse.curse_sub"),
+                    RowRenderSupport.EPIPHANY_GOLD
+                );
+            }
             if (enchantAlreadyExist()) {
                 return new EnchantmentRowRenderer.OverrideAnnotation("\u2714 " + enchantmentName, RowRenderSupport.CYAN);
             }
-            if (sameEnchantLevelDiff.isPresent() && existingSameLevel.isPresent()) {
+            if (sameEnchantLevelDiff.isPresent() && existingSameLevel.isPresent() && sameEnchantLevelDiff.getAsInt() > 0) {
                 String existingName = Enchantment.getFullname(this.enchantment, existingSameLevel.getAsInt()).getString();
-                if (sameEnchantLevelDiff.getAsInt() > 0) {
-                    return new EnchantmentRowRenderer.OverrideAnnotation("\u2B06 " + existingName, RowRenderSupport.LIGHT_GREEN);
-                }
-                if (sameEnchantLevelDiff.getAsInt() < 0) {
-                    return new EnchantmentRowRenderer.OverrideAnnotation("\u2B07 " + existingName, RowRenderSupport.LIGHT_RED);
-                }
+                return new EnchantmentRowRenderer.OverrideAnnotation(
+                    I18n.get("gui.chiseled_enchanting_table.upgrade_from", existingName),
+                    RowRenderSupport.LIGHT_GREEN
+                );
             }
             var firstOverridenEnchant = this.overridenEnchant.stream().findFirst();
             if (firstOverridenEnchant.isPresent() && !enchantable_item.is(Items.ENCHANTED_BOOK)) {
@@ -604,26 +756,45 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
             if (is_transformation) {
                 String outputName = handler.syncedTransformationOutputName(this.enchantment_id);
-                String rowTitle = this.enchantment_id.equals(chiseled_enchanting_table.data.ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)
+                String rowTitle = this.enchantment_id.equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)
                     ? I18n.get("gui.chiseled_enchanting_table.blank_overwrite", outputName)
                     : outputName;
                 TransformationRowRenderer.render(
                     ctx, client, dx, dy, dw, dh, isFocused, hovered, canEnchant(),
                     primaryMet, additionalMet, xpMet, rowTitle, cost, additional_costs, xp_requirement
                 );
-            } else {
-                String rawName = Enchantment.getFullname(this.enchantment, enchant_level).getString();
-                String enchantmentName = rawName;
-                if (option_type == OptionType.TREASURE_EPIPHANY) enchantmentName = I18n.get("gui.chiseled_enchanting_table.treasure_epiphany", rawName);
-                if (option_type == OptionType.BOOK_COMBINE_UPGRADE) enchantmentName = I18n.get("gui.chiseled_enchanting_table.book_upgrade.combine", rawName);
-                if (option_type == OptionType.BOOK_RESEARCH_UPGRADE) enchantmentName = I18n.get("gui.chiseled_enchanting_table.book_upgrade.research", rawName);
-                EnchantmentRowRenderer.render(
-                    ctx, client, dx, dy, dw, dh, option_type == OptionType.TREASURE_EPIPHANY,
-                    isFocused, hovered, canEnchant(),
-                    primaryMet, additionalMet, xpMet, enchantmentName, cost, additional_costs, xp_requirement,
-                    computeOverrideAnnotation(rawName)
-                );
+                return;
             }
+
+            if (option_type == OptionType.DISENCHANT_ALL
+                || option_type == OptionType.DOWNGRADE_ENCHANTMENT
+                || option_type == OptionType.STRIP_SINGLE_ENCHANTMENT
+                || option_type == OptionType.PURGE_CURSE) {
+                AvailableOption opt = new AvailableOption(option_type, enchantment_id, enchant_level);
+                String title = parent.displayName(opt);
+                RowRenderSupport.RowVisualStyle style = (option_type == OptionType.PURGE_CURSE)
+                    ? RowRenderSupport.RowVisualStyle.CURSE_PURGE
+                    : (cost.isEmpty() ? RowRenderSupport.RowVisualStyle.CLEANSE : RowRenderSupport.RowVisualStyle.STANDARD);
+                EnchantmentRowRenderer.render(
+                    ctx, client, dx, dy, dw, dh, style,
+                    isFocused, hovered, canEnchant(),
+                    primaryMet, additionalMet, xpMet, title, cost, additional_costs, xp_requirement,
+                    computeOverrideAnnotation(title)
+                );
+                return;
+            }
+
+            String rawName = Enchantment.getFullname(this.enchantment, enchant_level).getString();
+            String enchantmentName = rawName;
+            if (option_type == OptionType.TREASURE_EPIPHANY) enchantmentName = I18n.get("gui.chiseled_enchanting_table.treasure_epiphany", rawName);
+            if (option_type == OptionType.BOOK_COMBINE_UPGRADE) enchantmentName = I18n.get("gui.chiseled_enchanting_table.book_upgrade.combine", rawName);
+            if (option_type == OptionType.BOOK_RESEARCH_UPGRADE) enchantmentName = I18n.get("gui.chiseled_enchanting_table.book_upgrade.research", rawName);
+            EnchantmentRowRenderer.render(
+                ctx, client, dx, dy, dw, dh, option_type == OptionType.TREASURE_EPIPHANY,
+                isFocused, hovered, canEnchant(),
+                primaryMet, additionalMet, xpMet, enchantmentName, cost, additional_costs, xp_requirement,
+                computeOverrideAnnotation(rawName)
+            );
         }
     }
 }

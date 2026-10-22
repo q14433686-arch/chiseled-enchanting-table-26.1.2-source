@@ -464,6 +464,19 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
             return ChiseledEnchantingTableData.bookResearchCostOptions(e, getEnchantmentMaxLevel(e));
         }
+        if (type == OptionType.STRIP_SINGLE_ENCHANTMENT) {
+            return ChiseledEnchantingTableData.targetedStripCostOptions(
+                e.enchantment_id(),
+                e.enchantment_level(),
+                getEnchantmentMaxLevel(e)
+            );
+        }
+        if (type == OptionType.PURGE_CURSE) {
+            return ChiseledEnchantingTableData.cursePurgeCostOptions(e.enchantment_id());
+        }
+        if (type == OptionType.DISENCHANT_ALL || type == OptionType.DOWNGRADE_ENCHANTMENT) {
+            return List.of();
+        }
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
             return ChiseledEnchantingTableData.transformationCostOptions(e.enchantment_id());
         }
@@ -519,10 +532,153 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (type == OptionType.BOOK_RESEARCH_UPGRADE) {
             return ChiseledEnchantingTableData.bookResearchXpCost(e, getEnchantmentMaxLevel(e));
         }
+        if (type == OptionType.STRIP_SINGLE_ENCHANTMENT) {
+            return ChiseledEnchantingTableData.targetedStripXpCost(
+                e.enchantment_id(),
+                e.enchantment_level(),
+                getEnchantmentMaxLevel(e)
+            );
+        }
+        if (type == OptionType.PURGE_CURSE) {
+            return ChiseledEnchantingTableData.cursePurgeXpCost();
+        }
+        if (type == OptionType.DISENCHANT_ALL || type == OptionType.DOWNGRADE_ENCHANTMENT) {
+            return 0;
+        }
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
             return ChiseledEnchantingTableData.transformationXpCost(e.enchantment_id());
         }
         return ChiseledEnchantingTableData.xpCost(e, getEnchantmentMaxLevel(e));
+    }
+
+    public boolean disenchantEnabled() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.disenchantEnabled()
+            : ChiseledEnchantingTableData.disenchantEnabled();
+    }
+
+    public boolean disenchantAllowCursePurge() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.disenchantAllowCursePurge()
+            : ChiseledEnchantingTableData.disenchantAllowCursePurge();
+    }
+
+    public double disenchantRefundScale() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.disenchantRefundScale()
+            : ChiseledEnchantingTableData.disenchantRefundScale();
+    }
+
+    public int currentTargetEnchantLevel(Identifier enchantmentId) {
+        if (enchantmentId == null || ChiseledEnchantingTableData.isTransformation(enchantmentId)) {
+            return 0;
+        }
+        ItemStack target = get_enchantable_item();
+        if (target.isEmpty()) {
+            return 0;
+        }
+        try {
+            Holder<Enchantment> holder = IdentifierToEnchantment(enchantmentId, this.world);
+            return EnchantmentHelper.getEnchantmentsForCrafting(target).getLevel(holder);
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
+    private static int findMatchingStackCount(List<ItemStack> bundle, ItemStack probe) {
+        if (bundle == null || probe.isEmpty()) return 0;
+        for (ItemStack s : bundle) {
+            if (ItemStack.isSameItemSameComponents(s, probe)) {
+                return s.getCount();
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Context-aware effective material options taking the target item's existing enchantment level
+     * {@code existingLevel} and nearby shelf/Master-Tome guidance into account identically on
+     * server & client.
+     */
+    public List<List<ItemStack>> getEffectiveItemCostOptions(EnchantmentWithLevel e, OptionType type) {
+        if (type == OptionType.BOOK_COMBINE_UPGRADE
+            || type == OptionType.DISENCHANT_ALL
+            || type == OptionType.DOWNGRADE_ENCHANTMENT) {
+            return List.of();
+        }
+        if (type == OptionType.STRIP_SINGLE_ENCHANTMENT) {
+            ItemStack target = get_enchantable_item();
+            if (EnchantmentHelper.getEnchantmentsForCrafting(target).size() <= 1) {
+                return List.of();
+            }
+            return getEnchantmentItemCostOptions(e, OptionType.STRIP_SINGLE_ENCHANTMENT);
+        }
+        if (type == OptionType.PURGE_CURSE || type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
+            return getEnchantmentItemCostOptions(e, type);
+        }
+
+        int existingLevel = currentTargetEnchantLevel(e.enchantment_id());
+        if (existingLevel <= 0 || e.enchantment_level() <= existingLevel) {
+            return getEnchantmentItemCostOptions(e, type);
+        }
+
+        OptionType baselineType = (type == OptionType.BOOK_RESEARCH_UPGRADE) ? OptionType.ENCHANTMENT : type;
+        List<List<ItemStack>> targetBundles = getEnchantmentItemCostOptions(e, baselineType);
+        List<List<ItemStack>> prevBundles = getEnchantmentItemCostOptions(
+            new EnchantmentWithLevel(e.enchantment_id(), existingLevel),
+            baselineType
+        );
+
+        boolean masterGuided = storedMasterLevel(e.enchantment_id()) >= e.enchantment_level();
+        double guidanceMultiplier = masterGuided ? 0.80 : (this.regularBookshelves >= 12 ? 0.90 : 1.0);
+
+        List<List<ItemStack>> researchBundles = (type == OptionType.BOOK_RESEARCH_UPGRADE
+            || (get_enchantable_item().is(Items.ENCHANTED_BOOK) && e.enchantment_level() == existingLevel + 1))
+            ? getEnchantmentItemCostOptions(e, OptionType.BOOK_RESEARCH_UPGRADE)
+            : List.of();
+
+        List<List<ItemStack>> out = new ArrayList<>(targetBundles.size() + researchBundles.size());
+        for (int bIdx = 0; bIdx < targetBundles.size(); bIdx++) {
+            List<ItemStack> tgtBundle = targetBundles.get(bIdx);
+            List<ItemStack> prvBundle = bIdx < prevBundles.size() ? prevBundles.get(bIdx) : List.of();
+            List<ItemStack> resMatch = findResearchBundleByPrimary(researchBundles, tgtBundle.isEmpty() ? ItemStack.EMPTY : tgtBundle.getFirst());
+
+            List<ItemStack> reduced = new ArrayList<>(tgtBundle.size());
+            for (ItemStack st : tgtBundle) {
+                ItemStack copy = st.copy();
+                if (!copy.is(BlockRegistry.ARCANE_CATALYST)) {
+                    int prevCount = findMatchingStackCount(prvBundle, st);
+                    int delta = Math.max(1, st.getCount() - prevCount);
+                    int guided = Math.max(1, (int) Math.floor(delta * guidanceMultiplier));
+                    int resCap = findMatchingStackCount(resMatch, st);
+                    if (resCap > 0) {
+                        guided = Math.min(guided, resCap);
+                    }
+                    copy.setCount(guided);
+                }
+                reduced.add(copy);
+            }
+            if (!reduced.isEmpty()) {
+                out.add(List.copyOf(reduced));
+            }
+        }
+        // Append any distinct primary option from book_upgrades.json (e.g. Arcane Catalyst) not yet present.
+        for (List<ItemStack> rb : researchBundles) {
+            if (!rb.isEmpty() && findResearchBundleByPrimary(out, rb.getFirst()).isEmpty()) {
+                out.add(rb);
+            }
+        }
+        return List.copyOf(out);
+    }
+
+    private static List<ItemStack> findResearchBundleByPrimary(List<List<ItemStack>> bundles, ItemStack primary) {
+        if (bundles == null || primary.isEmpty()) return List.of();
+        for (List<ItemStack> b : bundles) {
+            if (!b.isEmpty() && ItemStack.isSameItemSameComponents(b.getFirst(), primary)) {
+                return b;
+            }
+        }
+        return List.of();
     }
 
     public int storedMasterLevel(Identifier enchantmentId) {
@@ -583,16 +739,85 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public XpCostConversion.XpRequirement resolveXpRequirement(EnchantmentWithLevel e, OptionType type) {
+        return resolveEffectiveXpRequirement(e, type);
+    }
+
+    public XpCostConversion.XpRequirement resolveEffectiveXpRequirement(EnchantmentWithLevel e, OptionType type) {
+        if (type == OptionType.DISENCHANT_ALL) {
+            int totalRefund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
+                .totalFullDisenchantRefund(get_enchantable_item(), disenchantRefundScale());
+            return XpCostConversion.XpRequirement.refund(totalRefund);
+        }
+        if (type == OptionType.DOWNGRADE_ENCHANTMENT) {
+            try {
+                Holder<Enchantment> holder = IdentifierToEnchantment(e.enchantment_id(), this.world);
+                int cur = currentTargetEnchantLevel(e.enchantment_id());
+                int refund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
+                    .refundForStepDown(holder, cur, e.enchantment_level(), disenchantRefundScale());
+                return XpCostConversion.XpRequirement.refund(refund);
+            } catch (Exception ignored) {
+                return XpCostConversion.XpRequirement.FREE;
+            }
+        }
+        if (type == OptionType.STRIP_SINGLE_ENCHANTMENT) {
+            ItemStack target = get_enchantable_item();
+            var curMap = EnchantmentHelper.getEnchantmentsForCrafting(target);
+            if (curMap.size() <= 1) {
+                try {
+                    Holder<Enchantment> holder = IdentifierToEnchantment(e.enchantment_id(), this.world);
+                    int refund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
+                        .essencePotential(holder, curMap.getLevel(holder), disenchantRefundScale());
+                    return XpCostConversion.XpRequirement.refund(refund);
+                } catch (Exception ignored) {
+                    return XpCostConversion.XpRequirement.FREE;
+                }
+            }
+            int rawStrip = getBaseEnchantmentXpLevelCost(e, OptionType.STRIP_SINGLE_ENCHANTMENT);
+            int maxLvl = getEnchantmentMaxLevel(e);
+            return XpCostConversion.forTargetedCleanse(e.enchantment_level(), maxLvl, rawStrip, this.xpDiscountPercent);
+        }
+        if (type == OptionType.PURGE_CURSE) {
+            int rawPurge = getBaseEnchantmentXpLevelCost(e, OptionType.PURGE_CURSE);
+            return XpCostConversion.forFullArcaneRitual(rawPurge, this.xpDiscountPercent);
+        }
+
         int rawCost = getBaseEnchantmentXpLevelCost(e, type);
         int discount = effectiveXpDiscountPercent(e.enchantment_id(), type);
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
             return XpCostConversion.forTransformation(e.enchantment_id(), rawCost, discount);
         }
-        if (isMasterTomeBacked(e, type)) {
-            int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(
-                this.world,
-                e.enchantment_id()
+
+        int existingLevel = currentTargetEnchantLevel(e.enchantment_id());
+        int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(
+            this.world,
+            e.enchantment_id()
+        );
+        if (existingLevel > 0 && e.enchantment_level() > existingLevel) {
+            if (storedMasterLevel(e.enchantment_id()) >= e.enchantment_level()
+                && (type == OptionType.ENCHANTMENT || type == OptionType.BOOK_RESEARCH_UPGRADE)) {
+                int fullRaw = getBaseEnchantmentXpLevelCost(e, OptionType.ENCHANTMENT);
+                return XpCostConversion.forIncrementalMasterTomeEnchant(
+                    existingLevel,
+                    e.enchantment_level(),
+                    maxLvl,
+                    fullRaw,
+                    discount
+                );
+            }
+            int targetRaw = getBaseEnchantmentXpLevelCost(
+                new EnchantmentWithLevel(e.enchantment_id(), e.enchantment_level()),
+                OptionType.ENCHANTMENT
             );
+            int prevRaw = getBaseEnchantmentXpLevelCost(
+                new EnchantmentWithLevel(e.enchantment_id(), existingLevel),
+                OptionType.ENCHANTMENT
+            );
+            int deltaRaw = Math.max(1, targetRaw - prevRaw);
+            int effectiveRaw = (type == OptionType.BOOK_RESEARCH_UPGRADE) ? Math.min(rawCost, deltaRaw) : deltaRaw;
+            return XpCostConversion.forFullArcaneRitual(effectiveRaw, discount);
+        }
+
+        if (isMasterTomeBacked(e, type)) {
             return XpCostConversion.forMasterTomeEnchant(e.enchantment_level(), maxLvl, rawCost, discount);
         }
         return XpCostConversion.forFullArcaneRitual(rawCost, discount);
@@ -1012,11 +1237,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     @org.jetbrains.annotations.Nullable
     public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
+        List<List<ItemStack>> options = getEffectiveItemCostOptions(ewl, type);
         if (this.player.getAbilities().instabuild) {
-            List<ItemStack> first = getEnchantmentItemCosts(ewl, type);
-            return first == null ? List.of() : first;
+            return options.isEmpty() ? List.of() : options.getFirst();
         }
-        List<List<ItemStack>> options = getEnchantmentItemCostOptions(ewl, type);
         ItemStack itemCostStack = this.get_cost_item();
         for (List<ItemStack> bundle : options) {
             if (bundle.isEmpty()) continue;
@@ -1063,6 +1287,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     // ---- Dispatch ----
 
     public void applyEnchantement(ApplyEnchantmentPayload payload) {
+        if (payload.option_type() == OptionType.DISENCHANT_ALL
+            || payload.option_type() == OptionType.DOWNGRADE_ENCHANTMENT
+            || payload.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
+            || payload.option_type() == OptionType.PURGE_CURSE) {
+            chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.apply(this, payload);
+            return;
+        }
         // Prefer the explicit option type from the payload; fall back to a data lookup so older
         // clients (which always send ENCHANTMENT) still route transformations correctly.
         if (payload.option_type() == OptionType.BOOK_COMBINE_UPGRADE || payload.option_type() == OptionType.BOOK_RESEARCH_UPGRADE) {
@@ -1120,11 +1351,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 for(var k: keys) m.set(k, 0);
             });
             boolean isBook = clickedStackNoEnchant.is(Items.BOOK) || clickedStackNoEnchant.is(Items.ENCHANTED_BOOK);
+            boolean hasExistingEnchants = !EnchantmentHelper.getEnchantmentsForCrafting(clickedStack).isEmpty();
             boolean isDedicatedTransformInput = clickedStack.is(BlockRegistry.DEPLETED_TOME)
                 || ChiseledEnchantingTableData.isResidualBook(clickedStack)
                 || (!this.getSlot(ENCHANTABLE_SLOT).hasItem() && !this.syncedTransformationsFor(clickedStack).isEmpty());
 
-            if (clickedStackNoEnchant.isEnchantable() || isDedicatedTransformInput || (isBook && !this.getSlot(ENCHANTABLE_SLOT).hasItem())) {
+            if (clickedStackNoEnchant.isEnchantable()
+                || isDedicatedTransformInput
+                || (hasExistingEnchants && !isBook && !this.getSlot(ENCHANTABLE_SLOT).hasItem())
+                || (isBook && !this.getSlot(ENCHANTABLE_SLOT).hasItem())) {
                 ItemStack tempStack = clickedStack.copy();
                 int maxAllowed = this.getSlot(ENCHANTABLE_SLOT).getMaxStackSize(tempStack);
                 this.getSlot(slotIndex).set(this.getSlot(ENCHANTABLE_SLOT).getItem());

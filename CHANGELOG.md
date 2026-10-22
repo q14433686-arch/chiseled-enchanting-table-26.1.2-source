@@ -18,6 +18,45 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ## [1.1.0] - 2026-10-23
 
+### Added & Fixed — Incremental Upgrade Discounting, Dual-Tab Disenchanting / Cleansing & Curse Purging
+
+- **Context-Aware Incremental Upgrade Discounting (`L_cur -> L_new`)**:
+  - Fixed the playtest bug where directly upgrading an `Enchanted Book` or enchanted piece of gear
+    already holding enchantment `E` at level `L_cur < L_new` charged the full `0 -> L_new` material
+    and XP cost (and emitted duplicate `ENCHANTMENT` + `BOOK_RESEARCH_UPGRADE` rows on books).
+  - `ChiseledEnchantingTableScreenHandler#getEffectiveItemCostOptions` and
+    `#resolveEffectiveXpRequirement` now deduct previously invested material counts (`max(1,
+    Cost(L_new) - Cost(L_cur))`), apply a `-20%` Master Tome guidance bonus (`-10%` at `12+` Wooden
+    Bookshelves), cap `Enchanted Book` `+1` upgrades so shelf/tome guidance is strictly cheaper or
+    equal to Research Upgrade, reduce incremental Master Tome XP to `1..2` deducted levels with a
+    reduced player level threshold (`XpCostConversion#forIncrementalMasterTomeEnchant`), and filter
+    out duplicate or downward rows from the Enchant tab.
+- **Dual-Tab UI (`Enchant` vs `Cleanse`), Free XP-Refunding Disenchant & Downgrade, `Cleansing Grit`, and High-Cost Curse Purging**:
+  - **Dual Mode Tabs**: seamless top stone folder tabs switch between **Enchant / Upgrade (`铭刻 · 升阶`)**
+    and **Disenchant / Cleanse (`退魔 · 洗练`)**, swapping the right-hand console to a dedicated
+    jade-emerald **Cleanse Altar** panel with live trait summary, total refund preview, and one-click
+    **Disenchant All** button (`gui/btn_cleanse_all.png`).
+  - **Free Full Disenchant & Step-Down Downgrading with Anti-Arbitrage XP Refunds**: full non-curse
+    wipes (`DISENCHANT_ALL`) and level step-downs (`DOWNGRADE_ENCHANTMENT`, `L_cur -> L_target`)
+    never consume materials or XP; instead they refund essence XP points (`+XP` orb badge) computed
+    dynamically from relative tier (`r = L / maxLevel`, auto-adapting to any modded `maxLevel =
+    1..255`), log-clamped `Enchantment#anvilCost()`, and `#minecraft:treasure` via telescoping
+    potentials (`V(L_cur) - V(L_target)`) proven strictly lower than Master Tome re-enchant costs
+    even at `-40%` resonance. Single-trait `Enchanted Book` wipes cleanly restore a plain `Book`.
+  - **New Item `Cleansing Grit` (`退魔砂`) & Targeted Single-Trait Removal (`STRIP_SINGLE_ENCHANTMENT`)**:
+    crafted `4×` shapeless from `Flint + Nether Quartz + Glow Ink Sac + Bone Meal`, allowing players
+    to remove a single unwanted enchantment while keeping all other traits intact (with built-in
+    vanilla alternatives `Glow Ink Sac + Quartz`, `Flint + Bone Meal`, or `Arcane Synthesis Crystal`).
+  - **High-Cost Curse Purging (`PURGE_CURSE`)**: free Full Disenchant leaves `#minecraft:curse`
+    enchantments intact, while Cleanse rows allow purging Curses via `2× Cleansing Grit + 1× Ghast
+    Tear`, `1× Arcane Synthesis Crystal`, or `2× Ghast Tear + 1× Golden Apple` + `12` Full Ritual
+    XP levels (discounted up to `-40%` by Library Resonance).
+  - **Full `Shift-Click`, 11-Locale Copy, Datapack `disenchanting.json`, & Bidirectional JEI/REI**:
+    any item carrying existing enchantments (including `Shield`, `Elytra`, `Carved Pumpkin`) can be
+    `Shift-clicked` into the top slot; all 3 Cleanse rituals appear in JEI & REI under
+    **Transmutation & Cleansing**; all 11 locales (`138` keys each) and [`docs/WIKI.md`](docs/WIKI.md)
+    are updated in full parity.
+
 ### Changed — Unified Progression, Library Resonance & Player-Choice Economy Overhaul (A × B × C)
 
 - **Plain-Spoken UI Copy, Trident Recipe Rebalance, Full-Library Glyph Particles, GitHub Wiki & JEI/REI Transformations**:

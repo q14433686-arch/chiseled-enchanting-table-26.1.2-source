@@ -41,11 +41,33 @@ public final class XpCostConversion {
         int requiredLevel,
         int deductedLevels,
         int rawRequiredLevel,
-        int discountPercent
+        int discountPercent,
+        int refundPoints
     ) {
-        public static final XpRequirement FREE = new XpRequirement(false, 0, 0, 0, 0);
+        public static final XpRequirement FREE = new XpRequirement(false, 0, 0, 0, 0, 0);
+
+        public XpRequirement(
+            boolean vanillaTierMode,
+            int requiredLevel,
+            int deductedLevels,
+            int rawRequiredLevel,
+            int discountPercent
+        ) {
+            this(vanillaTierMode, requiredLevel, deductedLevels, rawRequiredLevel, discountPercent, 0);
+        }
+
+        public static XpRequirement refund(int xpPoints) {
+            return new XpRequirement(false, 0, 0, 0, 0, Math.max(0, xpPoints));
+        }
+
+        public boolean isRefund() {
+            return refundPoints > 0;
+        }
 
         public boolean isMetBy(Player player) {
+            if (refundPoints > 0 || (requiredLevel <= 0 && deductedLevels <= 0)) {
+                return true;
+            }
             return player.getAbilities().instabuild || player.experienceLevel >= requiredLevel;
         }
     }
@@ -78,6 +100,55 @@ public final class XpCostConversion {
             ? Math.max(tierCost, Math.round(rawThreshold * (100 - clampedDisc) / 100.0f))
             : rawThreshold;
         return new XpRequirement(true, effectiveThreshold, tierCost, rawThreshold, clampedDisc);
+    }
+
+    /**
+     * Resolves incremental Master Tome XP requirement when upgrading an item or book that already
+     * carries {@code existingLevel >= 1} up to {@code targetLevel > existingLevel}: reduces both
+     * deducted levels ({@code 1..2} levels by relative delta) and threshold proportionally.
+     */
+    public static XpRequirement forIncrementalMasterTomeEnchant(
+        int existingLevel,
+        int targetLevel,
+        int maxLevel,
+        int rawBaseXpCost,
+        int discountPercent
+    ) {
+        XpRequirement full = forMasterTomeEnchant(targetLevel, maxLevel, rawBaseXpCost, 0);
+        int safeMax = Math.max(1, maxLevel);
+        int delta = Math.max(1, targetLevel - existingLevel);
+        double deltaRatio = (double) delta / (double) safeMax;
+        int tierCost = deltaRatio <= 0.5001 ? 1 : 2;
+        float progressCredit = Math.clamp((float) existingLevel / (float) Math.max(1, targetLevel), 0.0f, 0.85f);
+        int rawThreshold = Math.max(tierCost, Math.round(full.rawRequiredLevel() * (1.0f - 0.35f * progressCredit)));
+        int clampedDisc = Math.clamp(discountPercent, 0, 40);
+        int effectiveThreshold = clampedDisc > 0
+            ? Math.max(tierCost, Math.round(rawThreshold * (100 - clampedDisc) / 100.0f))
+            : rawThreshold;
+        return new XpRequirement(true, effectiveThreshold, tierCost, rawThreshold, clampedDisc);
+    }
+
+    /**
+     * Resolves Vanilla-style light surgical XP cost for stripping a single non-curse enchantment
+     * while preserving all other enchantments on the item ({@code 1..2} levels deducted).
+     */
+    public static XpRequirement forTargetedCleanse(
+        int level,
+        int maxLevel,
+        int rawThreshold,
+        int discountPercent
+    ) {
+        if (rawThreshold <= 0) {
+            return XpRequirement.FREE;
+        }
+        double r = Math.clamp((double) level / (double) Math.max(1, maxLevel), 0.0, 1.0);
+        int tierCost = r <= 0.55 ? 1 : 2;
+        int baseThreshold = Math.clamp(rawThreshold, tierCost, 30);
+        int clampedDisc = Math.clamp(discountPercent, 0, 40);
+        int effectiveThreshold = clampedDisc > 0
+            ? Math.max(tierCost, Math.round(baseThreshold * (100 - clampedDisc) / 100.0f))
+            : baseThreshold;
+        return new XpRequirement(true, effectiveThreshold, tierCost, baseThreshold, clampedDisc);
     }
 
     /**

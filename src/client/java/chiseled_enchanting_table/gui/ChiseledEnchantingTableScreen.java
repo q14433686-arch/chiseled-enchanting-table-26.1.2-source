@@ -1,8 +1,12 @@
 package chiseled_enchanting_table.gui;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
+import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
+import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload;
+import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.RerollEpiphanyPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import java.util.ArrayList;
@@ -26,6 +30,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 @Environment(EnvType.CLIENT)
 public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<ChiseledEnchantingTableScreenHandler> {
@@ -34,10 +39,24 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final Identifier BACKGROUND = ChiseledEnchantingTable.identifier("gui/chiseled_enchanting_table.png");
     private static final Identifier EPIPHANY_PANEL = ChiseledEnchantingTable.identifier("gui/epiphany_panel.png");
     private static final Identifier EPIPHANY_PANEL_FROZEN = ChiseledEnchantingTable.identifier("gui/epiphany_panel_frozen.png");
+    private static final Identifier CLEANSE_PANEL = ChiseledEnchantingTable.identifier("gui/cleanse_panel.png");
     private static final Identifier BTN_FREEZE = ChiseledEnchantingTable.identifier("gui/btn_freeze.png");
     private static final Identifier BTN_REROLL = ChiseledEnchantingTable.identifier("gui/btn_reroll.png");
+    private static final Identifier BTN_CLEANSE_ALL = ChiseledEnchantingTable.identifier("gui/btn_cleanse_all.png");
 
-    // Integrated Sanctum & Stasis Console coordinates inside the cohesive 340x166 window chassis.
+    private static final Identifier TAB_INSCRIBE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_active.png");
+    private static final Identifier TAB_INSCRIBE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_inactive.png");
+    private static final Identifier TAB_CLEANSE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_active.png");
+    private static final Identifier TAB_CLEANSE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_inactive.png");
+
+    // Top mode switcher tabs joined flush against the top stone frame.
+    private static final int TAB_W = 74;
+    private static final int TAB_H = 18;
+    private static final int TAB_Y_OFFSET = -15;
+    private static final int TAB_INSCRIBE_X = 8;
+    private static final int TAB_CLEANSE_X = 86;
+
+    // Integrated Sanctum / Cleanse Console coordinates inside the cohesive 340x166 window chassis.
     private static final int PANEL_X = 214;
     private static final int PANEL_Y = 18;
     private static final int PANEL_W = 119;
@@ -48,6 +67,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final int FREEZE_BTN_Y = PANEL_Y + 35;
     private static final int REROLL_BTN_X = PANEL_X + 95;
     private static final int REROLL_BTN_Y = PANEL_Y + 35;
+    private static final int CLEANSE_ALL_BTN_X = PANEL_X + 95;
+    private static final int CLEANSE_ALL_BTN_Y = PANEL_Y + 35;
 
     private EnchantementListWidget scrollContainer;
 
@@ -72,6 +93,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         );
     }
 
+    private boolean isCleanseTab() {
+        return this.scrollContainer != null && this.scrollContainer.tabMode() == UiTabMode.CLEANSE;
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -83,6 +108,19 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     protected void repositionElements() {
         super.repositionElements();
         this.scrollContainer.updateSizeAndPosition(151, 140, this.leftPos + 7, this.topPos + 18);
+    }
+
+    private boolean isOverInscribeTab(double mouseX, double mouseY) {
+        int x0 = this.leftPos + TAB_INSCRIBE_X;
+        int y0 = this.topPos + TAB_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
+    }
+
+    private boolean isOverCleanseTab(double mouseX, double mouseY) {
+        if (!this.menu.disenchantEnabled()) return false;
+        int x0 = this.leftPos + TAB_CLEANSE_X;
+        int y0 = this.topPos + TAB_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
     }
 
     private boolean isOverEnchantList(double mouseX, double mouseY) {
@@ -104,15 +142,29 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private boolean isOverFreezeButton(double mouseX, double mouseY) {
+        if (isCleanseTab()) return false;
         int x0 = this.leftPos + FREEZE_BTN_X;
         int y0 = this.topPos + FREEZE_BTN_Y;
         return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
     }
 
     private boolean isOverRerollButton(double mouseX, double mouseY) {
+        if (isCleanseTab()) return false;
         int x0 = this.leftPos + REROLL_BTN_X;
         int y0 = this.topPos + REROLL_BTN_Y;
         return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
+    }
+
+    private boolean isOverCleanseAllButton(double mouseX, double mouseY) {
+        if (!isCleanseTab()) return false;
+        int x0 = this.leftPos + CLEANSE_ALL_BTN_X;
+        int y0 = this.topPos + CLEANSE_ALL_BTN_Y;
+        return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
+    }
+
+    private boolean canCleanseAllNow() {
+        return this.menu.disenchantEnabled()
+            && DisenchantmentApplication.countNonCurseEnchantments(this.menu.get_enchantable_item()) > 0;
     }
 
     private boolean isOverSanctumPanel(double mouseX, double mouseY) {
@@ -131,6 +183,29 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (isOverInscribeTab(event.x(), event.y())) {
+            if (isCleanseTab()) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                this.scrollContainer.setTabMode(UiTabMode.INSCRIBE);
+            }
+            return true;
+        }
+        if (isOverCleanseTab(event.x(), event.y())) {
+            if (!isCleanseTab()) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
+                this.scrollContainer.setTabMode(UiTabMode.CLEANSE);
+            }
+            return true;
+        }
+        if (isOverCleanseAllButton(event.x(), event.y())) {
+            if (canCleanseAllNow()) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
+                ClientPlayNetworking.send(new ApplyEnchantmentPayload(OptionType.DISENCHANT_ALL, DisenchantmentApplication.DISENCHANT_ALL_ID, 0));
+            } else {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+            }
+            return true;
+        }
         if (isOverFreezeButton(event.x(), event.y())) {
             if (this.menu.canAffordFreezeEpiphany()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
@@ -199,11 +274,6 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return String.format("%02d:%02d", mins, secs);
     }
 
-    /**
-     * Renders text strictly within {@code maxWidth} at up to {@code maxScale}: smoothly shrinks
-     * to fit without truncating digits (such as {@code MM:SS} seconds), and ellipsizes only on
-     * extreme strings below {@code 0.48f}.
-     */
     private void drawAutoScaledText(
         GuiGraphicsExtractor ctx,
         Component text,
@@ -216,22 +286,114 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         RowRenderSupport.renderBoundedText(ctx, this.minecraft, text.getString(), x, y, maxScale, maxWidth, argbColor);
     }
 
+    private void renderModeTabs(GuiGraphicsExtractor ctx, int i, int j, int mouseX, int mouseY) {
+        boolean cleanse = isCleanseTab();
+        int tabY = j + TAB_Y_OFFSET;
+
+        int inscribeX = i + TAB_INSCRIBE_X;
+        Identifier inscribeSprite = cleanse ? TAB_INSCRIBE_INACTIVE : TAB_INSCRIBE_ACTIVE;
+        ctx.blit(inscribeSprite, inscribeX, tabY, inscribeX + TAB_W, tabY + TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
+        if (cleanse && isOverInscribeTab(mouseX, mouseY)) {
+            ctx.fill(inscribeX + 2, tabY + 2, inscribeX + TAB_W - 2, tabY + TAB_H - 3, 0x24FFE082);
+        }
+        String tab1Text = Component.translatable("gui.chiseled_enchanting_table.tab.inscribe").getString();
+        RowRenderSupport.renderBoundedText(
+            ctx,
+            this.minecraft,
+            tab1Text,
+            inscribeX + 6,
+            tabY + 5,
+            0.76f,
+            TAB_W - 12,
+            cleanse ? 0xFFC2B2DC : 0xFFFFF0C8
+        );
+
+        if (this.menu.disenchantEnabled()) {
+            int cleanseX = i + TAB_CLEANSE_X;
+            Identifier cleanseSprite = cleanse ? TAB_CLEANSE_ACTIVE : TAB_CLEANSE_INACTIVE;
+            ctx.blit(cleanseSprite, cleanseX, tabY, cleanseX + TAB_W, tabY + TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
+            if (!cleanse && isOverCleanseTab(mouseX, mouseY)) {
+                ctx.fill(cleanseX + 2, tabY + 2, cleanseX + TAB_W - 2, tabY + TAB_H - 3, 0x247CFFA6);
+            }
+            int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(this.menu.get_enchantable_item()).size();
+            String baseLabel = Component.translatable("gui.chiseled_enchanting_table.tab.cleanse").getString();
+            String tab2Text = traitCount > 0 ? (baseLabel + " (" + traitCount + ")") : baseLabel;
+            RowRenderSupport.renderBoundedText(
+                ctx,
+                this.minecraft,
+                tab2Text,
+                cleanseX + 6,
+                tabY + 5,
+                0.76f,
+                TAB_W - 12,
+                cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC)
+            );
+        }
+    }
+
     @Override
     public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         super.extractBackground(ctx, mouseX, mouseY, partialTick);
         int i = this.leftPos;
         int j = this.topPos;
+
+        // Draw inactive tab under main frame, main frame, then active tab flush on top so its open bottom blends seamlessly!
         ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
+        renderModeTabs(ctx, i, j, mouseX, mouseY);
+
+        int px = i + PANEL_X;
+        int py = j + PANEL_Y;
+
+        if (isCleanseTab()) {
+            ctx.blit(CLEANSE_PANEL, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
+            try {
+                ItemStack target = this.menu.get_enchantable_item();
+                int totalTraits = EnchantmentHelper.getEnchantmentsForCrafting(target).size();
+                int nonCurse = DisenchantmentApplication.countNonCurseEnchantments(target);
+                int barX = px + 10;
+                int barY = py + 45;
+                int barW = 80;
+                int barH = 4;
+                ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC071210);
+                ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE102420);
+                float ratio = totalTraits <= 0 ? 0.0f : Mth.clamp((float) nonCurse / (float) Math.max(1, totalTraits), 0.15f, 1.0f);
+                int filledW = Math.round(barW * ratio);
+                if (filledW > 0) {
+                    ctx.fill(barX, barY, barX + filledW, barY + barH, 0xFF39D99A);
+                    ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFA8FFE0);
+                }
+
+                int bx = i + CLEANSE_ALL_BTN_X;
+                int by = j + CLEANSE_ALL_BTN_Y;
+                boolean canAll = canCleanseAllNow();
+                ctx.blit(BTN_CLEANSE_ALL, bx, by, bx + BTN_SIZE, by + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+                if (!canAll) {
+                    ctx.fill(bx, by, bx + BTN_SIZE, by + BTN_SIZE, 0x990A1010);
+                } else if (isOverCleanseAllButton(mouseX, mouseY)) {
+                    ctx.fill(bx, by, bx + BTN_SIZE, by + BTN_SIZE, 0x2E8CFFD2);
+                }
+            } finally {
+                ctx.disableScissor();
+            }
+
+            if (this.scrollContainer.children().isEmpty()) {
+                int lx = i + 12;
+                int ly = j + 74;
+                String hint1 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line1").getString();
+                String hint2 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line2").getString();
+                RowRenderSupport.renderBoundedText(ctx, this.minecraft, hint1, lx, ly, 0.72f, 140, 0xFFAEEADF);
+                RowRenderSupport.renderBoundedText(ctx, this.minecraft, hint2, lx, ly + 12, 0.64f, 140, 0xFF82B8AD);
+            }
+            return;
+        }
 
         boolean frozen = this.menu.isEpiphanyFrozen();
         Identifier panelSprite = frozen ? EPIPHANY_PANEL_FROZEN : EPIPHANY_PANEL;
-        int px = i + PANEL_X;
-        int py = j + PANEL_Y;
         ctx.blit(panelSprite, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
 
         ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
         try {
-            // Countdown / Awakening progress bar inside the recessed Sanctum readout.
             int minShelves = Math.max(1, this.menu.epiphanyMinBookshelves());
             boolean unlocked = this.menu.regularBookshelves >= minShelves;
             int barX = px + 10;
@@ -265,7 +427,6 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ctx.fill(barX, barY, barX + filledW, barY + 1, fillHighlight);
             }
 
-            // Imported painted square icon buttons: [Freeze] and [Reroll].
             int fx = i + FREEZE_BTN_X;
             int fy = j + FREEZE_BTN_Y;
             boolean canFreeze = this.menu.canAffordFreezeEpiphany();
@@ -294,6 +455,23 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
         if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
+            if (isOverInscribeTab(mouseX, mouseY)) {
+                List<Component> tip = List.of(
+                    Component.translatable("gui.chiseled_enchanting_table.tab.inscribe.title").withStyle(ChatFormatting.GOLD),
+                    Component.translatable("gui.chiseled_enchanting_table.tab.inscribe.desc").withStyle(ChatFormatting.GRAY)
+                );
+                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
+            if (isOverCleanseTab(mouseX, mouseY)) {
+                List<Component> tip = List.of(
+                    Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.title").withStyle(ChatFormatting.AQUA),
+                    Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.desc").withStyle(ChatFormatting.GRAY)
+                );
+                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
+
             ItemStack hoveredCost = this.scrollContainer.hoveredCostItem(mouseX, mouseY);
             if (hoveredCost != null && !hoveredCost.isEmpty()) {
                 List<Component> lines = new ArrayList<>(this.getTooltipFromContainerItem(hoveredCost));
@@ -352,7 +530,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 int playerLvl = this.menu.player.experienceLevel;
                 boolean met = hoveredXpEntry.xpConditionMet();
                 List<Component> xpTip = new ArrayList<>();
-                if (req.requiredLevel() <= 0 && req.deductedLevels() <= 0) {
+                if (req.isRefund()) {
+                    xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.refund.title")
+                        .withStyle(ChatFormatting.GREEN));
+                    xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.refund.amount", req.refundPoints())
+                        .withStyle(ChatFormatting.AQUA));
+                    xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.refund.hint")
+                        .withStyle(ChatFormatting.GRAY));
+                } else if (req.requiredLevel() <= 0 && req.deductedLevels() <= 0) {
                     xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.free")
                         .withStyle(ChatFormatting.GREEN));
                 } else if (req.vanillaTierMode()) {
@@ -389,12 +574,32 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                             req.rawRequiredLevel()
                         ).withStyle(ChatFormatting.AQUA));
                     }
-                    if (hoveredXpEntry.option_type == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.ENCHANTMENT) {
+                    if (hoveredXpEntry.option_type == OptionType.ENCHANTMENT) {
                         xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.full.master_hint")
                             .withStyle(ChatFormatting.DARK_GRAY));
                     }
                 }
                 ctx.setTooltipForNextFrame(this.font, xpTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
+            if (isOverCleanseAllButton(mouseX, mouseY)) {
+                int refund = DisenchantmentApplication.totalFullDisenchantRefund(
+                    this.menu.get_enchantable_item(),
+                    this.menu.disenchantRefundScale()
+                );
+                List<Component> tip = new ArrayList<>();
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_all_title")
+                    .withStyle(ChatFormatting.GREEN));
+                if (canCleanseAllNow()) {
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.refund.amount", refund)
+                        .withStyle(ChatFormatting.AQUA));
+                } else {
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line1")
+                        .withStyle(ChatFormatting.RED));
+                }
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_all_hint")
+                    .withStyle(ChatFormatting.GRAY));
+                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
             if (isOverFreezeButton(mouseX, mouseY)) {
@@ -447,8 +652,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         minShelves
                     ).withStyle(ChatFormatting.RED));
                 } else {
-                    tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.slots_line", maxSlots)
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.active", pct)
                         .withStyle(ChatFormatting.LIGHT_PURPLE));
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.slots_line", maxSlots)
+                        .withStyle(ChatFormatting.GOLD));
                     tip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.epiphany.reroll_cost",
                         this.menu.epiphanyRerollXpLevels()
@@ -465,6 +672,29 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 return;
             }
             if (isOverSanctumPanel(mouseX, mouseY)) {
+                if (isCleanseTab()) {
+                    ItemStack target = this.menu.get_enchantable_item();
+                    int totalTraits = EnchantmentHelper.getEnchantmentsForCrafting(target).size();
+                    int nonCurse = DisenchantmentApplication.countNonCurseEnchantments(target);
+                    int refund = DisenchantmentApplication.totalFullDisenchantRefund(target, this.menu.disenchantRefundScale());
+                    List<Component> tip = new ArrayList<>();
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_title")
+                        .withStyle(ChatFormatting.AQUA));
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_rule_free")
+                        .withStyle(ChatFormatting.GREEN));
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_rule_strip")
+                        .withStyle(ChatFormatting.GRAY));
+                    if (this.menu.disenchantAllowCursePurge()) {
+                        tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_rule_curse")
+                            .withStyle(ChatFormatting.GOLD));
+                    }
+                    if (totalTraits > 0) {
+                        tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_stats", nonCurse, refund)
+                            .withStyle(ChatFormatting.AQUA));
+                    }
+                    ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    return;
+                }
                 int woodenBonus = this.menu.woodenXpDiscountPercent();
                 int chiseledBonus = this.menu.globalMasteryDiscountPercent();
                 double totalUnits = this.menu.totalMasteryUnits();
@@ -529,17 +759,36 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
-        // Warm gilded-ivory title rendered right atop the stitched royal-purple header cloth.
         RowRenderSupport.renderBoundedText(context, this.minecraft, this.title.getString(), 18, 6, 1.0f, 304, 0xFFFFF0C8);
 
         int lx = PANEL_X + 10;
         int ly = PANEL_Y;
-        int minShelves = Math.max(1, this.menu.epiphanyMinBookshelves());
-        boolean unlocked = this.menu.regularBookshelves >= minShelves;
-        boolean frozen = this.menu.isEpiphanyFrozen();
 
         context.enableScissor(PANEL_X + 9, PANEL_Y + 9, PANEL_X + 110, PANEL_Y + 52);
         try {
+            if (isCleanseTab()) {
+                ItemStack target = this.menu.get_enchantable_item();
+                int totalTraits = EnchantmentHelper.getEnchantmentsForCrafting(target).size();
+                int nonCurse = DisenchantmentApplication.countNonCurseEnchantments(target);
+                int refund = DisenchantmentApplication.totalFullDisenchantRefund(target, this.menu.disenchantRefundScale());
+
+                Component header = Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_title");
+                drawAutoScaledText(context, header, lx, ly + 10, 0.85f, 98, 0xFF9EFFDB);
+
+                Component countLine = totalTraits > 0
+                    ? Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_traits", totalTraits, nonCurse)
+                    : Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_idle");
+                drawAutoScaledText(context, countLine, lx, ly + 22, 0.82f, 98, totalTraits > 0 ? 0xFFE6FFF6 : 0xFFA2C4BC);
+
+                Component refundLine = Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_refund", refund);
+                drawAutoScaledText(context, refundLine, lx, ly + 34, 0.80f, 80, refund > 0 ? 0xFF7CFFA6 : 0xFF8FB8AD);
+                return;
+            }
+
+            int minShelves = Math.max(1, this.menu.epiphanyMinBookshelves());
+            boolean unlocked = this.menu.regularBookshelves >= minShelves;
+            boolean frozen = this.menu.isEpiphanyFrozen();
+
             Component resLine = Component.translatable("gui.chiseled_enchanting_table.resonance.badge", this.menu.xpDiscountPercent);
             drawAutoScaledText(context, resLine, lx, ly + 10, 0.85f, 98, this.menu.xpDiscountPercent > 0 ? 0xFF7FFFB2 : 0xFFE2D8F5);
 

@@ -51,6 +51,11 @@ public final class EnchantmentApplication {
         if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(enchantable_item))) {
             return false;
         }
+        int existingSameLevel = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item).getLevel(enchantment);
+        // Never allow accidental same-level or downgrade via direct enchant (downgrades are free & grant XP in Cleanse mode).
+        if (existingSameLevel >= enchantment_level) {
+            return false;
+        }
         if (!handler.applyEnchantementCondition(payload)) {
             return false;
         }

@@ -54,6 +54,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static final Identifier BOOKSHELF_BOOK_POOL_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/bookshelf_book_pool.json");
     private static final Identifier BOOK_UPGRADES_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/book_upgrades.json");
     private static final Identifier TREASURE_EPIPHANY_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/treasure_epiphany.json");
+    private static final Identifier DISENCHANTING_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/disenchanting.json");
 
     private static Set<EnchantmentWithLevel> defaultEnchantmentValues = builtInDefaultEnchantments();
     private static List<DefaultEnchantmentTagRule> defaultEnchantmentTags = builtInDefaultEnchantmentTags();
@@ -65,6 +66,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static BookshelfBookPool bookshelfBookPool = BookshelfBookPool.emptyFallback();
     private static BookUpgradeRules bookUpgradeRules = BookUpgradeRules.builtInFallback();
     private static TreasureEpiphanyRules treasureEpiphanyRules = TreasureEpiphanyRules.builtInFallback();
+    private static DisenchantingRules disenchantingRules = DisenchantingRules.builtInFallback();
 
     public static void init() {
         net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(PackType.SERVER_DATA)
@@ -396,6 +398,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         bookshelfBookPool = loadBookshelfBookPool(resourceManager);
         bookUpgradeRules = loadBookUpgradeRules(resourceManager);
         treasureEpiphanyRules = loadTreasureEpiphanyRules(resourceManager);
+        disenchantingRules = loadDisenchantingRules(resourceManager);
         ChiseledEnchantingTable.LOGGER.info(
             "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformations, {} loot injections",
             defaultEnchantmentValues.size(),
@@ -1397,5 +1400,130 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     private static int intOr(JsonObject json, String key, int fallback) {
         return json.has(key) ? json.get(key).getAsInt() : fallback;
+    }
+
+    public static boolean disenchantEnabled() {
+        return disenchantingRules.enabled();
+    }
+
+    public static boolean disenchantAllowCursePurge() {
+        return disenchantingRules.allowCursePurge();
+    }
+
+    public static double disenchantRefundScale() {
+        return disenchantingRules.xpRefundScale();
+    }
+
+    public static int targetedStripXpCost(Identifier id, int level, int maxLevel) {
+        return disenchantingRules.targetedStripXpCost(level, maxLevel);
+    }
+
+    public static List<List<ItemStack>> targetedStripCostOptions(Identifier id, int level, int maxLevel) {
+        return disenchantingRules.targetedStripCostOptions(id, level, maxLevel);
+    }
+
+    public static int cursePurgeXpCost() {
+        return disenchantingRules.cursePurgeXpCost();
+    }
+
+    public static List<List<ItemStack>> cursePurgeCostOptions(Identifier id) {
+        return disenchantingRules.cursePurgeCostOptions(id);
+    }
+
+    private static DisenchantingRules loadDisenchantingRules(ResourceManager resourceManager) {
+        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(DISENCHANTING_ID);
+        if (resource.isEmpty()) {
+            return DisenchantingRules.builtInFallback();
+        }
+        try (Reader reader = resource.get().openAsReader()) {
+            return DisenchantingRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject());
+        } catch (Exception e) {
+            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in disenchanting defaults", DISENCHANTING_ID, e);
+            return DisenchantingRules.builtInFallback();
+        }
+    }
+
+    private record DisenchantingRules(
+        boolean enabled,
+        boolean allowCursePurge,
+        double xpRefundScale,
+        int stripXpMin,
+        int stripXpMax,
+        ItemCostRule stripMaterialCost,
+        int curseXpCost,
+        ItemCostRule curseMaterialCost
+    ) {
+        private static final String BUILT_IN_JSON = """
+            {
+              "enabled": true,
+              "allow_curse_purge": true,
+              "xp_refund_scale": 1.0,
+              "targeted_strip": {
+                "xp_cost_min": 3,
+                "xp_cost_max": 10,
+                "cost_options": [
+                  { "item": "chiseled_enchanting_table:cleansing_grit", "base_count": 1, "max_level_count": 3, "level_exponent": 1.15 },
+                  { "item": "minecraft:glow_ink_sac", "base_count": 2, "max_level_count": 5, "level_exponent": 1.15, "additional_costs": [ { "item": "minecraft:quartz", "base_count": 1, "max_level_count": 2, "level_exponent": 1.0 } ] },
+                  { "item": "minecraft:flint", "base_count": 3, "max_level_count": 8, "level_exponent": 1.2, "additional_costs": [ { "item": "minecraft:bone_meal", "base_count": 2, "max_level_count": 4, "level_exponent": 1.1 } ] },
+                  { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
+                ]
+              },
+              "curse_purge": {
+                "xp_cost": 12,
+                "cost_options": [
+                  { "item": "chiseled_enchanting_table:cleansing_grit", "count": 2, "additional_costs": [ { "item": "minecraft:ghast_tear", "count": 1 } ] },
+                  { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 },
+                  { "item": "minecraft:ghast_tear", "count": 2, "additional_costs": [ { "item": "minecraft:golden_apple", "count": 1 } ] }
+                ]
+              }
+            }
+            """;
+
+        static DisenchantingRules builtInFallback() {
+            return fromJson(JsonParser.parseString(BUILT_IN_JSON).getAsJsonObject());
+        }
+
+        static DisenchantingRules fromJson(JsonObject root) {
+            boolean enabled = boolOr(root, "enabled", true);
+            boolean allowCurse = boolOr(root, "allow_curse_purge", true);
+            double scale = Math.max(0.0, Math.min(5.0, doubleOr(root, "xp_refund_scale", 1.0)));
+
+            JsonObject stripObj = root.has("targeted_strip") ? root.getAsJsonObject("targeted_strip") : new JsonObject();
+            int stripMin = Math.max(1, intOr(stripObj, "xp_cost_min", 3));
+            int stripMax = Math.max(stripMin, intOr(stripObj, "xp_cost_max", 10));
+            ItemCostRule stripCost = stripObj.has("cost_options")
+                ? ItemCostRule.fromJson(stripObj)
+                : builtInFallback().stripMaterialCost;
+
+            JsonObject curseObj = root.has("curse_purge") ? root.getAsJsonObject("curse_purge") : new JsonObject();
+            int curseXp = Math.max(1, intOr(curseObj, "xp_cost", 12));
+            ItemCostRule curseCost = curseObj.has("cost_options")
+                ? ItemCostRule.fromJson(curseObj)
+                : builtInFallback().curseMaterialCost;
+
+            return new DisenchantingRules(
+                enabled, allowCurse, scale,
+                stripMin, stripMax, stripCost,
+                curseXp, curseCost
+            );
+        }
+
+        int targetedStripXpCost(int level, int maxLevel) {
+            int safeMax = Math.max(1, maxLevel);
+            int safeLvl = Math.clamp(level, 1, safeMax);
+            if (safeMax <= 1) {
+                return Math.round((stripXpMin + stripXpMax) * 0.5f);
+            }
+            double u = (double) (safeLvl - 1) / (double) (safeMax - 1);
+            return Math.max(1, (int) Math.round(stripXpMin + (stripXpMax - stripXpMin) * u));
+        }
+
+        List<List<ItemStack>> targetedStripCostOptions(Identifier id, int level, int maxLevel) {
+            return stripMaterialCost.toBundles(id, level, maxLevel);
+        }
+
+        List<List<ItemStack>> cursePurgeCostOptions(Identifier id) {
+            return curseMaterialCost.toBundles(id, 1, 1);
+        }
     }
 }

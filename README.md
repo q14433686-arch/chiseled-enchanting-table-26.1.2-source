@@ -29,7 +29,8 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 * **Two-track library progression & Dual-Mode XP Formula (see [`docs/WIKI.md`](docs/WIKI.md))**:
   * **Wooden Bookshelves (`7×5×7`)** boost standard enchantments up to mid-tier (`ceil(maxLevel / 2)`), grant XP reduction starting at `12+` shelves, and at **`32+` Wooden Bookshelves** unlock **Treasure Epiphany** (with countdown, persistent lock, and manual refresh).
   * **Chiseled Bookshelves (`7×5×7`)** turn stored Enchanted Books into permanent **Master Tomes** unlocking tiers `1..k` directly, adding global & per-enchantment XP discounts (up to **`-40%`**), and switching inscriptions into **Vanilla Mass-Production XP Mode (`1–3` levels deducted)**.
-  * **Bidirectional JEI & REI Support**: full recipe & usage lookup for both **Chiseled Enchanting** and **Item Transformations** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo Shard`, `Bottle o' Enchanting`, `Blank Overwrite`).
+  * **Incremental Upgrade Discounting & Dual-Tab Disenchanting / Cleansing**: upgrading existing lower-tier enchantments (`L_cur -> L_new`) automatically deducts previously invested materials and XP; switching to the top **Cleanse (`退魔 · 洗练`)** tab refunds XP for free on full non-curse wipes or level step-downs, strips single unwanted traits with **`Cleansing Grit` (`退魔砂`)** or vanilla alternatives, and purges `#minecraft:curse` traits at high ritual cost.
+  * **Bidirectional JEI & REI Support**: full recipe & usage lookup for both **Chiseled Enchanting** and **Transmutation & Cleansing** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo Shard`, `Bottle o' Enchanting`, `Blank Overwrite`, `Cleansing Grit`, and Cleanse / Curse-Purge rituals).
 
 ## Installation
 

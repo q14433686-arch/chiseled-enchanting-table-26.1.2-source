@@ -28,7 +28,11 @@ public final class ChiseledEnchantingMenuPayloads {
         TRANSFORMATION("transformation"),
         BOOK_COMBINE_UPGRADE("book_combine_upgrade"),
         BOOK_RESEARCH_UPGRADE("book_research_upgrade"),
-        TREASURE_EPIPHANY("treasure_epiphany");
+        TREASURE_EPIPHANY("treasure_epiphany"),
+        DISENCHANT_ALL("disenchant_all"),
+        DOWNGRADE_ENCHANTMENT("downgrade_enchantment"),
+        STRIP_SINGLE_ENCHANTMENT("strip_single_enchantment"),
+        PURGE_CURSE("purge_curse");
 
         private final String token;
 
