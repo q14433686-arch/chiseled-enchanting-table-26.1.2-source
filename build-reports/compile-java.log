@@ -1,4 +1,4 @@
-commit: 4a10aaa6500c859bfb32e0bbe72767dad64fee2d
+commit: 25bc4e4b8f116b8c7bb1967f91c6232f70cc0854
 branch: arena/a33d7fe9-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -18,60 +18,41 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:147: error: cannot find symbol
-                int newColor = dyeItem.getDyeColor().getTextureDiffuseColor();
-                                      ^
-  symbol:   method getDyeColor()
-  location: variable dyeItem of type DyeItem
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:484: error: cannot find symbol
-        for (List<ChiseledEnchantingTableData.WeightedEnchantEntry> set : pool.enchantSets()) {
-                                             ^
-  symbol:   class WeightedEnchantEntry
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:485: error: cannot find symbol
-            for (ChiseledEnchantingTableData.WeightedEnchantEntry entry : set) {
-                                            ^
-  symbol:   class WeightedEnchantEntry
-  location: class ChiseledEnchantingTableData
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-3 errors
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792638499838.json
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/rei/ReiEnchantingCategory.java:53: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+1 error
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792638611878.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava'.
+Execution failed for task ':compileClientJava'.
 > Compilation failed; see the compiler output below.
+  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:484: error: cannot find symbol
-          for (List<ChiseledEnchantingTableData.WeightedEnchantEntry> set : pool.enchantSets()) {
-                                               ^
-    symbol:   class WeightedEnchantEntry
-    location: class ChiseledEnchantingTableData
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:485: error: cannot find symbol
-              for (ChiseledEnchantingTableData.WeightedEnchantEntry entry : set) {
-                                              ^
-    symbol:   class WeightedEnchantEntry
-    location: class ChiseledEnchantingTableData
-  Note: Some input files use or override a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:147: error: cannot find symbol
-                  int newColor = dyeItem.getDyeColor().getTextureDiffuseColor();
-                                        ^
-    symbol:   method getDyeColor()
-    location: variable dyeItem of type DyeItem
-  3 errors
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/rei/ReiEnchantingCategory.java:53: error: method does not override or implement a method from a supertype
+      @Override
+      ^
+  1 error
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -106,24 +87,12 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:147: error: cannot find symbol
-                int newColor = dyeItem.getDyeColor().getTextureDiffuseColor();
-                                      ^
-  symbol:   method getDyeColor()
-  location: variable dyeItem of type DyeItem
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:484: error: cannot find symbol
-        for (List<ChiseledEnchantingTableData.WeightedEnchantEntry> set : pool.enchantSets()) {
-                                             ^
-  symbol:   class WeightedEnchantEntry
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:485: error: cannot find symbol
-            for (ChiseledEnchantingTableData.WeightedEnchantEntry entry : set) {
-                                            ^
-  symbol:   class WeightedEnchantEntry
-  location: class ChiseledEnchantingTableData
-Note: Some input files use or override a deprecated API.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/rei/ReiEnchantingCategory.java:53: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-3 errors
+1 error
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -258,8 +227,8 @@ Note: Recompile with -Xlint:deprecation for details.
 	... 30 more
 
 
-BUILD FAILED in 9s
-1 actionable task: 1 executed
+BUILD FAILED in 17s
+3 actionable tasks: 3 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
