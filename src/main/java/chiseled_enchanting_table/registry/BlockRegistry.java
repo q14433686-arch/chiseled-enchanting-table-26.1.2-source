@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.block.ChiseledEnchantingTableBlock;
+import chiseled_enchanting_table.item.ArcaneGrimoireItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
@@ -78,6 +79,22 @@ public class BlockRegistry {
         )
     );
 
+    public static final Item ARCANE_GRIMOIRE = registerItem(
+        "arcane_grimoire",
+        settings -> new ArcaneGrimoireItem(
+            settings
+                .stacksTo(1)
+                .rarity(Rarity.UNCOMMON)
+                .component(
+                    DataComponents.LORE,
+                    new ItemLore(List.of(
+                        Component.translatable("item.chiseled_enchanting_table.arcane_grimoire.lore")
+                            .withStyle(style -> style.withItalic(false).withColor(ChatFormatting.GOLD))
+                    ))
+                )
+        )
+    );
+
     private static Block register(String name, Function<BlockBehaviour.Properties, Block> blockFactory, BlockBehaviour.Properties settings, boolean shouldRegisterItem) {
         ResourceKey<Block> blockKey = keyOfBlock(name);
         Block block = blockFactory.apply(settings.setId(blockKey));
@@ -113,11 +130,16 @@ public class BlockRegistry {
     public static void init() {
         net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> {
             output.accept(CHISELED_ENCHANTING_TABLE.asItem());
+            output.accept(ARCANE_GRIMOIRE);
             output.accept(ARCANE_CATALYST);
             output.accept(CLEANSING_GRIT);
             output.accept(DEPLETED_TOME);
         });
+        net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(output -> {
+            output.accept(ARCANE_GRIMOIRE);
+        });
         net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS).register(output -> {
+            output.accept(ARCANE_GRIMOIRE);
             output.accept(ARCANE_CATALYST);
             output.accept(CLEANSING_GRIT);
             output.accept(DEPLETED_TOME);

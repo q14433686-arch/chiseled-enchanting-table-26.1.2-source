@@ -18,6 +18,17 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ## [1.1.0] - 2026-10-23
 
+### Added — Illustrated In-Game Manual (`纂刻秘典` / `chiseled_enchanting_table:arcane_grimoire`)
+
+- **Dual Shapeless Crafting Recipes & Chiseled Bookshelf Compatibility**:
+  - Craftable via **`minecraft:writable_book` + `minecraft:chiseled_bookshelf`** (`recipe/arcane_grimoire_from_shelf.json`) OR **`chiseled_enchanting_table:depleted_tome` + `minecraft:ink_sac`** (`recipe/arcane_grimoire_from_tome.json`), unlocked automatically in the vanilla Recipe Book, storable inside Chiseled Bookshelves (`#minecraft:bookshelf_books`), and accessible directly from the header button on `ChiseledEnchantingTableScreen` with 1-click return to the open table.
+- **Illuminated Double-Page Vellum Layout, Strict Optical Typography & Native Interactive Diagrams**:
+  - Features an 8-chapter Home Directory spread, persistent top breadcrumb/index/back bar, right-edge chapter bookmark ribbons (`⌂` + `01..08`), bottom pagination + instant return-to-index controls, and full keyboard/mouse navigation (`←/→/A/D`, `Home/Backspace`, `1–8`, `ESC`).
+  - Uses explicit `0xFF` ARGB optical glyph-ink centering (`GLYPH_INK_HEIGHT = 8.0f`), automatic multi-scale fitting (`100%` single-page crisp fit across Chapters `01–08` in `zh_cn`/`zh_tw`/`en_us`), scroll fallback, and hardware `enableScissor` clipping across all 11 shipped languages.
+  - All 8 right-page demonstrations (7-tab interactive crafting workbench, 5-zone UI map, live `7×5×7` shelf simulator, dual XP mode & `-40%` resonance bar, 3-route book upgrade flow, treasure stasis flow, 6-ritual transmutation wheel, and 4-way cleanse diagram) are rendered natively in Java with real `ItemStack` hover tooltips — zero AI-generated diagram bitmaps.
+- **Complete 6-Event Vorbis Audio Suite (`SoundRegistry` + `sounds.json`)**:
+  - Custom 44.1 kHz Ogg Vorbis foley for open (`grimoire_open`), close (`grimoire_close`), 3-variant page turns (`grimoire_page_turn`), chapter bookmarks (`grimoire_chapter_select`), return to index (`grimoire_home`), and interactive diagram switches (`grimoire_tab_switch`), with subtitles across all 11 locales.
+
 ### Round 2 Deep Code & Configuration Audit Remediation (`ZIP 3` & `ZIP 4`)
 
 - **Fixed Book Combine Upgrade Triple Regression (`R2-1`)**: `BookUpgradeApplication#applyCombine` now resolves and deducts `XpRequirement.deductedLevels()` via `resolveEffectiveXpRequirement` (matching UI tooltips and Research Upgrade instead of deducting `requiredLevel()`), and `ChiseledEnchantingTableScreenHandler` applies `min(rawCost, deltaRaw)` to `BOOK_COMBINE_UPGRADE` so `book_upgrades.json`'s `0.6×` multiplier takes full effect (`Combine <= Research` locked by JUnit 5 & CI gates).

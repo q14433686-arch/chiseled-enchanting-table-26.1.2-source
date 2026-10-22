@@ -43,6 +43,11 @@
 ### 2.3 秘法凝晶（`chiseled_enchanting_table:arcane_catalyst`）
 - 由 `钻石块、绿宝石块、金块、紫水晶块、青金石块、哭泣的黑曜石` 合成的高阶通用触媒，可在**宝藏顿悟、附魔书材料升级、定向单洗、破除诅咒、冻结锁定**中直接作为单件替代耗材使用（退魔与去诅咒同时保留纯原版材料方案，绝不硬锁此物品）。
 
+### 2.4 纂刻秘典（`chiseled_enchanting_table:arcane_grimoire` · 游戏内图解说明书）
+- **无序合成配方一（书架拓印）**：`1× 书与笔（minecraft:writable_book）` + `1× 雕纹书架（minecraft:chiseled_enchanting_table / minecraft:chiseled_bookshelf 原版雕纹书架）` $\longrightarrow$ `1× 纂刻秘典`。
+- **无序合成配方二（残卷重装）**：`1× 褪魔残卷（chiseled_enchanting_table:depleted_tome）` + `1× 墨囊（minecraft:ink_sac）` $\longrightarrow$ `1× 纂刻秘典`。
+- **收纳与快捷查阅**：已加入 `#minecraft:bookshelf_books` 标签，可直接放入雕纹书架收纳展示；也可直接在**纂刻附魔台界面右上角书典按钮**一键翻阅并一键返回附魔界面，内置全交互合成表、书架模拟器、双经验条、升阶/顿悟/置换/退魔全图解及独立翻书音效。
+
 ---
 
 ## 3. 三轨书架与经验减免机制

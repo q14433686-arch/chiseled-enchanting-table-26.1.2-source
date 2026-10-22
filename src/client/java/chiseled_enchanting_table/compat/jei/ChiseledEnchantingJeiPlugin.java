@@ -112,6 +112,10 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             List.of(new ItemStack(BlockRegistry.CLEANSING_GRIT)),
             Component.translatable("jei.chiseled_enchanting_table.info.cleansing_grit")
         );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.ARCANE_GRIMOIRE)),
+            Component.translatable("jei.chiseled_enchanting_table.info.grimoire")
+        );
     }
 
     @Override

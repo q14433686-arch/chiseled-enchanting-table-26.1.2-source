@@ -7,6 +7,7 @@ import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.EntityRegistry;
 import chiseled_enchanting_table.registry.LootRegistry;
 import chiseled_enchanting_table.registry.ScreenHandlerRegistry;
+import chiseled_enchanting_table.registry.SoundRegistry;
 import chiseled_enchanting_table.registry.StructureProcessorRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.item.v1.DefaultItemComponentEvents;
@@ -35,6 +36,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
 
         ChiseledEnchantingTableData.init();
         EnchantCostSync.init();
+        SoundRegistry.init();
         BlockRegistry.init();
         EntityRegistry.init();
         ScreenHandlerRegistry.init();

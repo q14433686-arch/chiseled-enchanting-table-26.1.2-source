@@ -1,0 +1,64 @@
+{
+  "grimoire_open": {
+    "subtitle": "subtitles.chiseled_enchanting_table.grimoire_open",
+    "sounds": [
+      {
+        "name": "chiseled_enchanting_table:grimoire/open",
+        "volume": 0.90
+      }
+    ]
+  },
+  "grimoire_close": {
+    "subtitle": "subtitles.chiseled_enchanting_table.grimoire_close",
+    "sounds": [
+      {
+        "name": "chiseled_enchanting_table:grimoire/close",
+        "volume": 0.85
+      }
+    ]
+  },
+  "grimoire_page_turn": {
+    "subtitle": "subtitles.chiseled_enchanting_table.grimoire_page_turn",
+    "sounds": [
+      {
+        "name": "chiseled_enchanting_table:grimoire/page_turn_1",
+        "volume": 0.88
+      },
+      {
+        "name": "chiseled_enchanting_table:grimoire/page_turn_2",
+        "volume": 0.88
+      },
+      {
+        "name": "chiseled_enchanting_table:grimoire/page_turn_3",
+        "volume": 0.88
+      }
+    ]
+  },
+  "grimoire_chapter_select": {
+    "subtitle": "subtitles.chiseled_enchanting_table.grimoire_chapter_select",
+    "sounds": [
+      {
+        "name": "chiseled_enchanting_table:grimoire/chapter_select",
+        "volume": 0.85
+      }
+    ]
+  },
+  "grimoire_home": {
+    "subtitle": "subtitles.chiseled_enchanting_table.grimoire_home",
+    "sounds": [
+      {
+        "name": "chiseled_enchanting_table:grimoire/home",
+        "volume": 0.85
+      }
+    ]
+  },
+  "grimoire_tab_switch": {
+    "subtitle": "subtitles.chiseled_enchanting_table.grimoire_tab_switch",
+    "sounds": [
+      {
+        "name": "chiseled_enchanting_table:grimoire/tab_switch",
+        "volume": 0.78
+      }
+    ]
+  }
+}

@@ -3,6 +3,8 @@ package chiseled_enchanting_table.gui;
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
+import chiseled_enchanting_table.gui.grimoire.ArcaneGrimoireScreen;
+import chiseled_enchanting_table.gui.grimoire.GrimoireSoundHelper;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
@@ -44,6 +46,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final Identifier BTN_FREEZE = ChiseledEnchantingTable.identifier("gui/btn_freeze.png");
     private static final Identifier BTN_REROLL = ChiseledEnchantingTable.identifier("gui/btn_reroll.png");
     private static final Identifier BTN_CLEANSE_ALL = ChiseledEnchantingTable.identifier("gui/btn_cleanse_all.png");
+    private static final Identifier BTN_GRIMOIRE = ChiseledEnchantingTable.identifier("gui/btn_grimoire.png");
+
+    private static final int GRIMOIRE_BTN_X = 311;
+    private static final int GRIMOIRE_BTN_Y_OFFSET = -15;
+    private static final int GRIMOIRE_BTN_SIZE = 15;
 
     private static final Identifier TAB_INSCRIBE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_active.png");
     private static final Identifier TAB_INSCRIBE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_inactive.png");
@@ -124,6 +131,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
     }
 
+    private boolean isOverGrimoireButton(double mouseX, double mouseY) {
+        int x0 = this.leftPos + GRIMOIRE_BTN_X;
+        int y0 = this.topPos + GRIMOIRE_BTN_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + GRIMOIRE_BTN_SIZE && mouseY >= y0 && mouseY < y0 + GRIMOIRE_BTN_SIZE;
+    }
+
     private boolean isOverEnchantList(double mouseX, double mouseY) {
         return this.scrollContainer != null
             && mouseX >= this.scrollContainer.getX()
@@ -184,6 +197,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (isOverGrimoireButton(event.x(), event.y())) {
+            GrimoireSoundHelper.playOpen();
+            Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(this));
+            return true;
+        }
         if (isOverInscribeTab(event.x(), event.y())) {
             if (isCleanseTab()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
@@ -331,6 +349,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC)
             );
         }
+
+        int gx = i + GRIMOIRE_BTN_X;
+        int gy = j + GRIMOIRE_BTN_Y_OFFSET;
+        ctx.blit(BTN_GRIMOIRE, gx, gy, gx + GRIMOIRE_BTN_SIZE, gy + GRIMOIRE_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+        if (isOverGrimoireButton(mouseX, mouseY)) {
+            ctx.fill(gx + 1, gy + 1, gx + GRIMOIRE_BTN_SIZE - 1, gy + GRIMOIRE_BTN_SIZE - 1, 0x2EFFDF82);
+        }
     }
 
     @Override
@@ -457,6 +482,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
         if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
+            if (isOverGrimoireButton(mouseX, mouseY)) {
+                List<Component> tip = List.of(
+                    Component.translatable("gui.chiseled_enchanting_table.grimoire.open_btn.title").withStyle(ChatFormatting.GOLD),
+                    Component.translatable("gui.chiseled_enchanting_table.grimoire.open_btn.desc").withStyle(ChatFormatting.GRAY)
+                );
+                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
             if (isOverInscribeTab(mouseX, mouseY)) {
                 List<Component> tip = List.of(
                     Component.translatable("gui.chiseled_enchanting_table.tab.inscribe.title").withStyle(ChatFormatting.GOLD),

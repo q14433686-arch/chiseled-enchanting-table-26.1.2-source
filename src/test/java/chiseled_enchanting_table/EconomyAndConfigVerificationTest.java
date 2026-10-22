@@ -255,4 +255,43 @@ class EconomyAndConfigVerificationTest {
                 <= BookshelfProgression.MAX_SCAN_VOLUME_BLOCKS
         );
     }
+
+    @Test
+    void grimoireDualShapelessRecipesAndBookshelfTagAreValid() throws Exception {
+        JsonObject shelfRecipe = ChiseledEnchantingTableData.readBundledJsonObject(
+            "data/chiseled_enchanting_table/recipe/arcane_grimoire_from_shelf.json"
+        );
+        assertNotNull(shelfRecipe, "Missing arcane_grimoire_from_shelf.json");
+        assertEquals("minecraft:crafting_shapeless", shelfRecipe.get("type").getAsString());
+        assertEquals(
+            "chiseled_enchanting_table:arcane_grimoire",
+            shelfRecipe.getAsJsonObject("result").get("id").getAsString()
+        );
+        Set<String> shelfIngs = new HashSet<>();
+        for (JsonElement el : shelfRecipe.getAsJsonArray("ingredients")) {
+            shelfIngs.add(el.getAsString());
+        }
+        assertEquals(Set.of("minecraft:writable_book", "minecraft:chiseled_bookshelf"), shelfIngs);
+
+        JsonObject tomeRecipe = ChiseledEnchantingTableData.readBundledJsonObject(
+            "data/chiseled_enchanting_table/recipe/arcane_grimoire_from_tome.json"
+        );
+        assertNotNull(tomeRecipe, "Missing arcane_grimoire_from_tome.json");
+        assertEquals("minecraft:crafting_shapeless", tomeRecipe.get("type").getAsString());
+        assertEquals(
+            "chiseled_enchanting_table:arcane_grimoire",
+            tomeRecipe.getAsJsonObject("result").get("id").getAsString()
+        );
+        Set<String> tomeIngs = new HashSet<>();
+        for (JsonElement el : tomeRecipe.getAsJsonArray("ingredients")) {
+            tomeIngs.add(el.getAsString());
+        }
+        assertEquals(Set.of("chiseled_enchanting_table:depleted_tome", "minecraft:ink_sac"), tomeIngs);
+
+        JsonObject bookshelfTag = ChiseledEnchantingTableData.readBundledJsonObject(
+            "data/minecraft/tags/item/bookshelf_books.json"
+        );
+        assertNotNull(bookshelfTag, "Missing bookshelf_books.json");
+        assertFalse(bookshelfTag.get("replace").getAsBoolean(), "bookshelf_books.json must not replace vanilla entries");
+    }
 }

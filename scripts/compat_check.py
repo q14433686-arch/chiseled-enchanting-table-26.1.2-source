@@ -1079,6 +1079,62 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         errors.append(f"expected >= 33,000,000 exhaustive conservation checks, ran only {checked_pairs}")
 
 
+def check_grimoire_recipes_sounds_and_textures() -> None:
+    from pathlib import Path
+    repo_root = Path(REPO)
+    client_res = repo_root / "src" / "client" / "resources" / "assets" / "chiseled_enchanting_table"
+    data_res = repo_root / "src" / "main" / "resources" / "data"
+
+    # 1. Verify both shapeless recipes exist and match exact ingredients
+    r1_path = data_res / "chiseled_enchanting_table" / "recipe" / "arcane_grimoire_from_shelf.json"
+    r2_path = data_res / "chiseled_enchanting_table" / "recipe" / "arcane_grimoire_from_tome.json"
+    for rpath, exp_set in [
+        (r1_path, {"minecraft:writable_book", "minecraft:chiseled_bookshelf"}),
+        (r2_path, {"chiseled_enchanting_table:depleted_tome", "minecraft:ink_sac"}),
+    ]:
+        if not rpath.is_file():
+            errors.append(f"missing grimoire recipe: {rpath}")
+            continue
+        robj = json.loads(rpath.read_text(encoding="utf-8"))
+        if robj.get("type") != "minecraft:crafting_shapeless":
+            errors.append(f"{rpath.name} must be minecraft:crafting_shapeless")
+        if set(robj.get("ingredients", [])) != exp_set:
+            errors.append(f"{rpath.name} ingredients mismatch: {robj.get('ingredients')} != {exp_set}")
+        if robj.get("result", {}).get("id") != "chiseled_enchanting_table:arcane_grimoire":
+            errors.append(f"{rpath.name} result id must be chiseled_enchanting_table:arcane_grimoire")
+
+    # 2. Verify sounds.json + Ogg Vorbis headers + subtitle translation keys across all 11 locales
+    sounds_path = client_res / "sounds.json"
+    if not sounds_path.is_file():
+        errors.append("missing assets/chiseled_enchanting_table/sounds.json")
+    else:
+        sounds_obj = json.loads(sounds_path.read_text(encoding="utf-8"))
+        expected_events = {
+            "grimoire_open", "grimoire_close", "grimoire_page_turn",
+            "grimoire_chapter_select", "grimoire_home", "grimoire_tab_switch",
+        }
+        missing_events = expected_events - set(sounds_obj.keys())
+        if missing_events:
+            errors.append(f"sounds.json missing events: {sorted(missing_events)}")
+        lang_files = sorted((client_res / "lang").glob("*.json"))
+        lang_maps = {lf.name: json.loads(lf.read_text(encoding="utf-8")) for lf in lang_files}
+        for ev, spec in sounds_obj.items():
+            sub_key = spec.get("subtitle", "")
+            for lname, lmap in lang_maps.items():
+                if sub_key not in lmap:
+                    errors.append(f"{lname} missing subtitle key '{sub_key}' for sound '{ev}'")
+            for entry in spec.get("sounds", []):
+                sname = entry if isinstance(entry, str) else entry.get("name", "")
+                rel = sname.split(":", 1)[1] if ":" in sname else sname
+                ogg_path = client_res / "sounds" / f"{rel}.ogg"
+                if not ogg_path.is_file():
+                    errors.append(f"missing .ogg sound file for '{ev}': {ogg_path}")
+                else:
+                    raw = ogg_path.read_bytes()
+                    if len(raw) < 1024 or raw[:4] != b"OggS":
+                        errors.append(f"invalid Ogg Vorbis file: {ogg_path}")
+
+
 # --------------------------------------------------------------------------- #
 
 def main() -> int:
@@ -1103,6 +1159,7 @@ def main() -> int:
     check_loot_injections_well_formed()
     check_bookshelf_book_pool_well_formed()
     check_disenchanting_and_anti_arbitrage()
+    check_grimoire_recipes_sounds_and_textures()
     mc_jar = find_mc_jar(args.mc_jar)
     check_ids_exist(mc_jar, args.extra_jar)
     check_referenced_tags_exist(mc_jar, args.extra_jar)

@@ -3,6 +3,9 @@ package chiseled_enchanting_table;
 import chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity;
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen;
+import chiseled_enchanting_table.gui.grimoire.ArcaneGrimoireScreen;
+import chiseled_enchanting_table.gui.grimoire.GrimoireSoundHelper;
+import chiseled_enchanting_table.item.ArcaneGrimoireItem;
 import chiseled_enchanting_table.menu.EnchantCostTablePayload;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.EntityRegistry;
@@ -26,6 +29,10 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ChiseledEnchantingTableClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ArcaneGrimoireItem.CLIENT_OPEN_ACTION = player -> {
+            GrimoireSoundHelper.playOpen();
+            net.minecraft.client.Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
+        };
         MenuScreens.register(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, ChiseledEnchantingTableScreen::new);
         BlockEntityRendererRegistry.register(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
 
