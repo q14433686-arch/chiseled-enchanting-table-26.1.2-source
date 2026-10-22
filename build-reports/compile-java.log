@@ -1,10 +1,10 @@
-commit: 7eb982740fcb717484ac34d5ae0ec05e3dae160b
+commit: a0412e948f630e253d5885d9e8fa81ca0f7aa56c
 branch: arena/eb218d80-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
 loader: 0.19.5
-jei: true / latest.release
-rei: true / 26.3.+
+jei: true / 31.16.0.89
+rei: true / 26.3.824
 ---
 Downloading https://services.gradle.org/distributions/gradle-9.5.1-bin.zip
 .............10%.............20%..............30%.............40%.............50%..............60%.............70%..............80%.............90%.............100%
@@ -38,11 +38,11 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :compileClientJava
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792690610390.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792690770087.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 1m 16s
+BUILD SUCCESSFUL in 50s
 3 actionable tasks: 3 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
@@ -59,8 +59,8 @@ com.mojang:patchy:2.2.10
 com.mojang:text2speech:1.19.12
 dev.architectury:architectury-fabric:22.0.3
 me.shedaniel.cloth:basic-math:0.6.1
-me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.+ -> 26.3.824
-mezz.jei:jei-26.3-fabric:latest.release -> 31.16.0.89
+me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.824
+mezz.jei:jei-26.3-fabric:31.16.0.89
 net.fabricmc.fabric-api:fabric-advancement-api-v1:1.0.0+38c7a2d55d
 net.fabricmc.fabric-api:fabric-api-base:2.0.6+fcdff87f5d
 net.fabricmc.fabric-api:fabric-api-deprecated:0.162.0+26.3
@@ -123,8 +123,8 @@ com.mojang:patchy:2.2.10
 com.mojang:text2speech:1.19.12
 dev.architectury:architectury-fabric:22.0.3
 me.shedaniel.cloth:basic-math:0.6.1
-me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.+ -> 26.3.824
-mezz.jei:jei-26.3-fabric:latest.release -> 31.16.0.89
+me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.824
+mezz.jei:jei-26.3-fabric:31.16.0.89
 net.fabricmc.fabric-api:fabric-advancement-api-v1:1.0.0+38c7a2d55d
 net.fabricmc.fabric-api:fabric-api-base:2.0.6+fcdff87f5d
 net.fabricmc.fabric-api:fabric-api-deprecated:0.162.0+26.3
