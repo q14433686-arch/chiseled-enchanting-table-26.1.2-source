@@ -51,7 +51,7 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
     }
 
     @Override
-    public int getDisplayHeight(ReiEnchantingDisplay display) {
+    public int getDisplayHeight() {
         return HEIGHT;
     }
 
