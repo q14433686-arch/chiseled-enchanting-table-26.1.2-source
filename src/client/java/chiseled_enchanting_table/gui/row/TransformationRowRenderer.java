@@ -71,7 +71,7 @@ public final class TransformationRowRenderer {
             if (!primaryCost.isEmpty()) {
                 RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
             } else {
-                float midY = RowRenderSupport.rowMidY(dy, dh);
+                float midY = dy + dh * 0.5f;
                 RowRenderSupport.renderCenteredYText(ctx, client, "\u2714", itemX + 2, midY, 0.90f, 12, RowRenderSupport.LIGHT_GREEN);
             }
             RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, additionalCostsMet, dx, dw, itemY);

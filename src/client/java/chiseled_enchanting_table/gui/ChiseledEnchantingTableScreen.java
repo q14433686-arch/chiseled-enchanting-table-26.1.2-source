@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.gui;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
