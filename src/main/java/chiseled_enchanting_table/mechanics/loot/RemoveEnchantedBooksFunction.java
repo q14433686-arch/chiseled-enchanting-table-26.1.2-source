@@ -21,9 +21,7 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
  * <pre>{
  *   "type": "chiseled_enchanting_table:remove_enchanted_books"
  * }</pre>
- * inside a vanilla-loot-table override, without needing our Java code to strip anything. Note the
- * 26.3 loot schema: functions are dispatched on {@code "type"} and live in the singular
- * {@code "modifier"} field of a pool/entry, not in a {@code "functions"} array.</p>
+ * inside a vanilla-loot-table override, without needing our Java code to strip anything.</p>
  *
  * <p>Registered in {@link chiseled_enchanting_table.registry.LootRegistry} alongside the injector.</p>
  */
@@ -35,7 +33,6 @@ public class RemoveEnchantedBooksFunction extends LootItemConditionalFunction {
         this(Optional.empty());
     }
 
-    // 26.3: LootItemConditionalFunction takes a single optional condition holder instead of a list.
     public RemoveEnchantedBooksFunction(Optional<Holder<LootItemCondition>> condition) {
         super(condition);
     }

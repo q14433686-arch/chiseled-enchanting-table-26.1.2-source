@@ -494,6 +494,140 @@ def check_bookshelf_book_pool_well_formed() -> None:
                     err(f"bookshelf_book_pool.json: enchant_sets[{i}][{j}].weight must be a positive integer, got {weight!r}")
 
 
+
+def _check_item_cost_rule(label: str, rule: object) -> None:
+    """Validate the recursive option shape shared by costs, upgrades and epiphanies."""
+    if not isinstance(rule, dict):
+        err(f"{label}: cost rule must be an object")
+        return
+    options = rule.get("options")
+    if options is None:
+        options = [rule] if "item" in rule else []
+    if not isinstance(options, list):
+        err(f"{label}.options must be a list")
+        return
+    for i, option in enumerate(options):
+        where = f"{label}.options[{i}]"
+        if not isinstance(option, dict):
+            err(f"{where} must be an object")
+            continue
+        item = option.get("item")
+        if not isinstance(item, str) or not _RESOURCE_LOCATION_RE.match(item):
+            err(f"{where}.item must be a resource location, got {item!r}")
+        for key in ("count", "count_per_level", "min_count", "max_count", "base_count", "max_level_count"):
+            value = option.get(key, 0)
+            if not isinstance(value, int) or value < 0:
+                err(f"{where}.{key} must be a non-negative integer, got {value!r}")
+        if "level_exponent" in option and (not isinstance(option["level_exponent"], (int, float)) or option["level_exponent"] <= 0):
+            err(f"{where}.level_exponent must be a positive number")
+        for key in ("extra",):
+            if key in option:
+                _check_item_cost_rule(f"{where}.{key}", option[key])
+        if "extras" in option:
+            extras = option["extras"]
+            if not isinstance(extras, list):
+                err(f"{where}.extras must be a list")
+            else:
+                for j, extra in enumerate(extras):
+                    _check_item_cost_rule(f"{where}.extras[{j}]", {"options": [extra]})
+    if "max_level" in rule:
+        _check_item_cost_rule(f"{label}.max_level", rule["max_level"])
+    overrides = rule.get("level_overrides", {})
+    if not isinstance(overrides, dict):
+        err(f"{label}.level_overrides must be an object")
+    else:
+        for level, override in overrides.items():
+            if not str(level).isdigit() or int(level) < 1:
+                err(f"{label}.level_overrides has invalid level key {level!r}")
+            _check_item_cost_rule(f"{label}.level_overrides[{level}]", override)
+
+
+def check_book_upgrade_rules_well_formed() -> None:
+    path = os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "book_upgrades.json")
+    if not os.path.isfile(path):
+        err("missing book_upgrades.json")
+        return
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return
+    for route_name in ("combine_route", "research_route"):
+        route = data.get(route_name)
+        if not isinstance(route, dict):
+            err(f"book_upgrades.json: '{route_name}' must be an object")
+            continue
+        if "enabled" in route and not isinstance(route["enabled"], bool):
+            err(f"book_upgrades.json: {route_name}.enabled must be boolean")
+        for key in ("xp_cost_multiplier_of_vanilla_like", "xp_cost_multiplier_of_direct_enchant", "material_cost_multiplier_of_direct_enchant"):
+            if key in route and (not isinstance(route[key], (int, float)) or route[key] < 0):
+                err(f"book_upgrades.json: {route_name}.{key} must be a non-negative number")
+    research = data.get("research_route", {})
+    if isinstance(research, dict):
+        if "default_material_cost" in research:
+            _check_item_cost_rule("book_upgrades.json.research_route.default_material_cost", research["default_material_cost"])
+        overrides = research.get("enchantment_overrides", {})
+        if not isinstance(overrides, dict):
+            err("book_upgrades.json.research_route.enchantment_overrides must be an object")
+        else:
+            for enchantment, override in overrides.items():
+                if not _RESOURCE_LOCATION_RE.match(enchantment):
+                    err(f"book_upgrades.json: invalid enchantment id {enchantment!r}")
+                    continue
+                if not isinstance(override, dict):
+                    err(f"book_upgrades.json: override for {enchantment} must be an object")
+                    continue
+                _check_item_cost_rule(f"book_upgrades.json override {enchantment}", override.get("material_cost", override))
+
+
+def check_treasure_epiphany_rules_well_formed() -> None:
+    path = os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "treasure_epiphany.json")
+    if not os.path.isfile(path):
+        err("missing treasure_epiphany.json")
+        return
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return
+    for key in ("min_regular_bookshelves", "max_slots_cap", "score_per_extra_slot", "cycle_ticks", "freeze_duration_ticks", "max_freeze_ticks", "freeze_xp_levels", "reroll_xp_levels", "default_xp_levels"):
+        if key in data and (not isinstance(data[key], int) or data[key] < 0):
+            err(f"treasure_epiphany.json: {key} must be a non-negative integer")
+    for key in ("base_chance", "chance_per_extra_bookshelf", "chance_per_master_tome", "max_chance"):
+        if key in data and (not isinstance(data[key], (int, float)) or not 0 <= data[key] <= 1):
+            err(f"treasure_epiphany.json: {key} must be a number in [0, 1]")
+    for key in ("freeze_cost_options", "reroll_cost_options"):
+        options = data.get(key, [])
+        if not isinstance(options, list):
+            err(f"treasure_epiphany.json: {key} must be a list")
+        else:
+            _check_item_cost_rule(f"treasure_epiphany.json.{key}", {"options": options})
+    enchantments = data.get("treasure_enchantments", [])
+    if not isinstance(enchantments, list):
+        err("treasure_epiphany.json: treasure_enchantments must be a list")
+    else:
+        for i, enchantment in enumerate(enchantments):
+            if not isinstance(enchantment, str) or not _RESOURCE_LOCATION_RE.match(enchantment):
+                err(f"treasure_epiphany.json: treasure_enchantments[{i}] is not a resource location")
+    costs = data.get("treasure_costs", {})
+    if not isinstance(costs, dict):
+        err("treasure_epiphany.json: treasure_costs must be an object")
+    else:
+        for enchantment, entry in costs.items():
+            if not _RESOURCE_LOCATION_RE.match(enchantment):
+                err(f"treasure_epiphany.json: invalid treasure enchantment id {enchantment!r}")
+                continue
+            if not isinstance(entry, dict):
+                err(f"treasure_epiphany.json: cost for {enchantment} must be an object")
+                continue
+            if "xp_levels" in entry and (not isinstance(entry["xp_levels"], int) or entry["xp_levels"] < 0):
+                err(f"treasure_epiphany.json: {enchantment}.xp_levels must be non-negative")
+            if "material_cost" in entry:
+                _check_item_cost_rule(f"treasure_epiphany.json cost {enchantment}", entry["material_cost"])
+    if "default_material_cost" in data:
+        _check_item_cost_rule("treasure_epiphany.json.default_material_cost", data["default_material_cost"])
+
+
 def check_default_enchantment_tags_well_formed() -> None:
     """Validate the `tags` extension in default_enchantments.json (the cross-mod compatibility
     hook: any enchantment mod that tags its enchantments with one of these is auto-included)."""
@@ -545,6 +679,8 @@ def collect_referenced_ids() -> set[str]:
         # U1: enchantment ids referenced by the new loot injection + bookshelf book pool JSONs.
         os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "loot_injections.json"),
         os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "bookshelf_book_pool.json"),
+        os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "book_upgrades.json"),
+        os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "treasure_epiphany.json"),
     ]
     for path in targets:
         if os.path.isfile(path):
@@ -720,6 +856,8 @@ def main() -> int:
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()
     check_bookshelf_book_pool_well_formed()
+    check_book_upgrade_rules_well_formed()
+    check_treasure_epiphany_rules_well_formed()
     mc_jar = find_mc_jar(args.mc_jar)
     check_ids_exist(mc_jar, args.extra_jar)
     check_referenced_tags_exist(mc_jar, args.extra_jar)

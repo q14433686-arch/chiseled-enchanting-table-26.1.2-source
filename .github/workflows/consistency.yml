@@ -9,7 +9,6 @@ on:
     branches:
       - 'arena/**'
       - 'chiseled-enchanting-table-26.1.2-source'
-      - '26.**'
       - 'main'
     paths:
       - 'gradle.properties'
@@ -17,6 +16,7 @@ on:
       - 'src/main/resources/fabric.mod.json'
       - '.github/workflows/publish.yml'
       - 'scripts/check_release_consistency.sh'
+      - 'docs/ci/publish.yml'
   pull_request:
     paths:
       - 'gradle.properties'
@@ -24,6 +24,7 @@ on:
       - 'src/main/resources/fabric.mod.json'
       - '.github/workflows/publish.yml'
       - 'scripts/check_release_consistency.sh'
+      - 'docs/ci/publish.yml'
   workflow_dispatch:
 
 jobs:
@@ -34,6 +35,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: run consistency gate
         run: bash scripts/check_release_consistency.sh --strict
+      - name: CI reference-copy drift (warn-only)
+        run: |
+          if bash docs/ci/install.sh --check; then
+            echo "docs/ci and .github/workflows agree"
+          else
+            echo "::warning::.github/workflows differs from docs/ci reference copies"
+          fi
       - name: failure hint
         if: failure()
         run: |

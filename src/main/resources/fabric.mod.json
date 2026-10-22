@@ -3,7 +3,7 @@
   "id": "chiseled-enchanting-table",
   "version": "${version}",
   "name": "Chiseled Enchanting Table (Unofficial 26.3 Port)",
-  "description": "Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraft 26.3 / Fabric. Not affiliated with or endorsed by the original author. A rework of enchantment progression: you can now enchant your gear using enchanted books placed in nearby chiseled bookshelves using a chiseled enchanting table.",
+  "description": "Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraft 26.3 / Fabric. Adds library-driven enchanting, treasure epiphanies, item transformations, book research and upgrade systems, plus optional JEI/REI recipe viewers. Not affiliated with or endorsed by the original author.",
   "authors": [
     "Sacramentix (original mod)",
     "q14433686-arch (unofficial 26.3 port)"
@@ -43,6 +43,6 @@
     "rei": "*"
   },
   "custom": {
-    "chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.3. 1.0.3: JSON-driven chest / archaeology loot injection, live structure bookshelf replacement/fill, score-based shelf-facing, vanilla-anvil-style XP point deduction, vanilla enchanting-table book blocking, narrow anvil book+book same-level merge blocking, and enchanted-book chiseled-bookshelf random-tick particles/sound. 26.3 adaptations: renderpearl-era PoseStack#rotate/rotateDegrees, 9-arg SubmitNodeCollector#submitModel plus a separate crumbling-overlay submit, ContextIntProviders/UniformContainerBase loot builder API, Optional<Holder<LootItemCondition>> conditional loot functions, hand-rolled payload collection codecs (FriendlyByteBuf collection helpers removed), 26.3 loot-table schema (condition/modifier + type) and recipe_crafted 'recipes' list. Active mixins live in chiseled-enchanting-table-port.mixins.json. Still parked: broader anvil XP-cost tweak, Colorful Books integration, enchanted-book stack-size accessor. See CURRENT_BASELINE.md for the capability boundary, docs/reports/PORTING_26_3_REPORT.md for the migration evidence, and docs/EXTENDING.md for data-driven customisation entry points."
+    "chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.3. Feature sync from the 26.1.2 line: dual-track bookshelf progression with mastery resonance, treasure epiphanies with freeze/reroll, configurable XP/material economies, depleted-tome cleansing and blank overwrite, arcane catalyst, crafting/upgrade recipes, expanded advancement progression, yield-aware cost curves, localized UI, and bidirectional JEI/REI transformation recipes. Retains 26.3-specific APIs and data schemas: renderpearl renderer submits, ContextIntProviders/UniformContainerBase loot builders, optional loot-condition holders, hand-rolled payload collection codecs, loot-table condition/modifier schema, and recipe_crafted recipes lists. Active mixins live in chiseled-enchanting-table-port.mixins.json. See CURRENT_BASELINE.md and docs/reports/SYNC_FROM_26_1_2_REPORT.md for adaptation details."
   }
 }

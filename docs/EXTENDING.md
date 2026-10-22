@@ -9,7 +9,7 @@ Every data file below is loaded by the `SimpleSynchronousResourceReloadListener`
 (`src/main/resources/data/<ns>/...`) and any user datapack that overrides these paths flow
 through the same loader; the last override wins by pack order.
 
-## Data-pack layout (MC 26.1.2 — singular directories!)
+## Data-pack layout (MC 26.3 — singular directories!)
 
 ```
 data/<namespace>/
@@ -23,11 +23,16 @@ data/<namespace>/
     item_transformations.json         # extension point 3
     loot_injections.json              # extension point 4 (added 1.0.2)
     bookshelf_book_pool.json          # extension point 5 (added 1.0.2)
+    book_upgrades.json                # extension point 6 (book combine/research rules)
+    treasure_epiphany.json             # extension point 7 (treasure, freeze, reroll rules)
 ```
 
 > The singular `loot_table` / `recipe` / `advancement` naming is the #1 silent-failure trap in
 > 26.x: a file under the old plural path loads as if it did not exist.
-> `scripts/compat_check.py` fails the build if a legacy plural directory appears.
+> `scripts/compat_check.py` fails the build if a legacy plural directory appears. On Minecraft
+> 26.3, loot pool and entry conditions/modifiers use singular `condition` / `modifier` fields with
+> `type` dispatch, and `recipe_crafted` advancements use `recipes: [...]`; the compatibility check
+> rejects stale schemas copied from earlier lines.
 
 ## Extension points
 
@@ -45,7 +50,7 @@ data/<namespace>/
 - `tags` — expands at lookup time to every enchantment in the tag (accepts `#namespace:path`
   or bare `namespace:path`). The default `#minecraft:non_treasure` matches the tag the vanilla
   enchanting table itself uses, so any well-behaved enchantment-adding mod is picked up with no
-  configuration. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full cross-mod investigation.
+  configuration. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the confirmed compatibility model and caveats.
 
 **Java entry point:** `ChiseledEnchantingTableData.defaultEnchantments(HolderGetter<Enchantment>)`
 combines the `values` list with a live tag expansion; the no-arg overload only returns the
@@ -146,9 +151,8 @@ the same table.
   cheap prefix match, not true tag resolution — loot tables are not tagged in vanilla).
 - `entries[*].empty` — vanilla `EmptyLootItem` filler that keeps the pool's total roll weight
   balanced without adding a book (upstream uses these to tune the "no book this roll" rate).
-- `entries[*].special` — optional string flag; currently only `"depth_based_efficiency"` is
-  recognised (upstream port kept for structural parity — its runtime effect is currently
-  disabled and the book emits as its declared static level).
+- `entries[*].special` — optional string flag; `"depth_based_efficiency"` uses the registered
+  `DepthBasedEfficiencyFunction` to roll Efficiency II–V from the loot origin's depth.
 - Every injected book gets a purple **"Chiseled Enchanting Table"** lore stamp so
   players (and the optional `remove_enchanted_books` loot function) can tell injected books
   apart from vanilla ones.
@@ -216,14 +220,38 @@ one of them runs on worldgen workers and one on the server thread:
   facing pass on template-placed shelves. Neighbour reads there use
   `ServerChunkCache#getChunkNow`, so an unloaded neighbour is "unknown", never a chunk load.
 
-### 6. Loot-item function utility (registry entry, not JSON)
+### 6. Book-upgrade rules — `book_upgrades.json`
+
+Controls enchanted-book combine and research routes. `combine_route` contains `enabled` and
+`xp_cost_multiplier_of_vanilla_like`. `research_route` contains `enabled`, XP/material multipliers,
+a `default_material_cost` rule, and optional `enchantment_overrides` keyed by enchantment id.
+Cost rules support alternative `options`, per-level overrides, a max-level override, and recursive
+`extra` / `extras` materials. Each option can use flat `count`, `count_per_level`, a range, or the
+yield-aware `base_count` / `max_level_count` / `level_exponent` curve.
+
+**Java entry point:** `ChiseledEnchantingTableData` loads the rules; `BookUpgradeApplication` applies
+combine and research outcomes. Tier-1 validation is in `scripts/compat_check.py`.
+
+### 7. Treasure Epiphany rules — `treasure_epiphany.json`
+
+Configures the treasure enchantment gate and the epiphany economy: minimum ordinary-bookshelf
+count, base/per-shelf/per-master-tome chance, chance and slot caps, cycle/freeze durations, freeze
+and reroll XP/material choices, explicit treasure enchantments, and per-enchantment XP/material
+costs. Cost bundles accept the same yield-aware option format as book upgrades.
+
+**Java entry point:** `ChiseledEnchantingTableData` loads the rules; `LibraryResonance` supplies
+mastery weighting; `ChiseledEnchantingTableBlockEntity` persists the cycle/freeze state; the screen
+handler validates reroll/freeze actions server-side. Tier-1 validation is in
+`scripts/compat_check.py`.
+
+### 8. Loot-item function utility (registry entry, not JSON)
 
 `chiseled_enchanting_table:remove_enchanted_books` — a codec-registered `LootItemFunction`
 that removes a vanilla enchanted book from its pool only if it lacks the "Chiseled Enchanting
 Table" lore stamp. Not enabled by default; a datapack can opt in per-loot-table:
 
 ```json
-{ "function": "chiseled_enchanting_table:remove_enchanted_books" }
+{ "type": "chiseled_enchanting_table:remove_enchanted_books" }
 ```
 
 This lets a modpack turn off vanilla-injected books in the tables they care about without
@@ -248,7 +276,7 @@ in `scripts/compat_check.py` — they are the canonical schema definition, not j
 1. Add the JSON under `src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/`.
 2. Add a loader method + record type in
    `chiseled_enchanting_table.data.ChiseledEnchantingTableData` (follow the pattern of the
-   existing five).
+   existing seven).
 3. Add a Tier-1 `check_*_well_formed()` in `scripts/compat_check.py` and wire it in `main()`.
 4. Add a section here documenting the schema and the Java entry point.
 5. Add the file to the id-referencing target list in `compat_check.py::collect_referenced_ids`

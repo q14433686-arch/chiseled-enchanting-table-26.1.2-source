@@ -1,29 +1,45 @@
 {
-    "display": {
-        "icon": {
-            "id": "chiseled_enchanting_table:chiseled_enchanting_table"
-        },
-        "title": "Chiseled journey begin!",
-        "description": "Craft your first chiseled enchanting table.",
-        "background": "minecraft:block/crying_obsidian"
+  "display": {
+    "icon": {
+      "id": "chiseled_enchanting_table:chiseled_enchanting_table"
     },
-    "criteria": {
-        "craft": {
-            "trigger": "minecraft:recipe_crafted",
-            "conditions": {
-                "recipes": [
-                    "chiseled_enchanting_table:chiseled_enchanting_table"
-                ],
-                "ingredients": [
-                    {}
-                ]
-            }
-        }
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.root.title"
     },
-    "requirements": [
-        [
-            "craft"
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.root.description"
+    },
+    "background": "minecraft:block/crying_obsidian"
+  },
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "ingredients": [
+          {}
+        ],
+        "recipes": [
+          "chiseled_enchanting_table:chiseled_enchanting_table"
         ]
-    ],
-    "sends_telemetry_event": false
+      }
+    },
+    "upgrade": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "ingredients": [
+          {}
+        ],
+        "recipes": [
+          "chiseled_enchanting_table:chiseled_enchanting_table_upgrade"
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft",
+      "upgrade"
+    ]
+  ],
+  "sends_telemetry_event": false
 }

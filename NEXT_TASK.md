@@ -1,15 +1,15 @@
-# Next Task: post-1.0.3 backlog (Minecraft 26.3 line)
+# Next Task: post-1.1.0 backlog (Minecraft 26.3 line)
 
 > **Unofficial community port.** All instructions below apply to the unofficial 26.3 port
 > (this repository). The upstream `Sacramentix/chiseled-enchanting-table` project is not affected
 > by this version line.
 
-**Current mod version:** `1.0.3` · **Minecraft:** `26.3` · **Fabric API:** `0.162.0+26.3` ·
+**Current mod version:** `1.1.0` · **Minecraft:** `26.3` · **Fabric API:** `0.162.0+26.3` ·
 **Loader:** `0.19.5`. See `CURRENT_BASELINE.md` for the currently-shipping capability boundary,
-`CHANGELOG.md` for the 1.0.3 change list, and
+`CHANGELOG.md` for the 1.1.0 change list, and
 `docs/reports/PORTING_26_3_REPORT.md` for the 26.2→26.3 migration evidence.
 
-## How to build 1.0.3 from a fresh clone
+## How to build 1.1.0 from a fresh clone
 
 The source tree is Gradle + Loom + Fabric API + Java 25:
 
@@ -45,11 +45,29 @@ gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/bu
 
 ## Open items (roughly in priority order)
 
+### A0.1 Synced progression / UI runtime verification
+
+The 26.1.2 gameplay overhaul is now present on the 26.3 line, but static checks do not prove the new
+menu and progression flows work at runtime. On a fresh 26.3 world, verify:
+
+1. Ordinary bookshelf thresholds and chiseled-bookshelf master-tome unlocks/levels; confirm resonance
+   discounts and per-enchantment affinity agree with the header/row tooltips.
+2. Treasure Epiphany availability at the configured bookshelf threshold; reroll and freeze persist
+   across save/reload, respect XP/material costs, and update the client from server state.
+3. Direct enchanting, book combine/research, transformations and treasure inscriptions each use the
+   intended XP mode and consume the expected primary/additional material bundle.
+4. Merging/stripping books produces clean stackable Depleted Tomes; Blank Overwrite restores
+   component-clean books in batches and fires the intended advancements.
+5. JEI and REI independently show enchanting and forward/reverse transformation queries; both can be
+   installed together without duplicate categories or subtype registration errors.
+6. Run the same checks with a dedicated server and customized datapack costs to verify the client
+   displays server-authoritative costs and that payload/reload behavior remains correct.
+
 ### A-1. ~~Install the CI triad~~ — **done 2026-10-14**
 
 All four workflows are live in `.github/workflows/` (applied by the maintainer; the sandbox token is
-still refused `workflows` write access). The 26.3 `publish.yml` (`MINECRAFT_VERSION: 26.3`,
-`VERSION: 1.0.3`) landed with them, so `check_release_consistency.sh --strict` now reports
+still refused `workflows` write access). The 26.3 `publish.yml` originally landed with `VERSION: 1.0.3`; its current release metadata has
+now been bumped to `1.1.0`. `check_release_consistency.sh --strict` reports
 `12 passed, 0 warned, 0 failed`. `docs/ci/` keeps byte-identical reference copies:
 
 ```bash
@@ -109,7 +127,7 @@ applied. The proper fix is a dedicated multi-slot cost panel in the menu.
 
 Scope: menu layout, `AbstractContainerMenu` slot registration, `quickMoveStack` behaviour,
 network protocol, client renderer, and a live-test pass. This is the largest remaining UI change
-and should be its own release (probably `1.1.0`).
+and should be its own release (probably `1.2.0`).
 
 ### C. Remaining parked legacy / integration items
 

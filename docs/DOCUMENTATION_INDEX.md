@@ -3,7 +3,7 @@
 > **Unofficial community port.** All documents indexed below describe the unofficial 26.3 port
 > in this repository. It is not affiliated with or endorsed by the original author of
 > [`chiseled-enchanting-table`](https://github.com/Sacramentix/chiseled-enchanting-table).
-> Current version: **`1.0.3`** (Minecraft 26.3).
+> Current version: **`1.1.0`** (Minecraft 26.3; includes the 26.1.2-line gameplay overhaul).
 
 ## Read these first
 
@@ -16,11 +16,12 @@ Roughly in the order a new contributor should walk them:
 3. [`EXTENDING.md`](EXTENDING.md) — every data-driven extension point (all 5 JSON files under
    `data/<ns>/chiseled_enchanting_table/`), their schemas, their Java entry points, and how to
    add a new one. Also documents the singular-directory 26.x data-pack trap.
-4. [`../NEXT_TASK.md`](../NEXT_TASK.md) — the open backlog. Every completed live-verification
+4. [`WIKI.md`](WIKI.md) — Chinese player guide to bookshelf progression, XP modes, epiphanies,
+   recipes, transformations and the upstream differences.
+5. [`../NEXT_TASK.md`](../NEXT_TASK.md) — the open backlog. Every completed live-verification
    round graduates out of NEXT_TASK; only the still-open items stay.
-5. [`COMPATIBILITY.md`](COMPATIBILITY.md) — cross-mod compatibility investigation for
-   third-party enchantment / anvil mods (Ore Enchants-style, Universal Enchants-style, Merge
-   Enchantments-style). Explains why the mod is designed the way it is.
+6. [`COMPATIBILITY.md`](COMPATIBILITY.md) — current compatibility model and caveats for
+   third-party enchantment, viewer, and anvil mods.
 
 ## Release notes
 
@@ -52,6 +53,7 @@ Used when publishing an updated release; keeps every platform aligned.
 Read these when moving this port to a new Minecraft version. The 26.3 report is the current one and
 also documents the CI triad that makes a sandbox-side port verifiable.
 
+- [**26.1.2 → 26.3 feature sync** (26.3 API/schema adaptations and validation boundary)](reports/SYNC_FROM_26_1_2_REPORT.md)
 - [**26.2 → 26.3 port** (current line, incl. the 26.3 data-schema migration)](reports/PORTING_26_3_REPORT.md)
 - [26.1.2 → 26.2 impact assessment](reports/PORTING_26_2_REPORT.md)
 - [Worldgen bookshelf fill deadlock fix (thread rules for `finalizeProcessing`)](reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md)
@@ -59,7 +61,7 @@ also documents the CI triad that makes a sandbox-side port verifiable.
 
 ## Historical porting reports
 
-These document how the port was built up before the current `1.0.3` release line. They previously
+These document how the port was built up before the current `1.1.0` release line. They previously
 corresponded to `0.2.3+26.1.2-pNN` internal `mod_version` values; those labels are kept inside the
 report bodies as a historical record only, not as live version numbers.
 
@@ -83,7 +85,7 @@ class shaped this way".
 - [P16 loot fix and compat tooling](reports/PORTING_26_1_2_P16_LOOT_FIX_AND_COMPAT_TOOLING_REPORT.md)
 - [P17 retire legacy block package](reports/PORTING_26_1_2_P17_BLOCK_PACKAGE_REPORT.md)
 - [P18 typed available-option model](reports/PORTING_26_1_2_P18_AVAILABLE_OPTION_MODEL_REPORT.md)
-- [P19 cross-mod enchantment compatibility](reports/PORTING_26_1_2_P19_CROSS_MOD_COMPATIBILITY_REPORT.md)
+- P19 cross-mod compatibility notes were referenced by the earlier 26.1.2 snapshot but are not present here; see [`COMPATIBILITY.md`](COMPATIBILITY.md) for confirmed current behavior.
 - [Agent Execution Brief](reports/CURRENT_AGENT_BRIEF.md)
 
 *(Note: `JSON_EXTENSION_SPEC_1_1_3.md` and `EXTENDING_HERBCRAFT.md` are not natively part of

@@ -31,7 +31,7 @@ bash docs/ci/install.sh           # copy the four files into .github/workflows/ 
 | `docs/ci/compile-check.yml` | `.github/workflows/compile-check.yml` | installed, identical |
 | `docs/ci/build.yml` | `.github/workflows/build.yml` | installed, identical |
 | `docs/ci/consistency.yml` | `.github/workflows/consistency.yml` | installed, identical |
-| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed, identical (`26.3` / `1.0.3`) |
+| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed, identical (`26.3` / `1.1.0`) |
 
 **After changing CI, edit the copy here first, then have a maintainer apply it** — otherwise
 `--check` will report drift on the next run and the sandbox has no way to reconcile it.
@@ -93,3 +93,12 @@ python3 scripts/ci_static_checks.py
 python3 scripts/compat_check.py
 bash scripts/check_release_consistency.sh --strict
 ```
+
+## 26.3 sync follow-up
+
+The feature sync from the 26.1.2 line also brought back two useful CI safeguards while retaining
+this branch's version filters: `build.yml` has a `no-viewers` compile job to prove JEI/REI remain
+optional, and `compile-check.yml` writes both the compiler output and (on failures) the dependency
+diagnostic report back through the Contents API. `consistency.yml` checks the installed workflows
+against these byte-identical reference copies as a warn-only step. Validate the reference copies with
+`bash docs/ci/install.sh --check`.

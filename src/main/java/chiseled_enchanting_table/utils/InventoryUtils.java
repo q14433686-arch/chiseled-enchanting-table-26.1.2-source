@@ -4,8 +4,8 @@ import java.util.Optional;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.Container;
 import net.minecraft.util.Prediction;
+import net.minecraft.world.Container;
 
 public class InventoryUtils {
     public static ItemStack insertItem(Player player, ItemStack stackToInsert, Optional<Integer> priority_slot) {
@@ -53,9 +53,6 @@ public class InventoryUtils {
         }
         
         if (!remainingStack.isEmpty()) {
-            // 26.3: LivingEntity#drop gained a Prediction parameter. Both callers of insertItem
-            // are the container-click path, where vanilla itself passes PREDICTED
-            // (see AbstractContainerMenu's click-path drops).
             player.drop(remainingStack, false, Prediction.PREDICTED);
             remainingStack = ItemStack.EMPTY;
         }

@@ -8,14 +8,23 @@
 Only the current release and the previous one are kept here. Older porting rounds and release notes
 are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
-> **26.3 branch (2026-10-13):** This line now targets **Minecraft 26.3** — Fabric API
-> `0.162.0+26.3`, Fabric Loader `0.19.5`, Loom `1.17-SNAPSHOT`, Java 25, `mod_version` `1.0.3`.
+> **26.3 port (2026-10-13; mod `1.0.3` at that time):** This line targets **Minecraft 26.3** — Fabric API
+> `0.162.0+26.3`, Fabric Loader `0.19.5`, Loom `1.17-SNAPSHOT`, Java 25. The current feature sync is versioned as `1.1.0` below.
 > See [`docs/reports/PORTING_26_3_REPORT.md`](docs/reports/PORTING_26_3_REPORT.md) for the
 > evidence-backed impact assessment (Fabric API side: 10 imported classes, 9 byte-identical and 1
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
-## [Unreleased]
+## [1.1.0] - 2026-10-23
+
+### Added — 26.1.2 gameplay overhaul synced to the 26.3 line
+
+- **Two-track bookshelf progression and library resonance:** ordinary bookshelves advance baseline enchantments; enchanted books stored in chiseled bookshelves unlock master-tome levels and provide global/specialization XP discounts.
+- **Treasure Epiphany and stasis:** data-driven treasure gates, chance and slot scaling, scheduled offerings, rerolls, persistent freeze controls, and per-enchantment cost bundles.
+- **Dual XP economies and yield-aware costs:** repeatable table-style level thresholds coexist with full XP-curve deductions; cost curves support max-level-aware scaling and alternate bundled materials.
+- **Book lifecycle and recipes:** combine/research upgrades, Arcane Catalyst, stackable enchanted books, Depleted Tomes, Blank Overwrite cleansing, direct/upgrade table recipes and crying-obsidian crafting.
+- **UI, localization and viewers:** new epiphany/table/list UI and assets, expanded advancement progression, refreshed 11-language copy, and JEI/REI transformation categories with reverse lookups.
+- **26.3 compatibility preserved:** retained the 26.3 renderer, loot builder and conditional-function APIs, Prediction-aware drops, hand-rolled payload codecs, datapack schemas, and worldgen-safe structure processor. See [`SYNC_FROM_26_1_2_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_REPORT.md).
 
 ### Added — JEI and REI integration (bidirectional enchantment lookup)
 

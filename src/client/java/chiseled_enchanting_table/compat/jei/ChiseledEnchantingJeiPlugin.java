@@ -2,6 +2,8 @@ package chiseled_enchanting_table.compat.jei;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.EnchantQueryIndex;
+import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.compat.TransformationQueryIndex;
 import java.util.ArrayList;
 import java.util.List;
 import mezz.jei.api.IModPlugin;
@@ -30,9 +32,11 @@ import net.minecraft.world.level.block.Blocks;
  *       directions.</li>
  *   <li>Catalysts: the chiseled enchanting table and the chiseled bookshelf, so the category shows up
  *       under {@code Recipes} for those blocks.</li>
- *   <li>Per-enchantment enchanted-book entries. Those come from JEI's own vanilla plugin, not from
- *       this one — see the comment where {@code registerItemSubtypes} would be (registering a second
- *       interpreter only produces an ERROR log line and then gets discarded).</li>
+ *   <li>Nothing for enchanted-book subtypes — deliberately. Two books with different enchantments
+ *       are already distinct JEI entries because JEI's own {@code VanillaPlugin} registers an
+ *       {@code EnchantedBookSubtypeInterpreter} for {@code Items.ENCHANTED_BOOK}; registering a
+ *       second one only produces an ERROR line and is discarded. See the comment where the
+ *       {@code registerItemSubtypes} override used to be.</li>
  *   <li>Info pages explaining the two things a recipe cannot express: the book must sit in a nearby
  *       chiseled bookshelf, and applying an enchantment can displace conflicting ones.</li>
  * </ul>
@@ -43,6 +47,15 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
     private HolderLookup.Provider cachedRegistries;
     private List<EnchantQueryIndex.Entry> cachedIndex;
 
+    public ChiseledEnchantingJeiPlugin() {
+        SyncedEnchantmentCosts.addListener(this::invalidateCache);
+    }
+
+    private void invalidateCache() {
+        this.cachedIndex = null;
+        this.cachedRecipes = null;
+    }
+
     @Override
     public Identifier getPluginUid() {
         return ChiseledEnchantingTable.identifier("jei_plugin");
@@ -50,7 +63,11 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        registration.addRecipeCategories(new EnchantingRecipeCategory(registration.getJeiHelpers().getGuiHelper()));
+        var guiHelper = registration.getJeiHelpers().getGuiHelper();
+        registration.addRecipeCategories(
+            new EnchantingRecipeCategory(guiHelper),
+            new TransformationRecipeCategory(guiHelper)
+        );
     }
 
     @Override
@@ -58,6 +75,13 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
         List<EnchantingRecipe> recipes = recipes();
         if (!recipes.isEmpty()) {
             registration.addRecipes(EnchantingRecipeCategory.RECIPE_TYPE, recipes);
+        }
+        List<TransformationRecipe> transformations = TransformationQueryIndex.build()
+            .stream()
+            .map(TransformationRecipe::of)
+            .toList();
+        if (!transformations.isEmpty()) {
+            registration.addRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
         }
 
         List<ItemStack> stations = List.of(
@@ -76,6 +100,14 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             List.of(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)),
             Component.translatable("jei.chiseled_enchanting_table.info.book")
         );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.ARCANE_CATALYST)),
+            Component.translatable("jei.chiseled_enchanting_table.info.catalyst")
+        );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.DEPLETED_TOME)),
+            Component.translatable("jei.chiseled_enchanting_table.info.depleted_tome")
+        );
     }
 
     @Override
@@ -84,6 +116,10 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             EnchantingRecipeCategory.RECIPE_TYPE,
             BlockRegistry.CHISELED_ENCHANTING_TABLE,
             Blocks.CHISELED_BOOKSHELF
+        );
+        registration.addCraftingStation(
+            TransformationRecipeCategory.RECIPE_TYPE,
+            BlockRegistry.CHISELED_ENCHANTING_TABLE
         );
     }
 
@@ -99,12 +135,12 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
     //     [ERROR] An interpreter is already registered for this: minecraft:enchanted_book
     //     java.lang.IllegalArgumentException  (synthetic, for the stack trace only — nothing throws)
     //
-    // and then *discarding* ours, i.e. JEI's interpreter wins either way. Observed in a real client
-    // log with JEI 29.29.0.77 (see docs/reports/VIEWER_INTEGRATION_JEI_REI.md §7.2): an ERROR line
-    // plus a stack trace on every world load, for no behavioural gain. `ISubtypeRegistration` offers
-    // no way to ask whether an interpreter is already present, so the only correct fix is not to
-    // register one. Per-enchantment book entries — and therefore the "focus a book → see what it can
-    // enchant" half of this integration — keep working through JEI's own interpreter.
+    // and then *discarding* ours, i.e. JEI's interpreter wins either way. Observed in a real 26.1.2
+    // client log with JEI 29.29.0.77 (see docs/reports/VIEWER_INTEGRATION_JEI_REI.md §7): an ERROR
+    // line plus a stack trace on every world load, for no behavioural gain. `ISubtypeRegistration`
+    // offers no way to ask whether an interpreter is already present, so the only correct fix is not
+    // to register one. Per-enchantment book entries — and therefore the "focus a book → see what it
+    // can enchant" half of this integration — keep working through JEI's own interpreter.
 
     // ---------------------------------------------------------------------------------------
     // Index plumbing
@@ -121,8 +157,8 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             );
             return null;
         }
-        // Rebuild only when the registry identity changes (world switch / datapack reload).
-        if (cachedRegistries != provider) {
+        // Rebuild when registry identity changes OR when S2C cost sync invalidated the cache.
+        if (cachedRegistries != provider || cachedIndex == null) {
             cachedRegistries = provider;
             cachedIndex = EnchantQueryIndex.build(provider);
             cachedRecipes = null;

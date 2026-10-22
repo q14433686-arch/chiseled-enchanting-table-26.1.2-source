@@ -23,7 +23,6 @@ on:
     branches:
       - 'arena/**'
       - 'chiseled-enchanting-table-26.1.2-source'
-      - '26.**'
       - 'main'
     paths-ignore:
       - 'build-reports/**'
@@ -134,20 +133,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # 日志可能很大，只保留头 200 行 + 尾 800 行
-          LOG=build-reports/compile-java.log
-          LINES=$(wc -l < "$LOG")
-          if [ "$LINES" -gt 1000 ]; then
-            { head -n 200 "$LOG"; echo "...[truncated ${LINES} lines total]..."; tail -n 800 "$LOG"; } > /tmp/log-trimmed
-            mv /tmp/log-trimmed "$LOG"
-          fi
-          echo "" >> "$LOG"
-          echo "== job status: ${{ job.status }} ==" >> "$LOG"
           BRANCH="${{ github.ref_name }}"
-          SHA=$(gh api "repos/${{ github.repository }}/contents/$LOG?ref=$BRANCH" --jq .sha 2>/dev/null || true)
-          ARGS=(-X PUT "repos/${{ github.repository }}/contents/$LOG"
-                -f message="ci-log: compile result (${{ job.status }}) for ${{ github.sha }}"
-                -f branch="$BRANCH"
-                -f content="$(base64 -w0 "$LOG")")
-          if [ -n "$SHA" ]; then ARGS+=(-f sha="$SHA"); fi
-          gh api "${ARGS[@]}" --jq .commit.sha
+          # Compile output and (on failure) dependency diagnostics are the sandbox's only
+          # accessible evidence channel; upload both reports via the Contents API.
+          for LOG in build-reports/compile-java.log build-reports/compile-deps.log; do
+            [ -f "$LOG" ] || continue
+            case "$LOG" in
+              *compile-deps.log) KIND="dependency report" ;;
+              *)                 KIND="compile result (${{ job.status }})" ;;
+            esac
+            LINES=$(wc -l < "$LOG")
+            if [ "$LINES" -gt 1000 ]; then
+              { head -n 200 "$LOG"; echo "...[truncated ${LINES} lines total]..."; tail -n 800 "$LOG"; } > /tmp/log-trimmed
+              mv /tmp/log-trimmed "$LOG"
+            fi
+            echo "" >> "$LOG"
+            echo "== job status: ${{ job.status }} ==" >> "$LOG"
+            SHA=$(gh api "repos/${{ github.repository }}/contents/$LOG?ref=$BRANCH" --jq .sha 2>/dev/null || true)
+            ARGS=(-X PUT "repos/${{ github.repository }}/contents/$LOG"
+                  -f message="ci-log: ${KIND} for ${{ github.sha }}"
+                  -f branch="$BRANCH"
+                  -f content="$(base64 -w0 "$LOG")")
+            if [ -n "$SHA" ]; then ARGS+=(-f sha="$SHA"); fi
+            gh api "${ARGS[@]}" --jq .commit.sha
+          done

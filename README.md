@@ -2,83 +2,46 @@
 
 ![Chiseled enchanting table banner](./banner.png)
 
-> ⚠️ **Unofficial community port.** This repository is a community-maintained, unofficial port of
-> [Sacramentix/chiseled-enchanting-table](https://github.com/Sacramentix/chiseled-enchanting-table)
-> updated to **Minecraft 26.3** on Fabric. It is **not affiliated with, endorsed by, or
-> maintained by the original author**. All credit for the original mod design, code, and assets
-> belongs to Sacramentix and is used under the original [MIT License](LICENSE). Please direct
-> bug reports about this port to **this** repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`),
-> not to the upstream project.
+> **Unofficial community port.** This repository ports [Sacramentix/chiseled-enchanting-table](https://github.com/Sacramentix/chiseled-enchanting-table) to Minecraft **26.3** on Fabric. It is not affiliated with or endorsed by the original author. Original design, code, and assets are credited to Sacramentix and used under the [MIT License](LICENSE). Please report issues about this port here, not to upstream.
 
-**Current version:** `1.0.3` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+**Current version:** `1.1.0` *(unofficial-port versioning)*
 **Target:** Minecraft `26.3`, Fabric Loader `>=0.19.5`, Fabric API `0.162.0+26.3`, Java `>=25`.
 
-A Minecraft Fabric mod that enhances the enchanting experience.
+This branch now includes the full gameplay and UI overhaul synced from the 26.1.2 development line, adapted for Minecraft 26.3 APIs and datapack schemas. The sync/adaptation record is in [`docs/reports/SYNC_FROM_26_1_2_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_REPORT.md).
 
-## Concept
+## Features
 
-* Add a new chiseled enchanting table
-* Unlock new enchantment for chiseled enchanting table by placing enchanted book in nearby chiseled bookshelves
-* Explore your world to discover new enchanted books!
+- **Two-track library progression:** ordinary bookshelves raise default enchantment tiers; enchanted books stored in nearby chiseled bookshelves unlock master-tome levels and contribute library resonance.
+- **Treasure Epiphanies:** discover rare enchantments through a grand library, with configurable rerolls and freeze/stasis controls.
+- **Two XP modes:** level-threshold costs for efficient repeat crafting, alongside full XP-curve costs for research and rare offerings.
+- **Cost and item progression:** level/yield-aware material curves, book combine/research upgrades, item transformations, and an Arcane Catalyst universal material.
+- **Clean book lifecycle:** stackable enchanted books, Depleted Tomes, and batchable Blank Overwrite to restore clean books.
+- **Accessible progression:** table upgrade and crafting recipes, expanded advancements, UI polish, and 11 shipped languages.
+- **Optional JEI / REI:** enchanting and transformation categories, including forward and reverse item-use lookups. Neither viewer is a hard dependency.
+- **Worldgen and loot:** safe bookshelf filling in structures, configurable chest-loot injection, and the existing 26.3 deadlock/API fixes.
 
-## Installation
+For mechanics, formulas, recipes, and upstream comparisons, see the Chinese [gameplay wiki](docs/WIKI.md). For datapack customization, see [`docs/EXTENDING.md`](docs/EXTENDING.md).
 
-Grab the latest `chiseled-enchanting-table-1.0.3.jar` from
-`release_output/chiseled_enchanting_table_1_0_3/` (or build it yourself with
-`./gradlew build` using JDK 25 — see `NEXT_TASK.md` for the exact command chain) and drop it into
-your Fabric `mods/` folder alongside Fabric API `0.162.0+26.3`.
+## Installation and build
 
-This unofficial port is **not** currently published to Modrinth or CurseForge under the original
-mod's listing. If a release is published, it will be under the unofficial-port repository's own
-release page, not the upstream listing.
-
-## Usage
-
-Once installed, the Chiseled Enchanting Table will be available in your game. Craft it using the new recipe and start enchanting!
-
-## Continuous integration
-
-CI mirrors the triad used by the sister port `q14433686-arch/TaCZ_Refabricated_Unofficial`, because
-this port is developed in a sandbox that cannot reach `maven.fabricmc.net` and therefore cannot
-compile locally — the compile has to happen on Actions and the log has to come back to the branch.
-
-> ✅ **Installed 2026-10-14** — all four workflows are live in `.github/workflows/`. The sandbox
-> token still cannot write workflow files, so the maintainer applied them by hand; `docs/ci/` keeps
-> byte-identical reference copies and `bash docs/ci/install.sh --check` reports any drift.
-
-| Workflow | What it does | Trigger |
-|---|---|---|
-| [`compile-check.yml`](.github/workflows/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API (Actions log blobs are unreachable from the sandbox) | push to `arena/**` / release branches, PRs |
-| [`build.yml`](.github/workflows/build.yml) | static gates first (no network needed), then full `./gradlew build` + jar artifact (14 days) | push / PR |
-| [`consistency.yml`](.github/workflows/consistency.yml) | version gate for "bumped one place, forgot the other four" | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml` |
-| [`publish.yml`](.github/workflows/publish.yml) | manual `workflow_dispatch` release to GitHub / Modrinth (version-bumped to 26.3 / 1.0.3) | manual |
-
-The three static gates run in seconds and need no Gradle, so they also work offline:
+This unofficial port is not currently published on the original Modrinth or CurseForge listings. Use a jar produced by the repository's CI/build pipeline, or build locally with JDK 25:
 
 ```bash
-python3 scripts/ci_static_checks.py                 # mixin configs resolvable + registered mixins not excluded + en_us/zh_cn key parity
-python3 scripts/compat_check.py                     # data-pack schema / JSON-vs-Java drift (Tier 1)
-bash scripts/check_release_consistency.sh --strict  # gradle.properties / README / fabric.mod.json / publish.yml agree
+./gradlew build
 ```
 
-Optional warn-only pre-commit reminder: `bash scripts/install-hooks.sh` (it never blocks a commit;
-CI is the real gate).
+Place the generated `chiseled-enchanting-table-1.1.0.jar` in your Fabric `mods/` folder alongside Fabric API `0.162.0+26.3`. JEI and REI integrations are optional; their compile-time toggles are documented in `gradle.properties`.
 
-## Forge (or other modloader) port
+## Checks
 
-Not planned at the moment.
-But if the mod get more popular, I might have a look at it!
+```bash
+python3 scripts/ci_static_checks.py
+python3 scripts/compat_check.py
+bash scripts/check_release_consistency.sh --strict
+```
+
+CI also compiles both main and client source sets and packages the jar. Minecraft 26.3-specific API and data-schema adaptations are recorded in [`docs/reports/PORTING_26_3_REPORT.md`](docs/reports/PORTING_26_3_REPORT.md); the new cross-line sync is detailed in [`docs/reports/SYNC_FROM_26_1_2_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_REPORT.md).
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
-## Inspiration
-
-I've looked at RPG enchanting table to get the base concept done
-https://github.com/TheRedBrain/rpg-enchanting
-If you are looking for a more RPG approch be sure to check out this mod!
+Contributions and bug reports are welcome. This is a community port, not an upstream release.
