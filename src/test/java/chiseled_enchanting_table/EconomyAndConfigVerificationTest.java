@@ -256,12 +256,20 @@ class EconomyAndConfigVerificationTest {
         );
     }
 
+    private static JsonObject readClasspathJson(String path) throws Exception {
+        try (var stream = EconomyAndConfigVerificationTest.class.getResourceAsStream("/" + path)) {
+            assertTrue(stream != null, "Missing bundled classpath resource: " + path);
+            try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+                return JsonParser.parseReader(reader).getAsJsonObject();
+            }
+        }
+    }
+
     @Test
     void grimoireDualShapelessRecipesAndBookshelfTagAreValid() throws Exception {
-        JsonObject shelfRecipe = ChiseledEnchantingTableData.readBundledJsonObject(
+        JsonObject shelfRecipe = readClasspathJson(
             "data/chiseled_enchanting_table/recipe/arcane_grimoire_from_shelf.json"
         );
-        assertNotNull(shelfRecipe, "Missing arcane_grimoire_from_shelf.json");
         assertEquals("minecraft:crafting_shapeless", shelfRecipe.get("type").getAsString());
         assertEquals(
             "chiseled_enchanting_table:arcane_grimoire",
@@ -273,10 +281,9 @@ class EconomyAndConfigVerificationTest {
         }
         assertEquals(Set.of("minecraft:writable_book", "minecraft:chiseled_bookshelf"), shelfIngs);
 
-        JsonObject tomeRecipe = ChiseledEnchantingTableData.readBundledJsonObject(
+        JsonObject tomeRecipe = readClasspathJson(
             "data/chiseled_enchanting_table/recipe/arcane_grimoire_from_tome.json"
         );
-        assertNotNull(tomeRecipe, "Missing arcane_grimoire_from_tome.json");
         assertEquals("minecraft:crafting_shapeless", tomeRecipe.get("type").getAsString());
         assertEquals(
             "chiseled_enchanting_table:arcane_grimoire",
@@ -288,10 +295,7 @@ class EconomyAndConfigVerificationTest {
         }
         assertEquals(Set.of("chiseled_enchanting_table:depleted_tome", "minecraft:ink_sac"), tomeIngs);
 
-        JsonObject bookshelfTag = ChiseledEnchantingTableData.readBundledJsonObject(
-            "data/minecraft/tags/item/bookshelf_books.json"
-        );
-        assertNotNull(bookshelfTag, "Missing bookshelf_books.json");
-        assertFalse(bookshelfTag.get("replace").getAsBoolean(), "bookshelf_books.json must not replace vanilla entries");
+        JsonObject bookshelfTag = readClasspathJson("data/minecraft/tags/item/bookshelf_books.json");
+        assertEquals(false, bookshelfTag.get("replace").getAsBoolean(), "bookshelf_books.json must not replace vanilla entries");
     }
 }
