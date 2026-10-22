@@ -3,6 +3,7 @@ package chiseled_enchanting_table.gui.grimoire;
 import static chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout.*;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.registry.BlockRegistry;
@@ -148,6 +149,7 @@ public final class GrimoireDiagramRenderer {
                 catalyst
             )
         );
+        return cachedRecipes;
     }
 
     public static void drawPanelHeader(GuiGraphicsExtractor ctx, Font font, int x, int y, int w, String titleKey) {
@@ -748,20 +750,26 @@ public final class GrimoireDiagramRenderer {
             false
         );
 
+        var lr = SyncedEnchantmentCosts.libraryResonanceConfig();
+        int pWood = Math.max(1, lr.maxWoodenDiscountPercent());
+        int pGlobal = Math.max(1, lr.maxGlobalMasteryDiscountPercent());
+        int pSpec = Math.max(1, lr.maxSpecificEnchantBonusPercent());
+        float sumParts = pWood + pGlobal + pSpec;
+
         int bx = x + 5;
         int bw = w - 10;
         int by = barCardY + 13;
         int bh = Math.max(8, barCardH - 17);
-        int w1 = Math.round(bw * (15.0f / 40.0f));
-        int w2 = Math.round(bw * (15.0f / 40.0f));
+        int w1 = Math.round(bw * (pWood / sumParts));
+        int w2 = Math.round(bw * (pGlobal / sumParts));
         int w3 = bw - w1 - w2;
 
         ctx.fill(bx, by, bx + w1, by + bh, 0xFF8C5B1F);
         ctx.fill(bx + w1, by, bx + w1 + w2, by + bh, 0xFF5A2D82);
         ctx.fill(bx + w1 + w2, by, bx + bw, by + bh, 0xFF1C7555);
-        drawCenteredBox(ctx, font, "-15%", bx, w1, by + bh * 0.5f, 0.48f, LIGHT_CREAM, false);
-        drawCenteredBox(ctx, font, "-15%", bx + w1, w2, by + bh * 0.5f, 0.48f, LIGHT_GOLD, false);
-        drawCenteredBox(ctx, font, "-10%", bx + w1 + w2, w3, by + bh * 0.5f, 0.48f, LIGHT_MINT, false);
+        drawCenteredBox(ctx, font, "-" + pWood + "%", bx, w1, by + bh * 0.5f, 0.48f, LIGHT_CREAM, false);
+        drawCenteredBox(ctx, font, "-" + pGlobal + "%", bx + w1, w2, by + bh * 0.5f, 0.48f, LIGHT_GOLD, false);
+        drawCenteredBox(ctx, font, "-" + pSpec + "%", bx + w1 + w2, w3, by + bh * 0.5f, 0.48f, LIGHT_MINT, false);
     }
 
     private static void drawXpModeCard(
@@ -1098,7 +1106,13 @@ public final class GrimoireDiagramRenderer {
             false
         );
 
-        String[] gates = {"0+: 2L + 2", "12+: 1L + 1", "24+: 0L + 1", "30+ & 6★: FREE!"};
+        var sg = SyncedEnchantmentCosts.shelfGatesConfig();
+        String[] gates = {
+            "0+: 2×",
+            sg.tier1Bookshelves() + "+: 0L",
+            sg.tier2Bookshelves() + "+: -50%",
+            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "★: FREE!"
+        };
         int[] gCols = {0xFF7D634C, 0xFF285E6B, 0xFF4C236E, 0xFF175E3E};
         int gw = (w - 10) / 2;
         int gh = Math.max(11, (ladH - 17) / 2);

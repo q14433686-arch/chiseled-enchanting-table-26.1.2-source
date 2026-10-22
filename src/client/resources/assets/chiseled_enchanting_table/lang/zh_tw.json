@@ -342,5 +342,7 @@
   "gui.chiseled_enchanting_table.grimoire.cln3.t": "③ 定向抹除單條詞條",
   "gui.chiseled_enchanting_table.grimoire.cln3.d": "退魔砂+副材（或螢光墨囊+石英）· 保留其餘附魔",
   "gui.chiseled_enchanting_table.grimoire.cln4.t": "④ 破除紅字詛咒（綁定/消失）",
-  "gui.chiseled_enchanting_table.grimoire.cln4.d": "2退魔砂+幽靈淚 / 秘法凝晶 · 12L 保留良性詞條"
+  "gui.chiseled_enchanting_table.grimoire.cln4.d": "2退魔砂+幽靈淚 / 秘法凝晶 · 12L 保留良性詞條",
+  "gui.chiseled_enchanting_table.grimoire.diag.ch4_res": "書庫共鳴疊加減免上限：-40%（木架15%+全局20%+同詞條15%）",
+  "gui.chiseled_enchanting_table.grimoire.diag.ch7_tome_hdr": "褪魔殘卷覆寫 4 檔書架階梯（0 → 8 → 18 → 18+6高階免費）："
 }

@@ -701,13 +701,13 @@ public class ArcaneGrimoireScreen extends Screen {
                 PageBlock.bullet("2", INK_PURPLE, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch4.m2")),
                 PageBlock.bullet("3", INK_GOLD_DARK, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch4.m3")),
                 PageBlock.callout(
-                    Component.translatable("gui.chiseled_enchanting_table.grimoire.ch4.res_t", lr.maxDiscountPercent()),
+                    Component.translatable("gui.chiseled_enchanting_table.grimoire.ch4.res_t", lr.maxTotalXpDiscountPercent()),
                     Component.translatable(
                         "gui.chiseled_enchanting_table.grimoire.ch4.res_b",
-                        lr.woodenShelvesForMaxDiscount(),
+                        lr.maxDiscountBookshelves(),
                         lr.maxWoodenDiscountPercent(),
-                        lr.maxChiseledGlobalDiscountPercent(),
-                        lr.specificEnchantDiscountMax()
+                        lr.maxGlobalMasteryDiscountPercent(),
+                        lr.maxSpecificEnchantBonusPercent()
                     ),
                     INK_EMERALD
                 )
@@ -730,7 +730,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch6.s1")),
                 PageBlock.step(2, Component.translatable(
                     "gui.chiseled_enchanting_table.grimoire.ch6.s2",
-                    sg.epiphanyMinBookshelves()
+                    SyncedEnchantmentCosts.epiphanyMinBookshelves()
                 )),
                 PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch6.s3")),
                 PageBlock.callout(
