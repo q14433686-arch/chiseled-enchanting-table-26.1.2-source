@@ -116,12 +116,8 @@ public final class BookUpgradeApplication {
     }
 
     private static void finish(ChiseledEnchantingTableScreenHandler handler) {
-        handler.inventory.setChanged();
-        handler.slotsChanged(handler.inventory);
+        handler.markInventoryChanged();
         handler.player.awardStat(Stats.ENCHANT_ITEM);
-        handler.access.execute((world, pos) -> world.playSound(
-            null, pos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS,
-            1.0F, world.getRandom().nextFloat() * 0.1F + 0.9F
-        ));
+        handler.world().playSound(null, handler.player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 2.0F, handler.world().getRandom().nextFloat() * 0.1F + 0.9F);
     }
 }
