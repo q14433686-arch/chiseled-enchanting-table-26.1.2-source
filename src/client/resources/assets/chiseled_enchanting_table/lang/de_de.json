@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "Erschaffe am gemeißelten Zaubertisch ein verzaubertes Buch mit allen Verzauberungen.",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "Akzeptierte Materialien (beliebig wählbar):",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% EP",
-  "gui.chiseled_enchanting_table.resonance.title": "Bibliotheksresonanz: -%s%% EP-Kosten",
+  "gui.chiseled_enchanting_table.resonance.title": "Bibliotheksresonanz: -%s%% Basis-EP (bis -40%% mit Meisterfoliant)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Bücherregale: %s (-%s%% EP, bis mittlere Stufe)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Meisterfolianten: %s (-%s%% EP, 1:1 Stufenfreischaltung)",
   "gui.chiseled_enchanting_table.resonance.cap": "Maximaler Resonanzrabatt: -35% EP",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "Leer-Überschreibung: %s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "Tabula Rasa",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "Reinige einen Erschöpften Folianten am Gemeißelten Zaubertisch per Leer-Überschreibung zu einem frischen Buch",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "Verbleibt nach dem Kombinieren oder Entladen verzauberter Bücher (stapelbar bis 64). Bis zu 8 Stück lassen sich gleichzeitig per Leer-Überschreibung (1 EP-Stufe + Papier, Knochenmehl, Tintenbeutel, Leuchttintenbeutel oder Amethystscherbe) in normale Bücher zurückverwandeln."
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Verbleibt nach dem Kombinieren oder Entladen verzauberter Bücher (stapelbar bis 64). Bis zu 8 Stück lassen sich gleichzeitig per Leer-Überschreibung (1 EP-Stufe + Papier, Knochenmehl, Tintenbeutel, Leuchttintenbeutel oder Amethystscherbe) in normale Bücher zurückverwandeln.",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "Bücherregale: %s / %s -> +0%% (ab 12 Regalen aktiv)",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Meisterfolianten: %s Vollbände -> +%s%% global (bis +15%% je passendem Foliant)",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "Passende Ausrüstungs-Folianten: %s Bände (erhöht Chance & Limit)",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "Meisterfoliant St.%s/%s -> +%s%% Extra-EP-Rabatt (-%s%% gesamt)"
 }

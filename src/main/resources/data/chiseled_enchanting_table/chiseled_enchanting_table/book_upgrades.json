@@ -12,15 +12,21 @@
       "options": [
         {
           "item": "minecraft:lapis_lazuli",
-          "count_per_level": 3
-        },
-        {
-          "item": "minecraft:amethyst_shard",
-          "count_per_level": 2
+          "base_count": 6,
+          "max_level_count": 26,
+          "level_exponent": 1.3
         },
         {
           "item": "minecraft:emerald",
-          "count_per_level": 1
+          "base_count": 5,
+          "max_level_count": 23,
+          "level_exponent": 1.3
+        },
+        {
+          "item": "minecraft:amethyst_shard",
+          "base_count": 2,
+          "max_level_count": 10,
+          "level_exponent": 1.3
         },
         {
           "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -34,15 +40,21 @@
           "options": [
             {
               "item": "minecraft:iron_ingot",
-              "count_per_level": 3
+              "base_count": 4,
+              "max_level_count": 16,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:obsidian",
-              "count_per_level": 2
+              "base_count": 2,
+              "max_level_count": 9,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:amethyst_shard",
-              "count_per_level": 3
+              "base_count": 2,
+              "max_level_count": 7,
+              "level_exponent": 1.25
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -254,15 +266,17 @@
           "options": [
             {
               "item": "minecraft:echo_shard",
-              "count": 1
+              "count_per_level": 1
             },
             {
               "item": "minecraft:sculk_catalyst",
-              "count": 1
+              "count_per_level": 1
             },
             {
-              "item": "minecraft:amethyst_block",
-              "count_per_level": 2
+              "item": "minecraft:amethyst_shard",
+              "base_count": 3,
+              "max_level_count": 8,
+              "level_exponent": 1.2
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -276,15 +290,21 @@
           "options": [
             {
               "item": "minecraft:quartz",
-              "count_per_level": 4
+              "base_count": 6,
+              "max_level_count": 26,
+              "level_exponent": 1.3
             },
             {
               "item": "minecraft:iron_ingot",
-              "count_per_level": 3
+              "base_count": 4,
+              "max_level_count": 18,
+              "level_exponent": 1.3
             },
             {
               "item": "minecraft:amethyst_shard",
-              "count_per_level": 3
+              "base_count": 2,
+              "max_level_count": 8,
+              "level_exponent": 1.3
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -386,15 +406,19 @@
           "options": [
             {
               "item": "minecraft:emerald",
-              "count_per_level": 2
+              "base_count": 8,
+              "max_level_count": 22,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:gold_ingot",
-              "count_per_level": 3
+              "base_count": 5,
+              "max_level_count": 15,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:rabbit_foot",
-              "count": 1
+              "count_per_level": 1
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -408,15 +432,21 @@
           "options": [
             {
               "item": "minecraft:iron_ingot",
-              "count_per_level": 3
+              "base_count": 5,
+              "max_level_count": 15,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:feather",
-              "count_per_level": 4
+              "base_count": 6,
+              "max_level_count": 20,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:amethyst_shard",
-              "count_per_level": 3
+              "base_count": 2,
+              "max_level_count": 6,
+              "level_exponent": 1.25
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -452,15 +482,21 @@
           "options": [
             {
               "item": "minecraft:obsidian",
-              "count_per_level": 2
-            },
-            {
-              "item": "minecraft:amethyst_shard",
-              "count_per_level": 3
+              "base_count": 3,
+              "max_level_count": 10,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:iron_ingot",
-              "count_per_level": 3
+              "base_count": 5,
+              "max_level_count": 16,
+              "level_exponent": 1.25
+            },
+            {
+              "item": "minecraft:amethyst_shard",
+              "base_count": 2,
+              "max_level_count": 6,
+              "level_exponent": 1.25
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -473,16 +509,22 @@
         "material_cost": {
           "options": [
             {
-              "item": "minecraft:emerald",
-              "count_per_level": 3
+              "item": "minecraft:lapis_lazuli",
+              "base_count": 12,
+              "max_level_count": 32,
+              "level_exponent": 1.25
             },
             {
-              "item": "minecraft:lapis_block",
-              "count_per_level": 1
+              "item": "minecraft:emerald",
+              "base_count": 10,
+              "max_level_count": 26,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:diamond",
-              "count": 1
+              "base_count": 2,
+              "max_level_count": 6,
+              "level_exponent": 1.25
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -606,15 +648,21 @@
           "options": [
             {
               "item": "minecraft:flint",
-              "count_per_level": 4
+              "base_count": 5,
+              "max_level_count": 18,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:arrow",
-              "count_per_level": 8
+              "base_count": 8,
+              "max_level_count": 32,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:amethyst_shard",
-              "count_per_level": 3
+              "base_count": 2,
+              "max_level_count": 7,
+              "level_exponent": 1.25
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",
@@ -716,15 +764,21 @@
           "options": [
             {
               "item": "minecraft:prismarine_crystals",
-              "count_per_level": 2
+              "base_count": 4,
+              "max_level_count": 12,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:emerald",
-              "count_per_level": 2
+              "base_count": 7,
+              "max_level_count": 20,
+              "level_exponent": 1.25
             },
             {
               "item": "minecraft:glow_ink_sac",
-              "count_per_level": 2
+              "base_count": 2,
+              "max_level_count": 6,
+              "level_exponent": 1.25
             },
             {
               "item": "chiseled_enchanting_table:arcane_catalyst",

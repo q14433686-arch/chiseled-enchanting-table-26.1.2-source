@@ -310,6 +310,26 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         lines.add(bullet);
                     }
                 }
+                Identifier hoveredEnchId = this.scrollContainer.hoveredEnchantmentId(mouseX, mouseY);
+                var hoveredOptType = this.scrollContainer.hoveredOptionType(mouseX, mouseY);
+                if (hoveredEnchId != null && hoveredOptType != null) {
+                    int storedLvl = this.menu.storedMasterLevel(hoveredEnchId);
+                    int specBonus = this.menu.specificEnchantDiscountBonus(hoveredEnchId);
+                    int totalDisc = this.menu.effectiveXpDiscountPercent(hoveredEnchId, hoveredOptType);
+                    if (storedLvl > 0 && specBonus > 0) {
+                        int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(
+                            this.minecraft.level,
+                            hoveredEnchId
+                        );
+                        lines.add(Component.translatable(
+                            "gui.chiseled_enchanting_table.resonance.specific_line",
+                            storedLvl,
+                            maxLvl,
+                            specBonus,
+                            totalDisc
+                        ).withStyle(ChatFormatting.AQUA));
+                    }
+                }
                 ctx.setTooltipForNextFrame(
                     this.font,
                     lines,
@@ -388,16 +408,35 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 return;
             }
             if (isOverSanctumPanel(mouseX, mouseY)) {
-                int woodenBonus = Math.min(10, this.menu.regularBookshelves);
-                int chiseledBonus = this.menu.chiseledBookCount * 2;
+                int woodenBonus = this.menu.woodenXpDiscountPercent();
+                int chiseledBonus = this.menu.globalMasteryDiscountPercent();
+                double totalUnits = this.menu.totalMasteryUnits();
+                double affinityUnits = this.menu.affinityMasteryUnits(this.menu.get_enchantable_item());
                 int minShelves = this.menu.epiphanyMinBookshelves();
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.title", this.menu.xpDiscountPercent)
                     .withStyle(ChatFormatting.GOLD));
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.wooden", this.menu.regularBookshelves, woodenBonus)
-                    .withStyle(ChatFormatting.GRAY));
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.chiseled", this.menu.chiseledBookCount, chiseledBonus)
-                    .withStyle(ChatFormatting.AQUA));
+                if (this.menu.regularBookshelves < chiseled_enchanting_table.mechanics.resonance.LibraryResonance.MIN_DISCOUNT_BOOKSHELVES) {
+                    tip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.resonance.wooden_locked",
+                        this.menu.regularBookshelves,
+                        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.MIN_DISCOUNT_BOOKSHELVES
+                    ).withStyle(ChatFormatting.GRAY));
+                } else {
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.wooden", this.menu.regularBookshelves, woodenBonus)
+                        .withStyle(ChatFormatting.GRAY));
+                }
+                tip.add(Component.translatable(
+                    "gui.chiseled_enchanting_table.resonance.chiseled_mastery",
+                    String.format("%.1f", totalUnits),
+                    chiseledBonus
+                ).withStyle(ChatFormatting.AQUA));
+                if (affinityUnits > 0.005) {
+                    tip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.resonance.affinity_line",
+                        String.format("%.1f", affinityUnits)
+                    ).withStyle(ChatFormatting.GREEN));
+                }
                 if (this.menu.regularBookshelves >= minShelves) {
                     int pct = (int) Math.round(this.menu.epiphanyChance() * 100.0);
                     int maxSlots = Math.max(1, this.menu.epiphanyMaxSlots());

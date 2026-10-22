@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "在纂刻附魔台上制作一本包含全部附魔的附魔书。",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "可用材料（任选其一）：",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% 经验",
-  "gui.chiseled_enchanting_table.resonance.title": "藏书共鸣：-%s%% 经验消耗",
+  "gui.chiseled_enchanting_table.resonance.title": "书库共鸣：公共 -%s%% 经验（同种满阶母版最高 -40%%）",
   "gui.chiseled_enchanting_table.resonance.wooden": "普通书架：%s 个（-%s%% 经验，提升基础附魔至中阶上限）",
   "gui.chiseled_enchanting_table.resonance.chiseled": "雕纹母本：%s 本（-%s%% 经验，1:1 解锁满阶与宝藏附魔）",
   "gui.chiseled_enchanting_table.resonance.cap": "藏书共鸣最高减免：-35% 经验",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "空白覆写：%s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "洗尽铅华",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "在纂刻附魔台上对褪魔残卷施行「空白覆写」，涤除残余铭痕并还原为崭新的书",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "附魔书在合书升阶或剥离全部魔咒后遗留的残卷（可堆叠至 64）。无法直接附魔或参与合成；将其放入纂刻附魔台（单次最多 8 本），消耗 1 级经验与任一涤墨材料（2×纸 / 2×骨粉 / 1×墨囊 / 1×发光墨囊 / 1×紫水晶碎片）即可经「空白覆写」还原为纯净可堆叠的普通书。"
+  "jei.chiseled_enchanting_table.info.depleted_tome": "附魔书在合书升阶或剥离全部魔咒后遗留的残卷（可堆叠至 64）。无法直接附魔或参与合成；将其放入纂刻附魔台（单次最多 8 本），消耗 1 级经验与任一涤墨材料（2×纸 / 2×骨粉 / 1×墨囊 / 1×发光墨囊 / 1×紫水晶碎片）即可经「空白覆写」还原为纯净可堆叠的普通书。",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "普通书架：%s / %s 个 → +0%%（满 12 个起算经验折扣）",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "母版总品阶：折算 %s 完本 → 公共 +%s%%（同种母版最高再减 15%%）",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "当前器物同系母版：折算 %s 完本（提升顿悟率与同件产出上限）",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "母版共鸣 Lv.%s/%s → 专属额外 -%s%% 经验（本项合计 -%s%%）"
 }

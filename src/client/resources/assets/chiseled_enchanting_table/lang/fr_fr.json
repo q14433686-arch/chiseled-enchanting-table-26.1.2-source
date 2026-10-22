@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "Créez un livre enchanté contenant tous les enchantements sur une table d'enchantement ciselée.",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "Matériaux acceptés (au choix) :",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% XP",
-  "gui.chiseled_enchanting_table.resonance.title": "Résonance de bibliothèque : -%s%% d'XP",
+  "gui.chiseled_enchanting_table.resonance.title": "Résonance : -%s%% XP de base (jusqu'à -40%% avec Tome Maître)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Bibliothèques : %s (-%s%% d'XP, palier intermédiaire max)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Grimoires maîtres : %s (-%s%% d'XP, déblocage 1:1)",
   "gui.chiseled_enchanting_table.resonance.cap": "Réduction maximale de résonance : -35% d'XP",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "Réécriture vierge : %s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "Tabula Rasa",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "Purifiez un Tome épuisé par Réécriture vierge sur la Table d'enchantement sculptée pour obtenir un Livre neuf",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "Reste après la fusion ou l'extraction d'un Livre enchanté (empilable par 64). Jusqu'à 8 tomes peuvent être purifiés d'un coup via Réécriture vierge (1 niveau d'XP + papier, poudre d'os, poche d'encre, poche d'encre luisante ou éclat d'améthyste) en Livres ordinaires."
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Reste après la fusion ou l'extraction d'un Livre enchanté (empilable par 64). Jusqu'à 8 tomes peuvent être purifiés d'un coup via Réécriture vierge (1 niveau d'XP + papier, poudre d'os, poche d'encre, poche d'encre luisante ou éclat d'améthyste) en Livres ordinaires.",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "Bibliothèques : %s / %s -> +0%% (actif dès 12 bibliothèques)",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Tomes Maîtres : %s tomes complets -> +%s%% global (+15%% max par tome dédié)",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "Tomes compatibles avec l'objet : %s (augmente chance et plafond)",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "Tome Maître Niv.%s/%s -> +%s%% réd. XP bonus (-%s%% total)"
 }

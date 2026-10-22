@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "彫刻されたエンチャントテーブルですべてのエンチャントを持つ本を作る。",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "使用可能な素材（いずれか1種）：",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% XP",
-  "gui.chiseled_enchanting_table.resonance.title": "書庫共鳴：XP消費 -%s%%",
+  "gui.chiseled_enchanting_table.resonance.title": "書庫共鳴：基本 -%s%% 経験値（原典極意込み最大 -40%%）",
   "gui.chiseled_enchanting_table.resonance.wooden": "本棚：%s 個（-%s%% XP・中位段階まで解放）",
   "gui.chiseled_enchanting_table.resonance.chiseled": "秘伝書（模様入り本棚）：%s 冊（-%s%% XP・1:1 完全解放）",
   "gui.chiseled_enchanting_table.resonance.cap": "共鳴による最大軽減率：-35% XP",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "空白上書き：%s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "白紙還し",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "彫模様のエンチャント台で「空白上書き」を行い、魔力枯れの残巻を新品の本へ浄化する",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "エンチャントの本の統合や魔力抽出後に残る巻物（最大64個スタック）。最大8冊まで一度に「空白上書き」（1レベル＋紙・骨粉・イカスミ・輝くイカスミ・アメジストの欠片のいずれか）で通常の本へ戻せます。"
+  "jei.chiseled_enchanting_table.info.depleted_tome": "エンチャントの本の統合や魔力抽出後に残る巻物（最大64個スタック）。最大8冊まで一度に「空白上書き」（1レベル＋紙・骨粉・イカスミ・輝くイカスミ・アメジストの欠片のいずれか）で通常の本へ戻せます。",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "通常の本棚：%s / %s 個 → +0%%（12個以上で割引発動）",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "原典相対階位：%s 完本換算 → 全体 +%s%%（同種原典でさらに最大 -15%%）",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "対象装備の同系統原典：%s 完本換算（閃き率・同時枠上限を強化）",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "原典共鳴 Lv.%s/%s → 専用追加 -%s%% 経験値（合計 -%s%%）"
 }

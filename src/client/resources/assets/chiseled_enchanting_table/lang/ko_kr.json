@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "조각된 마법 부여대에서 모든 마법 부여가 담긴 책을 만드세요.",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "사용 가능한 재료 (택1):",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% XP",
-  "gui.chiseled_enchanting_table.resonance.title": "서고 공명: 경험치 소모 -%s%%",
+  "gui.chiseled_enchanting_table.resonance.title": "서고 공명: 기본 -%s%% 경험치 (원본 숙련 포함 최대 -40%%)",
   "gui.chiseled_enchanting_table.resonance.wooden": "일반 책장: %s개 (-%s%% XP, 중급 단계까지 해금)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "보관된 비전서: %s권 (-%s%% XP, 1:1 최고 단계 해금)",
   "gui.chiseled_enchanting_table.resonance.cap": "최대 공명 할인: -35% XP",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "공백 덮어쓰기: %s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "백지 복원",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "조각된 마법 부여대에서 「공백 덮어쓰기」를 수행해 마력 바랜 잔권을 깨끗한 책으로 되돌리세요",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "마법이 부여된 책을 합치거나 마력을 추출한 뒤 남는 잔권입니다(최대 64개 중첩). 한 번에 최대 8권까지 「공백 덮어쓰기」(경험치 1레벨 + 종이/뼛가루/먹물 주머니/발광 먹물 주머니/자수정 조각 중 하나)로 일반 책으로 정화할 수 있습니다."
+  "jei.chiseled_enchanting_table.info.depleted_tome": "마법이 부여된 책을 합치거나 마력을 추출한 뒤 남는 잔권입니다(최대 64개 중첩). 한 번에 최대 8권까지 「공백 덮어쓰기」(경험치 1레벨 + 종이/뼛가루/먹물 주머니/발광 먹물 주머니/자수정 조각 중 하나)로 일반 책으로 정화할 수 있습니다.",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "일반 책장: %s / %s개 → +0%% (12개 이상부터 할인 적용)",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "원본 상대 등급: 완본 %s권 환산 → 전체 +%s%% (동종 원본 추가 최대 -15%%)",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "현재 장비 동계열 원본: 완본 %s권 환산 (깨달음 확률·동시 상한 증가)",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "원본 공명 Lv.%s/%s → 전용 추가 -%s%% 경험치 (총 -%s%%)"
 }

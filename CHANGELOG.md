@@ -20,6 +20,23 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ### Changed — Unified Progression, Library Resonance & Player-Choice Economy Overhaul (A × B × C)
 
+- **Yield-Aware Material Curves & Relative-Mastery Library Resonance (`LibraryResonance`)**:
+  - **Yield-Differentiated Level Scaling Across All Scenes**: upgraded `ItemCostOption` with
+    smooth relative-tier curves (`base_count`, `max_level_count`, `level_exponent`, auto-adapting to
+    any modded `maxLevel = 1..255`) across `enchantment_costs.json`, `book_upgrades.json`,
+    `treasure_epiphany.json`, and `item_transformations.json` following survival yield rates:
+    `Lapis Lazuli > Emerald >> Amethyst Shard` (e.g. 5-tier enchants scale `3→6→10→15→20 Lapis`,
+    `2→5→8→13→18 Emerald`, `1→2→4→6→8 Amethyst Shard`).
+  - **`W >= 12` Wooden Bookshelf Discount Floor**: fewer than `12` regular bookshelves grant `0%`
+    XP discount; from `12` to `32` shelves, base shelf discount rises smoothly from `2%` to `12%`.
+  - **Mod-Agnostic Relative Master-Tome Resonance (`r = L / maxLevel`)**: dynamically queries
+    `Enchantment#getMaxLevel()` and `Enchantment#canEnchant(ItemStack)` for every stored Chiseled
+    Bookshelf tome (`w(r) = 0.45r + 0.55r²`), driving:
+    1. **XP Discount**: up to `25%` table-wide base (`12%` wooden + `13%` global mastery) PLUS up
+       to `15%` per-enchantment specialization (`round(15 * r^1.5)`), capped at `40%`;
+    2. **Treasure Epiphany Probability & Per-Item Cap**: scales both trigger chance (up to `90%`)
+       and simultaneous slot cap (`1..4`) with global mastery `E_all` and target-equipment matching
+       mastery `E_affinity(target)`, plus multi-level tier rolls in `[storedLevel + 1, maxLevel]`.
 - **Depleted Tome (`chiseled_enchanting_table:depleted_tome`) & Blank Overwrite (`blank_overwrite`)**:
   - Fixed a component-pollution stacking bug where `ItemStack#transmuteCopy` left residual
     `STORED_ENCHANTMENTS` / glint data patches on drained `minecraft:book`s and re-enchanted

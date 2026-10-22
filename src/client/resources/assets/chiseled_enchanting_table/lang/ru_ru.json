@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "Создайте зачарованную книгу со всеми зачарованиями на резном столе зачарования.",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "Подходящие материалы (любой на выбор):",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% опыта",
-  "gui.chiseled_enchanting_table.resonance.title": "Резонанс библиотеки: -%s%% к расходу опыта",
+  "gui.chiseled_enchanting_table.resonance.title": "Резонанс: -%s%% базового опыта (до -40%% с эталонным фолиантом)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Книжные полки: %s (-%s%% опыта, до средних уровней)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Мастер-фолианты: %s (-%s%% опыта, полное открытие 1:1)",
   "gui.chiseled_enchanting_table.resonance.cap": "Максимальная скидка резонанса: -35% опыта",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "Чистая перезапись: %s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "Чистый лист",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "Очистите истощённый фолиант с помощью «Чистой перезаписи» на резном чародейском столе",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "Остаётся после слияния или извлечения чар из чародейской книги (стакается до 64). До 8 фолиантов за раз можно очистить через «Чистую перезапись» (1 уровень опыта + бумага, костная мука, чернильный мешок, светящийся чернильный мешок или осколок аметиста) в обычные книги."
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Остаётся после слияния или извлечения чар из чародейской книги (стакается до 64). До 8 фолиантов за раз можно очистить через «Чистую перезапись» (1 уровень опыта + бумага, костная мука, чернильный мешок, светящийся чернильный мешок или осколок аметиста) в обычные книги.",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "Книжные полки: %s / %s -> +0%% (нужно не менее 12 полок)",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Эталонные тома: %s полн. экв. -> +%s%% общ. (+до 15%% за свой том)",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "Профильные тома предмета: %s (повышает шанс и лимит озарений)",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "Эталонный том Ур.%s/%s -> +%s%% доп. скидка опыта (всего -%s%%)"
 }

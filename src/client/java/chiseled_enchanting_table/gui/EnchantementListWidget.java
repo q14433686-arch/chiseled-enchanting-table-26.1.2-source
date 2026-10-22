@@ -184,6 +184,34 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
+    public Identifier hoveredEnchantmentId(double mouseX, double mouseY) {
+        if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
+            return null;
+        }
+        for (EnchantUiEntry entry : this.children()) {
+            ItemStack hovered = entry.hoveredCostItem(mouseX, mouseY);
+            if (hovered != null && !hovered.isEmpty()) {
+                return entry.enchantment_id;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public OptionType hoveredOptionType(double mouseX, double mouseY) {
+        if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
+            return null;
+        }
+        for (EnchantUiEntry entry : this.children()) {
+            ItemStack hovered = entry.hoveredCostItem(mouseX, mouseY);
+            if (hovered != null && !hovered.isEmpty()) {
+                return entry.option_type;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     public List<List<ItemStack>> hoveredCostOptions(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;

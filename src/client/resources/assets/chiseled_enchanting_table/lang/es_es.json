@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "Crea un libro encantado con todos los encantamientos en una mesa de encantamientos cincelada.",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "Materiales aceptados (elige uno):",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% XP",
-  "gui.chiseled_enchanting_table.resonance.title": "Resonancia de biblioteca: -%s%% de XP",
+  "gui.chiseled_enchanting_table.resonance.title": "Resonancia: -%s%% XP base (hasta -40%% con Tomo Maestro)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Librerías de madera: %s (-%s%% XP, límite de nivel medio)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Tomos maestros: %s (-%s%% XP, desbloqueo 1:1 completo)",
   "gui.chiseled_enchanting_table.resonance.cap": "Descuento máximo por resonancia: -35% de XP",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "Sobrescritura en blanco: %s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "Tabula Rasa",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "Purifica un Tomo agotado mediante Sobrescritura en blanco en la Mesa de encantamientos cincelada",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "Queda tras fusionar o extraer la magia de un Libro encantado (apilable hasta 64). Limpia hasta 8 a la vez con Sobrescritura en blanco (1 nivel de XP + papel, polvo de hueso, saco de tinta, saco de tinta luminosa o fragmento de amatista) para obtener Libros puros."
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Queda tras fusionar o extraer la magia de un Libro encantado (apilable hasta 64). Limpia hasta 8 a la vez con Sobrescritura en blanco (1 nivel de XP + papel, polvo de hueso, saco de tinta, saco de tinta luminosa o fragmento de amatista) para obtener Libros puros.",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "Librerías: %s / %s -> +0%% (requiere 12+ librerías)",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Tomos Maestros: %s eq. completos -> +%s%% global (+hasta 15%% por tomo propio)",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "Tomos afines al objeto: %s eq. (aumenta probabilidad y límite)",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "Tomo Maestro Nv.%s/%s -> +%s%% desc. XP extra (-%s%% total)"
 }

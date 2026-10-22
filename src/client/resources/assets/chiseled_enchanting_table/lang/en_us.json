@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "Create an enchanted book holding every enchantment at a chiseled enchanting table.",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "Accepted materials (pick any):",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% XP",
-  "gui.chiseled_enchanting_table.resonance.title": "Library Resonance: -%s%% XP Cost",
+  "gui.chiseled_enchanting_table.resonance.title": "Library Resonance: -%s%% Base XP (up to -40%% w/ Tome Mastery)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Wooden Bookshelves: %s (-%s%% XP, mid-tier unlock cap)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Stored Master Tomes: %s (-%s%% XP, 1:1 full tier unlock)",
   "gui.chiseled_enchanting_table.resonance.cap": "Maximum resonance discount: -35% XP",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "Blank Overwrite: %s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "Tabula Rasa",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "Perform Blank Overwrite at a Chiseled Enchanting Table to cleanse a Depleted Tome back into a crisp Book",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "Left behind when an Enchanted Book's magic is merged or stripped. Stacks up to 64, and up to 8 can be cleansed at once via Blank Overwrite (1 XP level + Paper, Bone Meal, Ink Sac, Glow Ink Sac, or Amethyst Shard) into pure stackable Books."
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Left behind when an Enchanted Book's magic is merged or stripped. Stacks up to 64, and up to 8 can be cleansed at once via Blank Overwrite (1 XP level + Paper, Bone Meal, Ink Sac, Glow Ink Sac, or Amethyst Shard) into pure stackable Books.",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "Wooden Bookshelves: %s / %s -> +0%% (requires 12+ shelves)",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Master Tomes: %s eq. full tomes -> +%s%% global (+up to 15%% per matching tome)",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "Matching Gear Tomes: %s eq. tomes (boosts Epiphany chance & cap)",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "Master Tome Lv.%s/%s -> +%s%% extra XP discount (-%s%% total)"
 }

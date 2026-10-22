@@ -36,7 +36,7 @@
   "advancements.chiseled_enchanting_table.all_enchant_book.description": "Crea un libro incantato con tutti gli incantesimi su un tavolo da incantesimi cesellato.",
   "gui.chiseled_enchanting_table.cost_alternatives.header": "Materiali accettati (scegline uno):",
   "gui.chiseled_enchanting_table.resonance.badge": "✦ -%s%% PE",
-  "gui.chiseled_enchanting_table.resonance.title": "Risonanza della biblioteca: -%s%% PE",
+  "gui.chiseled_enchanting_table.resonance.title": "Risonanza: -%s%% PE base (fino a -40%% con Tomo Maestro)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Librerie di legno: %s (-%s%% PE, fino a livello intermedio)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Tomi maestri: %s (-%s%% PE, sblocco 1:1 completo)",
   "gui.chiseled_enchanting_table.resonance.cap": "Sconto massimo di risonanza: -35% PE",
@@ -82,5 +82,9 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "Sovrascrittura in bianco: %s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "Tabula Rasa",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "Purifica un Tomo esaurito tramite Sovrascrittura in bianco sul Tavolo per incantesimi cesellato",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "Rimane dopo aver fuso o estratto la magia da un Libro incantato (impilabile fino a 64). Fino a 8 tomi possono essere purificati insieme con Sovrascrittura in bianco (1 livello di PE + carta, farina d'ossa, sacca d'inchiostro, sacca d'inchiostro luminescente o frammento di ametista) in Libri normali."
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Rimane dopo aver fuso o estratto la magia da un Libro incantato (impilabile fino a 64). Fino a 8 tomi possono essere purificati insieme con Sovrascrittura in bianco (1 livello di PE + carta, farina d'ossa, sacca d'inchiostro, sacca d'inchiostro luminescente o frammento di ametista) in Libri normali.",
+  "gui.chiseled_enchanting_table.resonance.wooden_locked": "Librerie: %s / %s -> +0%% (attivo da 12+ librerie)",
+  "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Tomi Maestri: %s tomi completi -> +%s%% globale (+fino a 15%% per tomo specifico)",
+  "gui.chiseled_enchanting_table.resonance.affinity_line": "Tomi affini all'oggetto: %s (aumenta probabilità e limite)",
+  "gui.chiseled_enchanting_table.resonance.specific_line": "Tomo Maestro Liv.%s/%s -> +%s%% sconto PE extra (-%s%% totale)"
 }

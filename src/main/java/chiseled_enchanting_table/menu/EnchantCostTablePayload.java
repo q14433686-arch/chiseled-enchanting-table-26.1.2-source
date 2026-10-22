@@ -64,14 +64,14 @@ public record EnchantCostTablePayload(
         for (Holder.Reference<Enchantment> holder : enchantments.listElements().toList()) {
             Identifier id = holder.key().identifier();
             int maxLevel = Math.max(1, holder.value().getMaxLevel());
-            entries.add(new CostEntry(
-                OptionType.TREASURE_EPIPHANY,
-                id,
-                1,
-                ChiseledEnchantingTableData.treasureEpiphanyXpCost(id),
-                ChiseledEnchantingTableData.treasureEpiphanyCostOptions(id)
-            ));
             for (int level = 1; level <= maxLevel; level++) {
+                entries.add(new CostEntry(
+                    OptionType.TREASURE_EPIPHANY,
+                    id,
+                    level,
+                    ChiseledEnchantingTableData.treasureEpiphanyXpCost(id, level, maxLevel),
+                    ChiseledEnchantingTableData.treasureEpiphanyCostOptions(id, level, maxLevel)
+                ));
                 EnchantmentWithLevel key = new EnchantmentWithLevel(id, level);
                 entries.add(new CostEntry(
                     OptionType.ENCHANTMENT,

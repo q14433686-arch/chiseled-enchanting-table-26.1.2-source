@@ -82,26 +82,58 @@ public final class SyncedEnchantmentCosts {
         return p != null ? p.epiphanyMinBookshelves() : ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves();
     }
 
-    public static double epiphanyChance(int regularBookshelves, int chiseledBooks) {
+    public static double epiphanyBaseChance() {
         EnchantCostTablePayload p = syncedPayload;
-        if (p != null) {
-            if (regularBookshelves < p.epiphanyMinBookshelves()) return 0.0;
-            double raw = p.epiphanyBaseChance()
-                + (regularBookshelves - p.epiphanyMinBookshelves()) * p.epiphanyPerShelfChance()
-                + Math.max(0, chiseledBooks) * p.epiphanyPerTomeChance();
-            return Math.max(0.0, Math.min(p.epiphanyMaxChance(), raw));
-        }
-        return ChiseledEnchantingTableData.treasureEpiphanyChance(regularBookshelves, chiseledBooks);
+        return p != null ? p.epiphanyBaseChance() : ChiseledEnchantingTableData.treasureEpiphanyBaseChance();
+    }
+
+    public static double epiphanyPerShelfChance() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyPerShelfChance() : ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance();
+    }
+
+    public static double epiphanyPerTomeChance() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyPerTomeChance() : ChiseledEnchantingTableData.treasureEpiphanyPerTomeChance();
+    }
+
+    public static double epiphanyMaxChance() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyMaxChance() : ChiseledEnchantingTableData.treasureEpiphanyMaxChance();
+    }
+
+    public static int epiphanyMaxSlotsCap() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyMaxSlotsCap() : ChiseledEnchantingTableData.treasureEpiphanyMaxSlotsCap();
+    }
+
+    public static int epiphanyScorePerSlot() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.epiphanyScorePerSlot() : ChiseledEnchantingTableData.treasureEpiphanyScorePerSlot();
+    }
+
+    public static double epiphanyChance(int regularBookshelves, int chiseledBooks) {
+        return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.epiphanyProbability(
+            regularBookshelves,
+            epiphanyMinBookshelves(),
+            epiphanyBaseChance(),
+            epiphanyPerShelfChance(),
+            epiphanyPerTomeChance(),
+            epiphanyMaxChance(),
+            chiseledBooks,
+            0.0
+        );
     }
 
     public static int epiphanyMaxSlots(int regularBookshelves, int chiseledBooks) {
-        EnchantCostTablePayload p = syncedPayload;
-        if (p != null) {
-            if (regularBookshelves < p.epiphanyMinBookshelves()) return 0;
-            int score = Math.max(0, regularBookshelves - p.epiphanyMinBookshelves()) + Math.max(0, chiseledBooks) * 2;
-            return Math.min(p.epiphanyMaxSlotsCap(), 1 + score / Math.max(1, p.epiphanyScorePerSlot()));
-        }
-        return ChiseledEnchantingTableData.treasureEpiphanyMaxSlots(regularBookshelves, chiseledBooks);
+        return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.epiphanyMaxSlots(
+            regularBookshelves,
+            epiphanyMinBookshelves(),
+            epiphanyMaxSlotsCap(),
+            epiphanyScorePerSlot(),
+            chiseledBooks,
+            0.0
+        );
     }
 
     public static int epiphanyCycleTicks() {

@@ -259,11 +259,19 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static int treasureEpiphanyXpCost(Identifier enchantmentId) {
-        return treasureEpiphanyRules.xpCost(enchantmentId);
+        return treasureEpiphanyXpCost(enchantmentId, 1, 1);
+    }
+
+    public static int treasureEpiphanyXpCost(Identifier enchantmentId, int level, int maxLevel) {
+        return treasureEpiphanyRules.xpCost(enchantmentId, level, maxLevel);
     }
 
     public static List<List<ItemStack>> treasureEpiphanyCostOptions(Identifier enchantmentId) {
-        return treasureEpiphanyRules.costOptions(enchantmentId);
+        return treasureEpiphanyCostOptions(enchantmentId, 1, 1);
+    }
+
+    public static List<List<ItemStack>> treasureEpiphanyCostOptions(Identifier enchantmentId, int level, int maxLevel) {
+        return treasureEpiphanyRules.costOptions(enchantmentId, level, maxLevel);
     }
 
     public static Set<EnchantmentWithLevel> transformationEnchantmentsFor(ItemStack input) {
@@ -526,10 +534,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         String json = """
             {
               "values": [
-                { "id": "chiseled_enchanting_table:blank_overwrite", "input": "chiseled_enchanting_table:depleted_tome", "output": "minecraft:book", "level": 1, "xp_cost": 1, "primary_cost": { "item": "minecraft:paper", "count": 2 }, "cost_options": [ { "item": "minecraft:paper", "count": 2 }, { "item": "minecraft:bone_meal", "count": 2 }, { "item": "minecraft:ink_sac", "count": 1 }, { "item": "minecraft:glow_ink_sac", "count": 1 }, { "item": "minecraft:amethyst_shard", "count": 1 } ] },
-                { "id": "chiseled_enchanting_table:enchanted_golden_apple", "input": "minecraft:golden_apple", "output": "minecraft:enchanted_golden_apple", "level": 1, "xp_cost": 3, "primary_cost": { "item": "minecraft:gold_block", "count": 8 }, "additional_costs": [ { "item": "minecraft:emerald", "min_count": 2, "max_count": 5 } ] },
-                { "id": "chiseled_enchanting_table:experience_bottle", "input": "minecraft:glass_bottle", "output": "minecraft:experience_bottle", "level": 1, "xp_cost": 1, "primary_cost": { "item": "minecraft:lapis_lazuli", "count": 6 }, "additional_costs": [ { "item": "minecraft:amethyst_shard", "count": 2 } ] },
-                { "id": "chiseled_enchanting_table:totem_of_undying", "input": "minecraft:emerald_block", "output": "minecraft:totem_of_undying", "level": 1, "xp_cost": 12, "primary_cost": { "item": "minecraft:gold_block", "count": 4 }, "additional_costs": [ { "item": "minecraft:ghast_tear", "count": 1 }, { "item": "minecraft:amethyst_shard", "count": 8 } ] },
+                { "id": "chiseled_enchanting_table:blank_overwrite", "input": "chiseled_enchanting_table:depleted_tome", "output": "minecraft:book", "level": 1, "xp_cost": 1, "primary_cost": { "item": "minecraft:paper", "count": 3 }, "cost_options": [ { "item": "minecraft:paper", "count": 3 }, { "item": "minecraft:bone_meal", "count": 3 }, { "item": "minecraft:lapis_lazuli", "count": 3 }, { "item": "minecraft:emerald", "count": 2 }, { "item": "minecraft:ink_sac", "count": 1 }, { "item": "minecraft:glow_ink_sac", "count": 1 }, { "item": "minecraft:amethyst_shard", "count": 1 } ] },
+                { "id": "chiseled_enchanting_table:enchanted_golden_apple", "input": "minecraft:golden_apple", "output": "minecraft:enchanted_golden_apple", "level": 1, "xp_cost": 5, "primary_cost": { "item": "minecraft:gold_block", "count": 8 }, "additional_costs": [ { "item": "minecraft:emerald", "count": 14 } ] },
+                { "id": "chiseled_enchanting_table:experience_bottle", "input": "minecraft:glass_bottle", "output": "minecraft:experience_bottle", "level": 1, "xp_cost": 1, "primary_cost": { "item": "minecraft:lapis_lazuli", "count": 8 }, "additional_costs": [ { "item": "minecraft:amethyst_shard", "count": 2 } ] },
+                { "id": "chiseled_enchanting_table:totem_of_undying", "input": "minecraft:emerald_block", "output": "minecraft:totem_of_undying", "level": 1, "xp_cost": 12, "primary_cost": { "item": "minecraft:gold_block", "count": 4 }, "additional_costs": [ { "item": "minecraft:ghast_tear", "count": 1 }, { "item": "minecraft:amethyst_shard", "count": 5 } ] },
                 { "id": "chiseled_enchanting_table:trident", "input": "minecraft:diamond_sword", "output": "minecraft:trident", "level": 1, "xp_cost": 10, "primary_cost": { "item": "minecraft:nautilus_shell", "count": 2 }, "additional_costs": [ { "item": "minecraft:prismarine_shard", "count": 16 }, { "item": "minecraft:prismarine_crystals", "count": 8 } ] },
                 { "id": "chiseled_enchanting_table:echo_shard", "input": "minecraft:amethyst_shard", "output": "minecraft:echo_shard", "level": 1, "xp_cost": 4, "primary_cost": { "item": "minecraft:sculk", "count": 4 }, "additional_costs": [ { "item": "minecraft:crying_obsidian", "count": 2 } ] }
               ]
@@ -717,9 +725,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                     "material_cost_multiplier_of_direct_enchant": 1.0,
                     "default_material_cost": {
                       "options": [
-                        { "item": "minecraft:lapis_lazuli", "count_per_level": 3 },
-                        { "item": "minecraft:amethyst_shard", "count_per_level": 2 },
-                        { "item": "minecraft:emerald", "count_per_level": 1 }
+                        { "item": "minecraft:lapis_lazuli", "base_count": 6, "max_level_count": 26, "level_exponent": 1.3 },
+                        { "item": "minecraft:emerald", "base_count": 5, "max_level_count": 23, "level_exponent": 1.3 },
+                        { "item": "minecraft:amethyst_shard", "base_count": 2, "max_level_count": 10, "level_exponent": 1.3 }
                       ]
                     },
                     "enchantment_overrides": {}
@@ -780,11 +788,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         static CostTables builtInFallback() {
             String json = """
                 {
-                  "xp": { "level_one_cost": 2, "common_max_cost": 10, "rare_single_level_cost": 12 },
+                  "xp": { "level_one_cost": 2, "common_max_cost": 10, "rare_single_level_cost": 10 },
                   "default_item_cost": {
                     "options": [
-                      { "item": "minecraft:lapis_lazuli", "count_per_level": 1 },
-                      { "item": "minecraft:amethyst_shard", "count_per_level": 1 }
+                      { "item": "minecraft:lapis_lazuli", "base_count": 3, "max_level_count": 20, "level_exponent": 1.3 },
+                      { "item": "minecraft:emerald", "base_count": 2, "max_level_count": 18, "level_exponent": 1.3 },
+                      { "item": "minecraft:amethyst_shard", "base_count": 1, "max_level_count": 8, "level_exponent": 1.3 }
                     ]
                   },
                   "item_costs": {}
@@ -847,7 +856,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     private record ItemCostRule(List<ItemCostOption> options, Map<Integer, ItemCostRule> levelOverrides, ItemCostRule maxLevelOverride) {
         static ItemCostRule single(Identifier itemId, int count, int countPerLevel, int minCount, int maxCount) {
-            return new ItemCostRule(List.of(new ItemCostOption(itemId, count, countPerLevel, minCount, maxCount, List.of())), Map.of(), null);
+            return new ItemCostRule(List.of(new ItemCostOption(itemId, count, countPerLevel, minCount, maxCount, 0, 0, 1.0, List.of())), Map.of(), null);
         }
 
         static ItemCostRule fromJson(JsonObject json) {
@@ -871,7 +880,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             }
 
             if (options.isEmpty()) {
-                options.add(new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 0, 2, 0, 0, List.of()));
+                options.add(new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 0, 0, 0, 0, 3, 20, 1.3, List.of()));
             }
             return new ItemCostRule(List.copyOf(options), Map.copyOf(levelOverrides), maxLevelOverride);
         }
@@ -900,13 +909,26 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
     }
 
-    public record ItemCostOption(Identifier itemId, int count, int countPerLevel, int minCount, int maxCount, List<ItemCostOption> extras) {
+    public record ItemCostOption(
+        Identifier itemId,
+        int count,
+        int countPerLevel,
+        int minCount,
+        int maxCount,
+        int baseCount,
+        int maxLevelCount,
+        double levelExponent,
+        List<ItemCostOption> extras
+    ) {
         static ItemCostOption fromJson(JsonObject json) {
             Identifier itemId = parseIdentifier(json.get("item").getAsString());
             int count = intOr(json, "count", 0);
             int countPerLevel = intOr(json, "count_per_level", 0);
             int minCount = intOr(json, "min_count", 0);
             int maxCount = intOr(json, "max_count", 0);
+            int baseCount = intOr(json, "base_count", 0);
+            int maxLevelCount = intOr(json, "max_level_count", 0);
+            double levelExponent = doubleOr(json, "level_exponent", 1.3D);
             List<ItemCostOption> extras = new ArrayList<>();
             if (json.has("extra")) {
                 extras.add(fromJson(json.getAsJsonObject("extra")));
@@ -917,7 +939,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                     extras.add(fromJson(extra.getAsJsonObject()));
                 }
             }
-            return new ItemCostOption(itemId, count, countPerLevel, minCount, maxCount, List.copyOf(extras));
+            return new ItemCostOption(
+                itemId, count, countPerLevel, minCount, maxCount,
+                baseCount, maxLevelCount, levelExponent, List.copyOf(extras)
+            );
         }
 
         List<ItemStack> toStacks(Identifier enchantmentId, int level, int maxLevel, String salt) {
@@ -936,7 +961,19 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 item = Items.LAPIS_LAZULI;
             }
             int computedCount;
-            if (count > 0) {
+            if (baseCount > 0 && maxLevelCount >= baseCount) {
+                int safeMax = Math.max(1, maxLevel);
+                int safeLvl = Math.max(1, Math.min(safeMax, level));
+                if (safeMax == 1) {
+                    computedCount = Math.max(1, (int) Math.round(baseCount + (maxLevelCount - baseCount) * 0.45));
+                } else {
+                    double span = Math.min(1.30, 0.52 + 0.096 * safeMax);
+                    double effectiveMax = baseCount + (maxLevelCount - baseCount) * span;
+                    double u = (double) (safeLvl - 1) / (double) (safeMax - 1);
+                    double exp = levelExponent > 0.0 ? levelExponent : 1.30;
+                    computedCount = Math.max(1, (int) Math.round(baseCount + (effectiveMax - baseCount) * Math.pow(u, exp)));
+                }
+            } else if (count > 0) {
                 computedCount = count;
             } else if (minCount > 0 && maxCount >= minCount) {
                 computedCount = (minCount + maxCount + 1) / 2;
@@ -1044,10 +1081,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 }
             }
             if (frzOpts.isEmpty()) {
-                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("blue_ice"), 4, 0, 0, 0, List.of()));
-                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("packed_ice"), 16, 0, 0, 0, List.of()));
-                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("amethyst_block"), 4, 0, 0, 0, List.of()));
-                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("crying_obsidian"), 2, 0, 0, 0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("packed_ice"), 16, 0, 0, 0, 0, 0, 1.0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("blue_ice"), 4, 0, 0, 0, 0, 0, 1.0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 16, 0, 0, 0, 0, 0, 1.0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("emerald"), 14, 0, 0, 0, 0, 0, 1.0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("amethyst_shard"), 6, 0, 0, 0, 0, 0, 1.0, List.of()));
+                frzOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("crying_obsidian"), 2, 0, 0, 0, 0, 0, 1.0, List.of()));
             }
             int rerollXp = intOr(root, "reroll_xp_levels", 2);
             List<ItemCostOption> rerollOpts = new ArrayList<>();
@@ -1057,8 +1096,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 }
             }
             if (rerollOpts.isEmpty()) {
-                rerollOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 4, 0, 0, 0, List.of()));
-                rerollOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("amethyst_shard"), 4, 0, 0, 0, List.of()));
+                rerollOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 10, 0, 0, 0, 0, 0, 1.0, List.of()));
+                rerollOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("emerald"), 8, 0, 0, 0, 0, 0, 1.0, List.of()));
+                rerollOpts.add(new ItemCostOption(Identifier.withDefaultNamespace("amethyst_shard"), 3, 0, 0, 0, 0, 0, 1.0, List.of()));
             }
             Set<Identifier> explicitIds = new HashSet<>(builtInExcludedTreasureIds());
             if (root.has("treasure_enchantments")) {
@@ -1094,10 +1134,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             String json = """
                 {
                   "min_regular_bookshelves": 32,
-                  "base_chance": 0.30,
-                  "chance_per_extra_bookshelf": 0.01,
-                  "chance_per_master_tome": 0.02,
-                  "max_chance": 0.85,
+                  "base_chance": 0.28,
+                  "chance_per_extra_bookshelf": 0.008,
+                  "chance_per_master_tome": 0.022,
+                  "max_chance": 0.90,
                   "max_slots_cap": 4,
                   "score_per_extra_slot": 12,
                   "cycle_ticks": 12000,
@@ -1105,10 +1145,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                   "max_freeze_ticks": 72000,
                   "freeze_xp_levels": 1,
                   "reroll_xp_levels": 2,
-                  "default_xp_levels": 25,
+                  "default_xp_levels": 24,
                   "default_material_cost": {
                     "options": [
-                      { "item": "minecraft:diamond", "count": 8, "extra": { "item": "minecraft:amethyst_shard", "count": 12 } },
+                      { "item": "minecraft:diamond", "count": 6, "extra": { "item": "minecraft:amethyst_shard", "count": 8 } },
+                      { "item": "minecraft:emerald", "count": 22, "extra": { "item": "minecraft:lapis_lazuli", "count": 24 } },
                       { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
                     ]
                   },
@@ -1150,15 +1191,45 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             return List.copyOf(out);
         }
 
-        int xpCost(Identifier id) {
-            TreasureEpiphanyEntry e = entries.get(id);
-            return e != null ? e.xpLevels() : defaultXpLevels;
+        private static double tierMultiplier(int level, int maxLevel) {
+            int safeMax = Math.max(1, maxLevel);
+            int safeLvl = Math.max(1, Math.min(safeMax, level));
+            if (safeMax <= 1 || safeLvl <= 1) {
+                return 1.0;
+            }
+            double u = (double) (safeLvl - 1) / (double) (safeMax - 1);
+            return 1.0 + 0.35 * u;
         }
 
-        List<List<ItemStack>> costOptions(Identifier id) {
+        int xpCost(Identifier id, int level, int maxLevel) {
+            TreasureEpiphanyEntry e = entries.get(id);
+            int base = e != null ? e.xpLevels() : defaultXpLevels;
+            return Math.max(1, (int) Math.round(base * tierMultiplier(level, maxLevel)));
+        }
+
+        List<List<ItemStack>> costOptions(Identifier id, int level, int maxLevel) {
             TreasureEpiphanyEntry e = entries.get(id);
             ItemCostRule rule = e != null ? e.materialCost() : defaultMaterialCost;
-            return rule.toBundles(id, 1, 1);
+            List<List<ItemStack>> baseBundles = rule.toBundles(id, level, maxLevel);
+            double mult = tierMultiplier(level, maxLevel);
+            if (mult <= 1.0001) {
+                return baseBundles;
+            }
+            List<List<ItemStack>> scaled = new ArrayList<>(baseBundles.size());
+            for (List<ItemStack> bundle : baseBundles) {
+                List<ItemStack> next = new ArrayList<>(bundle.size());
+                for (ItemStack stack : bundle) {
+                    if (stack.is(chiseled_enchanting_table.registry.BlockRegistry.ARCANE_CATALYST)) {
+                        next.add(stack.copy());
+                    } else {
+                        ItemStack copy = stack.copy();
+                        copy.setCount(Math.min(64, Math.max(1, (int) Math.round(stack.getCount() * mult))));
+                        next.add(copy);
+                    }
+                }
+                scaled.add(List.copyOf(next));
+            }
+            return List.copyOf(scaled);
         }
     }
 
