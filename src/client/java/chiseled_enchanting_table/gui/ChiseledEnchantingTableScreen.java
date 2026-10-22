@@ -198,17 +198,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private void drawFittedText(GuiGraphicsExtractor ctx, Component text, int x, int y, int maxWidth, int argbColor) {
-        int w = this.font.width(text);
-        if (w <= maxWidth || w <= 0) {
-            ctx.text(this.font, text, x, y, argbColor, true);
-        } else {
-            float scale = (float) maxWidth / (float) w;
-            ctx.pose().pushMatrix();
-            ctx.pose().translate(x, y + (1.0f - scale) * 4.0f);
-            ctx.pose().scale(scale, scale);
-            ctx.text(this.font, text, 0, 0, argbColor, true);
-            ctx.pose().popMatrix();
-        }
+        String raw = text.getString();
+        String fitted = this.font.width(raw) <= maxWidth ? raw : this.font.plainSubstrByWidth(raw, maxWidth);
+        ctx.text(this.font, Component.literal(fitted), x, y, argbColor, true);
     }
 
     @Override
@@ -263,23 +255,21 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         int fx = i + FREEZE_BTN_X;
         int fy = j + FREEZE_BTN_Y;
         boolean canFreeze = this.menu.canAffordFreezeEpiphany();
-        int freezeTint = canFreeze
-            ? (isOverFreezeButton(mouseX, mouseY) ? 0xFFFFFFFF : 0xFFEAFBFF)
-            : (unlocked ? 0x99FFFFFF : 0x55FFFFFF);
-        ctx.blit(BTN_FREEZE, fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f, freezeTint);
-        if (isOverFreezeButton(mouseX, mouseY) && canFreeze) {
-            ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0x2890F5FF);
+        ctx.blit(BTN_FREEZE, fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+        if (!canFreeze) {
+            ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, unlocked ? 0x66100C1A : 0xAA0C0814);
+        } else if (isOverFreezeButton(mouseX, mouseY)) {
+            ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0x2C90F5FF);
         }
 
         int rx = i + REROLL_BTN_X;
         int ry = j + REROLL_BTN_Y;
         boolean canReroll = this.menu.canAffordRerollEpiphany();
-        int rerollTint = canReroll
-            ? (isOverRerollButton(mouseX, mouseY) ? 0xFFFFFFFF : 0xFFFFF4DC)
-            : (unlocked ? 0x99FFFFFF : 0x55FFFFFF);
-        ctx.blit(BTN_REROLL, rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f, rerollTint);
-        if (isOverRerollButton(mouseX, mouseY) && canReroll) {
-            ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0x28FFE082);
+        ctx.blit(BTN_REROLL, rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+        if (!canReroll) {
+            ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, unlocked ? 0x66100C1A : 0xAA0C0814);
+        } else if (isOverRerollButton(mouseX, mouseY)) {
+            ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0x2CFFE082);
         }
     }
 
