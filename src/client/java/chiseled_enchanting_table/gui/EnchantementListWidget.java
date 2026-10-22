@@ -300,6 +300,28 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
+    public EnchantUiEntry hoveredSpecialRowEntry(double mouseX, double mouseY) {
+        if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
+            return null;
+        }
+        for (EnchantUiEntry entry : this.children()) {
+            int dx = entry.is_category_header ? (entry.getX() + 1) : entry.effectiveDx();
+            int dy = entry.getY();
+            int dw = entry.is_category_header ? (entry.getWidth() - 2) : entry.effectiveDw();
+            int dh = entry.getHeight();
+            if (mouseX >= dx && mouseX <= dx + dw && mouseY >= dy && mouseY <= dy + dh) {
+                if (entry.is_category_header && !entry.cleanse_theme) {
+                    return entry;
+                }
+                if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(entry.enchantment_id)) {
+                    return entry;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     public List<List<ItemStack>> hoveredCostOptions(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;
@@ -476,6 +498,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 } else if (researchEnabled
                     && !cost_item_stack.is(Items.ENCHANTED_BOOK)
                     && !cost_item_stack.is(Items.BOOK)
+                    && this.handler.canDirectResearchUpgradeTo(id, targetLevel)
                     && !unlockedDirectSet.contains(new EnchantmentWithLevel(id, targetLevel))) {
                     options.add(AvailableOption.bookResearchUpgrade(id, targetLevel));
                 }
@@ -746,15 +769,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return bundle.size() <= 1 ? List.of() : bundle.subList(1, bundle.size());
         }
 
-        private boolean isFreeCleanseRow() {
+        private boolean isZeroMaterialRow() {
             return option_type == OptionType.DISENCHANT_ALL
                 || option_type == OptionType.DOWNGRADE_ENCHANTMENT
-                || (option_type == OptionType.STRIP_SINGLE_ENCHANTMENT && cost_options.isEmpty());
+                || (option_type == OptionType.STRIP_SINGLE_ENCHANTMENT && cost_options.isEmpty())
+                || (is_transformation && cost_options.isEmpty());
         }
 
         private boolean isBundleFullyAffordable(List<ItemStack> bundle) {
             if (player.getAbilities().instabuild) return true;
-            if (bundle.isEmpty()) return isFreeCleanseRow() || cost_item_stack.is(Items.ENCHANTED_BOOK);
+            if (bundle.isEmpty()) return isZeroMaterialRow() || cost_item_stack.is(Items.ENCHANTED_BOOK);
             ItemStack primary = bundle.getFirst();
             if (primary.isEmpty()
                 || !ItemStack.isSameItemSameComponents(primary, cost_item_stack)
@@ -784,7 +808,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean primaryCostMet() {
-            if (player.getAbilities().instabuild || isFreeCleanseRow()) return true;
+            if (player.getAbilities().instabuild || isZeroMaterialRow()) return true;
             ItemStack cost = activePrimaryCost();
             if (cost.isEmpty() && cost_item_stack.is(Items.ENCHANTED_BOOK)) return true;
             return !cost.isEmpty()
@@ -815,7 +839,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean itemCostConditionMet() {
-            if (player.getAbilities().instabuild || isFreeCleanseRow()) return true;
+            if (player.getAbilities().instabuild || isZeroMaterialRow()) return true;
             if (cost_options.isEmpty()) {
                 return cost_item_stack.is(Items.ENCHANTED_BOOK);
             }
@@ -1018,12 +1042,30 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
             if (is_transformation) {
                 String outputName = handler.syncedTransformationOutputName(this.enchantment_id);
-                String rowTitle = this.enchantment_id.equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)
+                boolean isBlankOverwrite = this.enchantment_id.equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID);
+                String rowTitle = isBlankOverwrite
                     ? I18n.get("gui.chiseled_enchanting_table.blank_overwrite", outputName)
                     : outputName;
+                String subText = null;
+                int subColor = RowRenderSupport.LIGHT_GREEN;
+                if (isBlankOverwrite) {
+                    var dtTier = handler.depletedTomeTier();
+                    subText = switch (dtTier) {
+                        case BASELINE -> I18n.get("gui.chiseled_enchanting_table.depleted_tome.sub_t0", handler.regularBookshelves);
+                        case TIER_1_NO_XP -> I18n.get("gui.chiseled_enchanting_table.depleted_tome.sub_t1", handler.regularBookshelves);
+                        case TIER_2_DISCOUNT_MAT -> I18n.get("gui.chiseled_enchanting_table.depleted_tome.sub_t2", handler.highTierChiseledBooks);
+                        case TIER_3_FREE -> I18n.get("gui.chiseled_enchanting_table.depleted_tome.sub_t3");
+                    };
+                    subColor = switch (dtTier) {
+                        case BASELINE -> RowRenderSupport.CYAN;
+                        case TIER_1_NO_XP -> RowRenderSupport.CYAN;
+                        case TIER_2_DISCOUNT_MAT -> RowRenderSupport.EPIPHANY_GOLD;
+                        case TIER_3_FREE -> RowRenderSupport.LIGHT_GREEN;
+                    };
+                }
                 TransformationRowRenderer.render(
                     ctx, client, dx, dy, dw, dh, isFocused, hovered, canEnchant(),
-                    primaryMet, additionalMet, xpMet, rowTitle, cost, additional_costs, xp_requirement
+                    primaryMet, additionalMet, xpMet, rowTitle, subText, subColor, cost, additional_costs, xp_requirement
                 );
                 return;
             }

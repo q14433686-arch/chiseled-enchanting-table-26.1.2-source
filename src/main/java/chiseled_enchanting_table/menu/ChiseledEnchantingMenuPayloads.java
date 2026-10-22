@@ -77,6 +77,7 @@ public final class ChiseledEnchantingMenuPayloads {
         int xp_discount_percent,
         int regular_bookshelves,
         int chiseled_book_count,
+        int high_tier_chiseled_books,
         int epiphany_seed,
         java.util.Map<Identifier, Integer> stored_master_levels
     ) implements CustomPacketPayload {
@@ -86,7 +87,7 @@ public final class ChiseledEnchantingMenuPayloads {
             CustomPacketPayload.codec(AvailableEnchantmentPayload::write, AvailableEnchantmentPayload::read);
 
         public AvailableEnchantmentPayload(Set<EnchantmentWithLevel> unlocked_enchantements) {
-            this(unlocked_enchantements, buildTransformationDisplays(), 0, 0, 0, 1, java.util.Map.of());
+            this(unlocked_enchantements, buildTransformationDisplays(), 0, 0, 0, 0, 1, java.util.Map.of());
         }
 
         public AvailableEnchantmentPayload(
@@ -96,7 +97,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int chiseled_book_count,
             int epiphany_seed
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, epiphany_seed, java.util.Map.of());
+            this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, java.util.Map.of());
         }
 
         public AvailableEnchantmentPayload(
@@ -107,7 +108,19 @@ public final class ChiseledEnchantingMenuPayloads {
             int epiphany_seed,
             java.util.Map<Identifier, Integer> stored_master_levels
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, epiphany_seed, stored_master_levels);
+            this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, stored_master_levels);
+        }
+
+        public AvailableEnchantmentPayload(
+            Set<EnchantmentWithLevel> unlocked_enchantements,
+            int xp_discount_percent,
+            int regular_bookshelves,
+            int chiseled_book_count,
+            int high_tier_chiseled_books,
+            int epiphany_seed,
+            java.util.Map<Identifier, Integer> stored_master_levels
+        ) {
+            this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, high_tier_chiseled_books, epiphany_seed, stored_master_levels);
         }
 
         private static List<TransformationDisplay> buildTransformationDisplays() {
@@ -129,6 +142,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(Math.max(0, xp_discount_percent));
             buf.writeVarInt(Math.max(0, regular_bookshelves));
             buf.writeVarInt(Math.max(0, chiseled_book_count));
+            buf.writeVarInt(Math.max(0, high_tier_chiseled_books));
             buf.writeInt(epiphany_seed);
             buf.writeVarInt(stored_master_levels == null ? 0 : stored_master_levels.size());
             if (stored_master_levels != null) {
@@ -145,6 +159,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int xpDiscountPercent = buf.readVarInt();
             int regularBookshelves = buf.readVarInt();
             int chiseledBookCount = buf.readVarInt();
+            int highTierChiseledBooks = buf.readVarInt();
             int epiphanySeed = buf.readInt();
             int masterSize = buf.readVarInt();
             java.util.Map<Identifier, Integer> masterLevels = new java.util.HashMap<>(Math.max(4, masterSize * 2));
@@ -153,7 +168,7 @@ public final class ChiseledEnchantingMenuPayloads {
                 int lvl = buf.readVarInt();
                 masterLevels.put(id, Math.max(1, lvl));
             }
-            return new AvailableEnchantmentPayload(unlocked, transformations, xpDiscountPercent, regularBookshelves, chiseledBookCount, epiphanySeed, java.util.Map.copyOf(masterLevels));
+            return new AvailableEnchantmentPayload(unlocked, transformations, xpDiscountPercent, regularBookshelves, chiseledBookCount, highTierChiseledBooks, epiphanySeed, java.util.Map.copyOf(masterLevels));
         }
 
         @Override

@@ -82,6 +82,7 @@ public final class BookUpgradeApplication {
         int targetLevel = payload.enchantment_level();
         int sourceLevel = targetLevel - 1;
         if (sourceLevel < 1 || targetLevel > enchantment.value().getMaxLevel()) return false;
+        if (!handler.canDirectResearchUpgradeTo(payload.enchantment_id(), targetLevel)) return false;
 
         ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(targetBook);
         if (current.getLevel(enchantment) != sourceLevel) return false;

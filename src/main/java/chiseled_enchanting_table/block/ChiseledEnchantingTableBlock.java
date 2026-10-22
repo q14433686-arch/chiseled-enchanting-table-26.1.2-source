@@ -211,6 +211,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             shelfPower.xpDiscountPercent(),
             shelfPower.regularBookshelves(),
             shelfPower.totalChiseledEnchantedBooks(),
+            shelfPower.highTierChiseledBooks(),
             tableBlockEntity.getOrInitEpiphanySeed(),
             shelfPower.storedMasterLevels()
         );
@@ -309,6 +310,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int regularBookshelves,
         int chiseledBookshelvesWithBooks,
         int totalChiseledEnchantedBooks,
+        int highTierChiseledBooks,
         double totalMasteryUnits,
         Map<Identifier, Integer> storedMasterLevels
     ) {
@@ -341,6 +343,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int regularBookshelves = 0;
         int chiseledBookshelvesWithBooks = 0;
         int totalChiseledEnchantedBooks = 0;
+        int highTierChiseledBooks = 0;
         Map<Identifier, Integer> storedMasterLevels = new HashMap<>();
         for (BlockPos scannedPos : streamLibraryPositions(tablePos).toList()) {
             BlockState nearbyState = level.getBlockState(scannedPos);
@@ -349,6 +352,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             } else if (nearbyState.is(Blocks.CHISELED_BOOKSHELF)) {
                 BlockEntity be = level.getBlockEntity(scannedPos);
                 if (be instanceof ChiseledBookShelfBlockEntity cbsbe) {
+                    highTierChiseledBooks += chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
+                        .countHighTierBooksInShelf(cbsbe);
                     List<EnchantmentWithLevel> found = EnchantmentFinder.streamAllEnchantements(cbsbe, level).toList();
                     if (!found.isEmpty()) {
                         chiseledBookshelvesWithBooks++;
@@ -366,6 +371,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             regularBookshelves,
             chiseledBookshelvesWithBooks,
             totalChiseledEnchantedBooks,
+            highTierChiseledBooks,
             totalUnits,
             Map.copyOf(storedMasterLevels)
         );
@@ -373,9 +379,9 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     private static EnchantmentWithLevel withWoodenShelfBoost(Level level, EnchantmentWithLevel enchantment, int regularBookshelfPower) {
         int maxLvl = maxLevel(level, enchantment.enchantment_id());
-        int woodenCap = maxLvl <= 1 ? 1 : (maxLvl + 1) / 2;
-        int boostedLevel = enchantment.enchantment_level() + regularBookshelfPower / 5;
-        return new EnchantmentWithLevel(enchantment.enchantment_id(), Math.max(1, Math.min(woodenCap, boostedLevel)));
+        int unlockedCap = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
+            .maxUnlockedDirectTier(maxLvl, regularBookshelfPower);
+        return new EnchantmentWithLevel(enchantment.enchantment_id(), Math.max(enchantment.enchantment_level(), unlockedCap));
     }
 
     private static EnchantmentWithLevel clampToMaxLevel(Level level, EnchantmentWithLevel enchantment) {

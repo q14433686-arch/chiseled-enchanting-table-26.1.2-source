@@ -1,5 +1,5 @@
 {
-  "_comment": "Two-track progression baseline: standard multi-level table enchantments start at level 1 and scale with Wooden Bookshelves up to ceil(maxLevel / 2). All 11 Treasure / pinnacle enchantments are strictly excluded here so they ONLY appear via (1) a Master Tome in a nearby Chiseled Bookshelf OR (2) Grand Library Treasure Epiphany (>= 32 Wooden Bookshelves).",
+  "_comment": "Two-track progression baseline: standard multi-level table enchantments start at level 1 and scale via surrounding Wooden Bookshelves across integer thresholds up to MAX at 38 bookshelves, while Chiseled Bookshelf Master Tomes always unlock 1:1 immediately alongside mass-production XP mode. All 11 Treasure / pinnacle enchantments are strictly excluded here so they ONLY appear via (1) a Master Tome in a nearby Chiseled Bookshelf OR (2) Grand Library Treasure Epiphany (>= 32 Wooden Bookshelves).",
   "values": [],
   "tags": [
     {

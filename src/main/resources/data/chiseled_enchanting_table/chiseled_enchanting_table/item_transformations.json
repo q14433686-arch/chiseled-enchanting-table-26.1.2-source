@@ -6,15 +6,15 @@
       "output": "minecraft:book",
       "level": 1,
       "xp_cost": 1,
-      "primary_cost": { "item": "minecraft:paper", "count": 3 },
+      "primary_cost": { "item": "minecraft:paper", "count": 4 },
       "cost_options": [
-        { "item": "minecraft:paper", "count": 3 },
-        { "item": "minecraft:bone_meal", "count": 3 },
-        { "item": "minecraft:lapis_lazuli", "count": 3 },
+        { "item": "minecraft:paper", "count": 4 },
+        { "item": "minecraft:bone_meal", "count": 4 },
+        { "item": "minecraft:lapis_lazuli", "count": 4 },
         { "item": "minecraft:emerald", "count": 2 },
-        { "item": "minecraft:ink_sac", "count": 1 },
-        { "item": "minecraft:glow_ink_sac", "count": 1 },
-        { "item": "minecraft:amethyst_shard", "count": 1 }
+        { "item": "minecraft:ink_sac", "count": 2 },
+        { "item": "minecraft:glow_ink_sac", "count": 2 },
+        { "item": "minecraft:amethyst_shard", "count": 2 }
       ]
     },
     {

@@ -97,6 +97,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public final int xpDiscountPercent;
     public final int regularBookshelves;
     public final int chiseledBookCount;
+    public final int highTierChiseledBooks;
     public final java.util.Map<Identifier, Integer> storedMasterLevels;
     private int epiphanySeed;
     private int syncedCycleIndex;
@@ -140,6 +141,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         );
         this.regularBookshelves = Math.max(0, payload.regular_bookshelves());
         this.chiseledBookCount = Math.max(0, payload.chiseled_book_count());
+        this.highTierChiseledBooks = Math.max(0, payload.high_tier_chiseled_books());
         this.storedMasterLevels = payload.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(payload.stored_master_levels());
@@ -178,7 +180,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             @Override
             public int getMaxStackSize(ItemStack stack) {
                 if (stack.is(BlockRegistry.DEPLETED_TOME)) {
-                    return 8;
+                    return depletedTomeMaxBatchSize();
                 }
                 return 1;
             }
@@ -615,7 +617,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             return getEnchantmentItemCostOptions(e, OptionType.STRIP_SINGLE_ENCHANTMENT);
         }
         if (type == OptionType.PURGE_CURSE || type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            return getEnchantmentItemCostOptions(e, type);
+            List<List<ItemStack>> base = getEnchantmentItemCostOptions(e, type);
+            if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(e.enchantment_id())) {
+                return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
+                    .applyDepletedTomeMaterialTier(base, depletedTomeTier());
+            }
+            return base;
         }
 
         int existingLevel = currentTargetEnchantLevel(e.enchantment_id());
@@ -680,6 +687,29 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             }
         }
         return List.of();
+    }
+
+    public chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier depletedTomeTier() {
+        return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.resolveDepletedTomeTier(
+            this.regularBookshelves,
+            this.highTierChiseledBooks
+        );
+    }
+
+    public int depletedTomeMaxBatchSize() {
+        return depletedTomeTier() == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.TIER_3_FREE
+            ? 64
+            : 8;
+    }
+
+    public boolean canDirectResearchUpgradeTo(Identifier enchantmentId, int targetLevel) {
+        int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(this.world, enchantmentId);
+        int cap = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.effectiveUnlockedTierCap(
+            maxLvl,
+            this.regularBookshelves,
+            storedMasterLevel(enchantmentId)
+        );
+        return targetLevel >= 1 && targetLevel <= cap;
     }
 
     public int storedMasterLevel(Identifier enchantmentId) {
@@ -785,7 +815,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         int rawCost = getBaseEnchantmentXpLevelCost(e, type);
         int discount = effectiveXpDiscountPercent(e.enchantment_id(), type);
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            return XpCostConversion.forTransformation(e.enchantment_id(), rawCost, discount);
+            var baseTransformXp = XpCostConversion.forTransformation(e.enchantment_id(), rawCost, discount);
+            if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(e.enchantment_id())) {
+                return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
+                    .applyDepletedTomeXpTier(baseTransformXp, depletedTomeTier());
+            }
+            return baseTransformXp;
         }
 
         int existingLevel = currentTargetEnchantLevel(e.enchantment_id());
@@ -1239,8 +1274,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     @org.jetbrains.annotations.Nullable
     public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
         List<List<ItemStack>> options = getEffectiveItemCostOptions(ewl, type);
+        if (options.isEmpty()) {
+            return List.of();
+        }
         if (this.player.getAbilities().instabuild) {
-            return options.isEmpty() ? List.of() : options.getFirst();
+            return options.getFirst();
         }
         ItemStack itemCostStack = this.get_cost_item();
         for (List<ItemStack> bundle : options) {
@@ -1334,10 +1372,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 return;
             }
             ItemStack existingTarget = this.getSlot(ENCHANTABLE_SLOT).getItem();
+            int depletedLimit = depletedTomeMaxBatchSize();
             if (clickedStack.is(BlockRegistry.DEPLETED_TOME)
                 && existingTarget.is(BlockRegistry.DEPLETED_TOME)
-                && existingTarget.getCount() < 8) {
-                int space = 8 - existingTarget.getCount();
+                && existingTarget.getCount() < depletedLimit) {
+                int space = depletedLimit - existingTarget.getCount();
                 int move = Math.min(space, clickedStack.getCount());
                 existingTarget.grow(move);
                 clickedStack.shrink(move);

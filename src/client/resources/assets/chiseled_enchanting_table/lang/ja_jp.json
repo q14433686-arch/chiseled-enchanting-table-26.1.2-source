@@ -82,7 +82,7 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "空白上書き：%s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "白紙還し",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "彫模様のエンチャント台で「空白上書き」を行い、魔力枯れの残巻を新品の本へ浄化する",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "エンチャントの本の統合や魔力抽出後に残る巻物（最大64個スタック）。最大8冊まで一度に「空白上書き」（1レベル＋紙・骨粉・イカスミ・輝くイカスミ・アメジストの欠片のいずれか）で通常の本へ戻せます。",
+  "jei.chiseled_enchanting_table.info.depleted_tome": "Left behind when an Enchanted Book is merged or stripped (stacks to 64). 3-stage restoration to plain Books: 8+ Bookshelves removes XP cost; 18+ Bookshelves halves material cost; 18+ Bookshelves + 6+ MAX/(MAX-1) books in Chiseled Bookshelves makes restoration completely FREE!",
   "gui.chiseled_enchanting_table.resonance.wooden_locked": "通常の本棚：%s / %s 個 → +0%%（12個以上で割引発動）",
   "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "原典相対階位：%s 完本換算 → 全体 +%s%%（同種原典でさらに最大 -15%%）",
   "gui.chiseled_enchanting_table.resonance.affinity_line": "対象装備の同系統原典：%s 完本換算（閃き率・同時枠上限を強化）",
@@ -137,5 +137,18 @@
   "jei.chiseled_enchanting_table.tooltip.xp_refund": "Free · Refunds XP points",
   "jei.chiseled_enchanting_table.tooltip.xp_full": "Cost: %s XP levels",
   "jei.chiseled_enchanting_table.info.cleansing_grit": "Crafted 4 at a time from Flint, Nether Quartz, Glow Ink Sac, and Bone Meal. Used in the Cleanse tab of the Chiseled Enchanting Table to strip a single unwanted enchantment while keeping all others, or combined with a Ghast Tear to purge Curses.",
-  "gui.chiseled_enchanting_table.category.count": "%s件"
+  "gui.chiseled_enchanting_table.category.count": "%s件",
+  "gui.chiseled_enchanting_table.xp_mode.free_tome": "Bookshelf Resonance (8+ Bookshelves): 0 XP Cost",
+  "gui.chiseled_enchanting_table.depleted_tome.sub_t0": "✦ %s/8 Shelves: No XP",
+  "gui.chiseled_enchanting_table.depleted_tome.sub_t1": "✦ Tier I: 0 XP · %s/18",
+  "gui.chiseled_enchanting_table.depleted_tome.sub_t2": "✦ Tier II: -50% Mat · %s/6",
+  "gui.chiseled_enchanting_table.depleted_tome.sub_t3": "✦ Tier III: Free Restore",
+  "gui.chiseled_enchanting_table.depleted_tome.tip_title": "✦ Depleted Tome 3-Stage Restoration",
+  "gui.chiseled_enchanting_table.depleted_tome.tip_g1": "• Tier I (No XP Loss): %s / %s Regular Bookshelves",
+  "gui.chiseled_enchanting_table.depleted_tome.tip_g2": "• Tier II (-50%% Material Cost): %s / %s Regular Bookshelves",
+  "gui.chiseled_enchanting_table.depleted_tome.tip_g3": "• Tier III (Completely Free): %s/%s Shelves + %s/%s MAX/(MAX-1) Chiseled Books",
+  "gui.chiseled_enchanting_table.category.tip_cap": "Unlocked Tier Cap: %s / %s (Bookshelves: %s / %s)",
+  "gui.chiseled_enchanting_table.category.tip_next": "Next Direct Tier (%s): Requires %s Regular Bookshelves (MAX = %s)",
+  "gui.chiseled_enchanting_table.category.tip_master": "Master Tome & Book Combine routes remain independent of bookshelf count",
+  "gui.chiseled_enchanting_table.resonance.high_tier_books": "High-Tier Chiseled Tomes (MAX / MAX-1): %s / %s"
 }

@@ -82,7 +82,7 @@
   "gui.chiseled_enchanting_table.blank_overwrite": "覆寫：%s",
   "advancements.chiseled_enchanting_table.blank_overwrite.title": "洗盡鉛華",
   "advancements.chiseled_enchanting_table.blank_overwrite.description": "在纂刻附魔台上對褪魔殘卷施行「空白覆寫」，滌除殘餘銘痕並還原為嶄新的書",
-  "jei.chiseled_enchanting_table.info.depleted_tome": "附魔書在合書升階或剝離全部魔咒後遺留的殘卷（可堆疊至 64）。無法直接附魔或參與合成；將其放入纂刻附魔台（單次最多 8 本），消耗 1 級經驗與任一滌墨材料（2×紙 / 2×骨粉 / 1×墨囊 / 1×發光墨囊 / 1×紫水晶碎片）即可經「空白覆寫」還原為純淨可堆疊的普通書。",
+  "jei.chiseled_enchanting_table.info.depleted_tome": "附魔書合併或剝離後留下的殘卷（可 64 堆疊）。依周圍書庫分三梯度還原為普通書：≥8 普通書架免除經驗損耗；≥18 普通書架額外減半所需材料；≥18 普通書架且雕紋書架存有 ≥6 本 MAX 或 MAX-1 附魔書時，完全免費轉化為普通書！",
   "gui.chiseled_enchanting_table.resonance.wooden_locked": "普通書架：%s / %s 個 → +0%%（滿 12 個起算經驗折扣）",
   "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "母版總品階：折算 %s 完本 → 公共 +%s%%（同種母版最高再減 15%%）",
   "gui.chiseled_enchanting_table.resonance.affinity_line": "當前器物同系母版：折算 %s 完本（提升頓悟率與同件產出上限）",
@@ -137,5 +137,18 @@
   "jei.chiseled_enchanting_table.tooltip.xp_refund": "免費 · 返還經驗點",
   "jei.chiseled_enchanting_table.tooltip.xp_full": "消耗：%s 級經驗",
   "jei.chiseled_enchanting_table.info.cleansing_grit": "由燧石、地獄石英、螢光墨囊與骨粉無序合成（每次 4 份）。放入附魔台材料槽並配合背包中的青金石、螢光墨囊或紫水晶碎片雙材料消耗，可保留其餘附魔單獨抹除指定詞條，或配合惡魂之淚破除詛咒。",
-  "gui.chiseled_enchanting_table.category.count": "%s 項"
+  "gui.chiseled_enchanting_table.category.count": "%s 項",
+  "gui.chiseled_enchanting_table.xp_mode.free_tome": "書庫共鳴（普通書架 ≥8）：免除全部經驗損耗",
+  "gui.chiseled_enchanting_table.depleted_tome.sub_t0": "✦ 書架 %s/8 免經驗",
+  "gui.chiseled_enchanting_table.depleted_tome.sub_t1": "✦ I階免經驗 · %s/18減材",
+  "gui.chiseled_enchanting_table.depleted_tome.sub_t2": "✦ II階減材 · 高階書 %s/6",
+  "gui.chiseled_enchanting_table.depleted_tome.sub_t3": "✦ III階：免費還原成書",
+  "gui.chiseled_enchanting_table.depleted_tome.tip_title": "✦ 褪魔殘卷 · 三梯度還原條件",
+  "gui.chiseled_enchanting_table.depleted_tome.tip_g1": "• 梯度一（僅免除經驗損耗）：普通書架 %s / %s 個",
+  "gui.chiseled_enchanting_table.depleted_tome.tip_g2": "• 梯度二（免經驗 + 材料減半）：普通書架 %s / %s 個",
+  "gui.chiseled_enchanting_table.depleted_tome.tip_g3": "• 梯度三（完全免費轉化為書）：普通書架 %s/%s 且雕紋高階書（MAX/MAX-1）%s/%s 本",
+  "gui.chiseled_enchanting_table.category.tip_cap": "目前可直升上限：%s / %s 級（普通書架：%s / %s）",
+  "gui.chiseled_enchanting_table.category.tip_next": "下一等級（%s 級）需普通書架：%s 個（滿級 MAX 需 %s 個）",
+  "gui.chiseled_enchanting_table.category.tip_master": "註：雕紋書架母本解鎖與雙書合併升級路線不受此限制",
+  "gui.chiseled_enchanting_table.resonance.high_tier_books": "雕紋高階藏書（MAX / MAX-1）：%s / %s 本"
 }

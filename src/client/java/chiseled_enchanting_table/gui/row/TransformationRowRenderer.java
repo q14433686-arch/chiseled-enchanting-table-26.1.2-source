@@ -5,6 +5,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Renders a transformation list row with unified {@code midY} centering and inner-border scissor clipping.
@@ -27,6 +28,30 @@ public final class TransformationRowRenderer {
         List<ItemStack> additionalCosts,
         XpRequirement xpRequirement
     ) {
+        render(
+            ctx, client, dx, dy, dw, dh, isFocused, hovered, canEnchant,
+            primaryCostMet, additionalCostsMet, xpMet, outputName,
+            null, 0, primaryCost, additionalCosts, xpRequirement
+        );
+    }
+
+    public static void render(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        int dx, int dy, int dw, int dh,
+        boolean isFocused,
+        boolean hovered,
+        boolean canEnchant,
+        boolean primaryCostMet,
+        List<Boolean> additionalCostsMet,
+        boolean xpMet,
+        String outputName,
+        @Nullable String customSubtitle,
+        int customSubtitleColor,
+        ItemStack primaryCost,
+        List<ItemStack> additionalCosts,
+        XpRequirement xpRequirement
+    ) {
         RowRenderSupport.drawPlaque(
             ctx,
             dx,
@@ -43,18 +68,25 @@ public final class TransformationRowRenderer {
         try {
             int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
             int itemY = RowRenderSupport.costIconY(dy, dh);
-            RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+            if (!primaryCost.isEmpty()) {
+                RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+            } else {
+                float midY = RowRenderSupport.rowMidY(dy, dh);
+                RowRenderSupport.renderCenteredYText(ctx, client, "\u2714", itemX + 2, midY, 0.90f, 12, RowRenderSupport.LIGHT_GREEN);
+            }
             RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, additionalCostsMet, dx, dw, itemY);
 
             int nameX = dx + RowRenderSupport.NAME_OFFSET_X;
             int maxTextW = RowRenderSupport.availableTextWidth(dx, dw, additionalCosts.size());
+            String subText = customSubtitle != null ? customSubtitle : ("\u2726 \u2192 " + outputName);
+            int subColor = customSubtitle != null ? customSubtitleColor : RowRenderSupport.LIGHT_GREEN;
             RowRenderSupport.renderTwoLineCenteredBlock(
                 ctx,
                 client,
                 outputName,
                 RowRenderSupport.TRANSFORM_GOLD,
-                "\u2726 \u2192 " + outputName,
-                RowRenderSupport.LIGHT_GREEN,
+                subText,
+                subColor,
                 nameX,
                 dy,
                 dh,

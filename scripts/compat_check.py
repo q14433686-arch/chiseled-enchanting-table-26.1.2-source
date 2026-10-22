@@ -767,6 +767,52 @@ def check_disenchanting_and_anti_arbitrage() -> None:
                     f"disenchanting.json 'targeted_strip.options[{idx}]' must require cleansing_grit: got {involved}"
                 )
 
+    # Verify BookshelfProgression exact integer curve (I=0 .. MAX=38) & 3-gradient Depleted Tome rules!
+    import math
+    def req_shelves(target_lvl: int, max_lvl: int) -> int:
+        s_max = max(1, max_lvl)
+        s_tgt = max(1, min(s_max, target_lvl))
+        if s_max <= 1 or s_tgt <= 1:
+            return 0
+        if s_tgt >= s_max:
+            return 38
+        prog = (s_tgt - 1) / (s_max - 1)
+        raw = int(math.floor(38.0 * (prog ** 1.11) + 0.5))
+        min_a = min(37, s_tgt - 1)
+        max_a = max(1, 38 - (s_max - s_tgt))
+        return max(min(min_a, max_a), min(raw, max_a))
+
+    expected_vanilla_curves = {
+        1: [0],
+        2: [0, 38],
+        3: [0, 18, 38],
+        4: [0, 11, 24, 38],
+        5: [0, 8, 18, 28, 38],
+    }
+    for m_lvl, exp_curve in expected_vanilla_curves.items():
+        got = [req_shelves(l, m_lvl) for l in range(1, m_lvl + 1)]
+        if got != exp_curve:
+            errors.append(f"BookshelfProgression curve mismatch for maxLevel={m_lvl}: expected {exp_curve}, got {got}")
+    for modded_max in (6, 7, 8, 10, 15):
+        seq = [req_shelves(l, modded_max) for l in range(1, modded_max + 1)]
+        if seq[0] != 0 or seq[-1] != 38 or any(seq[i] >= seq[i + 1] for i in range(len(seq) - 1)):
+            errors.append(f"Non-monotonic modded BookshelfProgression sequence for maxLevel={modded_max}: {seq}")
+
+    transforms_path = os.path.join(
+        REPO,
+        "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/item_transformations.json",
+    )
+    t_json = json.load(open(transforms_path, encoding="utf-8"))
+    blank_entry = next((v for v in t_json.get("values", []) if v.get("id") == "chiseled_enchanting_table:blank_overwrite"), None)
+    if not blank_entry:
+        errors.append("item_transformations.json missing chiseled_enchanting_table:blank_overwrite")
+    else:
+        for opt in blank_entry.get("cost_options", []):
+            cnt = opt.get("count", 0)
+            disc = max(1, int(math.floor(cnt * 0.50)))
+            if cnt < 2 or disc >= cnt:
+                errors.append(f"blank_overwrite option {opt} must have count >= 2 so Tier-2 (18 shelves) strictly discounts material quantity!")
+
     def xp_for_level(level: int) -> int:
         if level >= 30:
             return 112 + (level - 30) * 9
