@@ -10,18 +10,16 @@
 > bug reports about this port to **this** repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`),
 > not to the upstream project.
 
-**Current version:** `1.0.3` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+**Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
 **Target:** Minecraft `26.1.2`, Fabric Loader `>=0.19.3`, Fabric API `0.151.0+26.1.2`, Java `>=25`.
 
 📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)**
 
-`1.0.3` on this branch is the back-port of the sister `26.3` branch's fixes and features — the
-worldgen bookshelf deadlock fix ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)),
-optional JEI + REI integration, server-authoritative enchantment costs, 11 languages and the CI
-triad — adapted to the 26.1.2 API and data schemas. What was taken, what was adapted and what was
-deliberately left on the 26.3 branch is recorded in
-[`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md); user-visible
-changes are in [`CHANGELOG.md`](CHANGELOG.md).
+`1.1.0` builds on the `1.0.3` 26.3-sync baseline ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)
+worldgen deadlock fix, S2C enchantment costs, 11 languages, and CI triad — see
+[`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md)) with a comprehensive
+progression, balance, UI/UX, and recipe-viewer overhaul; user-visible changes are in
+[`CHANGELOG.md`](CHANGELOG.md) and [`docs/WIKI.md`](docs/WIKI.md).
 
 A Minecraft Fabric mod that enhances the enchanting experience.
 
@@ -35,9 +33,9 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 
 ## Installation
 
-Grab the latest `chiseled-enchanting-table-1.0.3.jar` from the `build` workflow's artifact on the
+Grab the latest `chiseled-enchanting-table-1.1.0.jar` from the `build` workflow's artifact on the
 branch you want (Actions → *build* → **Artifacts**, kept 14 days) or from
-`release_output/chiseled_enchanting_table_1_0_3/` when a release is staged there, and drop it into
+`release_output/chiseled_enchanting_table_1_1_0/` when a release is staged there, and drop it into
 your Fabric `mods/` folder alongside Fabric API `0.151.0+26.1.2`.
 
 To build it yourself: JDK 25 + network access to `maven.fabricmc.net` (the dev sandbox this port is
@@ -92,7 +90,7 @@ history, including the two failed runs and what each one taught us.
 | [`compile-check.yml`](.github/workflows/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API (Actions log blobs are unreachable from the sandbox). The log also records which artifact versions the floating viewer coordinates resolved to, and a failure additionally commits back `build-reports/compile-deps.log` with the dependency graph | push to `arena/**` / this branch, PRs |
 | [`build.yml`](.github/workflows/build.yml) | static gates first (no network needed) → full `./gradlew build` + jar artifact (14 days), plus a **`no-viewers`** job that compiles with `-Penable_jei=false -Penable_rei=false` | push / PR |
 | [`consistency.yml`](.github/workflows/consistency.yml) | version gate for "bumped one place, forgot the other four", plus a warn-only `docs/ci` drift check | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml`, `docs/ci/publish.yml` |
-| [`publish.yml`](.github/workflows/publish.yml) | manual release to GitHub / Modrinth (`MINECRAFT_VERSION: 26.1.2`, `VERSION: 1.0.3`) | `workflow_dispatch` only |
+| [`publish.yml`](.github/workflows/publish.yml) | manual release to GitHub / Modrinth (`MINECRAFT_VERSION: 26.1.2`, `VERSION: 1.1.0`) | `workflow_dispatch` only |
 
 `docs/ci/` keeps byte-identical reference copies of all four, because a GitHub App token without
 `workflows: write` cannot create or update workflow files; `bash docs/ci/install.sh --check` reports
