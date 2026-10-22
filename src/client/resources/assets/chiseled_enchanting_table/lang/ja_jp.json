@@ -86,5 +86,14 @@
   "gui.chiseled_enchanting_table.resonance.wooden_locked": "通常の本棚：%s / %s 個 → +0%%（12個以上で割引発動）",
   "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "原典相対階位：%s 完本換算 → 全体 +%s%%（同種原典でさらに最大 -15%%）",
   "gui.chiseled_enchanting_table.resonance.affinity_line": "対象装備の同系統原典：%s 完本換算（閃き率・同時枠上限を強化）",
-  "gui.chiseled_enchanting_table.resonance.specific_line": "原典共鳴 Lv.%s/%s → 専用追加 -%s%% 経験値（合計 -%s%%）"
+  "gui.chiseled_enchanting_table.resonance.specific_line": "原典共鳴 Lv.%s/%s → 専用追加 -%s%% 経験値（合計 -%s%%）",
+  "gui.chiseled_enchanting_table.xp_mode.free": "✦ エンチャント本転写：経験値消費なし",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.title": "✦ バニラ量産式（緑の経験値オーブ）",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.threshold": " • 必要レベル：Lv.%s 以上（現在 Lv.%s）",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.consume": " • 実際の消費：わずか %s レベルのみ消費",
+  "gui.chiseled_enchanting_table.xp_mode.full.title": "✦ 秘術全量注入式（紫金の秘薬瓶）",
+  "gui.chiseled_enchanting_table.xp_mode.full.consume": " • 実際の消費：%s レベル分の経験値を完全消費（現在 Lv.%s）",
+  "gui.chiseled_enchanting_table.xp_mode.discount": " • 書庫共鳴軽減：-%s%%（基本 Lv.%s）",
+  "gui.chiseled_enchanting_table.xp_mode.full.master_hint": " 💡 模様入り本棚に原典を収めると 1〜3Lv 消費の量産式に切り替わります",
+  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "必要 Lv.%s · 消費 -%sL"
 }

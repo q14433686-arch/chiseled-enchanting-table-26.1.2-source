@@ -86,5 +86,14 @@
   "gui.chiseled_enchanting_table.resonance.wooden_locked": "普通书架：%s / %s 个 → +0%%（满 12 个起算经验折扣）",
   "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "母版总品阶：折算 %s 完本 → 公共 +%s%%（同种母版最高再减 15%%）",
   "gui.chiseled_enchanting_table.resonance.affinity_line": "当前器物同系母版：折算 %s 完本（提升顿悟率与同件产出上限）",
-  "gui.chiseled_enchanting_table.resonance.specific_line": "母版共鸣 Lv.%s/%s → 专属额外 -%s%% 经验（本项合计 -%s%%）"
+  "gui.chiseled_enchanting_table.resonance.specific_line": "母版共鸣 Lv.%s/%s → 专属额外 -%s%% 经验（本项合计 -%s%%）",
+  "gui.chiseled_enchanting_table.xp_mode.free": "✦ 附魔书直接转移：无需消耗经验",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.title": "✦ 原版附魔台量产公式（翠绿经验球）",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.threshold": " • 等级门槛：需达到 %s 级（当前 %s 级）",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.consume": " • 实际消耗：仅扣除 %s 级经验（适合批量量产）",
+  "gui.chiseled_enchanting_table.xp_mode.full.title": "✦ 奥术直灌实扣公式（紫金魔药瓶）",
+  "gui.chiseled_enchanting_table.xp_mode.full.consume": " • 实际消耗：完整扣除 %s 级对应经验值（当前 %s 级）",
+  "gui.chiseled_enchanting_table.xp_mode.discount": " • 共鸣减免：已降低 -%s%%（原基准 %s 级）",
+  "gui.chiseled_enchanting_table.xp_mode.full.master_hint": " 💡 将该阶母版存入雕刻书架后，可转为「仅扣 1~3 级」的原版量产公式",
+  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "门槛 %s 级 · 实扣 %s 级"
 }

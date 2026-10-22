@@ -340,6 +340,57 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 );
                 return;
             }
+            var hoveredXpEntry = this.scrollContainer.hoveredXpBadgeEntry(mouseX, mouseY);
+            if (hoveredXpEntry != null) {
+                var req = hoveredXpEntry.xp_requirement;
+                int playerLvl = this.menu.player.experienceLevel;
+                boolean met = hoveredXpEntry.xpConditionMet();
+                List<Component> xpTip = new ArrayList<>();
+                if (req.requiredLevel() <= 0 && req.deductedLevels() <= 0) {
+                    xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.free")
+                        .withStyle(ChatFormatting.GREEN));
+                } else if (req.vanillaTierMode()) {
+                    xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.vanilla.title")
+                        .withStyle(ChatFormatting.GREEN));
+                    xpTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.xp_mode.vanilla.threshold",
+                        req.requiredLevel(),
+                        playerLvl
+                    ).withStyle(met ? ChatFormatting.GREEN : ChatFormatting.RED));
+                    xpTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.xp_mode.vanilla.consume",
+                        req.deductedLevels()
+                    ).withStyle(ChatFormatting.GOLD));
+                    if (req.discountPercent() > 0) {
+                        xpTip.add(Component.translatable(
+                            "gui.chiseled_enchanting_table.xp_mode.discount",
+                            req.discountPercent(),
+                            req.rawRequiredLevel()
+                        ).withStyle(ChatFormatting.AQUA));
+                    }
+                } else {
+                    xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.full.title")
+                        .withStyle(ChatFormatting.LIGHT_PURPLE));
+                    xpTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.xp_mode.full.consume",
+                        req.deductedLevels(),
+                        playerLvl
+                    ).withStyle(met ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.RED));
+                    if (req.discountPercent() > 0) {
+                        xpTip.add(Component.translatable(
+                            "gui.chiseled_enchanting_table.xp_mode.discount",
+                            req.discountPercent(),
+                            req.rawRequiredLevel()
+                        ).withStyle(ChatFormatting.AQUA));
+                    }
+                    if (hoveredXpEntry.option_type == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.ENCHANTMENT) {
+                        xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.full.master_hint")
+                            .withStyle(ChatFormatting.DARK_GRAY));
+                    }
+                }
+                ctx.setTooltipForNextFrame(this.font, xpTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
             if (isOverFreezeButton(mouseX, mouseY)) {
                 int minShelves = this.menu.epiphanyMinBookshelves();
                 int addMins = Math.max(1, this.menu.epiphanyFreezeDurationTicks() / 1200);

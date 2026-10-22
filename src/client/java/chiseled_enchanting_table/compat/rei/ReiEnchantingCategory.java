@@ -77,9 +77,16 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
         widgets.add(Widgets.createArrow(new Point(x + 80, y + 5)));
         widgets.add(slot(x + 108, y + 5, display.getOutputEntries().getFirst()).markOutput());
 
+        var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+            display.row().level(), display.row().maxLevel(), display.xpLevelCost(), 0
+        );
         widgets.add(Widgets.createLabel(
                 new Point(x + WIDTH / 2, y + 28),
-                Component.translatable("jei.chiseled_enchanting_table.tooltip.xp", display.xpLevelCost())
+                Component.translatable(
+                    "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+                    xpReq.requiredLevel(),
+                    xpReq.deductedLevels()
+                )
             )
             .tooltip(tooltipLines(display)));
         return widgets;

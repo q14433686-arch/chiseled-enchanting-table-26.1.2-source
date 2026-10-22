@@ -574,13 +574,30 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         );
     }
 
-    public int getEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
-        int base = getBaseEnchantmentXpLevelCost(e, type);
+    public boolean isMasterTomeBacked(EnchantmentWithLevel e, OptionType type) {
+        return type == OptionType.ENCHANTMENT
+            && !ChiseledEnchantingTableData.isTransformation(e.enchantment_id())
+            && storedMasterLevel(e.enchantment_id()) >= e.enchantment_level();
+    }
+
+    public XpCostConversion.XpRequirement resolveXpRequirement(EnchantmentWithLevel e, OptionType type) {
+        int rawCost = getBaseEnchantmentXpLevelCost(e, type);
         int discount = effectiveXpDiscountPercent(e.enchantment_id(), type);
-        if (base <= 0 || discount <= 0) {
-            return base;
+        if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
+            return XpCostConversion.forTransformation(e.enchantment_id(), rawCost, discount);
         }
-        return Math.max(1, Math.round(base * (100 - discount) / 100.0f));
+        if (isMasterTomeBacked(e, type)) {
+            int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(
+                this.world,
+                e.enchantment_id()
+            );
+            return XpCostConversion.forMasterTomeEnchant(e.enchantment_level(), maxLvl, rawCost, discount);
+        }
+        return XpCostConversion.forFullArcaneRitual(rawCost, discount);
+    }
+
+    public int getEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
+        return resolveXpRequirement(e, type).requiredLevel();
     }
 
     private static final net.minecraft.tags.TagKey<Enchantment> TREASURE_TAG =
@@ -1026,8 +1043,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (effectiveType == OptionType.ENCHANTMENT && ChiseledEnchantingTableData.isTransformation(payload.enchantment_id())) {
             effectiveType = OptionType.TRANSFORMATION;
         }
-        int xp_level_cost = getEnchantmentXpLevelCost(ewl, effectiveType);
-        if (this.player.experienceLevel < xp_level_cost && !player.getAbilities().instabuild) return false;
+        var xpReq = resolveXpRequirement(ewl, effectiveType);
+        if (!xpReq.isMetBy(this.player)) return false;
 
         List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(ewl, effectiveType);
         if (!player.getAbilities().instabuild && matchedBundle == null) {
@@ -1035,8 +1052,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
 
         if (!player.getAbilities().instabuild) {
-            int xpPointsToDeduct = XpCostConversion.pointsForLevelCost(this.player, xp_level_cost);
-            this.player.giveExperiencePoints(-xpPointsToDeduct);
+            XpCostConversion.deductXp(this.player, xpReq);
             deductMatchedBundle(matchedBundle);
         }
         return true;

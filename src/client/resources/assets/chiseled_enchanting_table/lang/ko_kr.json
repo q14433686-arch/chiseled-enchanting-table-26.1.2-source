@@ -86,5 +86,14 @@
   "gui.chiseled_enchanting_table.resonance.wooden_locked": "일반 책장: %s / %s개 → +0%% (12개 이상부터 할인 적용)",
   "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "원본 상대 등급: 완본 %s권 환산 → 전체 +%s%% (동종 원본 추가 최대 -15%%)",
   "gui.chiseled_enchanting_table.resonance.affinity_line": "현재 장비 동계열 원본: 완본 %s권 환산 (깨달음 확률·동시 상한 증가)",
-  "gui.chiseled_enchanting_table.resonance.specific_line": "원본 공명 Lv.%s/%s → 전용 추가 -%s%% 경험치 (총 -%s%%)"
+  "gui.chiseled_enchanting_table.resonance.specific_line": "원본 공명 Lv.%s/%s → 전용 추가 -%s%% 경험치 (총 -%s%%)",
+  "gui.chiseled_enchanting_table.xp_mode.free": "✦ 마법이 부여된 책 이전: 경험치 소모 없음",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.title": "✦ 바닐라 양산 공식 (초록 경험치 구슬)",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.threshold": " • 요구 레벨: Lv.%s 이상 (현재 Lv.%s)",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.consume": " • 실제 소모: 단 %s 레벨만 차감 (대량 생산 적합)",
+  "gui.chiseled_enchanting_table.xp_mode.full.title": "✦ 비전 전량 주입 공식 (보라색 비약병)",
+  "gui.chiseled_enchanting_table.xp_mode.full.consume": " • 실제 소모: %s 레벨 경험치 전량 차감 (현재 Lv.%s)",
+  "gui.chiseled_enchanting_table.xp_mode.discount": " • 서고 공명 할인: -%s%% (기본 Lv.%s)",
+  "gui.chiseled_enchanting_table.xp_mode.full.master_hint": " 💡 조각된 책장에 원본 마법서를 보관하면 1~3레벨 양산 공식으로 전환됩니다",
+  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "요구 Lv.%s · 소모 -%sL"
 }

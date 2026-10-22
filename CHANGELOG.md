@@ -20,6 +20,20 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ### Changed — Unified Progression, Library Resonance & Player-Choice Economy Overhaul (A × B × C)
 
+- **Dual-Mode Coexisting XP Formula (`XpCostConversion.XpRequirement`) & Crying Obsidian Recipe**:
+  - **Vanilla Enchanting Table Mass-Production Formula**: both **Item Transformations** and
+    **Master Tome Inscribing** (`storedMasterLevel >= option.level()`) now use vanilla's
+    Enchanting Table formula — checking a player level threshold (`Lv.1..30`, discounted up to
+    `-40%` by Library & Specific Tome Resonance) while consuming only **`1 / 2 / 3` XP levels**
+    via `player.giveExperienceLevels(-tierCost)`, enabling seamless batch mass-production.
+  - **Full-Level Arcane Infusion Coexistence & Distinct Badges**: un-enshrined base enchanting,
+    Book Combine/Research Upgrades, and Treasure Epiphanies retain full XP curve deduction and
+    coexist side-by-side via custom pixel-art row badges (`gui/xp_orb_1..3.png` + `Lv.X` emerald
+    badge vs `gui/xp_ritual_flask.png` + `-XL` violet badge), rich hover formula breakdown tooltips,
+    and updated JEI/REI Master Tome category displays.
+  - **Shaped Crafting Recipe (`8× Crying Obsidian`)**: added `recipe/crying_obsidian.json` and
+    matching recipe unlock advancement (`8× minecraft:obsidian` border around `1× minecraft:ghast_tear`
+    center -> `8× minecraft:crying_obsidian`).
 - **Yield-Aware Material Curves & Relative-Mastery Library Resonance (`LibraryResonance`)**:
   - **Yield-Differentiated Level Scaling Across All Scenes**: upgraded `ItemCostOption` with
     smooth relative-tier curves (`base_count`, `max_level_count`, `level_exponent`, auto-adapting to

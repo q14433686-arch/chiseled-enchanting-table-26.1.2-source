@@ -212,6 +212,19 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
+    public EnchantUiEntry hoveredXpBadgeEntry(double mouseX, double mouseY) {
+        if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
+            return null;
+        }
+        for (EnchantUiEntry entry : this.children()) {
+            if (entry.isOverXpBadge(mouseX, mouseY)) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     public List<List<ItemStack>> hoveredCostOptions(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;
@@ -297,9 +310,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             List<List<ItemStack>> costOptions = option.isBookCombineUpgrade() || (enchantFromBook && !option.isBookResearchUpgrade())
                 ? List.of()
                 : this.handler.getEnchantmentItemCostOptions(ewl, option.type());
-            var xpCost = this.handler.getEnchantmentXpLevelCost(ewl, option.type());
-            if (enchantFromBook && !option.isBookUpgrade()) xpCost = 0;
-            this.addEntry(new EnchantUiEntry(minecraft, this.handler, option, costOptions, xpCost, this));
+            var xpReq = (enchantFromBook && !option.isBookUpgrade())
+                ? chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement.FREE
+                : this.handler.resolveXpRequirement(ewl, option.type());
+            this.addEntry(new EnchantUiEntry(minecraft, this.handler, option, costOptions, xpReq, this));
         });
         resumeNavigation(navigationIndex);
     }
@@ -313,6 +327,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public Holder<Enchantment> enchantment;
         public Identifier enchantment_id;
         public List<List<ItemStack>> cost_options;
+        public chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement xp_requirement;
         public int xp_level_cost;
         public Minecraft client;
         public Player player;
@@ -327,7 +342,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             ChiseledEnchantingTableScreenHandler handler,
             AvailableOption option,
             List<List<ItemStack>> cost_options,
-            int xp_level_cost,
+            chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement xp_requirement,
             EnchantementListWidget parent
         ) {
             super();
@@ -342,7 +357,8 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             this.enchantment_id = option.id();
             this.enchant_level = option.level();
             this.cost_options = cost_options == null ? List.of() : List.copyOf(cost_options);
-            this.xp_level_cost = xp_level_cost;
+            this.xp_requirement = xp_requirement;
+            this.xp_level_cost = xp_requirement.requiredLevel();
             this.enchantment = this.is_transformation ? null : IdentifierToEnchantment(option.id(), this.player);
 
             this.overridenEnchant = new ArrayList<>();
@@ -514,6 +530,17 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return null;
         }
 
+        public boolean isOverXpBadge(double mouseX, double mouseY) {
+            int dx = this.getX() + 1;
+            int dy = this.getY();
+            int dw = this.getWidth() - 2;
+            int dh = this.getHeight();
+            return mouseX >= dx + dw - RowRenderSupport.XP_BADGE_WIDTH
+                && mouseX <= dx + dw
+                && mouseY >= dy
+                && mouseY <= dy + dh;
+        }
+
         public boolean serverSendApplyEnchant() {
             if (!this.canEnchant()) return false;
             ClientPlayNetworking.send(new ApplyEnchantmentPayload(option_type, enchantment_id, enchant_level));
@@ -578,7 +605,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     : outputName;
                 TransformationRowRenderer.render(
                     ctx, client, dx, dy, dw, dh, isFocused, hovered, canEnchant(),
-                    primaryMet, additionalMet, xpMet, rowTitle, cost, additional_costs, xp_level_cost
+                    primaryMet, additionalMet, xpMet, rowTitle, cost, additional_costs, xp_requirement
                 );
             } else {
                 String enchantmentName = Enchantment.getFullname(this.enchantment, enchant_level).getString();
@@ -588,7 +615,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 EnchantmentRowRenderer.render(
                     ctx, client, dx, dy, dw, dh, option_type == OptionType.TREASURE_EPIPHANY,
                     isFocused, hovered, canEnchant(),
-                    primaryMet, additionalMet, xpMet, enchantmentName, cost, additional_costs, xp_level_cost,
+                    primaryMet, additionalMet, xpMet, enchantmentName, cost, additional_costs, xp_requirement,
                     computeOverrideAnnotation(enchantmentName)
                 );
             }

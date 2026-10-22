@@ -86,5 +86,14 @@
   "gui.chiseled_enchanting_table.resonance.wooden_locked": "Librerías: %s / %s -> +0%% (requiere 12+ librerías)",
   "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Tomos Maestros: %s eq. completos -> +%s%% global (+hasta 15%% por tomo propio)",
   "gui.chiseled_enchanting_table.resonance.affinity_line": "Tomos afines al objeto: %s eq. (aumenta probabilidad y límite)",
-  "gui.chiseled_enchanting_table.resonance.specific_line": "Tomo Maestro Nv.%s/%s -> +%s%% desc. XP extra (-%s%% total)"
+  "gui.chiseled_enchanting_table.resonance.specific_line": "Tomo Maestro Nv.%s/%s -> +%s%% desc. XP extra (-%s%% total)",
+  "gui.chiseled_enchanting_table.xp_mode.free": "✦ Direct Tome Transfer: 0 XP Cost",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.title": "✦ Vanilla Mass-Production Formula (XP Orbs)",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.threshold": " • Required Level: Lv.%s+ (Current: Lv.%s)",
+  "gui.chiseled_enchanting_table.xp_mode.vanilla.consume": " • Actual Cost: Deducts only %s XP Level(s)",
+  "gui.chiseled_enchanting_table.xp_mode.full.title": "✦ Arcane Full-Infusion Formula (Ritual Flask)",
+  "gui.chiseled_enchanting_table.xp_mode.full.consume": " • Actual Cost: Deducts full %s XP Level(s) (Current: Lv.%s)",
+  "gui.chiseled_enchanting_table.xp_mode.discount": " • Library Resonance: -%s%% reduction (Base: Lv.%s)",
+  "gui.chiseled_enchanting_table.xp_mode.full.master_hint": " 💡 Store this Master Tome in a Chiseled Bookshelf to unlock 1–3 Lv mass-production!",
+  "jei.chiseled_enchanting_table.tooltip.xp_vanilla": "Req Lv.%s · Cost -%sL"
 }

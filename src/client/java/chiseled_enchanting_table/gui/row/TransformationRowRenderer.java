@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.gui.row;
 
+import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -24,7 +25,7 @@ public final class TransformationRowRenderer {
         String outputName,
         ItemStack primaryCost,
         List<ItemStack> additionalCosts,
-        int xpCost
+        XpRequirement xpRequirement
     ) {
         RowRenderSupport.drawPlaque(
             ctx,
@@ -57,6 +58,6 @@ public final class TransformationRowRenderer {
         int subY = dy + dh - 2 - client.font.lineHeight;
         RowRenderSupport.renderScaledText(ctx, client, "\u2726 \u2192 " + outputName, nameX, subY, 2.0f / 3.0f, RowRenderSupport.LIGHT_GREEN);
 
-        RowRenderSupport.drawXpLabel(ctx, client, xpCost, dx, dw, dy, dh, xpMet);
+        RowRenderSupport.drawXpBadge(ctx, client, xpRequirement, dx, dw, dy, dh, xpMet);
     }
 }

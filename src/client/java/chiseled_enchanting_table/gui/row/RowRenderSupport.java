@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.gui.row;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import chiseled_enchanting_table.utils.CustomDrawContext;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -9,7 +10,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Shared drawing primitives for chiseled-enchanting list rows using cohesive imported plaque sprites.
+ * Shared drawing primitives for chiseled-enchanting list rows using cohesive imported plaque sprites
+ * and custom pixel-art experience formula badges ({@code xp_orb_1..3} vs {@code xp_ritual_flask}).
  */
 public final class RowRenderSupport {
     private static final Identifier ROW_NORMAL = ChiseledEnchantingTable.identifier("gui/row_normal.png");
@@ -20,7 +22,13 @@ public final class RowRenderSupport {
     private static final Identifier ROW_TRANSFORM = ChiseledEnchantingTable.identifier("gui/row_transform.png");
     private static final Identifier ROW_TRANSFORM_HOVER = ChiseledEnchantingTable.identifier("gui/row_transform_hover.png");
 
+    public static final Identifier XP_ORB_1 = ChiseledEnchantingTable.identifier("gui/xp_orb_1.png");
+    public static final Identifier XP_ORB_2 = ChiseledEnchantingTable.identifier("gui/xp_orb_2.png");
+    public static final Identifier XP_ORB_3 = ChiseledEnchantingTable.identifier("gui/xp_orb_3.png");
+    public static final Identifier XP_RITUAL_FLASK = ChiseledEnchantingTable.identifier("gui/xp_ritual_flask.png");
+
     public static final int XP_GREEN = 0xFF7CFFA6;
+    public static final int ARCANE_PURPLE = 0xFFE5B2FF;
     public static final int RED = 0xFFFF6B6B;
     public static final int WHITE = 0xFFF7F2EA;
     public static final int EPIPHANY_GOLD = 0xFFFFE28A;
@@ -31,8 +39,9 @@ public final class RowRenderSupport {
 
     public static final int PRIMARY_COST_OFFSET_X = 5;
     public static final int COST_OFFSET_Y = 4;
-    public static final int ADDITIONAL_COST_RIGHT_MARGIN = 56;
-    public static final int ADDITIONAL_COST_STRIDE = 18;
+    public static final int XP_BADGE_WIDTH = 34;
+    public static final int ADDITIONAL_COST_RIGHT_MARGIN = 70;
+    public static final int ADDITIONAL_COST_STRIDE = 17;
 
     public enum RowVisualStyle {
         STANDARD,
@@ -41,6 +50,12 @@ public final class RowRenderSupport {
     }
 
     private RowRenderSupport() {}
+
+    public static Identifier orbSprite(int deductedTier) {
+        if (deductedTier <= 1) return XP_ORB_1;
+        if (deductedTier == 2) return XP_ORB_2;
+        return XP_ORB_3;
+    }
 
     public static void drawPlaque(
         GuiGraphicsExtractor ctx,
@@ -92,12 +107,53 @@ public final class RowRenderSupport {
         }
     }
 
-    public static void drawXpLabel(GuiGraphicsExtractor ctx, Minecraft client, int xpCost, int dx, int dw, int dy, int dh, boolean xpMet) {
-        var xpCostText = String.valueOf(xpCost);
-        var textWidth = client.font.width(xpCostText);
-        var textX = dx + dw - 6 - textWidth;
-        var textY = dy + (dh - client.font.lineHeight) / 2 + 1;
-        ctx.text(client.font, xpCostText, textX, textY, xpMet ? XP_GREEN : RED, true);
+    /**
+     * Renders the right-hand dual-mode XP badge:
+     * <ul>
+     *   <li><b>Vanilla Mass-Production ({@code vanillaTierMode})</b>: 1/2/3 glowing emerald-gold orbs
+     *       on top + {@code Lv.X} player threshold below.</li>
+     *   <li><b>Arcane Full-Cost Ritual ({@code !vanillaTierMode})</b>: corked violet-gold arcane flask
+     *       on top + {@code -XL} full level deduction below.</li>
+     * </ul>
+     */
+    public static void drawXpBadge(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        XpRequirement req,
+        int dx,
+        int dw,
+        int dy,
+        int dh,
+        boolean xpMet
+    ) {
+        int sepX = dx + dw - XP_BADGE_WIDTH;
+        ctx.fill(sepX, dy + 4, sepX + 1, dy + dh - 4, 0x389480B8);
+        int centerX = sepX + XP_BADGE_WIDTH / 2;
+
+        if (req.requiredLevel() <= 0 && req.deductedLevels() <= 0) {
+            String freeText = "0L";
+            float scale = 0.65f;
+            int w = Math.round(client.font.width(freeText) * scale);
+            renderScaledText(ctx, client, freeText, centerX - w / 2, dy + 9, scale, XP_GREEN);
+            return;
+        }
+
+        Identifier icon = req.vanillaTierMode() ? orbSprite(req.deductedLevels()) : XP_RITUAL_FLASK;
+        int iconSize = 11;
+        int iconX = centerX - iconSize / 2;
+        int iconY = dy + 2;
+        ctx.blit(icon, iconX, iconY, iconX + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
+        if (!xpMet) {
+            ctx.fill(iconX, iconY, iconX + iconSize, iconY + iconSize, 0x55120A16);
+        }
+
+        String label = req.vanillaTierMode()
+            ? ("Lv." + req.requiredLevel())
+            : ("-" + req.deductedLevels() + "L");
+        float scale = 0.58f;
+        int labelW = Math.round(client.font.width(label) * scale);
+        int color = !xpMet ? RED : (req.vanillaTierMode() ? XP_GREEN : ARCANE_PURPLE);
+        renderScaledText(ctx, client, label, centerX - labelW / 2, dy + 15, scale, color);
     }
 
     private static void drawFocusBorder(GuiGraphicsExtractor ctx, int x, int y, int width, int height) {

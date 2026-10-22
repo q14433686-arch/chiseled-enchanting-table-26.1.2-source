@@ -22,7 +22,7 @@
       "input": "minecraft:golden_apple",
       "output": "minecraft:enchanted_golden_apple",
       "level": 1,
-      "xp_cost": 5,
+      "xp_cost": 8,
       "primary_cost": { "item": "minecraft:gold_block", "count": 8 },
       "additional_costs": [
         { "item": "minecraft:emerald", "count": 14 }
@@ -33,7 +33,7 @@
       "input": "minecraft:glass_bottle",
       "output": "minecraft:experience_bottle",
       "level": 1,
-      "xp_cost": 1,
+      "xp_cost": 2,
       "primary_cost": { "item": "minecraft:lapis_lazuli", "count": 8 },
       "additional_costs": [
         { "item": "minecraft:amethyst_shard", "count": 2 }
@@ -68,7 +68,7 @@
       "input": "minecraft:amethyst_shard",
       "output": "minecraft:echo_shard",
       "level": 1,
-      "xp_cost": 4,
+      "xp_cost": 5,
       "primary_cost": { "item": "minecraft:sculk", "count": 4 },
       "additional_costs": [
         { "item": "minecraft:crying_obsidian", "count": 2 }
