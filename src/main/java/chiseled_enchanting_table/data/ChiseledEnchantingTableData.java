@@ -1423,7 +1423,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static int cursePurgeXpCost() {
-        return disenchantingRules.cursePurgeXpCost();
+        return disenchantingRules.curseXpCost();
     }
 
     public static List<List<ItemStack>> cursePurgeCostOptions(Identifier id) {

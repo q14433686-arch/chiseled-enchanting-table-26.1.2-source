@@ -12,6 +12,7 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.Transformat
 import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.ScreenHandlerRegistry;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
