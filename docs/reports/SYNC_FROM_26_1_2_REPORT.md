@@ -62,3 +62,9 @@ instead of floating selectors. Runtime smoke tests are still outstanding, not im
 The first intermediate compile (`91d7f1d`) still had the old block codec override; it was
 removed before the successful run and covered by the regression test. Any compile-deps report
 from that intermediate failure is historical, not a failure of the current source.
+
+Final pinned-dependency verification (source commit `a0412e9`):
+`compile-check` **39824564921** succeeded; `build` **39824565189** completed
+all three jobs successfully (static checks, full Gradle build, no-viewers compilation).
+`build-reports/compile-java.log` records both exact pinned viewer versions and
+`BUILD SUCCESSFUL`. This confirms compilation/packaging, not in-game runtime behaviour.

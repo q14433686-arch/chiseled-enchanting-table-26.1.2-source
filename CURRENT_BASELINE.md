@@ -67,3 +67,9 @@ publish workflow and its docs/ci copy. Do not copy historical compile reports fr
   98 translation keys in each of 11 locales, Markdown links and Tier-1 compatibility all pass.
 - Tier-2 registry/tag existence checks need the Minecraft jar (unavailable in sandbox);
   gameplay/runtime smoke tests have **not** been performed.
+
+Final pinned-dependency verification (source commit `a0412e9`):
+`compile-check` **39824564921** succeeded; `build` **39824565189** completed
+all three jobs successfully (static checks, full Gradle build, no-viewers compilation).
+`build-reports/compile-java.log` records both exact pinned viewer versions and
+`BUILD SUCCESSFUL`. This confirms compilation/packaging, not in-game runtime behaviour.
