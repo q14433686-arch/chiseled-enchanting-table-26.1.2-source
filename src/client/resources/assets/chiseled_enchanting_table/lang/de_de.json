@@ -9,7 +9,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "Kosten: %s Erfahrungsstufen",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "Beliebiges angezeigtes Material kann im Kosten-Slot genutzt werden",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "Mit Server synchronisiert — jedes angezeigte Material ist gültig",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Normale Regale heben bis zur Mittelstufe; gemeißelte Bücherregale schalten Bücher 1:1 frei (bis -35% EP)",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Normale Regale heben bis zur Mittelstufe; gemeißelte Bücherregale schalten Bücher 1:1 frei (bis -40% EP)",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "Ersetzt widersprüchliche Verzauberungen: %s",
   "jei.chiseled_enchanting_table.info.station": "Der gemeißelte Zaubertisch überträgt eine Verzauberung aus einem nahegelegenen gemeißelten Bücherregal. Lege verzauberte Bücher in Bücherregale in Reichweite und wähle dann einen Eintrag in der Liste des Tisches.",
   "jei.chiseled_enchanting_table.info.bookshelf": "Gemeißelte Bücherregale in Reichweite des Tisches liefern die verfügbaren Verzauberungen. Jedes Buch in einem Regalfach schaltet seine Verzauberung frei.",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "Bibliotheksresonanz: -%s%% Basis-EP (bis -40%% mit Meisterfoliant)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Bücherregale: %s (-%s%% EP, bis mittlere Stufe)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Meisterfolianten: %s (-%s%% EP, 1:1 Stufenfreischaltung)",
-  "gui.chiseled_enchanting_table.resonance.cap": "Maximaler Resonanzrabatt: -35% EP",
+  "gui.chiseled_enchanting_table.resonance.cap": "Maximaler Resonanzrabatt: -40% EP",
   "item.chiseled_enchanting_table.arcane_catalyst": "Arkaner Synthesekristall",
   "gui.chiseled_enchanting_table.treasure_epiphany": "✦ Eingebung: %s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ Schatzeingebung aktiv (%s%% Chance)",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "Condensed Arcana",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "Craft an Arcane Synthesis Crystal.",
   "advancements.chiseled_enchanting_table.library_resonance.title": "Full Library Resonance",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -35% XP Library Resonance discount at a Chiseled Enchanting Table.",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -40% XP Library Resonance discount at a Chiseled Enchanting Table.",
   "advancements.chiseled_enchanting_table.grand_library.title": "Grand Library Awakening",
   "advancements.chiseled_enchanting_table.grand_library.description": "Surround a Chiseled Enchanting Table with at least 32 Wooden Bookshelves to awaken Treasure Epiphanies.",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "Frozen in Time",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 %s Bücherregale nötig (Akt. %s)",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 Gesperrte Stufe: %s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "Bücherregale: %s / %s",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Mehr Bücherregale aufstellen oder einen Meisterfolianten einlagern"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Mehr Bücherregale aufstellen oder einen Meisterfolianten einlagern",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "Unverzauberte Gegenstände erreichen ohne Meisterfoliant nur mittlere Stufen — präge zuerst eine niedrigere Stufe zum Aufwerten ein oder lege ein verzaubertes Buch in ein gearbeitetes Bücherregal"
 }

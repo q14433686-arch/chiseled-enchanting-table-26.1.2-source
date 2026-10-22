@@ -9,7 +9,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "Coût : %s niveaux d'expérience",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "Placez n'importe lequel des matériaux proposés dans l'emplacement de coût",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "Synchronisé avec le serveur — tout matériau affiché est accepté",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Les bibliothèques débloquent les paliers moyens ; les bibliothèques sculptées débloquent les livres 1:1 (-35% XP max)",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Les bibliothèques débloquent les paliers moyens ; les bibliothèques sculptées débloquent les livres 1:1 (-40% XP max)",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "Remplace les enchantements incompatibles : %s",
   "jei.chiseled_enchanting_table.info.station": "La table d'enchantement ciselée applique un enchantement provenant d'une bibliothèque ciselée proche. Placez des livres enchantés dans les bibliothèques à portée, puis choisissez une option dans la liste de la table.",
   "jei.chiseled_enchanting_table.info.bookshelf": "Les bibliothèques ciselées à portée de la table fournissent les enchantements disponibles. Chaque livre dans une case débloque son enchantement.",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "Résonance : -%s%% XP de base (jusqu'à -40%% avec Tome Maître)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Bibliothèques : %s (-%s%% d'XP, palier intermédiaire max)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Grimoires maîtres : %s (-%s%% d'XP, déblocage 1:1)",
-  "gui.chiseled_enchanting_table.resonance.cap": "Réduction maximale de résonance : -35% d'XP",
+  "gui.chiseled_enchanting_table.resonance.cap": "Réduction maximale de résonance : -40% d'XP",
   "item.chiseled_enchanting_table.arcane_catalyst": "Cristal de synthèse arcanique",
   "gui.chiseled_enchanting_table.treasure_epiphany": "✦ Révélation : %s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ Révélation de trésor active (%s%% de chance)",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "Condensed Arcana",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "Craft an Arcane Synthesis Crystal.",
   "advancements.chiseled_enchanting_table.library_resonance.title": "Full Library Resonance",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -35% XP Library Resonance discount at a Chiseled Enchanting Table.",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -40% XP Library Resonance discount at a Chiseled Enchanting Table.",
   "advancements.chiseled_enchanting_table.grand_library.title": "Grand Library Awakening",
   "advancements.chiseled_enchanting_table.grand_library.description": "Surround a Chiseled Enchanting Table with at least 32 Wooden Bookshelves to awaken Treasure Epiphanies.",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "Frozen in Time",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 %s Bibliothèques req. (%s act.)",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 Palier verrouillé : %s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "Bibliothèques : %s / %s",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Ajoutez des bibliothèques ou stockez un tome maître sculpté"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Ajoutez des bibliothèques ou stockez un tome maître sculpté",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "Sans Tome Maître, les objets vierges sont limités aux paliers intermédiaires — inscrivez d'abord un palier inférieur pour améliorer ou placez un livre enchanté dans une bibliothèque sculptée"
 }

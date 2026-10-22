@@ -9,7 +9,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "消耗：%s 級經驗",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "放入輪播材料中的任意一種即可支付",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "已與伺服器同步——輪播顯示的任意材料均可使用",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "普通書櫃可將常規附魔推至中階；雕紋書櫃依母本 1:1 解鎖高階/寶藏附魔並最高減免 35% 經驗",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "普通書櫃可將常規附魔推至中階；雕紋書櫃依母本 1:1 解鎖高階/寶藏附魔並最高減免 40% 經驗",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "會取代衝突附魔：%s",
   "jei.chiseled_enchanting_table.info.station": "將附魔書放入周圍 7×5×7 雕紋書架即可無損解鎖；對已有低階附魔升階時自動扣減差額材料與經驗。切換頂部「退魔 · 洗練」頁可免費全洗或降級返還經驗，或用退魔砂單洗指定詞條。",
   "jei.chiseled_enchanting_table.info.bookshelf": "附魔台作用範圍內的雕紋書架提供可用的附魔。書架每格中的一本書即可解鎖對應附魔。",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "書庫共鳴：公共 -%s%% 經驗（同種滿階母版最高 -40%%）",
   "gui.chiseled_enchanting_table.resonance.wooden": "普通書櫃：%s 個（-%s%% 經驗，提升基礎附魔至中階上限）",
   "gui.chiseled_enchanting_table.resonance.chiseled": "雕紋母本：%s 本（-%s%% 經驗，1:1 解鎖滿階與寶藏附魔）",
-  "gui.chiseled_enchanting_table.resonance.cap": "藏書共鳴最高減免：-35% 經驗",
+  "gui.chiseled_enchanting_table.resonance.cap": "藏書共鳴最高減免：-40% 經驗",
   "item.chiseled_enchanting_table.arcane_catalyst": "秘法凝晶",
   "gui.chiseled_enchanting_table.treasure_epiphany": "頓悟：%s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ 寶藏秘法頓悟已啟動（目前觸發率 %s%%）",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "萬法歸一",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "凝煉出一枚「秘法凝晶」。",
   "advancements.chiseled_enchanting_table.library_resonance.title": "滿堂書香",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "構築書閣，使纂刻附魔台達到 -35% 滿額藏書共鳴。",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "構築書閣，使纂刻附魔台達到 -40% 滿額藏書共鳴。",
   "advancements.chiseled_enchanting_table.grand_library.title": "萬捲聖堂",
   "advancements.chiseled_enchanting_table.grand_library.description": "在纂刻附魔台周圍佈置至少 32 個普通書櫃，喚醒寶藏秘法頓悟。",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "剎那永恆",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 需 %s 普通書架（目前 %s）",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 待解鎖階位：%s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "普通書架進度：%s / %s 個",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "補足普通書架即可解鎖；放入雕紋母本或雙書合併可無視此限制"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "補足普通書架即可解鎖；放入雕紋母本或雙書合併可無視此限制",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "無典籍時白板物品僅可直接銘刻至中階——請先銘刻低階再逐級升級，或在雕紋書架中放入對應附魔典籍"
 }

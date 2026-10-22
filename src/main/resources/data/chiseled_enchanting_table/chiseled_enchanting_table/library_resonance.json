@@ -1,0 +1,27 @@
+{
+  "_comment": "Full data-driven configuration for Library & Master Tome Resonance (XP discounts, convex mastery weights, incremental guidance discounts, and Epiphany affinity scaling).",
+  "wooden_bookshelves": {
+    "min_discount_bookshelves": 12,
+    "base_discount_percent": 2,
+    "bookshelves_per_extra_percent": 2,
+    "max_discount_percent": 12,
+    "upgrade_material_multiplier": 0.90
+  },
+  "chiseled_mastery": {
+    "linear_weight": 0.45,
+    "quadratic_weight": 0.55,
+    "global_discount_per_unit": 1.5,
+    "max_global_discount_percent": 13,
+    "max_base_discount_percent": 25,
+    "max_specific_discount_percent": 15,
+    "specific_exponent": 1.5,
+    "max_total_xp_discount_percent": 40,
+    "upgrade_material_multiplier": 0.80,
+    "incremental_threshold_credit_factor": 0.35
+  },
+  "epiphany_affinity": {
+    "affinity_chance_per_unit": 0.055,
+    "global_slot_weight": 1.8,
+    "affinity_slot_weight": 3.6
+  }
+}

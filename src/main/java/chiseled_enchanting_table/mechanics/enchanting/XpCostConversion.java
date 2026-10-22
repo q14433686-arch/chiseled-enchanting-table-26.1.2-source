@@ -1,63 +1,37 @@
 package chiseled_enchanting_table.mechanics.enchanting;
 
-import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.mechanics.resonance.LibraryResonance;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Dual-mode coexisting XP formula engine shared identically across Server, Client GUI, JEI, and REI:
- *
- * <ul>
- *   <li><b>Vanilla Table Mass-Production Mode ({@code vanillaTierMode = true})</b>:
- *       Used for repeatable production — <b>Item Transformations</b> and <b>Master Tome Inscribing</b>
- *       (when a nearby Chiseled Bookshelf stores {@code storedMasterLevel >= optionLevel}).
- *       Mirrors vanilla's Enchanting Table formula: checks a player level threshold
- *       ({@code requiredLevel}, up to {@code 30}, discounted by Library/Tome Resonance) while
- *       deducting ONLY {@code 1 / 2 / 3} experience levels ({@code player.giveExperienceLevels(-tierCost)}).</li>
- *   <li><b>Arcane Full-Cost Ritual Mode ({@code vanillaTierMode = false})</b>:
- *       Used for non-mass-production breakthroughs — un-enshrined base enchanting, Book Combine/Research
- *       Upgrades, and Treasure Epiphanies. Deducts full experience points along the capped level-30 curve.</li>
- * </ul>
+ * Authoritative Minecraft XP level <-> XP point math shared by server deduction, client tooltips,
+ * JEI/REI recipe viewers, and single-source disenchantment conservation verification.
  */
 public final class XpCostConversion {
-    private static final int MARGINAL_CAP_LEVEL = 30;
-    private static final Identifier EXP_BOTTLE_TRANSFORM_ID = ChiseledEnchantingTable.identifier("experience_bottle");
-
-    private XpCostConversion() {}
-
-    /**
-     * Complete resolved XP requirement for any row in the Chiseled Enchanting Table.
-     *
-     * @param vanillaTierMode  true = Vanilla Enchanting Table formula (level threshold + 1..3 levels consumed);
-     *                         false = Full-Level Arcane Ritual formula (full level points deducted)
-     * @param requiredLevel    minimum {@code player.experienceLevel} needed to execute this row
-     * @param deductedLevels   actual XP levels consumed ({@code 1..3} in Vanilla mode; full cost in Arcane mode)
-     * @param rawRequiredLevel pre-discount threshold/cost before Library & Master Tome Resonance
-     * @param discountPercent  active total XP discount percentage applied ({@code 0..40})
-     */
     public record XpRequirement(
-        boolean vanillaTierMode,
+        int rawRequiredLevel,
         int requiredLevel,
         int deductedLevels,
-        int rawRequiredLevel,
         int discountPercent,
+        boolean vanillaTierMode,
         int refundPoints
     ) {
-        public static final XpRequirement FREE = new XpRequirement(false, 0, 0, 0, 0, 0);
-
         public XpRequirement(
-            boolean vanillaTierMode,
+            int rawRequiredLevel,
             int requiredLevel,
             int deductedLevels,
-            int rawRequiredLevel,
-            int discountPercent
+            int discountPercent,
+            boolean vanillaTierMode
         ) {
-            this(vanillaTierMode, requiredLevel, deductedLevels, rawRequiredLevel, discountPercent, 0);
+            this(rawRequiredLevel, requiredLevel, deductedLevels, discountPercent, vanillaTierMode, 0);
         }
 
-        public static XpRequirement refund(int xpPoints) {
-            return new XpRequirement(false, 0, 0, 0, 0, Math.max(0, xpPoints));
+        public static final XpRequirement FREE = new XpRequirement(0, 0, 0, 0, false, 0);
+
+        public static XpRequirement refund(int points) {
+            return new XpRequirement(0, 0, 0, 0, false, Math.max(0, points));
         }
 
         public boolean isRefund() {
@@ -65,186 +39,210 @@ public final class XpCostConversion {
         }
 
         public boolean isMetBy(Player player) {
-            if (refundPoints > 0 || (requiredLevel <= 0 && deductedLevels <= 0)) {
+            if (player.getAbilities().instabuild) {
                 return true;
             }
-            return player.getAbilities().instabuild || player.experienceLevel >= requiredLevel;
+            if (isRefund() || (requiredLevel <= 0 && deductedLevels <= 0)) {
+                return true;
+            }
+            return player.experienceLevel >= requiredLevel;
         }
     }
 
-    /**
-     * Resolves Vanilla Enchanting Table tier cost ({@code 1..3} levels) and player level threshold
-     * ({@code 1..30} before discount) for Master Tome inscribing of ANY vanilla or modded enchantment
-     * with arbitrary {@code maxLevel >= 1}.
-     */
-    public static XpRequirement forMasterTomeEnchant(
-        int level,
-        int maxLevel,
-        int rawBaseXpCost,
-        int discountPercent
-    ) {
-        int safeMax = Math.max(1, maxLevel);
-        int safeLvl = Math.clamp(level, 1, safeMax);
-        int tierCost;
-        int rawThreshold;
-        if (safeMax == 1) {
-            tierCost = rawBaseXpCost >= 10 ? 3 : 2;
-            rawThreshold = tierCost == 3 ? 30 : 20;
-        } else {
-            double r = (double) safeLvl / (double) safeMax;
-            tierCost = r <= 0.4001 ? 1 : (r < 0.7999 ? 2 : 3);
-            rawThreshold = Math.clamp(Math.round(30.0f * (float) r), tierCost, 30);
+    private XpCostConversion() {}
+
+    public static int xpPointsForLevel(int level) {
+        if (level >= 30) {
+            return 112 + (level - 30) * 9;
         }
-        int clampedDisc = Math.clamp(discountPercent, 0, 40);
-        int effectiveThreshold = clampedDisc > 0
-            ? Math.max(tierCost, Math.round(rawThreshold * (100 - clampedDisc) / 100.0f))
-            : rawThreshold;
-        return new XpRequirement(true, effectiveThreshold, tierCost, rawThreshold, clampedDisc);
+        if (level >= 15) {
+            return 37 + (level - 15) * 5;
+        }
+        return 7 + Math.max(0, level) * 2;
+    }
+
+    public static int totalXpForLevel(int level) {
+        int clamped = Math.max(0, level);
+        int sum = 0;
+        for (int l = 0; l < clamped; l++) {
+            sum += xpPointsForLevel(l);
+        }
+        return sum;
+    }
+
+    public static int totalPlayerXpPoints(Player player) {
+        int base = totalXpForLevel(player.experienceLevel);
+        int barPoints = Math.round(player.experienceProgress * (float) xpPointsForLevel(player.experienceLevel));
+        return Math.max(0, base + barPoints);
     }
 
     /**
-     * Resolves incremental Master Tome XP requirement when upgrading an item or book that already
-     * carries {@code existingLevel >= 1} up to {@code targetLevel > existingLevel}: reduces both
-     * deducted levels ({@code 1..2} levels by relative delta) and threshold proportionally.
+     * Exact minimum XP points deducted when a player with zero fractional bar at {@code req.requiredLevel()}
+     * pays {@code req.deductedLevels()}. Because {@link #xpPointsForLevel(int)} is strictly increasing in
+     * level, higher player levels always deduct at least this many XP points.
      */
+    public static int minPointsRequired(XpRequirement req) {
+        if (req == null || req.isRefund() || req.deductedLevels() <= 0) {
+            return 0;
+        }
+        int startLevel = Math.max(req.deductedLevels(), req.requiredLevel());
+        int total = 0;
+        for (int i = 0; i < req.deductedLevels(); i++) {
+            total += xpPointsForLevel(startLevel - 1 - i);
+        }
+        return total;
+    }
+
+    public static int pointsForLevelCost(Player player, int levelCost) {
+        if (levelCost <= 0) {
+            return 0;
+        }
+        int curLvl = Math.max(0, player.experienceLevel);
+        int targetLvl = Math.max(0, curLvl - levelCost);
+        int total = 0;
+        for (int l = targetLvl; l < curLvl; l++) {
+            total += xpPointsForLevel(l);
+        }
+        return total;
+    }
+
+    public static void deductXp(Player player, XpRequirement req) {
+        if (player.getAbilities().instabuild) {
+            return;
+        }
+        if (req.refundPoints() > 0) {
+            player.giveExperiencePoints(req.refundPoints());
+            return;
+        }
+        if (req.deductedLevels() <= 0) {
+            return;
+        }
+        int pts = pointsForLevelCost(player, req.deductedLevels());
+        if (pts > 0) {
+            player.giveExperiencePoints(-pts);
+        }
+    }
+
+    public static int vanillaTierDeduction(int level, int maxLevel) {
+        int clampedMax = Math.max(1, maxLevel);
+        if (clampedMax <= 1) {
+            return 3;
+        }
+        double r = (double) Math.max(1, Math.min(level, clampedMax)) / (double) clampedMax;
+        if (r <= 0.40) {
+            return 1;
+        }
+        if (r <= 0.75) {
+            return 2;
+        }
+        return 3;
+    }
+
+    public static XpRequirement forMasterTomeEnchant(int level, int maxLevel, int rawCost, int discountPercent) {
+        int clampedMax = Math.max(1, maxLevel);
+        int tierCost = vanillaTierDeduction(level, clampedMax);
+        int minThreshold = Math.max(tierCost, (int) Math.round(8.0 + 22.0 * ((double) Math.min(clampedMax, level) / (double) clampedMax)));
+        int rawThreshold = rawCost > 0 ? Math.max(minThreshold, rawCost) : minThreshold;
+        int clampedDiscount = clampDiscount(discountPercent);
+        int requiredThreshold = Math.max(tierCost, (int) Math.round(rawThreshold * (1.0 - clampedDiscount / 100.0)));
+        return new XpRequirement(rawThreshold, requiredThreshold, tierCost, clampedDiscount, true);
+    }
+
     public static XpRequirement forIncrementalMasterTomeEnchant(
         int existingLevel,
         int targetLevel,
         int maxLevel,
-        int rawBaseXpCost,
+        int rawTargetCost,
         int discountPercent
     ) {
-        XpRequirement full = forMasterTomeEnchant(targetLevel, maxLevel, rawBaseXpCost, 0);
-        int safeMax = Math.max(1, maxLevel);
-        int delta = Math.max(1, targetLevel - existingLevel);
-        double deltaRatio = (double) delta / (double) safeMax;
-        int tierCost = deltaRatio <= 0.5001 ? 1 : 2;
-        float progressCredit = Math.clamp((float) existingLevel / (float) Math.max(1, targetLevel), 0.0f, 0.85f);
-        int rawThreshold = Math.max(tierCost, Math.round(full.rawRequiredLevel() * (1.0f - 0.35f * progressCredit)));
-        int clampedDisc = Math.clamp(discountPercent, 0, 40);
-        int effectiveThreshold = clampedDisc > 0
-            ? Math.max(tierCost, Math.round(rawThreshold * (100 - clampedDisc) / 100.0f))
-            : rawThreshold;
-        return new XpRequirement(true, effectiveThreshold, tierCost, rawThreshold, clampedDisc);
+        int clampedMax = Math.max(1, maxLevel);
+        int deltaLevels = Math.max(1, targetLevel - Math.max(0, existingLevel));
+        int tierCost = vanillaTierDeduction(deltaLevels, clampedMax);
+        double credit = LibraryResonance.activeConfig().incrementalStepCreditFactor();
+        double targetFraction = (double) Math.min(clampedMax, targetLevel) / (double) clampedMax;
+        double prevFraction = (double) Math.min(clampedMax, Math.max(0, existingLevel)) / (double) clampedMax;
+        double remainingFraction = Math.max(0.15, targetFraction - credit * prevFraction);
+        int minStepThreshold = Math.max(tierCost, (int) Math.round(8.0 + 22.0 * remainingFraction));
+        int scaledRaw = rawTargetCost > 0
+            ? Math.max(tierCost, (int) Math.round(rawTargetCost * (targetFraction <= 0 ? 1.0 : remainingFraction / targetFraction)))
+            : minStepThreshold;
+        int rawThreshold = Math.max(minStepThreshold, scaledRaw);
+        int clampedDiscount = clampDiscount(discountPercent);
+        int requiredThreshold = Math.max(tierCost, (int) Math.round(rawThreshold * (1.0 - clampedDiscount / 100.0)));
+        return new XpRequirement(Math.max(1, rawThreshold), requiredThreshold, tierCost, clampedDiscount, true);
     }
 
-    /**
-     * Resolves Vanilla-style light surgical XP cost for stripping a single non-curse enchantment
-     * while preserving all other enchantments on the item ({@code 1..2} levels deducted).
-     */
-    public static XpRequirement forTargetedCleanse(
-        int level,
-        int maxLevel,
-        int rawThreshold,
-        int discountPercent
-    ) {
-        if (rawThreshold <= 0) {
+    public static XpRequirement forTargetedCleanse(int level, int maxLevel, int rawCost, int discountPercent) {
+        int clampedMax = Math.max(1, maxLevel);
+        int tierCost = vanillaTierDeduction(level, clampedMax);
+        int baseThreshold = Math.max(tierCost, Math.max(4, rawCost));
+        int clampedDiscount = clampDiscount(discountPercent);
+        int requiredThreshold = Math.max(tierCost, (int) Math.round(baseThreshold * (1.0 - clampedDiscount / 100.0)));
+        return new XpRequirement(baseThreshold, requiredThreshold, tierCost, clampedDiscount, true);
+    }
+
+    public static XpRequirement forFullArcaneRitual(int rawCost, int discountPercent) {
+        int clampedRaw = Math.max(0, rawCost);
+        if (clampedRaw == 0) {
             return XpRequirement.FREE;
         }
-        double r = Math.clamp((double) level / (double) Math.max(1, maxLevel), 0.0, 1.0);
-        int tierCost = r <= 0.55 ? 1 : 2;
-        int baseThreshold = Math.clamp(rawThreshold, tierCost, 30);
-        int clampedDisc = Math.clamp(discountPercent, 0, 40);
-        int effectiveThreshold = clampedDisc > 0
-            ? Math.max(tierCost, Math.round(baseThreshold * (100 - clampedDisc) / 100.0f))
-            : baseThreshold;
-        return new XpRequirement(true, effectiveThreshold, tierCost, baseThreshold, clampedDisc);
+        int clampedDiscount = clampDiscount(discountPercent);
+        int deducted = Math.max(1, (int) Math.round(clampedRaw * (1.0 - clampedDiscount / 100.0)));
+        return new XpRequirement(clampedRaw, deducted, deducted, clampedDiscount, false);
     }
 
     /**
-     * Resolves Vanilla Enchanting Table tier cost ({@code 1..3} levels) and player level threshold
-     * for any built-in or datapack Item Transformation.
+     * Full arcane ritual for a known target enchantment tier {@code (existingLevel -> targetLevel / maxLevel)}
+     * without a Master Tome: guarantees non-Master-Tome rituals always require at least as much player XP
+     * threshold & level deduction as the Master Tome path, closing low-level upgrade-wipe loops.
      */
+    public static XpRequirement forFullArcaneEnchantOrUpgrade(
+        int existingLevel,
+        int targetLevel,
+        int maxLevel,
+        int rawCost,
+        int discountPercent
+    ) {
+        XpRequirement base = forFullArcaneRitual(rawCost, discountPercent);
+        if (rawCost <= 0) {
+            return XpRequirement.FREE;
+        }
+        XpRequirement masterFloor = existingLevel > 0
+            ? forIncrementalMasterTomeEnchant(existingLevel, targetLevel, maxLevel, 0, discountPercent)
+            : forMasterTomeEnchant(targetLevel, maxLevel, 0, discountPercent);
+        int deducted = Math.max(base.deductedLevels(), masterFloor.deductedLevels());
+        int required = Math.max(deducted, Math.max(base.requiredLevel(), masterFloor.requiredLevel()));
+        int rawShown = Math.max(base.rawRequiredLevel(), masterFloor.rawRequiredLevel());
+        return new XpRequirement(rawShown, required, deducted, base.discountPercent(), false);
+    }
+
+    public static XpRequirement forTransformation(Identifier transformationId, int rawCost, int discountPercent) {
+        return forTransformation(
+            transformationId,
+            rawCost,
+            discountPercent,
+            ChiseledEnchantingTableData.transformationMinPlayerLevel(transformationId)
+        );
+    }
+
     public static XpRequirement forTransformation(
         Identifier transformationId,
-        int rawXpCost,
-        int discountPercent
+        int rawCost,
+        int discountPercent,
+        int configuredMinPlayerLevel
     ) {
-        if (rawXpCost <= 0) {
+        int clampedRaw = Math.max(0, rawCost);
+        if (clampedRaw == 0) {
             return XpRequirement.FREE;
         }
-        int tierCost;
-        int rawThreshold;
-        int minDiscountedFloor;
-        if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(transformationId)) {
-            tierCost = 1;
-            rawThreshold = 1;
-            minDiscountedFloor = 1;
-        } else {
-            tierCost = rawXpCost <= 2 ? 1 : (rawXpCost <= 8 ? 2 : 3);
-            rawThreshold = Math.clamp(Math.round(rawXpCost * 2.5f), tierCost, 30);
-            // Guarantee Bottle o' Enchanting never drops below Lv.3 (11 XP >= max 11 XP drop).
-            minDiscountedFloor = EXP_BOTTLE_TRANSFORM_ID.equals(transformationId) ? Math.max(tierCost, 3) : tierCost;
-        }
-        int clampedDisc = Math.clamp(discountPercent, 0, 40);
-        int effectiveThreshold = clampedDisc > 0
-            ? Math.max(minDiscountedFloor, Math.round(rawThreshold * (100 - clampedDisc) / 100.0f))
-            : rawThreshold;
-        return new XpRequirement(true, effectiveThreshold, tierCost, rawThreshold, clampedDisc);
+        int clampedDiscount = clampDiscount(discountPercent);
+        int minDeducted = Math.max(1, configuredMinPlayerLevel);
+        int deducted = Math.max(minDeducted, (int) Math.round(clampedRaw * (1.0 - clampedDiscount / 100.0)));
+        return new XpRequirement(clampedRaw, deducted, deducted, clampedDiscount, false);
     }
 
-    /**
-     * Resolves Full-Level Arcane Ritual cost for un-enshrined base enchants, book upgrades, and epiphanies.
-     */
-    public static XpRequirement forFullArcaneRitual(int rawXpCost, int discountPercent) {
-        if (rawXpCost <= 0) {
-            return XpRequirement.FREE;
-        }
-        int clampedDisc = Math.clamp(discountPercent, 0, 40);
-        int effective = clampedDisc > 0
-            ? Math.max(1, Math.round(rawXpCost * (100 - clampedDisc) / 100.0f))
-            : rawXpCost;
-        return new XpRequirement(false, effective, effective, rawXpCost, clampedDisc);
-    }
-
-    /**
-     * Deducts the resolved XP requirement from {@code player} on the server:
-     * <ul>
-     *   <li>{@code vanillaTierMode == true}: subtracts {@code 1..3} levels cleanly via
-     *       {@code player.giveExperienceLevels(-deductedLevels)}, preserving bar % progress.</li>
-     *   <li>{@code vanillaTierMode == false}: subtracts full XP points along the capped curve.</li>
-     * </ul>
-     */
-    public static void deductXp(Player player, XpRequirement requirement) {
-        if (player.getAbilities().instabuild || requirement.deductedLevels() <= 0) {
-            return;
-        }
-        if (requirement.vanillaTierMode()) {
-            player.giveExperienceLevels(-requirement.deductedLevels());
-        } else {
-            int xpPointsToDeduct = pointsForLevelCost(player, requirement.deductedLevels());
-            player.giveExperiencePoints(-xpPointsToDeduct);
-        }
-    }
-
-    public static int pointsForLevelCost(Player player, int levelCost) {
-        if (levelCost <= 0) return 0;
-        int actualStart = player.experienceLevel;
-        if (actualStart <= 0) return 0;
-
-        int effectiveStart = Math.min(actualStart, MARGINAL_CAP_LEVEL);
-        int effectiveCost = Math.min(levelCost, actualStart);
-        int effectiveEnd = Math.max(0, effectiveStart - effectiveCost);
-
-        float progress = player.experienceProgress;
-        long startPartial = Math.round(progress * xpNeededToReachNextLevelFrom(effectiveStart));
-        long endPartial = Math.round(progress * xpNeededToReachNextLevelFrom(effectiveEnd));
-        long points = startPartial - endPartial;
-
-        // If cost exceeds 30 while capped (e.g., datapack custom cost > 30), charge remaining levels at lv0.. cap floor.
-        for (int i = 0; i < effectiveCost; i++) {
-            int barLevel = Math.max(0, effectiveStart - 1 - i);
-            points += xpNeededToReachNextLevelFrom(barLevel);
-        }
-
-        if (points <= 0L) return 1;
-        if (points > Integer.MAX_VALUE) return Integer.MAX_VALUE;
-        return (int) points;
-    }
-
-    private static int xpNeededToReachNextLevelFrom(int level) {
-        if (level < 16) return 2 * level + 7;
-        if (level < 31) return 5 * level - 38;
-        return 9 * level - 158;
+    public static int clampDiscount(int discountPercent) {
+        int cap = LibraryResonance.activeConfig().maxTotalXpDiscountPercent();
+        return Math.max(0, Math.min(cap, discountPercent));
     }
 }

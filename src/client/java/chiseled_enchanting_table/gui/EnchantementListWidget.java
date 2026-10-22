@@ -504,6 +504,25 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     }
                 }
             }
+            // Track 2 (Existing-category upgrade on gear): once an item already carries level >= 1,
+            // regular bookshelves unlock upgrades up to maxUnlockedDirectTier (1..MAX at 38 shelves).
+            if (!enchantable_item.is(Items.ENCHANTED_BOOK) && !enchantable_item.is(Items.BOOK)) {
+                for (var existingEntry : targetEnchantments.entrySet()) {
+                    int existingLvl = existingEntry.getIntValue();
+                    int maxLvl = Math.max(1, existingEntry.getKey().value().getMaxLevel());
+                    if (existingLvl < 1 || existingLvl >= maxLvl) continue;
+                    Identifier id = EnchantmentToIdentifier(existingEntry.getKey(), this.player);
+                    for (int lvl = existingLvl + 1; lvl <= maxLvl; lvl++) {
+                        EnchantmentWithLevel candidate = new EnchantmentWithLevel(id, lvl);
+                        if (!unlockedDirectSet.contains(candidate)
+                            && this.handler.canDirectUpgradeExistingEnchantment(existingEntry.getKey(), id, existingLvl, lvl)) {
+                            optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(candidate), false, 0));
+                            unlockedDirectSet.add(candidate);
+                            maxAddedTierById.merge(id, lvl, Math::max);
+                        }
+                    }
+                }
+            }
             for (EnchantmentWithLevel epiphany : this.handler.computeActiveTreasureEpiphanies(enchantable_item)) {
                 Holder<Enchantment> h = IdentifierToEnchantment(epiphany.enchantment_id(), this.player);
                 if (epiphany.enchantment_level() > targetEnchantments.getLevel(h)) {
@@ -1150,8 +1169,12 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             List<ItemStack> additional_costs = activeAdditionalCosts();
 
             if (is_transformation) {
-                String outputName = handler.syncedTransformationOutputName(this.enchantment_id);
+                String baseOutputName = handler.syncedTransformationOutputName(this.enchantment_id);
                 boolean isBlankOverwrite = this.enchantment_id.equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID);
+                int batchCount = isBlankOverwrite ? handler.resolveDepletedTomeBatchCount() : 1;
+                String outputName = (isBlankOverwrite && batchCount > 1)
+                    ? (batchCount + "\u00d7 " + baseOutputName)
+                    : baseOutputName;
                 String rowTitle = isBlankOverwrite
                     ? I18n.get("gui.chiseled_enchanting_table.blank_overwrite", outputName)
                     : outputName;

@@ -9,7 +9,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "Стоимость: %s уровней опыта",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "Положите любой из подходящих материалов в ячейку оплаты",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "Синхронизировано с сервером — подходит любой из показанных материалов",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Обычные полки открывают средние уровни; резные полки открывают книги 1:1 и снижают расход опыта до -35%",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Обычные полки открывают средние уровни; резные полки открывают книги 1:1 и снижают расход опыта до -40%",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "Заменяет несовместимые зачарования: %s",
   "jei.chiseled_enchanting_table.info.station": "Резной стол зачарования применяет зачарование из ближайшего резного книжного шкафа. Положите зачарованные книги в шкафы в радиусе действия, затем выберите строку в списке стола.",
   "jei.chiseled_enchanting_table.info.bookshelf": "Резные книжные шкафы в радиусе действия стола дают доступные зачарования. Каждая книга в ячейке открывает своё зачарование.",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "Резонанс: -%s%% базового опыта (до -40%% с эталонным фолиантом)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Книжные полки: %s (-%s%% опыта, до средних уровней)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Мастер-фолианты: %s (-%s%% опыта, полное открытие 1:1)",
-  "gui.chiseled_enchanting_table.resonance.cap": "Максимальная скидка резонанса: -35% опыта",
+  "gui.chiseled_enchanting_table.resonance.cap": "Максимальная скидка резонанса: -40% опыта",
   "item.chiseled_enchanting_table.arcane_catalyst": "Кристалл тайного синтеза",
   "gui.chiseled_enchanting_table.treasure_epiphany": "✦ Озарение: %s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ Озарение сокровищ активно (шанс %s%%)",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "Condensed Arcana",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "Craft an Arcane Synthesis Crystal.",
   "advancements.chiseled_enchanting_table.library_resonance.title": "Full Library Resonance",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -35% XP Library Resonance discount at a Chiseled Enchanting Table.",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -40% XP Library Resonance discount at a Chiseled Enchanting Table.",
   "advancements.chiseled_enchanting_table.grand_library.title": "Grand Library Awakening",
   "advancements.chiseled_enchanting_table.grand_library.description": "Surround a Chiseled Enchanting Table with at least 32 Wooden Bookshelves to awaken Treasure Epiphanies.",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "Frozen in Time",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 Нужно %s полок (сейчас %s)",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 Закрытый уровень: %s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "Книжные полки: %s / %s",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Добавьте обычные полки или поместите эталонный фолиант в резную полку"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Добавьте обычные полки или поместите эталонный фолиант в резную полку",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "Без эталонного фолианта чистые предметы ограничены средними уровнями — сначала наложите младший уровень для улучшения или поместите чародейскую книгу в резную книжную полку"
 }

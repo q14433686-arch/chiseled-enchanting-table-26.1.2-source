@@ -1,5 +1,5 @@
 {
-  "_comment": "Unified Treasure Epiphany & Cryo-Arcane Freeze system. Probability, simultaneous per-item cap, and rolled tier all scale with Wooden Bookshelves + Stored Master Tome relative mastery (r = level / maxLevel), automatically compatible with modded enchantments. Material ratios strictly follow Lapis > Emerald >> Amethyst Shard across rerolls, freezes, and epiphany offerings.",
+  "_comment": "Unified Treasure Epiphany & Cryo-Arcane Freeze system. Treasure pool membership is driven entirely via tags (#minecraft:treasure + #chiseled_enchanting_table:epiphany_exclusive minus #minecraft:curse) plus optional datapack IDs.",
   "min_regular_bookshelves": 32,
   "base_chance": 0.28,
   "chance_per_extra_bookshelf": 0.008,
@@ -25,21 +25,10 @@
     { "item": "minecraft:emerald", "count": 8 },
     { "item": "minecraft:amethyst_shard", "count": 3 }
   ],
-  "treasure_enchantments": [
-    "minecraft:aqua_affinity",
-    "minecraft:flame",
-    "minecraft:multishot",
-    "minecraft:channeling",
-    "minecraft:silk_touch",
-    "minecraft:infinity",
-    "minecraft:mending",
-    "minecraft:frost_walker",
-    "minecraft:soul_speed",
-    "minecraft:swift_sneak",
-    "minecraft:wind_burst"
-  ],
+  "treasure_enchantments": [],
   "treasure_tags": [
-    "#minecraft:treasure"
+    "#minecraft:treasure",
+    "#chiseled_enchanting_table:epiphany_exclusive"
   ],
   "exclude_tags": [
     "#minecraft:curse"
@@ -154,10 +143,10 @@
       }
     },
     "minecraft:wind_burst": {
-      "xp_levels": 24,
+      "xp_levels": 25,
       "material_cost": {
         "options": [
-          { "item": "minecraft:breeze_rod", "count": 5, "extra": { "item": "minecraft:wind_charge", "count": 16 } },
+          { "item": "minecraft:breeze_rod", "count": 4, "extra": { "item": "minecraft:amethyst_shard", "count": 7 } },
           { "item": "minecraft:wind_charge", "count": 24, "extra": { "item": "minecraft:emerald", "count": 18 } },
           { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
         ]

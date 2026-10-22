@@ -50,11 +50,19 @@
       },
       {
         "item": "chiseled_enchanting_table:arcane_catalyst",
-        "count": 1,
+        "count": 1
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "base_count": 4,
+        "max_level_count": 12,
+        "level_exponent": 1.15,
         "extras": [
           {
-            "item": "chiseled_enchanting_table:cleansing_grit",
-            "count": 1
+            "item": "minecraft:lapis_lazuli",
+            "base_count": 6,
+            "max_level_count": 18,
+            "level_exponent": 1.15
           }
         ]
       }
@@ -85,11 +93,15 @@
       },
       {
         "item": "chiseled_enchanting_table:arcane_catalyst",
-        "count": 1,
+        "count": 1
+      },
+      {
+        "item": "minecraft:ghast_tear",
+        "count": 2,
         "extras": [
           {
-            "item": "minecraft:ghast_tear",
-            "count": 1
+            "item": "minecraft:golden_apple",
+            "count": 2
           }
         ]
       }

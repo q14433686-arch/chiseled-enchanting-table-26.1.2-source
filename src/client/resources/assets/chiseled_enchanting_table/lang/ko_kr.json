@@ -9,7 +9,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "비용: 경험치 %s 레벨",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "표시되는 대체 재료 중 아무것이나 슬롯에 넣어 사용할 수 있습니다",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "서버 동기화됨 — 순환 표시되는 모든 재료 사용 가능",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "일반 책장은 중급까지, 조각된 책장의 마법이 부여된 책은 1:1 해금 및 최대 35% XP 할인 제공",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "일반 책장은 중급까지, 조각된 책장의 마법이 부여된 책은 1:1 해금 및 최대 40% XP 할인 제공",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "충돌하는 마법 부여를 대체합니다: %s",
   "jei.chiseled_enchanting_table.info.station": "조각된 마법 부여대는 근처 조각된 책장에서 마법 부여를 적용합니다. 범위 안의 책장에 마법이 부여된 책을 넣은 뒤 부여대의 목록에서 항목을 고르세요.",
   "jei.chiseled_enchanting_table.info.bookshelf": "부여대 범위 안의 조각된 책장이 사용 가능한 마법 부여를 제공합니다. 칸에 있는 책 하나마다 해당 마법 부여가 해금됩니다.",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "서고 공명: 기본 -%s%% 경험치 (원본 숙련 포함 최대 -40%%)",
   "gui.chiseled_enchanting_table.resonance.wooden": "일반 책장: %s개 (-%s%% XP, 중급 단계까지 해금)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "보관된 비전서: %s권 (-%s%% XP, 1:1 최고 단계 해금)",
-  "gui.chiseled_enchanting_table.resonance.cap": "최대 공명 할인: -35% XP",
+  "gui.chiseled_enchanting_table.resonance.cap": "최대 공명 할인: -40% XP",
   "item.chiseled_enchanting_table.arcane_catalyst": "비전 응결석",
   "gui.chiseled_enchanting_table.treasure_epiphany": "✦ 비전 깨달음: %s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ 보물 마법 깨달음 활성화 (발동 확률 %s%%)",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "만법귀일",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "비법 응결정을 제작하세요.",
   "advancements.chiseled_enchanting_table.library_resonance.title": "완전한 서고 공명",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "최대 -35% 경험치 서고 공명을 달성하세요.",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "최대 -40% 경험치 서고 공명을 달성하세요.",
   "advancements.chiseled_enchanting_table.grand_library.title": "대서고 각성",
   "advancements.chiseled_enchanting_table.grand_library.description": "주변에 일반 책장 32개 이상을 배치해 보물 돈오를 깨우세요.",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "찰나의 영원",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 책장 %s개 필요 (현재 %s)",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 잠긴 등급: %s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "일반 책장 진행도: %s / %s",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "일반 책장을 추가하거나 조각된 책장에 원본 서적을 보관하면 해금됩니다"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "일반 책장을 추가하거나 조각된 책장에 원본 서적을 보관하면 해금됩니다",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "비전서가 없으면 무마법 아이템 직접 각인은 중간 단계까지만 가능합니다 — 하위 단계를 먼저 각인해 강화하거나 조각된 책장에 마법이 부여된 책을 보관하세요"
 }

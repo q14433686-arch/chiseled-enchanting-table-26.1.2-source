@@ -1,5 +1,5 @@
 {
-  "_comment": "Two-track progression baseline: standard multi-level table enchantments start at level 1 and scale via surrounding Wooden Bookshelves across integer thresholds up to MAX at 38 bookshelves, while Chiseled Bookshelf Master Tomes always unlock 1:1 immediately alongside mass-production XP mode. All 11 Treasure / pinnacle enchantments are strictly excluded here so they ONLY appear via (1) a Master Tome in a nearby Chiseled Bookshelf OR (2) Grand Library Treasure Epiphany (>= 32 Wooden Bookshelves).",
+  "_comment": "Three-track progression baseline: blank gear/books unlock up to ceil(maxLevel / 2) along regular bookshelves, items already carrying an enchantment can upgrade all the way to MAX at 38 regular bookshelves, and Chiseled Bookshelf Master Tomes always unlock 1:1 immediately alongside 1-3 vanilla XP deduction. Treasure and #chiseled_enchanting_table:epiphany_exclusive enchantments remain exclusive to Master Tomes, Treasure Epiphanies, or direct book transfer.",
   "values": [],
   "tags": [
     {
@@ -7,21 +7,10 @@
       "level": 1
     }
   ],
-  "exclude": [
-    "minecraft:aqua_affinity",
-    "minecraft:flame",
-    "minecraft:multishot",
-    "minecraft:channeling",
-    "minecraft:silk_touch",
-    "minecraft:infinity",
-    "minecraft:mending",
-    "minecraft:frost_walker",
-    "minecraft:soul_speed",
-    "minecraft:swift_sneak",
-    "minecraft:wind_burst"
-  ],
+  "exclude": [],
   "exclude_tags": [
     "#minecraft:treasure",
-    "#minecraft:curse"
+    "#minecraft:curse",
+    "#chiseled_enchanting_table:epiphany_exclusive"
   ]
 }

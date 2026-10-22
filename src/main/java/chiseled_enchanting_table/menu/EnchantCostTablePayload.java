@@ -2,6 +2,8 @@ package chiseled_enchanting_table.menu;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
+import chiseled_enchanting_table.mechanics.resonance.LibraryResonance;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
@@ -9,20 +11,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 
 /**
- * Server -> client cost table carrying ALL player-selectable material alternatives (`costOptions`),
- * book-upgrade flags, and Grand Library Treasure Epiphany & Stasis Freeze settings and costs.
+ * Server -> client cost table carrying ALL player-selectable material alternatives ({@code costOptions})
+ * with full DataComponents preserved via {@link ItemStack#OPTIONAL_STREAM_CODEC}, stable string
+ * {@link OptionType#token()} wire framing, {@link BookshelfProgression.Config}, and {@link LibraryResonance.Config}.
  */
 public record EnchantCostTablePayload(
     boolean combineEnabled,
@@ -45,7 +46,8 @@ public record EnchantCostTablePayload(
     int epiphanyRerollXpLevels,
     List<ItemStack> epiphanyRerollCosts,
     Set<Identifier> explicitTreasureIds,
-    chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig,
+    BookshelfProgression.Config shelfGatesConfig,
+    LibraryResonance.Config libraryResonanceConfig,
     List<CostEntry> costs
 ) implements CustomPacketPayload {
     public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table");
@@ -64,7 +66,8 @@ public record EnchantCostTablePayload(
 
     public static EnchantCostTablePayload build(Player player) {
         List<CostEntry> entries = new ArrayList<>();
-        var enchantments = player.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        var registryAccess = player.level().registryAccess();
+        var enchantments = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
         for (Holder.Reference<Enchantment> holder : enchantments.listElements().toList()) {
             Identifier id = holder.key().identifier();
             int maxLevel = Math.max(1, holder.value().getMaxLevel());
@@ -145,8 +148,9 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingTableData.treasureEpiphanyFreezeCostOptions(),
             ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels(),
             ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions(),
-            ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(),
+            ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(registryAccess),
             ChiseledEnchantingTableData.shelfGatesConfig(),
+            ChiseledEnchantingTableData.libraryResonanceConfig(),
             List.copyOf(entries)
         );
     }
@@ -154,8 +158,7 @@ public record EnchantCostTablePayload(
     private static void writeStacks(RegistryFriendlyByteBuf buf, List<ItemStack> stacks) {
         buf.writeVarInt(stacks.size());
         for (ItemStack s : stacks) {
-            buf.writeIdentifier(BuiltInRegistries.ITEM.getKey(s.getItem()));
-            buf.writeVarInt(s.getCount());
+            ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, s);
         }
     }
 
@@ -163,11 +166,9 @@ public record EnchantCostTablePayload(
         int n = buf.readVarInt();
         List<ItemStack> list = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
-            Identifier itemId = buf.readIdentifier();
-            int count = buf.readVarInt();
-            Item item = BuiltInRegistries.ITEM.getValue(itemId);
-            if (item != null) {
-                list.add(new ItemStack(item, Math.max(1, count)));
+            ItemStack decoded = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
+            if (!decoded.isEmpty()) {
+                list.add(decoded);
             }
         }
         return List.copyOf(list);
@@ -197,12 +198,13 @@ public record EnchantCostTablePayload(
         for (Identifier id : explicitTreasureIds) {
             buf.writeIdentifier(id);
         }
-        var sg = shelfGatesConfig == null
-            ? chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT
-            : shelfGatesConfig;
+        var sg = shelfGatesConfig == null ? BookshelfProgression.Config.DEFAULT : shelfGatesConfig;
         buf.writeBoolean(sg.directGatesEnabled());
         buf.writeVarInt(sg.maxDirectBookshelves());
         buf.writeDouble(sg.gamma());
+        buf.writeUtf(sg.blankMaxTierMode().token());
+        buf.writeVarInt(sg.horizontalScanRadius());
+        buf.writeVarInt(sg.verticalScanRadius());
         buf.writeVarInt(sg.overrides().size());
         for (var ov : sg.overrides().entrySet()) {
             buf.writeIdentifier(ov.getKey());
@@ -215,9 +217,35 @@ public record EnchantCostTablePayload(
         buf.writeVarInt(sg.tier2Bookshelves());
         buf.writeDouble(sg.tier2MaterialMultiplier());
         buf.writeVarInt(sg.tier3QualifyingEnchantments());
+        buf.writeVarInt(sg.baseBatchSize());
+        buf.writeVarInt(sg.tier3BatchSize());
+
+        var lr = libraryResonanceConfig == null ? LibraryResonance.Config.DEFAULT : libraryResonanceConfig;
+        buf.writeVarInt(lr.minDiscountBookshelves());
+        buf.writeVarInt(lr.maxDiscountBookshelves());
+        buf.writeVarInt(lr.maxWoodenDiscountPercent());
+        buf.writeVarInt(lr.maxGlobalMasteryDiscountPercent());
+        buf.writeVarInt(lr.maxBaseXpDiscountPercent());
+        buf.writeVarInt(lr.maxSpecificEnchantBonusPercent());
+        buf.writeVarInt(lr.maxTotalXpDiscountPercent());
+        buf.writeDouble(lr.masteryUnitExponent());
+        buf.writeDouble(lr.globalMasteryMultiplier());
+        buf.writeDouble(lr.masterTomeUpgradeMaterialMultiplier());
+        buf.writeDouble(lr.shelfUpgradeMaterialMultiplier());
+        buf.writeDouble(lr.epiphanyShelfScoreFactor());
+        buf.writeDouble(lr.epiphanyGlobalMasteryScoreFactor());
+        buf.writeDouble(lr.epiphanyAffinityMasteryScoreFactor());
+        buf.writeDouble(lr.epiphanyTier2MaxProb());
+        buf.writeDouble(lr.epiphanyTier2ScoreDivisor());
+        buf.writeDouble(lr.epiphanyTier2MasteryBonus());
+        buf.writeDouble(lr.epiphanyTierPlusMaxProb());
+        buf.writeDouble(lr.epiphanyTierPlusScoreDivisor());
+        buf.writeDouble(lr.epiphanyTierPlusMasteryBonus());
+        buf.writeDouble(lr.incrementalStepCreditFactor());
+
         buf.writeVarInt(costs.size());
         for (CostEntry entry : costs) {
-            buf.writeVarInt(entry.optionType().ordinal());
+            buf.writeUtf(entry.optionType().token());
             buf.writeIdentifier(entry.enchantmentId());
             buf.writeVarInt(entry.level());
             buf.writeVarInt(Math.max(0, entry.xpLevelCost()));
@@ -256,6 +284,9 @@ public record EnchantCostTablePayload(
         boolean sgEnabled = buf.readBoolean();
         int sgMax = buf.readVarInt();
         double sgGamma = buf.readDouble();
+        var sgBlankMode = BookshelfProgression.BlankMaxTierMode.fromToken(buf.readUtf());
+        int sgHScan = buf.readVarInt();
+        int sgVScan = buf.readVarInt();
         int ovCount = buf.readVarInt();
         java.util.Map<Identifier, List<Integer>> sgOverrides = new java.util.HashMap<>();
         for (int i = 0; i < ovCount; i++) {
@@ -273,15 +304,41 @@ public record EnchantCostTablePayload(
         int sgT2 = buf.readVarInt();
         double sgMult = buf.readDouble();
         int sgT3 = buf.readVarInt();
-        var sgConfig = new chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config(
-            sgEnabled, sgMax, sgGamma, sgOverrides, sgT1, sgT2, sgMult, sgT3
+        int sgBaseBatch = buf.readVarInt();
+        int sgTier3Batch = buf.readVarInt();
+        var sgConfig = new BookshelfProgression.Config(
+            sgEnabled, sgMax, sgGamma, sgBlankMode, sgHScan, sgVScan,
+            sgOverrides, sgT1, sgT2, sgMult, sgT3, sgBaseBatch, sgTier3Batch
         );
-        OptionType[] optionValues = OptionType.values();
+
+        var lrConfig = new LibraryResonance.Config(
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble()
+        );
+
         int rowCount = buf.readVarInt();
         List<CostEntry> entries = new ArrayList<>(Math.max(16, rowCount));
         for (int i = 0; i < rowCount; i++) {
-            int ord = buf.readVarInt();
-            OptionType optionType = (ord >= 0 && ord < optionValues.length) ? optionValues[ord] : OptionType.ENCHANTMENT;
+            OptionType optionType = OptionType.fromToken(buf.readUtf());
             Identifier id = buf.readIdentifier();
             int level = buf.readVarInt();
             int xpLevelCost = buf.readVarInt();
@@ -301,7 +358,7 @@ public record EnchantCostTablePayload(
             minShelves, baseChance, perShelfChance, perTomeChance, maxChance,
             maxSlotsCap, scorePerSlot, cycleTicks, freezeDurationTicks, maxFreezeTicks,
             freezeXpLevels, freezeCosts, rerollXp, rerollCosts,
-            Set.copyOf(treasureIds), sgConfig, List.copyOf(entries)
+            Set.copyOf(treasureIds), sgConfig, lrConfig, List.copyOf(entries)
         );
     }
 

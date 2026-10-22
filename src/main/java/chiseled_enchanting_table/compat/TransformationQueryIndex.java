@@ -98,7 +98,12 @@ public final class TransformationQueryIndex {
             List<List<ItemStack>> costOptions = synced.map(SyncedEnchantmentCosts.Cost::costOptions)
                 .orElseGet(() -> ChiseledEnchantingTableData.transformationCostOptions(id));
 
-            XpRequirement xpReq = XpCostConversion.forTransformation(id, rawXp, 0);
+            XpRequirement xpReq = XpCostConversion.forTransformation(
+                id,
+                rawXp,
+                0,
+                ChiseledEnchantingTableData.transformationMinPlayerLevel(id)
+            );
             results.add(new Entry(
                 id,
                 level,
@@ -111,13 +116,15 @@ public final class TransformationQueryIndex {
         }
         if (SyncedEnchantmentCosts.disenchantEnabled()) {
             Identifier sampleId = Identifier.withDefaultNamespace("sharpness");
+            int sampleRefund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
+                .essencePotentialFromParams(5, 5, 1, false, SyncedEnchantmentCosts.disenchantRefundScale());
             results.add(new Entry(
                 chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.DISENCHANT_ALL_ID,
                 1,
                 new ItemStack(Items.ENCHANTED_BOOK),
                 List.of(),
-                new ItemStack(Items.BOOK),
-                XpRequirement.refund(24),
+                new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME),
+                XpRequirement.refund(sampleRefund),
                 true
             ));
             results.add(new Entry(

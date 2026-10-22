@@ -597,11 +597,17 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         "gui.chiseled_enchanting_table.shelf_locked.tip_title",
                         lockedName
                     ).withStyle(ChatFormatting.GOLD));
-                    lockTip.add(Component.translatable(
-                        "gui.chiseled_enchanting_table.shelf_locked.tip_req",
-                        this.menu.regularBookshelves,
-                        specialEntry.required_bookshelves
-                    ).withStyle(ChatFormatting.RED));
+                    if (this.menu.regularBookshelves < specialEntry.required_bookshelves) {
+                        lockTip.add(Component.translatable(
+                            "gui.chiseled_enchanting_table.shelf_locked.tip_req",
+                            this.menu.regularBookshelves,
+                            specialEntry.required_bookshelves
+                        ).withStyle(ChatFormatting.RED));
+                    } else {
+                        lockTip.add(Component.translatable(
+                            "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap"
+                        ).withStyle(ChatFormatting.YELLOW));
+                    }
                     lockTip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.shelf_locked.tip_bypass"
                     ).withStyle(ChatFormatting.GRAY));
@@ -646,8 +652,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     var sg = this.menu.shelfGatesConfig();
                     int shelves = this.menu.regularBookshelves;
                     int storedLvl = this.menu.storedMasterLevel(specialEntry.enchantment_id);
+                    int existingLvl = this.menu.currentTargetEnchantLevel(specialEntry.enchantment_id);
                     int directCap = this.menu.maxUnlockedDirectTier(specialEntry.enchantment_id, maxLvl);
-                    int effectiveCap = Math.min(maxLvl, Math.max(storedLvl, directCap));
+                    int baseCap = existingLvl >= 1
+                        ? directCap
+                        : this.menu.maxBlankWoodenTier(specialEntry.enchantment_id, maxLvl);
+                    int effectiveCap = Math.min(maxLvl, Math.max(storedLvl, baseCap));
                     List<Component> catTip = new ArrayList<>();
                     catTip.add(Component.literal(specialEntry.category_title + "  " + specialEntry.category_badge)
                         .withStyle(ChatFormatting.GOLD));
@@ -658,19 +668,25 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         shelves,
                         sg.maxDirectBookshelves()
                     ).withStyle(effectiveCap >= maxLvl ? ChatFormatting.GREEN : ChatFormatting.AQUA));
-                    if (directCap < maxLvl) {
-                        int nextTier = directCap + 1;
+                    if (effectiveCap < maxLvl) {
+                        int nextTier = effectiveCap + 1;
                         int reqShelves = this.menu.requiredBookshelvesForDirectTier(
                             specialEntry.enchantment_id,
                             nextTier,
                             maxLvl
                         );
-                        catTip.add(Component.translatable(
-                            "gui.chiseled_enchanting_table.category.tip_next",
-                            nextTier,
-                            reqShelves,
-                            sg.maxDirectBookshelves()
-                        ).withStyle(ChatFormatting.YELLOW));
+                        if (shelves < reqShelves) {
+                            catTip.add(Component.translatable(
+                                "gui.chiseled_enchanting_table.category.tip_next",
+                                nextTier,
+                                reqShelves,
+                                sg.maxDirectBookshelves()
+                            ).withStyle(ChatFormatting.YELLOW));
+                        } else {
+                            catTip.add(Component.translatable(
+                                "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap"
+                            ).withStyle(ChatFormatting.YELLOW));
+                        }
                     }
                     catTip.add(Component.translatable("gui.chiseled_enchanting_table.category.tip_master")
                         .withStyle(ChatFormatting.DARK_GRAY));
@@ -802,11 +818,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.title", this.menu.xpDiscountPercent)
                     .withStyle(ChatFormatting.GOLD));
-                if (this.menu.regularBookshelves < chiseled_enchanting_table.mechanics.resonance.LibraryResonance.MIN_DISCOUNT_BOOKSHELVES) {
+                int minDiscShelves = this.menu.libraryResonanceConfig().minDiscountBookshelves();
+                if (this.menu.regularBookshelves < minDiscShelves) {
                     tip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.resonance.wooden_locked",
                         this.menu.regularBookshelves,
-                        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.MIN_DISCOUNT_BOOKSHELVES
+                        minDiscShelves
                     ).withStyle(ChatFormatting.GRAY));
                 } else {
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.wooden", this.menu.regularBookshelves, woodenBonus)

@@ -9,7 +9,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "コスト: 経験値 %s レベル",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "候補素材のいずれか1種類を素材スロットに入れて使用できます",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "サーバー同期済み — 表示されるどの候補素材でも支払い可能",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "通常の本棚は中位まで解放、模様入り本棚のエンチャント本は1:1で解放し最大35% XP軽減",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "通常の本棚は中位まで解放、模様入り本棚のエンチャント本は1:1で解放し最大40% XP軽減",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "競合するエンチャントを置き換えます: %s",
   "jei.chiseled_enchanting_table.info.station": "彫刻されたエンチャントテーブルは、近くの彫刻された本棚からエンチャントを付与します。範囲内の本棚にエンチャントの本を入れ、テーブルの一覧から項目を選んでください。",
   "jei.chiseled_enchanting_table.info.bookshelf": "テーブルの範囲内にある彫刻された本棚が、利用できるエンチャントを供給します。スロットの本1冊ごとに対応するエンチャントが解放されます。",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "書庫共鳴：基本 -%s%% 経験値（原典極意込み最大 -40%%）",
   "gui.chiseled_enchanting_table.resonance.wooden": "本棚：%s 個（-%s%% XP・中位段階まで解放）",
   "gui.chiseled_enchanting_table.resonance.chiseled": "秘伝書（模様入り本棚）：%s 冊（-%s%% XP・1:1 完全解放）",
-  "gui.chiseled_enchanting_table.resonance.cap": "共鳴による最大軽減率：-35% XP",
+  "gui.chiseled_enchanting_table.resonance.cap": "共鳴による最大軽減率：-40% XP",
   "item.chiseled_enchanting_table.arcane_catalyst": "秘術の凝晶",
   "gui.chiseled_enchanting_table.treasure_epiphany": "✦ 秘術の閃き：%s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ トレジャー閃き発動中（発生率 %s%%）",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "万法帰一",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "秘法凝晶をクラフトする。",
   "advancements.chiseled_enchanting_table.library_resonance.title": "満堂の書香",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "模様入りエンチャント台で最大 -35% の蔵書共鳴を達成する。",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "模様入りエンチャント台で最大 -40% の蔵書共鳴を達成する。",
   "advancements.chiseled_enchanting_table.grand_library.title": "大書院の覚醒",
   "advancements.chiseled_enchanting_table.grand_library.description": "周囲に本棚を32個以上配置して秘法頓悟を目覚めさせる。",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "刹那の永遠",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 本棚 %s 個必要（現在 %s）",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 未解放ランク：%s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "通常の本棚数：%s / %s",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "本棚を増設するか、模様入り本棚に原典を収めると解放されます"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "本棚を増設するか、模様入り本棚に原典を収めると解放されます",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "秘伝書がない場合、未付与品への直接刻印は中位段階までです — 下位段階を刻印してから強化するか、模様入り本棚にエンチャントの本を収めてください"
 }

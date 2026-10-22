@@ -6,6 +6,7 @@ import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -19,6 +20,7 @@ public final class ChiseledEnchantingMenuPayloads {
     private ChiseledEnchantingMenuPayloads() {}
 
     public static final Identifier AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("available_chiseled_enchantment");
+    public static final Identifier LIVE_SHELF_STATE_PACKET_ID = ChiseledEnchantingTable.identifier("live_shelf_state");
     public static final Identifier APPLY_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("apply_chiseled_enchantment");
     public static final Identifier REROLL_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("reroll_epiphany");
     public static final Identifier FREEZE_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("freeze_epiphany");
@@ -54,20 +56,35 @@ public final class ChiseledEnchantingMenuPayloads {
         }
     }
 
-    public record TransformationDisplay(Identifier id, Identifier input_item, Identifier output_item, int level) {
+    public record TransformationDisplay(
+        Identifier id,
+        Identifier input_item,
+        boolean input_is_tag,
+        Identifier output_item,
+        int level,
+        int min_player_level
+    ) {
+        public TransformationDisplay(Identifier id, Identifier input_item, Identifier output_item, int level) {
+            this(id, input_item, false, output_item, level, 1);
+        }
+
         public static void write(RegistryFriendlyByteBuf buf, TransformationDisplay value) {
             buf.writeIdentifier(value.id());
             buf.writeIdentifier(value.input_item());
+            buf.writeBoolean(value.input_is_tag());
             buf.writeIdentifier(value.output_item());
             buf.writeInt(value.level());
+            buf.writeVarInt(Math.max(1, value.min_player_level()));
         }
 
         public static TransformationDisplay read(RegistryFriendlyByteBuf buf) {
             Identifier id = buf.readIdentifier();
             Identifier input = buf.readIdentifier();
+            boolean isTag = buf.readBoolean();
             Identifier output = buf.readIdentifier();
             int level = buf.readInt();
-            return new TransformationDisplay(id, input, output, level);
+            int minPlayerLevel = Math.max(1, buf.readVarInt());
+            return new TransformationDisplay(id, input, isTag, output, level, minPlayerLevel);
         }
     }
 
@@ -79,7 +96,7 @@ public final class ChiseledEnchantingMenuPayloads {
         int chiseled_book_count,
         int high_tier_chiseled_books,
         int epiphany_seed,
-        java.util.Map<Identifier, Integer> stored_master_levels
+        Map<Identifier, Integer> stored_master_levels
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_PAYLOAD_ID =
             new CustomPacketPayload.Type<>(AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID);
@@ -87,7 +104,7 @@ public final class ChiseledEnchantingMenuPayloads {
             CustomPacketPayload.codec(AvailableEnchantmentPayload::write, AvailableEnchantmentPayload::read);
 
         public AvailableEnchantmentPayload(Set<EnchantmentWithLevel> unlocked_enchantements) {
-            this(unlocked_enchantements, buildTransformationDisplays(), 0, 0, 0, 0, 1, java.util.Map.of());
+            this(unlocked_enchantements, buildTransformationDisplays(), 0, 0, 0, 0, 1, Map.of());
         }
 
         public AvailableEnchantmentPayload(
@@ -97,7 +114,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int chiseled_book_count,
             int epiphany_seed
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, java.util.Map.of());
+            this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, Map.of());
         }
 
         public AvailableEnchantmentPayload(
@@ -106,7 +123,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int regular_bookshelves,
             int chiseled_book_count,
             int epiphany_seed,
-            java.util.Map<Identifier, Integer> stored_master_levels
+            Map<Identifier, Integer> stored_master_levels
         ) {
             this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, stored_master_levels);
         }
@@ -118,7 +135,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int chiseled_book_count,
             int high_tier_chiseled_books,
             int epiphany_seed,
-            java.util.Map<Identifier, Integer> stored_master_levels
+            Map<Identifier, Integer> stored_master_levels
         ) {
             this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, high_tier_chiseled_books, epiphany_seed, stored_master_levels);
         }
@@ -126,11 +143,15 @@ public final class ChiseledEnchantingMenuPayloads {
         private static List<TransformationDisplay> buildTransformationDisplays() {
             List<TransformationDisplay> displays = new ArrayList<>();
             for (Object[] tuple : ChiseledEnchantingTableData.transformationDisplayTuples()) {
+                boolean isTag = tuple.length > 4 && Boolean.TRUE.equals(tuple[4]);
+                int minLvl = tuple.length > 5 ? (int) tuple[5] : 1;
                 displays.add(new TransformationDisplay(
                     (Identifier) tuple[0],
                     (Identifier) tuple[1],
+                    isTag,
                     (Identifier) tuple[2],
-                    (int) tuple[3]
+                    (int) tuple[3],
+                    minLvl
                 ));
             }
             return List.copyOf(displays);
@@ -162,18 +183,89 @@ public final class ChiseledEnchantingMenuPayloads {
             int highTierChiseledBooks = buf.readVarInt();
             int epiphanySeed = buf.readInt();
             int masterSize = buf.readVarInt();
-            java.util.Map<Identifier, Integer> masterLevels = new java.util.HashMap<>(Math.max(4, masterSize * 2));
+            Map<Identifier, Integer> masterLevels = new java.util.HashMap<>(Math.max(4, masterSize * 2));
             for (int i = 0; i < masterSize; i++) {
                 Identifier id = buf.readIdentifier();
                 int lvl = buf.readVarInt();
                 masterLevels.put(id, Math.max(1, lvl));
             }
-            return new AvailableEnchantmentPayload(unlocked, transformations, xpDiscountPercent, regularBookshelves, chiseledBookCount, highTierChiseledBooks, epiphanySeed, java.util.Map.copyOf(masterLevels));
+            return new AvailableEnchantmentPayload(
+                unlocked,
+                transformations,
+                xpDiscountPercent,
+                regularBookshelves,
+                chiseledBookCount,
+                highTierChiseledBooks,
+                epiphanySeed,
+                Map.copyOf(masterLevels)
+            );
         }
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
             return AVAILABLE_CHISELED_ENCHANTMENT_PAYLOAD_ID;
+        }
+    }
+
+    /**
+     * S2C real-time synchronization packet pushing updated shelf counts, stored Master Tomes,
+     * and unlocked enchantments to an already-open {@link ChiseledEnchantingTableScreenHandler}
+     * whenever surrounding shelves change while the GUI stays open.
+     */
+    public record LiveShelfStatePayload(
+        Set<EnchantmentWithLevel> unlocked_enchantements,
+        int xp_discount_percent,
+        int regular_bookshelves,
+        int chiseled_book_count,
+        int high_tier_chiseled_books,
+        Map<Identifier, Integer> stored_master_levels
+    ) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<LiveShelfStatePayload> TYPE =
+            new CustomPacketPayload.Type<>(LIVE_SHELF_STATE_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, LiveShelfStatePayload> CODEC =
+            CustomPacketPayload.codec(LiveShelfStatePayload::write, LiveShelfStatePayload::read);
+
+        private void write(RegistryFriendlyByteBuf buf) {
+            buf.writeCollection(unlocked_enchantements, (target, value) -> EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode((RegistryFriendlyByteBuf) target, value));
+            buf.writeVarInt(Math.max(0, xp_discount_percent));
+            buf.writeVarInt(Math.max(0, regular_bookshelves));
+            buf.writeVarInt(Math.max(0, chiseled_book_count));
+            buf.writeVarInt(Math.max(0, high_tier_chiseled_books));
+            buf.writeVarInt(stored_master_levels == null ? 0 : stored_master_levels.size());
+            if (stored_master_levels != null) {
+                for (var entry : stored_master_levels.entrySet()) {
+                    buf.writeIdentifier(entry.getKey());
+                    buf.writeVarInt(Math.max(1, entry.getValue()));
+                }
+            }
+        }
+
+        private static LiveShelfStatePayload read(RegistryFriendlyByteBuf buf) {
+            Set<EnchantmentWithLevel> unlocked = buf.readCollection(HashSet::new, source -> EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode((RegistryFriendlyByteBuf) source));
+            int xpDiscountPercent = buf.readVarInt();
+            int regularBookshelves = buf.readVarInt();
+            int chiseledBookCount = buf.readVarInt();
+            int highTierChiseledBooks = buf.readVarInt();
+            int masterSize = buf.readVarInt();
+            Map<Identifier, Integer> masterLevels = new java.util.HashMap<>(Math.max(4, masterSize * 2));
+            for (int i = 0; i < masterSize; i++) {
+                Identifier id = buf.readIdentifier();
+                int lvl = buf.readVarInt();
+                masterLevels.put(id, Math.max(1, lvl));
+            }
+            return new LiveShelfStatePayload(
+                unlocked,
+                xpDiscountPercent,
+                regularBookshelves,
+                chiseledBookCount,
+                highTierChiseledBooks,
+                Map.copyOf(masterLevels)
+            );
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
         }
     }
 

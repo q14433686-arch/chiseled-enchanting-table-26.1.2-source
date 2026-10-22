@@ -9,7 +9,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "Costo: %s livelli di esperienza",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "Inserisci uno qualsiasi dei materiali accettati nello slot del costo",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "Sincronizzato col server — ogni materiale mostrato è valido",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Le librerie normali sbloccano i gradi medi; quelle cesellate sbloccano i tomi 1:1 (fino a -35% PE)",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Le librerie normali sbloccano i gradi medi; quelle cesellate sbloccano i tomi 1:1 (fino a -40% PE)",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "Sostituisce incantesimi incompatibili: %s",
   "jei.chiseled_enchanting_table.info.station": "Il tavolo da incantesimi cesellato applica un incantesimo da una libreria cesellata vicina. Metti i libri incantati nelle librerie a portata, poi scegli un'opzione nell'elenco del tavolo.",
   "jei.chiseled_enchanting_table.info.bookshelf": "Le librerie cesellate a portata del tavolo forniscono gli incantesimi disponibili. Ogni libro in uno scomparto sblocca il suo incantesimo.",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "Risonanza: -%s%% PE base (fino a -40%% con Tomo Maestro)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Librerie di legno: %s (-%s%% PE, fino a livello intermedio)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Tomi maestri: %s (-%s%% PE, sblocco 1:1 completo)",
-  "gui.chiseled_enchanting_table.resonance.cap": "Sconto massimo di risonanza: -35% PE",
+  "gui.chiseled_enchanting_table.resonance.cap": "Sconto massimo di risonanza: -40% PE",
   "item.chiseled_enchanting_table.arcane_catalyst": "Cristallo di sintesi arcana",
   "gui.chiseled_enchanting_table.treasure_epiphany": "✦ Epifania: %s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ Epifania del tesoro attiva (%s%% di probabilità)",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "Condensed Arcana",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "Craft an Arcane Synthesis Crystal.",
   "advancements.chiseled_enchanting_table.library_resonance.title": "Full Library Resonance",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -35% XP Library Resonance discount at a Chiseled Enchanting Table.",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -40% XP Library Resonance discount at a Chiseled Enchanting Table.",
   "advancements.chiseled_enchanting_table.grand_library.title": "Grand Library Awakening",
   "advancements.chiseled_enchanting_table.grand_library.description": "Surround a Chiseled Enchanting Table with at least 32 Wooden Bookshelves to awaken Treasure Epiphanies.",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "Frozen in Time",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 Rich. %s Librerie (Att. %s)",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 Grado bloccato: %s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "Librerie normali: %s / %s",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Aggiungi librerie normali o conserva un tomo maestro cesellato"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Aggiungi librerie normali o conserva un tomo maestro cesellato",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "Senza Tomo Maestro gli oggetti non incantati arrivano solo ai gradi medi — inscrivi prima un grado inferiore per potenziarlo o conserva un libro incantato in una libreria cesellata"
 }

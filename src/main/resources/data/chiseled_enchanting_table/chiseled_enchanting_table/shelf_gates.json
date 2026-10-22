@@ -1,15 +1,22 @@
 {
-  "_comment": "Shelf progression gates for direct category tier unlocking (0..38 regular bookshelves) and 3-gradient Depleted Tome restoration.",
+  "_comment": "Shelf progression gates, scan volume, blank-vs-upgrade wooden shelf cap, and 3-gradient Depleted Tome restoration rules.",
+  "scan_volume": {
+    "horizontal_radius": 3,
+    "vertical_radius": 2
+  },
   "direct_upgrade_gates": {
     "enabled": true,
     "max_bookshelves": 38,
-    "gamma": 1.11,
+    "gamma": 1.25,
+    "blank_max_tier_mode": "half_ceil",
     "overrides": {}
   },
   "depleted_tome_gradients": {
     "tier1_bookshelves": 8,
     "tier2_bookshelves": 18,
     "tier2_material_multiplier": 0.5,
-    "tier3_qualifying_enchantments": 6
+    "tier3_qualifying_enchantments": 6,
+    "base_batch_size": 8,
+    "tier3_batch_size": 64
   }
 }

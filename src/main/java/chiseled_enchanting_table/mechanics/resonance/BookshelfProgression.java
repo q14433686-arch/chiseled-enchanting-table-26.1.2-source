@@ -1,55 +1,82 @@
 package chiseled_enchanting_table.mechanics.resonance;
 
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
-import org.jetbrains.annotations.Nullable;
 
 /**
- * Unified server/client progression rules driven by surrounding bookshelves within the 7x5x7 scan volume:
- *
+ * Data-driven progression formulas connecting regular bookshelves and Chiseled Bookshelves to:
  * <ol>
- *   <li><b>Direct Category Tier Unlock ({@code 0 .. 38} Regular Bookshelves)</b>:
- *       Unlocks non-Master-Tome category upgrades progressively from {@code Level I} ({@code 0} shelves)
- *       across strictly increasing integer bookshelf thresholds up to {@code MAX} at {@code 38} regular
- *       bookshelves (configurable in {@code shelf_gates.json}), while keeping the Chiseled Bookshelf
- *       Master Tome &amp; two-book Combine routes completely independent and untouched.</li>
- *   <li><b>Three-Gradient Depleted Tome ({@code 褪魔残卷 -> 书}) Progression</b>:
- *       <ul>
- *         <li>{@code < 8} regular bookshelves: baseline XP + full materials.</li>
- *         <li><b>Gradient I</b> ({@code 8 .. 17} regular bookshelves): waives all XP loss ({@code 0 XP}), full materials.</li>
- *         <li><b>Gradient II</b> ({@code >= 18} regular bookshelves, {@code < 6} qualifying {@code MAX / MAX-1}
- *             stored enchantments in Chiseled Bookshelves): waives XP loss + discounts required material counts
- *             ({@code floor(count * 0.50)}, minimum {@code 1}).</li>
- *         <li><b>Gradient III</b> ({@code >= 18} regular bookshelves <b>AND</b> {@code >= 6} qualifying
- *             {@code MAX / MAX-1} non-curse enchantments across all books stored in nearby Chiseled Bookshelves):
- *             <b>completely free</b> ({@code 0 XP} + {@code 0 materials})!</li>
- *       </ul>
- *   </li>
+ *   <li><b>Track 1 — Blank Wooden-Shelf Inscription</b> ({@link #maxBlankWoodenTier}): blank gear
+ *       and blank books unlock up to {@code ceil(maxLevel / 2)} along the single unified
+ *       {@code gamma = 1.25} curve without replacing Master Tomes.</li>
+ *   <li><b>Track 2 — Direct Category Upgrade</b> ({@link #maxUnlockedDirectTier}): once an item or
+ *       Enchanted Book already carries {@code existingLevel >= 1}, regular bookshelves unlock step
+ *       upgrades all the way to {@code MAX} at {@code 38} shelves ({@code [0, 7, 16, 27, 38]} for
+ *       {@code maxLevel = 5}, {@code [0, 9, 21, 38]} for {@code maxLevel = 4}, {@code [0, 16, 38]}
+ *       for {@code maxLevel = 3}, {@code [0, 38]} for {@code maxLevel = 2}, {@code [0]} for
+ *       {@code maxLevel = 1}, and strictly monotonic for any modded {@code maxLevel}).</li>
+ *   <li><b>Depleted Tome 3-Gradient Restoration</b> ({@link DepletedTomeTier}): linear batch
+ *       conversion with configurable batch sizes and deduplicated distinct high-tier Master Tome
+ *       qualification ({@code M <= 1 -> 1}, {@code M == 2 -> 2}, {@code M >= 3 -> M - 1}).</li>
  * </ol>
  */
 public final class BookshelfProgression {
-    public static final int MAX_DIRECT_UPGRADE_BOOKSHELVES = 38;
-    public static final double DIRECT_TIER_CURVE_EXPONENT = 1.11;
+    public static final int DEFAULT_SCAN_HORIZONTAL_RADIUS = 3;
+    public static final int DEFAULT_SCAN_VERTICAL_RADIUS = 2;
+    public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = 38;
+    public static final double DIRECT_TIER_CURVE_EXPONENT = 1.25;
 
-    public static final int DEPLETED_TOME_TIER1_BOOKSHELVES = 8;
-    public static final int DEPLETED_TOME_TIER2_BOOKSHELVES = 18;
-    public static final int DEPLETED_TOME_TIER3_QUALIFYING_ENCHANTS = 6;
-    /** Kept as alias constant for compatibility with callers. */
-    public static final int DEPLETED_TOME_TIER3_HIGH_BOOKS = DEPLETED_TOME_TIER3_QUALIFYING_ENCHANTS;
-    public static final double DEPLETED_TOME_TIER2_MATERIAL_MULTIPLIER = 0.50;
+    public static final int DEFAULT_TIER1_BOOKSHELVES = 8;
+    public static final int DEFAULT_TIER2_BOOKSHELVES = 18;
+    public static final double DEFAULT_TIER2_MATERIAL_MULTIPLIER = 0.50;
+    public static final int DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS = 6;
+    public static final int DEFAULT_BASE_BATCH_SIZE = 8;
+    public static final int DEFAULT_TIER3_BATCH_SIZE = 64;
 
     private static final TagKey<Enchantment> CURSE_TAG =
         TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+
+    public enum BlankMaxTierMode {
+        HALF_CEIL,
+        LEVEL_ONE_ONLY,
+        FULL_CURVE;
+
+        public String token() {
+            return switch (this) {
+                case HALF_CEIL -> "half_ceil";
+                case LEVEL_ONE_ONLY -> "level_one_only";
+                case FULL_CURVE -> "full_curve";
+            };
+        }
+
+        public static BlankMaxTierMode fromToken(String raw) {
+            if (raw == null || raw.isBlank()) {
+                return HALF_CEIL;
+            }
+            return switch (raw.trim().toLowerCase(Locale.ROOT)) {
+                case "level_one_only", "one" -> LEVEL_ONE_ONLY;
+                case "full_curve", "full" -> FULL_CURVE;
+                default -> HALF_CEIL;
+            };
+        }
+    }
 
     public enum DepletedTomeTier {
         BASELINE,
@@ -58,263 +85,450 @@ public final class BookshelfProgression {
         TIER_3_FREE
     }
 
-    /**
-     * Immutable data-driven shelf progression config loaded from {@code shelf_gates.json} and synced S2C.
-     */
     public record Config(
         boolean directGatesEnabled,
         int maxDirectBookshelves,
         double gamma,
+        BlankMaxTierMode blankMaxTierMode,
+        int horizontalScanRadius,
+        int verticalScanRadius,
         Map<Identifier, List<Integer>> overrides,
         int tier1Bookshelves,
         int tier2Bookshelves,
         double tier2MaterialMultiplier,
-        int tier3QualifyingEnchantments
+        int tier3QualifyingEnchantments,
+        int baseBatchSize,
+        int tier3BatchSize
     ) {
         public static final Config DEFAULT = new Config(
             true,
-            MAX_DIRECT_UPGRADE_BOOKSHELVES,
+            DEFAULT_MAX_DIRECT_BOOKSHELVES,
             DIRECT_TIER_CURVE_EXPONENT,
+            BlankMaxTierMode.HALF_CEIL,
+            DEFAULT_SCAN_HORIZONTAL_RADIUS,
+            DEFAULT_SCAN_VERTICAL_RADIUS,
             Map.of(),
-            DEPLETED_TOME_TIER1_BOOKSHELVES,
-            DEPLETED_TOME_TIER2_BOOKSHELVES,
-            DEPLETED_TOME_TIER2_MATERIAL_MULTIPLIER,
-            DEPLETED_TOME_TIER3_QUALIFYING_ENCHANTS
+            DEFAULT_TIER1_BOOKSHELVES,
+            DEFAULT_TIER2_BOOKSHELVES,
+            DEFAULT_TIER2_MATERIAL_MULTIPLIER,
+            DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS,
+            DEFAULT_BASE_BATCH_SIZE,
+            DEFAULT_TIER3_BATCH_SIZE
         );
 
-        public Config {
-            maxDirectBookshelves = Math.clamp(maxDirectBookshelves, 1, 256);
-            gamma = Math.clamp(gamma, 0.25, 3.0);
-            overrides = overrides == null ? Map.of() : Map.copyOf(overrides);
-            tier1Bookshelves = Math.max(1, tier1Bookshelves);
-            tier2Bookshelves = Math.max(tier1Bookshelves, tier2Bookshelves);
-            tier2MaterialMultiplier = Math.clamp(tier2MaterialMultiplier, 0.05, 1.0);
-            tier3QualifyingEnchantments = Math.max(1, tier3QualifyingEnchantments);
+        public Config(
+            boolean directGatesEnabled,
+            int maxDirectBookshelves,
+            double gamma,
+            Map<Identifier, List<Integer>> overrides,
+            int tier1Bookshelves,
+            int tier2Bookshelves,
+            double tier2MaterialMultiplier,
+            int tier3QualifyingEnchantments
+        ) {
+            this(
+                directGatesEnabled,
+                maxDirectBookshelves,
+                gamma,
+                BlankMaxTierMode.HALF_CEIL,
+                DEFAULT_SCAN_HORIZONTAL_RADIUS,
+                DEFAULT_SCAN_VERTICAL_RADIUS,
+                overrides,
+                tier1Bookshelves,
+                tier2Bookshelves,
+                tier2MaterialMultiplier,
+                tier3QualifyingEnchantments,
+                DEFAULT_BASE_BATCH_SIZE,
+                DEFAULT_TIER3_BATCH_SIZE
+            );
+        }
+
+        public static Config fromJson(JsonObject root) {
+            if (root == null) {
+                return DEFAULT;
+            }
+            int hRadius = DEFAULT_SCAN_HORIZONTAL_RADIUS;
+            int vRadius = DEFAULT_SCAN_VERTICAL_RADIUS;
+            if (root.has("scan_volume") && root.get("scan_volume").isJsonObject()) {
+                JsonObject sv = root.getAsJsonObject("scan_volume");
+                if (sv.has("horizontal_radius")) {
+                    hRadius = clampInt(sv.get("horizontal_radius").getAsInt(), 1, 16);
+                }
+                if (sv.has("vertical_radius")) {
+                    vRadius = clampInt(sv.get("vertical_radius").getAsInt(), 0, 16);
+                }
+            }
+
+            boolean enabled = true;
+            int maxDirect = DEFAULT_MAX_DIRECT_BOOKSHELVES;
+            double curveExp = DIRECT_TIER_CURVE_EXPONENT;
+            BlankMaxTierMode blankMode = BlankMaxTierMode.HALF_CEIL;
+            Map<Identifier, List<Integer>> parsedOverrides = new HashMap<>();
+
+            if (root.has("direct_upgrade_gates") && root.get("direct_upgrade_gates").isJsonObject()) {
+                JsonObject directObj = root.getAsJsonObject("direct_upgrade_gates");
+                if (directObj.has("enabled")) {
+                    enabled = directObj.get("enabled").getAsBoolean();
+                }
+                if (directObj.has("max_bookshelves")) {
+                    maxDirect = clampInt(directObj.get("max_bookshelves").getAsInt(), 1, 256);
+                }
+                if (directObj.has("gamma")) {
+                    double rawExp = directObj.get("gamma").getAsDouble();
+                    curveExp = Double.isFinite(rawExp) ? Math.max(0.5, Math.min(3.0, rawExp)) : DIRECT_TIER_CURVE_EXPONENT;
+                } else if (directObj.has("curve_exponent")) {
+                    double rawExp = directObj.get("curve_exponent").getAsDouble();
+                    curveExp = Double.isFinite(rawExp) ? Math.max(0.5, Math.min(3.0, rawExp)) : DIRECT_TIER_CURVE_EXPONENT;
+                }
+                if (directObj.has("blank_max_tier_mode")) {
+                    blankMode = BlankMaxTierMode.fromToken(directObj.get("blank_max_tier_mode").getAsString());
+                }
+                if (directObj.has("overrides") && directObj.get("overrides").isJsonObject()) {
+                    JsonObject ovRoot = directObj.getAsJsonObject("overrides");
+                    for (Map.Entry<String, JsonElement> entry : ovRoot.entrySet()) {
+                        Identifier id = Identifier.tryParse(entry.getKey());
+                        if (id == null) continue;
+                        if (entry.getValue().isJsonArray()) {
+                            List<Integer> ladder = new ArrayList<>();
+                            for (JsonElement elem : entry.getValue().getAsJsonArray()) {
+                                ladder.add(clampInt(elem.getAsInt(), 0, 256));
+                            }
+                            if (!ladder.isEmpty()) {
+                                parsedOverrides.put(id, List.copyOf(ladder));
+                            }
+                        } else if (entry.getValue().isJsonObject()) {
+                            int maxKey = 0;
+                            Map<Integer, Integer> sparse = new HashMap<>();
+                            for (Map.Entry<String, JsonElement> lvlEntry : entry.getValue().getAsJsonObject().entrySet()) {
+                                try {
+                                    int lvl = Integer.parseInt(lvlEntry.getKey());
+                                    if (lvl >= 1) {
+                                        maxKey = Math.max(maxKey, lvl);
+                                        sparse.put(lvl, clampInt(lvlEntry.getValue().getAsInt(), 0, 256));
+                                    }
+                                } catch (Exception ignored) {
+                                }
+                            }
+                            if (maxKey >= 1) {
+                                List<Integer> ladder = new ArrayList<>(maxKey);
+                                for (int l = 1; l <= maxKey; l++) {
+                                    ladder.add(sparse.getOrDefault(l, requiredBookshelvesForDirectTier(l, maxKey, maxDirect, curveExp)));
+                                }
+                                parsedOverrides.put(id, List.copyOf(ladder));
+                            }
+                        }
+                    }
+                }
+            }
+
+            int t1 = DEFAULT_TIER1_BOOKSHELVES;
+            int t2 = DEFAULT_TIER2_BOOKSHELVES;
+            double t2Mult = DEFAULT_TIER2_MATERIAL_MULTIPLIER;
+            int t3Ench = DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS;
+            int baseBatch = DEFAULT_BASE_BATCH_SIZE;
+            int tier3Batch = DEFAULT_TIER3_BATCH_SIZE;
+            if (root.has("depleted_tome_gradients") && root.get("depleted_tome_gradients").isJsonObject()) {
+                JsonObject depObj = root.getAsJsonObject("depleted_tome_gradients");
+                if (depObj.has("tier1_bookshelves")) {
+                    t1 = clampInt(depObj.get("tier1_bookshelves").getAsInt(), 1, 256);
+                }
+                if (depObj.has("tier2_bookshelves")) {
+                    t2 = clampInt(depObj.get("tier2_bookshelves").getAsInt(), t1, 256);
+                }
+                if (depObj.has("tier2_material_multiplier")) {
+                    t2Mult = Math.max(0.05, Math.min(1.0, depObj.get("tier2_material_multiplier").getAsDouble()));
+                }
+                if (depObj.has("tier3_qualifying_enchantments")) {
+                    t3Ench = clampInt(depObj.get("tier3_qualifying_enchantments").getAsInt(), 1, 256);
+                }
+                if (depObj.has("base_batch_size")) {
+                    baseBatch = clampInt(depObj.get("base_batch_size").getAsInt(), 1, 64);
+                }
+                if (depObj.has("tier3_batch_size")) {
+                    tier3Batch = clampInt(depObj.get("tier3_batch_size").getAsInt(), baseBatch, 64);
+                }
+            }
+
+            return new Config(
+                enabled,
+                maxDirect,
+                curveExp,
+                blankMode,
+                hRadius,
+                vRadius,
+                Map.copyOf(parsedOverrides),
+                t1,
+                t2,
+                t2Mult,
+                t3Ench,
+                baseBatch,
+                tier3Batch
+            );
+        }
+
+        private static int clampInt(int v, int lo, int hi) {
+            return Math.max(lo, Math.min(hi, v));
         }
     }
 
     private BookshelfProgression() {}
 
-    public static int requiredBookshelvesForDirectTier(int targetLevel, int maxLevel) {
-        return requiredBookshelvesForDirectTier(Config.DEFAULT, null, targetLevel, maxLevel);
+    public static int requiredBookshelvesForDirectTier(int targetLevel, int maxLevel, int maxBookshelvesCap) {
+        return requiredBookshelvesForDirectTier(targetLevel, maxLevel, maxBookshelvesCap, DIRECT_TIER_CURVE_EXPONENT);
     }
 
-    /**
-     * Exact integer regular-bookshelf count required to unlock {@code targetLevel} directly for an
-     * enchantment whose maximum level is {@code maxLevel}:
-     * <ul>
-     *   <li>{@code maxLevel == 1}: {@code I -> 0}</li>
-     *   <li>{@code maxLevel == 2}: {@code I -> 0, II -> 38}</li>
-     *   <li>{@code maxLevel == 3}: {@code I -> 0, II -> 18, III -> 38}</li>
-     *   <li>{@code maxLevel == 4}: {@code I -> 0, II -> 11, III -> 24, IV -> 38}</li>
-     *   <li>{@code maxLevel == 5}: {@code I -> 0, II -> 8, III -> 18, IV -> 28, V -> 38}</li>
-     * </ul>
-     */
     public static int requiredBookshelvesForDirectTier(
-        Config cfg,
-        @Nullable Identifier enchantmentId,
         int targetLevel,
-        int maxLevel
+        int maxLevel,
+        int maxBookshelvesCap,
+        double curveExponent
     ) {
-        Config safeCfg = cfg == null ? Config.DEFAULT : cfg;
-        if (!safeCfg.directGatesEnabled()) {
-            return 0;
-        }
         int safeMax = Math.max(1, maxLevel);
-        int safeTarget = Math.clamp(targetLevel, 1, safeMax);
-        if (enchantmentId != null) {
-            List<Integer> custom = safeCfg.overrides().get(enchantmentId);
-            if (custom != null && !custom.isEmpty()) {
-                int idx = Math.min(custom.size() - 1, safeTarget - 1);
-                return Math.max(0, custom.get(idx));
-            }
-        }
-        int maxAnchor = safeCfg.maxDirectBookshelves();
+        int safeTarget = Math.max(1, Math.min(safeMax, targetLevel));
+        int cap = Math.max(1, maxBookshelvesCap);
         if (safeMax <= 1 || safeTarget <= 1) {
             return 0;
         }
         if (safeTarget >= safeMax) {
-            return maxAnchor;
+            return cap;
         }
+        double exp = Double.isFinite(curveExponent) ? Math.max(0.5, curveExponent) : DIRECT_TIER_CURVE_EXPONENT;
         double progress = (double) (safeTarget - 1) / (double) (safeMax - 1);
-        int raw = (int) Math.round(maxAnchor * Math.pow(progress, safeCfg.gamma()));
-        int minAllowed = Math.min(maxAnchor - 1, safeTarget - 1);
-        int maxAllowed = Math.max(1, maxAnchor - (safeMax - safeTarget));
-        return Math.clamp(raw, Math.min(minAllowed, maxAllowed), maxAllowed);
+        int raw = (int) Math.floor(cap * Math.pow(progress, exp) + 0.5);
+        int minAllowed = Math.min(cap - 1, safeTarget - 1);
+        int maxAllowed = Math.max(1, cap - (safeMax - safeTarget));
+        return Math.max(Math.min(minAllowed, maxAllowed), Math.min(raw, maxAllowed));
     }
 
-    public static int maxUnlockedDirectTier(int maxLevel, int regularBookshelves) {
-        return maxUnlockedDirectTier(Config.DEFAULT, null, maxLevel, regularBookshelves);
+    public static int requiredBookshelvesForDirectTier(
+        Config config,
+        Identifier enchantmentId,
+        int targetLevel,
+        int maxLevel
+    ) {
+        Config cfg = config == null ? Config.DEFAULT : config;
+        if (!cfg.directGatesEnabled()) {
+            return 0;
+        }
+        if (enchantmentId != null) {
+            List<Integer> ladder = cfg.overrides().get(enchantmentId);
+            if (ladder != null && targetLevel >= 1 && targetLevel <= ladder.size()) {
+                return Math.max(0, ladder.get(targetLevel - 1));
+            }
+        }
+        return requiredBookshelvesForDirectTier(targetLevel, maxLevel, cfg.maxDirectBookshelves(), cfg.gamma());
     }
 
-    /**
-     * Highest level in {@code [1 .. maxLevel]} unlocked directly by {@code regularBookshelves}
-     * regular wooden bookshelves (without requiring a Master Tome in a Chiseled Bookshelf).
-     */
     public static int maxUnlockedDirectTier(
-        Config cfg,
-        @Nullable Identifier enchantmentId,
+        Config config,
+        Identifier enchantmentId,
         int maxLevel,
         int regularBookshelves
     ) {
-        int safeMax = Math.max(1, maxLevel);
-        int safeShelves = Math.max(0, regularBookshelves);
-        for (int lvl = safeMax; lvl >= 1; lvl--) {
-            if (safeShelves >= requiredBookshelvesForDirectTier(cfg, enchantmentId, lvl, safeMax)) {
-                return lvl;
+        Config cfg = config == null ? Config.DEFAULT : config;
+        int clampedMax = Math.max(1, maxLevel);
+        if (!cfg.directGatesEnabled()) {
+            return clampedMax;
+        }
+        int shelves = Math.max(0, regularBookshelves);
+        int unlocked = 1;
+        for (int lvl = 2; lvl <= clampedMax; lvl++) {
+            int req = requiredBookshelvesForDirectTier(cfg, enchantmentId, lvl, clampedMax);
+            if (shelves >= req) {
+                unlocked = lvl;
+            } else {
+                break;
             }
         }
-        return 1;
-    }
-
-    public static int effectiveUnlockedTierCap(int maxLevel, int regularBookshelves, int storedMasterLevel) {
-        return effectiveUnlockedTierCap(Config.DEFAULT, null, maxLevel, regularBookshelves, storedMasterLevel);
+        return unlocked;
     }
 
     /**
-     * Effective maximum unlocked tier combining both independent routes:
-     * {@code max(storedMasterLevel, maxUnlockedDirectTier(cfg, enchantmentId, maxLevel, regularBookshelves))}.
+     * Track 1 cap for blank items/books without an existing category or Master Tome:
+     * follows the exact same monotonic {@link #maxUnlockedDirectTier} curve so no inversion can
+     * ever occur, capped at {@code ceil(maxLevel / 2)} under {@link BlankMaxTierMode#HALF_CEIL}.
      */
+    public static int maxBlankWoodenTier(
+        Config config,
+        Identifier enchantmentId,
+        int maxLevel,
+        int regularBookshelves
+    ) {
+        Config cfg = config == null ? Config.DEFAULT : config;
+        int clampedMax = Math.max(1, maxLevel);
+        if (!cfg.directGatesEnabled()) {
+            return clampedMax;
+        }
+        int curveUnlocked = maxUnlockedDirectTier(cfg, enchantmentId, clampedMax, regularBookshelves);
+        return switch (cfg.blankMaxTierMode()) {
+            case LEVEL_ONE_ONLY -> 1;
+            case FULL_CURVE -> curveUnlocked;
+            case HALF_CEIL -> Math.min((clampedMax + 1) / 2, curveUnlocked);
+        };
+    }
+
     public static int effectiveUnlockedTierCap(
-        Config cfg,
-        @Nullable Identifier enchantmentId,
+        Config config,
+        Identifier enchantmentId,
         int maxLevel,
         int regularBookshelves,
         int storedMasterLevel
     ) {
-        int safeMax = Math.max(1, maxLevel);
-        int directCap = maxUnlockedDirectTier(cfg, enchantmentId, safeMax, regularBookshelves);
-        return Math.min(safeMax, Math.max(Math.max(0, storedMasterLevel), directCap));
+        int clampedMax = Math.max(1, maxLevel);
+        int shelfUnlocked = maxUnlockedDirectTier(config, enchantmentId, clampedMax, regularBookshelves);
+        return Math.min(clampedMax, Math.max(Math.max(0, storedMasterLevel), shelfUnlocked));
     }
 
-    public static DepletedTomeTier resolveDepletedTomeTier(int regularBookshelves, int qualifyingHighTierEnchantments) {
-        return resolveDepletedTomeTier(Config.DEFAULT, regularBookshelves, qualifyingHighTierEnchantments);
+    public static int minQualifyingHighTierLevel(int maxLevel) {
+        if (maxLevel <= 1) return 1;
+        if (maxLevel == 2) return 2;
+        return maxLevel - 1;
     }
 
-    /**
-     * Resolves which of the three Depleted Tome upgrade gradients (or baseline) is active based on
-     * regular bookshelf count and the total number of qualifying {@code MAX / MAX-1} stored enchantments
-     * across nearby Chiseled Bookshelves.
-     */
-    public static DepletedTomeTier resolveDepletedTomeTier(
-        Config cfg,
-        int regularBookshelves,
-        int qualifyingHighTierEnchantments
+    public static int countQualifyingStoredMasterEnchantments(
+        Level level,
+        Map<Identifier, Integer> storedMasterLevels
     ) {
-        Config safeCfg = cfg == null ? Config.DEFAULT : cfg;
-        int shelves = Math.max(0, regularBookshelves);
-        int qualifyingEnchants = Math.max(0, qualifyingHighTierEnchantments);
-        if (shelves >= safeCfg.tier2Bookshelves()) {
-            return qualifyingEnchants >= safeCfg.tier3QualifyingEnchantments()
-                ? DepletedTomeTier.TIER_3_FREE
-                : DepletedTomeTier.TIER_2_DISCOUNT_MAT;
+        if (storedMasterLevels == null || storedMasterLevels.isEmpty()) {
+            return 0;
         }
-        if (shelves >= safeCfg.tier1Bookshelves()) {
-            return DepletedTomeTier.TIER_1_NO_XP;
+        var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        int qualifyingCount = 0;
+        for (Map.Entry<Identifier, Integer> entry : storedMasterLevels.entrySet()) {
+            int lvl = entry.getValue();
+            if (lvl <= 0) continue;
+            try {
+                Holder.Reference<Enchantment> holder = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, entry.getKey()));
+                if (holder.is(CURSE_TAG)) continue;
+                int maxLvl = Math.max(1, holder.value().getMaxLevel());
+                if (lvl >= minQualifyingHighTierLevel(maxLvl)) {
+                    qualifyingCount++;
+                }
+            } catch (Exception ignored) {
+            }
         }
-        return DepletedTomeTier.BASELINE;
+        return qualifyingCount;
     }
 
-    /**
-     * Counts the total number of qualifying non-curse stored enchantments on {@code stack} whose
-     * level satisfies {@code level >= max(1, maxLevel - 1)} ({@code MAX} or {@code MAX - 1}).
-     *
-     * <p>Crucially, this evaluates <b>every stored enchantment entry</b> on the book rather than
-     * judging by item rarity or collapsing a multi-enchant Master Tome down to {@code 1} book: a
-     * book storing 4 {@code MAX / MAX-1} enchantments contributes all {@code 4} qualifying entries,
-     * while low-tier enchantments ({@code < MAX - 1}) and curses contribute {@code 0}.</p>
-     */
     public static int countQualifyingHighTierEnchantments(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return 0;
         }
-        ItemEnchantments stored = stack.get(DataComponents.STORED_ENCHANTMENTS);
-        if (stored == null || stored.isEmpty()) {
+        ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(stack);
+        if (enchantments.isEmpty()) {
             return 0;
         }
         int qualifyingCount = 0;
-        for (var entry : stored.entrySet()) {
-            if (entry.getKey().is(CURSE_TAG)) {
-                continue;
-            }
-            int maxLvl = Math.max(1, entry.getKey().value().getMaxLevel());
-            int minQualifying = Math.max(1, maxLvl - 1);
-            if (entry.getIntValue() >= minQualifying) {
+        for (var entry : enchantments.entrySet()) {
+            Holder<Enchantment> holder = entry.getKey();
+            if (holder.is(CURSE_TAG)) continue;
+            int lvl = entry.getIntValue();
+            int maxLvl = Math.max(1, holder.value().getMaxLevel());
+            if (lvl >= minQualifyingHighTierLevel(maxLvl)) {
                 qualifyingCount++;
             }
         }
         return qualifyingCount;
     }
 
-    /**
-     * Returns {@code true} if {@code stack} carries at least one qualifying {@code MAX / MAX - 1}
-     * non-curse stored enchantment.
-     */
-    public static boolean isQualifyingHighTierBook(ItemStack stack) {
-        return countQualifyingHighTierEnchantments(stack) > 0;
-    }
-
-    /**
-     * Sums the total number of qualifying {@code MAX} / {@code MAX - 1} non-curse stored enchantments
-     * across all books placed inside {@code cbsbe}.
-     */
-    public static int countQualifyingHighTierEnchantmentsInShelf(ChiseledBookShelfBlockEntity cbsbe) {
+    public static int countQualifyingHighTierEnchantmentsInShelf(ChiseledBookShelfBlockEntity shelf) {
+        if (shelf == null) {
+            return 0;
+        }
         int count = 0;
-        for (int slot = 0; slot < cbsbe.getContainerSize(); slot++) {
-            count += countQualifyingHighTierEnchantments(cbsbe.getItem(slot));
+        for (int i = 0; i < shelf.getContainerSize(); i++) {
+            count += countQualifyingHighTierEnchantments(shelf.getItem(i));
         }
         return count;
     }
 
-    /** Alias forwarding to {@link #countQualifyingHighTierEnchantmentsInShelf(ChiseledBookShelfBlockEntity)}. */
-    public static int countHighTierBooksInShelf(ChiseledBookShelfBlockEntity cbsbe) {
-        return countQualifyingHighTierEnchantmentsInShelf(cbsbe);
+    public static DepletedTomeTier resolveDepletedTomeTier(
+        Config config,
+        int regularBookshelves,
+        int qualifyingChiseledEnchantments
+    ) {
+        Config cfg = config == null ? Config.DEFAULT : config;
+        int shelves = Math.max(0, regularBookshelves);
+        int qualifyingEnchants = Math.max(0, qualifyingChiseledEnchantments);
+        if (shelves >= cfg.tier2Bookshelves() && qualifyingEnchants >= cfg.tier3QualifyingEnchantments()) {
+            return DepletedTomeTier.TIER_3_FREE;
+        }
+        if (shelves >= cfg.tier2Bookshelves()) {
+            return DepletedTomeTier.TIER_2_DISCOUNT_MAT;
+        }
+        if (shelves >= cfg.tier1Bookshelves()) {
+            return DepletedTomeTier.TIER_1_NO_XP;
+        }
+        return DepletedTomeTier.BASELINE;
     }
 
-    /**
-     * Applies the active three-gradient XP rule to {@code chiseled_enchanting_table:blank_overwrite}.
-     */
-    public static XpRequirement applyDepletedTomeXpTier(XpRequirement baseRequirement, DepletedTomeTier tier) {
+    public static XpRequirement applyDepletedTomeXpTier(XpRequirement baseXp, DepletedTomeTier tier) {
+        return applyDepletedTomeXpTierWithBatch(baseXp, tier, 1);
+    }
+
+    public static XpRequirement applyDepletedTomeXpTierWithBatch(
+        XpRequirement baseXp,
+        DepletedTomeTier tier,
+        int batchCount
+    ) {
         return switch (tier) {
+            case BASELINE -> {
+                int safeBatch = Math.max(1, batchCount);
+                if (safeBatch <= 1 || (baseXp.requiredLevel() <= 0 && baseXp.deductedLevels() <= 0)) {
+                    yield baseXp;
+                }
+                int scaledDed = baseXp.deductedLevels() * safeBatch;
+                int scaledReq = Math.max(scaledDed, baseXp.requiredLevel() * safeBatch);
+                yield new XpRequirement(
+                    baseXp.rawRequiredLevel() * safeBatch,
+                    scaledReq,
+                    scaledDed,
+                    baseXp.discountPercent(),
+                    baseXp.vanillaTierMode()
+                );
+            }
             case TIER_1_NO_XP, TIER_2_DISCOUNT_MAT, TIER_3_FREE -> XpRequirement.FREE;
-            case BASELINE -> baseRequirement;
         };
     }
 
     public static List<List<ItemStack>> applyDepletedTomeMaterialTier(
+        Config config,
         List<List<ItemStack>> baseBundles,
         DepletedTomeTier tier
     ) {
-        return applyDepletedTomeMaterialTier(Config.DEFAULT, baseBundles, tier);
+        return applyDepletedTomeMaterialTierWithBatch(config, baseBundles, tier, 1);
     }
 
-    /**
-     * Applies the active three-gradient material rule to {@code chiseled_enchanting_table:blank_overwrite}.
-     */
-    public static List<List<ItemStack>> applyDepletedTomeMaterialTier(
-        Config cfg,
+    public static List<List<ItemStack>> applyDepletedTomeMaterialTierWithBatch(
+        Config config,
         List<List<ItemStack>> baseBundles,
-        DepletedTomeTier tier
+        DepletedTomeTier tier,
+        int batchCount
     ) {
-        Config safeCfg = cfg == null ? Config.DEFAULT : cfg;
+        if (baseBundles == null || baseBundles.isEmpty()) {
+            return List.of();
+        }
         if (tier == DepletedTomeTier.TIER_3_FREE) {
             return List.of();
         }
-        if (tier != DepletedTomeTier.TIER_2_DISCOUNT_MAT || baseBundles == null || baseBundles.isEmpty()) {
-            return baseBundles == null ? List.of() : baseBundles;
-        }
+        int safeBatch = Math.max(1, batchCount);
+        double mult = (tier == DepletedTomeTier.TIER_2_DISCOUNT_MAT)
+            ? (config == null ? DEFAULT_TIER2_MATERIAL_MULTIPLIER : config.tier2MaterialMultiplier())
+            : 1.0;
+
         List<List<ItemStack>> out = new ArrayList<>(baseBundles.size());
         for (List<ItemStack> bundle : baseBundles) {
-            List<ItemStack> discounted = new ArrayList<>(bundle.size());
-            for (ItemStack st : bundle) {
-                ItemStack copy = st.copy();
-                int reducedCount = Math.max(1, (int) Math.floor(copy.getCount() * safeCfg.tier2MaterialMultiplier()));
-                copy.setCount(reducedCount);
-                discounted.add(copy);
+            if (bundle.isEmpty()) continue;
+            List<ItemStack> scaled = new ArrayList<>(bundle.size());
+            for (ItemStack stack : bundle) {
+                ItemStack copy = stack.copy();
+                int unitCount = tier == DepletedTomeTier.TIER_2_DISCOUNT_MAT
+                    ? Math.max(1, (int) Math.floor(stack.getCount() * mult))
+                    : Math.max(1, stack.getCount());
+                copy.setCount(unitCount * safeBatch);
+                scaled.add(copy);
             }
-            if (!discounted.isEmpty()) {
-                out.add(List.copyOf(discounted));
-            }
+            out.add(List.copyOf(scaled));
         }
         return List.copyOf(out);
     }

@@ -58,10 +58,36 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public static final MapCodec<ChiseledEnchantingTableBlock> CODEC = simpleCodec(ChiseledEnchantingTableBlock::new);
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
-    public static final List<BlockPos> POWER_PROVIDER_OFFSETS = BlockPos.betweenClosedStream(-3, -2, -3, 3, 2, 3)
-        .filter(pos -> !(pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0))
-        .map(BlockPos::immutable)
-        .toList();
+    public static final net.minecraft.tags.TagKey<Block> REGULAR_BOOKSHELVES_TAG =
+        net.minecraft.tags.TagKey.create(
+            Registries.BLOCK,
+            chiseled_enchanting_table.ChiseledEnchantingTable.identifier("regular_bookshelves")
+        );
+
+    public static boolean isRegularBookshelf(BlockState state) {
+        return !state.is(Blocks.CHISELED_BOOKSHELF)
+            && (state.is(REGULAR_BOOKSHELVES_TAG) || state.is(net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER));
+    }
+
+    public static List<BlockPos> getScanOffsets(
+        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config cfg
+    ) {
+        int rx = cfg == null ? 3 : Math.max(1, cfg.horizontalScanRadius());
+        int ry = cfg == null ? 2 : Math.max(0, cfg.verticalScanRadius());
+        int capacity = Math.max(8, (2 * rx + 1) * (2 * rx + 1) * (2 * ry + 1) - 1);
+        java.util.ArrayList<BlockPos> offsets = new java.util.ArrayList<>(capacity);
+        for (int dx = -rx; dx <= rx; dx++) {
+            for (int dy = -ry; dy <= ry; dy++) {
+                for (int dz = -rx; dz <= rx; dz++) {
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
+                    offsets.add(new BlockPos(dx, dy, dz));
+                }
+            }
+        }
+        return offsets;
+    }
+
+    public static final List<BlockPos> POWER_PROVIDER_OFFSETS = List.copyOf(getScanOffsets(null));
 
     private static boolean hasOccupiedChiseledSlot(BlockState state) {
         for (var prop : net.minecraft.world.level.block.ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES) {
@@ -99,7 +125,13 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
         super.animateTick(state, level, pos, random);
-        for (BlockPos offset : POWER_PROVIDER_OFFSETS) {
+        var sg = level.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.shelfGatesConfig()
+            : ChiseledEnchantingTableData.shelfGatesConfig();
+        List<BlockPos> offsets = (sg.horizontalScanRadius() == 3 && sg.verticalScanRadius() == 2)
+            ? POWER_PROVIDER_OFFSETS
+            : getScanOffsets(sg);
+        for (BlockPos offset : offsets) {
             boolean vanillaRing = Math.max(Math.abs(offset.getX()), Math.abs(offset.getZ())) <= 2
                 && offset.getY() >= 0 && offset.getY() <= 1;
             if (random.nextInt(vanillaRing ? 16 : 24) != 0) {
@@ -107,7 +139,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             }
             BlockPos shelfPos = pos.offset(offset);
             BlockState shelfState = level.getBlockState(shelfPos);
-            boolean activeShelf = shelfState.is(net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER)
+            boolean activeShelf = isRegularBookshelf(shelfState)
                 || (shelfState.is(Blocks.CHISELED_BOOKSHELF) && hasOccupiedChiseledSlot(shelfState));
             if (!activeShelf) {
                 continue;
@@ -294,16 +326,39 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         chiseled_enchanting_table.mechanics.resonance.LibraryResonance.MAX_TOTAL_XP_DISCOUNT_PERCENT;
 
     private static java.util.stream.Stream<BlockPos> streamLibraryPositions(BlockPos origin) {
-        java.util.ArrayList<BlockPos> list = new java.util.ArrayList<>(195);
-        for (int dx = -3; dx <= 3; dx++) {
-            for (int dy = -2; dy <= 2; dy++) {
-                for (int dz = -3; dz <= 3; dz++) {
+        var cfg = ChiseledEnchantingTableData.shelfGatesConfig();
+        int rx = cfg == null ? 3 : Math.max(1, cfg.horizontalScanRadius());
+        int ry = cfg == null ? 2 : Math.max(0, cfg.verticalScanRadius());
+        int capacity = Math.max(8, (2 * rx + 1) * (2 * rx + 1) * (2 * ry + 1) - 1);
+        java.util.ArrayList<BlockPos> list = new java.util.ArrayList<>(capacity);
+        for (int dx = -rx; dx <= rx; dx++) {
+            for (int dy = -ry; dy <= ry; dy++) {
+                for (int dz = -rx; dz <= rx; dz++) {
                     if (dx == 0 && dy == 0 && dz == 0) continue;
                     list.add(origin.offset(dx, dy, dz));
                 }
             }
         }
         return list.stream();
+    }
+
+    public static chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload computeLiveShelfState(
+        Level level,
+        BlockPos pos
+    ) {
+        BlockState state = level.getBlockState(pos);
+        ShelfPower shelfPower = calculateShelfPower(level, pos);
+        Set<EnchantmentWithLevel> unlocked = state.getBlock() instanceof ChiseledEnchantingTableBlock cetb
+            ? cetb.get_unlocked_enchantements(state, level, pos)
+            : Set.of();
+        return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
+            unlocked,
+            shelfPower.xpDiscountPercent(),
+            shelfPower.regularBookshelves(),
+            shelfPower.totalChiseledEnchantedBooks(),
+            shelfPower.highTierChiseledBooks(),
+            shelfPower.storedMasterLevels()
+        );
     }
 
     private record ShelfPower(
@@ -343,17 +398,14 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int regularBookshelves = 0;
         int chiseledBookshelvesWithBooks = 0;
         int totalChiseledEnchantedBooks = 0;
-        int highTierChiseledBooks = 0;
         Map<Identifier, Integer> storedMasterLevels = new HashMap<>();
         for (BlockPos scannedPos : streamLibraryPositions(tablePos).toList()) {
             BlockState nearbyState = level.getBlockState(scannedPos);
-            if (nearbyState.is(Blocks.BOOKSHELF)) {
+            if (isRegularBookshelf(nearbyState)) {
                 regularBookshelves++;
             } else if (nearbyState.is(Blocks.CHISELED_BOOKSHELF)) {
                 BlockEntity be = level.getBlockEntity(scannedPos);
                 if (be instanceof ChiseledBookShelfBlockEntity cbsbe) {
-                    highTierChiseledBooks += chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
-                        .countQualifyingHighTierEnchantmentsInShelf(cbsbe);
                     List<EnchantmentWithLevel> found = EnchantmentFinder.streamAllEnchantements(cbsbe, level).toList();
                     if (!found.isEmpty()) {
                         chiseledBookshelvesWithBooks++;
@@ -366,21 +418,24 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 }
             }
         }
-        double totalUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.totalMasteryUnits(level, storedMasterLevels);
+        Map<Identifier, Integer> immutableStored = Map.copyOf(storedMasterLevels);
+        int highTierChiseledBooks = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
+            .countQualifyingStoredMasterEnchantments(level, immutableStored);
+        double totalUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.totalMasteryUnits(level, immutableStored);
         return new ShelfPower(
             regularBookshelves,
             chiseledBookshelvesWithBooks,
             totalChiseledEnchantedBooks,
             highTierChiseledBooks,
             totalUnits,
-            Map.copyOf(storedMasterLevels)
+            immutableStored
         );
     }
 
     private static EnchantmentWithLevel withWoodenShelfBoost(Level level, EnchantmentWithLevel enchantment, int regularBookshelfPower) {
         int maxLvl = maxLevel(level, enchantment.enchantment_id());
         int unlockedCap = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
-            .maxUnlockedDirectTier(
+            .maxBlankWoodenTier(
                 ChiseledEnchantingTableData.shelfGatesConfig(),
                 enchantment.enchantment_id(),
                 maxLvl,

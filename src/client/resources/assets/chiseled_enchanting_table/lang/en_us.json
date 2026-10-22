@@ -8,7 +8,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "Cost: %s XP levels",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "Place any one of the accepted materials in the cost slot",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "Synced with server — any cycled material is accepted",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Wooden shelves unlock up to mid-tier; Chiseled Bookshelves unlock Master Tomes 1:1 & reduce XP up to -35%",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Wooden shelves unlock up to mid-tier; Chiseled Bookshelves unlock Master Tomes 1:1 & reduce XP up to -40%",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "Replaces conflicting enchantments: %s",
   "jei.chiseled_enchanting_table.info.station": "Store enchanted books in Chiseled Bookshelves within 7×5×7 to unlock them permanently. Upgrading existing enchantments automatically discounts previously invested materials and XP. Switch to the Cleanse tab to downgrade or wipe all enchantments for free XP refunds, or use Cleansing Grit to remove a single unwanted trait.",
   "jei.chiseled_enchanting_table.info.bookshelf": "Chiseled Bookshelves within 7×5×7 share their stored enchanted books with the table and switch matching enchantments to the vanilla 1–3 XP level cost.",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "Library Resonance: -%s%% Base XP (up to -40%% w/ Tome Mastery)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Wooden Bookshelves: %s (-%s%% XP, mid-tier unlock cap)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Stored Master Tomes: %s (-%s%% XP, 1:1 full tier unlock)",
-  "gui.chiseled_enchanting_table.resonance.cap": "Maximum resonance discount: -35% XP",
+  "gui.chiseled_enchanting_table.resonance.cap": "Maximum resonance discount: -40% XP",
   "item.chiseled_enchanting_table.arcane_catalyst": "Arcane Synthesis Crystal",
   "gui.chiseled_enchanting_table.treasure_epiphany": "Treasure: %s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ Treasure Epiphany active (%s%% chance per item)",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "Condensed Arcana",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "Craft an Arcane Synthesis Crystal.",
   "advancements.chiseled_enchanting_table.library_resonance.title": "Full Library Resonance",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -35% XP Library Resonance discount at a Chiseled Enchanting Table.",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -40% XP Library Resonance discount at a Chiseled Enchanting Table.",
   "advancements.chiseled_enchanting_table.grand_library.title": "Grand Library Awakening",
   "advancements.chiseled_enchanting_table.grand_library.description": "Surround a Chiseled Enchanting Table with at least 32 Wooden Bookshelves to awaken Treasure Epiphanies.",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "Frozen in Time",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 Req %s Bookshelves (Now %s)",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 Shelf-Locked Tier: %s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "Regular Bookshelves: %s / %s",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Place more regular bookshelves, or store a Master Tome in a Chiseled Bookshelf"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Place more regular bookshelves, or store a Master Tome in a Chiseled Bookshelf",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "Blank items cap at mid-tier without a Master Tome — inscribe a lower tier first to upgrade, or store a Master Tome in a Chiseled Bookshelf"
 }

@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 需 %s 普通书架（当前 %s）",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 待解锁阶位：%s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "普通书架进度：%s / %s 个",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "补足普通书架即可解锁；放入雕纹母本或双书合并可无视此限制"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "补足普通书架即可解锁；放入雕纹母本或双书合并可无视此限制",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "无典籍时白板物品仅可直接铭刻至中阶——请先铭刻低阶再逐级升级，或在雕纹书架中放入对应附魔典籍"
 }

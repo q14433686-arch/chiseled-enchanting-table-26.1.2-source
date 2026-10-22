@@ -49,6 +49,15 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         // and after every data pack reload; empty means "fall back to the canonical cost".
         ClientPlayNetworking.registerGlobalReceiver(EnchantCostTablePayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> SyncedEnchantmentCosts.apply(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.TYPE,
+            (payload, ctx) -> ctx.client().execute(() -> {
+                var player = ctx.client().player;
+                if (player != null && player.containerMenu instanceof chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler menu) {
+                    menu.applyLiveShelfState(payload);
+                }
+            })
+        );
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> SyncedEnchantmentCosts.clear());
     }
 }

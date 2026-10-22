@@ -18,6 +18,21 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ## [1.1.0] - 2026-10-23
 
+### Security, Economy & Architecture Hardening — Full Audit Resolution (`ZIP 1` & `ZIP 2`)
+
+- **Closed All Infinite XP Arbitrage Loops & Proved Inductive Conservation (`M = 1..255`)**:
+  - Fixed two infinite XP duplication paths in `XpCostConversion` + `DisenchantmentApplication`:
+    1. **Master Tome Incremental Step Loop**: enforced `Math.max(minStepThreshold, scaledRaw)` in `XpCostConversion#forIncrementalMasterTomeEnchant` instead of discarding `minStepThreshold` whenever `rawTargetCost > 0`;
+    2. **Zero-Tome Wooden Upgrade Loop**: added `XpCostConversion#forFullArcaneEnchantOrUpgrade` so non-Master-Tome upgrades (`IV -> V` at low player level) never cost fewer XP points than the disenchant step-down refund;
+    3. **Pigeonhole `maxLevel > 126` & Telescoping Additivity**: replaced `max(clampedLvl, ...)` and `max(1, V[cur] - V[next])` with an inductive potential builder (`DisenchantmentApplication#buildPotentialTable`) plus runtime startup/reload guard (`verifyRuntimeConservation`), ensuring exact telescoping additivity (`sum ΔV = V[M]`) and `V[k] - V[j] <= Cost_min(j -> k)` across every `maxLevel = 1..255`.
+- **Resolved All 4 Mechanism Collisions (`Collision 01–04`)**:
+  - **Three-Track Bookshelf Role Separation (`Collision 01`, `gamma = 1.25`)**: regular bookshelves (`#chiseled_enchanting_table:regular_bookshelves`) unlock **blank** inscriptions up to `ceil(maxLevel / 2)` (`shelf_gates.json`: `blank_max_tier_mode: "half_ceil"`), scale upgrades on **already-enchanted** items/books up to `MAX` along `0..38` shelves (`I(0) → II(7) → III(16) → IV(27) → V(38)`), while **Chiseled Bookshelf Master Tomes** retain exclusive `1:1` direct blank graduation (`I..MAX`, Treasures, and Vanilla Mass-Production `1–3L` XP mode).
+  - **Deduplicated Master Tome Evaluation (`F3`)**: Tier-3 Depleted Tome qualification counts distinct stored enchantments meeting `level >= max(1, maxLevel - 1)` from `storedMasterLevels`, eliminating duplicate-book inflation.
+  - **Linear Batch Scaling & Stack-Loss Fix (`Collision 03`)**: fixed multi-item slot overwrite on standard transmutations (`1` input consumed per ritual, remainder preserved) and linear per-unit material/XP batch scaling (`1..8` / `1..64`) on `blank_overwrite`.
+  - **Live Shelf State Synchronization (`Collision 04`)**: added server-authoritative `LiveShelfStatePayload` rescanning every `20` ticks and prior to every ritual/reroll/freeze action so open menus respond immediately to world block or book changes.
+- **Full De-Hardcoding & Modpack Extensibility (`HC-01` .. `HC-10`)**:
+  - Added `#chiseled_enchanting_table:regular_bookshelves` (`HC-01`), `#chiseled_enchanting_table:epiphany_exclusive` (`HC-10`), `library_resonance.json` (`HC-03`, synced via `EnchantCostTablePayload`), `ModBootstrapConfig` (`config/chiseled_enchanting_table.json` for `enchanted_book_max_stack_size`, `HC-04`), standalone pure-vanilla options in `disenchanting.json` (`HC-05`), `min_player_level` on transformations (`HC-06`), `OptionType#token()` wire decoupling (`HC-07`), clean 64-stacking unfrozen table drops (`rem > 0L` check in `collectImplicitComponents`, `HC-08`), `#tag` selectors across costs/transformations/default enchantments, and correct `DEPLETED_TOME` display in `TransformationQueryIndex` (`HC-02`).
+
 ### Added & Fixed — Incremental Upgrade Discounting, Dual-Tab Disenchanting / Cleansing & Curse Purging
 
 - **Context-Aware Incremental Upgrade Discounting (`L_cur -> L_new`)**:

@@ -9,7 +9,7 @@
   "jei.chiseled_enchanting_table.tooltip.xp": "Coste: %s niveles de experiencia",
   "jei.chiseled_enchanting_table.tooltip.cost_hint": "Coloca cualquiera de los materiales aceptados en la ranura de coste",
   "jei.chiseled_enchanting_table.tooltip.cost_synced": "Sincronizado con el servidor — cualquier material mostrado es válido",
-  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Las librerías suben hasta nivel medio; las cinceladas desbloquean libros 1:1 y reducen hasta -35% de XP",
+  "jei.chiseled_enchanting_table.tooltip.bookshelf": "Las librerías suben hasta nivel medio; las cinceladas desbloquean libros 1:1 y reducen hasta -40% de XP",
   "jei.chiseled_enchanting_table.tooltip.conflicts": "Sustituye encantamientos incompatibles: %s",
   "jei.chiseled_enchanting_table.info.station": "La mesa de encantamientos cincelada aplica un encantamiento de una estantería cincelada cercana. Coloca libros encantados en las estanterías a su alcance y elige una opción en la lista de la mesa.",
   "jei.chiseled_enchanting_table.info.bookshelf": "Las estanterías cinceladas al alcance de la mesa proporcionan los encantamientos disponibles. Cada libro en una ranura desbloquea su encantamiento.",
@@ -39,7 +39,7 @@
   "gui.chiseled_enchanting_table.resonance.title": "Resonancia: -%s%% XP base (hasta -40%% con Tomo Maestro)",
   "gui.chiseled_enchanting_table.resonance.wooden": "Librerías de madera: %s (-%s%% XP, límite de nivel medio)",
   "gui.chiseled_enchanting_table.resonance.chiseled": "Tomos maestros: %s (-%s%% XP, desbloqueo 1:1 completo)",
-  "gui.chiseled_enchanting_table.resonance.cap": "Descuento máximo por resonancia: -35% de XP",
+  "gui.chiseled_enchanting_table.resonance.cap": "Descuento máximo por resonancia: -40% de XP",
   "item.chiseled_enchanting_table.arcane_catalyst": "Cristal de síntesis arcana",
   "gui.chiseled_enchanting_table.treasure_epiphany": "✦ Epifanía: %s",
   "gui.chiseled_enchanting_table.epiphany.active": "✦ Epifanía de tesoro activa (%s%% de probabilidad)",
@@ -68,7 +68,7 @@
   "advancements.chiseled_enchanting_table.arcane_catalyst.title": "Condensed Arcana",
   "advancements.chiseled_enchanting_table.arcane_catalyst.description": "Craft an Arcane Synthesis Crystal.",
   "advancements.chiseled_enchanting_table.library_resonance.title": "Full Library Resonance",
-  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -35% XP Library Resonance discount at a Chiseled Enchanting Table.",
+  "advancements.chiseled_enchanting_table.library_resonance.description": "Reach the maximum -40% XP Library Resonance discount at a Chiseled Enchanting Table.",
   "advancements.chiseled_enchanting_table.grand_library.title": "Grand Library Awakening",
   "advancements.chiseled_enchanting_table.grand_library.description": "Surround a Chiseled Enchanting Table with at least 32 Wooden Bookshelves to awaken Treasure Epiphanies.",
   "advancements.chiseled_enchanting_table.freeze_epiphany.title": "Frozen in Time",
@@ -155,5 +155,6 @@
   "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 Req. %s Librerías (Act. %s)",
   "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 Nivel bloqueado: %s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "Librerías normales: %s / %s",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Añade librerías normales o guarda un tomo maestro en librería cincelada"
+  "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "Añade librerías normales o guarda un tomo maestro en librería cincelada",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "Los objetos sin encantar se limitan a niveles medios sin Tomo Maestro — inscribe primero un nivel inferior para mejorar o guarda un libro encantado en una estantería cincelada"
 }
