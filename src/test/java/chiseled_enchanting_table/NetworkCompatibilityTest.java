@@ -36,9 +36,16 @@ class NetworkCompatibilityTest {
         roundTrip(AvailableEnchantmentPayload.AVAILABLE_CHISELED_ENCHANTMENT_CODEC,
             new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789, masters));
         roundTrip(LiveShelfStatePayload.CODEC,
-            new LiveShelfStatePayload(unlocked, 37, 38, 123, 17, masters));
+            new LiveShelfStatePayload(27, unlocked, 37, 38, 123, 17, masters));
         roundTrip(LiveShelfStatePayload.CODEC,
-            new LiveShelfStatePayload(Set.of(), 0, 0, 0, 0, Map.of()));
+            new LiveShelfStatePayload(3, Set.of(), 0, 0, 0, 0, Map.of()));
+    }
+
+    @Test void liveUpdatesOnlyTargetTheMatchingMenu() {
+        var live = new LiveShelfStatePayload(27, Set.of(), 0, 0, 0, 0, Map.of());
+        assertTrue(live.targets(27));
+        assertFalse(live.targets(28));
+        assertFalse(live.targets(0));
     }
 
     @Test void allActionTokensAndNoBodyPacketsRoundTrip() {

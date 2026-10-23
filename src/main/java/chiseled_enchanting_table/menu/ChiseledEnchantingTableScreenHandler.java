@@ -371,7 +371,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public void applyLiveShelfState(ChiseledEnchantingMenuPayloads.LiveShelfStatePayload live) {
-        if (live == null) {
+        if (live == null || !live.targets(this.containerId)) {
             return;
         }
         this.unlocked_enchantements.clear();
@@ -401,7 +401,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         ChiseledEnchantingMenuPayloads.LiveShelfStatePayload[] holder =
             new ChiseledEnchantingMenuPayloads.LiveShelfStatePayload[] { null };
         this.access.execute((lvl, pos) ->
-            holder[0] = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.computeLiveShelfState(lvl, pos)
+            holder[0] = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.computeLiveShelfState(lvl, pos, this.containerId)
         );
         var live = holder[0];
         if (live == null) {

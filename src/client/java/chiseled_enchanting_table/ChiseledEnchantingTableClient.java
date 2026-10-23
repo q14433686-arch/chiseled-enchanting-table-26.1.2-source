@@ -63,7 +63,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         );
 
         // Server-authoritative costs for the menu and recipe viewers. Sent on join
-        // and after every data pack reload; empty means "fall back to the canonical cost".
+        // and after every data pack reload; server catalogs (even empty) are authoritative.
         ClientPlayNetworking.registerGlobalReceiver(EnchantCostTablePayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> SyncedEnchantmentCosts.apply(payload)));
         ClientPlayNetworking.registerGlobalReceiver(

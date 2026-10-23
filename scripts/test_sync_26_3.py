@@ -170,6 +170,9 @@ class SyncContracts(unittest.TestCase):
     def test_audit_guards_authoritative_sync_and_input(self):
         sync = (MAIN / 'menu/EnchantCostSync.java').read_text()
         self.assertIn('player.closeContainer()', sync)
+        handler = (MAIN / 'menu/ChiseledEnchantingTableScreenHandler.java').read_text()
+        self.assertIn('!live.targets(this.containerId)', handler)
+        self.assertNotIn('return ChiseledEnchantingTableData.transformationEnchantmentsFor(input)', handler)
         self.assertIn('EnchantingProtocol.incompatible(', sync)
         table = (CLIENT / 'gui/ChiseledEnchantingTableScreen.java').read_text()
         self.assertIn('event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT', table)

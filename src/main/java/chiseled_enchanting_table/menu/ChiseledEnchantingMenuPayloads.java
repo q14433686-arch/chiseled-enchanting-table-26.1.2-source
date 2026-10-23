@@ -243,6 +243,7 @@ public final class ChiseledEnchantingMenuPayloads {
      * whenever surrounding shelves change while the GUI stays open.
      */
     public record LiveShelfStatePayload(
+        int container_id,
         Set<EnchantmentWithLevel> unlocked_enchantements,
         int xp_discount_percent,
         int regular_bookshelves,
@@ -255,7 +256,12 @@ public final class ChiseledEnchantingMenuPayloads {
         public static final StreamCodec<RegistryFriendlyByteBuf, LiveShelfStatePayload> CODEC =
             CustomPacketPayload.codec(LiveShelfStatePayload::write, LiveShelfStatePayload::read);
 
+        public boolean targets(int containerId) {
+            return this.container_id == containerId;
+        }
+
         private void write(RegistryFriendlyByteBuf buf) {
+            buf.writeVarInt(container_id);
             buf.writeVarInt(unlocked_enchantements.size());
             for (EnchantmentWithLevel value : unlocked_enchantements) {
                 EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode(buf, value);
@@ -274,6 +280,7 @@ public final class ChiseledEnchantingMenuPayloads {
         }
 
         private static LiveShelfStatePayload read(RegistryFriendlyByteBuf buf) {
+            int containerId = buf.readVarInt();
             int unlockedSize = PayloadLimits.readCount(buf);
             Set<EnchantmentWithLevel> unlocked = new HashSet<>();
             for (int i = 0; i < unlockedSize; i++) {
@@ -291,6 +298,7 @@ public final class ChiseledEnchantingMenuPayloads {
                 masterLevels.put(id, Math.max(1, lvl));
             }
             return new LiveShelfStatePayload(
+                containerId,
                 unlocked,
                 xpDiscountPercent,
                 regularBookshelves,

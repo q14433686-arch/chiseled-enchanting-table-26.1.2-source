@@ -340,7 +340,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     public static chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload computeLiveShelfState(
         Level level,
-        BlockPos pos
+        BlockPos pos,
+        int containerId
     ) {
         BlockState state = level.getBlockState(pos);
         ShelfPower shelfPower = calculateShelfPower(level, pos);
@@ -348,6 +349,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             ? cetb.getUnlockedEnchantmentsFromPower(level, shelfPower)
             : Set.of();
         return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
+            containerId,
             unlocked,
             shelfPower.xpDiscountPercent(),
             shelfPower.regularBookshelves(),
