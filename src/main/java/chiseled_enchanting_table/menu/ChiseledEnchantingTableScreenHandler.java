@@ -1013,7 +1013,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     public int syncedTransformationDeductedLevels(Identifier id) {
         TransformationDisplay display = this.transformationDisplays.get(id);
-        return display != null && display.deducted_levels() > 0
+        return display != null
             ? display.deducted_levels()
             : ChiseledEnchantingTableData.transformationDeductedLevels(id);
     }
