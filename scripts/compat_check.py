@@ -709,6 +709,7 @@ def check_disenchanting_and_anti_arbitrage() -> None:
     for tag_rel in (
         "src/main/resources/data/chiseled_enchanting_table/tags/block/regular_bookshelves.json",
         "src/main/resources/data/chiseled_enchanting_table/tags/enchantment/epiphany_exclusive.json",
+        "src/main/resources/data/chiseled_enchanting_table/tags/enchantment/crossline_excluded.json",
     ):
         tp = os.path.join(REPO, tag_rel)
         if not os.path.isfile(tp):
@@ -1132,8 +1133,13 @@ def check_grimoire_recipes_sounds_and_textures() -> None:
     data_dir = Path(REPO) / "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table"
     lr_json = json.loads((data_dir / "library_resonance.json").read_text(encoding="utf-8"))
     cm = lr_json.get("chiseled_mastery", {})
-    if cm.get("tome_consumption_mode") != "wear" or cm.get("max_tome_uses") != 16 or cm.get("book_copy_wear_cost") != 4:
-        errors.append("library_resonance.json chiseled_mastery tome wear fields must default to wear / 16 / 4 (D1)")
+    if cm.get("tome_consumption_mode") != "wear" or cm.get("max_tome_uses") != 4 or cm.get("book_copy_wear_cost") != 2:
+        errors.append("library_resonance.json chiseled_mastery tome wear fields must default to wear / 4 / 2 (D1 / Part B)")
+    if cm.get("unbreaking_waiver_max_chance", 1.0) > 0.30 + 1e-9:
+        errors.append("library_resonance.json unbreaking_waiver_max_chance must be <= 0.30")
+    cs = lr_json.get("crossline_slip", {})
+    if cs.get("max_slip_chance") != 0.18 or cs.get("tier_drop_share") != 0.70 or cs.get("junk_crossline_share") != 0.25 or cs.get("curse_crossline_share") != 0.05:
+        errors.append("library_resonance.json crossline_slip must default to 0.18 cap and 0.70 / 0.25 / 0.05 outcome split")
 
     sg_json = json.loads((data_dir / "shelf_gates.json").read_text(encoding="utf-8"))
     dtg = sg_json.get("depleted_tome_gradients", {})

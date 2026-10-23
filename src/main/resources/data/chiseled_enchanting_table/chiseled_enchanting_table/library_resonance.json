@@ -45,7 +45,7 @@
     "epiphany_tier2_mastery_bonus": 0.20,
     "epiphany_tier_plus_max_prob": 0.50,
     "epiphany_tier_plus_score_divisor": 110.0,
-    "epiphany_tier_plus_score_divisor_note": "score divisor for tier+ epiphany rolls",
+    "_epiphany_tier_plus_score_divisor_note": "score divisor for tier+ epiphany rolls",
     "epiphany_tier_plus_mastery_bonus": 0.25
   },
   "ritual": {
