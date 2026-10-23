@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.config;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData.VanillaChestBooksMode;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.BlankMaxTierMode;

@@ -4,7 +4,6 @@ import java.util.*;
 import chiseled_enchanting_table.block.ChiseledEnchantingTableBlock;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -18,6 +17,7 @@ public final class WorldRegeneration {
     private record Slot(BlockPos position, int slot) {}
     private record Context(ChiseledBookShelfBlockEntity shelf, ItemStack identity, int wear) {}
     private static final class Window {
+        long lastSettled = -1;
         final RegenerationScheduler<Slot> scheduler = new RegenerationScheduler<>();
         final Map<Slot, RegenerationScheduler.Observation<Slot>> observations = new HashMap<>();
         final Map<Slot, Context> contexts = new HashMap<>();
@@ -26,11 +26,18 @@ public final class WorldRegeneration {
     private WorldRegeneration() {}
     public static void init() {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> WORLDS.clear());
-        ServerWorldEvents.UNLOAD.register((server, world) -> WORLDS.remove(world));
-        ServerTickEvents.END_WORLD_TICK.register(world -> {
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            Set<ServerLevel> loaded = Collections.newSetFromMap(new IdentityHashMap<>());
+            for (ServerLevel world : server.getAllLevels()) { loaded.add(world); settleWorld(world); }
+            WORLDS.keySet().retainAll(loaded);
+        });
+    }
+    private static void settleWorld(ServerLevel world) {
             if (Math.floorMod(world.getGameTime(), 20L) != 19L) return;
             Window window = WORLDS.get(world);
-            if (window == null) return;
+            if (window == null || window.lastSettled == world.getGameTime() / 20L) return;
+            if (window.lastSettled > world.getGameTime() / 20L) window.scheduler.clear();
+            window.lastSettled = world.getGameTime() / 20L;
             var valid = new ArrayList<RegenerationScheduler.Observation<Slot>>();
             window.observations.forEach((slot, observation) -> {
                 Context context = window.contexts.get(slot);
@@ -53,7 +60,6 @@ public final class WorldRegeneration {
                 world.sendBlockUpdated(slot.position(), state, state, Block.UPDATE_ALL);
             });
             window.observations.clear(); window.contexts.clear();
-        });
     }
 
     public static void observe(Level level, BlockPos table, BookshelfProgression.Config shelves,
