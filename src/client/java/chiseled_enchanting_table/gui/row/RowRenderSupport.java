@@ -2,7 +2,6 @@ package chiseled_enchanting_table.gui.row;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
-import chiseled_enchanting_table.utils.CustomDrawContext;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -10,8 +9,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Shared drawing primitives for chiseled-enchanting list rows with hardware scissor clipping,
- * bounded auto-scaling/ellipsizing text, compact centered item icons, and horizontal dual-mode XP badges.
+ * Shared drawing primitives for chiseled-enchanting list rows with strict inner-border GPU scissor
+ * clipping, unified {@code midY} vertical centering across all icons/labels/badges, crisp disclosure
+ * triangles, and nested tree connector rails.
  */
 public final class RowRenderSupport {
     private static final Identifier ROW_NORMAL = ChiseledEnchantingTable.identifier("gui/row_normal.png");
@@ -21,13 +21,25 @@ public final class RowRenderSupport {
     private static final Identifier ROW_EPIPHANY_HOVER = ChiseledEnchantingTable.identifier("gui/row_epiphany_hover.png");
     private static final Identifier ROW_TRANSFORM = ChiseledEnchantingTable.identifier("gui/row_transform.png");
     private static final Identifier ROW_TRANSFORM_HOVER = ChiseledEnchantingTable.identifier("gui/row_transform_hover.png");
+    private static final Identifier ROW_CLEANSE = ChiseledEnchantingTable.identifier("gui/row_cleanse.png");
+    private static final Identifier ROW_CLEANSE_HOVER = ChiseledEnchantingTable.identifier("gui/row_cleanse_hover.png");
+    private static final Identifier ROW_CURSE = ChiseledEnchantingTable.identifier("gui/row_curse.png");
+    private static final Identifier ROW_CURSE_HOVER = ChiseledEnchantingTable.identifier("gui/row_curse_hover.png");
+
+    public static final Identifier ROW_CATEGORY_CLOSED = ChiseledEnchantingTable.identifier("gui/row_category_closed.png");
+    public static final Identifier ROW_CATEGORY_OPEN = ChiseledEnchantingTable.identifier("gui/row_category_open.png");
+    public static final Identifier ROW_CLEANSE_CATEGORY_CLOSED = ChiseledEnchantingTable.identifier("gui/row_cleanse_category_closed.png");
+    public static final Identifier ROW_CLEANSE_CATEGORY_OPEN = ChiseledEnchantingTable.identifier("gui/row_cleanse_category_open.png");
 
     public static final Identifier XP_ORB_1 = ChiseledEnchantingTable.identifier("gui/xp_orb_1.png");
     public static final Identifier XP_ORB_2 = ChiseledEnchantingTable.identifier("gui/xp_orb_2.png");
     public static final Identifier XP_ORB_3 = ChiseledEnchantingTable.identifier("gui/xp_orb_3.png");
     public static final Identifier XP_RITUAL_FLASK = ChiseledEnchantingTable.identifier("gui/xp_ritual_flask.png");
+    public static final Identifier XP_REFUND_ORB = ChiseledEnchantingTable.identifier("gui/xp_refund_orb.png");
 
     public static final int XP_GREEN = 0xFF7CFFA6;
+    public static final int JADE_MINT = 0xFF9EFFDB;
+    public static final int CURSE_CRIMSON = 0xFFFF9696;
     public static final int ARCANE_PURPLE = 0xFFE5B2FF;
     public static final int RED = 0xFFFF6B6B;
     public static final int WHITE = 0xFFF7F2EA;
@@ -37,20 +49,34 @@ public final class RowRenderSupport {
     public static final int LIGHT_RED = 0xFFFFB4B4;
     public static final int LIGHT_GREEN = 0xFFA8FFC4;
 
-    public static final int PRIMARY_COST_OFFSET_X = 5;
-    public static final int COST_ICON_SIZE = 14;
+    // Inner safe border inset (all row_*.png ornate frames occupy [0..3.5] top/bottom; interior is [4..dh-4]).
+    public static final int INNER_BORDER_PAD = 4;
+    public static final int NESTED_CHILD_INDENT = 8;
+
+    public static final int PRIMARY_COST_OFFSET_X = 6;
+    public static final int NO_ICON_NAME_OFFSET_X = 7;
+    public static final int COST_ICON_SIZE = 12;
     public static final float COST_ICON_SCALE = COST_ICON_SIZE / 16.0f;
-    public static final int ADDITIONAL_COST_STRIDE = 15;
-    public static final int XP_BADGE_WIDTH = 42;
-    public static final int NAME_OFFSET_X = PRIMARY_COST_OFFSET_X + COST_ICON_SIZE + 3;
+    public static final int ADDITIONAL_COST_STRIDE = 14;
+    public static final int XP_BADGE_WIDTH = 40;
+    public static final int NAME_OFFSET_X = PRIMARY_COST_OFFSET_X + COST_ICON_SIZE + 4;
+
+    // Actual glyph ink height in Minecraft's default + CJK font (rows 0..7 = 8px ink; row 8 is line spacing).
+    private static final float GLYPH_INK_HEIGHT = 8.0f;
 
     public enum RowVisualStyle {
         STANDARD,
         EPIPHANY,
-        TRANSFORMATION
+        TRANSFORMATION,
+        CLEANSE,
+        CURSE_PURGE
     }
 
     private RowRenderSupport() {}
+
+    public static float rowCenterY(int dy, int dh) {
+        return dy + dh * 0.5f;
+    }
 
     public static Identifier orbSprite(int deductedTier) {
         if (deductedTier <= 1) return XP_ORB_1;
@@ -59,34 +85,96 @@ public final class RowRenderSupport {
     }
 
     public static int costIconY(int dy, int dh) {
-        return dy + (dh - COST_ICON_SIZE) / 2;
+        return Math.round(rowCenterY(dy, dh) - COST_ICON_SIZE * 0.5f);
     }
 
     public static int xpSeparatorX(int dx, int dw) {
         return dx + dw - XP_BADGE_WIDTH;
     }
 
-    /** Right-aligned start X for {@code shown} (1..2) secondary cost icons right next to the XP divider. */
     public static int additionalCostStartX(int dx, int dw, int shownCount) {
         int shown = Math.clamp(shownCount, 0, 2);
         return xpSeparatorX(dx, dw) - 3 - shown * ADDITIONAL_COST_STRIDE;
     }
 
-    /** Exact maximum pixel width available for title/subtitle before colliding with secondary items or XP badge. */
     public static int availableTextWidth(int dx, int dw, int shownAdditionalCount) {
+        return availableTextWidth(dx, dw, shownAdditionalCount, true);
+    }
+
+    public static int availableTextWidth(int dx, int dw, int shownAdditionalCount, boolean hasPrimaryIcon) {
         int shown = Math.clamp(shownAdditionalCount, 0, 2);
         int rightLimit = shown > 0
             ? additionalCostStartX(dx, dw, shown) - 3
             : xpSeparatorX(dx, dw) - 4;
-        return Math.max(24, rightLimit - (dx + NAME_OFFSET_X));
+        int leftOffset = hasPrimaryIcon ? NAME_OFFSET_X : NO_ICON_NAME_OFFSET_X;
+        return Math.max(20, rightLimit - (dx + leftOffset));
     }
 
     public static void beginRowContentClip(GuiGraphicsExtractor ctx, int dx, int dy, int dw, int dh) {
-        ctx.enableScissor(dx + 2, dy + 2, dx + dw - 2, dy + dh - 2);
+        ctx.enableScissor(
+            dx + INNER_BORDER_PAD,
+            dy + INNER_BORDER_PAD,
+            dx + dw - INNER_BORDER_PAD,
+            dy + dh - INNER_BORDER_PAD
+        );
     }
 
     public static void endRowContentClip(GuiGraphicsExtractor ctx) {
         ctx.disableScissor();
+    }
+
+    public static void drawTreeConnector(
+        GuiGraphicsExtractor ctx,
+        int outerDx,
+        int dy,
+        int dh,
+        boolean lastChild,
+        boolean cleanseTheme
+    ) {
+        int spineX = outerDx + 3;
+        int midY = Math.round(rowCenterY(dy, dh));
+        int mainColor = cleanseTheme ? 0xCC5CE6B8 : 0xCCA882E8;
+        int highlightColor = cleanseTheme ? 0xFFA8FFE0 : 0xFFFFDF8E;
+
+        int spineBottom = lastChild ? (midY + 1) : (dy + dh + 1);
+        ctx.fill(spineX, dy - 1, spineX + 1, spineBottom, mainColor);
+        ctx.fill(spineX + 1, midY, outerDx + NESTED_CHILD_INDENT, midY + 1, highlightColor);
+    }
+
+    /**
+     * Draws a razor-sharp pixel-art triangle centered on {@code centerY}:
+     * {@code ▶} when collapsed ({@code expanded == false}) or {@code ▼} when expanded ({@code expanded == true}).
+     */
+    public static void drawDisclosureTriangle(
+        GuiGraphicsExtractor ctx,
+        int leftX,
+        float centerY,
+        boolean expanded,
+        int fillArgb
+    ) {
+        int cy = Math.round(centerY);
+        int shadowArgb = 0xAA090610;
+        if (expanded) {
+            // Down-pointing 7x4 pixel triangle centered on (leftX + 3, cy)
+            for (int row = 0; row < 4; row++) {
+                int half = 3 - row;
+                int y = cy - 2 + row;
+                int x0 = leftX + 3 - half;
+                int x1 = leftX + 4 + half;
+                ctx.fill(x0, y + 1, x1, y + 2, shadowArgb);
+                ctx.fill(x0, y, x1, y + 1, fillArgb);
+            }
+        } else {
+            // Right-pointing 4x7 pixel triangle centered on (leftX + 2, cy)
+            for (int col = 0; col < 4; col++) {
+                int half = 3 - col;
+                int x = leftX + 1 + col;
+                int y0 = cy - half;
+                int y1 = cy + half + 1;
+                ctx.fill(x + 1, y0, x + 2, y1, shadowArgb);
+                ctx.fill(x, y0, x + 1, y1, fillArgb);
+            }
+        }
     }
 
     public static void drawPlaque(
@@ -103,6 +191,8 @@ public final class RowRenderSupport {
         Identifier sprite = switch (style) {
             case EPIPHANY -> (hovered && canEnchant) ? ROW_EPIPHANY_HOVER : ROW_EPIPHANY;
             case TRANSFORMATION -> (hovered && canEnchant) ? ROW_TRANSFORM_HOVER : ROW_TRANSFORM;
+            case CLEANSE -> (hovered && canEnchant) ? ROW_CLEANSE_HOVER : ROW_CLEANSE;
+            case CURSE_PURGE -> (hovered && canEnchant) ? ROW_CURSE_HOVER : ROW_CURSE;
             case STANDARD -> !canEnchant ? ROW_DISABLED : (hovered ? ROW_HOVER : ROW_NORMAL);
         };
         ctx.blit(sprite, dx, dy, dx + dw, dy + dh, 0.0f, 1.0f, 0.0f, 1.0f);
@@ -128,16 +218,26 @@ public final class RowRenderSupport {
         pose.translate(x, y);
         pose.scale(COST_ICON_SCALE, COST_ICON_SCALE);
         ctx.item(stack, 0, 0);
-        CustomDrawContext.drawItemInSlotWithColor(ctx, client.font, stack, 0, 0, affordable ? WHITE : RED);
         pose.popMatrix();
+
+        // Render compact stack count strictly inside [x..x+COST_ICON_SIZE+2] x [y..y+COST_ICON_SIZE+1]
+        // so digits NEVER spill onto the bottom border of any row plaque!
+        int count = stack.getCount();
+        if (count > 1 || !affordable) {
+            String countStr = String.valueOf(count);
+            float scale = 0.54f;
+            int w = Math.max(1, Math.round(client.font.width(countStr) * scale));
+            int rightEdge = x + COST_ICON_SIZE + 2;
+            int drawX = rightEdge - w;
+            int drawY = y + COST_ICON_SIZE - Math.round(GLYPH_INK_HEIGHT * scale) + 1;
+            renderScaledText(ctx, client, countStr, drawX, drawY, scale, affordable ? WHITE : RED);
+        }
     }
 
-    /** Draw the primary cost item centered vertically within the plaque recess. */
     public static void drawPrimaryCost(GuiGraphicsExtractor ctx, Minecraft client, ItemStack cost, int x, int y, boolean affordable) {
         drawCompactCostStack(ctx, client, cost, x, y, affordable);
     }
 
-    /** Draw up to two secondary cost icons flush against the XP badge divider. */
     public static void drawAdditionalCosts(
         GuiGraphicsExtractor ctx,
         Minecraft client,
@@ -157,10 +257,6 @@ public final class RowRenderSupport {
         }
     }
 
-    /**
-     * Renders the horizontal side-by-side XP badge strictly inside the row plaque recess:
-     * {@code | [10x10 Orb / Flask]  Lv.30 / -28L} — zero vertical border overflow.
-     */
     public static void drawXpBadge(
         GuiGraphicsExtractor ctx,
         Minecraft client,
@@ -171,23 +267,30 @@ public final class RowRenderSupport {
         int dh,
         boolean xpMet
     ) {
+        float midY = rowCenterY(dy, dh);
         int sepX = xpSeparatorX(dx, dw);
-        ctx.fill(sepX, dy + 4, sepX + 1, dy + dh - 4, 0x429480B8);
+        ctx.fill(sepX, dy + 5, sepX + 1, dy + dh - 5, 0x489480B8);
+
+        int iconSize = 9;
+        int iconX = sepX + 3;
+        int iconY = Math.round(midY - iconSize * 0.5f);
+        int textLeftLimit = iconX + iconSize + 2;
+        int textRightEdge = dx + dw - 5;
+
+        if (req.isRefund()) {
+            ctx.blit(XP_REFUND_ORB, iconX, iconY, iconX + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
+            String label = req.refundPoints() > 0 ? ("+" + req.refundPoints()) : "0 XP";
+            int refundColor = req.refundPoints() > 0 ? XP_GREEN : 0xFFA2C4BC;
+            renderRightAlignedCenteredYText(ctx, client, label, textLeftLimit, textRightEdge, midY, 0.60f, refundColor);
+            return;
+        }
 
         if (req.requiredLevel() <= 0 && req.deductedLevels() <= 0) {
-            String freeText = "0L";
-            float scale = 0.65f;
-            int w = Math.round(client.font.width(freeText) * scale);
-            int centerX = sepX + XP_BADGE_WIDTH / 2;
-            int textY = dy + Math.round((dh - client.font.lineHeight * scale) / 2.0f) + 1;
-            renderScaledText(ctx, client, freeText, centerX - w / 2, textY, scale, XP_GREEN);
+            renderCenteredBoxText(ctx, client, "0L", sepX + 2, XP_BADGE_WIDTH - 6, midY, 0.62f, XP_GREEN);
             return;
         }
 
         Identifier icon = req.vanillaTierMode() ? orbSprite(req.deductedLevels()) : XP_RITUAL_FLASK;
-        int iconSize = 10;
-        int iconX = sepX + 3;
-        int iconY = dy + (dh - iconSize) / 2;
         ctx.blit(icon, iconX, iconY, iconX + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
         if (!xpMet) {
             ctx.fill(iconX, iconY, iconX + iconSize, iconY + iconSize, 0x55120A16);
@@ -196,28 +299,20 @@ public final class RowRenderSupport {
         String label = req.vanillaTierMode()
             ? ("Lv." + req.requiredLevel())
             : ("-" + req.deductedLevels() + "L");
-        int textLeftLimit = iconX + iconSize + 2;
-        int textRightEdge = dx + dw - 7;
-        int availW = Math.max(10, textRightEdge - textLeftLimit);
-        int rawW = Math.max(1, client.font.width(label));
-        float scale = Math.min(0.60f, (float) availW / (float) rawW);
-        int scaledW = Math.round(rawW * scale);
-        int textX = textRightEdge - scaledW;
-        int textY = dy + Math.round((dh - client.font.lineHeight * scale) / 2.0f) + 1;
         int color = !xpMet ? RED : (req.vanillaTierMode() ? XP_GREEN : ARCANE_PURPLE);
-        renderScaledText(ctx, client, label, textX, textY, scale, color);
+        renderRightAlignedCenteredYText(ctx, client, label, textLeftLimit, textRightEdge, midY, 0.58f, color);
     }
 
     /**
-     * Renders text guaranteed never to exceed {@code maxWidth}: smoothly auto-scales down to
-     * {@code minScale} first, and cleanly ellipsizes only if still wider than {@code maxWidth}.
+     * Left-aligned text whose actual visual glyph ink center sits on {@code visualCenterY},
+     * automatically scaling down or ellipsizing so width never exceeds {@code maxWidth}.
      */
-    public static void renderBoundedText(
+    public static void renderCenteredYText(
         GuiGraphicsExtractor ctx,
         Minecraft client,
         String text,
         int x,
-        int y,
+        float visualCenterY,
         float maxScale,
         int maxWidth,
         int color
@@ -226,7 +321,7 @@ public final class RowRenderSupport {
         int rawW = client.font.width(text);
         if (rawW <= 0) return;
 
-        float minScale = 0.48f;
+        float minScale = 0.46f;
         float scale = maxScale;
         String finalStr = text;
         if (rawW * scale > maxWidth) {
@@ -239,8 +334,102 @@ public final class RowRenderSupport {
                 finalStr = client.font.plainSubstrByWidth(text, maxRawPx) + "\u2026";
             }
         }
-        int yAdjust = Math.round((maxScale - scale) * client.font.lineHeight * 0.5f);
-        renderScaledText(ctx, client, finalStr, x, y + yAdjust, scale, color);
+        float drawY = visualCenterY - (GLYPH_INK_HEIGHT * scale) * 0.5f;
+        renderScaledTextFloat(ctx, client, finalStr, x, drawY, scale, color);
+    }
+
+    /**
+     * Horizontally AND vertically centered text strictly inside {@code [boxX .. boxX + boxWidth]}.
+     */
+    public static void renderCenteredBoxText(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        String text,
+        int boxX,
+        int boxWidth,
+        float visualCenterY,
+        float maxScale,
+        int color
+    ) {
+        if (text == null || text.isEmpty() || boxWidth <= 4) return;
+        int rawW = client.font.width(text);
+        if (rawW <= 0) return;
+
+        float minScale = 0.46f;
+        float scale = maxScale;
+        String finalStr = text;
+        if (rawW * scale > boxWidth) {
+            float needed = (float) boxWidth / (float) rawW;
+            if (needed >= minScale) {
+                scale = needed;
+            } else {
+                scale = minScale;
+                int maxRawPx = Math.max(8, Math.round(boxWidth / scale) - client.font.width("\u2026"));
+                finalStr = client.font.plainSubstrByWidth(text, maxRawPx) + "\u2026";
+            }
+        }
+        float renderedW = client.font.width(finalStr) * scale;
+        float drawX = boxX + (boxWidth - renderedW) * 0.5f;
+        float drawY = visualCenterY - (GLYPH_INK_HEIGHT * scale) * 0.5f;
+        renderScaledTextFloat(ctx, client, finalStr, drawX, drawY, scale, color);
+    }
+
+    /**
+     * Right-aligned text inside {@code [leftLimit .. rightEdge]} vertically centered on {@code visualCenterY}.
+     */
+    public static void renderRightAlignedCenteredYText(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        String text,
+        int leftLimit,
+        int rightEdge,
+        float visualCenterY,
+        float maxScale,
+        int color
+    ) {
+        if (text == null || text.isEmpty()) return;
+        int availW = Math.max(8, rightEdge - leftLimit);
+        int rawW = Math.max(1, client.font.width(text));
+        float scale = Math.min(maxScale, (float) availW / (float) rawW);
+        float scaledW = rawW * scale;
+        float drawX = rightEdge - scaledW;
+        float drawY = visualCenterY - (GLYPH_INK_HEIGHT * scale) * 0.5f;
+        renderScaledTextFloat(ctx, client, text, drawX, drawY, scale, color);
+    }
+
+    /**
+     * Two-line stacked text block centered around {@code midY = dy + dh/2} strictly inside
+     * {@code [dy + 5 .. dy + dh - 5]} so neither line ever touches any plaque border.
+     */
+    public static void renderTwoLineCenteredBlock(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        String line1,
+        int color1,
+        String line2,
+        int color2,
+        int x,
+        int dy,
+        int dh,
+        int maxWidth
+    ) {
+        float midY = rowCenterY(dy, dh);
+        renderCenteredYText(ctx, client, line1, x, midY - 3.6f, 0.58f, maxWidth, color1);
+        renderCenteredYText(ctx, client, line2, x, midY + 3.6f, 0.50f, maxWidth, color2);
+    }
+
+    public static void renderBoundedText(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        String text,
+        int x,
+        int y,
+        float maxScale,
+        int maxWidth,
+        int color
+    ) {
+        float approxCenterY = y + (GLYPH_INK_HEIGHT * maxScale) * 0.5f;
+        renderCenteredYText(ctx, client, text, x, approxCenterY, maxScale, maxWidth, color);
     }
 
     private static void drawFocusBorder(GuiGraphicsExtractor ctx, int x, int y, int width, int height) {
@@ -251,13 +440,24 @@ public final class RowRenderSupport {
         ctx.fill(x + width - 1, y, x + width, y + height, gold);
     }
 
-    public static void renderScaledText(GuiGraphicsExtractor drawContext, Minecraft client, String text, int x, int y, float scale, int color) {
+    private static void renderScaledTextFloat(
+        GuiGraphicsExtractor drawContext,
+        Minecraft client,
+        String text,
+        float x,
+        float y,
+        float scale,
+        int color
+    ) {
         var matrixStack = drawContext.pose();
         matrixStack.pushMatrix();
+        matrixStack.translate(x, y);
         matrixStack.scale(scale, scale);
-        var scaledX = Math.round(x / scale);
-        var scaledY = Math.round(y / scale);
-        drawContext.text(client.font, text, (int) scaledX, (int) scaledY, color, true);
+        drawContext.text(client.font, text, 0, 0, color, true);
         matrixStack.popMatrix();
+    }
+
+    public static void renderScaledText(GuiGraphicsExtractor drawContext, Minecraft client, String text, int x, int y, float scale, int color) {
+        renderScaledTextFloat(drawContext, client, text, x, y, scale, color);
     }
 }

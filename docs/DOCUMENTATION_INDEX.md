@@ -58,10 +58,11 @@ Used when publishing an updated release; keeps every platform aligned.
 
 ## Gameplay
 
-- [`WIKI.md`](WIKI.md) — full gameplay guide + upstream comparison (中文): the `7×5×7` two-track
+- [`WIKI.md`](WIKI.md) — full gameplay guide + upstream comparison (中文): the `7×5×7` three-track
   bookshelf progression, dual-mode XP, yield-aware material curves, Master Tomes, Treasure
-  Epiphany/freeze/reroll, Depleted Tome & Blank Overwrite, every built-in transformation recipe,
-  and the JEI/REI query model.
+  Epiphany/freeze/reroll, Depleted Tome & Blank Overwrite, the illustrated Arcane Grimoire manual,
+  the dual-tab cleanse / downgrade / curse-purge rituals, every built-in recipe (crafting and
+  transformation), and the JEI/REI query model.
 
 ## Minecraft-line & feature reports
 

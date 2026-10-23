@@ -1,6 +1,8 @@
 package chiseled_enchanting_table.compat;
 
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
+import chiseled_enchanting_table.mechanics.resonance.LibraryResonance;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.EnchantCostTablePayload;
 import chiseled_enchanting_table.menu.EnchantCostTablePayload.CostEntry;
@@ -15,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * Client-side cache of the server's resolved multi-option cost rows, book-upgrade flags,
- * and Grand Library Treasure Epiphany & Stasis Freeze configuration.
+ * shelf gates, library resonance config, and Grand Library Treasure Epiphany settings.
  */
 public final class SyncedEnchantmentCosts {
     public record Cost(int xpLevelCost, List<List<ItemStack>> costOptions) {
@@ -77,6 +79,21 @@ public final class SyncedEnchantmentCosts {
         return synced != null ? synced : ChiseledEnchantingTableData.bookResearchEnabled();
     }
 
+    public static boolean disenchantEnabled() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.disenchantEnabled() : ChiseledEnchantingTableData.disenchantEnabled();
+    }
+
+    public static boolean disenchantAllowCursePurge() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.disenchantAllowCursePurge() : ChiseledEnchantingTableData.disenchantAllowCursePurge();
+    }
+
+    public static double disenchantRefundScale() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.disenchantRefundScale() : ChiseledEnchantingTableData.disenchantRefundScale();
+    }
+
     public static int epiphanyMinBookshelves() {
         EnchantCostTablePayload p = syncedPayload;
         return p != null ? p.epiphanyMinBookshelves() : ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves();
@@ -113,7 +130,8 @@ public final class SyncedEnchantmentCosts {
     }
 
     public static double epiphanyChance(int regularBookshelves, int chiseledBooks) {
-        return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.epiphanyProbability(
+        return LibraryResonance.epiphanyProbability(
+            libraryResonanceConfig(),
             regularBookshelves,
             epiphanyMinBookshelves(),
             epiphanyBaseChance(),
@@ -126,7 +144,8 @@ public final class SyncedEnchantmentCosts {
     }
 
     public static int epiphanyMaxSlots(int regularBookshelves, int chiseledBooks) {
-        return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.epiphanyMaxSlots(
+        return LibraryResonance.epiphanyMaxSlots(
+            libraryResonanceConfig(),
             regularBookshelves,
             epiphanyMinBookshelves(),
             epiphanyMaxSlotsCap(),
@@ -174,6 +193,20 @@ public final class SyncedEnchantmentCosts {
     public static Set<Identifier> explicitTreasureIds() {
         EnchantCostTablePayload p = syncedPayload;
         return p != null ? p.explicitTreasureIds() : ChiseledEnchantingTableData.treasureEpiphanyExplicitIds();
+    }
+
+    public static BookshelfProgression.Config shelfGatesConfig() {
+        EnchantCostTablePayload p = syncedPayload;
+        return (p != null && p.shelfGatesConfig() != null)
+            ? p.shelfGatesConfig()
+            : ChiseledEnchantingTableData.shelfGatesConfig();
+    }
+
+    public static LibraryResonance.Config libraryResonanceConfig() {
+        EnchantCostTablePayload p = syncedPayload;
+        return (p != null && p.libraryResonanceConfig() != null)
+            ? p.libraryResonanceConfig()
+            : ChiseledEnchantingTableData.libraryResonanceConfig();
     }
 
     public static boolean isEmpty() {

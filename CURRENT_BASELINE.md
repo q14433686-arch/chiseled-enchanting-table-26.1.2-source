@@ -18,7 +18,7 @@
 > **`ChatFormatting` no longer exists in 26.2**, so all styled text uses
 > `Style#withColor(0xAARRGGBB)` (vanilla RGB values preserved).
 
-**Date:** 2026-10-22
+**Date:** 2026-10-23
 **Minecraft Version:** 26.2
 **Fabric Loader:** 0.19.3
 **Fabric API:** 0.155.2+26.2
@@ -33,11 +33,16 @@ This repository currently publishes the unofficial 26.2 port as **`1.1.0`**. Ear
 porting labels are treated as historical implementation notes only; current metadata, release
 artefacts, documentation, and marketing copy should all refer to `1.1.0`.
 
-`1.1.0` is a **minor** bump over `1.0.3` because it adds content (two data-pack files, two items,
-four recipes, eight advancements, two viewer categories' worth of transformation lookup) without
-breaking anything: the mod id, the seven data-pack paths under
+`1.1.0` is a **minor** bump over `1.0.3` because it adds content (data-pack files, items, recipes,
+advancements, a second viewer category, the grimoire screens, the cleanse tab and a compiled test
+suite) without breaking anything: the mod id, the existing data-pack paths under
 `data/chiseled_enchanting_table/chiseled_enchanting_table/`, the payload ids and existing world
 saves are unchanged.
+
+`1.1.0` covers **two** sync passes: the 2026-10-22 progression/economy/UI overhaul from the
+`26.1.2` line, and the 2026-10-23 follow-up batch (illustrated grimoire, dual-tab cleanse, economy
+hardening, de-hardcoded configuration). The number was deliberately **not** bumped again: no `1.1.0`
+jar was ever published, so the second batch is part of the same unreleased release.
 
 > **Cross-branch note:** the sister `26.1.2` and `26.3` branches still declare `1.0.3` for the same
 > feature set. They should be bumped to `1.1.0` on their next release so the version alone
@@ -90,11 +95,27 @@ saves are unchanged.
   (the legacy mixed `chiseledEnchantingTable` package has been retired).
 - `chiseled_enchanting_table.data.ChiseledEnchantingTableData` — server-data reload listener that
   loads JSON-driven default unlocks, costs, book upgrades, treasure epiphanies, transformations,
-  loot injections and the structure bookshelf pool — all seven data files.
-- `chiseled_enchanting_table.mechanics.resonance.LibraryResonance` — the two-track progression and
-  relative-mastery maths (`r = level / maxLevel`, `w(r) = 0.45r + 0.55r²`), the `>=12`-shelf
-  discount floor and the `-40%` cap. `mechanics.enchanting.XpCostConversion.XpRequirement` carries
-  both XP modes (vanilla mass-production tiers versus the full curve).
+  loot injections, the structure bookshelf pool, library resonance, shelf gates and the
+  disenchanting/cleanse table — **all ten data files**, read straight from the bundled classpath
+  (`readBundledJsonObject`, no embedded Java copies that could drift).
+- `chiseled_enchanting_table.mechanics.resonance.LibraryResonance` — the relative-mastery maths
+  (`r(e) = level / maxLevel`, mastery sum `Σ r(e)^1.25`), the `12`-shelf discount floor, the
+  `-15%` wooden / `-35%` public / `-40%` total caps and the epiphany-affinity weights, all parsed
+  from the three nested objects of `library_resonance.json` and synced to clients in
+  `EnchantCostTablePayload`. `mechanics.resonance.BookshelfProgression` holds the three shelf roles,
+  the `0..38` step-up curve (`shelf_gates.json`, `gamma = 1.25`) and the Depleted-Tome gradients.
+  `mechanics.enchanting.XpCostConversion.XpRequirement` carries both XP modes (vanilla
+  mass-production tiers versus the full curve).
+- `chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication` — free disenchant /
+  step-down / single-trait strip / curse purge, with the inductive potential table
+  (`buildPotentialTable`) and its startup/reload conservation guard (`verifyRuntimeConservation`),
+  so a refund can never beat a Master-Tome re-enchant for any `maxLevel = 1..255`.
+- `chiseled_enchanting_table.config.ModBootstrapConfig` — early bootstrap config
+  (`config/chiseled_enchanting_table.json`, e.g. `enchanted_book_max_stack_size`) read before the
+  item default-component events run.
+- `chiseled_enchanting_table.item.ArcaneGrimoireItem` — the illustrated manual item; it delegates
+  screen opening through a client-only `CLIENT_OPEN_ACTION` so `src/main` stays free of client
+  imports.
 - `chiseled_enchanting_table.compat.TransformationQueryIndex` — viewer-agnostic transformation rows
   (input, primary/secondary cost alternatives, output, XP requirement) consumed by both the JEI and
   REI transformation categories.
@@ -151,9 +172,13 @@ saves are unchanged.
   `ScreenHandlerRegistry`, `StructureProcessorRegistry`.
 - `chiseled_enchanting_table.utils.*` — `Advancement`, `BlockPosStream`, `EnchantmentFinder`,
   `EnchantmentWithLevel`, `InventoryUtils`.
-- Client (`src/client/java`): `ChiseledEnchantingTableClient`, `ChiseledEnchantingTableScreen`,
-  `EnchantementListWidget`, `gui.row.*` (`RowRenderSupport`, `EnchantmentRowRenderer`,
-  `TransformationRowRenderer`).
+- Client (`src/client/java`): `ChiseledEnchantingTableClient`, `ChiseledEnchantingTableScreen`
+  (dual-tab `Inscribe` / `Cleanse` console), `EnchantementListWidget`, `gui.row.*`
+  (`RowRenderSupport`, `EnchantmentRowRenderer`, `TransformationRowRenderer`,
+  `CategoryRowRenderer`), and `gui.grimoire.*` — `ArcaneGrimoireScreen` (8 chapters, keyboard/mouse
+  navigation), `GrimoireDiagramRenderer` (live recipes/costs/transformations), `GrimoireTextLayout`
+  (single-pass column planning), `GrimoireSoundHelper` (vanilla book/UI sounds) and
+  `GrimoireViewerBridge` (optional JEI/REI lookups without leaking viewer types into core GUI).
 
 ### Data / JSON
 - `data/chiseled_enchanting_table/chiseled_enchanting_table/default_enchantments.json` —
@@ -195,11 +220,27 @@ saves are unchanged.
   `base_chance` / per-bookshelf / per-tome chance scaling with a `max_chance` cap, `max_slots_cap`,
   `cycle_ticks`, freeze/reroll XP + material options, the treasure id/tag lists, and per-treasure
   cost overrides. Validated by `scripts/compat_check.py` (Tier 1).
+- `data/chiseled_enchanting_table/chiseled_enchanting_table/library_resonance.json` — three nested
+  config objects (`wooden_bookshelves`: `12..38` shelves, `-15%`, `0.90` material multiplier;
+  `chiseled_mastery`: exponent `1.25`, `-20%` global / `-35%` public / `-40%` total, `0.80` tome
+  multiplier, `0.85` step credit; `epiphany_affinity`: probability and blank-book weights), guarded
+  against `LibraryResonance.Config.DEFAULT` by the JUnit suite.
+- `data/chiseled_enchanting_table/chiseled_enchanting_table/shelf_gates.json` — scan volume
+  (`3`/`2` radii), the `direct_upgrade_gates` block (`max_bookshelves: 38`, `gamma: 1.25`,
+  `blank_max_tier_mode: "half_ceil"`, per-enchantment `overrides`) and the three Depleted-Tome
+  restoration gradients (`8` / `18` shelves, `6` qualifying enchantments, batch `8` / `64`).
+- `data/chiseled_enchanting_table/chiseled_enchanting_table/disenchanting.json` — the cleanse table:
+  full wipe, step-down, single-trait strip and curse purge, each with a custom-catalyst option and a
+  standalone pure-vanilla alternative (plus the ritual XP levels).
+- Tags: `#chiseled_enchanting_table:regular_bookshelves` (which blocks count as wooden shelves),
+  `#chiseled_enchanting_table:epiphany_exclusive`, and the vanilla
+  `#minecraft:bookshelf_books` extension that lets the grimoire sit in a chiseled bookshelf.
 - `data/chiseled_enchanting_table/recipe/` — the chiseled table, the vanilla-table upgrade recipe,
-  the `8× Crying Obsidian` recipe and the Arcane Catalyst recipe; matching
-  `advancement/recipes/*.json` unlock files.
-- **18 advancements** under `data/chiseled_enchanting_table/advancement/`, all translatable in the
-  11 shipped locales; `root.json` keys on both the craft and the upgrade recipe.
+  the `8× Crying Obsidian` recipe, the Arcane Catalyst recipe, the `4× Cleansing Grit` recipe and
+  the two `Arcane Grimoire` recipes (7 in total); matching `advancement/recipes/*.json` unlock files.
+- **25 advancements** under `data/chiseled_enchanting_table/advancement/` (21 guide advancements +
+  4 recipe unlocks), all translatable in the 11 shipped locales (`307` keys each); `root.json` keys
+  on both the craft and the upgrade recipe.
 
 ### Tooling
 - `scripts/compat_check.py` — Tier 1 (offline, fails the build) covers singular-dir convention,
@@ -207,11 +248,20 @@ saves are unchanged.
   `conditions[]`/`functions[]` loot schema, the 26.2 advancement schema (`recipe_id`,
   root-only `background`, `show_toast`/`announce_to_chat` inside `display`), JSON/Java
   transformation drift, `default_enchantments.json` `tags` schema, `loot_injections.json`,
-  `bookshelf_book_pool.json`, **`book_upgrades.json`**, **`treasure_epiphany.json`** and a shared
+  `bookshelf_book_pool.json`, `book_upgrades.json`, `treasure_epiphany.json`, the shared
   **cost-option** validator (`count` / `count_per_level` / `min_count+max_count` /
-  `base_count+max_level_count` + `level_exponent` + nested `extras` / `additional_costs`). Tier 2
-  (best-effort, warn-only) checks id and tag existence against `--mc-jar` and/or `--extra-jar`
-  paths, for all seven data files.
+  `base_count+max_level_count` + `level_exponent` + nested `extras` / `additional_costs`),
+  **`disenchanting.json`** (anti-arbitrage structure), **grimoire recipes / sounds / textures** and a
+  **`docs/WIKI.md` sync gate** (the wiki must keep documenting the shipped formulas and keys).
+  Tier 2 (best-effort, warn-only) checks id and tag existence against `--mc-jar` and/or
+  `--extra-jar` paths, for all ten data files.
+- `src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java` — JUnit 5 suite
+  wired through `build.gradle` (`junit-bom` 5.11.4, `useJUnitPlatform()`), so `./gradlew build` and
+  the CI `build` job execute it: nested `library_resonance.json` schema and mutation coverage, the
+  `M = 1..255` full-wipe and step-upgrade conservation sweep over the real
+  `DisenchantmentApplication` / `XpCostConversion` code paths (~391,680 checks), Book-Combine ≤
+  Book-Research across every tier, the transformation thresholds / Bottle-o'-Enchanting arbitrage
+  and the bounded high-level shelf scan (`M = 1..255`).
 
 ### Active Temporary Boundaries
 - Main-source exclusions still parked in `build.gradle`:
@@ -222,8 +272,11 @@ saves are unchanged.
 - Now active (previously parked): `mixin/anvil/RemoveXpCostScaling.java` (flat anvil prior-work
   penalty) and `DefaultItemComponentEvents.MODIFY` for the 64-stack enchanted book. The
   `mixin/accessor/ItemAccessor` was deleted rather than enabled.
+- The JUnit suite runs on the plain JUnit platform (no Loom test bootstrap): it only exercises the
+  compiled data/DTO/mechanics classes (`Identifier`, `RegistryFriendlyByteBuf` with a null
+  `RegistryAccess`), which keeps `./gradlew build` free of a Minecraft test runtime.
 - Runtime feature gaps:
-  - Full live-client gameplay validation of the 18 advancements, the epiphany freeze/reroll
+  - Full live-client gameplay validation of the 25 advancements, the epiphany freeze/reroll
     round-trip and the dye pipeline is still pending; the three offline gates and the CI compile are
     the only automated coverage in this sandbox.
   - Full live-client gameplay validation of the actual bookshelf fills in villages / mansions /
@@ -299,6 +352,39 @@ This session added the localized advancement guide pass and rebuilt the release 
     `build` workflows (the sandbox cannot run Gradle); the resulting log lands in
     `build-reports/compile-java.log`.
 
+## Synced This Session (2026-10-23) — second 26.1.2 batch → 26.2 line
+
+- Synced everything the `26.1.2` line gained after the first sync (`2f62762..b78b244`, PR #13 on
+  the sister repository): 128 paths — 49 added, 23 deleted (scratch `fix*.patch` / `fix_*.py`,
+  `build-reports/compile-deps.log`), 43 taken verbatim because this tree had no local divergence,
+  and 13 merged by hand (the docs, `build.gradle`, `scripts/compat_check.py`).
+- 26.2 adaptations applied to the new code:
+  - `ChatFormatting` (gone in 26.2) → `Style#withColor(0xAARRGGBB)` in the four files that use
+    colours: `gui/ChiseledEnchantingTableScreen` (74 references, including ternary style
+    expressions), `gui/grimoire/ArcaneGrimoireScreen` (5), `block/ChiseledEnchantingTableBlockEntity`
+    (1) and `registry/BlockRegistry` (4).
+  - `build.gradle`: added the JUnit 5 wiring (`junit-bom` 5.11.4 + `useJUnitPlatform()`) and
+    refreshed the client-source-set comment; the 26.2 Loom/`toolchainPins`/mixin-exclusion block is
+    otherwise untouched.
+  - `scripts/compat_check.py`: three-way merge — the 26.2 schema wording and the
+    `check_loot_tables_use_26_2_schema` / `check_advancements_use_26_2_schema` direction are kept,
+    while the new Tier-1 validators (`check_disenchanting_and_anti_arbitrage`,
+    `check_grimoire_recipes_sounds_and_textures`) and the wiki-sync gate are added, so all nine
+    checks run.
+  - `docs/WIKI.md`: taken from the 26.1.2 side (it is a full gameplay-guide rewrite) with the target
+    line adjusted to `Minecraft 26.2` / Fabric API `0.155.2+26.2`.
+  - `gradle.properties`, both `publish.yml` copies and `build-reports/compile-java.log` keep this
+    branch's values (`mod_version=1.1.0`, `MINECRAFT_VERSION: 26.2`, CI-written log).
+- Version: **unchanged at `1.1.0`** (see "Versioning" above) — the first `1.1.0` was never released.
+- Validation in this headless sandbox (no JDK, no maven):
+  - `python3 scripts/ci_static_checks.py` → **PASS** (9 mixin refs, 307 lang keys × 11 locales,
+    code-to-lang coverage 297 refs, 36 markdown files).
+  - `python3 scripts/compat_check.py` → **PASS** (2 warnings: no MC jar for Tier 2).
+  - `bash scripts/check_release_consistency.sh --strict` → **12 passed, 0 warned, 0 failed**.
+  - `bash docs/ci/install.sh --check` → all four workflow copies up to date.
+  - `compileJava` / `compileClientJava` / the JUnit suite are exercised by the GitHub Actions
+    `compile-check` and `build` workflows; the compile log lands in `build-reports/compile-java.log`.
+
 ## Client-Only / Live-Game Validation Still Pending
 
 Same as the prior baseline — these require a real MC 26.2 + Fabric runtime and were not run in
@@ -306,7 +392,11 @@ this headless sandbox: mod-metadata load, the restored balance / ambience mixins
 Vanilla Enchanting Table / Anvil / Chiseled Bookshelf / Chiseled Enchanting Table setup, block placement, custom menu open, slot/scroll/floating book
 renderer, enchanting + transformation application, chiseled-bookshelf scanning, P19 tag-based
 cross-mod default unlocks, multiplayer sync beyond payload registration, and mining drop in a
-live world. The full list is kept in `docs/reports/CURRENT_AGENT_BRIEF.md`.
+live world. Added by the 2026-10-23 batch and still unverified in a live client: the grimoire
+overlay and its JEI/REI round-trip, the dual-tab Cleanse console, the cleanse / downgrade /
+curse-purge rituals and their XP refunds, the live shelf rescan payload, and the `1..38` shelf
+step-up curve on a real world. The full list is kept in
+`docs/reports/CURRENT_AGENT_BRIEF.md`.
 
 
 ## 1.0.2 Hotfix Note

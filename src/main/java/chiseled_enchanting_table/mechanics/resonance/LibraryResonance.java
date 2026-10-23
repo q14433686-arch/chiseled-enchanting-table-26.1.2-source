@@ -1,59 +1,333 @@
 package chiseled_enchanting_table.mechanics.resonance;
 
+import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import com.google.gson.JsonObject;
 import java.util.Map;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.Level;
 
 /**
- * Unified Library Resonance math shared identically by Server and Client.
+ * Relative-mastery math shared by Library XP Discounts, Master Tome specific bonuses,
+ * and Treasure Epiphany proc rate / simultaneous slots / rolled tier.
  *
- * <h3>Design Pillars</h3>
- * <ol>
- *   <li><b>Wooden Bookshelf Discount Floor ({@code W >= 12})</b>: fewer than 12 regular bookshelves
- *       grant {@code 0%} XP discount; starting at 12 shelves, discount begins at {@code 2%} and
- *       grows by {@code +1%} every 2 additional shelves up to {@code 12%} (at 32 shelves).</li>
- *   <li><b>Mod-Agnostic Relative Master-Tome Tier ({@code r = L / maxLevel})</b>: queries each
- *       enchantment's registered {@link Enchantment#getMaxLevel()} dynamically, automatically
- *       supporting vanilla and all third-party enchantment mods ({@code maxLevel = 1..255}).
- *       Each distinct stored enchantment contributes convex mastery weight
- *       {@code w(r) = 0.45 * r + 0.55 * r^2} in {@code [0, 1]}, preventing low-tier duplicate spam
- *       while rewarding upgrading Master Tomes to max tier ({@code r = 1.0 -> w = 1.0}).</li>
- *   <li><b>Three-Way Resonance Impact</b>:
- *     <ul>
- *       <li><b>XP Discount</b>: {@code min(40%, wooden(W) + globalMastery(E_all) + specificMastery(r_e))},
- *           where {@code specificMastery(r_e) = round(15 * r_e^1.5)} rewards upgrading that exact
- *           enchantment's Master Tome up to an extra {@code -15%} XP discount.</li>
- *       <li><b>Treasure Epiphany Probability</b>: combines {@code W}, global mastery {@code E_all},
- *           and target-equipment affinity mastery {@code E_affinity(target)} (all stored tomes
- *           matching {@link Enchantment#canEnchant(ItemStack)}).</li>
- *       <li><b>Per-Item Epiphany Cap & Tier</b>: scales max simultaneous Epiphany slots up to
- *           {@code maxSlotsCap} and elevates rolled tier on multi-level Treasure enchantments.</li>
- *     </ul>
- *   </li>
- * </ol>
+ * <p>Every parameter is parsed directly from the nested structure in
+ * {@code data/chiseled_enchanting_table/chiseled_enchanting_table/library_resonance.json}
+ * ({@code wooden_bookshelves}, {@code chiseled_mastery}, {@code epiphany_affinity}, with flat
+ * root keys also accepted as fallback overrides) and synced to clients in
+ * {@link chiseled_enchanting_table.menu.EnchantCostTablePayload}.</p>
  */
 public final class LibraryResonance {
     public static final int MIN_DISCOUNT_BOOKSHELVES = 12;
-    public static final int MAX_WOODEN_DISCOUNT_PERCENT = 12;
-    public static final int MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT = 13;
-    public static final int MAX_BASE_DISCOUNT_PERCENT = 25;
-    public static final int MAX_SPECIFIC_MASTERY_DISCOUNT_PERCENT = 15;
+    public static final int MAX_WOODEN_DISCOUNT_PERCENT = 15;
+    public static final int MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT = 20;
+    public static final int MAX_BASE_XP_DISCOUNT_PERCENT = 35;
+    public static final int MAX_SPECIFIC_ENCHANT_BONUS_PERCENT = 15;
     public static final int MAX_TOTAL_XP_DISCOUNT_PERCENT = 40;
 
-    public static final double AFFINITY_CHANCE_PER_UNIT = 0.055;
-    public static final double GLOBAL_SLOT_WEIGHT = 1.8;
-    public static final double AFFINITY_SLOT_WEIGHT = 3.6;
+    private static final TagKey<Enchantment> CURSE_TAG =
+        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+
+    public record Config(
+        int minDiscountBookshelves,
+        int maxDiscountBookshelves,
+        int maxWoodenDiscountPercent,
+        int maxGlobalMasteryDiscountPercent,
+        int maxBaseXpDiscountPercent,
+        int maxSpecificEnchantBonusPercent,
+        double specificEnchantExponent,
+        int maxTotalXpDiscountPercent,
+        double masteryUnitExponent,
+        double globalMasteryMultiplier,
+        double masterTomeUpgradeMaterialMultiplier,
+        double shelfUpgradeMaterialMultiplier,
+        double epiphanyProbabilityGlobalWeight,
+        double epiphanyProbabilityAffinityWeight,
+        double blankBookAffinityWeight,
+        double epiphanyShelfScoreFactor,
+        double epiphanyGlobalMasteryScoreFactor,
+        double epiphanyAffinityMasteryScoreFactor,
+        double epiphanyTier2MaxProb,
+        double epiphanyTier2ScoreDivisor,
+        double epiphanyTier2MasteryBonus,
+        double epiphanyTierPlusMaxProb,
+        double epiphanyTierPlusScoreDivisor,
+        double epiphanyTierPlusMasteryBonus,
+        double incrementalStepCreditFactor
+    ) {
+        public static final Config DEFAULT = new Config(
+            MIN_DISCOUNT_BOOKSHELVES,
+            38,
+            MAX_WOODEN_DISCOUNT_PERCENT,
+            MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT,
+            MAX_BASE_XP_DISCOUNT_PERCENT,
+            MAX_SPECIFIC_ENCHANT_BONUS_PERCENT,
+            1.0,
+            MAX_TOTAL_XP_DISCOUNT_PERCENT,
+            1.25,
+            1.25,
+            0.80,
+            0.90,
+            0.45,
+            0.85,
+            0.50,
+            1.0,
+            2.2,
+            3.5,
+            0.65,
+            80.0,
+            0.20,
+            0.50,
+            110.0,
+            0.25,
+            0.85
+        );
+
+        public static Config fromJson(JsonObject root) {
+            if (root == null) {
+                return DEFAULT;
+            }
+            JsonObject woodObj = subObject(root, "wooden_bookshelves");
+            JsonObject masteryObj = subObject(root, "chiseled_mastery");
+            JsonObject epiphanyObj = subObject(root, "epiphany_affinity");
+
+            int minShelves = clampInt(
+                intFrom(woodObj, root, "min_discount_bookshelves", null, DEFAULT.minDiscountBookshelves),
+                0,
+                256
+            );
+            int maxShelves = clampInt(
+                intFrom(woodObj, root, "max_discount_bookshelves", null, DEFAULT.maxDiscountBookshelves),
+                Math.max(1, minShelves + 1),
+                256
+            );
+            int maxWood = clampInt(
+                intFrom(woodObj, root, "max_wooden_discount_percent", "max_discount_percent", DEFAULT.maxWoodenDiscountPercent),
+                0,
+                90
+            );
+            int maxGlobal = clampInt(
+                intFrom(masteryObj, root, "max_global_mastery_discount_percent", "max_global_discount_percent", DEFAULT.maxGlobalMasteryDiscountPercent),
+                0,
+                90
+            );
+            int maxBase = clampInt(
+                intFrom(masteryObj, root, "max_base_xp_discount_percent", "max_base_discount_percent", DEFAULT.maxBaseXpDiscountPercent),
+                0,
+                90
+            );
+            int maxSpec = clampInt(
+                intFrom(masteryObj, root, "max_specific_enchant_bonus_percent", "max_specific_discount_percent", DEFAULT.maxSpecificEnchantBonusPercent),
+                0,
+                90
+            );
+            double specExp = clampDouble(
+                doubleFrom(masteryObj, root, "specific_enchant_exponent", "specific_exponent", DEFAULT.specificEnchantExponent),
+                0.25,
+                4.0
+            );
+            int maxTotal = clampInt(
+                intFrom(masteryObj, root, "max_total_xp_discount_percent", null, DEFAULT.maxTotalXpDiscountPercent),
+                maxBase,
+                90
+            );
+
+            return new Config(
+                minShelves,
+                maxShelves,
+                maxWood,
+                maxGlobal,
+                maxBase,
+                maxSpec,
+                specExp,
+                maxTotal,
+                clampDouble(
+                    doubleFrom(masteryObj, root, "mastery_unit_exponent", null, DEFAULT.masteryUnitExponent),
+                    0.25,
+                    4.0
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "global_mastery_multiplier", "global_discount_per_unit", DEFAULT.globalMasteryMultiplier),
+                    0.0,
+                    20.0
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "master_tome_upgrade_material_multiplier", "upgrade_material_multiplier", DEFAULT.masterTomeUpgradeMaterialMultiplier),
+                    0.05,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(woodObj, root, "shelf_upgrade_material_multiplier", "upgrade_material_multiplier", DEFAULT.shelfUpgradeMaterialMultiplier),
+                    0.05,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_probability_global_weight", null, DEFAULT.epiphanyProbabilityGlobalWeight),
+                    0.0,
+                    10.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_probability_affinity_weight", "affinity_chance_per_unit", DEFAULT.epiphanyProbabilityAffinityWeight),
+                    0.0,
+                    10.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "blank_book_affinity_weight", null, DEFAULT.blankBookAffinityWeight),
+                    0.0,
+                    2.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_shelf_score_factor", null, DEFAULT.epiphanyShelfScoreFactor),
+                    0.0,
+                    20.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_global_mastery_score_factor", "global_slot_weight", DEFAULT.epiphanyGlobalMasteryScoreFactor),
+                    0.0,
+                    20.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_affinity_mastery_score_factor", "affinity_slot_weight", DEFAULT.epiphanyAffinityMasteryScoreFactor),
+                    0.0,
+                    20.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier2_max_prob", null, DEFAULT.epiphanyTier2MaxProb),
+                    0.0,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier2_score_divisor", null, DEFAULT.epiphanyTier2ScoreDivisor),
+                    1.0,
+                    1000.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier2_mastery_bonus", null, DEFAULT.epiphanyTier2MasteryBonus),
+                    0.0,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier_plus_max_prob", null, DEFAULT.epiphanyTierPlusMaxProb),
+                    0.0,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier_plus_score_divisor", null, DEFAULT.epiphanyTierPlusScoreDivisor),
+                    1.0,
+                    1000.0
+                ),
+                clampDouble(
+                    doubleFrom(epiphanyObj, root, "epiphany_tier_plus_mastery_bonus", null, DEFAULT.epiphanyTierPlusMasteryBonus),
+                    0.0,
+                    1.0
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "incremental_step_credit_factor", "incremental_threshold_credit_factor", DEFAULT.incrementalStepCreditFactor),
+                    0.0,
+                    0.95
+                )
+            );
+        }
+
+        private static JsonObject subObject(JsonObject root, String sectionKey) {
+            return root.has(sectionKey) && root.get(sectionKey).isJsonObject()
+                ? root.getAsJsonObject(sectionKey)
+                : null;
+        }
+
+        private static int intFrom(JsonObject section, JsonObject root, String primaryKey, String aliasKey, int fallback) {
+            if (section != null) {
+                if (section.has(primaryKey) && section.get(primaryKey).isJsonPrimitive()) {
+                    return section.get(primaryKey).getAsInt();
+                }
+                if (aliasKey != null && section.has(aliasKey) && section.get(aliasKey).isJsonPrimitive()) {
+                    return section.get(aliasKey).getAsInt();
+                }
+            }
+            if (root.has(primaryKey) && root.get(primaryKey).isJsonPrimitive()) {
+                return root.get(primaryKey).getAsInt();
+            }
+            if (aliasKey != null && root.has(aliasKey) && root.get(aliasKey).isJsonPrimitive()) {
+                return root.get(aliasKey).getAsInt();
+            }
+            return fallback;
+        }
+
+        private static double doubleFrom(JsonObject section, JsonObject root, String primaryKey, String aliasKey, double fallback) {
+            if (section != null) {
+                if (section.has(primaryKey) && section.get(primaryKey).isJsonPrimitive()) {
+                    return section.get(primaryKey).getAsDouble();
+                }
+                if (aliasKey != null && section.has(aliasKey) && section.get(aliasKey).isJsonPrimitive()) {
+                    return section.get(aliasKey).getAsDouble();
+                }
+            }
+            if (root.has(primaryKey) && root.get(primaryKey).isJsonPrimitive()) {
+                return root.get(primaryKey).getAsDouble();
+            }
+            if (aliasKey != null && root.has(aliasKey) && root.get(aliasKey).isJsonPrimitive()) {
+                return root.get(aliasKey).getAsDouble();
+            }
+            return fallback;
+        }
+
+        private static int clampInt(int v, int lo, int hi) {
+            return Math.max(lo, Math.min(hi, v));
+        }
+
+        private static double clampDouble(double v, double lo, double hi) {
+            if (!Double.isFinite(v)) return lo;
+            return Math.max(lo, Math.min(hi, v));
+        }
+    }
 
     private LibraryResonance() {}
 
+    public static Config activeServerConfig() {
+        Config cfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        return cfg != null ? cfg : Config.DEFAULT;
+    }
+
+    public static Config configForSide(boolean isClientSide) {
+        Config cfg = isClientSide
+            ? SyncedEnchantmentCosts.libraryResonanceConfig()
+            : ChiseledEnchantingTableData.libraryResonanceConfig();
+        return cfg != null ? cfg : Config.DEFAULT;
+    }
+
+    public static Config activeConfig() {
+        return activeServerConfig();
+    }
+
+    public static double relativeMastery(int storedLevel, int maxLevel) {
+        if (storedLevel <= 0) {
+            return 0.0;
+        }
+        int cappedMax = Math.max(1, maxLevel);
+        return Math.min(1.0, (double) Math.min(storedLevel, cappedMax) / (double) cappedMax);
+    }
+
+    public static double masteryUnitsForEntry(int storedLevel, int maxLevel) {
+        return masteryUnitsForEntry(activeServerConfig(), storedLevel, maxLevel);
+    }
+
+    public static double masteryUnitsForEntry(Config cfg, int storedLevel, int maxLevel) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        double r = relativeMastery(storedLevel, maxLevel);
+        if (r <= 0.0) {
+            return 0.0;
+        }
+        return Math.pow(r, c.masteryUnitExponent());
+    }
+
     public static int resolveMaxLevel(Level level, Identifier enchantmentId) {
-        if (level == null || enchantmentId == null) return 1;
         try {
             Holder<Enchantment> holder = level.registryAccess()
                 .lookupOrThrow(Registries.ENCHANTMENT)
@@ -64,194 +338,301 @@ public final class LibraryResonance {
         }
     }
 
-    /** Relative tier in {@code [0.0, 1.0]} for a stored Master Tome of {@code enchantmentId}. */
-    public static double relativeMastery(int storedLevel, int maxLevel) {
-        if (storedLevel <= 0) return 0.0;
-        int safeMax = Math.max(1, maxLevel);
-        int clamped = Math.min(safeMax, storedLevel);
-        return (double) clamped / (double) safeMax;
-    }
-
-    /** Convex mastery tome unit in {@code [0.0, 1.0]}: low-tier 1/5 = 0.112, maxed N/N = 1.000. */
-    public static double masteryUnit(int storedLevel, int maxLevel) {
-        double r = relativeMastery(storedLevel, maxLevel);
-        if (r <= 0.0) return 0.0;
-        return 0.45 * r + 0.55 * r * r;
-    }
-
-    /** Sum of convex mastery units across all distinct enchantments stored in Chiseled Bookshelves. */
     public static double totalMasteryUnits(Level level, Map<Identifier, Integer> storedMasterLevels) {
-        if (storedMasterLevels == null || storedMasterLevels.isEmpty()) return 0.0;
-        double sum = 0.0;
-        for (Map.Entry<Identifier, Integer> entry : storedMasterLevels.entrySet()) {
-            int lvl = entry.getValue() == null ? 0 : entry.getValue();
-            if (lvl <= 0) continue;
-            int maxLvl = resolveMaxLevel(level, entry.getKey());
-            sum += masteryUnit(lvl, maxLvl);
-        }
-        return sum;
+        return totalMasteryUnits(configForSide(level.isClientSide()), level, storedMasterLevels);
     }
 
-    /**
-     * Sum of convex mastery units across stored Master Tomes compatible with {@code targetStack}
-     * (via {@link Enchantment#canEnchant(ItemStack)} — works automatically for modded gear & enchants).
-     */
-    public static double affinityMasteryUnits(
-        Level level,
-        Map<Identifier, Integer> storedMasterLevels,
-        ItemStack targetStack
-    ) {
-        if (level == null
-            || storedMasterLevels == null
-            || storedMasterLevels.isEmpty()
-            || targetStack == null
-            || targetStack.isEmpty()
-            || targetStack.is(Items.BOOK)
-            || targetStack.is(Items.ENCHANTED_BOOK)) {
+    public static double totalMasteryUnits(Config cfg, Level level, Map<Identifier, Integer> storedMasterLevels) {
+        if (storedMasterLevels == null || storedMasterLevels.isEmpty()) {
             return 0.0;
         }
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         double sum = 0.0;
         for (Map.Entry<Identifier, Integer> entry : storedMasterLevels.entrySet()) {
-            int lvl = entry.getValue() == null ? 0 : entry.getValue();
+            int lvl = entry.getValue();
             if (lvl <= 0) continue;
-            var optHolder = registry.get(ResourceKey.create(Registries.ENCHANTMENT, entry.getKey()));
-            if (optHolder.isEmpty()) continue;
-            Enchantment ench = optHolder.get().value();
-            if (ench.canEnchant(targetStack)) {
-                sum += masteryUnit(lvl, Math.max(1, ench.getMaxLevel()));
+            try {
+                Holder.Reference<Enchantment> holder = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, entry.getKey()));
+                if (holder.is(CURSE_TAG)) continue;
+                sum += masteryUnitsForEntry(c, lvl, holder.value().getMaxLevel());
+            } catch (Exception ignored) {
             }
         }
         return sum;
     }
 
-    /** Wooden bookshelf XP discount: strictly 0% below 12 shelves, then 2%..12% from 12..32 shelves. */
+    public static double affinityMasteryUnits(
+        Level level,
+        Map<Identifier, Integer> storedMasterLevels,
+        ItemStack targetStack
+    ) {
+        return affinityMasteryUnits(configForSide(level.isClientSide()), level, storedMasterLevels, targetStack);
+    }
+
+    public static double affinityMasteryUnits(
+        Config cfg,
+        Level level,
+        Map<Identifier, Integer> storedMasterLevels,
+        ItemStack targetStack
+    ) {
+        if (storedMasterLevels == null || storedMasterLevels.isEmpty() || targetStack.isEmpty()) {
+            return 0.0;
+        }
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        boolean isBlankBook = targetStack.is(Items.BOOK);
+        var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        double sum = 0.0;
+        for (Map.Entry<Identifier, Integer> entry : storedMasterLevels.entrySet()) {
+            int lvl = entry.getValue();
+            if (lvl <= 0) continue;
+            try {
+                Holder.Reference<Enchantment> holder = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, entry.getKey()));
+                if (holder.is(CURSE_TAG)) continue;
+                if (isBlankBook || holder.value().canEnchant(targetStack)) {
+                    double units = masteryUnitsForEntry(c, lvl, holder.value().getMaxLevel());
+                    sum += isBlankBook ? (units * c.blankBookAffinityWeight()) : units;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return sum;
+    }
+
     public static int woodenBookshelfDiscountPercent(int regularBookshelves) {
-        if (regularBookshelves < MIN_DISCOUNT_BOOKSHELVES) {
+        return woodenBookshelfDiscountPercent(activeServerConfig(), regularBookshelves);
+    }
+
+    public static int woodenBookshelfDiscountPercent(Config cfg, int regularBookshelves) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        if (regularBookshelves < c.minDiscountBookshelves()) {
             return 0;
         }
-        return Math.min(
-            MAX_WOODEN_DISCOUNT_PERCENT,
-            2 + (regularBookshelves - MIN_DISCOUNT_BOOKSHELVES) / 2
-        );
+        int clamped = Math.min(c.maxDiscountBookshelves(), regularBookshelves);
+        int span = Math.max(1, c.maxDiscountBookshelves() - c.minDiscountBookshelves());
+        double progress = (double) (clamped - c.minDiscountBookshelves()) / (double) span;
+        return Math.min(c.maxWoodenDiscountPercent(), Math.max(1, (int) Math.round(1.0 + Math.max(0, c.maxWoodenDiscountPercent() - 1) * progress)));
     }
 
-    /** Global Chiseled Bookshelf mastery discount across all stored Master Tomes (0%..13%). */
     public static int globalMasteryDiscountPercent(double totalMasteryUnits) {
-        if (totalMasteryUnits <= 0.0) return 0;
-        return Math.min(
-            MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT,
-            (int) Math.round(totalMasteryUnits * 1.5)
-        );
+        return globalMasteryDiscountPercent(activeServerConfig(), totalMasteryUnits);
     }
 
-    /** Table-wide baseline XP discount (0%..25%) before per-enchantment Master Tome specialization. */
-    public static int baseXpDiscountPercent(int regularBookshelves, double totalMasteryUnits) {
-        return Math.min(
-            MAX_BASE_DISCOUNT_PERCENT,
-            woodenBookshelfDiscountPercent(regularBookshelves) + globalMasteryDiscountPercent(totalMasteryUnits)
-        );
+    public static int globalMasteryDiscountPercent(Config cfg, double totalMasteryUnits) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        if (totalMasteryUnits <= 0.0) {
+            return 0;
+        }
+        return Math.min(c.maxGlobalMasteryDiscountPercent(), (int) Math.floor(totalMasteryUnits * c.globalMasteryMultiplier()));
     }
 
-    /** Per-enchantment relative-tier Master Tome bonus XP discount (0%..15%). */
     public static int specificEnchantmentDiscountBonus(int storedLevel, int maxLevel) {
+        return specificEnchantmentDiscountBonus(activeServerConfig(), storedLevel, maxLevel);
+    }
+
+    public static int specificEnchantmentDiscountBonus(Config cfg, int storedLevel, int maxLevel) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         double r = relativeMastery(storedLevel, maxLevel);
-        if (r <= 0.0) return 0;
+        if (r <= 0.0) {
+            return 0;
+        }
+        double weighted = c.specificEnchantExponent() == 1.0 ? r : Math.pow(r, c.specificEnchantExponent());
+        return Math.min(c.maxSpecificEnchantBonusPercent(), (int) Math.round(c.maxSpecificEnchantBonusPercent() * weighted));
+    }
+
+    public static int baseXpDiscountPercent(int regularBookshelves, double totalMasteryUnits) {
+        return baseXpDiscountPercent(activeServerConfig(), regularBookshelves, totalMasteryUnits);
+    }
+
+    public static int baseXpDiscountPercent(Config cfg, int regularBookshelves, double totalMasteryUnits) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         return Math.min(
-            MAX_SPECIFIC_MASTERY_DISCOUNT_PERCENT,
-            (int) Math.round(MAX_SPECIFIC_MASTERY_DISCOUNT_PERCENT * Math.pow(r, 1.5))
+            c.maxBaseXpDiscountPercent(),
+            woodenBookshelfDiscountPercent(c, regularBookshelves) + globalMasteryDiscountPercent(c, totalMasteryUnits)
         );
     }
 
-    /** Total XP discount (0%..40%) for a specific enchantment id. */
     public static int effectiveXpDiscountPercent(
         int regularBookshelves,
         double totalMasteryUnits,
-        int storedLevelForEnchant,
-        int maxLevelForEnchant
+        int specificStoredLevel,
+        int specificMaxLevel
     ) {
-        int total = woodenBookshelfDiscountPercent(regularBookshelves)
-            + globalMasteryDiscountPercent(totalMasteryUnits)
-            + specificEnchantmentDiscountBonus(storedLevelForEnchant, maxLevelForEnchant);
-        return Math.max(0, Math.min(MAX_TOTAL_XP_DISCOUNT_PERCENT, total));
+        return effectiveXpDiscountPercent(
+            activeServerConfig(),
+            regularBookshelves,
+            totalMasteryUnits,
+            specificStoredLevel,
+            specificMaxLevel
+        );
     }
 
-    /** Treasure Epiphany trigger probability incorporating W, global mastery, and item affinity mastery. */
-    public static double epiphanyProbability(
+    public static int effectiveXpDiscountPercent(
+        Config cfg,
         int regularBookshelves,
-        int minBookshelves,
-        double baseChance,
-        double perShelfChance,
-        double perMasterUnitChance,
-        double maxChance,
         double totalMasteryUnits,
-        double affinityMasteryUnits
+        int specificStoredLevel,
+        int specificMaxLevel
     ) {
-        if (regularBookshelves < minBookshelves) {
-            return 0.0;
-        }
-        double raw = baseChance
-            + Math.max(0, regularBookshelves - minBookshelves) * perShelfChance
-            + Math.max(0.0, totalMasteryUnits) * perMasterUnitChance
-            + Math.max(0.0, affinityMasteryUnits) * AFFINITY_CHANCE_PER_UNIT;
-        return Math.max(0.0, Math.min(maxChance, raw));
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        int base = baseXpDiscountPercent(c, regularBookshelves, totalMasteryUnits);
+        int specific = specificEnchantmentDiscountBonus(c, specificStoredLevel, specificMaxLevel);
+        return Math.min(c.maxTotalXpDiscountPercent(), base + specific);
     }
 
-    /** Combined resonance score used for simultaneous Epiphany slot cap and multi-tier rolls. */
     public static double epiphanyResonanceScore(
         int regularBookshelves,
         int minBookshelves,
         double totalMasteryUnits,
         double affinityMasteryUnits
     ) {
+        return epiphanyResonanceScore(activeServerConfig(), regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
+    }
+
+    public static double epiphanyResonanceScore(
+        Config cfg,
+        int regularBookshelves,
+        int minBookshelves,
+        double totalMasteryUnits,
+        double affinityMasteryUnits
+    ) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
         if (regularBookshelves < minBookshelves) {
             return 0.0;
         }
-        return Math.max(0, regularBookshelves - minBookshelves)
-            + Math.max(0.0, totalMasteryUnits) * GLOBAL_SLOT_WEIGHT
-            + Math.max(0.0, affinityMasteryUnits) * AFFINITY_SLOT_WEIGHT;
+        double shelfExcess = Math.max(0, regularBookshelves - minBookshelves) * c.epiphanyShelfScoreFactor();
+        return shelfExcess
+            + c.epiphanyGlobalMasteryScoreFactor() * Math.max(0.0, totalMasteryUnits)
+            + c.epiphanyAffinityMasteryScoreFactor() * Math.max(0.0, affinityMasteryUnits);
     }
 
-    /** Maximum simultaneous Treasure Epiphany options on a single item (1..maxSlotsCap). */
+    public static double epiphanyProbability(
+        int regularBookshelves,
+        int minBookshelves,
+        double baseChance,
+        double perShelfChance,
+        double perTomeChance,
+        double maxChance,
+        double totalMasteryUnits,
+        double affinityMasteryUnits
+    ) {
+        return epiphanyProbability(
+            activeServerConfig(),
+            regularBookshelves,
+            minBookshelves,
+            baseChance,
+            perShelfChance,
+            perTomeChance,
+            maxChance,
+            totalMasteryUnits,
+            affinityMasteryUnits
+        );
+    }
+
+    public static double epiphanyProbability(
+        Config cfg,
+        int regularBookshelves,
+        int minBookshelves,
+        double baseChance,
+        double perShelfChance,
+        double perTomeChance,
+        double maxChance,
+        double totalMasteryUnits,
+        double affinityMasteryUnits
+    ) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        if (regularBookshelves < minBookshelves) {
+            return 0.0;
+        }
+        double effectiveMastery = c.epiphanyProbabilityGlobalWeight() * Math.max(0.0, totalMasteryUnits)
+            + c.epiphanyProbabilityAffinityWeight() * Math.max(0.0, affinityMasteryUnits);
+        double raw = baseChance
+            + Math.max(0, regularBookshelves - minBookshelves) * perShelfChance
+            + effectiveMastery * perTomeChance;
+        return Math.max(0.0, Math.min(maxChance, raw));
+    }
+
     public static int epiphanyMaxSlots(
         int regularBookshelves,
         int minBookshelves,
         int maxSlotsCap,
-        int scorePerExtraSlot,
+        int scoreStepPerExtraSlot,
         double totalMasteryUnits,
         double affinityMasteryUnits
     ) {
-        if (regularBookshelves < minBookshelves) {
-            return 0;
-        }
-        double score = epiphanyResonanceScore(regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
-        return Math.min(Math.max(1, maxSlotsCap), 1 + (int) Math.floor(score / Math.max(1, scorePerExtraSlot)));
+        return epiphanyMaxSlots(
+            activeServerConfig(),
+            regularBookshelves,
+            minBookshelves,
+            maxSlotsCap,
+            scoreStepPerExtraSlot,
+            totalMasteryUnits,
+            affinityMasteryUnits
+        );
     }
 
-    /**
-     * Deterministically rolls the Epiphany tier in {@code [minTier, maxTier]} for multi-level
-     * Treasure enchantments (vanilla or modded), weighted upward by library & affinity mastery.
-     */
-    public static int rollEpiphanyTier(
-        long hashBits,
-        int minTier,
-        int maxTier,
-        double resonanceScore,
-        double ownRelativeMastery
+    public static int epiphanyMaxSlots(
+        Config cfg,
+        int regularBookshelves,
+        int minBookshelves,
+        int maxSlotsCap,
+        int scoreStepPerExtraSlot,
+        double totalMasteryUnits,
+        double affinityMasteryUnits
     ) {
-        int lo = Math.max(1, minTier);
-        int hi = Math.max(lo, maxTier);
-        if (lo >= hi) {
-            return hi;
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        if (regularBookshelves < minBookshelves) {
+            return 0.0 >= 0.0 && regularBookshelves < minBookshelves ? 0 : 0;
         }
-        double u = ((hashBits >>> 11) * (1.0 / (1L << 53)));
-        double upgradeBias = Math.min(0.85, 0.22 + (resonanceScore / 42.0) * 0.48 + ownRelativeMastery * 0.25);
-        int tier = lo;
-        while (tier < hi && u < upgradeBias) {
-            tier++;
-            u = u / Math.max(1e-6, upgradeBias);
-            upgradeBias *= 0.72;
+        double score = epiphanyResonanceScore(c, regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
+        int step = Math.max(1, scoreStepPerExtraSlot);
+        int unlocked = 1 + (int) Math.floor(score / (double) step);
+        return Math.max(1, Math.min(Math.max(1, maxSlotsCap), unlocked));
+    }
+
+    public static int rollEpiphanyTier(
+        long hashSeed,
+        int minTier,
+        int maxLevel,
+        double resonanceScore,
+        double ownStoredRelativeMastery
+    ) {
+        return rollEpiphanyTier(activeServerConfig(), hashSeed, minTier, maxLevel, resonanceScore, ownStoredRelativeMastery);
+    }
+
+    public static int rollEpiphanyTier(
+        Config cfg,
+        long hashSeed,
+        int minTier,
+        int maxLevel,
+        double resonanceScore,
+        double ownStoredRelativeMastery
+    ) {
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        int cappedMax = Math.max(1, maxLevel);
+        int tier = Math.max(1, Math.min(cappedMax, minTier));
+        if (tier >= cappedMax) {
+            return cappedMax;
         }
-        return Math.min(hi, tier);
+        long s = hashSeed;
+        while (tier < cappedMax) {
+            s = splitMix64(s + 0x9E3779B97F4A7C15L);
+            double u = (s >>> 11) * (1.0 / (1L << 53));
+            double p = (tier == 1)
+                ? Math.min(c.epiphanyTier2MaxProb(), (resonanceScore / c.epiphanyTier2ScoreDivisor()) + c.epiphanyTier2MasteryBonus() * ownStoredRelativeMastery)
+                : Math.min(c.epiphanyTierPlusMaxProb(), (resonanceScore / c.epiphanyTierPlusScoreDivisor()) + c.epiphanyTierPlusMasteryBonus() * ownStoredRelativeMastery);
+            if (u < p) {
+                tier++;
+            } else {
+                break;
+            }
+        }
+        return tier;
+    }
+
+    private static long splitMix64(long z) {
+        z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
+        z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
+        return z ^ (z >>> 31);
     }
 }

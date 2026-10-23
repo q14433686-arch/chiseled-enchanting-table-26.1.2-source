@@ -7,8 +7,9 @@
 **Current mod version:** `1.1.0` · **Minecraft:** `26.2` · **Fabric API:** `0.155.2+26.2` ·
 **Loader:** `0.19.3`. See `CURRENT_BASELINE.md` for the currently-shipping capability boundary,
 `CHANGELOG.md` for the 1.1.0 content and
-`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md` for the 2026-10-22 sync that brought the
-progression/economy/UI overhaul onto this line.
+`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md` for the 2026-10-22 and 2026-10-23 syncs that
+brought the progression/economy/UI overhaul and then the grimoire / cleanse / economy-hardening
+batch onto this line (both ship as `1.1.0`).
 
 ## How to build 1.1.0 from a fresh clone
 
@@ -37,12 +38,13 @@ Everything below compiles and packages, but none of it has been played on a real
 is the highest-value round because the 2026-10-22 sync changed balance-facing numbers *and* a lot of
 UI:
 
-1. **Two-track progression**: with `5 / 10 / 20` wooden bookshelves, confirm default-unlocked
-   enchantments stop at `ceil(maxLevel / 2)`; store Master Tomes in chiseled bookshelves and confirm
-   levels `1..k` appear 1:1. Confirm the graduation tiers are *not* reachable from wooden shelves
-   alone.
-2. **XP discounts**: `0–11` shelves ⇒ `0%`; `12` shelves ⇒ `2%`; `32` ⇒ `12%`; add master tomes and
-   confirm global (`13%`) + specialisation (`round(15 * r^1.5)`) never exceed `-40%`.
+1. **Three-track progression**: blank items must stop at `ceil(maxLevel / 2)` from wooden shelves
+   alone; an already-enchanted item or book must step up along the `0..38` curve
+   (`II(7) → III(16) → IV(27) → V(38)` for a 5-tier enchantment); store Master Tomes in chiseled
+   bookshelves and confirm blank levels `1..k` appear 1:1 (treasures included).
+2. **XP discounts**: `0–11` shelves ⇒ `0%`; `12` ⇒ `1%`; `38` ⇒ `15%`; add master tomes and confirm
+   the public total caps at `35%` and the per-enchantment bonus (`15%`) never pushes past `-40%`.
+   Every knob must come from `library_resonance.json` — edit it and `/reload` to prove it.
 3. **Dual-mode XP**: item transformations and Master-Tome inscribing (`storedMasterLevel >=
    option.level()`) must deduct only `1 / 2 / 3` levels (orb badge + `Lv.X`); base enchanting,
    combine/research upgrades and epiphanies must still use the full curve (flask badge + `-XL`).
@@ -64,6 +66,17 @@ UI:
 10. Confirm no unexpected crash from `chiseled-enchanting-table-port.mixins.json` with its 9 active
     mixins (the re-enabled `RemoveXpCostScaling` is the fresh one — it injects into
     `AnvilMenu#calculateIncreasedRepairCost`).
+11. **Arcane Grimoire**: both recipes unlock in the recipe book; the book sits in a chiseled
+    bookshelf; the top-right table button opens it without dropping either slot, `ESC`/back returns
+    to the still-open table, and `R`/`U` on a page item opens JEI/REI and returns to the grimoire
+    (`ReopenTablePayload`). All 8 chapters must render without clipped or overlapping text in all 11
+    locales.
+12. **Cleanse tab**: free full disenchant and step-down must refund essence XP and never cost
+    materials; a single-trait book wipe must return a plain `Book`; `Cleansing Grit` must strip
+    exactly one chosen trait; curse purging must remove only `#minecraft:curse` rows. Spot-check
+    that no refund/cost pair can be looped for net XP.
+13. **Live shelf sync**: with a menu open, place/break bookshelves and add/remove stored books — the
+    rows must refresh within about one second without reopening the table.
 
 ### B. Multi-slot cost panel (last big UI decoupling backlog item)
 
@@ -90,9 +103,10 @@ network protocol, client renderer, and a live-test pass. This is the largest rem
 
 Every data file under `src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/`
 must be documented in [`docs/EXTENDING.md`](docs/EXTENDING.md) and covered by a Tier-1 schema check
-in `scripts/compat_check.py`. As of the 2026-10-22 sync all seven (default_enchantments,
+in `scripts/compat_check.py`. As of the 2026-10-23 sync all ten (default_enchantments,
 enchantment_costs, item_transformations, loot_injections, bookshelf_book_pool, book_upgrades,
-treasure_epiphany) are covered — keep it that way when adding new data files.
+treasure_epiphany, library_resonance, shelf_gates, disenchanting) are covered — keep it that way
+when adding new data files.
 
 ## Validation required after any change
 

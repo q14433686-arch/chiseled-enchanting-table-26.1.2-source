@@ -1,10 +1,12 @@
-# Sync Report — `26.1.2` line → `26.2` line (2026-10-22)
+# Sync Report — `26.1.2` line → `26.2` line (2026-10-22, extended 2026-10-23)
 
 > **Scope:** port every feature, fix, data file, asset and doc change that landed on the sister
 > `chiseled-enchanting-table-26.1.2-source` branch between the shared `1.0.3` baseline (`09f854e`,
-> the 26.3-feature back-port) and its tip (`2f62762`, PR #9), onto **this** `26.2` branch.
+> the 26.3-feature back-port) and its tip (`2f62762`, PR #9), onto **this** `26.2` branch; then
+> repeat the exercise for everything that landed afterwards (`b78b244`, PR #13) — see §6.
 > **Released as `1.1.0`** on this line — a minor bump over the shared `1.0.3` baseline because the
-> sync adds content (two data-pack files, two items, four recipes, eight advancements) without
+> sync adds content (data-pack files, items, recipes and advancements; the 2026-10-23 second pass
+> in §6 adds more of each) without
 > changing the mod id, payload ids, data-pack paths or world saves; see `CHANGELOG.md`.
 > **Verdict:** the sync is feature-complete; the only remaining source delta between the lines is
 > the set of APIs that genuinely differ between Minecraft 26.1.2 and 26.2 (listed in §3), plus the
@@ -41,7 +43,7 @@ were taken verbatim (`git checkout <26.1.2 tip> -- <path>`, including the deleti
 
 | Area | What arrived |
 |---|---|
-| Progression | Two-track `7×5×7` library: wooden bookshelves (`+1` default level per 5 shelves up to `ceil(maxLevel/2)`), stored Master Tomes in chiseled bookshelves unlocking every level `1..k` 1:1, graduation tiers gated behind tomes |
+| Progression | Three-track `7×5×7` library (see §6 for the 2026-10-23 revision): wooden bookshelves unlocking blank inscriptions up to `ceil(maxLevel/2)`, step-ups on already-enchanted gear along `0..38` shelves, stored Master Tomes in chiseled bookshelves unlocking every level `1..k` 1:1 |
 | Economy | `mechanics/resonance/LibraryResonance` (relative mastery `r = level/maxLevel`, `w(r) = 0.45r + 0.55r²`, `>=12`-shelf discount floor, `-40%` cap), `XpCostConversion.XpRequirement` dual mode, yield-aware `base_count`/`max_level_count`/`level_exponent` curves in every cost table |
 | Treasure Epiphany | `data/.../treasure_epiphany.json` + menu/UI support: `>=32` wooden bookshelves, chance/cap scaling, persistent cryo-stasis freeze (`CUSTOM_DATA` + loot `copy_components`), manual reroll, `MM:SS` countdown |
 | Items & recipes | `arcane_catalyst`, `depleted_tome`, `blank_overwrite` cleanse loop, `recipe/crying_obsidian.json` (8×), `recipe/chiseled_enchanting_table_upgrade.json`, cheapened base recipe, trident transformation rebalance |
@@ -153,7 +155,7 @@ consistency run `39818720363`), so every surface that was flagged as uncertain c
 ## 4. Validation done in this round
 
 ```bash
-python3 scripts/ci_static_checks.py                 # PASS — 9 mixins, 98 lang keys x 11 locales, 36 md files
+python3 scripts/ci_static_checks.py                 # PASS — 9 mixins, 307 lang keys x 11 locales, 36 md files
 python3 scripts/compat_check.py                     # PASS — Tier 1 (now also validates book_upgrades.json
                                                     #        and treasure_epiphany.json; see §5)
 bash scripts/check_release_consistency.sh --strict  # PASS — 12 checks
@@ -193,3 +195,66 @@ When a change lands on one of them:
 3. keep the toolchain pins of the *target* branch;
 4. update `CHANGELOG.md` + `CURRENT_BASELINE.md` + the matching `SYNC_FROM_*_REPORT.md`, and run the
    three offline gates before pushing.
+
+---
+
+## 6. Second pass (2026-10-23) — `2f62762..b78b244`
+
+The sister line shipped one more merge (PR #13, `b78b244`) after the 2026-10-22 sync, and it is a
+substantial batch: the illustrated manual, the cleanse system and an economy hardening round. It was
+ported the same way — content first, 26.2 APIs second.
+
+### 6.1 Shape of the delta
+
+128 paths, split by how they were applied:
+
+| Bucket | Count | Handling |
+|---|---|---|
+| Added on 26.1.2 | 49 | taken verbatim (grimoire screens/assets, `DisenchantmentApplication`, `BookshelfProgression`, `ModBootstrapConfig`, `ArcaneGrimoireItem`, JSON configs, tags, recipes, advancements, JUnit suite) |
+| Deleted on 26.1.2 | 23 | deleted here as well (scratch `fix*.patch` / `fix_*.py`, `build-reports/compile-deps.log`) |
+| Modified, no local divergence | 43 | taken verbatim |
+| Modified, diverged locally | 13 | merged by hand / adapted (below) |
+
+### 6.2 26.2 adaptations
+
+* **`ChatFormatting` does not exist in 26.2.** Rewritten to `Style#withColor(0xAARRGGBB)` in the four
+  files that use colours, 84 references in total:
+  `gui/ChiseledEnchantingTableScreen` (74, including ternary style expressions such as
+  `met ? GREEN : RED`), `gui/grimoire/ArcaneGrimoireScreen` (5, new file),
+  `block/ChiseledEnchantingTableBlockEntity` (1) and `registry/BlockRegistry` (4).
+  The rewrite is mechanical (`GOLD` → `0xFFFFAA00`, …) and verified by `grep ChatFormatting src/`
+  returning nothing.
+* **JUnit 5**: `build.gradle` gained `testImplementation platform('org.junit:junit-bom:5.11.4')`,
+  `junit-jupiter` and `junit-platform-launcher` plus `test { useJUnitPlatform() }`, so `./gradlew
+  build` — and therefore the CI `build` job — now runs `EconomyAndConfigVerificationTest`. The test
+  deliberately uses only compiled data/DTO/mechanics classes and constructs
+  `RegistryFriendlyByteBuf(Unpooled.buffer(), null)`, so it needs no Fabric/Loom test bootstrap. The
+  26.2 Loom block (`toolchainPins`, `-Penable_jei`/`-Penable_rei`, the three mixin exclusions) is
+  untouched.
+* **`scripts/compat_check.py`**: three-way merge. This branch's 26.2 wording and its
+  `check_loot_tables_use_26_2_schema` / `check_advancements_use_26_2_schema` direction are kept; the
+  new Tier-1 validators `check_disenchanting_and_anti_arbitrage` and
+  `check_grimoire_recipes_sounds_and_textures` plus the `docs/WIKI.md` sync gate are added and
+  registered in `main()` (all nine checks run, `PASS` with the two "no MC jar" warnings).
+* **`docs/WIKI.md`**: the 26.1.2 version is a full gameplay-guide rewrite (formulas, three shelf
+  roles, every recipe, cleanse rituals, upstream comparison), so it was taken wholesale and only the
+  target line was adjusted (`Minecraft 26.2`, Fabric API `0.155.2+26.2`).
+* **Kept as this branch's own values**: `gradle.properties` (`mod_version=1.1.0`),
+  `.github/workflows/publish.yml` + `docs/ci/publish.yml` (`MINECRAFT_VERSION: 26.2`,
+  `VERSION: 1.1.0`) and `build-reports/compile-java.log` (written by CI).
+
+### 6.3 Versioning
+
+The version **stays `1.1.0`**: the first `1.1.0` was never published (the release is still in PR
+review), so the second batch is folded into the same release rather than bumped to `1.1.1`. The
+SemVer rule from §5 is unchanged — only *released* content forces a new number.
+
+### 6.4 Validation
+
+* `python3 scripts/ci_static_checks.py` → **PASS** (9 mixin refs, 307 lang keys × 11 locales,
+  code-to-lang coverage 297 refs, 36 markdown files).
+* `python3 scripts/compat_check.py` → **PASS** (2 warnings: no MC jar for Tier 2).
+* `bash scripts/check_release_consistency.sh --strict` → **12 passed, 0 warned, 0 failed**.
+* `bash docs/ci/install.sh --check` → the four workflow copies match.
+* Compilation, the JUnit suite and the jar are exercised by the GitHub Actions `compile-check` /
+  `build` workflows; the compile log is committed back as `build-reports/compile-java.log`.

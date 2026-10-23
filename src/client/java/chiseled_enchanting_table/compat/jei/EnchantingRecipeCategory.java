@@ -83,6 +83,7 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
         var font = Minecraft.getInstance().font;
         guiGraphics.text(font, "\u2192", ARROW_X, SLOT_Y + 4, 0xFF404040, false);
         var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig(),
             recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0
         );
         Identifier orb = chiseled_enchanting_table.gui.row.RowRenderSupport.orbSprite(xpReq.deductedLevels());
@@ -119,6 +120,7 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
         double mouseY
     ) {
         var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig(),
             recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0
         );
         tooltip.add(Component.translatable(

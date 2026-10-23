@@ -76,14 +76,19 @@ public class ReiTransformationCategory implements DisplayCategory<ReiTransformat
         widgets.add(slot(x + 108, y + 5, display.getOutputEntries().getFirst()).markOutput());
 
         var xpReq = display.xpRequirement();
-        widgets.add(Widgets.createLabel(
-                new Point(x + WIDTH / 2, y + 28),
-                Component.translatable(
+        Component xpLabel = xpReq.isRefund()
+            ? Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_refund")
+            : (xpReq.vanillaTierMode()
+                ? Component.translatable(
                     "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
                     xpReq.requiredLevel(),
                     xpReq.deductedLevels()
                 )
-            )
+                : Component.translatable(
+                    "jei.chiseled_enchanting_table.tooltip.xp_full",
+                    xpReq.deductedLevels()
+                ));
+        widgets.add(Widgets.createLabel(new Point(x + WIDTH / 2, y + 28), xpLabel)
             .tooltip(
                 Component.translatable(
                     display.serverCosts()

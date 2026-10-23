@@ -8,8 +8,8 @@
 The current release and the two previous ones are kept here. Historical pre-`1.0.2` porting rounds
 and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 
-> **26.2 branch (2026-07-19, synced 2026-10-21 and 2026-10-22):** This line targets **Minecraft
-> 26.2**. Toolchain uses Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Gradle `9.5.1`, Fabric
+> **26.2 branch (2026-07-19, synced 2026-10-21, 2026-10-22 and 2026-10-23):** This line targets
+> **Minecraft 26.2**. Toolchain uses Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Gradle `9.5.1`, Fabric
 > Loader `0.19.3`, and `mod_version` `1.1.0`. See
 > [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md) for the 26.2 port
 > details. On **2026-10-21** all feature additions and fixes from the `26.3` branch were synced back
@@ -18,8 +18,12 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > change-by-change mapping and the 26.2 adaptations (notably: `ChatFormatting` no longer exists in
 > 26.2, so every styled line uses `Style#withColor(ARGB)`) are recorded in
 > [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md).
+> On **2026-10-23** the second `26.1.2`-line batch (the illustrated grimoire manual, the dual-tab
+> disenchant/cleanse system, the economy anti-arbitrage hardening and the de-hardcoded data-pack
+> configuration) was synced in the same way — the version stays `1.1.0`, since `1.1.0` had not been
+> released from this branch yet and the addition is part of the same feature release.
 
-## [1.1.0] - 2026-10-22
+## [1.1.0] - 2026-10-23
 
 ### Added — full `26.1.2`-line progression, economy & UI overhaul
 
@@ -27,22 +31,31 @@ Ported from the sister `26.1.2` branch (see
 [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md)).
 Minecraft, Loom, Gradle, Fabric API and the viewer coordinates are unchanged: this is a feature
 release adapted to the 26.2 APIs, not a Minecraft port. `1.1.0` (minor) rather than `1.0.4`
-(patch) because it adds two data-pack files, two items, four recipes and eight advancements;
-the mod id, the seven data-pack paths and existing world saves are unchanged.
+(patch) because it adds content — the illustrated grimoire and cleansing-grit items, their
+recipes and advancements, three new data-pack configuration files
+(`library_resonance.json`, `shelf_gates.json`, `disenchanting.json`), three block/enchantment tags,
+a dual-tab cleanse UI and a compiled JUnit verification suite — while the mod id, the existing
+data-pack paths and existing world saves are unchanged. The second sync pass (2026-10-23) was
+folded into the same `1.1.0` instead of bumping again, because `1.1.0` had never been released.
 
 The `1.0.3` content below (JEI/REI, S2C cost sync, worldgen deadlock fix, 11 languages) is
 included as-is.
 
-- **Two-track library progression (`7×5×7`)**: wooden bookshelves raise default-unlocked
-  enchantments by `+1` per `5` shelves up to `ceil(maxLevel / 2)`; enchanted books stored in
-  chiseled bookshelves become permanent **Master Tomes** that unlock every level `1..k` 1:1, and the
-  graduation tiers are only reachable through them. Treasure enchantments are gated behind either a
-  stored tome or a Grand-Library epiphany.
-- **`LibraryResonance` — relative-mastery discounts**: XP discounts start at `12` wooden shelves
-  (`2%`) and rise smoothly to `12%` at `32`, global mastery adds up to `13%`, per-enchantment
-  specialisation adds `round(15 * r^1.5)` with `r = level / maxLevel`, capped at `-40%`. The
-  mastery weights are mod-agnostic (`Enchantment#getMaxLevel`, `#canEnchant`), so modded
-  enchantments work out of the box.
+- **Three-track library progression (`7×5×7`, `shelf_gates.json`)**: wooden bookshelves unlock
+  *blank* inscriptions up to `ceil(maxLevel / 2)` (`blank_max_tier_mode: "half_ceil"`) and step an
+  **already-enchanted** item or book from `L` to `MAX` along the `0..38` shelf curve
+  (`round(38 · ((L-1)/(M-1))^1.25)`, `gamma = 1.25`), while enchanted books stored in chiseled
+  bookshelves become permanent **Master Tomes** that unlock every level `1..k` 1:1 and are the only
+  route to blank graduation above `ceil(maxLevel / 2)`. Treasure enchantments are gated behind
+  either a stored tome or a Grand-Library epiphany.
+- **`LibraryResonance` — relative-mastery discounts (`library_resonance.json`)**: the wooden-shelf
+  discount starts at `12` shelves (`1%`) and rises linearly to `15%` at `38`; chiseled mastery adds
+  `sum(r(e)^1.25)` scaled up to `-20%`, so the public discount caps at `-35%`
+  (`max_base_xp_discount_percent`), per-enchantment specialisation adds up to a further `15%`, and
+  the total is capped at `-40%`. Every knob is data-driven (three nested config objects plus the
+  epiphany-affinity weights) and synced to clients in `EnchantCostTablePayload`. The mastery weights
+  are mod-agnostic (`Enchantment#getMaxLevel`, `#canEnchant`), so modded enchantments work out of
+  the box.
 - **Dual-mode XP formula (`XpCostConversion.XpRequirement`)**: item transformations and
   Master-Tome inscribing (when `storedMasterLevel >= option.level()`) use vanilla's enchanting-table
   thresholds (`Lv.1..30`) but deduct only `1 / 2 / 3` levels — batch mass production. Base
@@ -90,16 +103,78 @@ included as-is.
 - **Advancements**: 18 in total (8 new: `transmute_item`, `enchanted_golden_apple`,
   `arcane_catalyst`, `library_resonance`, `grand_library`, `freeze_epiphany`, `inscribe_epiphany`,
   `multi_epiphany`), all localized; `root` additionally keys on the upgrade recipe.
-- **26.2 adaptations** (details in the sync report): `ChatFormatting` was removed from all three
-  files that used it and replaced with `Style#withColor(0xAARRGGBB)`; the 26.2 structure-processor
-  API, `markPosForPostProcessing`, the plural loot schema, `recipe_id` criteria, the two-argument
-  `LivingEntity#drop` and the pinned 26.2 viewer coordinates are all kept.
+- **26.2 adaptations** (details in the sync report): `ChatFormatting` no longer exists in 26.2, so
+  every styled line in the GUI files that use colours (`ChiseledEnchantingTableScreen`,
+  `ArcaneGrimoireScreen`, `ChiseledEnchantingTableBlockEntity`, `BlockRegistry`) now uses
+  `Style#withColor(0xAARRGGBB)`; the 26.2 structure-processor API, `markPosForPostProcessing`, the
+  plural loot schema, `recipe_id` criteria, the two-argument `LivingEntity#drop` and the pinned 26.2
+  viewer coordinates are all kept.
 - **Repo hygiene**: removed leftover scratch files (`Dummy.*`, `RawOutput.log`, `adapted_handler.java`,
   `adapt_handler.py`, `append.py`, stale `fix*.patch`/`fix_*.py`, `*.orig`, `*.rej`, a committed
   `.class`), the retired duplicate mixin configs, and `block/FloatingBook.java`.
 - **Data-pack tooling**: `scripts/compat_check.py` gained Tier-1 validators for
   `book_upgrades.json` and `treasure_epiphany.json` plus a shared cost-option schema check, and both
   files joined the Tier-2 referenced-id sweep.
+
+### Added — second `26.1.2`-line sync (2026-10-23): illustrated grimoire, dual-tab cleansing & economy hardening
+
+- **Illustrated in-game manual (`纂刻秘典` / `chiseled_enchanting_table:arcane_grimoire`)**:
+  two shapeless recipes (`writable_book + chiseled_bookshelf`, `depleted_tome + ink_sac`), unlocked in
+  the vanilla recipe book, storable inside chiseled bookshelves (`#minecraft:bookshelf_books`) and
+  openable from the top-right button of the table screen as a non-destructive modal overlay (both
+  container slots survive, live shelf sync stays active, and a server-validated `ReopenTablePayload`
+  restores the table after a JEI/REI screen round-trip). Eight chapters rendered on a double-page
+  vellum spread with breadcrumb/bookmark/pagination chrome, full keyboard and mouse navigation,
+  hardware scissor clipping, a single-pass line-wrapping engine (`0.72f–0.80f` body scales) and live
+  diagrams that read the shipped JSON recipes, `SyncedEnchantmentCosts` and
+  `TransformationQueryIndex`. `GrimoireViewerBridge` keeps JEI/REI lookups (`R`/`U`/`A`, left/right
+  click) optional and type-safe. Audio uses vanilla `BOOK_PAGE_TURN` / `BOOK_PUT` /
+  `UI_BUTTON_CLICK` only — no custom `.ogg` assets.
+- **Dual-tab UI: `Inscribe · Upgrade` vs `Cleanse · Refine`**: stone folder tabs swap the right-hand
+  console to a dedicated Cleanse Altar panel with a live trait summary, refund preview and a
+  one-click **Disenchant All** button.
+- **Free disenchanting with anti-arbitrage refunds (`disenchanting.json`)**: `DISENCHANT_ALL` and
+  `DOWNGRADE_ENCHANTMENT` (`L_cur -> L_target`) cost no materials and no XP; they refund essence XP
+  computed from the relative tier `r = L / maxLevel` (any modded `maxLevel = 1..255`), the log-clamped
+  `Enchantment#anvilCost()` and `#minecraft:treasure`, using the telescoping potentials
+  `V(L_cur) - V(L_target)` that are proven strictly cheaper than a Master-Tome re-enchant even at
+  `-40%` resonance. Wiping a single-trait enchanted book returns a plain `Book`.
+- **New item `Cleansing Grit` (`退魔砂`) and targeted stripping**: `4×` shapeless from
+  `Flint + Nether Quartz + Glow Ink Sac + Bone Meal`; `STRIP_SINGLE_ENCHANTMENT` removes one unwanted
+  trait and keeps the rest. Every ritual keeps a pure-vanilla alternative and also accepts
+  `arcane_catalyst`.
+- **Curse purging (`PURGE_CURSE`)**: a full disenchant leaves `#minecraft:curse` traits intact, so
+  Cleanse rows can purge them for `2× Cleansing Grit + 1× Ghast Tear`, `1× arcane_catalyst` or
+  `2× Ghast Tear + 1× Golden Apple` plus `12` ritual XP levels (resonance-discounted).
+- **Incremental upgrade discounting (`L_cur -> L_new`)**: upgrading an item or book that already
+  carries the enchantment now deducts the materials already invested
+  (`max(1, Cost(L_new) - Cost(L_cur))`), applies the `-20%` Master-Tome guidance bonus (`-10%` with
+  `12+` wooden bookshelves), caps book `+1` upgrades so shelf guidance is never more expensive than
+  Research Upgrade, and drops the duplicate/downward rows from the Inscribe tab.
+- **Economy hardening — no infinite XP loops**: raised the incremental Master-Tome step to
+  `max(minStepThreshold, scaledRaw)`, added `XpCostConversion#forFullArcaneEnchantOrUpgrade` so
+  non-tome step-ups never cost less than the matching disenchant refund, and replaced the
+  `max(clamped, …)` refund maths with the inductive potential table
+  `DisenchantmentApplication#buildPotentialTable` plus a startup/reload guard
+  (`verifyRuntimeConservation`) that proves exact telescoping additivity for every
+  `maxLevel = 1..255`.
+- **Live shelf state sync (`Collision 04`)**: a server-authoritative `LiveShelfStatePayload` rescans
+  every `20` ticks and before every ritual, so an open menu reacts within one second to placed or
+  broken bookshelves and to stored or removed books.
+- **De-hardcoding for modpacks (`HC-01` .. `HC-10`)**: `#chiseled_enchanting_table:regular_bookshelves`,
+  `#chiseled_enchanting_table:epiphany_exclusive`, the three new JSON config files, `ModBootstrapConfig`
+  (`config/chiseled_enchanting_table.json`, e.g. `enchanted_book_max_stack_size`),
+  `min_player_level` on transformations, `OptionType#token()` wire decoupling, `#tag` selectors in
+  costs/transformations/default enchantments and correct `DEPLETED_TOME` display in
+  `TransformationQueryIndex`.
+- **Verification**: a compiled JUnit 5 suite (`src/test/java/.../EconomyAndConfigVerificationTest`,
+  `~391,680` conservation checks over the real `DisenchantmentApplication` /
+  `XpCostConversion` code paths, JUnit wired through `build.gradle`) plus two new Tier-1
+  `scripts/compat_check.py` validators (`check_disenchanting_and_anti_arbitrage`,
+  `check_grimoire_recipes_sounds_and_textures`) and a wiki-sync gate.
+- **Localization & docs**: 11 locales extended in full parity (`307` keys), `docs/WIKI.md` rewritten
+  as a gameplay guide (formulas, the three shelf roles, every recipe, the cleanse rituals, the
+  upstream comparison table).
 
 ## [1.0.3] - 2026-10-21
 

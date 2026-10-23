@@ -93,11 +93,8 @@ sourceSets {
             if (!reiEnabled) {
                 exclude 'chiseled_enchanting_table/compat/rei/**'
             }
-            // P3 first establishes a client compile slice. Full UI/renderer migration is still parked.
-            //exclude 'chiseled_enchanting_table/gui/**'
-            // P7: renderer restored for floating book smoke path.
-            // exclude 'chiseled_enchanting_table/render/**'
-            //exclude 'chiseled_enchanting_table/utils/**'
+            // All 26.1.2 client screens (ChiseledEnchantingTableScreen, ArcaneGrimoireScreen,
+            // row renderers), custom draw helpers, and block-entity book renderer compile cleanly.
         }
     }
 }
@@ -126,6 +123,16 @@ dependencies {
         compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}", toolchainPins)
         compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}", toolchainPins)
     }
+
+    // The 1.1.0 economy tests (EconomyAndConfigVerificationTest) run on the plain JUnit platform:
+    // they touch the compiled data/DTO/mechanics classes only, so no Loom test bootstrap is needed.
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 processResources {

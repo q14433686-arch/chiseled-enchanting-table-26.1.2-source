@@ -26,14 +26,18 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 ## What 1.1.0 ships on this line
 
 `1.1.0` is the same feature set as the sister `26.1.2` and `26.3` branches, adapted to this
-Minecraft line. On this `26.2` branch it combines two syncs:
+Minecraft line. On this `26.2` branch it combines three passes:
 
 1. the `26.3` back-port that landed on 2026-10-21 — worldgen bookshelf deadlock fix
    ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)),
    server-authoritative enchantment costs, optional JEI + REI integration, 11 languages, CI triad;
-2. the `26.1.2`-line progression/economy/UI overhaul that landed on 2026-10-22 — two-track library
+2. the `26.1.2`-line progression/economy/UI overhaul that landed on 2026-10-22 — three-track library
    progression, Library Resonance, the dual-mode XP formula, yield-aware material curves, Treasure
-   Epiphany, the Depleted Tome loop, item transformations in both viewers, and the painted UI.
+   Epiphany, the Depleted Tome loop, item transformations in both viewers, and the painted UI;
+3. the second `26.1.2`-line batch that landed on 2026-10-23 — the illustrated **Arcane Grimoire**
+   manual, the dual-tab **Cleanse** system (free disenchant / downgrade / single-trait strip / curse
+   purge, with `Cleansing Grit`), incremental upgrade discounting, and the anti-arbitrage economy
+   hardening that is now proven by a compiled JUnit suite.
 
 What was taken, what was adapted and what was deliberately left out is recorded in
 [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md)
@@ -47,19 +51,34 @@ Highlights:
   Bookshelf + 3 Crying Obsidian`, upgrade a vanilla Enchanting Table (`1 Enchanting Table + 1
   Chiseled Bookshelf + 4 Amethyst Shard + 3 Crying Obsidian`), or craft `8× Crying Obsidian` from
   `8× Obsidian + 1× Ghast Tear`.
-* **Two-track library progression & dual-mode XP formula** (full tables in [`docs/WIKI.md`](docs/WIKI.md)):
-  * **Wooden Bookshelves** inside the `7×5×7` volume raise standard enchantments up to
-    `ceil(maxLevel / 2)`, start granting XP discounts at `12+` shelves, and at **`32+` shelves**
-    unlock **Treasure Epiphany** (countdown, persistent cryo-stasis freeze, manual reroll).
+* **Three-track library progression & dual-mode XP formula** (full tables in [`docs/WIKI.md`](docs/WIKI.md)):
+  * **Wooden Bookshelves** (`#chiseled_enchanting_table:regular_bookshelves`, configurable `7×5×7`
+    scan) unlock blank inscriptions up to `ceil(maxLevel / 2)`, step already-enchanted gear/books up
+    to `MAX` along the `0..38` shelf curve (`gamma = 1.25`: `I(0) → II(7) → III(16) → IV(27) →
+    V(38)`), start granting XP discounts at `12+` shelves (up to `-15%` at `38`), and at **`32+`
+    shelves** unlock **Treasure Epiphany** (countdown, persistent cryo-stasis freeze, manual reroll).
   * **Chiseled Bookshelves** turn stored enchanted books into permanent **Master Tomes**, unlocking
-    levels `1..k` directly, adding global & per-enchantment XP discounts (up to `-40%`), and
-    switching Master-Tome inscribing into **vanilla mass-production mode** (`1–3` levels deducted)
-    while item transformations, base enchanting, upgrades and epiphanies keep the full XP curve.
+    levels `1..k` directly on blank items (treasures included), adding global & per-enchantment XP
+    discounts (up to `-40%`, data-driven through `library_resonance.json`), and switching
+    Master-Tome inscribing into **vanilla mass-production mode** (`1–3` levels deducted) while item
+    transformations, base enchanting, upgrades and epiphanies keep the full XP curve.
   * **Yield-aware material curves** (`Lapis Lazuli > Emerald >> Amethyst Shard`) that adapt to any
     modded `maxLevel` through `base_count` / `max_level_count` / `level_exponent`.
+  * **Live shelf sync**: a server-authoritative rescan every second and before every ritual, so an
+    open menu reacts immediately to placed/broken shelves and stored/removed books.
+* **Illustrated in-game manual (`纂刻秘典` / `arcane_grimoire`)**: craft it from
+  `Book and Quill + Chiseled Bookshelf` or `Depleted Tome + Ink Sac`, store it on a shelf, or open it
+  from the button above the table UI. Eight chapters of live, data-driven diagrams with JEI/REI
+  lookup from every item slot; vanilla book/UI sounds only.
+* **Dual-tab cleanse system (`清练`)**: `Inscribe · Upgrade` and `Cleanse · Refine` tabs. Full
+  disenchants and level step-downs are free and *refund* essence XP (telescoping potentials, proven
+  never to beat a Master-Tome re-enchant), `Cleansing Grit` strips a single unwanted trait, and curse
+  purging removes `#minecraft:curse` entries. Every ritual keeps a pure-vanilla alternative
+  (`disenchanting.json`).
 * **Bidirectional JEI & REI support**: full recipe/usage lookup for both **Chiseled Enchanting**
-  and **Item Transformations** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo
-  Shard`, `Bottle o' Enchanting`, `Blank Overwrite`).
+  and **Transmutation & Cleansing** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo
+  Shard`, `Bottle o' Enchanting`, `Blank Overwrite`, `Cleansing Grit`, cleanse and curse-purge
+  rituals).
 
 ## Installation
 
@@ -83,7 +102,7 @@ Neither viewer is required, bundled, or a runtime dependency — the mod ships o
 for each and only loads it when the viewer is installed. Both are compile-only and can be switched
 off (`-Penable_jei=false` / `-Penable_rei=false`, or the same keys in `gradle.properties`), which is
 what CI's `no-viewers` job verifies on every push. With either viewer installed you get two
-categories — **Chiseled Enchanting** and **Chiseled Item Transformation** — that answer both
+categories — **Chiseled Enchanting** and **Transmutation & Cleansing** — that answer both
 directions of each mechanic: focus an enchanted book to see every item it can enchant, focus an item
 to see every book that works on it (and the same for transformations), with XP tier, material
 costs, secondary materials and conflicts on the row. Costs shown there are the ones *your server*
