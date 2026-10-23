@@ -1075,7 +1075,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 );
             default -> {
                 int curseXp = SyncedEnchantmentCosts.find(
-                    chiseled_enchanting_table.utils.OptionType.PURGE_CURSE,
+                    chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.PURGE_CURSE,
                     net.minecraft.resources.Identifier.withDefaultNamespace("binding_curse"),
                     1
                 ).map(SyncedEnchantmentCosts.Cost::xpLevelCost)
