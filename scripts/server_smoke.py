@@ -45,7 +45,9 @@ fixture_functions.mkdir()
     'data merge block 0 65 0 {color:1122867,CustomName:"Audit Table",epiphanySeed:123456,pendingFreezeTicks:1200L,frozenCycleIndex:17}\n'
     'loot spawn 0 67 0 mine 0 65 0\n'
     'schedule function cet_audit_smoke:inspect 10t\n')
-(fixture_functions / 'inspect.mcfunction').write_text('data get entity @e[type=minecraft:item,limit=1]\n')
+# Scheduled functions suppress command feedback. Use /say as a tick barrier, then let the
+# console issue /data get so the inspected NBT is actually logged.
+(fixture_functions / 'inspect.mcfunction').write_text('say CET_AUDIT_INSPECT_READY\n')
 log_path = ROOT / 'build-reports/server-smoke.log'
 log_path.parent.mkdir(exist_ok=True)
 process = subprocess.Popen(['./gradlew', 'runServer', '--args=nogui', '--console=plain', '--no-daemon'],
@@ -92,6 +94,9 @@ try:
                 # Forceload and entity admission are asynchronous. Inspect on later GAME ticks,
                 # not immediately after addFreshEntity (which can legitimately be invisible to @e).
                 process.stdin.write('forceload add 0 0\nschedule function cet_audit_smoke:spawn_table 20t\n')
+                process.stdin.flush()
+            elif reloaded and 'CET_AUDIT_INSPECT_READY' in line:
+                process.stdin.write('data get entity @e[type=minecraft:item,limit=1]\n')
                 process.stdin.flush()
             elif reloaded and all(token in line for token in (
                 'Audit Table', '"minecraft:dyed_color": 1122867', 'pendingFreezeTicks: 1200L',
