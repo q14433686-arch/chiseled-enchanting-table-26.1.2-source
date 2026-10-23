@@ -124,8 +124,6 @@ public class ArcaneGrimoireScreen extends Screen {
     }
 
     public void initOverlay(Minecraft mc, int width, int height) {
-        this.minecraft = mc;
-        this.font = mc.font;
         this.width = width;
         this.height = height;
         this.init();
