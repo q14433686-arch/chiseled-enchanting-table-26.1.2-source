@@ -1302,6 +1302,52 @@ class EconomyAndConfigVerificationTest {
                 "Missing advancement file: " + adv
             );
         }
+
+        // 8. Multi-page Grimoire chapters & new visual diagram coverage across all 11 locales.
+        String grimoireScreenSrc = Files.readString(
+            Path.of("src/client/java/chiseled_enchanting_table/gui/grimoire/ArcaneGrimoireScreen.java")
+        );
+        String grimoireDiagSrc = Files.readString(
+            Path.of("src/client/java/chiseled_enchanting_table/gui/grimoire/GrimoireDiagramRenderer.java")
+        );
+        for (String specEntry : List.of(
+            "new SpreadSpec(2, 1, 2)",
+            "new SpreadSpec(2, 2, 2)",
+            "new SpreadSpec(3, 1, 2)",
+            "new SpreadSpec(3, 2, 2)",
+            "new SpreadSpec(4, 1, 2)",
+            "new SpreadSpec(4, 2, 2)",
+            "new SpreadSpec(5, 1, 2)",
+            "new SpreadSpec(5, 2, 2)"
+        )) {
+            assertTrue(grimoireScreenSrc.contains(specEntry), "Missing multi-page SpreadSpec: " + specEntry);
+        }
+        for (String diagFn : List.of(
+            "renderChapter2Persistence",
+            "renderChapter3Ritual",
+            "renderChapter4ThresholdGuide",
+            "renderChapter5InfinityAndRegen"
+        )) {
+            assertTrue(grimoireScreenSrc.contains(diagFn) && grimoireDiagSrc.contains(diagFn), "Unwired Grimoire diagram: " + diagFn);
+        }
+
+        try (var langStream = Files.list(Path.of("src/client/resources/assets/chiseled_enchanting_table/lang"))) {
+            for (Path lp : langStream.filter(p -> p.toString().endsWith(".json")).toList()) {
+                JsonObject map = JsonParser.parseString(Files.readString(lp)).getAsJsonObject();
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.lead").getAsString(), 32, 10).contains("%s")
+                );
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step").getAsString(), 40, 18).contains("%s")
+                );
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch5p2.lead").getAsString(), 38, "10", 42, "3").contains("%s")
+                );
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
+                );
+            }
+        }
     }
 
     private static int countSubstring(String haystack, String needle) {
