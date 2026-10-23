@@ -5,6 +5,7 @@ import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
 import chiseled_enchanting_table.gui.grimoire.ArcaneGrimoireScreen;
 import chiseled_enchanting_table.gui.grimoire.GrimoireSoundHelper;
+import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge.HoveredSlot;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
@@ -135,6 +136,35 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         int x0 = this.leftPos + GRIMOIRE_BTN_X;
         int y0 = this.topPos + GRIMOIRE_BTN_Y_OFFSET;
         return mouseX >= x0 && mouseX < x0 + GRIMOIRE_BTN_SIZE && mouseY >= y0 && mouseY < y0 + GRIMOIRE_BTN_SIZE;
+    }
+
+    public List<net.minecraft.client.renderer.Rect2i> extraViewerExclusionAreas() {
+        return List.of(
+            new net.minecraft.client.renderer.Rect2i(
+                this.leftPos + TAB_INSCRIBE_X,
+                this.topPos + TAB_Y_OFFSET,
+                (TAB_CLEANSE_X + TAB_W) - TAB_INSCRIBE_X,
+                TAB_H
+            ),
+            new net.minecraft.client.renderer.Rect2i(
+                this.leftPos + GRIMOIRE_BTN_X,
+                this.topPos + GRIMOIRE_BTN_Y_OFFSET,
+                GRIMOIRE_BTN_SIZE,
+                GRIMOIRE_BTN_SIZE
+            )
+        );
+    }
+
+    @org.jetbrains.annotations.Nullable
+    public HoveredSlot hoveredCostIngredient(double mouseX, double mouseY) {
+        if (this.scrollContainer == null) return null;
+        ItemStack stack = this.scrollContainer.hoveredCostItem(mouseX, mouseY);
+        if (stack == null || stack.isEmpty()) return null;
+        return new HoveredSlot(
+            stack,
+            new net.minecraft.client.renderer.Rect2i((int) mouseX - 6, (int) mouseY - 6, 12, 12),
+            false
+        );
     }
 
     private boolean isOverEnchantList(double mouseX, double mouseY) {

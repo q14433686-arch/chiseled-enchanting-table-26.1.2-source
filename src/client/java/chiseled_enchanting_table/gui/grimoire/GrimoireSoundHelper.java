@@ -1,58 +1,56 @@
 package chiseled_enchanting_table.gui.grimoire;
 
-import chiseled_enchanting_table.registry.SoundRegistry;
 import java.util.concurrent.ThreadLocalRandom;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 
 /**
- * Tactile UI foley helper for {@link ArcaneGrimoireScreen}.
- * Uses dedicated Vorbis sound assets registered in {@link SoundRegistry} with subtle random pitch
- * variation so consecutive interactions feel natural rather than mechanical.
+ * Native vanilla book &amp; UI audio helper for {@link ArcaneGrimoireScreen}, using built-in
+ * Minecraft {@link SoundEvents#BOOK_PAGE_TURN}, {@link SoundEvents#BOOK_PUT}, and
+ * {@link SoundEvents#UI_BUTTON_CLICK} sounds with subtle natural pitch variation.
  */
 @Environment(EnvType.CLIENT)
 public final class GrimoireSoundHelper {
-    private GrimoireSoundHelper() {}
 
-    private static float jitter(float min, float max) {
-        return min + ThreadLocalRandom.current().nextFloat() * (max - min);
-    }
+    private GrimoireSoundHelper() {}
 
     public static void playOpen() {
         Minecraft.getInstance().getSoundManager().play(
-            SimpleSoundInstance.forUI(SoundRegistry.GRIMOIRE_OPEN, jitter(0.98f, 1.03f), 0.90f)
+            SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 0.94F, 1.0F)
         );
     }
 
     public static void playClose() {
         Minecraft.getInstance().getSoundManager().play(
-            SimpleSoundInstance.forUI(SoundRegistry.GRIMOIRE_CLOSE, jitter(0.97f, 1.02f), 0.85f)
+            SimpleSoundInstance.forUI(SoundEvents.BOOK_PUT, 0.96F, 0.85F)
         );
     }
 
     public static void playPageTurn() {
+        float pitch = 0.94F + ThreadLocalRandom.current().nextFloat() * 0.14F;
         Minecraft.getInstance().getSoundManager().play(
-            SimpleSoundInstance.forUI(SoundRegistry.GRIMOIRE_PAGE_TURN, jitter(0.95f, 1.06f), 0.88f)
+            SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, pitch, 1.0F)
         );
     }
 
     public static void playChapterSelect() {
         Minecraft.getInstance().getSoundManager().play(
-            SimpleSoundInstance.forUI(SoundRegistry.GRIMOIRE_CHAPTER_SELECT, jitter(0.98f, 1.03f), 0.86f)
+            SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.08F, 1.0F)
         );
     }
 
     public static void playHome() {
         Minecraft.getInstance().getSoundManager().play(
-            SimpleSoundInstance.forUI(SoundRegistry.GRIMOIRE_HOME, jitter(0.99f, 1.02f), 0.86f)
+            SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 0.88F, 1.0F)
         );
     }
 
     public static void playTabSwitch() {
         Minecraft.getInstance().getSoundManager().play(
-            SimpleSoundInstance.forUI(SoundRegistry.GRIMOIRE_TAB_SWITCH, jitter(0.96f, 1.05f), 0.78f)
+            SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.12F)
         );
     }
 }

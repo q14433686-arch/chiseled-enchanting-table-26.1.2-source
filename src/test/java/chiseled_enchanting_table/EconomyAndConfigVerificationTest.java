@@ -298,4 +298,56 @@ class EconomyAndConfigVerificationTest {
         JsonObject bookshelfTag = readClasspathJson("data/minecraft/tags/item/bookshelf_books.json");
         assertEquals(false, bookshelfTag.get("replace").getAsBoolean(), "bookshelf_books.json must not replace vanilla entries");
     }
+
+    @Test
+    void everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() throws Exception {
+        java.nio.file.Path repoRoot = java.nio.file.Paths.get("").toAbsolutePath();
+        java.nio.file.Path langDir = repoRoot.resolve("src/client/resources/assets/chiseled_enchanting_table/lang");
+        var dynPattern = java.util.regex.Pattern.compile(
+            "\"(gui\\.chiseled_enchanting_table\\.[A-Za-z0-9_.]+)\"\\s*\\+\\s*[A-Za-z0-9_.()]+\\s*\\+\\s*\"(\\.[A-Za-z0-9_.]+)\""
+        );
+        var litPattern = java.util.regex.Pattern.compile(
+            "\"([a-z0-9_]+\\.chiseled_enchanting_table(?:\\.[A-Za-z0-9_]+)+)\""
+        );
+        Set<String> referencedKeys = new HashSet<>();
+        try (var walk = java.nio.file.Files.walk(repoRoot.resolve("src"))) {
+            for (var p : walk.toList()) {
+                String posix = p.toString().replace('\\', '/');
+                if (!java.nio.file.Files.isRegularFile(p) || posix.contains("/lang/")) continue;
+                if (!posix.endsWith(".java") && !posix.endsWith(".json")) continue;
+                String txt = java.nio.file.Files.readString(p, StandardCharsets.UTF_8);
+                var dm = dynPattern.matcher(txt);
+                while (dm.find()) {
+                    for (int ch = 1; ch <= 8; ch++) {
+                        referencedKeys.add(dm.group(1) + ch + dm.group(2));
+                    }
+                }
+                var lm = litPattern.matcher(txt);
+                while (lm.find()) {
+                    String k = lm.group(1);
+                    if (!k.endsWith(".ch")) referencedKeys.add(k);
+                }
+            }
+        }
+        assertTrue(referencedKeys.size() >= 295, "Expected >=295 referenced mod keys, got " + referencedKeys.size());
+
+        List<java.nio.file.Path> langFiles;
+        try (var s = java.nio.file.Files.list(langDir)) {
+            langFiles = s.filter(p -> p.toString().endsWith(".json")).sorted().toList();
+        }
+        assertEquals(11, langFiles.size(), "Expected all 11 locale files under lang/");
+        for (var lf : langFiles) {
+            JsonObject map = JsonParser.parseString(
+                java.nio.file.Files.readString(lf, StandardCharsets.UTF_8)
+            ).getAsJsonObject();
+            for (String key : referencedKeys) {
+                assertTrue(
+                    map.has(key),
+                    lf.getFileName() + " is missing referenced translation key: " + key
+                );
+                String val = map.get(key).getAsString();
+                assertTrue(!val.isBlank() && !val.equals(key), lf.getFileName() + " has raw/empty value for " + key);
+            }
+        }
+    }
 }

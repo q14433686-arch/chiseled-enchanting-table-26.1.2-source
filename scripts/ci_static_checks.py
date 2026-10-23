@@ -226,6 +226,41 @@ def check_lang_parity() -> None:
 
     note(f"lang parity ok ({len(reference_keys)} keys across en_us + {len(others)} language(s))")
 
+    # Also enforce 100% code/data -> lang key coverage across every .java and .json file under src/
+    referenced_keys: set[str] = set()
+    dyn_re = re.compile(
+        r'"(gui\.chiseled_enchanting_table\.[A-Za-z0-9_.]+)"\s*\+\s*[A-Za-z0-9_.()]+\s*\+\s*"(\.[A-Za-z0-9_.]+)"'
+    )
+    lit_re = re.compile(r'"([a-z0-9_]+\.chiseled_enchanting_table(?:\.[A-Za-z0-9_]+)+)"')
+    for root, _, files in os.walk(os.path.join(REPO, "src")):
+        if os.sep + "lang" in root:
+            continue
+        for fname in files:
+            if not fname.endswith((".java", ".json")):
+                continue
+            fpath = os.path.join(root, fname)
+            try:
+                src_text = open(fpath, encoding="utf-8").read()
+            except OSError:
+                continue
+            for m in dyn_re.finditer(src_text):
+                for ch in range(1, 9):
+                    referenced_keys.add(f"{m.group(1)}{ch}{m.group(2)}")
+            for m in lit_re.finditer(src_text):
+                k = m.group(1)
+                if not k.endswith(".ch"):
+                    referenced_keys.add(k)
+
+    missing_from_lang = sorted(referenced_keys - reference_keys)
+    for key in missing_from_lang:
+        fail(f"code/data references translation key '{key}' which is MISSING from lang/*.json!")
+    for lname in ["en_us.json"] + others:
+        lmap = read_json(os.path.join(LANG_DIR, lname))
+        for key, val in lmap.items():
+            if isinstance(val, str) and (val.strip() == key or "gui.chiseled_enchanting_table." in val):
+                fail(f"{lname}: key '{key}' contains raw untranslated key text '{val}'")
+    note(f"code-to-lang coverage ok ({len(referenced_keys)} referenced keys verified in all {1 + len(others)} locales)")
+
 
 # --------------------------------------------------------------------------- #
 # Tier D (warn-only)

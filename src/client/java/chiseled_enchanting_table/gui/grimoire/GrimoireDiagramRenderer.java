@@ -4,6 +4,7 @@ import static chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout.*;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge.HoveredSlot;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.registry.BlockRegistry;
@@ -13,6 +14,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -21,11 +23,7 @@ import net.minecraft.world.item.Items;
 
 /**
  * Programmatic schematic &amp; interactive demonstration renderer for the right-hand page of every
- * chapter in {@link ArcaneGrimoireScreen}.
- *
- * <p>Every diagram here is rendered dynamically in Java from real {@link ItemStack} icons, live
- * mathematical progression curves, structured flow connectors, and hardware-scissored plates —
- * NEVER static AI-generated screenshots — with interactive hover tooltips on every slot!</p>
+ * chapter in {@link ArcaneGrimoireScreen}, with full JEI / REI slot focus &amp; click integration.
  */
 @Environment(EnvType.CLIENT)
 public final class GrimoireDiagramRenderer {
@@ -179,8 +177,9 @@ public final class GrimoireDiagramRenderer {
         int size,
         int mouseX,
         int mouseY,
-        List<ItemStack> hoveredOut,
-        boolean highlightResult
+        List<HoveredSlot> slotsOut,
+        boolean highlightResult,
+        boolean leftClickOpensRecipes
     ) {
         int border = highlightResult ? INK_GOLD_DARK : 0xFFA98B5F;
         int fill = highlightResult ? 0xFFFBEEC9 : 0xFFE6D5B8;
@@ -189,7 +188,7 @@ public final class GrimoireDiagramRenderer {
         ctx.fill(sx + 1, sy + 1, sx + size - 1, sy + 2, 0x559B7B4E);
 
         boolean over = mouseX >= sx && mouseX < sx + size && mouseY >= sy && mouseY < sy + size;
-        if (over) {
+        if (over && !stack.isEmpty()) {
             ctx.fill(sx + 1, sy + 1, sx + size - 1, sy + size - 1, 0x44FFE082);
         }
 
@@ -206,9 +205,7 @@ public final class GrimoireDiagramRenderer {
                 String c = String.valueOf(stack.getCount());
                 drawRightCenteredY(ctx, font, c, sx + 2, sx + size - 1, sy + size - 3.5f, 0.56f, INK_PRIMARY, false);
             }
-            if (over && hoveredOut.isEmpty()) {
-                hoveredOut.add(stack);
-            }
+            slotsOut.add(new HoveredSlot(stack, new Rect2i(sx, sy, size, size), leftClickOpensRecipes));
         }
     }
 
@@ -244,7 +241,7 @@ public final class GrimoireDiagramRenderer {
         int mouseX,
         int mouseY,
         List<HitRegion> hits,
-        List<ItemStack> hoveredItem
+        List<HoveredSlot> slotsOut
     ) {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch1_title");
@@ -253,7 +250,6 @@ public final class GrimoireDiagramRenderer {
         int idx = Mth.clamp(selectedIdx, 0, list.size() - 1);
         RecipeShowcase cur = list.get(idx);
 
-        // Selector tabs row (7 compact pills: 1..7)
         int tabY = y + 17;
         int gap = 2;
         int tabW = (w - gap * (list.size() - 1)) / list.size();
@@ -279,7 +275,6 @@ public final class GrimoireDiagramRenderer {
             hits.add(new HitRegion(tx, tabY, tabW, 13, ACTION_RECIPE_TAB, String.valueOf(i)));
         }
 
-        // Recipe title card + Shapeless/Shaped tag
         int cardY = tabY + 17;
         int cardH = 84;
         ctx.fill(x, cardY, x + w, cardY + cardH, CARD_BORDER);
@@ -312,8 +307,9 @@ public final class GrimoireDiagramRenderer {
                     slot,
                     mouseX,
                     mouseY,
-                    hoveredItem,
-                    false
+                    slotsOut,
+                    false,
+                    true
                 );
             }
         }
@@ -330,9 +326,8 @@ public final class GrimoireDiagramRenderer {
         drawCenteredBox(ctx, font, modeTag, arrowX - 4, 24, midY - 9.0f, 0.50f, INK_EMERALD, false);
 
         int outX = arrowX + 20;
-        drawSlotItem(ctx, font, cur.result(), outX, midY - 11, 22, mouseX, mouseY, hoveredItem, true);
+        drawSlotItem(ctx, font, cur.result(), outX, midY - 11, 22, mouseX, mouseY, slotsOut, true, true);
 
-        // Bottom dual quick-summary strip for the Manual's 2 shapeless recipes
         int sumY = cardY + cardH + 5;
         int sumH = Math.max(24, (y + h) - sumY);
         ctx.fill(x, sumY, x + w, sumY + sumH, CALLOUT_BORDER);
@@ -375,7 +370,7 @@ public final class GrimoireDiagramRenderer {
         int h,
         int mouseX,
         int mouseY,
-        List<ItemStack> hoveredItem
+        List<HoveredSlot> slotsOut
     ) {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch2_title");
@@ -383,9 +378,8 @@ public final class GrimoireDiagramRenderer {
         int mockY = y + 17;
         int mockH = 82;
 
-        // Top mode tabs above window frame
         ctx.fill(x + 3, mockY, x + 36, mockY + 9, 0xFF4C236E);
-        drawCenteredBox(ctx, font, "①", x + 3, 12, mockY + 4.5f, 0.54f, LIGHT_GOLD, false);
+        drawBadgeCircle(ctx, font, x + 4, mockY + 1, "1", 0xFF6B3A9E);
         drawLeftCenteredY(
             ctx,
             font,
@@ -410,20 +404,17 @@ public final class GrimoireDiagramRenderer {
             false
         );
 
-        // Quick-manual button on top-right
         ctx.fill(x + w - 15, mockY, x + w - 4, mockY + 9, INK_GOLD_DARK);
         drawCenteredBox(ctx, font, "?", x + w - 15, 11, mockY + 4.5f, 0.54f, LIGHT_GOLD, false);
 
-        // Main miniature console window
         int winY = mockY + 9;
         int winH = mockH - 9;
         ctx.fill(x, winY, x + w, winY + winH, 0xFF23162E);
         ctx.fill(x + 1, winY + 1, x + w - 1, winY + winH - 1, 0xFF342244);
 
-        // Left scrollable list zone [②]
         int listW = 62;
         ctx.fill(x + 4, winY + 5, x + 4 + listW, winY + winH - 5, 0xFF1B1126);
-        String[] sampleRows = {"Sharpness III", "Unbreaking II", "Mending ★"};
+        String[] sampleRows = {"Sharpness III", "Unbreaking II", "Mending *"};
         int[] rowCols = {0xFF563A78, 0xFF483166, 0xFF6B4F1D};
         for (int r = 0; r < 3; r++) {
             int ry = winY + 8 + r * 19;
@@ -433,15 +424,13 @@ public final class GrimoireDiagramRenderer {
         }
         drawBadgeCircle(ctx, font, x + 6, winY + 5, "2", 0xFF7A4E10);
 
-        // Center slots column [③ Target, ④ Reagent]
         int midX = x + 70;
-        drawSlotItem(ctx, font, new ItemStack(Items.DIAMOND_SWORD), midX, winY + 11, 18, mouseX, mouseY, hoveredItem, true);
+        drawSlotItem(ctx, font, new ItemStack(Items.DIAMOND_SWORD), midX, winY + 11, 18, mouseX, mouseY, slotsOut, true, true);
         drawBadgeCircle(ctx, font, midX - 2, winY + 9, "3", INK_PURPLE);
 
-        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 4), midX, winY + 42, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 4), midX, winY + 42, 18, mouseX, mouseY, slotsOut, false, true);
         drawBadgeCircle(ctx, font, midX - 2, winY + 40, "4", INK_EMERALD);
 
-        // Right Sanctum / Stasis Console [⑤]
         int sanX = x + 92;
         int sanW = w - 96;
         ctx.fill(sanX, winY + 8, sanX + sanW, winY + winH - 8, 0xFF241538);
@@ -450,9 +439,8 @@ public final class GrimoireDiagramRenderer {
         drawLeftCenteredY(ctx, font, "-40% XP", sanX + 4, winY + 25.0f, 0.50f, sanW - 8, LIGHT_MINT, false);
         drawLeftCenteredY(ctx, font, "09:42", sanX + 4, winY + 35.0f, 0.50f, sanW - 8, LIGHT_GOLD, false);
         ctx.blit(BTN_FREEZE, sanX + 4, winY + 44, sanX + 15, winY + 55, 0.0f, 1.0f, 0.0f, 1.0f);
-        ctx.blit(BTN_REROLL, sanX + 18, winY + 44, sanX + 29, winY + 55, 0.0f, 1.0f, 0.0f, 0.0f + 1.0f);
+        ctx.blit(BTN_REROLL, sanX + 18, winY + 44, sanX + 29, winY + 55, 0.0f, 1.0f, 0.0f, 1.0f);
 
-        // Numbered legend cards below schematic
         int legY = mockY + mockH + 4;
         int legH = Math.max(24, (y + h) - legY);
         ctx.fill(x, legY, x + w, legY + legH, CALLOUT_BORDER);
@@ -505,10 +493,9 @@ public final class GrimoireDiagramRenderer {
 
         int shelves = Mth.clamp(demoShelves, 0, 38);
 
-        // Top-down 7x7 scan ring slice + interactive shelf stepper
         int topY = y + 16;
         int cell = 7;
-        int gridSize = 7 * cell; // 49px
+        int gridSize = 7 * cell;
         int gx = x + 3;
         int gy = topY + 2;
         ctx.fill(gx - 1, gy - 1, gx + gridSize + 1, gy + gridSize + 1, CARD_BORDER);
@@ -530,7 +517,6 @@ public final class GrimoireDiagramRenderer {
             }
         }
 
-        // Right of 7x7 grid: interactive shelf counter & presets [0] [7] [16] [27] [38]
         int ctrlX = gx + gridSize + 6;
         int ctrlW = (x + w) - ctrlX;
         drawLeftCenteredY(
@@ -545,7 +531,6 @@ public final class GrimoireDiagramRenderer {
             false
         );
 
-        // [- ]  Shelves: XX / 38  [ +]
         int spinY = topY + 13;
         drawMiniButton(ctx, font, ctrlX, spinY, 13, 12, "-", mouseX, mouseY);
         hits.add(new HitRegion(ctrlX, spinY, 13, 12, ACTION_SHELF_STEP, "-1"));
@@ -588,7 +573,7 @@ public final class GrimoireDiagramRenderer {
             hits.add(new HitRegion(px, py, pw, 11, ACTION_SHELF_PRESET, String.valueOf(presets[i])));
         }
 
-        boolean epiphanyReady = shelves >= 30;
+        boolean epiphanyReady = shelves >= SyncedEnchantmentCosts.epiphanyMinBookshelves();
         drawLeftCenteredY(
             ctx,
             font,
@@ -605,7 +590,6 @@ public final class GrimoireDiagramRenderer {
             false
         );
 
-        // Live Max-Tier Unlock Table for Max II / III / IV / V at `shelves`
         int tblY = topY + 56;
         int tblH = Math.max(40, (y + h) - tblY);
         ctx.fill(x, tblY, x + w, tblY + tblH, CARD_BORDER);
@@ -732,7 +716,6 @@ public final class GrimoireDiagramRenderer {
             "gui.chiseled_enchanting_table.grimoire.diag.ch4_m3_b"
         );
 
-        // Stacked Resonance Discount Bar (-15% + -15% + -10% = -40% Max)
         int barCardY = c3Y + 32;
         int barCardH = Math.max(24, (y + h) - barCardY);
         ctx.fill(x, barCardY, x + w, barCardY + barCardH, CARD_BORDER);
@@ -832,12 +815,11 @@ public final class GrimoireDiagramRenderer {
         int h,
         int mouseX,
         int mouseY,
-        List<ItemStack> hoveredItem
+        List<HoveredSlot> slotsOut
     ) {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch5_title");
 
-        // Route A: Twin Combine (0 items, 0.6x XP, +1 Depleted Tome)
         int r1Y = y + 17;
         ctx.fill(x, r1Y, x + w, r1Y + 44, CARD_BORDER);
         ctx.fill(x + 1, r1Y + 1, x + w - 1, r1Y + 43, CARD_BG);
@@ -854,15 +836,14 @@ public final class GrimoireDiagramRenderer {
             false
         );
         int sy1 = r1Y + 15;
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 6, sy1, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 6, sy1, 18, mouseX, mouseY, slotsOut, false, true);
         drawCenteredBox(ctx, font, "+", x + 25, 9, sy1 + 9.0f, 0.65f, INK_PRIMARY, false);
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 35, sy1, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 35, sy1, 18, mouseX, mouseY, slotsOut, false, true);
         drawRightArrow(ctx, x + 57, sy1 + 9, 15, INK_EMERALD);
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 76, sy1, 18, mouseX, mouseY, hoveredItem, true);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 76, sy1, 18, mouseX, mouseY, slotsOut, true, true);
         drawCenteredBox(ctx, font, "+", x + 95, 8, sy1 + 9.0f, 0.60f, INK_GOLD_DARK, false);
-        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME), x + 104, sy1, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME), x + 104, sy1, 18, mouseX, mouseY, slotsOut, false, true);
 
-        // Route B: Single-Book Research (1.4x XP + Reagent OR 1x Arcane Catalyst)
         int r2Y = r1Y + 48;
         ctx.fill(x, r2Y, x + w, r2Y + 44, CARD_BORDER);
         ctx.fill(x + 1, r2Y + 1, x + w - 1, r2Y + 43, CARD_BG);
@@ -879,15 +860,14 @@ public final class GrimoireDiagramRenderer {
             false
         );
         int sy2 = r2Y + 15;
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 8, sy2, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 8, sy2, 18, mouseX, mouseY, slotsOut, false, true);
         drawCenteredBox(ctx, font, "+", x + 28, 9, sy2 + 9.0f, 0.65f, INK_PRIMARY, false);
-        drawSlotItem(ctx, font, new ItemStack(Items.DIAMOND, 4), x + 39, sy2, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.DIAMOND, 4), x + 39, sy2, 18, mouseX, mouseY, slotsOut, false, true);
         drawCenteredBox(ctx, font, "/", x + 58, 7, sy2 + 9.0f, 0.60f, INK_GOLD_DARK, false);
-        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.ARCANE_CATALYST), x + 66, sy2, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.ARCANE_CATALYST), x + 66, sy2, 18, mouseX, mouseY, slotsOut, false, true);
         drawRightArrow(ctx, x + 88, sy2 + 9, 14, INK_PURPLE);
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 105, sy2, 18, mouseX, mouseY, hoveredItem, true);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 105, sy2, 18, mouseX, mouseY, slotsOut, true, true);
 
-        // Route C: Delta Deduction & Master Tome Mass-Craft Payoff
         int r3Y = r2Y + 48;
         int r3H = Math.max(24, (y + h) - r3Y);
         ctx.fill(x, r3Y, x + w, r3Y + r3H, CALLOUT_BORDER);
@@ -929,16 +909,27 @@ public final class GrimoireDiagramRenderer {
         int h,
         int mouseX,
         int mouseY,
-        List<ItemStack> hoveredItem
+        List<HoveredSlot> slotsOut
     ) {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch6_title");
 
-        // Top condition banner: 30+ Wooden Shelves -> 10:00 Roll Window
         int bY = y + 17;
         ctx.fill(x, bY, x + w, bY + 34, CARD_BORDER);
         ctx.fill(x + 1, bY + 1, x + w - 1, bY + 33, CARD_BG);
-        drawSlotItem(ctx, font, new ItemStack(Items.BOOKSHELF, 30), x + 5, bY + 8, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(
+            ctx,
+            font,
+            new ItemStack(Items.BOOKSHELF, SyncedEnchantmentCosts.epiphanyMinBookshelves()),
+            x + 5,
+            bY + 8,
+            18,
+            mouseX,
+            mouseY,
+            slotsOut,
+            false,
+            true
+        );
         drawRightArrow(ctx, x + 27, bY + 17, 14, INK_GOLD_DARK);
         drawLeftCenteredY(
             ctx,
@@ -965,11 +956,9 @@ public final class GrimoireDiagramRenderer {
 
         drawDownArrow(ctx, x + w / 2, bY + 35, 9, INK_GOLD_DARK);
 
-        // Dual Action Controls Card: Freeze vs Reroll
         int midY = bY + 45;
         int halfW = (w - 4) / 2;
 
-        // Left sub-card: Stasis Freeze
         ctx.fill(x, midY, x + halfW, midY + 52, 0xFF3E8FA8);
         ctx.fill(x + 1, midY + 1, x + halfW - 1, midY + 51, 0xFFEBF6F9);
         ctx.blit(BTN_FREEZE, x + 5, midY + 5, x + 17, midY + 17, 0.0f, 1.0f, 0.0f, 1.0f);
@@ -984,11 +973,10 @@ public final class GrimoireDiagramRenderer {
             0xFF15576B,
             false
         );
-        drawSlotItem(ctx, font, new ItemStack(Items.BLUE_ICE, 4), x + 6, midY + 24, 18, mouseX, mouseY, hoveredItem, false);
-        drawSlotItem(ctx, font, new ItemStack(Items.QUARTZ, 4), x + 26, midY + 24, 18, mouseX, mouseY, hoveredItem, false);
-        drawSlotItem(ctx, font, new ItemStack(Items.AMETHYST_SHARD, 4), x + 46, midY + 24, 16, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.BLUE_ICE, 4), x + 6, midY + 24, 18, mouseX, mouseY, slotsOut, false, true);
+        drawSlotItem(ctx, font, new ItemStack(Items.QUARTZ, 4), x + 26, midY + 24, 18, mouseX, mouseY, slotsOut, false, true);
+        drawSlotItem(ctx, font, new ItemStack(Items.AMETHYST_SHARD, 4), x + 46, midY + 24, 16, mouseX, mouseY, slotsOut, false, true);
 
-        // Right sub-card: Instant Reroll
         int rx = x + halfW + 4;
         ctx.fill(rx, midY, rx + halfW, midY + 52, INK_PURPLE);
         ctx.fill(rx + 1, midY + 1, rx + halfW - 1, midY + 51, CARD_BG);
@@ -1004,10 +992,9 @@ public final class GrimoireDiagramRenderer {
             INK_PURPLE,
             false
         );
-        drawSlotItem(ctx, font, new ItemStack(Items.AMETHYST_SHARD, 4), rx + 8, midY + 24, 18, mouseX, mouseY, hoveredItem, false);
-        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 4), rx + 30, midY + 24, 18, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.AMETHYST_SHARD, 4), rx + 8, midY + 24, 18, mouseX, mouseY, slotsOut, false, true);
+        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 4), rx + 30, midY + 24, 18, mouseX, mouseY, slotsOut, false, true);
 
-        // Bottom payoff: Inscribe onto Book -> Permanent Master Tome!
         int botY = midY + 56;
         int botH = Math.max(24, (y + h) - botY);
         ctx.fill(x, botY, x + w, botY + botH, CALLOUT_BORDER);
@@ -1027,7 +1014,7 @@ public final class GrimoireDiagramRenderer {
     }
 
     // =========================================================================
-    // CHAPTER 7 — TRANSMUTATION WHEEL + DEPLETED TOME 0→12→24→30 GATE LADDER
+    // CHAPTER 7 — TRANSMUTATION WHEEL + DEPLETED TOME GATE LADDER
     // =========================================================================
     public static void renderChapter7Transmute(
         GuiGraphicsExtractor ctx,
@@ -1040,7 +1027,7 @@ public final class GrimoireDiagramRenderer {
         int mouseX,
         int mouseY,
         List<HitRegion> hits,
-        List<ItemStack> hoveredItem
+        List<HoveredSlot> slotsOut
     ) {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch7_title");
@@ -1053,10 +1040,9 @@ public final class GrimoireDiagramRenderer {
             {new ItemStack(Items.GLASS_BOTTLE), new ItemStack(Items.EXPERIENCE_BOTTLE)},
             {new ItemStack(Items.BONE), new ItemStack(Items.SKELETON_SKULL)}
         };
-        String[] lvBadges = {"Lv.30 · -3L", "Lv.20 · -3L", "Lv.30 · -3L", "Lv.8 · -1L", "Lv.3 · -1L", "Lv.15 · -2L"};
+        String[] lvBadges = {"Lv.30 -3L", "Lv.20 -3L", "Lv.30 -3L", "Lv.8 -1L", "Lv.3 -1L", "Lv.15 -2L"};
         int sel = Mth.clamp(selectedTransmute, 0, pairs.length - 1);
 
-        // 6 clickable output icons strip
         int stripY = y + 17;
         int cellW = (w - 10) / pairs.length;
         for (int i = 0; i < pairs.length; i++) {
@@ -1064,18 +1050,17 @@ public final class GrimoireDiagramRenderer {
             boolean active = i == sel;
             ctx.fill(cx, stripY, cx + cellW, stripY + 20, active ? INK_GOLD_DARK : CARD_BORDER);
             ctx.fill(cx + 1, stripY + 1, cx + cellW - 1, stripY + 19, active ? 0xFFFFF4D4 : CARD_BG);
-            drawSlotItem(ctx, font, pairs[i][1], cx + (cellW - 18) / 2, stripY + 1, 18, mouseX, mouseY, hoveredItem, active);
+            drawSlotItem(ctx, font, pairs[i][1], cx + (cellW - 18) / 2, stripY + 1, 18, mouseX, mouseY, slotsOut, active, false);
             hits.add(new HitRegion(cx, stripY, cellW, 20, ACTION_TRANSMUTE_SELECT, String.valueOf(i)));
         }
 
-        // Selected transformation detail box
         int detY = stripY + 24;
         ctx.fill(x, detY, x + w, detY + 38, CARD_BORDER);
         ctx.fill(x + 1, detY + 1, x + w - 1, detY + 37, CARD_BG);
-        drawSlotItem(ctx, font, pairs[sel][0], x + 12, detY + 10, 20, mouseX, mouseY, hoveredItem, false);
+        drawSlotItem(ctx, font, pairs[sel][0], x + 12, detY + 10, 20, mouseX, mouseY, slotsOut, false, true);
         drawRightArrow(ctx, x + 38, detY + 20, 22, INK_GOLD_DARK);
         drawCenteredBox(ctx, font, lvBadges[sel], x + 34, 30, detY + 9.0f, 0.48f, INK_EMERALD, false);
-        drawSlotItem(ctx, font, pairs[sel][1], x + 66, detY + 9, 22, mouseX, mouseY, hoveredItem, true);
+        drawSlotItem(ctx, font, pairs[sel][1], x + 66, detY + 9, 22, mouseX, mouseY, slotsOut, true, true);
         drawLeftCenteredY(
             ctx,
             font,
@@ -1088,7 +1073,6 @@ public final class GrimoireDiagramRenderer {
             false
         );
 
-        // Depleted Tome 4-Gate Restoration Ladder (0 -> 12 -> 24 -> 30+6)
         int ladY = detY + 42;
         int ladH = Math.max(36, (y + h) - ladY);
         ctx.fill(x, ladY, x + w, ladY + ladH, CALLOUT_BORDER);
@@ -1108,10 +1092,10 @@ public final class GrimoireDiagramRenderer {
 
         var sg = SyncedEnchantmentCosts.shelfGatesConfig();
         String[] gates = {
-            "0+: 2×",
+            "0+: 2x",
             sg.tier1Bookshelves() + "+: 0L",
             sg.tier2Bookshelves() + "+: -50%",
-            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "★: FREE!"
+            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "*: FREE!"
         };
         int[] gCols = {0xFF7D634C, 0xFF285E6B, 0xFF4C236E, 0xFF175E3E};
         int gw = (w - 10) / 2;

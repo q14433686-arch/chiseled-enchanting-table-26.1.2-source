@@ -7,6 +7,7 @@ import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.gui.grimoire.GrimoireDiagramRenderer.HitRegion;
 import chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout.ColumnRenderResult;
 import chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout.PageBlock;
+import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge.HoveredSlot;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -29,28 +31,8 @@ import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Full double-page illuminated manual ({@code 纂刻秘典 / Arcane Grimoire}) covering every mechanic,
- * condition, recipe, step, and anti-trap rule of {@code Chiseled Enchanting Table}.
- *
- * <p>Navigation &amp; layout architecture:</p>
- * <ul>
- *   <li><b>Spread {@code 0} — Home / Navigation Directory ({@code 主页 / 导航目录})</b>:
- *       Left page shows the illuminated emblem, 3-step quick-start overview, and live world parameters;
- *       Right page displays an interactive 8-chapter card directory where clicking any chapter card
- *       jumps straight to that chapter.</li>
- *   <li><b>Spreads {@code 1..8} — Illustrated Chapters</b>:
- *       Left page renders structured, numbered, auto-scaled prose inside hardware GPU scissor clipping;
- *       Right page renders live interactive schematics, crafting grids, progression curves, and hoverable
- *       {@link ItemStack} tooltips.</li>
- *   <li><b>4 Independent Return-to-Home &amp; Navigation Surfaces</b>:
- *       (1) Top floating bar {@code [⌂ 主页 / 目录]} button (always visible on every chapter spread) +
- *       {@code [↩ 返回附魔台]} when opened from the table UI;
- *       (2) Right-edge colored bookmark ribbons ({@code ⌂} Home + {@code 01..08} chapters);
- *       (3) Bottom page-footer {@code [◀ 上一章]} / {@code [⌂ 返回目录]} / {@code [下一章 ▶]} controls;
- *       (4) Full keyboard shortcuts: {@code Left/Right} or {@code A/D} turn spreads, {@code Home/Backspace}
- *       returns to the Home Directory, {@code 1..8} jump directly to chapters, and {@code ESC} closes
- *       (or returns cleanly to the open {@code ChiseledEnchantingTableScreen}).</li>
- * </ul>
+ * Full double-page illuminated manual ({@code 纂刻秘典 / Arcane Grimoire}) with full JEI / REI item
+ * focus &amp; recipe/uses lookup across every rendered item slot.
  */
 @Environment(EnvType.CLIENT)
 public class ArcaneGrimoireScreen extends Screen {
@@ -58,11 +40,9 @@ public class ArcaneGrimoireScreen extends Screen {
     private static final Identifier SPREAD_TEX = ChiseledEnchantingTable.identifier("gui/grimoire_spread.png");
     private static final Identifier CREST_TEX = ChiseledEnchantingTable.identifier("gui/grimoire_crest.png");
 
-    // Logical book dimensions (backed by 2x high-DPI 672x424 texture)
-    private static final int BOOK_W = 336;
-    private static final int BOOK_H = 212;
+    public static final int BOOK_W = 336;
+    public static final int BOOK_H = 212;
 
-    // Pixel-measured safe inner parchment margins (strictly inside [15..162] and [173..316] x [8..194])
     private static final int LEFT_PAGE_X = 22;
     private static final int RIGHT_PAGE_X = 179;
     private static final int PAGE_TOP_Y = 15;
@@ -74,15 +54,15 @@ public class ArcaneGrimoireScreen extends Screen {
     public static final int CHAPTER_COUNT = 8;
 
     private static final int[] TAB_COLORS = {
-        0xFF7A4E10, // 0: Home (Gilded Gold)
-        0xFF5A2D82, // 1: Recipes
-        0xFF285E6B, // 2: UI Anatomy
-        0xFF7D5320, // 3: 3-Track Shelves
-        0xFF1E6E46, // 4: XP & Resonance
-        0xFF4C236E, // 5: Book Loop
-        0xFF8B5E14, // 6: Epiphany & Stasis
-        0xFF2B6B58, // 7: Transmutation & Depleted Tome
-        0xFF7D2430  // 8: Cleanse & Curse Purge
+        0xFF7A4E10,
+        0xFF5A2D82,
+        0xFF285E6B,
+        0xFF7D5320,
+        0xFF1E6E46,
+        0xFF4C236E,
+        0xFF8B5E14,
+        0xFF2B6B58,
+        0xFF7D2430
     };
 
     @Nullable
@@ -102,6 +82,7 @@ public class ArcaneGrimoireScreen extends Screen {
     private int bookY;
 
     private final List<HitRegion> interactiveRegions = new ArrayList<>();
+    private final List<HoveredSlot> itemSlots = new ArrayList<>();
     private List<ItemStack> chapterIcons;
 
     private static final int NAV_SPREAD = 100;
@@ -136,6 +117,25 @@ public class ArcaneGrimoireScreen extends Screen {
         }
     }
 
+    /** Full bounding box including top floating bar and right-edge chapter bookmark ribbons (for JEI / REI). */
+    public Rect2i fullGuiBounds() {
+        return new Rect2i(this.bookX, Math.max(0, this.bookY - 19), BOOK_W + 24, BOOK_H + 19);
+    }
+
+    /** Returns the item slot under {@code (mouseX, mouseY)}, enabling native JEI / REI R/U/Bookmark lookups. */
+    @Nullable
+    public HoveredSlot hoveredIngredient(double mouseX, double mouseY) {
+        for (int i = this.itemSlots.size() - 1; i >= 0; i--) {
+            HoveredSlot s = this.itemSlots.get(i);
+            Rect2i r = s.area();
+            if (mouseX >= r.getX() && mouseX < r.getX() + r.getWidth()
+                && mouseY >= r.getY() && mouseY < r.getY() + r.getHeight()) {
+                return s;
+            }
+        }
+        return null;
+    }
+
     @Override
     public boolean isPauseScreen() {
         return false;
@@ -164,27 +164,46 @@ public class ArcaneGrimoireScreen extends Screen {
         }
     }
 
+    /** Draws a crisp 7x7 pixel-art House glyph (never relying on tiny Unifont fallback symbols). */
+    private static void drawHomeGlyph(GuiGraphicsExtractor ctx, int leftX, int centerY, int argbColor) {
+        // Roof (4 rows: width 1, 3, 5, 7)
+        for (int r = 0; r < 4; r++) {
+            ctx.fill(leftX + 3 - r, centerY - 3 + r, leftX + 4 + r, centerY - 2 + r, argbColor);
+        }
+        // Walls + doorway cutout
+        ctx.fill(leftX + 1, centerY + 1, leftX + 3, centerY + 4, argbColor);
+        ctx.fill(leftX + 4, centerY + 1, leftX + 6, centerY + 4, argbColor);
+        ctx.fill(leftX + 3, centerY + 1, leftX + 4, centerY + 2, argbColor);
+    }
+
+    /** Draws a crisp 4x7 pixel-art right or left triangle arrow centered on {@code centerY}. */
+    private static void drawSmallTriangle(GuiGraphicsExtractor ctx, int leftX, int centerY, boolean right, int argbColor) {
+        for (int col = 0; col < 4; col++) {
+            int half = right ? (3 - col) : col;
+            ctx.fill(leftX + col, centerY - half, leftX + col + 1, centerY + half + 1, argbColor);
+        }
+    }
+
     @Override
     public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
-        // Rendered seamlessly inside extractRenderState so parent container screen isn't double-blurred.
+        // Handled cleanly inside extractRenderState without double-blurring open screens.
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         this.interactiveRegions.clear();
-        List<ItemStack> hoveredItem = new ArrayList<>(1);
+        this.itemSlots.clear();
         List<Component> hoveredTabTip = new ArrayList<>();
 
-        // Subtle dark arcane backdrop tint
         ctx.fill(0, 0, this.width, this.height, 0xB4090610);
 
-        // 1. Right-edge chapter bookmark ribbons (drawn slightly tucked behind right cover edge, active tab pops out!)
+        // 1. Right-edge chapter bookmark ribbons
         renderBookmarkRibbons(ctx, mouseX, mouseY, hoveredTabTip);
 
         // 2. Crisp 2x double-page illuminated book spread
         ctx.blit(SPREAD_TEX, this.bookX, this.bookY, this.bookX + BOOK_W, this.bookY + BOOK_H, 0.0f, 1.0f, 0.0f, 1.0f);
 
-        // 3. Top floating navigation bar (Home button + Breadcrumb + Return/Close button)
+        // 3. Top floating navigation bar
         renderTopNavigationBar(ctx, mouseX, mouseY);
 
         // 4. Main left & right pages content strictly inside safe parchment bounding boxes
@@ -199,18 +218,23 @@ public class ArcaneGrimoireScreen extends Screen {
             ColumnRenderResult res = renderChapterLeftProse(ctx, this.spreadIndex, lx, py, PAGE_W, PAGE_H);
             this.leftMaxScroll = res.maxScroll();
             this.leftScroll = Mth.clamp(this.leftScroll, 0.0f, this.leftMaxScroll);
-            renderChapterRightDiagram(ctx, this.spreadIndex, rx, py, PAGE_W, PAGE_H, mouseX, mouseY, hoveredItem);
+            renderChapterRightDiagram(ctx, this.spreadIndex, rx, py, PAGE_W, PAGE_H, mouseX, mouseY);
         }
 
-        // 5. In-page bottom navigation footers (Prev / Return to Home Index / Next)
+        // 5. In-page bottom navigation footers
         renderBottomFooters(ctx, mouseX, mouseY);
 
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
 
-        // 6. Rich interactive tooltips on top layer
-        if (!hoveredItem.isEmpty()) {
-            ItemStack st = hoveredItem.get(0);
-            List<Component> itemLines = Screen.getTooltipFromItem(this.minecraft, st);
+        // 6. Rich interactive item & bookmark tooltips on top layer
+        HoveredSlot hoveredSlot = hoveredIngredient(mouseX, mouseY);
+        if (hoveredSlot != null) {
+            ItemStack st = hoveredSlot.stack();
+            List<Component> itemLines = new ArrayList<>(Screen.getTooltipFromItem(this.minecraft, st));
+            if (GrimoireViewerBridge.isAvailable()) {
+                itemLines.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.viewer_hint")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            }
             ctx.setTooltipForNextFrame(
                 this.font,
                 itemLines,
@@ -232,8 +256,8 @@ public class ArcaneGrimoireScreen extends Screen {
         int barY = this.bookY - 17;
         int barH = 14;
 
-        // Left pill: [⌂ 主页 / 目录] (highlighted active on spread 0, clickable button on 1..8)
-        int homeW = 74;
+        // Left pill: [Home Icon + 主页/目录]
+        int homeW = 76;
         int homeX = this.bookX + 8;
         boolean onHome = this.spreadIndex == 0;
         boolean overHome = mouseX >= homeX && mouseX < homeX + homeW && mouseY >= barY && mouseY < barY + barH;
@@ -241,23 +265,24 @@ public class ArcaneGrimoireScreen extends Screen {
         int homeBorder = (onHome || overHome) ? LIGHT_GOLD : 0xFF9E7B46;
         ctx.fill(homeX, barY, homeX + homeW, barY + barH, homeBorder);
         ctx.fill(homeX + 1, barY + 1, homeX + homeW - 1, barY + barH - 1, homeBg);
-        String homeLabel = "\u2302 " + Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.home").getString();
+        int homeFg = onHome ? LIGHT_GOLD : LIGHT_CREAM;
+        drawHomeGlyph(ctx, homeX + 5, barY + barH / 2, homeFg);
         drawCenteredBox(
             ctx,
             this.font,
-            homeLabel,
-            homeX + 3,
-            homeW - 6,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.home").getString(),
+            homeX + 14,
+            homeW - 18,
             barY + barH * 0.5f,
             0.62f,
-            onHome ? LIGHT_GOLD : LIGHT_CREAM,
+            homeFg,
             true
         );
         if (!onHome) {
             this.interactiveRegions.add(new HitRegion(homeX, barY, homeW, barH, NAV_SPREAD, "0"));
         }
 
-        // Right pill: [↩ 返回附魔台] when parentScreen != null, else [✕ 关闭]
+        // Right pill: [返回附魔台 / 关闭]
         int closeW = 76;
         int closeX = this.bookX + BOOK_W - closeW - 8;
         boolean overClose = mouseX >= closeX && mouseX < closeX + closeW && mouseY >= barY && mouseY < barY + barH;
@@ -270,24 +295,24 @@ public class ArcaneGrimoireScreen extends Screen {
             ctx,
             this.font,
             Component.translatable(closeKey).getString(),
-            closeX + 3,
-            closeW - 6,
+            closeX + 4,
+            closeW - 8,
             barY + barH * 0.5f,
-            0.60f,
+            0.62f,
             overClose ? LIGHT_GOLD : LIGHT_CREAM,
             true
         );
         this.interactiveRegions.add(new HitRegion(closeX, barY, closeW, barH, NAV_CLOSE, ""));
 
-        // Center breadcrumb plaque strictly between [homeX + homeW + 4 .. closeX - 4]
+        // Center breadcrumb plaque
         int midX = homeX + homeW + 4;
         int midW = Math.max(40, closeX - 4 - midX);
         ctx.fill(midX, barY + 1, midX + midW, barY + barH - 1, 0xCC1E132B);
         String crumb = this.spreadIndex == 0
             ? Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.crumb_home").getString()
-            : (String.format("%02d / %02d · ", this.spreadIndex, CHAPTER_COUNT)
+            : (String.format("%02d / %02d  ", this.spreadIndex, CHAPTER_COUNT)
                 + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + this.spreadIndex + ".short").getString());
-        drawCenteredBox(ctx, this.font, crumb, midX + 4, midW - 8, barY + barH * 0.5f, 0.58f, LIGHT_GOLD, true);
+        drawCenteredBox(ctx, this.font, crumb, midX + 5, midW - 10, barY + barH * 0.5f, 0.60f, LIGHT_GOLD, true);
     }
 
     private void renderBookmarkRibbons(
@@ -317,18 +342,22 @@ public class ArcaneGrimoireScreen extends Screen {
                 ctx.fill(tx, ty + 1, tx + tw - 1, ty + 2, 0x55FFF2CC);
             }
 
-            String label = i == 0 ? "\u2302" : String.format("%02d", i);
-            drawCenteredBox(
-                ctx,
-                this.font,
-                label,
-                tx + 2,
-                tw - 4,
-                ty + tabH * 0.5f,
-                0.56f,
-                active ? LIGHT_GOLD : LIGHT_CREAM,
-                true
-            );
+            int fg = active ? LIGHT_GOLD : LIGHT_CREAM;
+            if (i == 0) {
+                drawHomeGlyph(ctx, tx + (tw - 7) / 2, ty + tabH / 2, fg);
+            } else {
+                drawCenteredBox(
+                    ctx,
+                    this.font,
+                    String.format("%02d", i),
+                    tx + 2,
+                    tw - 4,
+                    ty + tabH * 0.5f,
+                    0.56f,
+                    fg,
+                    true
+                );
+            }
             this.interactiveRegions.add(new HitRegion(tx, ty, tw, tabH, NAV_SPREAD, String.valueOf(i)));
 
             if (over) {
@@ -336,7 +365,7 @@ public class ArcaneGrimoireScreen extends Screen {
                     hoveredTabTip.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.home")
                         .withStyle(ChatFormatting.GOLD));
                 } else {
-                    hoveredTabTip.add(Component.literal(String.format("%02d · ", i))
+                    hoveredTabTip.add(Component.literal(String.format("%02d  ", i))
                         .append(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + i + ".title"))
                         .withStyle(ChatFormatting.GOLD));
                     hoveredTabTip.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + i + ".sub")
@@ -355,7 +384,6 @@ public class ArcaneGrimoireScreen extends Screen {
         ctx.fill(rx, fy - 2, rx + PAGE_W, fy - 1, RULE_LINE);
 
         if (this.spreadIndex == 0) {
-            // Left footer on Home: keyboard shortcut hint
             drawCenteredBox(
                 ctx,
                 this.font,
@@ -363,33 +391,32 @@ public class ArcaneGrimoireScreen extends Screen {
                 lx,
                 PAGE_W,
                 fy + FOOTER_H * 0.5f,
-                0.54f,
+                0.56f,
                 INK_MUTED,
                 false
             );
 
-            // Right footer on Home: [开始阅读第 01 章 ▶]
-            int btnW = PAGE_W - 16;
-            int btnX = rx + 8;
+            int btnW = PAGE_W - 14;
+            int btnX = rx + 7;
             boolean over = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= fy && mouseY < fy + FOOTER_H;
             ctx.fill(btnX, fy, btnX + btnW, fy + FOOTER_H, over ? CARD_HOVER_BORDER : CARD_BORDER);
             ctx.fill(btnX + 1, fy + 1, btnX + btnW - 1, fy + FOOTER_H - 1, over ? CARD_HOVER_BG : CALLOUT_BG);
             drawCenteredBox(
                 ctx,
                 this.font,
-                Component.translatable("gui.chiseled_enchanting_table.grimoire.home.start_btn").getString() + " \u25b6",
-                btnX + 4,
-                btnW - 8,
+                Component.translatable("gui.chiseled_enchanting_table.grimoire.home.start_btn").getString(),
+                btnX + 5,
+                btnW - 16,
                 fy + FOOTER_H * 0.5f,
-                0.58f,
+                0.60f,
                 INK_PURPLE,
                 false
             );
+            drawSmallTriangle(ctx, btnX + btnW - 9, fy + FOOTER_H / 2, true, INK_PURPLE);
             this.interactiveRegions.add(new HitRegion(btnX, fy, btnW, FOOTER_H, NAV_SPREAD, "1"));
             return;
         }
 
-        // Left page footer on Chapters 1..8: [◀ 上一页] + [⌂ 返回目录]
         int prevW = 60;
         int homeBtnW = 68;
         drawFooterPill(
@@ -398,7 +425,7 @@ public class ArcaneGrimoireScreen extends Screen {
             fy,
             prevW,
             FOOTER_H,
-            "\u25c0 " + Component.translatable(
+            Component.translatable(
                 this.spreadIndex == 1
                     ? "gui.chiseled_enchanting_table.grimoire.nav.home_short"
                     : "gui.chiseled_enchanting_table.grimoire.nav.prev"
@@ -406,7 +433,8 @@ public class ArcaneGrimoireScreen extends Screen {
             String.valueOf(this.spreadIndex - 1),
             mouseX,
             mouseY,
-            false
+            false,
+            -1
         );
         drawFooterPill(
             ctx,
@@ -414,14 +442,14 @@ public class ArcaneGrimoireScreen extends Screen {
             fy,
             homeBtnW,
             FOOTER_H,
-            "\u2302 " + Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.return_home").getString(),
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.return_home").getString(),
             "0",
             mouseX,
             mouseY,
-            true
+            true,
+            0
         );
 
-        // Right page footer on Chapters 1..8: Chapter indicator + [下一章 ▶ / 回到目录 ⌂]
         String pageCounter = String.format("%d / %d", this.spreadIndex, CHAPTER_COUNT);
         drawLeftCenteredY(ctx, this.font, pageCounter, rx + 2, fy + FOOTER_H * 0.5f, 0.58f, 44, INK_MUTED, false);
 
@@ -433,16 +461,20 @@ public class ArcaneGrimoireScreen extends Screen {
             fy,
             nextW,
             FOOTER_H,
-            hasNext
-                ? (Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.next").getString() + " \u25b6")
-                : ("\u2302 " + Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.return_home").getString()),
+            Component.translatable(
+                hasNext
+                    ? "gui.chiseled_enchanting_table.grimoire.nav.next"
+                    : "gui.chiseled_enchanting_table.grimoire.nav.return_home"
+            ).getString(),
             hasNext ? String.valueOf(this.spreadIndex + 1) : "0",
             mouseX,
             mouseY,
-            !hasNext
+            !hasNext,
+            hasNext ? 1 : 0
         );
     }
 
+    /** {@code iconMode}: {@code -1} = left arrow, {@code 0} = home glyph, {@code +1} = right arrow. */
     private void drawFooterPill(
         GuiGraphicsExtractor ctx,
         int x,
@@ -453,24 +485,25 @@ public class ArcaneGrimoireScreen extends Screen {
         String targetSpread,
         int mouseX,
         int mouseY,
-        boolean accentGold
+        boolean accentGold,
+        int iconMode
     ) {
         boolean over = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
         int border = over ? INK_PURPLE : (accentGold ? INK_GOLD_DARK : CARD_BORDER);
         int bg = over ? CARD_HOVER_BG : (accentGold ? 0xFFF5E6C4 : CARD_BG);
+        int fg = accentGold ? INK_GOLD_DARK : INK_PURPLE;
         ctx.fill(x, y, x + w, y + h, border);
         ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, bg);
-        drawCenteredBox(
-            ctx,
-            this.font,
-            text,
-            x + 3,
-            w - 6,
-            y + h * 0.5f,
-            0.55f,
-            accentGold ? INK_GOLD_DARK : INK_PURPLE,
-            false
-        );
+        if (iconMode < 0) {
+            drawSmallTriangle(ctx, x + 5, y + h / 2, false, fg);
+            drawCenteredBox(ctx, this.font, text, x + 11, w - 14, y + h * 0.5f, 0.58f, fg, false);
+        } else if (iconMode == 0) {
+            drawHomeGlyph(ctx, x + 4, y + h / 2, fg);
+            drawCenteredBox(ctx, this.font, text, x + 13, w - 16, y + h * 0.5f, 0.58f, fg, false);
+        } else {
+            drawCenteredBox(ctx, this.font, text, x + 4, w - 15, y + h * 0.5f, 0.58f, fg, false);
+            drawSmallTriangle(ctx, x + w - 8, y + h / 2, true, fg);
+        }
         this.interactiveRegions.add(new HitRegion(x, y, w, h, NAV_SPREAD, targetSpread));
     }
 
@@ -481,12 +514,15 @@ public class ArcaneGrimoireScreen extends Screen {
     private void renderHomeLeftPage(GuiGraphicsExtractor ctx, int x, int y, int w, int h) {
         ctx.enableScissor(x, y, x + w, y + h);
         try {
-            // Crest medallion at top center
             int crestSize = 30;
             int cx = x + (w - crestSize) / 2;
             ctx.blit(CREST_TEX, cx, y, cx + crestSize, y + crestSize, 0.0f, 1.0f, 0.0f, 1.0f);
+            this.itemSlots.add(new HoveredSlot(
+                new ItemStack(BlockRegistry.ARCANE_GRIMOIRE),
+                new Rect2i(cx, y, crestSize, crestSize),
+                true
+            ));
 
-            // Title & subtitle
             drawCenteredBox(
                 ctx,
                 this.font,
@@ -505,17 +541,15 @@ public class ArcaneGrimoireScreen extends Screen {
                 x + 2,
                 w - 4,
                 y + 46.5f,
-                0.56f,
+                0.58f,
                 INK_GOLD_DARK,
                 false
             );
 
-            // Ornamental divider
             int divY = y + 53;
             ctx.fill(x + 10, divY, x + w - 10, divY + 1, CARD_BORDER);
             ctx.fill(x + w / 2 - 14, divY, x + w / 2 + 14, divY + 1, INK_PURPLE);
 
-            // Intro summary box
             int introY = divY + 5;
             ctx.fill(x, introY, x + w, introY + 34, CALLOUT_BG);
             ctx.fill(x, introY, x + 3, introY + 34, INK_PURPLE);
@@ -532,7 +566,6 @@ public class ArcaneGrimoireScreen extends Screen {
                 false
             );
 
-            // 3 Core Pillars quick cards
             String[] pillars = {
                 "gui.chiseled_enchanting_table.grimoire.home.p1",
                 "gui.chiseled_enchanting_table.grimoire.home.p2",
@@ -553,7 +586,7 @@ public class ArcaneGrimoireScreen extends Screen {
                     Component.translatable(pillars[i]).getString(),
                     x + 17,
                     py0 + pH * 0.5f,
-                    0.56f,
+                    0.58f,
                     w - 21,
                     INK_PRIMARY,
                     false
@@ -585,7 +618,7 @@ public class ArcaneGrimoireScreen extends Screen {
         int listTop = y + 16;
         int availH = h - 16;
         int gap = 2;
-        int rowH = (availH - gap * (CHAPTER_COUNT - 1)) / CHAPTER_COUNT; // 16px clean rows
+        int rowH = (availH - gap * (CHAPTER_COUNT - 1)) / CHAPTER_COUNT;
 
         for (int i = 0; i < CHAPTER_COUNT; i++) {
             int ch = i + 1;
@@ -598,16 +631,17 @@ public class ArcaneGrimoireScreen extends Screen {
             ctx.fill(x + 1, ry + 1, x + w - 1, ry + rowH - 1, bg);
             ctx.fill(x, ry, x + 3, ry + rowH, TAB_COLORS[ch]);
 
-            // Mini 11x11 item icon
             ItemStack icon = this.chapterIcons.get(i);
+            int iconX = x + 5;
+            int iconY = Math.round(ry + (rowH - 11.0f) * 0.5f);
             var pose = ctx.pose();
             pose.pushMatrix();
-            pose.translate(x + 5.0f, ry + (rowH - 11.0f) * 0.5f);
+            pose.translate(iconX, iconY);
             pose.scale(11.0f / 16.0f, 11.0f / 16.0f);
             ctx.item(icon, 0, 0);
             pose.popMatrix();
+            this.itemSlots.add(new HoveredSlot(icon, new Rect2i(iconX - 1, ry + 1, 13, rowH - 2), false));
 
-            // Chapter number + title
             String title = String.format("%02d ", ch)
                 + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + ch + ".short").getString();
             drawLeftCenteredY(
@@ -616,24 +650,13 @@ public class ArcaneGrimoireScreen extends Screen {
                 title,
                 x + 19,
                 ry + rowH * 0.5f,
-                0.60f,
+                0.62f,
                 w - 30,
                 over ? INK_PURPLE : INK_PRIMARY,
                 false
             );
 
-            drawCenteredBox(
-                ctx,
-                this.font,
-                "\u25b8",
-                x + w - 10,
-                8,
-                ry + rowH * 0.5f,
-                0.58f,
-                over ? INK_GOLD_DARK : INK_MUTED,
-                false
-            );
-
+            drawSmallTriangle(ctx, x + w - 8, ry + rowH / 2, true, over ? INK_GOLD_DARK : INK_MUTED);
             this.interactiveRegions.add(new HitRegion(x, ry, w, rowH, NAV_SPREAD, String.valueOf(ch)));
         }
     }
@@ -787,30 +810,29 @@ public class ArcaneGrimoireScreen extends Screen {
         int w,
         int h,
         int mouseX,
-        int mouseY,
-        List<ItemStack> hoveredItem
+        int mouseY
     ) {
         ctx.enableScissor(x, y, x + w, y + h);
         try {
             switch (ch) {
                 case 1 -> GrimoireDiagramRenderer.renderChapter1Recipes(
-                    ctx, this.minecraft, x, y, w, h, this.selectedRecipeIdx, mouseX, mouseY, this.interactiveRegions, hoveredItem
+                    ctx, this.minecraft, x, y, w, h, this.selectedRecipeIdx, mouseX, mouseY, this.interactiveRegions, this.itemSlots
                 );
                 case 2 -> GrimoireDiagramRenderer.renderChapter2Anatomy(
-                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, hoveredItem
+                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, this.itemSlots
                 );
                 case 3 -> GrimoireDiagramRenderer.renderChapter3Shelves(
                     ctx, this.minecraft, x, y, w, h, this.demoShelves, mouseX, mouseY, this.interactiveRegions
                 );
                 case 4 -> GrimoireDiagramRenderer.renderChapter4Economy(ctx, this.minecraft, x, y, w, h);
                 case 5 -> GrimoireDiagramRenderer.renderChapter5BookLoop(
-                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, hoveredItem
+                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, this.itemSlots
                 );
                 case 6 -> GrimoireDiagramRenderer.renderChapter6Epiphany(
-                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, hoveredItem
+                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, this.itemSlots
                 );
                 case 7 -> GrimoireDiagramRenderer.renderChapter7Transmute(
-                    ctx, this.minecraft, x, y, w, h, this.selectedTransmuteIdx, mouseX, mouseY, this.interactiveRegions, hoveredItem
+                    ctx, this.minecraft, x, y, w, h, this.selectedTransmuteIdx, mouseX, mouseY, this.interactiveRegions, this.itemSlots
                 );
                 default -> GrimoireDiagramRenderer.renderChapter8Cleanse(ctx, this.minecraft, x, y, w, h);
             }
@@ -820,14 +842,28 @@ public class ArcaneGrimoireScreen extends Screen {
     }
 
     // =========================================================================
-    // INPUT HANDLING (MOUSE CLICKS, SCROLL WHEEL, FULL KEYBOARD SHORTCUTS)
+    // INPUT HANDLING (JEI/REI CLICK + HOTKEY LOOKUP, TABS, SCROLL, KEYBOARD)
     // =========================================================================
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+
+        HoveredSlot slot = hoveredIngredient(mouseX, mouseY);
+        if (slot != null && GrimoireViewerBridge.isAvailable()) {
+            if (event.button() == 1) {
+                if (GrimoireViewerBridge.openUses(slot.stack())) {
+                    return true;
+                }
+            } else if (event.button() == 0 && (slot.leftClickOpensRecipes() || event.hasShiftDown())) {
+                if (GrimoireViewerBridge.openRecipes(slot.stack())) {
+                    return true;
+                }
+            }
+        }
+
         if (event.button() == 0) {
-            double mouseX = event.x();
-            double mouseY = event.y();
             for (HitRegion region : this.interactiveRegions) {
                 if (region.contains(mouseX, mouseY)) {
                     switch (region.actionId()) {
@@ -894,6 +930,26 @@ public class ArcaneGrimoireScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
+
+        // Direct R / U recipe-viewer lookup fallback when hovering an item slot
+        if ((keyCode == InputConstants.KEY_R || keyCode == InputConstants.KEY_U) && GrimoireViewerBridge.isAvailable()) {
+            double mx = this.minecraft.mouseHandler.xpos()
+                * (double) this.minecraft.getWindow().getGuiScaledWidth()
+                / (double) this.minecraft.getWindow().getScreenWidth();
+            double my = this.minecraft.mouseHandler.ypos()
+                * (double) this.minecraft.getWindow().getGuiScaledHeight()
+                / (double) this.minecraft.getWindow().getScreenHeight();
+            HoveredSlot slot = hoveredIngredient(mx, my);
+            if (slot != null) {
+                boolean opened = (keyCode == InputConstants.KEY_R)
+                    ? GrimoireViewerBridge.openRecipes(slot.stack())
+                    : GrimoireViewerBridge.openUses(slot.stack());
+                if (opened) {
+                    return true;
+                }
+            }
+        }
+
         if (keyCode == InputConstants.KEY_RIGHT || keyCode == InputConstants.KEY_D || keyCode == InputConstants.KEY_PAGEDOWN) {
             if (this.spreadIndex < CHAPTER_COUNT) {
                 jumpToSpread(this.spreadIndex + 1, false);

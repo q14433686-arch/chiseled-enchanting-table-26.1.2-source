@@ -1103,36 +1103,46 @@ def check_grimoire_recipes_sounds_and_textures() -> None:
         if robj.get("result", {}).get("id") != "chiseled_enchanting_table:arcane_grimoire":
             errors.append(f"{rpath.name} result id must be chiseled_enchanting_table:arcane_grimoire")
 
-    # 2. Verify sounds.json + Ogg Vorbis headers + subtitle translation keys across all 11 locales
-    sounds_path = client_res / "sounds.json"
-    if not sounds_path.is_file():
-        errors.append("missing assets/chiseled_enchanting_table/sounds.json")
-    else:
-        sounds_obj = json.loads(sounds_path.read_text(encoding="utf-8"))
-        expected_events = {
-            "grimoire_open", "grimoire_close", "grimoire_page_turn",
-            "grimoire_chapter_select", "grimoire_home", "grimoire_tab_switch",
-        }
-        missing_events = expected_events - set(sounds_obj.keys())
-        if missing_events:
-            errors.append(f"sounds.json missing events: {sorted(missing_events)}")
-        lang_files = sorted((client_res / "lang").glob("*.json"))
-        lang_maps = {lf.name: json.loads(lf.read_text(encoding="utf-8")) for lf in lang_files}
-        for ev, spec in sounds_obj.items():
-            sub_key = spec.get("subtitle", "")
-            for lname, lmap in lang_maps.items():
-                if sub_key not in lmap:
-                    errors.append(f"{lname} missing subtitle key '{sub_key}' for sound '{ev}'")
-            for entry in spec.get("sounds", []):
-                sname = entry if isinstance(entry, str) else entry.get("name", "")
-                rel = sname.split(":", 1)[1] if ":" in sname else sname
-                ogg_path = client_res / "sounds" / f"{rel}.ogg"
-                if not ogg_path.is_file():
-                    errors.append(f"missing .ogg sound file for '{ev}': {ogg_path}")
-                else:
-                    raw = ogg_path.read_bytes()
-                    if len(raw) < 1024 or raw[:4] != b"OggS":
-                        errors.append(f"invalid Ogg Vorbis file: {ogg_path}")
+    # 2. Verify native vanilla sound usage (zero custom .ogg bloat) & JEI/REI viewer integration
+    if (client_res / "sounds.json").exists():
+        errors.append("obsolete sounds.json still exists; grimoire must use vanilla SoundEvents")
+    if (client_res / "sounds").exists():
+        errors.append("obsolete custom sounds directory still exists; grimoire must use vanilla SoundEvents")
+
+    sound_helper = (
+        repo_root
+        / "src/client/java/chiseled_enchanting_table/gui/grimoire/GrimoireSoundHelper.java"
+    ).read_text(encoding="utf-8")
+    for required_sym in ("SoundEvents.BOOK_PAGE_TURN", "SoundEvents.BOOK_PUT", "SoundEvents.UI_BUTTON_CLICK"):
+        if required_sym not in sound_helper:
+            errors.append(f"GrimoireSoundHelper missing vanilla sound symbol: {required_sym}")
+
+    # 3. Verify JEI & REI viewer bridge + zero optional-mod imports outside compat/{jei,rei}
+    for non_compat_java in sorted((repo_root / "src").glob("**/*.java")):
+        posix = non_compat_java.as_posix()
+        if "/compat/jei/" in posix or "/compat/rei/" in posix:
+            continue
+        src_txt = non_compat_java.read_text(encoding="utf-8")
+        if "mezz.jei." in src_txt or "me.shedaniel." in src_txt:
+            errors.append(f"{posix} directly imports JEI/REI; breaks -Penable_jei=false/-Penable_rei=false")
+
+    jei_txt = (
+        repo_root
+        / "src/client/java/chiseled_enchanting_table/compat/jei/ChiseledEnchantingJeiPlugin.java"
+    ).read_text(encoding="utf-8")
+    for tok in ("BlockRegistry.ARCANE_GRIMOIRE", "ArcaneGrimoireScreen", "GrimoireViewerBridge", "hoveredIngredient"):
+        if tok not in jei_txt:
+            errors.append(f"ChiseledEnchantingJeiPlugin missing '{tok}'")
+
+    rei_txt = (
+        repo_root
+        / "src/client/java/chiseled_enchanting_table/compat/rei/ChiseledEnchantingReiPlugin.java"
+    ).read_text(encoding="utf-8")
+    for tok in ("BlockRegistry.ARCANE_GRIMOIRE", "ArcaneGrimoireScreen", "GrimoireViewerBridge", "registerFocusedStack"):
+        if tok not in rei_txt:
+            errors.append(f"ChiseledEnchantingReiPlugin missing '{tok}'")
+    if "me.shedaniel.rei.plugin." in rei_txt:
+        errors.append("ChiseledEnchantingReiPlugin must use me.shedaniel.rei.api.* only (not default-plugin internal packages)")
 
 
 # --------------------------------------------------------------------------- #
