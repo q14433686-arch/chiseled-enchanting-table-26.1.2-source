@@ -357,7 +357,7 @@ class EconomyAndConfigVerificationTest {
         assertEquals(BookshelfProgression.VanillaTableMode.BOOKS, sg.vanillaTableMode());
         assertEquals(12, sg.tier1Bookshelves());
         assertEquals(32, sg.tier2Bookshelves());
-        assertEquals(38, sg.maxTierBookshelves());
+        assertEquals(38, sg.maxDirectBookshelves());
         assertTrue(sg.requireBreathingRoom());
         assertEquals(6, sg.minOpenAdjacentBlocks());
 
