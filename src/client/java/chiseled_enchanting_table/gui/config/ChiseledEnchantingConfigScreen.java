@@ -114,11 +114,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     }
 
     public void initOverlay(Minecraft mc, int fullWidth, int fullHeight) {
-        this.minecraft = mc;
-        this.font = mc.font;
         this.width = fullWidth;
         this.height = fullHeight;
-        computeLayout();
+        this.init();
     }
 
     public Rect2i fullGuiBounds() {
