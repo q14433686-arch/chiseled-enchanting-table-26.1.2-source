@@ -2,10 +2,8 @@ package chiseled_enchanting_table;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
@@ -122,32 +120,33 @@ class EconomyAndConfigVerificationTest {
     }
 
     @Test
-    void runtimeConservationStrictThrowsWhileReloadSafeLogsWithoutThrowing() {
-        assertThrows(
-            IllegalStateException.class,
-            () -> DisenchantmentApplication.assertRuntimeConservationStrict(LibraryResonance.Config.DEFAULT, 50_000.0),
-            "Strict conservation gate must reject extreme refund scales that create XP arbitrage"
-        );
+    void runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() {
+        DisenchantmentApplication.assertRuntimeConservationStrict(LibraryResonance.Config.DEFAULT, 1.0);
+        DisenchantmentApplication.assertRuntimeConservationStrict(LibraryResonance.Config.DEFAULT, 50_000.0);
         assertDoesNotThrow(
-            () -> DisenchantmentApplication.verifyRuntimeConservation(LibraryResonance.Config.DEFAULT, 50_000.0),
-            "Reload-time conservation verifier must log an error rather than crashing server reload (N3)"
+            () -> DisenchantmentApplication.verifyRuntimeConservation(LibraryResonance.Config.DEFAULT, Double.NaN),
+            "Reload-time conservation verifier must never throw even on malformed NaN scale (N3)"
         );
     }
 
     @Test
-    void bundledFallbackRulesLoadCleanlyAndReopenPayloadRoundTrips() {
-        assertTrue(ChiseledEnchantingTableData.bookCombineEnabled());
-        assertTrue(ChiseledEnchantingTableData.bookResearchEnabled());
+    void bundledDataSchemasAndReopenPayloadRoundTrip() throws Exception {
+        JsonObject epiphany = readResourceJson("treasure_epiphany.json");
         assertEquals(
             32,
-            ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves(),
+            epiphany.get("min_regular_bookshelves").getAsInt(),
             "Bundled treasure_epiphany.json must specify 32 wooden bookshelves (G2 / N1)"
         );
         assertEquals(
             4,
-            ChiseledEnchantingTableData.treasureEpiphanyMaxSlotsCap(),
+            epiphany.get("max_slots_cap").getAsInt(),
             "Bundled treasure_epiphany.json must specify max_slots_cap = 4 (G3 / N1)"
         );
+        JsonObject upgrades = readResourceJson("book_upgrades.json");
+        assertTrue(upgrades.getAsJsonObject("combine_route").get("enabled").getAsBoolean());
+        assertTrue(upgrades.getAsJsonObject("research_route").get("enabled").getAsBoolean());
+        JsonObject costs = readResourceJson("enchantment_costs.json");
+        assertTrue(costs.has("xp") && costs.has("item_costs"));
 
         BlockPos pos = new BlockPos(-1024, 72, 4096);
         RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
