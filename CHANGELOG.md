@@ -216,6 +216,12 @@ Ported from the sister `26.3` branch with 26.2 API/schema adaptations; full mapp
   (`LiveShelfStatePayload.container_id`) and is closed on config change or datapack reload so it can
   never keep a stale snapshot. An empty server catalog is authoritative — the client no longer
   falls back to its local data-pack values mid-session.
+- **Fixed — loot-function conditions were parsed away**: `RemoveEnchantedBooksFunction` and
+  `DepthBasedEfficiencyFunction` built their codec with `MapCodec.unit(...)`, which ignores unknown
+  fields, so a data pack's `conditions` array on either function was silently dropped and the
+  function ran regardless (an always-false condition still stripped the enchanted book). Both
+  codecs now go through `commonFields(...)` like every vanilla `LootItemConditionalFunction`, and
+  `compat_check.py` guards against the unit-codec pattern. Found by the new server smoke test.
 - **Verification**: two new JUnit 5 suites (`ConfigurationSafetyTest`, `NetworkCompatibilityTest`,
   `29` tests in total across `src/test/java`), and a new `server-smoke` CI job
   (`scripts/server_smoke.py`) that boots a disposable world, reloads datapacks, and asserts table

@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.mechanics.loot;
 
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.List;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -22,8 +23,10 @@ import net.minecraft.world.phys.Vec3;
  * (near {@code level.getMinY()}), preserving upstream's {@code DepthBasedEfficiency} formula.
  */
 public class DepthBasedEfficiencyFunction extends LootItemConditionalFunction {
+    // Same story as RemoveEnchantedBooksFunction: `MapCodec.unit` dropped the `conditions` array,
+    // so a datapack's always-false condition was ignored and the depth scaling ran regardless.
     public static final MapCodec<DepthBasedEfficiencyFunction> MAP_CODEC =
-        MapCodec.unit(DepthBasedEfficiencyFunction::new);
+        RecordCodecBuilder.mapCodec(i -> commonFields(i).apply(i, DepthBasedEfficiencyFunction::new));
 
     private static final ResourceKey<Enchantment> EFFICIENCY_KEY =
         ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("efficiency"));

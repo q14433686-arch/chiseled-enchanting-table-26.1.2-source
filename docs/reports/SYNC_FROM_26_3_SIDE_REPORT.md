@@ -105,7 +105,31 @@ different Minecraft line and *will* re-introduce them if it is ever replayed.
 `override_datapacks=true`; Master Tome `wear` → 16 uses / `cost_per_use` 4 / `step_down`; external
 refund `0.25`; shelf gates `12` / `32` / `38`; batch max `64`; vanilla table mode `books`.
 
-### 2.7 Tests & CI
+### 2.7 Bonus: a real 26.2-line bug the ported smoke test found
+
+The first CI run of the new `server-smoke` job failed, and it failed on a genuine defect that the
+26.2 line had shipped since `1.0.2`:
+
+`RemoveEnchantedBooksFunction` and `DepthBasedEfficiencyFunction` built their `MapCodec` with
+`MapCodec.unit(...)`. A unit codec ignores every unknown field, including the `conditions` array, so
+a data pack that wrapped either function in an always-false condition had that condition **silently
+dropped** and the function ran anyway — `remove_enchanted_books` ate books it was told to leave
+alone. Nothing in the bundled data uses per-function conditions, which is why no earlier gate caught
+it. The 26.3 line had already fixed it by routing the codec through `commonFields(...)`; the same
+fix was applied here against the 26.2 signature (`List<LootItemCondition>` instead of a single
+`Optional<Holder<LootItemCondition>>`):
+
+```java
+public static final MapCodec<RemoveEnchantedBooksFunction> MAP_CODEC =
+    RecordCodecBuilder.mapCodec(i -> commonFields(i).apply(i, RemoveEnchantedBooksFunction::new));
+```
+
+`scripts/compat_check.py` now has a Tier-1 guard
+(`check_loot_function_codecs_keep_conditions`) that rejects `MapCodec.unit(...)` (or a missing
+`commonFields(...)`) in any `LootItemConditionalFunction` subclass, so datapack-facing condition
+support cannot regress silently again.
+
+### 2.8 Tests & CI
 
 * `src/test/java/.../ConfigurationSafetyTest` (new, 4 tests): authority matrix + config round-trip
   safety.

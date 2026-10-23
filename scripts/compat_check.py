@@ -204,6 +204,31 @@ DISPLAY_KEYS = {
 }
 
 
+def check_loot_function_codecs_keep_conditions() -> None:
+    """Every `LootItemConditionalFunction` subclass must build its MapCodec via `commonFields`.
+
+    A `MapCodec.unit(...)` codec ignores the `conditions` array, so a data pack's
+    always-false condition is silently dropped and the function runs anyway. The CI
+    server smoke test caught exactly that on 2026-10-23 (an always-false
+    `minecraft:random_chance` on `remove_enchanted_books` still ate the book), and the
+    26.3 line fixed it by routing the codec through `commonFields`.
+    """
+    loot_dir = os.path.join(REPO, "src", "main", "java", "chiseled_enchanting_table",
+                            "mechanics", "loot")
+    for path in sorted(glob.glob(os.path.join(loot_dir, "*.java"))):
+        rel = os.path.relpath(path, REPO)
+        with open(path, encoding="utf-8") as fh:
+            source = fh.read()
+        if "extends LootItemConditionalFunction" not in source:
+            continue
+        if "MapCodec.unit(" in source:
+            err(f"{rel}: MapCodec.unit(...) drops the loot-function 'conditions' array; "
+                f"build the codec with RecordCodecBuilder.mapCodec(i -> commonFields(i)...)")
+        if "commonFields(" not in source:
+            err(f"{rel}: loot function codec never calls commonFields(...), "
+                f"so per-function conditions cannot be parsed")
+
+
 def check_advancements_use_26_2_schema() -> None:
     """26.2 advancement schema checks.
 
@@ -1420,6 +1445,7 @@ def main() -> int:
     check_datapack_dir_naming()
     check_block_loot_tables_drop_something()
     check_loot_tables_use_26_2_schema()
+    check_loot_function_codecs_keep_conditions()
     check_advancements_use_26_2_schema()
     check_transformation_json_matches_java()
     check_default_enchantment_tags_well_formed()
