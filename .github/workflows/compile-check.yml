@@ -75,7 +75,7 @@ jobs:
           # 编译失败时脚本会在那一行直接退出（1.0.3 第一次失败的日志里就没有 exit code 行），
           # 下面的失败诊断也就永远不会生成。必须用 `|| status=$?` 把退出码接住。
           status=0
-          ./gradlew compileJava compileClientJava --console=plain --stacktrace --no-daemon \
+          ./gradlew compileJava compileClientJava test --console=plain --stacktrace --no-daemon \
             >> build-reports/compile-java.log 2>&1 || status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
           # 把「浮动坐标」这次实际解析成了什么记进日志：jei_version=latest.release 与

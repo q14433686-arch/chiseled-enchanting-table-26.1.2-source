@@ -61,6 +61,7 @@ public final class EnchantCostSync {
             }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_DISPLAYS.clear());
+        ServerPlayConnectionEvents.DISCONNECT.register((listener, server) -> LAST_DISPLAYS.remove(listener.player));
 
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
             if (!success) return;
