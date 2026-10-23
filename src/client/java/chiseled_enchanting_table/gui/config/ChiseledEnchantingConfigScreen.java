@@ -184,8 +184,17 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return ConfigCatalog.optionsInCategory(this.activeCategory);
     }
 
+    private Draft displayedDraft(OptionEntry entry) {
+        if (this.sessionMode == SessionMode.OFFLINE_CLIENT) return this.draft;
+        var policy = ModRuntimeConfig.effectivePackPolicy();
+        boolean governed = policy.isKeyLocked(entry.key())
+            || (policy.datapackOverriddenKeys().contains(entry.key())
+                && (!this.draft.overrideDatapacks || policy.enforceDatapackPriority()));
+        return governed ? ModRuntimeConfig.effective().toDraft() : this.draft;
+    }
+
     private String formatOptionValue(OptionEntry entry) {
-        String raw = entry.rawOrKeyDisplay(this.draft);
+        String raw = entry.rawOrKeyDisplay(displayedDraft(entry));
         return raw.startsWith("@") ? I18n.get(raw.substring(1)) : raw;
     }
 
@@ -518,7 +527,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean editable = avail.editable();
 
         if (entry.kind() == ControlKind.BOOLEAN) {
-            boolean on = Boolean.TRUE.equals(entry.get(this.draft));
+            boolean on = Boolean.TRUE.equals(entry.get(displayedDraft(entry)));
             boolean over = inClipMouse && editable && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
             int border = !editable ? 0xFF3B3052 : (on ? 0xFF5CE1A6 : 0xFF75609E);
             int fill = !editable ? 0xFF1D172B : (on ? (over ? 0xFF236B4E : 0xFF1A523B) : (over ? 0xFF34264F : 0xFF241A38));
@@ -578,7 +587,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         ctx.fill(plusX + 1, y + 1, plusX + stepW - 1, y + h - 1, overPlus ? 0xFF422E66 : 0xFF211735);
         GrimoireTextLayout.drawCenteredBox(ctx, this.font, "+", plusX, stepW, y + h * 0.5f, 0.76f, editable ? CREAM_TEXT : 0xFF665A7D, true);
 
-        double norm = entry.normalizedSliderValue(this.draft);
+        double norm = entry.normalizedSliderValue(displayedDraft(entry));
         ctx.fill(trackX, y, trackX + trackW, y + h, editable ? 0xFF6D5899 : 0xFF352B4A);
         ctx.fill(trackX + 1, y + 1, trackX + trackW - 1, y + h - 1, 0xFF181126);
         int fillW = Math.round((float) ((trackW - 2) * norm));
@@ -621,6 +630,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             formatOptionValue(entry),
             formatDefaultValue(entry)
         ).withStyle(ChatFormatting.AQUA));
+        if (entry.effectScope() == ConfigCatalog.EffectScope.RESTART_REQUIRED) {
+            String actual = entry.rawOrKeyDisplay(ModRuntimeConfig.effective().toDraft());
+            lines.add(Component.translatable("config.chiseled_enchanting_table.tip.active_value", actual).withStyle(ChatFormatting.GOLD));
+        }
         ChatFormatting scopeFmt = switch (avail.effectScope()) {
             case IMMEDIATE -> ChatFormatting.GREEN;
             case NEW_GENERATION -> ChatFormatting.AQUA;

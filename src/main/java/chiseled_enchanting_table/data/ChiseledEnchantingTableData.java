@@ -826,7 +826,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 }
             }
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.warn("Failed to read {}; falling back to default pack policy", PACK_POLICY_ID, e);
+            throw new IllegalArgumentException("Invalid pack policy: " + PACK_POLICY_ID, e);
         }
         return chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.fromJson(policyRoot, externalKeys);
     }
@@ -837,15 +837,27 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         String tableName,
         Set<String> outKeys
     ) {
-        List<net.minecraft.server.packs.resources.Resource> stack = resourceManager.getResourceStack(tableId);
-        // Index 0 is the mod's own built-in resource pack; indices 1..N-1 are external datapacks / modpacks.
-        for (int i = 1; i < stack.size(); i++) {
-            try (Reader reader = stack.get(i).openAsReader()) {
-                JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
-                outKeys.addAll(extractConfigKeysFromDatapackJson(tableName, obj));
-            } catch (Exception e) {
-                ChiseledEnchantingTable.LOGGER.warn("Failed to inspect external datapack layer for {}", tableId, e);
+        // The table loader uses getResource (whole-file replacement), so only the selected layer
+        // may govern fields. Never lock keys from a shadowed lower layer or assume stack index 0.
+        var selected = resourceManager.getResource(tableId);
+        if (selected.isEmpty()) return;
+        var resource = selected.get();
+        try (Reader reader = resource.openAsReader()) {
+            JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
+            String source = resource.sourcePackId();
+            boolean own = source.equals("mod/chiseled_enchanting_table") || source.equals("chiseled_enchanting_table");
+            // Fabric's aggregate built-in pack may not expose a per-mod identity. Compare its
+            // selected content to our bundled resource rather than treating any first layer as ours.
+            if (source.equals("fabric") || source.equals("vanilla")) {
+                try (var stream = ChiseledEnchantingTableData.class.getResourceAsStream(
+                    "/data/" + tableId.getNamespace() + "/" + tableId.getPath())) {
+                    if (stream != null) own = object.equals(JsonParser.parseReader(
+                        new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)));
+                }
             }
+            if (!own) outKeys.addAll(extractConfigKeysFromDatapackJson(tableName, object));
+        } catch (Exception error) {
+            throw new IllegalArgumentException("Failed to inspect effective table " + tableId, error);
         }
     }
 

@@ -33,7 +33,7 @@ import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.entries.EmptyLootItem;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -231,11 +231,11 @@ public final class DepletedTomeWorldMechanics {
             int totalPoolWeight = 1000 * span;
             int emptyWeight = Math.max(0, totalPoolWeight - perCountHitWeight * span);
 
-            LootPool.Builder pool = LootPool.lootPool().setRolls(ConstantValue.exactly(1.0F));
+            LootPool.Builder pool = LootPool.lootPool().setRolls(ContextIntProviders.exactly(1));
             for (int c = minC; c <= maxC; c++) {
                 pool.add(
                     LootItem.lootTableItem(BlockRegistry.DEPLETED_TOME)
-                        .apply(SetItemCountFunction.setCount(ConstantValue.exactly(c)))
+                        .apply(SetItemCountFunction.setCount(ContextIntProviders.exactly(c)))
                         .setWeight(perCountHitWeight)
                 );
             }

@@ -617,5 +617,6 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_title": "图示：残卷探索(≤30%)与村民交易",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "世界各地结构宝箱（10%–55%）\n野生雕纹书架风化替换（总概率 ≤30%）",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "仅限【图书管理员】回收：\n2 残卷 = 1 绿宝石 或 2 紫水晶碎片",
-  "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "拜托重绘：按「稀有度×普适度×相对等级」同时决定【村民等级门槛 Lv.1–5】与【要价】（基础 4青金石/2墨囊/1绿宝石；高阶需大师村民，封顶 18 绿宝石 < 原版修补均价 24）！"
+  "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "拜托重绘：按「稀有度×普适度×相对等级」同时决定【村民等级门槛 Lv.1–5】与【要价】（基础 4青金石/2墨囊/1绿宝石；高阶需大师村民，封顶 18 绿宝石 < 原版修补均价 24）！",
+  "config.chiseled_enchanting_table.tip.active_value": "当前实际生效值（重启前）：%s"
 }
