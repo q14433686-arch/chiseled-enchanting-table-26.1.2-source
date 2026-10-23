@@ -152,6 +152,21 @@ class SyncContracts(unittest.TestCase):
             self.assertIn(token, payload)
         self.assertTrue((CLIENT / 'gui/grimoire/ArcaneGrimoireScreen.java').exists())
 
+    def test_grimoire_clicks_use_platform_button_constants(self):
+        source = (CLIENT / 'gui/grimoire/ArcaneGrimoireScreen.java').read_text()
+        click = source.split('public boolean mouseClicked(', 1)[1].split(
+            'public boolean mouseScrolled(', 1)[0]
+        # SDL left-click must reach navigation AND recipe lookup, not the right-click uses path.
+        self.assertIn('event.button() == InputConstants.MOUSE_BUTTON_RIGHT', click)
+        self.assertEqual(click.count('event.button() == InputConstants.MOUSE_BUTTON_LEFT'), 2)
+        self.assertNotRegex(click, r'event\.button\(\)\s*==\s*\d+')
+        self.assertIn('case NAV_SPREAD -> jumpToSpread', click)
+        self.assertIn('case NAV_CLOSE -> onClose()', click)
+        self.assertIn('case GrimoireDiagramRenderer.ACTION_SHELF_STEP', click)
+        # The same handler serves the table overlay, which must keep forwarding clicks.
+        table = (CLIENT / 'gui/ChiseledEnchantingTableScreen.java').read_text()
+        self.assertIn('this.grimoireOverlay.mouseClicked(event, isDoubleClick)', table)
+
 
 if __name__ == '__main__':
     unittest.main()

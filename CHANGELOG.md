@@ -15,6 +15,14 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
+## [1.1.1] — Grimoire mouse-input fix (version unchanged)
+
+- Use platform mouse-button constants in the Grimoire instead of old GLFW button numbers.
+  Fixes directory/bookmarks, page navigation, close/return, recipe tabs and diagram controls
+  on 26.3 (SDL left=1, right=3); both standalone and table-overlay views share this handler.
+- Restore intended recipe/usage lookup clicks on item icons without treating left click as right.
+- Add a regression gate against hardcoded mouse IDs in the Grimoire click handler.
+
 ## [1.1.1] — Additional 26.1.2 sync, 2026-10-23 (version unchanged)
 
 - Sync through source `b78b244`: full/targeted disenchanting, curse purge, Cleansing Grit,

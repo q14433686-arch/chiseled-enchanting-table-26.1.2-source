@@ -914,20 +914,21 @@ public class ArcaneGrimoireScreen extends Screen {
         double mouseX = event.x();
         double mouseY = event.y();
 
+        // 26.3 uses SDL button IDs (left=1, right=3), not GLFW IDs (0/1).
         HoveredSlot slot = hoveredIngredient(mouseX, mouseY);
         if (slot != null && GrimoireViewerBridge.isAvailable()) {
-            if (event.button() == 1) {
+            if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
                 if (GrimoireViewerBridge.openUses(slot.stack())) {
                     return true;
                 }
-            } else if (event.button() == 0 && (slot.leftClickOpensRecipes() || event.hasShiftDown())) {
+            } else if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && (slot.leftClickOpensRecipes() || event.hasShiftDown())) {
                 if (GrimoireViewerBridge.openRecipes(slot.stack())) {
                     return true;
                 }
             }
         }
 
-        if (event.button() == 0) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             int maxCap = Math.max(1, SyncedEnchantmentCosts.shelfGatesConfig().maxDirectBookshelves());
             for (HitRegion region : this.interactiveRegions) {
                 if (region.contains(mouseX, mouseY)) {
