@@ -673,13 +673,7 @@ class EconomyAndConfigVerificationTest {
         assertEquals(64, BookshelfProgression.DEFAULT_BASE_BATCH_SIZE, "Batch crafting must have zero bookshelf threshold (64 at 0 shelves)");
         assertEquals(64, BookshelfProgression.DEFAULT_TIER3_BATCH_SIZE);
 
-        Path repoRoot = findRepoRoot();
-        JsonObject shelfGatesJson = JsonParser.parseString(
-            java.nio.file.Files.readString(
-                repoRoot.resolve("src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/shelf_gates.json"),
-                StandardCharsets.UTF_8
-            )
-        ).getAsJsonObject();
+        JsonObject shelfGatesJson = readResourceJson("shelf_gates.json");
         BookshelfProgression.Config parsedCfg = BookshelfProgression.Config.fromJson(shelfGatesJson);
         assertEquals(64, parsedCfg.baseBatchSize(), "shelf_gates.json base_batch_size must default to 64 without any shelf gate");
         assertEquals(64, parsedCfg.tier3BatchSize());
