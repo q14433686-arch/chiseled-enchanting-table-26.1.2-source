@@ -133,6 +133,25 @@ class SyncContracts(unittest.TestCase):
             compat.check_loot_tables_use_26_3_schema()
             self.assertFalse(err.called)
 
+    def test_incremental_client_screen_api(self):
+        for java in CLIENT.rglob('*.java'):
+            source = java.read_text()
+            self.assertNotIn('getInstance().setScreen(', source, str(java))
+            self.assertNotIn('getInstance().screen ', source, str(java))
+        plugin = (CLIENT / 'compat/jei/ChiseledEnchantingJeiPlugin.java').read_text()
+        self.assertIn('getInstance().gui.screen() instanceof ArcaneGrimoireScreen', plugin)
+
+    def test_incremental_features_and_live_payload(self):
+        for path in ['mechanics/enchanting/DisenchantmentApplication.java',
+                     'mechanics/resonance/BookshelfProgression.java',
+                     'config/ModBootstrapConfig.java', 'item/ArcaneGrimoireItem.java']:
+            self.assertTrue((MAIN / path).exists())
+        payload = (MAIN / 'menu/ChiseledEnchantingMenuPayloads.java').read_text()
+        for token in ['LiveShelfStatePayload', 'high_tier_chiseled_books', 'ReopenTablePayload',
+                      'DISENCHANT_ALL', 'PURGE_CURSE']:
+            self.assertIn(token, payload)
+        self.assertTrue((CLIENT / 'gui/grimoire/ArcaneGrimoireScreen.java').exists())
+
 
 if __name__ == '__main__':
     unittest.main()
