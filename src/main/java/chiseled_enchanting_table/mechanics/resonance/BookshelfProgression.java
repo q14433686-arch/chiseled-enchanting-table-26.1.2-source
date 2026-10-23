@@ -237,36 +237,6 @@ public final class BookshelfProgression {
             int sy = 2 * Math.max(0, ry) + 1;
             return Math.max(0, sx * sx * sy - 1);
         }
-    }
-
-    /**
-     * Pure breathing-room shelf multiplier ({@code D4}) callable both in-game and in headless tests.
-     */
-    public static int effectiveShelvesAfterBreathingRoom(
-        int rawShelves,
-        boolean ceilingBlocked,
-        int openAdjacentBlocks,
-        Config cfg
-    ) {
-        if (rawShelves <= 0) {
-            return 0;
-        }
-        var c = cfg != null ? cfg : Config.DEFAULT;
-        if (!c.requireBreathingRoom()) {
-            return rawShelves;
-        }
-        if (ceilingBlocked) {
-            return 0;
-        }
-        int minOpen = Math.max(1, c.minOpenAdjacentBlocks());
-        if (openAdjacentBlocks >= minOpen) {
-            return rawShelves;
-        }
-        if (openAdjacentBlocks <= 0) {
-            return 0;
-        }
-        return (int) Math.floor((double) rawShelves * (double) openAdjacentBlocks / (double) minOpen);
-    }
 
         public static Config fromJson(JsonObject root) {
             if (root == null) {
@@ -654,5 +624,34 @@ public final class BookshelfProgression {
             out.add(List.copyOf(scaled));
         }
         return List.copyOf(out);
+    }
+
+    /**
+     * Pure breathing-room shelf multiplier ({@code D4}) callable both in-game and in headless tests.
+     */
+    public static int effectiveShelvesAfterBreathingRoom(
+        int rawShelves,
+        boolean ceilingBlocked,
+        int openAdjacentBlocks,
+        Config cfg
+    ) {
+        if (rawShelves <= 0) {
+            return 0;
+        }
+        var c = cfg != null ? cfg : Config.DEFAULT;
+        if (!c.requireBreathingRoom()) {
+            return rawShelves;
+        }
+        if (ceilingBlocked) {
+            return 0;
+        }
+        int minOpen = Math.max(1, c.minOpenAdjacentBlocks());
+        if (openAdjacentBlocks >= minOpen) {
+            return rawShelves;
+        }
+        if (openAdjacentBlocks <= 0) {
+            return 0;
+        }
+        return (int) Math.floor((double) rawShelves * (double) openAdjacentBlocks / (double) minOpen);
     }
 }
