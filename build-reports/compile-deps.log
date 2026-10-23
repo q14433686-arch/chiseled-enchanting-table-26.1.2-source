@@ -199,8 +199,6 @@ net.fabricmc.fabric-api:fabric-api-lookup-api-v1:2.0.24+3434d6d95d
 |    \--- compileClasspath
 \--- net.fabricmc.fabric-api:fabric-transfer-api-v1:8.0.25+fcdff87f5d
 ...[truncated 1003 lines total]...
-    | org.gradle.usage               | java-api | java-api     |
-    | org.gradle.dependency.bundling |          | external     |
     | org.gradle.jvm.environment     |          | standard-jvm |
     | org.gradle.jvm.version         |          | 25           |
 
@@ -991,6 +989,8 @@ A web-based, searchable dependency report is available by adding the --scan opti
 == job status: success ==
 
 == job status: cancelled ==
+
+== job status: success ==
 
 == job status: success ==
 
