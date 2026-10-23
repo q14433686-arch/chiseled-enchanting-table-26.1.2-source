@@ -1,6 +1,6 @@
 # Current Baseline
 
-**Date:** 2026-10-23
+**Date:** 2026-10-24
 **Minecraft Version:** 26.3
 **Fabric Loader:** 0.19.5
 **Fabric API:** 0.162.0+26.3
@@ -13,7 +13,15 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Current incremental port — option 1
+## Active work — option 3, latest source 3e61f5d (not yet fully ported)
+
+The user selected architecture-first integration of the **entire** new 26.1.2 delta through **`3e61f5de3ba7679ccbc92b73443dead149c96840`**, including PR #17 and #18. The earlier selection below is historical context for the shipped baseline, not the current work plan.
+
+Independent `RuleBook` and `RegenerationScheduler` cores and 13 new tests are implemented. They are **not yet wired into gameplay**. The existing gameplay/source boundary and revision 5 remain unchanged until the integrated implementation is ready. No claim is made that the new rituals, persistence, trades, loot or UI are already ported.
+
+[Cross-branch audit, completed foundation, evidence and remaining work](docs/reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md). New source defaults are 24,000 / 12,000 / 3,600 seconds, not the superseded 90 / 30 / 10 seconds.
+
+## Shipped gameplay baseline — previous option 1
 
 User selected faithful source defaults plus necessary hardening. The complete increment through **`3e081f31f262dc13f6a92f0a50313e12f6af28c0`** is merged; release **1.1.0**, target **MC 26.3**, protocol **`26_3_revision_5`**. This supersedes the previous “audit only / awaiting choice” state.
 

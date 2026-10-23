@@ -1,10 +1,30 @@
-# Next validation — option 1 port
+# Active implementation — option 3 / 3e61f5d
 
-The user selected **1**. The source increment through **3e081f3** is ported, retaining 26.3 fixes and release **1.1.0**. Wire is revision **5**. See [implementation, migration and evidence](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md).
+User approved **3**, including latest 26.1.2 changes and feedback for 26.1.2/26.2. No fresh design-choice prompt is needed for this agreed scope. Current branch remains `arena/7a86fcca-chiseled-enchanting-table-26-1`; never work on or push other branches.
 
-Final functional source **181e996** passed build **39904722889** (all four jobs), compile-check **39904722983**, 29 JUnit, 15 Python and the real no-player server/reload/loot smoke. No further default-policy decision is pending.
+## Completed foundation, NOT full port
 
-## Remaining real-client checks
+- Source pin: `3e61f5de3ba7679ccbc92b73443dead149c96840`; old synchronized source: `3e081f3`.
+- `RuleBook`: immutable effective values/origins, startup boundary, policy precedence, prepare/persist/publish with stale/foreign/reentrant rejection.
+- `RegenerationScheduler`: aggregate shared-shelf observations, fastest legal rate, no absent-window credit, identity/acknowledgement, eviction and linear batch acknowledgement.
+- 13 new pure-core JUnit tests; final foundation source `200e468` passed 42 total JUnit, compile-check **40004583488**, and all four jobs of build **40004583434**. These checks do not validate the unintegrated new gameplay.
+- [Cross-branch report](docs/reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md) identifies R1–R8/N1–N7; runtime fixes remain pending adapter integration.
+
+## Next implementation order
+
+1. Merge the FULL `3e081f3..3e61f5d` gameplay/resource delta without overwriting 26.3 safeguards. Preserve version 1.1.0 and pinned 26.3 dependencies. New regen defaults are 24000/12000/3600 seconds.
+2. Build candidate domain tables, policy and scalar rules before publication. Route all runtime consumers through one effective generation, while keeping stored preferences and UI drafts distinct. Actual startup components stay explicit restart-only values; world policy cannot retroactively control them.
+3. Replace source per-table timestamp regeneration with one per-world-session aggregate scheduler. Validate loaded chunks and exact shelf slot/book identity before applying; preserve unrelated NBT/provenance. No missed-time/backpack/cross-world credit.
+4. Integrate bounded ritual sessions, target escrow/fingerprint, ownership, preflight-before-payment, container/automation guards, recoverable completion and break/unload behavior. Do not copy the unbounded string queue or clear-before-complete sequence unchanged.
+5. Upgrade wire independently (expected revision 6), including charges/policy/ritual messages. Preserve revision 4/5 query-only diagnostics, PayloadLimits, container/session targeting, request ACKs and LAN owner/op checks. Do not inherit source unknown-action fallback or old save code.
+6. Integrate depleted-tome loot, wild-shelf decay, librarian trades/ranks, Infinity acquisition rules and the new Grimoire/UI/locales. Preserve 26.3 loot/provider APIs and safe structure processing. Separate third-party transaction ownership and test idempotency.
+7. Run full CI/JUnit/server smoke plus new inventory/queue/policy/registry-stack probes, then actual GUI/multiplayer checks. Update the report's implemented/pending columns; no declaration of full port before integration evidence.
+
+Scratch three-way candidate is OUTSIDE the repository at `/home/user/new-port-audit/candidate`; source/base archives are in `latest` / `base`, with `plan_merge.py` and `merge_plan.json` in the parent. These are comparison aids, not applied code or a publishable build. If unavailable, reconstruct from pinned git objects. Do not blindly copy conflict candidates: client receiver, block scanning, config networking, wear, payloads, handler and language files require deliberate integration.
+
+## Existing gameplay manual-validation backlog (still relevant)
+
+
 
 1. Singleplayer GUI: SDL left/right/drag, overlay/standalone pause, save/reject feedback and draft retention. Saving closes old table menus; check feedback if the overlay disappears before ACK rendering.
 2. Real dedicated/LAN clients: owner/guest/op permissions, successful/rejected/failed saves, disconnects and config commands. Current smoke has no players and does not execute config commands.
