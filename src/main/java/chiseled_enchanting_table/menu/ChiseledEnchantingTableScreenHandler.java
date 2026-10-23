@@ -531,6 +531,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (this.player != null && this.player.getAbilities().instabuild) {
             return true;
         }
+        var activeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.effective();
+        if (activeCfg.shouldApplyKey("require_prior_discovery") && !activeCfg.requirePriorDiscovery()) {
+            return true;
+        }
         TransformationDisplay display = this.transformationDisplays.get(id);
         if (display != null) {
             if (display.unlocked()) {

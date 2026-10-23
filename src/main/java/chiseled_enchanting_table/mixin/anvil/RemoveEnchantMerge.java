@@ -48,6 +48,9 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
 
 	@Inject(method = "createResult", at = @At("TAIL"))
 	private void cet$blockSameLevelBookMerge(CallbackInfo ci) {
+		if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().anvilBlockSameBookMerge()) {
+			return;
+		}
 		ItemStack left = this.inputSlots.getItem(0);
 		ItemStack right = this.inputSlots.getItem(1);
 		if (!left.is(Items.ENCHANTED_BOOK) || !right.is(Items.ENCHANTED_BOOK)) {
