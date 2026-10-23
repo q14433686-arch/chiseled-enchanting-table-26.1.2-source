@@ -92,3 +92,8 @@ VarInt collection codecs for LiveShelfStatePayload. Every new recipe advancement
 to the 26.3 recipes list; previous world-entry hotfixes remain intact. Source-branch tooling,
 version declarations and historical build logs are not copied. Current verification and
 runtime caveats: docs/reports/SYNC_FROM_26_1_2_INCREMENTAL_REPORT.md.
+
+Incremental source `aadcecc` verified: full build **39888562095** (including imported JUnit
+suite and no-viewers compile) and main/client compile-check **39888562097** are successful.
+The sync now has 11 Python regression tests; all 307 keys in each of 11 locales and 297
+code-referenced translation keys pass the updated gates. Version remains **1.1.1**.

@@ -26,3 +26,15 @@
    REI 26.3.824). Upgrade them deliberately and rerun both viewer-enabled and disabled builds.
 
 Migration evidence: docs/reports/SYNC_FROM_26_1_2_REPORT.md.
+
+## Additional runtime checks after incremental 26.1.2 sync (still 1.1.1)
+
+- Use the artifact from build 39888562095; earlier 1.1.1 artifacts lack the new features.
+- Open the Grimoire from its item and the table shortcut, navigate/scroll diagrams, invoke
+  JEI/REI usages, close and reopen the same table through the server-authorized return packet.
+- Change surrounding shelves with the menu open and verify synchronized mastery/gates/costs.
+- Test cleanse-all, downgrade, strip and curse purge (including vanilla reagent alternatives),
+  XP refund boundaries, tagged transformation inputs and custom configuration/datapack reloads.
+- Load both an existing save and a fresh world. Static checks include every new recipe-unlock
+  advancement and preserve the previous single-predicate block loot fix, but cannot substitute
+  for an actual game session.

@@ -36,3 +36,20 @@ CI also compiles with viewers disabled. Registry/tag existence checks needing th
 are unavailable offline. Actual in-game loading, cleanse economy, Grimoire navigation/return,
 viewer compatibility and live shelf updates still need runtime smoke tests. Compilation is not
 proof of world-load success; the prior data-schema hotfix tests remain mandatory.
+
+## Observed results
+
+Source commit `aadcecc72ad38cfd9a656b23376a9f8a7ba53933`:
+- [Full build 39888562095](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/39888562095):
+  all three jobs passed (offline checks, Gradle build including JUnit tests, viewer-disabled compile).
+- [Compile-check 39888562097](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/39888562097):
+  main + client passed; build-reports/compile-java.log contains this run's output.
+- Offline: 11 sync regressions, 12 release checks, 307-key parity across 11 languages,
+  297 code-referenced language keys and all Tier-1 compatibility/economy checks passed.
+- Version/toolchain declarations are byte-identical to the pre-sync 26.3 1.1.1 baseline.
+- First attempt exposed one additional JEI-only old Minecraft.screen lookup; fixed to
+  Minecraft.gui.screen() and covered by a regression check before the successful runs above.
+
+Download the artifact from the successful build above, not the earlier 1.1.1 hotfix run:
+this request deliberately keeps the filename/version unchanged. Replace the old jar rather
+than installing both. Runtime testing is still outstanding.
