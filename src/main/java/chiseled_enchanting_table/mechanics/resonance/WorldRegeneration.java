@@ -25,7 +25,14 @@ public final class WorldRegeneration {
     private static final Map<ServerLevel, Window> WORLDS = new IdentityHashMap<>();
     private WorldRegeneration() {}
     public static void init() {
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> WORLDS.clear());
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            WORLDS.clear();
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(
+                chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.NONE);
+            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+                chiseled_enchanting_table.config.ModRuntimeConfig.get(),
+                chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.NONE, () -> {});
+        });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             Set<ServerLevel> loaded = Collections.newSetFromMap(new IdentityHashMap<>());
             for (ServerLevel world : server.getAllLevels()) { loaded.add(world); settleWorld(world); }

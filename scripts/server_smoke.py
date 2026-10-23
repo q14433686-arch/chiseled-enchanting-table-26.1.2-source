@@ -48,6 +48,16 @@ fixture_functions.mkdir()
 # Scheduled functions suppress command feedback. Use /say as a tick barrier, then let the
 # console issue /data get so the inspected NBT is actually logged.
 (fixture_functions / 'inspect.mcfunction').write_text('say CET_AUDIT_INSPECT_READY\n')
+# Real BlockEntity probe: load a persisted owner/session/target/queue, keep inputs during the
+# pending state, then let the real server ticker complete it without any player/GUI shortcut.
+(fixture_functions / 'ritual.mcfunction').write_text(
+    'setblock 1 65 0 chiseled_enchanting_table:chiseled_enchanting_table\n'
+    'data merge block 1 65 0 {Items:[{Slot:0b,id:"minecraft:diamond_sword",count:1}],ritualTarget:{id:"minecraft:diamond_sword",count:1},'
+    'ritualQueue:"minecraft:sharpness|1|0|0|0|0|0",ritualSession:123L,ritualTotalTicks:80L,ritualRemainingTicks:80L,'
+    'ritualOwnerUuid:"00000000-0000-0000-0000-000000000001"}\n'
+    'schedule function cet_audit_smoke:ritual_pending 10t\n')
+(fixture_functions / 'ritual_pending.mcfunction').write_text('say CET_AUDIT_RITUAL_PENDING\n')
+(fixture_functions / 'ritual_finished.mcfunction').write_text('say CET_AUDIT_RITUAL_FINISHED\n')
 log_path = ROOT / 'build-reports/server-smoke.log'
 log_path.parent.mkdir(exist_ok=True)
 process = subprocess.Popen(['./gradlew', 'runServer', '--args=nogui', '--console=plain', '--no-daemon'],
@@ -64,6 +74,8 @@ reloaded = False
 drop_verified = False
 remove_verified = False
 depth_verified = False
+ritual_pending_verified = False
+ritual_finished_verified = False
 stopping = False
 probe_phase = 'table'
 failed = []
@@ -120,16 +132,38 @@ try:
                 depth_verified = 'minecraft:enchanted_book' in line and 'minecraft:stored_enchantments' not in line
                 if not depth_verified:
                     failed.append('Depth function executed despite its always-false condition')
-            if ready and not stopping and (failed or (drop_verified and remove_verified and depth_verified)):
+                probe_phase = 'ritual_start'
+                process.stdin.write('function cet_audit_smoke:ritual\n')
+                process.stdin.flush()
+            elif reloaded and 'CET_AUDIT_RITUAL_PENDING' in line:
+                probe_phase = 'ritual_pending'
+                process.stdin.write('data get block 1 65 0\n')
+                process.stdin.flush()
+            elif probe_phase == 'ritual_pending' and 'has the following block data:' in line:
+                ritual_pending_verified = all(token in line for token in (
+                    'minecraft:diamond_sword', 'ritualSession: 123L', 'minecraft:sharpness|1|0|0|0|0|0'))
+                if not ritual_pending_verified: failed.append('Pending ritual lost its persisted input/session/queue')
+                probe_phase = 'ritual_wait'
+                process.stdin.write('save-all\nschedule function cet_audit_smoke:ritual_finished 100t\n')
+                process.stdin.flush()
+            elif reloaded and 'CET_AUDIT_RITUAL_FINISHED' in line:
+                probe_phase = 'ritual_finished'
+                process.stdin.write('data get block 1 65 0\n')
+                process.stdin.flush()
+            elif probe_phase == 'ritual_finished' and 'has the following block data:' in line:
+                ritual_finished_verified = all(token in line for token in (
+                    'minecraft:diamond_sword', 'minecraft:enchantments', 'minecraft:sharpness', 'ritualQueue: ""'))
+                if not ritual_finished_verified: failed.append('Real ritual ticker did not commit its enchantment and clear its queue')
+            if ready and not stopping and (failed or (drop_verified and remove_verified and depth_verified and ritual_pending_verified and ritual_finished_verified)):
                 stopping = True
                 process.stdin.write('stop\n')
                 process.stdin.flush()
-        if not ready or not reloaded or not drop_verified or not remove_verified or not depth_verified or failed:
-            raise RuntimeError(f'Smoke test failed: ready={ready}, reloaded={reloaded}, drop_verified={drop_verified}, remove_verified={remove_verified}, depth_verified={depth_verified}, errors={failed}')
+        if not ready or not reloaded or not drop_verified or not remove_verified or not depth_verified or not ritual_pending_verified or not ritual_finished_verified or failed:
+            raise RuntimeError(f'Smoke test failed: ready={ready}, reloaded={reloaded}, drop_verified={drop_verified}, remove_verified={remove_verified}, depth_verified={depth_verified}, ritual_pending={ritual_pending_verified}, ritual_finished={ritual_finished_verified}, errors={failed}')
     code = process.wait(timeout=45)
     if code:
         raise RuntimeError(f'Server/Gradle exited with {code}')
-    print('SERVER SMOKE PASS: fresh world + reload + named/dyed/frozen table loot + conditional loot functions + clean shutdown')
+    print('SERVER SMOKE PASS: fresh world + reload + named/dyed/frozen table loot + conditional loot functions + persisted ritual input/session + natural ritual completion + clean shutdown')
 finally:
     shutil.rmtree(fixture_root)
     if process.poll() is None:

@@ -49,6 +49,29 @@ class FullPortRuntimeTest {
         } finally { buffer.release(); }
     }
 
+    @Test void configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() {
+        var payload = new chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload(
+            "preferences", "policy", "effective", true, 1234L, false);
+        var buffer = new net.minecraft.network.FriendlyByteBuf(Unpooled.buffer());
+        try {
+            chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload.CODEC.encode(buffer, payload);
+            assertEquals(payload, chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload.CODEC.decode(buffer));
+            assertEquals(0, buffer.readableBytes());
+        } finally { buffer.release(); }
+    }
+
+    @Test void liveShelfWirePreservesChargeSentinelsAndCounts() {
+        var enchantment = new EnchantmentWithLevel(Identifier.withDefaultNamespace("mending"), 1);
+        var payload = new LiveShelfStatePayload(23, Set.of(enchantment), 10, 12, 5, 4,
+            Map.of(enchantment.enchantment_id(), 1), false, 2, 1, Map.of(enchantment, -1));
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
+        try {
+            LiveShelfStatePayload.CODEC.encode(buffer, payload);
+            assertEquals(payload, LiveShelfStatePayload.CODEC.decode(buffer));
+            assertEquals(0, buffer.readableBytes());
+        } finally { buffer.release(); }
+    }
+
     @Test void malformedPolicyNeverBecomesAnUnlockedDefault() {
         assertThrows(IllegalArgumentException.class, () -> ModRuntimeConfig.PackPolicy.fromJsonString("{\"lock_in_game_config\":\"typo\"}"));
         assertThrows(IllegalArgumentException.class, () -> ModRuntimeConfig.PackPolicy.fromJsonString("{\"locked_keys\":[\"misspelled_rule\"]}"));
