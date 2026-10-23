@@ -77,24 +77,33 @@ public final class TransformationQueryIndex {
 
     public static List<Entry> build() {
         var resonanceCfg = SyncedEnchantmentCosts.libraryResonanceConfig();
-        boolean hasSyncedPayload = !SyncedEnchantmentCosts.isEmpty();
+        boolean hasSyncedPayload = SyncedEnchantmentCosts.hasServerData();
 
-        List<Object[]> tuples = new ArrayList<>(ChiseledEnchantingTableData.transformationDisplayTuples());
-        tuples.sort(Comparator.comparing(t -> ((Identifier) t[0]).toString()));
+        var displays = new ArrayList<>(SyncedEnchantmentCosts.transformationDisplays().orElseGet(
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload::buildTransformationDisplays));
+        displays.sort(Comparator.comparing(d -> d.id().toString()));
 
-        List<Entry> results = new ArrayList<>(tuples.size());
-        for (Object[] tuple : tuples) {
-            Identifier id = (Identifier) tuple[0];
-            Identifier inputId = (Identifier) tuple[1];
-            Identifier outputId = (Identifier) tuple[2];
-            int level = (Integer) tuple[3];
-            int minReq = tuple.length > 5 ? (Integer) tuple[5] : ChiseledEnchantingTableData.transformationMinRequiredLevel(id);
-            int dedLvls = tuple.length > 6 ? (Integer) tuple[6] : ChiseledEnchantingTableData.transformationDeductedLevels(id);
-
-            Item inputItem = BuiltInRegistries.ITEM.getValue(inputId);
+        List<Entry> results = new ArrayList<>(displays.size());
+        for (var display : displays) {
+            Identifier id = display.id();
+            Identifier inputId = display.input_item();
+            Identifier outputId = display.output_item();
+            int level = display.level();
+            int minReq = display.min_player_level();
+            int dedLvls = display.deducted_levels();
             Item outputItem = BuiltInRegistries.ITEM.getValue(outputId);
-            if (inputItem == null || inputItem == Items.AIR || outputItem == null || outputItem == Items.AIR) {
-                continue;
+            if (outputItem == null || outputItem == Items.AIR) continue;
+
+            List<ItemStack> inputs = new ArrayList<>();
+            if (display.input_is_tag()) {
+                var tag = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM, inputId);
+                for (Item item : BuiltInRegistries.ITEM) {
+                    var stack = new ItemStack(item);
+                    if (stack.is(tag)) inputs.add(stack);
+                }
+            } else {
+                Item inputItem = BuiltInRegistries.ITEM.getValue(inputId);
+                if (inputItem != null && inputItem != Items.AIR) inputs.add(new ItemStack(inputItem));
             }
 
             var synced = SyncedEnchantmentCosts.find(OptionType.TRANSFORMATION, id, level);
@@ -112,15 +121,9 @@ public final class TransformationQueryIndex {
                 minReq,
                 dedLvls
             );
-            results.add(new Entry(
-                id,
-                level,
-                new ItemStack(inputItem),
-                costOptions,
-                new ItemStack(outputItem),
-                xpReq,
-                serverCosts
-            ));
+            for (ItemStack input : inputs) {
+                results.add(new Entry(id, level, input, costOptions, new ItemStack(outputItem), xpReq, serverCosts));
+            }
         }
         if (SyncedEnchantmentCosts.disenchantEnabled()) {
             Identifier sampleId = Identifier.withDefaultNamespace("sharpness");

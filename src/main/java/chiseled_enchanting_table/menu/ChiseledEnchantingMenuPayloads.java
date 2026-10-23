@@ -155,7 +155,7 @@ public final class ChiseledEnchantingMenuPayloads {
             this(unlocked_enchantements, buildTransformationDisplays(), xp_discount_percent, regular_bookshelves, chiseled_book_count, high_tier_chiseled_books, epiphany_seed, stored_master_levels);
         }
 
-        private static List<TransformationDisplay> buildTransformationDisplays() {
+        public static List<TransformationDisplay> buildTransformationDisplays() {
             List<TransformationDisplay> displays = new ArrayList<>();
             for (Object[] tuple : ChiseledEnchantingTableData.transformationDisplayTuples()) {
                 boolean isTag = tuple.length > 4 && Boolean.TRUE.equals(tuple[4]);

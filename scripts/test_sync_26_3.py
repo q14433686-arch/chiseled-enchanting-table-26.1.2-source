@@ -167,6 +167,21 @@ class SyncContracts(unittest.TestCase):
         table = (CLIENT / 'gui/ChiseledEnchantingTableScreen.java').read_text()
         self.assertIn('this.grimoireOverlay.mouseClicked(event, isDoubleClick)', table)
 
+    def test_audit_guards_authoritative_sync_and_input(self):
+        sync = (MAIN / 'menu/EnchantCostSync.java').read_text()
+        self.assertIn('player.closeContainer()', sync)
+        self.assertIn('EnchantingProtocol.incompatible(', sync)
+        table = (CLIENT / 'gui/ChiseledEnchantingTableScreen.java').read_text()
+        self.assertIn('event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT', table)
+        for name in ['RemoveEnchantedBooksFunction', 'DepthBasedEfficiencyFunction']:
+            loot = (MAIN / f'mechanics/loot/{name}.java').read_text()
+            self.assertIn('commonFields(i).apply(i,', loot)
+            self.assertNotIn('MapCodec.unit(', loot)
+        index = (MAIN / 'compat/TransformationQueryIndex.java').read_text()
+        self.assertIn('SyncedEnchantmentCosts.transformationDisplays()', index)
+        self.assertIn('display.input_is_tag()', index)
+        self.assertIn('stack.is(tag)', index)
+
 
 if __name__ == '__main__':
     unittest.main()

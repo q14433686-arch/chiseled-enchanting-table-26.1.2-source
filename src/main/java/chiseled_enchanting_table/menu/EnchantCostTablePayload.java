@@ -48,7 +48,8 @@ public record EnchantCostTablePayload(
     Set<Identifier> explicitTreasureIds,
     BookshelfProgression.Config shelfGatesConfig,
     LibraryResonance.Config libraryResonanceConfig,
-    List<CostEntry> costs
+    List<CostEntry> costs,
+    List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations
 ) implements CustomPacketPayload {
     public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table");
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> TYPE =
@@ -151,7 +152,8 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(registryAccess),
             ChiseledEnchantingTableData.shelfGatesConfig(),
             ChiseledEnchantingTableData.libraryResonanceConfig(),
-            List.copyOf(entries)
+            List.copyOf(entries),
+            ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays()
         );
     }
 
@@ -258,6 +260,10 @@ public record EnchantCostTablePayload(
                 writeStacks(buf, bundle);
             }
         }
+        buf.writeVarInt(transformations.size());
+        for (var display : transformations) {
+            ChiseledEnchantingMenuPayloads.TransformationDisplay.write(buf, display);
+        }
     }
 
     private static EnchantCostTablePayload read(RegistryFriendlyByteBuf buf) {
@@ -360,13 +366,18 @@ public record EnchantCostTablePayload(
             }
             entries.add(new CostEntry(optionType, id, level, xpLevelCost, List.copyOf(options)));
         }
+        int transformationCount = PayloadLimits.readCount(buf);
+        List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations = new ArrayList<>();
+        for (int i = 0; i < transformationCount; i++) {
+            transformations.add(ChiseledEnchantingMenuPayloads.TransformationDisplay.read(buf));
+        }
         return new EnchantCostTablePayload(
             combineEnabled, researchEnabled,
             disenchantEnabled, disenchantAllowCursePurge, disenchantRefundScale,
             minShelves, baseChance, perShelfChance, perTomeChance, maxChance,
             maxSlotsCap, scorePerSlot, cycleTicks, freezeDurationTicks, maxFreezeTicks,
             freezeXpLevels, freezeCosts, rerollXp, rerollCosts,
-            Set.copyOf(treasureIds), sgConfig, lrConfig, List.copyOf(entries)
+            Set.copyOf(treasureIds), sgConfig, lrConfig, List.copyOf(entries), List.copyOf(transformations)
         );
     }
 

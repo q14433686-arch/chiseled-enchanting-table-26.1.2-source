@@ -479,15 +479,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     /** Whether the given id is a transformation, preferring server-synced data over local data. */
     public boolean isSyncedTransformation(Identifier id) {
-        return this.transformationDisplays.containsKey(id) || ChiseledEnchantingTableData.isTransformation(id);
+        return this.transformationDisplays.containsKey(id);
     }
 
     /** Transformation options whose input matches the given stack, from server-synced data. */
     public Set<EnchantmentWithLevel> syncedTransformationsFor(ItemStack input) {
         Set<EnchantmentWithLevel> result = new HashSet<>();
-        if (this.transformationDisplays.isEmpty()) {
-            return ChiseledEnchantingTableData.transformationEnchantmentsFor(input);
-        }
         for (TransformationDisplay display : this.transformationDisplays.values()) {
             if (syncedTransformationMatches(display.id(), input)) {
                 result.add(new EnchantmentWithLevel(display.id(), display.level()));
@@ -503,7 +500,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         TransformationDisplay display = this.transformationDisplays.get(id);
         if (display == null) {
-            return ChiseledEnchantingTableData.itemTransformation(id).map(rule -> rule.matchesInput(input)).orElse(false);
+            return false; // the opening snapshot, including an empty rule set, is authoritative
         }
         if (id.equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID) && ChiseledEnchantingTableData.isResidualBook(input)) {
             return true;

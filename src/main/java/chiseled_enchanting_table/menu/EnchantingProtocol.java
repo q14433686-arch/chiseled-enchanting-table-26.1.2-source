@@ -22,7 +22,7 @@ public final class EnchantingProtocol {
 
     public record Capability() implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<Capability> TYPE = new CustomPacketPayload.Type<>(
-            ChiseledEnchantingTable.identifier("protocol_26_3_revision_1"));
+            ChiseledEnchantingTable.identifier("protocol_26_3_revision_2"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Capability> CODEC =
             CustomPacketPayload.codec((value, buf) -> {}, buf -> new Capability());
 

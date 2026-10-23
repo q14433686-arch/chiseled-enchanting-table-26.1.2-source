@@ -52,12 +52,35 @@ class NetworkCompatibilityTest {
 
     @Test void costTableConfigurationAndRowsRoundTrip() {
         // No ItemStack fields in this fixture: validates every config field/order headlessly.
-        var value = new EnchantCostTablePayload(true, false, true, false, 0.5,
+        var display = new TransformationDisplay(id("custom_rule"), id("tag"), true, id("custom_output"), 7, 29, 2);
+        roundTrip(EnchantCostTablePayload.CODEC, table(List.of(display)));
+        roundTrip(EnchantCostTablePayload.CODEC, table(List.of()));
+    }
+
+    private static EnchantCostTablePayload table(List<TransformationDisplay> displays) {
+        var gates = new BookshelfProgression.Config(false, 47, 1.37,
+            BookshelfProgression.BlankMaxTierMode.FULL_CURVE, 4, 3,
+            Map.of(id("override"), List.of(0, 3, 11, 23, 47)), 2, 19, 0.41, 9, 7, 61);
+        // Distinct values catch field swaps hidden by equal default config values.
+        var resonance = new LibraryResonance.Config(13, 39, 21, 8, 29, 12, 1.13, 41,
+            1.21, 1.31, 0.73, 0.83, 0.43, 0.53, 0.63, 1.03, 2.13, 3.23,
+            0.67, 81.0, 0.17, 0.57, 111.0, 0.27, 0.87);
+        return new EnchantCostTablePayload(true, false, true, false, 0.5,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
-            11, List.of(), Set.of(id("treasure")), BookshelfProgression.Config.DEFAULT,
-            LibraryResonance.Config.DEFAULT,
-            List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())));
-        roundTrip(EnchantCostTablePayload.CODEC, value);
+            11, List.of(), Set.of(id("treasure")), gates, resonance,
+            List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())), displays);
+    }
+
+    @Test void emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() {
+        chiseled_enchanting_table.compat.SyncedEnchantmentCosts.apply(table(List.of()));
+        try {
+            assertTrue(chiseled_enchanting_table.compat.SyncedEnchantmentCosts.hasServerData());
+            assertTrue(chiseled_enchanting_table.compat.SyncedEnchantmentCosts.transformationDisplays().orElseThrow().isEmpty());
+        } finally {
+            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.clear();
+        }
+        assertFalse(chiseled_enchanting_table.compat.SyncedEnchantmentCosts.hasServerData());
+        assertTrue(chiseled_enchanting_table.compat.SyncedEnchantmentCosts.transformationDisplays().isEmpty());
     }
 
     @Test void unknownActionsCannotSilentlyBecomeEnchantment() {

@@ -209,6 +209,16 @@ public final class SyncedEnchantmentCosts {
             : ChiseledEnchantingTableData.libraryResonanceConfig();
     }
 
+    /** Empty server rule lists are authoritative, not a request for jar-default fallback. */
+    public static java.util.Optional<java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay>> transformationDisplays() {
+        var payload = syncedPayload;
+        return payload == null ? java.util.Optional.empty() : java.util.Optional.of(payload.transformations());
+    }
+
+    public static boolean hasServerData() {
+        return syncedPayload != null;
+    }
+
     public static boolean isEmpty() {
         return rows.isEmpty();
     }
