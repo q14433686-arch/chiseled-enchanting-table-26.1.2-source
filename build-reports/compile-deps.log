@@ -199,8 +199,6 @@ net.fabricmc.fabric-api:fabric-api-lookup-api-v1:2.0.24+3434d6d95d
 |    \--- compileClasspath
 \--- net.fabricmc.fabric-api:fabric-transfer-api-v1:8.0.25+fcdff87f5d
 ...[truncated 1003 lines total]...
-     +--- net.fabricmc.fabric-api:fabric-gametest-api-v1:4.0.33+3434d6d95d
-     |    \--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
      +--- net.fabricmc.fabric-api:fabric-menu-api-v1:2.0.28+ed66f0a35d (*)
      \--- net.fabricmc.fabric-api:fabric-object-builder-api-v1:24.1.10+3434d6d95d
           +--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
@@ -991,6 +989,8 @@ clientCompileClasspath - Compile classpath for source set 'client'.
 A web-based, searchable dependency report is available by adding the --scan option.
 
 == job status: failure ==
+
+== job status: success ==
 
 == job status: success ==
 
