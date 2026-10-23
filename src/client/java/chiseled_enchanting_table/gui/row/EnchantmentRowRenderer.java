@@ -7,8 +7,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Renders a real-enchantment or Treasure Epiphany list row with strict anti-overlap text bounds
- * and hardware scissor clipping inside the plaque border.
+ * Renders an enchantment, Treasure Epiphany, Cleanse, or Curse-Purge list row with unified
+ * {@code midY} vertical centering and strict inner-border GPU scissor clipping.
  */
 public final class EnchantmentRowRenderer {
     private EnchantmentRowRenderer() {}
@@ -33,35 +33,86 @@ public final class EnchantmentRowRenderer {
         XpRequirement xpRequirement,
         OverrideAnnotation annotation
     ) {
-        RowRenderSupport.drawPlaque(
+        render(
             ctx,
+            client,
             dx,
             dy,
             dw,
             dh,
             isEpiphany ? RowRenderSupport.RowVisualStyle.EPIPHANY : RowRenderSupport.RowVisualStyle.STANDARD,
-            canEnchant,
+            isFocused,
             hovered,
-            isFocused
+            canEnchant,
+            primaryCostMet,
+            additionalCostsMet,
+            xpMet,
+            enchantmentName,
+            primaryCost,
+            additionalCosts,
+            xpRequirement,
+            annotation
         );
+    }
+
+    public static void render(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        int dx, int dy, int dw, int dh,
+        RowRenderSupport.RowVisualStyle visualStyle,
+        boolean isFocused,
+        boolean hovered,
+        boolean canEnchant,
+        boolean primaryCostMet,
+        List<Boolean> additionalCostsMet,
+        boolean xpMet,
+        String enchantmentName,
+        ItemStack primaryCost,
+        List<ItemStack> additionalCosts,
+        XpRequirement xpRequirement,
+        OverrideAnnotation annotation
+    ) {
+        RowRenderSupport.drawPlaque(ctx, dx, dy, dw, dh, visualStyle, canEnchant, hovered, isFocused);
 
         RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
         try {
-            int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
-            int itemY = RowRenderSupport.costIconY(dy, dh);
-            RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
-            RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, additionalCostsMet, dx, dw, itemY);
+            float midY = RowRenderSupport.rowCenterY(dy, dh);
+            boolean hasPrimary = !primaryCost.isEmpty();
+            if (hasPrimary) {
+                int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
+                int itemY = RowRenderSupport.costIconY(dy, dh);
+                RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+            }
+            if (!additionalCosts.isEmpty()) {
+                int itemY = RowRenderSupport.costIconY(dy, dh);
+                RowRenderSupport.drawAdditionalCosts(ctx, client, additionalCosts, additionalCostsMet, dx, dw, itemY);
+            }
 
-            int nameX = dx + RowRenderSupport.NAME_OFFSET_X;
-            int maxTextW = RowRenderSupport.availableTextWidth(dx, dw, additionalCosts.size());
-            int titleColor = isEpiphany ? RowRenderSupport.EPIPHANY_GOLD : RowRenderSupport.WHITE;
+            int nameX = dx + (hasPrimary ? RowRenderSupport.NAME_OFFSET_X : RowRenderSupport.NO_ICON_NAME_OFFSET_X);
+            int maxTextW = RowRenderSupport.availableTextWidth(dx, dw, additionalCosts.size(), hasPrimary);
+            int titleColor = switch (visualStyle) {
+                case EPIPHANY -> RowRenderSupport.EPIPHANY_GOLD;
+                case CLEANSE -> RowRenderSupport.JADE_MINT;
+                case CURSE_PURGE -> RowRenderSupport.CURSE_CRIMSON;
+                case TRANSFORMATION -> RowRenderSupport.TRANSFORM_GOLD;
+                case STANDARD -> RowRenderSupport.WHITE;
+            };
 
             if (annotation != null) {
-                RowRenderSupport.renderBoundedText(ctx, client, enchantmentName, nameX, dy + 4, 0.64f, maxTextW, titleColor);
-                RowRenderSupport.renderBoundedText(ctx, client, annotation.text(), nameX, dy + 12, 0.58f, maxTextW, annotation.color());
+                RowRenderSupport.renderTwoLineCenteredBlock(
+                    ctx,
+                    client,
+                    enchantmentName,
+                    titleColor,
+                    annotation.text(),
+                    annotation.color(),
+                    nameX,
+                    dy,
+                    dh,
+                    maxTextW
+                );
             } else {
-                int centeredY = dy + Math.round((dh - client.font.lineHeight * 0.66f) / 2.0f) + 1;
-                RowRenderSupport.renderBoundedText(ctx, client, enchantmentName, nameX, centeredY, 0.66f, maxTextW, titleColor);
+                RowRenderSupport.renderCenteredYText(ctx, client, enchantmentName, nameX, midY, 0.66f, maxTextW, titleColor);
             }
 
             RowRenderSupport.drawXpBadge(ctx, client, xpRequirement, dx, dw, dy, dh, xpMet);

@@ -26,21 +26,6 @@ public final class EnchantmentApplication {
 
     /** Apply one of the menu's unlocked enchantments (or an active Grand Library Treasure Epiphany) to the enchantable item. */
     public static boolean apply(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
-        boolean exist = false;
-        if (payload.option_type() == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.TREASURE_EPIPHANY) {
-            exist = handler.matchesActiveTreasureEpiphany(payload);
-        } else {
-            for (EnchantmentWithLevel e : handler.unlocked_enchantements) {
-                if (e.enchantment_id().equals(payload.enchantment_id()) && e.enchantment_level() == payload.enchantment_level()) {
-                    exist = true;
-                    break;
-                }
-            }
-        }
-        if (!exist) {
-            return false;
-        }
-
         Level world = handler.world();
         ItemStack enchantable_item = handler.get_enchantable_item();
         if (chiseled_enchanting_table.data.ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
@@ -49,6 +34,29 @@ public final class EnchantmentApplication {
         int enchantment_level = payload.enchantment_level();
         Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
         if (!(enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(enchantable_item))) {
+            return false;
+        }
+        int existingSameLevel = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item).getLevel(enchantment);
+        // Never allow accidental same-level or downgrade via direct enchant (downgrades are free & grant XP in Cleanse mode).
+        if (existingSameLevel >= enchantment_level) {
+            return false;
+        }
+
+        boolean exist = false;
+        if (payload.option_type() == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.TREASURE_EPIPHANY) {
+            exist = handler.matchesActiveTreasureEpiphany(payload);
+        } else {
+            for (EnchantmentWithLevel e : handler.unlocked_enchantements) {
+                if (e.enchantment_id().equals(payload.enchantment_id()) && e.enchantment_level() == enchantment_level) {
+                    exist = true;
+                    break;
+                }
+            }
+            if (!exist && existingSameLevel >= 1) {
+                exist = handler.canDirectUpgradeExistingEnchantment(enchantment, payload.enchantment_id(), existingSameLevel, enchantment_level);
+            }
+        }
+        if (!exist) {
             return false;
         }
         if (!handler.applyEnchantementCondition(payload)) {

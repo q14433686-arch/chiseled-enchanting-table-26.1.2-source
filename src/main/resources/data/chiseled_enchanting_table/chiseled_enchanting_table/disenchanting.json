@@ -1,0 +1,110 @@
+{
+  "enabled": true,
+  "allow_curse_purge": true,
+  "xp_refund_scale": 1.0,
+  "targeted_strip": {
+    "xp_cost_min": 3,
+    "xp_cost_max": 10,
+    "options": [
+      {
+        "item": "chiseled_enchanting_table:cleansing_grit",
+        "base_count": 1,
+        "max_level_count": 3,
+        "level_exponent": 1.15,
+        "extras": [
+          {
+            "item": "minecraft:lapis_lazuli",
+            "base_count": 2,
+            "max_level_count": 6,
+            "level_exponent": 1.15
+          }
+        ]
+      },
+      {
+        "item": "chiseled_enchanting_table:cleansing_grit",
+        "base_count": 1,
+        "max_level_count": 3,
+        "level_exponent": 1.15,
+        "extras": [
+          {
+            "item": "minecraft:glow_ink_sac",
+            "base_count": 1,
+            "max_level_count": 3,
+            "level_exponent": 1.1
+          }
+        ]
+      },
+      {
+        "item": "chiseled_enchanting_table:cleansing_grit",
+        "base_count": 1,
+        "max_level_count": 3,
+        "level_exponent": 1.15,
+        "extras": [
+          {
+            "item": "minecraft:amethyst_shard",
+            "base_count": 1,
+            "max_level_count": 3,
+            "level_exponent": 1.1
+          }
+        ]
+      },
+      {
+        "item": "chiseled_enchanting_table:arcane_catalyst",
+        "count": 1
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "base_count": 4,
+        "max_level_count": 12,
+        "level_exponent": 1.15,
+        "extras": [
+          {
+            "item": "minecraft:lapis_lazuli",
+            "base_count": 6,
+            "max_level_count": 18,
+            "level_exponent": 1.15
+          }
+        ]
+      }
+    ]
+  },
+  "curse_purge": {
+    "xp_cost": 12,
+    "options": [
+      {
+        "item": "chiseled_enchanting_table:cleansing_grit",
+        "count": 3,
+        "extras": [
+          {
+            "item": "minecraft:ghast_tear",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "item": "chiseled_enchanting_table:cleansing_grit",
+        "count": 2,
+        "extras": [
+          {
+            "item": "minecraft:golden_apple",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "item": "chiseled_enchanting_table:arcane_catalyst",
+        "count": 1
+      },
+      {
+        "item": "minecraft:ghast_tear",
+        "count": 2,
+        "extras": [
+          {
+            "item": "minecraft:golden_apple",
+            "count": 2
+          }
+        ]
+      }
+    ]
+  }
+}

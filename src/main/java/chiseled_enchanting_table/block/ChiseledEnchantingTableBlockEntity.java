@@ -247,24 +247,22 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         long rem = this.pendingFreezeTicks > 0L
             ? this.pendingFreezeTicks
             : (this.level != null ? remainingFreezeTicks(this.level.getGameTime()) : 0L);
-        if (this.epiphanySeed != 0 || rem > 0L) {
+        if (rem > 0L) {
             CompoundTag tag = new CompoundTag();
             if (this.epiphanySeed != 0) {
                 tag.putInt("epiphanySeed", this.epiphanySeed);
             }
-            if (rem > 0L) {
-                tag.putLong("pendingFreezeTicks", rem);
-                tag.putInt("frozenCycleIndex", this.frozenCycleIndex);
-                int totalSec = (int) ((rem + 19L) / 20L);
-                String clock = String.format("%02d:%02d", totalSec / 60, totalSec % 60);
-                componentMapBuilder.set(
-                    DataComponents.LORE,
-                    new ItemLore(java.util.List.of(
-                        Component.translatable("item.chiseled_enchanting_table.frozen_lore", clock)
-                            .withStyle(style -> style.withItalic(false).withColor(net.minecraft.ChatFormatting.AQUA))
-                    ))
-                );
-            }
+            tag.putLong("pendingFreezeTicks", rem);
+            tag.putInt("frozenCycleIndex", this.frozenCycleIndex);
+            int totalSec = (int) ((rem + 19L) / 20L);
+            String clock = String.format("%02d:%02d", totalSec / 60, totalSec % 60);
+            componentMapBuilder.set(
+                DataComponents.LORE,
+                new ItemLore(java.util.List.of(
+                    Component.translatable("item.chiseled_enchanting_table.frozen_lore", clock)
+                        .withStyle(style -> style.withItalic(false).withColor(net.minecraft.ChatFormatting.AQUA))
+                ))
+            );
             componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         }
     }

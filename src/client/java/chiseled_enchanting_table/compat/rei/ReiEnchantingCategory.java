@@ -78,6 +78,7 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
         widgets.add(slot(x + 108, y + 5, display.getOutputEntries().getFirst()).markOutput());
 
         var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig(),
             display.row().level(), display.row().maxLevel(), display.xpLevelCost(), 0
         );
         widgets.add(Widgets.createLabel(

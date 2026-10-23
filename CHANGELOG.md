@@ -15,6 +15,17 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
+## [1.1.1] — Additional 26.1.2 sync, 2026-10-23 (version unchanged)
+
+- Sync through source `b78b244`: full/targeted disenchanting, curse purge, Cleansing Grit,
+  XP-conservation economy, configurable shelf progression and real-time shelf synchronization.
+- Interactive illustrated Arcane Grimoire, recipes and sounds, table shortcut and return packet,
+  category/tab GUI, JEI/REI cleansing support and live reagent information.
+- Updated Wiki and all 11 locales (307 keys), language coverage and single-source data gates,
+  headless JUnit economy/config verification suite, removal of legacy scratch patches/scripts.
+- Adapt new screen navigation and live-shelf collection codecs for 26.3. Retain 1.1.1
+  recipe-unlock and block-loot world-load fixes. Minecraft/toolchain/viewer pins unchanged.
+
 ## [1.1.1] — 2026-10-23
 
 ### Fixed — save/world entry blocked by datapack registry errors

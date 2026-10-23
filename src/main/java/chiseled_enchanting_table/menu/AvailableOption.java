@@ -33,12 +33,51 @@ public record AvailableOption(OptionType type, Identifier id, int level) {
         return new AvailableOption(OptionType.BOOK_RESEARCH_UPGRADE, id, targetLevel);
     }
 
+    public static AvailableOption disenchantAll(Identifier id) {
+        return new AvailableOption(OptionType.DISENCHANT_ALL, id, 0);
+    }
+
+    public static AvailableOption downgradeEnchantment(Identifier id, int targetLevel) {
+        return new AvailableOption(OptionType.DOWNGRADE_ENCHANTMENT, id, targetLevel);
+    }
+
+    public static AvailableOption stripSingleEnchantment(Identifier id, int currentLevel) {
+        return new AvailableOption(OptionType.STRIP_SINGLE_ENCHANTMENT, id, currentLevel);
+    }
+
+    public static AvailableOption purgeCurse(Identifier id, int currentLevel) {
+        return new AvailableOption(OptionType.PURGE_CURSE, id, currentLevel);
+    }
+
     public boolean isTransformation() {
         return type == OptionType.TRANSFORMATION;
     }
 
     public boolean isTreasureEpiphany() {
         return type == OptionType.TREASURE_EPIPHANY;
+    }
+
+    public boolean isCleanseOperation() {
+        return type == OptionType.DISENCHANT_ALL
+            || type == OptionType.DOWNGRADE_ENCHANTMENT
+            || type == OptionType.STRIP_SINGLE_ENCHANTMENT
+            || type == OptionType.PURGE_CURSE;
+    }
+
+    public boolean isDisenchantAll() {
+        return type == OptionType.DISENCHANT_ALL;
+    }
+
+    public boolean isDowngrade() {
+        return type == OptionType.DOWNGRADE_ENCHANTMENT;
+    }
+
+    public boolean isStripSingle() {
+        return type == OptionType.STRIP_SINGLE_ENCHANTMENT;
+    }
+
+    public boolean isPurgeCurse() {
+        return type == OptionType.PURGE_CURSE;
     }
 
     public boolean isBookUpgrade() {

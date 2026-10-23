@@ -25,11 +25,12 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 
 ## Concept
 
-* **Smooth entry & vanilla upgrade**: craft directly with `2 Diamonds + 1 Chiseled Bookshelf + 3 Crying Obsidian + 1 Book`, upgrade a vanilla Enchanting Table, or craft `8× Crying Obsidian` from `8× Obsidian + 1× Ghast Tear`.
-* **Two-track library progression & Dual-Mode XP Formula (see [`docs/WIKI.md`](docs/WIKI.md))**:
-  * **Wooden Bookshelves (`7×5×7`)** boost standard enchantments up to mid-tier (`ceil(maxLevel / 2)`), grant XP reduction starting at `12+` shelves, and at **`32+` Wooden Bookshelves** unlock **Treasure Epiphany** (with countdown, persistent lock, and manual refresh).
-  * **Chiseled Bookshelves (`7×5×7`)** turn stored Enchanted Books into permanent **Master Tomes** unlocking tiers `1..k` directly, adding global & per-enchantment XP discounts (up to **`-40%`**), and switching inscriptions into **Vanilla Mass-Production XP Mode (`1–3` levels deducted)**.
-  * **Bidirectional JEI & REI Support**: full recipe & usage lookup for both **Chiseled Enchanting** and **Item Transformations** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo Shard`, `Bottle o' Enchanting`, `Blank Overwrite`).
+* **Smooth entry, Vanilla Upgrade & Illustrated In-Game Manual (`纂刻秘典` / `Chiseled Grimoire`)**: craft the table directly with `2 Diamonds + 1 Chiseled Bookshelf + 3 Crying Obsidian + 1 Book`, upgrade a vanilla Enchanting Table, craft `8× Crying Obsidian` from `8× Obsidian + 1× Ghast Tear`, and craft the full interactive illustrated manual via **`Book and Quill + Chiseled Bookshelf`** OR **`Depleted Tome + Ink Sac`** (or open it directly from the button above the table UI).
+* **Three-track library progression, Live World Sync & Conservation-Verified Dual-Mode XP Formula (see [`docs/WIKI.md`](docs/WIKI.md))**:
+  * **Regular Bookshelves (`#chiseled_enchanting_table:regular_bookshelves`, configurable `7×5×7`)** unlock blank inscriptions up to mid-tier (`ceil(maxLevel / 2)`), smoothly scale upgrades on already-inscribed gear/books up to `MAX` along `0..38` shelves (`gamma = 1.25`: `I(0) → II(7) → III(16) → IV(27) → V(38)`), grant XP reduction starting at `12+` shelves, and at **`32+` Bookshelves** awaken **Treasure Epiphany**.
+  * **Chiseled Bookshelves (`7×5×7`)** turn stored Enchanted Books into permanent **Master Tomes** unlocking tiers `1..k` directly on blank items (including Treasures), counting deduplicated qualifying enchantments toward free Depleted Tome restoration, adding global & per-enchantment XP discounts (data-driven via `library_resonance.json`, up to **`-40%`**), and switching inscriptions into **Vanilla Mass-Production XP Mode (`1–3` levels deducted)**.
+  * **Inductive XP Conservation & Standalone-Vanilla Cleanse Alternatives**: full wipes (`DISENCHANT_ALL`) and step-downs (`DOWNGRADE_ENCHANTMENT`) satisfy exact telescoping conservation (`V[k] - V[j] <= Cost_min(j -> k)` across all `maxLevel = 1..255`), while targeted trait stripping and curse purging support both custom catalysts (`Cleansing Grit`, `Arcane Synthesis Crystal`) and pure standalone vanilla item bundles (`disenchanting.json`).
+  * **Bidirectional JEI & REI Support**: full recipe & usage lookup for both **Chiseled Enchanting** and **Transmutation & Cleansing** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo Shard`, `Bottle o' Enchanting`, `Blank Overwrite`, `Cleansing Grit`, and Cleanse / Curse-Purge rituals).
 
 ## Installation
 

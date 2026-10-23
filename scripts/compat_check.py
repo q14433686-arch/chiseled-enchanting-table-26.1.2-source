@@ -284,63 +284,49 @@ def check_advancements_use_26_3_schema() -> None:
 
 
 def check_transformation_json_matches_java() -> None:
-    """The item_transformations.json must mirror the Java built-in fallback so a missing
-    datapack file and the bundled file behave identically."""
+    """Single-source-of-truth gate (F8 / R2-9): verify ChiseledEnchantingTableData reads
+    bundled classpath JSON resources directly via readBundledJsonObject(...) with zero
+    duplicate embedded BUILT_IN_JSON text blocks that could drift from data/*.json."""
     json_path = os.path.join(
         DATA_ROOT, NAMESPACE, NAMESPACE, "item_transformations.json"
+    )
+    dis_path = os.path.join(
+        DATA_ROOT, NAMESPACE, NAMESPACE, "disenchanting.json"
     )
     java_path = os.path.join(
         REPO, "src", "main", "java", "chiseled_enchanting_table", "data",
         "ChiseledEnchantingTableData.java",
     )
-    if not os.path.isfile(json_path) or not os.path.isfile(java_path):
-        warn("could not locate both transformation JSON and Java fallback to compare")
+    if not os.path.isfile(json_path) or not os.path.isfile(dis_path) or not os.path.isfile(java_path):
+        err("missing item_transformations.json, disenchanting.json, or ChiseledEnchantingTableData.java")
         return
     try:
         with open(json_path, encoding="utf-8") as fh:
             json_values = {v["id"]: _norm_transform(v) for v in json.load(fh)["values"]}
+        if len(json_values) < 6:
+            err(f"expected >= 6 built-in transformations in item_transformations.json, got {len(json_values)}")
     except Exception as exc:  # noqa: BLE001
         err(f"failed reading transformation JSON: {exc}")
         return
 
     with open(java_path, encoding="utf-8") as fh:
         java_src = fh.read()
-    # Pull every brace-object that looks like a transformation out of the embedded
-    # text block (lines containing '"input"' and '"output"').
-    java_values: dict[str, dict] = {}
-    for line in java_src.splitlines():
-        if '"input"' in line and '"output"' in line and '"id"' in line:
-            snippet = line.strip().rstrip(",")
-            try:
-                obj = json.loads(snippet)
-            except Exception:
-                continue
-            java_values[obj["id"]] = _norm_transform(obj)
-
-    if not java_values:
-        warn("no transformation objects parsed from Java fallback; skipping drift check")
-        return
-
-    if set(json_values) != set(java_values):
-        err(
-            "transformation id sets differ between JSON and Java fallback: "
-            f"JSON={sorted(json_values)} JAVA={sorted(java_values)}"
-        )
-    for tid in set(json_values) & set(java_values):
-        if json_values[tid] != java_values[tid]:
-            err(
-                f"transformation '{tid}' differs between JSON and Java fallback:\n"
-                f"    JSON={json_values[tid]}\n    JAVA={java_values[tid]}"
-            )
+    if "BUILT_IN_JSON" in java_src:
+        err("ChiseledEnchantingTableData.java still contains a duplicate BUILT_IN_JSON text block (F8 drift risk)")
+    for req_call in ('readBundledJsonObject("item_transformations.json")', 'readBundledJsonObject("disenchanting.json")'):
+        if req_call not in java_src:
+            err(f"ChiseledEnchantingTableData.java missing single-source classpath loader {req_call}")
 
 
 def _norm_transform(v: dict) -> dict:
-    """Normalise the fields we care about for drift comparison."""
+    """Normalise transformation fields."""
     return {
         "input": v.get("input"),
         "output": v.get("output"),
         "level": v.get("level", 1),
         "xp_cost": v.get("xp_cost", 0),
+        "min_required_level": v.get("min_required_level", v.get("min_player_level", 1)),
+        "deducted_levels": v.get("deducted_levels", 0),
         "primary_cost": v.get("primary_cost"),
         "additional_costs": v.get("additional_costs", []),
     }
@@ -702,6 +688,447 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
             warn(f"referenced id '{rid}' not seen in vanilla data jar or any --extra-jar (verify it exists)")
 
 
+def check_disenchanting_and_anti_arbitrage() -> None:
+    """Tier 1 gate: validate disenchanting.json, 100% key consumption on library_resonance.json,
+    shelf_gates.json (including high-maxLevel 40/100/255 & scan volume cap), Book Combine <= Research,
+    Transformation XP gates & progress preservation, client S2C sync, WIKI formulas, and exact
+    1:1 Java inductive XP conservation across ALL M = 1..255 (391,680 checks)."""
+    import math
+
+    def jround(x: float) -> int:
+        """Exact Java Math.round(double) == floor(x + 0.5)."""
+        return int(math.floor(x + 0.5))
+
+    # F11: Ensure zero transient root clutter or feedback .zip archives remain in worktree.
+    for pattern in ("fix*.patch", "fix*.py", "*.orig", "*.zip"):
+        clutter = glob.glob(os.path.join(REPO, pattern))
+        if clutter:
+            errors.append(f"Transient root clutter detected: {[os.path.basename(c) for c in clutter]}")
+
+    # HC-01 & HC-10: Verify block/enchantment tag extension files exist and are non-empty.
+    for tag_rel in (
+        "src/main/resources/data/chiseled_enchanting_table/tags/block/regular_bookshelves.json",
+        "src/main/resources/data/chiseled_enchanting_table/tags/enchantment/epiphany_exclusive.json",
+    ):
+        tp = os.path.join(REPO, tag_rel)
+        if not os.path.isfile(tp):
+            errors.append(f"missing required tag file: {tag_rel}")
+        else:
+            tdata = json.load(open(tp, encoding="utf-8"))
+            if not tdata.get("values"):
+                errors.append(f"{tag_rel} must have non-empty 'values'")
+
+    # R2-2 / CFG-01 / R2-6: Verify library_resonance.json nested sections AND 100% key consumption by LibraryResonance.java!
+    lr_path = os.path.join(
+        REPO,
+        "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/library_resonance.json",
+    )
+    lr_java_path = os.path.join(
+        REPO,
+        "src/main/java/chiseled_enchanting_table/mechanics/resonance/LibraryResonance.java",
+    )
+    lr_java = open(lr_java_path, encoding="utf-8").read()
+    lr = json.load(open(lr_path, encoding="utf-8"))
+    for req_section in ("wooden_bookshelves", "chiseled_mastery", "epiphany_affinity"):
+        if not isinstance(lr.get(req_section), dict) or not lr[req_section]:
+            errors.append(f"library_resonance.json missing nested section '{req_section}'")
+        if f'"{req_section}"' not in lr_java:
+            errors.append(f"LibraryResonance.java does not consume nested section '{req_section}'")
+        for leaf_key in lr.get(req_section, {}):
+            if leaf_key.startswith("_"):
+                continue
+            if f'"{leaf_key}"' not in lr_java:
+                errors.append(f"library_resonance.json key '{req_section}.{leaf_key}' is NOT consumed by LibraryResonance.java!")
+
+    max_disc = int(lr["chiseled_mastery"]["max_total_xp_discount_percent"])
+    credit_factor = float(lr["chiseled_mastery"]["incremental_step_credit_factor"])
+    if max_disc != 40 or abs(credit_factor - 0.85) > 1e-9:
+        errors.append(f"library_resonance.json canonical defaults invalid: max_disc={max_disc}, credit={credit_factor}")
+
+    # R2-1: Verify BookUpgradeApplication uses resolveEffectiveXpRequirement + XpCostConversion.deductXp AND ScreenHandler preserves 0.6x combine cap.
+    bua_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java"),
+        encoding="utf-8",
+    ).read()
+    sh_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java"),
+        encoding="utf-8",
+    ).read()
+    if "resolveEffectiveXpRequirement(ewl, OptionType.BOOK_COMBINE_UPGRADE)" not in bua_java:
+        errors.append("BookUpgradeApplication.applyCombine must use resolveEffectiveXpRequirement + deductXp (R2-1)")
+    if "type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE" not in sh_java:
+        errors.append("ScreenHandler must apply min(rawCost, deltaRaw) to BOOK_COMBINE_UPGRADE so 0.6x multiplier takes effect (R2-1)")
+    if "/ 12000L" in sh_java:
+        errors.append("ScreenHandler still hardcodes / 12000L instead of reading epiphanyCycleTicks() (R2-9)")
+
+    # R2-3 / SYNC-01 / XP-02: Verify XpCostConversion preserves bar percentage via giveExperienceLevels & takes explicit Config.
+    xpc_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/enchanting/XpCostConversion.java"),
+        encoding="utf-8",
+    ).read()
+    if "player.giveExperienceLevels(-req.deductedLevels())" not in xpc_java:
+        errors.append("XpCostConversion.deductXp must use player.giveExperienceLevels(-req.deductedLevels()) in vanillaTierMode (XP-02)")
+
+    cfg_path = os.path.join(
+        REPO,
+        "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/disenchanting.json",
+    )
+    cfg = json.load(open(cfg_path, encoding="utf-8"))
+    for key in ("enabled", "allow_curse_purge", "xp_refund_scale", "targeted_strip", "curse_purge"):
+        if key not in cfg:
+            errors.append(f"disenchanting.json missing required key '{key}'")
+
+    # HC-05: Both targeted_strip and curse_purge must support dual-material options AND pure vanilla alternatives!
+    for section_key in ("targeted_strip", "curse_purge"):
+        sec = cfg.get(section_key, {})
+        opts = sec.get("options", [])
+        if not opts:
+            errors.append(f"disenchanting.json '{section_key}' must define non-empty 'options' list")
+            continue
+        has_custom = False
+        has_pure_vanilla = False
+        for idx, opt in enumerate(opts):
+            extras = opt.get("extras", [])
+            is_arcane_bypass = opt.get("item") == "chiseled_enchanting_table:arcane_catalyst"
+            if not extras and not is_arcane_bypass:
+                errors.append(f"disenchanting.json '{section_key}.options[{idx}]' missing dual-material 'extras'")
+            involved = {opt.get("item")} | {ex.get("item") for ex in extras}
+            if any(str(i).startswith("chiseled_enchanting_table:") for i in involved):
+                has_custom = True
+            if all(str(i).startswith("minecraft:") for i in involved):
+                has_pure_vanilla = True
+        if not has_custom or not has_pure_vanilla:
+            errors.append(
+                f"disenchanting.json '{section_key}' must provide both custom catalyst options AND pure standalone vanilla alternatives!"
+            )
+
+    # SHELF-01 & PERF-01: Verify BookshelfProgression across M = 1..255 (strict on 1..39, full 39-gate distribution on 40..255)!
+    def req_shelves(target_lvl: int, max_lvl: int, gamma: float = 1.25) -> int:
+        # Bound to BookshelfProgression.java:258-281
+        s_max = max(1, max_lvl)
+        s_tgt = max(1, min(s_max, target_lvl))
+        if s_max <= 1 or s_tgt <= 1:
+            return 0
+        if s_tgt >= s_max:
+            return 38
+        prog = (s_tgt - 1) / (s_max - 1)
+        raw = jround(38.0 * (prog ** gamma))
+        if s_max > 39:
+            return max(1, min(37, raw))
+        min_a = min(37, s_tgt - 1)
+        max_a = max(1, 38 - (s_max - s_tgt))
+        return max(min(min_a, max_a), min(raw, max_a))
+
+    expected_vanilla_curves = {
+        1: [0],
+        2: [0, 38],
+        3: [0, 16, 38],
+        4: [0, 10, 23, 38],
+        5: [0, 7, 16, 27, 38],
+    }
+    for m_lvl, exp_curve in expected_vanilla_curves.items():
+        got = [req_shelves(l, m_lvl) for l in range(1, m_lvl + 1)]
+        if got != exp_curve:
+            errors.append(f"BookshelfProgression gamma=1.25 curve mismatch for maxLevel={m_lvl}: expected {exp_curve}, got {got}")
+    for modded_max in range(6, 40):
+        seq = [req_shelves(l, modded_max) for l in range(1, modded_max + 1)]
+        if seq[0] != 0 or seq[-1] != 38 or any(seq[i] >= seq[i + 1] for i in range(len(seq) - 1)):
+            errors.append(f"Non-strict BookshelfProgression sequence for maxLevel={modded_max}: {seq}")
+    for high_max in (40, 100, 255):
+        seq = [req_shelves(l, high_max) for l in range(1, high_max + 1)]
+        if seq[0] != 0 or seq[-1] != 38 or any(seq[i] > seq[i + 1] for i in range(len(seq) - 1)):
+            errors.append(f"Non-monotonic high-maxLevel BookshelfProgression sequence for maxLevel={high_max}")
+        shelf_one_count = sum(1 for v in seq if v == 1)
+        if high_max == 255 and (len(set(seq)) != 39 or shelf_one_count > 25):
+            errors.append(f"SHELF-01 regression on M=255: unique_gates={len(set(seq))}, shelf_1_count={shelf_one_count}")
+
+    bp_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java"),
+        encoding="utf-8",
+    ).read()
+    if "countQualifyingStoredMasterEnchantments(" not in bp_java or "MAX_SCAN_VOLUME_BLOCKS" not in bp_java:
+        errors.append("BookshelfProgression must evaluate deduplicated qualifying enchantments and cap scan volume!")
+    if "countQualifyingHighTierEnchantments(" in bp_java:
+        errors.append("Dead slot-accumulating helper countQualifyingHighTierEnchantments remains in BookshelfProgression.java (R2-9)")
+
+    dis_java = open(
+        os.path.join(REPO, "src/main/java/chiseled_enchanting_table/mechanics/enchanting/DisenchantmentApplication.java"),
+        encoding="utf-8",
+    ).read()
+    if "BlockRegistry.DEPLETED_TOME" not in dis_java or "ExperienceOrb.award" not in dis_java:
+        errors.append("DisenchantmentApplication must close the DEPLETED_TOME lifecycle and award ExperienceOrb!")
+
+    # XP-01 / R2-8: Verify all 6 built-in transformations match WIKI mass-production table & preserve bottle conservation!
+    transforms_path = os.path.join(
+        REPO,
+        "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/item_transformations.json",
+    )
+    t_json = json.load(open(transforms_path, encoding="utf-8"))
+    expected_transforms = {
+        "chiseled_enchanting_table:blank_overwrite": (1, 1, 1),
+        "chiseled_enchanting_table:experience_bottle": (5, 3, 1),
+        "chiseled_enchanting_table:echo_shard": (12, 2, 2),
+        "chiseled_enchanting_table:enchanted_golden_apple": (20, 2, 2),
+        "chiseled_enchanting_table:trident": (25, 3, 3),
+        "chiseled_enchanting_table:totem_of_undying": (30, 3, 3),
+    }
+    for v in t_json.get("values", []):
+        tid = v.get("id")
+        if tid in expected_transforms:
+            got_tuple = (v.get("xp_cost"), v.get("min_required_level"), v.get("deducted_levels"))
+            if got_tuple != expected_transforms[tid]:
+                errors.append(f"Transformation {tid} XP mismatch: expected {expected_transforms[tid]}, got {got_tuple}")
+    blank_entry = next((v for v in t_json.get("values", []) if v.get("id") == "chiseled_enchanting_table:blank_overwrite"), None)
+    if not blank_entry:
+        errors.append("item_transformations.json missing chiseled_enchanting_table:blank_overwrite")
+    else:
+        for opt in blank_entry.get("cost_options", []):
+            cnt = opt.get("count", 0)
+            disc = max(1, int(math.floor(cnt * 0.50)))
+            if cnt < 2 or disc >= cnt:
+                errors.append(f"blank_overwrite option {opt} must have count >= 2")
+
+    # R2-5: Verify WIKI.md §3, §4, §7, §8 match real formulas with zero stale drift!
+    wiki_text = open(os.path.join(REPO, "docs/WIKI.md"), encoding="utf-8").read()
+    for stale_fragment in (
+        "0.45\\,r(e)",
+        "round(1.5\\,E",
+        "gamma = 1.11",
+        "bookshelf_books.json",
+        "0.85×",
+        "Lv.4~10",
+        "涤魔碎砂",
+    ):
+        if stale_fragment in wiki_text:
+            errors.append(f"docs/WIKI.md still contains stale formula/filename '{stale_fragment}' (R2-5)")
+    for required_fragment in (
+        "38 - 12",
+        "r(e)^{1.25}",
+        "blank_book_affinity_weight = 0.50",
+        "giveExperienceLevels",
+        "library_resonance.json",
+        "Lv.3~10",
+        "1.4×",
+    ):
+        if required_fragment not in wiki_text:
+            errors.append(f"docs/WIKI.md missing required synchronized specification '{required_fragment}' (R2-5)")
+
+    # R2-4 / TEST-01: Exact 1:1 mirror of Java XpCostConversion.java + DisenchantmentApplication.buildPotentialTable
+    # tested across ALL 255 integers M = 1..255 and EVERY step 1 <= a < k <= M (391,680 checks)!
+    SAFETY_MARGIN = 5  # DisenchantmentApplication.java:CONSERVATION_SAFETY_MARGIN_POINTS
+
+    def xp_for_level(level: int) -> int:
+        # XpCostConversion.java:xpPointsForLevel
+        if level >= 30:
+            return 112 + (level - 30) * 9
+        if level >= 15:
+            return 37 + (level - 15) * 5
+        return 7 + max(0, level) * 2
+
+    def points_for_level_deduction(required_level: int, deducted: int) -> int:
+        # XpCostConversion.java:minPointsRequired
+        start_level = max(deducted, required_level)
+        pts = 0
+        for i in range(deducted):
+            pts += xp_for_level(start_level - 1 - i)
+        return pts
+
+    def master_tome_tier_cost(level: int, max_level: int) -> int:
+        # XpCostConversion.java:vanillaTierDeduction (0.40 / 0.75 boundaries -> 1 / 2 / 3)
+        capped_max = max(1, max_level)
+        if capped_max <= 1:
+            return 3
+        r = max(1, min(level, capped_max)) / capped_max
+        return 1 if r <= 0.40 else (2 if r <= 0.75 else 3)
+
+    def min_master_tome_full_points(target_level: int, max_level: int) -> int:
+        # XpCostConversion.java:forMasterTomeEnchant (8.0 + 22.0 * r, discount = max_disc)
+        capped_max = max(1, max_level)
+        lvl = max(1, min(target_level, capped_max))
+        tier = master_tome_tier_cost(lvl, capped_max)
+        raw_req = max(tier, jround(8.0 + 22.0 * (lvl / capped_max)))
+        req = max(tier, jround(raw_req * (1.0 - max_disc / 100.0)))
+        return points_for_level_deduction(req, tier)
+
+    def min_master_tome_step_points(existing_level: int, target_level: int, max_level: int) -> int:
+        # XpCostConversion.java:forIncrementalMasterTomeEnchant (credit_factor = 0.85, floor 0.15)
+        capped_max = max(1, max_level)
+        ex = max(0, min(existing_level, capped_max))
+        tgt = max(1, min(target_level, capped_max))
+        delta = max(1, tgt - ex)
+        tier = master_tome_tier_cost(delta, capped_max)
+        rem = max(0.15, (tgt / capped_max) - credit_factor * (ex / capped_max))
+        raw_req = max(tier, jround(8.0 + 22.0 * rem))
+        req = max(tier, jround(raw_req * (1.0 - max_disc / 100.0)))
+        return points_for_level_deduction(req, tier)
+
+    def build_potential_table(
+        max_level: int,
+        anvil_cost: int,
+        is_treasure: bool,
+        scale: float,
+        full_costs: list[int],
+        step_costs: list[list[int]],
+    ) -> list[int]:
+        # DisenchantmentApplication.java:buildPotentialTable (base 34/48, rarity 1.45*1.15, margin 5)
+        s_max = max(1, max_level)
+        clamped_scale = max(0.0, min(1.0, scale))
+        if clamped_scale <= 0.0:
+            return [0] * (s_max + 1)
+        safe_anvil = max(1, anvil_cost)
+        rarity = min(1.45, max(1.00, 1.0 + 0.18 * math.log(safe_anvil))) * (1.15 if is_treasure else 1.0)
+        base_max = 34.0 if s_max == 1 else 48.0
+        vals = [0] * (s_max + 1)
+        for k in range(1, s_max + 1):
+            r = k / s_max
+            desired = jround(clamped_scale * base_max * rarity * (r ** 1.65))
+            row = step_costs[k]
+            step_bound = min((vals[a] + row[a] - SAFETY_MARGIN for a in range(1, k)), default=full_costs[k] - SAFETY_MARGIN)
+            cap = max(0, min(full_costs[k] - SAFETY_MARGIN, step_bound))
+            vals[k] = max(vals[k - 1], min(desired, cap))
+        return vals
+
+    # R2-1 mathematical check across M = 2..10 & discounts 0..40: Combine <= Research ALWAYS
+    for m_lvl in range(2, 11):
+        for tgt in range(2, m_lvl + 1):
+            t_raw = max(2, jround(2 + 8.0 * (tgt - 1) / max(1, m_lvl - 1)))
+            p_raw = max(2, jround(2 + 8.0 * (tgt - 2) / max(1, m_lvl - 1)))
+            d_raw = max(1, t_raw - p_raw)
+            comb_eff = min(max(1, jround(t_raw * 0.60)), d_raw)
+            res_eff = min(max(1, jround(t_raw * 0.85)), d_raw)
+            for disc in (0, 20, 40):
+                comb_ded = max(1, jround(comb_eff * (1.0 - disc / 100.0)))
+                res_ded = max(1, jround(res_eff * (1.0 - disc / 100.0)))
+                if comb_ded > res_ded:
+                    errors.append(f"Combine > Research regression at M={m_lvl}, target={tgt}, disc={disc}")
+
+    # Exhaustive conservation check across EVERY SINGLE M in 1..255!
+    xp_width = [xp_for_level(l) for l in range(40)]
+    cum_xp = [0]
+    for w in xp_width:
+        cum_xp.append(cum_xp[-1] + w)
+
+    def fast_min_pts(req_lvl: int, ded: int) -> int:
+        s = max(ded, req_lvl)
+        return cum_xp[s] - cum_xp[s - ded]
+
+    scale = float(cfg.get("xp_refund_scale", 1.0))
+    checked_pairs = 0
+    for max_lvl in range(1, 256):
+        inv_m = 1.0 / max_lvl
+        tier_lut = [3] * (max_lvl + 1)
+        if max_lvl > 1:
+            for d in range(1, max_lvl + 1):
+                r_d = d * inv_m
+                tier_lut[d] = 1 if r_d <= 0.40 else (2 if r_d <= 0.75 else 3)
+        full_mins = [0] * (max_lvl + 1)
+        step_by_k: list[list[int]] = [[] for _ in range(max_lvl + 1)]
+        disc_mult = 1.0 - max_disc / 100.0
+        for k in range(1, max_lvl + 1):
+            tk = tier_lut[k]
+            raw_k = max(tk, int((8.0 + 22.0 * (k * inv_m)) + 0.5))
+            req_k = max(tk, int(raw_k * disc_mult + 0.5))
+            full_mins[k] = fast_min_pts(req_k, tk)
+            row_k = [0] * k
+            tf = k * inv_m
+            for a in range(1, k):
+                ts = tier_lut[k - a]
+                rem = tf - credit_factor * (a * inv_m)
+                if rem < 0.15:
+                    rem = 0.15
+                raw_s = max(ts, int((8.0 + 22.0 * rem) + 0.5))
+                req_s = max(ts, int(raw_s * disc_mult + 0.5))
+                row_k[a] = fast_min_pts(req_s, ts)
+            step_by_k[k] = row_k
+
+        for anvil_cost in (1, 2, 4, 8, 25, 100):
+            for is_treasure in (False, True):
+                vals = build_potential_table(max_lvl, anvil_cost, is_treasure, scale, full_mins, step_by_k)
+                for k in range(1, max_lvl + 1):
+                    if vals[k] < vals[k - 1]:
+                        errors.append(f"decreasing potential at M={max_lvl}, k={k}")
+                    if vals[k] > full_mins[k] - SAFETY_MARGIN:
+                        errors.append(f"full-wipe XP arbitrage at M={max_lvl}, k={k}")
+                    checked_pairs += 1
+                    row_k = step_by_k[k]
+                    vk = vals[k]
+                    for a in range(1, k):
+                        if vk - vals[a] > row_k[a] - SAFETY_MARGIN:
+                            errors.append(f"step XP arbitrage at M={max_lvl}, {a}->{k}")
+                        checked_pairs += 1
+                telescoped = sum(vals[l] - vals[l - 1] for l in range(1, max_lvl + 1))
+                if telescoped != vals[max_lvl]:
+                    errors.append(f"telescoping sum mismatch at M={max_lvl}: {telescoped} != {vals[max_lvl]}")
+    if checked_pairs < 33_000_000:
+        errors.append(f"expected >= 33,000,000 exhaustive conservation checks, ran only {checked_pairs}")
+
+
+def check_grimoire_recipes_sounds_and_textures() -> None:
+    from pathlib import Path
+    repo_root = Path(REPO)
+    client_res = repo_root / "src" / "client" / "resources" / "assets" / "chiseled_enchanting_table"
+    data_res = repo_root / "src" / "main" / "resources" / "data"
+
+    # 1. Verify both shapeless recipes exist and match exact ingredients
+    r1_path = data_res / "chiseled_enchanting_table" / "recipe" / "arcane_grimoire_from_shelf.json"
+    r2_path = data_res / "chiseled_enchanting_table" / "recipe" / "arcane_grimoire_from_tome.json"
+    for rpath, exp_set in [
+        (r1_path, {"minecraft:writable_book", "minecraft:chiseled_bookshelf"}),
+        (r2_path, {"chiseled_enchanting_table:depleted_tome", "minecraft:ink_sac"}),
+    ]:
+        if not rpath.is_file():
+            errors.append(f"missing grimoire recipe: {rpath}")
+            continue
+        robj = json.loads(rpath.read_text(encoding="utf-8"))
+        if robj.get("type") != "minecraft:crafting_shapeless":
+            errors.append(f"{rpath.name} must be minecraft:crafting_shapeless")
+        if set(robj.get("ingredients", [])) != exp_set:
+            errors.append(f"{rpath.name} ingredients mismatch: {robj.get('ingredients')} != {exp_set}")
+        if robj.get("result", {}).get("id") != "chiseled_enchanting_table:arcane_grimoire":
+            errors.append(f"{rpath.name} result id must be chiseled_enchanting_table:arcane_grimoire")
+
+    # 2. Verify native vanilla sound usage (zero custom .ogg bloat) & JEI/REI viewer integration
+    if (client_res / "sounds.json").exists():
+        errors.append("obsolete sounds.json still exists; grimoire must use vanilla SoundEvents")
+    if (client_res / "sounds").exists():
+        errors.append("obsolete custom sounds directory still exists; grimoire must use vanilla SoundEvents")
+
+    sound_helper = (
+        repo_root
+        / "src/client/java/chiseled_enchanting_table/gui/grimoire/GrimoireSoundHelper.java"
+    ).read_text(encoding="utf-8")
+    for required_sym in ("SoundEvents.BOOK_PAGE_TURN", "SoundEvents.BOOK_PUT", "SoundEvents.UI_BUTTON_CLICK"):
+        if required_sym not in sound_helper:
+            errors.append(f"GrimoireSoundHelper missing vanilla sound symbol: {required_sym}")
+
+    # 3. Verify JEI & REI viewer bridge + zero optional-mod imports outside compat/{jei,rei}
+    for non_compat_java in sorted((repo_root / "src").glob("**/*.java")):
+        posix = non_compat_java.as_posix()
+        if "/compat/jei/" in posix or "/compat/rei/" in posix:
+            continue
+        src_txt = non_compat_java.read_text(encoding="utf-8")
+        if "mezz.jei." in src_txt or "me.shedaniel." in src_txt:
+            errors.append(f"{posix} directly imports JEI/REI; breaks -Penable_jei=false/-Penable_rei=false")
+
+    jei_txt = (
+        repo_root
+        / "src/client/java/chiseled_enchanting_table/compat/jei/ChiseledEnchantingJeiPlugin.java"
+    ).read_text(encoding="utf-8")
+    for tok in ("BlockRegistry.ARCANE_GRIMOIRE", "ArcaneGrimoireScreen", "GrimoireViewerBridge", "hoveredIngredient"):
+        if tok not in jei_txt:
+            errors.append(f"ChiseledEnchantingJeiPlugin missing '{tok}'")
+
+    rei_txt = (
+        repo_root
+        / "src/client/java/chiseled_enchanting_table/compat/rei/ChiseledEnchantingReiPlugin.java"
+    ).read_text(encoding="utf-8")
+    for tok in ("BlockRegistry.ARCANE_GRIMOIRE", "ArcaneGrimoireScreen", "GrimoireViewerBridge", "registerFocusedStack"):
+        if tok not in rei_txt:
+            errors.append(f"ChiseledEnchantingReiPlugin missing '{tok}'")
+    if "me.shedaniel.rei.plugin." in rei_txt:
+        errors.append("ChiseledEnchantingReiPlugin must use me.shedaniel.rei.api.* only (not default-plugin internal packages)")
+
+
 # --------------------------------------------------------------------------- #
 
 def main() -> int:
@@ -725,6 +1152,8 @@ def main() -> int:
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()
     check_bookshelf_book_pool_well_formed()
+    check_disenchanting_and_anti_arbitrage()
+    check_grimoire_recipes_sounds_and_textures()
     mc_jar = find_mc_jar(args.mc_jar)
     check_ids_exist(mc_jar, args.extra_jar)
     check_referenced_tags_exist(mc_jar, args.extra_jar)

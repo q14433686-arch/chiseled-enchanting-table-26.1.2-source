@@ -3,6 +3,9 @@ package chiseled_enchanting_table;
 import chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity;
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen;
+import chiseled_enchanting_table.gui.grimoire.ArcaneGrimoireScreen;
+import chiseled_enchanting_table.gui.grimoire.GrimoireSoundHelper;
+import chiseled_enchanting_table.item.ArcaneGrimoireItem;
 import chiseled_enchanting_table.menu.EnchantCostTablePayload;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.EntityRegistry;
@@ -26,6 +29,10 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ChiseledEnchantingTableClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ArcaneGrimoireItem.CLIENT_OPEN_ACTION = player -> {
+            GrimoireSoundHelper.playOpen();
+            net.minecraft.client.Minecraft.getInstance().gui.setScreen(new ArcaneGrimoireScreen(null));
+        };
         MenuScreens.register(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, ChiseledEnchantingTableScreen::new);
         BlockEntityRendererRegistry.register(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
 
@@ -49,6 +56,15 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         // and after every data pack reload; empty means "fall back to the canonical cost".
         ClientPlayNetworking.registerGlobalReceiver(EnchantCostTablePayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> SyncedEnchantmentCosts.apply(payload)));
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.TYPE,
+            (payload, ctx) -> ctx.client().execute(() -> {
+                var player = ctx.client().player;
+                if (player != null && player.containerMenu instanceof chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler menu) {
+                    menu.applyLiveShelfState(payload);
+                }
+            })
+        );
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> SyncedEnchantmentCosts.clear());
     }
 }

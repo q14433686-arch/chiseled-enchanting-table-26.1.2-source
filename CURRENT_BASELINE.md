@@ -81,3 +81,14 @@ and loot condition takes a single predicate holder (not an array). Both bundled 
 fixed, preserving all copy-components fields including freeze data. The offline gates now
 cover both exact failures. Historical green compilation above did not validate datapack codecs.
 See docs/reports/WORLD_LOAD_1_1_1_HOTFIX.md. Runtime retest is still required.
+
+## Incremental 26.1.2 sync — 2026-10-23 (version remains 1.1.1)
+
+Source advanced from `0304f9d` to `b78b244` (PR #13). Includes disenchanting/cleansing,
+configurable shelf progression and live sync, illustrated Grimoire, new recipes/tags/assets,
+viewer extensions, 307 translation keys per locale, headless economy/config tests and
+stronger static checks. New 26.3 adaptations: Minecraft.gui screen navigation and explicit
+VarInt collection codecs for LiveShelfStatePayload. Every new recipe advancement is converted
+to the 26.3 recipes list; previous world-entry hotfixes remain intact. Source-branch tooling,
+version declarations and historical build logs are not copied. Current verification and
+runtime caveats: docs/reports/SYNC_FROM_26_1_2_INCREMENTAL_REPORT.md.

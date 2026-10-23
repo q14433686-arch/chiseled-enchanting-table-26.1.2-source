@@ -226,6 +226,70 @@ def check_lang_parity() -> None:
 
     note(f"lang parity ok ({len(reference_keys)} keys across en_us + {len(others)} language(s))")
 
+    # Also enforce 100% code/data -> lang key coverage across every .java and .json file under src/
+    referenced_keys: set[str] = set()
+    dyn_re = re.compile(
+        r'"(gui\.chiseled_enchanting_table\.[A-Za-z0-9_.]+)"\s*\+\s*[A-Za-z0-9_.()]+\s*\+\s*"(\.[A-Za-z0-9_.]+)"'
+    )
+    lit_re = re.compile(r'"([a-z0-9_]+\.chiseled_enchanting_table(?:\.[A-Za-z0-9_]+)+)"')
+    for root, _, files in os.walk(os.path.join(REPO, "src")):
+        if os.sep + "lang" in root:
+            continue
+        for fname in files:
+            if not fname.endswith((".java", ".json")):
+                continue
+            fpath = os.path.join(root, fname)
+            try:
+                src_text = open(fpath, encoding="utf-8").read()
+            except OSError:
+                continue
+            for m in dyn_re.finditer(src_text):
+                for ch in range(1, 9):
+                    referenced_keys.add(f"{m.group(1)}{ch}{m.group(2)}")
+            for m in lit_re.finditer(src_text):
+                k = m.group(1)
+                if not k.endswith(".ch"):
+                    referenced_keys.add(k)
+
+    missing_from_lang = sorted(referenced_keys - reference_keys)
+    for key in missing_from_lang:
+        fail(f"code/data references translation key '{key}' which is MISSING from lang/*.json!")
+    for lname in ["en_us.json"] + others:
+        lmap = read_json(os.path.join(LANG_DIR, lname))
+        for key, val in lmap.items():
+            if isinstance(val, str) and (val.strip() == key or "gui.chiseled_enchanting_table." in val):
+                fail(f"{lname}: key '{key}' contains raw untranslated key text '{val}'")
+            if isinstance(val, str) and key in reference and isinstance(reference[key], str):
+                ref_slots = len(re.findall(r"(?<!%)%s", reference[key]))
+                cur_slots = len(re.findall(r"(?<!%)%s", val))
+                if cur_slots != ref_slots:
+                    fail(
+                        f"{lname}: key '{key}' has {cur_slots} '%s' placeholder(s), "
+                        f"expected {ref_slots} matching en_us.json"
+                    )
+    note(f"code-to-lang coverage ok ({len(referenced_keys)} referenced keys verified in all {1 + len(others)} locales)")
+
+
+# --------------------------------------------------------------------------- #
+# Tier E - Single source of truth for bundled JSON defaults (N1)
+# --------------------------------------------------------------------------- #
+
+def check_no_embedded_json_fallbacks() -> None:
+    data_java = os.path.join(
+        MAIN_JAVA, "chiseled_enchanting_table", "data", "ChiseledEnchantingTableData.java"
+    )
+    if not os.path.exists(data_java):
+        fail(f"missing {os.path.relpath(data_java, REPO)}")
+        return
+    src = open(data_java, encoding="utf-8").read()
+    if '"""' in src:
+        fail(
+            "ChiseledEnchantingTableData.java contains embedded multi-line JSON text blocks "
+            "(violates N1 single-source-of-truth; load bundled resources via readBundledJsonObject instead)"
+        )
+    else:
+        note("single-source-of-truth ok (zero embedded JSON text blocks in ChiseledEnchantingTableData.java)")
+
 
 # --------------------------------------------------------------------------- #
 # Tier D (warn-only)
@@ -272,6 +336,7 @@ def main() -> int:
 
     check_mixin_configs()
     check_lang_parity()
+    check_no_embedded_json_fallbacks()
     check_markdown_links()
 
     if args.porcelain:

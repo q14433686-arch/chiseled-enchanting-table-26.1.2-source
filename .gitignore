@@ -48,3 +48,7 @@ libs/
 # python
 __pycache__/
 *.pyc
+
+# scratch patches & scripts
+fix*.patch
+fix*.py
