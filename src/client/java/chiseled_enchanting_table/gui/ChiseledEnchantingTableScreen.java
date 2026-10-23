@@ -825,8 +825,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 double riskPct = this.menu.currentRushSkipDegradeChance() * 100.0;
                 var rCfg = this.menu.ritualConfig();
                 int capPct = (int) Math.round(100.0 * (this.menu.ritualUsedInfinityTome()
-                    ? rCfg.rushMaxInfinityDegradeChance()
-                    : rCfg.rushMaxNormalDegradeChance()));
+                    ? rCfg.maxRushDegradeInfinity()
+                    : rCfg.maxRushDegradeNormal()));
                 boolean hasTome = this.menu.hasAnyMasterTomeInRange();
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_rush_title")

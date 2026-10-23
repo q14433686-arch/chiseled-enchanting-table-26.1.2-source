@@ -1314,7 +1314,7 @@ public final class GrimoireDiagramRenderer {
             Component.translatable(
                 "gui.chiseled_enchanting_table.grimoire.diag.ch3p2_gate",
                 midShelf,
-                SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+                SyncedEnchantmentCosts.ritualConfig().minTomeEnchantsForWait()
             ),
             x + 6, gY + 3, w - 10, gH - 6, 0.66f, 0.58f, INK_PRIMARY, false
         );

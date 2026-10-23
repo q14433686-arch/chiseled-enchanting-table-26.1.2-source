@@ -82,7 +82,7 @@ class NetworkCompatibilityTest {
             chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, 16, 4,
             chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN);
         var ritual = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
-            12, 5_400, 14, 150.0, 0.48, 0.68, 0.18);
+            270, 12, 14, 0.48, 0.68, 0.18);
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
             11, List.of(), Set.of(id("treasure")), gates, resonance, ritual,

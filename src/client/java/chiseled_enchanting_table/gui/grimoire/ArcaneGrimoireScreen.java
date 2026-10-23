@@ -931,7 +931,7 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.lead(Component.translatable(
                         "gui.chiseled_enchanting_table.grimoire.ch3p2.lead",
                         midShelf,
-                        SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+                        SyncedEnchantmentCosts.ritualConfig().minTomeEnchantsForWait()
                     )),
                     PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.rules"), INK_PURPLE),
                     PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.s1")),

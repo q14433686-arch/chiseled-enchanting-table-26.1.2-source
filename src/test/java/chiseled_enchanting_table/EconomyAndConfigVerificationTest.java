@@ -1308,20 +1308,22 @@ class EconomyAndConfigVerificationTest {
         var customRitualJson = JsonParser.parseString("""
             {
               "ritual": {
-                "optimal_target_tomes": 14,
+                "min_tome_enchants_for_wait": 14,
                 "max_single_wait_seconds": 180,
-                "sacrifice_max_xp_levels": 9,
-                "rush_max_normal_degrade_chance": 0.35,
-                "rush_max_infinity_degrade_chance": 0.55
+                "max_sacrifice_xp_levels": 9,
+                "max_rush_degrade_normal": 0.35,
+                "max_rush_degrade_infinity": 0.55,
+                "max_transcription_slip_chance": 0.16
               }
             }
             """).getAsJsonObject();
         var customRitual = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(customRitualJson);
-        assertEquals(14, customRitual.optimalTargetTomes());
+        assertEquals(14, customRitual.minTomeEnchantsForWait());
         assertEquals(3_600, customRitual.maxSingleWaitTicks());
         assertEquals(9, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(customRitual, 100_000L));
         assertEquals(0.35, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(customRitual, 100_000L, false), 1e-6);
         assertEquals(0.55, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(customRitual, 100_000L, true), 1e-6);
+        assertEquals(0.16, customRitual.maxTranscriptionSlipChance(), 1e-6);
         String epiphanyJsonRaw = Files.readString(
             Path.of("src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/treasure_epiphany.json")
         );

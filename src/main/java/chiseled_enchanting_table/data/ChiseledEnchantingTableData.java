@@ -639,24 +639,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         preloadedLootInjections = null;
         preloadedVanillaChestBooksMode = null;
         chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(candidatePolicy);
-        int validTransformations = 0;
-        for (ItemTransformation t : itemTransformations.values()) {
-            if (t.isResolvable()) {
-                validTransformations++;
-            } else {
-                ChiseledEnchantingTable.LOGGER.warn(
-                    "Disabled transformation {} due to unresolved input/output/cost item or tag",
-                    t.id()
-                );
-            }
-        }
         ChiseledEnchantingTable.LOGGER.info(
-            "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformations ({} active), {} loot injections",
+            "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformation rules, {} loot injections",
             defaultEnchantmentValues.size(),
             defaultEnchantmentTags.size(),
             costTables.itemCosts().size(),
             itemTransformations.size(),
-            validTransformations,
             lootInjections.size()
         );
         } catch (RuntimeException failure) {
@@ -1488,7 +1476,20 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                     return false;
                 }
             }
-            return !resolvedBundles().isEmpty();
+            for (ItemCostOption option : additionalCosts) {
+                if (!option.hasResolvableItems()) {
+                    return false;
+                }
+            }
+            List<ItemCostOption> primarySources = !alternativePrimaryOptions.isEmpty()
+                ? alternativePrimaryOptions
+                : List.of(primaryCost);
+            for (ItemCostOption option : primarySources) {
+                if (option.hasResolvableItems()) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public List<List<ItemStack>> resolvedBundles() {
@@ -1936,6 +1937,18 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 computedCount += countPerLevel * Math.max(1, level);
             }
             return Math.max(1, computedCount);
+        }
+
+        boolean hasResolvableItems() {
+            if (candidateItems().isEmpty()) {
+                return false;
+            }
+            for (ItemCostOption extra : additionalItems) {
+                if (!extra.hasResolvableItems()) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         ItemStack toSingleStack(Identifier enchantmentId, int level, int maxLevel, String salt) {
