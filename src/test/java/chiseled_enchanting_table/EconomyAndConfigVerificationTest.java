@@ -1180,7 +1180,7 @@ class EconomyAndConfigVerificationTest {
     void deepRitualPersistenceSkipSlipAndInfinityRulesVerified() throws Exception {
         // 1. Strict Infinity acquisition rules: excluded from default_enchantments & epiphany_exclusive.
         JsonObject defEnch = readResourceJson("default_enchantments.json");
-        List<String> excludedDefaults = new ArrayList<>();
+        List<String> excludedDefaults = new java.util.ArrayList<>();
         defEnch.getAsJsonArray("exclude").forEach(e -> excludedDefaults.add(e.getAsString()));
         assertTrue(
             excludedDefaults.contains("minecraft:infinity"),
@@ -1190,7 +1190,7 @@ class EconomyAndConfigVerificationTest {
         JsonObject epiphanyTag = JsonParser.parseString(Files.readString(
             Path.of("src/main/resources/data/chiseled_enchanting_table/tags/enchantment/epiphany_exclusive.json")
         )).getAsJsonObject();
-        List<String> epiphanyTagValues = new ArrayList<>();
+        List<String> epiphanyTagValues = new java.util.ArrayList<>();
         epiphanyTag.getAsJsonArray("values").forEach(e -> epiphanyTagValues.add(e.getAsString()));
         assertFalse(
             epiphanyTagValues.contains("minecraft:infinity"),
