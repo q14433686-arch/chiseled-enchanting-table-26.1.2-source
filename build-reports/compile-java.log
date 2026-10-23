@@ -1,4 +1,4 @@
-commit: 9d74cf1f0cb91842f0ccac1419b11a8ec0e6c4f5
+commit: 3d4964832cbc19a90dd6b9e09b91326cd7e97790
 branch: arena/3f862174-chiseled-enchanting-table-26-1
 minecraft: 26.2
 fabric-api: 0.155.2+26.2
@@ -29,36 +29,57 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.17.21
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: ')' or ',' expected
-                        .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: not a statement
-                        .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: ';' expected
-                        .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                                      ^
-3 errors
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792721690264.json
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/ArcaneGrimoireScreen.java:193: error: cannot find symbol
+            Minecraft.getInstance().setScreen(this.parentScreen);
+                                   ^
+  symbol:   method setScreen(Screen)
+  location: class Minecraft
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:34: error: cannot find symbol
+            net.minecraft.client.Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
+                                                        ^
+  symbol:   method setScreen(ArcaneGrimoireScreen)
+  location: class Minecraft
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/ChiseledEnchantingJeiPlugin.java:188: error: cannot find symbol
+                if (Minecraft.getInstance().screen instanceof ArcaneGrimoireScreen grimoire) {
+                                           ^
+  symbol:   variable screen
+  location: class Minecraft
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+3 errors
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792721940268.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+Execution failed for task ':compileClientJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
 > Compilation failed; see the compiler output below.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: not a statement
-                          .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                               ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: ')' or ',' expected
-                          .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                             ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: ';' expected
-                          .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                                        ^
+  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+  Note: Recompile with -Xlint:deprecation for details.
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/ChiseledEnchantingJeiPlugin.java:188: error: cannot find symbol
+                  if (Minecraft.getInstance().screen instanceof ArcaneGrimoireScreen grimoire) {
+                                             ^
+    symbol:   variable screen
+    location: class Minecraft
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/ArcaneGrimoireScreen.java:193: error: cannot find symbol
+              Minecraft.getInstance().setScreen(this.parentScreen);
+                                     ^
+    symbol:   method setScreen(Screen)
+    location: class Minecraft
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:34: error: cannot find symbol
+              net.minecraft.client.Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
+                                                          ^
+    symbol:   method setScreen(ArcaneGrimoireScreen)
+    location: class Minecraft
   3 errors
 
 * Try:
@@ -66,7 +87,7 @@ Execution failed for task ':compileJava' (registered by plugin class 'org.gradle
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -101,15 +122,23 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: ')' or ',' expected
-                        .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: not a statement
-                        .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:263: error: ';' expected
-                        .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
-                                                                                                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/ArcaneGrimoireScreen.java:193: error: cannot find symbol
+            Minecraft.getInstance().setScreen(this.parentScreen);
+                                   ^
+  symbol:   method setScreen(Screen)
+  location: class Minecraft
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:34: error: cannot find symbol
+            net.minecraft.client.Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
+                                                        ^
+  symbol:   method setScreen(ArcaneGrimoireScreen)
+  location: class Minecraft
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/ChiseledEnchantingJeiPlugin.java:188: error: cannot find symbol
+                if (Minecraft.getInstance().screen instanceof ArcaneGrimoireScreen grimoire) {
+                                           ^
+  symbol:   variable screen
+  location: class Minecraft
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
 3 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
@@ -245,8 +274,8 @@ Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Com
 	... 30 more
 
 
-BUILD FAILED in 40s
-1 actionable task: 1 executed
+BUILD FAILED in 48s
+3 actionable tasks: 3 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
