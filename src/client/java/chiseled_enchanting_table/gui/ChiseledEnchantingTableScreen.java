@@ -917,13 +917,20 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         .withStyle(ChatFormatting.GREEN));
                     xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.refund.amount", req.refundPoints())
                         .withStyle(ChatFormatting.AQUA));
-                    xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.refund.hint")
-                        .withStyle(ChatFormatting.GRAY));
+                    xpTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.xp_mode.refund.hint",
+                        (int) Math.round(this.menu.disenchantExternalRefundScale() * 100.0)
+                    ).withStyle(ChatFormatting.GRAY));
                 } else if (req.requiredLevel() <= 0 && req.deductedLevels() <= 0) {
-                    String freeKey = ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(hoveredXpEntry.enchantment_id)
-                        ? "gui.chiseled_enchanting_table.xp_mode.free_tome"
-                        : "gui.chiseled_enchanting_table.xp_mode.free";
-                    xpTip.add(Component.translatable(freeKey).withStyle(ChatFormatting.GREEN));
+                    if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(hoveredXpEntry.enchantment_id)) {
+                        xpTip.add(Component.translatable(
+                            "gui.chiseled_enchanting_table.xp_mode.free_tome",
+                            this.menu.shelfGatesConfig().tier1Bookshelves()
+                        ).withStyle(ChatFormatting.GREEN));
+                    } else {
+                        xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.free")
+                            .withStyle(ChatFormatting.GREEN));
+                    }
                 } else if (req.vanillaTierMode()) {
                     xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.vanilla.title")
                         .withStyle(ChatFormatting.GREEN));
@@ -1284,8 +1291,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         .append(req.getHoverName())
                         .withStyle(ChatFormatting.GRAY));
                 }
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.auto_hint")
-                    .withStyle(ChatFormatting.DARK_GRAY));
+                tip.add(Component.translatable(
+                    "gui.chiseled_enchanting_table.epiphany.auto_hint",
+                    Math.max(1, Math.round(this.menu.epiphanyCycleTicks() / 1200.0f))
+                ).withStyle(ChatFormatting.DARK_GRAY));
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
@@ -1315,8 +1324,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_stats", nonCurse, refund)
                             .withStyle(ChatFormatting.AQUA));
                     }
-                    tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_resonance")
-                        .withStyle(ChatFormatting.DARK_GRAY));
+                    tip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.cleanse.panel_resonance",
+                        this.menu.libraryResonanceConfig().maxSpecificEnchantBonusPercent()
+                    ).withStyle(ChatFormatting.DARK_GRAY));
                     ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                     return;
                 }
@@ -1327,8 +1338,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 int minShelves = this.menu.epiphanyMinBookshelves();
                 var sg = this.menu.shelfGatesConfig();
                 List<Component> tip = new ArrayList<>();
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.title", this.menu.xpDiscountPercent)
-                    .withStyle(ChatFormatting.GOLD));
+                tip.add(Component.translatable(
+                    "gui.chiseled_enchanting_table.resonance.title",
+                    this.menu.xpDiscountPercent,
+                    this.menu.libraryResonanceConfig().maxTotalXpDiscountPercent()
+                ).withStyle(ChatFormatting.GOLD));
                 tip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.resonance.broad_breakdown",
                     this.menu.totalLibraryBookshelves(),
@@ -1345,6 +1359,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     tip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.resonance.wooden_locked",
                         this.menu.regularBookshelves,
+                        minDiscShelves,
                         minDiscShelves
                     ).withStyle(ChatFormatting.GRAY));
                 } else {

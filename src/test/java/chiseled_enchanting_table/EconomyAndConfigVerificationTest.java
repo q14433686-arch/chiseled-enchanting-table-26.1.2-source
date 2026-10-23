@@ -579,7 +579,37 @@ class EconomyAndConfigVerificationTest {
 
             // Verify every parameterized Grimoire key formats cleanly with live config values
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15)
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15, 40)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p0.s3").getAsString(), 15, 38, 42)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3.lead").getAsString(), 3, 2, 12)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.s3").getAsString(), 40, 60)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch5.note_b").getAsString(), 16, 38, 42)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch6.s2").getAsString(), 32, 20, 3)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch8.s4").getAsString(), 12, 35)
                     .contains("%s"),
                 false
             );
