@@ -665,6 +665,83 @@ class EconomyAndConfigVerificationTest {
         assertTrue(!wiki.contains("0.85×"), "WIKI.md must not retain stale 0.85x research multiplier");
         assertTrue(!wiki.contains("Lv.4~10"), "WIKI.md must not retain stale Lv.4~10 strip range");
         assertTrue(!wiki.contains("涤魔碎砂"), "WIKI.md must not contain removed grit-shard refund claim");
+        assertTrue(wiki.contains("无书架门槛自动批量合成"), "WIKI.md must document zero-threshold universal batching");
+    }
+
+    @Test
+    void universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() throws Exception {
+        assertEquals(64, BookshelfProgression.DEFAULT_BASE_BATCH_SIZE, "Batch crafting must have zero bookshelf threshold (64 at 0 shelves)");
+        assertEquals(64, BookshelfProgression.DEFAULT_TIER3_BATCH_SIZE);
+
+        Path repoRoot = findRepoRoot();
+        JsonObject shelfGatesJson = JsonParser.parseString(
+            java.nio.file.Files.readString(
+                repoRoot.resolve("src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/shelf_gates.json"),
+                StandardCharsets.UTF_8
+            )
+        ).getAsJsonObject();
+        BookshelfProgression.Config parsedCfg = BookshelfProgression.Config.fromJson(shelfGatesJson);
+        assertEquals(64, parsedCfg.baseBatchSize(), "shelf_gates.json base_batch_size must default to 64 without any shelf gate");
+        assertEquals(64, parsedCfg.tier3BatchSize());
+
+        // Verify exact sequential equivalence & maxTransformationBatchForLevel bijection across ALL built-in transformations
+        Identifier bottleId = Identifier.fromNamespaceAndPath("chiseled_enchanting_table", "experience_bottle");
+        Identifier blankId = Identifier.fromNamespaceAndPath("chiseled_enchanting_table", "blank_overwrite");
+        Identifier appleId = Identifier.fromNamespaceAndPath("chiseled_enchanting_table", "enchanted_golden_apple");
+        Identifier totemId = Identifier.fromNamespaceAndPath("chiseled_enchanting_table", "totem_of_undying");
+
+        // 1. Experience bottle strict anti-arbitrage for ALL batch sizes B = 1..64 across ALL discounts 0..40%
+        for (int discount = 0; discount <= 40; discount++) {
+            var unitBottle = XpCostConversion.forTransformation(
+                LibraryResonance.Config.DEFAULT,
+                bottleId,
+                5,
+                discount,
+                5,
+                1
+            );
+            for (int batch = 1; batch <= 64; batch++) {
+                var batchXp = XpCostConversion.scaleTransformationXpForBatch(unitBottle, batch);
+                int minPointsSpent = XpCostConversion.minPointsRequired(batchXp);
+                assertTrue(
+                    minPointsSpent >= 11 * batch,
+                    "Batch " + batch + " at " + discount + "% discount spent " + minPointsSpent + " < " + (11 * batch)
+                );
+            }
+        }
+
+        // 2. Sequential equivalence on high-tier transformations (e.g., Totem of Undying: req=30, deduct=3):
+        // At player level 45, sequential clicks craft (45 - 30) / 3 + 1 = 6 Totems (45 -> 42 -> 39 -> 36 -> 33 -> 30 -> 27).
+        var unitTotem = XpCostConversion.forTransformation(
+            LibraryResonance.Config.DEFAULT,
+            totemId,
+            30,
+            0,
+            30,
+            3
+        );
+        assertEquals(6, XpCostConversion.maxTransformationBatchForLevel(unitTotem, 45));
+        var batch6Totem = XpCostConversion.scaleTransformationXpForBatch(unitTotem, 6);
+        assertEquals(45, batch6Totem.requiredLevel(), "6 Totems require exact sequential level 45 (NOT naive 180!)");
+        assertEquals(18, batch6Totem.deductedLevels(), "6 Totems deduct exact 6 * 3 = 18 levels (45 -> 27)");
+        assertEquals(5, XpCostConversion.maxTransformationBatchForLevel(unitTotem, 44));
+
+        // 3. Exact bijection across all player levels 0..250 for all recipes
+        for (var unit : List.of(
+            XpCostConversion.forTransformation(LibraryResonance.Config.DEFAULT, blankId, 1, 0, 1, 1),
+            XpCostConversion.forTransformation(LibraryResonance.Config.DEFAULT, appleId, 20, 40, 20, 2),
+            unitTotem
+        )) {
+            for (int playerLv = 0; playerLv <= 250; playerLv++) {
+                int maxB = XpCostConversion.maxTransformationBatchForLevel(unit, playerLv);
+                if (maxB >= 1 && maxB < 10_000) {
+                    var atMax = XpCostConversion.scaleTransformationXpForBatch(unit, maxB);
+                    var overMax = XpCostConversion.scaleTransformationXpForBatch(unit, maxB + 1);
+                    assertTrue(playerLv >= atMax.requiredLevel());
+                    assertTrue(playerLv < overMax.requiredLevel());
+                }
+            }
+        }
     }
 
     private static int countSubstring(String haystack, String needle) {

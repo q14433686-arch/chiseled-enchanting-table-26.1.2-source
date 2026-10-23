@@ -1060,10 +1060,10 @@ public final class GrimoireDiagramRenderer {
 
         var sg = SyncedEnchantmentCosts.shelfGatesConfig();
         String[] gates = {
-            "0+: 2\u00d7 (" + sg.baseBatchSize() + ")",
+            "0+: 2\u00d7 (\u00d7" + sg.baseBatchSize() + ")",
             sg.tier1Bookshelves() + "+: 0 XP",
             sg.tier2Bookshelves() + "+: 1\u00d7 (-50%)",
-            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "*: 0 (" + sg.tier3BatchSize() + ")"
+            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "*: 0 (\u00d7" + sg.tier3BatchSize() + ")"
         };
         int[] gCols = {0xFF7D634C, 0xFF285E6B, 0xFF4C236E, 0xFF175E3E};
         int gw = (w - 10) / 2;

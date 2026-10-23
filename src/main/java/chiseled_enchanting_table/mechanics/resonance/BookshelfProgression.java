@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.mechanics.resonance;
 
+import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -48,7 +49,7 @@ public final class BookshelfProgression {
     public static final int DEFAULT_TIER2_BOOKSHELVES = 32;
     public static final double DEFAULT_TIER2_MATERIAL_MULTIPLIER = 0.50;
     public static final int DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS = 6;
-    public static final int DEFAULT_BASE_BATCH_SIZE = 8;
+    public static final int DEFAULT_BASE_BATCH_SIZE = 64;
     public static final int DEFAULT_TIER3_BATCH_SIZE = 64;
     public static final int DEFAULT_MIN_OPEN_ADJACENT_BLOCKS = 6;
 
@@ -565,21 +566,7 @@ public final class BookshelfProgression {
         int batchCount
     ) {
         return switch (tier) {
-            case BASELINE -> {
-                int safeBatch = Math.max(1, batchCount);
-                if (safeBatch <= 1 || (baseXp.requiredLevel() <= 0 && baseXp.deductedLevels() <= 0)) {
-                    yield baseXp;
-                }
-                int scaledDed = baseXp.deductedLevels() * safeBatch;
-                int scaledReq = Math.max(scaledDed, baseXp.requiredLevel() * safeBatch);
-                yield new XpRequirement(
-                    baseXp.rawRequiredLevel() * safeBatch,
-                    scaledReq,
-                    scaledDed,
-                    baseXp.discountPercent(),
-                    baseXp.vanillaTierMode()
-                );
-            }
+            case BASELINE -> XpCostConversion.scaleTransformationXpForBatch(baseXp, batchCount);
             case TIER_1_NO_XP, TIER_2_DISCOUNT_MAT, TIER_3_FREE -> XpRequirement.FREE;
         };
     }
@@ -619,6 +606,31 @@ public final class BookshelfProgression {
                     ? Math.max(1, (int) Math.floor(stack.getCount() * mult))
                     : Math.max(1, stack.getCount());
                 copy.setCount(unitCount * safeBatch);
+                scaled.add(copy);
+            }
+            out.add(List.copyOf(scaled));
+        }
+        return List.copyOf(out);
+    }
+
+    public static List<List<ItemStack>> scaleBundlesWithBatch(
+        List<List<ItemStack>> unitBundles,
+        int batchCount
+    ) {
+        if (unitBundles == null || unitBundles.isEmpty()) {
+            return List.of();
+        }
+        int safeBatch = Math.max(1, batchCount);
+        if (safeBatch <= 1) {
+            return unitBundles;
+        }
+        List<List<ItemStack>> out = new ArrayList<>(unitBundles.size());
+        for (List<ItemStack> bundle : unitBundles) {
+            if (bundle.isEmpty()) continue;
+            List<ItemStack> scaled = new ArrayList<>(bundle.size());
+            for (ItemStack stack : bundle) {
+                ItemStack copy = stack.copy();
+                copy.setCount(Math.max(1, stack.getCount()) * safeBatch);
                 scaled.add(copy);
             }
             out.add(List.copyOf(scaled));

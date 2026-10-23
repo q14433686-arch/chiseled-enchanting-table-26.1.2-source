@@ -927,16 +927,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         private boolean isBundleFullyAffordable(List<ItemStack> bundle) {
             if (player.getAbilities().instabuild) return true;
             if (bundle.isEmpty()) return isZeroMaterialRow() || cost_item_stack.is(Items.ENCHANTED_BOOK);
-            ItemStack primary = bundle.getFirst();
-            if (primary.isEmpty()
-                || !ItemStack.isSameItemSameComponents(primary, cost_item_stack)
-                || cost_item_stack.getCount() < primary.getCount()) {
-                return false;
-            }
-            for (int i = 1; i < bundle.size(); i++) {
-                if (!hasInventoryCost(bundle.get(i))) return false;
-            }
-            return true;
+            return handler.isBundleAffordableWithOverflow(bundle);
         }
 
         public boolean enchantAlreadyExist() {
@@ -961,8 +952,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             ItemStack cost = activePrimaryCost();
             if (cost.isEmpty() && cost_item_stack.is(Items.ENCHANTED_BOOK)) return true;
             return !cost.isEmpty()
+                && !cost_item_stack.isEmpty()
                 && ItemStack.isSameItemSameComponents(cost, cost_item_stack)
-                && cost_item_stack.getCount() >= cost.getCount();
+                && handler.countAvailableIncludingCostSlot(cost) >= cost.getCount();
         }
 
         public boolean hasInventoryCost(ItemStack additionalCost) {
@@ -1205,8 +1197,8 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (is_transformation) {
                 String baseOutputName = handler.syncedTransformationOutputName(this.enchantment_id);
                 boolean isBlankOverwrite = this.enchantment_id.equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID);
-                int batchCount = isBlankOverwrite ? handler.resolveDepletedTomeBatchCount() : 1;
-                String outputName = (isBlankOverwrite && batchCount > 1)
+                int batchCount = handler.resolveTransformationBatchCount(this.enchantment_id);
+                String outputName = batchCount > 1
                     ? (batchCount + "\u00d7 " + baseOutputName)
                     : baseOutputName;
                 String rowTitle = isBlankOverwrite
@@ -1244,6 +1236,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                         case TIER_2_DISCOUNT_MAT -> RowRenderSupport.EPIPHANY_GOLD;
                         case TIER_3_FREE -> RowRenderSupport.LIGHT_GREEN;
                     };
+                } else if (enchantable_item.getCount() > 1) {
+                    subText = I18n.get("gui.chiseled_enchanting_table.transformation.batch_sub", batchCount);
+                    subColor = batchCount > 1 ? RowRenderSupport.LIGHT_GREEN : RowRenderSupport.CYAN;
                 }
                 TransformationRowRenderer.render(
                     ctx, client, dx, dy, dw, dh, isFocused, hovered, canEnchant(),

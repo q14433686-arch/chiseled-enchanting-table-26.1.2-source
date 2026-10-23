@@ -274,7 +274,7 @@
   "gui.chiseled_enchanting_table.grimoire.ch7.sub": "1–3L vanilla rituals & 4-gate free Tome restoration",
   "gui.chiseled_enchanting_table.grimoire.ch7.lead": "Base items in the top slot unlock golden 1–3L Vanilla Transmutations!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s1": "Frascos de XP y Tomos al instante; Fragmentos de eco, Tótems, Tridentes y Manzanas encantadas al descubrirlos.",
-  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "Normal: 1 por clic; el tomo agotado restaura lotes por clic (%s base, %s gratis)!",
+  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "¡Todas las transformaciones fabrican lotes en un clic sin requisito de librerías (hasta %s desde 0 librerías; %s gratis)!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s3": "Baja en %s / %s librerías y es 100%% GRATIS con %s+ encantamientos altos!",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_t": "Anti-Exploit Floor",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_b": "XP Bottles require Lv.3+ and >= 11 XP points, preventing XP loops.",
@@ -323,5 +323,6 @@
   "gui.chiseled_enchanting_table.pricing.cleanse_provenance": "✦ Reembolso: 100%% esencia propia · %s%% botín externo",
   "gui.chiseled_enchanting_table.pricing.cleanse_targeted": "✦ Limpieza selectiva: conserva los demás encantamientos",
   "gui.chiseled_enchanting_table.pricing.conflict_refund": "• Reembolso por conflicto: +%s XP",
-  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• Descuento de resonancia activo: -%s%% XP"
+  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• Descuento de resonancia activo: -%s%% XP",
+  "gui.chiseled_enchanting_table.transformation.batch_sub": "✦ Lote automático: ×%s (sin requisito de librerías)"
 }

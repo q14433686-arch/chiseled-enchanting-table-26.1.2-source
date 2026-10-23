@@ -274,7 +274,7 @@
   "gui.chiseled_enchanting_table.grimoire.ch7.sub": "1–3L vanilla rituals & 4-gate free Tome restoration",
   "gui.chiseled_enchanting_table.grimoire.ch7.lead": "Base items in the top slot unlock golden 1–3L Vanilla Transmutations!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s1": "경험치 병과 소진된 고서는 즉시 변환 가능하며, 메아리 조각·불사의 토템·삼지창·마법 황금 사과는 최초 획득 후 해금됩니다.",
-  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "일반 변환은 클릭당 1개, 고서 복원은 클릭 1번에 묶음 변환(최대 %s권, 무료 시 %s권)!",
+  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "모든 변환 제작이 책장 조건 없이 일괄 제작 지원(책장 0개부터 클릭당 최대 %s개, 무료 시 %s개)!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s3": "나무 책장 %s / %s개에서 비용 감소, 2단계 + 고급 장서 %s종 이상이면 100%% 무료!",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_t": "Anti-Exploit Floor",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_b": "XP Bottles require Lv.3+ and >= 11 XP points, preventing XP loops.",
@@ -323,5 +323,6 @@
   "gui.chiseled_enchanting_table.pricing.cleanse_provenance": "✦ 출처 비례 환급: 본 제단 각인 100%% · 외부 전리품 %s%%",
   "gui.chiseled_enchanting_table.pricing.cleanse_targeted": "✦ 선택 제거: 나머지 마법은 그대로 유지",
   "gui.chiseled_enchanting_table.pricing.conflict_refund": "• 상충 마법 덮어쓰기 환급: +%s XP 구슬",
-  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• 서고 공명 할인 적용: -%s%% XP"
+  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• 서고 공명 할인 적용: -%s%% XP",
+  "gui.chiseled_enchanting_table.transformation.batch_sub": "✦ 일괄 변환: ×%s (책장 조건 없음)"
 }

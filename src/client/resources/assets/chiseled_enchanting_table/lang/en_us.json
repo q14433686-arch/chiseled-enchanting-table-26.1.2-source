@@ -274,7 +274,7 @@
   "gui.chiseled_enchanting_table.grimoire.ch7.sub": "1–3L vanilla rituals & 4-gate free Tome restoration",
   "gui.chiseled_enchanting_table.grimoire.ch7.lead": "Put base items in the Top Slot to unlock golden 1–3L Transmutations:",
   "gui.chiseled_enchanting_table.grimoire.ch7.s1": "Transmute XP Bottles & Depleted Tomes right away; Echo Shards, Totems, Tridents & Enchanted Apples unlock once discovered.",
-  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "Standard rituals convert 1 per click; Depleted Tome restores batches per click (%s base, %s when free)!",
+  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "All transformations craft batches in one click with zero bookshelf gate (up to %s/click from 0 shelves; %s when free)!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s3": "Costs drop at %s and %s Wooden Shelves, becoming 100%% FREE with %s+ qualifying Tomes!",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_t": "Anti-Exploit Floor",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_b": "XP Bottles require Lv.3+ and >= 11 XP points, preventing XP loops.",
@@ -323,5 +323,6 @@
   "gui.chiseled_enchanting_table.pricing.cleanse_provenance": "✦ Refund: 100%% Table Essence · %s%% External Loot Essence",
   "gui.chiseled_enchanting_table.pricing.cleanse_targeted": "✦ Targeted Cleanse: Preserves all other enchantments",
   "gui.chiseled_enchanting_table.pricing.conflict_refund": "• Conflict Overwrite Refund: +%s XP Orbs",
-  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• Active Library Resonance: -%s%% XP"
+  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• Active Library Resonance: -%s%% XP",
+  "gui.chiseled_enchanting_table.transformation.batch_sub": "✦ Batch Transmute: ×%s (No Shelf Gate)"
 }

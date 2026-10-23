@@ -274,7 +274,7 @@
   "gui.chiseled_enchanting_table.grimoire.ch7.sub": "1–3L vanilla rituals & 4-gate free Tome restoration",
   "gui.chiseled_enchanting_table.grimoire.ch7.lead": "Base items in the top slot unlock golden 1–3L Vanilla Transmutations!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s1": "EP-Fläschchen & Folianten sofort; Echoscherben, Totems, Dreizacke & Goldäpfel nach erster Entdeckung.",
-  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "Standard: 1 pro Klick; Foliant-Wiederherstellung im Stapel (%s Basis, %s kostenlos)!",
+  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "Alle Freischaltungen fertigen automatisch im Stapel ohne Regal-Schwelle (bis %s/Klick ab 0 Regalen, %s kostenlos)!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s3": "Sinkt bei %s / %s Holzregalen und ist mit %s+ hohen Folianten 100%% KOSTENLOS!",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_t": "Anti-Exploit Floor",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_b": "XP Bottles require Lv.3+ and >= 11 XP points, preventing XP loops.",
@@ -323,5 +323,6 @@
   "gui.chiseled_enchanting_table.pricing.cleanse_provenance": "✦ Rückgabe: 100%% Tisch-Essenz · %s%% Fremdbeute-Essenz",
   "gui.chiseled_enchanting_table.pricing.cleanse_targeted": "✦ Gezielte Reinigung: Bewahrt alle übrigen Verzauberungen",
   "gui.chiseled_enchanting_table.pricing.conflict_refund": "• Konflikt-Überschreibung erstattet: +%s EP",
-  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• Aktiver Bibliotheksrabatt: -%s%% EP"
+  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• Aktiver Bibliotheksrabatt: -%s%% EP",
+  "gui.chiseled_enchanting_table.transformation.batch_sub": "✦ Stapel-Umwandlung: ×%s (ohne Regal-Schwelle)"
 }

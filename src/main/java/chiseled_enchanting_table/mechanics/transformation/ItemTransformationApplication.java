@@ -15,16 +15,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Item transformation gameplay mechanic with prior-discovery gating ({@code D5}) and strict
- * linear unit/batch consumption:
+ * Item transformation gameplay mechanic with prior-discovery gating ({@code D5}) and universal
+ * ungated stack batching across ALL transformations:
  * <ul>
  *   <li>Exploration transmutations carrying {@code require_prior_discovery = true} or
  *       {@code required_advancement} verify server-side unlock status before accepting rituals.</li>
- *   <li>Standard transmutations strictly consume {@code 1} input item per ritual, closing the
- *       multi-stack duplication loophole.</li>
- *   <li>{@link ChiseledEnchantingTableData#BLANK_OVERWRITE_ID} supports stack batching up to
- *       {@link ChiseledEnchantingTableScreenHandler#resolveDepletedTomeBatchCount()} and scales both
- *       material bundles and baseline XP strictly linearly by {@code batchCount}.</li>
+ *   <li>Every unlocked transformation automatically resolves {@code batchCount >= 1} up to the
+ *       player's full affordable stack without any bookshelf threshold requirement, scaling both
+ *       reagents and XP identically to {@code batchCount} sequential rituals.</li>
+ *   <li>Produced stacks strictly respect {@link ItemStack#getMaxStackSize()} (including unstackable
+ *       outputs such as Totems of Undying and Tridents).</li>
  * </ul>
  */
 public final class ItemTransformationApplication {
@@ -44,9 +44,7 @@ public final class ItemTransformationApplication {
             return false;
         }
 
-        boolean isBlankOverwrite = rule.id().equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID);
-        int batchCount = isBlankOverwrite ? handler.resolveDepletedTomeBatchCount() : 1;
-        batchCount = Math.max(1, Math.min(input.getCount(), batchCount));
+        int batchCount = Math.max(1, Math.min(input.getCount(), handler.resolveTransformationBatchCount(rule.id())));
 
         ApplyEnchantmentPayload canonical = new ApplyEnchantmentPayload(
             OptionType.TRANSFORMATION,
@@ -57,12 +55,20 @@ public final class ItemTransformationApplication {
             return false;
         }
 
-        ItemStack produced = rule.outputStack(batchCount * Math.max(1, rule.level()));
+        int totalProduced = batchCount * Math.max(1, rule.level());
+        ItemStack unitSample = rule.outputStack(1);
+        int outMaxStack = Math.max(1, unitSample.getMaxStackSize());
+
         if (input.getCount() <= batchCount) {
-            handler.setEnchantableSlot(produced);
+            int inSlot = Math.min(totalProduced, outMaxStack);
+            handler.setEnchantableSlot(rule.outputStack(inSlot));
+            int rem = totalProduced - inSlot;
+            if (rem > 0) {
+                InventoryUtils.insertItem(handler.player, rule.outputStack(rem), Optional.empty());
+            }
         } else {
             input.shrink(batchCount);
-            InventoryUtils.insertItem(handler.player, produced, Optional.empty());
+            InventoryUtils.insertItem(handler.player, rule.outputStack(totalProduced), Optional.empty());
         }
         handler.advanceTableEpiphanySeed(false);
 
@@ -74,7 +80,7 @@ public final class ItemTransformationApplication {
         if (rule.id().equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)) {
             Advancement.give(player, "blank_overwrite");
         }
-        if (produced.is(Items.ENCHANTED_GOLDEN_APPLE)) {
+        if (unitSample.is(Items.ENCHANTED_GOLDEN_APPLE)) {
             Advancement.give(player, "enchanted_golden_apple");
         }
         return true;

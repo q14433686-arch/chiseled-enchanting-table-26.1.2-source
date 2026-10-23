@@ -274,7 +274,7 @@
   "gui.chiseled_enchanting_table.grimoire.ch7.sub": "1–3L vanilla rituals & 4-gate free Tome restoration",
   "gui.chiseled_enchanting_table.grimoire.ch7.lead": "Base items in the top slot unlock golden 1–3L Vanilla Transmutations!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s1": "経験値瓶と古文書はすぐ変換可能。残響の欠片・トーテム・トライデント・金リンゴは入手後に解放されます。",
-  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "通常変換は1クリック1個。残巻復元は1クリックで一括変換（最大 %s 冊、無料時は %s 冊）！",
+  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "すべての変換レシピが本棚条件なしで一括変換に対応（本棚0個から1クリック最大 %s 個、無料時も %s 個）！",
   "gui.chiseled_enchanting_table.grimoire.ch7.s3": "木製本棚 %s / %s 個で軽減し、第2段階＋高段階蔵書 %s 種以上で完全無料！",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_t": "Anti-Exploit Floor",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_b": "XP Bottles require Lv.3+ and >= 11 XP points, preventing XP loops.",
@@ -323,5 +323,6 @@
   "gui.chiseled_enchanting_table.pricing.cleanse_provenance": "✦ 由来別返還：本台刻印分 100%% ・ 外部入手分 %s%%",
   "gui.chiseled_enchanting_table.pricing.cleanse_targeted": "✦ 単体除去：他のエンチャントをすべて保持",
   "gui.chiseled_enchanting_table.pricing.conflict_refund": "• 競合上書き払い戻し：+%s XPオーブ",
-  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• 書庫共鳴割引：-%s%% XP"
+  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• 書庫共鳴割引：-%s%% XP",
+  "gui.chiseled_enchanting_table.transformation.batch_sub": "✦ 一括変換：×%s（本棚条件なし）"
 }

@@ -274,7 +274,7 @@
   "gui.chiseled_enchanting_table.grimoire.ch7.sub": "1–3L vanilla rituals & 4-gate free Tome restoration",
   "gui.chiseled_enchanting_table.grimoire.ch7.lead": "Base items in the top slot unlock golden 1–3L Vanilla Transmutations!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s1": "Пузырьки опыта и фолианты сразу; осколки эха, тотемы, трезубцы и чар-яблоки — после первой находки.",
-  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "Обычно 1 за клик; истощённый том восстанавливается пачкой (%s база, %s бесплатно)!",
+  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "Все превращения работают пачкой за клик без порога полок (до %s с 0 полок; %s при бесплатном)!",
   "gui.chiseled_enchanting_table.grimoire.ch7.s3": "Дешевле на %s / %s полках и 100%% БЕСПЛАТНО при %s+ высших чарах!",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_t": "Anti-Exploit Floor",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_b": "XP Bottles require Lv.3+ and >= 11 XP points, preventing XP loops.",
@@ -323,5 +323,6 @@
   "gui.chiseled_enchanting_table.pricing.cleanse_provenance": "✦ Возврат: 100%% чар этого стола · %s%% внешних трофеев",
   "gui.chiseled_enchanting_table.pricing.cleanse_targeted": "✦ Точечное снятие: сохраняет остальные чары",
   "gui.chiseled_enchanting_table.pricing.conflict_refund": "• Возврат за замену конфликта: +%s XP",
-  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• Скидка резонанса библиотеки: -%s%% XP"
+  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• Скидка резонанса библиотеки: -%s%% XP",
+  "gui.chiseled_enchanting_table.transformation.batch_sub": "✦ Пакетное превращение: ×%s (без порога полок)"
 }

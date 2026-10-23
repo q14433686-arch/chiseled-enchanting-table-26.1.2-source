@@ -20,7 +20,7 @@
     "tier2_bookshelves": 32,
     "tier2_material_multiplier": 0.5,
     "tier3_qualifying_enchantments": 6,
-    "base_batch_size": 8,
+    "base_batch_size": 64,
     "tier3_batch_size": 64
   }
 }

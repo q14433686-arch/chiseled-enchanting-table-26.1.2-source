@@ -274,7 +274,7 @@
   "gui.chiseled_enchanting_table.grimoire.ch7.sub": "6 種實用物品轉化與褪魔殘卷免費還原",
   "gui.chiseled_enchanting_table.grimoire.ch7.lead": "把特定原件放進上格，左側會自動出現金色置換配方（只扣 1–3 級）：",
   "gui.chiseled_enchanting_table.grimoire.ch7.s1": "經驗瓶與殘卷隨時可轉；迴響碎片、圖騰、三叉戟與附魔金蘋果於首次取得原物後自動解鎖量產。",
-  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "普通置換每點一次做 1 個；褪魔殘卷點一次自動批次變回書（預設最多 %s 本，滿檔免費時一次 %s 本）！",
+  "gui.chiseled_enchanting_table.grimoire.ch7.s2": "所有置換皆支援無門檻自動批次合成（0 書櫃起單次最高 ×%s，滿檔免費單次 ×%s）！",
   "gui.chiseled_enchanting_table.grimoire.ch7.s3": "普通書櫃滿 %s 個免經驗、滿 %s 個材料減半；再加雕紋書櫃存滿 %s 種高階附魔即可完全免費變書！",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_t": "經驗防刷機制",
   "gui.chiseled_enchanting_table.grimoire.ch7.note_b": "製作附魔之瓶保底需 Lv.3 且至少扣 11 點經驗，防止無限刷經驗。",
@@ -323,5 +323,6 @@
   "gui.chiseled_enchanting_table.pricing.cleanse_provenance": "✦ 溯源返還：本台銘刻全額返精華 · 外來戰利品依 %s%% 折算",
   "gui.chiseled_enchanting_table.pricing.cleanse_targeted": "✦ 定向洗練：僅移除所選詞條，其餘附魔完整保留",
   "gui.chiseled_enchanting_table.pricing.conflict_refund": "• 覆蓋衝突詞條自動退還：+%s 點經驗球",
-  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• 當前書庫共鳴減免：-%s%% 經驗"
+  "gui.chiseled_enchanting_table.pricing.resonance_discount": "• 當前書庫共鳴減免：-%s%% 經驗",
+  "gui.chiseled_enchanting_table.transformation.batch_sub": "✦ 批次置換：單次 ×%s（無書櫃門檻）"
 }

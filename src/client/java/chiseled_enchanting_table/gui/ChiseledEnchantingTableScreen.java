@@ -89,6 +89,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private ArcaneGrimoireScreen grimoireOverlay;
     @Nullable
     private final BlockPos openedTablePos;
+    private int lastBatchSignature = Integer.MIN_VALUE;
 
     public int inventory_size;
     public int hotbar_size;
@@ -113,6 +114,18 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             150,
             25
         );
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        int sig = this.menu.transformationBatchSignature();
+        if (sig != this.lastBatchSignature) {
+            this.lastBatchSignature = sig;
+            if (this.scrollContainer != null) {
+                this.scrollContainer.updateEntry(this.menu.get_enchantable_item(), this.menu.get_cost_item());
+            }
+        }
     }
 
     private boolean isCleanseTab() {
