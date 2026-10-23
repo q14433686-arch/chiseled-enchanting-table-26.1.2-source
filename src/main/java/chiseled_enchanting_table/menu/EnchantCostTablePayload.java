@@ -396,6 +396,13 @@ public record EnchantCostTablePayload(
         buf.writeVarInt(lr.tomeRegenTier1Seconds());
         buf.writeVarInt(lr.tomeRegenTier2Shelves());
         buf.writeVarInt(lr.tomeRegenTier2Seconds());
+        buf.writeDouble(lr.unbreakingWaiverPerLevel());
+        buf.writeDouble(lr.unbreakingWaiverMaxChance());
+        buf.writeBoolean(lr.wildBookWearEnabled());
+        PayloadLimits.writeBoundedCount(buf, lr.wildBookRemainingWeights().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
+        for (int w : lr.wildBookRemainingWeights()) {
+            buf.writeVarInt(Math.max(0, w));
+        }
 
         var rc = ritualConfig == null ? InscriptionRitualMechanics.Config.DEFAULT : ritualConfig;
         buf.writeVarInt(rc.maxSingleWaitSeconds());
@@ -404,6 +411,32 @@ public record EnchantCostTablePayload(
         buf.writeDouble(rc.maxRushDegradeNormal());
         buf.writeDouble(rc.maxRushDegradeInfinity());
         buf.writeDouble(rc.maxTranscriptionSlipChance());
+        var cs = rc.crosslineSlip();
+        buf.writeDouble(cs.minLoadThreshold());
+        buf.writeDouble(cs.perLoadSlope());
+        buf.writeDouble(cs.maxSlipChance());
+        buf.writeVarInt(cs.shelfTier1Count());
+        buf.writeDouble(cs.shelfTier1Bonus());
+        buf.writeVarInt(cs.shelfTier2Count());
+        buf.writeDouble(cs.shelfTier2Bonus());
+        buf.writeVarInt(cs.shelfTier3Count());
+        buf.writeDouble(cs.shelfTier3Bonus());
+        buf.writeDouble(cs.treasureScore());
+        buf.writeDouble(cs.singleTreasureMinLoad());
+        buf.writeVarInt(cs.highRarityMaxWeight());
+        buf.writeDouble(cs.highRarityScore());
+        buf.writeVarInt(cs.midRarityMaxWeight());
+        buf.writeDouble(cs.midRarityScore());
+        buf.writeVarInt(cs.broadApplicabilityMinItems());
+        buf.writeDouble(cs.broadApplicabilityScore());
+        buf.writeDouble(cs.relativeLevelMinRatio());
+        buf.writeDouble(cs.relativeLevelScore());
+        buf.writeVarInt(cs.unbreakingHighMinLevel());
+        buf.writeDouble(cs.unbreakingHighScore());
+        buf.writeDouble(cs.tierDropShare());
+        buf.writeDouble(cs.junkCrosslineShare());
+        buf.writeDouble(cs.curseCrosslineShare());
+        buf.writeDouble(cs.pollutionRefundRatio());
 
         PayloadLimits.writeBoundedCount(buf, costs.size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
         int writtenStacks = 0;
@@ -499,51 +532,92 @@ public record EnchantCostTablePayload(
             sgVanillaMode, sgBreathing, sgMinOpen, sgLos
         );
 
+        int lr0 = buf.readVarInt();
+        int lr1 = buf.readVarInt();
+        int lr2 = buf.readVarInt();
+        int lr3 = buf.readVarInt();
+        int lr4 = buf.readVarInt();
+        int lr5 = buf.readVarInt();
+        double lr6 = buf.readDouble();
+        int lr7 = buf.readVarInt();
+        double lr8 = buf.readDouble();
+        double lr9 = buf.readDouble();
+        double lr10 = buf.readDouble();
+        double lr11 = buf.readDouble();
+        double lr12 = buf.readDouble();
+        double lr13 = buf.readDouble();
+        double lr14 = buf.readDouble();
+        double lr15 = buf.readDouble();
+        double lr16 = buf.readDouble();
+        double lr17 = buf.readDouble();
+        double lr18 = buf.readDouble();
+        double lr19 = buf.readDouble();
+        double lr20 = buf.readDouble();
+        double lr21 = buf.readDouble();
+        double lr22 = buf.readDouble();
+        double lr23 = buf.readDouble();
+        double lr24 = buf.readDouble();
+        var lrMode = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.fromToken(buf.readUtf());
+        int lrMtu = buf.readVarInt();
+        int lrBcwc = buf.readVarInt();
+        var lrDep = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.fromToken(buf.readUtf());
+        boolean lrRegenEn = buf.readBoolean();
+        int lrRegenBase = buf.readVarInt();
+        int lrRegenT1S = buf.readVarInt();
+        int lrRegenT1Sec = buf.readVarInt();
+        int lrRegenT2S = buf.readVarInt();
+        int lrRegenT2Sec = buf.readVarInt();
+        double lrUnbPerLvl = buf.readDouble();
+        double lrUnbMax = buf.readDouble();
+        boolean lrWildEn = buf.readBoolean();
+        int wildWeightLen = PayloadLimits.readBoundedCount(buf, 256);
+        List<Integer> lrWildWeights = new ArrayList<>(wildWeightLen);
+        for (int i = 0; i < wildWeightLen; i++) {
+            lrWildWeights.add(Math.max(0, buf.readVarInt()));
+        }
+
         var lrConfig = new LibraryResonance.Config(
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readDouble(),
-            buf.readVarInt(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.fromToken(buf.readUtf()),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.fromToken(buf.readUtf()),
-            buf.readBoolean(),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readVarInt()
+            lr0, lr1, lr2, lr3, lr4, lr5, lr6, lr7, lr8, lr9, lr10, lr11, lr12,
+            lr13, lr14, lr15, lr16, lr17, lr18, lr19, lr20, lr21, lr22, lr23, lr24,
+            lrMode, lrMtu, lrBcwc, lrDep, lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec,
+            lrUnbPerLvl, lrUnbMax, lrWildEn, lrWildWeights
         );
 
-        var rcConfig = new InscriptionRitualMechanics.Config(
+        int rcMaxWait = buf.readVarInt();
+        int rcMinTome = buf.readVarInt();
+        int rcMaxSac = buf.readVarInt();
+        double rcRushNorm = buf.readDouble();
+        double rcRushInf = buf.readDouble();
+        double rcSlipCap = buf.readDouble();
+        var csConfig = new InscriptionRitualMechanics.CrosslineSlipConfig(
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
             buf.readVarInt(),
+            buf.readDouble(),
             buf.readVarInt(),
+            buf.readDouble(),
             buf.readVarInt(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readDouble(),
             buf.readDouble(),
             buf.readDouble(),
             buf.readDouble()
+        );
+        var rcConfig = new InscriptionRitualMechanics.Config(
+            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, csConfig
         );
 
         int rowCount = PayloadLimits.readCount(buf);

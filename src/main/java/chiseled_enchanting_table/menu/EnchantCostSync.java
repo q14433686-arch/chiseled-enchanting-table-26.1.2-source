@@ -48,7 +48,8 @@ public final class EnchantCostSync {
                         || ServerPlayNetworking.canSend(player, EnchantingProtocol.LEGACY_COST_TYPE)
                         || ServerPlayNetworking.canSend(player, EnchantingProtocol.PREVIOUS_COST_TYPE)
                         || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_5_COST_TYPE)
-                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_6_COST_TYPE),
+                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_6_COST_TYPE)
+                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_7_COST_TYPE),
                     ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE))) {
                     player.connection.disconnect(net.minecraft.network.chat.Component.literal(EnchantingProtocol.MISMATCH_MESSAGE));
                     return;

@@ -649,8 +649,8 @@ public record ModRuntimeConfig(
         public boolean requireLineOfSight = false;
 
         public MasterTomeWear.ConsumptionMode tomeConsumptionMode = MasterTomeWear.ConsumptionMode.WEAR;
-        public int maxTomeUses = 16;
-        public int bookCopyWearCost = 4;
+        public int maxTomeUses = MasterTomeWear.DEFAULT_MAX_TOME_USES;
+        public int bookCopyWearCost = MasterTomeWear.DEFAULT_BOOK_COPY_WEAR_COST;
         public MasterTomeWear.DepleteBehavior tomeDepleteBehavior = MasterTomeWear.DepleteBehavior.STEP_DOWN;
         public boolean tomeRegenEnabled = true;
         public int tomeRegenBaseSeconds = 7_200;

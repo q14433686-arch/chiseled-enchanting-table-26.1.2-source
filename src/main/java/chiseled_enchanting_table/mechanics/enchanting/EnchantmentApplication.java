@@ -83,12 +83,14 @@ public final class EnchantmentApplication {
         if (admissionPos == null || !(world.getBlockEntity(admissionPos) instanceof
             chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity admissionTable)
             || !admissionTable.canQueue(handler.player.getUUID(), conflictRefund) || enchantment_level < 1 || enchantment_level > 255 || payload.enchantment_id().toString().length() > 512) return false;
-        if (!handler.applyEnchantementCondition(payload)) {
+        var receipt = handler.applyEnchantementConditionWithReceipt(payload);
+        if (!receipt.accepted()) {
             return false;
         }
 
+        MasterTomeWear.ResolvedTomeUse resolvedWear = MasterTomeWear.ResolvedTomeUse.NONE;
         if (masterTomeUsed) {
-            var outcome = MasterTomeWear.applyShelfWear(
+            resolvedWear = MasterTomeWear.applyShelfWearDetailed(
                 world,
                 handler.tableBlockPos(),
                 handler.shelfGatesConfig(),
@@ -97,6 +99,7 @@ public final class EnchantmentApplication {
                 enchantment_level,
                 targetWasBook
             );
+            var outcome = resolvedWear.outcome();
             if (handler.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                 if (outcome == MasterTomeWear.WearOutcome.STEPPED_DOWN) {
                     serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
@@ -113,6 +116,13 @@ public final class EnchantmentApplication {
                             enchantment.value().description()
                         ).withStyle(ChatFormatting.YELLOW)
                     ));
+                } else if (outcome == MasterTomeWear.WearOutcome.WAIVED_BY_UNBREAKING) {
+                    serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
+                        Component.translatable(
+                            "gui.chiseled_enchanting_table.tome_wear.unbreaking_saved",
+                            enchantment.value().description()
+                        ).withStyle(ChatFormatting.AQUA)
+                    ));
                 }
             }
         }
@@ -127,14 +137,14 @@ public final class EnchantmentApplication {
             tablePos,
             shelfCfg
         );
-        boolean usedInfinityTome = masterTomeUsed
-            && chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.doesMatchingMasterTomeHaveInfinity(
-                world,
-                tablePos,
-                shelfCfg,
-                payload.enchantment_id(),
-                enchantment_level
-            );
+        // Iron Rule #2: bind Infinity flag AND qualification load L strictly to the exact Master Tome consumed by THIS step!
+        boolean usedInfinityTome = masterTomeUsed && resolvedWear.usedInfinityTome();
+        double infinityTomeLoad = usedInfinityTome
+            ? chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeInfinityTomeQualificationLoad(
+                handler.ritualConfig(),
+                resolvedWear.chosenTomeSnapshot()
+            )
+            : 0.0;
         int maxLvl = Math.max(1, enchantment.value().getMaxLevel());
         double appFactor = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeApplicabilityFactor(
             payload.enchantment_id(),
@@ -157,7 +167,12 @@ public final class EnchantmentApplication {
             masterTomeUsed,
             usedInfinityTome,
             conflictRefund,
-            consumedEpiphany
+            consumedEpiphany,
+            infinityTomeLoad,
+            receipt.paidXpPoints(),
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription.fromStacks(
+                receipt.paidMaterials()
+            )
         );
 
         if (tablePos != null

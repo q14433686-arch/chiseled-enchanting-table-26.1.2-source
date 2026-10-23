@@ -320,14 +320,14 @@ class EconomyAndConfigVerificationTest {
         // D1: Master Tome wear state machine (wear / keep / consume, step_down vs depleted_tome)
         var wearCfg = LibraryResonance.Config.DEFAULT;
         assertEquals(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, wearCfg.tomeConsumptionMode());
-        assertEquals(16, wearCfg.maxTomeUses());
-        assertEquals(4, wearCfg.bookCopyWearCost());
+        assertEquals(4, wearCfg.maxTomeUses());
+        assertEquals(2, wearCfg.bookCopyWearCost());
         assertEquals(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN, wearCfg.tomeDepleteBehavior());
 
-        // Simulate 16 gear uses on a Lv.5 Master Tome -> steps down cleanly at use #16 to fresh Lv.4 (0 wear)!
+        // Simulate 4 gear uses on a Lv.5 Master Tome -> steps down cleanly at use #4 to fresh Lv.4 (0 wear)!
         int curLevel = 5;
         int curWear = 0;
-        for (int u = 1; u <= 15; u++) {
+        for (int u = 1; u <= 3; u++) {
             var res = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
                 wearCfg.tomeConsumptionMode(),
                 wearCfg.tomeDepleteBehavior(),
@@ -342,7 +342,7 @@ class EconomyAndConfigVerificationTest {
             curLevel = res.nextEnchantLevel();
             curWear = res.nextWearUsed();
         }
-        var sixteenthUse = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
+        var fourthUse = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
             wearCfg.tomeConsumptionMode(),
             wearCfg.tomeDepleteBehavior(),
             wearCfg.maxTomeUses(),
@@ -351,22 +351,22 @@ class EconomyAndConfigVerificationTest {
             curWear,
             false
         );
-        assertEquals(4, sixteenthUse.nextEnchantLevel(), "16th gear use must step Lv.5 Master Tome down to Lv.4");
-        assertEquals(0, sixteenthUse.nextWearUsed(), "Stepped-down Master Tome starts fresh at 0 wear");
-        assertTrue(sixteenthUse.steppedDown());
+        assertEquals(4, fourthUse.nextEnchantLevel(), "4th gear use must step Lv.5 Master Tome down to Lv.4");
+        assertEquals(0, fourthUse.nextWearUsed(), "Stepped-down Master Tome starts fresh at 0 wear");
+        assertTrue(fourthUse.steppedDown());
 
-        // Copying onto a blank book costs 4 charges -> 4th book copy on Lv.1 tome exhausts into Depleted Tome
-        var fourthCopy = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
+        // Copying onto a blank book costs 2 charges -> 2nd book copy on Lv.1 tome exhausts into Depleted Tome
+        var secondCopy = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
             wearCfg.tomeConsumptionMode(),
             wearCfg.tomeDepleteBehavior(),
             wearCfg.maxTomeUses(),
             wearCfg.bookCopyWearCost(),
             1,
-            12,
+            2,
             true
         );
-        assertEquals(0, fourthCopy.nextEnchantLevel(), "4th book copy on Lv.1 tome must exhaust into Depleted Tome (level 0)");
-        assertTrue(fourthCopy.depletedCompletely());
+        assertEquals(0, secondCopy.nextEnchantLevel(), "2nd book copy on Lv.1 tome must exhaust into Depleted Tome (level 0)");
+        assertTrue(secondCopy.depletedCompletely());
 
         // D2 + D6: VanillaTableMode & unified 12 / 32 / 38 shelf milestones
         JsonObject sgJson = readResourceJson("shelf_gates.json");
@@ -1251,15 +1251,15 @@ class EconomyAndConfigVerificationTest {
         for (int totalEnch = 5; totalEnch <= 9; totalEnch++) {
             double c = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeTranscriptionSlipChance(totalEnch, 35);
-            assertTrue(c >= prevE && c > 0.0 && c <= 0.20 + 1e-9);
+            assertTrue(c >= prevE && c > 0.0 && c <= 0.18 + 1e-9);
             prevE = c;
         }
         assertEquals(
-            0.20,
+            0.18,
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeTranscriptionSlipChance(12, 100),
             1e-9,
-            "Maximum transcription slip probability must never exceed 20%"
+            "Maximum transcription slip probability must never exceed 18%"
         );
         int slipped = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .resolveTranscribedLevel(5, 6, 0.15, 0.05, 0.80);
@@ -1369,7 +1369,7 @@ class EconomyAndConfigVerificationTest {
         String encoded = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.serializeQueue(List.of(q1, q2));
         assertEquals(List.of(q1, q2), chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.deserializeQueue(encoded));
 
-        for (String adv : List.of("haste_makes_waste", "soul_fed_ink", "scribes_slip", "eternal_codex", "patient_archivist")) {
+        for (String adv : List.of("haste_makes_waste", "soul_fed_ink", "scribes_slip", "crossline_slip", "eternal_codex", "patient_archivist")) {
             assertTrue(
                 Files.exists(Path.of("src/main/resources/data/chiseled_enchanting_table/advancement/" + adv + ".json")),
                 "Missing advancement file: " + adv
@@ -1625,6 +1625,169 @@ class EconomyAndConfigVerificationTest {
             XpCostConversion.forTransformation(cfg, id, 0, 0, 17, 2));
         assertEquals(3, XpCostConversion.forTransformation(cfg, id, 25, 0, 1, 0).deductedLevels());
         assertEquals(2, XpCostConversion.forTransformation(cfg, id, 25, 0, 1, 2).deductedLevels());
+    }
+
+    @Test
+    void partBTemplateDurabilityWildPreWearUnbreakingWaiverAndCrosslineInvariants() throws Exception {
+        // 1. Data-driven library_resonance.json defaults match Part B exactly
+        JsonObject lrJson = readResourceJson("library_resonance.json");
+        LibraryResonance.Config lr = LibraryResonance.Config.fromJson(lrJson);
+        var ritual = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(lrJson);
+
+        assertEquals(4, lr.maxTomeUses());
+        assertEquals(2, lr.bookCopyWearCost());
+        assertEquals(0.10, lr.unbreakingWaiverPerLevel(), 1e-9);
+        assertEquals(0.30, lr.unbreakingWaiverMaxChance(), 1e-9);
+        assertTrue(lr.wildBookWearEnabled());
+        assertEquals(List.of(45, 35, 15, 5), lr.wildBookRemainingWeights());
+
+        // 2. Unbreaking waiver strictly bounded <= 30% for all levels (including over-leveled Unbreaking X)
+        assertEquals(0.00, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(0, lr), 1e-9);
+        assertEquals(0.10, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(1, lr), 1e-9);
+        assertEquals(0.20, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(2, lr), 1e-9);
+        assertEquals(0.30, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(3, lr), 1e-9);
+        assertEquals(0.30, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(10, lr), 1e-9);
+
+        // 3. Wild book pre-wear weights [45, 35, 15, 5] concentrate ~80% at 1..2 charges remaining
+        var rng = net.minecraft.util.RandomSource.create(20261024L);
+        int oneOrTwo = 0;
+        int fullFour = 0;
+        int trials = 20_000;
+        for (int i = 0; i < trials; i++) {
+            int rem = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.rollWildRemainingCharges(
+                rng,
+                lr.maxTomeUses(),
+                lr.wildBookRemainingWeights()
+            );
+            assertTrue(rem >= 1 && rem <= 4);
+            if (rem <= 2) oneOrTwo++;
+            if (rem == 4) fullFour++;
+        }
+        double oneOrTwoShare = (double) oneOrTwo / trials;
+        assertTrue(oneOrTwoShare > 0.78 && oneOrTwoShare < 0.82, "Expected ~80% wild books with 1-2 charges, got " + oneOrTwoShare);
+        assertTrue(fullFour > 800 && fullFour < 1_200, "Expected ~5% intact 4/4 wild books");
+
+        // 4. Qualification load L & exact probability table: P = min(18%, 0.035 * (L - 3) + shelfBonus)
+        var slip = ritual.crosslineSlip();
+        var infOnly = List.of(
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TraitLoadInput(
+                true, false, false, false, 1, 1, 1, 1
+            )
+        );
+        assertEquals(0.0, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeInfinityTomeQualificationLoad(slip, infOnly), 1e-9);
+
+        // Infinity + Mending (treasure, weight=2, broad>=12, 1/1>=0.6) -> >= 3.0!
+        var infPlusMending = List.of(
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TraitLoadInput(
+                true, false, false, false, 1, 1, 1, 1
+            ),
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TraitLoadInput(
+                false, false, true, false, 2, 24, 1, 1
+            )
+        );
+        double mendingLoad = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeInfinityTomeQualificationLoad(slip, infPlusMending);
+        assertEquals(3.0, mendingLoad, 1e-9);
+
+        // Exact probability table verification across L = 2.5, 3, 5, 7, 8, 12 and shelves = 20, 32, 38, 42
+        for (int s : List.of(0, 20, 32, 38, 42, 64)) {
+            assertEquals(0.0, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .computeLoadSlipProbability(ritual, 2.5, s), 1e-9);
+        }
+        assertEquals(0.000, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 20), 1e-9);
+        assertEquals(0.010, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 32), 1e-9);
+        assertEquals(0.020, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 38), 1e-9);
+        assertEquals(0.030, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 42), 1e-9);
+
+        assertEquals(0.070, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 20), 1e-9);
+        assertEquals(0.080, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 32), 1e-9);
+        assertEquals(0.090, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 38), 1e-9);
+        assertEquals(0.100, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 42), 1e-9);
+
+        assertEquals(0.140, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 20), 1e-9);
+        assertEquals(0.150, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 32), 1e-9);
+        assertEquals(0.160, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 38), 1e-9);
+        assertEquals(0.170, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 42), 1e-9);
+
+        assertEquals(0.175, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 20), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 32), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 38), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 42), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 12.0, 64), 1e-9);
+
+        // 5. Single-roll 3-outcome split: 70% TIER_DROP / 25% JUNK_CROSSLINE / 5% CURSE_CROSSLINE
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.NONE,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.20, 0.01)
+        );
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.TIER_DROP,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.10, 0.69)
+        );
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.JUNK_CROSSLINE,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.10, 0.70)
+        );
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.JUNK_CROSSLINE,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.10, 0.94)
+        );
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.CURSE_CROSSLINE,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.10, 0.95)
+        );
+
+        // 6. QueuedInscription 10-field & legacy 7-field round-trip + 50% XP compensation
+        assertEquals(0, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computePollutionXpRefund(ritual, 0));
+        assertEquals(55, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computePollutionXpRefund(ritual, 110));
+        var legacyDecoded = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription
+            .decode("minecraft:sharpness|5|3|1|0|12|0");
+        assertNotNull(legacyDecoded);
+        assertEquals(0.0, legacyDecoded.infinityTomeLoad(), 1e-9);
+        assertEquals(0, legacyDecoded.paidXpPoints());
+        assertTrue(legacyDecoded.paidItems().isEmpty());
+
+        var richStep = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
+            Identifier.withDefaultNamespace("efficiency"),
+            5,
+            2,
+            true,
+            true,
+            18,
+            false,
+            5.5,
+            94,
+            List.of(
+                new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.PaidItemEntry(
+                    Identifier.withDefaultNamespace("lapis_lazuli"), 6
+                ),
+                new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.PaidItemEntry(
+                    Identifier.withDefaultNamespace("amethyst_shard"), 1
+                )
+            )
+        );
+        var roundTripped = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription
+            .decode(richStep.encode());
+        assertNotNull(roundTripped);
+        assertEquals(5.5, roundTripped.infinityTomeLoad(), 1e-4);
+        assertEquals(94, roundTripped.paidXpPoints());
+        assertEquals(2, roundTripped.paidItems().size());
+
+        // 7. Data tag & Option B advancement copywriting verification
+        Path tagPath = Path.of("src/main/resources/data/chiseled_enchanting_table/tags/enchantment/crossline_excluded.json");
+        assertTrue(Files.isRegularFile(tagPath));
+        String tagRaw = Files.readString(tagPath);
+        assertTrue(tagRaw.contains("minecraft:infinity") && tagRaw.contains("minecraft:mending"));
+
+        JsonObject zhLang = JsonParser.parseString(
+            Files.readString(Path.of("src/client/resources/assets/chiseled_enchanting_table/lang/zh_cn.json"))
+        ).getAsJsonObject();
+        assertEquals("……抄串行了", zhLang.get("advancements.chiseled_enchanting_table.crossline_slip.title").getAsString());
+        assertEquals(
+            "往「无限」模板书里塞太多好东西的后果——恭喜，你的镐子学会呼吸（或者别的什么没用的本事）了。",
+            zhLang.get("advancements.chiseled_enchanting_table.crossline_slip.description").getAsString()
+        );
     }
 
 }

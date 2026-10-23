@@ -22,10 +22,10 @@ class FullPortRuntimeTest {
             var policy = new ModRuntimeConfig.PackPolicy(true, true, Set.of("max_tome_uses"), Set.of());
             ChiseledEnchantingTableData.applyRuntimeConfig(draft.build(), policy, () -> {});
             var frame = ChiseledEnchantingTableData.runtimeFrame();
-            assertEquals(16, frame.configuration().maxTomeUses());
+            assertEquals(4, frame.configuration().maxTomeUses());
             assertEquals(frame.configuration().maxTomeUses(), ChiseledEnchantingTableData.libraryResonanceConfig().maxTomeUses());
             assertTrue(ModRuntimeConfig.effective().anvilFlatRepairCost());
-            assertEquals(16, frame.rules().rule("max_tome_uses").effective());
+            assertEquals(4, frame.rules().rule("max_tome_uses").effective());
             assertThrows(IllegalStateException.class, () -> ChiseledEnchantingTableData.applyRuntimeConfig(
                 draft.build(), ModRuntimeConfig.PackPolicy.NONE, () -> { throw new IllegalStateException("disk error"); }));
             assertSame(frame, ChiseledEnchantingTableData.runtimeFrame());

@@ -72,23 +72,31 @@ public final class EnchantedBookLootInjector {
                 return;
             }
 
-            List<LootInjection> injections = ChiseledEnchantingTableData.lootInjections();
-            if (injections.isEmpty()) return;
-
-            HolderGetter<Enchantment> enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT);
             Identifier tableId = key.identifier();
+            String tablePath = tableId.getPath();
+            boolean isWildContainerLoot = tablePath.startsWith("chests/")
+                || tablePath.startsWith("archaeology/")
+                || tablePath.startsWith("pots/")
+                || tablePath.startsWith("spawners/");
 
+            List<LootInjection> injections = ChiseledEnchantingTableData.lootInjections();
             boolean matchedAny = false;
-            for (LootInjection injection : injections) {
-                if (!matches(injection, tableId)) continue;
-                matchedAny = true;
-                LootPool.Builder pool = buildPool(injection, enchantmentLookup);
-                if (pool != null) {
-                    tableBuilder.withPool(pool);
+            if (!injections.isEmpty()) {
+                HolderGetter<Enchantment> enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT);
+                for (LootInjection injection : injections) {
+                    if (!matches(injection, tableId)) continue;
+                    matchedAny = true;
+                    LootPool.Builder pool = buildPool(injection, enchantmentLookup);
+                    if (pool != null) {
+                        tableBuilder.withPool(pool);
+                    }
                 }
             }
             if (matchedAny && chestMode == ChiseledEnchantingTableData.VanillaChestBooksMode.STRIP_VANILLA) {
                 tableBuilder.modifyPools(poolBuilder -> poolBuilder.apply(new RemoveEnchantedBooksFunction()));
+            }
+            if (isWildContainerLoot || matchedAny) {
+                tableBuilder.modifyPools(poolBuilder -> poolBuilder.apply(new ApplyWildBookWearFunction()));
             }
         });
     }

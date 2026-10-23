@@ -806,7 +806,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             cfg.tomeRegenTier1Shelves(),
             cfg.tomeRegenTier1Seconds(),
             cfg.tomeRegenTier2Shelves(),
-            cfg.tomeRegenTier2Seconds()
+            cfg.tomeRegenTier2Seconds(),
+            lr.unbreakingWaiverPerLevel(),
+            lr.unbreakingWaiverMaxChance(),
+            lr.wildBookWearEnabled(),
+            lr.wildBookRemainingWeights()
         );
 
         var bu = rawBookUpgradeRules;

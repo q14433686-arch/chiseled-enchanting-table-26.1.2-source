@@ -465,6 +465,7 @@ public final class DisenchantmentApplication {
         }
 
         ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         awardRefundOrbs(menu, totalRefund);
         playCleanseFeedback(menu, 1.15f);
@@ -542,6 +543,7 @@ public final class DisenchantmentApplication {
         }
 
         ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         playCleanseFeedback(menu, 0.95f);
         Advancement.give(menu.player, "cleanse_enchantment");
@@ -578,6 +580,7 @@ public final class DisenchantmentApplication {
         }
 
         ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         playCleanseFeedback(menu, 0.72f);
         Advancement.give(menu.player, "purge_curse");

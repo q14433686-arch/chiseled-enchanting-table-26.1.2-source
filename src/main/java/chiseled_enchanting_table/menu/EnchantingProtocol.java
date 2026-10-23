@@ -12,7 +12,7 @@ import net.minecraft.resources.Identifier;
  * no probe needs to be sent before the first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final String REVISION = "26_3_revision_7";
+    public static final String REVISION = "26_3_revision_8";
 
     // Query only. Never register a decoder on these older channels: an old server may send its
     // join-time packet before the client JOIN callback can disconnect it.
@@ -27,6 +27,9 @@ public final class EnchantingProtocol {
 
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_6_COST_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_3_revision_6"));
+
+    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_7_COST_TYPE =
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_3_revision_7"));
 
     public static final String MISMATCH_MESSAGE = "Chiseled Enchanting Table network protocol mismatch. "
         + "Install the same current Minecraft 26.3 build on both client and server (version labels alone are not enough).";

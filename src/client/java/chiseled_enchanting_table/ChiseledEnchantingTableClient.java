@@ -99,6 +99,15 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 lines.add(Component.translatable(
                     "item.chiseled_enchanting_table.master_tome_infinite"
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
+                var rCfg = SyncedEnchantmentCosts.ritualConfig();
+                double loadL = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                    .computeInfinityTomeQualificationLoad(rCfg, stack);
+                if (loadL >= rCfg.crosslineSlip().minLoadThreshold()) {
+                    lines.add(Component.translatable(
+                        "item.chiseled_enchanting_table.master_tome_overloaded_hint",
+                        String.format(java.util.Locale.ROOT, "%.1f", loadL)
+                    ).withStyle(ChatFormatting.GOLD));
+                }
                 return;
             }
             int wearUsed = MasterTomeWear.getWearUsed(stack);
@@ -113,6 +122,13 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 remaining,
                 maxUses
             ).withStyle(color));
+            int waiverPct = (int) Math.round(MasterTomeWear.computeUnbreakingWaiverChance(stack, cfg) * 100.0);
+            if (waiverPct > 0) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_unbreaking_hint",
+                    waiverPct
+                ).withStyle(ChatFormatting.DARK_AQUA));
+            }
             if (wearUsed > 0 && cfg.tomeRegenEnabled()) {
                 lines.add(Component.translatable(
                     "item.chiseled_enchanting_table.master_tome_regen_hint",

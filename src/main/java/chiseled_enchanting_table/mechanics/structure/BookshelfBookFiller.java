@@ -537,6 +537,11 @@ public final class BookshelfBookFiller {
         Holder<Enchantment> holder = picked.holder;
         EnchantmentHelper.updateEnchantments(stack, mutable -> mutable.set(holder, level));
         stack.set(DataComponents.LORE, new ItemLore(List.of(LORE)));
+        chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.applyWildBookWear(
+            stack,
+            random,
+            ChiseledEnchantingTableData.libraryResonanceConfig()
+        );
         return stack;
     }
 

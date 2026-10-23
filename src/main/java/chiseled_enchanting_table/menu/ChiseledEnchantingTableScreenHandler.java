@@ -2292,25 +2292,41 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         consumeAdditionalCosts(merged);
     }
 
+    /** Exact survival payment receipt used for 50% cross-line pollution compensation. */
+    public record PaymentReceipt(boolean accepted, int paidXpPoints, List<ItemStack> paidMaterials) {}
+
     public boolean applyEnchantementCondition(ApplyEnchantmentPayload payload) {
+        return applyEnchantementConditionWithReceipt(payload).accepted();
+    }
+
+    public PaymentReceipt applyEnchantementConditionWithReceipt(ApplyEnchantmentPayload payload) {
         EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), payload.enchantment_level());
         OptionType effectiveType = payload.option_type();
         if (effectiveType == OptionType.ENCHANTMENT && ChiseledEnchantingTableData.isTransformation(payload.enchantment_id())) {
             effectiveType = OptionType.TRANSFORMATION;
         }
         var xpReq = resolveXpRequirement(ewl, effectiveType);
-        if (!xpReq.isMetBy(this.player)) return false;
+        if (!xpReq.isMetBy(this.player)) {
+            return new PaymentReceipt(false, 0, List.of());
+        }
 
         List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(ewl, effectiveType);
         if (!player.getAbilities().instabuild && matchedBundle == null) {
-            return false;
+            return new PaymentReceipt(false, 0, List.of());
         }
 
         if (!player.getAbilities().instabuild) {
+            int xpBefore = XpCostConversion.totalPlayerXpPoints(this.player);
             XpCostConversion.deductXp(this.player, xpReq);
+            int xpAfter = XpCostConversion.totalPlayerXpPoints(this.player);
+            int paidXpPoints = Math.max(0, xpBefore - xpAfter);
+            List<ItemStack> paidCopies = matchedBundle == null
+                ? List.of()
+                : matchedBundle.stream().map(ItemStack::copy).toList();
             deductMatchedBundle(matchedBundle);
+            return new PaymentReceipt(true, paidXpPoints, paidCopies);
         }
-        return true;
+        return new PaymentReceipt(true, 0, List.of());
     }
 
     // ---- Dispatch ----

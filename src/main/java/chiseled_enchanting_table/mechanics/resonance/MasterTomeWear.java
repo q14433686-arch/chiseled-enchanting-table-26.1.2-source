@@ -48,6 +48,7 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public final class MasterTomeWear {
     public static final Identifier INFINITY_ENCHANTMENT_ID = Identifier.withDefaultNamespace("infinity");
+    public static final Identifier UNBREAKING_ENCHANTMENT_ID = Identifier.withDefaultNamespace("unbreaking");
     public static final String NBT_WEAR_KEY = "cet_tome_wear";
     public static final String NBT_REGEN_TICKS_KEY = "cet_tome_regen_ticks";
     public static final String NBT_REGEN_BUCKET_KEY = "cet_tome_regen_bucket";
@@ -55,8 +56,13 @@ public final class MasterTomeWear {
     /** Sentinel value in synced UI maps indicating an {@code Infinity}-blessed immortal Master Tome. */
     public static final int IMMORTAL_CHARGES = -1;
 
-    public static final int DEFAULT_MAX_TOME_USES = 16;
-    public static final int DEFAULT_BOOK_COPY_WEAR_COST = 4;
+    public static final int DEFAULT_MAX_TOME_USES = 4;
+    public static final int DEFAULT_BOOK_COPY_WEAR_COST = 2;
+    public static final double DEFAULT_UNBREAKING_WAIVER_PER_LEVEL = 0.10;
+    public static final double DEFAULT_UNBREAKING_WAIVER_MAX_CHANCE = 0.30;
+    public static final boolean DEFAULT_WILD_BOOK_WEAR_ENABLED = true;
+    /** Default weights for remaining charges {@code 1, 2, 3, 4}: {@code 80%} of wild books spawn with {@code 1–2} durability. */
+    public static final List<Integer> DEFAULT_WILD_REMAINING_WEIGHTS = List.of(45, 35, 15, 5);
 
     public static final boolean DEFAULT_REGEN_ENABLED = true;
     /** 6 Minecraft game days (6 * 1,200s = 7,200s = 144,000 ticks) at 0 shelves. */
@@ -128,9 +134,129 @@ public final class MasterTomeWear {
     public enum WearOutcome {
         NONE,
         IMMORTAL,
+        WAIVED_BY_UNBREAKING,
         WORN,
         STEPPED_DOWN,
         DEPLETED
+    }
+
+    /** Detailed per-step attribution &amp; wear result returning the exact chosen Master Tome stack. */
+    public record ResolvedTomeUse(
+        WearOutcome outcome,
+        boolean usedInfinityTome,
+        ItemStack chosenTomeSnapshot
+    ) {
+        public static final ResolvedTomeUse NONE = new ResolvedTomeUse(WearOutcome.NONE, false, ItemStack.EMPTY);
+    }
+
+    /** Returns the stored {@code minecraft:unbreaking} level on {@code stack} ({@code 0} if absent). */
+    public static int getUnbreakingLevel(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0;
+        }
+        ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(stack);
+        for (var entry : enchants.entrySet()) {
+            int lv = entry.getIntValue();
+            if (lv <= 0) {
+                continue;
+            }
+            var keyOpt = entry.getKey().unwrapKey();
+            if (keyOpt.isPresent() && UNBREAKING_ENCHANTMENT_ID.equals(keyOpt.get().identifier())) {
+                return lv;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Computes the probability {@code [0.0, 0.30]} that a non-{@code Infinity} template book carrying
+     * {@code minecraft:unbreaking} at {@code unbreakingLevel} waives durability loss on use.
+     */
+    public static double computeUnbreakingWaiverChance(LibraryResonance.Config cfg, int unbreakingLevel) {
+        if (unbreakingLevel <= 0) {
+            return 0.0;
+        }
+        LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
+        double cap = Math.max(0.0, Math.min(0.30, c.unbreakingWaiverMaxChance()));
+        double perLvl = Math.max(0.0, c.unbreakingWaiverPerLevel());
+        return Math.min(cap, unbreakingLevel * perLvl);
+    }
+
+    public static double computeUnbreakingWaiverChance(int unbreakingLevel, LibraryResonance.Config cfg) {
+        return computeUnbreakingWaiverChance(cfg, unbreakingLevel);
+    }
+
+    public static double computeUnbreakingWaiverChance(ItemStack stack, LibraryResonance.Config cfg) {
+        return computeUnbreakingWaiverChance(cfg, getUnbreakingLevel(stack));
+    }
+
+    /**
+     * Rolls remaining durability charges {@code [1..maxTomeUses]} for a wild-spawned Enchanted Book
+     * using {@code remainingWeights} (default {@code [45, 35, 15, 5]} -> {@code 80%} have {@code 1–2} left).
+     */
+    public static int rollWildRemainingCharges(
+        net.minecraft.util.RandomSource random,
+        int maxTomeUses,
+        List<Integer> remainingWeights
+    ) {
+        int safeMax = Math.max(1, maxTomeUses);
+        if (safeMax == 1) {
+            return 1;
+        }
+        List<Integer> weights = (remainingWeights != null && !remainingWeights.isEmpty())
+            ? remainingWeights
+            : DEFAULT_WILD_REMAINING_WEIGHTS;
+        int[] bucketWeights = new int[safeMax];
+        long totalWeight = 0L;
+        for (int idx = 0; idx < safeMax; idx++) {
+            int w;
+            if (idx < weights.size()) {
+                w = Math.max(0, weights.get(idx));
+            } else {
+                w = Math.max(1, weights.getLast());
+            }
+            bucketWeights[idx] = w;
+            totalWeight += w;
+        }
+        if (totalWeight <= 0L) {
+            return 1;
+        }
+        long pick = Math.floorMod(random.nextLong(), totalWeight);
+        long acc = 0L;
+        for (int idx = 0; idx < safeMax; idx++) {
+            acc += bucketWeights[idx];
+            if (pick < acc) {
+                return idx + 1;
+            }
+        }
+        return safeMax;
+    }
+
+    /**
+     * Applies pre-wear to a newly rolled wild {@code Enchanted Book} (chest loot or wild Chiseled Bookshelf),
+     * skipping {@code Infinity} books and preserving clean NBT when full durability is rolled.
+     */
+    public static void applyWildBookWear(
+        ItemStack stack,
+        net.minecraft.util.RandomSource random,
+        LibraryResonance.Config cfg
+    ) {
+        if (stack == null || !stack.is(Items.ENCHANTED_BOOK) || hasInfinityImmunity(stack)) {
+            return;
+        }
+        LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
+        if (!c.wildBookWearEnabled() || c.tomeConsumptionMode() != ConsumptionMode.WEAR) {
+            return;
+        }
+        int safeMax = Math.max(1, c.maxTomeUses());
+        if (safeMax <= 1) {
+            return;
+        }
+        int remaining = rollWildRemainingCharges(random, safeMax, c.wildBookRemainingWeights());
+        int wearUsed = Math.max(0, Math.min(safeMax - 1, safeMax - remaining));
+        if (wearUsed > 0) {
+            setWearUsed(stack, wearUsed);
+        }
     }
 
     /**
@@ -457,12 +583,35 @@ public final class MasterTomeWear {
         int requiredLevel,
         boolean targetIsBook
     ) {
+        return applyShelfWearDetailed(
+            level,
+            tablePos,
+            shelfCfg,
+            resonanceCfg,
+            enchantmentId,
+            requiredLevel,
+            targetIsBook
+        ).outcome();
+    }
+
+    /**
+     * Resolves the exact Master Tome backing {@code (enchantmentId, requiredLevel)} and applies wear
+     * (honoring {@code Infinity} immunity and {@code Unbreaking} waiver up to {@code <= 30%}), returning
+     * a snapshot of the exact chosen tome so downstream ritual/cross-line checks bind strictly to the
+     * tome that was actually used.
+     */
+    public static ResolvedTomeUse applyShelfWearDetailed(
+        Level level,
+        BlockPos tablePos,
+        BookshelfProgression.Config shelfCfg,
+        LibraryResonance.Config resonanceCfg,
+        Identifier enchantmentId,
+        int requiredLevel,
+        boolean targetIsBook
+    ) {
         LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
         if (level == null || level.isClientSide() || tablePos == null || enchantmentId == null) {
-            return WearOutcome.NONE;
-        }
-        if (cfg.tomeConsumptionMode() == ConsumptionMode.KEEP) {
-            return WearOutcome.NONE;
+            return ResolvedTomeUse.NONE;
         }
 
         Holder<Enchantment> targetHolder;
@@ -471,17 +620,27 @@ public final class MasterTomeWear {
                 .lookupOrThrow(Registries.ENCHANTMENT)
                 .getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, enchantmentId));
         } catch (Exception ignored) {
-            return WearOutcome.NONE;
+            return ResolvedTomeUse.NONE;
         }
 
         List<CandidateSlot> candidates = collectCandidates(level, tablePos, shelfCfg, targetHolder, requiredLevel);
         if (candidates.isEmpty()) {
-            return WearOutcome.NONE;
+            return ResolvedTomeUse.NONE;
         }
 
         CandidateSlot chosen = candidates.getFirst();
+        ItemStack chosenSnapshot = chosen.stack().copy();
         if (chosen.infinite()) {
-            return WearOutcome.IMMORTAL;
+            return new ResolvedTomeUse(WearOutcome.IMMORTAL, true, chosenSnapshot);
+        }
+        if (cfg.tomeConsumptionMode() == ConsumptionMode.KEEP) {
+            return new ResolvedTomeUse(WearOutcome.NONE, false, chosenSnapshot);
+        }
+
+        int unbreakingLvl = getUnbreakingLevel(chosenSnapshot);
+        double waiveChance = computeUnbreakingWaiverChance(cfg, unbreakingLvl);
+        if (waiveChance > 0.0 && level.getRandom().nextDouble() < waiveChance) {
+            return new ResolvedTomeUse(WearOutcome.WAIVED_BY_UNBREAKING, false, chosenSnapshot);
         }
 
         WearStepResult step = computeWearStep(
@@ -542,6 +701,6 @@ public final class MasterTomeWear {
         if (outcome == WearOutcome.DEPLETED || outcome == WearOutcome.STEPPED_DOWN) {
             level.playSound(null, chosen.pos(), SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 1.0F, 0.72F);
         }
-        return outcome;
+        return new ResolvedTomeUse(outcome, false, chosenSnapshot);
     }
 }
