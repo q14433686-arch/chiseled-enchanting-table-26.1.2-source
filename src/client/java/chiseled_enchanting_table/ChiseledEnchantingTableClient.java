@@ -42,6 +42,16 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ChiseledEnchantingTableClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
+        ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> {
+            if (chiseled_enchanting_table.menu.EnchantingProtocol.incompatible(
+                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID),
+                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE))) {
+                listener.getConnection().disconnect(net.minecraft.network.chat.Component.literal(
+                    chiseled_enchanting_table.menu.EnchantingProtocol.MISMATCH_MESSAGE));
+            }
+        });
         ArcaneGrimoireItem.CLIENT_OPEN_ACTION = player -> {
             GrimoireSoundHelper.playOpen();
             Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
@@ -114,10 +124,13 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(ModConfigNetworking.SyncRuntimeConfigPayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> {
-                ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.json());
+                ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.effectiveJson());
+                ModRuntimeConfig.setRemotePreferences(ModRuntimeConfig.fromJsonString(payload.json()));
                 ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.PackPolicy.fromJsonString(payload.policyJson());
                 ModRuntimeConfig.applyRemoteSync(synced, policy, payload.canEdit());
-                ChiseledEnchantingTableData.applyRuntimeConfig(synced);
+                // In an integrated server the shared tables were already committed on the server thread.
+                if (!ctx.client().hasSingleplayerServer()) ChiseledEnchantingTableData.applyRuntimeConfig(synced, ModRuntimeConfig.PackPolicy.NONE, () -> {});
+                if (payload.requestId() > 0) ModRuntimeConfig.acknowledgeSave(payload.requestId(), payload.accepted());
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                     if (menu.onContentChangedCallback != null) {
@@ -127,15 +140,13 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             }));
 
         // Server-authoritative costs for the menu and recipe viewers. Sent on join
-        // and after every data pack reload; empty means "fall back to the canonical cost".
+        // and after every data pack reload; server catalogs (even empty) are authoritative.
         ClientPlayNetworking.registerGlobalReceiver(EnchantCostTablePayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> {
                 SyncedEnchantmentCosts.apply(payload);
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
-                    if (menu.onContentChangedCallback != null) {
-                        menu.onContentChangedCallback.run();
-                    }
+                    menu.applyTransformationSnapshot(payload.transformations());
                 }
             }));
 

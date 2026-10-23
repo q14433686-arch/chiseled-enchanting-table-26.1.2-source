@@ -341,7 +341,8 @@ public final class MasterTomeWear {
         boolean checkLos = shelfCfg != null && shelfCfg.requireLineOfSight();
         for (BlockPos offset : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(shelfCfg)) {
             BlockPos scanPos = tablePos.offset(offset);
-            if (checkLos && !chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.hasShelfLineOfSight(level, tablePos, scanPos)) {
+            if (!level.hasChunkAt(scanPos)) continue;
+            if (checkLos && !chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.hasClearLineOfSight(level, tablePos, scanPos)) {
                 continue;
             }
             BlockState st = level.getBlockState(scanPos);
@@ -391,7 +392,7 @@ public final class MasterTomeWear {
         var reg = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         for (var entry : storedMasterLevels.entrySet()) {
             Identifier id = entry.getKey();
-            int topLvl = Math.max(1, entry.getValue());
+            int topLvl = Math.min(255, Math.max(1, entry.getValue()));
             Holder<Enchantment> holder;
             try {
                 holder = reg.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, id));
@@ -431,88 +432,8 @@ public final class MasterTomeWear {
         int nearbyBookshelves
     ) {
         LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
-        if (level == null || level.isClientSide() || tablePos == null || !cfg.tomeRegenEnabled()) {
-            return false;
-        }
-        if (cfg.tomeConsumptionMode() != ConsumptionMode.WEAR) {
-            return false;
-        }
-        int intervalTicks = computeRegenIntervalTicks(cfg, nearbyBookshelves);
-        long currentBucket = level.getGameTime() / 20L;
-        boolean checkLos = shelfCfg != null && shelfCfg.requireLineOfSight();
-        boolean anyRecovered = false;
-
-        for (BlockPos offset : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(shelfCfg)) {
-            BlockPos scanPos = tablePos.offset(offset);
-            if (checkLos && !chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.hasShelfLineOfSight(level, tablePos, scanPos)) {
-                continue;
-            }
-            BlockState st = level.getBlockState(scanPos);
-            if (!st.is(Blocks.CHISELED_BOOKSHELF)) continue;
-            if (!(level.getBlockEntity(scanPos) instanceof ChiseledBookShelfBlockEntity cbs)) continue;
-
-            boolean shelfDirty = false;
-            for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
-                ItemStack slotStack = cbs.getItem(slot);
-                if (!slotStack.is(Items.ENCHANTED_BOOK)) continue;
-
-                CustomData customData = slotStack.get(DataComponents.CUSTOM_DATA);
-                if (customData == null || customData.isEmpty()) continue;
-
-                if (hasInfinityImmunity(slotStack)) {
-                    ItemStack cleaned = slotStack.copy();
-                    setWearUsed(cleaned, 0);
-                    cbs.setItem(slot, cleaned);
-                    shelfDirty = true;
-                    anyRecovered = true;
-                    continue;
-                }
-
-                CompoundTag tag = customData.copyTag();
-                int wear = tag.getIntOr(NBT_WEAR_KEY, 0);
-                if (wear <= 0) {
-                    continue;
-                }
-                long prevBucket = tag.getLongOr(NBT_REGEN_BUCKET_KEY, -1L);
-                if (prevBucket == currentBucket) {
-                    continue;
-                }
-                long elapsedTicks = prevBucket > 0L && currentBucket > prevBucket
-                    ? Math.min(intervalTicks * 64L, (currentBucket - prevBucket) * 20L)
-                    : 20L;
-                long accTicks = Math.max(0, tag.getIntOr(NBT_REGEN_TICKS_KEY, 0)) + elapsedTicks;
-
-                ItemStack updated = slotStack.copy();
-                if (accTicks >= intervalTicks) {
-                    int recoveredPoints = (int) Math.min(wear, accTicks / intervalTicks);
-                    int nextWear = Math.max(0, wear - recoveredPoints);
-                    int leftoverTicks = (int) (accTicks % intervalTicks);
-                    if (nextWear == 0) {
-                        setWearUsed(updated, 0);
-                    } else {
-                        CompoundTag nextTag = tag.copy();
-                        nextTag.putInt(NBT_WEAR_KEY, nextWear);
-                        nextTag.putInt(NBT_REGEN_TICKS_KEY, leftoverTicks);
-                        nextTag.putLong(NBT_REGEN_BUCKET_KEY, currentBucket);
-                        updated.set(DataComponents.CUSTOM_DATA, CustomData.of(nextTag));
-                    }
-                    anyRecovered = true;
-                } else {
-                    CompoundTag nextTag = tag.copy();
-                    nextTag.putInt(NBT_REGEN_TICKS_KEY, (int) accTicks);
-                    nextTag.putLong(NBT_REGEN_BUCKET_KEY, currentBucket);
-                    updated.set(DataComponents.CUSTOM_DATA, CustomData.of(nextTag));
-                }
-                cbs.setItem(slot, updated);
-                shelfDirty = true;
-            }
-            if (shelfDirty) {
-                cbs.setChanged();
-                BlockState latest = level.getBlockState(scanPos);
-                level.sendBlockUpdated(scanPos, st, latest, Block.UPDATE_ALL);
-            }
-        }
-        return anyRecovered;
+        WorldRegeneration.observe(level, tablePos, shelfCfg, cfg, nearbyBookshelves);
+        return false; // settlement happens once at END_WORLD_TICK, never per-table here
     }
 
     /**

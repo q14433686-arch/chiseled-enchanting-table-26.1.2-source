@@ -359,17 +359,21 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.grimoireOverlay.mouseClicked(event, isDoubleClick);
             return true;
         }
+        // Restrict custom actions to the platform left button, but retain vanilla
+        // inventory right-click handling. Overlay events above remain fully forwarded.
+        if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
+            return super.mouseClicked(event, isDoubleClick);
+        }
         if (isOverConfigButton(event.x(), event.y())) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             this.configOverlay = new ChiseledEnchantingConfigScreen(this, () -> {
                 this.configOverlay = null;
-                if (this.scrollContainer != null) {
-                    this.scrollContainer.updateEntry(this.menu.get_enchantable_item(), this.menu.get_cost_item());
-                }
+                if (this.scrollContainer != null) this.scrollContainer.updateEntry(this.menu.get_enchantable_item(), this.menu.get_cost_item());
             });
             this.configOverlay.initOverlay(this.minecraft, this.width, this.height);
             return true;
         }
+
         if (isOverGrimoireButton(event.x(), event.y())) {
             GrimoireSoundHelper.playOpen();
             this.grimoireOverlay = new ArcaneGrimoireScreen(
@@ -399,7 +403,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (isOverSacrificeSkipButton(event.x(), event.y())) {
             if (this.menu.canSacrificeSkipNow()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.1F));
-                ClientPlayNetworking.send(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload(true));
+                ClientPlayNetworking.send(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload(this.menu.containerId, this.menu.ritualSession(), true));
             } else {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             }
@@ -408,7 +412,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (isOverRushSkipButton(event.x(), event.y())) {
             if (this.menu.canRushSkipNow()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.9F));
-                ClientPlayNetworking.send(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload(false));
+                ClientPlayNetworking.send(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload(this.menu.containerId, this.menu.ritualSession(), false));
             } else {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             }

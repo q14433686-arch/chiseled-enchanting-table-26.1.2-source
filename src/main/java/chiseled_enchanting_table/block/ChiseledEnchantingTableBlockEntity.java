@@ -124,6 +124,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
     @Override
     public ItemStack removeItem(int slot, int amount) {
+        if (slot == ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT && hasActiveRitual()) return ItemStack.EMPTY;
         ItemStack result = ContainerHelper.removeItem(this.items, slot, amount);
         if (!result.isEmpty()) {
             this.setChanged();
@@ -133,6 +134,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
+        if (slot == ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT && hasActiveRitual()) return ItemStack.EMPTY;
         return ContainerHelper.takeItem(this.items, slot);
     }
 
@@ -141,6 +143,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         if (slot < 0 || slot >= this.items.size()) {
             return;
         }
+        if (slot == ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT && hasActiveRitual()) return;
         this.items.set(slot, stack);
         this.setChanged();
     }
@@ -160,7 +163,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     // ---- Active Inscription Ritual state & progression ----
 
     public boolean hasActiveRitual() {
-        return !this.ritualQueue.isEmpty() && this.ritualRemainingTicks > 0L;
+        return !this.ritualQueue.isEmpty() || !this.ritualCorruptQueue.isEmpty();
     }
 
     public long ritualRemainingTicks() {
@@ -192,14 +195,53 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         return false;
     }
 
+    public static final int MAX_RITUAL_STEPS = 256;
+    public static final int MAX_RITUAL_CHARACTERS = 32_000;
+    private long ritualSession;
+    private ItemStack ritualTarget = ItemStack.EMPTY;
+    private boolean ritualBlocked;
+    private String ritualCorruptQueue = "";
+    public long ritualSession() { return this.ritualSession; }
+    public boolean ownsRitual(UUID actor) { return !hasActiveRitual() || actor.equals(this.ritualOwnerUuid); }
+    public boolean canQueue(UUID actor) { return canQueue(actor, 0); }
+    public boolean canQueue(UUID actor, int extraRefund) {
+        long refund = Math.max(0, extraRefund);
+        for (var step : ritualQueue) refund += step.conflictRefundPoints();
+        if (refund > Integer.MAX_VALUE) return false;
+        ItemStack target = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
+        return ownsRitual(actor) && !ritualBlocked && target.getCount() == 1
+            && (ritualQueue.isEmpty() || ItemStack.isSameItemSameComponents(target, ritualTarget))
+            && ritualQueue.size() < MAX_RITUAL_STEPS
+            && InscriptionRitualMechanics.serializeQueue(ritualQueue).length() + 1024 <= MAX_RITUAL_CHARACTERS
+            && ritualRemainingTicks <= Long.MAX_VALUE - InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS
+            && ritualTotalTicks <= Long.MAX_VALUE - InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS;
+    }
+    public boolean cancelRitual(UUID actor) {
+        if (!ownsRitual(actor)) return false;
+        clearRitualState();
+        setChanged();
+        return true;
+    }
+    @Override public boolean canPlaceItem(int slot, ItemStack stack) {
+        return slot != ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT || !hasActiveRitual();
+    }
+    @Override public boolean canTakeItem(net.minecraft.world.Container hopper, int slot, ItemStack stack) {
+        return slot != ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT || !hasActiveRitual();
+    }
+
     public void enqueueInscription(QueuedInscription step, int stepWaitTicks, @Nullable UUID playerUuid) {
-        this.ritualQueue.add(step);
-        long add = Math.max(1L, stepWaitTicks);
+        if (playerUuid == null || !canQueue(playerUuid, step.conflictRefundPoints()) || step.targetLevel() > 255
+            || step.encode().length() > 1024) throw new IllegalStateException("Ritual admission rejected");
+        if (this.ritualQueue.isEmpty()) {
+            this.ritualTarget = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT).copy();
+            this.ritualSession = java.util.UUID.randomUUID().getLeastSignificantBits();
+            if (this.ritualSession == 0) this.ritualSession = 1;
+        }
+        long add = Math.max(1L, Math.min(InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS, stepWaitTicks));
         this.ritualTotalTicks = Math.addExact(this.ritualTotalTicks, add);
         this.ritualRemainingTicks = Math.addExact(this.ritualRemainingTicks, add);
-        if (playerUuid != null) {
-            this.ritualOwnerUuid = playerUuid;
-        }
+        this.ritualQueue.add(step);
+        this.ritualOwnerUuid = playerUuid;
         this.setChanged();
     }
 
@@ -208,13 +250,16 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.ritualTotalTicks = 0L;
         this.ritualRemainingTicks = 0L;
         this.ritualOwnerUuid = null;
+        this.ritualTarget = ItemStack.EMPTY;
+        this.ritualBlocked = false;
+        this.ritualCorruptQueue = "";
     }
 
     /**
      * Finalizes ALL queued inscriptions onto persistent slot 0, applying overloaded Infinity Tome
      * transcription-slip («抄错») checks, provenance tracking, conflict refunds, and advancements.
      */
-    public void completeActiveRitual(
+    public boolean completeActiveRitual(
         Level level,
         BlockPos pos,
         @Nullable ServerPlayer triggeringPlayer,
@@ -222,14 +267,27 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     ) {
         if (this.ritualQueue.isEmpty()) {
             clearRitualState();
-            return;
+            return false;
         }
         ItemStack currentTarget = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
-        if (currentTarget.isEmpty()) {
-            clearRitualState();
-            this.setChanged();
-            return;
+        if (ritualBlocked) return false;
+        if (currentTarget.getCount() != 1 || !ItemStack.isSameItemSameComponents(currentTarget, ritualTarget)) {
+            ritualBlocked = true;
+            chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.warn("Quarantined ritual target mismatch at {}", pos);
+            return false;
         }
+        for (QueuedInscription step : this.ritualQueue) {
+            try {
+                var holder = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(step.enchantmentId(), level);
+                if (!currentTarget.is(Items.BOOK) && !currentTarget.is(Items.ENCHANTED_BOOK)
+                    && !holder.value().canEnchant(currentTarget)) throw new IllegalArgumentException("Unsupported target");
+            } catch (RuntimeException error) {
+                ritualBlocked = true;
+                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.warn("Quarantined invalid ritual at {}", pos, error);
+                return false;
+            }
+        }
+        currentTarget = currentTarget.copy();
 
         ServerPlayer recipient = triggeringPlayer;
         if (recipient == null && this.ritualOwnerUuid != null && level.getServer() != null) {
@@ -237,7 +295,6 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         }
 
         List<QueuedInscription> finishing = List.copyOf(this.ritualQueue);
-        clearRitualState();
 
         var scan = InscriptionRitualMechanics.scanLibraryRitualContext(
             level,
@@ -256,8 +313,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             if (customNameComp != null) {
                 converted.set(DataComponents.CUSTOM_NAME, customNameComp);
             }
-            setItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT, converted);
-            currentTarget = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
+            currentTarget = converted;
         }
 
         ItemEnchantments.Mutable working = new ItemEnchantments.Mutable(
@@ -320,6 +376,10 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
         );
 
+        this.items.set(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT, currentTarget);
+        clearRitualState();
+        this.setChanged();
+
         if (totalConflictRefund > 0 && level instanceof ServerLevel serverLevel) {
             ExperienceOrb.award(
                 serverLevel,
@@ -372,6 +432,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
         this.setChanged();
         syncOpenMenusWatchingTable(level, pos);
+        return true;
     }
 
     public static void syncOpenMenusWatchingTable(Level level, BlockPos pos) {
@@ -380,7 +441,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         }
         for (ServerPlayer sp : level.getServer().getPlayerList().getPlayers()) {
             if (sp.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
-                && pos.equals(menu.tableBlockPos())) {
+                && menu.world() == level && pos.equals(menu.tableBlockPos())) {
                 menu.refreshLiveShelfState();
                 menu.pushRitualStateToViewer();
                 menu.broadcastChanges();
@@ -410,7 +471,11 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             resolvePendingFreeze(this.level.getGameTime());
         }
         ContainerHelper.saveAllItems(output, this.items);
-        output.putString("ritualQueue", InscriptionRitualMechanics.serializeQueue(this.ritualQueue));
+        output.putLong("ritualSession", this.ritualSession);
+        if (!this.ritualTarget.isEmpty()) output.store("ritualTarget", ItemStack.CODEC, this.ritualTarget);
+        output.putString("ritualQueue", this.ritualCorruptQueue.isEmpty()
+            ? InscriptionRitualMechanics.serializeQueue(this.ritualQueue) : this.ritualCorruptQueue);
+        output.putBoolean("ritualBlocked", this.ritualBlocked);
         output.putLong("ritualTotalTicks", this.ritualTotalTicks);
         output.putLong("ritualRemainingTicks", this.ritualRemainingTicks);
         output.putString("ritualOwnerUuid", this.ritualOwnerUuid != null ? this.ritualOwnerUuid.toString() : "");
@@ -427,7 +492,21 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         super.loadAdditional(input);
         this.items.clear();
         ContainerHelper.loadAllItems(input, this.items);
-        this.ritualQueue = InscriptionRitualMechanics.deserializeQueue(input.getStringOr("ritualQueue", ""));
+        this.ritualSession = input.getLongOr("ritualSession", 0L);
+        this.ritualTarget = input.read("ritualTarget", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        String rawQueue = input.getStringOr("ritualQueue", "");
+        this.ritualCorruptQueue = "";
+        this.ritualBlocked = input.getBooleanOr("ritualBlocked", false);
+        try {
+            this.ritualQueue = InscriptionRitualMechanics.deserializeQueue(rawQueue);
+        } catch (IllegalArgumentException malformed) {
+            this.ritualQueue = new ArrayList<>();
+            this.ritualCorruptQueue = rawQueue.substring(0, Math.min(rawQueue.length(), MAX_RITUAL_CHARACTERS));
+            this.ritualBlocked = true;
+            chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.error(
+                "Quarantined malformed ritual at {}; inventory retained, owner may cancel. Diagnostic queue limited to {} characters.",
+                getBlockPos(), MAX_RITUAL_CHARACTERS, malformed);
+        }
         this.ritualTotalTicks = Math.max(0L, input.getLongOr("ritualTotalTicks", 0L));
         this.ritualRemainingTicks = Math.max(0L, input.getLongOr("ritualRemainingTicks", 0L));
         String uuidStr = input.getStringOr("ritualOwnerUuid", "");
@@ -523,8 +602,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         if (level.isClientSide()) {
             return;
         }
-        if (blockEntity.hasActiveRitual()) {
-            blockEntity.ritualRemainingTicks--;
+        if (blockEntity.hasActiveRitual() && !blockEntity.ritualBlocked) {
+            blockEntity.ritualRemainingTicks = Math.max(0, blockEntity.ritualRemainingTicks - 1);
             if (level instanceof ServerLevel serverLevel && (level.getGameTime() % 10L == 0L)) {
                 serverLevel.sendParticles(
                     ParticleTypes.ENCHANT,
@@ -553,7 +632,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             || resonanceCfg.tomeConsumptionMode() == MasterTomeWear.ConsumptionMode.KEEP) {
             return;
         }
-        ChiseledEnchantingTableBlock.ShelfPower power = ChiseledEnchantingTableBlock.calculateShelfPower(level, pos);
+        ChiseledEnchantingTableBlock.ShelfPower power = ChiseledEnchantingTableBlock.calculateShelfPower(level, pos, false);
         MasterTomeWear.tickLibraryRegeneration(
             level,
             pos,
@@ -682,7 +761,10 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         output.discard("epiphanyFreezeUntil");
         output.discard("pendingFreezeTicks");
         output.discard("frozenCycleIndex");
+        output.discard("ritualSession");
+        output.discard("ritualTarget");
         output.discard("ritualQueue");
+        output.discard("ritualBlocked");
         output.discard("ritualTotalTicks");
         output.discard("ritualRemainingTicks");
         output.discard("ritualOwnerUuid");

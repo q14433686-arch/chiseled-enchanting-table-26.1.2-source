@@ -219,6 +219,9 @@ public final class ConfigCatalog {
             return getter.apply(d);
         }
 
+        /** Resolver-only assignment; normalize all related fields once after the complete overlay. */
+        public void setResolvedValue(Draft d, Object v) { setter.accept(d, v); }
+
         public void set(Draft d, Object v) {
             setter.accept(d, v);
             d.normalizeAfterEdit(key);

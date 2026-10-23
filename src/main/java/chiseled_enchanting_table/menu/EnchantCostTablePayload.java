@@ -49,9 +49,10 @@ public record EnchantCostTablePayload(
     Set<Identifier> explicitTreasureIds,
     BookshelfProgression.Config shelfGatesConfig,
     LibraryResonance.Config libraryResonanceConfig,
-    List<CostEntry> costs
+    List<CostEntry> costs,
+    List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations
 ) implements CustomPacketPayload {
-    public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table");
+    public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table_" + EnchantingProtocol.REVISION);
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> TYPE =
         new CustomPacketPayload.Type<>(PACKET_ID);
     public static final StreamCodec<RegistryFriendlyByteBuf, EnchantCostTablePayload> CODEC =
@@ -153,7 +154,8 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(registryAccess),
             ChiseledEnchantingTableData.shelfGatesConfig(),
             ChiseledEnchantingTableData.libraryResonanceConfig(),
-            List.copyOf(entries)
+            List.copyOf(entries),
+            ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays(player)
         );
     }
 
@@ -165,7 +167,7 @@ public record EnchantCostTablePayload(
     }
 
     private static List<ItemStack> readStacks(RegistryFriendlyByteBuf buf) {
-        int n = buf.readVarInt();
+        int n = PayloadLimits.readCount(buf);
         List<ItemStack> list = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             ItemStack decoded = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
@@ -275,6 +277,10 @@ public record EnchantCostTablePayload(
                 writeStacks(buf, bundle);
             }
         }
+        buf.writeVarInt(transformations.size());
+        for (var display : transformations) {
+            ChiseledEnchantingMenuPayloads.TransformationDisplay.write(buf, display);
+        }
     }
 
     private static EnchantCostTablePayload read(RegistryFriendlyByteBuf buf) {
@@ -298,7 +304,7 @@ public record EnchantCostTablePayload(
         List<ItemStack> freezeCosts = readStacks(buf);
         int rerollXp = buf.readVarInt();
         List<ItemStack> rerollCosts = readStacks(buf);
-        int treasureIdCount = buf.readVarInt();
+        int treasureIdCount = PayloadLimits.readCount(buf);
         Set<Identifier> treasureIds = new HashSet<>(treasureIdCount * 2);
         for (int i = 0; i < treasureIdCount; i++) {
             treasureIds.add(buf.readIdentifier());
@@ -309,11 +315,11 @@ public record EnchantCostTablePayload(
         var sgBlankMode = BookshelfProgression.BlankMaxTierMode.fromToken(buf.readUtf());
         int sgHScan = buf.readVarInt();
         int sgVScan = buf.readVarInt();
-        int ovCount = buf.readVarInt();
+        int ovCount = PayloadLimits.readCount(buf);
         java.util.Map<Identifier, List<Integer>> sgOverrides = new java.util.HashMap<>();
         for (int i = 0; i < ovCount; i++) {
             Identifier ovId = buf.readIdentifier();
-            int len = buf.readVarInt();
+            int len = PayloadLimits.readCount(buf);
             List<Integer> ladder = new ArrayList<>(len);
             for (int j = 0; j < len; j++) {
                 ladder.add(Math.max(0, buf.readVarInt()));
@@ -376,14 +382,14 @@ public record EnchantCostTablePayload(
             buf.readVarInt()
         );
 
-        int rowCount = buf.readVarInt();
+        int rowCount = PayloadLimits.readCount(buf);
         List<CostEntry> entries = new ArrayList<>(Math.max(16, rowCount));
         for (int i = 0; i < rowCount; i++) {
             OptionType optionType = OptionType.fromToken(buf.readUtf());
             Identifier id = buf.readIdentifier();
             int level = buf.readVarInt();
             int xpLevelCost = buf.readVarInt();
-            int optionCount = buf.readVarInt();
+            int optionCount = PayloadLimits.readCount(buf);
             List<List<ItemStack>> options = new ArrayList<>(optionCount);
             for (int o = 0; o < optionCount; o++) {
                 List<ItemStack> bundle = readStacks(buf);
@@ -393,13 +399,18 @@ public record EnchantCostTablePayload(
             }
             entries.add(new CostEntry(optionType, id, level, xpLevelCost, List.copyOf(options)));
         }
+        int transformationCount = PayloadLimits.readCount(buf);
+        List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations = new ArrayList<>();
+        for (int i = 0; i < transformationCount; i++) {
+            transformations.add(ChiseledEnchantingMenuPayloads.TransformationDisplay.read(buf));
+        }
         return new EnchantCostTablePayload(
             combineEnabled, researchEnabled,
             disenchantEnabled, disenchantAllowCursePurge, disenchantRefundScale, disenchantExternalRefundScale,
             minShelves, baseChance, perShelfChance, perTomeChance, maxChance,
             maxSlotsCap, scorePerSlot, cycleTicks, freezeDurationTicks, maxFreezeTicks,
             freezeXpLevels, freezeCosts, rerollXp, rerollCosts,
-            Set.copyOf(treasureIds), sgConfig, lrConfig, List.copyOf(entries)
+            Set.copyOf(treasureIds), sgConfig, lrConfig, List.copyOf(entries), List.copyOf(transformations)
         );
     }
 

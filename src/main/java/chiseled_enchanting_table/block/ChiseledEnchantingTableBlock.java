@@ -392,7 +392,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     public static chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload computeLiveShelfState(
         Level level,
-        BlockPos pos
+        BlockPos pos,
+        int containerId
     ) {
         BlockState state = level.getBlockState(pos);
         ShelfPower shelfPower = calculateShelfPower(level, pos);
@@ -400,6 +401,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             ? cetb.getUnlockedEnchantmentsFromPower(level, shelfPower)
             : Set.of();
         return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
+            containerId,
             unlocked,
             shelfPower.xpDiscountPercent(),
             shelfPower.regularBookshelves(),
@@ -471,11 +473,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             .effectiveShelvesAfterBreathingRoom(rawRegularBookshelves, ceilingBlocked, openAdjacentBlocks, cfg);
     }
 
-    public static boolean hasShelfLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) {
-        return hasClearLineOfSight(level, tablePos, shelfPos);
-    }
-
-    private static boolean hasClearLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) {
+    public static boolean hasShelfLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) { return hasClearLineOfSight(level, tablePos, shelfPos); }
+    public static boolean hasClearLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) {
         int dx = shelfPos.getX() - tablePos.getX();
         int dy = shelfPos.getY() - tablePos.getY();
         int dz = shelfPos.getZ() - tablePos.getZ();
@@ -496,6 +495,9 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     }
 
     public static ShelfPower calculateShelfPower(Level level, BlockPos tablePos) {
+        return calculateShelfPower(level, tablePos, true);
+    }
+    public static ShelfPower calculateShelfPower(Level level, BlockPos tablePos, boolean includeCharges) {
         var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
         int openAdjacent = 0;
         for (int dx = -1; dx <= 1; dx++) {
@@ -579,7 +581,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int highTierChiseledBooks = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
             .countQualifyingStoredMasterEnchantments(level, immutableStored);
         double totalUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.totalMasteryUnits(level, immutableStored);
-        Map<EnchantmentWithLevel, Integer> masterTomeCharges = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+        Map<EnchantmentWithLevel, Integer> masterTomeCharges = !includeCharges ? Map.of() : chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
             .snapshotLiveMasterCharges(
                 level,
                 tablePos,

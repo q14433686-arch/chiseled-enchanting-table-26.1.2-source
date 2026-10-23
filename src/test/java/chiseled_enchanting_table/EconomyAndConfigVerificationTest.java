@@ -1544,4 +1544,14 @@ class EconomyAndConfigVerificationTest {
         }
         return px;
     }
+    @Test
+    void transformationZeroValuesKeepCanonicalMeaning() {
+        var cfg = LibraryResonance.Config.DEFAULT;
+        var id = Identifier.parse("chiseled_enchanting_table:audit_custom_rule");
+        assertEquals(XpCostConversion.XpRequirement.FREE,
+            XpCostConversion.forTransformation(cfg, id, 0, 0, 17, 2));
+        assertEquals(3, XpCostConversion.forTransformation(cfg, id, 25, 0, 1, 0).deductedLevels());
+        assertEquals(2, XpCostConversion.forTransformation(cfg, id, 25, 0, 1, 2).deductedLevels());
+    }
+
 }
