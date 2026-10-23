@@ -922,10 +922,26 @@ def check_disenchanting_and_anti_arbitrage() -> None:
 
     # R2-5: Verify WIKI.md §3, §4, §7, §8 match real formulas with zero stale drift!
     wiki_text = open(os.path.join(REPO, "docs/WIKI.md"), encoding="utf-8").read()
-    for stale_fragment in ("0.45\\,r(e)", "round(1.5\\,E", "gamma = 1.11", "bookshelf_books.json"):
+    for stale_fragment in (
+        "0.45\\,r(e)",
+        "round(1.5\\,E",
+        "gamma = 1.11",
+        "bookshelf_books.json",
+        "0.85×",
+        "Lv.4~10",
+        "涤魔碎砂",
+    ):
         if stale_fragment in wiki_text:
             errors.append(f"docs/WIKI.md still contains stale formula/filename '{stale_fragment}' (R2-5)")
-    for required_fragment in ("38 - 12", "r(e)^{1.25}", "blank_book_affinity_weight = 0.50", "giveExperienceLevels", "library_resonance.json"):
+    for required_fragment in (
+        "38 - 12",
+        "r(e)^{1.25}",
+        "blank_book_affinity_weight = 0.50",
+        "giveExperienceLevels",
+        "library_resonance.json",
+        "Lv.3~10",
+        "1.4×",
+    ):
         if required_fragment not in wiki_text:
             errors.append(f"docs/WIKI.md missing required synchronized specification '{required_fragment}' (R2-5)")
 

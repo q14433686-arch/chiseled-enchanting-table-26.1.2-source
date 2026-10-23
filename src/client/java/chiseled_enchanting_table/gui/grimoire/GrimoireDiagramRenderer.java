@@ -5,9 +5,11 @@ import static chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout.*;
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.compat.TransformationQueryIndex;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge.HoveredSlot;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
+import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -1071,7 +1073,7 @@ public final class GrimoireDiagramRenderer {
     }
 
     // =========================================================================
-    // CHAPTER 8 — 4-WAY CLEANSE & CURSE PURGE DIAGRAM (WITH CLICKABLE SLOTS)
+    // CHAPTER 8 — 4-WAY CLEANSE & CURSE PURGE DIAGRAM (LIVE SERVER REAGENTS)
     // =========================================================================
     public static void renderChapter8Cleanse(
         GuiGraphicsExtractor ctx,
@@ -1087,17 +1089,29 @@ public final class GrimoireDiagramRenderer {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch8_title");
 
+        Identifier sampleId = Identifier.withDefaultNamespace("sharpness");
+        var syncedStrip = SyncedEnchantmentCosts.find(OptionType.STRIP_SINGLE_ENCHANTMENT, sampleId, 3);
+        List<List<ItemStack>> stripBundles = syncedStrip.map(SyncedEnchantmentCosts.Cost::costOptions)
+            .orElseGet(() -> ChiseledEnchantingTableData.targetedStripCostOptions(sampleId, 3, 5));
+
+        Identifier curseSampleId = Identifier.withDefaultNamespace("binding_curse");
+        var syncedCurse = SyncedEnchantmentCosts.find(OptionType.PURGE_CURSE, curseSampleId, 1);
+        int curseXp = syncedCurse.map(SyncedEnchantmentCosts.Cost::xpLevelCost)
+            .orElseGet(ChiseledEnchantingTableData::cursePurgeXpCost);
+        List<List<ItemStack>> curseBundles = syncedCurse.map(SyncedEnchantmentCosts.Cost::costOptions)
+            .orElseGet(() -> ChiseledEnchantingTableData.cursePurgeCostOptions(curseSampleId));
+
         String[][] rows = {
             {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c1_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c1_b", "+XP"},
             {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c2_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c2_b", "+XP"},
             {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c3_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c3_b", "-1~3L"},
-            {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_b", "-12L"}
+            {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_b", "-" + curseXp + "L"}
         };
         ItemStack[] icons = {
             new ItemStack(Items.EXPERIENCE_BOTTLE),
             new ItemStack(BlockRegistry.DEPLETED_TOME),
-            new ItemStack(BlockRegistry.CLEANSING_GRIT),
-            new ItemStack(Items.GHAST_TEAR)
+            cycledReagentIcon(stripBundles, new ItemStack(BlockRegistry.CLEANSING_GRIT)),
+            cycledReagentIcon(curseBundles, new ItemStack(Items.GHAST_TEAR))
         };
         int[] accents = {0xFF175E3E, 0xFF285E6B, 0xFF4C236E, INK_CRIMSON};
 
@@ -1129,6 +1143,35 @@ public final class GrimoireDiagramRenderer {
                 x + 26, cy + 13, w - 30, Math.max(12, cardH - 15), 0.65f, 0.58f, INK_SECONDARY, false
             );
         }
+    }
+
+    private static ItemStack cycledReagentIcon(List<List<ItemStack>> bundles, ItemStack fallback) {
+        if (bundles == null || bundles.isEmpty()) {
+            return fallback;
+        }
+        List<ItemStack> distinct = new ArrayList<>();
+        for (List<ItemStack> bundle : bundles) {
+            for (ItemStack st : bundle) {
+                if (st.isEmpty()) {
+                    continue;
+                }
+                boolean seen = false;
+                for (ItemStack existing : distinct) {
+                    if (ItemStack.isSameItem(existing, st)) {
+                        seen = true;
+                        break;
+                    }
+                }
+                if (!seen) {
+                    distinct.add(st);
+                }
+            }
+        }
+        if (distinct.isEmpty()) {
+            return fallback;
+        }
+        int idx = (int) (Math.floorMod(System.currentTimeMillis() / 1600L, distinct.size()));
+        return distinct.get(idx);
     }
 
     private static String toRoman(int n) {

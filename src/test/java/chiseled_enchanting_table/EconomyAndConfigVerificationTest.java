@@ -436,6 +436,95 @@ class EconomyAndConfigVerificationTest {
         }
     }
 
+    @Test
+    void disenchantingAndWordingAccuracyZeroDriftGate() throws Exception {
+        JsonObject disenchant = readClasspathJson(
+            "data/chiseled_enchanting_table/chiseled_enchanting_table/disenchanting.json"
+        );
+        JsonObject strip = disenchant.getAsJsonObject("targeted_strip");
+        assertEquals(3, strip.get("xp_cost_min").getAsInt());
+        assertEquals(10, strip.get("xp_cost_max").getAsInt());
+        String stripJson = strip.toString();
+        assertTrue(stripJson.contains("minecraft:glow_ink_sac"), "targeted_strip must accept glow_ink_sac");
+        assertTrue(!stripJson.contains("\"minecraft:ink_sac\""), "targeted_strip must not accept regular ink_sac");
+
+        JsonObject curse = disenchant.getAsJsonObject("curse_purge");
+        assertEquals(12, curse.get("xp_cost").getAsInt());
+        String curseJson = curse.toString();
+        assertTrue(curseJson.contains("minecraft:ghast_tear"));
+        assertTrue(curseJson.contains("minecraft:golden_apple"));
+        assertTrue(curseJson.contains("chiseled_enchanting_table:arcane_catalyst"));
+        assertTrue(!curseJson.contains("minecraft:echo_shard"), "curse_purge does not use echo_shard");
+        assertTrue(!curseJson.contains("minecraft:lapis_lazuli"), "curse_purge does not use lapis_lazuli");
+
+        java.nio.file.Path repoRoot = java.nio.file.Paths.get("").toAbsolutePath();
+        java.nio.file.Path langDir = repoRoot.resolve("src/client/resources/assets/chiseled_enchanting_table/lang");
+        JsonObject enMap = JsonParser.parseString(
+            java.nio.file.Files.readString(langDir.resolve("en_us.json"), StandardCharsets.UTF_8)
+        ).getAsJsonObject();
+
+        List<java.nio.file.Path> langFiles;
+        try (var s = java.nio.file.Files.list(langDir)) {
+            langFiles = s.filter(p -> p.toString().endsWith(".json")).sorted().toList();
+        }
+        for (var lf : langFiles) {
+            String fileName = lf.getFileName().toString();
+            JsonObject map = JsonParser.parseString(
+                java.nio.file.Files.readString(lf, StandardCharsets.UTF_8)
+            ).getAsJsonObject();
+            assertEquals(enMap.keySet(), map.keySet(), "Key set mismatch in " + fileName);
+
+            for (String key : enMap.keySet()) {
+                String enVal = enMap.get(key).getAsString();
+                String locVal = map.get(key).getAsString();
+                int expArgs = countSubstring(enVal, "%s");
+                int gotArgs = countSubstring(locVal, "%s");
+                assertEquals(expArgs, gotArgs, "Placeholder %s count mismatch in " + fileName + ":" + key);
+                if (expArgs > 0) {
+                    String stripped = locVal.replace("%s", "").replace("%%", "");
+                    assertTrue(!stripped.contains("%"), "Unescaped % in parameterized key " + fileName + ":" + key);
+                } else {
+                    assertTrue(!locVal.contains("%%"), "Double %% in non-parameterized key " + fileName + ":" + key);
+                }
+                if (key.contains(".grimoire.")) {
+                    String low = locVal.toLowerCase();
+                    assertTrue(!low.contains("ceil(") && !low.contains("min("),
+                        "Raw math code left in prose " + fileName + ":" + key + " -> " + locVal);
+                }
+            }
+
+            String c4 = (map.get("gui.chiseled_enchanting_table.grimoire.ch8.s4").getAsString() + " "
+                + map.get("gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_b").getAsString()).toLowerCase();
+            for (String bad : List.of("echo", "回响", "迴響", "残響", "메아리", "écho", "эхо")) {
+                assertTrue(!c4.contains(bad), "Stale Echo Shard curse claim in " + fileName + ": " + c4);
+            }
+        }
+
+        JsonObject zhCn = JsonParser.parseString(
+            java.nio.file.Files.readString(langDir.resolve("zh_cn.json"), StandardCharsets.UTF_8)
+        ).getAsJsonObject();
+        assertTrue(zhCn.get("gui.chiseled_enchanting_table.cleanse.panel_rule_strip").getAsString().contains("发光墨囊"));
+        assertTrue(zhCn.get("gui.chiseled_enchanting_table.grimoire.rec.cleansing_grit").getAsString().startsWith("退魔砂"));
+        assertTrue(zhCn.get("gui.chiseled_enchanting_table.grimoire.ch8.s3").getAsString().contains("Lv.3–10"));
+
+        String wiki = java.nio.file.Files.readString(repoRoot.resolve("docs/WIKI.md"), StandardCharsets.UTF_8);
+        assertTrue(wiki.contains("Lv.3~10"), "WIKI.md must state exact Lv.3~10 strip range");
+        assertTrue(wiki.contains("1.4×"), "WIKI.md must state exact 1.4x book research multiplier");
+        assertTrue(!wiki.contains("0.85×"), "WIKI.md must not retain stale 0.85x research multiplier");
+        assertTrue(!wiki.contains("Lv.4~10"), "WIKI.md must not retain stale Lv.4~10 strip range");
+        assertTrue(!wiki.contains("涤魔碎砂"), "WIKI.md must not contain removed grit-shard refund claim");
+    }
+
+    private static int countSubstring(String haystack, String needle) {
+        int count = 0;
+        int idx = 0;
+        while ((idx = haystack.indexOf(needle, idx)) >= 0) {
+            count++;
+            idx += needle.length();
+        }
+        return count;
+    }
+
     private static int estimateMinecraftFontPx(String s) {
         int px = 0;
         for (int i = 0; i < s.length(); i++) {
