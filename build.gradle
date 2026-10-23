@@ -128,6 +128,15 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
+}
+
+tasks.named('compileClientJava') {
+    finalizedBy(tasks.named('test'))
 }
 
 processResources {

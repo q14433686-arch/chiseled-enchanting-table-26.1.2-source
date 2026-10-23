@@ -639,6 +639,14 @@ public record ModRuntimeConfig(
             } else if ("bookshelf_max_books".equals(editedKey) && this.bookshelfMaxBooks < this.bookshelfMinBooks) {
                 this.bookshelfMinBooks = this.bookshelfMaxBooks;
             }
+
+            this.bookCombineXpMultiplier = round2(clampDouble(this.bookCombineXpMultiplier, 0.10, 3.00));
+            this.bookResearchXpMultiplier = round2(clampDouble(this.bookResearchXpMultiplier, 0.10, 3.00));
+            this.epiphanyBaseChance = round2(clampDouble(this.epiphanyBaseChance, 0.0, 1.0));
+            this.epiphanyMaxChance = round2(clampDouble(this.epiphanyMaxChance, this.epiphanyBaseChance, 1.0));
+            this.xpRefundScale = round2(clampDouble(this.xpRefundScale, 0.0, 1.0));
+            this.externalXpRefundScale = round2(clampDouble(this.externalXpRefundScale, 0.0, this.xpRefundScale));
+            this.bookshelfEnchantedProb = round2(clampDouble(this.bookshelfEnchantedProb, 0.0, 1.0));
         }
 
         public ModRuntimeConfig build() {
