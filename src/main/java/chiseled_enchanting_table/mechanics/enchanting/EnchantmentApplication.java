@@ -120,7 +120,7 @@ public final class EnchantmentApplication {
                 enchantment_level,
                 targetWasBook
             );
-            if (handler.player instanceof ServerPlayer serverPlayer) {
+            if (handler.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                 if (outcome == MasterTomeWear.WearOutcome.STEPPED_DOWN) {
                     serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
                         Component.translatable(
