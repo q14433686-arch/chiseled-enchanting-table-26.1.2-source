@@ -586,7 +586,11 @@ public final class GrimoireDiagramRenderer {
         drawMiniButton(ctx, font, ctrlX + ctrlW - 15, spinY, 15, 13, "+", mouseX, mouseY);
         hits.add(new HitRegion(ctrlX + ctrlW - 15, spinY, 15, 13, ACTION_SHELF_STEP, "+1"));
 
-        int[] presets = {0, sg.tier1Bookshelves(), sg.tier2Bookshelves(), minEpi, maxCap};
+        int[] presets = java.util.stream.IntStream.of(0, sg.tier1Bookshelves(), sg.tier2Bookshelves(), minEpi, maxCap)
+            .filter(v -> v >= 0 && v <= maxCap)
+            .distinct()
+            .sorted()
+            .toArray();
         int pw = (ctrlW - 8) / presets.length;
         int py = topY + 29;
         for (int i = 0; i < presets.length; i++) {
@@ -1056,10 +1060,10 @@ public final class GrimoireDiagramRenderer {
 
         var sg = SyncedEnchantmentCosts.shelfGatesConfig();
         String[] gates = {
-            "0+: 2\u00d7 (" + sg.baseBatchSize() + ")",
+            "0+: 2\u00d7 (\u00d7" + sg.baseBatchSize() + ")",
             sg.tier1Bookshelves() + "+: 0 XP",
             sg.tier2Bookshelves() + "+: 1\u00d7 (-50%)",
-            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "*: 0 (" + sg.tier3BatchSize() + ")"
+            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "*: 0 (\u00d7" + sg.tier3BatchSize() + ")"
         };
         int[] gCols = {0xFF7D634C, 0xFF285E6B, 0xFF4C236E, 0xFF175E3E};
         int gw = (w - 10) / 2;

@@ -1,8 +1,12 @@
 {
-  "_comment": "Shelf progression gates, scan volume, blank-vs-upgrade wooden shelf cap, and 3-gradient Depleted Tome restoration rules.",
+  "_comment": "Shelf progression gates, scan volume + breathing room check, vanilla enchanting table mode, blank-vs-upgrade wooden shelf cap, and 3-gradient Depleted Tome restoration rules (unified 12 / 32 / 38 milestones).",
+  "vanilla_table_mode": "books",
   "scan_volume": {
     "horizontal_radius": 3,
-    "vertical_radius": 2
+    "vertical_radius": 2,
+    "require_breathing_room": true,
+    "min_open_adjacent_blocks": 6,
+    "require_line_of_sight": false
   },
   "direct_upgrade_gates": {
     "enabled": true,
@@ -12,11 +16,11 @@
     "overrides": {}
   },
   "depleted_tome_gradients": {
-    "tier1_bookshelves": 8,
-    "tier2_bookshelves": 18,
+    "tier1_bookshelves": 12,
+    "tier2_bookshelves": 32,
     "tier2_material_multiplier": 0.5,
     "tier3_qualifying_enchantments": 6,
-    "base_batch_size": 8,
+    "base_batch_size": 64,
     "tier3_batch_size": 64
   }
 }

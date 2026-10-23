@@ -77,7 +77,7 @@ public class ArcaneGrimoireScreen extends Screen {
 
     // Interactive diagram states
     private int selectedRecipeIdx = 0;
-    private int demoShelves = 18;
+    private int demoShelves = 12;
     private int selectedTransmuteIdx = 0;
 
     // Responsive UV-matched book geometry
@@ -101,11 +101,11 @@ public class ArcaneGrimoireScreen extends Screen {
     private static final int NAV_CLOSE = 101;
 
     public ArcaneGrimoireScreen(@Nullable Screen parentScreen) {
-        this(parentScreen, 0, null, parentScreen != null, 18);
+        this(parentScreen, 0, null, parentScreen != null, 12);
     }
 
     public ArcaneGrimoireScreen(@Nullable Screen parentScreen, int initialSpread) {
-        this(parentScreen, initialSpread, null, parentScreen != null, 18);
+        this(parentScreen, initialSpread, null, parentScreen != null, 12);
     }
 
     public ArcaneGrimoireScreen(

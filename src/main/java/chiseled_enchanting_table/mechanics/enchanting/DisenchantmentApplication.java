@@ -9,6 +9,7 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
+import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -31,17 +32,8 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Unified, single-source disenchanting, step-down downgrading, targeted single-trait stripping,
- * and curse purification mechanic with cached inductive XP conservation across all levels {@code 1..255}.
- *
- * <p>Conservation theorem: for every {@code M >= 1}, {@code 1 <= k <= M}, and {@code 1 <= a < k}:
- * <pre>
- *   0 = V(0) &lt;= V(1) &lt;= ... &lt;= V(M)
- *   V(k) &lt;= minPointsRequired(MasterTome(cfg, 0 -&gt; k, maxDiscount)) - SAFETY_MARGIN
- *   V(k) - V(a) &lt;= minPointsRequired(MasterTome(cfg, a -&gt; k, maxDiscount)) - SAFETY_MARGIN
- * </pre>
- * All client/server callers pass their authoritative {@link LibraryResonance.Config} explicitly and
- * share the memoized potential table {@link #buildPotentialTable} so dedicated-server overrides and
- * {@code M = 255} menus stay fast and strictly consistent.</p>
+ * and curse purification mechanic with cached inductive XP conservation across all levels {@code 1..255}
+ * and level-slice provenance tracking ({@code D3}).
  */
 public final class DisenchantmentApplication {
     public static final Identifier DISENCHANT_ALL_ID = ChiseledEnchantingTable.identifier("disenchant_all");
@@ -148,6 +140,66 @@ public final class DisenchantmentApplication {
     }
 
     /**
+     * Pure headless provenance-exact potential across paid vs external slices {@code 1..clampedLevel}:
+     * <ul>
+     *   <li>Telescopes identically to {@code V_table[L]} when all slices {@code 0..L-1} are set.</li>
+     *   <li>Telescopes identically to {@code V_ext[L]} when {@code paidSlices} is empty.</li>
+     *   <li>Satisfies exact step-down additivity {@code P(k, S) - P(b, S) + P(b, S) == P(k, S)}
+     *       and hybrid upgrade conservation {@code P(k, S ∪ [a..k)) - cost(a -> k) <= P(a, S) - 5}.</li>
+     * </ul>
+     */
+    public static int provenanceSlicePotential(
+        LibraryResonance.Config resonanceCfg,
+        int maxLevel,
+        int clampedLevel,
+        int anvilCost,
+        boolean treasure,
+        double tableRefundScale,
+        double externalRefundScale,
+        BitSet paidSlices
+    ) {
+        if (clampedLevel <= 0) {
+            return 0;
+        }
+        int cappedMax = Math.max(1, maxLevel);
+        int target = Math.min(clampedLevel, cappedMax);
+        int[] vTable = buildPotentialTable(resonanceCfg, cappedMax, anvilCost, treasure, tableRefundScale);
+        int[] vExt = buildPotentialTable(resonanceCfg, cappedMax, anvilCost, treasure, externalRefundScale);
+        int sum = 0;
+        for (int j = 1; j <= target; j++) {
+            boolean paidAtTable = paidSlices != null && paidSlices.get(j - 1);
+            sum += paidAtTable ? (vTable[j] - vTable[j - 1]) : (vExt[j] - vExt[j - 1]);
+        }
+        return sum;
+    }
+
+    public static int provenanceEssencePotential(
+        LibraryResonance.Config resonanceCfg,
+        ItemStack stack,
+        Holder<Enchantment> holder,
+        int level,
+        double tableRefundScale,
+        double externalRefundScale
+    ) {
+        if (holder == null || level <= 0 || isCurse(holder)) {
+            return 0;
+        }
+        Identifier enchId = holder.unwrapKey().map(k -> k.identifier()).orElse(null);
+        BitSet paidSlices = EnchantmentProvenance.getPaidSlices(stack, enchId);
+        int maxLevel = Math.max(1, holder.value().getMaxLevel());
+        return provenanceSlicePotential(
+            resonanceCfg,
+            maxLevel,
+            Math.min(level, maxLevel),
+            holder.value().getAnvilCost(),
+            isTreasure(holder),
+            tableRefundScale,
+            externalRefundScale,
+            paidSlices
+        );
+    }
+
+    /**
      * Authoritative memoized potential table {@code V[0..cappedMax]} for all runtime, UI, recipe
      * viewer, reload self-check, and JUnit conservation proof callers.
      */
@@ -214,11 +266,6 @@ public final class DisenchantmentApplication {
         verifyRuntimeConservation(LibraryResonance.activeServerConfig(), refundScale);
     }
 
-    /**
-     * Runtime conservation check run automatically on datapack reload: degrades gracefully with an
-     * error log instead of aborting {@code /reload} if a third-party/future code change breaks an
-     * invariant, while {@link #assertRuntimeConservationStrict} enforces hard failures in JUnit.
-     */
     public static void verifyRuntimeConservation(LibraryResonance.Config resonanceCfg, double refundScale) {
         try {
             assertRuntimeConservationStrict(resonanceCfg, refundScale);
@@ -278,22 +325,63 @@ public final class DisenchantmentApplication {
         int targetLevel,
         double refundScale
     ) {
+        return provenanceRefundForStepDown(
+            resonanceCfg,
+            ItemStack.EMPTY,
+            holder,
+            currentLevel,
+            targetLevel,
+            refundScale,
+            refundScale
+        );
+    }
+
+    public static int provenanceRefundForStepDown(
+        LibraryResonance.Config resonanceCfg,
+        ItemStack stack,
+        Holder<Enchantment> holder,
+        int currentLevel,
+        int targetLevel,
+        double tableRefundScale,
+        double externalRefundScale
+    ) {
         if (holder == null || isCurse(holder) || currentLevel <= targetLevel || targetLevel < 0) {
             return 0;
         }
-        int curV = essencePotential(resonanceCfg, holder, currentLevel, refundScale);
-        int nextV = targetLevel == 0 ? 0 : essencePotential(resonanceCfg, holder, targetLevel, refundScale);
+        int curV = provenanceEssencePotential(resonanceCfg, stack, holder, currentLevel, tableRefundScale, externalRefundScale);
+        int nextV = targetLevel == 0
+            ? 0
+            : provenanceEssencePotential(resonanceCfg, stack, holder, targetLevel, tableRefundScale, externalRefundScale);
         return Math.max(0, curV - nextV);
     }
 
     public static int totalFullDisenchantRefund(ItemStack stack, double refundScale) {
-        return totalFullDisenchantRefund(LibraryResonance.activeServerConfig(), stack, refundScale);
+        return totalFullDisenchantRefund(
+            LibraryResonance.activeServerConfig(),
+            stack,
+            refundScale,
+            ChiseledEnchantingTableData.disenchantExternalRefundScale()
+        );
     }
 
     public static int totalFullDisenchantRefund(
         LibraryResonance.Config resonanceCfg,
         ItemStack stack,
         double refundScale
+    ) {
+        return totalFullDisenchantRefund(
+            resonanceCfg,
+            stack,
+            refundScale,
+            ChiseledEnchantingTableData.disenchantExternalRefundScale()
+        );
+    }
+
+    public static int totalFullDisenchantRefund(
+        LibraryResonance.Config resonanceCfg,
+        ItemStack stack,
+        double tableRefundScale,
+        double externalRefundScale
     ) {
         if (stack.isEmpty()) {
             return 0;
@@ -306,7 +394,14 @@ public final class DisenchantmentApplication {
         for (var entry : enchantments.entrySet()) {
             Holder<Enchantment> holder = entry.getKey();
             if (!isCurse(holder)) {
-                sum += essencePotential(resonanceCfg, holder, entry.getIntValue(), refundScale);
+                sum += provenanceEssencePotential(
+                    resonanceCfg,
+                    stack,
+                    holder,
+                    entry.getIntValue(),
+                    tableRefundScale,
+                    externalRefundScale
+                );
             }
         }
         return sum;
@@ -355,7 +450,12 @@ public final class DisenchantmentApplication {
             return;
         }
         var cfg = menu.libraryResonanceConfig();
-        int totalRefund = totalFullDisenchantRefund(cfg, target, menu.disenchantRefundScale());
+        int totalRefund = totalFullDisenchantRefund(
+            cfg,
+            target,
+            menu.disenchantRefundScale(),
+            menu.disenchantExternalRefundScale()
+        );
 
         ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
         for (var entry : current.entrySet()) {
@@ -366,7 +466,7 @@ public final class DisenchantmentApplication {
 
         ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
         menu.setEnchantableSlot(resulting);
-        spawnOrAwardRefund(menu, totalRefund);
+        awardRefundOrbs(menu, totalRefund);
         playCleanseFeedback(menu, 1.15f);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
@@ -387,7 +487,15 @@ public final class DisenchantmentApplication {
             return;
         }
         var cfg = menu.libraryResonanceConfig();
-        int refund = refundForStepDown(cfg, matched, curLvl, desiredLevel, menu.disenchantRefundScale());
+        int refund = provenanceRefundForStepDown(
+            cfg,
+            target,
+            matched,
+            curLvl,
+            desiredLevel,
+            menu.disenchantRefundScale(),
+            menu.disenchantExternalRefundScale()
+        );
 
         ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
         for (var entry : current.entrySet()) {
@@ -400,7 +508,7 @@ public final class DisenchantmentApplication {
 
         ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
         menu.setEnchantableSlot(resulting);
-        spawnOrAwardRefund(menu, refund);
+        awardRefundOrbs(menu, refund);
         playCleanseFeedback(menu, 1.05f);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
@@ -494,10 +602,11 @@ public final class DisenchantmentApplication {
         } else {
             copy.set(DataComponents.ENCHANTMENTS, remaining);
         }
+        EnchantmentProvenance.pruneToCurrentEnchantments(copy, remaining);
         return copy;
     }
 
-    private static void spawnOrAwardRefund(ChiseledEnchantingTableScreenHandler menu, int refundPoints) {
+    public static void awardRefundOrbs(ChiseledEnchantingTableScreenHandler menu, int refundPoints) {
         if (refundPoints <= 0) {
             return;
         }
