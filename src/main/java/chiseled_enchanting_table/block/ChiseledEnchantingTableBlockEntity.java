@@ -416,7 +416,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                     // Iron Rule #1: NEVER wipe conflicting player enchantments on a polluted step!
                     int pollutedLvl = Math.max(1, working.getLevel(polluted));
                     working.set(polluted, pollutedLvl);
-                    Identifier pollutedId = polluted.unwrapKey().map(k -> k.identifier()).orElse(null);
+                    net.minecraft.resources.Identifier pollutedId = polluted.unwrapKey().map(k -> k.identifier()).orElse(null);
                     if (pollutedId != null) {
                         EnchantmentProvenance.recordTablePayment(currentTarget, pollutedId, 0, pollutedLvl);
                     }

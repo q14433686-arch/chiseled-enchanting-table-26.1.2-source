@@ -175,21 +175,6 @@ public final class XpCostConversion {
         return total;
     }
 
-    /** Exact cumulative vanilla XP points corresponding to {@code player}'s current level and bar progress. */
-    public static int totalPlayerXpPoints(Player player) {
-        if (player == null) {
-            return 0;
-        }
-        int curLvl = Math.max(0, player.experienceLevel);
-        int sum = 0;
-        for (int l = 0; l < curLvl; l++) {
-            sum += xpPointsForLevel(l);
-        }
-        float prog = Math.max(0.0f, Math.min(1.0f, player.experienceProgress));
-        sum += Math.round(prog * xpPointsForLevel(curLvl));
-        return Math.max(0, sum);
-    }
-
     public static void deductXp(Player player, XpRequirement req) {
         if (player.getAbilities().instabuild) {
             return;
