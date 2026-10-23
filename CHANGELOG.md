@@ -15,15 +15,17 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
-## [1.1.0] — Release-label rollback and pre-port audit, 2026-10-23
+## [1.1.0] — Full 26.1.2 increment and hardened configuration, 2026-10-23
 
-- Restore the active release label, download names and publishing metadata to 1.1.0 by request.
-- Retain existing 26.3 runtime fixes and `26_3_revision_4`; a version-label rollback is not a wire rollback.
-- Review 26.1.2 delta `b78b244` → `3e081f3` before porting. New gameplay/configuration changes remain
-  pending a rollout decision; see [review and choices](docs/reports/PRE_PORT_26_1_2_3E081F3_REVIEW.md).
-- Older 1.1.1 entries below describe historical fixes/builds; those fixes are not removed.
+- Restore the requested release label **1.1.0** while retaining MC **26.3**, pinned dependencies and existing worldgen, mouse, menu-routing and authoritative-catalog fixes.
+- Port the complete source increment through **3e081f3** using user-selected **option 1**: D1–D7 progression/economy/discovery/batching plus classified runtime configuration, commands and Mod Menu integration.
+- Retain source defaults: config-over-datapack priority, wear 16 / copy cost 4 / step-down, external/unmarked refund scale 0.25 and books-only vanilla table. **Back up old worlds**; absent old provenance cannot be inferred.
+- Harden LAN ownership/permissions, atomic save-before-publish, strict explicit reload, request-ID server acknowledgements, integrated-server routing, stale-menu closure and per-player catalog refresh. Match mother-tome wear candidates to line-of-sight scanning and preserve safe 26.3 structure processing.
+- Advance the independent wire to **revision 5**, detecting old revision 4 without reusing old decoder channels. Update both sides even if their displayed version is the same.
+- Verify final functional source **181e996**: complete build, no-viewer compile, 29 JUnit, 15 Python and actual no-player dedicated-server smoke. Real GUI/multiplayer interaction is still untested. [Evidence and limits](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md).
+- Older 1.1.1 entries below are historical; their fixes are retained.
 
-## [1.1.1] — 26.3 runtime and synchronization audit (version unchanged)
+## [1.1.1] — 26.3 runtime and synchronization audit (historical)
 
 - Synchronize complete server transformation catalogs, including tag inputs and empty catalogs;
   refresh actual JEI runtime recipes and use dynamic REI displays after synchronization.

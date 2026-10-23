@@ -13,22 +13,19 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Current request — version rollback and pre-port review
+## Current incremental port — option 1
 
-Release label is **1.1.0** by request. This does not revert the 26.3 fixes or the independent
-`26_3_revision_4` protocol capability. Older audit/build records labelled 1.1.1 remain historical evidence.
+User selected faithful source defaults plus necessary hardening. The complete increment through **`3e081f31f262dc13f6a92f0a50313e12f6af28c0`** is merged; release **1.1.0**, target **MC 26.3**, protocol **`26_3_revision_5`**. This supersedes the previous “audit only / awaiting choice” state.
 
-Gameplay has previously been synced through `b78b244b391a96bfb4255d88c7f66d2ee573567e`.
-The next source target is `3e081f31f262dc13f6a92f0a50313e12f6af28c0` on the 26.1.2 branch.
-That new delta has been reviewed but **has not yet been ported**: configuration precedence,
-legacy-item treatment and rollout strategy await the user's choice.
-See [pre-port review](docs/reports/PRE_PORT_26_1_2_3E081F3_REVIEW.md).
+[Current implementation and evidence](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md): source **181e996** passed build **39904722889** (four jobs), compile-check **39904722983**, **29 JUnit**, **15 Python**, and the real no-player server/reload/component/loot smoke. Real GUI and multiplayer interaction remain unverified. Older 1.1.1 records are historical, not current release artifacts.
+
+Back up old worlds: defaults include mother-tome wear, external/unmarked refund scaling and configuration-over-datapack priority. There is no retroactive provenance inference. Update both client and server to revision 5 even though the displayed release label is 1.1.0.
 
 ## Source of truth
 
 All gameplay, assets, languages and viewer functionality from the 26.1.2 branch through
-`0304f9dd065af4f145e5547fdeb822da30e9c527` (1.1.0) are synced, with 26.3 adaptations.
-See [sync report](docs/reports/SYNC_FROM_26_1_2_REPORT.md) for the exact boundary and verification.
+`3e081f31f262dc13f6a92f0a50313e12f6af28c0` (1.1.0) are synced, with 26.3 adaptations.
+See the [current port report](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md) for the exact boundary, migration notes and verification.
 [Player Wiki](docs/WIKI.md) describes resonance, Treasure Epiphany/freezing, XP, material
 alternatives, book upgrades, Blank Overwrite and transformations.
 
@@ -62,12 +59,16 @@ alternatives, book upgrades, Blank Overwrite and transformations.
 `python3 scripts/compat_check.py` and `python3 scripts/test_sync_26_3.py` are offline gates.
 GitHub Actions is the authoritative Java compilation check: the sandbox cannot reach the
 Fabric/Mojang Maven repositories. A green older 1.0.3 build is not evidence for this sync.
-Runtime smoke tests still require a 26.3 client/server; see NEXT_TASK.md.
+Headless server smoke has passed. Remaining real-client/multiplayer checks are in NEXT_TASK.md.
 
 Version declarations must agree in gradle.properties, README.md, fabric.mod.json,
 publish workflow and its docs/ci copy. Do not copy historical compile reports from 26.1.2.
 
-## Verified sync build
+## Historical builds and earlier scope
+
+The sections below predate the current option-1 port. Their pending-runtime notes, versions and test counts are historical, not current status.
+
+### Verified sync build
 
 - `compile-check` run **39824070708**, source commit `7eb9827`: success for both main and client.
 - `build` run **39824070633**, same source: static checks, full Gradle build and the

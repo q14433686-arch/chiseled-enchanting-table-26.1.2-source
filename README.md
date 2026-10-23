@@ -12,9 +12,9 @@
 
 **Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
 
-> Release label restored to 1.1.0 by request; existing 26.3 fixes and protocol safeguards are retained.
-> The next 26.1.2 delta is [reviewed, not yet ported](docs/reports/PRE_PORT_26_1_2_3E081F3_REVIEW.md), pending a design choice.
-> Previous 1.1.1 build records are historical; a new 1.1.0 JAR has not been built in this review.
+> The full 26.1.2 delta through `3e081f3` is now ported using **option 1**: source defaults plus necessary hardening, while retaining the 26.3 fixes.
+> See the [implementation and verification report](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md). Protocol revision is **5** despite the unchanged 1.1.0 release label: update both client and server.
+> **Back up existing worlds:** defaults now include mother-tome wear (16 charges, copying costs 4), reduced refunds for unmarked/external items, and config-over-datapack priority. GUI/multiplayer interaction remains to be tested manually.
 **Target:** Minecraft `26.3`, Fabric Loader `>=0.19.5`, Fabric API `0.162.0+26.3`, Java `>=25`.
 
 📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)**
