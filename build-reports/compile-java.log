@@ -1,4 +1,4 @@
-commit: 88f67ce9729455ab0de19ee74de4393b437c13e9
+commit: f2d9889776bde472c8c2918fc62c280fa1b7b4fb
 branch: arena/c0adaa10-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -75,7 +75,7 @@ EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcr
 EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
 
 EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() STANDARD_OUT
-    [18:00:06] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+    [18:19:36] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
     java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
     	at java.base/java.nio.file.Files.provider(Files.java:103)
     	at java.base/java.nio.file.Files.exists(Files.java:2289)
@@ -169,7 +169,7 @@ EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTampe
     	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
 
 EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792778387524.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792779556160.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -179,7 +179,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 23s
+BUILD SUCCESSFUL in 27s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
