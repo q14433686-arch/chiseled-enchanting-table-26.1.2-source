@@ -57,6 +57,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static final Identifier DISENCHANTING_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/disenchanting.json");
     private static final Identifier SHELF_GATES_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/shelf_gates.json");
     private static final Identifier LIBRARY_RESONANCE_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/library_resonance.json");
+    private static final Identifier PACK_POLICY_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/pack_policy.json");
 
     public enum VanillaChestBooksMode {
         KEEP_BOTH,
@@ -504,6 +505,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         rawDisenchantingRules = loadDisenchantingRules(resourceManager);
         rawShelfGatesConfig = loadShelfGatesConfig(resourceManager);
         rawLibraryResonanceConfig = loadLibraryResonanceConfig(resourceManager);
+        chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(loadPackPolicy(resourceManager));
         applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get());
         ChiseledEnchantingTable.LOGGER.info(
             "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformations, {} loot injections",
@@ -710,6 +712,151 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             libraryResonanceConfig,
             disenchantingRules.xpRefundScale()
         );
+    }
+
+    private static chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy loadPackPolicy(
+        ResourceManager resourceManager
+    ) {
+        Set<String> externalKeys = new java.util.LinkedHashSet<>();
+        collectExternalDatapackKeys(resourceManager, SHELF_GATES_ID, "shelf_gates", externalKeys);
+        collectExternalDatapackKeys(resourceManager, LIBRARY_RESONANCE_ID, "library_resonance", externalKeys);
+        collectExternalDatapackKeys(resourceManager, BOOK_UPGRADES_ID, "book_upgrades", externalKeys);
+        collectExternalDatapackKeys(resourceManager, TREASURE_EPIPHANY_ID, "treasure_epiphany", externalKeys);
+        collectExternalDatapackKeys(resourceManager, DISENCHANTING_ID, "disenchanting", externalKeys);
+        collectExternalDatapackKeys(resourceManager, ITEM_TRANSFORMATIONS_ID, "item_transformations", externalKeys);
+        collectExternalDatapackKeys(resourceManager, LOOT_INJECTIONS_ID, "loot_injections", externalKeys);
+        collectExternalDatapackKeys(resourceManager, BOOKSHELF_BOOK_POOL_ID, "bookshelf_book_pool", externalKeys);
+
+        JsonObject policyRoot = null;
+        try {
+            var resOpt = resourceManager.getResource(PACK_POLICY_ID);
+            if (resOpt.isPresent()) {
+                try (Reader reader = resOpt.get().openAsReader()) {
+                    policyRoot = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+        } catch (Exception e) {
+            ChiseledEnchantingTable.LOGGER.warn("Failed to read {}; falling back to default pack policy", PACK_POLICY_ID, e);
+        }
+        return chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.fromJson(policyRoot, externalKeys);
+    }
+
+    private static void collectExternalDatapackKeys(
+        ResourceManager resourceManager,
+        Identifier tableId,
+        String tableName,
+        Set<String> outKeys
+    ) {
+        List<net.minecraft.server.packs.resources.Resource> stack = resourceManager.getResourceStack(tableId);
+        // Index 0 is the mod's own built-in resource pack; indices 1..N-1 are external datapacks / modpacks.
+        for (int i = 1; i < stack.size(); i++) {
+            try (Reader reader = stack.get(i).openAsReader()) {
+                JsonObject obj = JsonParser.parseReader(reader).getAsJsonObject();
+                outKeys.addAll(extractConfigKeysFromDatapackJson(tableName, obj));
+            } catch (Exception e) {
+                ChiseledEnchantingTable.LOGGER.warn("Failed to inspect external datapack layer for {}", tableId, e);
+            }
+        }
+    }
+
+    public static Set<String> extractConfigKeysFromDatapackJson(String tableName, JsonObject root) {
+        if (root == null) {
+            return Set.of();
+        }
+        Set<String> keys = new java.util.LinkedHashSet<>();
+        switch (tableName) {
+            case "shelf_gates" -> {
+                String[] directKeys = {
+                    "direct_gates_enabled", "blank_max_tier_mode", "max_direct_bookshelves",
+                    "horizontal_scan_radius", "vertical_scan_radius", "require_breathing_room",
+                    "min_open_adjacent_blocks", "require_line_of_sight", "vanilla_table_mode",
+                    "tier1_bookshelves", "tier2_bookshelves", "tier3_qualifying_enchantments"
+                };
+                for (String k : directKeys) {
+                    if (root.has(k)) keys.add(k);
+                }
+                if (root.has("base_batch_size") || root.has("tier3_batch_size")) {
+                    keys.add("transformation_max_batch_size");
+                }
+            }
+            case "library_resonance" -> {
+                JsonObject wooden = root.has("wooden_bookshelves") && root.get("wooden_bookshelves").isJsonObject()
+                    ? root.getAsJsonObject("wooden_bookshelves") : null;
+                JsonObject mastery = root.has("chiseled_mastery") && root.get("chiseled_mastery").isJsonObject()
+                    ? root.getAsJsonObject("chiseled_mastery") : null;
+                if (hasAny(root, wooden, "max_wooden_discount_percent")) keys.add("max_wooden_discount_percent");
+                if (hasAny(root, mastery, "max_total_xp_discount_percent")) keys.add("max_total_xp_discount_percent");
+                String[] masteryKeys = {
+                    "tome_consumption_mode", "max_tome_uses", "book_copy_wear_cost", "tome_deplete_behavior",
+                    "tome_regen_enabled", "tome_regen_base_seconds", "tome_regen_tier1_shelves",
+                    "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds"
+                };
+                for (String k : masteryKeys) {
+                    if (hasAny(root, mastery, k)) keys.add(k);
+                }
+            }
+            case "book_upgrades" -> {
+                JsonObject comb = root.has("combine_route") && root.get("combine_route").isJsonObject()
+                    ? root.getAsJsonObject("combine_route") : null;
+                JsonObject res = root.has("research_route") && root.get("research_route").isJsonObject()
+                    ? root.getAsJsonObject("research_route") : null;
+                if (comb != null && comb.has("enabled")) keys.add("book_combine_enabled");
+                if (comb != null && comb.has("xp_cost_multiplier_of_vanilla_like")) keys.add("book_combine_xp_multiplier");
+                if (res != null && res.has("enabled")) keys.add("book_research_enabled");
+                if (res != null && res.has("xp_cost_multiplier_of_direct_enchant")) keys.add("book_research_xp_multiplier");
+            }
+            case "treasure_epiphany" -> {
+                if (root.has("min_regular_bookshelves")) keys.add("epiphany_min_bookshelves");
+                if (root.has("base_chance")) keys.add("epiphany_base_chance");
+                if (root.has("max_chance")) keys.add("epiphany_max_chance");
+                if (root.has("max_slots_cap")) keys.add("epiphany_max_slots_cap");
+                if (root.has("cycle_ticks")) keys.add("epiphany_cycle_seconds");
+                if (root.has("freeze_xp_levels")) keys.add("epiphany_freeze_xp_levels");
+                if (root.has("freeze_duration_ticks")) keys.add("epiphany_freeze_duration_seconds");
+                if (root.has("max_freeze_ticks")) keys.add("epiphany_max_freeze_seconds");
+                if (root.has("reroll_xp_levels")) keys.add("epiphany_reroll_xp_levels");
+            }
+            case "disenchanting" -> {
+                if (root.has("enabled")) keys.add("disenchant_enabled");
+                if (root.has("xp_refund_scale")) keys.add("xp_refund_scale");
+                if (root.has("external_xp_refund_scale")) keys.add("external_xp_refund_scale");
+                if (root.has("allow_curse_purge")) keys.add("allow_curse_purge");
+                JsonObject strip = root.has("targeted_strip") && root.get("targeted_strip").isJsonObject()
+                    ? root.getAsJsonObject("targeted_strip") : null;
+                if (strip != null && (strip.has("xp_cost_min") || strip.has("xp_levels"))) keys.add("strip_xp_min");
+                if (strip != null && strip.has("xp_cost_max")) keys.add("strip_xp_max");
+                JsonObject curse = root.has("curse_purge") && root.get("curse_purge").isJsonObject()
+                    ? root.getAsJsonObject("curse_purge") : null;
+                if (curse != null && (curse.has("xp_cost") || curse.has("xp_levels"))) keys.add("curse_purge_xp_cost");
+            }
+            case "item_transformations" -> {
+                if (root.has("require_prior_discovery")) {
+                    keys.add("require_prior_discovery");
+                } else if (root.has("values") && root.get("values").isJsonArray()) {
+                    for (JsonElement el : root.getAsJsonArray("values")) {
+                        if (el.isJsonObject() && el.getAsJsonObject().has("require_prior_discovery")) {
+                            keys.add("require_prior_discovery");
+                            break;
+                        }
+                    }
+                }
+            }
+            case "loot_injections" -> {
+                if (root.has("vanilla_chest_books")) keys.add("vanilla_chest_books_mode");
+            }
+            case "bookshelf_book_pool" -> {
+                if (root.has("enabled")) keys.add("bookshelf_pool_enabled");
+                if (root.has("min_books")) keys.add("bookshelf_min_books");
+                if (root.has("max_books")) keys.add("bookshelf_max_books");
+                if (root.has("enchanted_book_probability")) keys.add("bookshelf_enchanted_prob");
+            }
+            default -> {}
+        }
+        return Set.copyOf(keys);
+    }
+
+    private static boolean hasAny(JsonObject root, JsonObject sub, String key) {
+        return root.has(key) || (sub != null && sub.has(key));
     }
 
     /**

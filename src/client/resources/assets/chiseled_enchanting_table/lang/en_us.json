@@ -392,8 +392,8 @@
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.keep_both": "Keep Vanilla + Add",
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.strip_vanilla": "Replace Vanilla Books",
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.disabled": "Vanilla Unchanged",
-    "config.chiseled_enchanting_table.opt.override_datapacks": "In-Game Config Overrides Datapacks",
-    "config.chiseled_enchanting_table.opt.override_datapacks.desc": "Apply these settings over world datapack JSON tables",
+    "config.chiseled_enchanting_table.opt.override_datapacks": "Allow Overriding External Datapacks",
+    "config.chiseled_enchanting_table.opt.override_datapacks.desc": "OFF by default: external datapacks take strict priority over in-game settings. Turn ON only in unlocked singleplayer worlds to let in-game sliders override external datapack values.",
     "config.chiseled_enchanting_table.opt.enchanted_book_stack_size": "Enchanted Book Max Stack Size",
     "config.chiseled_enchanting_table.opt.enchanted_book_stack_size.desc": "Set to 1 if third-party machines assume non-stackable books",
     "config.chiseled_enchanting_table.opt.vanilla_table_mode": "Vanilla Enchanting Table Rule",
@@ -510,5 +510,8 @@
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_shelves": "Regen Tier 2 Bookshelves",
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_shelves.desc": "Nearby library bookshelf threshold for the Grand Sanctum Tier 2 regeneration breakthrough (default: 42 shelves).",
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds": "Regen Tier 2 Interval",
-    "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds.desc": "Seconds required to recover +1 Master Tome durability upon reaching Tier 2 bookshelves (default: 10s at 42 shelves; scales further with extra shelves)."
+    "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds.desc": "Seconds required to recover +1 Master Tome durability upon reaching Tier 2 bookshelves (default: 10s at 42 shelves; scales further with extra shelves).",
+    "config.chiseled_enchanting_table.session.modpack_locked": "🔒 Unified Modpack / Server Lock (Read-Only)",
+    "config.chiseled_enchanting_table.reason.pack_locked": "Locked by unified Modpack / Server policy (pack_policy.json).",
+    "config.chiseled_enchanting_table.reason.datapack_priority": "Controlled by active Datapack (Datapack has priority over in-game config by default)."
 }

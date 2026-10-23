@@ -28,16 +28,17 @@ public final class ModConfigNetworking {
     public static final Identifier CONFIG_MANAGE_PERMISSION =
         ChiseledEnchantingTable.identifier("config/manage");
 
-    public record SyncRuntimeConfigPayload(String json, boolean canEdit) implements CustomPacketPayload {
+    public record SyncRuntimeConfigPayload(String json, String policyJson, boolean canEdit) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<SyncRuntimeConfigPayload> TYPE =
             new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("sync_runtime_config"));
 
         public static final StreamCodec<FriendlyByteBuf, SyncRuntimeConfigPayload> CODEC = StreamCodec.of(
             (buf, payload) -> {
                 buf.writeUtf(payload.json(), 262_144);
+                buf.writeUtf(payload.policyJson() == null ? "" : payload.policyJson(), 65_536);
                 buf.writeBoolean(payload.canEdit());
             },
-            buf -> new SyncRuntimeConfigPayload(buf.readUtf(262_144), buf.readBoolean())
+            buf -> new SyncRuntimeConfigPayload(buf.readUtf(262_144), buf.readUtf(65_536), buf.readBoolean())
         );
 
         @Override
@@ -62,6 +63,9 @@ public final class ModConfigNetworking {
     }
 
     public static boolean canPlayerManageConfig(MinecraftServer server, ServerPlayer player) {
+        if (ModRuntimeConfig.serverPackPolicy().lockInGameConfig()) {
+            return false;
+        }
         if (!server.isDedicatedServer()) {
             return true;
         }
@@ -108,6 +112,12 @@ public final class ModConfigNetworking {
                         .requires(PermissionPredicates.require(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS))
                         .executes(ctx -> {
                             MinecraftServer server = ctx.getSource().getServer();
+                            if (ModRuntimeConfig.serverPackPolicy().lockInGameConfig()) {
+                                ctx.getSource().sendFailure(
+                                    Component.translatable("config.chiseled_enchanting_table.reason.pack_locked")
+                                );
+                                return 0;
+                            }
                             applyAndBroadcast(server, ModRuntimeConfig.DEFAULT);
                             ctx.getSource().sendSuccess(
                                 () -> Component.translatable("config.chiseled_enchanting_table.msg.reset_all"),
@@ -120,8 +130,9 @@ public final class ModConfigNetworking {
     }
 
     public static void applyAndBroadcast(MinecraftServer server, ModRuntimeConfig updated) {
-        ModRuntimeConfig.setLocalAndSave(updated);
-        ChiseledEnchantingTableData.applyRuntimeConfig(updated);
+        ModRuntimeConfig sanitized = updated.withEnforcedPolicy(ModRuntimeConfig.serverPackPolicy());
+        ModRuntimeConfig.setLocalAndSave(sanitized);
+        ChiseledEnchantingTableData.applyRuntimeConfig(sanitized);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             sendToPlayer(p);
             EnchantCostSync.sendTo(p);
@@ -142,6 +153,7 @@ public final class ModConfigNetworking {
                 player,
                 new SyncRuntimeConfigPayload(
                     ModRuntimeConfig.get().toJsonString(),
+                    ModRuntimeConfig.serverPackPolicy().toJsonString(),
                     canPlayerManageConfig(server, player)
                 )
             );

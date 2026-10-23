@@ -92,7 +92,8 @@ public final class ConfigCatalog {
         OFFLINE_CLIENT("config.chiseled_enchanting_table.session.offline", true),
         SINGLEPLAYER_LIVE("config.chiseled_enchanting_table.session.singleplayer", true),
         DEDICATED_ADMIN("config.chiseled_enchanting_table.session.dedicated_admin", true),
-        DEDICATED_READONLY("config.chiseled_enchanting_table.session.dedicated_readonly", false);
+        DEDICATED_READONLY("config.chiseled_enchanting_table.session.dedicated_readonly", false),
+        MODPACK_LOCKED("config.chiseled_enchanting_table.session.modpack_locked", false);
 
         private final String bannerKey;
         private final boolean writable;
@@ -278,15 +279,45 @@ public final class ConfigCatalog {
         }
 
         public OptionAvailability evaluate(Draft draft, SessionMode sessionMode) {
+            ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.effectivePackPolicy();
             boolean parentOk = activeWhen.test(draft);
-            String reason = null;
             if (!sessionMode.writable()) {
-                reason = "config.chiseled_enchanting_table.reason.server_readonly";
-            } else if (!parentOk && dynamicInactiveReasonKey != null) {
-                reason = dynamicInactiveReasonKey.apply(draft);
+                String roReason = sessionMode == SessionMode.MODPACK_LOCKED
+                    ? "config.chiseled_enchanting_table.reason.pack_locked"
+                    : "config.chiseled_enchanting_table.reason.server_readonly";
+                return new OptionAvailability(
+                    false,
+                    parentOk,
+                    roReason,
+                    effectScope,
+                    isModifiedFromDefault(draft)
+                );
             }
+            if (policy.isKeyLocked(key)) {
+                return new OptionAvailability(
+                    false,
+                    parentOk,
+                    "config.chiseled_enchanting_table.reason.pack_locked",
+                    effectScope,
+                    isModifiedFromDefault(draft)
+                );
+            }
+            if (!"override_datapacks".equals(key)
+                && policy.datapackOverriddenKeys().contains(key)
+                && (!draft.overrideDatapacks || policy.enforceDatapackPriority())) {
+                return new OptionAvailability(
+                    false,
+                    parentOk,
+                    "config.chiseled_enchanting_table.reason.datapack_priority",
+                    effectScope,
+                    isModifiedFromDefault(draft)
+                );
+            }
+            String reason = !parentOk && dynamicInactiveReasonKey != null
+                ? dynamicInactiveReasonKey.apply(draft)
+                : null;
             return new OptionAvailability(
-                sessionMode.writable() && parentOk,
+                parentOk,
                 parentOk,
                 reason,
                 effectScope,

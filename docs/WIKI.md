@@ -181,7 +181,12 @@
 - **智能适用性逻辑与多人权限同步**：
   - **7 条父子适用性链路**：当父级总开关关闭或父级模式不匹配时（例如关闭「要求台周呼吸空间」、或将「母本消耗模式」设为「永久保留」、或关闭「启用退魔洗练总开关」导致子项与「破除诅咒消耗」两级联动失效），子配置项自动置灰锁定并直观提示生效前提，同时保留原数值不丢失；
   - **跨字段一致性约束**：拖动滑块时自动维护上下界与经济守恒关系（如 `阶段一 ≤ 阶段二 ≤ 满阶书架`、`木书架减免 ≤ 总减免上限`、`外来返还 ≤ 本台溯源返还`、`最少藏书 ≤ 最多藏书`、扫描总体积上限保护）；
-  - **多人联机实时同步**：单人世界与专用服 OP 修改保存后通过 `SyncRuntimeConfigPayload` 与 `EnchantCostTablePayload` 全服实时推送生效；普通玩家打开面板时自动切换为 `🔒 服务器只读检视` 模式，可透明查看当前服务器全部真实规则与默认值对比。
+- **数据包优先原则与服务器 / 整合包防篡改锁定机制（`pack_policy.json`）**：
+  - **默认严格「数据包优先于游戏内配置」（`override_datapacks = false`）**：任何外部数据包（存档 `datapacks/`、KubeJS、Paxi、OpenLoader 或附属核心模组 JAR）中显式声明的配置项，默认**无条件优先于玩家的 `config/chiseled_enchanting_table.json` 与游戏内面板修改**；被数据包接管的条目会在面板中自动锁定并注明 `📦 当前由外部数据包优先接管生效`，未被数据包涉及的其他选项仍允许玩家自由微调；
+  - **多人服务器防作弊保护**：所有附魔花费、书架判定、母本损耗/回复、宝藏顿悟、退魔返还与战利品全部 **100% 服务端权威计算**；普通玩家无 `GAMEMASTERS` / `chiseled_enchanting_table:config/manage` 权限时，本地修改 `config/*.json` 或伪造发包均完全无效，服务端会直接拦截并重推权威规则；
+  - **整合包单人防私改策略（`data/chiseled_enchanting_table/chiseled_enchanting_table/pack_policy.json`）**：整合包作者可在 KubeJS（`ServerEvents.highPriorityData`）、Paxi 或自定义核心模组 `.jar` 中覆盖 `pack_policy.json`：
+    - `"enforce_datapack_priority": true`：强制锁死数据包最高优先级，即便玩家手动用记事本把 `config/chiseled_enchanting_table.json` 中的 `"override_datapacks"` 改为 `true` 也无法覆盖数据包；
+    - `"lock_in_game_config": true`（或按需指定 `"locked_keys": [...]`）：将全部（或指定核心平衡项）彻底锁定为 `🔒 整合包 / 服务器统一配置已锁定（只读检视）`，单人存档面板与 `config/*.json` 外部改档均不再覆写整合包设定。
 
 ### 9.2 JEI / REI 双向查询与底层数据包表
 - **可选客户端联动（无硬前置）**：安装 JEI 或 REI 时自动注册 **「纂刻附魔」** 与 **「纂刻置换与退魔」** 分类，专用服配置与自定义数据包自动通过 `EnchantCostTablePayload` 同步到客户端界面、秘典图解与 JEI / REI。

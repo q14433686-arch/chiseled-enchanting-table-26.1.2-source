@@ -392,8 +392,8 @@
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.keep_both": "保留原版并追加",
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.strip_vanilla": "替换原版附魔书",
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.disabled": "不改动战利品箱",
-    "config.chiseled_enchanting_table.opt.override_datapacks": "游戏内配置覆盖数据包",
-    "config.chiseled_enchanting_table.opt.override_datapacks.desc": "开启时本界面配置优先于数据包；关闭时仅已改项覆盖数据包",
+    "config.chiseled_enchanting_table.opt.override_datapacks": "允许游戏内配置覆盖外部数据包",
+    "config.chiseled_enchanting_table.opt.override_datapacks.desc": "默认关闭：外部数据包优先级严格高于游戏内配置。仅在未被整合包锁定时开启，方可让游戏内设置覆盖外部数据包中的同名项。",
     "config.chiseled_enchanting_table.opt.enchanted_book_stack_size": "附魔书最大堆叠数量",
     "config.chiseled_enchanting_table.opt.enchanted_book_stack_size.desc": "配合假定单本附魔书的第三方机器时可改为 1",
     "config.chiseled_enchanting_table.opt.vanilla_table_mode": "原版附魔台行为规则",
@@ -510,5 +510,8 @@
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_shelves": "二档温养书架阈值",
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_shelves.desc": "触发第二档大书库共鸣回复突破所需的附近书架总数（默认 42 架）。",
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds": "二档每点耐久回复时间",
-    "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds.desc": "达到二档书架数时每恢复 1 点母本耐久所需秒数（默认 42 架时 10 秒/+1，超出后继续微幅提速）。"
+    "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds.desc": "达到二档书架数时每恢复 1 点母本耐久所需秒数（默认 42 架时 10 秒/+1，超出后继续微幅提速）。",
+    "config.chiseled_enchanting_table.session.modpack_locked": "🔒 整合包 / 服务器统一配置已锁定（只读检视）",
+    "config.chiseled_enchanting_table.reason.pack_locked": "该项已由整合包或服务器统一策略（pack_policy.json）强制锁定，禁止修改。",
+    "config.chiseled_enchanting_table.reason.datapack_priority": "当前由外部数据包优先接管生效（默认数据包优先于游戏内配置）。"
 }

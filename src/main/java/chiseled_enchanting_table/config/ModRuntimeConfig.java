@@ -107,6 +107,86 @@ public record ModRuntimeConfig(
     @Nullable
     private static volatile ModRuntimeConfig remoteServerInstance;
     private static volatile boolean clientCanEditServerConfig = false;
+    private static volatile PackPolicy serverPackPolicy = PackPolicy.NONE;
+    @Nullable
+    private static volatile PackPolicy remotePackPolicy;
+
+    /**
+     * Authoritative governance policy loaded from datapacks ({@code pack_policy.json} plus any
+     * keys explicitly specified by external datapacks).
+     */
+    public record PackPolicy(
+        boolean enforceDatapackPriority,
+        boolean lockInGameConfig,
+        Set<String> datapackOverriddenKeys,
+        Set<String> lockedKeys
+    ) {
+        public static final PackPolicy NONE = new PackPolicy(false, false, Set.of(), Set.of());
+
+        public PackPolicy {
+            datapackOverriddenKeys = datapackOverriddenKeys == null
+                ? Set.of()
+                : Collections.unmodifiableSet(new LinkedHashSet<>(datapackOverriddenKeys));
+            lockedKeys = lockedKeys == null
+                ? Set.of()
+                : Collections.unmodifiableSet(new LinkedHashSet<>(lockedKeys));
+        }
+
+        public boolean isKeyLocked(String key) {
+            if (lockInGameConfig) {
+                return true;
+            }
+            if ("override_datapacks".equals(key) && enforceDatapackPriority) {
+                return true;
+            }
+            return lockedKeys.contains(key);
+        }
+
+        public JsonObject toJson() {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("enforce_datapack_priority", enforceDatapackPriority);
+            obj.addProperty("lock_in_game_config", lockInGameConfig);
+            com.google.gson.JsonArray dpArr = new com.google.gson.JsonArray();
+            for (String k : datapackOverriddenKeys) dpArr.add(k);
+            obj.add("datapack_overridden_keys", dpArr);
+            com.google.gson.JsonArray lockArr = new com.google.gson.JsonArray();
+            for (String k : lockedKeys) lockArr.add(k);
+            obj.add("locked_keys", lockArr);
+            return obj;
+        }
+
+        public String toJsonString() {
+            return GSON.toJson(toJson());
+        }
+
+        public static PackPolicy fromJson(JsonObject root, Set<String> externalDatapackKeys) {
+            boolean enforceDp = root != null && boolOr(root, "enforce_datapack_priority", false);
+            boolean lockAll = root != null && boolOr(root, "lock_in_game_config", false);
+            Set<String> dpKeys = new LinkedHashSet<>();
+            if (externalDatapackKeys != null) {
+                dpKeys.addAll(externalDatapackKeys);
+            }
+            if (root != null && root.has("datapack_overridden_keys") && root.get("datapack_overridden_keys").isJsonArray()) {
+                for (JsonElement el : root.getAsJsonArray("datapack_overridden_keys")) {
+                    if (el.isJsonPrimitive()) dpKeys.add(el.getAsString());
+                }
+            }
+            Set<String> locked = new LinkedHashSet<>();
+            if (root != null && root.has("locked_keys") && root.get("locked_keys").isJsonArray()) {
+                for (JsonElement el : root.getAsJsonArray("locked_keys")) {
+                    if (el.isJsonPrimitive()) locked.add(el.getAsString());
+                }
+            }
+            return new PackPolicy(enforceDp, lockAll, dpKeys, locked);
+        }
+
+        public static PackPolicy fromJsonString(String raw) {
+            if (raw == null || raw.isBlank()) {
+                return NONE;
+            }
+            return fromJson(JsonParser.parseString(raw).getAsJsonObject(), Set.of());
+        }
+    }
 
     public ModRuntimeConfig {
         enchantedBookStackSize = clampInt(enchantedBookStackSize, 1, 64);
@@ -171,8 +251,38 @@ public record ModRuntimeConfig(
             : Collections.unmodifiableSet(new LinkedHashSet<>(customizedKeys));
     }
 
+    public ModRuntimeConfig withEnforcedPolicy(PackPolicy policy) {
+        if (policy == null || !policy.enforceDatapackPriority() || !this.overrideDatapacks) {
+            return this;
+        }
+        Draft d = this.toDraft();
+        d.overrideDatapacks = false;
+        d.customizedKeys.remove("override_datapacks");
+        return d.build();
+    }
+
     public boolean shouldApplyKey(String key) {
-        return overrideDatapacks || customizedKeys.contains(key);
+        PackPolicy policy = effectivePackPolicy();
+        if (policy.isKeyLocked(key)) {
+            return false;
+        }
+        if (policy.datapackOverriddenKeys().contains(key)) {
+            return !policy.enforceDatapackPriority() && overrideDatapacks;
+        }
+        return true;
+    }
+
+    public static PackPolicy serverPackPolicy() {
+        return serverPackPolicy;
+    }
+
+    public static void setServerPackPolicy(PackPolicy policy) {
+        serverPackPolicy = policy != null ? policy : PackPolicy.NONE;
+    }
+
+    public static PackPolicy effectivePackPolicy() {
+        PackPolicy remote = remotePackPolicy;
+        return remote != null ? remote : serverPackPolicy;
     }
 
     public Draft toDraft() {
@@ -213,13 +323,19 @@ public record ModRuntimeConfig(
         return loaded;
     }
 
-    public static void applyRemoteSync(ModRuntimeConfig remote, boolean canEdit) {
+    public static void applyRemoteSync(ModRuntimeConfig remote, PackPolicy policy, boolean canEdit) {
         remoteServerInstance = remote;
+        remotePackPolicy = policy;
         clientCanEditServerConfig = canEdit;
+    }
+
+    public static void applyRemoteSync(ModRuntimeConfig remote, boolean canEdit) {
+        applyRemoteSync(remote, null, canEdit);
     }
 
     public static void clearRemoteSync() {
         remoteServerInstance = null;
+        remotePackPolicy = null;
         clientCanEditServerConfig = false;
     }
 
@@ -471,7 +587,7 @@ public record ModRuntimeConfig(
 
     /** Mutable editor buffer enforcing live cross-field coherence as users drag sliders or click toggles. */
     public static final class Draft {
-        public boolean overrideDatapacks = true;
+        public boolean overrideDatapacks = false;
         public int enchantedBookStackSize = 64;
         public VanillaTableMode vanillaTableMode = VanillaTableMode.BOOKS;
         public boolean anvilFlatRepairCost = true;

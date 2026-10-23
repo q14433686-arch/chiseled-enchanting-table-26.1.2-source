@@ -392,8 +392,8 @@
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.keep_both": "Keep Vanilla + Add",
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.strip_vanilla": "Replace Vanilla Books",
     "config.chiseled_enchanting_table.enum.vanilla_chest_books_mode.disabled": "Vanilla Unchanged",
-    "config.chiseled_enchanting_table.opt.override_datapacks": "In-Game Config Overrides Datapacks",
-    "config.chiseled_enchanting_table.opt.override_datapacks.desc": "Apply these settings over world datapack JSON tables",
+    "config.chiseled_enchanting_table.opt.override_datapacks": "ゲーム内設定で外部データパックを上書き",
+    "config.chiseled_enchanting_table.opt.override_datapacks.desc": "既定オフ：外部データパックがゲーム内設定より優先されます。ロックされていない環境でのみオンにすると上書き可能です。",
     "config.chiseled_enchanting_table.opt.enchanted_book_stack_size": "Enchanted Book Max Stack Size",
     "config.chiseled_enchanting_table.opt.enchanted_book_stack_size.desc": "Set to 1 if third-party machines assume non-stackable books",
     "config.chiseled_enchanting_table.opt.vanilla_table_mode": "Vanilla Enchanting Table Rule",
@@ -510,5 +510,8 @@
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_shelves": "第二段階の本棚数しきい値",
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_shelves.desc": "第二段階の大書庫共鳴回復に必要な周囲の本棚数（既定：42）。",
     "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds": "第二段階の回復間隔（秒）",
-    "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds.desc": "第二段階到達時に耐久 +1 回復するまでの秒数（既定：42 棚で 10 秒）。"
+    "config.chiseled_enchanting_table.opt.tome_regen_tier2_seconds.desc": "第二段階到達時に耐久 +1 回復するまでの秒数（既定：42 棚で 10 秒）。",
+    "config.chiseled_enchanting_table.session.modpack_locked": "🔒 Modパック / サーバー統一設定ロック中（閲覧専用）",
+    "config.chiseled_enchanting_table.reason.pack_locked": "Modパックまたはサーバーの統一ポリシー（pack_policy.json）によりロックされています。",
+    "config.chiseled_enchanting_table.reason.datapack_priority": "外部データパックの設定が優先適用されています（既定でデータパック優先）。"
 }

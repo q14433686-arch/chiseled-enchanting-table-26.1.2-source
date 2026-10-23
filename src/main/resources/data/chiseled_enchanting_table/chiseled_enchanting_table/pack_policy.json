@@ -1,0 +1,6 @@
+{
+  "_comment": "Modpack & server unified configuration governance policy. Override this file inside a datapack, KubeJS data script, Paxi/OpenLoader pack, or companion mod JAR to enforce unified rules and prevent client/player tampering.",
+  "enforce_datapack_priority": false,
+  "lock_in_game_config": false,
+  "locked_keys": []
+}

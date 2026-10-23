@@ -115,7 +115,8 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(ModConfigNetworking.SyncRuntimeConfigPayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> {
                 ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.json());
-                ModRuntimeConfig.applyRemoteSync(synced, payload.canEdit());
+                ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.PackPolicy.fromJsonString(payload.policyJson());
+                ModRuntimeConfig.applyRemoteSync(synced, policy, payload.canEdit());
                 ChiseledEnchantingTableData.applyRuntimeConfig(synced);
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {

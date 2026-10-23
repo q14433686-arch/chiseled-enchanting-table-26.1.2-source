@@ -124,6 +124,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     }
 
     private static SessionMode detectSessionMode() {
+        if (ModRuntimeConfig.effectivePackPolicy().lockInGameConfig()) {
+            return SessionMode.MODPACK_LOCKED;
+        }
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) {
             return SessionMode.OFFLINE_CLIENT;

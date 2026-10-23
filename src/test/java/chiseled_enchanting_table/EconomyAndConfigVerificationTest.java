@@ -915,6 +915,8 @@ class EconomyAndConfigVerificationTest {
             "config.chiseled_enchanting_table.msg.reloaded",
             "config.chiseled_enchanting_table.msg.reset_all",
             "config.chiseled_enchanting_table.reason.server_readonly",
+            "config.chiseled_enchanting_table.reason.pack_locked",
+            "config.chiseled_enchanting_table.reason.datapack_priority",
             "config.chiseled_enchanting_table.reason.need_direct_gates",
             "config.chiseled_enchanting_table.reason.need_breathing_room",
             "config.chiseled_enchanting_table.reason.need_wear_mode",
@@ -1075,6 +1077,101 @@ class EconomyAndConfigVerificationTest {
             enchantAppSrc.contains("handler.refreshLiveShelfState();"),
             "EnchantmentApplication.finish must push live Master Tome charges immediately after enchanting"
         );
+    }
+
+    @Test
+    void datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() throws Exception {
+        try {
+            // 1. Out-of-the-box default strictly prioritizes external datapacks over in-game config.
+            assertFalse(
+                chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.overrideDatapacks(),
+                "override_datapacks must default to false so external datapacks take strict priority"
+            );
+            JsonObject shippedPolicy = readResourceJson("pack_policy.json");
+            var parsedDefaultPolicy = chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.fromJson(
+                shippedPolicy,
+                Set.of()
+            );
+            assertEquals(chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.NONE, parsedDefaultPolicy);
+
+            // 2. External datapack JSON key extraction covers nested & flat tables accurately.
+            Set<String> lrKeys = chiseled_enchanting_table.data.ChiseledEnchantingTableData.extractConfigKeysFromDatapackJson(
+                "library_resonance",
+                JsonParser.parseString("""
+                    {
+                      "chiseled_mastery": {
+                        "max_tome_uses": 8,
+                        "tome_regen_tier1_shelves": 36
+                      }
+                    }
+                    """).getAsJsonObject()
+            );
+            assertEquals(Set.of("max_tome_uses", "tome_regen_tier1_shelves"), lrKeys);
+
+            // 3. With default override_datapacks=false, even a player-tampered config file cannot beat an active datapack key!
+            var dpPolicy = new chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy(
+                false,
+                false,
+                lrKeys,
+                Set.of()
+            );
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(dpPolicy);
+
+            var tamperedDraft = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
+            tamperedDraft.maxTomeUses = 128;
+            tamperedDraft.customizedKeys.add("max_tome_uses");
+            var tamperedCfg = tamperedDraft.build();
+            assertFalse(
+                tamperedCfg.shouldApplyKey("max_tome_uses"),
+                "Datapack key must win over player config when override_datapacks is false"
+            );
+            assertTrue(
+                tamperedCfg.shouldApplyKey("book_copy_wear_cost"),
+                "Non-datapack keys must still respect the player's in-game config"
+            );
+
+            var live = chiseled_enchanting_table.config.ConfigCatalog.SessionMode.SINGLEPLAYER_LIVE;
+            var maxUsesOpt = chiseled_enchanting_table.config.ConfigCatalog.byKey("max_tome_uses").orElseThrow();
+            var dpAvail = maxUsesOpt.evaluate(tamperedDraft, live);
+            assertFalse(dpAvail.editable());
+            assertEquals("config.chiseled_enchanting_table.reason.datapack_priority", dpAvail.inactiveReasonKey());
+
+            // 4. Modpack enforce_datapack_priority=true blocks even manual "override_datapacks": true tampering on disk!
+            var enforcedPolicy = new chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy(
+                true,
+                false,
+                lrKeys,
+                Set.of("disenchant_enabled")
+            );
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(enforcedPolicy);
+            tamperedDraft.overrideDatapacks = true;
+            var forcedTamper = tamperedDraft.build();
+            assertFalse(forcedTamper.shouldApplyKey("max_tome_uses"));
+            assertFalse(forcedTamper.shouldApplyKey("disenchant_enabled"));
+            var overrideOpt = chiseled_enchanting_table.config.ConfigCatalog.byKey("override_datapacks").orElseThrow();
+            assertFalse(overrideOpt.evaluate(tamperedDraft, live).editable());
+            assertEquals(
+                "config.chiseled_enchanting_table.reason.pack_locked",
+                overrideOpt.evaluate(tamperedDraft, live).inactiveReasonKey()
+            );
+
+            // 5. Full unified pack lock (lock_in_game_config=true) locks ALL 55 options across disk & UI.
+            var fullLock = chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.fromJson(
+                JsonParser.parseString("{\"lock_in_game_config\": true}").getAsJsonObject(),
+                Set.of()
+            );
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(fullLock);
+            for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
+                assertFalse(forcedTamper.shouldApplyKey(opt.key()), "Full pack lock must neutralize " + opt.key());
+                assertFalse(
+                    opt.evaluate(tamperedDraft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.MODPACK_LOCKED).editable()
+                );
+            }
+        } finally {
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(
+                chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.NONE
+            );
+        }
     }
 
     private static int countSubstring(String haystack, String needle) {
