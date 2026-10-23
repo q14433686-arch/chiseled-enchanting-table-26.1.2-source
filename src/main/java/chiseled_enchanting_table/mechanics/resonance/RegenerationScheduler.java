@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Pure per-world-session scheduler. The server adapter must collect ALL eligible covering tables
+ * Pure, server-thread-confined per-world-session scheduler. The server adapter must collect ALL eligible covering tables
  * for a window, then settle once. No item timestamp is trusted and no world/ItemStack is mutated here.
  * K must include world/session, shelf position and slot; bookIdentity is compared by reference.
  */
@@ -72,16 +72,16 @@ public final class RegenerationScheduler<K> {
         return Map.copyOf(recoveries);
     }
 
-    /** Call only after adapter verified identity and successfully replaced the exact observed book. */
+    /** Partial recovery only: fully restored slots are already evicted and need no acknowledgement. */
     public void acknowledgeReplacement(K slot, Object expectedIdentity, Object replacementIdentity, int remainingWear) {
         Objects.requireNonNull(replacementIdentity);
         Progress state = previous.get(slot);
         if (state == null || state.identity() != expectedIdentity || state.expectedWear() != remainingWear) {
             throw new IllegalStateException("Stale regeneration acknowledgement");
         }
-        Map<K, Progress> next = new HashMap<>(previous);
-        next.put(slot, new Progress(replacementIdentity, remainingWear, state.interval(), state.ticks()));
-        previous = next;
+        // State is private and thread-confined; cloning the entire map per recovered book would
+        // turn a large simultaneous recovery batch into quadratic work.
+        previous.put(slot, new Progress(replacementIdentity, remainingWear, state.interval(), state.ticks()));
     }
 
     public int trackedSlots() { return previous.size(); }

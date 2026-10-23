@@ -30,7 +30,7 @@ class RuleArchitectureTest {
         assertEquals(RuleBook.Origin.STARTUP, snapshot.rule("stack").origin());
     }
 
-    @Test void fullLockCoversDirectConsumersNotJustUiPredicates() {
+    @Test void fullLockResolvesEveryDefinedRuntimeKeyNotJustDatapackKeys() {
         RuleBook book = book();
         var snapshot = book.prepare(Map.of("anvil", false, "wear", 128), Map.of("wear", 8), true,
             new RuleBook.Policy(false, true, Set.of())).snapshot();
