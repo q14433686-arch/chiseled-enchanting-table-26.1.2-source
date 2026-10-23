@@ -124,11 +124,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     @Override
+    public boolean isPauseScreen() {
+        return this.configOverlay != null && this.configOverlay.isPauseScreen();
+    }
+
+    @Override
     protected void containerTick() {
         super.containerTick();
-        if (this.configOverlay != null) {
-            this.configOverlay.tick();
-        }
         int sig = this.menu.transformationBatchSignature();
         if (sig != this.lastBatchSignature) {
             this.lastBatchSignature = sig;

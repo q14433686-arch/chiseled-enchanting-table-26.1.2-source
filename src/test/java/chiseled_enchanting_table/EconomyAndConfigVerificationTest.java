@@ -951,6 +951,11 @@ class EconomyAndConfigVerificationTest {
 
         String buildGradle = Files.readString(Path.of("build.gradle"));
         assertTrue(buildGradle.contains("exclude 'com/terraformersmc/**'"));
+
+        String cfgScreenSrc = Files.readString(Path.of("src/client/java/chiseled_enchanting_table/gui/config/ChiseledEnchantingConfigScreen.java"));
+        assertTrue(cfgScreenSrc.contains("public boolean isPauseScreen() {\n        return true;\n    }"));
+        String tableScreenSrc = Files.readString(Path.of("src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java"));
+        assertTrue(tableScreenSrc.contains("return this.configOverlay != null && this.configOverlay.isPauseScreen();"));
     }
 
     private static int countSubstring(String haystack, String needle) {

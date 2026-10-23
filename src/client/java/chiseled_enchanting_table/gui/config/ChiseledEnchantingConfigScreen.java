@@ -98,7 +98,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     @Nullable
     private SliderTrack activeDraggingSlider = null;
     private boolean draggingScrollbar = false;
-    private int statusToastTicks = 0;
+    private long statusToastUntilMs = 0L;
 
     public ChiseledEnchantingConfigScreen(@Nullable Screen parentScreen) {
         this(parentScreen, null);
@@ -157,15 +157,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() {
-        return false;
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-        if (this.statusToastTicks > 0) {
-            this.statusToastTicks--;
-        }
+        return true;
     }
 
     @Override
@@ -214,19 +206,18 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             ModRuntimeConfig.setLocalAndSave(built);
             ChiseledEnchantingTableData.applyRuntimeConfig(built);
         } else if (this.sessionMode == SessionMode.SINGLEPLAYER_LIVE) {
+            ModRuntimeConfig.setLocalAndSave(built);
+            ChiseledEnchantingTableData.applyRuntimeConfig(built);
             var integrated = mc.getSingleplayerServer();
             if (integrated != null) {
                 integrated.execute(() -> ModConfigNetworking.applyAndBroadcast(integrated, built));
-            } else {
-                ModRuntimeConfig.setLocalAndSave(built);
-                ChiseledEnchantingTableData.applyRuntimeConfig(built);
             }
         } else if (this.sessionMode == SessionMode.DEDICATED_ADMIN) {
             ModRuntimeConfig.applyRemoteSync(built, true);
             ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(built.toJsonString()));
         }
 
-        this.statusToastTicks = 60;
+        this.statusToastUntilMs = System.currentTimeMillis() + 2600L;
         if (closeAfterSave) {
             onClose();
         }
@@ -669,7 +660,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int statusMaxW = Math.max(40, cancelX - 8 - statusX);
         String statusText;
         int statusCol;
-        if (this.statusToastTicks > 0) {
+        if (System.currentTimeMillis() < this.statusToastUntilMs) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.saved");
             statusCol = 0xFF6BFFB3;
         } else if (restartChanged) {
