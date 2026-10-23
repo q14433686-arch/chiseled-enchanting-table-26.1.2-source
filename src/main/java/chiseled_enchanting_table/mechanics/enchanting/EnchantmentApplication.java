@@ -120,22 +120,23 @@ public final class EnchantmentApplication {
                 enchantment_level,
                 targetWasBook
             );
-            if (outcome == MasterTomeWear.WearOutcome.STEPPED_DOWN) {
-                handler.player.displayClientMessage(
-                    Component.translatable(
-                        "gui.chiseled_enchanting_table.tome_wear.stepped_down",
-                        enchantment.value().description()
-                    ).withStyle(ChatFormatting.GOLD),
-                    true
-                );
-            } else if (outcome == MasterTomeWear.WearOutcome.DEPLETED) {
-                handler.player.displayClientMessage(
-                    Component.translatable(
-                        "gui.chiseled_enchanting_table.tome_wear.depleted",
-                        enchantment.value().description()
-                    ).withStyle(ChatFormatting.YELLOW),
-                    true
-                );
+            if (handler.player instanceof ServerPlayer serverPlayer) {
+                if (outcome == MasterTomeWear.WearOutcome.STEPPED_DOWN) {
+                    serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
+                        Component.translatable(
+                            "gui.chiseled_enchanting_table.tome_wear.stepped_down",
+                            enchantment.value().description(),
+                            Math.max(1, enchantment_level - 1)
+                        ).withStyle(ChatFormatting.GOLD)
+                    ));
+                } else if (outcome == MasterTomeWear.WearOutcome.DEPLETED) {
+                    serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
+                        Component.translatable(
+                            "gui.chiseled_enchanting_table.tome_wear.depleted",
+                            enchantment.value().description()
+                        ).withStyle(ChatFormatting.YELLOW)
+                    ));
+                }
             }
         }
 
