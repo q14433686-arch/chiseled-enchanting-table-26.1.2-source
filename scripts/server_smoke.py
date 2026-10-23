@@ -21,6 +21,7 @@ if (RUN / 'world').exists() or (RUN / 'audit-world').exists():
 (RUN / 'server.properties').write_text(
     'online-mode=false\nserver-ip=127.0.0.1\nserver-port=0\n'
     'level-name=audit-world\nlevel-type=minecraft:flat\n'
+    'generator-settings={"layers":[{"block":"minecraft:bedrock","height":1}],"biome":"minecraft:plains","lakes":false,"features":false}\n'
     'generate-structures=false\nview-distance=2\nsimulation-distance=2\nmax-tick-time=60000\n')
 log_path = ROOT / 'build-reports/server-smoke.log'
 log_path.parent.mkdir(exist_ok=True)
@@ -49,7 +50,7 @@ try:
             log.write(line)
             log.flush()
             print(line, end='', flush=True)
-            if any(marker in line for marker in ('Registry loading errors', 'Failed to load registries',
+            if '/ERROR]' in line or any(marker in line for marker in ('Registry loading errors', 'Failed to load registries',
                     'Mixin apply failed', 'MixinTransformerError', 'Failed to load datapacks',
                     'Couldn\'t parse', 'Failed to parse', 'Error loading', 'Failed to validate',
                     'Failed to send the enchanting cost table')):

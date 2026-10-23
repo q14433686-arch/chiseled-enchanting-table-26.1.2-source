@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.mechanics.loot;
 
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.Optional;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -23,7 +24,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public class DepthBasedEfficiencyFunction extends LootItemConditionalFunction {
     public static final MapCodec<DepthBasedEfficiencyFunction> MAP_CODEC =
-        MapCodec.unit(DepthBasedEfficiencyFunction::new);
+        RecordCodecBuilder.mapCodec(i -> commonFields(i).apply(i, DepthBasedEfficiencyFunction::new));
 
     private static final ResourceKey<Enchantment> EFFICIENCY_KEY =
         ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("efficiency"));

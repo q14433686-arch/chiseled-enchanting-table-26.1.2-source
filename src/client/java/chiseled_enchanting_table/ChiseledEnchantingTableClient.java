@@ -29,6 +29,16 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ChiseledEnchantingTableClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
+        ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> {
+            if (chiseled_enchanting_table.menu.EnchantingProtocol.incompatible(
+                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID),
+                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE))) {
+                listener.getConnection().disconnect(net.minecraft.network.chat.Component.literal(
+                    chiseled_enchanting_table.menu.EnchantingProtocol.MISMATCH_MESSAGE));
+            }
+        });
         ArcaneGrimoireItem.CLIENT_OPEN_ACTION = player -> {
             GrimoireSoundHelper.playOpen();
             net.minecraft.client.Minecraft.getInstance().gui.setScreen(new ArcaneGrimoireScreen(null));

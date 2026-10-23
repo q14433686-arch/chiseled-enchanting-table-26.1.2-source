@@ -26,6 +26,9 @@ public final class EnchantCostSync {
     private EnchantCostSync() {}
 
     public static void init() {
+        PayloadTypeRegistry.clientboundPlay().register(EnchantingProtocol.Capability.TYPE, EnchantingProtocol.Capability.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(EnchantingProtocol.Capability.TYPE, EnchantingProtocol.Capability.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
         PayloadTypeRegistry.clientboundPlay().register(EnchantCostTablePayload.TYPE, EnchantCostTablePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(
             ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.TYPE,
@@ -35,6 +38,12 @@ public final class EnchantCostSync {
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
             ServerPlayer player = listener.player;
             if (player != null) {
+                if (EnchantingProtocol.incompatible(
+                    ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE),
+                    ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE))) {
+                    player.connection.disconnect(net.minecraft.network.chat.Component.literal(EnchantingProtocol.MISMATCH_MESSAGE));
+                    return;
+                }
                 sendTo(player);
             }
         });
@@ -55,7 +64,8 @@ public final class EnchantCostSync {
 
     /** Pushes the player's resolved cost table, if their client registered the payload. */
     public static void sendTo(ServerPlayer player) {
-        if (!ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)) {
+        if (!ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)
+            || !ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) {
             return;
         }
         try {
