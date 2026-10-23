@@ -2,12 +2,15 @@ package chiseled_enchanting_table;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.mechanics.resonance.LibraryResonance;
+import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ReopenTablePayload;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -15,6 +18,8 @@ import com.google.gson.JsonParser;
 import io.netty.buffer.Unpooled;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
