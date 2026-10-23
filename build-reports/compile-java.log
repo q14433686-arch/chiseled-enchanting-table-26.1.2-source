@@ -1,4 +1,4 @@
-commit: 52ce51f576aff15a460add015037e1cb13bc8476
+commit: 5978595a559edd0d7e8f5c34c215bbd097d2d2f7
 branch: arena/eb218d80-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
@@ -38,11 +38,11 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :compileClientJava
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792723887585.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792723972034.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 59s
+BUILD SUCCESSFUL in 42s
 3 actionable tasks: 3 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
@@ -177,4 +177,4 @@ net.fabricmc.fabric-api:fabric-transitive-access-wideners-v1:8.1.16+52268a0e5d
 net.fabricmc:fabric-loader:0.19.5
 net.fabricmc:sponge-mixin:0.17.4+mixin.0.8.7
 
-== job status: cancelled ==
+== job status: success ==
