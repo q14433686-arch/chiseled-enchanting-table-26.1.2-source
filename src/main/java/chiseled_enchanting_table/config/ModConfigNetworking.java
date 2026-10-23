@@ -28,18 +28,23 @@ public final class ModConfigNetworking {
     public static final Identifier CONFIG_MANAGE_PERMISSION =
         ChiseledEnchantingTable.identifier("config/manage");
 
-    public record SyncRuntimeConfigPayload(String json, boolean canEdit, long requestId, boolean accepted) implements CustomPacketPayload {
+    public record SyncRuntimeConfigPayload(String json, String policyJson, String effectiveJson, boolean canEdit, long requestId, boolean accepted) implements CustomPacketPayload {
+        public SyncRuntimeConfigPayload(String json, boolean edit, long request, boolean accepted) {
+            this(json, "", json, edit, request, accepted);
+        }
         public static final CustomPacketPayload.Type<SyncRuntimeConfigPayload> TYPE =
             new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("sync_runtime_config_" + chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
 
         public static final StreamCodec<FriendlyByteBuf, SyncRuntimeConfigPayload> CODEC = StreamCodec.of(
             (buf, payload) -> {
                 buf.writeUtf(payload.json(), 262_144);
+                buf.writeUtf(payload.policyJson() == null ? "" : payload.policyJson(), 65_536);
+                buf.writeUtf(payload.effectiveJson(), 262_144);
                 buf.writeBoolean(payload.canEdit());
                 buf.writeLong(payload.requestId());
                 buf.writeBoolean(payload.accepted());
             },
-            buf -> new SyncRuntimeConfigPayload(buf.readUtf(262_144), buf.readBoolean(), buf.readLong(), buf.readBoolean())
+            buf -> new SyncRuntimeConfigPayload(buf.readUtf(262_144), buf.readUtf(65_536), buf.readUtf(262_144), buf.readBoolean(), buf.readLong(), buf.readBoolean())
         );
 
         @Override
@@ -68,6 +73,7 @@ public final class ModConfigNetworking {
     }
 
     public static boolean canPlayerManageConfig(MinecraftServer server, ServerPlayer player) {
+        if (ModRuntimeConfig.serverPackPolicy().lockInGameConfig()) return false;
         return mayManage(server.isDedicatedServer(), server.isSingleplayerOwner(player.nameAndId()),
             player.checkPermission(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS));
     }
@@ -104,6 +110,19 @@ public final class ModConfigNetworking {
         CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) -> {
             dispatcher.register(
                 Commands.literal("cet")
+                    .then(Commands.literal("cancel-ritual").executes(ctx -> {
+                        ServerPlayer player = ctx.getSource().getPlayerOrException();
+                        if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
+                            && menu.tableBlockPos() != null
+                            && player.level().getBlockEntity(menu.tableBlockPos()) instanceof
+                                chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity table
+                            && table.cancelRitual(player.getUUID())) {
+                            player.sendSystemMessage(Component.literal("Ritual cancelled; stored input retained. Spent fees and wear are not refunded."));
+                            table.syncOpenMenusWatchingTable(player.level(), menu.tableBlockPos());
+                            return 1;
+                        }
+                        return 0;
+                    }))
                     .then(Commands.literal("reload-config")
                         .requires(PermissionPredicates.require(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS))
                         .executes(ctx -> {
@@ -120,6 +139,12 @@ public final class ModConfigNetworking {
                         .requires(PermissionPredicates.require(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS))
                         .executes(ctx -> {
                             MinecraftServer server = ctx.getSource().getServer();
+                            if (ModRuntimeConfig.serverPackPolicy().lockInGameConfig()) {
+                                ctx.getSource().sendFailure(
+                                    Component.translatable("config.chiseled_enchanting_table.reason.pack_locked")
+                                );
+                                return 0;
+                            }
                             applyAndBroadcast(server, ModRuntimeConfig.DEFAULT);
                             ctx.getSource().sendSuccess(
                                 () -> Component.translatable("config.chiseled_enchanting_table.msg.reset_all"),
@@ -132,8 +157,9 @@ public final class ModConfigNetworking {
     }
 
     public static void applyAndBroadcast(MinecraftServer server, ModRuntimeConfig updated) {
-        ModRuntimeConfig.setLocalAndSave(updated);
-        ChiseledEnchantingTableData.applyRuntimeConfig(updated);
+        ModRuntimeConfig sanitized = updated.withEnforcedPolicy(ModRuntimeConfig.serverPackPolicy());
+        ChiseledEnchantingTableData.applyRuntimeConfig(sanitized, ModRuntimeConfig.serverPackPolicy(),
+            () -> ModRuntimeConfig.setLocalAndSave(sanitized));
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             // Rule changes can invalidate opening-time unlock/scan snapshots. Vanilla returns inputs.
             if (p.containerMenu instanceof ChiseledEnchantingTableScreenHandler) p.closeContainer();
@@ -156,6 +182,8 @@ public final class ModConfigNetworking {
                 player,
                 new SyncRuntimeConfigPayload(
                     ModRuntimeConfig.get().toJsonString(),
+                    ModRuntimeConfig.serverPackPolicy().toJsonString(),
+                    ChiseledEnchantingTableData.runtimeConfiguration().toJsonString(),
                     canPlayerManageConfig(server, player), requestId, accepted
                 )
             );

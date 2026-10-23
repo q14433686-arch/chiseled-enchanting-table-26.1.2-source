@@ -92,7 +92,8 @@ public final class ConfigCatalog {
         OFFLINE_CLIENT("config.chiseled_enchanting_table.session.offline", true),
         SINGLEPLAYER_LIVE("config.chiseled_enchanting_table.session.singleplayer", true),
         DEDICATED_ADMIN("config.chiseled_enchanting_table.session.dedicated_admin", true),
-        DEDICATED_READONLY("config.chiseled_enchanting_table.session.dedicated_readonly", false);
+        DEDICATED_READONLY("config.chiseled_enchanting_table.session.dedicated_readonly", false),
+        MODPACK_LOCKED("config.chiseled_enchanting_table.session.modpack_locked", false);
 
         private final String bannerKey;
         private final boolean writable;
@@ -218,6 +219,9 @@ public final class ConfigCatalog {
             return getter.apply(d);
         }
 
+        /** Resolver-only assignment; normalize all related fields once after the complete overlay. */
+        public void setResolvedValue(Draft d, Object v) { setter.accept(d, v); }
+
         public void set(Draft d, Object v) {
             setter.accept(d, v);
             d.normalizeAfterEdit(key);
@@ -278,15 +282,45 @@ public final class ConfigCatalog {
         }
 
         public OptionAvailability evaluate(Draft draft, SessionMode sessionMode) {
+            ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.effectivePackPolicy();
             boolean parentOk = activeWhen.test(draft);
-            String reason = null;
             if (!sessionMode.writable()) {
-                reason = "config.chiseled_enchanting_table.reason.server_readonly";
-            } else if (!parentOk && dynamicInactiveReasonKey != null) {
-                reason = dynamicInactiveReasonKey.apply(draft);
+                String roReason = sessionMode == SessionMode.MODPACK_LOCKED
+                    ? "config.chiseled_enchanting_table.reason.pack_locked"
+                    : "config.chiseled_enchanting_table.reason.server_readonly";
+                return new OptionAvailability(
+                    false,
+                    parentOk,
+                    roReason,
+                    effectScope,
+                    isModifiedFromDefault(draft)
+                );
             }
+            if (policy.isKeyLocked(key)) {
+                return new OptionAvailability(
+                    false,
+                    parentOk,
+                    "config.chiseled_enchanting_table.reason.pack_locked",
+                    effectScope,
+                    isModifiedFromDefault(draft)
+                );
+            }
+            if (!"override_datapacks".equals(key)
+                && policy.datapackOverriddenKeys().contains(key)
+                && (!draft.overrideDatapacks || policy.enforceDatapackPriority())) {
+                return new OptionAvailability(
+                    false,
+                    parentOk,
+                    "config.chiseled_enchanting_table.reason.datapack_priority",
+                    effectScope,
+                    isModifiedFromDefault(draft)
+                );
+            }
+            String reason = !parentOk && dynamicInactiveReasonKey != null
+                ? dynamicInactiveReasonKey.apply(draft)
+                : null;
             return new OptionAvailability(
-                sessionMode.writable() && parentOk,
+                parentOk,
                 parentOk,
                 reason,
                 effectScope,
@@ -532,6 +566,57 @@ public final class ConfigCatalog {
             d -> d.tomeDepleteBehavior, (d, v) -> d.tomeDepleteBehavior = v, MasterTomeWear.DepleteBehavior::token,
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR,
             "config.chiseled_enchanting_table.reason.need_wear_mode"
+        ),
+        boolOpt(
+            "tome_regen_enabled", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            d -> d.tomeRegenEnabled, (d, v) -> d.tomeRegenEnabled = v,
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR,
+            "config.chiseled_enchanting_table.reason.need_wear_mode"
+        ),
+        intOpt(
+            "tome_regen_base_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 72_000, 600,
+            d -> d.tomeRegenBaseSeconds, (d, v) -> d.tomeRegenBaseSeconds = v,
+            d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenBaseSeconds),
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
+        intOpt(
+            "tome_regen_tier1_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 4, 96, 1,
+            d -> d.tomeRegenTier1Shelves, (d, v) -> d.tomeRegenTier1Shelves = v,
+            d -> d.tomeRegenTier1Shelves + "",
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
+        intOpt(
+            "tome_regen_tier1_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 48_000, 600,
+            d -> d.tomeRegenTier1Seconds, (d, v) -> d.tomeRegenTier1Seconds = v,
+            d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenTier1Seconds),
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
+        intOpt(
+            "tome_regen_tier2_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 4, 96, 1,
+            d -> d.tomeRegenTier2Shelves, (d, v) -> d.tomeRegenTier2Shelves = v,
+            d -> d.tomeRegenTier2Shelves + "",
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
+        intOpt(
+            "tome_regen_tier2_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 24_000, 300,
+            d -> d.tomeRegenTier2Seconds, (d, v) -> d.tomeRegenTier2Seconds = v,
+            d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenTier2Seconds),
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
         intOpt(
             "max_wooden_discount_percent", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 90, 1,

@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:bow"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.eternal_codex.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.eternal_codex.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:enchant_to_book",
+  "criteria": {
+    "eternal_codex": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "eternal_codex"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

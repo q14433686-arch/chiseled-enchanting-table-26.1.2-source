@@ -204,11 +204,17 @@ public final class BookshelfBookFiller {
         List<WeightedEntry> enchantCandidates = pool.enchantedBookProbability() > 0.0
             ? aggregateEnchantCandidates(pool, enchantmentLookup)
             : List.of();
+        double shelfWeatheringProb = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .rollShelfWeatheringProbability(random);
         for (int occupiedSlot : occupiedSlots) {
             boolean enchanted = random.nextDouble() < pool.enchantedBookProbability();
-            items.set(occupiedSlot, (enchanted && !enchantCandidates.isEmpty())
-                ? pickWeightedEnchantedBook(random, enchantCandidates)
-                : new ItemStack(Items.BOOK));
+            if (enchanted && !enchantCandidates.isEmpty()) {
+                items.set(occupiedSlot, pickWeightedEnchantedBook(random, enchantCandidates));
+            } else if (random.nextDouble() < shelfWeatheringProb) {
+                items.set(occupiedSlot, new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME));
+            } else {
+                items.set(occupiedSlot, new ItemStack(Items.BOOK));
+            }
         }
 
         BlockState state = baseState;

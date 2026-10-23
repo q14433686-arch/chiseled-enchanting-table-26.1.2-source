@@ -50,6 +50,12 @@ public record ModRuntimeConfig(
     int maxTomeUses,
     int bookCopyWearCost,
     MasterTomeWear.DepleteBehavior tomeDepleteBehavior,
+    boolean tomeRegenEnabled,
+    int tomeRegenBaseSeconds,
+    int tomeRegenTier1Shelves,
+    int tomeRegenTier1Seconds,
+    int tomeRegenTier2Shelves,
+    int tomeRegenTier2Seconds,
     int maxWoodenDiscountPercent,
     int maxTotalXpDiscountPercent,
     boolean bookCombineEnabled,
@@ -100,7 +106,90 @@ public record ModRuntimeConfig(
     private static volatile ModRuntimeConfig localInstance;
     @Nullable
     private static volatile ModRuntimeConfig remoteServerInstance;
+    private static volatile ModRuntimeConfig remotePreferences;
+    public static ModRuntimeConfig preferences() { return remotePreferences != null ? remotePreferences : get(); }
+    public static void setRemotePreferences(ModRuntimeConfig value) { remotePreferences = value; }
     private static volatile boolean clientCanEditServerConfig = false;
+    private static volatile PackPolicy serverPackPolicy = PackPolicy.NONE;
+    @Nullable
+    private static volatile PackPolicy remotePackPolicy;
+
+    /**
+     * Authoritative governance policy loaded from datapacks ({@code pack_policy.json} plus any
+     * keys explicitly specified by external datapacks).
+     */
+    public record PackPolicy(
+        boolean enforceDatapackPriority,
+        boolean lockInGameConfig,
+        Set<String> datapackOverriddenKeys,
+        Set<String> lockedKeys
+    ) {
+        public static final PackPolicy NONE = new PackPolicy(false, false, Set.of(), Set.of());
+
+        public PackPolicy {
+            datapackOverriddenKeys = datapackOverriddenKeys == null
+                ? Set.of()
+                : Collections.unmodifiableSet(new LinkedHashSet<>(datapackOverriddenKeys));
+            lockedKeys = lockedKeys == null
+                ? Set.of()
+                : Collections.unmodifiableSet(new LinkedHashSet<>(lockedKeys));
+        }
+
+        public boolean isKeyLocked(String key) {
+            if (lockInGameConfig) {
+                return true;
+            }
+            if ("override_datapacks".equals(key) && enforceDatapackPriority) {
+                return true;
+            }
+            return lockedKeys.contains(key);
+        }
+
+        public JsonObject toJson() {
+            JsonObject obj = new JsonObject();
+            obj.addProperty("enforce_datapack_priority", enforceDatapackPriority);
+            obj.addProperty("lock_in_game_config", lockInGameConfig);
+            com.google.gson.JsonArray dpArr = new com.google.gson.JsonArray();
+            for (String k : datapackOverriddenKeys) dpArr.add(k);
+            obj.add("datapack_overridden_keys", dpArr);
+            com.google.gson.JsonArray lockArr = new com.google.gson.JsonArray();
+            for (String k : lockedKeys) lockArr.add(k);
+            obj.add("locked_keys", lockArr);
+            return obj;
+        }
+
+        public String toJsonString() {
+            return GSON.toJson(toJson());
+        }
+
+        public static PackPolicy fromJson(JsonObject root, Set<String> externalDatapackKeys) {
+            boolean enforceDp = root != null && boolOr(root, "enforce_datapack_priority", false);
+            boolean lockAll = root != null && boolOr(root, "lock_in_game_config", false);
+            Set<String> dpKeys = new LinkedHashSet<>();
+            if (externalDatapackKeys != null) {
+                dpKeys.addAll(externalDatapackKeys);
+            }
+            if (root != null && root.has("datapack_overridden_keys") && root.get("datapack_overridden_keys").isJsonArray()) {
+                for (JsonElement el : root.getAsJsonArray("datapack_overridden_keys")) {
+                    if (el.isJsonPrimitive()) dpKeys.add(el.getAsString());
+                }
+            }
+            Set<String> locked = new LinkedHashSet<>();
+            if (root != null && root.has("locked_keys") && root.get("locked_keys").isJsonArray()) {
+                for (JsonElement el : root.getAsJsonArray("locked_keys")) {
+                    if (el.isJsonPrimitive()) locked.add(el.getAsString());
+                }
+            }
+            return new PackPolicy(enforceDp, lockAll, dpKeys, locked);
+        }
+
+        public static PackPolicy fromJsonString(String raw) {
+            if (raw == null || raw.isBlank()) {
+                return NONE;
+            }
+            return fromJson(JsonParser.parseString(raw).getAsJsonObject(), Set.of());
+        }
+    }
 
     public ModRuntimeConfig {
         enchantedBookStackSize = clampInt(enchantedBookStackSize, 1, 64);
@@ -125,6 +214,11 @@ public record ModRuntimeConfig(
         maxTomeUses = clampInt(maxTomeUses, 1, 256);
         bookCopyWearCost = clampInt(bookCopyWearCost, 1, maxTomeUses);
         tomeDepleteBehavior = tomeDepleteBehavior != null ? tomeDepleteBehavior : MasterTomeWear.DepleteBehavior.STEP_DOWN;
+        tomeRegenBaseSeconds = clampInt(tomeRegenBaseSeconds, 1, 86_400);
+        tomeRegenTier1Shelves = clampInt(tomeRegenTier1Shelves, 1, 128);
+        tomeRegenTier1Seconds = clampInt(tomeRegenTier1Seconds, 1, tomeRegenBaseSeconds);
+        tomeRegenTier2Shelves = clampInt(tomeRegenTier2Shelves, tomeRegenTier1Shelves, 128);
+        tomeRegenTier2Seconds = clampInt(tomeRegenTier2Seconds, 1, tomeRegenTier1Seconds);
         maxWoodenDiscountPercent = clampInt(maxWoodenDiscountPercent, 0, 90);
         maxTotalXpDiscountPercent = clampInt(maxTotalXpDiscountPercent, maxWoodenDiscountPercent, 90);
         bookCombineXpMultiplier = round2(clampDouble(bookCombineXpMultiplier, 0.10, 3.00));
@@ -160,8 +254,38 @@ public record ModRuntimeConfig(
             : Collections.unmodifiableSet(new LinkedHashSet<>(customizedKeys));
     }
 
+    public ModRuntimeConfig withEnforcedPolicy(PackPolicy policy) {
+        if (policy == null || !policy.enforceDatapackPriority() || !this.overrideDatapacks) {
+            return this;
+        }
+        Draft d = this.toDraft();
+        d.overrideDatapacks = false;
+        d.customizedKeys.remove("override_datapacks");
+        return d.build();
+    }
+
     public boolean shouldApplyKey(String key) {
-        return overrideDatapacks || customizedKeys.contains(key);
+        PackPolicy policy = effectivePackPolicy();
+        if (policy.isKeyLocked(key)) {
+            return false;
+        }
+        if (policy.datapackOverriddenKeys().contains(key)) {
+            return !policy.enforceDatapackPriority() && overrideDatapacks;
+        }
+        return true;
+    }
+
+    public static PackPolicy serverPackPolicy() {
+        return serverPackPolicy;
+    }
+
+    public static void setServerPackPolicy(PackPolicy policy) {
+        serverPackPolicy = policy != null ? policy : PackPolicy.NONE;
+    }
+
+    public static PackPolicy effectivePackPolicy() {
+        PackPolicy remote = remotePackPolicy;
+        return remote != null ? remote : serverPackPolicy;
     }
 
     public Draft toDraft() {
@@ -187,7 +311,7 @@ public record ModRuntimeConfig(
     /** Returns server-synced config when connected to a multiplayer server, otherwise local config. */
     public static ModRuntimeConfig effective() {
         ModRuntimeConfig remote = remoteServerInstance;
-        return remote != null ? remote : get();
+        return remote != null ? remote : ChiseledEnchantingTableData.runtimeConfiguration();
     }
 
     public static void setLocalAndSave(ModRuntimeConfig updated) {
@@ -205,13 +329,20 @@ public record ModRuntimeConfig(
         }
     }
 
-    public static void applyRemoteSync(ModRuntimeConfig remote, boolean canEdit) {
+    public static void applyRemoteSync(ModRuntimeConfig remote, PackPolicy policy, boolean canEdit) {
         remoteServerInstance = remote;
+        remotePackPolicy = policy;
         clientCanEditServerConfig = canEdit;
+    }
+
+    public static void applyRemoteSync(ModRuntimeConfig remote, boolean canEdit) {
+        applyRemoteSync(remote, null, canEdit);
     }
 
     public static void clearRemoteSync() {
         remoteServerInstance = null;
+        remotePreferences = null;
+        remotePackPolicy = null;
         clientCanEditServerConfig = false;
         acknowledgedSaveId = 0;
     }
@@ -322,6 +453,12 @@ public record ModRuntimeConfig(
         tomes.addProperty("max_tome_uses", maxTomeUses);
         tomes.addProperty("book_copy_wear_cost", bookCopyWearCost);
         tomes.addProperty("tome_deplete_behavior", tomeDepleteBehavior.token());
+        tomes.addProperty("tome_regen_enabled", tomeRegenEnabled);
+        tomes.addProperty("tome_regen_base_seconds", tomeRegenBaseSeconds);
+        tomes.addProperty("tome_regen_tier1_shelves", tomeRegenTier1Shelves);
+        tomes.addProperty("tome_regen_tier1_seconds", tomeRegenTier1Seconds);
+        tomes.addProperty("tome_regen_tier2_shelves", tomeRegenTier2Shelves);
+        tomes.addProperty("tome_regen_tier2_seconds", tomeRegenTier2Seconds);
         tomes.addProperty("max_wooden_discount_percent", maxWoodenDiscountPercent);
         tomes.addProperty("max_total_xp_discount_percent", maxTotalXpDiscountPercent);
         tomes.addProperty("book_combine_enabled", bookCombineEnabled);
@@ -420,6 +557,12 @@ public record ModRuntimeConfig(
                 tomes.get("tome_deplete_behavior").getAsString()
             );
         }
+        d.tomeRegenEnabled = boolOr(tomes, "tome_regen_enabled", d.tomeRegenEnabled);
+        d.tomeRegenBaseSeconds = intOr(tomes, "tome_regen_base_seconds", d.tomeRegenBaseSeconds);
+        d.tomeRegenTier1Shelves = intOr(tomes, "tome_regen_tier1_shelves", d.tomeRegenTier1Shelves);
+        d.tomeRegenTier1Seconds = intOr(tomes, "tome_regen_tier1_seconds", d.tomeRegenTier1Seconds);
+        d.tomeRegenTier2Shelves = intOr(tomes, "tome_regen_tier2_shelves", d.tomeRegenTier2Shelves);
+        d.tomeRegenTier2Seconds = intOr(tomes, "tome_regen_tier2_seconds", d.tomeRegenTier2Seconds);
         d.maxWoodenDiscountPercent = intOr(tomes, "max_wooden_discount_percent", d.maxWoodenDiscountPercent);
         d.maxTotalXpDiscountPercent = intOr(tomes, "max_total_xp_discount_percent", d.maxTotalXpDiscountPercent);
         d.bookCombineEnabled = boolOr(tomes, "book_combine_enabled", d.bookCombineEnabled);
@@ -472,7 +615,7 @@ public record ModRuntimeConfig(
 
     /** Mutable editor buffer enforcing live cross-field coherence as users drag sliders or click toggles. */
     public static final class Draft {
-        public boolean overrideDatapacks = true;
+        public boolean overrideDatapacks = false;
         public int enchantedBookStackSize = 64;
         public VanillaTableMode vanillaTableMode = VanillaTableMode.BOOKS;
         public boolean anvilFlatRepairCost = true;
@@ -491,6 +634,12 @@ public record ModRuntimeConfig(
         public int maxTomeUses = 16;
         public int bookCopyWearCost = 4;
         public MasterTomeWear.DepleteBehavior tomeDepleteBehavior = MasterTomeWear.DepleteBehavior.STEP_DOWN;
+        public boolean tomeRegenEnabled = true;
+        public int tomeRegenBaseSeconds = 24_000;
+        public int tomeRegenTier1Shelves = 38;
+        public int tomeRegenTier1Seconds = 12_000;
+        public int tomeRegenTier2Shelves = 42;
+        public int tomeRegenTier2Seconds = 3_600;
         public int maxWoodenDiscountPercent = 15;
         public int maxTotalXpDiscountPercent = 40;
         public boolean bookCombineEnabled = true;
@@ -551,6 +700,12 @@ public record ModRuntimeConfig(
             this.maxTomeUses = src.maxTomeUses;
             this.bookCopyWearCost = src.bookCopyWearCost;
             this.tomeDepleteBehavior = src.tomeDepleteBehavior;
+            this.tomeRegenEnabled = src.tomeRegenEnabled;
+            this.tomeRegenBaseSeconds = src.tomeRegenBaseSeconds;
+            this.tomeRegenTier1Shelves = src.tomeRegenTier1Shelves;
+            this.tomeRegenTier1Seconds = src.tomeRegenTier1Seconds;
+            this.tomeRegenTier2Shelves = src.tomeRegenTier2Shelves;
+            this.tomeRegenTier2Seconds = src.tomeRegenTier2Seconds;
             this.maxWoodenDiscountPercent = src.maxWoodenDiscountPercent;
             this.maxTotalXpDiscountPercent = src.maxTotalXpDiscountPercent;
             this.bookCombineEnabled = src.bookCombineEnabled;
@@ -664,6 +819,23 @@ public record ModRuntimeConfig(
                 this.bookshelfMinBooks = this.bookshelfMaxBooks;
             }
 
+            if ("tome_regen_tier1_shelves".equals(editedKey) && this.tomeRegenTier1Shelves > this.tomeRegenTier2Shelves) {
+                this.tomeRegenTier2Shelves = this.tomeRegenTier1Shelves;
+            } else if ("tome_regen_tier2_shelves".equals(editedKey) && this.tomeRegenTier2Shelves < this.tomeRegenTier1Shelves) {
+                this.tomeRegenTier1Shelves = this.tomeRegenTier2Shelves;
+            }
+
+            if ("tome_regen_base_seconds".equals(editedKey)) {
+                if (this.tomeRegenTier1Seconds > this.tomeRegenBaseSeconds) this.tomeRegenTier1Seconds = this.tomeRegenBaseSeconds;
+                if (this.tomeRegenTier2Seconds > this.tomeRegenTier1Seconds) this.tomeRegenTier2Seconds = this.tomeRegenTier1Seconds;
+            } else if ("tome_regen_tier1_seconds".equals(editedKey)) {
+                if (this.tomeRegenBaseSeconds < this.tomeRegenTier1Seconds) this.tomeRegenBaseSeconds = this.tomeRegenTier1Seconds;
+                if (this.tomeRegenTier2Seconds > this.tomeRegenTier1Seconds) this.tomeRegenTier2Seconds = this.tomeRegenTier1Seconds;
+            } else if ("tome_regen_tier2_seconds".equals(editedKey)) {
+                if (this.tomeRegenTier1Seconds < this.tomeRegenTier2Seconds) this.tomeRegenTier1Seconds = this.tomeRegenTier2Seconds;
+                if (this.tomeRegenBaseSeconds < this.tomeRegenTier1Seconds) this.tomeRegenBaseSeconds = this.tomeRegenTier1Seconds;
+            }
+
             this.bookCombineXpMultiplier = round2(clampDouble(this.bookCombineXpMultiplier, 0.10, 3.00));
             this.bookResearchXpMultiplier = round2(clampDouble(this.bookResearchXpMultiplier, 0.10, 3.00));
             this.epiphanyBaseChance = round2(clampDouble(this.epiphanyBaseChance, 0.0, 1.0));
@@ -692,6 +864,12 @@ public record ModRuntimeConfig(
                 maxTomeUses,
                 bookCopyWearCost,
                 tomeDepleteBehavior,
+                tomeRegenEnabled,
+                tomeRegenBaseSeconds,
+                tomeRegenTier1Shelves,
+                tomeRegenTier1Seconds,
+                tomeRegenTier2Shelves,
+                tomeRegenTier2Seconds,
                 maxWoodenDiscountPercent,
                 maxTotalXpDiscountPercent,
                 bookCombineEnabled,

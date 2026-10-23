@@ -35,6 +35,10 @@ public final class EnchantCostSync {
             ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.TYPE,
             ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.CODEC
         );
+        PayloadTypeRegistry.clientboundPlay().register(
+            ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.TYPE,
+            ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.CODEC
+        );
 
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
             ServerPlayer player = listener.player;
@@ -42,7 +46,8 @@ public final class EnchantCostSync {
                 if (EnchantingProtocol.incompatible(
                     ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)
                         || ServerPlayNetworking.canSend(player, EnchantingProtocol.LEGACY_COST_TYPE)
-                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.PREVIOUS_COST_TYPE),
+                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.PREVIOUS_COST_TYPE)
+                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_5_COST_TYPE),
                     ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE))) {
                     player.connection.disconnect(net.minecraft.network.chat.Component.literal(EnchantingProtocol.MISMATCH_MESSAGE));
                     return;

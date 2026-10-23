@@ -1188,4 +1188,482 @@ public final class GrimoireDiagramRenderer {
             default -> String.valueOf(n);
         };
     }
+
+    // =========================================================================
+    // CHAPTER 2 PAGE 2 — CHEST PERSISTENCE & LIVE RITUAL QUEUE CONSOLE DIAGRAM
+    // =========================================================================
+    public static void renderChapter2Persistence(
+        GuiGraphicsExtractor ctx,
+        Minecraft mc,
+        int x,
+        int y,
+        int w,
+        int h,
+        int mouseX,
+        int mouseY,
+        List<HoveredSlot> slotsOut
+    ) {
+        Font font = mc.font;
+        drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch2p2_title");
+
+        int c1Y = y + 17;
+        int c1H = 56;
+        ctx.fill(x, c1Y, x + w, c1Y + c1H, CARD_BORDER);
+        ctx.fill(x + 1, c1Y + 1, x + w - 1, c1Y + c1H - 1, CARD_BG);
+        ctx.fill(x, c1Y, x + 3, c1Y + c1H, INK_EMERALD);
+
+        drawSlotItem(ctx, font, new ItemStack(Items.CHEST), x + 6, c1Y + 7, 20, mouseX, mouseY, slotsOut, false, true);
+        drawCenteredBox(ctx, font, "=", x + 27, 9, c1Y + 17.0f, 0.72f, INK_GOLD_DARK, false);
+        drawSlotItem(
+            ctx, font, new ItemStack(BlockRegistry.CHISELED_ENCHANTING_TABLE),
+            x + 37, c1Y + 7, 20, mouseX, mouseY, slotsOut, true, true
+        );
+        drawLeftCenteredY(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch2p2_chest_t").getString(),
+            x + 62, c1Y + 11.5f, 0.68f, w - 66, INK_EMERALD, false
+        );
+        drawLeftCenteredY(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch2p2_chest_sub").getString(),
+            x + 62, c1Y + 23.0f, 0.60f, w - 66, INK_SECONDARY, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch2p2_chest_b"),
+            x + 6, c1Y + 30, w - 11, 24, 0.65f, 0.58f, INK_PRIMARY, false
+        );
+
+        int c2Y = c1Y + c1H + 5;
+        int c2H = Math.max(52, (y + h) - c2Y);
+        ctx.fill(x, c2Y, x + w, c2Y + c2H, 0xFF8B56BA);
+        ctx.fill(x + 1, c2Y + 1, x + w - 1, c2Y + c2H - 1, 0xFF221433);
+
+        drawLeftCenteredY(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.ritual.panel_title", 3).getString(),
+            x + 6, c2Y + 8.5f, 0.66f, w - 12, LIGHT_GOLD, true
+        );
+        drawLeftCenteredY(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.ritual.panel_timer", "06:40").getString(),
+            x + 6, c2Y + 19.5f, 0.62f, w - 12, LIGHT_CREAM, true
+        );
+
+        int barX = x + 6;
+        int barW = w - 12;
+        int barY = c2Y + 26;
+        ctx.fill(barX, barY, barX + barW, barY + 6, 0xFF12091E);
+        ctx.fill(barX + 1, barY + 1, barX + Math.round(barW * 0.62f), barY + 5, 0xFFB86BFF);
+
+        int btnY = barY + 9;
+        int halfW = (barW - 4) / 2;
+        ctx.fill(barX, btnY, barX + halfW, btnY + 14, 0xFF43A07A);
+        ctx.fill(barX + 1, btnY + 1, barX + halfW - 1, btnY + 13, 0xFF163D33);
+        drawCenteredBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.ritual.btn_sacrifice", 9).getString(),
+            barX + 2, halfW - 4, btnY + 7.0f, 0.62f, LIGHT_MINT, true
+        );
+
+        int rx = barX + halfW + 4;
+        ctx.fill(rx, btnY, rx + halfW, btnY + 14, 0xFFD98B38);
+        ctx.fill(rx + 1, btnY + 1, rx + halfW - 1, btnY + 13, 0xFF42211C);
+        drawCenteredBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.ritual.btn_rush", 32).getString(),
+            rx + 2, halfW - 4, btnY + 7.0f, 0.62f, LIGHT_GOLD, true
+        );
+
+        if (c2H > 58) {
+            drawWrappedBox(
+                ctx, font,
+                Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch2p2_note"),
+                barX, btnY + 16, barW, c2H - (btnY - c2Y) - 18, 0.62f, 0.56f, LIGHT_CREAM, true
+            );
+        }
+    }
+
+    // =========================================================================
+    // CHAPTER 3 PAGE 2 — DEEP RITUAL GATE & DUAL SKIP RISK COMPARISON
+    // =========================================================================
+    public static void renderChapter3Ritual(
+        GuiGraphicsExtractor ctx,
+        Minecraft mc,
+        int x,
+        int y,
+        int w,
+        int h,
+        int mouseX,
+        int mouseY,
+        List<HoveredSlot> slotsOut
+    ) {
+        Font font = mc.font;
+        drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch3p2_title");
+
+        var sg = SyncedEnchantmentCosts.shelfGatesConfig();
+        int midShelf = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.medianShelfGate(sg);
+
+        int gY = y + 17;
+        int gH = 34;
+        ctx.fill(x, gY, x + w, gY + gH, CARD_BORDER);
+        ctx.fill(x + 1, gY + 1, x + w - 1, gY + gH - 1, CALLOUT_BG);
+        ctx.fill(x, gY, x + 3, gY + gH, INK_GOLD_DARK);
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p2_gate", midShelf, 10),
+            x + 6, gY + 3, w - 10, gH - 6, 0.66f, 0.58f, INK_PRIMARY, false
+        );
+
+        int s1Y = gY + gH + 4;
+        int cardH = Math.max(40, ((y + h) - s1Y - 4) / 2);
+        ctx.fill(x, s1Y, x + w, s1Y + cardH, CARD_BORDER);
+        ctx.fill(x + 1, s1Y + 1, x + w - 1, s1Y + cardH - 1, CARD_BG);
+        ctx.fill(x, s1Y, x + 3, s1Y + cardH, INK_EMERALD);
+        ctx.blit(XP_FLASK, x + 6, s1Y + 4, x + 15, s1Y + 13, 0.0f, 1.0f, 0.0f, 1.0f);
+        drawLeftCenteredY(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p2_sac_t").getString(),
+            x + 18, s1Y + 8.5f, 0.68f, w - 22, INK_EMERALD, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p2_sac_b"),
+            x + 6, s1Y + 15, w - 11, cardH - 17, 0.64f, 0.58f, INK_SECONDARY, false
+        );
+
+        int s2Y = s1Y + cardH + 4;
+        int s2H = Math.max(40, (y + h) - s2Y);
+        ctx.fill(x, s2Y, x + w, s2Y + s2H, CARD_BORDER);
+        ctx.fill(x + 1, s2Y + 1, x + w - 1, s2Y + s2H - 1, CARD_BG);
+        ctx.fill(x, s2Y, x + 3, s2Y + s2H, INK_CRIMSON);
+        drawSlotItem(
+            ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME),
+            x + 5, s2Y + 4, 18, mouseX, mouseY, slotsOut, false, true
+        );
+        drawLeftCenteredY(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p2_rush_t").getString(),
+            x + 26, s2Y + 11.0f, 0.68f, w - 30, INK_CRIMSON, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p2_rush_b"),
+            x + 6, s2Y + 23, w - 11, Math.max(14, s2H - 25), 0.63f, 0.56f, INK_SECONDARY, false
+        );
+    }
+
+    // =========================================================================
+    // CHAPTER 4 PAGE 2 — WORKED EXAMPLE OF "原为 XX 级" IN GREEN vs PURPLE MODE
+    // =========================================================================
+    public static void renderChapter4ThresholdGuide(
+        GuiGraphicsExtractor ctx,
+        Minecraft mc,
+        int x,
+        int y,
+        int w,
+        int h
+    ) {
+        Font font = mc.font;
+        drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch4p2_title");
+
+        var lr = SyncedEnchantmentCosts.libraryResonanceConfig();
+        int maxDisc = lr.maxTotalXpDiscountPercent();
+        int discountedLv = Math.max(3, (int) Math.round(30 * (1.0 - maxDisc / 100.0)));
+
+        int fY = y + 17;
+        int fH = 34;
+        ctx.fill(x, fY, x + w, fY + fH, CARD_BORDER);
+        ctx.fill(x + 1, fY + 1, x + w - 1, fY + fH - 1, CALLOUT_BG);
+        ctx.fill(x, fY, x + 3, fY + fH, INK_GOLD_DARK);
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step", maxDisc, discountedLv),
+            x + 6, fY + 3, w - 10, fH - 6, 0.65f, 0.58f, INK_PRIMARY, false
+        );
+
+        int gY = fY + fH + 4;
+        int cardH = Math.max(40, ((y + h) - gY - 4) / 2);
+        drawXpModeCard(
+            ctx, font, x, gY, w, cardH,
+            XP_ORB_3, "Lv." + discountedLv + "→-3L", 0xFF1E6E46,
+            "gui.chiseled_enchanting_table.grimoire.diag.ch4p2_green_t",
+            "gui.chiseled_enchanting_table.grimoire.diag.ch4p2_green_b"
+        );
+
+        int pY = gY + cardH + 4;
+        int pH = Math.max(40, (y + h) - pY);
+        drawXpModeCard(
+            ctx, font, x, pY, w, pH,
+            XP_FLASK, "-" + discountedLv + "L XP", 0xFF5A287D,
+            "gui.chiseled_enchanting_table.grimoire.diag.ch4p2_purple_t",
+            "gui.chiseled_enchanting_table.grimoire.diag.ch4p2_purple_b"
+        );
+    }
+
+    // =========================================================================
+    // CHAPTER 5 PAGE 2 — 10D/3D GAME-DAY REGEN & INFINITY TOME SLIP DIAGRAM
+    // =========================================================================
+    public static void renderChapter5InfinityAndRegen(
+        GuiGraphicsExtractor ctx,
+        Minecraft mc,
+        int x,
+        int y,
+        int w,
+        int h,
+        int mouseX,
+        int mouseY,
+        List<HoveredSlot> slotsOut
+    ) {
+        Font font = mc.font;
+        drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_title");
+
+        var lr = SyncedEnchantmentCosts.libraryResonanceConfig();
+        String d1 = formatCleanGameDays(lr.tomeRegenTier1Seconds());
+        String d2 = formatCleanGameDays(lr.tomeRegenTier2Seconds());
+
+        int rY = y + 17;
+        int rH = 52;
+        ctx.fill(x, rY, x + w, rY + rH, CARD_BORDER);
+        ctx.fill(x + 1, rY + 1, x + w - 1, rY + rH - 1, CARD_BG);
+        ctx.fill(x, rY, x + 3, rY + rH, INK_EMERALD);
+        drawLeftCenteredY(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_t").getString(),
+            x + 6, rY + 8.0f, 0.67f, w - 10, INK_EMERALD, false
+        );
+
+        int pillY = rY + 16;
+        int halfW = (w - 14) / 2;
+        ctx.fill(x + 6, pillY, x + 6 + halfW, pillY + 15, 0xFF285E6B);
+        drawCenteredBox(
+            ctx, font,
+            lr.tomeRegenTier1Shelves() + "+ → " + d1 + "d/+1",
+            x + 7, halfW - 2, pillY + 7.5f, 0.58f, LIGHT_CREAM, false
+        );
+        ctx.fill(x + 8 + halfW, pillY, x + 8 + halfW * 2, pillY + 15, 0xFF175E3E);
+        drawCenteredBox(
+            ctx, font,
+            lr.tomeRegenTier2Shelves() + "+ → " + d2 + "d/+1",
+            x + 9 + halfW, halfW - 2, pillY + 7.5f, 0.58f, LIGHT_GOLD, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b",
+                lr.tomeRegenTier1Shelves(), d1, lr.tomeRegenTier2Shelves(), d2),
+            x + 6, pillY + 17, w - 11, 17, 0.62f, 0.56f, INK_SECONDARY, false
+        );
+
+        int iY = rY + rH + 4;
+        int iH = Math.max(54, (y + h) - iY);
+        ctx.fill(x, iY, x + w, iY + iH, CARD_BORDER);
+        ctx.fill(x + 1, iY + 1, x + w - 1, iY + iH - 1, CALLOUT_BG);
+        ctx.fill(x, iY, x + 3, iY + iH, INK_PURPLE);
+        drawSlotItem(
+            ctx, font, new ItemStack(Items.BOW),
+            x + 5, iY + 5, 18, mouseX, mouseY, slotsOut, false, true
+        );
+        drawLeftCenteredY(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_t").getString(),
+            x + 26, iY + 11.5f, 0.67f, w - 30, INK_PURPLE, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_b"),
+            x + 6, iY + 24, w - 11, Math.max(24, iH - 26), 0.63f, 0.56f, INK_PRIMARY, false
+        );
+    }
+
+    public static String formatCleanGameDays(int seconds) {
+        double days = seconds / 1200.0;
+        if (Math.abs(days - Math.round(days)) < 0.05) {
+            return String.valueOf(Math.round(days));
+        }
+        return String.format(java.util.Locale.ROOT, "%.1f", days);
+    }
+
+    // =========================================================================
+    // CHAPTER 3 (1/3) — UNIFIED BOOKSHELF TAXONOMY SET DIAGRAM (图示法)
+    // =========================================================================
+    public static void renderChapter3ShelfTaxonomy(
+        GuiGraphicsExtractor ctx,
+        Minecraft mc,
+        int x,
+        int y,
+        int w,
+        int h,
+        int mouseX,
+        int mouseY,
+        List<HoveredSlot> slotsOut
+    ) {
+        Font font = mc.font;
+        drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch3p0_title");
+
+        // Outer set box representing Broad Bookshelves (广义书架 = ① + ② + ③)
+        int setY = y + 17;
+        int setH = 98;
+        ctx.fill(x, setY, x + w, setY + setH, 0xFF8C6218);
+        ctx.fill(x + 1, setY + 1, x + w - 1, setY + setH - 1, CALLOUT_BG);
+        ctx.fill(x + 1, setY + 1, x + w - 1, setY + 13, 0xFF5A3E12);
+        drawCenteredBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_broad_hdr").getString(),
+            x + 4, w - 8, setY + 7.0f, 0.62f, LIGHT_GOLD, false
+        );
+
+        // Top row inside set: [① 普通书架] | [② 空雕纹书架]
+        int topRowY = setY + 16;
+        int topRowH = 34;
+        int colGap = 4;
+        int colW = (w - 8 - colGap) / 2;
+        int c1X = x + 4;
+        int c2X = c1X + colW + colGap;
+
+        ctx.fill(c1X, topRowY, c1X + colW, topRowY + topRowH, CARD_BORDER);
+        ctx.fill(c1X + 1, topRowY + 1, c1X + colW - 1, topRowY + topRowH - 1, CARD_BG);
+        ctx.fill(c1X, topRowY, c1X + 3, topRowY + topRowH, INK_GOLD_DARK);
+        drawSlotItem(
+            ctx, font, new ItemStack(Items.BOOKSHELF),
+            c1X + 4, topRowY + 8, 17, mouseX, mouseY, slotsOut, false, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_c1"),
+            c1X + 23, topRowY + 3, colW - 25, topRowH - 6, 0.58f, 0.52f, INK_PRIMARY, false
+        );
+
+        ctx.fill(c2X, topRowY, c2X + colW, topRowY + topRowH, CARD_BORDER);
+        ctx.fill(c2X + 1, topRowY + 1, c2X + colW - 1, topRowY + topRowH - 1, CARD_BG);
+        ctx.fill(c2X, topRowY, c2X + 3, topRowY + topRowH, 0xFF6B5B45);
+        drawSlotItem(
+            ctx, font, new ItemStack(Items.CHISELED_BOOKSHELF),
+            c2X + 4, topRowY + 8, 17, mouseX, mouseY, slotsOut, false, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_c2"),
+            c2X + 23, topRowY + 3, colW - 25, topRowH - 6, 0.58f, 0.52f, INK_SECONDARY, false
+        );
+
+        // Bottom wide card inside set: [③ 有书雕纹书架：普通书/褪魔残卷 => 广义书架 | 附魔书 => 广义书架 + 母本]
+        int c3Y = topRowY + topRowH + 3;
+        int c3H = setH - (c3Y - setY) - 4;
+        ctx.fill(x + 4, c3Y, x + w - 4, c3Y + c3H, CARD_BORDER);
+        ctx.fill(x + 5, c3Y + 1, x + w - 5, c3Y + c3H - 1, CARD_BG);
+        ctx.fill(x + 4, c3Y, x + 7, c3Y + c3H, INK_EMERALD);
+
+        drawSlotItem(
+            ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME),
+            x + 9, c3Y + 4, 16, mouseX, mouseY, slotsOut, false, false
+        );
+        drawSlotItem(
+            ctx, font, new ItemStack(Items.ENCHANTED_BOOK),
+            x + 9, c3Y + 22, 16, mouseX, mouseY, slotsOut, false, true
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_c3_remnant"),
+            x + 28, c3Y + 3, w - 35, 18, 0.58f, 0.52f, INK_EMERALD, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_c3_master"),
+            x + 28, c3Y + 22, w - 35, Math.max(16, c3H - 24), 0.58f, 0.52f, INK_PURPLE, false
+        );
+
+        // Bottom scope matrix card showing which mechanics use which shelf definition
+        int mapY = setY + setH + 3;
+        int mapH = Math.max(46, (y + h) - mapY);
+        ctx.fill(x, mapY, x + w, mapY + mapH, CARD_BORDER);
+        ctx.fill(x + 1, mapY + 1, x + w - 1, mapY + mapH - 1, CARD_BG);
+
+        String[] keys = {
+            "gui.chiseled_enchanting_table.grimoire.diag.ch3p0_map_reg",
+            "gui.chiseled_enchanting_table.grimoire.diag.ch3p0_map_broad",
+            "gui.chiseled_enchanting_table.grimoire.diag.ch3p0_map_tome"
+        };
+        int[] accents = { INK_GOLD_DARK, INK_EMERALD, INK_PURPLE };
+        int rowH = Math.max(14, (mapH - 4) / 3);
+        for (int i = 0; i < 3; i++) {
+            int ry = mapY + 2 + i * rowH;
+            ctx.fill(x + 3, ry + 1, x + 6, ry + rowH - 1, accents[i]);
+            drawWrappedBox(
+                ctx, font,
+                Component.translatable(keys[i]),
+                x + 9, ry + 1, w - 13, rowH - 1, 0.57f, 0.50f, INK_PRIMARY, false
+            );
+        }
+    }
+
+    // =========================================================================
+    // CHAPTER 7 (2/2) — DEPLETED TOME WORLD LOOT (<=30%) & LIBRARIAN TRADES
+    // =========================================================================
+    public static void renderChapter7RemnantEconomy(
+        GuiGraphicsExtractor ctx,
+        Minecraft mc,
+        int x,
+        int y,
+        int w,
+        int h,
+        int mouseX,
+        int mouseY,
+        List<HoveredSlot> slotsOut
+    ) {
+        Font font = mc.font;
+        drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_title");
+
+        int bodyTop = y + 17;
+        int totalH = Math.max(120, (y + h) - bodyTop);
+        int gap = 3;
+        int c1H = (totalH - gap * 2) * 32 / 100;
+        int c2H = (totalH - gap * 2) * 31 / 100;
+        int c3H = totalH - gap * 2 - c1H - c2H;
+
+        // Card 1: World Chests + Wild Chiseled Bookshelves (<= 30% book decay)
+        int c1Y = bodyTop;
+        ctx.fill(x, c1Y, x + w, c1Y + c1H, CARD_BORDER);
+        ctx.fill(x + 1, c1Y + 1, x + w - 1, c1Y + c1H - 1, CARD_BG);
+        ctx.fill(x, c1Y, x + 3, c1Y + c1H, INK_GOLD_DARK);
+        drawSlotItem(ctx, font, new ItemStack(Items.CHEST), x + 5, c1Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.CHISELED_BOOKSHELF), x + 23, c1Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawRightArrow(ctx, x + 41, c1Y + 13, 8, INK_GOLD_DARK);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME), x + 51, c1Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world"),
+            x + 70, c1Y + 3, w - 74, c1H - 6, 0.58f, 0.51f, INK_PRIMARY, false
+        );
+
+        // Card 2: Librarian Buyback: 2× Depleted Tome -> 1× Emerald OR 2× Amethyst Shard
+        int c2Y = c1Y + c1H + gap;
+        ctx.fill(x, c2Y, x + w, c2Y + c2H, CARD_BORDER);
+        ctx.fill(x + 1, c2Y + 1, x + w - 1, c2Y + c2H - 1, CARD_BG);
+        ctx.fill(x, c2Y, x + 3, c2Y + c2H, INK_EMERALD);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME, 2), x + 5, c2Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawRightArrow(ctx, x + 23, c2Y + 13, 8, INK_EMERALD);
+        drawSlotItem(ctx, font, new ItemStack(Items.EMERALD, 1), x + 33, c2Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.AMETHYST_SHARD, 2), x + 51, c2Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle"),
+            x + 70, c2Y + 3, w - 74, c2H - 6, 0.58f, 0.51f, INK_EMERALD, false
+        );
+
+        // Card 3: Librarian Commission: 4 Lapis / 2 Ink / 1 Emerald base -> Book / Dynamic-Weighted Enchanted Book (< Mending)
+        int c3Y = c2Y + c2H + gap;
+        ctx.fill(x, c3Y, x + w, c3Y + c3H, CARD_BORDER);
+        ctx.fill(x + 1, c3Y + 1, x + w - 1, c3Y + c3H - 1, CALLOUT_BG);
+        ctx.fill(x, c3Y, x + 3, c3Y + c3H, INK_PURPLE);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME, 1), x + 5, c3Y + 4, 15, mouseX, mouseY, slotsOut, false, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 4), x + 21, c3Y + 4, 15, mouseX, mouseY, slotsOut, false, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.INK_SAC, 2), x + 37, c3Y + 4, 15, mouseX, mouseY, slotsOut, false, false);
+        drawRightArrow(ctx, x + 54, c3Y + 11, 7, INK_PURPLE);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK, 1), x + 63, c3Y + 4, 15, mouseX, mouseY, slotsOut, false, true);
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite"),
+            x + 6, c3Y + 21, w - 10, Math.max(18, c3H - 23), 0.58f, 0.51f, INK_PRIMARY, false
+        );
+    }
 }

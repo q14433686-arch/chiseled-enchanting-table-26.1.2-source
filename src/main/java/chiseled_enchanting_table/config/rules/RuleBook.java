@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * No Fabric/client static state or persistence is hidden in resolution.
  */
 public final class RuleBook {
-    public enum Origin { DEFAULT, CONFIG, DATAPACK, LOCKED_DEFAULT, LOCKED_DATAPACK, STARTUP }
+    public enum Origin { DEFAULT, CONFIG, DATAPACK, LOCKED_DEFAULT, LOCKED_DATAPACK, STARTUP, NORMALIZED }
 
     public record Definition(String key, Object defaultValue, boolean startupOnly) {
         public Definition {
@@ -110,6 +110,22 @@ public final class RuleBook {
         Snapshot base = active.get();
         return new Prepared(this, base, resolve(Math.incrementExact(base.revision()), local, datapack,
             overrideDatapacks, policy));
+    }
+
+    public Prepared withValidatedValues(Prepared original, Map<String, Object> normalized) {
+        normalized = Map.copyOf(normalized);
+        if (original.owner != this || !normalized.keySet().equals(definitions.keySet()))
+            throw new IllegalArgumentException("Invalid normalized proposal");
+        validateValues(normalized);
+        Map<String, Value> values = new LinkedHashMap<>();
+        for (var entry : normalized.entrySet()) {
+            Value old = original.next.rule(entry.getKey());
+            if (definitions.get(entry.getKey()).startupOnly() && !Objects.equals(old.effective(), entry.getValue()))
+                throw new IllegalArgumentException("Normalization changed actual bootstrap value");
+            values.put(entry.getKey(), new Value(entry.getValue(),
+                Objects.equals(old.effective(), entry.getValue()) ? old.origin() : Origin.NORMALIZED, old.editable()));
+        }
+        return new Prepared(this, original.base, new Snapshot(original.next.revision(), values));
     }
 
     /**

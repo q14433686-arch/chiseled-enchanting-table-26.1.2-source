@@ -112,7 +112,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         this.parentScreen = parentScreen;
         this.closeOverride = closeOverride;
         this.sessionMode = detectSessionMode();
-        this.baselineConfig = ModRuntimeConfig.effective();
+        this.baselineConfig = ModRuntimeConfig.preferences();
         this.draft = this.baselineConfig.toDraft();
     }
 
@@ -127,6 +127,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     }
 
     private static SessionMode detectSessionMode() {
+        if (ModRuntimeConfig.effectivePackPolicy().lockInGameConfig()) {
+            return SessionMode.MODPACK_LOCKED;
+        }
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) {
             return SessionMode.OFFLINE_CLIENT;
@@ -229,7 +232,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         this.lastSaveFailed = !ModRuntimeConfig.acknowledgedSaveAccepted();
         this.statusToastUntilMs = System.currentTimeMillis() + 5000L;
         if (!this.lastSaveFailed) {
-            this.baselineConfig = ModRuntimeConfig.effective();
+            this.baselineConfig = ModRuntimeConfig.preferences();
             this.draft = this.baselineConfig.toDraft();
             if (this.pendingClose) onClose();
         }
@@ -267,6 +270,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             case DEDICATED_ADMIN -> 0xFF6B4C1B;
             case OFFLINE_CLIENT -> 0xFF1E4C66;
             case DEDICATED_READONLY -> 0xFF662432;
+            case MODPACK_LOCKED -> 0xFF4C2466;
         };
         ctx.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 16, 0xFF8C6F39);
         ctx.fill(badgeX + 1, badgeY + 1, badgeX + badgeW - 1, badgeY + 15, badgeCol);
