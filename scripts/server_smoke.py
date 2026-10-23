@@ -38,6 +38,14 @@ for name, function in (('remove_false', 'remove_enchanted_books'), ('depth_false
                      'condition': {'type': 'minecraft:random_chance', 'chance': 0.0}}
     }]}]}
     (fixture_tables / (name + '.json')).write_text(json.dumps(table))
+fixture_functions = fixture_root / 'function'
+fixture_functions.mkdir()
+(fixture_functions / 'spawn_table.mcfunction').write_text(
+    'setblock 0 65 0 chiseled_enchanting_table:chiseled_enchanting_table\n'
+    'data merge block 0 65 0 {color:1122867,CustomName:"Audit Table",epiphanySeed:123456,pendingFreezeTicks:1200L,frozenCycleIndex:17}\n'
+    'loot spawn 0 67 0 mine 0 65 0\n'
+    'schedule function cet_audit_smoke:inspect 10t\n')
+(fixture_functions / 'inspect.mcfunction').write_text('data get entity @e[type=minecraft:item,limit=1]\n')
 log_path = ROOT / 'build-reports/server-smoke.log'
 log_path.parent.mkdir(exist_ok=True)
 process = subprocess.Popen(['./gradlew', 'runServer', '--args=nogui', '--console=plain', '--no-daemon'],
@@ -55,6 +63,7 @@ drop_verified = False
 remove_verified = False
 depth_verified = False
 stopping = False
+probe_phase = 'table'
 failed = []
 start = time.monotonic()
 try:
@@ -72,7 +81,7 @@ try:
             if '/ERROR]' in line or any(marker in line for marker in ('Registry loading errors', 'Failed to load registries',
                     'Mixin apply failed', 'MixinTransformerError', 'Failed to load datapacks',
                     'Couldn\'t parse', 'Failed to parse', 'Error loading', 'Failed to validate',
-                    'Failed to send the enchanting cost table')):
+                    'Failed to send the enchanting cost table', 'No entity was found')):
                 failed.append(line.strip())
             if not ready and 'Done (' in line:
                 ready = True
@@ -80,29 +89,29 @@ try:
                 process.stdin.flush()
             elif ready and ('Loaded ' in line and ' advancements' in line):
                 reloaded = True
-                # Exercise the actual 26.3 block-entity -> loot component path, not just JSON parsing.
-                process.stdin.write(
-                    'forceload add 0 0\n'
-                    'setblock 0 65 0 chiseled_enchanting_table:chiseled_enchanting_table\n'
-                    'data merge block 0 65 0 {color:1122867,CustomName:"Audit Table",epiphanySeed:123456,pendingFreezeTicks:1200L,frozenCycleIndex:17}\n'
-                    'loot spawn 0 67 0 mine 0 65 0\n'
-                    'data get entity @e[type=minecraft:item,limit=1]\n'
-                    'loot spawn 3 70 0 loot cet_audit_smoke:remove_false\n'
-                    'tag @e[type=minecraft:item,x=3,y=70,z=0,distance=..1,limit=1] add cet_audit_remove_probe\n'
-                    'data get entity @e[tag=cet_audit_remove_probe,limit=1]\n'
-                    'loot spawn 5 70 0 loot cet_audit_smoke:depth_false\n'
-                    'tag @e[type=minecraft:item,x=5,y=70,z=0,distance=..1,limit=1] add cet_audit_depth_probe\n'
-                    'data get entity @e[tag=cet_audit_depth_probe,limit=1]\n')
+                # Forceload and entity admission are asynchronous. Inspect on later GAME ticks,
+                # not immediately after addFreshEntity (which can legitimately be invisible to @e).
+                process.stdin.write('forceload add 0 0\nschedule function cet_audit_smoke:spawn_table 20t\n')
                 process.stdin.flush()
             elif reloaded and all(token in line for token in (
                 'Audit Table', '"minecraft:dyed_color": 1122867', 'pendingFreezeTicks: 1200L',
                 'epiphanySeed: 123456', 'frozenCycleIndex: 17', 'item.chiseled_enchanting_table.frozen_lore')):
                 drop_verified = True
-            elif reloaded and 'cet_audit_remove_probe' in line and 'has the following entity data:' in line:
+                probe_phase = 'remove'
+                process.stdin.write('kill @e[type=minecraft:item]\n'
+                                    'loot spawn 0 67 0 loot cet_audit_smoke:remove_false\n'
+                                    'schedule function cet_audit_smoke:inspect 10t\n')
+                process.stdin.flush()
+            elif reloaded and probe_phase == 'remove' and 'has the following entity data:' in line:
                 remove_verified = 'minecraft:enchanted_book' in line
                 if not remove_verified:
                     failed.append('Conditional removal fixture did not preserve its enchanted book')
-            elif reloaded and 'cet_audit_depth_probe' in line and 'has the following entity data:' in line:
+                probe_phase = 'depth'
+                process.stdin.write('kill @e[type=minecraft:item]\n'
+                                    'loot spawn 0 67 0 loot cet_audit_smoke:depth_false\n'
+                                    'schedule function cet_audit_smoke:inspect 10t\n')
+                process.stdin.flush()
+            elif reloaded and probe_phase == 'depth' and 'has the following entity data:' in line:
                 depth_verified = 'minecraft:enchanted_book' in line and 'minecraft:stored_enchantments' not in line
                 if not depth_verified:
                     failed.append('Depth function executed despite its always-false condition')
