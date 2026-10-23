@@ -185,7 +185,7 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
                 double mouseX,
                 double mouseY
             ) {
-                if (Minecraft.getInstance().screen instanceof ArcaneGrimoireScreen grimoire) {
+                if (Minecraft.getInstance().gui.screen instanceof ArcaneGrimoireScreen grimoire) {
                     HoveredSlot slot = grimoire.hoveredIngredient(mouseX, mouseY);
                     if (slot != null && !slot.stack().isEmpty()) {
                         return builder.createBuilder(slot.stack().copyWithCount(1))

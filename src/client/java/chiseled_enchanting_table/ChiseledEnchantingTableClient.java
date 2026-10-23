@@ -31,7 +31,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
     public void onInitializeClient() {
         ArcaneGrimoireItem.CLIENT_OPEN_ACTION = player -> {
             GrimoireSoundHelper.playOpen();
-            net.minecraft.client.Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
+            net.minecraft.client.Minecraft.getInstance().gui.setScreen(new ArcaneGrimoireScreen(null));
         };
         MenuScreens.register(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, ChiseledEnchantingTableScreen::new);
         BlockEntityRendererRegistry.register(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);

@@ -190,7 +190,7 @@ public class ArcaneGrimoireScreen extends Screen {
         if (this.closeOverride != null) {
             this.closeOverride.run();
         } else {
-            Minecraft.getInstance().setScreen(this.parentScreen);
+            Minecraft.getInstance().gui.setScreen(this.parentScreen);
         }
     }
 
