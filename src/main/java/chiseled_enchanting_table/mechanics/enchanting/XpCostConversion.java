@@ -92,6 +92,57 @@ public final class XpCostConversion {
     }
 
     /**
+     * Exact sequential-equivalence XP requirement for crafting {@code batchCount >= 1} units of an
+     * item transformation in a single click:
+     * <ul>
+     *   <li>{@code deductedLevels(B) = B * D_1}</li>
+     *   <li>{@code requiredLevel(B) = R_1 + (B - 1) * D_1}</li>
+     * </ul>
+     * Performing a batch ritual of size {@code B} from level {@code L} is 100% identical in
+     * threshold check, deducted levels, preserved XP bar fraction, and minimum XP points spent to
+     * performing {@code B} sequential single-unit rituals one by one ({@code minPoints >= B * minPoints(1)}).
+     */
+    public static XpRequirement scaleTransformationXpForBatch(XpRequirement unitXp, int batchCount) {
+        if (unitXp == null) {
+            return XpRequirement.FREE;
+        }
+        int safeBatch = Math.max(1, batchCount);
+        if (safeBatch <= 1 || unitXp.isRefund() || (unitXp.requiredLevel() <= 0 && unitXp.deductedLevels() <= 0)) {
+            return unitXp;
+        }
+        int d1 = Math.max(0, unitXp.deductedLevels());
+        int scaledDed = d1 * safeBatch;
+        int scaledRaw = Math.max(scaledDed, unitXp.rawRequiredLevel() + (safeBatch - 1) * d1);
+        int scaledReq = Math.max(scaledDed, unitXp.requiredLevel() + (safeBatch - 1) * d1);
+        return new XpRequirement(
+            scaledRaw,
+            scaledReq,
+            scaledDed,
+            unitXp.discountPercent(),
+            unitXp.vanillaTierMode()
+        );
+    }
+
+    /**
+     * Maximum transformation batch size {@code B >= 0} affordable at {@code playerLevel} under
+     * {@link #scaleTransformationXpForBatch(XpRequirement, int)}.
+     */
+    public static int maxTransformationBatchForLevel(XpRequirement unitXp, int playerLevel) {
+        if (unitXp == null || unitXp.isRefund() || (unitXp.requiredLevel() <= 0 && unitXp.deductedLevels() <= 0)) {
+            return Integer.MAX_VALUE;
+        }
+        int safeLevel = Math.max(0, playerLevel);
+        if (safeLevel < unitXp.requiredLevel()) {
+            return 0;
+        }
+        int d1 = Math.max(0, unitXp.deductedLevels());
+        if (d1 <= 0) {
+            return Integer.MAX_VALUE;
+        }
+        return ((safeLevel - unitXp.requiredLevel()) / d1) + 1;
+    }
+
+    /**
      * Exact minimum XP points deducted when a player at {@code req.requiredLevel()} pays
      * {@code req.deductedLevels()}. Because {@link #xpPointsForLevel(int)} is monotonically
      * non-decreasing in level, both {@code player.giveExperienceLevels(-d)} (which preserves fractional

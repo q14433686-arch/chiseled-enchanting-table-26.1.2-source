@@ -15,6 +15,14 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
+## [1.1.0] — Release-label rollback and pre-port audit, 2026-10-23
+
+- Restore the active release label, download names and publishing metadata to 1.1.0 by request.
+- Retain existing 26.3 runtime fixes and `26_3_revision_4`; a version-label rollback is not a wire rollback.
+- Review 26.1.2 delta `b78b244` → `3e081f3` before porting. New gameplay/configuration changes remain
+  pending a rollout decision; see [review and choices](docs/reports/PRE_PORT_26_1_2_3E081F3_REVIEW.md).
+- Older 1.1.1 entries below describe historical fixes/builds; those fixes are not removed.
+
 ## [1.1.1] — 26.3 runtime and synchronization audit (version unchanged)
 
 - Synchronize complete server transformation catalogs, including tag inputs and empty catalogs;

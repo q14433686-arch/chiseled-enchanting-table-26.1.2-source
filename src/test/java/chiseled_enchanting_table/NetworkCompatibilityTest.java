@@ -34,15 +34,15 @@ class NetworkCompatibilityTest {
         var masters = Map.of(id("one"), 7, id("two"), 255);
         var display = new TransformationDisplay(id("rule"), id("input_tag"), true, id("out"), 2, 30, 3);
         roundTrip(AvailableEnchantmentPayload.AVAILABLE_CHISELED_ENCHANTMENT_CODEC,
-            new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789, masters));
+            new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789, masters, true));
         roundTrip(LiveShelfStatePayload.CODEC,
-            new LiveShelfStatePayload(27, unlocked, 37, 38, 123, 17, masters));
+            new LiveShelfStatePayload(27, unlocked, 37, 38, 123, 17, masters, true));
         roundTrip(LiveShelfStatePayload.CODEC,
-            new LiveShelfStatePayload(3, Set.of(), 0, 0, 0, 0, Map.of()));
+            new LiveShelfStatePayload(3, Set.of(), 0, 0, 0, 0, Map.of(), false));
     }
 
     @Test void liveUpdatesOnlyTargetTheMatchingMenu() {
-        var live = new LiveShelfStatePayload(27, Set.of(), 0, 0, 0, 0, Map.of());
+        var live = new LiveShelfStatePayload(27, Set.of(), 0, 0, 0, 0, Map.of(), false);
         assertTrue(live.targets(27));
         assertFalse(live.targets(28));
         assertFalse(live.targets(0));
@@ -67,12 +67,15 @@ class NetworkCompatibilityTest {
     private static EnchantCostTablePayload table(List<TransformationDisplay> displays) {
         var gates = new BookshelfProgression.Config(false, 47, 1.37,
             BookshelfProgression.BlankMaxTierMode.FULL_CURVE, 4, 3,
-            Map.of(id("override"), List.of(0, 3, 11, 23, 47)), 2, 19, 0.41, 9, 7, 61);
+            Map.of(id("override"), List.of(0, 3, 11, 23, 47)), 2, 19, 0.41, 9, 7, 61,
+            BookshelfProgression.VanillaTableMode.BOOKS, true, 6, false);
         // Distinct values catch field swaps hidden by equal default config values.
         var resonance = new LibraryResonance.Config(13, 39, 21, 8, 29, 12, 1.13, 41,
             1.21, 1.31, 0.73, 0.83, 0.43, 0.53, 0.63, 1.03, 2.13, 3.23,
-            0.67, 81.0, 0.17, 0.57, 111.0, 0.27, 0.87);
-        return new EnchantCostTablePayload(true, false, true, false, 0.5,
+            0.67, 81.0, 0.17, 0.57, 111.0, 0.27, 0.87,
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, 16, 4,
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN);
+        return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
             11, List.of(), Set.of(id("treasure")), gates, resonance,
             List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())), displays);

@@ -1,3 +1,15 @@
+## Current priority — awaiting user design choice (2026-10-23)
+
+- Active release label: 1.1.0; retain 26.3 fixes and protocol revision 4 until the next wire change.
+- Reviewed source target: 26.1.2 `3e081f31f262dc13f6a92f0a50313e12f6af28c0`.
+- Do not overwrite current menu/network/viewer safeguards with the source branch's older code.
+- Do not implement the new progression/configuration policies until the user chooses the approach in
+  `docs/reports/PRE_PORT_26_1_2_3E081F3_REVIEW.md`.
+- After selection: port with regression fixtures for protocol fields, permissions, atomic config application,
+  legacy provenance policy, new mouse handlers, player-specific unlocks and live viewer refresh.
+
+---
+
 # Validation / next steps — 26.3 1.1.0
 
 1. Offline gates:

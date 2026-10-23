@@ -52,6 +52,9 @@ public final class BookUpgradeApplication {
         if (!xpReq.isMetBy(handler.player)) return false;
         XpCostConversion.deductXp(handler.player, xpReq);
 
+        ItemStack targetSnapshot = targetBook.copy();
+        ItemStack costSnapshot = costBook.copy();
+
         ItemEnchantments.Mutable merged = new ItemEnchantments.Mutable(targetEnchants);
         for (var entry : costEnchants.entrySet()) {
             Holder<Enchantment> incoming = entry.getKey();
@@ -64,6 +67,12 @@ public final class BookUpgradeApplication {
         }
         merged.set(enchantment, targetLevel);
         writeEnchantments(targetBook, merged);
+        EnchantmentProvenance.recordBookCombine(
+            targetSnapshot,
+            costSnapshot,
+            targetBook,
+            EnchantmentHelper.getEnchantmentsForCrafting(targetBook)
+        );
 
         // Drained source book carries arcane residue and becomes a stackable Depleted Tome requiring Blank Overwrite.
         handler.setCostSlot(new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1));
@@ -99,6 +108,8 @@ public final class BookUpgradeApplication {
         ItemEnchantments.Mutable upgraded = new ItemEnchantments.Mutable(current);
         upgraded.set(enchantment, targetLevel);
         writeEnchantments(targetBook, upgraded);
+        EnchantmentProvenance.recordTablePayment(targetBook, payload.enchantment_id(), sourceLevel, targetLevel);
+        EnchantmentProvenance.pruneToCurrentEnchantments(targetBook, EnchantmentHelper.getEnchantmentsForCrafting(targetBook));
         finish(handler);
         Advancement.give(handler.player, "upgrade_enchanted_book");
         Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());

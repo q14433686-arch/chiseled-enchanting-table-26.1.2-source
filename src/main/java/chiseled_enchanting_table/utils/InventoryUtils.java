@@ -1,11 +1,9 @@
 package chiseled_enchanting_table.utils;
 
 import java.util.Optional;
-
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.Container;
-import net.minecraft.util.Prediction;
 
 public class InventoryUtils {
     public static ItemStack insertItem(Player player, ItemStack stackToInsert, Optional<Integer> priority_slot) {
@@ -15,12 +13,12 @@ public class InventoryUtils {
 
         Container inventory = player.getInventory();
         ItemStack remainingStack = stackToInsert.copy();
+        int maxStackSize = Math.max(1, remainingStack.getMaxStackSize());
 
         for (int i = 0; i < 36; ++i) {
             if (remainingStack.isEmpty()) {
                 break;
             }
-
             ItemStack currentStack = inventory.getItem(i);
             if (!currentStack.isEmpty() && ItemStack.isSameItemSameComponents(currentStack, remainingStack)) {
                 int space = currentStack.getMaxStackSize() - currentStack.getCount();
@@ -33,31 +31,35 @@ public class InventoryUtils {
             }
         }
 
-        if (priority_slot.isPresent() && inventory.getItem(priority_slot.get()).isEmpty()) {
-            inventory.setItem(priority_slot.get(), remainingStack.copy());
-            remainingStack = ItemStack.EMPTY;
+        if (!remainingStack.isEmpty()
+            && priority_slot.isPresent()
+            && inventory.getItem(priority_slot.get()).isEmpty()) {
+            int put = Math.min(remainingStack.getCount(), maxStackSize);
+            ItemStack piece = remainingStack.copy();
+            piece.setCount(put);
+            inventory.setItem(priority_slot.get(), piece);
+            remainingStack.shrink(put);
         }
 
         if (!remainingStack.isEmpty()) {
-            for (int i = 0; i < 36; ++i) {
-                if (remainingStack.isEmpty()) {
-                    break;
-                }
+            for (int i = 0; i < 36 && !remainingStack.isEmpty(); ++i) {
                 ItemStack currentStack = inventory.getItem(i);
                 if (currentStack.isEmpty()) {
-                    inventory.setItem(i, remainingStack.copy());
-                    remainingStack = ItemStack.EMPTY;
-                    break; 
+                    int put = Math.min(remainingStack.getCount(), maxStackSize);
+                    ItemStack piece = remainingStack.copy();
+                    piece.setCount(put);
+                    inventory.setItem(i, piece);
+                    remainingStack.shrink(put);
                 }
             }
         }
-        
-        if (!remainingStack.isEmpty()) {
-            // 26.3: LivingEntity#drop gained a Prediction parameter. Both callers of insertItem
-            // are the container-click path, where vanilla itself passes PREDICTED
-            // (see AbstractContainerMenu's click-path drops).
-            player.drop(remainingStack, false, Prediction.PREDICTED);
-            remainingStack = ItemStack.EMPTY;
+
+        while (!remainingStack.isEmpty()) {
+            int dropCount = Math.min(remainingStack.getCount(), maxStackSize);
+            ItemStack piece = remainingStack.copy();
+            piece.setCount(dropCount);
+            player.drop(piece, false, net.minecraft.util.Prediction.PREDICTED);
+            remainingStack.shrink(dropCount);
         }
 
         return remainingStack;

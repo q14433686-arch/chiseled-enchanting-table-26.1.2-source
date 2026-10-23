@@ -16,6 +16,8 @@ public abstract class RemoveXpCostScaling {
 
 	@Inject(method = "calculateIncreasedRepairCost", at = @At("HEAD"), cancellable = true)
 	private static void cet$keepFlatRepairCost(int oldRepairCost, CallbackInfoReturnable<Integer> cir) {
-		cir.setReturnValue(oldRepairCost);
+		if (chiseled_enchanting_table.config.ModRuntimeConfig.effective().anvilFlatRepairCost()) {
+			cir.setReturnValue(oldRepairCost);
+		}
 	}
 }

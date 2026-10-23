@@ -1,17 +1,28 @@
 # Current Baseline
 
-**Date:** 2026-10-22
+**Date:** 2026-10-23
 **Minecraft Version:** 26.3
 **Fabric Loader:** 0.19.5
 **Fabric API:** 0.162.0+26.3
 **Gradle:** 9.5.1
 **Loom:** 1.17-SNAPSHOT
 **Java:** 25
-**Mod Version:** `1.1.1`
+**Mod Version:** `1.1.0`
 
 This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not affiliated
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
+
+## Current request — version rollback and pre-port review
+
+Release label is **1.1.0** by request. This does not revert the 26.3 fixes or the independent
+`26_3_revision_4` protocol capability. Older audit/build records labelled 1.1.1 remain historical evidence.
+
+Gameplay has previously been synced through `b78b244b391a96bfb4255d88c7f66d2ee573567e`.
+The next source target is `3e081f31f262dc13f6a92f0a50313e12f6af28c0` on the 26.1.2 branch.
+That new delta has been reviewed but **has not yet been ported**: configuration precedence,
+legacy-item treatment and rollout strategy await the user's choice.
+See [pre-port review](docs/reports/PRE_PORT_26_1_2_3E081F3_REVIEW.md).
 
 ## Source of truth
 

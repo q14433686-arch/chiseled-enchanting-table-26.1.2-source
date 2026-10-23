@@ -1128,6 +1128,38 @@ def check_grimoire_recipes_sounds_and_textures() -> None:
     if "me.shedaniel.rei.plugin." in rei_txt:
         errors.append("ChiseledEnchantingReiPlugin must use me.shedaniel.rei.api.* only (not default-plugin internal packages)")
 
+    # 4. Verify D1-D7 synchronized datapack schemas & defaults
+    data_dir = Path(REPO) / "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table"
+    lr_json = json.loads((data_dir / "library_resonance.json").read_text(encoding="utf-8"))
+    cm = lr_json.get("chiseled_mastery", {})
+    if cm.get("tome_consumption_mode") != "wear" or cm.get("max_tome_uses") != 16 or cm.get("book_copy_wear_cost") != 4:
+        errors.append("library_resonance.json chiseled_mastery tome wear fields must default to wear / 16 / 4 (D1)")
+
+    sg_json = json.loads((data_dir / "shelf_gates.json").read_text(encoding="utf-8"))
+    dtg = sg_json.get("depleted_tome_gradients", {})
+    sv = sg_json.get("scan_volume", {})
+    if dtg.get("tier1_bookshelves") != 12 or dtg.get("tier2_bookshelves") != 32:
+        errors.append("shelf_gates.json unified Depleted Tome shelf stages must be 12 / 32 (D6)")
+    if sg_json.get("vanilla_table_mode") != "books":
+        errors.append("shelf_gates.json default vanilla_table_mode must be 'books' (D2)")
+    if sv.get("require_breathing_room") is not True or sv.get("min_open_adjacent_blocks") != 6:
+        errors.append("shelf_gates.json scan_volume breathing-room check must default to enabled with min 6 open blocks (D4)")
+
+    dis_json = json.loads((data_dir / "disenchanting.json").read_text(encoding="utf-8"))
+    if dis_json.get("external_xp_refund_scale") != 0.25:
+        errors.append("disenchanting.json must configure external_xp_refund_scale = 0.25 (D3)")
+
+    pool_json = json.loads((data_dir / "bookshelf_book_pool.json").read_text(encoding="utf-8"))
+    loot_json = json.loads((data_dir / "loot_injections.json").read_text(encoding="utf-8"))
+    if pool_json.get("enabled") is not True or loot_json.get("vanilla_chest_books") != "keep_both":
+        errors.append("bookshelf_book_pool.json / loot_injections.json must expose D7 datapack switches")
+
+    bs_tag = json.loads(
+        (Path(REPO) / "src/main/resources/data/minecraft/tags/item/bookshelf_books.json").read_text(encoding="utf-8")
+    )
+    if "chiseled_enchanting_table:depleted_tome" not in bs_tag.get("values", []):
+        errors.append("bookshelf_books.json must include chiseled_enchanting_table:depleted_tome (D1)")
+
 
 # --------------------------------------------------------------------------- #
 

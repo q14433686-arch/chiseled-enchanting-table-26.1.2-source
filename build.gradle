@@ -187,3 +187,8 @@ publishing {
 tasks.named('runServer', JavaExec).configure {
     standardInput = System.in
 }
+
+// Compile-only Mod Menu API shim must not leak into either distributable.
+tasks.withType(Jar).configureEach {
+    exclude 'com/terraformersmc/**'
+}

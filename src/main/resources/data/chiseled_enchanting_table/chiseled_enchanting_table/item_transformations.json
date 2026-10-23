@@ -8,6 +8,7 @@
       "xp_cost": 1,
       "min_required_level": 1,
       "deducted_levels": 1,
+      "require_prior_discovery": false,
       "primary_cost": { "item": "minecraft:paper", "count": 2 },
       "cost_options": [
         { "item": "minecraft:paper", "count": 2 },
@@ -27,6 +28,7 @@
       "xp_cost": 20,
       "min_required_level": 2,
       "deducted_levels": 2,
+      "require_prior_discovery": true,
       "primary_cost": { "item": "minecraft:gold_block", "count": 8 },
       "additional_costs": [
         { "item": "minecraft:emerald", "count": 14 }
@@ -40,6 +42,7 @@
       "xp_cost": 5,
       "min_required_level": 3,
       "deducted_levels": 1,
+      "require_prior_discovery": false,
       "primary_cost": { "item": "minecraft:lapis_lazuli", "count": 8 },
       "additional_costs": [
         { "item": "minecraft:amethyst_shard", "count": 2 }
@@ -53,6 +56,7 @@
       "xp_cost": 30,
       "min_required_level": 3,
       "deducted_levels": 3,
+      "require_prior_discovery": true,
       "primary_cost": { "item": "minecraft:gold_block", "count": 4 },
       "additional_costs": [
         { "item": "minecraft:ghast_tear", "count": 1 },
@@ -67,6 +71,7 @@
       "xp_cost": 25,
       "min_required_level": 3,
       "deducted_levels": 3,
+      "require_prior_discovery": true,
       "primary_cost": { "item": "minecraft:nautilus_shell", "count": 1 },
       "additional_costs": [
         { "item": "minecraft:prismarine_shard", "count": 3 },
@@ -81,6 +86,7 @@
       "xp_cost": 12,
       "min_required_level": 2,
       "deducted_levels": 2,
+      "require_prior_discovery": true,
       "primary_cost": { "item": "minecraft:sculk", "count": 4 },
       "additional_costs": [
         { "item": "minecraft:crying_obsidian", "count": 2 }

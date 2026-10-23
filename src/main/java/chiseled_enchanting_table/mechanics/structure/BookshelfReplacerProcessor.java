@@ -82,7 +82,7 @@ public class BookshelfReplacerProcessor implements StructureProcessor {
         StructureTemplate.StructureBlockInfo currentBlockInfo,
         StructurePlaceSettings data
     ) {
-        if (!REPLACEMENT_ENABLED) return currentBlockInfo;
+        if (!REPLACEMENT_ENABLED || !chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookshelfReplacementEnabled()) return currentBlockInfo;
         BlockState state = currentBlockInfo.state();
         if (!state.is(Blocks.BOOKSHELF)) return currentBlockInfo;
         // Rewrite to an empty chiseled bookshelf; the fill happens in finalizeProcessing, which
@@ -112,7 +112,7 @@ public class BookshelfReplacerProcessor implements StructureProcessor {
         List<StructureTemplate.StructureBlockInfo> currentBlockInfos,
         StructurePlaceSettings data
     ) {
-        if (!REPLACEMENT_ENABLED) return currentBlockInfos;
+        if (!REPLACEMENT_ENABLED || !chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookshelfReplacementEnabled()) return currentBlockInfos;
 
         long seed = worldSeed(level);
         HolderGetter<Enchantment> enchantments = null;
@@ -148,7 +148,7 @@ public class BookshelfReplacerProcessor implements StructureProcessor {
      * {@link BookshelfBookFiller#applyToPlacedBookshelf} — this runs on the server thread.
      */
     public static void postProcessBookshelf(ServerLevel level, BlockPos pos) {
-        if (!REPLACEMENT_ENABLED) return;
+        if (!REPLACEMENT_ENABLED || !chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookshelfReplacementEnabled()) return;
         RandomSource random = RandomSource.create(seedFor(level.getSeed(), pos));
         BookshelfBookFiller.applyToPlacedBookshelf(level, pos, random);
     }
@@ -159,7 +159,7 @@ public class BookshelfReplacerProcessor implements StructureProcessor {
      * actually placed. Server thread.
      */
     public static void postProcessFilledBookshelf(ServerLevel level, BlockPos pos) {
-        if (!REPLACEMENT_ENABLED) return;
+        if (!REPLACEMENT_ENABLED || !chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookshelfReplacementEnabled()) return;
         BookshelfBookFiller.applyFacingToPlacedBookshelf(level, pos);
     }
 

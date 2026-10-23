@@ -27,6 +27,9 @@
     ],
     "rei_client": [
       "chiseled_enchanting_table.compat.rei.ChiseledEnchantingReiPlugin"
+    ],
+    "modmenu": [
+      "chiseled_enchanting_table.compat.modmenu.ChiseledEnchantingModMenuPlugin"
     ]
   },
   "mixins": [
@@ -40,9 +43,10 @@
   },
   "suggests": {
     "jei": "*",
-    "rei": "*"
+    "rei": "*",
+    "modmenu": "*"
   },
   "custom": {
-    "chiseled_enchanting_table:port_notes": "Unofficial 26.3 port, 1.1.1 world-load hotfix (recipe_unlocked recipes list and single loot predicate). Gameplay synced from 1.1.0: full 26.1.2 progression and UX sync (library resonance, Treasure Epiphany and persistent freeze, dual-mode XP, multi-material costs, Arcane Condensate, Depleted Tome and Blank Overwrite, painted GUI, dye tint, flat anvil penalty, depth-based Efficiency loot, bidirectional JEI/REI transformations, 11 locales). Retains 26.3 structure processor interface/codec registration, rotate/rotateDegrees and separate crumbling overlay, ContextIntProviders/UniformContainerBase, optional condition holders, explicit payload collection codecs, Prediction drops, condition/modifier loot schema and recipe_crafted recipes lists. See docs/reports/SYNC_FROM_26_1_2_REPORT.md."
+    "chiseled_enchanting_table:port_notes": "Unofficial 26.3 port, release label 1.1.0; retains the previous world-load hotfix (recipe_unlocked recipes list and single loot predicate). Gameplay synced from 1.1.0: full 26.1.2 progression and UX sync (library resonance, Treasure Epiphany and persistent freeze, dual-mode XP, multi-material costs, Arcane Condensate, Depleted Tome and Blank Overwrite, painted GUI, dye tint, flat anvil penalty, depth-based Efficiency loot, bidirectional JEI/REI transformations, 11 locales). Retains 26.3 structure processor interface/codec registration, rotate/rotateDegrees and separate crumbling overlay, ContextIntProviders/UniformContainerBase, optional condition holders, explicit payload collection codecs, Prediction drops, condition/modifier loot schema and recipe_crafted recipes lists. See docs/reports/SYNC_FROM_26_1_2_REPORT.md."
   }
 }

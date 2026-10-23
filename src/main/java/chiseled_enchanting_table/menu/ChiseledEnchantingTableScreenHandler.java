@@ -118,12 +118,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public int chiseledBookCount;
     public int highTierChiseledBooks;
     public java.util.Map<Identifier, Integer> storedMasterLevels;
+    public boolean crampedLibrary;
     private int epiphanySeed;
     private int syncedCycleIndex;
     private int syncedCountdownSeconds;
     private boolean syncedFrozen;
     /** Server-synced transformation table, keyed by transformation id. Used by client UI. */
-    public final java.util.Map<Identifier, TransformationDisplay> transformationDisplays;
+    public java.util.Map<Identifier, TransformationDisplay> transformationDisplays;
     private final Level world;
     private final ContainerLevelAccess access;
 
@@ -166,6 +167,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.storedMasterLevels = payload.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(payload.stored_master_levels());
+        this.crampedLibrary = payload.cramped_library();
         this.epiphanySeed = payload.epiphany_seed();
         long cycleTicks = Math.max(1L, this.epiphanyCycleTicks());
         this.syncedCycleIndex = (int) ((this.world.getGameTime() / cycleTicks) & 0xFFFFL);
@@ -389,9 +391,17 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.storedMasterLevels = live.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(live.stored_master_levels());
+        this.crampedLibrary = live.cramped_library();
         if (this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
         }
+    }
+
+    public void applyTransformationSnapshot(java.util.List<TransformationDisplay> displays) {
+        var next = new java.util.HashMap<Identifier, TransformationDisplay>();
+        for (var display : displays) next.put(display.id(), display);
+        this.transformationDisplays = java.util.Map.copyOf(next);
+        if (this.onContentChangedCallback != null) this.onContentChangedCallback.run();
     }
 
     public void refreshLiveShelfState() {
@@ -412,6 +422,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             || live.regular_bookshelves() != this.regularBookshelves
             || live.chiseled_book_count() != this.chiseledBookCount
             || live.high_tier_chiseled_books() != this.highTierChiseledBooks
+            || live.cramped_library() != this.crampedLibrary
             || !live.stored_master_levels().equals(this.storedMasterLevels);
         if (changed) {
             applyLiveShelfState(live);
@@ -518,6 +529,55 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             return Math.max(1, display.min_player_level());
         }
         return ChiseledEnchantingTableData.transformationMinPlayerLevel(id);
+    }
+
+    public boolean isTransformationUnlocked(Identifier id) {
+        if (this.player != null && this.player.getAbilities().instabuild) {
+            return true;
+        }
+        var activeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.effective();
+        if (activeCfg.shouldApplyKey("require_prior_discovery") && !activeCfg.requirePriorDiscovery()) {
+            return true;
+        }
+        TransformationDisplay display = this.transformationDisplays.get(id);
+        if (display != null) {
+            if (display.unlocked()) {
+                return true;
+            }
+            Item outItem = BuiltInRegistries.ITEM.getValue(display.output_item());
+            if (outItem != null && outItem != Items.AIR && this.player != null) {
+                for (int slot = 0; slot < this.player.getInventory().getContainerSize(); slot++) {
+                    ItemStack st = this.player.getInventory().getItem(slot);
+                    if (!st.isEmpty() && st.is(outItem)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        return ChiseledEnchantingTableData.isTransformationUnlocked(this.player, id);
+    }
+
+    public int syncedTransformationLevel(Identifier id) {
+        TransformationDisplay display = this.transformationDisplays.get(id);
+        if (display != null) {
+            return Math.max(1, display.level());
+        }
+        return ChiseledEnchantingTableData.itemTransformation(id)
+            .map(rule -> Math.max(1, rule.level()))
+            .orElse(1);
+    }
+
+    public int transformationBatchSignature() {
+        int sig = this.player != null ? this.player.experienceLevel : 0;
+        ItemStack target = get_enchantable_item();
+        if (target.isEmpty()) {
+            return sig;
+        }
+        for (EnchantmentWithLevel tr : syncedTransformationsFor(target)) {
+            sig = 31 * sig + resolveTransformationBatchCount(tr.enchantment_id());
+        }
+        return sig;
     }
 
     /** Display (hover) name of a synced transformation's output item. */
@@ -660,6 +720,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             : ChiseledEnchantingTableData.disenchantRefundScale();
     }
 
+    public double disenchantExternalRefundScale() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.disenchantExternalRefundScale()
+            : ChiseledEnchantingTableData.disenchantExternalRefundScale();
+    }
+
     public int currentTargetEnchantLevel(Identifier enchantmentId) {
         if (enchantmentId == null || ChiseledEnchantingTableData.isTransformation(enchantmentId)) {
             return 0;
@@ -704,18 +770,24 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             }
             return getEnchantmentItemCostOptions(e, OptionType.STRIP_SINGLE_ENCHANTMENT);
         }
-        if (type == OptionType.PURGE_CURSE || type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
-            List<List<ItemStack>> base = getEnchantmentItemCostOptions(e, type);
+        if (type == OptionType.PURGE_CURSE) {
+            return getEnchantmentItemCostOptions(e, OptionType.PURGE_CURSE);
+        }
+        if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
+            int batchCount = resolveTransformationBatchCount(e.enchantment_id());
             if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(e.enchantment_id())) {
                 return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
                     .applyDepletedTomeMaterialTierWithBatch(
                         shelfGatesConfig(),
-                        base,
+                        getEnchantmentItemCostOptions(e, type),
                         depletedTomeTier(),
-                        resolveDepletedTomeBatchCount()
+                        batchCount
                     );
             }
-            return base;
+            return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.scaleBundlesWithBatch(
+                getEnchantmentItemCostOptions(e, OptionType.TRANSFORMATION),
+                batchCount
+            );
         }
 
         int existingLevel = currentTargetEnchantLevel(e.enchantment_id());
@@ -818,57 +890,118 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     public int depletedTomeMaxBatchSize() {
         var sg = shelfGatesConfig();
-        return depletedTomeTier() == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.TIER_3_FREE
-            ? sg.tier3BatchSize()
-            : sg.baseBatchSize();
+        return Math.max(1, Math.max(sg.baseBatchSize(), sg.tier3BatchSize()));
+    }
+
+    public int countAvailableInInventory(ItemStack required) {
+        if (required == null || required.isEmpty() || this.player == null) {
+            return 0;
+        }
+        int found = 0;
+        for (int slot = 0; slot < this.player.getInventory().getContainerSize(); slot++) {
+            ItemStack candidate = this.player.getInventory().getItem(slot);
+            if (!candidate.isEmpty() && ItemStack.isSameItemSameComponents(candidate, required)) {
+                found += candidate.getCount();
+            }
+        }
+        return found;
+    }
+
+    public int countAvailableIncludingCostSlot(ItemStack required) {
+        if (required == null || required.isEmpty()) {
+            return 0;
+        }
+        ItemStack costSlot = get_cost_item();
+        int fromSlot = (!costSlot.isEmpty() && ItemStack.isSameItemSameComponents(costSlot, required))
+            ? costSlot.getCount()
+            : 0;
+        return fromSlot + countAvailableInInventory(required);
+    }
+
+    private int maxBundleUnitsAvailable(List<ItemStack> unitBundle) {
+        if (unitBundle == null || unitBundle.isEmpty()) {
+            return Integer.MAX_VALUE;
+        }
+        ItemStack primary = unitBundle.getFirst();
+        ItemStack costSlot = get_cost_item();
+        if (primary.isEmpty() || costSlot.isEmpty() || !ItemStack.isSameItemSameComponents(primary, costSlot)) {
+            return 0;
+        }
+        int units = countAvailableIncludingCostSlot(primary) / Math.max(1, primary.getCount());
+        for (int i = 1; i < unitBundle.size(); i++) {
+            ItemStack add = unitBundle.get(i);
+            if (add.isEmpty()) continue;
+            int totalPool = ItemStack.isSameItemSameComponents(add, primary)
+                ? countAvailableIncludingCostSlot(add)
+                : countAvailableInInventory(add);
+            int unitNeed = ItemStack.isSameItemSameComponents(add, primary)
+                ? (Math.max(1, primary.getCount()) + Math.max(1, add.getCount()))
+                : Math.max(1, add.getCount());
+            units = Math.min(units, totalPool / unitNeed);
+        }
+        return Math.max(0, units);
+    }
+
+    public int resolveTransformationBatchCount(Identifier transformationId) {
+        if (transformationId == null) {
+            return 1;
+        }
+        boolean isBlank = ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(transformationId);
+        int inputCount = Math.max(1, get_enchantable_item().getCount());
+        int maxCap = isBlank ? Math.max(1, depletedTomeMaxBatchSize()) : 64;
+        int desired = Math.max(1, Math.min(maxCap, inputCount));
+        if (this.player != null && this.player.getAbilities().instabuild) {
+            return desired;
+        }
+        if (desired <= 1) {
+            return 1;
+        }
+
+        int level = isBlank ? 1 : Math.max(1, syncedTransformationLevel(transformationId));
+        EnchantmentWithLevel unitRef = new EnchantmentWithLevel(transformationId, level);
+        List<List<ItemStack>> unitBundles = isBlank
+            ? chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.applyDepletedTomeMaterialTier(
+                shelfGatesConfig(),
+                getEnchantmentItemCostOptions(unitRef, OptionType.TRANSFORMATION),
+                depletedTomeTier()
+            )
+            : getEnchantmentItemCostOptions(unitRef, OptionType.TRANSFORMATION);
+
+        int rawUnitXp = getBaseEnchantmentXpLevelCost(unitRef, OptionType.TRANSFORMATION);
+        var baseUnitXp = XpCostConversion.forTransformation(
+            libraryResonanceConfig(),
+            transformationId,
+            rawUnitXp,
+            effectiveXpDiscountPercent(transformationId, OptionType.TRANSFORMATION),
+            syncedTransformationMinPlayerLevel(transformationId),
+            syncedTransformationDeductedLevels(transformationId)
+        );
+        var effectiveUnitXp = isBlank
+            ? chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.applyDepletedTomeXpTierWithBatch(
+                baseUnitXp,
+                depletedTomeTier(),
+                1
+            )
+            : baseUnitXp;
+
+        int maxXpUnits = XpCostConversion.maxTransformationBatchForLevel(
+            effectiveUnitXp,
+            this.player != null ? this.player.experienceLevel : 0
+        );
+        if (unitBundles.isEmpty()) {
+            return maxXpUnits >= 1 ? Math.min(desired, maxXpUnits) : 1;
+        }
+
+        int maxMatUnits = 0;
+        for (List<ItemStack> bundle : unitBundles) {
+            maxMatUnits = Math.max(maxMatUnits, maxBundleUnitsAvailable(bundle));
+        }
+        int affordable = Math.min(maxMatUnits, maxXpUnits);
+        return affordable >= 1 ? Math.min(desired, affordable) : 1;
     }
 
     public int resolveDepletedTomeBatchCount() {
-        int inputCount = Math.max(1, get_enchantable_item().getCount());
-        int maxCap = Math.max(1, depletedTomeMaxBatchSize());
-        int desired = Math.min(maxCap, inputCount);
-        var tier = depletedTomeTier();
-        if (tier == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.TIER_3_FREE
-            || this.player.getAbilities().instabuild) {
-            return desired;
-        }
-        ItemStack costSlot = get_cost_item();
-        List<List<ItemStack>> unitBundles = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
-            .applyDepletedTomeMaterialTier(
-                shelfGatesConfig(),
-                getEnchantmentItemCostOptions(
-                    new EnchantmentWithLevel(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID, 1),
-                    OptionType.TRANSFORMATION
-                ),
-                tier
-            );
-        int maxMatUnits = 0;
-        for (List<ItemStack> bundle : unitBundles) {
-            if (!bundle.isEmpty() && ItemStack.isSameItemSameComponents(bundle.getFirst(), costSlot)) {
-                int unit = Math.max(1, bundle.getFirst().getCount());
-                maxMatUnits = Math.max(maxMatUnits, costSlot.getCount() / unit);
-            }
-        }
-        int maxXpUnits = Integer.MAX_VALUE;
-        if (tier == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.BASELINE) {
-            int rawUnitXp = getBaseEnchantmentXpLevelCost(
-                new EnchantmentWithLevel(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID, 1),
-                OptionType.TRANSFORMATION
-            );
-            var unitXp = XpCostConversion.forTransformation(
-                ChiseledEnchantingTableData.BLANK_OVERWRITE_ID,
-                rawUnitXp,
-                effectiveXpDiscountPercent(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID, OptionType.TRANSFORMATION),
-                syncedTransformationMinPlayerLevel(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)
-            );
-            int reqUnit = Math.max(0, unitXp.requiredLevel());
-            maxXpUnits = reqUnit <= 0 ? Integer.MAX_VALUE : (Math.max(0, this.player.experienceLevel) / reqUnit);
-        }
-        int affordable = Math.min(maxMatUnits, maxXpUnits);
-        if (affordable >= 1) {
-            return Math.min(desired, affordable);
-        }
-        return desired;
+        return resolveTransformationBatchCount(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID);
     }
 
     public int requiredBookshelvesForDirectTier(Identifier enchantmentId, int targetLevel, int maxLevel) {
@@ -1022,7 +1155,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         var resonanceCfg = libraryResonanceConfig();
         if (type == OptionType.DISENCHANT_ALL) {
             int totalRefund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                .totalFullDisenchantRefund(resonanceCfg, get_enchantable_item(), disenchantRefundScale());
+                .totalFullDisenchantRefund(
+                    resonanceCfg,
+                    get_enchantable_item(),
+                    disenchantRefundScale(),
+                    disenchantExternalRefundScale()
+                );
             return XpCostConversion.XpRequirement.refund(totalRefund);
         }
         if (type == OptionType.DOWNGRADE_ENCHANTMENT) {
@@ -1030,7 +1168,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 Holder<Enchantment> holder = IdentifierToEnchantment(e.enchantment_id(), this.world);
                 int cur = currentTargetEnchantLevel(e.enchantment_id());
                 int refund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                    .refundForStepDown(resonanceCfg, holder, cur, e.enchantment_level(), disenchantRefundScale());
+                    .provenanceRefundForStepDown(
+                        resonanceCfg,
+                        get_enchantable_item(),
+                        holder,
+                        cur,
+                        e.enchantment_level(),
+                        disenchantRefundScale(),
+                        disenchantExternalRefundScale()
+                    );
                 return XpCostConversion.XpRequirement.refund(refund);
             } catch (Exception ignored) {
                 return XpCostConversion.XpRequirement.FREE;
@@ -1043,7 +1189,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 try {
                     Holder<Enchantment> holder = IdentifierToEnchantment(e.enchantment_id(), this.world);
                     int refund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                        .essencePotential(resonanceCfg, holder, curMap.getLevel(holder), disenchantRefundScale());
+                        .provenanceEssencePotential(
+                            resonanceCfg,
+                            target,
+                            holder,
+                            curMap.getLevel(holder),
+                            disenchantRefundScale(),
+                            disenchantExternalRefundScale()
+                        );
                     return XpCostConversion.XpRequirement.refund(refund);
                 } catch (Exception ignored) {
                     return XpCostConversion.XpRequirement.FREE;
@@ -1070,15 +1223,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 syncedTransformationMinPlayerLevel(e.enchantment_id()),
                 syncedTransformationDeductedLevels(e.enchantment_id())
             );
+            int batchCount = resolveTransformationBatchCount(e.enchantment_id());
             if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(e.enchantment_id())) {
                 return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
                     .applyDepletedTomeXpTierWithBatch(
                         baseTransformXp,
                         depletedTomeTier(),
-                        resolveDepletedTomeBatchCount()
+                        batchCount
                     );
             }
-            return baseTransformXp;
+            return XpCostConversion.scaleTransformationXpForBatch(baseTransformXp, batchCount);
         }
 
         int existingLevel = currentTargetEnchantLevel(e.enchantment_id());
@@ -1558,6 +1712,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
     }
 
+    public boolean isBundleAffordableWithOverflow(List<ItemStack> bundle) {
+        if (bundle == null || bundle.isEmpty()) {
+            return true;
+        }
+        if (this.player.getAbilities().instabuild) {
+            return true;
+        }
+        return maxBundleUnitsAvailable(bundle) >= 1;
+    }
+
     @org.jetbrains.annotations.Nullable
     public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
         List<List<ItemStack>> options = getEffectiveItemCostOptions(ewl, type);
@@ -1567,14 +1731,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (this.player.getAbilities().instabuild) {
             return options.getFirst();
         }
-        ItemStack itemCostStack = this.get_cost_item();
         for (List<ItemStack> bundle : options) {
-            if (bundle.isEmpty()) continue;
-            ItemStack primaryCost = bundle.getFirst();
-            if (!primaryCost.isEmpty()
-                && ItemStack.isSameItemSameComponents(itemCostStack, primaryCost)
-                && itemCostStack.getCount() >= primaryCost.getCount()
-                && hasAdditionalCosts(bundle)) {
+            if (!bundle.isEmpty() && isBundleAffordableWithOverflow(bundle)) {
                 return bundle;
             }
         }
@@ -1585,7 +1743,26 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (this.player.getAbilities().instabuild || matchedBundle == null || matchedBundle.isEmpty()) {
             return;
         }
-        this.get_cost_item().shrink(matchedBundle.getFirst().getCount());
+        ItemStack primary = matchedBundle.getFirst();
+        if (!primary.isEmpty()) {
+            int remainingPrimary = primary.getCount();
+            ItemStack costSlot = this.get_cost_item();
+            if (!costSlot.isEmpty() && ItemStack.isSameItemSameComponents(costSlot, primary)) {
+                int takeSlot = Math.min(remainingPrimary, costSlot.getCount());
+                costSlot.shrink(takeSlot);
+                remainingPrimary -= takeSlot;
+            }
+            for (int slot = 0; slot < this.player.getInventory().getContainerSize() && remainingPrimary > 0; slot++) {
+                ItemStack candidate = this.player.getInventory().getItem(slot);
+                if (!candidate.isEmpty() && ItemStack.isSameItemSameComponents(candidate, primary)) {
+                    int takeInv = Math.min(remainingPrimary, candidate.getCount());
+                    candidate.shrink(takeInv);
+                    remainingPrimary -= takeInv;
+                }
+            }
+            this.inventory.setChanged();
+            this.player.getInventory().setChanged();
+        }
         consumeAdditionalCosts(matchedBundle);
     }
 
@@ -1660,11 +1837,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 return;
             }
             ItemStack existingTarget = this.getSlot(ENCHANTABLE_SLOT).getItem();
-            int depletedLimit = depletedTomeMaxBatchSize();
-            if (clickedStack.is(BlockRegistry.DEPLETED_TOME)
-                && existingTarget.is(BlockRegistry.DEPLETED_TOME)
-                && existingTarget.getCount() < depletedLimit) {
-                int space = depletedLimit - existingTarget.getCount();
+            int stackLimit = clickedStack.is(BlockRegistry.DEPLETED_TOME)
+                ? depletedTomeMaxBatchSize()
+                : clickedStack.getMaxStackSize();
+            if (!existingTarget.isEmpty()
+                && ItemStack.isSameItemSameComponents(clickedStack, existingTarget)
+                && (clickedStack.is(BlockRegistry.DEPLETED_TOME) || !this.syncedTransformationsFor(clickedStack).isEmpty())
+                && existingTarget.getCount() < stackLimit) {
+                int space = stackLimit - existingTarget.getCount();
                 int move = Math.min(space, clickedStack.getCount());
                 existingTarget.grow(move);
                 clickedStack.shrink(move);

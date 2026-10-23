@@ -85,6 +85,7 @@ public final class TransformationQueryIndex {
 
         List<Entry> results = new ArrayList<>(displays.size());
         for (var display : displays) {
+            if (!display.unlocked()) continue;
             Identifier id = display.id();
             Identifier inputId = display.input_item();
             Identifier outputId = display.output_item();
