@@ -48,13 +48,19 @@ class NetworkCompatibilityTest {
         assertFalse(live.targets(0));
     }
 
-    @Test void allActionTokensAndNoBodyPacketsRoundTrip() {
+    @Test void allActionTokensAndMenuTargetedPacketsRoundTrip() {
         for (OptionType type : OptionType.values()) {
-            roundTrip(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_CODEC,
-                new ApplyEnchantmentPayload(type, id("action"), 255));
+            var apply = new ApplyEnchantmentPayload(42, type, id("action"), 255);
+            roundTrip(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_CODEC, apply);
+            assertTrue(apply.targets(42));
+            assertFalse(apply.targets(43));
         }
-        roundTrip(RerollEpiphanyPayload.CODEC, new RerollEpiphanyPayload());
-        roundTrip(FreezeEpiphanyPayload.CODEC, new FreezeEpiphanyPayload());
+        var reroll = new RerollEpiphanyPayload(42);
+        var freeze = new FreezeEpiphanyPayload(42);
+        roundTrip(RerollEpiphanyPayload.CODEC, reroll);
+        roundTrip(FreezeEpiphanyPayload.CODEC, freeze);
+        assertTrue(reroll.targets(42) && !reroll.targets(7));
+        assertTrue(freeze.targets(42) && !freeze.targets(7));
     }
 
     @Test void costTableConfigurationAndRowsRoundTrip() {
@@ -75,9 +81,11 @@ class NetworkCompatibilityTest {
             0.67, 81.0, 0.17, 0.57, 111.0, 0.27, 0.87,
             chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, 16, 4,
             chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN);
+        var ritual = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
+            12, 5_400, 14, 150.0, 0.48, 0.68, 0.18);
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
-            11, List.of(), Set.of(id("treasure")), gates, resonance,
+            11, List.of(), Set.of(id("treasure")), gates, resonance, ritual,
             List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())), displays);
     }
 
@@ -124,8 +132,10 @@ class NetworkCompatibilityTest {
 
     @Test void runtimeConfigRequestAndAcknowledgementRoundTrip() {
         var config = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toJsonString();
-        roundTrip(chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload.CODEC,
-            new chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload(config, 8123456789L));
+        for (boolean closeContainer : new boolean[] {false, true}) {
+            roundTrip(chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload.CODEC,
+                new chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload(config, 8123456789L, closeContainer));
+        }
         for (boolean accepted : new boolean[] {false, true}) {
             roundTrip(chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload.CODEC,
                 new chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload(config, true, 8123456789L, accepted));

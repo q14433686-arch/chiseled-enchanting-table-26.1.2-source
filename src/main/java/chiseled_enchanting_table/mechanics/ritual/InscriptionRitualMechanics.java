@@ -71,6 +71,78 @@ public final class InscriptionRitualMechanics {
     /** Hard cap on overloaded Infinity Master Tome transcription slip («抄错») chance (20%). */
     public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = 0.20;
 
+    /**
+     * Data-driven ritual balance rules loaded from {@code library_resonance.json -> ritual}
+     * and synchronized to clients via {@code EnchantCostTablePayload}.
+     */
+    public record Config(
+        int maxSingleWaitSeconds,
+        int minTomeEnchantsForWait,
+        int maxSacrificeXpLevels,
+        double maxRushDegradeNormal,
+        double maxRushDegradeInfinity,
+        double maxTranscriptionSlipChance
+    ) {
+        public static final Config DEFAULT = new Config(
+            MAX_SINGLE_WAIT_TICKS / 20,
+            MIN_TOME_ENCHANTS_FOR_WAIT,
+            MAX_SACRIFICE_XP_LEVELS,
+            MAX_RUSH_DEGRADE_NORMAL,
+            MAX_RUSH_DEGRADE_INFINITY,
+            MAX_TRANSCRIPTION_SLIP_CHANCE
+        );
+
+        public Config {
+            maxSingleWaitSeconds = Mth.clamp(maxSingleWaitSeconds, 5, 3_600);
+            minTomeEnchantsForWait = Mth.clamp(minTomeEnchantsForWait, 1, 256);
+            maxSacrificeXpLevels = Mth.clamp(maxSacrificeXpLevels, 1, 100);
+            maxRushDegradeNormal = Double.isFinite(maxRushDegradeNormal) ? Mth.clamp(maxRushDegradeNormal, 0.0, 1.0) : MAX_RUSH_DEGRADE_NORMAL;
+            maxRushDegradeInfinity = Double.isFinite(maxRushDegradeInfinity)
+                ? Mth.clamp(maxRushDegradeInfinity, maxRushDegradeNormal, 1.0)
+                : Math.max(maxRushDegradeNormal, MAX_RUSH_DEGRADE_INFINITY);
+            maxTranscriptionSlipChance = Double.isFinite(maxTranscriptionSlipChance)
+                ? Mth.clamp(maxTranscriptionSlipChance, 0.0, 1.0)
+                : MAX_TRANSCRIPTION_SLIP_CHANCE;
+        }
+
+        public int maxSingleWaitTicks() {
+            return maxSingleWaitSeconds * 20;
+        }
+
+        public static Config fromJson(@Nullable com.google.gson.JsonObject root) {
+            if (root == null) {
+                return DEFAULT;
+            }
+            com.google.gson.JsonObject r = root.has("ritual") && root.get("ritual").isJsonObject()
+                ? root.getAsJsonObject("ritual")
+                : null;
+            if (r == null) {
+                return DEFAULT;
+            }
+            int maxWaitSec = intOr(r, "max_single_wait_seconds", DEFAULT.maxSingleWaitSeconds);
+            int minTomeEnch = intOr(r, "min_tome_enchants_for_wait", DEFAULT.minTomeEnchantsForWait);
+            int maxSacXp = intOr(r, "max_sacrifice_xp_levels", DEFAULT.maxSacrificeXpLevels);
+            double rushNorm = doubleOr(r, "max_rush_degrade_normal", DEFAULT.maxRushDegradeNormal);
+            double rushInf = doubleOr(r, "max_rush_degrade_infinity", DEFAULT.maxRushDegradeInfinity);
+            double slipCap = doubleOr(r, "max_transcription_slip_chance", DEFAULT.maxTranscriptionSlipChance);
+            return new Config(maxWaitSec, minTomeEnch, maxSacXp, rushNorm, rushInf, slipCap);
+        }
+
+        private static int intOr(com.google.gson.JsonObject obj, String key, int fallback) {
+            if (!obj.has(key) || !obj.get(key).isJsonPrimitive() || !obj.get(key).getAsJsonPrimitive().isNumber()) {
+                return fallback;
+            }
+            return obj.get(key).getAsInt();
+        }
+
+        private static double doubleOr(com.google.gson.JsonObject obj, String key, double fallback) {
+            if (!obj.has(key) || !obj.get(key).isJsonPrimitive() || !obj.get(key).getAsJsonPrimitive().isNumber()) {
+                return fallback;
+            }
+            return obj.get(key).getAsDouble();
+        }
+    }
+
     public static final Identifier MENDING_ID = Identifier.withDefaultNamespace("mending");
     public static final Identifier UNBREAKING_ID = Identifier.withDefaultNamespace("unbreaking");
     private static final Set<Identifier> HIGH_APPLICABILITY_IDS = Set.of(
@@ -207,15 +279,25 @@ public final class InscriptionRitualMechanics {
 
     /**
      * Strict iff activation gate: waiting exists IF AND ONLY IF nearby shelves {@code >= middleShelfTier}
-     * OR surrounding Master Tome enchantments {@code >= 10}.
+     * OR surrounding Master Tome enchantments {@code >= minTomeEnchantsForWait}.
      */
     public static boolean shouldRequireRitualWait(
         int nearbyBookshelves,
         int middleShelfTier,
         int totalMasterTomeEnchantments
     ) {
+        return shouldRequireRitualWait(Config.DEFAULT, nearbyBookshelves, middleShelfTier, totalMasterTomeEnchantments);
+    }
+
+    public static boolean shouldRequireRitualWait(
+        @Nullable Config ritualCfg,
+        int nearbyBookshelves,
+        int middleShelfTier,
+        int totalMasterTomeEnchantments
+    ) {
+        Config c = ritualCfg != null ? ritualCfg : Config.DEFAULT;
         return Math.max(0, nearbyBookshelves) >= Math.max(1, middleShelfTier)
-            || Math.max(0, totalMasterTomeEnchantments) >= MIN_TOME_ENCHANTS_FOR_WAIT;
+            || Math.max(0, totalMasterTomeEnchantments) >= c.minTomeEnchantsForWait();
     }
 
     /** Applicability factor reflecting enchantment universality &amp; keystone impact ({@code >= 1.0}). */
@@ -241,7 +323,7 @@ public final class InscriptionRitualMechanics {
 
     /**
      * Smooth saturating single-enchantment casting duration in ticks ({@code 0} when gate is inactive;
-     * otherwise bounded strictly within {@code [100, 6000]} ticks = {@code [5s, 5m]}).
+     * otherwise bounded strictly within {@code [100, maxSingleWaitTicks]}).
      */
     public static int computeSingleEnchantWaitTicks(
         int nearbyBookshelves,
@@ -251,7 +333,28 @@ public final class InscriptionRitualMechanics {
         int maxLevel,
         double applicabilityFactor
     ) {
-        if (!shouldRequireRitualWait(nearbyBookshelves, middleShelfTier, totalMasterTomeEnchantments)) {
+        return computeSingleEnchantWaitTicks(
+            Config.DEFAULT,
+            nearbyBookshelves,
+            middleShelfTier,
+            totalMasterTomeEnchantments,
+            targetLevel,
+            maxLevel,
+            applicabilityFactor
+        );
+    }
+
+    public static int computeSingleEnchantWaitTicks(
+        @Nullable Config ritualCfg,
+        int nearbyBookshelves,
+        int middleShelfTier,
+        int totalMasterTomeEnchantments,
+        int targetLevel,
+        int maxLevel,
+        double applicabilityFactor
+    ) {
+        Config c = ritualCfg != null ? ritualCfg : Config.DEFAULT;
+        if (!shouldRequireRitualWait(c, nearbyBookshelves, middleShelfTier, totalMasterTomeEnchantments)) {
             return 0;
         }
         double relLevel = Mth.clamp((double) Math.max(1, targetLevel) / (double) Math.max(1, maxLevel), 0.10, 1.0);
@@ -260,33 +363,50 @@ public final class InscriptionRitualMechanics {
         double intensity = (0.42 * shelfLoad + 0.58 * tomeLoad)
             * (0.35 + 0.65 * Math.pow(relLevel, 1.15))
             * Math.max(1.0, applicabilityFactor);
-        double seconds = 300.0 * (1.0 - Math.exp(-0.62 * intensity));
+        double maxSec = c.maxSingleWaitSeconds();
+        double seconds = maxSec * (1.0 - Math.exp(-0.62 * intensity));
         int ticks = (int) Math.round(seconds * 20.0);
-        return Mth.clamp(ticks, 100, MAX_SINGLE_WAIT_TICKS);
+        return Mth.clamp(ticks, 100, c.maxSingleWaitTicks());
     }
 
     /**
-     * Direct XP level sacrifice cost ({@code 1..15} levels) derived smoothly from live remaining ticks.
+     * Direct XP level sacrifice cost ({@code 1..maxSacrificeXpLevels}) derived smoothly from live remaining ticks.
      */
     public static int computeSacrificeXpLevels(long remainingTicks) {
+        return computeSacrificeXpLevels(Config.DEFAULT, remainingTicks);
+    }
+
+    public static int computeSacrificeXpLevels(@Nullable Config ritualCfg, long remainingTicks) {
         if (remainingTicks <= 0L) {
             return 0;
         }
+        Config c = ritualCfg != null ? ritualCfg : Config.DEFAULT;
+        int cap = c.maxSacrificeXpLevels();
         double remSeconds = remainingTicks / 20.0;
-        int raw = (int) Math.ceil(MAX_SACRIFICE_XP_LEVELS * (1.0 - Math.exp(-remSeconds / 240.0)));
-        return Mth.clamp(raw, 1, MAX_SACRIFICE_XP_LEVELS);
+        int raw = (int) Math.ceil(cap * (1.0 - Math.exp(-remSeconds / 240.0)));
+        return Mth.clamp(raw, 1, cap);
     }
 
     /**
-     * Live Master Tome degradation probability when forcing a rush skip without sacrificing XP:
-     * updates every tick from {@code remainingTicks}, strictly {@code <= 50%} normally and
-     * {@code <= 70%} when enchanting using an {@code Infinity}-bearing Master Tome.
+     * Live Master Tome degradation probability when forcing a rush skip without sacrificing XP.
      */
     public static double computeRushDegradeChance(long remainingTicks, boolean usedInfinityMasterTome) {
+        return computeRushDegradeChance(Config.DEFAULT, remainingTicks, usedInfinityMasterTome);
+    }
+
+    public static double computeRushDegradeChance(
+        @Nullable Config ritualCfg,
+        long remainingTicks,
+        boolean usedInfinityMasterTome
+    ) {
         if (remainingTicks <= 0L) {
             return 0.0;
         }
-        double cap = usedInfinityMasterTome ? MAX_RUSH_DEGRADE_INFINITY : MAX_RUSH_DEGRADE_NORMAL;
+        Config c = ritualCfg != null ? ritualCfg : Config.DEFAULT;
+        double cap = usedInfinityMasterTome ? c.maxRushDegradeInfinity() : c.maxRushDegradeNormal();
+        if (cap <= 0.0) {
+            return 0.0;
+        }
         double remSeconds = remainingTicks / 20.0;
         double raw = cap * (1.0 - Math.exp(-remSeconds / 210.0));
         return Mth.clamp(raw, cap * 0.02, cap);
@@ -296,14 +416,22 @@ public final class InscriptionRitualMechanics {
      * Overloaded {@code Infinity} Master Tome transcription slip («抄错») probability:
      * active ONLY when a tome in scan range holds {@code minecraft:infinity} AND {@code > 3} other
      * enchantments ({@code maxOverloadedTomeEnchants >= 5}); scales across both single-tome
-     * enchantment count and detected shelf count, strictly capped at {@code 20%}.
+     * enchantment count and detected shelf count, strictly capped at {@code maxTranscriptionSlipChance}.
      */
     public static double computeTranscriptionSlipChance(
         int maxOverloadedTomeEnchants,
         int totalDetectedBookshelves
     ) {
-        // Must have Infinity (1) + strictly more than 3 other enchantments (>= 4) => total >= 5.
-        if (maxOverloadedTomeEnchants < 5) {
+        return computeTranscriptionSlipChance(Config.DEFAULT, maxOverloadedTomeEnchants, totalDetectedBookshelves);
+    }
+
+    public static double computeTranscriptionSlipChance(
+        @Nullable Config ritualCfg,
+        int maxOverloadedTomeEnchants,
+        int totalDetectedBookshelves
+    ) {
+        Config c = ritualCfg != null ? ritualCfg : Config.DEFAULT;
+        if (c.maxTranscriptionSlipChance() <= 0.0 || maxOverloadedTomeEnchants < 5) {
             return 0.0;
         }
         double tomeComponent = switch (Math.min(8, maxOverloadedTomeEnchants)) {
@@ -325,7 +453,7 @@ public final class InscriptionRitualMechanics {
         } else {
             shelfComponent = 0.06;
         }
-        return Math.min(MAX_TRANSCRIPTION_SLIP_CHANCE, tomeComponent + shelfComponent);
+        return Math.min(c.maxTranscriptionSlipChance(), tomeComponent + shelfComponent);
     }
 
     /**
@@ -386,7 +514,10 @@ public final class InscriptionRitualMechanics {
         return weights.size() - 1;
     }
 
-    /** Selects the highest-priority degradation victim (minimum preservation score first). */
+    /**
+     * Selects the highest-priority degradation victim: non-{@code Infinity} Master Tomes are ALWAYS
+     * chosen before {@code Infinity}-blessed Master Tomes, then broken by minimum preservation score.
+     */
     @Nullable
     public static TomeCandidate selectDegradationVictim(List<TomeCandidate> candidates) {
         if (candidates == null || candidates.isEmpty()) {
@@ -394,7 +525,8 @@ public final class InscriptionRitualMechanics {
         }
         return candidates.stream()
             .min(Comparator
-                .comparingDouble(TomeCandidate::preservationScore)
+                .comparing(TomeCandidate::hasInfinity)
+                .thenComparingDouble(TomeCandidate::preservationScore)
                 .thenComparingInt(TomeCandidate::enchantCount)
                 .thenComparingDouble(TomeCandidate::averageRelativeLevel)
                 .thenComparingDouble(TomeCandidate::averageRarityScore)
@@ -413,16 +545,30 @@ public final class InscriptionRitualMechanics {
             return new LibraryRitualScan(0, false, 0, 0);
         }
         BookshelfProgression.Config safeCfg = cfg != null ? cfg : BookshelfProgression.Config.DEFAULT;
-        int shelves = 0;
+        boolean ceilingBlocked = ChiseledEnchantingTableBlock.isTableCeilingBlocked(level, tablePos);
+        int openAdj = ChiseledEnchantingTableBlock.countOpenAdjacentBlocks(level, tablePos);
+        if (safeCfg.requireBreathingRoom()
+            && BookshelfProgression.effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, safeCfg) <= 0) {
+            return new LibraryRitualScan(0, false, 0, 0);
+        }
+
+        int rawShelves = 0;
         boolean anyTome = false;
-        int totalTomeEnchants = 0;
+        int rawTomeEnchants = 0;
         int maxOverloadedInf = 0;
+        boolean checkLos = safeCfg.requireLineOfSight();
 
         for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
             BlockPos p = tablePos.offset(offset);
+            if (!level.hasChunkAt(p)) {
+                continue;
+            }
+            if (checkLos && !ChiseledEnchantingTableBlock.hasClearLineOfSight(level, tablePos, p)) {
+                continue;
+            }
             BlockState state = level.getBlockState(p);
             if (ChiseledEnchantingTableBlock.isRegularBookshelf(state)) {
-                shelves++;
+                rawShelves++;
                 continue;
             }
             if (!state.is(Blocks.CHISELED_BOOKSHELF)) {
@@ -431,7 +577,7 @@ public final class InscriptionRitualMechanics {
             // Broad bookshelves (广义书架) include regular bookshelves, empty chiseled bookshelves,
             // AND book-holding chiseled bookshelves (including Depleted Tomes); only slots holding
             // Enchanted Books count toward Master Tome resonance below.
-            shelves++;
+            rawShelves++;
             if (!(level.getBlockEntity(p) instanceof ChiseledBookShelfBlockEntity shelfBe)) {
                 continue;
             }
@@ -442,7 +588,7 @@ public final class InscriptionRitualMechanics {
                 int count = enchants.size();
                 if (count <= 0) continue;
                 anyTome = true;
-                totalTomeEnchants += count;
+                rawTomeEnchants += count;
                 boolean hasInf = MasterTomeWear.hasInfinityImmunity(book);
                 // Strictly: possesses Infinity (1) AND strictly more than 3 OTHER enchantments (> 3 => count - 1 > 3 => count >= 5).
                 if (hasInf && (count - 1) > 3 && count > maxOverloadedInf) {
@@ -450,7 +596,19 @@ public final class InscriptionRitualMechanics {
                 }
             }
         }
-        return new LibraryRitualScan(shelves, anyTome, totalTomeEnchants, maxOverloadedInf);
+        int effectiveShelves = BookshelfProgression.effectiveShelvesAfterBreathingRoom(
+            rawShelves,
+            ceilingBlocked,
+            openAdj,
+            safeCfg
+        );
+        int effectiveTomeEnchants = BookshelfProgression.effectiveShelvesAfterBreathingRoom(
+            rawTomeEnchants,
+            ceilingBlocked,
+            openAdj,
+            safeCfg
+        );
+        return new LibraryRitualScan(effectiveShelves, anyTome, effectiveTomeEnchants, maxOverloadedInf);
     }
 
     /** Returns {@code true} if any nearby Master Tome providing {@code enchantmentId >= minLevel} carries {@code minecraft:infinity}. */
@@ -468,8 +626,22 @@ public final class InscriptionRitualMechanics {
             return false;
         }
         BookshelfProgression.Config safeCfg = cfg != null ? cfg : BookshelfProgression.Config.DEFAULT;
+        if (safeCfg.requireBreathingRoom()) {
+            boolean ceilingBlocked = ChiseledEnchantingTableBlock.isTableCeilingBlocked(level, tablePos);
+            int openAdj = ChiseledEnchantingTableBlock.countOpenAdjacentBlocks(level, tablePos);
+            if (BookshelfProgression.effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, safeCfg) <= 0) {
+                return false;
+            }
+        }
+        boolean checkLos = safeCfg.requireLineOfSight();
         for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
             BlockPos p = tablePos.offset(offset);
+            if (!level.hasChunkAt(p)) {
+                continue;
+            }
+            if (checkLos && !ChiseledEnchantingTableBlock.hasClearLineOfSight(level, tablePos, p)) {
+                continue;
+            }
             if (!(level.getBlockEntity(p) instanceof ChiseledBookShelfBlockEntity shelfBe)) {
                 continue;
             }
@@ -505,9 +677,23 @@ public final class InscriptionRitualMechanics {
             return null;
         }
         BookshelfProgression.Config safeCfg = cfg != null ? cfg : BookshelfProgression.Config.DEFAULT;
+        if (safeCfg.requireBreathingRoom()) {
+            boolean ceilingBlocked = ChiseledEnchantingTableBlock.isTableCeilingBlocked(level, tablePos);
+            int openAdj = ChiseledEnchantingTableBlock.countOpenAdjacentBlocks(level, tablePos);
+            if (BookshelfProgression.effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, safeCfg) <= 0) {
+                return null;
+            }
+        }
+        boolean checkLos = safeCfg.requireLineOfSight();
         List<TomeCandidate> candidates = new ArrayList<>();
         for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
             BlockPos p = tablePos.offset(offset);
+            if (!level.hasChunkAt(p)) {
+                continue;
+            }
+            if (checkLos && !ChiseledEnchantingTableBlock.hasClearLineOfSight(level, tablePos, p)) {
+                continue;
+            }
             if (!(level.getBlockEntity(p) instanceof ChiseledBookShelfBlockEntity shelfBe)) {
                 continue;
             }

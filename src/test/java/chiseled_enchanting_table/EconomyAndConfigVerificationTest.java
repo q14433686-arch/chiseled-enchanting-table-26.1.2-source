@@ -990,14 +990,14 @@ class EconomyAndConfigVerificationTest {
             }
         }
 
-        // 2. Two-tier bookshelf passive regeneration curve (0 -> 20d/24000s, Tier 1 @ 38 -> 10d/12000s, Tier 2 @ 42 -> 3d/3600s).
+        // 2. Two-tier bookshelf passive regeneration curve (0 -> 6d/7200s, Tier 1 @ 38 -> 3d/3600s, Tier 2 @ 42 -> 1d/1200s).
         LibraryResonance.Config def = LibraryResonance.Config.DEFAULT;
         assertTrue(def.tomeRegenEnabled());
-        assertEquals(24_000, def.tomeRegenBaseSeconds());
+        assertEquals(7_200, def.tomeRegenBaseSeconds());
         assertEquals(38, def.tomeRegenTier1Shelves());
-        assertEquals(12_000, def.tomeRegenTier1Seconds());
+        assertEquals(3_600, def.tomeRegenTier1Seconds());
         assertEquals(42, def.tomeRegenTier2Shelves());
-        assertEquals(3_600, def.tomeRegenTier2Seconds());
+        assertEquals(1_200, def.tomeRegenTier2Seconds());
 
         assertEquals(0, MasterTomeWear.regenTierIndex(def, 0));
         assertEquals(0, MasterTomeWear.regenTierIndex(def, 37));
@@ -1006,23 +1006,23 @@ class EconomyAndConfigVerificationTest {
         assertEquals(2, MasterTomeWear.regenTierIndex(def, 42));
         assertEquals(2, MasterTomeWear.regenTierIndex(def, 64));
 
-        assertEquals(24_000.0, MasterTomeWear.computeRegenSeconds(def, 0), 1e-6);
-        assertEquals(480_000, MasterTomeWear.computeRegenIntervalTicks(def, 0));
-        // 38 shelves = 10 game days = 12,000s = 240,000 ticks
-        assertEquals(12_000.0, MasterTomeWear.computeRegenSeconds(def, 38), 1e-6);
-        assertEquals(240_000, MasterTomeWear.computeRegenIntervalTicks(def, 38));
-        // 42 shelves = 3 game days = 3,600s = 72,000 ticks
-        assertEquals(3_600.0, MasterTomeWear.computeRegenSeconds(def, 42), 1e-6);
-        assertEquals(72_000, MasterTomeWear.computeRegenIntervalTicks(def, 42));
+        assertEquals(7_200.0, MasterTomeWear.computeRegenSeconds(def, 0), 1e-6);
+        assertEquals(144_000, MasterTomeWear.computeRegenIntervalTicks(def, 0));
+        // 38 shelves = 3 game days = 3,600s = 72,000 ticks
+        assertEquals(3_600.0, MasterTomeWear.computeRegenSeconds(def, 38), 1e-6);
+        assertEquals(72_000, MasterTomeWear.computeRegenIntervalTicks(def, 38));
+        // 42 shelves = 1 game day = 1,200s = 24,000 ticks
+        assertEquals(1_200.0, MasterTomeWear.computeRegenSeconds(def, 42), 1e-6);
+        assertEquals(24_000, MasterTomeWear.computeRegenIntervalTicks(def, 42));
 
         // Dramatic two-tier breakthroughs at 37 -> 38 and 41 -> 42 AND strict non-increasing monotonicity for S in [0, 100].
         assertTrue(
-            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) >= 3_600.0,
-            "Reaching Tier 1 (38 bookshelves -> 10 game days) must deliver a substantial regeneration breakthrough"
+            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) >= 1_000.0,
+            "Reaching Tier 1 (38 bookshelves -> 3 game days) must deliver a substantial regeneration breakthrough"
         );
         assertTrue(
-            MasterTomeWear.computeRegenSeconds(def, 41) - MasterTomeWear.computeRegenSeconds(def, 42) >= 2_400.0,
-            "Reaching Tier 2 (42 bookshelves -> 3 game days) must deliver a dramatic Grand Sanctum regeneration breakthrough"
+            MasterTomeWear.computeRegenSeconds(def, 41) - MasterTomeWear.computeRegenSeconds(def, 42) >= 800.0,
+            "Reaching Tier 2 (42 bookshelves -> 1 game day) must deliver a dramatic Grand Sanctum regeneration breakthrough"
         );
         for (int s = 0; s < 100; s++) {
             int curTicks = MasterTomeWear.computeRegenIntervalTicks(def, s);
@@ -1031,7 +1031,7 @@ class EconomyAndConfigVerificationTest {
                 nextTicks <= curTicks,
                 "Regen interval ticks must never slow down when adding bookshelves at S=" + s
             );
-            assertTrue(curTicks >= 36_000, "Asymptotic floor must stay >= 1.5 game days (36,000 ticks)");
+            assertTrue(curTicks >= 12_000, "Asymptotic floor must stay >= 0.5 game days (12,000 ticks)");
         }
 
         // Disabled flag cleanly stops passive regeneration.
@@ -1271,20 +1271,61 @@ class EconomyAndConfigVerificationTest {
         assertEquals(0.50, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(100_000L, false), 1e-6);
         assertEquals(0.70, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(100_000L, true), 1e-6);
 
-        // 6. Degradation priority order: lowest relative level + fewest enchants + lowest rarity selected FIRST!
+        // 6. Degradation priority order: non-Infinity tomes ALWAYS degrade before Infinity tomes;
+        //    within the same group, lowest relative level + fewest enchants + lowest rarity selected FIRST!
         var weakTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
             net.minecraft.core.BlockPos.ZERO, 0, 1, 0.20, 0.10, false
         );
         var midTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
             net.minecraft.core.BlockPos.ZERO, 1, 2, 0.80, 0.50, false
         );
+        var leanInfinityTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 3, 1, 0.10, 0.05, true
+        );
         var grandInfinityTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
             net.minecraft.core.BlockPos.ZERO, 2, 5, 1.00, 0.85, true
         );
         var chosenVictim = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
-            List.of(grandInfinityTome, midTome, weakTome)
+            List.of(grandInfinityTome, leanInfinityTome, midTome, weakTome)
         );
-        assertEquals(weakTome, chosenVictim, "Lowest-level, fewest-enchant, lowest-rarity tome must degrade first");
+        assertEquals(weakTome, chosenVictim, "Lowest-level, fewest-enchant, lowest-rarity non-Infinity tome must degrade first");
+        assertEquals(
+            midTome,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
+                List.of(leanInfinityTome, midTome)
+            ),
+            "Even a higher-tier non-Infinity tome must degrade before an Infinity Master Tome"
+        );
+        assertEquals(
+            leanInfinityTome,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
+                List.of(grandInfinityTome, leanInfinityTome)
+            ),
+            "When only Infinity Master Tomes remain, the weakest Infinity tome degrades first"
+        );
+
+        // 6b. Data-driven Ritual Config (CET-015) & treasure_epiphany.json hygiene.
+        var customRitualJson = JsonParser.parseString("""
+            {
+              "ritual": {
+                "optimal_target_tomes": 14,
+                "max_single_wait_seconds": 180,
+                "sacrifice_max_xp_levels": 9,
+                "rush_max_normal_degrade_chance": 0.35,
+                "rush_max_infinity_degrade_chance": 0.55
+              }
+            }
+            """).getAsJsonObject();
+        var customRitual = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(customRitualJson);
+        assertEquals(14, customRitual.optimalTargetTomes());
+        assertEquals(3_600, customRitual.maxSingleWaitTicks());
+        assertEquals(9, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(customRitual, 100_000L));
+        assertEquals(0.35, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(customRitual, 100_000L, false), 1e-6);
+        assertEquals(0.55, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(customRitual, 100_000L, true), 1e-6);
+        String epiphanyJsonRaw = Files.readString(
+            Path.of("src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/treasure_epiphany.json")
+        );
+        assertFalse(epiphanyJsonRaw.contains("minecraft:infinity"), "treasure_epiphany.json must not contain dead minecraft:infinity entry");
 
         // 7. Queue serialization round-trip + all 5 new custom advancements present.
         var q1 = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(

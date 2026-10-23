@@ -1311,7 +1311,11 @@ public final class GrimoireDiagramRenderer {
         ctx.fill(x, gY, x + 3, gY + gH, INK_GOLD_DARK);
         drawWrappedBox(
             ctx, font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p2_gate", midShelf, 10),
+            Component.translatable(
+                "gui.chiseled_enchanting_table.grimoire.diag.ch3p2_gate",
+                midShelf,
+                SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+            ),
             x + 6, gY + 3, w - 10, gH - 6, 0.66f, 0.58f, INK_PRIMARY, false
         );
 

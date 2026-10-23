@@ -422,12 +422,12 @@ public final class DisenchantmentApplication {
     }
 
     public static void apply(ChiseledEnchantingTableScreenHandler menu, ApplyEnchantmentPayload payload) {
-        if (!ChiseledEnchantingTableData.disenchantEnabled()) {
+        if (!ChiseledEnchantingTableData.disenchantEnabled() || menu.isRitualActive()) {
             return;
         }
         OptionType type = payload.option_type();
         ItemStack target = menu.get_enchantable_item();
-        if (target.isEmpty()) {
+        if (target.isEmpty() || target.getCount() != 1) {
             return;
         }
 

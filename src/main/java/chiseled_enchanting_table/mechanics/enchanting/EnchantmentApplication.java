@@ -34,12 +34,18 @@ public final class EnchantmentApplication {
     public static boolean apply(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
         Level world = handler.world();
         ItemStack enchantable_item = handler.get_enchantable_item();
-        ItemStack planningStack = handler.getEffectiveEnchantableItem();
-        if (ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+        if (enchantable_item.isEmpty()
+            || enchantable_item.getCount() != 1
+            || ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
             return false;
         }
+        ItemStack planningStack = handler.getEffectiveEnchantableItem();
         int enchantment_level = payload.enchantment_level();
-        Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
+        var optEnchantment = ChiseledEnchantingTableScreenHandler.findEnchantment(payload.enchantment_id(), world);
+        if (optEnchantment.isEmpty()) {
+            return false;
+        }
+        Holder<Enchantment> enchantment = optEnchantment.get();
         if (!(planningStack.is(Items.BOOK) || planningStack.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(planningStack))) {
             return false;
         }
@@ -135,6 +141,7 @@ public final class EnchantmentApplication {
             enchantment
         );
         int waitTicks = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
+            handler.ritualConfig(),
             ritualScan.totalDetectedBookshelves(),
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.medianShelfGate(shelfCfg),
             ritualScan.totalMasterTomeEnchantments(),
@@ -194,6 +201,7 @@ public final class EnchantmentApplication {
 
         // Headless / synthetic non-BE fallback path
         double slipChance = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
+            handler.ritualConfig(),
             ritualScan.maxOverloadedInfinityTomeEnchants(),
             ritualScan.totalDetectedBookshelves()
         );
@@ -274,17 +282,23 @@ public final class EnchantmentApplication {
         }
 
         ItemStack enchantable_item = handler.get_enchantable_item();
-        if (ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+        if (enchantable_item.isEmpty()
+            || enchantable_item.getCount() != 1
+            || ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
             return false;
         }
         int enchantment_level = payload.enchantment_level();
-        Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
+        var optEnchantment = ChiseledEnchantingTableScreenHandler.findEnchantment(payload.enchantment_id(), world);
+        if (optEnchantment.isEmpty()) {
+            return false;
+        }
+        Holder<Enchantment> enchantment = optEnchantment.get();
         boolean targetWasBook = enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK);
         if (!(targetWasBook || enchantment.value().canEnchant(enchantable_item))) {
             return false;
         }
 
-        ItemStack sourceBookSnapshot = enchanted_book.copy();
+        ItemStack sourceBookSnapshot = enchanted_book.copyWithCount(1);
         ItemEnchantments preTargetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
         int conflictRefund = computeConflictOverwriteRefund(handler, enchantable_item, preTargetEnchantments, enchantment);
 
@@ -294,19 +308,29 @@ public final class EnchantmentApplication {
                 new_enchanted_book_enchants.set(entry.getKey(), entry.getIntValue());
             }
         }
-        EnchantmentHelper.updateEnchantments(enchanted_book, m -> {
+        ItemStack updatedSingleBook = sourceBookSnapshot.copy();
+        EnchantmentHelper.updateEnchantments(updatedSingleBook, m -> {
             var keys = new HashSet<>(m.keySet());
             for (var k : keys) m.set(k, 0);
             for (var entry : new_enchanted_book_enchants.keySet()) m.set(entry, new_enchanted_book_enchants.getLevel(entry));
         });
 
-        if (EnchantmentHelper.getEnchantmentsForCrafting(enchanted_book).isEmpty()) {
-            handler.setCostSlot(new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1));
+        ItemStack remainderBook;
+        if (EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook).isEmpty()) {
+            remainderBook = new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1);
         } else {
             EnchantmentProvenance.pruneToCurrentEnchantments(
-                enchanted_book,
-                EnchantmentHelper.getEnchantmentsForCrafting(enchanted_book)
+                updatedSingleBook,
+                EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook)
             );
+            remainderBook = updatedSingleBook;
+        }
+        if (enchanted_book.getCount() <= 1) {
+            handler.setCostSlot(remainderBook);
+        } else {
+            ItemStack reduced = enchanted_book.copyWithCount(enchanted_book.getCount() - 1);
+            handler.setCostSlot(reduced);
+            chiseled_enchanting_table.utils.InventoryUtils.insertItem(handler.player, remainderBook, java.util.Optional.empty());
         }
 
         ItemEnchantments.Mutable newEnchantmentsComponent = new ItemEnchantments.Mutable(preTargetEnchantments);

@@ -206,7 +206,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         this.configOverlay = new ChiseledEnchantingConfigScreen(this, () -> {
             this.configOverlay = null;
             if (this.scrollContainer != null) {
-                this.scrollContainer.updateEntry(this.menu.get_enchantable_item(), this.menu.get_cost_item());
+                this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
             }
         });
         this.configOverlay.initOverlay(this.minecraft, this.width, this.height);
@@ -326,6 +326,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private boolean canCleanseAllNow() {
         return this.menu.disenchantEnabled()
+            && !this.menu.isRitualActive()
             && DisenchantmentApplication.countNonCurseEnchantments(this.menu.get_enchantable_item()) > 0;
     }
 
@@ -368,7 +369,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             this.configOverlay = new ChiseledEnchantingConfigScreen(this, () -> {
                 this.configOverlay = null;
-                if (this.scrollContainer != null) this.scrollContainer.updateEntry(this.menu.get_enchantable_item(), this.menu.get_cost_item());
+                if (this.scrollContainer != null) this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
             });
             this.configOverlay.initOverlay(this.minecraft, this.width, this.height);
             return true;
@@ -421,7 +422,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (isOverCleanseAllButton(event.x(), event.y())) {
             if (canCleanseAllNow()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
-                ClientPlayNetworking.send(new ApplyEnchantmentPayload(OptionType.DISENCHANT_ALL, DisenchantmentApplication.DISENCHANT_ALL_ID, 0));
+                ClientPlayNetworking.send(new ApplyEnchantmentPayload(this.menu.containerId, OptionType.DISENCHANT_ALL, DisenchantmentApplication.DISENCHANT_ALL_ID, 0));
             } else {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             }
@@ -430,7 +431,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (isOverFreezeButton(event.x(), event.y())) {
             if (this.menu.canAffordFreezeEpiphany()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
-                ClientPlayNetworking.send(new FreezeEpiphanyPayload());
+                ClientPlayNetworking.send(new FreezeEpiphanyPayload(this.menu.containerId));
             } else {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             }
@@ -439,7 +440,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (isOverRerollButton(event.x(), event.y())) {
             if (this.menu.canAffordRerollEpiphany()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                ClientPlayNetworking.send(new RerollEpiphanyPayload());
+                ClientPlayNetworking.send(new RerollEpiphanyPayload(this.menu.containerId));
             } else {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             }
@@ -498,7 +499,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.grimoireOverlay.keyPressed(event);
             return true;
         }
-        this.scrollContainer.keyPressed(event);
+        if (this.scrollContainer.keyPressed(event)) {
+            return true;
+        }
         return super.keyPressed(event);
     }
 
@@ -805,7 +808,6 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             if (isOverSacrificeSkipButton(mouseX, mouseY)) {
                 int lvls = this.menu.currentSacrificeSkipLevels();
-                boolean hasTome = this.menu.hasAnyMasterTomeInRange();
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_title")
                     .withStyle(ChatFormatting.GOLD));
@@ -816,16 +818,15 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ).withStyle(this.menu.player.experienceLevel >= lvls ? ChatFormatting.GREEN : ChatFormatting.RED));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_safe")
                     .withStyle(ChatFormatting.AQUA));
-                if (!hasTome) {
-                    tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
-                        .withStyle(ChatFormatting.RED));
-                }
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
             if (isOverRushSkipButton(mouseX, mouseY)) {
                 double riskPct = this.menu.currentRushSkipDegradeChance() * 100.0;
-                int capPct = this.menu.ritualUsedInfinityTome() ? 70 : 50;
+                var rCfg = this.menu.ritualConfig();
+                int capPct = (int) Math.round(100.0 * (this.menu.ritualUsedInfinityTome()
+                    ? rCfg.rushMaxInfinityDegradeChance()
+                    : rCfg.rushMaxNormalDegradeChance()));
                 boolean hasTome = this.menu.hasAnyMasterTomeInRange();
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_rush_title")

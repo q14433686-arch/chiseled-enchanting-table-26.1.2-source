@@ -34,14 +34,16 @@ class FullPortRuntimeTest {
         }
     }
 
-    @Test void ritualWirePreservesMenuSessionAndQueue() {
+    @Test void ritualWirePreservesMenuSessionQueueAndBlockedState() {
         var step = new EnchantmentWithLevel(Identifier.withDefaultNamespace("sharpness"), 5);
-        var sync = new SyncRitualStatePayload(27, 987654321L, List.of(step), true, false);
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
         try {
-            SyncRitualStatePayload.CODEC.encode(buffer, sync);
-            assertEquals(sync, SyncRitualStatePayload.CODEC.decode(buffer));
-            assertEquals(0, buffer.readableBytes());
+            for (boolean blocked : new boolean[] {false, true}) {
+                var sync = new SyncRitualStatePayload(27, 987654321L, List.of(step), true, false, blocked);
+                SyncRitualStatePayload.CODEC.encode(buffer, sync);
+                assertEquals(sync, SyncRitualStatePayload.CODEC.decode(buffer));
+                assertEquals(0, buffer.readableBytes());
+            }
             var skip = new SkipRitualPayload(27, 987654321L, true);
             SkipRitualPayload.CODEC.encode(buffer, skip);
             assertEquals(skip, SkipRitualPayload.CODEC.decode(buffer));

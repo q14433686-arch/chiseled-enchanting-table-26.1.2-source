@@ -53,13 +53,21 @@ public final class ModConfigNetworking {
         }
     }
 
-    public record UpdateRuntimeConfigPayload(String json, long requestId) implements CustomPacketPayload {
+    public record UpdateRuntimeConfigPayload(String json, long requestId, boolean closeContainer) implements CustomPacketPayload {
+        public UpdateRuntimeConfigPayload(String json, long requestId) {
+            this(json, requestId, true);
+        }
+
         public static final CustomPacketPayload.Type<UpdateRuntimeConfigPayload> TYPE =
             new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("update_runtime_config_" + chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
 
         public static final StreamCodec<FriendlyByteBuf, UpdateRuntimeConfigPayload> CODEC = StreamCodec.of(
-            (buf, payload) -> { buf.writeUtf(payload.json(), 262_144); buf.writeLong(payload.requestId()); },
-            buf -> new UpdateRuntimeConfigPayload(buf.readUtf(262_144), buf.readLong())
+            (buf, payload) -> {
+                buf.writeUtf(payload.json(), 262_144);
+                buf.writeLong(payload.requestId());
+                buf.writeBoolean(payload.closeContainer());
+            },
+            buf -> new UpdateRuntimeConfigPayload(buf.readUtf(262_144), buf.readLong(), buf.readBoolean())
         );
 
         @Override
@@ -98,7 +106,7 @@ public final class ModConfigNetworking {
             try {
                 if (payload.requestId() <= 0 || payload.json().isBlank()) throw new IllegalArgumentException("Invalid save request");
                 ModRuntimeConfig parsed = ModRuntimeConfig.fromJsonString(payload.json());
-                applyAndBroadcast(server, parsed);
+                applyAndBroadcast(server, parsed, payload.closeContainer() ? null : player);
                 sendToPlayer(player, payload.requestId(), true);
             } catch (RuntimeException error) {
                 ChiseledEnchantingTable.LOGGER.warn("Rejected config update from {}", player.getName().getString(), error);
@@ -157,12 +165,28 @@ public final class ModConfigNetworking {
     }
 
     public static void applyAndBroadcast(MinecraftServer server, ModRuntimeConfig updated) {
+        applyAndBroadcast(server, updated, null);
+    }
+
+    public static void applyAndBroadcast(
+        MinecraftServer server,
+        ModRuntimeConfig updated,
+        @org.jetbrains.annotations.Nullable ServerPlayer keepOpenCaller
+    ) {
         ModRuntimeConfig sanitized = updated.withEnforcedPolicy(ModRuntimeConfig.serverPackPolicy());
         ChiseledEnchantingTableData.applyRuntimeConfig(sanitized, ModRuntimeConfig.serverPackPolicy(),
             () -> ModRuntimeConfig.setLocalAndSave(sanitized));
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             // Rule changes can invalidate opening-time unlock/scan snapshots. Vanilla returns inputs.
-            if (p.containerMenu instanceof ChiseledEnchantingTableScreenHandler) p.closeContainer();
+            if (p.containerMenu instanceof ChiseledEnchantingTableScreenHandler openMenu) {
+                if (keepOpenCaller != null && p == keepOpenCaller) {
+                    sendToPlayer(p);
+                    EnchantCostSync.sendTo(p);
+                    openMenu.refreshAfterRuntimeConfigChange();
+                    continue;
+                }
+                p.closeContainer();
+            }
             sendToPlayer(p);
             EnchantCostSync.sendTo(p);
         }

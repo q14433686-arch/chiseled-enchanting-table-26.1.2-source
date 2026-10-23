@@ -201,6 +201,9 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     private ItemStack ritualTarget = ItemStack.EMPTY;
     private boolean ritualBlocked;
     private String ritualCorruptQueue = "";
+    public boolean isRitualBlocked() {
+        return this.ritualBlocked || !this.ritualCorruptQueue.isEmpty();
+    }
     public long ritualSession() { return this.ritualSession; }
     public boolean ownsRitual(UUID actor) { return !hasActiveRitual() || actor.equals(this.ritualOwnerUuid); }
     public boolean canQueue(UUID actor) { return canQueue(actor, 0); }
@@ -208,13 +211,14 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         long refund = Math.max(0, extraRefund);
         for (var step : ritualQueue) refund += step.conflictRefundPoints();
         if (refund > Integer.MAX_VALUE) return false;
+        long maxStepWait = ChiseledEnchantingTableData.ritualConfig().maxSingleWaitTicks();
         ItemStack target = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
-        return ownsRitual(actor) && !ritualBlocked && target.getCount() == 1
+        return ownsRitual(actor) && !isRitualBlocked() && target.getCount() == 1
             && (ritualQueue.isEmpty() || ItemStack.isSameItemSameComponents(target, ritualTarget))
             && ritualQueue.size() < MAX_RITUAL_STEPS
             && InscriptionRitualMechanics.serializeQueue(ritualQueue).length() + 1024 <= MAX_RITUAL_CHARACTERS
-            && ritualRemainingTicks <= Long.MAX_VALUE - InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS
-            && ritualTotalTicks <= Long.MAX_VALUE - InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS;
+            && ritualRemainingTicks <= Long.MAX_VALUE - maxStepWait
+            && ritualTotalTicks <= Long.MAX_VALUE - maxStepWait;
     }
     public boolean cancelRitual(UUID actor) {
         if (!ownsRitual(actor)) return false;
@@ -223,7 +227,43 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         return true;
     }
     @Override public boolean canPlaceItem(int slot, ItemStack stack) {
-        return slot != ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT || !hasActiveRitual();
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        if (slot == ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT) {
+            if (hasActiveRitual()) {
+                return false;
+            }
+            boolean isDepleted = stack.is(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME);
+            boolean isBookOrGear = stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK) || stack.isEnchantable();
+            boolean isTransform = ChiseledEnchantingTableData.hasTransformationForInput(stack);
+            if (!isDepleted && !isBookOrGear && !isTransform) {
+                return false;
+            }
+            int maxAllowed;
+            if (isDepleted) {
+                var sg = ChiseledEnchantingTableData.shelfGatesConfig();
+                maxAllowed = Math.max(1, Math.max(sg.baseBatchSize(), sg.tier3BatchSize()));
+            } else if (!isBookOrGear && isTransform) {
+                maxAllowed = Math.max(1, chiseled_enchanting_table.config.ModRuntimeConfig.effective().transformationMaxBatchSize());
+            } else {
+                maxAllowed = 1;
+            }
+            ItemStack existing = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
+            if (!existing.isEmpty()) {
+                return maxAllowed > 1
+                    && existing.getCount() < maxAllowed
+                    && ItemStack.isSameItemSameComponents(existing, stack);
+            }
+            return true;
+        }
+        if (slot == ChiseledEnchantingTableScreenHandler.COST_SLOT) {
+            if (stack.is(Items.ENCHANTED_BOOK)) {
+                return getItem(ChiseledEnchantingTableScreenHandler.COST_SLOT).isEmpty();
+            }
+            return true;
+        }
+        return false;
     }
     @Override public boolean canTakeItem(net.minecraft.world.Container hopper, int slot, ItemStack stack) {
         return slot != ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT || !hasActiveRitual();
@@ -237,7 +277,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             this.ritualSession = java.util.UUID.randomUUID().getLeastSignificantBits();
             if (this.ritualSession == 0) this.ritualSession = 1;
         }
-        long add = Math.max(1L, Math.min(InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS, stepWaitTicks));
+        long maxWait = ChiseledEnchantingTableData.ritualConfig().maxSingleWaitTicks();
+        long add = Math.max(1L, Math.min(maxWait, stepWaitTicks));
         this.ritualTotalTicks = Math.addExact(this.ritualTotalTicks, add);
         this.ritualRemainingTicks = Math.addExact(this.ritualRemainingTicks, add);
         this.ritualQueue.add(step);
@@ -277,13 +318,12 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             return false;
         }
         for (QueuedInscription step : this.ritualQueue) {
-            try {
-                var holder = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(step.enchantmentId(), level);
-                if (!currentTarget.is(Items.BOOK) && !currentTarget.is(Items.ENCHANTED_BOOK)
-                    && !holder.value().canEnchant(currentTarget)) throw new IllegalArgumentException("Unsupported target");
-            } catch (RuntimeException error) {
+            var optHolder = ChiseledEnchantingTableScreenHandler.findEnchantment(step.enchantmentId(), level);
+            if (optHolder.isEmpty()
+                || (!currentTarget.is(Items.BOOK) && !currentTarget.is(Items.ENCHANTED_BOOK)
+                    && !optHolder.get().value().canEnchant(currentTarget))) {
                 ritualBlocked = true;
-                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.warn("Quarantined invalid ritual at {}", pos, error);
+                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.warn("Quarantined invalid ritual at {}", pos);
                 return false;
             }
         }
@@ -302,6 +342,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             ChiseledEnchantingTableData.shelfGatesConfig()
         );
         double slipChance = InscriptionRitualMechanics.computeTranscriptionSlipChance(
+            ChiseledEnchantingTableData.ritualConfig(),
             scan.maxOverloadedInfinityTomeEnchants(),
             scan.totalDetectedBookshelves()
         );
@@ -327,12 +368,11 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         int lastSlippedLevel = 1;
 
         for (QueuedInscription step : finishing) {
-            Holder<Enchantment> holder;
-            try {
-                holder = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(step.enchantmentId(), level);
-            } catch (RuntimeException ignored) {
+            var optHolder = ChiseledEnchantingTableScreenHandler.findEnchantment(step.enchantmentId(), level);
+            if (optHolder.isEmpty()) {
                 continue;
             }
+            Holder<Enchantment> holder = optHolder.get();
             int finalLevel = InscriptionRitualMechanics.resolveTranscribedLevel(
                 step.targetLevel(),
                 scan.maxOverloadedInfinityTomeEnchants(),

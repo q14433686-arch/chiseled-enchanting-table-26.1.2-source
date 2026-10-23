@@ -1,7 +1,7 @@
 plugins {
-    // 26.3: Loom stays on the 1.17 line — FabricMC/fabric's own 26.3 branch pins fabric-loom 1.17.20
-    // (gradle/libs.versions.toml@26.3), so no major upgrade is needed for this Minecraft line.
-    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
+    // 26.3: Loom stays on the 1.17 line — pinned to concrete release 1.17.21 on maven.fabricmc.net
+    // instead of a floating 1.17-SNAPSHOT for reproducible builds.
+    id 'net.fabricmc.fabric-loom' version '1.17.21'
     id 'java-library'
     id 'maven-publish'
 }
@@ -62,50 +62,16 @@ loom {
 }
 
 sourceSets {
-    main {
-        java {
-            // Port-side exclusions. The old exclusion set covered everything the P1 skeleton
-            // couldn't compile against 26.1.2 yet. The current port compiles enough of the
-            // upstream feature set that most old excludes are gone; what remains:
-            //   * chiseled_enchanting_table.integration.*                — third-party mod
-            //     integration (Colorful Books etc.) — port later as an opt-in layer.
-            //   * chiseled_enchanting_table.mixin.enchanting_table.*     — the vanilla-anvil
-            //     "no more same-level book combine" mixin from upstream; not re-verified for
-            //     26.1.2 yet, keep excluded so it can't break the anvil.
-            //   * The four legacy structure mixins under mixin/structureProcessor/            —
-            //     replaced by the new port-owned mixins under mixin/structure/.
-            //   * modifyChestLootTable/* and the utils/ChiseledBookshelfLootTable helper       —
-            //     legacy hardcoded Java; superseded by the JSON-driven loot injector and
-            //     BookshelfBookFiller.
-            //   * block/ChiseledBookshelfTick                                                  —
-            //     still deferred (adds enchant particles/sound over a chiseled bookshelf).
-            // Legacy upstream mixins still parked pending their own 26.1.2 mapping pass.
-            // 1.0.2: vanilla enchanting-table book blocking and narrow book+book same-level
-            // anvil merge block restored. 1.0.3: chiseled-bookshelf random-tick ambient
-            // particle/sound restored. 1.1.0: flat anvil prior-work penalty is active too.
-            exclude 'chiseled_enchanting_table/mixin/structureProcessor/**'
-            exclude 'chiseled_enchanting_table/modifyChestLootTable/**'
-            exclude 'chiseled_enchanting_table/structureProcessor/**'
-            exclude 'chiseled_enchanting_table/integration/**'
-            exclude 'chiseled_enchanting_table/utils/ChiseledBookshelfLootTable.java'
-        }
-    }
     client {
         java {
-            // Optional JEI integration. Excluded when `-Penable_jei=false` so an environment that
-            // cannot resolve JEI's maven still builds (the fabric.mod.json entrypoint is only
-            // touched when JEI is actually installed).
+            // Optional JEI / REI integrations. Excluded when `-Penable_jei=false` / `-Penable_rei=false`
+            // so an environment that cannot resolve optional viewer mavens still builds cleanly.
             if (!jeiEnabled) {
                 exclude 'chiseled_enchanting_table/compat/jei/**'
             }
             if (!reiEnabled) {
                 exclude 'chiseled_enchanting_table/compat/rei/**'
             }
-            // P3 first establishes a client compile slice. Full UI/renderer migration is still parked.
-            //exclude 'chiseled_enchanting_table/gui/**'
-            // P7: renderer restored for floating book smoke path.
-            // exclude 'chiseled_enchanting_table/render/**'
-            //exclude 'chiseled_enchanting_table/utils/**'
         }
     }
 }

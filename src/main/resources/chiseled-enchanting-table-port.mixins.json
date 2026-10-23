@@ -3,17 +3,15 @@
   "package": "chiseled_enchanting_table.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "enchanting_table.DisableBookEnchanting",
     "anvil.RemoveEnchantMerge",
     "anvil.RemoveXpCostScaling",
-    "chiseled_bookshelf.AddRandomTick",
-    "structure.StructureTemplatePoolProjectionMixin",
+    "bookshelf.AddRandomTick",
+    "enchanting_table.DisableBookEnchanting",
+    "grindstone.GrindstoneBookDepleteMixin",
+    "loot.ReloadableServerRegistriesMixin",
     "structure.StructurePlaceSettingsMixin",
-    "structure.StructurePieceMarkMixin",
-    "structure.StructurePieceAccessor",
-    "structure.LevelChunkPostProcessMixin"
+    "structure.StructureTemplatePoolProjectionMixin"
   ],
-  "client": [],
   "injectors": {
     "defaultRequire": 1
   }

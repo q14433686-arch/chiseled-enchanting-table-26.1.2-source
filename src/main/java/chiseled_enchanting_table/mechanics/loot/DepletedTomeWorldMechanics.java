@@ -401,9 +401,29 @@ public final class DepletedTomeWorldMechanics {
         );
     }
 
+    public static final net.minecraft.tags.TagKey<Enchantment> EPIPHANY_EXCLUSIVE_TAG =
+        net.minecraft.tags.TagKey.create(
+            Registries.ENCHANTMENT,
+            ChiseledEnchantingTable.identifier("epiphany_exclusive")
+        );
+
     /** True only for non-curse enchantments excluding {@code minecraft:infinity}. */
     public static boolean isAllowedLibrarianCommissionEnchantment(Identifier enchantmentId, boolean isCurse) {
-        if (enchantmentId == null || isCurse) {
+        return isAllowedLibrarianCommissionEnchantment(enchantmentId, isCurse, true, false);
+    }
+
+    /**
+     * Full Librarian Depleted Tome commission eligibility gate:
+     * requires {@code #minecraft:tradeable}, excludes {@code #minecraft:curse},
+     * excludes {@code #chiseled_enchanting_table:epiphany_exclusive}, and excludes {@code minecraft:infinity}.
+     */
+    public static boolean isAllowedLibrarianCommissionEnchantment(
+        Identifier enchantmentId,
+        boolean isCurse,
+        boolean isTradeable,
+        boolean isEpiphanyExclusive
+    ) {
+        if (enchantmentId == null || isCurse || !isTradeable || isEpiphanyExclusive) {
             return false;
         }
         return !MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(enchantmentId);
@@ -425,12 +445,62 @@ public final class DepletedTomeWorldMechanics {
         };
     }
 
-    private static final String COMMISSION_BAND = "cet_commission_band";
-    private static boolean hasCommissionBand(MerchantOffers offers, int band) {
-        for (var offer : offers) {
+    private static final String LEGACY_COMMISSION_BAND_KEY = "cet_commission_band";
+
+    /**
+     * Strips legacy {@code cet_commission_band} custom NBT from pre-existing Librarian offers so
+     * upgraded worlds never hand out unstackable Enchanted Books.
+     */
+    private static void sanitizeLegacyCommissionOffers(MerchantOffers offers) {
+        for (MerchantOffer offer : offers) {
             if (offer.getItemCostA().item().value() != BlockRegistry.DEPLETED_TOME) continue;
-            var data = offer.getResult().get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-            if (data != null && data.copyTag().getIntOr(COMMISSION_BAND, -1) == band) return true;
+            ItemStack result = offer.getResult();
+            if (!result.is(Items.ENCHANTED_BOOK)) continue;
+            var custom = result.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+            if (custom == null) continue;
+            var tag = custom.copyTag();
+            if (!tag.contains(LEGACY_COMMISSION_BAND_KEY)) continue;
+            tag.remove(LEGACY_COMMISSION_BAND_KEY);
+            if (tag.isEmpty()) {
+                result.remove(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+            } else {
+                result.set(
+                    net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                    net.minecraft.world.item.component.CustomData.of(tag)
+                );
+            }
+        }
+    }
+
+    private static int countCommissionBookOffers(MerchantOffers offers) {
+        int count = 0;
+        for (MerchantOffer offer : offers) {
+            if (offer.getItemCostA().item().value() == BlockRegistry.DEPLETED_TOME
+                && offer.getResult().is(Items.ENCHANTED_BOOK)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static boolean hasCommissionInBand(MerchantOffers offers, int band, int[] bandRanks) {
+        for (MerchantOffer offer : offers) {
+            if (offer.getItemCostA().item().value() != BlockRegistry.DEPLETED_TOME) continue;
+            if (!offer.getResult().is(Items.ENCHANTED_BOOK)) continue;
+            boolean secondaryEmerald = offer.getItemCostB()
+                .map(cost -> cost.item().value() == Items.EMERALD)
+                .orElse(false);
+            if (band == 0 && !secondaryEmerald) {
+                return true;
+            }
+            if (band > 0 && secondaryEmerald) {
+                int offerXp = offer.getXp();
+                for (int rank : bandRanks) {
+                    if (offerXp == 2 + rank * 3 && (band == 1 ? rank <= 3 : rank >= 5)) {
+                        return true;
+                    }
+                }
+            }
         }
         return false;
     }
@@ -491,6 +561,7 @@ public final class DepletedTomeWorldMechanics {
         if (offers == null) {
             return;
         }
+        sanitizeLegacyCommissionOffers(offers);
         int currentVillagerLevel = Mth.clamp(
             villager.getVillagerData().level(),
             MIN_VILLAGER_PROFESSION_LEVEL,
@@ -550,7 +621,9 @@ public final class DepletedTomeWorldMechanics {
         enchRegistry.listElements().forEach(ref -> {
             Identifier id = ref.key().identifier();
             boolean curse = ref.is(EnchantmentTags.CURSE);
-            if (isAllowedLibrarianCommissionEnchantment(id, curse)) {
+            boolean tradeable = ref.is(EnchantmentTags.TRADEABLE);
+            boolean epiphanyExclusive = ref.is(EPIPHANY_EXCLUSIVE_TAG);
+            if (isAllowedLibrarianCommissionEnchantment(id, curse, tradeable, epiphanyExclusive)) {
                 eligible.add(ref);
             }
         });
@@ -591,6 +664,9 @@ public final class DepletedTomeWorldMechanics {
         };
 
         for (int b = 0; b < rankBands.length; b++) {
+            if (countCommissionBookOffers(offers) >= rankBands.length) {
+                break;
+            }
             List<CandidateEnchantRoll> pool = new ArrayList<>();
             for (int rank : rankBands[b]) {
                 pool.addAll(byRequiredRank[rank]);
@@ -599,7 +675,7 @@ public final class DepletedTomeWorldMechanics {
                 continue;
             }
             CandidateEnchantRoll pick = pool.get(rng.nextInt(pool.size()));
-            if (hasCommissionBand(offers, b)) continue;
+            if (hasCommissionInBand(offers, b, rankBands[b])) continue;
             if (!canLibrarianOfferCommission(currentVillagerLevel, pick.quote())) {
                 // Villager has not yet reached the dynamic profession rank required for this enchantment!
                 continue;
@@ -612,10 +688,6 @@ public final class DepletedTomeWorldMechanics {
 
             ItemStack bookOut = new ItemStack(Items.ENCHANTED_BOOK, 1);
             EnchantmentHelper.updateEnchantments(bookOut, mutable -> mutable.set(pick.holder(), pick.enchantLevel()));
-            var marker = new net.minecraft.nbt.CompoundTag();
-            marker.putInt(COMMISSION_BAND, b);
-            bookOut.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
-                net.minecraft.world.item.component.CustomData.of(marker));
 
             offers.add(new MerchantOffer(
                 new ItemCost(BlockRegistry.DEPLETED_TOME, 1),

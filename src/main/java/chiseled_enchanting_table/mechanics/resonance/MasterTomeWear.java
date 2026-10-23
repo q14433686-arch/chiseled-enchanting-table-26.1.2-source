@@ -42,7 +42,8 @@ import net.minecraft.world.level.block.state.BlockState;
  *       {@link #NBT_REGEN_TICKS_KEY} so canonical {@code stack64} stacking is 100% preserved.</li>
  *   <li>All non-immune books in Chiseled Bookshelves passively recover {@code +1} charge at an
  *       interval determined by effective nearby bookshelf count {@code S}, with two resonance
- *       breakthrough tiers at {@code 38} shelves ({@code 30s/+1}) and {@code 42} shelves ({@code 10s/+1}).</li>
+ *       breakthrough tiers at {@code 38} shelves ({@code 3.0} game days = {@code 3,600s/+1}) and
+ *       {@code 42} shelves ({@code 1.0} game day = {@code 1,200s/+1}).</li>
  * </ul>
  */
 public final class MasterTomeWear {
@@ -58,14 +59,14 @@ public final class MasterTomeWear {
     public static final int DEFAULT_BOOK_COPY_WEAR_COST = 4;
 
     public static final boolean DEFAULT_REGEN_ENABLED = true;
-    /** 20 Minecraft game days (20 * 1,200s = 24,000s = 480,000 ticks) at 0 shelves. */
-    public static final int DEFAULT_REGEN_BASE_SECONDS = 24_000;
-    /** Tier 1 breakthrough at 38 effective shelves: 10 Minecraft game days (12,000s = 240,000 ticks) per +1 durability. */
+    /** 6 Minecraft game days (6 * 1,200s = 7,200s = 144,000 ticks) at 0 shelves. */
+    public static final int DEFAULT_REGEN_BASE_SECONDS = 7_200;
+    /** Tier 1 breakthrough at 38 effective shelves: 3 Minecraft game days (3,600s = 72,000 ticks) per +1 durability. */
     public static final int DEFAULT_REGEN_TIER1_SHELVES = 38;
-    public static final int DEFAULT_REGEN_TIER1_SECONDS = 12_000;
-    /** Tier 2 breakthrough at 42 effective shelves: 3 Minecraft game days (3,600s = 72,000 ticks) per +1 durability. */
+    public static final int DEFAULT_REGEN_TIER1_SECONDS = 3_600;
+    /** Tier 2 breakthrough at 42 effective shelves: 1 Minecraft game day (1,200s = 24,000 ticks) per +1 durability. */
     public static final int DEFAULT_REGEN_TIER2_SHELVES = 42;
-    public static final int DEFAULT_REGEN_TIER2_SECONDS = 3_600;
+    public static final int DEFAULT_REGEN_TIER2_SECONDS = 1_200;
 
     private MasterTomeWear() {}
 
@@ -172,7 +173,7 @@ public final class MasterTomeWear {
     /**
      * Computes exact game ticks ({@code 20 ticks = 1.0s}) required to passively regenerate {@code +1}
      * Master Tome durability charge at {@code nearbyBookshelves}, featuring two resonance breakthroughs
-     * at {@code tier1Shelves} (default {@code 38 -> 30s}) and {@code tier2Shelves} (default {@code 42 -> 10s}).
+     * at {@code tier1Shelves} (default {@code 38 -> 3,600s}) and {@code tier2Shelves} (default {@code 42 -> 1,200s}).
      */
     public static int computeRegenIntervalTicks(LibraryResonance.Config cfg, int nearbyBookshelves) {
         LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
@@ -337,6 +338,13 @@ public final class MasterTomeWear {
         Holder<Enchantment> targetHolder,
         int requiredLevel
     ) {
+        if (shelfCfg != null && shelfCfg.requireBreathingRoom()) {
+            boolean ceilingBlocked = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.isTableCeilingBlocked(level, tablePos);
+            int openAdj = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.countOpenAdjacentBlocks(level, tablePos);
+            if (BookshelfProgression.effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, shelfCfg) <= 0) {
+                return List.of();
+            }
+        }
         List<CandidateSlot> candidates = new ArrayList<>();
         boolean checkLos = shelfCfg != null && shelfCfg.requireLineOfSight();
         for (BlockPos offset : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(shelfCfg)) {
@@ -518,6 +526,16 @@ public final class MasterTomeWear {
 
         chosen.shelf().setItem(chosen.slot(), mutated);
         chosen.shelf().setChanged();
+        if (outcome == WearOutcome.WORN) {
+            WorldRegeneration.acknowledgeInPlaceWear(
+                level,
+                chosen.pos(),
+                chosen.slot(),
+                chosen.stack(),
+                mutated,
+                step.nextWearUsed()
+            );
+        }
         BlockState latestState = level.getBlockState(chosen.pos());
         level.sendBlockUpdated(chosen.pos(), chosen.state(), latestState, Block.UPDATE_ALL);
 

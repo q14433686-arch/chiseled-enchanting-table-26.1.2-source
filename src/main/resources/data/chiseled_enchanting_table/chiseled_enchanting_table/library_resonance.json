@@ -1,5 +1,5 @@
 {
-  "_comment": "Full data-driven configuration for Library & Master Tome Resonance. Every key below is read directly by LibraryResonance.Config.fromJson and synced to clients in EnchantCostTablePayload.",
+  "_comment": "Full data-driven configuration for Library & Master Tome Resonance and Inscription Rituals. Every key below is read directly by LibraryResonance.Config.fromJson / InscriptionRitualMechanics.Config.fromJson and synced to clients in EnchantCostTablePayload.",
   "wooden_bookshelves": {
     "min_discount_bookshelves": 12,
     "max_discount_bookshelves": 38,
@@ -21,11 +21,11 @@
     "book_copy_wear_cost": 4,
     "tome_deplete_behavior": "step_down",
     "tome_regen_enabled": true,
-    "tome_regen_base_seconds": 24000,
+    "tome_regen_base_seconds": 7200,
     "tome_regen_tier1_shelves": 38,
-    "tome_regen_tier1_seconds": 12000,
+    "tome_regen_tier1_seconds": 3600,
     "tome_regen_tier2_shelves": 42,
-    "tome_regen_tier2_seconds": 3600
+    "tome_regen_tier2_seconds": 1200
   },
   "epiphany_affinity": {
     "epiphany_probability_global_weight": 0.45,
@@ -40,5 +40,13 @@
     "epiphany_tier_plus_max_prob": 0.50,
     "epiphany_tier_plus_score_divisor": 110.0,
     "epiphany_tier_plus_mastery_bonus": 0.25
+  },
+  "ritual": {
+    "max_single_wait_seconds": 300,
+    "min_tome_enchants_for_wait": 10,
+    "max_sacrifice_xp_levels": 15,
+    "max_rush_degrade_normal": 0.50,
+    "max_rush_degrade_infinity": 0.70,
+    "max_transcription_slip_chance": 0.20
   }
 }

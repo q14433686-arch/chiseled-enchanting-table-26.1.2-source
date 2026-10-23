@@ -232,7 +232,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         // Integrated and dedicated servers share the same authorized, acknowledged path.
         this.pendingSaveId = ModRuntimeConfig.nextSaveRequestId();
         this.pendingClose = closeAfterSave;
-        ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(built.toJsonString(), this.pendingSaveId));
+        ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(
+            built.toJsonString(),
+            this.pendingSaveId,
+            closeAfterSave
+        ));
     }
 
     private void reconcileSaveAcknowledgement() {
@@ -695,7 +699,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             statusCol = GOLD_TEXT;
         } else if (System.currentTimeMillis() < this.statusToastUntilMs) {
             statusText = I18n.get(this.lastSaveFailed ? "config.chiseled_enchanting_table.msg.save_failed" : "config.chiseled_enchanting_table.msg.saved");
-            statusCol = 0xFF6BFFB3;
+            statusCol = this.lastSaveFailed ? 0xFFFF6B6B : 0xFF6BFFB3;
         } else if (restartChanged) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.restart_hint");
             statusCol = 0xFFFFC46B;
