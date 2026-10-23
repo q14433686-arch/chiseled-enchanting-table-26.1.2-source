@@ -35,6 +35,7 @@ public final class EnchantCostSync {
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
             ServerPlayer player = listener.player;
             if (player != null) {
+                chiseled_enchanting_table.config.ModConfigNetworking.sendToPlayer(player);
                 sendTo(player);
             }
         });
@@ -42,6 +43,7 @@ public final class EnchantCostSync {
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
             if (!success) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                chiseled_enchanting_table.config.ModConfigNetworking.sendToPlayer(player);
                 sendTo(player);
             }
         });

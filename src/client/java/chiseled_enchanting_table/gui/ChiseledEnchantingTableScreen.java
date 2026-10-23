@@ -3,6 +3,7 @@ package chiseled_enchanting_table.gui;
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
+import chiseled_enchanting_table.gui.config.ChiseledEnchantingConfigScreen;
 import chiseled_enchanting_table.gui.grimoire.ArcaneGrimoireScreen;
 import chiseled_enchanting_table.gui.grimoire.GrimoireSoundHelper;
 import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge.HoveredSlot;
@@ -53,7 +54,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final Identifier BTN_REROLL = ChiseledEnchantingTable.identifier("gui/btn_reroll.png");
     private static final Identifier BTN_CLEANSE_ALL = ChiseledEnchantingTable.identifier("gui/btn_cleanse_all.png");
     private static final Identifier BTN_GRIMOIRE = ChiseledEnchantingTable.identifier("gui/btn_grimoire.png");
+    private static final Identifier BTN_CONFIG = ChiseledEnchantingTable.identifier("gui/btn_config.png");
 
+    private static final int CONFIG_BTN_X = 293;
+    private static final int CONFIG_BTN_Y_OFFSET = -15;
+    private static final int CONFIG_BTN_SIZE = 15;
     private static final int GRIMOIRE_BTN_X = 311;
     private static final int GRIMOIRE_BTN_Y_OFFSET = -15;
     private static final int GRIMOIRE_BTN_SIZE = 15;
@@ -88,6 +93,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Nullable
     private ArcaneGrimoireScreen grimoireOverlay;
     @Nullable
+    private ChiseledEnchantingConfigScreen configOverlay;
+    @Nullable
     private final BlockPos openedTablePos;
     private int lastBatchSignature = Integer.MIN_VALUE;
 
@@ -114,6 +121,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             150,
             25
         );
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return this.configOverlay != null && this.configOverlay.isPauseScreen();
     }
 
     @Override
@@ -149,6 +161,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (this.grimoireOverlay != null) {
             this.grimoireOverlay.initOverlay(this.minecraft, this.width, this.height);
         }
+        if (this.configOverlay != null) {
+            this.configOverlay.initOverlay(this.minecraft, this.width, this.height);
+        }
     }
 
     @Override
@@ -157,6 +172,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         this.scrollContainer.updateSizeAndPosition(151, 141, this.leftPos + 7, this.topPos + 17);
         if (this.grimoireOverlay != null) {
             this.grimoireOverlay.initOverlay(this.minecraft, this.width, this.height);
+        }
+        if (this.configOverlay != null) {
+            this.configOverlay.initOverlay(this.minecraft, this.width, this.height);
         }
     }
 
@@ -173,6 +191,23 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
     }
 
+    public void openConfigFromGrimoire() {
+        this.grimoireOverlay = null;
+        this.configOverlay = new ChiseledEnchantingConfigScreen(this, () -> {
+            this.configOverlay = null;
+            if (this.scrollContainer != null) {
+                this.scrollContainer.updateEntry(this.menu.get_enchantable_item(), this.menu.get_cost_item());
+            }
+        });
+        this.configOverlay.initOverlay(this.minecraft, this.width, this.height);
+    }
+
+    private boolean isOverConfigButton(double mouseX, double mouseY) {
+        int x0 = this.leftPos + CONFIG_BTN_X;
+        int y0 = this.topPos + CONFIG_BTN_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + CONFIG_BTN_SIZE && mouseY >= y0 && mouseY < y0 + CONFIG_BTN_SIZE;
+    }
+
     private boolean isOverGrimoireButton(double mouseX, double mouseY) {
         int x0 = this.leftPos + GRIMOIRE_BTN_X;
         int y0 = this.topPos + GRIMOIRE_BTN_Y_OFFSET;
@@ -180,7 +215,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     public List<net.minecraft.client.renderer.Rect2i> extraViewerExclusionAreas() {
-        List<net.minecraft.client.renderer.Rect2i> areas = new ArrayList<>(3);
+        List<net.minecraft.client.renderer.Rect2i> areas = new ArrayList<>(5);
         areas.add(new net.minecraft.client.renderer.Rect2i(
             this.leftPos + TAB_INSCRIBE_X,
             this.topPos + TAB_Y_OFFSET,
@@ -188,11 +223,20 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             TAB_H
         ));
         areas.add(new net.minecraft.client.renderer.Rect2i(
+            this.leftPos + CONFIG_BTN_X,
+            this.topPos + CONFIG_BTN_Y_OFFSET,
+            CONFIG_BTN_SIZE,
+            CONFIG_BTN_SIZE
+        ));
+        areas.add(new net.minecraft.client.renderer.Rect2i(
             this.leftPos + GRIMOIRE_BTN_X,
             this.topPos + GRIMOIRE_BTN_Y_OFFSET,
             GRIMOIRE_BTN_SIZE,
             GRIMOIRE_BTN_SIZE
         ));
+        if (this.configOverlay != null) {
+            areas.add(this.configOverlay.fullGuiBounds());
+        }
         if (this.grimoireOverlay != null) {
             areas.add(this.grimoireOverlay.fullGuiBounds());
         }
@@ -201,6 +245,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Nullable
     public HoveredSlot hoveredCostIngredient(double mouseX, double mouseY) {
+        if (this.configOverlay != null) {
+            return null;
+        }
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.hoveredIngredient(mouseX, mouseY);
         }
@@ -266,6 +313,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
@@ -277,8 +327,23 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (this.configOverlay != null) {
+            this.configOverlay.mouseClicked(event, isDoubleClick);
+            return true;
+        }
         if (this.grimoireOverlay != null) {
             this.grimoireOverlay.mouseClicked(event, isDoubleClick);
+            return true;
+        }
+        if (isOverConfigButton(event.x(), event.y())) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            this.configOverlay = new ChiseledEnchantingConfigScreen(this, () -> {
+                this.configOverlay = null;
+                if (this.scrollContainer != null) {
+                    this.scrollContainer.updateEntry(this.menu.get_enchantable_item(), this.menu.get_cost_item());
+                }
+            });
+            this.configOverlay.initOverlay(this.minecraft, this.width, this.height);
             return true;
         }
         if (isOverGrimoireButton(event.x(), event.y())) {
@@ -349,6 +414,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.mouseDragged(event, dragX, dragY);
+        }
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.mouseDragged(event, dragX, dragY);
         }
@@ -360,6 +428,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.mouseReleased(event);
+        }
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.mouseReleased(event);
         }
@@ -373,6 +444,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        if (this.configOverlay != null) {
+            this.configOverlay.keyPressed(event);
+            return true;
+        }
         if (this.grimoireOverlay != null) {
             this.grimoireOverlay.keyPressed(event);
             return true;
@@ -383,6 +458,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean keyReleased(KeyEvent event) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.keyReleased(event);
+        }
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.keyReleased(event);
         }
@@ -452,6 +530,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 0.76f,
                 cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC)
             );
+        }
+
+        int cx = i + CONFIG_BTN_X;
+        int cy = j + CONFIG_BTN_Y_OFFSET;
+        ctx.blit(BTN_CONFIG, cx, cy, cx + CONFIG_BTN_SIZE, cy + CONFIG_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+        if (isOverConfigButton(mouseX, mouseY)) {
+            ctx.fill(cx + 1, cy + 1, cx + CONFIG_BTN_SIZE - 1, cy + CONFIG_BTN_SIZE - 1, 0x2EFFDF82);
         }
 
         int gx = i + GRIMOIRE_BTN_X;
@@ -584,6 +669,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
+        if (this.configOverlay != null) {
+            super.extractRenderState(ctx, -1000, -1000, partialTick);
+            this.configOverlay.extractRenderState(ctx, mouseX, mouseY, partialTick);
+            return;
+        }
         if (this.grimoireOverlay != null) {
             super.extractRenderState(ctx, -1000, -1000, partialTick);
             this.grimoireOverlay.extractRenderState(ctx, mouseX, mouseY, partialTick);
@@ -591,6 +681,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
         if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
+            if (isOverConfigButton(mouseX, mouseY)) {
+                List<Component> tip = List.of(
+                    Component.translatable("config.chiseled_enchanting_table.open_tip.title").withStyle(ChatFormatting.GOLD),
+                    Component.translatable("config.chiseled_enchanting_table.open_tip.sub").withStyle(ChatFormatting.GRAY)
+                );
+                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
             if (isOverGrimoireButton(mouseX, mouseY)) {
                 List<Component> tip = List.of(
                     Component.translatable("gui.chiseled_enchanting_table.grimoire.open_btn.title").withStyle(ChatFormatting.GOLD),

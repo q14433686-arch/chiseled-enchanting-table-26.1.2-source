@@ -2,11 +2,16 @@ package chiseled_enchanting_table;
 
 import chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity;
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.config.ModConfigNetworking;
+import chiseled_enchanting_table.config.ModRuntimeConfig;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen;
+import chiseled_enchanting_table.gui.config.ChiseledEnchantingConfigScreen;
 import chiseled_enchanting_table.gui.grimoire.ArcaneGrimoireScreen;
 import chiseled_enchanting_table.gui.grimoire.GrimoireSoundHelper;
 import chiseled_enchanting_table.item.ArcaneGrimoireItem;
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
+import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.menu.EnchantCostTablePayload;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.registry.EntityRegistry;
@@ -16,12 +21,15 @@ import java.util.List;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockColorRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.block.BlockAndTintGetter;
@@ -36,10 +44,22 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
     public void onInitializeClient() {
         ArcaneGrimoireItem.CLIENT_OPEN_ACTION = player -> {
             GrimoireSoundHelper.playOpen();
-            net.minecraft.client.Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
+            Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
         };
         MenuScreens.register(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, ChiseledEnchantingTableScreen::new);
         BlockEntityRendererRegistry.register(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
+
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
+            dispatcher.register(
+                ClientCommands.literal("cet")
+                    .then(ClientCommands.literal("config")
+                        .executes(ctx -> {
+                            Minecraft mc = Minecraft.getInstance();
+                            mc.execute(() -> mc.setScreen(new ChiseledEnchantingConfigScreen(null)));
+                            return 1;
+                        }))
+            )
+        );
 
         BlockColorRegistry.register(
             List.of(new BlockTintSource() {
@@ -82,19 +102,45 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             ).withStyle(color));
         });
 
+        ClientPlayNetworking.registerGlobalReceiver(ModConfigNetworking.SyncRuntimeConfigPayload.TYPE, (payload, ctx) ->
+            ctx.client().execute(() -> {
+                ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.json());
+                ModRuntimeConfig.applyRemoteSync(synced, payload.canEdit());
+                ChiseledEnchantingTableData.applyRuntimeConfig(synced);
+                var player = ctx.client().player;
+                if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                    if (menu.onContentChangedCallback != null) {
+                        menu.onContentChangedCallback.run();
+                    }
+                }
+            }));
+
         // Server-authoritative costs for the menu and recipe viewers. Sent on join
         // and after every data pack reload; empty means "fall back to the canonical cost".
         ClientPlayNetworking.registerGlobalReceiver(EnchantCostTablePayload.TYPE, (payload, ctx) ->
-            ctx.client().execute(() -> SyncedEnchantmentCosts.apply(payload)));
+            ctx.client().execute(() -> {
+                SyncedEnchantmentCosts.apply(payload);
+                var player = ctx.client().player;
+                if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                    if (menu.onContentChangedCallback != null) {
+                        menu.onContentChangedCallback.run();
+                    }
+                }
+            }));
+
         ClientPlayNetworking.registerGlobalReceiver(
             chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.TYPE,
             (payload, ctx) -> ctx.client().execute(() -> {
                 var player = ctx.client().player;
-                if (player != null && player.containerMenu instanceof chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler menu) {
+                if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                     menu.applyLiveShelfState(payload);
                 }
             })
         );
-        ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> SyncedEnchantmentCosts.clear());
+        ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
+            SyncedEnchantmentCosts.clear();
+            ModRuntimeConfig.clearRemoteSync();
+            ChiseledEnchantingTableData.applyRuntimeConfig(ModRuntimeConfig.get());
+        });
     }
 }

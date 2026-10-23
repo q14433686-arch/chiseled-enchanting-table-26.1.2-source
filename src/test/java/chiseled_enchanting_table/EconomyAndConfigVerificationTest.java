@@ -2,12 +2,15 @@ package chiseled_enchanting_table;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.mechanics.resonance.LibraryResonance;
+import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ReopenTablePayload;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -15,6 +18,8 @@ import com.google.gson.JsonParser;
 import io.netty.buffer.Unpooled;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -736,6 +741,221 @@ class EconomyAndConfigVerificationTest {
                 }
             }
         }
+    }
+
+    @Test
+    void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
+        var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
+        assertEquals(49, all.size(), "Expected 49 curated in-game configurable entries across 6 categories");
+        for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
+            assertFalse(
+                chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
+                "Category must not be empty: " + cat
+            );
+        }
+
+        var working = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
+        assertEquals(0L, chiseled_enchanting_table.config.ConfigCatalog.countModified(working));
+
+        for (var entry : all) {
+            assertFalse(entry.isModifiedFromDefault(working), "Default must match on entry: " + entry.key());
+        }
+
+        for (var entry : all) {
+            switch (entry.kind()) {
+                case BOOLEAN, ENUM_CYCLE -> {
+                    Object orig = entry.get(working);
+                    entry.toggleOrCycle(working, 1);
+                    assertNotEquals(orig, entry.get(working), "Toggle/enum should change value for " + entry.key());
+                }
+                case INT_SLIDER -> {
+                    int orig = ((Number) entry.get(working)).intValue();
+                    int candidate = orig == (int) entry.min() ? (int) entry.max() : (int) entry.min();
+                    entry.set(working, candidate);
+                }
+                case DOUBLE_SLIDER -> {
+                    double orig = ((Number) entry.get(working)).doubleValue();
+                    double mid = Math.round(((entry.min() + entry.max()) * 0.5) / entry.step()) * entry.step();
+                    if (Math.abs(mid - orig) < 1e-6) {
+                        mid = entry.min();
+                    }
+                    entry.set(working, mid);
+                }
+            }
+        }
+        assertTrue(chiseled_enchanting_table.config.ConfigCatalog.countModified(working) > 30);
+
+        var built = working.build();
+        String json = built.toJsonString();
+        var reloadedDraft = chiseled_enchanting_table.config.ModRuntimeConfig.fromJsonString(json).toDraft();
+        for (var entry : all) {
+            assertEquals(entry.get(working), entry.get(reloadedDraft), "JSON round-trip mismatch on " + entry.key());
+        }
+
+        chiseled_enchanting_table.config.ConfigCatalog.resetAll(reloadedDraft);
+        assertEquals(0L, chiseled_enchanting_table.config.ConfigCatalog.countModified(reloadedDraft));
+    }
+
+    @Test
+    void configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() {
+        var cfg = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
+        var admin = chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN;
+        var readonly = chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_READONLY;
+
+        // Dedicated non-OP player sees every option read-only with explicit server reason
+        for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
+            var avail = opt.evaluate(cfg, readonly);
+            assertFalse(avail.editable(), "Read-only session must lock " + opt.key());
+            assertEquals("config.chiseled_enchanting_table.reason.server_readonly", avail.inactiveReasonKey());
+        }
+
+        // All 49 options are active and editable under default config for admins/singleplayer
+        for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
+            var avail = opt.evaluate(cfg, admin);
+            assertTrue(avail.parentApplicable(), "Default config should leave " + opt.key() + " applicable");
+            assertTrue(avail.editable(), "Admin session should leave " + opt.key() + " editable");
+        }
+
+        // 1. Direct wooden shelf gates chain
+        cfg.directGatesEnabled = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("blank_max_tier_mode").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("max_direct_bookshelves").orElseThrow().evaluate(cfg, admin).parentApplicable());
+
+        // 2. Breathing room chain
+        cfg.requireBreathingRoom = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("min_open_adjacent_blocks").orElseThrow().evaluate(cfg, admin).parentApplicable());
+
+        // 3. Master Tome wear chain (KEEP / CONSUME disables wear charges, copy wear & depletion behavior)
+        cfg.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("max_tome_uses").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_copy_wear_cost").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("tome_deplete_behavior").orElseThrow().evaluate(cfg, admin).parentApplicable());
+
+        // 4 & 5. Book combine / research multipliers
+        cfg.bookCombineEnabled = false;
+        cfg.bookResearchEnabled = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_combine_xp_multiplier").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_research_xp_multiplier").orElseThrow().evaluate(cfg, admin).parentApplicable());
+
+        // 6. Two-level Disenchant -> Allow Curse Purge -> Curse Purge XP Cost chain
+        cfg.allowCursePurge = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("curse_purge_xp_cost").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertTrue(chiseled_enchanting_table.config.ConfigCatalog.byKey("xp_refund_scale").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        cfg.allowCursePurge = true;
+        cfg.disenchantEnabled = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("xp_refund_scale").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("allow_curse_purge").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("curse_purge_xp_cost").orElseThrow().evaluate(cfg, admin).parentApplicable());
+
+        // 7. Structure Chiseled Bookshelf pool chain
+        cfg.bookshelfPoolEnabled = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_min_books").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_max_books").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_enchanted_prob").orElseThrow().evaluate(cfg, admin).parentApplicable());
+
+        // Cross-field coherence checks
+        cfg.tier1Bookshelves = 40;
+        cfg.normalizeAfterEdit("tier1_bookshelves");
+        assertTrue(cfg.tier1Bookshelves <= cfg.tier2Bookshelves);
+        assertTrue(cfg.tier2Bookshelves <= cfg.maxDirectBookshelves);
+
+        cfg.externalXpRefundScale = 0.95;
+        cfg.xpRefundScale = 0.40;
+        cfg.normalizeAfterEdit("xp_refund_scale");
+        assertTrue(cfg.externalXpRefundScale <= cfg.xpRefundScale + 1e-9);
+
+        cfg.bookshelfMinBooks = 5;
+        cfg.bookshelfMaxBooks = 2;
+        cfg.normalizeAfterEdit("bookshelf_max_books");
+        assertEquals(2, cfg.bookshelfMinBooks);
+        assertEquals(2, cfg.bookshelfMaxBooks);
+    }
+
+    @Test
+    void allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() throws Exception {
+        Path langDir = Path.of("src/client/resources/assets/chiseled_enchanting_table/lang");
+        List<Path> langFiles;
+        try (var stream = Files.list(langDir)) {
+            langFiles = stream.filter(p -> p.toString().endsWith(".json")).sorted().toList();
+        }
+        assertEquals(11, langFiles.size(), "Expected all 11 locale files");
+
+        Set<String> requiredKeys = new HashSet<>(List.of(
+            "config.chiseled_enchanting_table.title",
+            "config.chiseled_enchanting_table.open_tip.title",
+            "config.chiseled_enchanting_table.open_tip.sub",
+            "config.chiseled_enchanting_table.grimoire_btn",
+            "config.chiseled_enchanting_table.filter.all",
+            "config.chiseled_enchanting_table.filter.modified",
+            "config.chiseled_enchanting_table.filter.modified_desc",
+            "config.chiseled_enchanting_table.empty_modified",
+            "config.chiseled_enchanting_table.btn.reset_page",
+            "config.chiseled_enchanting_table.btn.reset_all",
+            "config.chiseled_enchanting_table.btn.close",
+            "config.chiseled_enchanting_table.btn.save",
+            "config.chiseled_enchanting_table.val.on",
+            "config.chiseled_enchanting_table.val.off",
+            "config.chiseled_enchanting_table.tip.current_default",
+            "config.chiseled_enchanting_table.msg.saved",
+            "config.chiseled_enchanting_table.msg.unsaved",
+            "config.chiseled_enchanting_table.msg.synced",
+            "config.chiseled_enchanting_table.msg.restart_hint",
+            "config.chiseled_enchanting_table.msg.reloaded",
+            "config.chiseled_enchanting_table.msg.reset_all",
+            "config.chiseled_enchanting_table.reason.server_readonly",
+            "config.chiseled_enchanting_table.reason.need_direct_gates",
+            "config.chiseled_enchanting_table.reason.need_breathing_room",
+            "config.chiseled_enchanting_table.reason.need_wear_mode",
+            "config.chiseled_enchanting_table.reason.need_book_combine",
+            "config.chiseled_enchanting_table.reason.need_book_research",
+            "config.chiseled_enchanting_table.reason.need_disenchant",
+            "config.chiseled_enchanting_table.reason.need_curse_purge",
+            "config.chiseled_enchanting_table.reason.need_bookshelf_pool"
+        ));
+        for (var mode : chiseled_enchanting_table.config.ConfigCatalog.SessionMode.values()) {
+            requiredKeys.add(mode.bannerKey());
+        }
+        for (var scope : chiseled_enchanting_table.config.ConfigCatalog.EffectScope.values()) {
+            requiredKeys.add(scope.badgeKey());
+            requiredKeys.add(scope.badgeKey() + ".detail");
+        }
+        for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
+            requiredKeys.add(cat.titleKey());
+            requiredKeys.add(cat.subtitleKey());
+        }
+        var probe = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
+        for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
+            requiredKeys.add(opt.nameKey());
+            requiredKeys.add(opt.descKey());
+            if (opt.kind() == chiseled_enchanting_table.config.ConfigCatalog.ControlKind.ENUM_CYCLE) {
+                for (int i = 0; i < 8; i++) {
+                    String formatted = opt.rawOrKeyDisplay(probe);
+                    requiredKeys.add(formatted.startsWith("@") ? formatted.substring(1) : formatted);
+                    opt.toggleOrCycle(probe, 1);
+                }
+            }
+        }
+
+        for (Path lf : langFiles) {
+            JsonObject obj = JsonParser.parseString(Files.readString(lf)).getAsJsonObject();
+            for (String key : requiredKeys) {
+                assertTrue(obj.has(key), lf.getFileName() + " missing key: " + key);
+                assertFalse(obj.get(key).getAsString().isBlank(), lf.getFileName() + " blank key: " + key);
+            }
+        }
+
+        byte[] btnBytes = Files.readAllBytes(Path.of("src/client/resources/assets/chiseled_enchanting_table/gui/btn_config.png"));
+        assertEquals((byte) 0x89, btnBytes[0]);
+        assertEquals(64, ((btnBytes[16] & 0xFF) << 24) | ((btnBytes[17] & 0xFF) << 16) | ((btnBytes[18] & 0xFF) << 8) | (btnBytes[19] & 0xFF));
+        assertEquals(64, ((btnBytes[20] & 0xFF) << 24) | ((btnBytes[21] & 0xFF) << 16) | ((btnBytes[22] & 0xFF) << 8) | (btnBytes[23] & 0xFF));
+
+        String buildGradle = Files.readString(Path.of("build.gradle"));
+        assertTrue(buildGradle.contains("exclude 'com/terraformersmc/**'"));
+
+        String cfgScreenSrc = Files.readString(Path.of("src/client/java/chiseled_enchanting_table/gui/config/ChiseledEnchantingConfigScreen.java"));
+        assertTrue(cfgScreenSrc.contains("public boolean isPauseScreen() {\n        return true;\n    }"));
+        String tableScreenSrc = Files.readString(Path.of("src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java"));
+        assertTrue(tableScreenSrc.contains("return this.configOverlay != null && this.configOverlay.isPauseScreen();"));
     }
 
     private static int countSubstring(String haystack, String needle) {

@@ -27,6 +27,9 @@
 		],
 		"rei_client": [
 			"chiseled_enchanting_table.compat.rei.ChiseledEnchantingReiPlugin"
+		],
+		"modmenu": [
+			"chiseled_enchanting_table.compat.modmenu.ChiseledEnchantingModMenuPlugin"
 		]
 	},
 	"mixins": [

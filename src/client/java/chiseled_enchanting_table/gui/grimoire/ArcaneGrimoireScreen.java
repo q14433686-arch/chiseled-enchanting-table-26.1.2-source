@@ -99,6 +99,7 @@ public class ArcaneGrimoireScreen extends Screen {
 
     private static final int NAV_SPREAD = 100;
     private static final int NAV_CLOSE = 101;
+    private static final int NAV_OPEN_CONFIG = 102;
 
     public ArcaneGrimoireScreen(@Nullable Screen parentScreen) {
         this(parentScreen, 0, null, parentScreen != null, 12);
@@ -328,8 +329,8 @@ public class ArcaneGrimoireScreen extends Screen {
             this.interactiveRegions.add(new HitRegion(homeX, barY, homeW, barH, NAV_SPREAD, "0"));
         }
 
-        // Right pill: [返回附魔 / 合上秘典]
-        int closeW = 88;
+        // Right pill: [返回附魔 / 合上秘典] + [配置]
+        int closeW = 82;
         int closeX = this.bookX + this.bookW - closeW - 8;
         boolean overClose = mouseX >= closeX && mouseX < closeX + closeW && mouseY >= barY && mouseY < barY + barH;
         ctx.fill(closeX, barY, closeX + closeW, barY + barH, overClose ? LIGHT_GOLD : 0xFF9E7B46);
@@ -350,9 +351,27 @@ public class ArcaneGrimoireScreen extends Screen {
         );
         this.interactiveRegions.add(new HitRegion(closeX, barY, closeW, barH, NAV_CLOSE, ""));
 
+        int cfgW = 54;
+        int cfgX = closeX - cfgW - 4;
+        boolean overCfg = mouseX >= cfgX && mouseX < cfgX + cfgW && mouseY >= barY && mouseY < barY + barH;
+        ctx.fill(cfgX, barY, cfgX + cfgW, barY + barH, overCfg ? LIGHT_GOLD : 0xFF7B63A6);
+        ctx.fill(cfgX + 1, barY + 1, cfgX + cfgW - 1, barY + barH - 1, overCfg ? 0xFF3E2966 : 0xFF23173A);
+        drawCenteredBox(
+            ctx,
+            this.font,
+            Component.translatable("config.chiseled_enchanting_table.grimoire_btn").getString(),
+            cfgX + 3,
+            cfgW - 6,
+            barY + barH * 0.5f,
+            0.68f,
+            overCfg ? LIGHT_GOLD : LIGHT_CREAM,
+            true
+        );
+        this.interactiveRegions.add(new HitRegion(cfgX, barY, cfgW, barH, NAV_OPEN_CONFIG, ""));
+
         // Center breadcrumb plaque
         int midX = homeX + homeW + 4;
-        int midW = Math.max(40, closeX - 4 - midX);
+        int midW = Math.max(40, cfgX - 4 - midX);
         ctx.fill(midX, barY + 1, midX + midW, barY + barH - 1, 0xCC1E132B);
         String crumb = this.spreadIndex == 0
             ? Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.crumb_home").getString()
@@ -934,6 +953,14 @@ public class ArcaneGrimoireScreen extends Screen {
                     switch (region.actionId()) {
                         case NAV_SPREAD -> jumpToSpread(Integer.parseInt(region.payload()), true);
                         case NAV_CLOSE -> onClose();
+                        case NAV_OPEN_CONFIG -> {
+                            GrimoireSoundHelper.playTabSwitch();
+                            if (this.closeOverride != null && this.parentScreen instanceof chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen table) {
+                                table.openConfigFromGrimoire();
+                            } else {
+                                Minecraft.getInstance().setScreen(new chiseled_enchanting_table.gui.config.ChiseledEnchantingConfigScreen(this));
+                            }
+                        }
                         case GrimoireDiagramRenderer.ACTION_RECIPE_TAB -> {
                             int next = Integer.parseInt(region.payload());
                             if (next != this.selectedRecipeIdx) {

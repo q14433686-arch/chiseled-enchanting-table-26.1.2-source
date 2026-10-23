@@ -128,6 +128,15 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
+}
+
+tasks.named('compileClientJava') {
+    finalizedBy(tasks.named('test'))
 }
 
 processResources {
@@ -148,6 +157,11 @@ java {
     withSourcesJar()
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.withType(Jar).configureEach {
+    // Compile-only ModMenu API shim: never ship com.terraformersmc.* in binary or sources JARs.
+    exclude 'com/terraformersmc/**'
 }
 
 jar {
