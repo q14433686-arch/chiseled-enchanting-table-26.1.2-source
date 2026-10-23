@@ -649,7 +649,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             sMin,
             sMax,
             dis.stripMaterialCost(),
-            cfg.shouldApplyKey("curse_purge_xp_cost") ? cfg.curseXpCost() : dis.curseXpCost(),
+            cfg.shouldApplyKey("curse_purge_xp_cost") ? cfg.cursePurgeXpCost() : dis.curseXpCost(),
             dis.curseMaterialCost()
         );
 

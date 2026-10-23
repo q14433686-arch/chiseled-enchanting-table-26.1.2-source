@@ -734,6 +734,22 @@ public final class ConfigCatalog {
         return ALL_OPTIONS.stream().filter(o -> o.category() == category).toList();
     }
 
+    public static java.util.Optional<OptionEntry> byKey(String key) {
+        return ALL_OPTIONS.stream().filter(o -> o.key().equals(key)).findFirst();
+    }
+
+    public static long countModified(Draft draft) {
+        return ALL_OPTIONS.stream().filter(o -> o.isModifiedFromDefault(draft)).count();
+    }
+
+    public static void resetAll(Draft draft) {
+        for (OptionEntry entry : ALL_OPTIONS) {
+            entry.resetToDefault(draft);
+        }
+        draft.customizedKeys.clear();
+        draft.normalizeAfterEdit(null);
+    }
+
     private static String formatSeconds(int sec) {
         if (sec % 60 == 0) {
             return (sec / 60) + "m (" + sec + "s)";

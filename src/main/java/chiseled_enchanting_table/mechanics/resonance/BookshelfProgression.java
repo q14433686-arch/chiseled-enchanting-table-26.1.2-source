@@ -56,6 +56,12 @@ public final class BookshelfProgression {
     private static final TagKey<Enchantment> CURSE_TAG =
         TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
 
+    public static int scanVolumeBlocks(int horizontalRadius, int verticalRadius) {
+        int h = Math.max(1, horizontalRadius);
+        int v = Math.max(0, verticalRadius);
+        return (2 * h + 1) * (2 * h + 1) * (2 * v + 1);
+    }
+
     public enum VanillaTableMode {
         BOOKS,
         ALIGN_CAPS,

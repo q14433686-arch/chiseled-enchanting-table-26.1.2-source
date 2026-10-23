@@ -739,142 +739,131 @@ class EconomyAndConfigVerificationTest {
     }
 
     @Test
-    @SuppressWarnings({"unchecked", "rawtypes"})
     void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
         assertEquals(49, all.size(), "Expected 49 curated in-game configurable entries across 6 categories");
-        for (var cat : chiseled_enchanting_table.config.ConfigCatalog.Category.values()) {
+        for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
-                chiseled_enchanting_table.config.ConfigCatalog.optionsIn(cat).isEmpty(),
+                chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
                 "Category must not be empty: " + cat
             );
         }
 
-        var working = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.copy();
-        assertEquals(0, chiseled_enchanting_table.config.ConfigCatalog.countModified(working));
+        var working = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
+        assertEquals(0L, chiseled_enchanting_table.config.ConfigCatalog.countModified(working));
 
         for (var entry : all) {
-            assertTrue(entry.equalsDefault(working), "Default must match on entry: " + entry.key());
-            switch (entry.controlKind()) {
-                case BOOLEAN -> {
-                    var boolEntry = (chiseled_enchanting_table.config.ConfigCatalog.OptionEntry<Boolean>) entry;
-                    boolean orig = boolEntry.get(working);
-                    boolEntry.applyAndNormalize(working, !orig);
-                    assertEquals(!orig, boolEntry.get(working));
+            assertFalse(entry.isModifiedFromDefault(working), "Default must match on entry: " + entry.key());
+            switch (entry.kind()) {
+                case BOOLEAN, ENUM_CYCLE -> {
+                    Object orig = entry.get(working);
+                    entry.toggleOrCycle(working, 1);
+                    assertNotEquals(orig, entry.get(working), "Toggle/enum should change value for " + entry.key());
                 }
-                case ENUM -> {
-                    var enumEntry = (chiseled_enchanting_table.config.ConfigCatalog.OptionEntry<Enum>) entry;
-                    Enum orig = enumEntry.get(working);
-                    Enum next = enumEntry.cycleEnum(working, 1);
-                    enumEntry.applyAndNormalize(working, next);
-                    assertNotEquals(orig, enumEntry.get(working), "Enum should cycle for " + entry.key());
+                case INT_SLIDER -> {
+                    int orig = ((Number) entry.get(working)).intValue();
+                    int candidate = orig == (int) entry.min() ? (int) entry.max() : (int) entry.min();
+                    entry.set(working, candidate);
                 }
-                case INT -> {
-                    var intEntry = (chiseled_enchanting_table.config.ConfigCatalog.OptionEntry<Integer>) entry;
-                    int candidate = intEntry.get(working) == (int) entry.min()
-                        ? (int) entry.max()
-                        : (int) entry.min();
-                    intEntry.applyAndNormalize(working, candidate);
-                }
-                case DOUBLE -> {
-                    var dblEntry = (chiseled_enchanting_table.config.ConfigCatalog.OptionEntry<Double>) entry;
+                case DOUBLE_SLIDER -> {
+                    double orig = ((Number) entry.get(working)).doubleValue();
                     double mid = Math.round(((entry.min() + entry.max()) * 0.5) / entry.step()) * entry.step();
-                    if (Math.abs(mid - dblEntry.get(working)) < 1e-6) {
+                    if (Math.abs(mid - orig) < 1e-6) {
                         mid = entry.min();
                     }
-                    dblEntry.applyAndNormalize(working, mid);
+                    entry.set(working, mid);
                 }
             }
         }
         assertTrue(chiseled_enchanting_table.config.ConfigCatalog.countModified(working) > 30);
 
-        String json = working.toJsonString();
-        var reloaded = chiseled_enchanting_table.config.ModRuntimeConfig.fromJsonString(json);
+        var built = working.build();
+        String json = built.toJsonString();
+        var reloadedDraft = chiseled_enchanting_table.config.ModRuntimeConfig.fromJsonString(json).toDraft();
         for (var entry : all) {
-            assertEquals(entry.get(working), entry.get(reloaded), "JSON round-trip mismatch on " + entry.key());
+            assertEquals(entry.get(working), entry.get(reloadedDraft), "JSON round-trip mismatch on " + entry.key());
         }
 
-        chiseled_enchanting_table.config.ConfigCatalog.resetAll(reloaded);
-        assertEquals(0, chiseled_enchanting_table.config.ConfigCatalog.countModified(reloaded));
+        chiseled_enchanting_table.config.ConfigCatalog.resetAll(reloadedDraft);
+        assertEquals(0L, chiseled_enchanting_table.config.ConfigCatalog.countModified(reloadedDraft));
     }
 
     @Test
     void configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() {
-        var cfg = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.copy();
+        var cfg = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
         var admin = chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN;
         var readonly = chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_READONLY;
 
         // Dedicated non-OP player sees every option read-only with explicit server reason
         for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
-            var avail = opt.availability(cfg, readonly);
+            var avail = opt.evaluate(cfg, readonly);
             assertFalse(avail.editable(), "Read-only session must lock " + opt.key());
             assertEquals("config.chiseled_enchanting_table.reason.server_readonly", avail.inactiveReasonKey());
         }
 
         // All 49 options are active and editable under default config for admins/singleplayer
         for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
-            var avail = opt.availability(cfg, admin);
-            assertTrue(avail.applicable(), "Default config should leave " + opt.key() + " applicable");
+            var avail = opt.evaluate(cfg, admin);
+            assertTrue(avail.parentApplicable(), "Default config should leave " + opt.key() + " applicable");
             assertTrue(avail.editable(), "Admin session should leave " + opt.key() + " editable");
         }
 
         // 1. Direct wooden shelf gates chain
-        cfg.setDirectGatesEnabled(false);
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("blank_max_tier_mode").orElseThrow().availability(cfg, admin).applicable());
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("max_direct_bookshelves").orElseThrow().availability(cfg, admin).applicable());
+        cfg.directGatesEnabled = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("blank_max_tier_mode").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("max_direct_bookshelves").orElseThrow().evaluate(cfg, admin).parentApplicable());
 
         // 2. Breathing room chain
-        cfg.setRequireBreathingRoom(false);
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("min_open_adjacent_blocks").orElseThrow().availability(cfg, admin).applicable());
+        cfg.requireBreathingRoom = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("min_open_adjacent_blocks").orElseThrow().evaluate(cfg, admin).parentApplicable());
 
         // 3. Master Tome wear chain (KEEP / CONSUME disables wear charges, copy wear & depletion behavior)
-        cfg.setTomeConsumptionMode(MasterTomeWear.ConsumptionMode.KEEP);
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("max_tome_uses").orElseThrow().availability(cfg, admin).applicable());
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_copy_wear_cost").orElseThrow().availability(cfg, admin).applicable());
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("tome_deplete_behavior").orElseThrow().availability(cfg, admin).applicable());
+        cfg.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("max_tome_uses").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_copy_wear_cost").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("tome_deplete_behavior").orElseThrow().evaluate(cfg, admin).parentApplicable());
 
         // 4 & 5. Book combine / research multipliers
-        cfg.setBookCombineEnabled(false);
-        cfg.setBookResearchEnabled(false);
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_combine_xp_multiplier").orElseThrow().availability(cfg, admin).applicable());
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_research_xp_multiplier").orElseThrow().availability(cfg, admin).applicable());
+        cfg.bookCombineEnabled = false;
+        cfg.bookResearchEnabled = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_combine_xp_multiplier").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("book_research_xp_multiplier").orElseThrow().evaluate(cfg, admin).parentApplicable());
 
         // 6. Two-level Disenchant -> Allow Curse Purge -> Curse Purge XP Cost chain
-        cfg.setAllowCursePurge(false);
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("curse_purge_xp_cost").orElseThrow().availability(cfg, admin).applicable());
-        assertTrue(chiseled_enchanting_table.config.ConfigCatalog.byKey("xp_refund_scale").orElseThrow().availability(cfg, admin).applicable());
-        cfg.setAllowCursePurge(true);
-        cfg.setDisenchantEnabled(false);
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("xp_refund_scale").orElseThrow().availability(cfg, admin).applicable());
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("allow_curse_purge").orElseThrow().availability(cfg, admin).applicable());
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("curse_purge_xp_cost").orElseThrow().availability(cfg, admin).applicable());
+        cfg.allowCursePurge = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("curse_purge_xp_cost").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertTrue(chiseled_enchanting_table.config.ConfigCatalog.byKey("xp_refund_scale").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        cfg.allowCursePurge = true;
+        cfg.disenchantEnabled = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("xp_refund_scale").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("allow_curse_purge").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("curse_purge_xp_cost").orElseThrow().evaluate(cfg, admin).parentApplicable());
 
         // 7. Structure Chiseled Bookshelf pool chain
-        cfg.setBookshelfPoolEnabled(false);
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_min_books").orElseThrow().availability(cfg, admin).applicable());
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_max_books").orElseThrow().availability(cfg, admin).applicable());
-        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_enchanted_prob").orElseThrow().availability(cfg, admin).applicable());
+        cfg.bookshelfPoolEnabled = false;
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_min_books").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_max_books").orElseThrow().evaluate(cfg, admin).parentApplicable());
+        assertFalse(chiseled_enchanting_table.config.ConfigCatalog.byKey("bookshelf_enchanted_prob").orElseThrow().evaluate(cfg, admin).parentApplicable());
 
         // Cross-field coherence checks
-        cfg.setTier1Bookshelves(40);
+        cfg.tier1Bookshelves = 40;
         cfg.normalizeAfterEdit("tier1_bookshelves");
-        assertTrue(cfg.tier1Bookshelves() <= cfg.tier2Bookshelves());
-        assertTrue(cfg.tier2Bookshelves() <= cfg.maxDirectBookshelves());
+        assertTrue(cfg.tier1Bookshelves <= cfg.tier2Bookshelves);
+        assertTrue(cfg.tier2Bookshelves <= cfg.maxDirectBookshelves);
 
-        cfg.setExternalXpRefundScale(0.95);
-        cfg.setXpRefundScale(0.40);
+        cfg.externalXpRefundScale = 0.95;
+        cfg.xpRefundScale = 0.40;
         cfg.normalizeAfterEdit("xp_refund_scale");
-        assertTrue(cfg.externalXpRefundScale() <= cfg.xpRefundScale() + 1e-9);
+        assertTrue(cfg.externalXpRefundScale <= cfg.xpRefundScale + 1e-9);
 
-        cfg.setBookshelfMinBooks(5);
-        cfg.setBookshelfMaxBooks(2);
+        cfg.bookshelfMinBooks = 5;
+        cfg.bookshelfMaxBooks = 2;
         cfg.normalizeAfterEdit("bookshelf_max_books");
-        assertEquals(2, cfg.bookshelfMinBooks());
-        assertEquals(2, cfg.bookshelfMaxBooks());
+        assertEquals(2, cfg.bookshelfMinBooks);
+        assertEquals(2, cfg.bookshelfMaxBooks);
     }
 
     @Test
-    @SuppressWarnings({"unchecked", "rawtypes"})
     void allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() throws Exception {
         Path langDir = Path.of("src/client/resources/assets/chiseled_enchanting_table/lang");
         List<Path> langFiles;
@@ -916,26 +905,25 @@ class EconomyAndConfigVerificationTest {
             "config.chiseled_enchanting_table.reason.need_bookshelf_pool"
         ));
         for (var mode : chiseled_enchanting_table.config.ConfigCatalog.SessionMode.values()) {
-            requiredKeys.add(mode.badgeKey());
+            requiredKeys.add(mode.bannerKey());
         }
         for (var scope : chiseled_enchanting_table.config.ConfigCatalog.EffectScope.values()) {
             requiredKeys.add(scope.badgeKey());
             requiredKeys.add(scope.badgeKey() + ".detail");
         }
-        for (var cat : chiseled_enchanting_table.config.ConfigCatalog.Category.values()) {
+        for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             requiredKeys.add(cat.titleKey());
             requiredKeys.add(cat.subtitleKey());
         }
-        var probe = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.copy();
+        var probe = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
         for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
             requiredKeys.add(opt.nameKey());
             requiredKeys.add(opt.descKey());
-            if (opt.controlKind() == chiseled_enchanting_table.config.ConfigCatalog.ControlKind.ENUM) {
-                var enumEntry = (chiseled_enchanting_table.config.ConfigCatalog.OptionEntry<Enum>) opt;
+            if (opt.kind() == chiseled_enchanting_table.config.ConfigCatalog.ControlKind.ENUM_CYCLE) {
                 for (int i = 0; i < 8; i++) {
-                    String formatted = enumEntry.formatValue(probe);
-                    requiredKeys.add(formatted);
-                    enumEntry.applyAndNormalize(probe, enumEntry.cycleEnum(probe, 1));
+                    String formatted = opt.rawOrKeyDisplay(probe);
+                    requiredKeys.add(formatted.startsWith("@") ? formatted.substring(1) : formatted);
+                    opt.toggleOrCycle(probe, 1);
                 }
             }
         }
