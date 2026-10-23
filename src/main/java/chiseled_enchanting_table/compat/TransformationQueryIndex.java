@@ -107,6 +107,11 @@ public final class TransformationQueryIndex {
             }
 
             var synced = SyncedEnchantmentCosts.find(OptionType.TRANSFORMATION, id, level);
+            if (hasSyncedPayload && synced.isEmpty()) {
+                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.warn(
+                    "Skipping transformation {}: server catalog has no matching synchronized cost row", id);
+                continue; // Never silently mix a server catalog with client-local prices.
+            }
             boolean serverCosts = synced.isPresent();
             int rawXp = synced.map(SyncedEnchantmentCosts.Cost::xpLevelCost)
                 .orElseGet(() -> ChiseledEnchantingTableData.transformationXpCost(id));

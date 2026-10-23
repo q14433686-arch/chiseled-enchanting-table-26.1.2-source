@@ -184,6 +184,9 @@ class SyncContracts(unittest.TestCase):
         self.assertIn('SyncedEnchantmentCosts.transformationDisplays()', index)
         self.assertIn('display.input_is_tag()', index)
         self.assertIn('stack.is(tag)', index)
+        self.assertIn('XpCostConversion.forTransformation(', index)
+        self.assertNotIn('display != null && display.deducted_levels() > 0', handler)
+
         jei = (CLIENT / 'compat/jei/ChiseledEnchantingJeiPlugin.java').read_text()
         self.assertIn('manager.hideRecipes(', jei)
         self.assertIn('manager.addRecipes(', jei)
