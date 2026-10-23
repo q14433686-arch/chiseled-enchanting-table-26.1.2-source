@@ -1,4 +1,4 @@
-commit: 8f52178c4624993baf7e2e037feffdc2cd065dad
+commit: 46782a25d1b0b342b0316ed69b82c6e63c7d34b8
 branch: arena/eb218d80-chiseled-enchanting-table-26-1
 gradle exit code: 1
 
@@ -198,7 +198,33 @@ net.fabricmc.fabric-api:fabric-api-lookup-api-v1:2.0.24+3434d6d95d
 +--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3
 |    \--- compileClasspath
 \--- net.fabricmc.fabric-api:fabric-transfer-api-v1:8.0.25+fcdff87f5d
-...[truncated 1003 lines total]...
+...[truncated 2454 lines total]...
+|    \--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
++--- net.fabricmc.fabric-api:fabric-particles-v1:5.0.25+3434d6d95d
+|    \--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
++--- net.fabricmc.fabric-api:fabric-recipe-api-v1:10.0.9+b9b88df45d
+|    +--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
+|    \--- net.fabricmc.fabric-api:fabric-data-generation-api-v1:27.3.0+5be2453c5d
+|         \--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
+\--- net.fabricmc.fabric-api:fabric-registry-sync-v0:8.0.2+1ca9f6365d
+     +--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
+     +--- net.fabricmc.fabric-api:fabric-data-generation-api-v1:27.3.0+5be2453c5d (*)
+     +--- net.fabricmc.fabric-api:fabric-gametest-api-v1:4.0.33+3434d6d95d
+     |    \--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
+     +--- net.fabricmc.fabric-api:fabric-menu-api-v1:2.0.28+ed66f0a35d (*)
+     \--- net.fabricmc.fabric-api:fabric-object-builder-api-v1:24.1.10+3434d6d95d
+          +--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
+          \--- net.fabricmc.fabric-api:fabric-data-attachment-api-v1:2.2.31+b9b88df45d (*)
+
+net.fabricmc.fabric-api:fabric-object-builder-api-v1:24.1.10+3434d6d95d
+  Variant compile:
+    | Attribute Name                 | Provided | Requested    |
+    |--------------------------------|----------|--------------|
+    | org.gradle.status              | release  |              |
+    | org.gradle.category            | library  | library      |
+    | org.gradle.libraryelements     | jar      | classes      |
+    | org.gradle.usage               | java-api | java-api     |
+    | org.gradle.dependency.bundling |          | external     |
     | org.gradle.jvm.environment     |          | standard-jvm |
     | org.gradle.jvm.version         |          | 25           |
 
@@ -975,29 +1001,3 @@ clientCompileClasspath - Compile classpath for source set 'client'.
 A web-based, searchable dependency report is available by adding the --scan option.
 
 == job status: failure ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: cancelled ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
