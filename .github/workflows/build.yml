@@ -172,16 +172,28 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PYLOG'
-          import base64, json, os, pathlib, subprocess
+          import base64, json, os, pathlib, subprocess, time
           path = pathlib.Path('build-reports/server-smoke.log')
           if path.exists():
               endpoint = f"repos/{os.environ['GITHUB_REPOSITORY']}/contents/{path}"
               branch = os.environ['GITHUB_REF_NAME']
-              old = subprocess.run(['gh', 'api', endpoint + '?ref=' + branch], capture_output=True, text=True)
-              data = {'message': 'ci-log: server smoke for ' + os.environ['GITHUB_SHA'],
-                      'branch': branch, 'content': base64.b64encode(path.read_bytes()[-150000:]).decode()}
-              if old.returncode == 0:
-                  data['sha'] = json.loads(old.stdout)['sha']
-              subprocess.run(['gh', 'api', '-X', 'PUT', endpoint, '--input', '-'],
-                             input=json.dumps(data), text=True, check=True, stdout=subprocess.DEVNULL)
+              content = base64.b64encode(path.read_bytes()[-150000:]).decode()
+              # compile-check writes back at the same time; retry instead of failing the job
+              # on a transient 409/422. The blob sha is re-read on every attempt.
+              for attempt in range(1, 4):
+                  old = subprocess.run(['gh', 'api', endpoint + '?ref=' + branch],
+                                       capture_output=True, text=True)
+                  data = {'message': 'ci-log: server smoke for ' + os.environ['GITHUB_SHA'],
+                          'branch': branch, 'content': content}
+                  if old.returncode == 0:
+                      data['sha'] = json.loads(old.stdout)['sha']
+                  put = subprocess.run(['gh', 'api', '-X', 'PUT', endpoint, '--input', '-'],
+                                       input=json.dumps(data), text=True,
+                                       capture_output=True)
+                  if put.returncode == 0:
+                      break
+                  print(f'write-back attempt {attempt} failed: {put.stderr.strip()}')
+                  time.sleep(attempt * 5)
+              else:
+                  print('::warning::could not push the smoke log back to ' + branch)
           PYLOG
