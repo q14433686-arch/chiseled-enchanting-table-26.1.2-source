@@ -64,7 +64,13 @@ public final class LibraryResonance {
         MasterTomeWear.ConsumptionMode tomeConsumptionMode,
         int maxTomeUses,
         int bookCopyWearCost,
-        MasterTomeWear.DepleteBehavior tomeDepleteBehavior
+        MasterTomeWear.DepleteBehavior tomeDepleteBehavior,
+        boolean tomeRegenEnabled,
+        int tomeRegenBaseSeconds,
+        int tomeRegenTier1Shelves,
+        int tomeRegenTier1Seconds,
+        int tomeRegenTier2Shelves,
+        int tomeRegenTier2Seconds
     ) {
         public static final Config DEFAULT = new Config(
             MIN_DISCOUNT_BOOKSHELVES,
@@ -95,7 +101,13 @@ public final class LibraryResonance {
             MasterTomeWear.ConsumptionMode.WEAR,
             MasterTomeWear.DEFAULT_MAX_TOME_USES,
             MasterTomeWear.DEFAULT_BOOK_COPY_WEAR_COST,
-            MasterTomeWear.DepleteBehavior.STEP_DOWN
+            MasterTomeWear.DepleteBehavior.STEP_DOWN,
+            MasterTomeWear.DEFAULT_REGEN_ENABLED,
+            MasterTomeWear.DEFAULT_REGEN_BASE_SECONDS,
+            MasterTomeWear.DEFAULT_REGEN_TIER1_SHELVES,
+            MasterTomeWear.DEFAULT_REGEN_TIER1_SECONDS,
+            MasterTomeWear.DEFAULT_REGEN_TIER2_SHELVES,
+            MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS
         );
 
         public Config {
@@ -103,6 +115,81 @@ public final class LibraryResonance {
             maxTomeUses = clampInt(maxTomeUses, 1, 1024);
             bookCopyWearCost = clampInt(bookCopyWearCost, 1, 1024);
             tomeDepleteBehavior = tomeDepleteBehavior != null ? tomeDepleteBehavior : MasterTomeWear.DepleteBehavior.STEP_DOWN;
+            tomeRegenBaseSeconds = clampInt(tomeRegenBaseSeconds, 1, 86_400);
+            tomeRegenTier1Shelves = clampInt(tomeRegenTier1Shelves, 1, 256);
+            tomeRegenTier1Seconds = clampInt(tomeRegenTier1Seconds, 1, tomeRegenBaseSeconds);
+            tomeRegenTier2Shelves = clampInt(tomeRegenTier2Shelves, tomeRegenTier1Shelves, 256);
+            tomeRegenTier2Seconds = clampInt(tomeRegenTier2Seconds, 1, tomeRegenTier1Seconds);
+        }
+
+        public Config(
+            int minDiscountBookshelves,
+            int maxDiscountBookshelves,
+            int maxWoodenDiscountPercent,
+            int maxGlobalMasteryDiscountPercent,
+            int maxBaseXpDiscountPercent,
+            int maxSpecificEnchantBonusPercent,
+            double specificEnchantExponent,
+            int maxTotalXpDiscountPercent,
+            double masteryUnitExponent,
+            double globalMasteryMultiplier,
+            double masterTomeUpgradeMaterialMultiplier,
+            double shelfUpgradeMaterialMultiplier,
+            double epiphanyProbabilityGlobalWeight,
+            double epiphanyProbabilityAffinityWeight,
+            double blankBookAffinityWeight,
+            double epiphanyShelfScoreFactor,
+            double epiphanyGlobalMasteryScoreFactor,
+            double epiphanyAffinityMasteryScoreFactor,
+            double epiphanyTier2MaxProb,
+            double epiphanyTier2ScoreDivisor,
+            double epiphanyTier2MasteryBonus,
+            double epiphanyTierPlusMaxProb,
+            double epiphanyTierPlusScoreDivisor,
+            double epiphanyTierPlusMasteryBonus,
+            double incrementalStepCreditFactor,
+            MasterTomeWear.ConsumptionMode tomeConsumptionMode,
+            int maxTomeUses,
+            int bookCopyWearCost,
+            MasterTomeWear.DepleteBehavior tomeDepleteBehavior
+        ) {
+            this(
+                minDiscountBookshelves,
+                maxDiscountBookshelves,
+                maxWoodenDiscountPercent,
+                maxGlobalMasteryDiscountPercent,
+                maxBaseXpDiscountPercent,
+                maxSpecificEnchantBonusPercent,
+                specificEnchantExponent,
+                maxTotalXpDiscountPercent,
+                masteryUnitExponent,
+                globalMasteryMultiplier,
+                masterTomeUpgradeMaterialMultiplier,
+                shelfUpgradeMaterialMultiplier,
+                epiphanyProbabilityGlobalWeight,
+                epiphanyProbabilityAffinityWeight,
+                blankBookAffinityWeight,
+                epiphanyShelfScoreFactor,
+                epiphanyGlobalMasteryScoreFactor,
+                epiphanyAffinityMasteryScoreFactor,
+                epiphanyTier2MaxProb,
+                epiphanyTier2ScoreDivisor,
+                epiphanyTier2MasteryBonus,
+                epiphanyTierPlusMaxProb,
+                epiphanyTierPlusScoreDivisor,
+                epiphanyTierPlusMasteryBonus,
+                incrementalStepCreditFactor,
+                tomeConsumptionMode,
+                maxTomeUses,
+                bookCopyWearCost,
+                tomeDepleteBehavior,
+                MasterTomeWear.DEFAULT_REGEN_ENABLED,
+                MasterTomeWear.DEFAULT_REGEN_BASE_SECONDS,
+                MasterTomeWear.DEFAULT_REGEN_TIER1_SHELVES,
+                MasterTomeWear.DEFAULT_REGEN_TIER1_SECONDS,
+                MasterTomeWear.DEFAULT_REGEN_TIER2_SHELVES,
+                MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS
+            );
         }
 
         public Config(
@@ -323,8 +410,52 @@ public final class LibraryResonance {
                 ),
                 MasterTomeWear.DepleteBehavior.fromToken(
                     stringFrom(masteryObj, root, "tome_deplete_behavior", null, DEFAULT.tomeDepleteBehavior.token())
+                ),
+                boolFrom(masteryObj, root, "tome_regen_enabled", null, DEFAULT.tomeRegenEnabled),
+                clampInt(
+                    intFrom(masteryObj, root, "tome_regen_base_seconds", null, DEFAULT.tomeRegenBaseSeconds),
+                    1,
+                    86_400
+                ),
+                clampInt(
+                    intFrom(masteryObj, root, "tome_regen_tier1_shelves", null, DEFAULT.tomeRegenTier1Shelves),
+                    1,
+                    256
+                ),
+                clampInt(
+                    intFrom(masteryObj, root, "tome_regen_tier1_seconds", null, DEFAULT.tomeRegenTier1Seconds),
+                    1,
+                    86_400
+                ),
+                clampInt(
+                    intFrom(masteryObj, root, "tome_regen_tier2_shelves", null, DEFAULT.tomeRegenTier2Shelves),
+                    1,
+                    256
+                ),
+                clampInt(
+                    intFrom(masteryObj, root, "tome_regen_tier2_seconds", null, DEFAULT.tomeRegenTier2Seconds),
+                    1,
+                    86_400
                 )
             );
+        }
+
+        private static boolean boolFrom(JsonObject section, JsonObject root, String primaryKey, String aliasKey, boolean fallback) {
+            if (section != null) {
+                if (section.has(primaryKey) && section.get(primaryKey).isJsonPrimitive()) {
+                    return section.get(primaryKey).getAsBoolean();
+                }
+                if (aliasKey != null && section.has(aliasKey) && section.get(aliasKey).isJsonPrimitive()) {
+                    return section.get(aliasKey).getAsBoolean();
+                }
+            }
+            if (root.has(primaryKey) && root.get(primaryKey).isJsonPrimitive()) {
+                return root.get(primaryKey).getAsBoolean();
+            }
+            if (aliasKey != null && root.has(aliasKey) && root.get(aliasKey).isJsonPrimitive()) {
+                return root.get(aliasKey).getAsBoolean();
+            }
+            return fallback;
         }
 
         private static String stringFrom(JsonObject section, JsonObject root, String primaryKey, String aliasKey, String fallback) {

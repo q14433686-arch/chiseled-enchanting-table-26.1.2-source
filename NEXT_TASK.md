@@ -9,7 +9,9 @@
 `CHANGELOG.md` for the 1.1.0 content and
 `docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md` for the 2026-10-22 and 2026-10-23 syncs that
 brought the progression/economy/UI overhaul and then the grimoire / cleanse / economy-hardening
-batch onto this line (both ship as `1.1.0`).
+batch onto this line, and `docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md` §9 for the 2026-10-24
+`26.3` sync (provenance/rule architecture, persistent inventory, queued rituals, tome regeneration,
+depleted-tome world content, wire revision 6). All three ship as `1.1.0`.
 
 ## How to build 1.1.0 from a fresh clone
 
@@ -77,6 +79,41 @@ UI:
     that no refund/cost pair can be looped for net XP.
 13. **Live shelf sync**: with a menu open, place/break bookshelves and add/remove stored books — the
     rows must refresh within about one second without reopening the table.
+
+### A2. Live-verify the 2026-10-24 `26.3` sync
+
+These are the surfaces that only exist since the latest sync; none has been played on a real
+26.2 client. Run them on a **backup copy** of a world — the defaults changed (tome regeneration,
+datapack-first configuration) and old worlds get the new defaults unless they already stored
+explicit values.
+
+1. **Persistent table inventory**: put an item in each slot, close the GUI (the items must stay in
+   the block, *not* be returned), quit and reload, then break the table — both slots must drop
+   exactly once, and the dropped block item must not carry a copy of them.
+2. **Queued inscriptions**: with `≥32` broad shelves (or `≥10` stored tomes) queue several
+   enchantments; confirm the panel shows the live timer, that only the owner can append or skip,
+   that targets are locked while a ritual runs, and that `/cet cancel-ritual` clears the queue while
+   keeping the stored inputs (paid fees and tome wear are *not* refunded).
+3. **Both skip paths**: XP sacrifice (capped at 15 levels, 0% tome damage) and force rush
+   (0 XP, live degradation chance capped at 50%, 70% with an Infinity tome, weakest tome degraded
+   first). Confirm the two advancements fire.
+4. **Infinity rules**: Infinity must never appear in the epiphany pool or the default inscription
+   list, villager/Master-Tome-copy paths must work, an Infinity tome must take 0 wear, and an
+   overloaded (`≥5` total enchants) Infinity tome must occasionally "slip" a level (≤20%).
+5. **Tome passive regeneration**: at `0 / 38 / 42` broad shelves a worn tome must heal one point per
+   `24,000 / 12,000 / 3,600` seconds of *loaded* time; unload the chunk or switch worlds and confirm
+   no backlog is credited on return.
+6. **Depleted-tome world content**: chest loot rates, wild chiseled bookshelf weathering (≤30%),
+   librarian recycling/repair and the level-gated commissioned trades (Novice→Master, price cap).
+7. **Configuration governance**: flip `override_datapacks`, then override a key from a datapack and
+   confirm the panel locks the row with the `📦 datapack-priority` reason; with
+   `pack_policy.json#lock_in_game_config` the row must become `🔒 modpack lock` and `/cet config`
+   must not accept edits from a non-operator.
+8. **Wire revision 6**: a client and server built from either side of this commit must refuse each
+   other with the mismatch message (not a decode crash). LAN host vs. guest vs. operator authority
+   still needs real clients.
+9. **Grimoire**: the repaginated chapters and the new diagrams (shelf taxonomy, skip comparison,
+   tome regeneration, world remnants), plus JEI/REI round-trips from the new pages.
 
 ### B. Multi-slot cost panel (last big UI decoupling backlog item)
 

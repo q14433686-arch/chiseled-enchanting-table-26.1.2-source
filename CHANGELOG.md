@@ -22,6 +22,10 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > disenchant/cleanse system, the economy anti-arbitrage hardening and the de-hardcoded data-pack
 > configuration) was synced in the same way — the version stays `1.1.0`, since `1.1.0` had not been
 > released from this branch yet and the addition is part of the same feature release.
+> On **2026-10-24** the `26.3` branch's second batch (source `3e61f5d`: effective-rule snapshots,
+> persistent table inventories, bounded inscription rituals, tome regeneration, depleted-tome world
+> content, wire revision 6) was ported as well — still `1.1.0`, still no 26.3 toolchain. See
+> [`docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md) §9.
 > Also on **2026-10-23** the `26.3` branch's *feature* batch (enchantment provenance with fair
 > refunds, Master-Tome wear, the protocol capability channel, the categorized in-game configuration
 > UI, live per-player unlock catalogs) was ported into this line — see
@@ -181,6 +185,49 @@ included as-is.
 - **Localization & docs**: 11 locales extended in full parity (`307` keys), `docs/WIKI.md` rewritten
   as a gameplay guide (formulas, the three shelf roles, every recipe, the cleanse rituals, the
   upstream comparison table).
+
+### Added — `26.3`-line batch 2: rules, persistent storage, rituals, regeneration (2026-10-24)
+
+Ported from the `26.3` branch at source `3e61f5d` (wire revision **6**); mapping, adaptations and
+the source audit's regression gates in
+[`docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md) §9.
+
+- **Effective-rule architecture (`RuntimeRules`, `RuleBook`, `pack_policy.json`)**: stored
+  preferences, the effective value and the client draft are now separate, ranges and cross-field
+  invariants are normalised once, and domain tables + costs + loot + policy + the effective config
+  are published as a single immutable generation. Locked or datapack-governed rows show their
+  *effective* value with a `📦` / `🔒` reason instead of a stale draft, and failed saves/reloads
+  never publish a half-applied generation.
+- **Pack governance for modpacks**: `pack_policy.json` (`enforce_datapack_priority`,
+  `lock_in_game_config`, `locked_keys`) lets a modpack or server force datapack priority and lock
+  balance keys read-only, regardless of what a player edits in `config/…json`.
+- **Chest-style persistent table storage**: both table slots live in the block entity — closing the
+  GUI, walking away or reloading the world no longer returns or duplicates items, and breaking the
+  table drops each stack exactly once.
+- **Queued deep-resonance inscriptions**: with `≥32` broad shelves (or `≥10` stored tome
+  enchantments) an inscription can take real time; several can be queued (bounded to 256 steps /
+  32,000 characters, ≤255 levels). Two skips: **sacrifice XP** (safe, ≤15 levels) or **force the
+  rush** (0 XP, live chance of degrading the weakest Master Tome, capped at 50% — 70% with an
+  Infinity tome). Queues are owner/session/target-bound; `/cet cancel-ritual` keeps the stored
+  inputs but not the spent fees; a vanished enchantment id quarantines the order instead of
+  deleting it.
+- **Master Tome regeneration**: worn tomes stored in Chiseled Bookshelves heal over *loaded* game
+  days — `24,000 s` per point at a bare table, `12,000 s` at `38` broad shelves, `3,600 s` at `42`;
+  shared shelves settle once per 20-tick window at the fastest legal rate and never credit time from
+  unloaded chunks, inventories or other worlds.
+- **Depleted Tome world content**: per-structure chest loot, wild chiseled-bookshelf weathering
+  (≤30% total replacement), librarian recycling (`2` remnants → `1` emerald / `2` amethyst), plain
+  book repair from Novice level, and commissioned enchanted-book rewrites whose required librarian
+  level *and* price both scale with rarity × universality × relative level (price capped at 18
+  emeralds).
+- **Infinity rules**: removed from the epiphany pool and the default inscription list; Infinity
+  Tomes take zero wear, and overloaded ones (≥5 total enchants) can slip a level when inscribing
+  (≤20%), with villager trades restricted to book results only.
+- **Content**: weighted Treasure Epiphany, five new advancements, repaginated Grimoire with new
+  diagrams, 621 translation keys × 11 locales.
+- **Fixed — loot-function conditions were parsed away** (carried over): both bundled
+  `LootItemConditionalFunction` codecs now use `commonFields(...)` so a datapack `conditions` array
+  is honoured, and `compat_check.py` guards against the `MapCodec.unit(...)` pattern.
 
 ### Added — `26.3`-line batch: provenance, Master-Tome wear, live config UI (2026-10-23)
 

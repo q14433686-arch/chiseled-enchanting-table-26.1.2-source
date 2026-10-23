@@ -90,33 +90,45 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             if (!stack.is(Items.ENCHANTED_BOOK)) {
                 return;
             }
-            int wearUsed = MasterTomeWear.getWearUsed(stack);
-            if (wearUsed <= 0) {
-                return;
-            }
             var cfg = SyncedEnchantmentCosts.libraryResonanceConfig();
             if (cfg.tomeConsumptionMode() == MasterTomeWear.ConsumptionMode.KEEP) {
                 return;
             }
+            if (MasterTomeWear.hasInfinityImmunity(stack)) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_infinite"
+                ).withStyle(style -> style.withColor(0xFFFF55FF)));
+                return;
+            }
+            int wearUsed = MasterTomeWear.getWearUsed(stack);
             int maxUses = Math.max(1, cfg.maxTomeUses());
             int remaining = Math.max(1, maxUses - wearUsed);
             float ratio = (float) remaining / (float) maxUses;
-            int color = ratio > 0.5f
-                ? 0xFF55FFFF
-                : (ratio > 0.25f ? 0xFFFFAA00 : 0xFFFF5555);
+            int color = wearUsed <= 0
+                ? 0xFF00AAAA
+                : (ratio > 0.5f ? 0xFF55FFFF : (ratio > 0.25f ? 0xFFFFAA00 : 0xFFFF5555));
             lines.add(Component.translatable(
                 "item.chiseled_enchanting_table.master_tome_charges",
                 remaining,
                 maxUses
             ).withStyle(style -> style.withColor(color)));
+            if (wearUsed > 0 && cfg.tomeRegenEnabled()) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_regen_hint",
+                    cfg.tomeRegenTier1Shelves(),
+                    cfg.tomeRegenTier2Shelves()
+                ).withStyle(style -> style.withColor(0xFF555555)));
+            }
         });
 
         ClientPlayNetworking.registerGlobalReceiver(ModConfigNetworking.SyncRuntimeConfigPayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> {
-                ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.json());
-                ModRuntimeConfig.applyRemoteSync(synced, payload.canEdit());
+                ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.effectiveJson());
+                ModRuntimeConfig.setRemotePreferences(ModRuntimeConfig.fromJsonString(payload.json()));
+                ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.PackPolicy.fromJsonString(payload.policyJson());
+                ModRuntimeConfig.applyRemoteSync(synced, policy, payload.canEdit());
                 // In an integrated server the shared tables were already committed on the server thread.
-                if (!ctx.client().hasSingleplayerServer()) ChiseledEnchantingTableData.applyRuntimeConfig(synced);
+                if (!ctx.client().hasSingleplayerServer()) ChiseledEnchantingTableData.applyRuntimeConfig(synced, ModRuntimeConfig.PackPolicy.NONE, () -> {});
                 if (payload.requestId() > 0) ModRuntimeConfig.acknowledgeSave(payload.requestId(), payload.accepted());
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
@@ -143,6 +155,15 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                     menu.applyLiveShelfState(payload);
+                }
+            })
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.TYPE,
+            (payload, ctx) -> ctx.client().execute(() -> {
+                var player = ctx.client().player;
+                if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                    menu.applySyncedRitualState(payload);
                 }
             })
         );

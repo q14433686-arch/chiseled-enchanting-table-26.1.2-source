@@ -9,10 +9,20 @@ import chiseled_enchanting_table.registry.LootRegistry;
 import chiseled_enchanting_table.registry.ScreenHandlerRegistry;
 import chiseled_enchanting_table.registry.StructureProcessorRegistry;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.item.v1.DefaultItemComponentEvents;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +46,54 @@ public class ChiseledEnchantingTable implements ModInitializer {
         ChiseledEnchantingTableData.init();
         chiseled_enchanting_table.config.ModConfigNetworking.init();
         EnchantCostSync.init();
+        chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.init();
         BlockRegistry.init();
         EntityRegistry.init();
         ScreenHandlerRegistry.init();
         StructureProcessorRegistry.init();
         LootRegistry.init();
+
+        // Restrict minecraft:infinity strictly to Exploration loot, Vanilla Enchanting Table random rolls,
+        // and Master Tome copying/inscription — strip/replace any Villager / Wandering Trader Infinity offer.
+        UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            if (!world.isClientSide() && entity instanceof AbstractVillager abstractVillager) {
+                sanitizeVillagerInfinityOffers(world, abstractVillager.getOffers());
+                if (abstractVillager instanceof net.minecraft.world.entity.npc.villager.Villager villager) {
+                    chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                        .ensureLibrarianDepletedTomeOffers(world, villager);
+                }
+            }
+            return InteractionResult.PASS;
+        });
+    }
+
+    private static void sanitizeVillagerInfinityOffers(net.minecraft.world.level.Level world, MerchantOffers offers) {
+        if (offers == null || offers.isEmpty()) {
+            return;
+        }
+        var enchRegistry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        var powerHolderOpt = enchRegistry.get(Enchantments.POWER);
+        for (int i = 0; i < offers.size(); i++) {
+            MerchantOffer offer = offers.get(i);
+            ItemStack result = offer.getResult();
+            // Restrict the book economy, not third-party enchanted equipment or arbitrary rewards.
+            if (!result.is(Items.ENCHANTED_BOOK)
+                || !chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.hasInfinityImmunity(result)) {
+                continue;
+            }
+            // The offer owns this stack. Mutating only its result preserves uses, discounts,
+            // demand, special price and out-of-stock state (reconstructing an offer loses them).
+            EnchantmentHelper.updateEnchantments(result, mutable -> {
+                mutable.removeIf(h -> h.unwrapKey()
+                    .map(ResourceKey::identifier)
+                    .filter(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.INFINITY_ENCHANTMENT_ID::equals)
+                    .isPresent());
+                if (mutable.keySet().isEmpty() && powerHolderOpt.isPresent()) {
+                    mutable.set(powerHolderOpt.get(), 1);
+                }
+            });
+
+        }
     }
 
     public static Identifier identifier(String path) {

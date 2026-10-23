@@ -71,7 +71,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     ) {
         super(client, width, height, y, itemHeight);
         this.handler = handler;
-        this.enchantable_item = handler.get_enchantable_item();
+        this.enchantable_item = handler.getEffectiveEnchantableItem();
         this.cost_item_stack = handler.get_cost_item();
         this.unlocked_enchantements = handler.unlocked_enchantements;
         this.player = handler.player;
@@ -87,7 +87,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             this.tabMode = nextMode;
             this.setFocused(null);
             this.setScrollAmount(0);
-            this.updateEntry(this.handler.get_enchantable_item(), this.handler.get_cost_item());
+            this.updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
         }
     }
 
@@ -104,7 +104,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             set.add(categoryId);
         }
         double savedScroll = this.scrollAmount();
-        this.updateEntry(this.handler.get_enchantable_item(), this.handler.get_cost_item());
+        this.updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
         this.setScrollAmount(Math.min(savedScroll, this.maxScrollAmount()));
     }
 
@@ -866,10 +866,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     this.existingSameLevel = OptionalInt.of(currentSameLevel);
                     this.sameEnchantLevelDiff = OptionalInt.of(this.enchant_level - currentSameLevel);
                 }
-                for (var entry : currentEnchants.entrySet()) {
-                    Identifier existingId = EnchantmentToIdentifier(entry.getKey(), this.player);
-                    if (!existingId.equals(this.enchantment_id) && !Enchantment.areCompatible(entry.getKey(), this.enchantment)) {
-                        this.overridenEnchant.add(new EnchantmentWithLevel(existingId, entry.getIntValue()));
+                boolean targetIsBook = enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK);
+                if (!targetIsBook) {
+                    for (var entry : currentEnchants.entrySet()) {
+                        Identifier existingId = EnchantmentToIdentifier(entry.getKey(), this.player);
+                        if (!existingId.equals(this.enchantment_id) && !Enchantment.areCompatible(entry.getKey(), this.enchantment)) {
+                            this.overridenEnchant.add(new EnchantmentWithLevel(existingId, entry.getIntValue()));
+                        }
                     }
                 }
                 this.conflict_refund_points = chiseled_enchanting_table.mechanics.enchanting.EnchantmentApplication

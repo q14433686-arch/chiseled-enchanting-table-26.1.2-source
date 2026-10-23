@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.registry;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics;
 import chiseled_enchanting_table.mechanics.loot.DepthBasedEfficiencyFunction;
 import chiseled_enchanting_table.mechanics.loot.EnchantedBookLootInjector;
 import chiseled_enchanting_table.mechanics.loot.RemoveEnchantedBooksFunction;
@@ -27,5 +28,6 @@ public final class LootRegistry {
             DepthBasedEfficiencyFunction.MAP_CODEC
         );
         EnchantedBookLootInjector.init();
+        DepletedTomeWorldMechanics.initChestLootInjection();
     }
 }

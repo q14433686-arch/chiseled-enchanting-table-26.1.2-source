@@ -11,6 +11,19 @@
 > not to the upstream project.
 
 **Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+
+> The `26.3`-line increment through `3e61f5d` (PR #17/#18 — itself the full `26.1.2` gameplay delta) is
+> ported to this `26.2` line with the same architecture-first approach: effective-rule snapshots,
+> one shared shelf-recovery scheduler, persistent table inventories, bounded owner/session-scoped
+> rituals, depleted-tome world/trade content and updated Grimoire/locales. See the
+> [port report](docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md) and the source branch's
+> [architecture review](docs/reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md).
+> Protocol revision is **6** despite the unchanged `1.1.0` release label: update both client and server.
+> **Back up existing worlds:** defaults now include mother-tome wear (16 charges, copying costs 4),
+> reduced refunds for unmarked/external items, datapack-first configuration, and
+> 24,000 / 12,000 / 3,600-second recovery tiers (38/42 shelves). Existing explicit settings are
+> preserved. 52 JUnit tests and the real dedicated-server probes pass in CI; GUI/multiplayer
+> interaction still requires manual validation.
 **Target:** Minecraft `26.2`, Fabric Loader `>=0.19.3`, Fabric API `0.155.2+26.2`, Java `>=25`.
 
 📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)**
@@ -26,7 +39,7 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 ## What 1.1.0 ships on this line
 
 `1.1.0` is the same feature set as the sister `26.1.2` and `26.3` branches, adapted to this
-Minecraft line. On this `26.2` branch it combines four passes:
+Minecraft line. On this `26.2` branch it combines five passes:
 
 1. the `26.3` back-port that landed on 2026-10-21 — worldgen bookshelf deadlock fix
    ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)),
@@ -41,6 +54,13 @@ Minecraft line. On this `26.2` branch it combines four passes:
 4. the `26.3`-line feature batch that landed on 2026-10-23 — enchantment provenance with fair
    refunds, Master-Tome wear with charge lore, the versioned protocol capability channel, the
    categorized in-game configuration screen, and live per-player unlock catalogs.
+5. the `26.3`-line architecture/feature batch that landed on 2026-10-24 — one effective-rule
+   snapshot (`RuntimeRules`/`RuleBook`) with datapack governance, persistent chest-style table
+   inventories, bounded owner/session-scoped inscription rituals with XP-sacrifice and force-rush
+   skips, Infinity acquisition limits with the overloaded-tome slip, weighted Treasure Epiphany,
+   passive Master-Tome regeneration (`24,000 / 12,000 / 3,600` s at `38 / 42` broad shelves),
+   depleted-tome chest loot / wild-shelf weathering / librarian trades, five new advancements and
+   the repaginated illustrated Grimoire in 11 locales.
 
 What was taken, what was adapted and what was deliberately left out is recorded in
 [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md)
@@ -79,6 +99,14 @@ Highlights:
   never to beat a Master-Tome re-enchant), `Cleansing Grit` strips a single unwanted trait, and curse
   purging removes `#minecraft:curse` entries. Every ritual keeps a pure-vanilla alternative
   (`disenchanting.json`).
+* **Chest-style table storage & queued deep-resonance rituals**: the two table slots persist inside
+  the block (close the GUI, walk away, reload the world — nothing drops and nothing duplicates), and
+  a deep library lets you queue several inscriptions on one item. When the wait is too long you can
+  **sacrifice XP** (safe, up to `15` levels) or **force the rush** (no XP, but a live chance of
+  degrading the weakest Master Tome) — both with dedicated advancements.
+* **Passive shelf recovery**: worn Master Tomes stored in Chiseled Bookshelves slowly heal, from
+  `1` point per `20` game days at a bare table down to `1` per `3` game days with `42` broad
+  shelves. Only time spent with the shelves loaded counts.
 * **In-game configuration screen**: every rule (bookshelf gates and scan volume, Master-Tome
   consumption mode and charges, economy discounts and refunds, epiphany odds, cleanse/uninstall
   switches, worldgen loot policy) is editable live from `/cet config`, the table screen, the

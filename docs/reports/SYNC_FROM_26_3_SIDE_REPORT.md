@@ -1,4 +1,4 @@
-# Sync Report — `26.3` line → `26.2` line (2026-10-23)
+# Sync Report — `26.3` line → `26.2` line (2026-10-23, second pass 2026-10-24)
 
 > **Scope:** port everything that landed on the sister `26.3` branch after this line's last sync
 > (`6a8f371`, the "provenance & live configuration" batch plus the runtime-audit hardening), onto
@@ -6,6 +6,10 @@
 > **Version:** unchanged — `1.1.0`. The user's standing instruction on this pass was
 > `版本号不变`, and `1.1.0` had not been released from this branch yet, so the imported feature batch
 > is folded into the same release (see `CHANGELOG.md`).
+> **Second pass (2026-10-24):** the `26.3` branch then advanced `6a8f371..d2abe21` (source
+> `3e61f5d`, PR #17/#18) adding the rule architecture, persistent table inventory, queued rituals,
+> tome regeneration, depleted-tome world content and wire revision **6**. That increment is ported
+> too — see **§9**, which supersedes the per-file numbers in §1/§2 for the current tree.
 > **Verdict:** the feature batch is complete and green locally. What was deliberately **not** taken
 > is the 26.3 *toolchain* (Minecraft 26.3 / loader 0.19.5 / FAPI 0.162.0 / JEI 31.x / REI 26.3.x),
 > the 26.3-only API rewrites (§4), and the 26.3 build scratch artifacts (§6). The branch diff is
@@ -136,7 +140,8 @@ support cannot regress silently again.
 * `src/test/java/.../NetworkCompatibilityTest` (new, 9 tests): revision/id separation, legacy
   channel never decodable, `readCount` bounds, cost payload round-trip including
   `transformations`.
-* `EconomyAndConfigVerificationTest` extended (16 tests) — 29 JUnit tests in total.
+* `EconomyAndConfigVerificationTest` extended (16 tests) — 29 JUnit tests after the first pass;
+  the second pass (§9) adds `FullPortRuntimeTest` (6) and `RuleArchitectureTest` (13) for **52**.
 * `scripts/server_smoke.py` (new, +x): boots a disposable flat world through `runServer`, issues
   `reload`, spawns named/dyed/frozen table loot and two always-false conditional loot-function
   fixtures, asserts the inspected NBT, verifies clean shutdown, and refuses to run against an
@@ -223,3 +228,146 @@ itself (APIs listed in §4), the toolchain pins this line must keep (`minecraft_
 `loader_version=0.19.3`, `fabric_version=0.155.2+26.2`, `jei_version=30.47.0.239`,
 `rei_version=26.2.821`, `rei_architectury_version=21.0.4`, `rei_math_version=0.6.1`,
 `mod_version=1.1.0`), or 26.3-only branch documentation.
+
+---
+
+## 9. Second pass — 2026-10-24: `6a8f371..d2abe21` (source `3e61f5d`, wire revision 6)
+
+The `26.3` branch gained 43 non-log changes after the first pass: 16 new files, 44 modified, plus
+docs. That increment is described in the source branch's own
+[`CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md`](CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md), which
+also lists the R1-R8 / N1-N7 findings and explicitly marks them as **migration gates for 26.2**
+rather than defects this line already had. Every gate was checked against the ported tree (§9.5).
+
+### 9.1 How it was ported
+
+Same method as the first pass — the branches still share no merge-base, so `git merge-file`
+(base `6a8f371`, ours `HEAD`, theirs `d2abe21`) over the 60 non-log paths, with
+`git show d2abe21:<path>` for the 16 new files. 21 files merged cleanly, 7 conflicted and were
+resolved by hand, 16 lang files were taken from the source because this line's copies were
+byte-identical to the merge base.
+
+Conflicts resolved (all by taking the 26.3 content and re-applying the 26.2 adaptation):
+
+| File | Conflict | Resolution |
+| --- | --- | --- |
+| `menu/EnchantingProtocol` | revision string + legacy probes | `26_2_revision_6` + `PREVIOUS_COST_TYPE = enchant_cost_table_26_2_revision_5` (two probes, not three — `..._26_3_revision_4` never existed here) |
+| `menu/EnchantCostSync` | join-time probe list | both 26.2 legacy probes, current revision last |
+| `ChiseledEnchantingTableClient` | tome-charge colour + new regen hint | theirs, colours converted |
+| `gui/ChiseledEnchantingTableScreen` | 3 × (tome wear panel, resonance breakdown, regen rate) | theirs, colours converted |
+| `gui/config/ChiseledEnchantingConfigScreen` | scope badge | theirs, `switch` returns ARGB ints |
+| `block/ChiseledEnchantingTableBlockEntity` | frozen-lore colour | theirs (`withItalic(false)` + ARGB) |
+| `mechanics/enchanting/EnchantmentApplication` | the old `applyShelfWear` block | deleted — 26.3 moved wear application to the top of the method; keeping ours would have double-charged wear |
+
+### 9.2 What the increment adds
+
+* **Rule architecture** — `config/rules/RuntimeRules` + `RuleBook`: preferences, effective values and
+  the client draft are separated, ranges and cross-field invariants are normalised once in
+  `prepare`, and `ChiseledEnchantingTableData.RuntimeFrame` publishes domain tables, costs, loot,
+  policy and the effective DTO as one immutable generation. `ModRuntimeConfig.effective()` is what
+  the anvil mixins and every gameplay consumer read now, so a locked/pack-governed row can no
+  longer be bypassed by a direct `get()`.
+* **`pack_policy.json`** — `enforce_datapack_priority`, `lock_in_game_config`, `locked_keys`;
+  datapack-declared keys are resolved by *source pack* (final selected resource), not by guessing
+  index 0, and the config screen shows `📦 datapack priority` / `🔒 modpack lock` reasons.
+* **Persistent table inventory** — the two slots live in the block entity, survive closing the GUI,
+  are dropped exactly once when the table is broken, and are guarded by an active-ritual target
+  fingerprint.
+* **Queued inscriptions** — `mechanics/ritual/InscriptionRitualMechanics` plus the block-entity
+  state machine: owner/session/target-bound queue (max 256 steps / 32,000 serialized characters,
+  ≤ 255 levels), deep-resonance trigger at `≥32` broad shelves **or** `≥10` stored tome
+  enchantments, per-step wait capped at 5 minutes, XP-sacrifice skip (≤15 levels, no tome damage)
+  and force-rush skip (0 XP, live degradation chance ≤50%, ≤70% with an Infinity tome, weakest tome
+  first), `/cet cancel-ritual` for the owner, and quarantine (never silent deletion) when an
+  enchantment id disappears or the target no longer matches.
+* **Tome regeneration** — `RegenerationScheduler` + `WorldRegeneration`: one settlement per
+  20-tick window per world session, aggregating all tables watching the same shelves so the fastest
+  legal rate wins; no absolute-time catch-up, no inventory/cross-world credit, chunk-load verified,
+  and nothing is written back to the item unless the value actually changed.
+* **Depleted-tome world content** — `mechanics/loot/DepletedTomeWorldMechanics`: chest-loot
+  injection per structure tier, wild chiseled-bookshelf weathering (three shelf tiers, ≤30% total
+  replacement), librarian recycling / plain-book repair / level-gated commissioned enchanted-book
+  rewrites, and the Infinity trade restriction (book results only, preserving uses/discounts/demand).
+* **Gameplay balance** — weighted Treasure Epiphany, Infinity removed from the epiphany pool and the
+  default inscription list, Infinity Tomes take zero wear, overloaded Infinity Tomes slip levels
+  (≤20%), five new advancements, `pack_policy.json` governance.
+* **UI / locale** — repaginated Grimoire with new diagrams (shelf taxonomy, wait/skip comparison,
+  regeneration and Infinity, world remnants and librarian trades), 621 keys × 11 locales (+128 new,
+  16 reworded), config screen effective-vs-draft display.
+* **Wire** — revision 6 for every menu/cost/config payload, ritual payloads bound to
+  container + session, `PayloadLimits` guarding every new collection read.
+
+### 9.3 26.3-only APIs re-adapted (the port re-introduces them)
+
+The same trap as the first pass: the source compiles against Minecraft 26.3, so every ported file
+must be re-checked. This pass needed four categories:
+
+| 26.3 usage | 26.2 fix applied | Occurrences |
+| --- | --- | --- |
+| `ChatFormatting` (removed in 26.2) | `Style#withColor(0xAARRGGBB)`, including `int` colour variables in charge/scope ternaries | 53 sites in 6 files, now **0** references repo-wide |
+| `ContextIntProviders.exactly(...)` (provider namespace split in 26.3) | `ConstantValue.exactly(...)` — the same class this line's `EnchantedBookLootInjector` already uses | 2 in the new loot builder |
+| `Optional<Holder<LootItemCondition>>` constructor (26.3 loot API) | `List<LootItemCondition>` + `commonFields(...)` codec, as this line requires | 0 leaked |
+| singular `modifier`/`condition` loot JSON | plural `functions[]`/`conditions[]` in `scripts/server_smoke.py` fixtures | 1 fixture block |
+
+Nothing else leaked: a token-level diff of every added line against the `26.1.2` tree (the oldest
+sibling, so any identifier it also uses is stable across 26.2) leaves only project-local identifiers.
+
+### 9.4 Kept as this line's own
+
+`MapCodec`/`codec()` on the block, the interface `StructureProcessor` + `codec()` registration,
+capital-P `markPosForPostProcessing`, the two-argument `LivingEntity#drop`, the plural loot schema
+in bundled data **and** in the smoke fixtures, the `recipe_crafted`/`recipe_id` advancement
+criterion, the JUnit-5 wiring, the 26.2 toolchain pins and the 26.2 GLFW mouse ids.
+
+Not taken: 26.3's toolchain and JVM args, `build-reports/*.log`, `scripts/test_sync_26_3.py` (it
+asserts 26.3-shaped APIs), and the 26.3-only rewrites listed in §4 (still absent, re-verified).
+
+### 9.5 Regression gates from the source audit
+
+Each item the source branch flagged for 26.2 was checked in the ported tree:
+
+| Gate | Where it is satisfied |
+| --- | --- |
+| R1 effective rules reach direct consumers | `ModRuntimeConfig.effective()`; both anvil mixins read it |
+| R2 preferences ≠ effective ≠ draft | `SyncRuntimeConfigPayload(json, policyJson, effectiveJson, canEdit, requestId, accepted)`; the client keeps a separate draft and rebuilds it from server preferences on ack |
+| R3 no absolute-time regen credit | `WorldRegeneration` only settles observed, loaded windows; the old timer keys are no longer read |
+| R4 shared shelves aggregate | `RegenerationScheduler` settles once per window at the fastest legal rate |
+| R5 no per-second item writes | items are written back only when a charge actually changes; unworn/Infinity tomes never enter the queue |
+| R6 datapack layer identity | resolution keys off the final selected resource + `sourcePackId` |
+| R7 save authority | owner/operator check (`mayManage`), request-id ack, atomic temp-file replace, strict reload, corrupt-JSON rejection |
+| R8 bounded reads | `PayloadLimits.readCount` on every collection; ritual payloads carry container + session |
+| N1 inventory is an escrow, not a GUI lock | target fingerprint + owner/session checks in `setItem`/`removeItem`/`canTakeItem`, not only in the slot |
+| N2 ownership is an authorisation boundary | `ownsRitual(uuid)` gates enqueue and skip; the owner is not just a reward recipient |
+| N3 queue is bounded before payment | capacity/character/level/refund-budget pre-check before any payment; rejection has zero side effects |
+| N4 completion is not "clear then fail" | invalid ids quarantine the target (`ritualBlocked`) and keep inputs; nothing is silently skipped |
+| N5 menu routing includes the world | menu sync compares world + position + session |
+| N6 villager offers stay owned by us | only enchanted-book results are touched and the offer object is mutated in place; commissioned offers are marked once |
+| N7 loot/API + drop state | 26.2 `ConstantValue`, 26.2 schema, and the smoke test now covers stored-input break drops |
+
+### 9.6 Verification
+
+| Gate | Result |
+| --- | --- |
+| `python3 scripts/compat_check.py` | `PASS (2 warning(s))` — both Tier-2 (no MC jar in the sandbox) |
+| `python3 scripts/ci_static_checks.py` | `PASS (5 groups)` — 9 mixins, **621** lang keys × 11 locales, 470 referenced keys, 40 markdown files |
+| `bash scripts/check_release_consistency.sh --strict` | `12 passed, 0 warned, 0 failed` |
+| `bash docs/ci/install.sh --check` | all four workflow copies identical |
+| `grep -r ChatFormatting src` | 0 |
+| conflict markers / unresolved project imports / duplicate classes | 0 / 0 / 0 |
+
+Java compilation, the 52 JUnit tests (`compile-check` runs `test`) and the new `server-smoke`
+phases (persisted ritual completion, registry-failure quarantine, stored-input break drop) run in
+CI — the sandbox has no JDK and no Maven/Mojang access.
+
+### 9.7 Version and release
+
+`1.1.0`, unchanged (`版本号不变`). The wire revision moves to 6, so **both ends must be updated**;
+the release label alone no longer identifies compatibility. No 26.3 toolchain, JVM argument or
+build log was taken.
+
+### 9.8 Still manual
+
+GUI pagination/drag, LAN host vs. guest vs. operator authority, multiplayer contention on one table
+or shared shelves, hopper/automation against a running ritual, cross-dimension same-coordinate
+menus, hard restart / chunk unload, layered modpack resource stacks, third-party trade lifecycles
+and large-library performance. Details in `NEXT_TASK.md` §A2.

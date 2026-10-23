@@ -57,6 +57,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static final Identifier DISENCHANTING_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/disenchanting.json");
     private static final Identifier SHELF_GATES_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/shelf_gates.json");
     private static final Identifier LIBRARY_RESONANCE_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/library_resonance.json");
+    private static final Identifier PACK_POLICY_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/pack_policy.json");
 
     public enum VanillaChestBooksMode {
         KEEP_BOTH,
@@ -111,6 +112,30 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig =
         rawLibraryResonanceConfig;
 
+    public record RuntimeFrame(Map<Identifier, ItemTransformation> itemTransformations,
+        VanillaChestBooksMode vanillaChestBooksMode,
+        BookshelfBookPool bookshelfBookPool,
+        BookUpgradeRules bookUpgradeRules,
+        TreasureEpiphanyRules treasureEpiphanyRules,
+        DisenchantingRules disenchantingRules,
+        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig,
+        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig,
+        CostTables costTables,
+        Set<EnchantmentWithLevel> defaultEnchantmentValues,
+        List<DefaultEnchantmentTagRule> defaultEnchantmentTags,
+        Set<Identifier> defaultExcludedIds,
+        List<Identifier> defaultExcludedTags,
+        List<LootInjection> lootInjections,
+        chiseled_enchanting_table.config.ModRuntimeConfig configuration,
+        chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy policy,
+        chiseled_enchanting_table.config.rules.RuleBook.Snapshot rules) {}
+    private static volatile RuntimeFrame runtimeFrame;
+    public static RuntimeFrame runtimeFrame() { return runtimeFrame; }
+    public static chiseled_enchanting_table.config.ModRuntimeConfig runtimeConfiguration() {
+        RuntimeFrame frame = runtimeFrame;
+        return frame == null ? chiseled_enchanting_table.config.ModRuntimeConfig.get() : frame.configuration();
+    }
+
     static {
         applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get());
     }
@@ -125,7 +150,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * (no tag expansion). Kept for callers without registry access.
      */
     public static Set<EnchantmentWithLevel> defaultEnchantments() {
-        return new HashSet<>(defaultEnchantmentValues);
+        return new HashSet<>((runtimeFrame == null ? defaultEnchantmentValues : runtimeFrame.defaultEnchantmentValues()));
     }
 
     /**
@@ -139,9 +164,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * by hand.
      */
     public static Set<EnchantmentWithLevel> defaultEnchantments(HolderGetter<Enchantment> enchantmentLookup) {
-        Set<Identifier> excluded = new HashSet<>(defaultExcludedIds);
-        excluded.addAll(treasureEpiphanyRules.explicitTreasureIds());
-        for (Identifier exTag : defaultExcludedTags) {
+        Set<Identifier> excluded = new HashSet<>((runtimeFrame == null ? defaultExcludedIds : runtimeFrame.defaultExcludedIds()));
+        excluded.addAll((runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).explicitTreasureIds());
+        for (Identifier exTag : (runtimeFrame == null ? defaultExcludedTags : runtimeFrame.defaultExcludedTags())) {
             TagKey<Enchantment> tagKey = TagKey.create(Registries.ENCHANTMENT, exTag);
             enchantmentLookup.get(tagKey).ifPresent(named -> named.stream().forEach(holder ->
                 holder.unwrapKey().ifPresent(key -> excluded.add(key.identifier()))
@@ -149,12 +174,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
 
         Set<EnchantmentWithLevel> result = new HashSet<>();
-        for (EnchantmentWithLevel explicit : defaultEnchantmentValues) {
+        for (EnchantmentWithLevel explicit : (runtimeFrame == null ? defaultEnchantmentValues : runtimeFrame.defaultEnchantmentValues())) {
             if (!excluded.contains(explicit.enchantment_id())) {
                 result.add(explicit);
             }
         }
-        for (DefaultEnchantmentTagRule rule : defaultEnchantmentTags) {
+        for (DefaultEnchantmentTagRule rule : (runtimeFrame == null ? defaultEnchantmentTags : runtimeFrame.defaultEnchantmentTags())) {
             TagKey<Enchantment> tagKey = TagKey.create(Registries.ENCHANTMENT, rule.tagId());
             enchantmentLookup.get(tagKey).ifPresent(named -> named.stream().forEach(holder ->
                 holder.unwrapKey().ifPresent(key -> {
@@ -181,7 +206,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static List<List<ItemStack>> itemCostOptions(EnchantmentWithLevel enchantmentWithLevel, int maxLevel) {
-        return costTables.itemCostOptions(enchantmentWithLevel, Math.max(1, maxLevel));
+        return (runtimeFrame == null ? costTables : runtimeFrame.costTables()).itemCostOptions(enchantmentWithLevel, Math.max(1, maxLevel));
     }
 
     public static List<ItemStack> itemCosts(EnchantmentWithLevel enchantmentWithLevel, String salt, int maxLevel) {
@@ -199,29 +224,29 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static int xpCost(EnchantmentWithLevel enchantmentWithLevel, int maxLevel) {
-        return costTables.xpCost(enchantmentWithLevel, Math.max(1, maxLevel));
+        return (runtimeFrame == null ? costTables : runtimeFrame.costTables()).xpCost(enchantmentWithLevel, Math.max(1, maxLevel));
     }
 
 
     public static boolean bookCombineEnabled() {
-        return bookUpgradeRules.combineEnabled();
+        return (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules()).combineEnabled();
     }
 
     public static boolean bookResearchEnabled() {
-        return bookUpgradeRules.researchEnabled();
+        return (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules()).researchEnabled();
     }
 
     public static int bookCombineXpCost(EnchantmentWithLevel target, int maxLevel) {
-        return bookUpgradeRules.combineXpCost(target, Math.max(1, maxLevel), costTables.xpCost(target, Math.max(1, maxLevel)));
+        return (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules()).combineXpCost(target, Math.max(1, maxLevel), (runtimeFrame == null ? costTables : runtimeFrame.costTables()).xpCost(target, Math.max(1, maxLevel)));
     }
 
     public static int bookResearchXpCost(EnchantmentWithLevel target, int maxLevel) {
-        return bookUpgradeRules.researchXpCost(target, Math.max(1, maxLevel), costTables.xpCost(target, Math.max(1, maxLevel)));
+        return (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules()).researchXpCost(target, Math.max(1, maxLevel), (runtimeFrame == null ? costTables : runtimeFrame.costTables()).xpCost(target, Math.max(1, maxLevel)));
     }
 
     public static List<List<ItemStack>> bookResearchCostOptions(EnchantmentWithLevel target, int maxLevel) {
         int safeMax = Math.max(1, maxLevel);
-        return bookUpgradeRules.researchCostOptions(target, safeMax, costTables.itemCostOptions(target, safeMax));
+        return (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules()).researchCostOptions(target, safeMax, (runtimeFrame == null ? costTables : runtimeFrame.costTables()).itemCostOptions(target, safeMax));
     }
 
     public static List<ItemStack> bookResearchCosts(EnchantmentWithLevel target, String salt, int maxLevel) {
@@ -240,69 +265,69 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static int treasureEpiphanyMinBookshelves() {
-        return treasureEpiphanyRules.minRegularBookshelves();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).minRegularBookshelves();
     }
 
     public static double treasureEpiphanyBaseChance() {
-        return treasureEpiphanyRules.baseChance();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).baseChance();
     }
 
     public static double treasureEpiphanyPerShelfChance() {
-        return treasureEpiphanyRules.chancePerExtraBookshelf();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).chancePerExtraBookshelf();
     }
 
     public static double treasureEpiphanyPerTomeChance() {
-        return treasureEpiphanyRules.chancePerMasterTome();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).chancePerMasterTome();
     }
 
     public static double treasureEpiphanyMaxChance() {
-        return treasureEpiphanyRules.maxChance();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).maxChance();
     }
 
     public static int treasureEpiphanyMaxSlotsCap() {
-        return treasureEpiphanyRules.maxSlotsCap();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).maxSlotsCap();
     }
 
     public static int treasureEpiphanyScorePerSlot() {
-        return treasureEpiphanyRules.scorePerExtraSlot();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).scorePerExtraSlot();
     }
 
     public static int treasureEpiphanyCycleTicks() {
-        return treasureEpiphanyRules.cycleTicks();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).cycleTicks();
     }
 
     public static int treasureEpiphanyFreezeDurationTicks() {
-        return treasureEpiphanyRules.freezeDurationTicks();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).freezeDurationTicks();
     }
 
     public static int treasureEpiphanyMaxFreezeTicks() {
-        return treasureEpiphanyRules.maxFreezeTicks();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).maxFreezeTicks();
     }
 
     public static int treasureEpiphanyFreezeXpLevels() {
-        return treasureEpiphanyRules.freezeXpLevels();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).freezeXpLevels();
     }
 
     public static List<ItemStack> treasureEpiphanyFreezeCostOptions() {
-        return treasureEpiphanyRules.freezeStacks();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).freezeStacks();
     }
 
     public static Set<Identifier> treasureEpiphanyExplicitIds() {
-        return treasureEpiphanyRules.explicitTreasureIds();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).explicitTreasureIds();
     }
 
     public static Set<Identifier> treasureEpiphanyExplicitIds(net.minecraft.core.RegistryAccess registryAccess) {
-        Set<Identifier> resolved = new HashSet<>(treasureEpiphanyRules.explicitTreasureIds());
+        Set<Identifier> resolved = new HashSet<>((runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).explicitTreasureIds());
         if (registryAccess == null) {
             return Set.copyOf(resolved);
         }
         var lookup = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
-        for (Identifier tagId : treasureEpiphanyRules.treasureTagIds()) {
+        for (Identifier tagId : (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).treasureTagIds()) {
             lookup.get(TagKey.create(Registries.ENCHANTMENT, tagId)).ifPresent(named ->
                 named.stream().forEach(holder -> holder.unwrapKey().ifPresent(k -> resolved.add(k.identifier())))
             );
         }
-        for (Identifier exTagId : treasureEpiphanyRules.excludedTagIds()) {
+        for (Identifier exTagId : (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).excludedTagIds()) {
             lookup.get(TagKey.create(Registries.ENCHANTMENT, exTagId)).ifPresent(named ->
                 named.stream().forEach(holder -> holder.unwrapKey().ifPresent(k -> resolved.remove(k.identifier())))
             );
@@ -311,19 +336,19 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static double treasureEpiphanyChance(int regularBookshelves, int chiseledBooks) {
-        return treasureEpiphanyRules.chanceFor(regularBookshelves, chiseledBooks);
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).chanceFor(regularBookshelves, chiseledBooks);
     }
 
     public static int treasureEpiphanyMaxSlots(int regularBookshelves, int chiseledBooks) {
-        return treasureEpiphanyRules.maxSlotsFor(regularBookshelves, chiseledBooks);
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).maxSlotsFor(regularBookshelves, chiseledBooks);
     }
 
     public static int treasureEpiphanyRerollXpLevels() {
-        return treasureEpiphanyRules.rerollXpLevels();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).rerollXpLevels();
     }
 
     public static List<ItemStack> treasureEpiphanyRerollCostOptions() {
-        return treasureEpiphanyRules.rerollStacks();
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).rerollStacks();
     }
 
     public static int treasureEpiphanyXpCost(Identifier enchantmentId) {
@@ -331,7 +356,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static int treasureEpiphanyXpCost(Identifier enchantmentId, int level, int maxLevel) {
-        return treasureEpiphanyRules.xpCost(enchantmentId, level, maxLevel);
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).xpCost(enchantmentId, level, maxLevel);
     }
 
     public static List<List<ItemStack>> treasureEpiphanyCostOptions(Identifier enchantmentId) {
@@ -339,12 +364,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static List<List<ItemStack>> treasureEpiphanyCostOptions(Identifier enchantmentId, int level, int maxLevel) {
-        return treasureEpiphanyRules.costOptions(enchantmentId, level, maxLevel);
+        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).costOptions(enchantmentId, level, maxLevel);
     }
 
     public static Set<EnchantmentWithLevel> transformationEnchantmentsFor(ItemStack input) {
         Set<EnchantmentWithLevel> result = new HashSet<>();
-        for (ItemTransformation transformation : itemTransformations.values()) {
+        for (ItemTransformation transformation : (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).values()) {
             if (transformation.matchesInput(input)) {
                 result.add(new EnchantmentWithLevel(transformation.id(), transformation.level()));
             }
@@ -354,11 +379,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
 
     public static Optional<ItemTransformation> itemTransformation(Identifier id) {
-        return Optional.ofNullable(itemTransformations.get(id));
+        return Optional.ofNullable((runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id));
     }
 
     public static Set<Identifier> transformationIds() {
-        return itemTransformations.keySet();
+        return (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).keySet();
     }
 
     /**
@@ -369,7 +394,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * to avoid a compile dependency from the data package onto the menu package.
      */
     public static boolean isTransformationUnlocked(@org.jetbrains.annotations.Nullable net.minecraft.world.entity.player.Player player, Identifier id) {
-        ItemTransformation rule = itemTransformations.get(id);
+        ItemTransformation rule = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
         return rule == null || rule.isUnlockedFor(player);
     }
 
@@ -379,7 +404,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     public static List<Object[]> transformationDisplayTuples(@org.jetbrains.annotations.Nullable net.minecraft.world.entity.player.Player player) {
         List<Object[]> result = new ArrayList<>();
-        for (ItemTransformation transformation : itemTransformations.values()) {
+        for (ItemTransformation transformation : (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).values()) {
             result.add(new Object[] {
                 transformation.id(),
                 transformation.inputItemId(),
@@ -395,7 +420,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static boolean isTransformation(Identifier id) {
-        return itemTransformations.containsKey(id);
+        return (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).containsKey(id);
     }
 
     public static final Identifier BLANK_OVERWRITE_ID = ChiseledEnchantingTable.identifier("blank_overwrite");
@@ -415,7 +440,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static List<List<ItemStack>> transformationCostOptions(Identifier id) {
-        ItemTransformation transformation = itemTransformations.get(id);
+        ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
         if (transformation == null) return List.of();
         if (!transformation.alternativePrimaryOptions().isEmpty()) {
             return transformation.alternativeBundles();
@@ -427,22 +452,22 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static ItemStack transformationPrimaryCost(Identifier id, String salt) {
-        ItemTransformation transformation = itemTransformations.get(id);
+        ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
         return transformation == null ? ItemStack.EMPTY : transformation.primaryCostStack(salt == null ? "" : salt);
     }
 
     public static List<ItemStack> transformationAdditionalCosts(Identifier id, String salt) {
-        ItemTransformation transformation = itemTransformations.get(id);
+        ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
         return transformation == null ? List.of() : transformation.additionalCostStacks(salt == null ? "" : salt);
     }
 
     public static int transformationXpCost(Identifier id) {
-        ItemTransformation transformation = itemTransformations.get(id);
+        ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
         return transformation == null ? 0 : transformation.xpCost();
     }
 
     public static int transformationMinRequiredLevel(Identifier id) {
-        ItemTransformation transformation = itemTransformations.get(id);
+        ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
         return transformation == null ? 1 : transformation.minRequiredLevel();
     }
 
@@ -451,7 +476,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static int transformationDeductedLevels(Identifier id) {
-        ItemTransformation transformation = itemTransformations.get(id);
+        ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
         return transformation == null ? 0 : transformation.deductedLevels();
     }
 
@@ -462,7 +487,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * enchanted book at what weight). Empty by default so an integrator can opt-in.</p>
      */
     public static List<LootInjection> lootInjections() {
-        return lootInjections;
+        return (runtimeFrame == null ? lootInjections : runtimeFrame.lootInjections());
     }
 
     /**
@@ -470,15 +495,15 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * {@code structureProcessor.BookshelfReplacerProcessor}. Also loaded from JSON only.
      */
     public static VanillaChestBooksMode vanillaChestBooksMode() {
-        return vanillaChestBooksMode;
+        return (runtimeFrame == null ? vanillaChestBooksMode : runtimeFrame.vanillaChestBooksMode());
     }
 
     public static boolean bookshelfReplacementEnabled() {
-        return bookshelfBookPool.enabled();
+        return (runtimeFrame == null ? bookshelfBookPool : runtimeFrame.bookshelfBookPool()).enabled();
     }
 
     public static BookshelfBookPool bookshelfBookPool() {
-        return bookshelfBookPool;
+        return (runtimeFrame == null ? bookshelfBookPool : runtimeFrame.bookshelfBookPool());
     }
 
     @Override
@@ -488,6 +513,23 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     @Override
     public void onResourceManagerReload(ResourceManager resourceManager) {
+        synchronized (ChiseledEnchantingTableData.class) {
+        var previous_defaultEnchantmentValues = defaultEnchantmentValues;
+        var previous_defaultEnchantmentTags = defaultEnchantmentTags;
+        var previous_defaultExcludedIds = defaultExcludedIds;
+        var previous_defaultExcludedTags = defaultExcludedTags;
+        var previous_costTables = costTables;
+        var previous_rawItemTransformations = rawItemTransformations;
+        var previous_rawVanillaChestBooksMode = rawVanillaChestBooksMode;
+        var previous_lootInjections = lootInjections;
+        var previous_rawBookshelfBookPool = rawBookshelfBookPool;
+        var previous_rawBookUpgradeRules = rawBookUpgradeRules;
+        var previous_rawTreasureEpiphanyRules = rawTreasureEpiphanyRules;
+        var previous_rawDisenchantingRules = rawDisenchantingRules;
+        var previous_rawShelfGatesConfig = rawShelfGatesConfig;
+        var previous_rawLibraryResonanceConfig = rawLibraryResonanceConfig;
+        try {
+        var candidatePolicy = loadPackPolicy(resourceManager);
         DefaultEnchantmentTable loadedDefaults = loadDefaultEnchantments(resourceManager);
         defaultEnchantmentValues = loadedDefaults.values();
         defaultEnchantmentTags = loadedDefaults.tags();
@@ -504,7 +546,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         rawDisenchantingRules = loadDisenchantingRules(resourceManager);
         rawShelfGatesConfig = loadShelfGatesConfig(resourceManager);
         rawLibraryResonanceConfig = loadLibraryResonanceConfig(resourceManager);
-        applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get());
+        applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get(), candidatePolicy, () -> {});
+        chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(candidatePolicy);
         ChiseledEnchantingTable.LOGGER.info(
             "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformations, {} loot injections",
             defaultEnchantmentValues.size(),
@@ -513,6 +556,24 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             itemTransformations.size(),
             lootInjections.size()
         );
+        } catch (RuntimeException failure) {
+            defaultEnchantmentValues = previous_defaultEnchantmentValues;
+            defaultEnchantmentTags = previous_defaultEnchantmentTags;
+            defaultExcludedIds = previous_defaultExcludedIds;
+            defaultExcludedTags = previous_defaultExcludedTags;
+            costTables = previous_costTables;
+            rawItemTransformations = previous_rawItemTransformations;
+            rawVanillaChestBooksMode = previous_rawVanillaChestBooksMode;
+            lootInjections = previous_lootInjections;
+            rawBookshelfBookPool = previous_rawBookshelfBookPool;
+            rawBookUpgradeRules = previous_rawBookUpgradeRules;
+            rawTreasureEpiphanyRules = previous_rawTreasureEpiphanyRules;
+            rawDisenchantingRules = previous_rawDisenchantingRules;
+            rawShelfGatesConfig = previous_rawShelfGatesConfig;
+            rawLibraryResonanceConfig = previous_rawLibraryResonanceConfig;
+            throw failure;
+        }
+        }
     }
 
     /**
@@ -520,42 +581,103 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * tables according to {@code cfg.shouldApplyKey(...)}, preserving datapack overrides when
      * {@code override_datapacks == false} unless a field was explicitly edited in-game.
      */
+    private static chiseled_enchanting_table.config.ModRuntimeConfig rawRuntimeConfig() {
+        var d = new chiseled_enchanting_table.config.ModRuntimeConfig.Draft();
+        d.directGatesEnabled = rawShelfGatesConfig.directGatesEnabled();
+        d.blankMaxTierMode = rawShelfGatesConfig.blankMaxTierMode();
+        d.maxDirectBookshelves = rawShelfGatesConfig.maxDirectBookshelves();
+        d.horizontalScanRadius = rawShelfGatesConfig.horizontalScanRadius();
+        d.verticalScanRadius = rawShelfGatesConfig.verticalScanRadius();
+        d.requireBreathingRoom = rawShelfGatesConfig.requireBreathingRoom();
+        d.minOpenAdjacentBlocks = rawShelfGatesConfig.minOpenAdjacentBlocks();
+        d.requireLineOfSight = rawShelfGatesConfig.requireLineOfSight();
+        d.vanillaTableMode = rawShelfGatesConfig.vanillaTableMode();
+        d.tier1Bookshelves = rawShelfGatesConfig.tier1Bookshelves();
+        d.tier2Bookshelves = rawShelfGatesConfig.tier2Bookshelves();
+        d.tier3QualifyingEnchantments = rawShelfGatesConfig.tier3QualifyingEnchantments();
+        d.transformationMaxBatchSize = rawShelfGatesConfig.baseBatchSize();
+        d.tomeConsumptionMode = rawLibraryResonanceConfig.tomeConsumptionMode();
+        d.maxTomeUses = rawLibraryResonanceConfig.maxTomeUses();
+        d.bookCopyWearCost = rawLibraryResonanceConfig.bookCopyWearCost();
+        d.tomeDepleteBehavior = rawLibraryResonanceConfig.tomeDepleteBehavior();
+        d.tomeRegenEnabled = rawLibraryResonanceConfig.tomeRegenEnabled();
+        d.tomeRegenBaseSeconds = rawLibraryResonanceConfig.tomeRegenBaseSeconds();
+        d.tomeRegenTier1Shelves = rawLibraryResonanceConfig.tomeRegenTier1Shelves();
+        d.tomeRegenTier1Seconds = rawLibraryResonanceConfig.tomeRegenTier1Seconds();
+        d.tomeRegenTier2Shelves = rawLibraryResonanceConfig.tomeRegenTier2Shelves();
+        d.tomeRegenTier2Seconds = rawLibraryResonanceConfig.tomeRegenTier2Seconds();
+        d.maxWoodenDiscountPercent = rawLibraryResonanceConfig.maxWoodenDiscountPercent();
+        d.maxTotalXpDiscountPercent = rawLibraryResonanceConfig.maxTotalXpDiscountPercent();
+        d.bookCombineEnabled = rawBookUpgradeRules.combineEnabled();
+        d.bookCombineXpMultiplier = rawBookUpgradeRules.combineXpMultiplier();
+        d.bookResearchEnabled = rawBookUpgradeRules.researchEnabled();
+        d.bookResearchXpMultiplier = rawBookUpgradeRules.researchXpMultiplier();
+        d.epiphanyMinBookshelves = rawTreasureEpiphanyRules.minRegularBookshelves();
+        d.epiphanyBaseChance = rawTreasureEpiphanyRules.baseChance();
+        d.epiphanyMaxChance = rawTreasureEpiphanyRules.maxChance();
+        d.epiphanyMaxSlotsCap = rawTreasureEpiphanyRules.maxSlotsCap();
+        d.epiphanyCycleSeconds = rawTreasureEpiphanyRules.cycleTicks() / 20;
+        d.epiphanyFreezeXpLevels = rawTreasureEpiphanyRules.freezeXpLevels();
+        d.epiphanyFreezeDurationSeconds = rawTreasureEpiphanyRules.freezeDurationTicks() / 20;
+        d.epiphanyMaxFreezeSeconds = rawTreasureEpiphanyRules.maxFreezeTicks() / 20;
+        d.epiphanyRerollXpLevels = rawTreasureEpiphanyRules.rerollXpLevels();
+        d.disenchantEnabled = rawDisenchantingRules.enabled();
+        d.xpRefundScale = rawDisenchantingRules.xpRefundScale();
+        d.externalXpRefundScale = rawDisenchantingRules.externalXpRefundScale();
+        d.stripXpMin = rawDisenchantingRules.stripXpMin();
+        d.stripXpMax = rawDisenchantingRules.stripXpMax();
+        d.allowCursePurge = rawDisenchantingRules.allowCursePurge();
+        d.cursePurgeXpCost = rawDisenchantingRules.curseXpCost();
+        d.bookshelfPoolEnabled = rawBookshelfBookPool.enabled();
+        d.bookshelfMinBooks = rawBookshelfBookPool.minBooks();
+        d.bookshelfMaxBooks = rawBookshelfBookPool.maxBooks();
+        d.bookshelfEnchantedProb = rawBookshelfBookPool.enchantedBookProbability();
+        d.vanillaChestBooksMode = rawVanillaChestBooksMode;
+        return d.build();
+    }
+
     public static synchronized void applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig cfg) {
+        applyRuntimeConfig(cfg, chiseled_enchanting_table.config.ModRuntimeConfig.serverPackPolicy(), () -> {});
+    }
+    public static synchronized void applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig cfg,
+        chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy policy, Runnable persist) {
         if (cfg == null) {
             cfg = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT;
         }
+        var prepared = chiseled_enchanting_table.config.rules.RuntimeRules.prepare(cfg, rawRuntimeConfig(), policy);
+        cfg = prepared.configuration();
         var sg = rawShelfGatesConfig;
-        int maxDirect = cfg.shouldApplyKey("max_direct_bookshelves") ? cfg.maxDirectBookshelves() : sg.maxDirectBookshelves();
-        int t2 = Math.min(maxDirect, cfg.shouldApplyKey("tier2_bookshelves") ? cfg.tier2Bookshelves() : sg.tier2Bookshelves());
-        int t1 = Math.min(t2, cfg.shouldApplyKey("tier1_bookshelves") ? cfg.tier1Bookshelves() : sg.tier1Bookshelves());
-        int batchCap = cfg.shouldApplyKey("transformation_max_batch_size") ? cfg.transformationMaxBatchSize() : sg.baseBatchSize();
-        shelfGatesConfig = new chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config(
-            cfg.shouldApplyKey("direct_gates_enabled") ? cfg.directGatesEnabled() : sg.directGatesEnabled(),
+        int maxDirect = cfg.maxDirectBookshelves();
+        int t2 = Math.min(maxDirect, cfg.tier2Bookshelves());
+        int t1 = Math.min(t2, cfg.tier1Bookshelves());
+        int batchCap = cfg.transformationMaxBatchSize();
+        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig = new chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config(
+            cfg.directGatesEnabled(),
             maxDirect,
             sg.gamma(),
-            cfg.shouldApplyKey("blank_max_tier_mode") ? cfg.blankMaxTierMode() : sg.blankMaxTierMode(),
-            cfg.shouldApplyKey("horizontal_scan_radius") ? cfg.horizontalScanRadius() : sg.horizontalScanRadius(),
-            cfg.shouldApplyKey("vertical_scan_radius") ? cfg.verticalScanRadius() : sg.verticalScanRadius(),
+            cfg.blankMaxTierMode(),
+            cfg.horizontalScanRadius(),
+            cfg.verticalScanRadius(),
             sg.overrides(),
             t1,
             t2,
             sg.tier2MaterialMultiplier(),
-            cfg.shouldApplyKey("tier3_qualifying_enchantments") ? cfg.tier3QualifyingEnchantments() : sg.tier3QualifyingEnchantments(),
+            cfg.tier3QualifyingEnchantments(),
             batchCap,
-            cfg.shouldApplyKey("transformation_max_batch_size") ? cfg.transformationMaxBatchSize() : sg.tier3BatchSize(),
-            cfg.shouldApplyKey("vanilla_table_mode") ? cfg.vanillaTableMode() : sg.vanillaTableMode(),
-            cfg.shouldApplyKey("require_breathing_room") ? cfg.requireBreathingRoom() : sg.requireBreathingRoom(),
-            cfg.shouldApplyKey("min_open_adjacent_blocks") ? cfg.minOpenAdjacentBlocks() : sg.minOpenAdjacentBlocks(),
-            cfg.shouldApplyKey("require_line_of_sight") ? cfg.requireLineOfSight() : sg.requireLineOfSight()
+            cfg.transformationMaxBatchSize(),
+            cfg.vanillaTableMode(),
+            cfg.requireBreathingRoom(),
+            cfg.minOpenAdjacentBlocks(),
+            cfg.requireLineOfSight()
         );
 
         var lr = rawLibraryResonanceConfig;
-        int woodDisc = cfg.shouldApplyKey("max_wooden_discount_percent") ? cfg.maxWoodenDiscountPercent() : lr.maxWoodenDiscountPercent();
+        int woodDisc = cfg.maxWoodenDiscountPercent();
         int totalDisc = Math.max(
             woodDisc,
-            cfg.shouldApplyKey("max_total_xp_discount_percent") ? cfg.maxTotalXpDiscountPercent() : lr.maxTotalXpDiscountPercent()
+            cfg.maxTotalXpDiscountPercent()
         );
-        libraryResonanceConfig = new chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config(
+        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig = new chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config(
             lr.minDiscountBookshelves(),
             Math.max(lr.minDiscountBookshelves() + 1, maxDirect),
             woodDisc,
@@ -581,49 +703,51 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             lr.epiphanyTierPlusScoreDivisor(),
             lr.epiphanyTierPlusMasteryBonus(),
             lr.incrementalStepCreditFactor(),
-            cfg.shouldApplyKey("tome_consumption_mode") ? cfg.tomeConsumptionMode() : lr.tomeConsumptionMode(),
-            cfg.shouldApplyKey("max_tome_uses") ? cfg.maxTomeUses() : lr.maxTomeUses(),
-            cfg.shouldApplyKey("book_copy_wear_cost") ? cfg.bookCopyWearCost() : lr.bookCopyWearCost(),
-            cfg.shouldApplyKey("tome_deplete_behavior") ? cfg.tomeDepleteBehavior() : lr.tomeDepleteBehavior()
+            cfg.tomeConsumptionMode(),
+            cfg.maxTomeUses(),
+            cfg.bookCopyWearCost(),
+            cfg.tomeDepleteBehavior(),
+            cfg.tomeRegenEnabled(),
+            cfg.tomeRegenBaseSeconds(),
+            cfg.tomeRegenTier1Shelves(),
+            cfg.tomeRegenTier1Seconds(),
+            cfg.tomeRegenTier2Shelves(),
+            cfg.tomeRegenTier2Seconds()
         );
 
         var bu = rawBookUpgradeRules;
-        bookUpgradeRules = new BookUpgradeRules(
-            cfg.shouldApplyKey("book_combine_enabled") ? cfg.bookCombineEnabled() : bu.combineEnabled(),
-            cfg.shouldApplyKey("book_combine_xp_multiplier") ? cfg.bookCombineXpMultiplier() : bu.combineXpMultiplier(),
-            cfg.shouldApplyKey("book_research_enabled") ? cfg.bookResearchEnabled() : bu.researchEnabled(),
-            cfg.shouldApplyKey("book_research_xp_multiplier") ? cfg.bookResearchXpMultiplier() : bu.researchXpMultiplier(),
+        BookUpgradeRules bookUpgradeRules = new BookUpgradeRules(
+            cfg.bookCombineEnabled(),
+            cfg.bookCombineXpMultiplier(),
+            cfg.bookResearchEnabled(),
+            cfg.bookResearchXpMultiplier(),
             bu.researchMaterialMultiplier(),
             bu.defaultResearchCost(),
             bu.researchOverrides()
         );
 
         var ep = rawTreasureEpiphanyRules;
-        double epBase = cfg.shouldApplyKey("epiphany_base_chance") ? cfg.epiphanyBaseChance() : ep.baseChance();
-        double epMax = Math.max(epBase, cfg.shouldApplyKey("epiphany_max_chance") ? cfg.epiphanyMaxChance() : ep.maxChance());
-        int frzTicks = cfg.shouldApplyKey("epiphany_freeze_duration_seconds")
-            ? Math.max(200, cfg.epiphanyFreezeDurationSeconds() * 20)
-            : ep.freezeDurationTicks();
+        double epBase = cfg.epiphanyBaseChance();
+        double epMax = Math.max(epBase, cfg.epiphanyMaxChance());
+        int frzTicks = Math.max(200, cfg.epiphanyFreezeDurationSeconds() * 20);
         int maxFrzTicks = Math.max(
             frzTicks,
-            cfg.shouldApplyKey("epiphany_max_freeze_seconds")
-                ? Math.max(200, cfg.epiphanyMaxFreezeSeconds() * 20)
-                : ep.maxFreezeTicks()
+            Math.max(200, cfg.epiphanyMaxFreezeSeconds() * 20)
         );
-        treasureEpiphanyRules = new TreasureEpiphanyRules(
-            cfg.shouldApplyKey("epiphany_min_bookshelves") ? cfg.epiphanyMinBookshelves() : ep.minRegularBookshelves(),
+        TreasureEpiphanyRules treasureEpiphanyRules = new TreasureEpiphanyRules(
+            cfg.epiphanyMinBookshelves(),
             epBase,
             ep.chancePerExtraBookshelf(),
             ep.chancePerMasterTome(),
             epMax,
-            cfg.shouldApplyKey("epiphany_max_slots_cap") ? cfg.epiphanyMaxSlotsCap() : ep.maxSlotsCap(),
+            cfg.epiphanyMaxSlotsCap(),
             ep.scorePerExtraSlot(),
-            cfg.shouldApplyKey("epiphany_cycle_seconds") ? Math.max(200, cfg.epiphanyCycleSeconds() * 20) : ep.cycleTicks(),
+            Math.max(200, cfg.epiphanyCycleSeconds() * 20),
             frzTicks,
             maxFrzTicks,
-            cfg.shouldApplyKey("epiphany_freeze_xp_levels") ? cfg.epiphanyFreezeXpLevels() : ep.freezeXpLevels(),
+            cfg.epiphanyFreezeXpLevels(),
             ep.freezeOptions(),
-            cfg.shouldApplyKey("epiphany_reroll_xp_levels") ? cfg.epiphanyRerollXpLevels() : ep.rerollXpLevels(),
+            cfg.epiphanyRerollXpLevels(),
             ep.rerollOptions(),
             ep.explicitTreasureIds(),
             ep.treasureTagIds(),
@@ -634,26 +758,27 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         );
 
         var dis = rawDisenchantingRules;
-        double refScale = cfg.shouldApplyKey("xp_refund_scale") ? cfg.xpRefundScale() : dis.xpRefundScale();
+        double refScale = cfg.xpRefundScale();
         double extScale = Math.min(
             refScale,
-            cfg.shouldApplyKey("external_xp_refund_scale") ? cfg.externalXpRefundScale() : dis.externalXpRefundScale()
+            cfg.externalXpRefundScale()
         );
-        int sMin = cfg.shouldApplyKey("strip_xp_min") ? cfg.stripXpMin() : dis.stripXpMin();
-        int sMax = Math.max(sMin, cfg.shouldApplyKey("strip_xp_max") ? cfg.stripXpMax() : dis.stripXpMax());
-        disenchantingRules = new DisenchantingRules(
-            cfg.shouldApplyKey("disenchant_enabled") ? cfg.disenchantEnabled() : dis.enabled(),
-            cfg.shouldApplyKey("allow_curse_purge") ? cfg.allowCursePurge() : dis.allowCursePurge(),
+        int sMin = cfg.stripXpMin();
+        int sMax = Math.max(sMin, cfg.stripXpMax());
+        DisenchantingRules disenchantingRules = new DisenchantingRules(
+            cfg.disenchantEnabled(),
+            cfg.allowCursePurge(),
             refScale,
             extScale,
             sMin,
             sMax,
             dis.stripMaterialCost(),
-            cfg.shouldApplyKey("curse_purge_xp_cost") ? cfg.cursePurgeXpCost() : dis.curseXpCost(),
+            cfg.cursePurgeXpCost(),
             dis.curseMaterialCost()
         );
 
-        if (cfg.shouldApplyKey("require_prior_discovery") && !cfg.requirePriorDiscovery()) {
+        Map<Identifier, ItemTransformation> itemTransformations;
+        if (!cfg.requirePriorDiscovery()) {
             Map<Identifier, ItemTransformation> unlockedMap = new java.util.LinkedHashMap<>();
             for (var entry : rawItemTransformations.entrySet()) {
                 ItemTransformation t = entry.getValue();
@@ -681,18 +806,16 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             itemTransformations = rawItemTransformations;
         }
 
-        vanillaChestBooksMode = cfg.shouldApplyKey("vanilla_chest_books_mode")
-            ? cfg.vanillaChestBooksMode()
-            : rawVanillaChestBooksMode;
+        VanillaChestBooksMode vanillaChestBooksMode = cfg.vanillaChestBooksMode();
 
         var bp = rawBookshelfBookPool;
-        int minB = cfg.shouldApplyKey("bookshelf_min_books") ? cfg.bookshelfMinBooks() : bp.minBooks();
-        int maxB = Math.max(minB, cfg.shouldApplyKey("bookshelf_max_books") ? cfg.bookshelfMaxBooks() : bp.maxBooks());
-        bookshelfBookPool = new BookshelfBookPool(
-            cfg.shouldApplyKey("bookshelf_pool_enabled") ? cfg.bookshelfPoolEnabled() : bp.enabled(),
+        int minB = cfg.bookshelfMinBooks();
+        int maxB = Math.max(minB, cfg.bookshelfMaxBooks());
+        BookshelfBookPool bookshelfBookPool = new BookshelfBookPool(
+            cfg.bookshelfPoolEnabled(),
             minB,
             maxB,
-            cfg.shouldApplyKey("bookshelf_enchanted_prob") ? cfg.bookshelfEnchantedProb() : bp.enchantedBookProbability(),
+            cfg.bookshelfEnchantedProb(),
             bp.enchantPoolSource(),
             bp.useBaseWeight(),
             bp.useVanillaWeightFactor(),
@@ -704,6 +827,167 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             libraryResonanceConfig,
             disenchantingRules.xpRefundScale()
         );
+        RuntimeFrame next = new RuntimeFrame(itemTransformations, vanillaChestBooksMode, bookshelfBookPool, bookUpgradeRules, treasureEpiphanyRules, disenchantingRules, shelfGatesConfig, libraryResonanceConfig, costTables, defaultEnchantmentValues, defaultEnchantmentTags, defaultExcludedIds, defaultExcludedTags, lootInjections, cfg, policy, prepared.snapshot());
+        chiseled_enchanting_table.config.rules.RuntimeRules.commit(prepared, persist);
+        runtimeFrame = next;
+
+    }
+
+    private static chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy loadPackPolicy(
+        ResourceManager resourceManager
+    ) {
+        Set<String> externalKeys = new java.util.LinkedHashSet<>();
+        collectExternalDatapackKeys(resourceManager, SHELF_GATES_ID, "shelf_gates", externalKeys);
+        collectExternalDatapackKeys(resourceManager, LIBRARY_RESONANCE_ID, "library_resonance", externalKeys);
+        collectExternalDatapackKeys(resourceManager, BOOK_UPGRADES_ID, "book_upgrades", externalKeys);
+        collectExternalDatapackKeys(resourceManager, TREASURE_EPIPHANY_ID, "treasure_epiphany", externalKeys);
+        collectExternalDatapackKeys(resourceManager, DISENCHANTING_ID, "disenchanting", externalKeys);
+        collectExternalDatapackKeys(resourceManager, ITEM_TRANSFORMATIONS_ID, "item_transformations", externalKeys);
+        collectExternalDatapackKeys(resourceManager, LOOT_INJECTIONS_ID, "loot_injections", externalKeys);
+        collectExternalDatapackKeys(resourceManager, BOOKSHELF_BOOK_POOL_ID, "bookshelf_book_pool", externalKeys);
+
+        JsonObject policyRoot = null;
+        try {
+            var resOpt = resourceManager.getResource(PACK_POLICY_ID);
+            if (resOpt.isPresent()) {
+                try (Reader reader = resOpt.get().openAsReader()) {
+                    policyRoot = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid pack policy: " + PACK_POLICY_ID, e);
+        }
+        return chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.fromJson(policyRoot, externalKeys);
+    }
+
+    private static void collectExternalDatapackKeys(
+        ResourceManager resourceManager,
+        Identifier tableId,
+        String tableName,
+        Set<String> outKeys
+    ) {
+        // The table loader uses getResource (whole-file replacement), so only the selected layer
+        // may govern fields. Never lock keys from a shadowed lower layer or assume stack index 0.
+        var selected = resourceManager.getResource(tableId);
+        if (selected.isEmpty()) return;
+        var resource = selected.get();
+        try (Reader reader = resource.openAsReader()) {
+            JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
+            String source = resource.sourcePackId();
+            boolean own = source.equals("mod/chiseled_enchanting_table") || source.equals("chiseled_enchanting_table");
+            // Fabric's aggregate built-in pack may not expose a per-mod identity. Compare its
+            // selected content to our bundled resource rather than treating any first layer as ours.
+            if (source.equals("fabric") || source.equals("vanilla")) {
+                try (var stream = ChiseledEnchantingTableData.class.getResourceAsStream(
+                    "/data/" + tableId.getNamespace() + "/" + tableId.getPath())) {
+                    if (stream != null) own = object.equals(JsonParser.parseReader(
+                        new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)));
+                }
+            }
+            if (!own) outKeys.addAll(extractConfigKeysFromDatapackJson(tableName, object));
+        } catch (Exception error) {
+            throw new IllegalArgumentException("Failed to inspect effective table " + tableId, error);
+        }
+    }
+
+    public static Set<String> extractConfigKeysFromDatapackJson(String tableName, JsonObject root) {
+        if (root == null) {
+            return Set.of();
+        }
+        Set<String> keys = new java.util.LinkedHashSet<>();
+        switch (tableName) {
+            case "shelf_gates" -> {
+                String[] directKeys = {
+                    "direct_gates_enabled", "blank_max_tier_mode", "max_direct_bookshelves",
+                    "horizontal_scan_radius", "vertical_scan_radius", "require_breathing_room",
+                    "min_open_adjacent_blocks", "require_line_of_sight", "vanilla_table_mode",
+                    "tier1_bookshelves", "tier2_bookshelves", "tier3_qualifying_enchantments"
+                };
+                for (String k : directKeys) {
+                    if (root.has(k)) keys.add(k);
+                }
+                if (root.has("base_batch_size") || root.has("tier3_batch_size")) {
+                    keys.add("transformation_max_batch_size");
+                }
+            }
+            case "library_resonance" -> {
+                JsonObject wooden = root.has("wooden_bookshelves") && root.get("wooden_bookshelves").isJsonObject()
+                    ? root.getAsJsonObject("wooden_bookshelves") : null;
+                JsonObject mastery = root.has("chiseled_mastery") && root.get("chiseled_mastery").isJsonObject()
+                    ? root.getAsJsonObject("chiseled_mastery") : null;
+                if (hasAny(root, wooden, "max_wooden_discount_percent")) keys.add("max_wooden_discount_percent");
+                if (hasAny(root, mastery, "max_total_xp_discount_percent")) keys.add("max_total_xp_discount_percent");
+                String[] masteryKeys = {
+                    "tome_consumption_mode", "max_tome_uses", "book_copy_wear_cost", "tome_deplete_behavior",
+                    "tome_regen_enabled", "tome_regen_base_seconds", "tome_regen_tier1_shelves",
+                    "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds"
+                };
+                for (String k : masteryKeys) {
+                    if (hasAny(root, mastery, k)) keys.add(k);
+                }
+            }
+            case "book_upgrades" -> {
+                JsonObject comb = root.has("combine_route") && root.get("combine_route").isJsonObject()
+                    ? root.getAsJsonObject("combine_route") : null;
+                JsonObject res = root.has("research_route") && root.get("research_route").isJsonObject()
+                    ? root.getAsJsonObject("research_route") : null;
+                if (comb != null && comb.has("enabled")) keys.add("book_combine_enabled");
+                if (comb != null && comb.has("xp_cost_multiplier_of_vanilla_like")) keys.add("book_combine_xp_multiplier");
+                if (res != null && res.has("enabled")) keys.add("book_research_enabled");
+                if (res != null && res.has("xp_cost_multiplier_of_direct_enchant")) keys.add("book_research_xp_multiplier");
+            }
+            case "treasure_epiphany" -> {
+                if (root.has("min_regular_bookshelves")) keys.add("epiphany_min_bookshelves");
+                if (root.has("base_chance")) keys.add("epiphany_base_chance");
+                if (root.has("max_chance")) keys.add("epiphany_max_chance");
+                if (root.has("max_slots_cap")) keys.add("epiphany_max_slots_cap");
+                if (root.has("cycle_ticks")) keys.add("epiphany_cycle_seconds");
+                if (root.has("freeze_xp_levels")) keys.add("epiphany_freeze_xp_levels");
+                if (root.has("freeze_duration_ticks")) keys.add("epiphany_freeze_duration_seconds");
+                if (root.has("max_freeze_ticks")) keys.add("epiphany_max_freeze_seconds");
+                if (root.has("reroll_xp_levels")) keys.add("epiphany_reroll_xp_levels");
+            }
+            case "disenchanting" -> {
+                if (root.has("enabled")) keys.add("disenchant_enabled");
+                if (root.has("xp_refund_scale")) keys.add("xp_refund_scale");
+                if (root.has("external_xp_refund_scale")) keys.add("external_xp_refund_scale");
+                if (root.has("allow_curse_purge")) keys.add("allow_curse_purge");
+                JsonObject strip = root.has("targeted_strip") && root.get("targeted_strip").isJsonObject()
+                    ? root.getAsJsonObject("targeted_strip") : null;
+                if (strip != null && (strip.has("xp_cost_min") || strip.has("xp_levels"))) keys.add("strip_xp_min");
+                if (strip != null && strip.has("xp_cost_max")) keys.add("strip_xp_max");
+                JsonObject curse = root.has("curse_purge") && root.get("curse_purge").isJsonObject()
+                    ? root.getAsJsonObject("curse_purge") : null;
+                if (curse != null && (curse.has("xp_cost") || curse.has("xp_levels"))) keys.add("curse_purge_xp_cost");
+            }
+            case "item_transformations" -> {
+                if (root.has("require_prior_discovery")) {
+                    keys.add("require_prior_discovery");
+                } else if (root.has("values") && root.get("values").isJsonArray()) {
+                    for (JsonElement el : root.getAsJsonArray("values")) {
+                        if (el.isJsonObject() && el.getAsJsonObject().has("require_prior_discovery")) {
+                            keys.add("require_prior_discovery");
+                            break;
+                        }
+                    }
+                }
+            }
+            case "loot_injections" -> {
+                if (root.has("vanilla_chest_books")) keys.add("vanilla_chest_books_mode");
+            }
+            case "bookshelf_book_pool" -> {
+                if (root.has("enabled")) keys.add("bookshelf_pool_enabled");
+                if (root.has("min_books")) keys.add("bookshelf_min_books");
+                if (root.has("max_books")) keys.add("bookshelf_max_books");
+                if (root.has("enchanted_book_probability")) keys.add("bookshelf_enchanted_prob");
+            }
+            default -> {}
+        }
+        return Set.copyOf(keys);
+    }
+
+    private static boolean hasAny(JsonObject root, JsonObject sub, String key) {
+        return root.has(key) || (sub != null && sub.has(key));
     }
 
     /**
@@ -781,8 +1065,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 List.copyOf(excludedTags)
             );
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback defaults", DEFAULT_ENCHANTMENTS_ID, e);
-            return builtInDefaultEnchantmentTable();
+            throw new IllegalArgumentException("Invalid data table " + DEFAULT_ENCHANTMENTS_ID, e);
         }
     }
 
@@ -802,8 +1085,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             return CostTables.fromJson(root);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback costs", ENCHANTMENT_COSTS_ID, e);
-            return CostTables.builtInFallback();
+            throw new IllegalArgumentException("Invalid data table " + ENCHANTMENT_COSTS_ID, e);
         }
     }
 
@@ -825,8 +1107,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             }
             return Map.copyOf(loaded);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback transformations", ITEM_TRANSFORMATIONS_ID, e);
-            return builtInItemTransformations();
+            throw new IllegalArgumentException("Invalid data table " + ITEM_TRANSFORMATIONS_ID, e);
         }
     }
 
@@ -1485,8 +1766,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             }
             return new LootInjectionTable(mode, List.copyOf(loaded));
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; loot injection disabled", LOOT_INJECTIONS_ID, e);
-            return new LootInjectionTable(VanillaChestBooksMode.KEEP_BOTH, List.of());
+            throw new IllegalArgumentException("Invalid data table " + LOOT_INJECTIONS_ID, e);
         }
     }
 
@@ -1499,8 +1779,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         try (Reader reader = resource.get().openAsReader()) {
             return BookUpgradeRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject());
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback book-upgrade rules", BOOK_UPGRADES_ID, e);
-            return BookUpgradeRules.builtInFallback();
+            throw new IllegalArgumentException("Invalid data table " + BOOK_UPGRADES_ID, e);
         }
     }
 
@@ -1512,8 +1791,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         try (Reader reader = resource.get().openAsReader()) {
             return TreasureEpiphanyRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject());
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback treasure-epiphany rules", TREASURE_EPIPHANY_ID, e);
-            return TreasureEpiphanyRules.builtInFallback();
+            throw new IllegalArgumentException("Invalid data table " + TREASURE_EPIPHANY_ID, e);
         }
     }
 
@@ -1713,8 +1991,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             return BookshelfBookPool.fromJson(root);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; bookshelf book pool disabled", BOOKSHELF_BOOK_POOL_ID, e);
-            return BookshelfBookPool.emptyFallback();
+            throw new IllegalArgumentException("Invalid data table " + BOOKSHELF_BOOK_POOL_ID, e);
         }
     }
 
@@ -1895,43 +2172,43 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static boolean disenchantEnabled() {
-        return disenchantingRules.enabled();
+        return (runtimeFrame == null ? disenchantingRules : runtimeFrame.disenchantingRules()).enabled();
     }
 
     public static boolean disenchantAllowCursePurge() {
-        return disenchantingRules.allowCursePurge();
+        return (runtimeFrame == null ? disenchantingRules : runtimeFrame.disenchantingRules()).allowCursePurge();
     }
 
     public static double disenchantRefundScale() {
-        return disenchantingRules.xpRefundScale();
+        return (runtimeFrame == null ? disenchantingRules : runtimeFrame.disenchantingRules()).xpRefundScale();
     }
 
     public static double disenchantExternalRefundScale() {
-        return disenchantingRules.externalXpRefundScale();
+        return (runtimeFrame == null ? disenchantingRules : runtimeFrame.disenchantingRules()).externalXpRefundScale();
     }
 
     public static int targetedStripXpCost(Identifier id, int level, int maxLevel) {
-        return disenchantingRules.targetedStripXpCost(level, maxLevel);
+        return (runtimeFrame == null ? disenchantingRules : runtimeFrame.disenchantingRules()).targetedStripXpCost(level, maxLevel);
     }
 
     public static List<List<ItemStack>> targetedStripCostOptions(Identifier id, int level, int maxLevel) {
-        return disenchantingRules.targetedStripCostOptions(id, level, maxLevel);
+        return (runtimeFrame == null ? disenchantingRules : runtimeFrame.disenchantingRules()).targetedStripCostOptions(id, level, maxLevel);
     }
 
     public static int cursePurgeXpCost() {
-        return disenchantingRules.curseXpCost();
+        return (runtimeFrame == null ? disenchantingRules : runtimeFrame.disenchantingRules()).curseXpCost();
     }
 
     public static List<List<ItemStack>> cursePurgeCostOptions(Identifier id) {
-        return disenchantingRules.cursePurgeCostOptions(id);
+        return (runtimeFrame == null ? disenchantingRules : runtimeFrame.disenchantingRules()).cursePurgeCostOptions(id);
     }
 
     public static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig() {
-        return shelfGatesConfig;
+        return (runtimeFrame == null ? shelfGatesConfig : runtimeFrame.shelfGatesConfig());
     }
 
     public static chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig() {
-        return libraryResonanceConfig;
+        return (runtimeFrame == null ? libraryResonanceConfig : runtimeFrame.libraryResonanceConfig());
     }
 
     private static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config loadShelfGatesConfig(
@@ -1945,8 +2222,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.fromJson(root);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in shelf gate defaults", SHELF_GATES_ID, e);
-            return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT;
+            throw new IllegalArgumentException("Invalid data table " + SHELF_GATES_ID, e);
         }
     }
 
@@ -1961,8 +2237,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.fromJson(root);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in library resonance defaults", LIBRARY_RESONANCE_ID, e);
-            return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
+            throw new IllegalArgumentException("Invalid data table " + LIBRARY_RESONANCE_ID, e);
         }
     }
 
@@ -1974,8 +2249,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         try (Reader reader = resource.get().openAsReader()) {
             return DisenchantingRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject());
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in disenchanting defaults", DISENCHANTING_ID, e);
-            return DisenchantingRules.builtInFallback();
+            throw new IllegalArgumentException("Invalid data table " + DISENCHANTING_ID, e);
         }
     }
 

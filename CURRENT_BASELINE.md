@@ -17,8 +17,11 @@
 > `docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`. The one 26.2-forced source change in that sync:
 > **`ChatFormatting` no longer exists in 26.2**, so all styled text uses
 > `Style#withColor(0xAARRGGBB)` (vanilla RGB values preserved).
+> A third sync (**2026-10-24**) ported the `26.3` branch's architecture/feature batch (source
+> `3e61f5d`, wire revision **6**) — see ``docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md`` §9 and
+> "Synced This Session (2026-10-24)" below.
 
-**Date:** 2026-10-23
+**Date:** 2026-10-24
 **Minecraft Version:** 26.2
 **Fabric Loader:** 0.19.3
 **Fabric API:** 0.155.2+26.2
@@ -386,6 +389,49 @@ This session added the localized advancement guide pass and rebuilt the release 
   - `compileJava` / `compileClientJava` / the JUnit suite are exercised by the GitHub Actions
     `compile-check` and `build` workflows; the compile log lands in `build-reports/compile-java.log`.
 
+## Synced This Session (2026-10-24) — 26.3 line (`3e61f5d`) → 26.2 line
+
+Ported the `26.3` branch's `6a8f371..d2abe21` increment (60 non-log paths; 16 added, 44 modified)
+onto this line, keeping every 26.2 pin and every 26.2-only API. Full mapping, adopt/skip decisions
+and evidence: [`docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md) §9.
+
+- **New modules**: `config/rules/{RuleBook,RuntimeRules}` (an immutable effective-rule snapshot —
+  domain tables, costs, loot, policy and the effective DTO published as one generation),
+  `mechanics/ritual/InscriptionRitualMechanics` (bounded, owner/session-scoped queued inscription
+  rituals with the two skip paths), `mechanics/resonance/{RegenerationScheduler,WorldRegeneration}`
+  (one 20-tick world-session settlement for shared shelf tome healing) and
+  `mechanics/loot/DepletedTomeWorldMechanics` (depleted-tome chest loot, wild bookshelf weathering,
+  librarian recycling/commissioning, Infinity trade restrictions).
+- **Gameplay**: persistent two-slot table inventory (items survive closing the GUI and drop on
+  break instead of being copied into the dropped block), deep-resonance wait with XP-sacrifice and
+  force-rush skips, Infinity acquisition limits plus the overloaded-tome transcription slip
+  (capped at 20%), weighted Treasure Epiphany, tome passive regeneration at
+  `24,000 / 12,000 / 3,600` seconds for `38 / 42` shelves, five new advancements and the
+  `pack_policy.json` datapack governance file.
+- **UI**: Grimoire repagination and the new diagrams (bookshelf taxonomy, ritual/skip comparison,
+  regen and Infinity, world remnants/librarian trades), 621 translation keys × 11 locales,
+  config-screen effective-vs-draft display with the `📦 datapack-priority` / `🔒 modpack-lock`
+  reasons.
+- **Wire**: revision **6** (`26_2_revision_6`). Two legacy probes only — the unversioned
+  `enchant_cost_table` and `..._26_2_revision_5`; 26.3 needs three because it also shipped a
+  `..._26_3_revision_4` layout that never existed here. Ritual/menu payloads now carry
+  container + session routing and every collection read is bounded.
+- **26.2 adaptations re-applied** (the port re-introduces them, exactly as documented):
+  `ChatFormatting` → `Style#withColor(0xAARRGGBB)` (53 sites across 6 files, now 0 references),
+  `ContextIntProviders` → `ConstantValue` in the new loot builders (26.3 split that provider
+  namespace; 26.2 still ships the flat one), `ValueInput`/`ValueOutput` persistence for the new
+  block-entity fields, plural `functions[]`/`conditions[]` in the smoke fixtures, and the
+  `chiseled_enchanting_table:...` datapack paths with singular `advancement/`.
+- **Re-applied 26.2 guards on merged files**: the per-block `MapCodec`/`codec()`, the interface
+  `StructureProcessor` + `codec()` registration, capital-P `markPosForPostProcessing`, the
+  two-argument `LivingEntity#drop`, and the JUnit-5 wiring in `build.gradle`.
+- **Version**: **unchanged at `1.1.0`** (user instruction "版本号不变"); no 26.3 toolchain pin,
+  no 26.3 JVM args and no 26.3 build logs were taken.
+- **Validation**: `ci_static_checks.py` PASS (9 mixins, 621 keys × 11 locales, 470 referenced keys,
+  40 markdown files), `compat_check.py` PASS (2 Tier-2 warnings), `check_release_consistency.sh
+  --strict` 12/0/0, `docs/ci/install.sh --check` clean. `compileJava`/`compileClientJava`, the JUnit
+  suites (`compile-check` now also runs `test`, 52 tests) and the new `server-smoke` job run in CI.
+
 ## Client-Only / Live-Game Validation Still Pending
 
 Same as the prior baseline — these require a real MC 26.2 + Fabric runtime and were not run in
@@ -396,7 +442,12 @@ cross-mod default unlocks, multiplayer sync beyond payload registration, and min
 live world. Added by the 2026-10-23 batch and still unverified in a live client: the grimoire
 overlay and its JEI/REI round-trip, the dual-tab Cleanse console, the cleanse / downgrade /
 curse-purge rituals and their XP refunds, the live shelf rescan payload, and the `1..38` shelf
-step-up curve on a real world. The full list is kept in
+step-up curve on a real world. Added by the 2026-10-24 `26.3` sync and still unverified in a live
+game: the persistent table inventory (close/re-enter/break/hopper/creative), the queued ritual
+lifecycle (owner lease, XP-sacrifice and force-rush skips, registry-failure quarantine,
+`/cet cancel-ritual`), tome passive regeneration across world sessions, librarian recycled/commissioned
+trades and wild-bookshelf weathering, the repaginated Grimoire and its new diagrams, the
+`pack_policy.json` lock/priority combinations, and revision-6 dual-end refusal. The full list is kept in
 `docs/reports/CURRENT_AGENT_BRIEF.md`.
 
 
