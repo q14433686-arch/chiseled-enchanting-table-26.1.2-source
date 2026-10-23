@@ -15,7 +15,78 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
-## [Unreleased]
+## [1.1.0] — Full 26.1.2 increment and hardened configuration, 2026-10-23
+
+- Restore the requested release label **1.1.0** while retaining MC **26.3**, pinned dependencies and existing worldgen, mouse, menu-routing and authoritative-catalog fixes.
+- Port the complete source increment through **3e081f3** using user-selected **option 1**: D1–D7 progression/economy/discovery/batching plus classified runtime configuration, commands and Mod Menu integration.
+- Retain source defaults: config-over-datapack priority, wear 16 / copy cost 4 / step-down, external/unmarked refund scale 0.25 and books-only vanilla table. **Back up old worlds**; absent old provenance cannot be inferred.
+- Harden LAN ownership/permissions, atomic save-before-publish, strict explicit reload, request-ID server acknowledgements, integrated-server routing, stale-menu closure and per-player catalog refresh. Match mother-tome wear candidates to line-of-sight scanning and preserve safe 26.3 structure processing.
+- Advance the independent wire to **revision 5**, detecting old revision 4 without reusing old decoder channels. Update both sides even if their displayed version is the same.
+- Verify final functional source **181e996**: complete build, no-viewer compile, 29 JUnit, 15 Python and actual no-player dedicated-server smoke. Real GUI/multiplayer interaction is still untested. [Evidence and limits](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md).
+- Older 1.1.1 entries below are historical; their fixes are retained.
+
+## [1.1.1] — 26.3 runtime and synchronization audit (historical)
+
+- Synchronize complete server transformation catalogs, including tag inputs and empty catalogs;
+  refresh actual JEI runtime recipes and use dynamic REI displays after synchronization.
+- Bind live shelf updates to their originating container; close old table menus on successful
+  datapack reload so reopened menus receive a fresh transformation snapshot.
+- Reject unknown action tokens, invalid collection lengths and incompatible same-version protocol
+  builds. **Update client and server together**: the current capability is `protocol_26_3_revision_4`.
+- Preserve custom loot-function conditions and server automatic-deduction settings; log failing
+  synchronization listeners rather than swallowing exceptions. Preserve native inventory right click.
+- Add real dedicated-server load/reload/loot-component checks, conditional-loot probes, and
+  headless payload-codec regressions. See [audit and validation boundaries](docs/reports/AUDIT_26_3_RUNTIME_AND_SYNC.md).
+
+## [1.1.1] — Grimoire mouse-input fix (version unchanged)
+
+- Use platform mouse-button constants in the Grimoire instead of old GLFW button numbers.
+  Fixes directory/bookmarks, page navigation, close/return, recipe tabs and diagram controls
+  on 26.3 (SDL left=1, right=3); both standalone and table-overlay views share this handler.
+- Restore intended recipe/usage lookup clicks on item icons without treating left click as right.
+- Add a regression gate against hardcoded mouse IDs in the Grimoire click handler.
+
+## [1.1.1] — Additional 26.1.2 sync, 2026-10-23 (version unchanged)
+
+- Sync through source `b78b244`: full/targeted disenchanting, curse purge, Cleansing Grit,
+  XP-conservation economy, configurable shelf progression and real-time shelf synchronization.
+- Interactive illustrated Arcane Grimoire, recipes and sounds, table shortcut and return packet,
+  category/tab GUI, JEI/REI cleansing support and live reagent information.
+- Updated Wiki and all 11 locales (307 keys), language coverage and single-source data gates,
+  headless JUnit economy/config verification suite, removal of legacy scratch patches/scripts.
+- Adapt new screen navigation and live-shelf collection codecs for 26.3. Retain 1.1.1
+  recipe-unlock and block-loot world-load fixes. Minecraft/toolchain/viewer pins unchanged.
+
+## [1.1.1] — 2026-10-23
+
+### Fixed — save/world entry blocked by datapack registry errors
+
+- Recipe-unlock advancement now uses the 26.3 `recipes` holder list instead of `recipe`.
+- Table block loot now uses a single `condition` object rather than an invalid predicate array.
+  Keeps custom name, dye, custom data (including freeze state) and lore when mined.
+- Schema gates and regression tests now reproduce both failures from the user's runtime log;
+  valid inline modifier sequences remain supported.
+- This fixes packaged data; no save editing or world deletion is required.
+
+## [1.1.0] — 2026-10-22
+
+Synced all current 26.1.2 gameplay, UI, assets and translations from `0304f9d` to
+Minecraft **26.3**, retaining the 26.3 toolchain and version-specific APIs/data schemas.
+
+- Dual-track 7×5×7 library resonance, Treasure Epiphany, reroll and persistent freeze.
+- Dual-mode XP costs, selectable multi-material bundles, Arcane Condensate, Depleted Tome,
+  Blank Overwrite, rebalanced book upgrades and item transformations (including trident).
+- Painted GUI, XP animations, dye-aware block/item appearance, converging bookshelf particles,
+  11-language plain-spoken text, expanded advancements and recipes.
+- Bidirectional JEI/REI transformation lookup alongside enchantment lookup.
+- Flat anvil prior-work penalty, stacked enchanted-book remainder preservation, and
+  depth-dependent mineshaft Efficiency books.
+- 26.3 adaptations: explicit collection codecs, prediction-aware overflow drops, optional
+  conditional loot holders, modern loot builders, `LootContext#getOptional`, and conversion
+  of every new loot/recipe-crafted advancement to the 26.3 schema.
+- See [sync report](docs/reports/SYNC_FROM_26_1_2_REPORT.md) and [player Wiki](docs/WIKI.md).
+
+## [1.0.3] — Previous baseline
 
 ### Added — JEI and REI integration (bidirectional enchantment lookup)
 

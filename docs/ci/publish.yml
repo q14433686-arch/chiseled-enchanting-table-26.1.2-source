@@ -5,8 +5,8 @@ on: [ workflow_dispatch ]
 env:
   MINECRAFT_VERSION: 26.3
   JAVA_VERSION: 25
-  VERSION: 1.0.3
-  RELEASE_NAME:  Chiseled Enchanting Table 1.0.3 (Unofficial 26.3 Port)
+  VERSION: 1.1.0
+  RELEASE_NAME:  Chiseled Enchanting Table 1.1.0 (Unofficial 26.3 Port)
   MODRINTH_ID: ${{ secrets.PUBLISH_MODRINTH_ID }}
   MODRINTH_TOKEN: ${{ secrets.PUBLISH_MODRINTH_TOKEN }}
   # CURSEFORGE_ID: ${{ secrets.PUBLISH_CURSEFORGE_ID }}

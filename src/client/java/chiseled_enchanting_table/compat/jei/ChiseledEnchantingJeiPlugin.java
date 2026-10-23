@@ -2,13 +2,33 @@ package chiseled_enchanting_table.compat.jei;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.EnchantQueryIndex;
+import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.compat.TransformationQueryIndex;
+import chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen;
+import chiseled_enchanting_table.gui.grimoire.ArcaneGrimoireScreen;
+import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge;
+import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge.HoveredSlot;
+import chiseled_enchanting_table.registry.BlockRegistry;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import mezz.jei.api.IModPlugin;
+import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.builder.IClickableIngredientFactory;
+import mezz.jei.api.gui.handlers.IGlobalGuiHandler;
+import mezz.jei.api.gui.handlers.IGuiContainerHandler;
+import mezz.jei.api.gui.handlers.IGuiProperties;
+import mezz.jei.api.recipe.IFocusFactory;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.runtime.IClickableIngredient;
+import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -16,32 +36,50 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import chiseled_enchanting_table.registry.BlockRegistry;
 import net.minecraft.world.level.block.Blocks;
 
 /**
- * JEI plugin registration. Declared in {@code fabric.mod.json} under the {@code jei_mod_plugin}
- * entrypoint, so JEI only ever loads this class when JEI itself is installed.
- *
- * <p>What this exposes:</p>
- * <ul>
- *   <li>One {@link EnchantingRecipeCategory} row per (enchantment, level), listing every supported
- *       item as alternatives — this is what gives both the "book → items" and "item → books"
- *       directions.</li>
- *   <li>Catalysts: the chiseled enchanting table and the chiseled bookshelf, so the category shows up
- *       under {@code Recipes} for those blocks.</li>
- *   <li>Per-enchantment enchanted-book entries. Those come from JEI's own vanilla plugin, not from
- *       this one — see the comment where {@code registerItemSubtypes} would be (registering a second
- *       interpreter only produces an ERROR log line and then gets discarded).</li>
- *   <li>Info pages explaining the two things a recipe cannot express: the book must sit in a nearby
- *       chiseled bookshelf, and applying an enchantment can displace conflicting ones.</li>
- * </ul>
+ * Full JEI 26.1 integration covering recipes, catalysts (including {@code Arcane Grimoire}),
+ * custom screen overlays, hoverable {@code R}/{@code U}/{@code A} focus, and click-to-lookup.
  */
 public class ChiseledEnchantingJeiPlugin implements IModPlugin {
-    /** Built lazily: JEI asks for recipes after the client has a level/registries. */
     private List<EnchantingRecipe> cachedRecipes;
     private HolderLookup.Provider cachedRegistries;
     private List<EnchantQueryIndex.Entry> cachedIndex;
+    private GrimoireViewerBridge.Backend bridgeBackend;
+    private IJeiRuntime runtime;
+    private List<EnchantingRecipe> registeredEnchanting = List.of();
+    private List<TransformationRecipe> registeredTransformations = List.of();
+
+    public ChiseledEnchantingJeiPlugin() {
+        SyncedEnchantmentCosts.addListener(this::invalidateCache);
+    }
+
+    private void invalidateCache() {
+        this.cachedIndex = null;
+        this.cachedRecipes = null;
+        Minecraft.getInstance().execute(this::refreshRuntimeRecipes);
+    }
+
+    private void refreshRuntimeRecipes() {
+        if (this.runtime == null || !SyncedEnchantmentCosts.hasServerData()) return;
+        var manager = this.runtime.getRecipeManager();
+        var enchanting = recipes();
+        var transformations = TransformationQueryIndex.build().stream().map(TransformationRecipe::of).toList();
+        // JEI's public runtime API provides hide/add, not removal. Hide superseded snapshots.
+        if (!this.registeredEnchanting.equals(enchanting)) {
+            manager.hideRecipes(EnchantingRecipeCategory.RECIPE_TYPE, this.registeredEnchanting);
+            manager.addRecipes(EnchantingRecipeCategory.RECIPE_TYPE, enchanting);
+            manager.unhideRecipes(EnchantingRecipeCategory.RECIPE_TYPE, enchanting);
+            this.registeredEnchanting = enchanting;
+        }
+        if (!this.registeredTransformations.equals(transformations)) {
+            manager.hideRecipes(TransformationRecipeCategory.RECIPE_TYPE, this.registeredTransformations);
+            manager.addRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
+            manager.unhideRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
+            this.registeredTransformations = transformations;
+        }
+    }
 
     @Override
     public Identifier getPluginUid() {
@@ -50,7 +88,11 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        registration.addRecipeCategories(new EnchantingRecipeCategory(registration.getJeiHelpers().getGuiHelper()));
+        var guiHelper = registration.getJeiHelpers().getGuiHelper();
+        registration.addRecipeCategories(
+            new EnchantingRecipeCategory(guiHelper),
+            new TransformationRecipeCategory(guiHelper)
+        );
     }
 
     @Override
@@ -59,6 +101,16 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
         if (!recipes.isEmpty()) {
             registration.addRecipes(EnchantingRecipeCategory.RECIPE_TYPE, recipes);
         }
+        List<TransformationRecipe> transformations = TransformationQueryIndex.build()
+            .stream()
+            .map(TransformationRecipe::of)
+            .toList();
+        if (!transformations.isEmpty()) {
+            registration.addRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
+        }
+
+        this.registeredEnchanting = recipes;
+        this.registeredTransformations = transformations;
 
         List<ItemStack> stations = List.of(
             new ItemStack(BlockRegistry.CHISELED_ENCHANTING_TABLE),
@@ -76,6 +128,22 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             List.of(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)),
             Component.translatable("jei.chiseled_enchanting_table.info.book")
         );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.ARCANE_CATALYST)),
+            Component.translatable("jei.chiseled_enchanting_table.info.catalyst")
+        );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.DEPLETED_TOME)),
+            Component.translatable("jei.chiseled_enchanting_table.info.depleted_tome")
+        );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.CLEANSING_GRIT)),
+            Component.translatable("jei.chiseled_enchanting_table.info.cleansing_grit")
+        );
+        registration.addItemStackInfo(
+            List.of(new ItemStack(BlockRegistry.ARCANE_GRIMOIRE)),
+            Component.translatable("jei.chiseled_enchanting_table.info.grimoire")
+        );
     }
 
     @Override
@@ -83,32 +151,143 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
         registration.addCraftingStation(
             EnchantingRecipeCategory.RECIPE_TYPE,
             BlockRegistry.CHISELED_ENCHANTING_TABLE,
-            Blocks.CHISELED_BOOKSHELF
+            Blocks.CHISELED_BOOKSHELF,
+            BlockRegistry.ARCANE_GRIMOIRE
+        );
+        registration.addCraftingStation(
+            TransformationRecipeCategory.RECIPE_TYPE,
+            BlockRegistry.CHISELED_ENCHANTING_TABLE,
+            BlockRegistry.ARCANE_GRIMOIRE
         );
     }
 
-    // Deliberately no `registerItemSubtypes` override here.
-    //
-    // This class used to call `registration.registerFromDataComponentTypes(Items.ENCHANTED_BOOK,
-    // DataComponents.STORED_ENCHANTMENTS)` so that two enchanted books with different enchantments
-    // would be distinct JEI entries. That is redundant: JEI's own VanillaPlugin already registers
-    // `EnchantedBookSubtypeInterpreter.INSTANCE` for `Items.ENCHANTED_BOOK`
-    // (Library/.../plugins/vanilla/VanillaPlugin.java, `registerItemSubtypes`), and
-    // `SubtypeRegistration.registerSubtypeInterpreter` reacts to a second registration by logging
-    //
-    //     [ERROR] An interpreter is already registered for this: minecraft:enchanted_book
-    //     java.lang.IllegalArgumentException  (synthetic, for the stack trace only — nothing throws)
-    //
-    // and then *discarding* ours, i.e. JEI's interpreter wins either way. Observed in a real client
-    // log with JEI 29.29.0.77 (see docs/reports/VIEWER_INTEGRATION_JEI_REI.md §7.2): an ERROR line
-    // plus a stack trace on every world load, for no behavioural gain. `ISubtypeRegistration` offers
-    // no way to ask whether an interpreter is already present, so the only correct fix is not to
-    // register one. Per-enchantment book entries — and therefore the "focus a book → see what it can
-    // enchant" half of this integration — keep working through JEI's own interpreter.
+    @Override
+    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        // 1. Render JEI's ingredient list & bookmark panels neatly beside ArcaneGrimoireScreen
+        registration.addGuiScreenHandler(ArcaneGrimoireScreen.class, screen -> {
+            Rect2i bounds = screen.fullGuiBounds();
+            return new IGuiProperties() {
+                @Override
+                public Class<? extends Screen> screenClass() {
+                    return ArcaneGrimoireScreen.class;
+                }
 
-    // ---------------------------------------------------------------------------------------
-    // Index plumbing
-    // ---------------------------------------------------------------------------------------
+                @Override
+                public int guiLeft() {
+                    return bounds.getX();
+                }
+
+                @Override
+                public int guiTop() {
+                    return bounds.getY();
+                }
+
+                @Override
+                public int guiXSize() {
+                    return bounds.getWidth();
+                }
+
+                @Override
+                public int guiYSize() {
+                    return bounds.getHeight();
+                }
+
+                @Override
+                public int screenWidth() {
+                    return screen.width;
+                }
+
+                @Override
+                public int screenHeight() {
+                    return screen.height;
+                }
+            };
+        });
+
+        // 2. Expose every item icon inside ArcaneGrimoireScreen to JEI's native R / U / A keybinds
+        registration.addGlobalGuiHandler(new IGlobalGuiHandler() {
+            @Override
+            public Optional<? extends IClickableIngredient<?>> getClickableIngredientUnderMouse(
+                IClickableIngredientFactory builder,
+                double mouseX,
+                double mouseY
+            ) {
+                if (Minecraft.getInstance().gui.screen() instanceof ArcaneGrimoireScreen grimoire) {
+                    HoveredSlot slot = grimoire.hoveredIngredient(mouseX, mouseY);
+                    if (slot != null && !slot.stack().isEmpty()) {
+                        return builder.createBuilder(slot.stack().copyWithCount(1))
+                            .buildWithArea(slot.area());
+                    }
+                }
+                return Optional.empty();
+            }
+        });
+
+        // 3. Protect ChiseledEnchantingTableScreen top tabs/button & expose row cost icons to JEI
+        registration.addGuiContainerHandler(ChiseledEnchantingTableScreen.class, new IGuiContainerHandler<>() {
+            @Override
+            public List<Rect2i> getGuiExtraAreas(ChiseledEnchantingTableScreen containerScreen) {
+                return containerScreen.extraViewerExclusionAreas();
+            }
+
+            @Override
+            public Optional<? extends IClickableIngredient<?>> getClickableIngredientUnderMouse(
+                IClickableIngredientFactory builder,
+                ChiseledEnchantingTableScreen containerScreen,
+                double mouseX,
+                double mouseY
+            ) {
+                HoveredSlot slot = containerScreen.hoveredCostIngredient(mouseX, mouseY);
+                if (slot != null && !slot.stack().isEmpty()) {
+                    return builder.createBuilder(slot.stack().copyWithCount(1))
+                        .buildWithArea(slot.area());
+                }
+                return Optional.empty();
+            }
+        });
+    }
+
+    @Override
+    public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
+        this.runtime = jeiRuntime;
+        if (this.bridgeBackend != null) {
+            GrimoireViewerBridge.unregisterBackend(this.bridgeBackend);
+        }
+        IFocusFactory focusFactory = jeiRuntime.getJeiHelpers().getFocusFactory();
+        this.bridgeBackend = new GrimoireViewerBridge.Backend() {
+            @Override
+            public boolean showRecipes(ItemStack stack) {
+                jeiRuntime.getRecipesGui().show(
+                    focusFactory.createFocus(RecipeIngredientRole.OUTPUT, VanillaTypes.ITEM_STACK, stack)
+                );
+                return true;
+            }
+
+            @Override
+            public boolean showUses(ItemStack stack) {
+                jeiRuntime.getRecipesGui().show(
+                    focusFactory.createFocus(RecipeIngredientRole.INPUT, VanillaTypes.ITEM_STACK, stack)
+                );
+                return true;
+            }
+        };
+        GrimoireViewerBridge.registerBackend(this.bridgeBackend);
+        Minecraft.getInstance().execute(this::refreshRuntimeRecipes);
+    }
+
+    @Override
+    public void onRuntimeUnavailable() {
+        this.runtime = null;
+        this.registeredEnchanting = List.of();
+        this.registeredTransformations = List.of();
+        this.cachedRegistries = null;
+        this.cachedIndex = null;
+        this.cachedRecipes = null;
+        if (this.bridgeBackend != null) {
+            GrimoireViewerBridge.unregisterBackend(this.bridgeBackend);
+            this.bridgeBackend = null;
+        }
+    }
 
     private HolderLookup.Provider registries() {
         Minecraft minecraft = Minecraft.getInstance();
@@ -121,8 +300,7 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             );
             return null;
         }
-        // Rebuild only when the registry identity changes (world switch / datapack reload).
-        if (cachedRegistries != provider) {
+        if (cachedRegistries != provider || cachedIndex == null) {
             cachedRegistries = provider;
             cachedIndex = EnchantQueryIndex.build(provider);
             cachedRecipes = null;
@@ -149,7 +327,6 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
         return cachedRecipes;
     }
 
-    /** Exposed for the REI adapter (same index, different display objects). */
     public static List<EnchantQueryIndex.Entry> index(HolderLookup.Provider provider) {
         return EnchantQueryIndex.build(provider);
     }

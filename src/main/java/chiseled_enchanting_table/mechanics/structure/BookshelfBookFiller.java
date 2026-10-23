@@ -472,36 +472,47 @@ public final class BookshelfBookFiller {
      * weight per entry.
      */
     private static List<WeightedEntry> aggregateEnchantCandidates(BookshelfBookPool pool, HolderGetter<Enchantment> lookup) {
-        if (!"loot_injections".equals(pool.enchantPoolSource())) return List.of();
         List<WeightedEntry> out = new ArrayList<>();
-        for (LootInjection injection : ChiseledEnchantingTableData.lootInjections()) {
-            for (LootInjectionEntry entry : injection.entries()) {
-                if (entry.empty() || entry.special() != null) continue;
-                Optional<Holder.Reference<Enchantment>> holder = lookup.get(
-                    ResourceKey.create(Registries.ENCHANTMENT, entry.enchantmentId())
-                );
-                if (holder.isEmpty()) continue;
-                Enchantment enchantment = holder.get().value();
-                double weight = 1.0;
-                if (pool.useBaseWeight()) weight *= Math.max(1, entry.weight());
-                if (pool.useVanillaWeightFactor()) weight *= Math.max(1, enchantment.getWeight());
-                // Relative-level penalty: a book at its enchantment's max level always gets
-                // maxLevelWeightRatio^1 penalty regardless of the numeric level; a level-1 book
-                // gets no penalty; intermediate levels interpolate exponentially. Enchantments
-                // with maxLevel == 1 (Mending, Silk Touch, Infinity, Curse of Vanishing, ...)
-                // are never level-penalised. This matches the user's intent of "penalise
-                // relative to how strong the book is for its own enchantment", not "penalise by
-                // absolute numeric level" which is unfair to naturally-single-level enchantments.
-                int maxLevel = Math.max(1, enchantment.getMaxLevel());
-                int level = Math.max(1, Math.min(entry.level(), maxLevel));
-                double relativeLevel = maxLevel == 1 ? 0.0 : (double)(level - 1) / (double)(maxLevel - 1);
-                weight *= Math.pow(pool.maxLevelWeightRatio(), relativeLevel);
-                if (weight > 0.0) {
-                    out.add(new WeightedEntry(entry.enchantmentId(), holder.get(), entry.level(), weight));
+        if ("loot_injections".equals(pool.enchantPoolSource())) {
+            for (LootInjection injection : ChiseledEnchantingTableData.lootInjections()) {
+                for (LootInjectionEntry entry : injection.entries()) {
+                    if (entry.empty() || entry.special() != null) continue;
+                    appendWeightedCandidate(out, pool, lookup, entry.enchantmentId(), entry.level(), entry.weight());
                 }
             }
         }
+        for (List<LootInjectionEntry> set : pool.enchantSets()) {
+            for (LootInjectionEntry entry : set) {
+                if (entry.empty()) continue;
+                appendWeightedCandidate(out, pool, lookup, entry.enchantmentId(), entry.level(), entry.weight());
+            }
+        }
         return out;
+    }
+
+    private static void appendWeightedCandidate(
+        List<WeightedEntry> out,
+        BookshelfBookPool pool,
+        HolderGetter<Enchantment> lookup,
+        net.minecraft.resources.Identifier enchantmentId,
+        int rawLevel,
+        int baseWeight
+    ) {
+        Optional<Holder.Reference<Enchantment>> holder = lookup.get(
+            ResourceKey.create(Registries.ENCHANTMENT, enchantmentId)
+        );
+        if (holder.isEmpty()) return;
+        Enchantment enchantment = holder.get().value();
+        double weight = 1.0;
+        if (pool.useBaseWeight()) weight *= Math.max(1, baseWeight);
+        if (pool.useVanillaWeightFactor()) weight *= Math.max(1, enchantment.getWeight());
+        int maxLevel = Math.max(1, enchantment.getMaxLevel());
+        int level = Math.max(1, Math.min(rawLevel, maxLevel));
+        double relativeLevel = maxLevel == 1 ? 0.0 : (double)(level - 1) / (double)(maxLevel - 1);
+        weight *= Math.pow(pool.maxLevelWeightRatio(), relativeLevel);
+        if (weight > 0.0) {
+            out.add(new WeightedEntry(enchantmentId, holder.get(), level, weight));
+        }
     }
 
     private static ItemStack pickWeightedEnchantedBook(RandomSource random, List<WeightedEntry> candidates) {

@@ -46,7 +46,19 @@ import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntPr
  * effectively does nothing — the feature is fully data-driven.</p>
  */
 public final class EnchantedBookLootInjector {
-    private static final Component LORE = Component.literal("Chiseled Enchanting Table")
+    /**
+     * Lore line stamped on every injected enchanted book.
+     *
+     * <p>Translatable, not a literal — same reasoning as
+     * {@link chiseled_enchanting_table.mechanics.structure.BookshelfBookFiller}: the component is
+     * stored in the stack and resolved per client, so a book rolled by a dedicated server reads in
+     * each player's own language. The 26.3 side converted the bookshelf filler's copy of this
+     * string; this is the second (chest-loot) copy of the same stamp.
+     * {@link RemoveEnchantedBooksFunction} detects "ours" by <i>having</i> a lore line, not by
+     * matching its text, so the switch is behaviour-preserving.</p>
+     */
+    private static final Component LORE = Component
+        .translatable("book.chiseled_enchanting_table.lore")
         .withStyle(style -> style.withColor(0x800080));
 
     private EnchantedBookLootInjector() {}
@@ -55,18 +67,28 @@ public final class EnchantedBookLootInjector {
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
             if (!source.isBuiltin()) return;
 
+            var chestMode = ChiseledEnchantingTableData.vanillaChestBooksMode();
+            if (chestMode == ChiseledEnchantingTableData.VanillaChestBooksMode.DISABLED) {
+                return;
+            }
+
             List<LootInjection> injections = ChiseledEnchantingTableData.lootInjections();
             if (injections.isEmpty()) return;
 
             HolderGetter<Enchantment> enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT);
             Identifier tableId = key.identifier();
 
+            boolean matchedAny = false;
             for (LootInjection injection : injections) {
                 if (!matches(injection, tableId)) continue;
+                matchedAny = true;
                 LootPool.Builder pool = buildPool(injection, enchantmentLookup);
                 if (pool != null) {
                     tableBuilder.withPool(pool);
                 }
+            }
+            if (matchedAny && chestMode == ChiseledEnchantingTableData.VanillaChestBooksMode.STRIP_VANILLA) {
+                tableBuilder.modifyPools(poolBuilder -> poolBuilder.apply(new RemoveEnchantedBooksFunction()));
             }
         });
     }
@@ -98,15 +120,14 @@ public final class EnchantedBookLootInjector {
                     );
                     continue;
                 }
-                // Special: upstream's DepthBasedEfficiencyBuilder mapped y -> level. Our JSON schema
-                // still records this as a special-flagged entry; without the depth context reachable
-                // from LootTableEvents.MODIFY we fall back to the JSON-declared static level (which
-                // the auto-import defaults to 1). Depth-based scaling can be re-added later by
-                // registering a per-level pool instead.
-                singleton = LootItem.lootTableItem(Items.ENCHANTED_BOOK)
-                    .apply(new SetEnchantmentsFunction.Builder()
-                        .withEnchantment(holder.get(), ContextIntProviders.exactly(entry.level())))
-                    .apply(SetLoreFunction.setLore().addLine(LORE));
+                var itemBuilder = LootItem.lootTableItem(Items.ENCHANTED_BOOK);
+                if ("depth_based_efficiency".equals(entry.special())) {
+                    itemBuilder.apply(DepthBasedEfficiencyFunction::new);
+                } else {
+                    itemBuilder.apply(new SetEnchantmentsFunction.Builder()
+                        .withEnchantment(holder.get(), ContextIntProviders.exactly(entry.level())));
+                }
+                singleton = itemBuilder.apply(SetLoreFunction.setLore().addLine(LORE));
             }
             pool.add(singleton.setWeight(entry.weight()));
             addedAny = true;

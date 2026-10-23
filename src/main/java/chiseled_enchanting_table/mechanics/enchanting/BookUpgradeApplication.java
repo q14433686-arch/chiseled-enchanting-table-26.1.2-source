@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.mechanics.enchanting;
 
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
@@ -32,6 +33,7 @@ public final class BookUpgradeApplication {
     }
 
     private static boolean applyCombine(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
+        if (!ChiseledEnchantingTableData.bookCombineEnabled()) return false;
         ItemStack targetBook = handler.get_enchantable_item();
         ItemStack costBook = handler.get_cost_item();
         if (!targetBook.is(Items.ENCHANTED_BOOK) || !costBook.is(Items.ENCHANTED_BOOK)) return false;
@@ -46,7 +48,12 @@ public final class BookUpgradeApplication {
         if (targetEnchants.getLevel(enchantment) != sourceLevel || costEnchants.getLevel(enchantment) != sourceLevel) return false;
 
         EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), targetLevel);
-        if (!chargeXp(handler, handler.getEnchantmentXpLevelCost(ewl, OptionType.BOOK_COMBINE_UPGRADE))) return false;
+        var xpReq = handler.resolveEffectiveXpRequirement(ewl, OptionType.BOOK_COMBINE_UPGRADE);
+        if (!xpReq.isMetBy(handler.player)) return false;
+        XpCostConversion.deductXp(handler.player, xpReq);
+
+        ItemStack targetSnapshot = targetBook.copy();
+        ItemStack costSnapshot = costBook.copy();
 
         ItemEnchantments.Mutable merged = new ItemEnchantments.Mutable(targetEnchants);
         for (var entry : costEnchants.entrySet()) {
@@ -56,18 +63,19 @@ public final class BookUpgradeApplication {
             int mergedLevel = current == incomingLevel
                 ? Math.min(incoming.value().getMaxLevel(), incomingLevel + 1)
                 : Math.max(current, incomingLevel);
-            if (canAddToBook(merged, incoming)) {
-                merged.set(incoming, mergedLevel);
-            }
+            merged.set(incoming, mergedLevel);
         }
         merged.set(enchantment, targetLevel);
         writeEnchantments(targetBook, merged);
-        // The lower/cost book is the sacrificial knowledge source for this table-hosted
-        // anvil-style route. Mirror this mod's book-transfer semantics: after its enchantment is
-        // consumed, leave a plain book in the cost slot so the player sees exactly what happened.
-        // Do this even in creative/instabuild, because the slot transformation is the visible result
-        // of the operation rather than a material affordability check.
-        handler.setCostSlot(costBook.transmuteCopy(Items.BOOK, 1));
+        EnchantmentProvenance.recordBookCombine(
+            targetSnapshot,
+            costSnapshot,
+            targetBook,
+            EnchantmentHelper.getEnchantmentsForCrafting(targetBook)
+        );
+
+        // Drained source book carries arcane residue and becomes a stackable Depleted Tome requiring Blank Overwrite.
+        handler.setCostSlot(new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1));
         finish(handler);
         Advancement.give(handler.player, "upgrade_enchanted_book");
         Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());
@@ -75,6 +83,7 @@ public final class BookUpgradeApplication {
     }
 
     private static boolean applyResearch(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
+        if (!ChiseledEnchantingTableData.bookResearchEnabled()) return false;
         ItemStack targetBook = handler.get_enchantable_item();
         if (!targetBook.is(Items.ENCHANTED_BOOK)) return false;
 
@@ -82,29 +91,28 @@ public final class BookUpgradeApplication {
         int targetLevel = payload.enchantment_level();
         int sourceLevel = targetLevel - 1;
         if (sourceLevel < 1 || targetLevel > enchantment.value().getMaxLevel()) return false;
+        if (!handler.canDirectResearchUpgradeTo(payload.enchantment_id(), targetLevel)) return false;
 
         ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(targetBook);
         if (current.getLevel(enchantment) != sourceLevel) return false;
 
         EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), targetLevel);
-        if (!chargeXp(handler, handler.getEnchantmentXpLevelCost(ewl, OptionType.BOOK_RESEARCH_UPGRADE))) return false;
-        if (!chargeItems(handler, handler.getEnchantmentItemCosts(ewl, OptionType.BOOK_RESEARCH_UPGRADE))) return false;
+        var xpReq = handler.resolveEffectiveXpRequirement(ewl, OptionType.BOOK_RESEARCH_UPGRADE);
+        List<ItemStack> matchedBundle = handler.findMatchingAffordableCostBundle(ewl, OptionType.BOOK_RESEARCH_UPGRADE);
+
+        // Validate BOTH XP and any player-chosen material alternative atomically before consuming either.
+        if (!xpReq.isMetBy(handler.player) || (!handler.player.getAbilities().instabuild && matchedBundle == null)) return false;
+        XpCostConversion.deductXp(handler.player, xpReq);
+        handler.deductMatchedBundle(matchedBundle);
 
         ItemEnchantments.Mutable upgraded = new ItemEnchantments.Mutable(current);
         upgraded.set(enchantment, targetLevel);
         writeEnchantments(targetBook, upgraded);
+        EnchantmentProvenance.recordTablePayment(targetBook, payload.enchantment_id(), sourceLevel, targetLevel);
+        EnchantmentProvenance.pruneToCurrentEnchantments(targetBook, EnchantmentHelper.getEnchantmentsForCrafting(targetBook));
         finish(handler);
         Advancement.give(handler.player, "upgrade_enchanted_book");
         Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());
-        return true;
-    }
-
-    private static boolean canAddToBook(ItemEnchantments.Mutable merged, Holder<Enchantment> incoming) {
-        for (Holder<Enchantment> existing : new HashSet<>(merged.keySet())) {
-            if (!existing.equals(incoming) && !Enchantment.areCompatible(existing, incoming)) {
-                return false;
-            }
-        }
         return true;
     }
 
@@ -116,48 +124,6 @@ public final class BookUpgradeApplication {
                 m.set(key, enchantments.getLevel(key));
             }
         });
-    }
-
-    private static boolean chargeXp(ChiseledEnchantingTableScreenHandler handler, int levelCost) {
-        if (handler.player.getAbilities().instabuild) return true;
-        if (handler.player.experienceLevel < levelCost) return false;
-        handler.player.giveExperiencePoints(-XpCostConversion.pointsForLevelCost(handler.player, levelCost));
-        return true;
-    }
-
-    private static boolean chargeItems(ChiseledEnchantingTableScreenHandler handler, List<ItemStack> costs) {
-        if (handler.player.getAbilities().instabuild) return true;
-        if (costs.isEmpty()) return false;
-        ItemStack primary = costs.getFirst();
-        ItemStack costSlot = handler.get_cost_item();
-        if (primary.isEmpty() || !ItemStack.isSameItemSameComponents(primary, costSlot) || costSlot.getCount() < primary.getCount()) return false;
-        for (int i = 1; i < costs.size(); i++) {
-            if (countInInventory(handler, costs.get(i)) < costs.get(i).getCount()) return false;
-        }
-        costSlot.shrink(primary.getCount());
-        for (int i = 1; i < costs.size(); i++) consumeFromInventory(handler, costs.get(i).copy());
-        handler.player.getInventory().setChanged();
-        return true;
-    }
-
-    private static int countInInventory(ChiseledEnchantingTableScreenHandler handler, ItemStack required) {
-        int found = 0;
-        for (int slot = 0; slot < handler.player.getInventory().getContainerSize(); slot++) {
-            ItemStack candidate = handler.player.getInventory().getItem(slot);
-            if (ItemStack.isSameItemSameComponents(candidate, required)) found += candidate.getCount();
-        }
-        return found;
-    }
-
-    private static void consumeFromInventory(ChiseledEnchantingTableScreenHandler handler, ItemStack required) {
-        for (int slot = 0; slot < handler.player.getInventory().getContainerSize() && !required.isEmpty(); slot++) {
-            ItemStack candidate = handler.player.getInventory().getItem(slot);
-            if (ItemStack.isSameItemSameComponents(candidate, required)) {
-                int consumed = Math.min(candidate.getCount(), required.getCount());
-                candidate.shrink(consumed);
-                required.shrink(consumed);
-            }
-        }
     }
 
     private static void finish(ChiseledEnchantingTableScreenHandler handler) {

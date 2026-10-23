@@ -31,7 +31,7 @@ bash docs/ci/install.sh           # copy the four files into .github/workflows/ 
 | `docs/ci/compile-check.yml` | `.github/workflows/compile-check.yml` | installed, identical |
 | `docs/ci/build.yml` | `.github/workflows/build.yml` | installed, identical |
 | `docs/ci/consistency.yml` | `.github/workflows/consistency.yml` | installed, identical |
-| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed, identical (`26.3` / `1.0.3`) |
+| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed, identical (`26.3` / `1.1.0`) |
 
 **After changing CI, edit the copy here first, then have a maintainer apply it** — otherwise
 `--check` will report drift on the next run and the sandbox has no way to reconcile it.

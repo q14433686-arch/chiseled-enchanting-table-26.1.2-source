@@ -82,10 +82,7 @@ sourceSets {
             // Legacy upstream mixins still parked pending their own 26.1.2 mapping pass.
             // 1.0.2: vanilla enchanting-table book blocking and narrow book+book same-level
             // anvil merge block restored. 1.0.3: chiseled-bookshelf random-tick ambient
-            // particle/sound restored. Keep only the broader XP-cost anvil tweak parked until
-            // it gets its own live-test pass.
-            exclude 'chiseled_enchanting_table/mixin/anvil/RemoveXpCostScaling.java'
-            exclude 'chiseled_enchanting_table/mixin/accessor/**'
+            // particle/sound restored. 1.1.0: flat anvil prior-work penalty is active too.
             exclude 'chiseled_enchanting_table/mixin/structureProcessor/**'
             exclude 'chiseled_enchanting_table/modifyChestLootTable/**'
             exclude 'chiseled_enchanting_table/structureProcessor/**'
@@ -139,6 +136,20 @@ dependencies {
     }
 }
 
+// Headless economy/configuration verification imported from the 26.1.2 line.
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
 processResources {
     inputs.property "version", project.version
 
@@ -174,4 +185,14 @@ publishing {
             from components.java
         }
     }
+}
+
+// The isolated CI smoke test sends reload/stop through the real dedicated-server console.
+tasks.named('runServer', JavaExec).configure {
+    standardInput = System.in
+}
+
+// Compile-only Mod Menu API shim must not leak into either distributable.
+tasks.withType(Jar).configureEach {
+    exclude 'com/terraformersmc/**'
 }

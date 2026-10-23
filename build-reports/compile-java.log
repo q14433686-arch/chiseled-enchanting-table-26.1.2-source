@@ -1,10 +1,10 @@
-commit: fbcf921fd17b63bd467b476e34d5376afa672144
-branch: arena/fed7bc62-chiseled-enchanting-table-26-1
+commit: 181e996202f890bfc188be68bff1b4d9e8915b1f
+branch: arena/eb218d80-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
 loader: 0.19.5
-jei: true / latest.release
-rei: true / 26.3.+
+jei: true / 31.16.0.89
+rei: true / 26.3.824
 ---
 Downloading https://services.gradle.org/distributions/gradle-9.5.1-bin.zip
 .............10%.............20%..............30%.............40%.............50%..............60%.............70%..............80%.............90%.............100%
@@ -36,25 +36,86 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :classes
 
 > Task :compileClientJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/EnchantingRecipeCategory.java:60: warning: [removal] addItemStack(ItemStack) in IIngredientAcceptor has been deprecated and marked for removal
-        builder.addInputSlot(SLOT_ITEM, SLOT_BOOK).addItemStack(recipe.book());
-                                                  ^
-  where THIS is a type-variable:
-    THIS extends IIngredientAcceptor<THIS> declared in interface IIngredientAcceptor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/EnchantingRecipeCategory.java:71: warning: [removal] addItemStack(ItemStack) in IIngredientAcceptor has been deprecated and marked for removal
-        builder.addOutputSlot(SLOT_OUTPUT_X, 11).addItemStack(output);
-                                                ^
-  where THIS is a type-variable:
-    THIS extends IIngredientAcceptor<THIS> declared in interface IIngredientAcceptor
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-2 warnings
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792617301162.json
+
+> Task :processClientResources
+> Task :clientClasses
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+
+> Task :test
+
+ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
+
+ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
+
+ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
+
+ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
+
+EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
+
+EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
+
+EconomyAndConfigVerificationTest > highMaxLevelShelfCurveDistributesSmoothlyAndCapsScanVolume() PASSED
+
+EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning() PASSED
+
+EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
+
+EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
+
+EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() PASSED
+
+EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
+
+EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
+
+EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
+
+EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
+
+EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
+
+NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
+
+NetworkCompatibilityTest > allActionTokensAndNoBodyPacketsRoundTrip() PASSED
+
+NetworkCompatibilityTest > unknownActionsCannotSilentlyBecomeEnchantment() PASSED
+
+NetworkCompatibilityTest > costTableConfigurationAndRowsRoundTrip() PASSED
+
+NetworkCompatibilityTest > runtimeConfigRequestAndAcknowledgementRoundTrip() PASSED
+
+NetworkCompatibilityTest > liveUpdatesOnlyTargetTheMatchingMenu() PASSED
+
+NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNotUnmoddedPeers() PASSED
+
+NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
+
+NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792732563963.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 51s
-3 actionable tasks: 3 executed
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 19s
+6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
 
@@ -70,8 +131,8 @@ com.mojang:patchy:2.2.10
 com.mojang:text2speech:1.19.12
 dev.architectury:architectury-fabric:22.0.3
 me.shedaniel.cloth:basic-math:0.6.1
-me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.+ -> 26.3.824
-mezz.jei:jei-26.3-fabric:latest.release -> 31.16.0.87
+me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.824
+mezz.jei:jei-26.3-fabric:31.16.0.89
 net.fabricmc.fabric-api:fabric-advancement-api-v1:1.0.0+38c7a2d55d
 net.fabricmc.fabric-api:fabric-api-base:2.0.6+fcdff87f5d
 net.fabricmc.fabric-api:fabric-api-deprecated:0.162.0+26.3
@@ -134,8 +195,8 @@ com.mojang:patchy:2.2.10
 com.mojang:text2speech:1.19.12
 dev.architectury:architectury-fabric:22.0.3
 me.shedaniel.cloth:basic-math:0.6.1
-me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.+ -> 26.3.824
-mezz.jei:jei-26.3-fabric:latest.release -> 31.16.0.87
+me.shedaniel:RoughlyEnoughItems-api-fabric:26.3.824
+mezz.jei:jei-26.3-fabric:31.16.0.89
 net.fabricmc.fabric-api:fabric-advancement-api-v1:1.0.0+38c7a2d55d
 net.fabricmc.fabric-api:fabric-api-base:2.0.6+fcdff87f5d
 net.fabricmc.fabric-api:fabric-api-deprecated:0.162.0+26.3

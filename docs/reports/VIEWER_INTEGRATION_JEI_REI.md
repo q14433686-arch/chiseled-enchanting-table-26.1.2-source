@@ -1,3 +1,10 @@
+> **2026-10-22 update (26.3 / 1.1.0):** Both viewers now also expose bidirectional
+> item-transformation recipes, selectable multi-material costs and the new XP/resonance
+> information. All single-stack JEI slots use `add(ItemStack)` rather than the deprecated
+> `addItemStack`. Current behaviour: [Wiki](../WIKI.md); migration and current verification:
+> [26.1.2 sync report](SYNC_FROM_26_1_2_REPORT.md). The API investigation and earlier
+> compilation records below describe the historical integration baseline.
+
 # Recipe-viewer integration: JEI and REI (both implemented)
 
 > **Status.** Both adapters are implemented and compile green on CI. JEI was verified in-game by the

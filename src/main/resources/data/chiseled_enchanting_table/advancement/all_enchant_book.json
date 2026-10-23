@@ -3,8 +3,12 @@
     "icon": {
       "id": "minecraft:ender_eye"
     },
-    "title": "Why did we get here?",
-    "description": "Create a enchanted book with all enchantments at a chiseled enchanting table.",
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.all_enchant_book.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.all_enchant_book.description"
+    },
     "frame": "challenge",
     "show_toast": true,
     "announce_to_chat": true,

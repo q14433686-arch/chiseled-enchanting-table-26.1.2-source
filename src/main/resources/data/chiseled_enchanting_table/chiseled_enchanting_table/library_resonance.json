@@ -1,0 +1,38 @@
+{
+  "_comment": "Full data-driven configuration for Library & Master Tome Resonance. Every key below is read directly by LibraryResonance.Config.fromJson and synced to clients in EnchantCostTablePayload.",
+  "wooden_bookshelves": {
+    "min_discount_bookshelves": 12,
+    "max_discount_bookshelves": 38,
+    "max_wooden_discount_percent": 15,
+    "shelf_upgrade_material_multiplier": 0.90
+  },
+  "chiseled_mastery": {
+    "mastery_unit_exponent": 1.25,
+    "global_mastery_multiplier": 1.25,
+    "max_global_mastery_discount_percent": 20,
+    "max_base_xp_discount_percent": 35,
+    "max_specific_enchant_bonus_percent": 15,
+    "specific_enchant_exponent": 1.0,
+    "max_total_xp_discount_percent": 40,
+    "master_tome_upgrade_material_multiplier": 0.80,
+    "incremental_step_credit_factor": 0.85,
+    "tome_consumption_mode": "wear",
+    "max_tome_uses": 16,
+    "book_copy_wear_cost": 4,
+    "tome_deplete_behavior": "step_down"
+  },
+  "epiphany_affinity": {
+    "epiphany_probability_global_weight": 0.45,
+    "epiphany_probability_affinity_weight": 0.85,
+    "blank_book_affinity_weight": 0.50,
+    "epiphany_shelf_score_factor": 1.0,
+    "epiphany_global_mastery_score_factor": 2.2,
+    "epiphany_affinity_mastery_score_factor": 3.5,
+    "epiphany_tier2_max_prob": 0.65,
+    "epiphany_tier2_score_divisor": 80.0,
+    "epiphany_tier2_mastery_bonus": 0.20,
+    "epiphany_tier_plus_max_prob": 0.50,
+    "epiphany_tier_plus_score_divisor": 110.0,
+    "epiphany_tier_plus_mastery_bonus": 0.25
+  }
+}

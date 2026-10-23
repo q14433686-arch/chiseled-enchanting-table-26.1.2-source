@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:aqua_affinity",
+    "minecraft:flame",
+    "minecraft:multishot",
+    "minecraft:channeling",
+    "minecraft:silk_touch",
+    "minecraft:infinity",
+    "minecraft:mending",
+    "minecraft:frost_walker",
+    "minecraft:soul_speed",
+    "minecraft:swift_sneak",
+    "minecraft:wind_burst"
+  ]
+}

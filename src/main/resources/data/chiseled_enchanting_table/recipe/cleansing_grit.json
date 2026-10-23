@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:flint",
+    "minecraft:quartz",
+    "minecraft:glow_ink_sac",
+    "minecraft:bone_meal"
+  ],
+  "result": {
+    "id": "chiseled_enchanting_table:cleansing_grit",
+    "count": 4
+  }
+}

@@ -27,6 +27,9 @@
     ],
     "rei_client": [
       "chiseled_enchanting_table.compat.rei.ChiseledEnchantingReiPlugin"
+    ],
+    "modmenu": [
+      "chiseled_enchanting_table.compat.modmenu.ChiseledEnchantingModMenuPlugin"
     ]
   },
   "mixins": [
@@ -40,9 +43,10 @@
   },
   "suggests": {
     "jei": "*",
-    "rei": "*"
+    "rei": "*",
+    "modmenu": "*"
   },
   "custom": {
-    "chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.3. 1.0.3: JSON-driven chest / archaeology loot injection, live structure bookshelf replacement/fill, score-based shelf-facing, vanilla-anvil-style XP point deduction, vanilla enchanting-table book blocking, narrow anvil book+book same-level merge blocking, and enchanted-book chiseled-bookshelf random-tick particles/sound. 26.3 adaptations: renderpearl-era PoseStack#rotate/rotateDegrees, 9-arg SubmitNodeCollector#submitModel plus a separate crumbling-overlay submit, ContextIntProviders/UniformContainerBase loot builder API, Optional<Holder<LootItemCondition>> conditional loot functions, hand-rolled payload collection codecs (FriendlyByteBuf collection helpers removed), 26.3 loot-table schema (condition/modifier + type) and recipe_crafted 'recipes' list. Active mixins live in chiseled-enchanting-table-port.mixins.json. Still parked: broader anvil XP-cost tweak, Colorful Books integration, enchanted-book stack-size accessor. See CURRENT_BASELINE.md for the capability boundary, docs/reports/PORTING_26_3_REPORT.md for the migration evidence, and docs/EXTENDING.md for data-driven customisation entry points."
+    "chiseled_enchanting_table:port_notes": "Unofficial 26.3 port, release label 1.1.0; retains the previous world-load hotfix (recipe_unlocked recipes list and single loot predicate). Gameplay synced from 1.1.0: full 26.1.2 progression and UX sync (library resonance, Treasure Epiphany and persistent freeze, dual-mode XP, multi-material costs, Arcane Condensate, Depleted Tome and Blank Overwrite, painted GUI, dye tint, flat anvil penalty, depth-based Efficiency loot, bidirectional JEI/REI transformations, 11 locales). Retains 26.3 structure processor interface/codec registration, rotate/rotateDegrees and separate crumbling overlay, ContextIntProviders/UniformContainerBase, optional condition holders, explicit payload collection codecs, Prediction drops, condition/modifier loot schema and recipe_crafted recipes lists. See docs/reports/SYNC_FROM_26_1_2_REPORT.md."
   }
 }
