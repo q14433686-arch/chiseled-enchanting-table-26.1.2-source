@@ -21,11 +21,6 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.17.21
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:36: error: cannot find symbol
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
-                                                              ^
-  symbol:   class ConstantValue
-  location: package net.minecraft.world.level.storage.loot.providers.number
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:7: error: cannot find symbol
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
                                                  ^
@@ -36,16 +31,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
                                          ^
   symbol:   variable ChiseledEnchantingTableData
   location: class ModRuntimeConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:234: error: cannot find symbol
-            LootPool.Builder pool = LootPool.lootPool().setRolls(ConstantValue.exactly(1.0F));
-                                                                 ^
-  symbol:   variable ConstantValue
-  location: class DepletedTomeWorldMechanics
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:238: error: cannot find symbol
-                        .apply(SetItemCountFunction.setCount(ConstantValue.exactly(c)))
-                                                             ^
-  symbol:   variable ConstantValue
-  location: class DepletedTomeWorldMechanics
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:29: error: package ServerWorldEvents does not exist
         ServerWorldEvents.UNLOAD.register((server, world) -> WORLDS.remove(world));
                          ^
@@ -58,10 +43,10 @@ Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-7 errors
+4 errors
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792781363648.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792781443348.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -72,11 +57,6 @@ Execution failed for task ':compileJava' (registered by plugin class 'org.gradle
 > Compilation failed; see the compiler output below.
   Note: Recompile with -Xlint:deprecation for details.
   Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:36: error: cannot find symbol
-  import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
-                                                                ^
-    symbol:   class ConstantValue
-    location: package net.minecraft.world.level.storage.loot.providers.number
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:7: error: cannot find symbol
   import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
                                                    ^
@@ -87,16 +67,6 @@ Execution failed for task ':compileJava' (registered by plugin class 'org.gradle
                                            ^
     symbol:   variable ChiseledEnchantingTableData
     location: class ModRuntimeConfig
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:234: error: cannot find symbol
-              LootPool.Builder pool = LootPool.lootPool().setRolls(ConstantValue.exactly(1.0F));
-                                                                   ^
-    symbol:   variable ConstantValue
-    location: class DepletedTomeWorldMechanics
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:238: error: cannot find symbol
-                          .apply(SetItemCountFunction.setCount(ConstantValue.exactly(c)))
-                                                               ^
-    symbol:   variable ConstantValue
-    location: class DepletedTomeWorldMechanics
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:30: error: cannot find symbol
           ServerTickEvents.END_WORLD_TICK.register(world -> {
                           ^
@@ -107,7 +77,7 @@ Execution failed for task ':compileJava' (registered by plugin class 'org.gradle
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:29: error: package ServerWorldEvents does not exist
           ServerWorldEvents.UNLOAD.register((server, world) -> WORLDS.remove(world));
                            ^
-  7 errors
+  4 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -119,5 +89,5 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 49s
+BUILD FAILED in 46s
 1 actionable task: 1 executed
