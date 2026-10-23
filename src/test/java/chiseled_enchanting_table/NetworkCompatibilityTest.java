@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class NetworkCompatibilityTest {
     private static Identifier id(String path) { return Identifier.fromNamespaceAndPath("audit", path); }
 
-    private static <T> void roundTrip(StreamCodec<RegistryFriendlyByteBuf, T> codec, T value) {
+    private static <T> void roundTrip(StreamCodec<? super RegistryFriendlyByteBuf, T> codec, T value) {
         RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
         try {
             codec.encode(buf, value);
@@ -120,6 +120,16 @@ class NetworkCompatibilityTest {
         assertTrue(LiveShelfStatePayload.TYPE.id().getPath().endsWith(chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
         roundTrip(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.CODEC,
             new chiseled_enchanting_table.menu.EnchantingProtocol.Capability());
+    }
+
+    @Test void runtimeConfigRequestAndAcknowledgementRoundTrip() {
+        var config = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toJsonString();
+        roundTrip(chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload.CODEC,
+            new chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload(config, 8123456789L));
+        for (boolean accepted : new boolean[] {false, true}) {
+            roundTrip(chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload.CODEC,
+                new chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload(config, true, 8123456789L, accepted));
+        }
     }
 
 }

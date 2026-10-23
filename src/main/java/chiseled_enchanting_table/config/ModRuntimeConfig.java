@@ -192,14 +192,17 @@ public record ModRuntimeConfig(
 
     public static void setLocalAndSave(ModRuntimeConfig updated) {
         ModRuntimeConfig normalized = updated != null ? updated : DEFAULT;
-        saveToDisk(normalized); // Commit durable state before publishing the new in-memory value.
+        saveToDisk(normalized); // Commit persisted state before publishing the new in-memory value.
         localInstance = normalized;
     }
 
+    /** Explicit reload must reject malformed input, not silently replace it with defaults. */
     public static ModRuntimeConfig reloadFromDisk() {
-        ModRuntimeConfig loaded = loadFromDiskOrWriteDefault();
-        localInstance = loaded;
-        return loaded;
+        try (Reader reader = Files.newBufferedReader(configFilePath(), StandardCharsets.UTF_8)) {
+            return fromJson(JsonParser.parseReader(reader).getAsJsonObject());
+        } catch (java.io.IOException error) {
+            throw new java.io.UncheckedIOException("Cannot reload " + FILE_NAME, error);
+        }
     }
 
     public static void applyRemoteSync(ModRuntimeConfig remote, boolean canEdit) {
@@ -264,6 +267,8 @@ public record ModRuntimeConfig(
         }
     }
 
+    private static final java.util.concurrent.atomic.AtomicLong SAVE_REQUEST_IDS = new java.util.concurrent.atomic.AtomicLong();
+    public static long nextSaveRequestId() { return SAVE_REQUEST_IDS.incrementAndGet(); }
     private static volatile long acknowledgedSaveId;
     private static volatile boolean acknowledgedSaveAccepted;
     public static void acknowledgeSave(long id, boolean accepted) {

@@ -234,6 +234,8 @@ public final class MasterTomeWear {
         List<CandidateSlot> candidates = new ArrayList<>();
         for (BlockPos offset : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(shelfCfg)) {
             BlockPos scanPos = tablePos.offset(offset);
+            if (shelfCfg.requireLineOfSight()
+                && !chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.hasClearLineOfSight(level, tablePos, scanPos)) continue;
             BlockState st = level.getBlockState(scanPos);
             if (!st.is(Blocks.CHISELED_BOOKSHELF)) continue;
             if (!(level.getBlockEntity(scanPos) instanceof ChiseledBookShelfBlockEntity cbs)) continue;

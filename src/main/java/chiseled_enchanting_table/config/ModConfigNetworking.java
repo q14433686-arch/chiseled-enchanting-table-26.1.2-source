@@ -63,11 +63,13 @@ public final class ModConfigNetworking {
         }
     }
 
+    public static boolean mayManage(boolean dedicated, boolean owner, boolean permitted) {
+        return (!dedicated && owner) || permitted;
+    }
+
     public static boolean canPlayerManageConfig(MinecraftServer server, ServerPlayer player) {
-        if (!server.isDedicatedServer() && server.isSingleplayerOwner(player.nameAndId())) {
-            return true;
-        }
-        return player.checkPermission(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS);
+        return mayManage(server.isDedicatedServer(), server.isSingleplayerOwner(player.nameAndId()),
+            player.checkPermission(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS));
     }
 
     public static void init() {

@@ -77,7 +77,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     private final SessionMode sessionMode;
     private ModRuntimeConfig baselineConfig;
-    private final Draft draft;
+    private Draft draft;
 
     private CategoryId activeCategory = CategoryId.GENERAL;
     private boolean filterModifiedOnly = false;
@@ -218,7 +218,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             return;
         }
         // Integrated and dedicated servers share the same authorized, acknowledged path.
-        this.pendingSaveId = Math.max(1L, System.nanoTime());
+        this.pendingSaveId = ModRuntimeConfig.nextSaveRequestId();
         this.pendingClose = closeAfterSave;
         ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(built.toJsonString(), this.pendingSaveId));
     }

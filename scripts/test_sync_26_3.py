@@ -196,6 +196,32 @@ class SyncContracts(unittest.TestCase):
         self.assertNotIn('registry.add(new ReiTransformationDisplay(', rei)
 
 
+    def test_config_authority_and_persistence_guards(self):
+        cfg = (MAIN / 'config/ModRuntimeConfig.java').read_text()
+        self.assertIn('StandardCopyOption.ATOMIC_MOVE', cfg)
+        self.assertIn('saveToDisk(normalized);', cfg)
+        net = (MAIN / 'config/ModConfigNetworking.java').read_text()
+        self.assertIn('server.isSingleplayerOwner(player.nameAndId())', net)
+        self.assertIn('payload.requestId()', net)
+        self.assertIn('p.closeContainer()', net)
+        screen = (CLIENT / 'gui/config/ChiseledEnchantingConfigScreen.java').read_text()
+        self.assertNotIn('ModRuntimeConfig.applyRemoteSync(built', screen)
+        self.assertIn('reconcileSaveAcknowledgement()', screen)
+        self.assertNotIn('event.button() == 0', screen)
+        self.assertNotIn('event.button() == 1', screen)
+
+    def test_new_source_features_keep_port_specific_safeguards(self):
+        protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
+        self.assertIn('26_3_revision_5', protocol)
+        self.assertIn('enchant_cost_table_26_3_revision_4', protocol)
+        wear = (MAIN / 'mechanics/resonance/MasterTomeWear.java').read_text()
+        self.assertIn('hasClearLineOfSight(level, tablePos, scanPos)', wear)
+        processor = (MAIN / 'mechanics/structure/BookshelfReplacerProcessor.java').read_text()
+        self.assertIn('implements StructureProcessor', processor)
+        self.assertIn('bookshelfReplacementEnabled()', processor)
+        cost = (MAIN / 'menu/EnchantCostTablePayload.java').read_text()
+        self.assertIn('buildTransformationDisplays(player)', cost)
+
 
 if __name__ == '__main__':
     unittest.main()
