@@ -115,7 +115,7 @@ public final class LibraryResonance {
             maxTomeUses = clampInt(maxTomeUses, 1, 1024);
             bookCopyWearCost = clampInt(bookCopyWearCost, 1, 1024);
             tomeDepleteBehavior = tomeDepleteBehavior != null ? tomeDepleteBehavior : MasterTomeWear.DepleteBehavior.STEP_DOWN;
-            tomeRegenBaseSeconds = clampInt(tomeRegenBaseSeconds, 1, 7200);
+            tomeRegenBaseSeconds = clampInt(tomeRegenBaseSeconds, 1, 86_400);
             tomeRegenTier1Shelves = clampInt(tomeRegenTier1Shelves, 1, 256);
             tomeRegenTier1Seconds = clampInt(tomeRegenTier1Seconds, 1, tomeRegenBaseSeconds);
             tomeRegenTier2Shelves = clampInt(tomeRegenTier2Shelves, tomeRegenTier1Shelves, 256);

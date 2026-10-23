@@ -27,6 +27,8 @@ public final class ChiseledEnchantingMenuPayloads {
     public static final Identifier REROLL_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("reroll_epiphany");
     public static final Identifier FREEZE_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("freeze_epiphany");
     public static final Identifier REOPEN_TABLE_PACKET_ID = ChiseledEnchantingTable.identifier("reopen_table");
+    public static final Identifier SKIP_RITUAL_PACKET_ID = ChiseledEnchantingTable.identifier("skip_ritual");
+    public static final Identifier SYNC_RITUAL_STATE_PACKET_ID = ChiseledEnchantingTable.identifier("sync_ritual_state");
 
     public enum OptionType {
         ENCHANTMENT("enchantment"),
@@ -508,6 +510,58 @@ public final class ChiseledEnchantingMenuPayloads {
                 (payload, buf) -> buf.writeBlockPos(payload.pos()),
                 buf -> new ReopenTablePayload(buf.readBlockPos())
             );
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record SkipRitualPayload(boolean sacrificeXp) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<SkipRitualPayload> TYPE =
+            new CustomPacketPayload.Type<>(SKIP_RITUAL_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, SkipRitualPayload> CODEC =
+            CustomPacketPayload.codec(
+                (payload, buf) -> buf.writeBoolean(payload.sacrificeXp()),
+                buf -> new SkipRitualPayload(buf.readBoolean())
+            );
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record SyncRitualStatePayload(
+        List<EnchantmentWithLevel> queuedSteps,
+        boolean usedInfinityTome,
+        boolean hasAnyMasterTome
+    ) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<SyncRitualStatePayload> TYPE =
+            new CustomPacketPayload.Type<>(SYNC_RITUAL_STATE_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, SyncRitualStatePayload> CODEC =
+            CustomPacketPayload.codec(SyncRitualStatePayload::write, SyncRitualStatePayload::read);
+
+        private void write(RegistryFriendlyByteBuf buf) {
+            List<EnchantmentWithLevel> list = queuedSteps == null ? List.of() : queuedSteps;
+            buf.writeVarInt(list.size());
+            for (EnchantmentWithLevel e : list) {
+                EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode(buf, e);
+            }
+            buf.writeBoolean(usedInfinityTome);
+            buf.writeBoolean(hasAnyMasterTome);
+        }
+
+        private static SyncRitualStatePayload read(RegistryFriendlyByteBuf buf) {
+            int n = Math.max(0, buf.readVarInt());
+            List<EnchantmentWithLevel> list = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                list.add(EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode(buf));
+            }
+            boolean inf = buf.readBoolean();
+            boolean tome = buf.readBoolean();
+            return new SyncRitualStatePayload(List.copyOf(list), inf, tome);
+        }
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {

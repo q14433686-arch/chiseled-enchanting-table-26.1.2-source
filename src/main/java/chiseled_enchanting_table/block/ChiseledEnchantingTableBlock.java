@@ -239,9 +239,44 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         MenuProvider provider = createChiseledEnchantingTableMenuProvider(state, level, pos);
         if (provider != null) {
             player.openMenu(provider);
+            if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                menu.pushRitualStateToViewer();
+            }
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    public void affectNeighborsAfterRemoval(
+        BlockState state,
+        net.minecraft.server.level.ServerLevel level,
+        BlockPos pos,
+        boolean moved
+    ) {
+        if (level.getBlockEntity(pos) instanceof net.minecraft.world.Container container) {
+            if (container instanceof ChiseledEnchantingTableBlockEntity tableBe) {
+                tableBe.clearRitualState();
+            }
+            net.minecraft.world.Containers.dropContents(level, pos, container);
+            level.updateNeighbourForOutputSignal(pos, this);
+        }
+        super.affectNeighborsAfterRemoval(state, level, pos, moved);
+    }
+
+    @Override
+    protected boolean hasAnalogOutputSignal(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getAnalogOutputSignal(
+        BlockState state,
+        Level level,
+        BlockPos pos,
+        net.minecraft.core.Direction dir
+    ) {
+        return AbstractContainerMenu.getRedstoneSignalFromBlockEntity(level.getBlockEntity(pos));
     }
 
     @Nullable

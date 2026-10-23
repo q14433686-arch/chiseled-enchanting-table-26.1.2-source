@@ -571,9 +571,9 @@ public final class ConfigCatalog {
             "config.chiseled_enchanting_table.reason.need_wear_mode"
         ),
         intOpt(
-            "tome_regen_base_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 5, 600, 5,
+            "tome_regen_base_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 72_000, 600,
             d -> d.tomeRegenBaseSeconds, (d, v) -> d.tomeRegenBaseSeconds = v,
-            d -> d.tomeRegenBaseSeconds + "s",
+            d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenBaseSeconds),
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
             d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
                 ? "config.chiseled_enchanting_table.reason.need_wear_mode"
@@ -589,9 +589,9 @@ public final class ConfigCatalog {
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
         intOpt(
-            "tome_regen_tier1_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 2, 300, 1,
+            "tome_regen_tier1_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 48_000, 600,
             d -> d.tomeRegenTier1Seconds, (d, v) -> d.tomeRegenTier1Seconds = v,
-            d -> d.tomeRegenTier1Seconds + "s",
+            d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenTier1Seconds),
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
             d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
                 ? "config.chiseled_enchanting_table.reason.need_wear_mode"
@@ -607,9 +607,9 @@ public final class ConfigCatalog {
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
         intOpt(
-            "tome_regen_tier2_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 120, 1,
+            "tome_regen_tier2_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 24_000, 300,
             d -> d.tomeRegenTier2Seconds, (d, v) -> d.tomeRegenTier2Seconds = v,
-            d -> d.tomeRegenTier2Seconds + "s",
+            d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenTier2Seconds),
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
             d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
                 ? "config.chiseled_enchanting_table.reason.need_wear_mode"

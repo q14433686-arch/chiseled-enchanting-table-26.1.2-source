@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:writable_book"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.scribes_slip.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.scribes_slip.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:enchant_from_book",
+  "criteria": {
+    "scribes_slip": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "scribes_slip"
+    ]
+  ],
+  "sends_telemetry_event": false
+}
