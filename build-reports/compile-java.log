@@ -1,4 +1,4 @@
-commit: efc87c4423e33f37cda4eb0249c6e338e0213eb6
+commit: a949f51f17c469ed93b93117de34aff35631a6f3
 branch: arena/d0fffdab-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -27,7 +27,7 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :compileClientJava
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792720391950.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792722816263.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -163,5 +163,3 @@ net.fabricmc:fabric-loader:0.19.3
 net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7
 
 == job status: success ==
-
-# verified PR head check run
