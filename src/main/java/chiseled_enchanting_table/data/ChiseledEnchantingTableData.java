@@ -1943,7 +1943,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             if (candidateItems().isEmpty()) {
                 return false;
             }
-            for (ItemCostOption extra : additionalItems) {
+            for (ItemCostOption extra : extras) {
                 if (!extra.hasResolvableItems()) {
                     return false;
                 }
