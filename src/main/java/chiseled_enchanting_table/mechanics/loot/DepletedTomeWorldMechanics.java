@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.mechanics.loot;
 
+import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import java.util.ArrayList;

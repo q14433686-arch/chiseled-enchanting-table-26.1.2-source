@@ -80,7 +80,7 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
         }
         this.cet$savedLeftBookCount = 0;
 
-        if (!ChiseledEnchantingTableData.anvilBlockSameBookMerge()) {
+        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().anvilBlockSameBookMerge()) {
             return;
         }
         ItemStack right = this.inputSlots.getItem(1);

@@ -114,7 +114,7 @@ public final class WorldRegeneration {
         if (window == null) return;
         for (var entry : window.scheduler.exportSavedEntries()) {
             Slot slot = entry.slot();
-            if ((slot.position().getX() >> 4) == chunkPos.x && (slot.position().getZ() >> 4) == chunkPos.z) {
+            if ((slot.position().getX() >> 4) == chunkPos.x() && (slot.position().getZ() >> 4) == chunkPos.z()) {
                 BookSignature sig = window.signatures.get(slot);
                 if (sig == null && entry.bookIdentity() instanceof ItemStack stack) {
                     sig = BookSignature.of(stack);
