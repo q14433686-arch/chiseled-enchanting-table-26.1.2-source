@@ -1,4 +1,4 @@
-commit: c1ec2f70a030a9e31361734cc329ea373e057482
+commit: 14bd13ea057402f0e92965236543168ebe5c210e
 branch: arena/1ac4c727-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
@@ -29,86 +29,77 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.17.21
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:407: error: cannot find symbol
-            ChiseledEnchantingTable.identifier("epiphany_exclusive")
-            ^
-  symbol:   variable ChiseledEnchantingTable
-  location: class DepletedTomeWorldMechanics
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:117: error: x has private access in ChunkPos
-            if ((slot.position().getX() >> 4) == chunkPos.x && (slot.position().getZ() >> 4) == chunkPos.z) {
-                                                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:117: error: z has private access in ChunkPos
-            if ((slot.position().getX() >> 4) == chunkPos.x && (slot.position().getZ() >> 4) == chunkPos.z) {
-                                                                                                        ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/enchanting_table/DisableBookEnchanting.java:68: error: cannot find symbol
-        VanillaTableMode mode = ChiseledEnchantingTableData.vanillaEnchantingMode();
-                                                           ^
-  symbol:   method vanillaEnchantingMode()
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/enchanting_table/DisableBookEnchanting.java:92: error: cannot find symbol
-        if (ChiseledEnchantingTableData.vanillaEnchantingMode() != VanillaTableMode.ALIGN_CAPS) {
-                                       ^
-  symbol:   method vanillaEnchantingMode()
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/anvil/RemoveEnchantMerge.java:83: error: cannot find symbol
-        if (!ChiseledEnchantingTableData.anvilBlockSameBookMerge()) {
-                                        ^
-  symbol:   method anvilBlockSameBookMerge()
-  location: class ChiseledEnchantingTableData
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-6 errors
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792790404406.json
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:828: error: cannot find symbol
+                    ? rCfg.rushMaxInfinityDegradeChance()
+                          ^
+  symbol:   method rushMaxInfinityDegradeChance()
+  location: variable rCfg of type Config
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:829: error: cannot find symbol
+                    : rCfg.rushMaxNormalDegradeChance()));
+                          ^
+  symbol:   method rushMaxNormalDegradeChance()
+  location: variable rCfg of type Config
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/GrimoireDiagramRenderer.java:1317: error: cannot find symbol
+                SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+                                                     ^
+  symbol:   method optimalTargetTomes()
+  location: class Config
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/ArcaneGrimoireScreen.java:934: error: cannot find symbol
+                        SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+                                                             ^
+  symbol:   method optimalTargetTomes()
+  location: class Config
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+4 errors
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792790616295.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+Execution failed for task ':compileClientJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
 > Compilation failed; see the compiler output below.
+  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
   Note: Recompile with -Xlint:deprecation for details.
-  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:407: error: cannot find symbol
-              ChiseledEnchantingTable.identifier("epiphany_exclusive")
-              ^
-    symbol:   variable ChiseledEnchantingTable
-    location: class DepletedTomeWorldMechanics
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:117: error: x has private access in ChunkPos
-              if ((slot.position().getX() >> 4) == chunkPos.x && (slot.position().getZ() >> 4) == chunkPos.z) {
-                                                           ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:117: error: z has private access in ChunkPos
-              if ((slot.position().getX() >> 4) == chunkPos.x && (slot.position().getZ() >> 4) == chunkPos.z) {
-                                                                                                          ^
-  Note: Recompile with -Xlint:unchecked for details.
-  Note: Some input files use or override a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/enchanting_table/DisableBookEnchanting.java:68: error: cannot find symbol
-          VanillaTableMode mode = ChiseledEnchantingTableData.vanillaEnchantingMode();
-                                                             ^
-    symbol:   method vanillaEnchantingMode()
-    location: class ChiseledEnchantingTableData
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/enchanting_table/DisableBookEnchanting.java:92: error: cannot find symbol
-          if (ChiseledEnchantingTableData.vanillaEnchantingMode() != VanillaTableMode.ALIGN_CAPS) {
-                                         ^
-    symbol:   method vanillaEnchantingMode()
-    location: class ChiseledEnchantingTableData
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/anvil/RemoveEnchantMerge.java:83: error: cannot find symbol
-          if (!ChiseledEnchantingTableData.anvilBlockSameBookMerge()) {
-                                          ^
-    symbol:   method anvilBlockSameBookMerge()
-    location: class ChiseledEnchantingTableData
-  6 errors
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:828: error: cannot find symbol
+                      ? rCfg.rushMaxInfinityDegradeChance()
+                            ^
+    symbol:   method rushMaxInfinityDegradeChance()
+    location: variable rCfg of type Config
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:829: error: cannot find symbol
+                      : rCfg.rushMaxNormalDegradeChance()));
+                            ^
+    symbol:   method rushMaxNormalDegradeChance()
+    location: variable rCfg of type Config
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/GrimoireDiagramRenderer.java:1317: error: cannot find symbol
+                  SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+                                                       ^
+    symbol:   method optimalTargetTomes()
+    location: class Config
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/ArcaneGrimoireScreen.java:934: error: cannot find symbol
+                          SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+                                                               ^
+    symbol:   method optimalTargetTomes()
+    location: class Config
+  4 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -143,37 +134,29 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:407: error: cannot find symbol
-            ChiseledEnchantingTable.identifier("epiphany_exclusive")
-            ^
-  symbol:   variable ChiseledEnchantingTable
-  location: class DepletedTomeWorldMechanics
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:117: error: x has private access in ChunkPos
-            if ((slot.position().getX() >> 4) == chunkPos.x && (slot.position().getZ() >> 4) == chunkPos.z) {
-                                                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:117: error: z has private access in ChunkPos
-            if ((slot.position().getX() >> 4) == chunkPos.x && (slot.position().getZ() >> 4) == chunkPos.z) {
-                                                                                                        ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/enchanting_table/DisableBookEnchanting.java:68: error: cannot find symbol
-        VanillaTableMode mode = ChiseledEnchantingTableData.vanillaEnchantingMode();
-                                                           ^
-  symbol:   method vanillaEnchantingMode()
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/enchanting_table/DisableBookEnchanting.java:92: error: cannot find symbol
-        if (ChiseledEnchantingTableData.vanillaEnchantingMode() != VanillaTableMode.ALIGN_CAPS) {
-                                       ^
-  symbol:   method vanillaEnchantingMode()
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/anvil/RemoveEnchantMerge.java:83: error: cannot find symbol
-        if (!ChiseledEnchantingTableData.anvilBlockSameBookMerge()) {
-                                        ^
-  symbol:   method anvilBlockSameBookMerge()
-  location: class ChiseledEnchantingTableData
-Note: Some input files use or override a deprecated API.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:828: error: cannot find symbol
+                    ? rCfg.rushMaxInfinityDegradeChance()
+                          ^
+  symbol:   method rushMaxInfinityDegradeChance()
+  location: variable rCfg of type Config
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:829: error: cannot find symbol
+                    : rCfg.rushMaxNormalDegradeChance()));
+                          ^
+  symbol:   method rushMaxNormalDegradeChance()
+  location: variable rCfg of type Config
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/GrimoireDiagramRenderer.java:1317: error: cannot find symbol
+                SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+                                                     ^
+  symbol:   method optimalTargetTomes()
+  location: class Config
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/grimoire/ArcaneGrimoireScreen.java:934: error: cannot find symbol
+                        SyncedEnchantmentCosts.ritualConfig().optimalTargetTomes()
+                                                             ^
+  symbol:   method optimalTargetTomes()
+  location: class Config
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-Note: Recompile with -Xlint:unchecked for details.
-6 errors
+4 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -314,8 +297,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 43s
-1 actionable task: 1 executed
+BUILD FAILED in 50s
+3 actionable tasks: 3 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
