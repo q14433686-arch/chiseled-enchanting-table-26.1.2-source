@@ -1,5 +1,5 @@
-commit: 181e996202f890bfc188be68bff1b4d9e8915b1f
-branch: arena/eb218d80-chiseled-enchanting-table-26-1
+commit: 99802e57afefd007fe062ace71145515377e9fb1
+branch: arena/7a86fcca-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
 loader: 0.19.5
@@ -104,7 +104,33 @@ NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNot
 NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
 
 NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792732563963.json
+
+RuleArchitectureTest > fullLockCoversDirectConsumersNotJustUiPredicates() PASSED
+
+RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
+
+RuleArchitectureTest > missingWindowCannotCreditBackpackOrUnloadedTime() PASSED
+
+RuleArchitectureTest > overlapUsesFastestRateIndependentOfProposalOrder() PASSED
+
+RuleArchitectureTest > foreignAndReentrantTransactionsCannotWrite() PASSED
+
+RuleArchitectureTest > acknowledgedReplacementCarriesOnlyItsOwnResidencyForward() PASSED
+
+RuleArchitectureTest > replacementAndConflictingIdentityDoNotInheritProgress() PASSED
+
+RuleArchitectureTest > invalidInputsAndBootstrapOverridesAreRejected() PASSED
+
+RuleArchitectureTest > sessionResetAndDuplicateSettlementAreSafe() PASSED
+
+RuleArchitectureTest > fullyRestoredBooksAreEvictedWithoutOngoingDirtyWrites() PASSED
+
+RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
+
+RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
+
+RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792780362315.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
