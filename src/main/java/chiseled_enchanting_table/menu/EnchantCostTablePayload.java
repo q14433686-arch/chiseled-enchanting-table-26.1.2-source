@@ -408,7 +408,12 @@ public record EnchantCostTablePayload(
         PayloadLimits.writeBoundedCount(buf, costs.size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
         int writtenStacks = 0;
         for (CostEntry entry : costs) {
-            PayloadLimits.writeBoundedCount(buf, entry.costOptions().size(), PayloadLimits.MAX_COST_OPTIONS);
+            if (entry.costOptions().size() > PayloadLimits.MAX_COST_OPTIONS) {
+                throw new IllegalArgumentException(
+                    "Outbound CostEntry option count exceeds budget: "
+                    + entry.costOptions().size() + " > " + PayloadLimits.MAX_COST_OPTIONS
+                );
+            }
             for (List<ItemStack> bundle : entry.costOptions()) {
                 writtenStacks += bundle.size();
                 if (writtenStacks > PayloadLimits.MAX_TOTAL_COST_STACKS) {
@@ -422,7 +427,7 @@ public record EnchantCostTablePayload(
             buf.writeIdentifier(entry.enchantmentId());
             buf.writeVarInt(entry.level());
             buf.writeVarInt(Math.max(0, entry.xpLevelCost()));
-            buf.writeVarInt(entry.costOptions().size());
+            PayloadLimits.writeBoundedCount(buf, entry.costOptions().size(), PayloadLimits.MAX_COST_OPTIONS);
             for (List<ItemStack> bundle : entry.costOptions()) {
                 writeStacks(buf, bundle, PayloadLimits.MAX_BUNDLE_STACKS);
             }
