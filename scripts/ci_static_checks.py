@@ -259,7 +259,36 @@ def check_lang_parity() -> None:
         for key, val in lmap.items():
             if isinstance(val, str) and (val.strip() == key or "gui.chiseled_enchanting_table." in val):
                 fail(f"{lname}: key '{key}' contains raw untranslated key text '{val}'")
+            if isinstance(val, str) and key in reference and isinstance(reference[key], str):
+                ref_slots = len(re.findall(r"(?<!%)%s", reference[key]))
+                cur_slots = len(re.findall(r"(?<!%)%s", val))
+                if cur_slots != ref_slots:
+                    fail(
+                        f"{lname}: key '{key}' has {cur_slots} '%s' placeholder(s), "
+                        f"expected {ref_slots} matching en_us.json"
+                    )
     note(f"code-to-lang coverage ok ({len(referenced_keys)} referenced keys verified in all {1 + len(others)} locales)")
+
+
+# --------------------------------------------------------------------------- #
+# Tier E - Single source of truth for bundled JSON defaults (N1)
+# --------------------------------------------------------------------------- #
+
+def check_no_embedded_json_fallbacks() -> None:
+    data_java = os.path.join(
+        MAIN_JAVA, "chiseled_enchanting_table", "data", "ChiseledEnchantingTableData.java"
+    )
+    if not os.path.exists(data_java):
+        fail(f"missing {os.path.relpath(data_java, REPO)}")
+        return
+    src = open(data_java, encoding="utf-8").read()
+    if '"""' in src:
+        fail(
+            "ChiseledEnchantingTableData.java contains embedded multi-line JSON text blocks "
+            "(violates N1 single-source-of-truth; load bundled resources via readBundledJsonObject instead)"
+        )
+    else:
+        note("single-source-of-truth ok (zero embedded JSON text blocks in ChiseledEnchantingTableData.java)")
 
 
 # --------------------------------------------------------------------------- #
@@ -307,6 +336,7 @@ def main() -> int:
 
     check_mixin_configs()
     check_lang_parity()
+    check_no_embedded_json_fallbacks()
     check_markdown_links()
 
     if args.porcelain:

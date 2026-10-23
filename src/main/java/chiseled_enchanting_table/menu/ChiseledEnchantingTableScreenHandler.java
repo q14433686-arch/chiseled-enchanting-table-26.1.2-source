@@ -89,6 +89,25 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 }
             });
         });
+        PayloadTypeRegistry.serverboundPlay().register(
+            ChiseledEnchantingMenuPayloads.ReopenTablePayload.TYPE,
+            ChiseledEnchantingMenuPayloads.ReopenTablePayload.CODEC
+        );
+        ServerPlayNetworking.registerGlobalReceiver(ChiseledEnchantingMenuPayloads.ReopenTablePayload.TYPE, (payload, ctx) -> {
+            var player = ctx.player();
+            var server = ctx.server();
+            server.execute(() -> {
+                var pos = payload.pos();
+                if (pos != null
+                    && player.canInteractWithBlock(pos, 4.0)
+                    && player.level().getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity) {
+                    var provider = player.level().getBlockState(pos).getMenuProvider(player.level(), pos);
+                    if (provider != null) {
+                        player.openMenu(provider);
+                    }
+                }
+            });
+        });
     }
 
     public Runnable onContentChangedCallback = () -> {};

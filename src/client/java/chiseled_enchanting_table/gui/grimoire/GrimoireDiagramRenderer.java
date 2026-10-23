@@ -4,10 +4,18 @@ import static chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout.*;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
+import chiseled_enchanting_table.compat.TransformationQueryIndex;
 import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge.HoveredSlot;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.registry.BlockRegistry;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -15,15 +23,27 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Programmatic schematic &amp; interactive demonstration renderer for the right-hand page of every
- * chapter in {@link ArcaneGrimoireScreen}, with full JEI / REI slot focus &amp; click integration.
+ * Live data-driven schematic &amp; interactive demonstration renderer for the right-hand page of
+ * every chapter in {@link ArcaneGrimoireScreen}.
+ *
+ * <p>Zero-duplication guarantees:</p>
+ * <ul>
+ *   <li>Chapter 1 reads all 7 bundled {@code data/chiseled_enchanting_table/recipe/*.json} files
+ *       directly and clears its cache whenever {@link SyncedEnchantmentCosts} updates.</li>
+ *   <li>Chapters 3, 4, 6, and 7 read live synced values directly from {@link SyncedEnchantmentCosts}
+ *       and {@link TransformationQueryIndex#build()}.</li>
+ *   <li>Multi-phrase notes use {@link GrimoireTextLayout#drawWrappedBox} so text wraps cleanly at
+ *       readable scales instead of shrinking into illegible sub-pixel lines.</li>
+ * </ul>
  */
 @Environment(EnvType.CLIENT)
 public final class GrimoireDiagramRenderer {
@@ -48,120 +68,121 @@ public final class GrimoireDiagramRenderer {
     public static final int ACTION_TRANSMUTE_SELECT = 4;
 
     public record RecipeShowcase(
+        String recipeId,
         String labelKey,
         boolean shapeless,
         ItemStack[] grid9,
         ItemStack result
     ) {}
 
-    private static List<RecipeShowcase> cachedRecipes;
+    private static volatile List<RecipeShowcase> cachedRecipes;
+
+    static {
+        SyncedEnchantmentCosts.addListener(GrimoireDiagramRenderer::invalidateCache);
+    }
 
     private GrimoireDiagramRenderer() {}
 
-    public static List<RecipeShowcase> showcases() {
-        if (cachedRecipes != null) {
-            return cachedRecipes;
-        }
-        ItemStack air = ItemStack.EMPTY;
-        ItemStack grimoire = new ItemStack(BlockRegistry.ARCANE_GRIMOIRE);
-        ItemStack table = new ItemStack(BlockRegistry.CHISELED_ENCHANTING_TABLE);
-        ItemStack catalyst = new ItemStack(BlockRegistry.ARCANE_CATALYST);
-        ItemStack cry8 = new ItemStack(Items.CRYING_OBSIDIAN, 8);
+    public static void invalidateCache() {
+        cachedRecipes = null;
+    }
 
-        cachedRecipes = List.of(
-            // 0: Manual Recipe A — Book & Quill + Chiseled Bookshelf (Shapeless)
-            new RecipeShowcase(
-                "gui.chiseled_enchanting_table.grimoire.rec.manual_shelf",
-                true,
-                new ItemStack[]{
-                    air, air, air,
-                    new ItemStack(Items.WRITABLE_BOOK), new ItemStack(Items.CHISELED_BOOKSHELF), air,
-                    air, air, air
-                },
-                grimoire.copy()
-            ),
-            // 1: Manual Recipe B — Depleted Tome + Ink Sac (Shapeless)
-            new RecipeShowcase(
-                "gui.chiseled_enchanting_table.grimoire.rec.manual_tome",
-                true,
-                new ItemStack[]{
-                    air, air, air,
-                    new ItemStack(BlockRegistry.DEPLETED_TOME), new ItemStack(Items.INK_SAC), air,
-                    air, air, air
-                },
-                grimoire.copy()
-            ),
-            // 2: Chiseled Enchanting Table — Direct Craft
-            new RecipeShowcase(
-                "gui.chiseled_enchanting_table.grimoire.rec.table_direct",
-                false,
-                new ItemStack[]{
-                    air, new ItemStack(Items.BOOK), air,
-                    new ItemStack(Items.DIAMOND), new ItemStack(Items.CHISELED_BOOKSHELF), new ItemStack(Items.DIAMOND),
-                    new ItemStack(Items.CRYING_OBSIDIAN), new ItemStack(Items.CRYING_OBSIDIAN), new ItemStack(Items.CRYING_OBSIDIAN)
-                },
-                table.copy()
-            ),
-            // 3: Vanilla Enchanting Table Upgrade (Variant 1)
-            new RecipeShowcase(
-                "gui.chiseled_enchanting_table.grimoire.rec.table_upgrade_a",
-                false,
-                new ItemStack[]{
-                    new ItemStack(Items.AMETHYST_SHARD), new ItemStack(Items.ENCHANTING_TABLE), new ItemStack(Items.AMETHYST_SHARD),
-                    new ItemStack(Items.AMETHYST_SHARD), new ItemStack(Items.CHISELED_BOOKSHELF), new ItemStack(Items.AMETHYST_SHARD),
-                    new ItemStack(Items.CRYING_OBSIDIAN), new ItemStack(Items.CRYING_OBSIDIAN), new ItemStack(Items.CRYING_OBSIDIAN)
-                },
-                table.copy()
-            ),
-            // 4: Vanilla Enchanting Table Upgrade (Variant 2)
-            new RecipeShowcase(
-                "gui.chiseled_enchanting_table.grimoire.rec.table_upgrade_b",
-                false,
-                new ItemStack[]{
-                    air, new ItemStack(Items.AMETHYST_SHARD), air,
-                    new ItemStack(Items.AMETHYST_SHARD), new ItemStack(Items.ENCHANTING_TABLE), new ItemStack(Items.AMETHYST_SHARD),
-                    new ItemStack(Items.CRYING_OBSIDIAN), new ItemStack(Items.CHISELED_BOOKSHELF), new ItemStack(Items.CRYING_OBSIDIAN)
-                },
-                table.copy()
-            ),
-            // 5: 8x Crying Obsidian Mass Craft
-            new RecipeShowcase(
-                "gui.chiseled_enchanting_table.grimoire.rec.crying_obsidian",
-                false,
-                new ItemStack[]{
-                    new ItemStack(Items.OBSIDIAN), new ItemStack(Items.OBSIDIAN), new ItemStack(Items.OBSIDIAN),
-                    new ItemStack(Items.OBSIDIAN), new ItemStack(Items.GHAST_TEAR), new ItemStack(Items.OBSIDIAN),
-                    new ItemStack(Items.OBSIDIAN), new ItemStack(Items.OBSIDIAN), new ItemStack(Items.OBSIDIAN)
-                },
-                cry8
-            ),
-            // 6: Arcane Crystal (Catalyst)
-            new RecipeShowcase(
-                "gui.chiseled_enchanting_table.grimoire.rec.arcane_catalyst",
-                false,
-                new ItemStack[]{
-                    new ItemStack(Items.LAPIS_BLOCK), new ItemStack(Items.EMERALD_BLOCK), new ItemStack(Items.LAPIS_BLOCK),
-                    new ItemStack(Items.AMETHYST_BLOCK), new ItemStack(Items.DIAMOND_BLOCK), new ItemStack(Items.AMETHYST_BLOCK),
-                    new ItemStack(Items.CRYING_OBSIDIAN), new ItemStack(Items.GOLD_BLOCK), new ItemStack(Items.CRYING_OBSIDIAN)
-                },
-                catalyst
-            )
+    private static ItemStack parseStackId(String rawId, int count) {
+        if (rawId == null || rawId.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        Identifier id = rawId.indexOf(':') >= 0
+            ? Identifier.parse(rawId)
+            : Identifier.withDefaultNamespace(rawId);
+        Item item = BuiltInRegistries.ITEM.getValue(id);
+        if (item == null || item == Items.AIR) {
+            return ItemStack.EMPTY;
+        }
+        return new ItemStack(item, Math.max(1, count));
+    }
+
+    private static RecipeShowcase loadBundledRecipe(String recipeName, String labelKey) {
+        ItemStack[] grid = new ItemStack[9];
+        for (int i = 0; i < 9; i++) {
+            grid[i] = ItemStack.EMPTY;
+        }
+        String path = "/data/chiseled_enchanting_table/recipe/" + recipeName + ".json";
+        try (var in = GrimoireDiagramRenderer.class.getResourceAsStream(path)) {
+            if (in != null) {
+                JsonObject root = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8))
+                    .getAsJsonObject();
+                String type = root.has("type") ? root.get("type").getAsString() : "";
+                boolean shapeless = type.endsWith("crafting_shapeless");
+                JsonObject resObj = root.getAsJsonObject("result");
+                String resId = resObj.get("id").getAsString();
+                int resCount = resObj.has("count") ? resObj.get("count").getAsInt() : 1;
+                ItemStack result = parseStackId(resId, resCount);
+
+                if (shapeless) {
+                    JsonArray ings = root.getAsJsonArray("ingredients");
+                    int[] slots = ings.size() <= 2 ? new int[]{3, 4} : new int[]{0, 1, 3, 4, 2, 5, 6, 7, 8};
+                    for (int i = 0; i < Math.min(ings.size(), slots.length); i++) {
+                        JsonElement el = ings.get(i);
+                        String itemId = el.isJsonPrimitive()
+                            ? el.getAsString()
+                            : el.getAsJsonObject().get("item").getAsString();
+                        grid[slots[i]] = parseStackId(itemId, 1);
+                    }
+                } else {
+                    JsonArray pattern = root.getAsJsonArray("pattern");
+                    JsonObject keys = root.getAsJsonObject("key");
+                    for (int r = 0; r < Math.min(3, pattern.size()); r++) {
+                        String row = pattern.get(r).getAsString();
+                        for (int c = 0; c < Math.min(3, row.length()); c++) {
+                            String ch = String.valueOf(row.charAt(c));
+                            if (!" ".equals(ch) && keys.has(ch)) {
+                                JsonElement kEl = keys.get(ch);
+                                String itemId = kEl.isJsonPrimitive()
+                                    ? kEl.getAsString()
+                                    : kEl.getAsJsonObject().get("item").getAsString();
+                                grid[r * 3 + c] = parseStackId(itemId, 1);
+                            }
+                        }
+                    }
+                }
+                return new RecipeShowcase(recipeName, labelKey, shapeless, grid, result);
+            }
+        } catch (Exception e) {
+            ChiseledEnchantingTable.LOGGER.error("Failed to parse bundled recipe {}", path, e);
+        }
+        return new RecipeShowcase(recipeName, labelKey, true, grid, new ItemStack(BlockRegistry.ARCANE_GRIMOIRE));
+    }
+
+    public static List<RecipeShowcase> showcases() {
+        List<RecipeShowcase> local = cachedRecipes;
+        if (local != null) {
+            return local;
+        }
+        List<RecipeShowcase> built = List.of(
+            loadBundledRecipe("arcane_grimoire_from_shelf", "gui.chiseled_enchanting_table.grimoire.rec.manual_shelf"),
+            loadBundledRecipe("arcane_grimoire_from_tome", "gui.chiseled_enchanting_table.grimoire.rec.manual_tome"),
+            loadBundledRecipe("chiseled_enchanting_table", "gui.chiseled_enchanting_table.grimoire.rec.table_direct"),
+            loadBundledRecipe("chiseled_enchanting_table_upgrade", "gui.chiseled_enchanting_table.grimoire.rec.table_upgrade"),
+            loadBundledRecipe("crying_obsidian", "gui.chiseled_enchanting_table.grimoire.rec.crying_obsidian"),
+            loadBundledRecipe("cleansing_grit", "gui.chiseled_enchanting_table.grimoire.rec.cleansing_grit"),
+            loadBundledRecipe("arcane_catalyst", "gui.chiseled_enchanting_table.grimoire.rec.arcane_catalyst")
         );
-        return cachedRecipes;
+        cachedRecipes = built;
+        return built;
     }
 
     public static void drawPanelHeader(GuiGraphicsExtractor ctx, Font font, int x, int y, int w, String titleKey) {
-        ctx.fill(x, y, x + w, y + 13, 0xFFEAD9BA);
+        ctx.fill(x, y, x + w, y + 14, 0xFFEAD9BA);
         ctx.fill(x, y, x + w, y + 1, CARD_BORDER);
-        ctx.fill(x, y + 12, x + w, y + 13, CARD_BORDER);
-        ctx.fill(x, y, x + 3, y + 13, INK_GOLD_DARK);
+        ctx.fill(x, y + 13, x + w, y + 14, CARD_BORDER);
+        ctx.fill(x, y, x + 3, y + 14, INK_GOLD_DARK);
         drawLeftCenteredY(
             ctx,
             font,
             Component.translatable(titleKey).getString(),
             x + 6,
-            y + 6.5f,
-            0.68f,
+            y + 7.0f,
+            0.74f,
             w - 10,
             INK_PRIMARY,
             false
@@ -203,7 +224,8 @@ public final class GrimoireDiagramRenderer {
 
             if (stack.getCount() > 1) {
                 String c = String.valueOf(stack.getCount());
-                drawRightCenteredY(ctx, font, c, sx + 2, sx + size - 1, sy + size - 3.5f, 0.56f, INK_PRIMARY, false);
+                ctx.fill(sx + size - 9, sy + size - 7, sx + size - 1, sy + size - 1, 0xB8F7EEDB);
+                drawRightCenteredY(ctx, font, c, sx + 2, sx + size - 1, sy + size - 4.0f, 0.60f, INK_PRIMARY, false);
             }
             slotsOut.add(new HoveredSlot(stack, new Rect2i(sx, sy, size, size), leftClickOpensRecipes));
         }
@@ -218,17 +240,31 @@ public final class GrimoireDiagramRenderer {
         }
     }
 
-    public static void drawDownArrow(GuiGraphicsExtractor ctx, int midX, int y, int length, int argbColor) {
-        int shaftEnd = y + Math.max(3, length - 3);
-        ctx.fill(midX - 1, y, midX + 1, shaftEnd, argbColor);
-        for (int i = 0; i < 3; i++) {
-            int half = 3 - i;
-            ctx.fill(midX - half, shaftEnd + i, midX + half, shaftEnd + i + 1, argbColor);
-        }
+    private static void drawBadgeCircle(GuiGraphicsExtractor ctx, Font font, int x, int y, String num, int bg) {
+        ctx.fill(x, y, x + 9, y + 9, LIGHT_GOLD);
+        ctx.fill(x + 1, y + 1, x + 8, y + 8, bg);
+        drawCenteredBox(ctx, font, num, x, 9, y + 4.5f, 0.56f, LIGHT_GOLD, false);
+    }
+
+    private static void drawMiniButton(
+        GuiGraphicsExtractor ctx,
+        Font font,
+        int x,
+        int y,
+        int w,
+        int h,
+        String label,
+        int mouseX,
+        int mouseY
+    ) {
+        boolean over = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        ctx.fill(x, y, x + w, y + h, over ? CARD_HOVER_BORDER : CARD_BORDER);
+        ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, over ? CARD_HOVER_BG : CALLOUT_BG);
+        drawCenteredBox(ctx, font, label, x, w, y + h * 0.5f, 0.68f, INK_PURPLE, false);
     }
 
     // =========================================================================
-    // CHAPTER 1 — INTERACTIVE 7-RECIPE CRAFTING GALLERY
+    // CHAPTER 1 — LIVE 7-RECIPE CRAFTING WORKBENCH (PARSED DIRECTLY FROM JSON)
     // =========================================================================
     public static void renderChapter1Recipes(
         GuiGraphicsExtractor ctx,
@@ -250,33 +286,33 @@ public final class GrimoireDiagramRenderer {
         int idx = Mth.clamp(selectedIdx, 0, list.size() - 1);
         RecipeShowcase cur = list.get(idx);
 
-        int tabY = y + 17;
+        int tabY = y + 18;
         int gap = 2;
         int tabW = (w - gap * (list.size() - 1)) / list.size();
         for (int i = 0; i < list.size(); i++) {
             int tx = x + i * (tabW + gap);
             boolean active = i == idx;
-            boolean over = mouseX >= tx && mouseX < tx + tabW && mouseY >= tabY && mouseY < tabY + 13;
+            boolean over = mouseX >= tx && mouseX < tx + tabW && mouseY >= tabY && mouseY < tabY + 14;
             int bg = active ? INK_PURPLE : (over ? CARD_HOVER_BG : CARD_BG);
             int border = active ? INK_GOLD_DARK : CARD_BORDER;
-            ctx.fill(tx, tabY, tx + tabW, tabY + 13, border);
-            ctx.fill(tx + 1, tabY + 1, tx + tabW - 1, tabY + 12, bg);
+            ctx.fill(tx, tabY, tx + tabW, tabY + 14, border);
+            ctx.fill(tx + 1, tabY + 1, tx + tabW - 1, tabY + 13, bg);
             drawCenteredBox(
                 ctx,
                 font,
                 "#" + (i + 1),
                 tx + 1,
                 tabW - 2,
-                tabY + 6.5f,
-                0.58f,
+                tabY + 7.0f,
+                0.66f,
                 active ? LIGHT_GOLD : INK_PRIMARY,
                 false
             );
-            hits.add(new HitRegion(tx, tabY, tabW, 13, ACTION_RECIPE_TAB, String.valueOf(i)));
+            hits.add(new HitRegion(tx, tabY, tabW, 14, ACTION_RECIPE_TAB, String.valueOf(i)));
         }
 
-        int cardY = tabY + 17;
-        int cardH = 84;
+        int cardY = tabY + 18;
+        int cardH = 92;
         ctx.fill(x, cardY, x + w, cardY + cardH, CARD_BORDER);
         ctx.fill(x + 1, cardY + 1, x + w - 1, cardY + cardH - 1, CARD_BG);
 
@@ -284,18 +320,19 @@ public final class GrimoireDiagramRenderer {
             ctx,
             font,
             Component.translatable(cur.labelKey()).getString(),
-            x + 4,
-            w - 8,
-            cardY + 7.5f,
-            0.64f,
+            x + 5,
+            w - 10,
+            cardY + 8.0f,
+            0.74f,
             INK_PURPLE,
             false
         );
-        ctx.fill(x + 6, cardY + 13, x + w - 6, cardY + 14, RULE_LINE);
+        ctx.fill(x + 6, cardY + 15, x + w - 6, cardY + 16, RULE_LINE);
 
-        int slot = 18;
-        int gridX = x + 10;
-        int gridY = cardY + 18;
+        int slot = 20;
+        int totalBenchW = 3 * (slot + 1) + 34 + 26;
+        int gridX = x + Math.max(8, (w - totalBenchW) / 2);
+        int gridY = cardY + 21;
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
                 drawSlotItem(
@@ -314,46 +351,37 @@ public final class GrimoireDiagramRenderer {
             }
         }
 
-        int arrowX = gridX + 3 * (slot + 1) + 5;
+        int arrowX = gridX + 3 * (slot + 1) + 7;
         int midY = gridY + (3 * slot + 2) / 2;
-        drawRightArrow(ctx, arrowX, midY, 16, INK_GOLD_DARK);
+        drawRightArrow(ctx, arrowX, midY, 20, INK_GOLD_DARK);
 
         String modeTag = Component.translatable(
             cur.shapeless()
                 ? "gui.chiseled_enchanting_table.grimoire.rec.tag_shapeless"
                 : "gui.chiseled_enchanting_table.grimoire.rec.tag_shaped"
         ).getString();
-        drawCenteredBox(ctx, font, modeTag, arrowX - 4, 24, midY - 9.0f, 0.50f, INK_EMERALD, false);
+        drawCenteredBox(ctx, font, modeTag, arrowX - 5, 30, midY - 10.0f, 0.62f, INK_EMERALD, false);
 
-        int outX = arrowX + 20;
-        drawSlotItem(ctx, font, cur.result(), outX, midY - 11, 22, mouseX, mouseY, slotsOut, true, true);
+        int outX = arrowX + 26;
+        drawSlotItem(ctx, font, cur.result(), outX, midY - 13, 26, mouseX, mouseY, slotsOut, true, true);
 
         int sumY = cardY + cardH + 5;
-        int sumH = Math.max(24, (y + h) - sumY);
+        int sumH = Math.max(28, (y + h) - sumY);
         ctx.fill(x, sumY, x + w, sumY + sumH, CALLOUT_BORDER);
         ctx.fill(x + 1, sumY + 1, x + w - 1, sumY + sumH - 1, CALLOUT_BG);
         ctx.fill(x, sumY, x + 3, sumY + sumH, INK_EMERALD);
 
-        drawLeftCenteredY(
+        drawWrappedBox(
             ctx,
             font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch1_note1").getString(),
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch1_note1"),
             x + 6,
-            sumY + sumH * 0.30f,
-            0.58f,
+            sumY + 2,
             w - 10,
-            INK_EMERALD,
-            false
-        );
-        drawLeftCenteredY(
-            ctx,
-            font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch1_note2").getString(),
-            x + 6,
-            sumY + sumH * 0.70f,
-            0.55f,
-            w - 10,
-            INK_SECONDARY,
+            sumH - 4,
+            0.70f,
+            0.64f,
+            INK_PRIMARY,
             false
         );
     }
@@ -375,102 +403,104 @@ public final class GrimoireDiagramRenderer {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch2_title");
 
-        int mockY = y + 17;
-        int mockH = 82;
+        int mockY = y + 18;
+        int mockH = 86;
 
-        ctx.fill(x + 3, mockY, x + 36, mockY + 9, 0xFF4C236E);
+        ctx.fill(x + 3, mockY, x + 52, mockY + 11, 0xFF4C236E);
         drawBadgeCircle(ctx, font, x + 4, mockY + 1, "1", 0xFF6B3A9E);
         drawLeftCenteredY(
             ctx,
             font,
             Component.translatable("gui.chiseled_enchanting_table.tab.inscribe").getString(),
-            x + 14,
-            mockY + 4.5f,
-            0.48f,
-            20,
+            x + 15,
+            mockY + 5.5f,
+            0.60f,
+            34,
             LIGHT_CREAM,
             false
         );
-        ctx.fill(x + 38, mockY + 1, x + 71, mockY + 9, 0xFF1F4E46);
-        drawLeftCenteredY(
+        ctx.fill(x + 54, mockY + 1, x + 98, mockY + 11, 0xFF1F4E46);
+        drawCenteredBox(
             ctx,
             font,
             Component.translatable("gui.chiseled_enchanting_table.tab.cleanse").getString(),
-            x + 41,
-            mockY + 5.0f,
-            0.48f,
-            28,
+            x + 56,
+            40,
+            mockY + 6.0f,
+            0.60f,
             LIGHT_MINT,
             false
         );
 
-        ctx.fill(x + w - 15, mockY, x + w - 4, mockY + 9, INK_GOLD_DARK);
-        drawCenteredBox(ctx, font, "?", x + w - 15, 11, mockY + 4.5f, 0.54f, LIGHT_GOLD, false);
+        ctx.fill(x + w - 16, mockY, x + w - 4, mockY + 10, INK_GOLD_DARK);
+        drawCenteredBox(ctx, font, "?", x + w - 16, 12, mockY + 5.0f, 0.62f, LIGHT_GOLD, false);
 
-        int winY = mockY + 9;
-        int winH = mockH - 9;
+        int winY = mockY + 11;
+        int winH = mockH - 11;
         ctx.fill(x, winY, x + w, winY + winH, 0xFF23162E);
         ctx.fill(x + 1, winY + 1, x + w - 1, winY + winH - 1, 0xFF342244);
 
-        int listW = 62;
+        int listW = Math.max(68, w - 92);
         ctx.fill(x + 4, winY + 5, x + 4 + listW, winY + winH - 5, 0xFF1B1126);
-        String[] sampleRows = {"Sharpness III", "Unbreaking II", "Mending *"};
+        String[] rowKeys = {
+            "gui.chiseled_enchanting_table.grimoire.diag.ch2_r1",
+            "gui.chiseled_enchanting_table.grimoire.diag.ch2_r2",
+            "gui.chiseled_enchanting_table.grimoire.diag.ch2_r3"
+        };
         int[] rowCols = {0xFF563A78, 0xFF483166, 0xFF6B4F1D};
         for (int r = 0; r < 3; r++) {
-            int ry = winY + 8 + r * 19;
-            ctx.fill(x + 6, ry, x + 2 + listW, ry + 16, rowCols[r]);
-            drawLeftCenteredY(ctx, font, sampleRows[r], x + 9, ry + 8.0f, 0.48f, 40, LIGHT_CREAM, false);
-            ctx.blit(r == 2 ? XP_ORB_1 : XP_FLASK, x + listW - 8, ry + 4, x + listW, ry + 12, 0.0f, 1.0f, 0.0f, 1.0f);
-        }
-        drawBadgeCircle(ctx, font, x + 6, winY + 5, "2", 0xFF7A4E10);
-
-        int midX = x + 70;
-        drawSlotItem(ctx, font, new ItemStack(Items.DIAMOND_SWORD), midX, winY + 11, 18, mouseX, mouseY, slotsOut, true, true);
-        drawBadgeCircle(ctx, font, midX - 2, winY + 9, "3", INK_PURPLE);
-
-        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 4), midX, winY + 42, 18, mouseX, mouseY, slotsOut, false, true);
-        drawBadgeCircle(ctx, font, midX - 2, winY + 40, "4", INK_EMERALD);
-
-        int sanX = x + 92;
-        int sanW = w - 96;
-        ctx.fill(sanX, winY + 8, sanX + sanW, winY + winH - 8, 0xFF241538);
-        ctx.fill(sanX + 1, winY + 9, sanX + sanW - 1, winY + 10, 0xFF8B56BA);
-        drawBadgeCircle(ctx, font, sanX + 2, winY + 10, "5", 0xFF285E6B);
-        drawLeftCenteredY(ctx, font, "-40% XP", sanX + 4, winY + 25.0f, 0.50f, sanW - 8, LIGHT_MINT, false);
-        drawLeftCenteredY(ctx, font, "09:42", sanX + 4, winY + 35.0f, 0.50f, sanW - 8, LIGHT_GOLD, false);
-        ctx.blit(BTN_FREEZE, sanX + 4, winY + 44, sanX + 15, winY + 55, 0.0f, 1.0f, 0.0f, 1.0f);
-        ctx.blit(BTN_REROLL, sanX + 18, winY + 44, sanX + 29, winY + 55, 0.0f, 1.0f, 0.0f, 1.0f);
-
-        int legY = mockY + mockH + 4;
-        int legH = Math.max(24, (y + h) - legY);
-        ctx.fill(x, legY, x + w, legY + legH, CALLOUT_BORDER);
-        ctx.fill(x + 1, legY + 1, x + w - 1, legY + legH - 1, CARD_BG);
-
-        String[] keys = {
-            "gui.chiseled_enchanting_table.grimoire.diag.ch2_k1",
-            "gui.chiseled_enchanting_table.grimoire.diag.ch2_k2",
-            "gui.chiseled_enchanting_table.grimoire.diag.ch2_k3"
-        };
-        float step = legH / 3.0f;
-        for (int i = 0; i < 3; i++) {
+            int ry = winY + 8 + r * 20;
+            ctx.fill(x + 6, ry, x + 2 + listW, ry + 17, rowCols[r]);
             drawLeftCenteredY(
                 ctx,
                 font,
-                Component.translatable(keys[i]).getString(),
-                x + 5,
-                legY + step * (i + 0.5f),
-                0.55f,
-                w - 10,
-                INK_PRIMARY,
+                Component.translatable(rowKeys[r]).getString(),
+                x + 9,
+                ry + 8.5f,
+                0.60f,
+                listW - 18,
+                LIGHT_CREAM,
                 false
             );
+            ctx.blit(r == 2 ? XP_ORB_3 : XP_FLASK, x + listW - 8, ry + 4, x + listW, ry + 12, 0.0f, 1.0f, 0.0f, 1.0f);
         }
-    }
+        drawBadgeCircle(ctx, font, x + 5, winY + 5, "2", 0xFF7A4E10);
 
-    private static void drawBadgeCircle(GuiGraphicsExtractor ctx, Font font, int x, int y, String num, int bg) {
-        ctx.fill(x, y, x + 8, y + 8, LIGHT_GOLD);
-        ctx.fill(x + 1, y + 1, x + 7, y + 7, bg);
-        drawCenteredBox(ctx, font, num, x, 8, y + 4.0f, 0.48f, LIGHT_GOLD, false);
+        int midX = x + listW + 10;
+        drawSlotItem(ctx, font, new ItemStack(Items.DIAMOND_SWORD), midX, winY + 10, 20, mouseX, mouseY, slotsOut, true, true);
+        drawBadgeCircle(ctx, font, midX - 3, winY + 8, "3", INK_PURPLE);
+
+        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 8), midX, winY + 42, 20, mouseX, mouseY, slotsOut, false, true);
+        drawBadgeCircle(ctx, font, midX - 3, winY + 40, "4", INK_EMERALD);
+
+        int sanX = midX + 25;
+        int sanW = Math.max(34, (x + w - 4) - sanX);
+        ctx.fill(sanX, winY + 8, sanX + sanW, winY + winH - 8, 0xFF241538);
+        ctx.fill(sanX + 1, winY + 9, sanX + sanW - 1, winY + 10, 0xFF8B56BA);
+        drawBadgeCircle(ctx, font, sanX + 2, winY + 11, "5", 0xFF285E6B);
+        drawLeftCenteredY(ctx, font, "-40%", sanX + 4, winY + 27.0f, 0.62f, sanW - 8, LIGHT_MINT, false);
+        drawLeftCenteredY(ctx, font, "09:42", sanX + 4, winY + 38.0f, 0.58f, sanW - 8, LIGHT_GOLD, false);
+        ctx.blit(BTN_FREEZE, sanX + 4, winY + 46, sanX + 15, winY + 57, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.blit(BTN_REROLL, sanX + 18, winY + 46, sanX + 29, winY + 57, 0.0f, 1.0f, 0.0f, 1.0f);
+
+        int legY = mockY + mockH + 4;
+        int legH = Math.max(30, (y + h) - legY);
+        ctx.fill(x, legY, x + w, legY + legH, CALLOUT_BORDER);
+        ctx.fill(x + 1, legY + 1, x + w - 1, legY + legH - 1, CARD_BG);
+
+        drawWrappedBox(
+            ctx,
+            font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch2_legend"),
+            x + 5,
+            legY + 2,
+            w - 10,
+            legH - 4,
+            0.68f,
+            0.62f,
+            INK_PRIMARY,
+            false
+        );
     }
 
     // =========================================================================
@@ -491,13 +521,16 @@ public final class GrimoireDiagramRenderer {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch3_title");
 
-        int shelves = Mth.clamp(demoShelves, 0, 38);
+        var sg = SyncedEnchantmentCosts.shelfGatesConfig();
+        int maxCap = Math.max(1, sg.maxDirectBookshelves());
+        int minEpi = SyncedEnchantmentCosts.epiphanyMinBookshelves();
+        int shelves = Mth.clamp(demoShelves, 0, maxCap);
 
-        int topY = y + 16;
-        int cell = 7;
+        int topY = y + 18;
+        int cell = 8;
         int gridSize = 7 * cell;
-        int gx = x + 3;
-        int gy = topY + 2;
+        int gx = x + 2;
+        int gy = topY + 1;
         ctx.fill(gx - 1, gy - 1, gx + gridSize + 1, gy + gridSize + 1, CARD_BORDER);
         int ringPlaced = 0;
         for (int rz = 0; rz < 7; rz++) {
@@ -518,80 +551,81 @@ public final class GrimoireDiagramRenderer {
         }
 
         int ctrlX = gx + gridSize + 6;
-        int ctrlW = (x + w) - ctrlX;
+        int ctrlW = Math.max(40, (x + w) - ctrlX);
         drawLeftCenteredY(
             ctx,
             font,
             Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3_scan").getString(),
             ctrlX,
             topY + 6.0f,
-            0.55f,
+            0.66f,
             ctrlW,
             INK_PURPLE,
             false
         );
 
         int spinY = topY + 13;
-        drawMiniButton(ctx, font, ctrlX, spinY, 13, 12, "-", mouseX, mouseY);
-        hits.add(new HitRegion(ctrlX, spinY, 13, 12, ACTION_SHELF_STEP, "-1"));
+        drawMiniButton(ctx, font, ctrlX, spinY, 15, 13, "-", mouseX, mouseY);
+        hits.add(new HitRegion(ctrlX, spinY, 15, 13, ACTION_SHELF_STEP, "-1"));
 
-        ctx.fill(ctrlX + 15, spinY, ctrlX + ctrlW - 15, spinY + 12, CARD_BG);
+        ctx.fill(ctrlX + 17, spinY, ctrlX + ctrlW - 17, spinY + 13, CARD_BG);
         drawCenteredBox(
             ctx,
             font,
-            shelves + " / 38",
-            ctrlX + 15,
-            ctrlW - 30,
-            spinY + 6.0f,
-            0.60f,
+            shelves + " / " + maxCap,
+            ctrlX + 17,
+            ctrlW - 34,
+            spinY + 6.5f,
+            0.68f,
             INK_PRIMARY,
             false
         );
 
-        drawMiniButton(ctx, font, ctrlX + ctrlW - 13, spinY, 13, 12, "+", mouseX, mouseY);
-        hits.add(new HitRegion(ctrlX + ctrlW - 13, spinY, 13, 12, ACTION_SHELF_STEP, "+1"));
+        drawMiniButton(ctx, font, ctrlX + ctrlW - 15, spinY, 15, 13, "+", mouseX, mouseY);
+        hits.add(new HitRegion(ctrlX + ctrlW - 15, spinY, 15, 13, ACTION_SHELF_STEP, "+1"));
 
-        int[] presets = {0, 7, 16, 27, 38};
+        int[] presets = {0, sg.tier1Bookshelves(), sg.tier2Bookshelves(), minEpi, maxCap};
         int pw = (ctrlW - 8) / presets.length;
         int py = topY + 29;
         for (int i = 0; i < presets.length; i++) {
             int px = ctrlX + i * (pw + 2);
             boolean active = shelves == presets[i];
-            ctx.fill(px, py, px + pw, py + 11, active ? INK_GOLD_DARK : CARD_BORDER);
-            ctx.fill(px + 1, py + 1, px + pw - 1, py + 10, active ? INK_PURPLE : CARD_BG);
+            ctx.fill(px, py, px + pw, py + 12, active ? INK_GOLD_DARK : CARD_BORDER);
+            ctx.fill(px + 1, py + 1, px + pw - 1, py + 11, active ? INK_PURPLE : CARD_BG);
             drawCenteredBox(
                 ctx,
                 font,
                 String.valueOf(presets[i]),
                 px,
                 pw,
-                py + 5.5f,
-                0.52f,
+                py + 6.0f,
+                0.60f,
                 active ? LIGHT_GOLD : INK_PRIMARY,
                 false
             );
-            hits.add(new HitRegion(px, py, pw, 11, ACTION_SHELF_PRESET, String.valueOf(presets[i])));
+            hits.add(new HitRegion(px, py, pw, 12, ACTION_SHELF_PRESET, String.valueOf(presets[i])));
         }
 
-        boolean epiphanyReady = shelves >= SyncedEnchantmentCosts.epiphanyMinBookshelves();
-        drawLeftCenteredY(
+        boolean epiphanyReady = shelves >= minEpi;
+        Component epiStatus = epiphanyReady
+            ? Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3_epi_on", minEpi)
+            : Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3_epi_off", minEpi);
+        drawWrappedBox(
             ctx,
             font,
-            Component.translatable(
-                epiphanyReady
-                    ? "gui.chiseled_enchanting_table.grimoire.diag.ch3_epi_on"
-                    : "gui.chiseled_enchanting_table.grimoire.diag.ch3_epi_off"
-            ).getString(),
+            epiStatus,
             ctrlX,
-            topY + 47.0f,
-            0.52f,
+            topY + 43,
             ctrlW,
+            16,
+            0.64f,
+            0.58f,
             epiphanyReady ? INK_EMERALD : INK_MUTED,
             false
         );
 
-        int tblY = topY + 56;
-        int tblH = Math.max(40, (y + h) - tblY);
+        int tblY = topY + 62;
+        int tblH = Math.max(46, (y + h) - tblY);
         ctx.fill(x, tblY, x + w, tblY + tblH, CARD_BORDER);
         ctx.fill(x + 1, tblY + 1, x + w - 1, tblY + tblH - 1, CARD_BG);
 
@@ -600,31 +634,31 @@ public final class GrimoireDiagramRenderer {
             font,
             Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3_curve_hdr").getString(),
             x + 5,
-            tblY + 7.0f,
-            0.55f,
+            tblY + 7.5f,
+            0.66f,
             w - 10,
             INK_GOLD_DARK,
             false
         );
-        ctx.fill(x + 4, tblY + 13, x + w - 4, tblY + 14, RULE_LINE);
+        ctx.fill(x + 4, tblY + 14, x + w - 4, tblY + 15, RULE_LINE);
 
         int[] maxClasses = {5, 4, 3, 2};
         String[] romanMax = {"MAX V", "MAX IV", "MAX III", "MAX II"};
-        float rowStep = (tblH - 16.0f) / maxClasses.length;
+        float rowStep = (tblH - 17.0f) / maxClasses.length;
         for (int r = 0; r < maxClasses.length; r++) {
             int maxLvl = maxClasses[r];
-            float cy = tblY + 16.0f + rowStep * (r + 0.5f);
-            drawLeftCenteredY(ctx, font, romanMax[r], x + 5, cy, 0.54f, 34, INK_PURPLE, false);
+            float cy = tblY + 17.0f + rowStep * (r + 0.5f);
+            drawLeftCenteredY(ctx, font, romanMax[r], x + 5, cy, 0.62f, 38, INK_PURPLE, false);
 
-            int gx0 = x + 42;
-            int cellW = (w - 47) / maxLvl;
+            int gx0 = x + 46;
+            int cellW = (w - 50) / maxLvl;
             for (int lvl = 1; lvl <= maxLvl; lvl++) {
-                int req = BookshelfProgression.requiredBookshelvesForDirectTier(lvl, maxLvl, 38, 1.25);
+                int req = BookshelfProgression.requiredBookshelvesForDirectTier(lvl, maxLvl, maxCap, sg.gamma());
                 boolean unlocked = shelves >= req;
                 int bx = gx0 + (lvl - 1) * cellW;
                 int bw = cellW - 2;
-                ctx.fill(bx, Math.round(cy - 5.5f), bx + bw, Math.round(cy + 5.5f), unlocked ? 0xFF1F6E4A : 0xFFD9CBB2);
-                String tag = toRoman(lvl) + "(" + req + ")";
+                ctx.fill(bx, Math.round(cy - 6.5f), bx + bw, Math.round(cy + 6.5f), unlocked ? 0xFF1F6E4A : 0xFFD9CBB2);
+                String tag = toRoman(lvl) + ":" + req;
                 drawCenteredBox(
                     ctx,
                     font,
@@ -632,7 +666,7 @@ public final class GrimoireDiagramRenderer {
                     bx + 1,
                     bw - 2,
                     cy,
-                    0.47f,
+                    0.58f,
                     unlocked ? LIGHT_CREAM : INK_SECONDARY,
                     false
                 );
@@ -640,25 +674,8 @@ public final class GrimoireDiagramRenderer {
         }
     }
 
-    private static void drawMiniButton(
-        GuiGraphicsExtractor ctx,
-        Font font,
-        int x,
-        int y,
-        int w,
-        int h,
-        String label,
-        int mouseX,
-        int mouseY
-    ) {
-        boolean over = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
-        ctx.fill(x, y, x + w, y + h, over ? CARD_HOVER_BORDER : CARD_BORDER);
-        ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, over ? CARD_HOVER_BG : CALLOUT_BG);
-        drawCenteredBox(ctx, font, label, x, w, y + h * 0.5f, 0.65f, INK_PURPLE, false);
-    }
-
     // =========================================================================
-    // CHAPTER 4 — DUAL XP MODES + LIBRARY RESONANCE -40% CAP BAR
+    // CHAPTER 4 — DUAL XP MODES + TWO-STAGE -35% / -40% RESONANCE BAR
     // =========================================================================
     public static void renderChapter4Economy(
         GuiGraphicsExtractor ctx,
@@ -671,88 +688,72 @@ public final class GrimoireDiagramRenderer {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch4_title");
 
-        int c1Y = y + 16;
+        int c1Y = y + 17;
         drawXpModeCard(
-            ctx,
-            font,
-            x,
-            c1Y,
-            w,
-            34,
-            XP_ORB_3,
-            "Lv.18 (-3L)",
-            0xFF1E6E46,
+            ctx, font, x, c1Y, w, 37,
+            XP_ORB_3, "Lv.18 (-3L)", 0xFF1E6E46,
             "gui.chiseled_enchanting_table.grimoire.diag.ch4_m1_t",
             "gui.chiseled_enchanting_table.grimoire.diag.ch4_m1_b"
         );
 
-        int c2Y = c1Y + 38;
+        int c2Y = c1Y + 40;
         drawXpModeCard(
-            ctx,
-            font,
-            x,
-            c2Y,
-            w,
-            34,
-            XP_FLASK,
-            "-12L XP",
-            0xFF5A287D,
+            ctx, font, x, c2Y, w, 37,
+            XP_FLASK, "-12L XP", 0xFF5A287D,
             "gui.chiseled_enchanting_table.grimoire.diag.ch4_m2_t",
             "gui.chiseled_enchanting_table.grimoire.diag.ch4_m2_b"
         );
 
-        int c3Y = c2Y + 38;
+        int c3Y = c2Y + 40;
         drawXpModeCard(
-            ctx,
-            font,
-            x,
-            c3Y,
-            w,
-            28,
-            XP_REFUND,
-            "+XP",
-            0xFF1F665E,
+            ctx, font, x, c3Y, w, 35,
+            XP_REFUND, "+XP", 0xFF1F665E,
             "gui.chiseled_enchanting_table.grimoire.diag.ch4_m3_t",
             "gui.chiseled_enchanting_table.grimoire.diag.ch4_m3_b"
         );
 
-        int barCardY = c3Y + 32;
-        int barCardH = Math.max(24, (y + h) - barCardY);
+        int barCardY = c3Y + 38;
+        int barCardH = Math.max(30, (y + h) - barCardY);
         ctx.fill(x, barCardY, x + w, barCardY + barCardH, CARD_BORDER);
         ctx.fill(x + 1, barCardY + 1, x + w - 1, barCardY + barCardH - 1, CARD_BG);
-
-        drawLeftCenteredY(
-            ctx,
-            font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch4_res").getString(),
-            x + 5,
-            barCardY + 6.5f,
-            0.54f,
-            w - 10,
-            INK_PRIMARY,
-            false
-        );
 
         var lr = SyncedEnchantmentCosts.libraryResonanceConfig();
         int pWood = Math.max(1, lr.maxWoodenDiscountPercent());
         int pGlobal = Math.max(1, lr.maxGlobalMasteryDiscountPercent());
+        int pBaseCap = Math.max(1, lr.maxBaseXpDiscountPercent());
         int pSpec = Math.max(1, lr.maxSpecificEnchantBonusPercent());
-        float sumParts = pWood + pGlobal + pSpec;
+        int pTotalCap = Math.max(1, lr.maxTotalXpDiscountPercent());
+
+        drawWrappedBox(
+            ctx,
+            font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch4_res", pBaseCap, pTotalCap),
+            x + 5,
+            barCardY + 2,
+            w - 10,
+            Math.max(12, barCardH - 16),
+            0.66f,
+            0.60f,
+            INK_PRIMARY,
+            false
+        );
 
         int bx = x + 5;
         int bw = w - 10;
-        int by = barCardY + 13;
-        int bh = Math.max(8, barCardH - 17);
-        int w1 = Math.round(bw * (pWood / sumParts));
-        int w2 = Math.round(bw * (pGlobal / sumParts));
-        int w3 = bw - w1 - w2;
+        int bh = 11;
+        int by = barCardY + barCardH - bh - 3;
+        int w1 = Math.round(bw * (pWood / (float) pTotalCap));
+        int wBase = Math.round(bw * (pBaseCap / (float) pTotalCap));
+        int w2 = Math.max(12, wBase - w1);
+        int w3 = Math.max(12, bw - w1 - w2);
 
         ctx.fill(bx, by, bx + w1, by + bh, 0xFF8C5B1F);
         ctx.fill(bx + w1, by, bx + w1 + w2, by + bh, 0xFF5A2D82);
         ctx.fill(bx + w1 + w2, by, bx + bw, by + bh, 0xFF1C7555);
-        drawCenteredBox(ctx, font, "-" + pWood + "%", bx, w1, by + bh * 0.5f, 0.48f, LIGHT_CREAM, false);
-        drawCenteredBox(ctx, font, "-" + pGlobal + "%", bx + w1, w2, by + bh * 0.5f, 0.48f, LIGHT_GOLD, false);
-        drawCenteredBox(ctx, font, "-" + pSpec + "%", bx + w1 + w2, w3, by + bh * 0.5f, 0.48f, LIGHT_MINT, false);
+        ctx.fill(bx + w1 + w2 - 1, by - 1, bx + w1 + w2 + 1, by + bh + 1, LIGHT_GOLD);
+        drawCenteredBox(ctx, font, "-" + pWood + "%", bx, w1, by + bh * 0.5f, 0.58f, LIGHT_CREAM, false);
+        drawCenteredBox(ctx, font, "-" + pGlobal + "%", bx + w1, w2, by + bh * 0.5f, 0.58f, LIGHT_GOLD, false);
+        drawCenteredBox(ctx, font, "+" + pSpec + "%→-" + pTotalCap + "%", bx + w1 + w2, w3, by + bh * 0.5f, 0.56f, LIGHT_MINT, false);
     }
 
     private static void drawXpModeCard(
@@ -772,39 +773,41 @@ public final class GrimoireDiagramRenderer {
         ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, CARD_BG);
         ctx.fill(x, y, x + 3, y + h, accent);
 
-        ctx.blit(icon, x + 6, y + 4, x + 15, y + 13, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.blit(icon, x + 6, y + 3, x + 15, y + 12, 0.0f, 1.0f, 0.0f, 1.0f);
         drawLeftCenteredY(
             ctx,
             font,
             Component.translatable(titleKey).getString(),
             x + 18,
-            y + 8.5f,
-            0.58f,
-            w - 62,
+            y + 8.0f,
+            0.70f,
+            w - 68,
             accent,
             false
         );
 
-        int pw = 40;
+        int pw = 44;
         int px = x + w - pw - 4;
-        ctx.fill(px, y + 3, px + pw, y + 13, accent);
-        drawCenteredBox(ctx, font, pillText, px + 1, pw - 2, y + 8.0f, 0.50f, LIGHT_CREAM, false);
+        ctx.fill(px, y + 2, px + pw, y + 13, accent);
+        drawCenteredBox(ctx, font, pillText, px + 1, pw - 2, y + 7.5f, 0.60f, LIGHT_CREAM, false);
 
-        drawLeftCenteredY(
+        drawWrappedBox(
             ctx,
             font,
-            Component.translatable(bodyKey).getString(),
+            Component.translatable(bodyKey),
             x + 6,
-            y + h * 0.68f,
-            0.54f,
+            y + 14,
             w - 11,
+            h - 16,
+            0.66f,
+            0.60f,
             INK_SECONDARY,
             false
         );
     }
 
     // =========================================================================
-    // CHAPTER 5 — TOME UPGRADE & DELTA CONSERVATION FLOWCHART
+    // CHAPTER 5 — THREE-ROUTE BOOK CARE & MASTER TOME LOOP
     // =========================================================================
     public static void renderChapter5BookLoop(
         GuiGraphicsExtractor ctx,
@@ -820,85 +823,72 @@ public final class GrimoireDiagramRenderer {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch5_title");
 
-        int r1Y = y + 17;
-        ctx.fill(x, r1Y, x + w, r1Y + 44, CARD_BORDER);
-        ctx.fill(x + 1, r1Y + 1, x + w - 1, r1Y + 43, CARD_BG);
-        ctx.fill(x, r1Y, x + 3, r1Y + 44, INK_EMERALD);
+        int areaY = y + 17;
+        int availH = (y + h) - areaY;
+        int cardH = (availH - 8) / 3;
+
+        // Route 1: Combine (Top slot book + Bottom slot book -> next tier + Depleted Tome, 0 materials)
+        int r1Y = areaY;
+        ctx.fill(x, r1Y, x + w, r1Y + cardH, CARD_BORDER);
+        ctx.fill(x + 1, r1Y + 1, x + w - 1, r1Y + cardH - 1, CARD_BG);
+        ctx.fill(x, r1Y, x + 3, r1Y + cardH, INK_EMERALD);
         drawLeftCenteredY(
-            ctx,
-            font,
+            ctx, font,
             Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5_r1").getString(),
-            x + 6,
-            r1Y + 7.5f,
-            0.56f,
-            w - 10,
-            INK_EMERALD,
-            false
+            x + 6, r1Y + 8.0f, 0.68f, w - 10, INK_EMERALD, false
         );
-        int sy1 = r1Y + 15;
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 6, sy1, 18, mouseX, mouseY, slotsOut, false, true);
-        drawCenteredBox(ctx, font, "+", x + 25, 9, sy1 + 9.0f, 0.65f, INK_PRIMARY, false);
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 35, sy1, 18, mouseX, mouseY, slotsOut, false, true);
-        drawRightArrow(ctx, x + 57, sy1 + 9, 15, INK_EMERALD);
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 76, sy1, 18, mouseX, mouseY, slotsOut, true, true);
-        drawCenteredBox(ctx, font, "+", x + 95, 8, sy1 + 9.0f, 0.60f, INK_GOLD_DARK, false);
-        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME), x + 104, sy1, 18, mouseX, mouseY, slotsOut, false, true);
+        int sy1 = r1Y + Math.max(15, (cardH - 18) / 2 + 5);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 8, sy1, 18, mouseX, mouseY, slotsOut, false, true);
+        drawCenteredBox(ctx, font, "+", x + 28, 9, sy1 + 9.0f, 0.70f, INK_PRIMARY, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 39, sy1, 18, mouseX, mouseY, slotsOut, false, true);
+        drawRightArrow(ctx, x + 62, sy1 + 9, 18, INK_EMERALD);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 85, sy1, 18, mouseX, mouseY, slotsOut, true, true);
+        drawCenteredBox(ctx, font, "+", x + 106, 9, sy1 + 9.0f, 0.68f, INK_GOLD_DARK, false);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME), x + 117, sy1, 18, mouseX, mouseY, slotsOut, false, true);
 
-        int r2Y = r1Y + 48;
-        ctx.fill(x, r2Y, x + w, r2Y + 44, CARD_BORDER);
-        ctx.fill(x + 1, r2Y + 1, x + w - 1, r2Y + 43, CARD_BG);
-        ctx.fill(x, r2Y, x + 3, r2Y + 44, INK_PURPLE);
+        // Route 2: Material Research (Top slot book + Lapis / Emerald / Amethyst / Catalyst -> next tier)
+        int r2Y = r1Y + cardH + 4;
+        ctx.fill(x, r2Y, x + w, r2Y + cardH, CARD_BORDER);
+        ctx.fill(x + 1, r2Y + 1, x + w - 1, r2Y + cardH - 1, CARD_BG);
+        ctx.fill(x, r2Y, x + 3, r2Y + cardH, INK_PURPLE);
         drawLeftCenteredY(
-            ctx,
-            font,
+            ctx, font,
             Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5_r2").getString(),
-            x + 6,
-            r2Y + 7.5f,
-            0.56f,
-            w - 10,
-            INK_PURPLE,
-            false
+            x + 6, r2Y + 8.0f, 0.68f, w - 10, INK_PURPLE, false
         );
-        int sy2 = r2Y + 15;
+        int sy2 = r2Y + Math.max(15, (cardH - 18) / 2 + 5);
         drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 8, sy2, 18, mouseX, mouseY, slotsOut, false, true);
-        drawCenteredBox(ctx, font, "+", x + 28, 9, sy2 + 9.0f, 0.65f, INK_PRIMARY, false);
-        drawSlotItem(ctx, font, new ItemStack(Items.DIAMOND, 4), x + 39, sy2, 18, mouseX, mouseY, slotsOut, false, true);
-        drawCenteredBox(ctx, font, "/", x + 58, 7, sy2 + 9.0f, 0.60f, INK_GOLD_DARK, false);
-        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.ARCANE_CATALYST), x + 66, sy2, 18, mouseX, mouseY, slotsOut, false, true);
-        drawRightArrow(ctx, x + 88, sy2 + 9, 14, INK_PURPLE);
-        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 105, sy2, 18, mouseX, mouseY, slotsOut, true, true);
+        drawCenteredBox(ctx, font, "+", x + 27, 8, sy2 + 9.0f, 0.70f, INK_PRIMARY, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 6), x + 36, sy2, 18, mouseX, mouseY, slotsOut, false, true);
+        drawSlotItem(ctx, font, new ItemStack(Items.EMERALD, 5), x + 56, sy2, 18, mouseX, mouseY, slotsOut, false, true);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.ARCANE_CATALYST), x + 76, sy2, 18, mouseX, mouseY, slotsOut, false, true);
+        drawRightArrow(ctx, x + 98, sy2 + 9, 16, INK_PURPLE);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK), x + 118, sy2, 18, mouseX, mouseY, slotsOut, true, true);
 
-        int r3Y = r2Y + 48;
-        int r3H = Math.max(24, (y + h) - r3Y);
+        // Route 3: Direct Transfer & Chiseled Shelf Graduation
+        int r3Y = r2Y + cardH + 4;
+        int r3H = Math.max(28, (y + h) - r3Y);
         ctx.fill(x, r3Y, x + w, r3Y + r3H, CALLOUT_BORDER);
         ctx.fill(x + 1, r3Y + 1, x + w - 1, r3Y + r3H - 1, CALLOUT_BG);
         ctx.fill(x, r3Y, x + 3, r3Y + r3H, INK_GOLD_DARK);
-        drawLeftCenteredY(
+        drawSlotItem(ctx, font, new ItemStack(Items.CHISELED_BOOKSHELF), x + 6, r3Y + (r3H - 20) / 2, 20, mouseX, mouseY, slotsOut, true, true);
+        drawWrappedBox(
             ctx,
             font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5_r3a").getString(),
-            x + 6,
-            r3Y + r3H * 0.32f,
-            0.55f,
-            w - 10,
-            INK_GOLD_DARK,
-            false
-        );
-        drawLeftCenteredY(
-            ctx,
-            font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5_r3b").getString(),
-            x + 6,
-            r3Y + r3H * 0.70f,
-            0.53f,
-            w - 10,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5_r3"),
+            x + 30,
+            r3Y + 3,
+            w - 35,
+            r3H - 6,
+            0.68f,
+            0.62f,
             INK_PRIMARY,
             false
         );
     }
 
     // =========================================================================
-    // CHAPTER 6 — TREASURE EPIPHANIES, STASIS FREEZE & MANUAL REROLL
+    // CHAPTER 6 — LIVE TREASURE EPIPHANIES, 4-STAR SLOTS, STASIS & REROLL
     // =========================================================================
     public static void renderChapter6Epiphany(
         GuiGraphicsExtractor ctx,
@@ -914,107 +904,77 @@ public final class GrimoireDiagramRenderer {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch6_title");
 
+        int minShelves = SyncedEnchantmentCosts.epiphanyMinBookshelves();
+        int maxSlots = Math.max(1, SyncedEnchantmentCosts.epiphanyMaxSlotsCap());
+        int frzLv = SyncedEnchantmentCosts.epiphanyFreezeXpLevels();
+        int rerLv = SyncedEnchantmentCosts.epiphanyRerollXpLevels();
+        List<ItemStack> frzOpts = SyncedEnchantmentCosts.epiphanyFreezeCosts();
+        List<ItemStack> rerOpts = SyncedEnchantmentCosts.epiphanyRerollCosts();
+
         int bY = y + 17;
-        ctx.fill(x, bY, x + w, bY + 34, CARD_BORDER);
-        ctx.fill(x + 1, bY + 1, x + w - 1, bY + 33, CARD_BG);
+        ctx.fill(x, bY, x + w, bY + 38, CARD_BORDER);
+        ctx.fill(x + 1, bY + 1, x + w - 1, bY + 37, CARD_BG);
         drawSlotItem(
-            ctx,
-            font,
-            new ItemStack(Items.BOOKSHELF, SyncedEnchantmentCosts.epiphanyMinBookshelves()),
-            x + 5,
-            bY + 8,
-            18,
-            mouseX,
-            mouseY,
-            slotsOut,
-            false,
-            true
+            ctx, font,
+            new ItemStack(Items.BOOKSHELF, minShelves),
+            x + 5, bY + 9, 20, mouseX, mouseY, slotsOut, false, true
         );
-        drawRightArrow(ctx, x + 27, bY + 17, 14, INK_GOLD_DARK);
+        drawRightArrow(ctx, x + 28, bY + 19, 13, INK_GOLD_DARK);
         drawLeftCenteredY(
-            ctx,
-            font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_gate").getString(),
-            x + 44,
-            bY + 11.0f,
-            0.55f,
-            w - 48,
-            INK_PURPLE,
-            false
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_gate", minShelves).getString(),
+            x + 44, bY + 11.5f, 0.66f, w - 48, INK_PURPLE, false
         );
         drawLeftCenteredY(
-            ctx,
-            font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_slots").getString(),
-            x + 44,
-            bY + 23.0f,
-            0.53f,
-            w - 48,
-            INK_EMERALD,
-            false
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_slots", maxSlots).getString(),
+            x + 44, bY + 26.5f, 0.64f, w - 48, INK_EMERALD, false
         );
 
-        drawDownArrow(ctx, x + w / 2, bY + 35, 9, INK_GOLD_DARK);
-
-        int midY = bY + 45;
+        int midY = bY + 43;
         int halfW = (w - 4) / 2;
 
-        ctx.fill(x, midY, x + halfW, midY + 52, 0xFF3E8FA8);
-        ctx.fill(x + 1, midY + 1, x + halfW - 1, midY + 51, 0xFFEBF6F9);
+        // Left card: Stasis Freeze (live costs from SyncedEnchantmentCosts!)
+        ctx.fill(x, midY, x + halfW, midY + 56, 0xFF3E8FA8);
+        ctx.fill(x + 1, midY + 1, x + halfW - 1, midY + 55, 0xFFEBF6F9);
         ctx.blit(BTN_FREEZE, x + 5, midY + 5, x + 17, midY + 17, 0.0f, 1.0f, 0.0f, 1.0f);
         drawLeftCenteredY(
-            ctx,
-            font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_freeze_t").getString(),
-            x + 20,
-            midY + 11.0f,
-            0.55f,
-            halfW - 23,
-            0xFF15576B,
-            false
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_freeze_t", frzLv).getString(),
+            x + 20, midY + 11.0f, 0.66f, halfW - 23, 0xFF15576B, false
         );
-        drawSlotItem(ctx, font, new ItemStack(Items.BLUE_ICE, 4), x + 6, midY + 24, 18, mouseX, mouseY, slotsOut, false, true);
-        drawSlotItem(ctx, font, new ItemStack(Items.QUARTZ, 4), x + 26, midY + 24, 18, mouseX, mouseY, slotsOut, false, true);
-        drawSlotItem(ctx, font, new ItemStack(Items.AMETHYST_SHARD, 4), x + 46, midY + 24, 16, mouseX, mouseY, slotsOut, false, true);
+        for (int i = 0; i < Math.min(3, frzOpts.size()); i++) {
+            drawSlotItem(ctx, font, frzOpts.get(i), x + 5 + i * 21, midY + 27, 19, mouseX, mouseY, slotsOut, false, true);
+        }
 
+        // Right card: Manual Reroll (live costs from SyncedEnchantmentCosts!)
         int rx = x + halfW + 4;
-        ctx.fill(rx, midY, rx + halfW, midY + 52, INK_PURPLE);
-        ctx.fill(rx + 1, midY + 1, rx + halfW - 1, midY + 51, CARD_BG);
+        ctx.fill(rx, midY, rx + halfW, midY + 56, INK_PURPLE);
+        ctx.fill(rx + 1, midY + 1, rx + halfW - 1, midY + 55, CARD_BG);
         ctx.blit(BTN_REROLL, rx + 5, midY + 5, rx + 17, midY + 17, 0.0f, 1.0f, 0.0f, 1.0f);
         drawLeftCenteredY(
-            ctx,
-            font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_reroll_t").getString(),
-            rx + 20,
-            midY + 11.0f,
-            0.55f,
-            halfW - 23,
-            INK_PURPLE,
-            false
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_reroll_t", rerLv).getString(),
+            rx + 20, midY + 11.0f, 0.66f, halfW - 23, INK_PURPLE, false
         );
-        drawSlotItem(ctx, font, new ItemStack(Items.AMETHYST_SHARD, 4), rx + 8, midY + 24, 18, mouseX, mouseY, slotsOut, false, true);
-        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 4), rx + 30, midY + 24, 18, mouseX, mouseY, slotsOut, false, true);
+        for (int i = 0; i < Math.min(3, rerOpts.size()); i++) {
+            drawSlotItem(ctx, font, rerOpts.get(i), rx + 5 + i * 21, midY + 27, 19, mouseX, mouseY, slotsOut, false, true);
+        }
 
-        int botY = midY + 56;
-        int botH = Math.max(24, (y + h) - botY);
+        int botY = midY + 60;
+        int botH = Math.max(28, (y + h) - botY);
         ctx.fill(x, botY, x + w, botY + botH, CALLOUT_BORDER);
         ctx.fill(x + 1, botY + 1, x + w - 1, botY + botH - 1, CALLOUT_BG);
         ctx.fill(x, botY, x + 3, botY + botH, INK_EMERALD);
-        drawLeftCenteredY(
-            ctx,
-            font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_payoff").getString(),
-            x + 6,
-            botY + botH * 0.5f,
-            0.55f,
-            w - 10,
-            INK_PRIMARY,
-            false
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch6_payoff"),
+            x + 6, botY + 2, w - 10, botH - 4, 0.68f, 0.62f, INK_PRIMARY, false
         );
     }
 
     // =========================================================================
-    // CHAPTER 7 — TRANSMUTATION WHEEL + DEPLETED TOME GATE LADDER
+    // CHAPTER 7 — LIVE TRANSMUTATION SHOWCASE + 4-GATE DEPLETED TOME LADDER
     // =========================================================================
     public static void renderChapter7Transmute(
         GuiGraphicsExtractor ctx,
@@ -1032,84 +992,86 @@ public final class GrimoireDiagramRenderer {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch7_title");
 
-        ItemStack[][] pairs = {
-            {new ItemStack(Items.GOLDEN_APPLE), new ItemStack(Items.ENCHANTED_GOLDEN_APPLE)},
-            {new ItemStack(Items.DIAMOND_SWORD), new ItemStack(Items.TRIDENT)},
-            {new ItemStack(Items.TOTEM_OF_UNDYING), new ItemStack(Items.TOTEM_OF_UNDYING, 2)},
-            {new ItemStack(Items.AMETHYST_SHARD), new ItemStack(Items.ECHO_SHARD)},
-            {new ItemStack(Items.GLASS_BOTTLE), new ItemStack(Items.EXPERIENCE_BOTTLE)},
-            {new ItemStack(Items.BONE), new ItemStack(Items.SKELETON_SKULL)}
-        };
-        String[] lvBadges = {"Lv.30 -3L", "Lv.20 -3L", "Lv.30 -3L", "Lv.8 -1L", "Lv.3 -1L", "Lv.15 -2L"};
-        int sel = Mth.clamp(selectedTransmute, 0, pairs.length - 1);
+        List<TransformationQueryIndex.Entry> entries = TransformationQueryIndex.build();
+        if (entries.isEmpty()) {
+            return;
+        }
+        int count = Math.min(6, entries.size());
+        int sel = Mth.clamp(selectedTransmute, 0, count - 1);
+        TransformationQueryIndex.Entry cur = entries.get(sel);
 
         int stripY = y + 17;
-        int cellW = (w - 10) / pairs.length;
-        for (int i = 0; i < pairs.length; i++) {
-            int cx = x + i * (cellW + 2);
+        int gap = 2;
+        int cellW = (w - gap * (count - 1)) / count;
+        for (int i = 0; i < count; i++) {
+            int cx = x + i * (cellW + gap);
             boolean active = i == sel;
-            ctx.fill(cx, stripY, cx + cellW, stripY + 20, active ? INK_GOLD_DARK : CARD_BORDER);
-            ctx.fill(cx + 1, stripY + 1, cx + cellW - 1, stripY + 19, active ? 0xFFFFF4D4 : CARD_BG);
-            drawSlotItem(ctx, font, pairs[i][1], cx + (cellW - 18) / 2, stripY + 1, 18, mouseX, mouseY, slotsOut, active, false);
-            hits.add(new HitRegion(cx, stripY, cellW, 20, ACTION_TRANSMUTE_SELECT, String.valueOf(i)));
+            ctx.fill(cx, stripY, cx + cellW, stripY + 22, active ? INK_GOLD_DARK : CARD_BORDER);
+            ctx.fill(cx + 1, stripY + 1, cx + cellW - 1, stripY + 21, active ? 0xFFFFF4D4 : CARD_BG);
+            ItemStack outIcon = entries.get(i).outputStack();
+            drawSlotItem(ctx, font, outIcon, cx + (cellW - 18) / 2, stripY + 2, 18, mouseX, mouseY, slotsOut, active, false);
+            hits.add(new HitRegion(cx, stripY, cellW, 22, ACTION_TRANSMUTE_SELECT, String.valueOf(i)));
         }
 
-        int detY = stripY + 24;
-        ctx.fill(x, detY, x + w, detY + 38, CARD_BORDER);
-        ctx.fill(x + 1, detY + 1, x + w - 1, detY + 37, CARD_BG);
-        drawSlotItem(ctx, font, pairs[sel][0], x + 12, detY + 10, 20, mouseX, mouseY, slotsOut, false, true);
-        drawRightArrow(ctx, x + 38, detY + 20, 22, INK_GOLD_DARK);
-        drawCenteredBox(ctx, font, lvBadges[sel], x + 34, 30, detY + 9.0f, 0.48f, INK_EMERALD, false);
-        drawSlotItem(ctx, font, pairs[sel][1], x + 66, detY + 9, 22, mouseX, mouseY, slotsOut, true, true);
-        drawLeftCenteredY(
-            ctx,
-            font,
-            "1-3L!",
-            x + 94,
-            detY + 20.0f,
-            0.58f,
-            w - 98,
-            INK_EMERALD,
-            false
-        );
+        // Exact live input + primary cost + bag extras -> output + real Lv.X (-dL)
+        int detY = stripY + 26;
+        int detH = 44;
+        ctx.fill(x, detY, x + w, detY + detH, CARD_BORDER);
+        ctx.fill(x + 1, detY + 1, x + w - 1, detY + detH - 1, CARD_BG);
 
-        int ladY = detY + 42;
-        int ladH = Math.max(36, (y + h) - ladY);
+        ItemStack inStack = cur.inputStack();
+        List<ItemStack> firstBundle = cur.costOptions().isEmpty() ? List.of() : cur.costOptions().getFirst();
+
+        int sx = x + 6;
+        int sy = detY + 12;
+        drawSlotItem(ctx, font, inStack, sx, sy, 20, mouseX, mouseY, slotsOut, false, true);
+        sx += 22;
+        for (int bi = 0; bi < Math.min(3, firstBundle.size()); bi++) {
+            drawCenteredBox(ctx, font, "+", sx, 7, sy + 10.0f, 0.62f, INK_MUTED, false);
+            sx += 7;
+            drawSlotItem(ctx, font, firstBundle.get(bi), sx, sy + 1, 18, mouseX, mouseY, slotsOut, false, true);
+            sx += 19;
+        }
+        int outX = x + w - 28;
+        int arrowStart = Math.min(sx + 3, outX - 18);
+        drawRightArrow(ctx, arrowStart, sy + 10, Math.max(12, outX - 4 - arrowStart), INK_GOLD_DARK);
+
+        String lvTag = "Lv." + Math.max(1, cur.xpRequirement().requiredLevel())
+            + " (-" + Math.max(1, cur.xpRequirement().deductedLevels()) + "L)";
+        drawRightCenteredY(ctx, font, lvTag, x + 6, outX - 2, detY + 6.5f, 0.60f, INK_EMERALD, false);
+        drawSlotItem(ctx, font, cur.outputStack(), outX, sy - 1, 22, mouseX, mouseY, slotsOut, true, true);
+
+        int ladY = detY + detH + 4;
+        int ladH = Math.max(42, (y + h) - ladY);
         ctx.fill(x, ladY, x + w, ladY + ladH, CALLOUT_BORDER);
         ctx.fill(x + 1, ladY + 1, x + w - 1, ladY + ladH - 1, CALLOUT_BG);
 
         drawLeftCenteredY(
-            ctx,
-            font,
+            ctx, font,
             Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch7_tome_hdr").getString(),
-            x + 5,
-            ladY + 7.0f,
-            0.54f,
-            w - 10,
-            INK_PURPLE,
-            false
+            x + 5, ladY + 7.5f, 0.64f, w - 10, INK_PURPLE, false
         );
 
         var sg = SyncedEnchantmentCosts.shelfGatesConfig();
         String[] gates = {
-            "0+: 2x",
-            sg.tier1Bookshelves() + "+: 0L",
-            sg.tier2Bookshelves() + "+: -50%",
-            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "*: FREE!"
+            "0+: 2\u00d7 (" + sg.baseBatchSize() + ")",
+            sg.tier1Bookshelves() + "+: 0 XP",
+            sg.tier2Bookshelves() + "+: 1\u00d7 (-50%)",
+            sg.tier2Bookshelves() + "+ & " + sg.tier3QualifyingEnchantments() + "*: 0 (" + sg.tier3BatchSize() + ")"
         };
         int[] gCols = {0xFF7D634C, 0xFF285E6B, 0xFF4C236E, 0xFF175E3E};
         int gw = (w - 10) / 2;
-        int gh = Math.max(11, (ladH - 17) / 2);
+        int gh = Math.max(12, (ladH - 18) / 2);
         for (int i = 0; i < 4; i++) {
             int gx0 = x + 4 + (i % 2) * (gw + 2);
-            int gy0 = ladY + 14 + (i / 2) * (gh + 2);
+            int gy0 = ladY + 15 + (i / 2) * (gh + 2);
             ctx.fill(gx0, gy0, gx0 + gw, gy0 + gh, gCols[i]);
-            drawCenteredBox(ctx, font, gates[i], gx0 + 2, gw - 4, gy0 + gh * 0.5f, 0.50f, LIGHT_CREAM, false);
+            drawCenteredBox(ctx, font, gates[i], gx0 + 2, gw - 4, gy0 + gh * 0.5f, 0.58f, LIGHT_CREAM, false);
         }
     }
 
     // =========================================================================
-    // CHAPTER 8 — CLEANSE & CURSE PURGE 4-WAY ACTION DIAGRAM
+    // CHAPTER 8 — 4-WAY CLEANSE & CURSE PURGE DIAGRAM (WITH CLICKABLE SLOTS)
     // =========================================================================
     public static void renderChapter8Cleanse(
         GuiGraphicsExtractor ctx,
@@ -1117,7 +1079,10 @@ public final class GrimoireDiagramRenderer {
         int x,
         int y,
         int w,
-        int h
+        int h,
+        int mouseX,
+        int mouseY,
+        List<HoveredSlot> slotsOut
     ) {
         Font font = mc.font;
         drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch8_title");
@@ -1125,12 +1090,18 @@ public final class GrimoireDiagramRenderer {
         String[][] rows = {
             {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c1_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c1_b", "+XP"},
             {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c2_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c2_b", "+XP"},
-            {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c3_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c3_b", "-1L"},
-            {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_b", "-5L"}
+            {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c3_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c3_b", "-1~3L"},
+            {"gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_t", "gui.chiseled_enchanting_table.grimoire.diag.ch8_c4_b", "-12L"}
+        };
+        ItemStack[] icons = {
+            new ItemStack(Items.EXPERIENCE_BOTTLE),
+            new ItemStack(BlockRegistry.DEPLETED_TOME),
+            new ItemStack(BlockRegistry.CLEANSING_GRIT),
+            new ItemStack(Items.GHAST_TEAR)
         };
         int[] accents = {0xFF175E3E, 0xFF285E6B, 0xFF4C236E, INK_CRIMSON};
 
-        int areaY = y + 16;
+        int areaY = y + 17;
         int availH = (y + h) - areaY;
         int cardH = (availH - 9) / 4;
 
@@ -1140,38 +1111,22 @@ public final class GrimoireDiagramRenderer {
             ctx.fill(x + 1, cy + 1, x + w - 1, cy + cardH - 1, CARD_BG);
             ctx.fill(x, cy, x + 3, cy + cardH, accents[i]);
 
-            if (i == 0) {
-                ctx.blit(BTN_CLEANSE_ALL, x + 5, cy + 3, x + 15, cy + 13, 0.0f, 1.0f, 0.0f, 1.0f);
-            } else {
-                drawBadgeCircle(ctx, font, x + 6, cy + 4, String.valueOf(i + 1), accents[i]);
-            }
+            drawSlotItem(ctx, font, icons[i], x + 5, cy + (cardH - 18) / 2, 18, mouseX, mouseY, slotsOut, false, true);
 
             drawLeftCenteredY(
-                ctx,
-                font,
+                ctx, font,
                 Component.translatable(rows[i][0]).getString(),
-                x + 18,
-                cy + cardH * 0.30f,
-                0.56f,
-                w - 50,
-                accents[i],
-                false
+                x + 26, cy + 7.5f, 0.68f, w - 64, accents[i], false
             );
 
-            int pw = 26;
-            ctx.fill(x + w - pw - 4, cy + 3, x + w - 4, cy + 12, accents[i]);
-            drawCenteredBox(ctx, font, rows[i][2], x + w - pw - 3, pw - 2, cy + 7.5f, 0.48f, LIGHT_CREAM, false);
+            int pw = 32;
+            ctx.fill(x + w - pw - 4, cy + 2, x + w - 4, cy + 12, accents[i]);
+            drawCenteredBox(ctx, font, rows[i][2], x + w - pw - 3, pw - 2, cy + 7.0f, 0.56f, LIGHT_CREAM, false);
 
-            drawLeftCenteredY(
-                ctx,
-                font,
-                Component.translatable(rows[i][1]).getString(),
-                x + 6,
-                cy + cardH * 0.72f,
-                0.52f,
-                w - 11,
-                INK_SECONDARY,
-                false
+            drawWrappedBox(
+                ctx, font,
+                Component.translatable(rows[i][1]),
+                x + 26, cy + 13, w - 30, Math.max(12, cardH - 15), 0.65f, 0.58f, INK_SECONDARY, false
             );
         }
     }

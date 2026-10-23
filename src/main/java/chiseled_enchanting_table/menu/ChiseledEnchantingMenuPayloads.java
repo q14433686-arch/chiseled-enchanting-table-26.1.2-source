@@ -24,6 +24,7 @@ public final class ChiseledEnchantingMenuPayloads {
     public static final Identifier APPLY_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("apply_chiseled_enchantment");
     public static final Identifier REROLL_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("reroll_epiphany");
     public static final Identifier FREEZE_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("freeze_epiphany");
+    public static final Identifier REOPEN_TABLE_PACKET_ID = ChiseledEnchantingTable.identifier("reopen_table");
 
     public enum OptionType {
         ENCHANTMENT("enchantment"),
@@ -330,6 +331,21 @@ public final class ChiseledEnchantingMenuPayloads {
             new CustomPacketPayload.Type<>(FREEZE_EPIPHANY_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, FreezeEpiphanyPayload> CODEC =
             CustomPacketPayload.codec((payload, buf) -> {}, buf -> new FreezeEpiphanyPayload());
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record ReopenTablePayload(net.minecraft.core.BlockPos pos) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<ReopenTablePayload> TYPE =
+            new CustomPacketPayload.Type<>(REOPEN_TABLE_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, ReopenTablePayload> CODEC =
+            CustomPacketPayload.codec(
+                (payload, buf) -> buf.writeBlockPos(payload.pos()),
+                buf -> new ReopenTablePayload(buf.readBlockPos())
+            );
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {

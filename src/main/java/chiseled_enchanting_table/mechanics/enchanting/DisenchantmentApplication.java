@@ -215,10 +215,23 @@ public final class DisenchantmentApplication {
     }
 
     /**
-     * Runtime conservation self-check run automatically on datapack reload: verifies BOTH full wipe
-     * {@code (0 -> k)} AND every incremental step {@code (a -> k)} across probe levels up to {@code 255}.
+     * Runtime conservation check run automatically on datapack reload: degrades gracefully with an
+     * error log instead of aborting {@code /reload} if a third-party/future code change breaks an
+     * invariant, while {@link #assertRuntimeConservationStrict} enforces hard failures in JUnit.
      */
     public static void verifyRuntimeConservation(LibraryResonance.Config resonanceCfg, double refundScale) {
+        try {
+            assertRuntimeConservationStrict(resonanceCfg, refundScale);
+        } catch (IllegalStateException ex) {
+            ChiseledEnchantingTable.LOGGER.error(
+                "Disenchant XP conservation invariant triggered during datapack reload; continuing safely: {}",
+                ex.getMessage(),
+                ex
+            );
+        }
+    }
+
+    public static void assertRuntimeConservationStrict(LibraryResonance.Config resonanceCfg, double refundScale) {
         clearPotentialCache();
         LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
         int maxDiscount = cfg.maxTotalXpDiscountPercent();

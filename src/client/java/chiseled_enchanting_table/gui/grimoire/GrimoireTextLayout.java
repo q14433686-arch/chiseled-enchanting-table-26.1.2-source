@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.gui.grimoire;
 
+import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -11,34 +12,39 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 
 /**
- * Optical typography and strict bounding-box layout engine for the illustrated manual.
+ * Single-pass optical typography, line-wrapping, and strict bounding-box engine for {@code 纂刻秘典}.
  *
- * <p>Historical UI invariants enforced everywhere in this class:</p>
+ * <p>Core mathematical &amp; UI invariants enforced across every method:</p>
  * <ul>
- *   <li>Every color carries an explicit alpha byte ({@code 0xFF......} / {@code 0xCC......}).</li>
- *   <li>Dark ink on warm parchment renders with {@code dropShadow = false} so glyph edges stay
- *       razor-sharp at fractional scales with zero muddy dark halos.</li>
- *   <li>Optical vertical centering always anchors {@code GLYPH_INK_HEIGHT = 8.0f} rather than
- *       {@code font.lineHeight} (9px), keeping CJK &amp; Latin text mathematically centered.</li>
- *   <li>Multi-block prose columns automatically solve the largest crisp scale in
- *       {@code [0.58 .. 0.72]} that fits the single page cleanly; if an extreme locale still exceeds
- *       the viewport, vertical scrolling inside hardware {@code enableScissor} prevents 100% of
- *       border touches and overlaps.</li>
+ *   <li><b>Explicit ARGB Alpha:</b> Every color carries explicit alpha ({@code 0xFF......}).</li>
+ *   <li><b>Zero Dry-Run / Render Drift:</b> {@link #planColumn} computes wrapped line sequences,
+ *       exact Y coordinates, box heights, and centered first-line baselines in a single pass;
+ *       {@link #renderStructuredColumn} draws directly from that immutable {@link ColumnPlan}.</li>
+ *   <li><b>True Multi-Line Optical Centering:</b> A wrapped block of {@code n >= 1} lines at scale
+ *       {@code s} and step {@code dy} occupies {@code (n - 1) * dy + GLYPH_FULL_HEIGHT * s} pixels
+ *       (covering both rows {@code 0..7} and descender row {@code 8}), guaranteeing identical top
+ *       and bottom margins inside every card and callout box.</li>
+ *   <li><b>Wrap First, Never Crush to Ants:</b> Multi-word boxes use {@link #drawWrappedBox} so text
+ *       wraps naturally across readable lines ({@code >= 0.66f}) rather than shrinking horizontally
+ *       down to illegible sub-pixel scales.</li>
  * </ul>
  */
 @Environment(EnvType.CLIENT)
 public final class GrimoireTextLayout {
 
-    /** Actual ink rows of Minecraft default + Unifont glyphs (rows 0..7 = 8px ink). */
+    /** Primary cap/CJK glyph ink height (rows 0..7 = 8.0px) for single-line optical centering. */
     public static final float GLYPH_INK_HEIGHT = 8.0f;
 
-    // Illuminated Vellum Palette (every constant carries explicit alpha!)
-    public static final int INK_PRIMARY = 0xFF281B12;
-    public static final int INK_SECONDARY = 0xFF5A4331;
-    public static final int INK_MUTED = 0xFF7D634C;
+    /** Full glyph height including descender row 8 (8.5px optical balance across CJK + Latin). */
+    public static final float GLYPH_FULL_HEIGHT = 8.5f;
+
+    // Illuminated Vellum Palette (explicit alpha on every constant)
+    public static final int INK_PRIMARY = 0xFF261910;
+    public static final int INK_SECONDARY = 0xFF543E2D;
+    public static final int INK_MUTED = 0xFF785E47;
     public static final int INK_GOLD_DARK = 0xFF7A4E10;
     public static final int INK_PURPLE = 0xFF4C236E;
-    public static final int INK_EMERALD = 0xFF175E3E;
+    public static final int INK_EMERALD = 0xFF165E3E;
     public static final int INK_CRIMSON = 0xFF7D2020;
 
     public static final int LIGHT_CREAM = 0xFFFFF2D6;
@@ -54,7 +60,8 @@ public final class GrimoireTextLayout {
     public static final int CARD_HOVER_BORDER = 0xFF9E6B1E;
     public static final int RULE_LINE = 0x88B89968;
 
-    private static final float[] CANDIDATE_SCALES = {0.72f, 0.67f, 0.62f, 0.58f};
+    /** Readable body scale candidates ordered largest -> smallest (never dropping to tiny <0.64f). */
+    private static final float[] CANDIDATE_SCALES = {0.80f, 0.76f, 0.72f, 0.68f, 0.64f};
 
     public enum BlockKind {
         LEAD,
@@ -93,7 +100,40 @@ public final class GrimoireTextLayout {
 
     public record ColumnRenderResult(float chosenScale, float totalHeight, float maxScroll) {}
 
+    private record PlacedBlock(
+        PageBlock spec,
+        float relY,
+        float boxHeight,
+        float textScale,
+        float lineStep,
+        float firstLineRelY,
+        int innerWidth,
+        List<FormattedCharSequence> lines
+    ) {}
+
+    private record ColumnPlan(
+        float chosenScale,
+        int textWidth,
+        float totalHeight,
+        List<PlacedBlock> items
+    ) {}
+
     private GrimoireTextLayout() {}
+
+    /** Visual pixel height occupied by {@code n} wrapped lines at {@code scale} and {@code lineStep}. */
+    public static float wrappedBlockVisualHeight(int lineCount, float scale, float lineStep) {
+        if (lineCount <= 0) {
+            return 0.0f;
+        }
+        return (lineCount - 1) * lineStep + GLYPH_FULL_HEIGHT * scale;
+    }
+
+    /** Wraps {@code text} so no rendered line ever exceeds {@code pixelWidth} at {@code scale}. */
+    public static List<FormattedCharSequence> wrapAtScale(Font font, Component text, int pixelWidth, float scale) {
+        float safeScale = Math.max(0.45f, scale);
+        int wrapUnits = Math.max(20, (int) Math.floor((pixelWidth - 0.5f) / safeScale));
+        return font.split(text, wrapUnits);
+    }
 
     public static void drawScaledString(
         GuiGraphicsExtractor ctx,
@@ -134,8 +174,8 @@ public final class GrimoireTextLayout {
     }
 
     /**
-     * Left-aligned single-line text optically centered on {@code visualCenterY}, guaranteed never to
-     * exceed {@code maxWidth}.
+     * Left-aligned single-line label optically centered on {@code visualCenterY}, clamped to
+     * {@code minScale = 0.56f} so short headers/buttons stay sharp.
      */
     public static void drawLeftCenteredY(
         GuiGraphicsExtractor ctx,
@@ -152,7 +192,7 @@ public final class GrimoireTextLayout {
         int rawW = font.width(text);
         if (rawW <= 0) return;
 
-        float minScale = 0.46f;
+        float minScale = Math.min(maxScale, 0.56f);
         float scale = maxScale;
         String finalStr = text;
         if (rawW * scale > maxWidth) {
@@ -161,7 +201,7 @@ public final class GrimoireTextLayout {
                 scale = needed;
             } else {
                 scale = minScale;
-                int maxRaw = Math.max(8, Math.round(maxWidth / scale) - font.width("\u2026"));
+                int maxRaw = Math.max(8, (int) Math.floor(maxWidth / scale) - font.width("\u2026"));
                 finalStr = font.plainSubstrByWidth(text, maxRaw) + "\u2026";
             }
         }
@@ -170,7 +210,7 @@ public final class GrimoireTextLayout {
     }
 
     /**
-     * Horizontally AND optically vertically centered single-line text inside {@code [boxX .. boxX + boxW]}.
+     * Horizontally AND optically vertically centered single-line label inside {@code [boxX .. boxX + boxW]}.
      */
     public static void drawCenteredBox(
         GuiGraphicsExtractor ctx,
@@ -187,7 +227,7 @@ public final class GrimoireTextLayout {
         int rawW = font.width(text);
         if (rawW <= 0) return;
 
-        float minScale = 0.46f;
+        float minScale = Math.min(maxScale, 0.56f);
         float scale = maxScale;
         String finalStr = text;
         if (rawW * scale > boxW) {
@@ -196,7 +236,7 @@ public final class GrimoireTextLayout {
                 scale = needed;
             } else {
                 scale = minScale;
-                int maxRaw = Math.max(8, Math.round(boxW / scale) - font.width("\u2026"));
+                int maxRaw = Math.max(8, (int) Math.floor(boxW / scale) - font.width("\u2026"));
                 finalStr = font.plainSubstrByWidth(text, maxRaw) + "\u2026";
             }
         }
@@ -229,70 +269,133 @@ public final class GrimoireTextLayout {
         drawScaledString(ctx, font, text, drawX, drawY, scale, argbColor, shadow);
     }
 
-    public static List<FormattedCharSequence> wrapAtScale(Font font, Component text, int pixelWidth, float scale) {
-        int wrapUnits = Math.max(24, (int) Math.floor((pixelWidth - 1.0f) / scale));
-        return font.split(text, wrapUnits);
-    }
-
     /**
-     * Draws wrapped paragraph lines strictly inside {@code [x .. x + width]} and returns the next Y.
+     * Multi-line wrapped box renderer: wraps naturally inside {@code [boxX .. boxX + boxW]},
+     * picks the largest readable scale in {@code [minScale .. preferredScale]} whose wrapped block
+     * height fits {@code boxH}, optically centers the block vertically inside {@code [boxY .. boxY + boxH]},
+     * and clips strictly inside {@code enableScissor} so text never shrinks into tiny unreadable lines
+     * AND never overflows its container.
      */
-    public static float drawWrappedParagraph(
+    public static void drawWrappedBox(
         GuiGraphicsExtractor ctx,
         Font font,
         Component text,
-        int x,
-        float startY,
-        int width,
-        float scale,
-        float lineStep,
+        int boxX,
+        int boxY,
+        int boxW,
+        int boxH,
+        float preferredScale,
+        float minScale,
         int argbColor,
         boolean shadow
     ) {
-        List<FormattedCharSequence> lines = wrapAtScale(font, text, width, scale);
-        float y = startY;
-        for (FormattedCharSequence line : lines) {
-            drawScaledSequence(ctx, font, line, x, y, scale, argbColor, shadow);
-            y += lineStep;
+        if (text == null || boxW <= 6 || boxH <= 6) return;
+        float floorScale = Math.min(preferredScale, Math.max(0.56f, minScale));
+        float chosenScale = floorScale;
+        List<FormattedCharSequence> chosenLines = List.of();
+        float chosenStep = 10.6f * floorScale;
+
+        for (float s = preferredScale; s >= floorScale - 0.001f; s -= 0.04f) {
+            float curScale = Math.max(floorScale, s);
+            float step = 10.6f * curScale;
+            List<FormattedCharSequence> lines = wrapAtScale(font, text, boxW, curScale);
+            float visH = wrappedBlockVisualHeight(lines.size(), curScale, step);
+            chosenScale = curScale;
+            chosenLines = lines;
+            chosenStep = step;
+            if (visH <= boxH + 0.5f) {
+                break;
+            }
         }
-        return y;
+        if (chosenLines.isEmpty()) {
+            return;
+        }
+
+        float visH = wrappedBlockVisualHeight(chosenLines.size(), chosenScale, chosenStep);
+        float startY = boxY + Math.max(0.0f, (boxH - visH) * 0.5f);
+
+        ctx.enableScissor(boxX, boxY, boxX + boxW, boxY + boxH);
+        try {
+            float ly = startY;
+            for (FormattedCharSequence line : chosenLines) {
+                drawScaledSequence(ctx, font, line, boxX, ly, chosenScale, argbColor, shadow);
+                ly += chosenStep;
+            }
+        } finally {
+            ctx.disableScissor();
+        }
     }
 
-    public static float measureBlocksHeight(Font font, List<PageBlock> blocks, int width, float bodyScale) {
-        float lineStep = 10.2f * bodyScale;
+    /**
+     * Single-pass column layout solver guaranteeing exact pixel equality between planned height
+     * and rendered coordinates.
+     */
+    private static ColumnPlan planColumn(Font font, List<PageBlock> blocks, int textWidth, float bodyScale) {
+        float lineStep = 10.8f * bodyScale;
         float y = 0.0f;
+        List<PlacedBlock> out = new ArrayList<>(blocks.size());
+
         for (PageBlock b : blocks) {
             switch (b.kind()) {
                 case LEAD -> {
-                    int innerW = width - 11;
-                    int n = wrapAtScale(font, b.body(), innerW, bodyScale).size();
-                    y += Math.max(12.0f, n * lineStep + 5.0f) + 4.5f;
+                    int innerW = Math.max(24, textWidth - 11);
+                    List<FormattedCharSequence> lines = wrapAtScale(font, b.body(), innerW, bodyScale);
+                    float visH = wrappedBlockVisualHeight(lines.size(), bodyScale, lineStep);
+                    float padY = 3.2f;
+                    float boxH = Math.max(13.0f, visH + padY * 2.0f);
+                    float firstRelY = (boxH - visH) * 0.5f;
+                    out.add(new PlacedBlock(b, y, boxH, bodyScale, lineStep, firstRelY, innerW, lines));
+                    y += boxH + 4.5f;
                 }
                 case SECTION_HEADER -> {
-                    if (y > 1.0f) y += 3.0f;
-                    y += 12.5f;
+                    if (y > 0.5f) {
+                        y += 2.5f;
+                    }
+                    float headerH = 12.5f;
+                    out.add(new PlacedBlock(b, y, headerH, Math.min(0.80f, bodyScale + 0.04f), lineStep, 0.0f, textWidth - 8, List.of()));
+                    y += headerH + 2.0f;
                 }
-                case STEP, BULLET -> {
-                    int textW = width - 15;
-                    int n = wrapAtScale(font, b.body(), textW, bodyScale).size();
-                    y += Math.max(11.5f, n * lineStep) + 2.6f;
+                case STEP -> {
+                    int innerW = Math.max(24, textWidth - 15);
+                    List<FormattedCharSequence> lines = wrapAtScale(font, b.body(), innerW, bodyScale);
+                    float visH = wrappedBlockVisualHeight(lines.size(), bodyScale, lineStep);
+                    float rowH = Math.max(11.5f, visH);
+                    float firstRelY = lines.size() == 1 ? Math.max(0.0f, (11.0f - visH) * 0.5f) : 0.5f;
+                    out.add(new PlacedBlock(b, y, rowH, bodyScale, lineStep, firstRelY, innerW, lines));
+                    y += rowH + 3.2f;
+                }
+                case BULLET -> {
+                    int innerW = Math.max(24, textWidth - 14);
+                    List<FormattedCharSequence> lines = wrapAtScale(font, b.body(), innerW, bodyScale);
+                    float visH = wrappedBlockVisualHeight(lines.size(), bodyScale, lineStep);
+                    float rowH = Math.max(11.0f, visH);
+                    float firstRelY = lines.size() == 1 ? Math.max(0.0f, (10.5f - visH) * 0.5f) : 0.4f;
+                    out.add(new PlacedBlock(b, y, rowH, bodyScale, lineStep, firstRelY, innerW, lines));
+                    y += rowH + 3.0f;
                 }
                 case CALLOUT -> {
-                    if (y > 1.0f) y += 2.5f;
-                    int innerW = width - 12;
-                    int n = wrapAtScale(font, b.body(), innerW, bodyScale * 0.95f).size();
-                    float headerH = b.badge().isEmpty() ? 0.0f : 9.0f;
-                    y += headerH + n * (lineStep * 0.95f) + 7.0f;
+                    if (y > 0.5f) {
+                        y += 2.5f;
+                    }
+                    int innerW = Math.max(24, textWidth - 12);
+                    float cScale = Math.max(0.62f, bodyScale * 0.95f);
+                    float cStep = 10.6f * cScale;
+                    List<FormattedCharSequence> lines = wrapAtScale(font, b.body(), innerW, cScale);
+                    float visH = wrappedBlockVisualHeight(lines.size(), cScale, cStep);
+                    float titleBandH = b.badge().isEmpty() ? 0.0f : 10.0f;
+                    float boxH = titleBandH + visH + 6.5f;
+                    float firstRelY = 3.2f + titleBandH;
+                    out.add(new PlacedBlock(b, y, boxH, cScale, cStep, firstRelY, innerW, lines));
+                    y += boxH + 1.5f;
                 }
             }
         }
-        return y;
+        return new ColumnPlan(bodyScale, textWidth, Math.max(0.0f, y - 1.5f), List.copyOf(out));
     }
 
     /**
      * Renders a structured chapter prose column inside hardware GPU scissor clipping, picking the
-     * largest crisp font scale that fits cleanly on a single page and clamping scroll safely if a
-     * verbose language needs extra vertical room.
+     * largest crisp font scale that fits cleanly on a single page without scrolling whenever possible.
      */
     public static ColumnRenderResult renderStructuredColumn(
         GuiGraphicsExtractor ctx,
@@ -308,11 +411,11 @@ public final class GrimoireTextLayout {
     ) {
         Font font = mc.font;
 
-        int headerH = 14;
-        int pillW = Math.max(18, Math.round(font.width(chapterBadge) * 0.64f) + 8);
+        int headerH = 15;
+        int pillW = Math.max(20, Math.round(font.width(chapterBadge) * 0.68f) + 8);
         ctx.fill(colX, colY, colX + pillW, colY + headerH, 0xFF4C236E);
         ctx.fill(colX + 1, colY + 1, colX + pillW - 1, colY + 2, 0xFF8B56BA);
-        drawCenteredBox(ctx, font, chapterBadge, colX + 2, pillW - 4, colY + headerH * 0.5f, 0.64f, LIGHT_GOLD, false);
+        drawCenteredBox(ctx, font, chapterBadge, colX + 2, pillW - 4, colY + headerH * 0.5f, 0.68f, LIGHT_GOLD, false);
 
         drawLeftCenteredY(
             ctx,
@@ -320,7 +423,7 @@ public final class GrimoireTextLayout {
             chapterTitle.getString(),
             colX + pillW + 5,
             colY + headerH * 0.5f,
-            0.84f,
+            0.88f,
             colW - pillW - 6,
             INK_PRIMARY,
             false
@@ -328,73 +431,66 @@ public final class GrimoireTextLayout {
 
         int ruleY = colY + headerH + 2;
         ctx.fill(colX, ruleY, colX + colW, ruleY + 1, CARD_BORDER);
-        ctx.fill(colX, ruleY, colX + 34, ruleY + 1, INK_GOLD_DARK);
+        ctx.fill(colX, ruleY, colX + 38, ruleY + 1, INK_GOLD_DARK);
 
         int bodyTop = ruleY + 4;
         int bodyH = Math.max(24, (colY + colH) - bodyTop);
 
-        float chosenScale = CANDIDATE_SCALES[CANDIDATE_SCALES.length - 1];
-        float contentH = 0.0f;
+        // First test full-width single-page fit across CANDIDATE_SCALES (largest first):
+        ColumnPlan chosenPlan = null;
         for (float candidate : CANDIDATE_SCALES) {
-            float h = measureBlocksHeight(font, blocks, colW - 4, candidate);
-            chosenScale = candidate;
-            contentH = h;
-            if (h <= bodyH + 0.5f) {
+            ColumnPlan trial = planColumn(font, blocks, colW, candidate);
+            if (trial.totalHeight() <= bodyH + 0.5f) {
+                chosenPlan = trial;
                 break;
             }
         }
-
-        int textAreaW = contentH > bodyH + 1.0f ? (colW - 6) : colW;
-        if (textAreaW != colW - 4) {
-            contentH = measureBlocksHeight(font, blocks, textAreaW, chosenScale);
+        // Only if even the smallest candidate exceeds bodyH, plan at (colW - 6) to reserve scrollbar gutter:
+        if (chosenPlan == null) {
+            chosenPlan = planColumn(font, blocks, Math.max(32, colW - 6), CANDIDATE_SCALES[CANDIDATE_SCALES.length - 1]);
         }
 
+        float contentH = chosenPlan.totalHeight();
+        int textAreaW = chosenPlan.textWidth();
         float maxScroll = Math.max(0.0f, contentH - bodyH);
         float clampedScroll = Mth.clamp(scrollOffset, 0.0f, maxScroll);
-        float lineStep = 10.2f * chosenScale;
 
         ctx.enableScissor(colX, bodyTop, colX + colW, bodyTop + bodyH);
         try {
-            float y = bodyTop - clampedScroll;
-            for (PageBlock b : blocks) {
+            float originY = bodyTop - clampedScroll;
+            for (PlacedBlock pb : chosenPlan.items()) {
+                PageBlock b = pb.spec();
+                float y = originY + pb.relY();
                 switch (b.kind()) {
                     case LEAD -> {
-                        int innerW = textAreaW - 11;
-                        List<FormattedCharSequence> lines = wrapAtScale(font, b.body(), innerW, chosenScale);
-                        float boxH = Math.max(12.0f, lines.size() * lineStep + 5.0f);
                         int y0 = Math.round(y);
-                        int y1 = Math.round(y + boxH);
+                        int y1 = Math.round(y + pb.boxHeight());
                         ctx.fill(colX, y0, colX + textAreaW, y1, CALLOUT_BG);
                         ctx.fill(colX, y0, colX + 2, y1, b.accentArgb());
-                        float ly = y + 2.8f;
-                        for (FormattedCharSequence line : lines) {
-                            drawScaledSequence(ctx, font, line, colX + 6, ly, chosenScale, INK_PRIMARY, false);
-                            ly += lineStep;
+                        float ly = y + pb.firstLineRelY();
+                        for (FormattedCharSequence line : pb.lines()) {
+                            drawScaledSequence(ctx, font, line, colX + 6, ly, pb.textScale(), INK_PRIMARY, false);
+                            ly += pb.lineStep();
                         }
-                        y += boxH + 4.5f;
                     }
                     case SECTION_HEADER -> {
-                        if (y > bodyTop - clampedScroll + 1.0f) {
-                            y += 3.0f;
-                        }
                         int hy = Math.round(y);
-                        ctx.fill(colX, hy + 3, colX + 3, hy + 8, b.accentArgb());
+                        ctx.fill(colX, hy + 3, colX + 3, hy + 9, b.accentArgb());
                         drawLeftCenteredY(
                             ctx,
                             font,
                             b.body().getString(),
                             colX + 6,
-                            hy + 5.5f,
-                            Math.min(0.74f, chosenScale + 0.05f),
-                            textAreaW - 8,
+                            hy + 6.0f,
+                            pb.textScale(),
+                            pb.innerWidth(),
                             b.accentArgb(),
                             false
                         );
                         ctx.fill(colX, hy + 11, colX + textAreaW, hy + 12, RULE_LINE);
-                        y += 12.5f;
                     }
                     case STEP -> {
-                        int badgeSize = 10;
+                        int badgeSize = 11;
                         int bx = colX;
                         int by = Math.round(y);
                         ctx.fill(bx, by, bx + badgeSize, by + badgeSize, b.accentArgb());
@@ -406,69 +502,52 @@ public final class GrimoireTextLayout {
                             bx,
                             badgeSize,
                             by + badgeSize * 0.5f,
-                            0.58f,
+                            0.62f,
                             LIGHT_GOLD,
                             false
                         );
-                        int textW = textAreaW - 15;
-                        List<FormattedCharSequence> lines = wrapAtScale(font, b.body(), textW, chosenScale);
-                        float ly = y + 1.0f;
-                        for (FormattedCharSequence line : lines) {
-                            drawScaledSequence(ctx, font, line, colX + 14, ly, chosenScale, INK_PRIMARY, false);
-                            ly += lineStep;
+                        float ly = y + pb.firstLineRelY();
+                        for (FormattedCharSequence line : pb.lines()) {
+                            drawScaledSequence(ctx, font, line, colX + 14, ly, pb.textScale(), INK_PRIMARY, false);
+                            ly += pb.lineStep();
                         }
-                        y += Math.max(11.5f, lines.size() * lineStep) + 2.6f;
                     }
                     case BULLET -> {
-                        int dotY = Math.round(y + 2.5f);
+                        int dotY = Math.round(y + 3.0f);
                         ctx.fill(colX + 2, dotY, colX + 6, dotY + 4, b.accentArgb());
                         ctx.fill(colX + 3, dotY + 1, colX + 5, dotY + 3, LIGHT_GOLD);
-                        int textW = textAreaW - 15;
-                        List<FormattedCharSequence> lines = wrapAtScale(font, b.body(), textW, chosenScale);
-                        float ly = y + 0.6f;
-                        for (FormattedCharSequence line : lines) {
-                            drawScaledSequence(ctx, font, line, colX + 12, ly, chosenScale, INK_PRIMARY, false);
-                            ly += lineStep;
+                        float ly = y + pb.firstLineRelY();
+                        for (FormattedCharSequence line : pb.lines()) {
+                            drawScaledSequence(ctx, font, line, colX + 11, ly, pb.textScale(), INK_PRIMARY, false);
+                            ly += pb.lineStep();
                         }
-                        y += Math.max(11.5f, lines.size() * lineStep) + 2.6f;
                     }
                     case CALLOUT -> {
-                        if (y > bodyTop - clampedScroll + 1.0f) {
-                            y += 2.5f;
-                        }
-                        int innerW = textAreaW - 12;
-                        float cScale = chosenScale * 0.95f;
-                        float cStep = lineStep * 0.95f;
-                        List<FormattedCharSequence> lines = wrapAtScale(font, b.body(), innerW, cScale);
-                        float headerExtra = b.badge().isEmpty() ? 0.0f : 9.0f;
-                        float totalBoxH = headerExtra + lines.size() * cStep + 6.0f;
                         int y0 = Math.round(y);
-                        int y1 = Math.round(y + totalBoxH);
+                        int y1 = Math.round(y + pb.boxHeight());
                         ctx.fill(colX, y0, colX + textAreaW, y1, CARD_BG);
                         ctx.fill(colX, y0, colX + textAreaW, y0 + 1, CALLOUT_BORDER);
                         ctx.fill(colX, y1 - 1, colX + textAreaW, y1, CALLOUT_BORDER);
                         ctx.fill(colX, y0, colX + 3, y1, b.accentArgb());
 
-                        float cy = y + 3.0f;
                         if (!b.badge().isEmpty()) {
                             drawLeftCenteredY(
                                 ctx,
                                 font,
                                 b.badge(),
                                 colX + 6,
-                                cy + 3.5f,
-                                Math.min(0.68f, chosenScale + 0.02f),
-                                innerW,
+                                y + 7.2f,
+                                Math.min(0.74f, pb.textScale() + 0.04f),
+                                pb.innerWidth(),
                                 b.accentArgb(),
                                 false
                             );
-                            cy += 9.0f;
                         }
-                        for (FormattedCharSequence line : lines) {
-                            drawScaledSequence(ctx, font, line, colX + 6, cy, cScale, INK_SECONDARY, false);
-                            cy += cStep;
+                        float ly = y + pb.firstLineRelY();
+                        for (FormattedCharSequence line : pb.lines()) {
+                            drawScaledSequence(ctx, font, line, colX + 6, ly, pb.textScale(), INK_SECONDARY, false);
+                            ly += pb.lineStep();
                         }
-                        y += totalBoxH + 1.0f;
                     }
                 }
             }
@@ -485,6 +564,6 @@ public final class GrimoireTextLayout {
             ctx.fill(trackX, thumbY, trackX + 2, thumbY + thumbH, INK_PURPLE);
         }
 
-        return new ColumnRenderResult(chosenScale, contentH, maxScroll);
+        return new ColumnRenderResult(chosenPlan.chosenScale(), contentH, maxScroll);
     }
 }

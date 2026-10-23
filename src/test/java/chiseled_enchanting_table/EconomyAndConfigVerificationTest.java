@@ -1,20 +1,27 @@
 package chiseled_enchanting_table;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.mechanics.resonance.LibraryResonance;
+import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ReopenTablePayload;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.netty.buffer.Unpooled;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
@@ -110,8 +117,43 @@ class EconomyAndConfigVerificationTest {
         assertEquals(105.0, c.epiphanyTierPlusScoreDivisor(), 1e-9);
         assertEquals(0.28, c.epiphanyTierPlusMasteryBonus(), 1e-9);
 
-        // Runtime conservation must also hold under custom server config overrides (e.g. 44% discount, 0.60 credit)!
-        DisenchantmentApplication.verifyRuntimeConservation(c, 1.0);
+        // Runtime conservation must also hold strictly under custom server config overrides (e.g. 44% discount, 0.60 credit)!
+        DisenchantmentApplication.assertRuntimeConservationStrict(c, 1.0);
+    }
+
+    @Test
+    void runtimeConservationStrictThrowsWhileReloadSafeLogsWithoutThrowing() {
+        assertThrows(
+            IllegalStateException.class,
+            () -> DisenchantmentApplication.assertRuntimeConservationStrict(LibraryResonance.Config.DEFAULT, 50_000.0),
+            "Strict conservation gate must reject extreme refund scales that create XP arbitrage"
+        );
+        assertDoesNotThrow(
+            () -> DisenchantmentApplication.verifyRuntimeConservation(LibraryResonance.Config.DEFAULT, 50_000.0),
+            "Reload-time conservation verifier must log an error rather than crashing server reload (N3)"
+        );
+    }
+
+    @Test
+    void bundledFallbackRulesLoadCleanlyAndReopenPayloadRoundTrips() {
+        assertTrue(ChiseledEnchantingTableData.bookCombineEnabled());
+        assertTrue(ChiseledEnchantingTableData.bookResearchEnabled());
+        assertEquals(
+            32,
+            ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves(),
+            "Bundled treasure_epiphany.json must specify 32 wooden bookshelves (G2 / N1)"
+        );
+        assertEquals(
+            4,
+            ChiseledEnchantingTableData.treasureEpiphanyMaxSlotsCap(),
+            "Bundled treasure_epiphany.json must specify max_slots_cap = 4 (G3 / N1)"
+        );
+
+        BlockPos pos = new BlockPos(-1024, 72, 4096);
+        RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
+        ReopenTablePayload.CODEC.encode(buf, new ReopenTablePayload(pos));
+        ReopenTablePayload decoded = ReopenTablePayload.CODEC.decode(buf);
+        assertEquals(pos, decoded.pos(), "ReopenTablePayload must round-trip exact BlockPos (G1)");
     }
 
     @Test
@@ -349,6 +391,64 @@ class EconomyAndConfigVerificationTest {
                 String val = map.get(key).getAsString();
                 assertTrue(!val.isBlank() && !val.equals(key), lf.getFileName() + " has raw/empty value for " + key);
             }
+
+            // Verify single-line navigation pills & titles fit comfortably without extreme horizontal squash
+            for (String pillKey : List.of(
+                "gui.chiseled_enchanting_table.grimoire.nav.home",
+                "gui.chiseled_enchanting_table.grimoire.nav.back_table",
+                "gui.chiseled_enchanting_table.grimoire.nav.close",
+                "gui.chiseled_enchanting_table.grimoire.nav.prev",
+                "gui.chiseled_enchanting_table.grimoire.nav.next",
+                "gui.chiseled_enchanting_table.grimoire.nav.return_home"
+            )) {
+                String txt = map.get(pillKey).getAsString();
+                int estPx = estimateMinecraftFontPx(txt);
+                assertTrue(
+                    estPx * 0.62f <= 82.0f,
+                    lf.getFileName() + " pill label too wide for button bounds: " + pillKey + " = '" + txt + "' (" + estPx + "px)"
+                );
+            }
+
+            // Verify every parameterized Grimoire key formats cleanly with live config values
+            assertEquals(
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4_res").getAsString(), 35, 40)
+                    .contains("%s"),
+                false
+            );
         }
+
+        // Verify all 7 crafting recipes displayed in Chapter 1 exist on classpath with valid schemas
+        for (String recipeId : List.of(
+            "arcane_grimoire_from_shelf",
+            "arcane_grimoire_from_tome",
+            "chiseled_enchanting_table",
+            "chiseled_enchanting_table_upgrade",
+            "crying_obsidian",
+            "cleansing_grit",
+            "arcane_catalyst"
+        )) {
+            JsonObject rec = readClasspathJson("data/chiseled_enchanting_table/recipe/" + recipeId + ".json");
+            assertTrue(rec.has("type") && rec.has("result"), "Invalid recipe JSON schema for " + recipeId);
+        }
+    }
+
+    private static int estimateMinecraftFontPx(String s) {
+        int px = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == ' ') {
+                px += 4;
+            } else if (c >= 0x2E80 && c <= 0xFFEF) {
+                px += 9;
+            } else {
+                px += 6;
+            }
+        }
+        return px;
     }
 }

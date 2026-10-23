@@ -31,8 +31,15 @@ import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Full double-page illuminated manual ({@code 纂刻秘典 / Arcane Grimoire}) with full JEI / REI item
- * focus &amp; recipe/uses lookup across every rendered item slot.
+ * Responsive double-page illuminated manual ({@code 纂刻秘典 / Chiseled Grimoire}).
+ *
+ * <p>Supports two lossless presentation modes:</p>
+ * <ul>
+ *   <li><b>Standalone Screen:</b> opened from right-clicking the {@code Arcane Grimoire} item.</li>
+ *   <li><b>In-Container Modal Overlay ({@code G1} safe):</b> hosted directly inside
+ *       {@link chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen} so the server container
+ *       menu is never closed, slot items are never ejected, and live 1s bookshelf updates keep running.</li>
+ * </ul>
  */
 @Environment(EnvType.CLIENT)
 public class ArcaneGrimoireScreen extends Screen {
@@ -40,17 +47,9 @@ public class ArcaneGrimoireScreen extends Screen {
     private static final Identifier SPREAD_TEX = ChiseledEnchantingTable.identifier("gui/grimoire_spread.png");
     private static final Identifier CREST_TEX = ChiseledEnchantingTable.identifier("gui/grimoire_crest.png");
 
-    public static final int BOOK_W = 336;
-    public static final int BOOK_H = 212;
-
-    private static final int LEFT_PAGE_X = 22;
-    private static final int RIGHT_PAGE_X = 179;
-    private static final int PAGE_TOP_Y = 15;
-    private static final int PAGE_W = 132;
-    private static final int PAGE_H = 159;
-    private static final int FOOTER_Y = 177;
-    private static final int FOOTER_H = 14;
-
+    /** Base UV coordinate system of {@code gui/grimoire_spread.png} (672x424 = 2x of 336x212). */
+    public static final int BASE_BOOK_W = 336;
+    public static final int BASE_BOOK_H = 212;
     public static final int CHAPTER_COUNT = 8;
 
     private static final int[] TAB_COLORS = {
@@ -67,6 +66,9 @@ public class ArcaneGrimoireScreen extends Screen {
 
     @Nullable
     private final Screen parentScreen;
+    @Nullable
+    private final Runnable closeOverride;
+    private final boolean openedFromTable;
 
     /** {@code 0} = Home Directory spread, {@code 1..8} = Chapter spreads. */
     private int spreadIndex = 0;
@@ -75,11 +77,21 @@ public class ArcaneGrimoireScreen extends Screen {
 
     // Interactive diagram states
     private int selectedRecipeIdx = 0;
-    private int demoShelves = 16;
+    private int demoShelves = 18;
     private int selectedTransmuteIdx = 0;
 
+    // Responsive UV-matched book geometry
+    private int bookW = 404;
+    private int bookH = 236;
     private int bookX;
     private int bookY;
+    private int leftPageX;
+    private int rightPageX;
+    private int pageTopY;
+    private int pageW;
+    private int pageH;
+    private int footerY;
+    private int footerH;
 
     private final List<HitRegion> interactiveRegions = new ArrayList<>();
     private final List<HoveredSlot> itemSlots = new ArrayList<>();
@@ -89,20 +101,54 @@ public class ArcaneGrimoireScreen extends Screen {
     private static final int NAV_CLOSE = 101;
 
     public ArcaneGrimoireScreen(@Nullable Screen parentScreen) {
-        super(Component.translatable("item.chiseled_enchanting_table.arcane_grimoire"));
-        this.parentScreen = parentScreen;
+        this(parentScreen, 0, null, parentScreen != null, 18);
     }
 
     public ArcaneGrimoireScreen(@Nullable Screen parentScreen, int initialSpread) {
-        this(parentScreen);
+        this(parentScreen, initialSpread, null, parentScreen != null, 18);
+    }
+
+    public ArcaneGrimoireScreen(
+        @Nullable Screen parentScreen,
+        int initialSpread,
+        @Nullable Runnable closeOverride,
+        boolean openedFromTable,
+        int initialDemoShelves
+    ) {
+        super(Component.translatable("item.chiseled_enchanting_table.arcane_grimoire"));
+        this.parentScreen = parentScreen;
         this.spreadIndex = Mth.clamp(initialSpread, 0, CHAPTER_COUNT);
+        this.closeOverride = closeOverride;
+        this.openedFromTable = openedFromTable;
+        this.demoShelves = Mth.clamp(initialDemoShelves, 0, 38);
+    }
+
+    public void initOverlay(Minecraft mc, int width, int height) {
+        this.minecraft = mc;
+        this.font = mc.font;
+        this.width = width;
+        this.height = height;
+        this.init();
     }
 
     @Override
     protected void init() {
         super.init();
-        this.bookX = (this.width - BOOK_W) / 2 - 6;
-        this.bookY = (this.height - BOOK_H) / 2 + 7;
+        this.bookW = Mth.clamp(this.width - 38, BASE_BOOK_W, 408);
+        this.bookH = Mth.clamp(this.height - 26, BASE_BOOK_H, 238);
+        this.bookX = (this.width - this.bookW) / 2 - 6;
+        this.bookY = (this.height - this.bookH) / 2 + 8;
+
+        float sx = this.bookW / (float) BASE_BOOK_W;
+        float sy = this.bookH / (float) BASE_BOOK_H;
+        this.leftPageX = Math.round(21.5f * sx);
+        this.rightPageX = Math.round(179.5f * sx);
+        this.pageW = Math.round(133.5f * sx);
+        this.pageTopY = Math.round(14.5f * sy);
+        this.footerY = Math.round(176.5f * sy);
+        this.footerH = Math.max(14, Math.round(14.0f * sy));
+        this.pageH = Math.max(120, (this.footerY - 3) - this.pageTopY);
+
         if (this.chapterIcons == null) {
             this.chapterIcons = List.of(
                 new ItemStack(BlockRegistry.ARCANE_GRIMOIRE),
@@ -112,14 +158,14 @@ public class ArcaneGrimoireScreen extends Screen {
                 new ItemStack(Items.ENCHANTED_BOOK),
                 new ItemStack(BlockRegistry.ARCANE_CATALYST),
                 new ItemStack(Items.ENCHANTED_GOLDEN_APPLE),
-                new ItemStack(BlockRegistry.DEPLETED_TOME)
+                new ItemStack(BlockRegistry.CLEANSING_GRIT)
             );
         }
     }
 
     /** Full bounding box including top floating bar and right-edge chapter bookmark ribbons (for JEI / REI). */
     public Rect2i fullGuiBounds() {
-        return new Rect2i(this.bookX, Math.max(0, this.bookY - 19), BOOK_W + 24, BOOK_H + 19);
+        return new Rect2i(this.bookX, Math.max(0, this.bookY - 19), this.bookW + 25, this.bookH + 19);
     }
 
     /** Returns the item slot under {@code (mouseX, mouseY)}, enabling native JEI / REI R/U/Bookmark lookups. */
@@ -144,7 +190,11 @@ public class ArcaneGrimoireScreen extends Screen {
     @Override
     public void onClose() {
         GrimoireSoundHelper.playClose();
-        Minecraft.getInstance().setScreen(this.parentScreen);
+        if (this.closeOverride != null) {
+            this.closeOverride.run();
+        } else {
+            Minecraft.getInstance().setScreen(this.parentScreen);
+        }
     }
 
     private void jumpToSpread(int target, boolean bookmarkSound) {
@@ -166,11 +216,9 @@ public class ArcaneGrimoireScreen extends Screen {
 
     /** Draws a crisp 7x7 pixel-art House glyph (never relying on tiny Unifont fallback symbols). */
     private static void drawHomeGlyph(GuiGraphicsExtractor ctx, int leftX, int centerY, int argbColor) {
-        // Roof (4 rows: width 1, 3, 5, 7)
         for (int r = 0; r < 4; r++) {
             ctx.fill(leftX + 3 - r, centerY - 3 + r, leftX + 4 + r, centerY - 2 + r, argbColor);
         }
-        // Walls + doorway cutout
         ctx.fill(leftX + 1, centerY + 1, leftX + 3, centerY + 4, argbColor);
         ctx.fill(leftX + 4, centerY + 1, leftX + 6, centerY + 4, argbColor);
         ctx.fill(leftX + 3, centerY + 1, leftX + 4, centerY + 2, argbColor);
@@ -186,7 +234,7 @@ public class ArcaneGrimoireScreen extends Screen {
 
     @Override
     public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
-        // Handled cleanly inside extractRenderState without double-blurring open screens.
+        // Rendered explicitly inside extractRenderState to prevent double-blur artifacts.
     }
 
     @Override
@@ -195,30 +243,30 @@ public class ArcaneGrimoireScreen extends Screen {
         this.itemSlots.clear();
         List<Component> hoveredTabTip = new ArrayList<>();
 
-        ctx.fill(0, 0, this.width, this.height, 0xB4090610);
+        ctx.fill(0, 0, this.width, this.height, 0xC4080510);
 
         // 1. Right-edge chapter bookmark ribbons
         renderBookmarkRibbons(ctx, mouseX, mouseY, hoveredTabTip);
 
-        // 2. Crisp 2x double-page illuminated book spread
-        ctx.blit(SPREAD_TEX, this.bookX, this.bookY, this.bookX + BOOK_W, this.bookY + BOOK_H, 0.0f, 1.0f, 0.0f, 1.0f);
+        // 2. Crisp 2x double-page illuminated book spread scaled proportionately
+        ctx.blit(SPREAD_TEX, this.bookX, this.bookY, this.bookX + this.bookW, this.bookY + this.bookH, 0.0f, 1.0f, 0.0f, 1.0f);
 
         // 3. Top floating navigation bar
         renderTopNavigationBar(ctx, mouseX, mouseY);
 
-        // 4. Main left & right pages content strictly inside safe parchment bounding boxes
-        int lx = this.bookX + LEFT_PAGE_X;
-        int rx = this.bookX + RIGHT_PAGE_X;
-        int py = this.bookY + PAGE_TOP_Y;
+        // 4. Main left & right pages content strictly inside UV-matched parchment bounds
+        int lx = this.bookX + this.leftPageX;
+        int rx = this.bookX + this.rightPageX;
+        int py = this.bookY + this.pageTopY;
 
         if (this.spreadIndex == 0) {
-            renderHomeLeftPage(ctx, lx, py, PAGE_W, PAGE_H);
-            renderHomeRightDirectory(ctx, rx, py, PAGE_W, PAGE_H, mouseX, mouseY);
+            renderHomeLeftPage(ctx, lx, py, this.pageW, this.pageH);
+            renderHomeRightDirectory(ctx, rx, py, this.pageW, this.pageH, mouseX, mouseY);
         } else {
-            ColumnRenderResult res = renderChapterLeftProse(ctx, this.spreadIndex, lx, py, PAGE_W, PAGE_H);
+            ColumnRenderResult res = renderChapterLeftProse(ctx, this.spreadIndex, lx, py, this.pageW, this.pageH);
             this.leftMaxScroll = res.maxScroll();
             this.leftScroll = Mth.clamp(this.leftScroll, 0.0f, this.leftMaxScroll);
-            renderChapterRightDiagram(ctx, this.spreadIndex, rx, py, PAGE_W, PAGE_H, mouseX, mouseY);
+            renderChapterRightDiagram(ctx, this.spreadIndex, rx, py, this.pageW, this.pageH, mouseX, mouseY);
         }
 
         // 5. In-page bottom navigation footers
@@ -256,8 +304,8 @@ public class ArcaneGrimoireScreen extends Screen {
         int barY = this.bookY - 17;
         int barH = 14;
 
-        // Left pill: [Home Icon + 主页/目录]
-        int homeW = 76;
+        // Left pill: [Home Icon + 主页目录]
+        int homeW = 84;
         int homeX = this.bookX + 8;
         boolean onHome = this.spreadIndex == 0;
         boolean overHome = mouseX >= homeX && mouseX < homeX + homeW && mouseY >= barY && mouseY < barY + barH;
@@ -266,15 +314,15 @@ public class ArcaneGrimoireScreen extends Screen {
         ctx.fill(homeX, barY, homeX + homeW, barY + barH, homeBorder);
         ctx.fill(homeX + 1, barY + 1, homeX + homeW - 1, barY + barH - 1, homeBg);
         int homeFg = onHome ? LIGHT_GOLD : LIGHT_CREAM;
-        drawHomeGlyph(ctx, homeX + 5, barY + barH / 2, homeFg);
+        drawHomeGlyph(ctx, homeX + 6, barY + barH / 2, homeFg);
         drawCenteredBox(
             ctx,
             this.font,
             Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.home").getString(),
-            homeX + 14,
-            homeW - 18,
+            homeX + 15,
+            homeW - 19,
             barY + barH * 0.5f,
-            0.62f,
+            0.70f,
             homeFg,
             true
         );
@@ -282,13 +330,13 @@ public class ArcaneGrimoireScreen extends Screen {
             this.interactiveRegions.add(new HitRegion(homeX, barY, homeW, barH, NAV_SPREAD, "0"));
         }
 
-        // Right pill: [返回附魔台 / 关闭]
-        int closeW = 76;
-        int closeX = this.bookX + BOOK_W - closeW - 8;
+        // Right pill: [返回附魔 / 合上秘典]
+        int closeW = 88;
+        int closeX = this.bookX + this.bookW - closeW - 8;
         boolean overClose = mouseX >= closeX && mouseX < closeX + closeW && mouseY >= barY && mouseY < barY + barH;
         ctx.fill(closeX, barY, closeX + closeW, barY + barH, overClose ? LIGHT_GOLD : 0xFF9E7B46);
         ctx.fill(closeX + 1, barY + 1, closeX + closeW - 1, barY + barH - 1, overClose ? 0xFF592638 : 0xFF2B1B3D);
-        String closeKey = this.parentScreen != null
+        String closeKey = this.openedFromTable
             ? "gui.chiseled_enchanting_table.grimoire.nav.back_table"
             : "gui.chiseled_enchanting_table.grimoire.nav.close";
         drawCenteredBox(
@@ -298,7 +346,7 @@ public class ArcaneGrimoireScreen extends Screen {
             closeX + 4,
             closeW - 8,
             barY + barH * 0.5f,
-            0.62f,
+            0.70f,
             overClose ? LIGHT_GOLD : LIGHT_CREAM,
             true
         );
@@ -312,7 +360,7 @@ public class ArcaneGrimoireScreen extends Screen {
             ? Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.crumb_home").getString()
             : (String.format("%02d / %02d  ", this.spreadIndex, CHAPTER_COUNT)
                 + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + this.spreadIndex + ".short").getString());
-        drawCenteredBox(ctx, this.font, crumb, midX + 5, midW - 10, barY + barH * 0.5f, 0.60f, LIGHT_GOLD, true);
+        drawCenteredBox(ctx, this.font, crumb, midX + 5, midW - 10, barY + barH * 0.5f, 0.68f, LIGHT_GOLD, true);
     }
 
     private void renderBookmarkRibbons(
@@ -321,18 +369,19 @@ public class ArcaneGrimoireScreen extends Screen {
         int mouseY,
         List<Component> hoveredTabTip
     ) {
-        int startY = this.bookY + 24;
-        int stepY = 18;
-        int tabH = 16;
+        int startY = this.bookY + 20;
+        int availSpan = Math.max(162, this.bookH - 40);
+        int stepY = availSpan / (CHAPTER_COUNT + 1);
+        int tabH = Math.max(15, stepY - 2);
 
         for (int i = 0; i <= CHAPTER_COUNT; i++) {
             boolean active = (i == this.spreadIndex);
-            int tx = this.bookX + BOOK_W - 3;
-            int tw = active ? 23 : 18;
+            int tx = this.bookX + this.bookW - 3;
+            int tw = active ? 24 : 19;
             int ty = startY + i * stepY;
             boolean over = mouseX >= tx && mouseX < tx + tw && mouseY >= ty && mouseY < ty + tabH;
             if (over && !active) {
-                tw = 21;
+                tw = 22;
             }
 
             int baseCol = TAB_COLORS[i];
@@ -353,7 +402,7 @@ public class ArcaneGrimoireScreen extends Screen {
                     tx + 2,
                     tw - 4,
                     ty + tabH * 0.5f,
-                    0.56f,
+                    0.64f,
                     fg,
                     true
                 );
@@ -376,12 +425,12 @@ public class ArcaneGrimoireScreen extends Screen {
     }
 
     private void renderBottomFooters(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
-        int fy = this.bookY + FOOTER_Y;
-        int lx = this.bookX + LEFT_PAGE_X;
-        int rx = this.bookX + RIGHT_PAGE_X;
+        int fy = this.bookY + this.footerY;
+        int lx = this.bookX + this.leftPageX;
+        int rx = this.bookX + this.rightPageX;
 
-        ctx.fill(lx, fy - 2, lx + PAGE_W, fy - 1, RULE_LINE);
-        ctx.fill(rx, fy - 2, rx + PAGE_W, fy - 1, RULE_LINE);
+        ctx.fill(lx, fy - 2, lx + this.pageW, fy - 1, RULE_LINE);
+        ctx.fill(rx, fy - 2, rx + this.pageW, fy - 1, RULE_LINE);
 
         if (this.spreadIndex == 0) {
             drawCenteredBox(
@@ -389,42 +438,42 @@ public class ArcaneGrimoireScreen extends Screen {
                 this.font,
                 Component.translatable("gui.chiseled_enchanting_table.grimoire.home.keys").getString(),
                 lx,
-                PAGE_W,
-                fy + FOOTER_H * 0.5f,
-                0.56f,
+                this.pageW,
+                fy + this.footerH * 0.5f,
+                0.62f,
                 INK_MUTED,
                 false
             );
 
-            int btnW = PAGE_W - 14;
-            int btnX = rx + 7;
-            boolean over = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= fy && mouseY < fy + FOOTER_H;
-            ctx.fill(btnX, fy, btnX + btnW, fy + FOOTER_H, over ? CARD_HOVER_BORDER : CARD_BORDER);
-            ctx.fill(btnX + 1, fy + 1, btnX + btnW - 1, fy + FOOTER_H - 1, over ? CARD_HOVER_BG : CALLOUT_BG);
+            int btnW = this.pageW - 10;
+            int btnX = rx + 5;
+            boolean over = mouseX >= btnX && mouseX < btnX + btnW && mouseY >= fy && mouseY < fy + this.footerH;
+            ctx.fill(btnX, fy, btnX + btnW, fy + this.footerH, over ? CARD_HOVER_BORDER : CARD_BORDER);
+            ctx.fill(btnX + 1, fy + 1, btnX + btnW - 1, fy + this.footerH - 1, over ? CARD_HOVER_BG : CALLOUT_BG);
             drawCenteredBox(
                 ctx,
                 this.font,
                 Component.translatable("gui.chiseled_enchanting_table.grimoire.home.start_btn").getString(),
-                btnX + 5,
-                btnW - 16,
-                fy + FOOTER_H * 0.5f,
-                0.60f,
+                btnX + 6,
+                btnW - 18,
+                fy + this.footerH * 0.5f,
+                0.70f,
                 INK_PURPLE,
                 false
             );
-            drawSmallTriangle(ctx, btnX + btnW - 9, fy + FOOTER_H / 2, true, INK_PURPLE);
-            this.interactiveRegions.add(new HitRegion(btnX, fy, btnW, FOOTER_H, NAV_SPREAD, "1"));
+            drawSmallTriangle(ctx, btnX + btnW - 10, fy + this.footerH / 2, true, INK_PURPLE);
+            this.interactiveRegions.add(new HitRegion(btnX, fy, btnW, this.footerH, NAV_SPREAD, "1"));
             return;
         }
 
-        int prevW = 60;
-        int homeBtnW = 68;
+        int prevW = Math.min(76, (this.pageW - 6) / 2);
+        int homeBtnW = this.pageW - prevW - 6;
         drawFooterPill(
             ctx,
             lx,
             fy,
             prevW,
-            FOOTER_H,
+            this.footerH,
             Component.translatable(
                 this.spreadIndex == 1
                     ? "gui.chiseled_enchanting_table.grimoire.nav.home_short"
@@ -438,10 +487,10 @@ public class ArcaneGrimoireScreen extends Screen {
         );
         drawFooterPill(
             ctx,
-            lx + PAGE_W - homeBtnW,
+            lx + this.pageW - homeBtnW,
             fy,
             homeBtnW,
-            FOOTER_H,
+            this.footerH,
             Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.return_home").getString(),
             "0",
             mouseX,
@@ -451,16 +500,16 @@ public class ArcaneGrimoireScreen extends Screen {
         );
 
         String pageCounter = String.format("%d / %d", this.spreadIndex, CHAPTER_COUNT);
-        drawLeftCenteredY(ctx, this.font, pageCounter, rx + 2, fy + FOOTER_H * 0.5f, 0.58f, 44, INK_MUTED, false);
+        drawLeftCenteredY(ctx, this.font, pageCounter, rx + 2, fy + this.footerH * 0.5f, 0.68f, 48, INK_MUTED, false);
 
-        int nextW = 78;
+        int nextW = Math.min(96, this.pageW - 52);
         boolean hasNext = this.spreadIndex < CHAPTER_COUNT;
         drawFooterPill(
             ctx,
-            rx + PAGE_W - nextW,
+            rx + this.pageW - nextW,
             fy,
             nextW,
-            FOOTER_H,
+            this.footerH,
             Component.translatable(
                 hasNext
                     ? "gui.chiseled_enchanting_table.grimoire.nav.next"
@@ -496,12 +545,12 @@ public class ArcaneGrimoireScreen extends Screen {
         ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, bg);
         if (iconMode < 0) {
             drawSmallTriangle(ctx, x + 5, y + h / 2, false, fg);
-            drawCenteredBox(ctx, this.font, text, x + 11, w - 14, y + h * 0.5f, 0.58f, fg, false);
+            drawCenteredBox(ctx, this.font, text, x + 11, w - 14, y + h * 0.5f, 0.68f, fg, false);
         } else if (iconMode == 0) {
             drawHomeGlyph(ctx, x + 4, y + h / 2, fg);
-            drawCenteredBox(ctx, this.font, text, x + 13, w - 16, y + h * 0.5f, 0.58f, fg, false);
+            drawCenteredBox(ctx, this.font, text, x + 13, w - 16, y + h * 0.5f, 0.68f, fg, false);
         } else {
-            drawCenteredBox(ctx, this.font, text, x + 4, w - 15, y + h * 0.5f, 0.58f, fg, false);
+            drawCenteredBox(ctx, this.font, text, x + 4, w - 15, y + h * 0.5f, 0.68f, fg, false);
             drawSmallTriangle(ctx, x + w - 8, y + h / 2, true, fg);
         }
         this.interactiveRegions.add(new HitRegion(x, y, w, h, NAV_SPREAD, targetSpread));
@@ -514,7 +563,7 @@ public class ArcaneGrimoireScreen extends Screen {
     private void renderHomeLeftPage(GuiGraphicsExtractor ctx, int x, int y, int w, int h) {
         ctx.enableScissor(x, y, x + w, y + h);
         try {
-            int crestSize = 30;
+            int crestSize = 28;
             int cx = x + (w - crestSize) / 2;
             ctx.blit(CREST_TEX, cx, y, cx + crestSize, y + crestSize, 0.0f, 1.0f, 0.0f, 1.0f);
             this.itemSlots.add(new HoveredSlot(
@@ -529,8 +578,8 @@ public class ArcaneGrimoireScreen extends Screen {
                 Component.translatable("item.chiseled_enchanting_table.arcane_grimoire").getString(),
                 x + 2,
                 w - 4,
-                y + 37.0f,
-                0.86f,
+                y + 35.5f,
+                0.92f,
                 INK_PRIMARY,
                 false
             );
@@ -540,28 +589,30 @@ public class ArcaneGrimoireScreen extends Screen {
                 Component.translatable("gui.chiseled_enchanting_table.grimoire.home.edition").getString(),
                 x + 2,
                 w - 4,
-                y + 46.5f,
-                0.58f,
+                y + 46.0f,
+                0.68f,
                 INK_GOLD_DARK,
                 false
             );
 
             int divY = y + 53;
             ctx.fill(x + 10, divY, x + w - 10, divY + 1, CARD_BORDER);
-            ctx.fill(x + w / 2 - 14, divY, x + w / 2 + 14, divY + 1, INK_PURPLE);
+            ctx.fill(x + w / 2 - 16, divY, x + w / 2 + 16, divY + 1, INK_PURPLE);
 
-            int introY = divY + 5;
-            ctx.fill(x, introY, x + w, introY + 34, CALLOUT_BG);
-            ctx.fill(x, introY, x + 3, introY + 34, INK_PURPLE);
-            drawWrappedParagraph(
+            int introY = divY + 4;
+            int introH = 38;
+            ctx.fill(x, introY, x + w, introY + introH, CALLOUT_BG);
+            ctx.fill(x, introY, x + 3, introY + introH, INK_PURPLE);
+            drawWrappedBox(
                 ctx,
                 this.font,
                 Component.translatable("gui.chiseled_enchanting_table.grimoire.home.intro"),
                 x + 6,
-                introY + 3.5f,
+                introY + 2,
                 w - 10,
-                0.60f,
-                6.8f,
+                introH - 4,
+                0.70f,
+                0.62f,
                 INK_PRIMARY,
                 false
             );
@@ -572,22 +623,25 @@ public class ArcaneGrimoireScreen extends Screen {
                 "gui.chiseled_enchanting_table.grimoire.home.p3"
             };
             int[] cols = {INK_GOLD_DARK, INK_PURPLE, INK_EMERALD};
-            int pStartY = introY + 39;
-            int pH = 19;
+            int pStartY = introY + introH + 4;
+            int remH = Math.max(60, (y + h) - pStartY);
+            int pH = (remH - 6) / 3;
             for (int i = 0; i < 3; i++) {
                 int py0 = pStartY + i * (pH + 3);
                 ctx.fill(x, py0, x + w, py0 + pH, CARD_BORDER);
                 ctx.fill(x + 1, py0 + 1, x + w - 1, py0 + pH - 1, CARD_BG);
-                ctx.fill(x, py0, x + 13, py0 + pH, cols[i]);
-                drawCenteredBox(ctx, this.font, String.valueOf(i + 1), x, 13, py0 + pH * 0.5f, 0.60f, LIGHT_GOLD, false);
-                drawLeftCenteredY(
+                ctx.fill(x, py0, x + 14, py0 + pH, cols[i]);
+                drawCenteredBox(ctx, this.font, String.valueOf(i + 1), x, 14, py0 + pH * 0.5f, 0.68f, LIGHT_GOLD, false);
+                drawWrappedBox(
                     ctx,
                     this.font,
-                    Component.translatable(pillars[i]).getString(),
-                    x + 17,
-                    py0 + pH * 0.5f,
-                    0.58f,
-                    w - 21,
+                    Component.translatable(pillars[i]),
+                    x + 18,
+                    py0 + 2,
+                    w - 22,
+                    pH - 4,
+                    0.68f,
+                    0.62f,
                     INK_PRIMARY,
                     false
                 );
@@ -615,8 +669,8 @@ public class ArcaneGrimoireScreen extends Screen {
             "gui.chiseled_enchanting_table.grimoire.home.dir_title"
         );
 
-        int listTop = y + 16;
-        int availH = h - 16;
+        int listTop = y + 17;
+        int availH = h - 17;
         int gap = 2;
         int rowH = (availH - gap * (CHAPTER_COUNT - 1)) / CHAPTER_COUNT;
 
@@ -632,26 +686,27 @@ public class ArcaneGrimoireScreen extends Screen {
             ctx.fill(x, ry, x + 3, ry + rowH, TAB_COLORS[ch]);
 
             ItemStack icon = this.chapterIcons.get(i);
+            int iconSize = Math.min(14, rowH - 3);
             int iconX = x + 5;
-            int iconY = Math.round(ry + (rowH - 11.0f) * 0.5f);
+            int iconY = Math.round(ry + (rowH - iconSize) * 0.5f);
             var pose = ctx.pose();
             pose.pushMatrix();
             pose.translate(iconX, iconY);
-            pose.scale(11.0f / 16.0f, 11.0f / 16.0f);
+            pose.scale(iconSize / 16.0f, iconSize / 16.0f);
             ctx.item(icon, 0, 0);
             pose.popMatrix();
-            this.itemSlots.add(new HoveredSlot(icon, new Rect2i(iconX - 1, ry + 1, 13, rowH - 2), false));
+            this.itemSlots.add(new HoveredSlot(icon, new Rect2i(iconX - 1, ry + 1, iconSize + 2, rowH - 2), false));
 
-            String title = String.format("%02d ", ch)
-                + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + ch + ".short").getString();
+            String title = String.format("%02d  ", ch)
+                + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + ch + ".title").getString();
             drawLeftCenteredY(
                 ctx,
                 this.font,
                 title,
-                x + 19,
+                x + 22,
                 ry + rowH * 0.5f,
-                0.62f,
-                w - 30,
+                0.72f,
+                w - 33,
                 over ? INK_PURPLE : INK_PRIMARY,
                 false
             );
@@ -662,7 +717,7 @@ public class ArcaneGrimoireScreen extends Screen {
     }
 
     // =========================================================================
-    // SPREADS 1..8 — LEFT PAGE PROSE + RIGHT PAGE INTERACTIVE DIAGRAMS
+    // SPREADS 1..8 — LEFT PAGE PROSE + RIGHT PAGE LIVE DIAGRAMS
     // =========================================================================
 
     private ColumnRenderResult renderChapterLeftProse(
@@ -709,7 +764,10 @@ public class ArcaneGrimoireScreen extends Screen {
                 )),
                 PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.tracks"), INK_GOLD_DARK),
                 PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t1")),
-                PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t2")),
+                PageBlock.step(2, Component.translatable(
+                    "gui.chiseled_enchanting_table.grimoire.ch3.t2",
+                    sg.maxDirectBookshelves()
+                )),
                 PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t3")),
                 PageBlock.callout(
                     Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.note_t"),
@@ -727,9 +785,9 @@ public class ArcaneGrimoireScreen extends Screen {
                     Component.translatable("gui.chiseled_enchanting_table.grimoire.ch4.res_t", lr.maxTotalXpDiscountPercent()),
                     Component.translatable(
                         "gui.chiseled_enchanting_table.grimoire.ch4.res_b",
-                        lr.maxDiscountBookshelves(),
                         lr.maxWoodenDiscountPercent(),
                         lr.maxGlobalMasteryDiscountPercent(),
+                        lr.maxBaseXpDiscountPercent(),
                         lr.maxSpecificEnchantBonusPercent()
                     ),
                     INK_EMERALD
@@ -753,7 +811,8 @@ public class ArcaneGrimoireScreen extends Screen {
                 PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch6.s1")),
                 PageBlock.step(2, Component.translatable(
                     "gui.chiseled_enchanting_table.grimoire.ch6.s2",
-                    SyncedEnchantmentCosts.epiphanyMinBookshelves()
+                    SyncedEnchantmentCosts.epiphanyMinBookshelves(),
+                    SyncedEnchantmentCosts.epiphanyMaxSlotsCap()
                 )),
                 PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch6.s3")),
                 PageBlock.callout(
@@ -766,9 +825,14 @@ public class ArcaneGrimoireScreen extends Screen {
                 PageBlock.lead(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch7.lead")),
                 PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.steps"), INK_EMERALD),
                 PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch7.s1")),
-                PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch7.s2")),
+                PageBlock.step(2, Component.translatable(
+                    "gui.chiseled_enchanting_table.grimoire.ch7.s2",
+                    sg.baseBatchSize(),
+                    sg.tier3BatchSize()
+                )),
                 PageBlock.step(3, Component.translatable(
                     "gui.chiseled_enchanting_table.grimoire.ch7.s3",
+                    sg.tier1Bookshelves(),
                     sg.tier2Bookshelves(),
                     sg.tier3QualifyingEnchantments()
                 )),
@@ -834,7 +898,9 @@ public class ArcaneGrimoireScreen extends Screen {
                 case 7 -> GrimoireDiagramRenderer.renderChapter7Transmute(
                     ctx, this.minecraft, x, y, w, h, this.selectedTransmuteIdx, mouseX, mouseY, this.interactiveRegions, this.itemSlots
                 );
-                default -> GrimoireDiagramRenderer.renderChapter8Cleanse(ctx, this.minecraft, x, y, w, h);
+                default -> GrimoireDiagramRenderer.renderChapter8Cleanse(
+                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, this.itemSlots
+                );
             }
         } finally {
             ctx.disableScissor();
@@ -864,6 +930,7 @@ public class ArcaneGrimoireScreen extends Screen {
         }
 
         if (event.button() == 0) {
+            int maxCap = Math.max(1, SyncedEnchantmentCosts.shelfGatesConfig().maxDirectBookshelves());
             for (HitRegion region : this.interactiveRegions) {
                 if (region.contains(mouseX, mouseY)) {
                     switch (region.actionId()) {
@@ -885,7 +952,7 @@ public class ArcaneGrimoireScreen extends Screen {
                         }
                         case GrimoireDiagramRenderer.ACTION_SHELF_STEP -> {
                             int delta = Integer.parseInt(region.payload());
-                            int updated = Mth.clamp(this.demoShelves + delta, 0, 38);
+                            int updated = Mth.clamp(this.demoShelves + delta, 0, maxCap);
                             if (updated != this.demoShelves) {
                                 this.demoShelves = updated;
                                 GrimoireSoundHelper.playTabSwitch();
@@ -909,9 +976,9 @@ public class ArcaneGrimoireScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (this.spreadIndex > 0 && this.leftMaxScroll > 0.5f) {
-            int lx = this.bookX + LEFT_PAGE_X;
-            int py = this.bookY + PAGE_TOP_Y;
-            if (mouseX >= lx && mouseX < lx + PAGE_W && mouseY >= py && mouseY < py + PAGE_H) {
+            int lx = this.bookX + this.leftPageX;
+            int py = this.bookY + this.pageTopY;
+            if (mouseX >= lx && mouseX < lx + this.pageW && mouseY >= py && mouseY < py + this.pageH) {
                 this.leftScroll = Mth.clamp(this.leftScroll - (float) (scrollY * 14.0), 0.0f, this.leftMaxScroll);
                 return true;
             }
@@ -930,6 +997,11 @@ public class ArcaneGrimoireScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
+
+        if (keyCode == InputConstants.KEY_ESCAPE) {
+            onClose();
+            return true;
+        }
 
         // Direct R / U recipe-viewer lookup fallback when hovering an item slot
         if ((keyCode == InputConstants.KEY_R || keyCode == InputConstants.KEY_U) && GrimoireViewerBridge.isAvailable()) {

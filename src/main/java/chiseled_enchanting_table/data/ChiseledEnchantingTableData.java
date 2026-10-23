@@ -809,25 +809,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
 
         static BookUpgradeRules builtInFallback() {
-            String json = """
-                {
-                  "combine_route": { "enabled": true, "xp_cost_multiplier_of_vanilla_like": 0.6 },
-                  "research_route": {
-                    "enabled": true,
-                    "xp_cost_multiplier_of_direct_enchant": 1.4,
-                    "material_cost_multiplier_of_direct_enchant": 1.0,
-                    "default_material_cost": {
-                      "options": [
-                        { "item": "minecraft:lapis_lazuli", "base_count": 6, "max_level_count": 26, "level_exponent": 1.3 },
-                        { "item": "minecraft:emerald", "base_count": 5, "max_level_count": 23, "level_exponent": 1.3 },
-                        { "item": "minecraft:amethyst_shard", "base_count": 2, "max_level_count": 10, "level_exponent": 1.3 }
-                      ]
-                    },
-                    "enchantment_overrides": {}
-                  }
-                }
-                """;
-            return fromJson(GSON.fromJson(json, JsonObject.class));
+            return fromJson(readBundledJsonObject("book_upgrades.json"));
         }
 
         int combineXpCost(EnchantmentWithLevel target, int maxLevel, int directXpCost) {
@@ -879,20 +861,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
 
         static CostTables builtInFallback() {
-            String json = """
-                {
-                  "xp": { "level_one_cost": 2, "common_max_cost": 10, "rare_single_level_cost": 10 },
-                  "default_item_cost": {
-                    "options": [
-                      { "item": "minecraft:lapis_lazuli", "base_count": 3, "max_level_count": 20, "level_exponent": 1.3 },
-                      { "item": "minecraft:emerald", "base_count": 2, "max_level_count": 18, "level_exponent": 1.3 },
-                      { "item": "minecraft:amethyst_shard", "base_count": 1, "max_level_count": 8, "level_exponent": 1.3 }
-                    ]
-                  },
-                  "item_costs": {}
-                }
-                """;
-            return fromJson(GSON.fromJson(json, JsonObject.class));
+            return fromJson(readBundledJsonObject("enchantment_costs.json"));
         }
 
         List<List<ItemStack>> itemCostOptions(EnchantmentWithLevel enchantmentWithLevel, int maxLevel) {
@@ -1103,6 +1072,20 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             return expanded.isEmpty() ? List.of() : expanded.getFirst();
         }
 
+        /**
+         * Computes the concrete item count required for {@code level} within {@code [1..maxLevel]}.
+         *
+         * <p><b>Why {@code span = min(1.30, 0.52 + 0.096 * safeMax)} stretches {@code maxLevelCount}:</b>
+         * A single {@link CostTables.TierEntry} configures {@code baseCount} and {@code maxLevelCount} per
+         * enchantment rarity tier rather than per individual enchantment. Within the same rarity tier,
+         * enchantments vary widely in maximum level: single-step enchantments ({@code maxLevel = 1}),
+         * mid-ladder enchantments ({@code maxLevel = 3}, {@code span = 0.808}), and full five-tier ladders
+         * ({@code maxLevel = 5}, {@code span = 1.000}, matching {@code maxLevelCount} 1:1).
+         * Scaling {@code span} linearly with {@code safeMax} (anchored at {@code 1.0} for {@code maxLevel = 5}
+         * and capped at {@code 1.30} for over-leveled datapacks up to {@code VIII+}) prevents a 2- or 3-level
+         * enchantment's final rank from charging the full endgame 5-level capstone cost on its third step,
+         * while allowing datapacks with {@code maxLevel > 5} to scale smoothly up to {@code 1.30x}.</p>
+         */
         private int computeCount(int level, int maxLevel) {
             int computedCount;
             if (baseCount > 0 && maxLevelCount >= baseCount) {
@@ -1298,32 +1281,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
 
         static TreasureEpiphanyRules builtInFallback() {
-            String json = """
-                {
-                  "min_regular_bookshelves": 32,
-                  "base_chance": 0.28,
-                  "chance_per_extra_bookshelf": 0.008,
-                  "chance_per_master_tome": 0.022,
-                  "max_chance": 0.90,
-                  "max_slots_cap": 4,
-                  "score_per_extra_slot": 12,
-                  "cycle_ticks": 12000,
-                  "freeze_duration_ticks": 24000,
-                  "max_freeze_ticks": 72000,
-                  "freeze_xp_levels": 1,
-                  "reroll_xp_levels": 2,
-                  "default_xp_levels": 24,
-                  "default_material_cost": {
-                    "options": [
-                      { "item": "minecraft:diamond", "count": 6, "extra": { "item": "minecraft:amethyst_shard", "count": 8 } },
-                      { "item": "minecraft:emerald", "count": 22, "extra": { "item": "minecraft:lapis_lazuli", "count": 24 } },
-                      { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
-                    ]
-                  },
-                  "treasure_costs": {}
-                }
-                """;
-            return fromJson(GSON.fromJson(json, JsonObject.class));
+            return fromJson(readBundledJsonObject("treasure_epiphany.json"));
         }
 
         double chanceFor(int regularBookshelves, int chiseledBooks) {
