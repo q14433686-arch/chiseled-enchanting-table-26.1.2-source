@@ -199,8 +199,6 @@ net.fabricmc.fabric-api:fabric-api-lookup-api-v1:2.0.24+3434d6d95d
 |    \--- compileClasspath
 \--- net.fabricmc.fabric-api:fabric-transfer-api-v1:8.0.25+fcdff87f5d
 ...[truncated 1003 lines total]...
-
-net.fabricmc.fabric-api:fabric-object-builder-api-v1:24.1.10+3434d6d95d
   Variant compile:
     | Attribute Name                 | Provided | Requested    |
     |--------------------------------|----------|--------------|
@@ -999,5 +997,7 @@ A web-based, searchable dependency report is available by adding the --scan opti
 == job status: success ==
 
 == job status: cancelled ==
+
+== job status: success ==
 
 == job status: success ==
