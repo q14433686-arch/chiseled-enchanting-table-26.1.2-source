@@ -235,7 +235,8 @@ public final class SyncedEnchantmentCosts {
         for (Runnable listener : LISTENERS) {
             try {
                 listener.run();
-            } catch (RuntimeException ignored) {
+            } catch (RuntimeException error) {
+                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.error("Failed to refresh a synchronized enchanting-data consumer", error);
             }
         }
     }

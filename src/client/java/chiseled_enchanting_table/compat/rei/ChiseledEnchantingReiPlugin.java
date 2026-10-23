@@ -3,6 +3,7 @@ package chiseled_enchanting_table.compat.rei;
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.compat.EnchantQueryIndex;
 import chiseled_enchanting_table.compat.TransformationQueryIndex;
+import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen;
 import chiseled_enchanting_table.gui.grimoire.ArcaneGrimoireScreen;
 import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge;
@@ -48,8 +49,19 @@ public class ChiseledEnchantingReiPlugin implements REIClientPlugin {
         }
     };
 
+    private HolderLookup.Provider cachedRegistries;
+    private List<ReiEnchantingDisplay> cachedEnchanting;
+    private List<ReiTransformationDisplay> cachedTransformations;
+
     public ChiseledEnchantingReiPlugin() {
         GrimoireViewerBridge.registerBackend(REI_BACKEND);
+        SyncedEnchantmentCosts.addListener(this::invalidateDisplays);
+    }
+
+    private synchronized void invalidateDisplays() {
+        this.cachedRegistries = null;
+        this.cachedEnchanting = null;
+        this.cachedTransformations = null;
     }
 
     @Override
@@ -71,27 +83,74 @@ public class ChiseledEnchantingReiPlugin implements REIClientPlugin {
 
     @Override
     public void registerDisplays(DisplayRegistry registry) {
-        HolderLookup.Provider registries = registries();
-        if (registries == null) return;
+        // Static registrations would survive a server cost/catalog reload unchanged.
+        registry.registerDisplayGenerator(ReiEnchantingCategory.ID, generator(this::enchantingDisplays));
+        registry.registerDisplayGenerator(ReiTransformationCategory.ID, generator(this::transformationDisplays));
+    }
 
-        List<EnchantQueryIndex.Entry> rows = EnchantQueryIndex.build(registries);
-        int added = 0;
-        for (EnchantQueryIndex.Entry row : rows) {
-            Holder.Reference<Enchantment> holder =
-                EnchantQueryIndex.holder(registries, row.enchantmentId()).orElse(null);
-            if (holder == null) continue;
-            registry.add(new ReiEnchantingDisplay(row, holder));
-            added++;
+    private void updateDisplays() {
+        var provider = registries();
+        if (provider == null) {
+            invalidateDisplays();
+            return;
         }
-        List<TransformationQueryIndex.Entry> transforms = TransformationQueryIndex.build();
-        for (TransformationQueryIndex.Entry trans : transforms) {
-            registry.add(new ReiTransformationDisplay(trans));
+        if (this.cachedRegistries == provider && this.cachedEnchanting != null) return;
+        var enchanting = new java.util.ArrayList<ReiEnchantingDisplay>();
+        for (var row : EnchantQueryIndex.build(provider)) {
+            EnchantQueryIndex.holder(provider, row.enchantmentId())
+                .ifPresent(holder -> enchanting.add(new ReiEnchantingDisplay(row, holder)));
         }
-        ChiseledEnchantingTable.LOGGER.debug(
-            "REI integration: registered {} enchanting displays and {} transformation displays",
-            added,
-            transforms.size()
-        );
+        this.cachedEnchanting = List.copyOf(enchanting);
+        this.cachedTransformations = TransformationQueryIndex.build().stream().map(ReiTransformationDisplay::new).toList();
+        this.cachedRegistries = provider;
+    }
+
+    private synchronized List<ReiEnchantingDisplay> enchantingDisplays() {
+        updateDisplays();
+        return this.cachedEnchanting == null ? List.of() : this.cachedEnchanting;
+    }
+
+    private synchronized List<ReiTransformationDisplay> transformationDisplays() {
+        updateDisplays();
+        return this.cachedTransformations == null ? List.of() : this.cachedTransformations;
+    }
+
+    private static <D extends me.shedaniel.rei.api.common.display.Display>
+    me.shedaniel.rei.api.client.registry.display.DynamicDisplayGenerator<D> generator(java.util.function.Supplier<List<D>> displays) {
+        return new me.shedaniel.rei.api.client.registry.display.DynamicDisplayGenerator<>() {
+            @Override
+            public java.util.Optional<List<D>> generate(ViewSearchBuilder builder) {
+                // Focused queries go through getRecipeFor/getUsageFor, with component-aware filtering.
+                return builder.getRecipesFor().isEmpty() && builder.getUsagesFor().isEmpty()
+                    ? java.util.Optional.of(displays.get()) : java.util.Optional.empty();
+            }
+
+            @Override
+            public java.util.Optional<List<D>> getRecipeFor(EntryStack<?> focus) {
+                return matching(displays.get(), focus, false);
+            }
+
+            @Override
+            public java.util.Optional<List<D>> getUsageFor(EntryStack<?> focus) {
+                return matching(displays.get(), focus, true);
+            }
+        };
+    }
+
+    private static <D extends me.shedaniel.rei.api.common.display.Display>
+    java.util.Optional<List<D>> matching(List<D> displays, EntryStack<?> focus, boolean usage) {
+        if (focus.getType() != VanillaEntryTypes.ITEM) return java.util.Optional.empty();
+        ItemStack stack = (ItemStack) focus.getValue();
+        return java.util.Optional.of(displays.stream().filter(display -> {
+            var ingredients = usage ? display.getInputEntries() : display.getOutputEntries();
+            for (var ingredient : ingredients) {
+                for (var entry : ingredient) {
+                    if (entry.getType() == VanillaEntryTypes.ITEM
+                        && ItemStack.isSameItemSameComponents((ItemStack) entry.getValue(), stack)) return true;
+                }
+            }
+            return false;
+        }).toList());
     }
 
     @Override
