@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "chiseled_enchanting_table_grimoire",
+  "ingredients": [
+    "chiseled_enchanting_table:depleted_tome",
+    "minecraft:ink_sac"
+  ],
+  "result": {
+    "id": "chiseled_enchanting_table:arcane_grimoire",
+    "count": 1
+  }
+}

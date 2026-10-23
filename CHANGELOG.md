@@ -18,6 +18,81 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 
 ## [1.1.0] - 2026-10-23
 
+### Added — Illustrated In-Game Manual (`纂刻秘典` / `chiseled_enchanting_table:arcane_grimoire`)
+
+- **Dual Shapeless Crafting Recipes, Container-Safe In-Table Overlay & Chiseled Bookshelf Compatibility**:
+  - Craftable via **`minecraft:writable_book` + `minecraft:chiseled_bookshelf`** (`recipe/arcane_grimoire_from_shelf.json`) OR **`chiseled_enchanting_table:depleted_tome` + `minecraft:ink_sac`** (`recipe/arcane_grimoire_from_tome.json`), unlocked automatically in the vanilla Recipe Book, storable inside Chiseled Bookshelves (`#minecraft:bookshelf_books`), and opened directly inside `ChiseledEnchantingTableScreen` as a non-destructive modal overlay (keeping both container slots intact and live shelf sync active, plus server-validated `ReopenTablePayload` recovery after external JEI/REI screen round-trips).
+- **Illuminated Double-Page Vellum Layout, Strict Single-Pass Typography Engine & Live Data-Driven Diagrams**:
+  - Features an 8-chapter Home Directory spread, persistent top breadcrumb/index/back bar, right-edge chapter bookmark ribbons, bottom pagination + instant return-to-index controls, and full keyboard/mouse navigation (`←/→/A/D`, `Home/Backspace`, `1–8`, `ESC`).
+  - Uses explicit `0xFF` ARGB optical block centering, single-pass `ColumnPlan` line-wrapping math (`0.72f–0.80f` body scales, wrapped multi-line boxes with zero tiny horizontal squishing), and hardware `enableScissor` clipping across **308 verified localization keys in all 11 shipped languages** (`ci_static_checks.py` + JUnit 5 hard-gated).
+  - All 8 right-page demonstrations read live JSON recipes (`recipe/*.json`), live `SyncedEnchantmentCosts`, and `TransformationQueryIndex` directly with full **JEI & REI** integration (catalyst/workstation registration for `ARCANE_GRIMOIRE`, sidebar overlay bounds & exclusion zones, hover `R`/`U`/`A`, and Left/Right-click lookup via `GrimoireViewerBridge`).
+- **Native Vanilla Book & UI Audio Feedback**:
+  - Uses vanilla Minecraft book/UI sound events (`SoundEvents.BOOK_PAGE_TURN`, `SoundEvents.BOOK_PUT`, and `SoundEvents.UI_BUTTON_CLICK`) with subtle pitch variation — zero custom `.ogg` audio asset overhead.
+
+### Round 2 Deep Code & Configuration Audit Remediation (`ZIP 3` & `ZIP 4`)
+
+- **Fixed Book Combine Upgrade Triple Regression (`R2-1`)**: `BookUpgradeApplication#applyCombine` now resolves and deducts `XpRequirement.deductedLevels()` via `resolveEffectiveXpRequirement` (matching UI tooltips and Research Upgrade instead of deducting `requiredLevel()`), and `ChiseledEnchantingTableScreenHandler` applies `min(rawCost, deltaRaw)` to `BOOK_COMBINE_UPGRADE` so `book_upgrades.json`'s `0.6×` multiplier takes full effect (`Combine <= Research` locked by JUnit 5 & CI gates).
+- **Unified `library_resonance.json` Nested Schema, Full Key Coverage & Client S2C Sync (`R2-2`, `R2-3`, `R2-6`, `CFG-01`, `SYNC-01`)**: `LibraryResonance.Config#fromJson` now parses all 3 nested objects (`wooden_bookshelves`, `chiseled_mastery`, `epiphany_affinity`, plus flat/legacy aliases) including configurable `epiphany_probability_global_weight`, `epiphany_probability_affinity_weight`, and `blank_book_affinity_weight`; all shared math & client/JEI/REI callers accept explicit synced `LibraryResonance.Config` (`EnchantCostTablePayload` extended symmetrically).
+- **Aligned Item Transformation XP Thresholds, Bottle Conservation & Vanilla Bar Percentage (`XP-01`, `XP-02`, `R2-8`)**: separated transformation `xp_cost` (`required_player_level`), `min_required_level` (`min_player_level` alias), and `deducted_levels` across `item_transformations.json`, UI, JEI/REI, and `WIKI.md` (`1/1`, `5/1` with `Lv.3` floor `>= 11 XP`, `12/2`, `20/2`, `25/3`, `30/3`), and made `vanillaTierMode` call `player.giveExperienceLevels(-deductedLevels)` to preserve exact fractional bar progress.
+- **High-Tier Modded Progression (`SHELF-01`), Scan Volume Budgeting (`PERF-01`), `M = 255` `0 XP` Display (`XP-03`), Single-Source Fallbacks (`F8` / `R2-9`), JEI/REI Sync (`JEI-01`), & Compiled JUnit 5 Verification (`R2-4` / `TEST-01`)**:
+  - Distributed `maxLevel > 39` (`40..255`) smoothly across all `39` shelf gates `0..38` instead of collapsing `217` tiers onto `1` shelf;
+  - Capped scan volume (`<= 2048` blocks), cached offset lists, deduplicated `computeLiveShelfState` & `get_unlocked_enchantements` to a single scan, and budgeted client `animateTick` particle sampling (`16` samples/tick);
+  - Memoized `DisenchantmentApplication#buildPotentialTable`, verified every `1 <= a < k <= M` step in `verifyRuntimeConservation`, displayed `0 XP` cleanly on quantized zero-refund downgrade rows, removed duplicate `BUILT_IN_JSON` text blocks via `readBundledJsonObject(...)` and dead slot helpers, fixed `epiphanyCycleTicks()` on client menu init, and added `EconomyAndConfigVerificationTest` (`JUnit 5`) + `33,423,360` 1:1 checks in `scripts/compat_check.py`.
+
+### Security, Economy & Architecture Hardening — Full Audit Resolution (`ZIP 1` & `ZIP 2`)
+
+- **Closed All Infinite XP Arbitrage Loops & Proved Inductive Conservation (`M = 1..255`)**:
+  - Fixed two infinite XP duplication paths in `XpCostConversion` + `DisenchantmentApplication`:
+    1. **Master Tome Incremental Step Loop**: enforced `Math.max(minStepThreshold, scaledRaw)` in `XpCostConversion#forIncrementalMasterTomeEnchant` instead of discarding `minStepThreshold` whenever `rawTargetCost > 0`;
+    2. **Zero-Tome Wooden Upgrade Loop**: added `XpCostConversion#forFullArcaneEnchantOrUpgrade` so non-Master-Tome upgrades (`IV -> V` at low player level) never cost fewer XP points than the disenchant step-down refund;
+    3. **Pigeonhole `maxLevel > 126` & Telescoping Additivity**: replaced `max(clampedLvl, ...)` and `max(1, V[cur] - V[next])` with an inductive potential builder (`DisenchantmentApplication#buildPotentialTable`) plus runtime startup/reload guard (`verifyRuntimeConservation`), ensuring exact telescoping additivity (`sum ΔV = V[M]`) and `V[k] - V[j] <= Cost_min(j -> k)` across every `maxLevel = 1..255`.
+- **Resolved All 4 Mechanism Collisions (`Collision 01–04`)**:
+  - **Three-Track Bookshelf Role Separation (`Collision 01`, `gamma = 1.25`)**: regular bookshelves (`#chiseled_enchanting_table:regular_bookshelves`) unlock **blank** inscriptions up to `ceil(maxLevel / 2)` (`shelf_gates.json`: `blank_max_tier_mode: "half_ceil"`), scale upgrades on **already-enchanted** items/books up to `MAX` along `0..38` shelves (`I(0) → II(7) → III(16) → IV(27) → V(38)`), while **Chiseled Bookshelf Master Tomes** retain exclusive `1:1` direct blank graduation (`I..MAX`, Treasures, and Vanilla Mass-Production `1–3L` XP mode).
+  - **Deduplicated Master Tome Evaluation (`F3`)**: Tier-3 Depleted Tome qualification counts distinct stored enchantments meeting `level >= max(1, maxLevel - 1)` from `storedMasterLevels`, eliminating duplicate-book inflation.
+  - **Linear Batch Scaling & Stack-Loss Fix (`Collision 03`)**: fixed multi-item slot overwrite on standard transmutations (`1` input consumed per ritual, remainder preserved) and linear per-unit material/XP batch scaling (`1..8` / `1..64`) on `blank_overwrite`.
+  - **Live Shelf State Synchronization (`Collision 04`)**: added server-authoritative `LiveShelfStatePayload` rescanning every `20` ticks and prior to every ritual/reroll/freeze action so open menus respond immediately to world block or book changes.
+- **Full De-Hardcoding & Modpack Extensibility (`HC-01` .. `HC-10`)**:
+  - Added `#chiseled_enchanting_table:regular_bookshelves` (`HC-01`), `#chiseled_enchanting_table:epiphany_exclusive` (`HC-10`), `library_resonance.json` (`HC-03`, synced via `EnchantCostTablePayload`), `ModBootstrapConfig` (`config/chiseled_enchanting_table.json` for `enchanted_book_max_stack_size`, `HC-04`), standalone pure-vanilla options in `disenchanting.json` (`HC-05`), `min_player_level` on transformations (`HC-06`), `OptionType#token()` wire decoupling (`HC-07`), clean 64-stacking unfrozen table drops (`rem > 0L` check in `collectImplicitComponents`, `HC-08`), `#tag` selectors across costs/transformations/default enchantments, and correct `DEPLETED_TOME` display in `TransformationQueryIndex` (`HC-02`).
+
+### Added & Fixed — Incremental Upgrade Discounting, Dual-Tab Disenchanting / Cleansing & Curse Purging
+
+- **Context-Aware Incremental Upgrade Discounting (`L_cur -> L_new`)**:
+  - Fixed the playtest bug where directly upgrading an `Enchanted Book` or enchanted piece of gear
+    already holding enchantment `E` at level `L_cur < L_new` charged the full `0 -> L_new` material
+    and XP cost (and emitted duplicate `ENCHANTMENT` + `BOOK_RESEARCH_UPGRADE` rows on books).
+  - `ChiseledEnchantingTableScreenHandler#getEffectiveItemCostOptions` and
+    `#resolveEffectiveXpRequirement` now deduct previously invested material counts (`max(1,
+    Cost(L_new) - Cost(L_cur))`), apply a `-20%` Master Tome guidance bonus (`-10%` at `12+` Wooden
+    Bookshelves), cap `Enchanted Book` `+1` upgrades so shelf/tome guidance is strictly cheaper or
+    equal to Research Upgrade, reduce incremental Master Tome XP to `1..2` deducted levels with a
+    reduced player level threshold (`XpCostConversion#forIncrementalMasterTomeEnchant`), and filter
+    out duplicate or downward rows from the Enchant tab.
+- **Dual-Tab UI (`Enchant` vs `Cleanse`), Free XP-Refunding Disenchant & Downgrade, `Cleansing Grit`, and High-Cost Curse Purging**:
+  - **Dual Mode Tabs**: seamless top stone folder tabs switch between **Enchant / Upgrade (`铭刻 · 升阶`)**
+    and **Disenchant / Cleanse (`退魔 · 洗练`)**, swapping the right-hand console to a dedicated
+    jade-emerald **Cleanse Altar** panel with live trait summary, total refund preview, and one-click
+    **Disenchant All** button (`gui/btn_cleanse_all.png`).
+  - **Free Full Disenchant & Step-Down Downgrading with Anti-Arbitrage XP Refunds**: full non-curse
+    wipes (`DISENCHANT_ALL`) and level step-downs (`DOWNGRADE_ENCHANTMENT`, `L_cur -> L_target`)
+    never consume materials or XP; instead they refund essence XP points (`+XP` orb badge) computed
+    dynamically from relative tier (`r = L / maxLevel`, auto-adapting to any modded `maxLevel =
+    1..255`), log-clamped `Enchantment#anvilCost()`, and `#minecraft:treasure` via telescoping
+    potentials (`V(L_cur) - V(L_target)`) proven strictly lower than Master Tome re-enchant costs
+    even at `-40%` resonance. Single-trait `Enchanted Book` wipes cleanly restore a plain `Book`.
+  - **New Item `Cleansing Grit` (`退魔砂`) & Targeted Single-Trait Removal (`STRIP_SINGLE_ENCHANTMENT`)**:
+    crafted `4×` shapeless from `Flint + Nether Quartz + Glow Ink Sac + Bone Meal`, allowing players
+    to remove a single unwanted enchantment while keeping all other traits intact (with built-in
+    vanilla alternatives `Glow Ink Sac + Quartz`, `Flint + Bone Meal`, or `Arcane Synthesis Crystal`).
+  - **High-Cost Curse Purging (`PURGE_CURSE`)**: free Full Disenchant leaves `#minecraft:curse`
+    enchantments intact, while Cleanse rows allow purging Curses via `2× Cleansing Grit + 1× Ghast
+    Tear`, `1× Arcane Synthesis Crystal`, or `2× Ghast Tear + 1× Golden Apple` + `12` Full Ritual
+    XP levels (discounted up to `-40%` by Library Resonance).
+  - **Full `Shift-Click`, 11-Locale Copy, Datapack `disenchanting.json`, & Bidirectional JEI/REI**:
+    any item carrying existing enchantments (including `Shield`, `Elytra`, `Carved Pumpkin`) can be
+    `Shift-clicked` into the top slot; all 3 Cleanse rituals appear in JEI & REI under
+    **Transmutation & Cleansing**; all 11 locales (`138` keys each) and [`docs/WIKI.md`](docs/WIKI.md)
+    are updated in full parity.
+
 ### Changed — Unified Progression, Library Resonance & Player-Choice Economy Overhaul (A × B × C)
 
 - **Plain-Spoken UI Copy, Trident Recipe Rebalance, Full-Library Glyph Particles, GitHub Wiki & JEI/REI Transformations**:

@@ -61,24 +61,17 @@ loom {
 sourceSets {
     main {
         java {
-            // Port-side exclusions. The old exclusion set covered everything the P1 skeleton
-            // couldn't compile against 26.1.2 yet. The current port compiles enough of the
-            // upstream feature set that most old excludes are gone; what remains:
-            //   * chiseled_enchanting_table.integration.*                — third-party mod
-            //     integration (Colorful Books etc.) — port later as an opt-in layer.
-            //   * chiseled_enchanting_table.mixin.enchanting_table.*     — the vanilla-anvil
-            //     "no more same-level book combine" mixin from upstream; not re-verified for
-            //     26.1.2 yet, keep excluded so it can't break the anvil.
-            //   * The four legacy structure mixins under mixin/structureProcessor/            —
-            //     replaced by the new port-owned mixins under mixin/structure/.
-            //   * modifyChestLootTable/* and the utils/ChiseledBookshelfLootTable helper       —
-            //     legacy hardcoded Java; superseded by the JSON-driven loot injector and
-            //     BookshelfBookFiller.
-            //   * block/ChiseledBookshelfTick                                                  —
-            //     still deferred (adds enchant particles/sound over a chiseled bookshelf).
-            // 1.0.2: vanilla enchanting-table book blocking and narrow book+book same-level
-            // anvil merge block restored. 1.0.3: chiseled-bookshelf random-tick ambient
-            // particle/sound and flat anvil prior-work penalty (`RemoveXpCostScaling`) restored.
+            // Active & restored mixins compiled in `main` (NOT excluded):
+            //   * mixin/enchanting_table/DisableBookEnchanting, AnvilMenuMixin, AnvilScreenMixin,
+            //     RemoveXpCostScaling — blocks vanilla enchanting-table book rolls, routes same-level
+            //     book combines to the table, and flattens anvil prior-work XP scaling.
+            //   * block/ChiseledBookshelfTick & mixin/structure/* — chiseled-bookshelf ambient rune
+            //     particles/sound and structure bookshelf population.
+            // Remaining excluded legacy upstream directories:
+            //   * integration/* — unported 1.20 third-party mod hooks (Colorful Books etc.).
+            //   * mixin/structureProcessor/* & structureProcessor/* — replaced by mixin/structure/*.
+            //   * modifyChestLootTable/* & utils/ChiseledBookshelfLootTable.java — replaced by
+            //     JSON-driven LootRegistry + BookshelfBookFiller.
             exclude 'chiseled_enchanting_table/mixin/structureProcessor/**'
             exclude 'chiseled_enchanting_table/modifyChestLootTable/**'
             exclude 'chiseled_enchanting_table/structureProcessor/**'
@@ -97,11 +90,8 @@ sourceSets {
             if (!reiEnabled) {
                 exclude 'chiseled_enchanting_table/compat/rei/**'
             }
-            // P3 first establishes a client compile slice. Full UI/renderer migration is still parked.
-            //exclude 'chiseled_enchanting_table/gui/**'
-            // P7: renderer restored for floating book smoke path.
-            // exclude 'chiseled_enchanting_table/render/**'
-            //exclude 'chiseled_enchanting_table/utils/**'
+            // All 26.1.2 client screens (ChiseledEnchantingTableScreen, ArcaneGrimoireScreen,
+            // row renderers), custom draw helpers, and block-entity book renderer compile cleanly.
         }
     }
 }
@@ -130,6 +120,14 @@ dependencies {
         compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}", toolchainPins)
         compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}", toolchainPins)
     }
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 processResources {

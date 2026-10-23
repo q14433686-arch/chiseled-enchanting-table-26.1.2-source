@@ -27,6 +27,10 @@ public final class EnchantCostSync {
 
     public static void init() {
         PayloadTypeRegistry.clientboundPlay().register(EnchantCostTablePayload.TYPE, EnchantCostTablePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(
+            ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.TYPE,
+            ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.CODEC
+        );
 
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
             ServerPlayer player = listener.player;
