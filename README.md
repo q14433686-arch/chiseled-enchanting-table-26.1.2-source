@@ -12,9 +12,9 @@
 
 **Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
 
-> The full 26.1.2 delta through `3e081f3` is now ported using **option 1**: source defaults plus necessary hardening, while retaining the 26.3 fixes.
-> See the [implementation and verification report](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md). Protocol revision is **5** despite the unchanged 1.1.0 release label: update both client and server.
-> **Back up existing worlds:** defaults now include mother-tome wear (16 charges, copying costs 4), reduced refunds for unmarked/external items, and config-over-datapack priority. GUI/multiplayer interaction remains to be tested manually.
+> The full 26.1.2 delta through `3e61f5d` (PR #17/#18) is integrated using **option 3**: effective-rule and shared-recovery architecture, persistent inventories, guarded rituals, depleted-tome world/trade features and updated Grimoire/locales, retaining the 26.3 fixes.
+> See the [implementation, cross-branch feedback and verification report](docs/reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md). Protocol revision is **6** despite the unchanged 1.1.0 release label: update both client and server.
+> **Back up existing worlds:** defaults now include mother-tome wear (16 charges, copying costs 4), reduced refunds for unmarked/external items, new-config datapack priority, and 24,000 / 12,000 / 3,600-second recovery tiers (38/42 shelves). Existing explicit settings are preserved. 52 JUnit and real server probes pass; GUI/multiplayer interaction still requires manual validation.
 **Target:** Minecraft `26.3`, Fabric Loader `>=0.19.5`, Fabric API `0.162.0+26.3`, Java `>=25`.
 
 📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)**

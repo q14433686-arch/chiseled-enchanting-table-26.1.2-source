@@ -3,7 +3,7 @@
 > **Unofficial community port.** All documents indexed below describe the unofficial 26.3 port
 > in this repository. It is not affiliated with or endorsed by the original author of
 > [`chiseled-enchanting-table`](https://github.com/Sacramentix/chiseled-enchanting-table).
-> Current version: **`1.1.0`** (Minecraft 26.3). Shipped gameplay is synchronized through source `3e081f3`; the architecture-first port through `3e61f5d` is in progress, not yet fully integrated.
+> Current version: **`1.1.0`** (Minecraft 26.3). The full architecture-first port through source `3e61f5d` is integrated on the development branch (wire revision 6); see the report for CI evidence and remaining manual checks.
 > [Latest cross-branch audit and progress](reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md).
 
 ## Read these first

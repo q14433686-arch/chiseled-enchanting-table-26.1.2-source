@@ -2,7 +2,7 @@
 
 日期：2026-10-24。用户已选 **3：先重构规则与回复层，再全量接入**，并要求纳入更新后的源内容、反馈给 26.1.2 和 26.2。
 
-**当前是分阶段工作，不是全量移植完成声明。** 本报告区分源码定位、独立核心修复、游戏适配、实际验证。这里只修改当前 26.3 开发分支，不向另外两个分支直接推送。
+**全量玩法及架构已接入当前 26.3 分支。** 本报告区分实际实现、自动验证和仍需人工验收的边界；不以旧基础库的绿灯代替新玩法证据。这里只修改当前开发分支，没有向 26.1.2/26.2 推送。
 
 ## 1. 锁定版本与新增范围
 
@@ -24,30 +24,41 @@
 - 秘典分页、图解和 11 语言更新。
 - **源默认温养已再次改动**：基础 24,000 秒（20 个游戏日），38 架 12,000 秒（10 日），42 架 3,600 秒（3 日）。旧审计中 90/30/10 秒是 `78dc051` 的历史设置，不能作为新移植默认值。
 
-全量同步应包含这些功能，不会仅同步早先的 PR #17。版本仍维持用户要求的 **1.1.0 / MC 26.3**；尚未接入新 wire，所以当前协议仍为 revision 5，后续新 wire 必须单独升级。
+全量同步应包含这些功能，不会仅同步早先的 PR #17。版本仍维持用户要求的 **1.1.0 / MC 26.3**；协议已独立升级为 **`26_3_revision_6`**。客户端和服务端必须一起更新；同为 1.1.0 的旧构建不等于 wire 兼容。
 
-## 2. 本阶段实际落地
+## 2. 全量接入结果
 
-新增独立于 Minecraft/Fabric 的基础库：
+### 有效规则与原子发布
 
-### `config/rules/RuleBook.java`
+- `RuntimeRules` 实际连接 `ConfigCatalog` 与 `RuleBook`；范围和跨字段归一化只做一次，来源包括启动值、datapack、偏好、锁定默认和归一化结果。
+- `ChiseledEnchantingTableData.RuntimeFrame` 把领域表、费用、loot、policy、有效 DTO 和规则快照放在同一不可变代中，一次 volatile 发布。`ModRuntimeConfig.effective()` 与 anvil 等直接消费者读有效值，不再绕过规则锁。
+- 存储偏好、实际生效 DTO、客户端编辑草稿分开；网络分别发送 preferences/policy/effective；锁定或被 datapack 管辖的行显示有效值，重启项另提示当前实际值。ACK 成功后以服务器偏好重建基线，拒绝保留草稿。
+- 保存仍先原子写盘，再提交/发布。严格解析 policy 的布尔、数组、键名；无效 policy/表不降为解锁默认。reload 失败会恢复原始表缓存，防止下一次保存把失败 reload 的半成品带入有效代。
+- 资源声明与加载采用同一整文件覆盖语义：只检查最终选中的资源，依据 `sourcePackId` 区分来源；Fabric 聚合默认包用内置 JSON 内容比对兜底，不猜 index 0，不合并被遮蔽层的声明。
+- 启动期 stack-size 记录实际启动值，世界 datapack 显式治理该键会拒绝。不能把世界规则描述成阻止玩家修改启动文件的绝对防篡改。
 
-- 区分存储偏好、权威 datapack 值和实际启动期值；不可变快照同时包含有效值、来源和可编辑性。
-- 统一优先级和逐键/全部运行时锁；无数据包值的锁定字段也得到确定的默认值，而不是让直接消费者绕过锁。
-- 明确启动期组件不可被世界 datapack 热替换；显式用 world-policy 锁启动期键会拒绝，而非虚假宣称安全。
-- 拒绝未知键、错误类型、可变对象和非有限浮点；外部 Map/Set 不可修改已发布内容。
-- `prepare` 不改状态；`commit` 检查所属实例及原始快照后再调用原子 writer，writer 成功才发布。失败、过时、跨实例、重入事务均有回归覆盖。
-- **范围限制**：这是解析/发布核心，尚未替代现有 ConfigCatalog、DataTables、UI、anvil 等消费者；领域范围与跨字段约束仍须由适配器验证，文件 writer 仍须使用已有原子替换实现。
+### 共享书库温养
 
-### `mechanics/resonance/RegenerationScheduler.java`
+- `WorldRegeneration` 已接入 Fabric 26.3 的 `END_SERVER_TICK`，遍历世界后按 20 tick 窗口收齐错峰观察，调用 `RegenerationScheduler` 一次结算；同槽位最快合法速率，不叠加。
+- 结算核验 chunk 已加载、书架 BE、槽位 ItemStack 引用与 wear；真正回复才复制回写并确认新引用。未损耗书/Infinity 不进入调度；缺失窗口、换书、速率变化重置驻留，不读取旧绝对时间 NBT，也不累计背包/跨世界时间。
+- 世界离开服务器集合/停服时清理；暂停不重复结算同窗口。后台扫描不再构建 GUI 的完整 charges map。纯调度测试覆盖次序、换书、缺口、换速率及批量回写。
 
-- 一窗口收齐合法观察再统一结算；同书架槽位采用最快合法速率，不按回调顺序先到先得，不叠加速度。
-- 只积累连续观察的加载窗口；缺口、取出/换书、wear/速率改变会重置驻留，绝不使用物品内旧世界绝对时间。
-- 用 book identity 与回写确认防止把旧观察的结果写到新物品上；满耐久条目移出调度，未观察槽位淘汰，停服/换 session 清空。
-- 部分回复确认原地更新私有状态，不为每本书复制整个调度表，避免批量回复的二次复杂度。
-- **范围限制**：这是主线程调度核心，不是已接入游戏的 ticker。适配器必须验证区块仍加载、槽位/物品仍匹配，收集完整覆盖集合后才能结算；Infinity/正常未损耗书不应提交观察。
+### 库存、仪式与恢复
 
-新增 **13 项 JUnit 核心测试**。当前基础库没有运行时接入，因此不会提前改变已发布玩法，也不证明下面的源侧游戏缺陷已经在线修好。
+- 两槽 BE 库存持久化，关闭菜单不退回输入。活动仪式绑定 owner、随机非零 session、目标副本；Container remove/set、自动化及 GUI 均限制替换目标，完成时再核验。
+- 入队在付费前检查 owner、目标 count=1、指纹、容量与退款预算。每台最多 **256 步 / 32,000 字符**，等级不超过 255；计时使用 long，但不照搬源“无限队列”。
+- 所有 enchantment/适用性先验证，再对副本结算，目标提交后才清队列。缺 ID、目标变更或坏存档会隔离，不静默跳过；赶工只有成功结算后才扣 XP/执行母本降级。
+- `/cet cancel-ritual` 供 owner 在打开对应表时取消，保留输入；已经支付的费用/磨损不退。坏字符串诊断最多保留 32,000 字符并明确记录 ERROR，避免加载失败丢整个 BE。
+- 菜单同步限定同一世界与位置；skip/state payload 绑定 container/session，旧会话拒绝。破坏表会清订单并掉落当前存储输入，不把队列复制进掉落方块。
+
+### 新源全部玩法/资源与 26.3 适配
+
+已接入持久库存、等待铭刻/虚拟规划、XP 献祭、强行赶工、Infinity 抄错、加权顿悟、新进度、残卷结构箱 loot、野生书架风化、图书管理员回收/恢复/按等级委托、秘典分页图解和 11 语言资源。
+
+- 新 loot 使用 26.3 `ContextIntProviders`，保留既有单 predicate holder、26.3 advancement/schema、结构线程安全和 SDL 等修复。
+- Infinity 禁售只改附魔书结果，不碰第三方装备；就地更新结果保留原 offer 的 uses、折扣、需求和售罄状态。附魔书交易限制仍是有意的兼容行为变化，不宣称对其他交易模组完全透明。
+- 自有委托结果持久标记 band，重开/升级/候选表变化不会无限追加；选择仍消费相同 RNG 序列，职业等级门槛保留。
+- 新温养默认 **24,000 / 12,000 / 3,600 秒、38/42 架**，创造同损、新实例 datapack 优先；旧配置显式值不强制覆盖。旧档升级前请备份。
 
 ## 3. 共性问题反馈给 26.1.2；26.2 移植前应规避
 
@@ -55,14 +66,14 @@
 
 | ID / 优先级 | 证据与问题 | 修复方向 / 当前状态 |
 |---|---|---|
-| R1 / 高 | `ModRuntimeConfig.shouldApplyKey` 才管锁；anvil mixin、`ModBootstrapConfig` 等直接读原始 effective/get 值 | RuleBook 核心已提供统一值/来源；**消费者接入待做**。启动组件单列，不宣称 world policy 可反向修改注册组件 |
-| R2 / 高 | `SyncRuntimeConfigPayload` 发本地 DTO + policy，费用发有效表，ConfigScreen draft 却可显示被覆盖的旧值 | UI、规则和报价读取同一快照；本地待保存值另存，不把锁定的 16 显示成服务端有效的 8 |
-| R3 / 高 | `MasterTomeWear.tickLibraryRegeneration` 根据物品旧 bucket 与当前世界绝对时间补算，没有驻留/世界身份 | 调度核心已去掉绝对时间输入；**实际 shelf 适配和旧 NBT 清理待做**。新默认慢了，不代表计时错误消失 |
-| R4 / 中高 | 同秒 bucket 去重使共享书架先扫描的台决定速率 | 核心统一取最快合法速率；实际接入必须一窗口聚合，不可在每台 ticker 独立 settle |
-| R5 / 中 | Infinity 书带 provenance 时仍反复清理/标脏；重复扫描、每秒写计时 NBT | 核心本身不写 ItemStack，满耐久淘汰；后续 adapter 仅实际回复时写，移除旧每秒写入路径；需实测后台负载 |
-| R6 / 高 | `collectExternalDatapackKeys` 假定资源栈 index 0 是本模组，并合并所有外部层声明键 | 按来源及最终生效层建权威字段，覆盖单层、过滤、多层和 mod jar 测试；暂不声称所有环境都必然失败 |
-| R7 / 高 | 源 `ModConfigNetworking` 仍无保存 request-ID/accepted；非 dedicated 全员可写；普通写文件失败只 log | 保留/回馈现有 26.3 原子保存、严格 reload、房主/权限校验、ACK 和失败草稿机制；不能覆盖回旧文件 |
-| R8 / 高 | `readMasterCharges` / `SyncRitualStatePayload.read` 裸 VarInt 分配；后者无 container/session 路由；skip 仅一个 boolean | 新 revision + 数量/字节/值域上限；S2C/C2S 均绑定 container ID 和 ritual session，拒绝延迟旧包 |
+| R1 / 高 | `ModRuntimeConfig.shouldApplyKey` 才管锁；anvil mixin、`ModBootstrapConfig` 等直接读原始 effective/get 值 | **已接入 RuntimeFrame 与直接消费者**。启动组件单列，不宣称 world policy 可反向修改注册组件 |
+| R2 / 高 | `SyncRuntimeConfigPayload` 发本地 DTO + policy，费用发有效表，ConfigScreen draft 却可显示被覆盖的旧值 | **已分离 preferences/effective，锁定行显示有效值**；本地待保存值另存，不以本地偏好冒充服务器实际值 |
+| R3 / 高 | `MasterTomeWear.tickLibraryRegeneration` 根据物品旧 bucket 与当前世界绝对时间补算，没有驻留/世界身份 | **已接入 WorldRegeneration，旧计时键不再参与计算**。新默认慢了，不代表计时错误消失 |
+| R4 / 中高 | 同秒 bucket 去重使共享书架先扫描的台决定速率 | **已一窗口聚合再结算，最快速率**；仍需多人共享大书库性能实测 |
+| R5 / 中 | Infinity 书带 provenance 时仍反复清理/标脏；重复扫描、每秒写计时 NBT | **已移除每秒物品写入，仅实际回复时回写**，满耐久/Infinity 不入队；后台负载需压测 |
+| R6 / 高 | `collectExternalDatapackKeys` 假定资源栈 index 0 是本模组，并合并所有外部层声明键 | **已按最终选中资源及来源识别**；Paxi/OpenLoader/KubeJS 等环境的资源层组合仍须实机验证 |
+| R7 / 高 | 源 `ModConfigNetworking` 仍无保存 request-ID/accepted；非 dedicated 全员可写；普通写文件失败只 log | **已保留并接入有效规则事务**：原子保存、严格 reload、房主/权限、ACK、失败草稿；真实 LAN 权限仍需人工验收 |
+| R8 / 高 | `readMasterCharges` / `SyncRitualStatePayload.read` 裸 VarInt 分配；后者无 container/session 路由；skip 仅一个 boolean | **revision 6 已接入**；有数量/字节/值域限幅、container/session 路由及往返测试 |
 
 旧报告还确认：书本互斥词条保留不是新增服务端能力；冲突退款函数对书返回 0，不应凭 UI 差异宣称存在刷 XP 漏洞。
 
@@ -136,16 +147,28 @@ long 计时不代表无限队列安全。应同时限制步骤数、序列化大
 
 没有替另两个分支开 PR、创建分支或推送；报告及独立核心保存在当前分支，便于之后按需反哺。
 
-## 7. 验证与剩余状态
+## 7. 验证证据与剩余人工边界
 
-第一版基础源码 `99802e57afefd007fe062ace71145515377e9fb1`：
+全量实现 `6357979` 已通过 [build 40007212249](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40007212249) 四 job 和 [compile-check 40007212228](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40007212228)，日志 **50 JUnit PASSED**。不是旧的 42 项基础阶段结果。
 
-- [build 40004091363](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40004091363)：静态、完整 Gradle build、无 JEI/REI 编译、真实无玩家专服 smoke 四项全成功。
-- [compile-check 40004091308](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40004091308)：成功，日志 **42 项 JUnit PASSED**，其中新核心 13 项。
-- 最新基础源码 **`200e468b47d955d67dabaafa86f08c88e850705c`** 优化批量回写复杂度；独立 [build 40004583434](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40004583434) 四 job 全成功，[compile-check 40004583488](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40004583488) 成功，日志仍为 **42 项 JUnit PASSED**。后续仅回写日志和补文档。
-- [当前 Java 日志](../../build-reports/compile-java.log)、[专服日志](../../build-reports/server-smoke.log)。专服无玩家，仍运行原有启动/reload/组件/loot 探针；不覆盖待移植的仪式或新残卷路径。
-- 本地 15 项 Python、静态五组、版本一致性通过；缺 MC jar 的两项 compat Tier 2 仍跳过，不计为通过。
+最终游戏源码/探针 **`92437900b5b80128665794a43e433561844c048a`**：
 
-**未完成**：最新功能的实际合并、运行时消费者/回复 adapter、仪式状态机、wire 升级、资源栈与新交易/loot 集成测试。新 GUI、真实 LAN/双端及性能压测也未进行。当前工作树没有把隔离的三方合并候选当成已发布代码。
+- [build 40007636762](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40007636762)：**四 job 全成功**（静态、完整 Gradle build、无 JEI/REI 编译、真实专服）。
+- [compile-check 40007636849](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40007636849)：**成功，52 JUnit PASSED**，含有效领域/直接消费者一致性、失败保存不发布、policy 拒绝、队列边界和新 wire 往返。
+- 真实专服在新平坦世界执行启动/reload、旧命名/染色/冻结掉落及条件 loot 探针后，加载带 owner/session/target 的持久队列。日志证实等待阶段保留钻石剑与订单，自然完成后出现 sharpness/provenance 并清空队列。
+- 同一真实 ticker 遇到已移除的附魔 ID 时输出预期 WARN，将 `ritualBlocked` 持久为 true，保留输入/订单；随后破坏附魔台，探针找到 count=1 的输入钻石剑。此 WARN 是故意构造的隔离路径，不是隐藏的启动错误。
+- 后续仅回写 CI 日志、更新报告和修正“无限队列”说明文案；以上编译证据对应明确的游戏源码提交。没有把一次 `/save-all` 描述为已经执行关服重启。
 
-因此，现阶段“修复”指独立核心中已实现并测试的规则，而不是宣称 3e61f5d 的游戏路径已经全部修好。后续集成仍须通过同等 CI 和新机制专项验收。
+当前 [Java 日志](../../build-reports/compile-java.log)、[专服日志](../../build-reports/server-smoke.log) 由 CI 回写；以 Java 日志首行 commit 和对应 run 为准，不以报告更新 commit 作为编译来源。
+
+本地：15 Python 同步测试、静态五组（621 键/11 locale）、版本一致性 12 项、workflow 镜像、diff 检查通过。由于本地没有 MC jar，compat Tier 2 两项跳过，**不算已通过**。真实 Java 25 编译/运行只引用 GitHub CI。
+
+仍需人工/专项集成验收，不冒称已测：
+
+- GUI 全分页、SDL 拖拽、Overlay、Mod Menu、JEI/REI；LAN 房主/访客/op、旧 revision 4/5 双端拒绝、断线和延迟包。
+- 多人争用表/共享书架、hopper/第三方可变引用、跨维度同坐标、满库存、Creative/爆炸/重复掉落等完整矩阵。
+- 真正关闭服务器后重启、区块卸载再载入、进程硬杀时 XP/进度通知一致性。实现保证正常 tick/NBT 事务边界，不承诺跨实体磁盘崩溃时“恰好一次”经济事务。
+- 多资源包/过滤包/聚合 mod jar 的来源与优先级组合；第三方 offer/折扣/职业变化和 registry 重载；自然结构生成与大规模性能。
+- 缺失 owner 的坏存档没有普通 owner 取消入口，需要管理员备份后处理；超长坏队列只保留限长诊断。`Container.getItem` 可变引用无法约束恶意 Java 模组，指纹核验用于隔离，不是防护任意同进程代码的安全沙箱。
+
+26.1.2 可反哺独立核心、RuntimeRules/Frame 方案及 R/N 清单；26.2 应把它们作为移植门禁，再适配自己的 API。本轮没有修改或合并另外两个分支，也没有自动创建/合并当前分支 PR。

@@ -554,7 +554,7 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch2p2_note": "Right panel shows live queue count, countdown timer, and two optional instant-finish buttons.",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.title": "Timed Rituals & Two Skip Choices",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.lead": "Waiting ONLY appears when Broad Bookshelves reach %s+ OR stored Master Tomes total %s+ enchantments:",
-  "gui.chiseled_enchanting_table.grimoire.ch3p2.s1": "More Broad Bookshelves, more Tome enchants, higher relative tier, and universal enchants (Infinity, Mending) take longer — capped at 5 min each.",
+  "gui.chiseled_enchanting_table.grimoire.ch3p2.s1": "More Broad Bookshelves, more Tome enchants, higher relative tier, and universal enchants (Infinity, Mending) take longer — capped at 5 min each. Queue cap: 256 steps / 32,000 characters.",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.s2": "[Sacrifice XP Skip]: Directly spends whole XP levels based on remaining time (capped at 15 levels) to finish safely with 0% Tome damage.",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.s3": "[Force Rush Skip]: 0 XP cost, with live risk of turning a Master Tome into a Depleted Tome (the shelf still counts as an occupied Broad Bookshelf; max 50%, or 70% with Infinity).",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.note_t": "No Tome = No Skip & Victim Order",

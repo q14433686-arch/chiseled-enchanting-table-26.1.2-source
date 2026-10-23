@@ -554,7 +554,7 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch2p2_note": "右側面板即時顯示排隊項數、倒數進度條，以及「獻祭」「強跳」兩個跳過按鈕。",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.title": "銘刻等待與雙跳過抉擇",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.lead": "只有周圍廣義書架滿 %s 架，或雕紋書架母本總詞條達 %s 条時才需要等待（前期小書房秒附不等）：",
-  "gui.chiseled_enchanting_table.grimoire.ch3p2.s1": "廣義書架越多、母本詞條越多、等級越接近滿級、詞條越通用（如無限、經驗修補），等待越久——單條封頂 5 分鐘，排隊可無限累加。",
+  "gui.chiseled_enchanting_table.grimoire.ch3p2.s1": "廣義書架越多、母本詞條越多、等級越接近滿級、詞條越通用（如無限、經驗修補），等待越久——單條封頂 5 分鐘，每台佇列最多 256 步 / 32,000 字元。",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.s2": "【獻祭經驗跳過】：按剩餘時間直接扣紫瓶整級（最多不超過 15 級），0% 傷書風險，瞬間安全完工！",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.s3": "【不獻祭強行跳過】：0 經驗硬跳，但有即時機率把一冊雕紋母本燒成「褪魔殘卷」（退化後該雕紋書架仍算有書的廣義書架；平時封頂 50%，借用含「無限」母本時封頂 70%）。",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.note_t": "無母本不可跳過 & 墊背順序",

@@ -554,7 +554,7 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch2p2_note": "Right panel shows live queue count, countdown timer, and two optional instant-finish buttons.",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.title": "Timed Rituals & Two Skip Choices",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.lead": "待機は周囲の広義の本棚が %s 個以上、または母本の合計エンチャントが %s 個以上の時のみ発生：",
-  "gui.chiseled_enchanting_table.grimoire.ch3p2.s1": "広義の本棚数・母本エンチャ数・相対レベル・汎用性（無限・修繕など）が高いほど待機増加（単体最大5分）。",
+  "gui.chiseled_enchanting_table.grimoire.ch3p2.s1": "広義の本棚数・母本エンチャ数・相対レベル・汎用性（無限・修繕など）が高いほど待機増加（単体最大5分）。 キューは最大256件、32,000文字。",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.s2": "[Sacrifice XP Skip]: Directly spends whole XP levels based on remaining time (capped at 15 levels) to finish safely with 0% Tome damage.",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.s3": "【無献上強行スキップ】：経験値0で即時完了しますが、母本が退魔の残巻へ退化する確率あり（退化後も広義の本棚として計上；上限50%／無限時70%）。",
   "gui.chiseled_enchanting_table.grimoire.ch3p2.note_t": "No Tome = No Skip & Victim Order",
