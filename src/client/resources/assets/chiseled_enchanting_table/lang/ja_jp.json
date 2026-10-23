@@ -82,7 +82,7 @@
     "gui.chiseled_enchanting_table.blank_overwrite": "空白上書き：%s",
     "advancements.chiseled_enchanting_table.blank_overwrite.title": "白紙還し",
     "advancements.chiseled_enchanting_table.blank_overwrite.description": "彫模様のエンチャント台で「空白上書き」を行い、魔力枯れの残巻を新品の本へ浄化する",
-    "jei.chiseled_enchanting_table.info.depleted_tome": "エンチャント本の合成・消去・母本消耗のほか、世界中の構造物チェスト（10%〜55%）や野生の模様入り本棚（書籍置換率合計≤30%）からも入手可能。模様入り本棚に入れると「広義の本棚」として計上。司書村人が2冊＝エメラルド1個／アメジストの欠片2個で買い取り、基礎費用（ラピス4／イカスミ2／エメラルド1）で本への修復や「希少度×汎用度×相対レベル」加重のエンチャント本依頼（バニラ修繕の平均価格未満）にも対応！",
+    "jei.chiseled_enchanting_table.info.depleted_tome": "世界中のチェスト（10%〜55%）や野生の模様入り本棚（書籍置換率合計≤30%）でも入手可能な残巻。模様入り本棚内では「広義の本棚」として計上。司書村人が2冊＝エメラルド1／アメジスト2で買い取り、本への修復（基礎：ラピス4／イカスミ2／エメラルド1）のほか、「希少度×汎用度×相対レベル」加重により【必要村人レベル（新米Lv.1〜達人Lv.5）】と【依頼費用（最大18E＜修繕平均24）】の双方が決まるエンチャント本書き換えに対応！",
     "gui.chiseled_enchanting_table.resonance.wooden_locked": "通常の本棚：%s / %s 個 → +0%%（12個以上で割引発動）",
     "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "原典相対階位：%s 完本換算 → 全体 +%s%%（同種原典でさらに最大 -15%%）",
     "gui.chiseled_enchanting_table.resonance.affinity_line": "対象装備の同系統原典：%s 完本換算（閃き率・同時枠上限を強化）",
@@ -609,11 +609,11 @@
     "gui.chiseled_enchanting_table.grimoire.ch7p2.lead": "『退魔の残巻』は世界各地での探索でも見つかり、【司書】村人と特別に取引できます：",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s1": "【チェスト＆野生の模様入り本棚】：遺跡チェスト（10%〜55%）に加え、自然生成の模様入り本棚でも合計置換率30%以下（平均約17.8%）で風化出現。",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s2": "【司書村人の買取】：司書限定で『退魔の残巻 2冊 ＝ エメラルド 1個 または アメジストの欠片 2個』で回収。",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "【本・エンチャント本への依頼】：基礎費用（ラピス4／イカスミ2／エメラルド1）で本へ修復、さらに「希少度×汎用度×相対レベル」加重価格でエンチャント本へ書き換え（最大18エメラルド＜バニラ司書の修繕平均24）！",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "【村人レベル条件＋費用の二重動的加重】：本への修復はLv.1から可能（ラピス4／イカスミ2／エメラルド1）。エンチャント本への書き換えは「希少度×汎用度×相対レベル」で【必要司書ランク（Lv.1新米〜Lv.5達人）】と【費用】が同時に決まります（修繕・シルクタッチ等は達人Lv.5必須、最大18E＜バニラ修繕平均24）！",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.note_t": "序盤探索の強い味方",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "遺跡で集めた残巻を複数の司書に見せると、格安で実用エンチャント本（無限は対象外）を入手できます！",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "司書を取引で熟練者・達人（Lv.4–5）へ育てると上位の書き換え枠が段階解放されます（書見台リセット技は不可・無限は対象外）！",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_title": "図解：残巻探索(≤30%)と司書取引",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "世界各地の宝箱（10%–55%）\n野生の模様入り本棚風化（合計 ≤30%）",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "【司書】限定買取：\n残巻2 ＝ エメラルド1 または 紫水晶2",
-    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "司書への依頼：基礎 ラピス4／イカスミ2／エメラルド1で本へ、または「希少度×汎用度×相対Lv」加重でエンチャ本へ（最大18E＜修繕平均24）！"
+    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "書き換え依頼：「希少度×汎用度×相対Lv」で【必要司書ランクLv.1–5】と【費用】を決定（上位は達人Lv.5必須・最大18E＜修繕平均24）！"
 }

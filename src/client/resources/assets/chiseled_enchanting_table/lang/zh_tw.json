@@ -82,7 +82,7 @@
     "gui.chiseled_enchanting_table.blank_overwrite": "覆寫：%s",
     "advancements.chiseled_enchanting_table.blank_overwrite.title": "洗盡鉛華",
     "advancements.chiseled_enchanting_table.blank_overwrite.description": "在纂刻附魔台上對褪魔殘卷施行「空白覆寫」，滌除殘餘銘痕並還原為嶄新的書",
-    "jei.chiseled_enchanting_table.info.depleted_tome": "附魔書合併、全洗、I 級降級、母本耗盡退化，或在世界各地寶箱及野生雕紋書架（總替換率 ≤30%）中獲得的殘卷。放入雕紋書架時計為「廣義書架」（不作母本）；可由圖書管理員按 2 殘卷 = 1 綠寶石 / 2 紫水晶碎片回收，或按 4 青金石 / 2 墨囊 / 1 綠寶石基礎價拜託修成普通書，亦可按「稀有度×普適度×相對等級」動態加權價委託重繪為附魔書（封頂價低於原版圖書管理員經驗修補常見要價）；也可在附魔台按普通書架 12/32 與 6 種高階藏書階梯免費還原！",
+    "jei.chiseled_enchanting_table.info.depleted_tome": "附魔書合併、全洗、I 級降級、母本耗盡退化，或在世界各地寶箱及野生雕紋書架（總替換率 ≤30%）中獲得的殘卷。放入雕紋書架時計為「廣義書架」（不作母本）；可由圖書管理員按 2 殘卷 = 1 綠寶石 / 2 紫水晶碎片回收，或按 4 青金石 / 2 墨囊 / 1 綠寶石基礎價拜託修成普通書；拜託重繪為附魔書時，【所需村民職業等級門檻（新手 Lv.1～大師 Lv.5）】與【具體要價】均按「稀有度×普適度×相對等級」動態加權決定（封頂價低於原版圖書管理員經驗修補常見要價）！",
     "gui.chiseled_enchanting_table.resonance.wooden_locked": "普通書架：%s / %s 個 → +0%%（滿 12 個起算經驗折扣）",
     "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "母版總品階：折算 %s 完本 → 公共 +%s%%（同種母版最高再減 15%%）",
     "gui.chiseled_enchanting_table.resonance.affinity_line": "當前器物同系母版：折算 %s 完本（提升頓悟率與同件產出上限）",
@@ -609,11 +609,11 @@
     "gui.chiseled_enchanting_table.grimoire.ch7p2.lead": "除了附魔台消耗產出，「褪魔殘卷」還能在世界各地探索收集，並找【圖書管理員】回收或重繪：",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s1": "【世界寶箱與野生雕紋書架】：各地建築寶箱按古蹟等級產出殘卷（要塞書庫最高 55%）；野生雕紋書架上的書也會歲月風化成殘卷，總替換機率嚴格不超過 30%（期望約 17.8%）。",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s2": "【圖書管理員專屬回收】：僅限「圖書管理員」職業村民收購殘卷，固定回收價為：2 本褪魔殘卷 = 1 顆綠寶石 或 2 枚紫水晶碎片。",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "【拜託村民變書 / 附魔書】：基礎工本費為 4 青金石 / 2 墨囊 / 1 綠寶石可修成普通書；重繪附魔書則按「稀有度 × 普適度 × 相對等級」動態加權計價，封頂價嚴格低於原版圖書管理員賣「經驗修補」的一般要價！",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "【拜託重繪：村民等級門檻 + 要價雙動態加權】：基礎 4 青金石 / 2 墨囊 / 1 綠寶石可修成普通書（Lv.1 可用）；重繪為附魔書則由「稀有度 × 普適度 × 相對等級」同時決定【所需圖書管理員等級（新手 Lv.1 ～ 大师 Lv.5）】與【要價】（如經驗修補、絲綢之觸、幸運 III 需大師級圖書管理員，封頂 18 綠寶石低於原版經驗修補常見均價）！",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.note_t": "前期開荒神路子",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "下遺跡搜刮殘卷去找村裡幾個不同的圖書管理員看看——經常能用遠低於原版的價格淘到實用附魔書（不含無限）！",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "把村裡的圖書管理員一路交易升到專家 / 大師（Lv.4–5），就能逐步解鎖高階重繪委託（無法靠反覆拆放講台白嫖高階書，且不含無限）！",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_title": "圖示：殘卷探索(≤30%)與村民交易",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "世界各地結構寶箱（10%–55%）\n野生雕紋書架風化替換（總機率 ≤30%）",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "僅限【圖書管理員】回收：\n2 殘卷 = 1 綠寶石 或 2 紫水晶碎片",
-    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "拜託圖書管理員：基礎 4青金石 / 2墨囊 / 1綠寶石變普通書；或按「稀有度×普適度×相對等級」加權變附魔書（最高 18 綠寶石 < 原版經驗修補均價 24）！"
+    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "拜託重繪：按「稀有度×普適度×相對等級」同時決定【村民等級門檻 Lv.1–5】與【要價】（基礎 4青金石/2墨囊/1綠寶石；高階需大師村民，封頂 18 綠寶石 < 原版修補均價 24）！"
 }

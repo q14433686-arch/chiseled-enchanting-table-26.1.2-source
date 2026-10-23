@@ -24,6 +24,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
@@ -49,9 +50,10 @@ import org.jetbrains.annotations.Nullable;
  *       <ol>
  *         <li>Buyback recycling: {@code 2× 褪魔残卷 -> 1× 绿宝石} and {@code 2× 褪魔残卷 -> 2× 紫水晶碎片};</li>
  *         <li>Plain book restoration: {@code 1× 褪魔残卷 + (4 青金石 / 2 墨囊 / 1 绿宝石) -> 1× 书};</li>
- *         <li>Enchanted book commission: priced by {@code 稀有度 × 普适度 × 相对等级}, with emerald ceiling
- *             strictly below vanilla Librarian's typical {@code 经验修补} price ({@code 18 < 24}) and
- *             {@code minecraft:infinity} strictly excluded.</li>
+ *         <li>Enchanted book commission: BOTH the <b>required Villager Profession Level ({@code Lv.1 ~ Lv.5})</b>
+ *             AND the <b>fee</b> are dynamically governed by {@code 稀有度 × 普适度 × 相对等级}, with emerald
+ *             ceiling strictly below vanilla Librarian's typical {@code 经验修补} price ({@code 18 < 24})
+ *             and {@code minecraft:infinity} strictly excluded.</li>
  *       </ol>
  *   </li>
  * </ul>
@@ -245,7 +247,7 @@ public final class DepletedTomeWorldMechanics {
     }
 
     // -------------------------------------------------------------------------
-    // 4. Librarian Recycling & Dynamic-Weighted Commissioning
+    // 4. Librarian Recycling & Dynamic-Weighted Commissioning (+ Villager Level Gate)
     // -------------------------------------------------------------------------
 
     /** Buyback ratio: 2 Depleted Tomes = 1 Emerald OR 2 Amethyst Shards. */
@@ -268,6 +270,25 @@ public final class DepletedTomeWorldMechanics {
     public static final int MAX_COMMISSION_LAPIS = 24;
     public static final int MAX_COMMISSION_INK_SACS = 14;
 
+    public static final int MIN_VILLAGER_PROFESSION_LEVEL = 1;
+    public static final int MAX_VILLAGER_PROFESSION_LEVEL = 5;
+
+    /**
+     * Dynamic-weighted score thresholds mapping {@code P = R(rarity) * U(universality) * Q(level/maxLevel)}
+     * onto the 5 vanilla Librarian profession ranks:
+     * <ul>
+     *   <li>{@code Lv.1 新手 (Novice)}     : {@code P < 0.065}  (e.g. Sharpness I, Protection I, Bane I)</li>
+     *   <li>{@code Lv.2 学徒 (Apprentice)} : {@code 0.065 <= P < 0.120} (e.g. Sharpness III, Protection II, Efficiency II)</li>
+     *   <li>{@code Lv.3 老手 (Journeyman)} : {@code 0.120 <= P < 0.235} (e.g. Sharpness V, Protection IV, Looting III, Fortune I)</li>
+     *   <li>{@code Lv.4 专家 (Expert)}     : {@code 0.235 <= P < 0.500} (e.g. Efficiency V, Unbreaking III, Fortune II, Thorns II)</li>
+     *   <li>{@code Lv.5 大师 (Master)}     : {@code P >= 0.500} (e.g. Mending I, Silk Touch I, Fortune III, Thorns III)</li>
+     * </ul>
+     */
+    public static final double VILLAGER_LEVEL_2_THRESHOLD = 0.065D;
+    public static final double VILLAGER_LEVEL_3_THRESHOLD = 0.120D;
+    public static final double VILLAGER_LEVEL_4_THRESHOLD = 0.235D;
+    public static final double VILLAGER_LEVEL_5_THRESHOLD = 0.500D;
+
     private static final double MIN_TRIPLE_PRODUCT = 0.25D * 0.35D * 0.10D;
 
     public enum CommissionCurrency {
@@ -281,6 +302,7 @@ public final class DepletedTomeWorldMechanics {
         double universalityFactor,
         double relativeLevelFactor,
         double tripleWeightedScore,
+        int requiredVillagerLevel,
         int emeraldCost,
         int lapisCost,
         int inkSacCost
@@ -295,9 +317,32 @@ public final class DepletedTomeWorldMechanics {
     }
 
     /**
-     * Computes dynamic commission pricing strictly from
-     * {@code 稀有度(rarityFactor) × 普适度(universalityFactor) × 相对等级(relativeLevelFactor)}.
+     * Computes BOTH the required Librarian profession level ({@code 1..5}) AND the dynamic trade fee
+     * strictly from {@code 稀有度(rarityFactor) × 普适度(universalityFactor) × 相对等级(relativeLevelFactor)}.
      */
+    public static int computeRequiredVillagerLevel(double tripleWeightedScore) {
+        if (tripleWeightedScore >= VILLAGER_LEVEL_5_THRESHOLD) {
+            return 5;
+        }
+        if (tripleWeightedScore >= VILLAGER_LEVEL_4_THRESHOLD) {
+            return 4;
+        }
+        if (tripleWeightedScore >= VILLAGER_LEVEL_3_THRESHOLD) {
+            return 3;
+        }
+        if (tripleWeightedScore >= VILLAGER_LEVEL_2_THRESHOLD) {
+            return 2;
+        }
+        return 1;
+    }
+
+    public static boolean canLibrarianOfferCommission(int currentVillagerLevel, DynamicCommissionQuote quote) {
+        if (quote == null) {
+            return false;
+        }
+        return currentVillagerLevel >= quote.requiredVillagerLevel();
+    }
+
     public static DynamicCommissionQuote computeDynamicCommissionQuote(
         int rarityWeight,
         int supportedItemCount,
@@ -321,6 +366,7 @@ public final class DepletedTomeWorldMechanics {
         double relativeLevelFactor = Mth.clamp((double) safeLvl / safeMax, 0.10D, 1.00D);
 
         double product = rarityFactor * universalityFactor * relativeLevelFactor;
+        int reqVillagerLvl = computeRequiredVillagerLevel(product);
         double normalized = Mth.clamp(
             (product - MIN_TRIPLE_PRODUCT) / (1.0D - MIN_TRIPLE_PRODUCT),
             0.0D,
@@ -348,6 +394,7 @@ public final class DepletedTomeWorldMechanics {
             universalityFactor,
             relativeLevelFactor,
             product,
+            reqVillagerLvl,
             emeralds,
             lapis,
             inkSacs
@@ -378,10 +425,50 @@ public final class DepletedTomeWorldMechanics {
         };
     }
 
+    private record CandidateEnchantRoll(
+        Holder.Reference<Enchantment> holder,
+        int enchantLevel,
+        DynamicCommissionQuote quote
+    ) {}
+
+    private static boolean hasRecycleOrPlainOffer(MerchantOffers offers, Item resultItem) {
+        for (MerchantOffer existing : offers) {
+            if (existing.getItemCostA().item().value() == BlockRegistry.DEPLETED_TOME
+                && existing.getResult().is(resultItem)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasCommissionEnchantOffer(
+        MerchantOffers offers,
+        Holder.Reference<Enchantment> targetEnchant,
+        int targetLevel
+    ) {
+        for (MerchantOffer existing : offers) {
+            if (existing.getItemCostA().item().value() != BlockRegistry.DEPLETED_TOME) {
+                continue;
+            }
+            ItemStack res = existing.getResult();
+            if (!res.is(Items.ENCHANTED_BOOK)) {
+                continue;
+            }
+            ItemEnchantments stored = EnchantmentHelper.getEnchantmentsForCrafting(res);
+            if (stored.getLevel(targetEnchant) == targetLevel) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Ensures a {@link Villager} of profession {@code minecraft:librarian} carries idempotent
-     * Depleted Tome buyback and restoration/enchanted-book commission offers. Non-Librarian villagers
-     * never receive any Depleted Tome trades.
+     * Depleted Tome buyback and restoration offers, AND unlocks enchanted-book commission offers
+     * ONLY when {@code villager.getVillagerData().level() >= quote.requiredVillagerLevel()} (computed
+     * via the same {@code 稀有度 × 普适度 × 相对等级} dynamic weighting). Re-opening the same Librarian
+     * after leveling them up (`Lv.1 -> ... -> Lv.5`) automatically unlocks newly reached tiers without
+     * duplicating prior trades.
      */
     public static void ensureLibrarianDepletedTomeOffers(Level world, Villager villager) {
         if (world == null || villager == null) {
@@ -394,35 +481,38 @@ public final class DepletedTomeWorldMechanics {
         if (offers == null) {
             return;
         }
-        for (MerchantOffer existing : offers) {
-            if (existing.getItemCostA().item().value() == BlockRegistry.DEPLETED_TOME) {
-                // Already initialized on this Librarian; do not duplicate across repeated interactions.
-                return;
-            }
-        }
+        int currentVillagerLevel = Mth.clamp(
+            villager.getVillagerData().level(),
+            MIN_VILLAGER_PROFESSION_LEVEL,
+            MAX_VILLAGER_PROFESSION_LEVEL
+        );
 
         UUID uuid = villager.getUUID();
         Random rng = new Random(uuid.getMostSignificantBits() ^ Long.rotateLeft(uuid.getLeastSignificantBits(), 21));
 
-        // 1) Recycle trades: 2× Depleted Tome -> 1× Emerald, and 2× Depleted Tome -> 2× Amethyst Shard
-        offers.add(new MerchantOffer(
-            new ItemCost(BlockRegistry.DEPLETED_TOME, RECYCLE_INPUT_DEPLETED_TOMES),
-            Optional.empty(),
-            new ItemStack(Items.EMERALD, RECYCLE_OUTPUT_EMERALDS),
-            16,
-            2,
-            0.05F
-        ));
-        offers.add(new MerchantOffer(
-            new ItemCost(BlockRegistry.DEPLETED_TOME, RECYCLE_INPUT_DEPLETED_TOMES),
-            Optional.empty(),
-            new ItemStack(Items.AMETHYST_SHARD, RECYCLE_OUTPUT_AMETHYST_SHARDS),
-            16,
-            2,
-            0.05F
-        ));
+        // 1) Base Novice (Lv.1+) Recycle trades: 2× Depleted Tome -> 1× Emerald, and 2× Depleted Tome -> 2× Amethyst Shard
+        if (!hasRecycleOrPlainOffer(offers, Items.EMERALD)) {
+            offers.add(new MerchantOffer(
+                new ItemCost(BlockRegistry.DEPLETED_TOME, RECYCLE_INPUT_DEPLETED_TOMES),
+                Optional.empty(),
+                new ItemStack(Items.EMERALD, RECYCLE_OUTPUT_EMERALDS),
+                16,
+                2,
+                0.05F
+            ));
+        }
+        if (!hasRecycleOrPlainOffer(offers, Items.AMETHYST_SHARD)) {
+            offers.add(new MerchantOffer(
+                new ItemCost(BlockRegistry.DEPLETED_TOME, RECYCLE_INPUT_DEPLETED_TOMES),
+                Optional.empty(),
+                new ItemStack(Items.AMETHYST_SHARD, RECYCLE_OUTPUT_AMETHYST_SHARDS),
+                16,
+                2,
+                0.05F
+            ));
+        }
 
-        // 2) Plain Book Restoration: 1× Depleted Tome + base reagent (4 Lapis / 2 Ink Sacs / 1 Emerald) -> 1× Book
+        // 2) Base Novice (Lv.1+) Plain Book Restoration: 1× Depleted Tome + base reagent (4 Lapis / 2 Ink / 1 Emerald) -> 1× Book
         CommissionCurrency plainCurrency = switch (rng.nextInt(3)) {
             case 0 -> CommissionCurrency.LAPIS;
             case 1 -> CommissionCurrency.INK_SAC;
@@ -433,16 +523,18 @@ public final class DepletedTomeWorldMechanics {
             case INK_SAC -> BASE_COMMISSION_INK_SACS;
             case EMERALD -> BASE_COMMISSION_EMERALDS;
         };
-        offers.add(new MerchantOffer(
-            new ItemCost(BlockRegistry.DEPLETED_TOME, 1),
-            Optional.of(new ItemCost(itemForCurrency(plainCurrency), plainFee)),
-            new ItemStack(Items.BOOK, 1),
-            12,
-            3,
-            0.05F
-        ));
+        if (!hasRecycleOrPlainOffer(offers, Items.BOOK)) {
+            offers.add(new MerchantOffer(
+                new ItemCost(BlockRegistry.DEPLETED_TOME, 1),
+                Optional.of(new ItemCost(itemForCurrency(plainCurrency), plainFee)),
+                new ItemStack(Items.BOOK, 1),
+                12,
+                3,
+                0.05F
+            ));
+        }
 
-        // 3) Dynamic-Weighted Enchanted Book Commissions (Emerald slot + Lapis/Ink pigment slot)
+        // 3) Dynamic-Weighted Enchanted Book Commissions gated by Villager Profession Level (Lv.1 .. Lv.5)
         var enchRegistry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         List<Holder.Reference<Enchantment>> eligible = new ArrayList<>();
         enchRegistry.listElements().forEach(ref -> {
@@ -457,37 +549,65 @@ public final class DepletedTomeWorldMechanics {
             return;
         }
 
-        CommissionCurrency[] commissionCurrencies = {
-            CommissionCurrency.EMERALD,
-            rng.nextBoolean() ? CommissionCurrency.LAPIS : CommissionCurrency.INK_SAC
-        };
-        int firstPickedIdx = -1;
-        for (CommissionCurrency currency : commissionCurrencies) {
-            int pickIdx = rng.nextInt(eligible.size());
-            if (pickIdx == firstPickedIdx && eligible.size() > 1) {
-                pickIdx = (pickIdx + 1 + rng.nextInt(eligible.size() - 1)) % eligible.size();
-            }
-            firstPickedIdx = pickIdx;
-
-            Holder.Reference<Enchantment> chosen = eligible.get(pickIdx);
-            Enchantment ench = chosen.value();
+        // Group all valid (enchantment, level) pairs into dynamic villager-rank buckets [1..5]
+        @SuppressWarnings("unchecked")
+        List<CandidateEnchantRoll>[] byRequiredRank = new List[MAX_VILLAGER_PROFESSION_LEVEL + 1];
+        for (int r = 1; r <= MAX_VILLAGER_PROFESSION_LEVEL; r++) {
+            byRequiredRank[r] = new ArrayList<>();
+        }
+        for (Holder.Reference<Enchantment> ref : eligible) {
+            Enchantment ench = ref.value();
             int maxLvl = Math.max(1, ench.getMaxLevel());
-            int level = 1 + rng.nextInt(maxLvl);
             int weight = Math.max(1, ench.definition().weight());
             int supportedCount = Math.max(1, ench.getSupportedItems().size());
+            for (int lvl = 1; lvl <= maxLvl; lvl++) {
+                DynamicCommissionQuote q = computeDynamicCommissionQuote(weight, supportedCount, lvl, maxLvl);
+                byRequiredRank[q.requiredVillagerLevel()].add(new CandidateEnchantRoll(ref, lvl, q));
+            }
+        }
 
-            DynamicCommissionQuote quote = computeDynamicCommissionQuote(weight, supportedCount, level, maxLvl);
-            int fee = quote.costFor(currency);
+        // Deterministically assign this Librarian 3 progressive commissions across Apprentice (Lv.2),
+        // Journeyman/Expert (Lv.3-4), and Expert/Master (Lv.4-5), plus an optional Novice (Lv.1) entry,
+        // unlocking each strictly when currentVillagerLevel >= candidate.quote().requiredVillagerLevel()!
+        int[][] rankBands = {
+            { 1, 2 },
+            { 3, 4 },
+            { 4, 5 }
+        };
+        CommissionCurrency[] bandCurrencies = {
+            rng.nextBoolean() ? CommissionCurrency.LAPIS : CommissionCurrency.INK_SAC,
+            CommissionCurrency.EMERALD,
+            CommissionCurrency.EMERALD
+        };
+
+        for (int b = 0; b < rankBands.length; b++) {
+            List<CandidateEnchantRoll> pool = new ArrayList<>();
+            for (int rank : rankBands[b]) {
+                pool.addAll(byRequiredRank[rank]);
+            }
+            if (pool.isEmpty()) {
+                continue;
+            }
+            CandidateEnchantRoll pick = pool.get(rng.nextInt(pool.size()));
+            if (!canLibrarianOfferCommission(currentVillagerLevel, pick.quote())) {
+                // Villager has not yet reached the dynamic profession rank required for this enchantment!
+                continue;
+            }
+            if (hasCommissionEnchantOffer(offers, pick.holder(), pick.enchantLevel())) {
+                continue;
+            }
+            CommissionCurrency currency = bandCurrencies[b];
+            int fee = pick.quote().costFor(currency);
 
             ItemStack bookOut = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            EnchantmentHelper.updateEnchantments(bookOut, mutable -> mutable.set(chosen, level));
+            EnchantmentHelper.updateEnchantments(bookOut, mutable -> mutable.set(pick.holder(), pick.enchantLevel()));
 
             offers.add(new MerchantOffer(
                 new ItemCost(BlockRegistry.DEPLETED_TOME, 1),
                 Optional.of(new ItemCost(itemForCurrency(currency), fee)),
                 bookOut,
                 8,
-                5 + level * 2,
+                2 + pick.quote().requiredVillagerLevel() * 3,
                 0.05F
             ));
         }

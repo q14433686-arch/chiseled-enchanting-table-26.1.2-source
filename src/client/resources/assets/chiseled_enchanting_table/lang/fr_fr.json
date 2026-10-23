@@ -82,7 +82,7 @@
     "gui.chiseled_enchanting_table.blank_overwrite": "Réécriture vierge : %s",
     "advancements.chiseled_enchanting_table.blank_overwrite.title": "Tabula Rasa",
     "advancements.chiseled_enchanting_table.blank_overwrite.description": "Purifiez un Tome épuisé par Réécriture vierge sur la Table d'enchantement sculptée pour obtenir un Livre neuf",
-    "jei.chiseled_enchanting_table.info.depleted_tome": "A 64-stackable remnant scroll produced by merging/stripping books or Tome depletion, and also found across world structure chests (10%–55%) and weathered wild Chiseled Bookshelves (<=30% total book replacement). Inside a Chiseled Bookshelf it counts toward Broad Bookshelves (never as a Master Tome). Librarian villagers buy 2 scrolls for 1 Emerald or 2 Amethyst Shards, and can restore them into plain Books (base: 4 Lapis / 2 Ink Sacs / 1 Emerald) or dynamically weighted Enchanted Books (Rarity x Universality x Relative Level, capped below typical vanilla Mending prices)!",
+    "jei.chiseled_enchanting_table.info.depleted_tome": "A 64-stackable remnant scroll produced by book merging/stripping or Tome depletion, and found across world chests (10%–55%) and wild Chiseled Bookshelves (<=30% total book replacement). Inside a Chiseled Bookshelf it counts toward Broad Bookshelves (never as a Master Tome). Librarian villagers buy 2 scrolls for 1 Emerald / 2 Amethyst Shards, repair plain Books at Novice Lv.1 (base: 4 Lapis / 2 Ink / 1 Emerald), and unlock Enchanted Book rewrites whose required Villager Level (Novice Lv.1 to Master Lv.5) AND price BOTH scale by (Rarity x Universality x Relative Level), capped below typical vanilla Mending prices!",
     "gui.chiseled_enchanting_table.resonance.wooden_locked": "Bibliothèques : %s / %s -> +0%% (actif dès 12 bibliothèques)",
     "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "Tomes Maîtres : %s tomes complets -> +%s%% global (+15%% max par tome dédié)",
     "gui.chiseled_enchanting_table.resonance.affinity_line": "Tomes compatibles avec l'objet : %s (augmente chance et plafond)",
@@ -609,11 +609,11 @@
     "gui.chiseled_enchanting_table.grimoire.ch7p2.lead": "Depleted Tomes also spawn across the world and trade exclusively with [Librarian] villagers:",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s1": "[Chests & Wild Chiseled Shelves]: Found in dungeon, temple, mansion, ancient city & stronghold library chests (10%–55%), plus weathered wild Chiseled Bookshelves (total book replacement strictly <=30%, ~17.8% avg).",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s2": "[Librarian Buyback]: Exclusively Librarian villagers buy Depleted Tomes at 2 Depleted Tomes = 1 Emerald OR 2 Amethyst Shards.",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "[Commission Plain or Enchanted Books]: Base fee is 4 Lapis / 2 Ink Sacs / 1 Emerald for a plain Book; Enchanted Books scale by (Rarity x Universality x Relative Level), always capped below vanilla Librarian's typical Mending price!",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "[Dynamic Villager Rank Gate + Dynamic Price]: Plain Books unlock at Lv.1 (4 Lapis / 2 Ink / 1 Emerald). Rewriting into Enchanted Books dynamically sets BOTH required Librarian rank (Novice Lv.1 – Master Lv.5) AND price via (Rarity x Universality x Relative Level), capped below vanilla Mending's typical price!",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.note_t": "Great Early-Game Boost",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "Bring dungeon Remnants to several village Librarians — each offers distinct discounted Enchanted Books (never Infinity)!",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "Level up village Librarians toward Expert / Master (Lv.4–5) to progressively unlock top-tier rewrites like Mending or Silk Touch (no Lv.1 lectern-spam bypass; excludes Infinity)!",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_title": "Diagram: Remnant Loot (<=30%) & Trades",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "World Chests (10%–55%)\nWild Chiseled Shelf Decay (<=30% max)",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "Librarian Villager Only:\n2 Remnants = 1 Emerald or 2 Amethyst",
-    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "Librarian Commission: Base 4 Lapis / 2 Ink / 1 Emerald -> Book, or weighted (Rarity x Universality x Rel.Lvl) -> Enchanted Book (max 18 Emeralds < vanilla Mending avg 24)!"
+    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "Dynamic Commission: (Rarity x Universality x Rel.Lvl) governs BOTH required Librarian Rank (Lv.1–5) & price (base 4 Lapis/2 Ink/1E; Master Lv.5 for top enchants, max 18E < Mending avg 24)!"
 }

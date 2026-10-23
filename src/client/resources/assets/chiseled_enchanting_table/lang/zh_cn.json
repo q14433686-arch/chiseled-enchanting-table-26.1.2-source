@@ -82,7 +82,7 @@
     "gui.chiseled_enchanting_table.blank_overwrite": "覆写：%s",
     "advancements.chiseled_enchanting_table.blank_overwrite.title": "洗尽铅华",
     "advancements.chiseled_enchanting_table.blank_overwrite.description": "在纂刻附魔台上将褪魔残卷还原为普通书。",
-    "jei.chiseled_enchanting_table.info.depleted_tome": "附魔书合并、全洗、I 级降级、母本耗尽退化，或在世界各地宝箱及野生雕纹书架（总替换率 ≤30%）中获得的残卷。放入雕纹书架时计为「广义书架」（不作母本）；可由图书管理员按 2 残卷 = 1 绿宝石 / 2 紫水晶碎片回收，或按 4 青金石 / 2 墨囊 / 1 绿宝石基础价拜托修成普通书，亦可按「稀有度×普适度×相对等级」动态加权价委托重绘为附魔书（封顶价低于原版图书管理员经验修补常见要价）；也可在附魔台按普通书架 12/32 与 6 种高阶藏书阶梯免费还原！",
+    "jei.chiseled_enchanting_table.info.depleted_tome": "附魔书合并、全洗、I 级降级、母本耗尽退化，或在世界各地宝箱及野生雕纹书架（总替换率 ≤30%）中获得的残卷。放入雕纹书架时计为「广义书架」（不作母本）；可由图书管理员按 2 残卷 = 1 绿宝石 / 2 紫水晶碎片回收，或按 4 青金石 / 2 墨囊 / 1 绿宝石基础价拜托修成普通书；拜托重绘为附魔书时，【所需村民职业等级门槛（新手 Lv.1～大师 Lv.5）】与【具体要价】均按「稀有度×普适度×相对等级」动态加权决定（封顶价低于原版图书管理员经验修补常见要价）！",
     "gui.chiseled_enchanting_table.resonance.wooden_locked": "普通书架：%s / %s 个（满 12 个起减免经验）",
     "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "雕纹藏书折合：%s 本满级书 → -%s%% 经验",
     "gui.chiseled_enchanting_table.resonance.affinity_line": "当前物品适用藏书：折合 %s 本满级书",
@@ -609,11 +609,11 @@
     "gui.chiseled_enchanting_table.grimoire.ch7p2.lead": "除了附魔台消耗产出，「褪魔残卷」还能在世界各地探索收集，并找【图书管理员】回收或重绘：",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s1": "【世界宝箱与野生雕纹书架】：各地建筑宝箱按古迹等级产出残卷（要塞书库最高 55%）；野生雕纹书架上的书也会岁月风化成残卷，总替换概率严格不超过 30%（期望约 17.8%）。",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s2": "【图书管理员专属回收】：仅限「图书管理员」职业村民收购残卷，固定回收价为：2 本褪魔残卷 = 1 颗绿宝石 或 2 枚紫水晶碎片。",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "【拜托村民变书 / 附魔书】：基础工本费为 4 青金石 / 2 墨囊 / 1 绿宝石可修成普通书；重绘附魔书则按「稀有度 × 普适度 × 相对等级」动态加权计价，封顶价严格低于原版图书管理员卖「经验修补」的一般要价！",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "【拜托重绘：村民等级门槛 + 要价双动态加权】：基础 4 青金石 / 2 墨囊 / 1 绿宝石可修成普通书（Lv.1 可用）；重绘为附魔书则由「稀有度 × 普适度 × 相对等级」同时决定【所需图书管理员等级（新手 Lv.1 ～ 大师 Lv.5）】与【要价】（如经验修补、精准采集、时运 III 需大师级图书管理员，封顶 18 绿宝石低于原版经验修补常见均价）！",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.note_t": "前期开荒神路子",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "下遗迹搜刮残卷去找村里几个不同的图书管理员看看——经常能用远低于原版的价格淘到实用附魔书（不含无限）！",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "把村里的图书管理员一路交易升到专家 / 大师（Lv.4–5），就能逐步解锁高阶重绘委托（无法靠反复拆放讲台白嫖高阶书，且不含无限）！",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_title": "图示：残卷探索(≤30%)与村民交易",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "世界各地结构宝箱（10%–55%）\n野生雕纹书架风化替换（总概率 ≤30%）",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "仅限【图书管理员】回收：\n2 残卷 = 1 绿宝石 或 2 紫水晶碎片",
-    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "拜托图书管理员：基础 4青金石 / 2墨囊 / 1绿宝石变普通书；或按「稀有度×普适度×相对等级」加权变附魔书（最高 18 绿宝石 < 原版经验修补均价 24）！"
+    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "拜托重绘：按「稀有度×普适度×相对等级」同时决定【村民等级门槛 Lv.1–5】与【要价】（基础 4青金石/2墨囊/1绿宝石；高阶需大师村民，封顶 18 绿宝石 < 原版修补均价 24）！"
 }

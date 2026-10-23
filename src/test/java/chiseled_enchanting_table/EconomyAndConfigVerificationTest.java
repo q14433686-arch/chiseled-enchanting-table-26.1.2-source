@@ -1476,6 +1476,8 @@ class EconomyAndConfigVerificationTest {
                             .computeDynamicCommissionQuote(weight, items, lvl, maxLvl);
                         assertTrue(quote.emeraldCost() >= 1 && quote.emeraldCost() < vanillaMendingTypical,
                             "Commission price must strictly stay below vanilla typical Mending price (" + vanillaMendingTypical + "): " + quote.emeraldCost());
+                        assertTrue(quote.requiredVillagerLevel() >= 1 && quote.requiredVillagerLevel() <= 5,
+                            "Required villager level must stay in [1..5]: " + quote.requiredVillagerLevel());
                         assertTrue(quote.lapisCost() >= 4);
                         assertTrue(quote.inkSacCost() >= 2);
                         if (lvl > 1) {
@@ -1483,17 +1485,39 @@ class EconomyAndConfigVerificationTest {
                                 .computeDynamicCommissionQuote(weight, items, lvl - 1, maxLvl);
                             assertTrue(quote.tripleWeightedScore() > lowerLvl.tripleWeightedScore());
                             assertTrue(quote.emeraldCost() >= lowerLvl.emeraldCost());
+                            assertTrue(quote.requiredVillagerLevel() >= lowerLvl.requiredVillagerLevel());
                         }
                         if (weight < 10) {
                             var moreCommon = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
                                 .computeDynamicCommissionQuote(weight + 1, items, lvl, maxLvl);
                             assertTrue(quote.tripleWeightedScore() > moreCommon.tripleWeightedScore());
                             assertTrue(quote.emeraldCost() >= moreCommon.emeraldCost());
+                            assertTrue(quote.requiredVillagerLevel() >= moreCommon.requiredVillagerLevel());
                         }
                     }
                 }
             }
         }
+
+        // Verify concrete dynamic Villager rank gates across iconic vanilla enchantments
+        var sharpness1 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(10, 2, 1, 5);
+        var sharpness5 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(10, 2, 5, 5);
+        var unbreaking3 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(5, 25, 3, 3);
+        var mending1 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(2, 25, 1, 1);
+        var silkTouch1 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(1, 20, 1, 1);
+
+        assertEquals(1, sharpness1.requiredVillagerLevel());
+        assertEquals(3, sharpness5.requiredVillagerLevel());
+        assertEquals(4, unbreaking3.requiredVillagerLevel());
+        assertEquals(5, mending1.requiredVillagerLevel());
+        assertEquals(5, silkTouch1.requiredVillagerLevel());
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.canLibrarianOfferCommission(4, mending1));
+        assertTrue(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.canLibrarianOfferCommission(5, mending1));
     }
 
     private static int countSubstring(String haystack, String needle) {

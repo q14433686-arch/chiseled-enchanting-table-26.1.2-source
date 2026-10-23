@@ -82,7 +82,7 @@
     "gui.chiseled_enchanting_table.blank_overwrite": "공백 덮어쓰기: %s",
     "advancements.chiseled_enchanting_table.blank_overwrite.title": "백지 복원",
     "advancements.chiseled_enchanting_table.blank_overwrite.description": "조각된 마법 부여대에서 「공백 덮어쓰기」를 수행해 마력 바랜 잔권을 깨끗한 책으로 되돌리세요",
-    "jei.chiseled_enchanting_table.info.depleted_tome": "마법이 부여된 책 합치기·정화·원본 소진 외에도 전 세계 구조물 상자(10%~55%) 및 야생 조각된 책장(총 교체율 ≤30%)에서 발견됩니다. 조각된 책장에 넣으면 '광의의 책장'으로 인정되며, 사서 주민에게 잔권 2개 = 에메랄드 1개 / 자수정 조각 2개로 판매하거나 기본 비용(청금석 4 / 먹물 주머니 2 / 에메랄드 1) 및 '희귀도×범용성×상대 레벨' 동적 가중치(바닐라 수선 평균가 미만)로 책·마법이 부여된 책 복원을 의뢰할 수 있습니다!",
+    "jei.chiseled_enchanting_table.info.depleted_tome": "전 세계 상자(10%~55%) 및 야생 조각된 책장(총 교체율 ≤30%)에서도 획득 가능한 잔권. 조각된 책장에 넣으면 '광의의 책장'으로 인정되며, 사서 주민이 잔권 2개 = 에메랄드 1 / 자수정 2로 매입합니다. 마법 책 복원 의뢰 시 '희귀도×범용성×상대 레벨' 동적 가중치에 따라 【필요 사서 등급(초심자 Lv.1 ~ 달인 Lv.5)】과 【가격(최대 18E < 바닐라 수선 평균 24)】이 함께 결정됩니다!",
     "gui.chiseled_enchanting_table.resonance.wooden_locked": "일반 책장: %s / %s개 → +0%% (12개 이상부터 할인 적용)",
     "gui.chiseled_enchanting_table.resonance.chiseled_mastery": "원본 상대 등급: 완본 %s권 환산 → 전체 +%s%% (동종 원본 추가 최대 -15%%)",
     "gui.chiseled_enchanting_table.resonance.affinity_line": "현재 장비 동계열 원본: 완본 %s권 환산 (깨달음 확률·동시 상한 증가)",
@@ -609,11 +609,11 @@
     "gui.chiseled_enchanting_table.grimoire.ch7p2.lead": "'퇴마 잔권'은 유적 탐험으로도 얻을 수 있으며 [사서] 주민과 전용 거래가 가능합니다:",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s1": "[상자 & 야생 조각된 책장]: 유적 상자(10%~55%)와 자연 생성 조각된 책장(풍화 교체 총확률 ≤30%, 평균 약 17.8%)에서 등장합니다.",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.s2": "[사서 전용 매입]: 사서 주민 한정으로 퇴마 잔권 2개 = 에메랄드 1개 또는 자수정 조각 2개로 매입합니다.",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "[책 / 마법 책 복원 의뢰]: 기본 비용(청금석 4 / 먹물 주머니 2 / 에메랄드 1)으로 책 복원, 또는 '희귀도×범용성×상대 레벨' 가중 가격(최대 18 에메랄드 < 바닐라 수선 평균 24)으로 마법 책 제작!",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.s3": "[사서 등급 제한 + 가격 이중 동적 가중]: 일반 책 복원은 Lv.1부터 가능(청금석 4 / 먹물 2 / 에메랄드 1). 마법 책 복원은 '희귀도×범용성×상대 레벨'로 【필요 사서 등급(Lv.1 초심자 ~ Lv.5 달인)】과 【가격】을 동시에 산출합니다!",
     "gui.chiseled_enchanting_table.grimoire.ch7p2.note_t": "초반 탐험 꿀팁",
-    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "던전에서 모은 잔권을 여러 사서에게 가져가면 저렴하게 핵심 마법 책(무한 제외)을 구할 수 있습니다!",
+    "gui.chiseled_enchanting_table.grimoire.ch7p2.note_b": "사서와 거래해 전문가·달인(Lv.4–5)으로 키우면 수선·섬세한 손길 등 상위 복원이 순차 해금됩니다(독서대 반복 설치 편법 차단·무한 제외)!",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_title": "도식: 잔권 파밍(≤30%) & 사서 거래",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "월드 유적 상자 (10%–55%)\n야생 조각된 책장 풍화 (총 ≤30%)",
     "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "[사서] 전용 매입:\n잔권 2 = 에메랄드 1 또는 자수정 2",
-    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "사서 의뢰: 기본 청금석4 / 먹물2 / 에메랄드1 -> 책, 또는 '희귀도×범용성×상대레벨' 가중 -> 마법 책 (최대 18E < 수선 평균 24)!"
+    "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "복원 의뢰: '희귀도×범용성×상대레벨'로 【필요 사서 등급 Lv.1–5】 & 【가격】 동시 결정 (상위 마법은 달인 Lv.5 필수 · 최대 18E < 수선 평균 24)!"
 }
