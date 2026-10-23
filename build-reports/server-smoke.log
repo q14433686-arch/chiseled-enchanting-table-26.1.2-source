@@ -31,9 +31,9 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :configureLaunch
 
 > Task :runServer
-[02:50:43] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.3 with Fabric Loader 0.19.5
-[02:50:43] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[02:50:43] [main/INFO] (FabricLoader) Loading 44 mods:
+[02:52:27] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.3 with Fabric Loader 0.19.5
+[02:52:27] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[02:52:27] [main/INFO] (FabricLoader) Loading 44 mods:
 	- chiseled-enchanting-table 1.1.1
 	- fabric-advancement-api-v1 1.0.0+38c7a2d55d
 	- fabric-api 0.162.0+26.3
@@ -78,51 +78,51 @@ Note: Recompile with -Xlint:deprecation for details.
 	- java 25
 	- minecraft 26.3
 	- mixinextras 0.5.5
-[02:50:43] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.4+mixin.0.8.7/5f66cc9f59b8efaa942155a3d5a30599bf6640dd/sponge-mixin-0.17.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[02:50:44] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.5).
-[02:50:51] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
-[02:50:51] [main/INFO] (Minecraft) Environment: Environment[discoveryUrl=https://discovery.minecraftservices.com/minecraft/client, name=PROD]
-[02:50:52] [Worker-Main-2/INFO] (Minecraft) No existing world data, creating new world
-[02:50:53] [Worker-Main-1/INFO] (Minecraft) Loaded 1891 advancements
-[02:50:53] [main/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformations, 41 loot injections
-[02:50:53] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 67 new biomes in 1.530 ms
-[02:50:53] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.3
-[02:50:53] [Server thread/INFO] (Minecraft) Loading properties
-[02:50:53] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[02:50:53] [Server thread/INFO] (Minecraft) Generating keypair
-[02:50:53] [Server thread/INFO] (Minecraft) Starting Minecraft server on 127.0.0.1:0
-[02:50:54] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
-[02:50:54] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
-[02:50:54] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
-[02:50:54] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
-[02:50:54] [Server thread/INFO] (Minecraft) Preparing level "audit-world"
-[02:50:54] [Server thread/INFO] (Minecraft) Selecting global world spawn...
-[02:50:54] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[02:50:54] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[02:50:54] [Server thread/INFO] (Minecraft) Time elapsed: 605 ms
-[02:50:54] [Server thread/INFO] (Minecraft) Done (0.778s)! For help, type "help"
-[02:50:54] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
-[02:50:54] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
-[02:50:54] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
-[02:50:55] [Server thread/INFO] (Minecraft) System chat: Reloading!
-[02:50:55] [Worker-Main-3/INFO] (Minecraft) Loaded 1891 advancements
-[02:50:55] [Server thread/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformations, 41 loot injections
-[02:50:55] [Server thread/INFO] (Minecraft) System chat: Marked chunk [0, 0] in minecraft:overworld to be force loaded
-[02:50:55] [Server thread/INFO] (Minecraft) System chat: Changed the block at 0, 65, 0
-[02:50:55] [Server thread/INFO] (Minecraft) System chat: Modified block data of 0, 65, 0
-[02:50:55] [Server thread/INFO] (Minecraft) System chat: Dropped 1 [Audit Table] from loot table chiseled_enchanting_table:blocks/chiseled_enchanting_table
-[02:50:55] [Server thread/INFO] (Minecraft) System chat: item.chiseled_enchanting_table.chiseled_enchanting_table has the following entity data: {Motion: [-0.04208595774897797d, 0.2d, 0.08328844625176055d], Health: 5s, Invulnerable: 0b, fall_distance: 0.0d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [144.22119f, 0.0f], Item: {components: {"minecraft:lore": [{with: ["01:00"], color: "aqua", italic: 0b, translate: "item.chiseled_enchanting_table.frozen_lore"}], "minecraft:custom_name": "Audit Table", "minecraft:custom_data": {pendingFreezeTicks: 1200L, epiphanySeed: 123456, frozenCycleIndex: 17}, "minecraft:dyed_color": 1122867}, count: 1, id: "chiseled_enchanting_table:chiseled_enchanting_table"}, Pos: [0.5d, 67.0d, 0.5d], PickupDelay: 10s, Fire: 0s, UUID: [I; 1212256605, 1597328730, -1576032169, -1059842343], Age: 0s}
-[02:50:55] [Server thread/INFO] (Minecraft) System chat: Stopping the server
-[02:50:55] [Server thread/INFO] (Minecraft) Stopping server
-[02:50:55] [Server thread/INFO] (Minecraft) Saving players
-[02:50:55] [Server thread/INFO] (Minecraft) Saving worlds
-[02:50:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
-[02:50:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
-[02:50:56] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792723798123.json
+[02:52:27] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.4+mixin.0.8.7/5f66cc9f59b8efaa942155a3d5a30599bf6640dd/sponge-mixin-0.17.4+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[02:52:27] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.5).
+[02:52:34] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
+[02:52:34] [main/INFO] (Minecraft) Environment: Environment[discoveryUrl=https://discovery.minecraftservices.com/minecraft/client, name=PROD]
+[02:52:35] [Worker-Main-3/INFO] (Minecraft) No existing world data, creating new world
+[02:52:36] [Worker-Main-1/INFO] (Minecraft) Loaded 1891 advancements
+[02:52:36] [main/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformations, 41 loot injections
+[02:52:36] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 67 new biomes in 1.119 ms
+[02:52:36] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.3
+[02:52:36] [Server thread/INFO] (Minecraft) Loading properties
+[02:52:36] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[02:52:36] [Server thread/INFO] (Minecraft) Generating keypair
+[02:52:36] [Server thread/INFO] (Minecraft) Starting Minecraft server on 127.0.0.1:0
+[02:52:36] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[02:52:36] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
+[02:52:36] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[02:52:36] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
+[02:52:36] [Server thread/INFO] (Minecraft) Preparing level "audit-world"
+[02:52:36] [Server thread/INFO] (Minecraft) Selecting global world spawn...
+[02:52:37] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[02:52:37] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[02:52:37] [Server thread/INFO] (Minecraft) Time elapsed: 408 ms
+[02:52:37] [Server thread/INFO] (Minecraft) Done (0.536s)! For help, type "help"
+[02:52:37] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
+[02:52:37] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
+[02:52:37] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
+[02:52:37] [Server thread/INFO] (Minecraft) System chat: Reloading!
+[02:52:38] [Worker-Main-3/INFO] (Minecraft) Loaded 1891 advancements
+[02:52:38] [Server thread/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformations, 41 loot injections
+[02:52:38] [Server thread/INFO] (Minecraft) System chat: Marked chunk [0, 0] in minecraft:overworld to be force loaded
+[02:52:38] [Server thread/INFO] (Minecraft) System chat: Changed the block at 0, 65, 0
+[02:52:38] [Server thread/INFO] (Minecraft) System chat: Modified block data of 0, 65, 0
+[02:52:38] [Server thread/INFO] (Minecraft) System chat: Dropped 1 [Audit Table] from loot table chiseled_enchanting_table:blocks/chiseled_enchanting_table
+[02:52:38] [Server thread/INFO] (Minecraft) System chat: item.chiseled_enchanting_table.chiseled_enchanting_table has the following entity data: {Motion: [-0.06418214233360248d, 0.2d, 0.04836381741062684d], Health: 5s, Invulnerable: 0b, fall_distance: 0.0d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [263.52295f, 0.0f], Item: {components: {"minecraft:lore": [{with: ["01:00"], color: "aqua", italic: 0b, translate: "item.chiseled_enchanting_table.frozen_lore"}], "minecraft:custom_name": "Audit Table", "minecraft:custom_data": {pendingFreezeTicks: 1200L, epiphanySeed: 123456, frozenCycleIndex: 17}, "minecraft:dyed_color": 1122867}, count: 1, id: "chiseled_enchanting_table:chiseled_enchanting_table"}, Pos: [0.5d, 67.0d, 0.5d], PickupDelay: 10s, Fire: 0s, UUID: [I; 1121533014, 1209944209, -1661264278, 1740086421], Age: 0s}
+[02:52:38] [Server thread/INFO] (Minecraft) System chat: Stopping the server
+[02:52:38] [Server thread/INFO] (Minecraft) Stopping server
+[02:52:38] [Server thread/INFO] (Minecraft) Saving players
+[02:52:38] [Server thread/INFO] (Minecraft) Saving worlds
+[02:52:38] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
+[02:52:40] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
+[02:52:40] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792723903641.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 1m 8s
+BUILD SUCCESSFUL in 1m 6s
 5 actionable tasks: 5 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
