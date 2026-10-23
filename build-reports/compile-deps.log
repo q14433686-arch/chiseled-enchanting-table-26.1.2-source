@@ -1,5 +1,5 @@
-commit: e522ed25c244846aff3c394a815038727669522f
-branch: arena/a0e39812-chiseled-enchanting-table-26-1
+commit: f81bc1685f64b7a10e099e477decc45a1d093472
+branch: arena/d9c93ff4-chiseled-enchanting-table-26-1
 gradle exit code: 1
 
 === dependencyInsight: net.fabricmc.fabric-api on compileClasspath ===
@@ -199,6 +199,8 @@ net.fabricmc.fabric-api:fabric-block-api-v1:3.0.2+ec56b6014c
     | org.gradle.status              | release  |              |
     | org.gradle.category            | library  | library      |
 ...[truncated 1003 lines total]...
+net.fabricmc.fabric-api:fabric-model-loading-api-v1:8.0.7+c80601bb4c
+\--- net.fabricmc.fabric-api:fabric-api:0.151.0+26.1.2
      \--- clientCompileClasspath
 
 net.fabricmc.fabric-api:fabric-networking-api-v1:6.3.1+554860db4c
@@ -997,7 +999,5 @@ clientCompileClasspath - Compile classpath for source set 'client'.
 A web-based, searchable dependency report is available by adding the --scan option.
 
 == job status: failure ==
-
-== job status: success ==
 
 == job status: success ==

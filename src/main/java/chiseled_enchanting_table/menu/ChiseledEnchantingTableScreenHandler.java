@@ -115,9 +115,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public final Set<EnchantmentWithLevel> unlocked_enchantements;
     public int xpDiscountPercent;
     public int regularBookshelves;
+    public int chiseledBookshelves;
     public int chiseledBookCount;
     public int highTierChiseledBooks;
     public java.util.Map<Identifier, Integer> storedMasterLevels;
+    public java.util.Map<EnchantmentWithLevel, Integer> masterTomeCharges;
     public boolean crampedLibrary;
     private int epiphanySeed;
     private int syncedCycleIndex;
@@ -162,11 +164,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             )
         );
         this.regularBookshelves = Math.max(0, payload.regular_bookshelves());
+        this.chiseledBookshelves = Math.max(0, payload.chiseled_bookshelves());
         this.chiseledBookCount = Math.max(0, payload.chiseled_book_count());
         this.highTierChiseledBooks = Math.max(0, payload.high_tier_chiseled_books());
         this.storedMasterLevels = payload.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(payload.stored_master_levels());
+        this.masterTomeCharges = payload.master_tome_charges() == null
+            ? java.util.Map.of()
+            : java.util.Map.copyOf(payload.master_tome_charges());
         this.crampedLibrary = payload.cramped_library();
         this.epiphanySeed = payload.epiphany_seed();
         long cycleTicks = Math.max(1L, this.epiphanyCycleTicks());
@@ -386,15 +392,31 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             )
         );
         this.regularBookshelves = Math.max(0, live.regular_bookshelves());
+        this.chiseledBookshelves = Math.max(0, live.chiseled_bookshelves());
         this.chiseledBookCount = Math.max(0, live.chiseled_book_count());
         this.highTierChiseledBooks = Math.max(0, live.high_tier_chiseled_books());
         this.storedMasterLevels = live.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(live.stored_master_levels());
+        this.masterTomeCharges = live.master_tome_charges() == null
+            ? java.util.Map.of()
+            : java.util.Map.copyOf(live.master_tome_charges());
         this.crampedLibrary = live.cramped_library();
         if (this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
         }
+    }
+
+    public int totalLibraryBookshelves() {
+        return Math.max(0, this.regularBookshelves) + Math.max(0, this.chiseledBookshelves);
+    }
+
+    public int masterTomeRemainingCharges(Identifier id, int level) {
+        if (id == null) {
+            return this.libraryResonanceConfig().maxTomeUses();
+        }
+        Integer live = this.masterTomeCharges.get(new EnchantmentWithLevel(id, Math.max(1, level)));
+        return live != null ? live : this.libraryResonanceConfig().maxTomeUses();
     }
 
     public void refreshLiveShelfState() {
@@ -413,10 +435,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         boolean changed = !live.unlocked_enchantements().equals(this.unlocked_enchantements)
             || live.xp_discount_percent() != this.xpDiscountPercent
             || live.regular_bookshelves() != this.regularBookshelves
+            || live.chiseled_bookshelves() != this.chiseledBookshelves
             || live.chiseled_book_count() != this.chiseledBookCount
             || live.high_tier_chiseled_books() != this.highTierChiseledBooks
             || live.cramped_library() != this.crampedLibrary
-            || !live.stored_master_levels().equals(this.storedMasterLevels);
+            || !live.stored_master_levels().equals(this.storedMasterLevels)
+            || !java.util.Objects.equals(live.master_tome_charges(), this.masterTomeCharges);
         if (changed) {
             applyLiveShelfState(live);
             if (this.player instanceof net.minecraft.server.level.ServerPlayer sp

@@ -110,7 +110,7 @@ public final class EnchantmentApplication {
         EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, enchantment_level);
         EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
 
-        if (masterTomeUsed && !handler.player.getAbilities().instabuild) {
+        if (masterTomeUsed) {
             var outcome = MasterTomeWear.applyShelfWear(
                 world,
                 handler.tableBlockPos(),
@@ -294,6 +294,7 @@ public final class EnchantmentApplication {
         Player player = handler.player;
         Level world = handler.world();
         handler.markInventoryChanged();
+        handler.refreshLiveShelfState();
         player.awardStat(Stats.ENCHANT_ITEM);
         world.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 2.0F, world.getRandom().nextFloat() * 0.1F + 0.9F);
     }

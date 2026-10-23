@@ -1,5 +1,5 @@
-commit: 6cdedfae3af667a3ef14d2721c960c28bded3af3
-branch: arena/a0e39812-chiseled-enchanting-table-26-1
+commit: d9bfad39ccaa962b48142bd99c38df9424992d10
+branch: arena/d9c93ff4-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
 loader: 0.19.3
@@ -36,6 +36,8 @@ Note: Recompile with -Xlint:deprecation for details.
 
 > Task :test
 
+EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
+
 EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
 
 EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
@@ -65,7 +67,103 @@ EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate(
 EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
 
 EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792730852580.json
+
+EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() STANDARD_OUT
+    [14:23:02] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+    java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
+    	at java.base/java.nio.file.Files.provider(Files.java:103)
+    	at java.base/java.nio.file.Files.exists(Files.java:2289)
+    	at net.fabricmc.loader.impl.FabricLoaderImpl.getConfigDir(FabricLoaderImpl.java:177)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:347)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:353)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:300)
+    	at chiseled_enchanting_table.data.ChiseledEnchantingTableData.<clinit>(ChiseledEnchantingTableData.java:116)
+    	at chiseled_enchanting_table.EconomyAndConfigVerificationTest.datapackPriorityDefaultAndPackPolicyAntiTamperGovernance(EconomyAndConfigVerificationTest.java:1098)
+    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+    	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
+    	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+    	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+    	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+    	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.processAllTestDefinitions(JUnitPlatformTestDefinitionProcessor.java:179)
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.access$000(JUnitPlatformTestDefinitionProcessor.java:122)
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor.stop(JUnitPlatformTestDefinitionProcessor.java:116)
+    	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.stop(SuiteTestDefinitionProcessor.java:63)
+    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+    	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+    	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+    	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+    	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+    	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+    	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:195)
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+    	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+    	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+    	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+    	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+    	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+
+EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792765363145.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -75,7 +173,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 34s
+BUILD SUCCESSFUL in 24s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
