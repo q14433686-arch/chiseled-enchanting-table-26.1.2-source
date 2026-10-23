@@ -758,7 +758,7 @@ class EconomyAndConfigVerificationTest {
     @Test
     void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
-        assertEquals(49, all.size(), "Expected 49 curated in-game configurable entries across 6 categories");
+        assertEquals(55, all.size(), "Expected 55 curated in-game configurable entries across 6 categories");
         for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
                 chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
@@ -918,6 +918,7 @@ class EconomyAndConfigVerificationTest {
             "config.chiseled_enchanting_table.reason.need_direct_gates",
             "config.chiseled_enchanting_table.reason.need_breathing_room",
             "config.chiseled_enchanting_table.reason.need_wear_mode",
+            "config.chiseled_enchanting_table.reason.need_tome_regen",
             "config.chiseled_enchanting_table.reason.need_book_combine",
             "config.chiseled_enchanting_table.reason.need_book_research",
             "config.chiseled_enchanting_table.reason.need_disenchant",
