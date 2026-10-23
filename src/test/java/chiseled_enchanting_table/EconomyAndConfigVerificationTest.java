@@ -754,6 +754,9 @@ class EconomyAndConfigVerificationTest {
 
         for (var entry : all) {
             assertFalse(entry.isModifiedFromDefault(working), "Default must match on entry: " + entry.key());
+        }
+
+        for (var entry : all) {
             switch (entry.kind()) {
                 case BOOLEAN, ENUM_CYCLE -> {
                     Object orig = entry.get(working);
