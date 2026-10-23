@@ -32,7 +32,7 @@ public class BookshelfReplacerProcessor extends StructureProcessor {
     public static final boolean REPLACEMENT_ENABLED = true;
 
     private static boolean isActive() {
-        return REPLACEMENT_ENABLED && ChiseledEnchantingTableData.structureBookshelfReplacementEnabled();
+        return REPLACEMENT_ENABLED && ChiseledEnchantingTableData.bookshelfReplacementEnabled();
     }
 
     private BookshelfReplacerProcessor() {}
