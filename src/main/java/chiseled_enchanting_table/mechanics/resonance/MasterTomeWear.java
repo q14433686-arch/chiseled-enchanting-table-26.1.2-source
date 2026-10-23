@@ -58,11 +58,14 @@ public final class MasterTomeWear {
     public static final int DEFAULT_BOOK_COPY_WEAR_COST = 4;
 
     public static final boolean DEFAULT_REGEN_ENABLED = true;
-    public static final int DEFAULT_REGEN_BASE_SECONDS = 90;
+    /** 20 Minecraft game days (20 * 1,200s = 24,000s = 480,000 ticks) at 0 shelves. */
+    public static final int DEFAULT_REGEN_BASE_SECONDS = 24_000;
+    /** Tier 1 breakthrough at 38 effective shelves: 10 Minecraft game days (12,000s = 240,000 ticks) per +1 durability. */
     public static final int DEFAULT_REGEN_TIER1_SHELVES = 38;
-    public static final int DEFAULT_REGEN_TIER1_SECONDS = 30;
+    public static final int DEFAULT_REGEN_TIER1_SECONDS = 12_000;
+    /** Tier 2 breakthrough at 42 effective shelves: 3 Minecraft game days (3,600s = 72,000 ticks) per +1 durability. */
     public static final int DEFAULT_REGEN_TIER2_SHELVES = 42;
-    public static final int DEFAULT_REGEN_TIER2_SECONDS = 10;
+    public static final int DEFAULT_REGEN_TIER2_SECONDS = 3_600;
 
     private MasterTomeWear() {}
 

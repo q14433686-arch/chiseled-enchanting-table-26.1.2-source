@@ -211,7 +211,7 @@ public record ModRuntimeConfig(
         maxTomeUses = clampInt(maxTomeUses, 1, 256);
         bookCopyWearCost = clampInt(bookCopyWearCost, 1, maxTomeUses);
         tomeDepleteBehavior = tomeDepleteBehavior != null ? tomeDepleteBehavior : MasterTomeWear.DepleteBehavior.STEP_DOWN;
-        tomeRegenBaseSeconds = clampInt(tomeRegenBaseSeconds, 1, 7200);
+        tomeRegenBaseSeconds = clampInt(tomeRegenBaseSeconds, 1, 86_400);
         tomeRegenTier1Shelves = clampInt(tomeRegenTier1Shelves, 1, 128);
         tomeRegenTier1Seconds = clampInt(tomeRegenTier1Seconds, 1, tomeRegenBaseSeconds);
         tomeRegenTier2Shelves = clampInt(tomeRegenTier2Shelves, tomeRegenTier1Shelves, 128);
@@ -607,11 +607,11 @@ public record ModRuntimeConfig(
         public int bookCopyWearCost = 4;
         public MasterTomeWear.DepleteBehavior tomeDepleteBehavior = MasterTomeWear.DepleteBehavior.STEP_DOWN;
         public boolean tomeRegenEnabled = true;
-        public int tomeRegenBaseSeconds = 90;
+        public int tomeRegenBaseSeconds = 24_000;
         public int tomeRegenTier1Shelves = 38;
-        public int tomeRegenTier1Seconds = 30;
+        public int tomeRegenTier1Seconds = 12_000;
         public int tomeRegenTier2Shelves = 42;
-        public int tomeRegenTier2Seconds = 10;
+        public int tomeRegenTier2Seconds = 3_600;
         public int maxWoodenDiscountPercent = 15;
         public int maxTotalXpDiscountPercent = 40;
         public boolean bookCombineEnabled = true;

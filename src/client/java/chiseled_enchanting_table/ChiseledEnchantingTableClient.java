@@ -148,6 +148,15 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 }
             })
         );
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.TYPE,
+            (payload, ctx) -> ctx.client().execute(() -> {
+                var player = ctx.client().player;
+                if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                    menu.applySyncedRitualState(payload);
+                }
+            })
+        );
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             SyncedEnchantmentCosts.clear();
             ModRuntimeConfig.clearRemoteSync();

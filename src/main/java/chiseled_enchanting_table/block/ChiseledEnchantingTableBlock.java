@@ -239,9 +239,44 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         MenuProvider provider = createChiseledEnchantingTableMenuProvider(state, level, pos);
         if (provider != null) {
             player.openMenu(provider);
+            if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                menu.pushRitualStateToViewer();
+            }
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    public void affectNeighborsAfterRemoval(
+        BlockState state,
+        net.minecraft.server.level.ServerLevel level,
+        BlockPos pos,
+        boolean moved
+    ) {
+        if (level.getBlockEntity(pos) instanceof net.minecraft.world.Container container) {
+            if (container instanceof ChiseledEnchantingTableBlockEntity tableBe) {
+                tableBe.clearRitualState();
+            }
+            net.minecraft.world.Containers.dropContents(level, pos, container);
+            level.updateNeighbourForOutputSignal(pos, this);
+        }
+        super.affectNeighborsAfterRemoval(state, level, pos, moved);
+    }
+
+    @Override
+    protected boolean hasAnalogOutputSignal(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getAnalogOutputSignal(
+        BlockState state,
+        Level level,
+        BlockPos pos,
+        net.minecraft.core.Direction dir
+    ) {
+        return AbstractContainerMenu.getRedstoneSignalFromBlockEntity(level.getBlockEntity(pos));
     }
 
     @Nullable
@@ -270,6 +305,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     shelfPower.storedMasterLevels(),
                     shelfPower.crampedLibrary(),
                     shelfPower.chiseledBookshelvesWithBooks(),
+                    shelfPower.emptyChiseledBookshelves(),
                     shelfPower.masterTomeCharges(),
                     targetPlayer
                 );
@@ -277,7 +313,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
             @Override
             public AvailableEnchantmentPayload getScreenOpeningData(ServerPlayer player) {
-                if (shelfPower.chiseledBookshelvesWithBooks() > 0) {
+                if (shelfPower.totalChiseledEnchantedBooks() > 0) {
                     Advancement.give(player, "unlock_new_enchant");
                 }
                 if (shelfPower.xpDiscountPercent() >= 22 || shelfPower.peakEffectiveXpDiscountPercent(level) >= 35) {
@@ -372,6 +408,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             shelfPower.storedMasterLevels(),
             shelfPower.crampedLibrary(),
             shelfPower.chiseledBookshelvesWithBooks(),
+            shelfPower.emptyChiseledBookshelves(),
             shelfPower.masterTomeCharges()
         );
     }
@@ -379,6 +416,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public record ShelfPower(
         int regularBookshelves,
         int chiseledBookshelvesWithBooks,
+        int emptyChiseledBookshelves,
         int totalChiseledEnchantedBooks,
         int highTierChiseledBooks,
         double totalMasteryUnits,
@@ -386,8 +424,16 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         boolean crampedLibrary,
         Map<EnchantmentWithLevel, Integer> masterTomeCharges
     ) {
+        /**
+         * Broad-sense bookshelf count ({@code 广义书架}):
+         * {@code 普通书架 + 空的雕纹书架 + 有书的雕纹书架（含普通书、附魔书、秘典及褪魔残卷）}.
+         */
         public int totalLibraryBookshelves() {
-            return Math.max(0, regularBookshelves) + Math.max(0, chiseledBookshelvesWithBooks);
+            return chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.computeBroadBookshelfCount(
+                regularBookshelves,
+                emptyChiseledBookshelves,
+                chiseledBookshelvesWithBooks
+            );
         }
 
         int xpDiscountPercent() {
@@ -468,7 +514,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         boolean cramped = sgCfg.requireBreathingRoom() && (ceilingBlocked || openAdjacent < sgCfg.minOpenAdjacentBlocks());
 
         int rawRegularBookshelves = 0;
-        int chiseledBookshelvesWithBooks = 0;
+        int rawOccupiedChiseledBookshelves = 0;
+        int rawEmptyChiseledBookshelves = 0;
         int totalChiseledEnchantedBooks = 0;
         Map<Identifier, Integer> storedMasterLevels = new HashMap<>();
         for (BlockPos scannedPos : streamLibraryPositions(tablePos).toList()) {
@@ -481,20 +528,49 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             } else if (nearbyState.is(Blocks.CHISELED_BOOKSHELF)) {
                 BlockEntity be = level.getBlockEntity(scannedPos);
                 if (be instanceof ChiseledBookShelfBlockEntity cbsbe) {
+                    boolean anyBookInShelf = false;
+                    for (int slot = 0; slot < cbsbe.getContainerSize(); slot++) {
+                        if (!cbsbe.getItem(slot).isEmpty()) {
+                            anyBookInShelf = true;
+                            break;
+                        }
+                    }
+                    if (anyBookInShelf) {
+                        // Any stored book — including plain books, written books, grimoires, and Depleted Tomes —
+                        // classifies this block as an occupied Chiseled Bookshelf inside broad bookshelves.
+                        rawOccupiedChiseledBookshelves++;
+                    } else {
+                        rawEmptyChiseledBookshelves++;
+                    }
                     List<EnchantmentWithLevel> found = EnchantmentFinder.streamAllEnchantements(cbsbe, level).toList();
                     if (!found.isEmpty()) {
-                        chiseledBookshelvesWithBooks++;
                         totalChiseledEnchantedBooks += found.size();
                         for (EnchantmentWithLevel e : found) {
                             EnchantmentWithLevel clamped = clampToMaxLevel(level, e);
                             mergeHighestLevel(storedMasterLevels, clamped);
                         }
                     }
+                } else if (hasOccupiedChiseledSlot(nearbyState)) {
+                    rawOccupiedChiseledBookshelves++;
+                } else {
+                    rawEmptyChiseledBookshelves++;
                 }
             }
         }
         int effectiveRegularBookshelves = effectiveShelvesAfterBreathingRoom(
             rawRegularBookshelves,
+            ceilingBlocked,
+            openAdjacent,
+            sgCfg
+        );
+        int effectiveOccupiedChiseled = effectiveShelvesAfterBreathingRoom(
+            rawOccupiedChiseledBookshelves,
+            ceilingBlocked,
+            openAdjacent,
+            sgCfg
+        );
+        int effectiveEmptyChiseled = effectiveShelvesAfterBreathingRoom(
+            rawEmptyChiseledBookshelves,
             ceilingBlocked,
             openAdjacent,
             sgCfg
@@ -513,7 +589,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             );
         return new ShelfPower(
             effectiveRegularBookshelves,
-            chiseledBookshelvesWithBooks,
+            effectiveOccupiedChiseled,
+            effectiveEmptyChiseled,
             totalChiseledEnchantedBooks,
             highTierChiseledBooks,
             totalUnits,

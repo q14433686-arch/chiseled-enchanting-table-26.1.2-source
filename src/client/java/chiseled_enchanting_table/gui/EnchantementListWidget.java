@@ -71,7 +71,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     ) {
         super(client, width, height, y, itemHeight);
         this.handler = handler;
-        this.enchantable_item = handler.get_enchantable_item();
+        this.enchantable_item = handler.getEffectiveEnchantableItem();
         this.cost_item_stack = handler.get_cost_item();
         this.unlocked_enchantements = handler.unlocked_enchantements;
         this.player = handler.player;
@@ -87,7 +87,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             this.tabMode = nextMode;
             this.setFocused(null);
             this.setScrollAmount(0);
-            this.updateEntry(this.handler.get_enchantable_item(), this.handler.get_cost_item());
+            this.updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
         }
     }
 
@@ -104,7 +104,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             set.add(categoryId);
         }
         double savedScroll = this.scrollAmount();
-        this.updateEntry(this.handler.get_enchantable_item(), this.handler.get_cost_item());
+        this.updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
         this.setScrollAmount(Math.min(savedScroll, this.maxScrollAmount()));
     }
 

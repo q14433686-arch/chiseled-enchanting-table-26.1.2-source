@@ -7,7 +7,9 @@
       "level": 1
     }
   ],
-  "exclude": [],
+  "exclude": [
+    "minecraft:infinity"
+  ],
   "exclude_tags": [
     "#minecraft:treasure",
     "#minecraft:curse",
