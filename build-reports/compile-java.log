@@ -1,4 +1,4 @@
-commit: 90a61455edc33b0dea24586e4d6514410fbe33ba
+commit: 0a04d9f7d7ef875b48d8e8a5995bf30f2775c7f3
 branch: arena/1ac4c727-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
@@ -43,46 +43,140 @@ Note: Recompile with -Xlint:deprecation for details.
 
 > Task :processClientResources
 > Task :clientClasses
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
 
-> Task :compileTestJava FAILED
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/RuleArchitectureTest.java:121: error: cannot find symbol
-        var snapshots = scheduler.snapshotEntries(key -> key, id -> Integer.toHexString(System.identityHashCode(id)));
-                                 ^
-  symbol:   method snapshotEntries((key)->key,(id)->Inte[...](id)))
-  location: variable scheduler of type RegenerationScheduler<String>
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/RuleArchitectureTest.java:141: error: cannot find symbol
-        restored.clearSlot("world/shelf/slot");
-                ^
-  symbol:   method clearSlot(String)
-  location: variable restored of type RegenerationScheduler<String>
-2 errors
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792790981488.json
+> Task :test
+
+ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
+
+ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
+
+ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
+
+ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
+
+EconomyAndConfigVerificationTest > bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() PASSED
+
+EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
+
+EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
+
+EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
+
+EconomyAndConfigVerificationTest > highMaxLevelShelfCurveDistributesSmoothlyAndCapsScanVolume() PASSED
+
+EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning() PASSED
+
+EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
+
+EconomyAndConfigVerificationTest > deepRitualPersistenceSkipSlipAndInfinityRulesVerified() PASSED
+
+EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
+
+EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() PASSED
+
+EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
+
+EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
+
+EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
+
+EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
+
+EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
+
+EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
+
+FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
+
+FullPortRuntimeTest > configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() PASSED
+
+FullPortRuntimeTest > ritualWirePreservesMenuSessionQueueAndBlockedState() PASSED
+
+FullPortRuntimeTest > malformedPolicyNeverBecomesAnUnlockedDefault() PASSED
+
+FullPortRuntimeTest > effectiveDomainAndDirectConsumerAgreeAndFailedSaveDoesNotPublish() PASSED
+
+FullPortRuntimeTest > persistedQueueHasFiniteResourceBounds() PASSED
+
+NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
+
+NetworkCompatibilityTest > unknownActionsCannotSilentlyBecomeEnchantment() PASSED
+
+NetworkCompatibilityTest > allActionTokensAndMenuTargetedPacketsRoundTrip() PASSED
+
+NetworkCompatibilityTest > costTableConfigurationAndRowsRoundTrip() FAILED
+    java.lang.IllegalArgumentException: Unknown enchanting option type: 
+        at chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads$OptionType.fromToken(ChiseledEnchantingMenuPayloads.java:60)
+        at chiseled_enchanting_table.menu.EnchantCostTablePayload.read(EnchantCostTablePayload.java:548)
+        at net.minecraft.network.codec.StreamCodec$2.decode(StreamCodec.java:43)
+        at chiseled_enchanting_table.NetworkCompatibilityTest.roundTrip(NetworkCompatibilityTest.java:27)
+        at chiseled_enchanting_table.NetworkCompatibilityTest.costTableConfigurationAndRowsRoundTrip(NetworkCompatibilityTest.java:69)
+
+NetworkCompatibilityTest > runtimeConfigRequestAndAcknowledgementRoundTrip() PASSED
+
+NetworkCompatibilityTest > liveUpdatesOnlyTargetTheMatchingMenu() PASSED
+
+NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNotUnmoddedPeers() PASSED
+
+NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
+
+NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
+
+RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
+
+RuleArchitectureTest > overlapUsesFastestRateIndependentOfProposalOrder() PASSED
+
+RuleArchitectureTest > foreignAndReentrantTransactionsCannotWrite() PASSED
+
+RuleArchitectureTest > acknowledgedReplacementCarriesOnlyItsOwnResidencyForward() PASSED
+
+RuleArchitectureTest > replacementAndConflictingIdentityDoNotInheritProgress() PASSED
+
+RuleArchitectureTest > invalidInputsAndBootstrapOverridesAreRejected() PASSED
+
+RuleArchitectureTest > sessionResetAndDuplicateSettlementAreSafe() PASSED
+
+RuleArchitectureTest > fullyRestoredBooksAreEvictedWithoutOngoingDirtyWrites() PASSED
+
+RuleArchitectureTest > fullLockResolvesEveryDefinedRuntimeKeyNotJustDatapackKeys() PASSED
+
+RuleArchitectureTest > unloadedWindowPausesWithoutCreditingOfflineTimeAndPersistsSnapshots() PASSED
+
+RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
+
+RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
+
+RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
+
+52 tests completed, 1 failed
+
+> Task :test FAILED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792791139223.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileTestJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
-> Compilation failed; see the compiler output below.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/RuleArchitectureTest.java:121: error: cannot find symbol
-          var snapshots = scheduler.snapshotEntries(key -> key, id -> Integer.toHexString(System.identityHashCode(id)));
-                                   ^
-    symbol:   method snapshotEntries((key)->key,(id)->Inte[...](id)))
-    location: variable scheduler of type RegenerationScheduler<String>
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/RuleArchitectureTest.java:141: error: cannot find symbol
-          restored.clearSlot("world/shelf/slot");
-                  ^
-    symbol:   method clearSlot(String)
-    location: variable restored of type RegenerationScheduler<String>
-  2 errors
+Execution failed for task ':test'.
+> There were failing tests. See the report at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/tests/test/index.html
 
 * Try:
-> Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileTestJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':test'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -116,52 +210,12 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
-Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/RuleArchitectureTest.java:121: error: cannot find symbol
-        var snapshots = scheduler.snapshotEntries(key -> key, id -> Integer.toHexString(System.identityHashCode(id)));
-                                 ^
-  symbol:   method snapshotEntries((key)->key,(id)->Inte[...](id)))
-  location: variable scheduler of type RegenerationScheduler<String>
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/RuleArchitectureTest.java:141: error: cannot find symbol
-        restored.clearSlot("world/shelf/slot");
-                ^
-  symbol:   method clearSlot(String)
-  location: variable restored of type RegenerationScheduler<String>
-2 errors
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:38)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:38)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:46)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:36)
-	at org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler.execute(DefaultToolchainJavaCompiler.java:57)
-	at org.gradle.api.tasks.compile.JavaCompile.lambda$createToolchainCompiler$3(JavaCompile.java:206)
-	at org.gradle.api.internal.tasks.compile.CleaningJavaCompiler.execute(CleaningJavaCompiler.java:53)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalCompilerFactory.lambda$createRebuildAllCompiler$0(IncrementalCompilerFactory.java:55)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:70)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:44)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:66)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:64)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:48)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler.execute(CompileJavaBuildOperationReportingCompiler.java:48)
-	at org.gradle.api.tasks.compile.JavaCompile.performCompilation(JavaCompile.java:224)
-	at org.gradle.api.tasks.compile.JavaCompile.performIncrementalCompilation(JavaCompile.java:165)
-	at org.gradle.api.tasks.compile.JavaCompile.compile(JavaCompile.java:150)
+Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There were failing tests. See the report at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/tests/test/index.html
+	at org.gradle.api.tasks.testing.AbstractTestTask.executeTests(AbstractTestTask.java:615)
+	at org.gradle.api.tasks.testing.Test.executeTests(Test.java:759)
 	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
-	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.doExecute(IncrementalTaskAction.java:45)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.doExecute(StandardTaskAction.java:58)
 	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
-	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.execute(IncrementalTaskAction.java:26)
 	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
 	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:259)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
@@ -268,8 +322,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 42s
-5 actionable tasks: 5 executed
+BUILD FAILED in 1m 5s
+6 actionable tasks: 6 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
