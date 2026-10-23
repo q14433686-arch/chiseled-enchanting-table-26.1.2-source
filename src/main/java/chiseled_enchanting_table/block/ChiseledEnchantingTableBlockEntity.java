@@ -1,5 +1,7 @@
 package chiseled_enchanting_table.block;
 
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.registry.EntityRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -158,6 +160,34 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.epiphanySeed = next;
         this.setChanged();
         return next;
+    }
+
+    public static void serverTick(
+        Level level,
+        BlockPos pos,
+        BlockState state,
+        ChiseledEnchantingTableBlockEntity blockEntity
+    ) {
+        if (level.isClientSide()) {
+            return;
+        }
+        // Stagger scans across 20 ticks by block position hash so multiple tables never spike on tick 0.
+        if (Math.floorMod(level.getGameTime() + pos.asLong(), 20L) != 0L) {
+            return;
+        }
+        var resonanceCfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        if (!resonanceCfg.tomeRegenEnabled()
+            || resonanceCfg.tomeConsumptionMode() == MasterTomeWear.ConsumptionMode.KEEP) {
+            return;
+        }
+        ChiseledEnchantingTableBlock.ShelfPower power = ChiseledEnchantingTableBlock.calculateShelfPower(level, pos);
+        MasterTomeWear.tickLibraryRegeneration(
+            level,
+            pos,
+            ChiseledEnchantingTableData.shelfGatesConfig(),
+            resonanceCfg,
+            power.totalLibraryBookshelves()
+        );
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, ChiseledEnchantingTableBlockEntity blockEntity) {

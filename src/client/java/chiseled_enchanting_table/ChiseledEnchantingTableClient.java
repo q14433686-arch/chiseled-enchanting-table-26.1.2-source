@@ -81,25 +81,35 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             if (!stack.is(Items.ENCHANTED_BOOK)) {
                 return;
             }
-            int wearUsed = MasterTomeWear.getWearUsed(stack);
-            if (wearUsed <= 0) {
-                return;
-            }
             var cfg = SyncedEnchantmentCosts.libraryResonanceConfig();
             if (cfg.tomeConsumptionMode() == MasterTomeWear.ConsumptionMode.KEEP) {
                 return;
             }
+            if (MasterTomeWear.hasInfinityImmunity(stack)) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_infinite"
+                ).withStyle(ChatFormatting.LIGHT_PURPLE));
+                return;
+            }
+            int wearUsed = MasterTomeWear.getWearUsed(stack);
             int maxUses = Math.max(1, cfg.maxTomeUses());
             int remaining = Math.max(1, maxUses - wearUsed);
             float ratio = (float) remaining / (float) maxUses;
-            ChatFormatting color = ratio > 0.5f
-                ? ChatFormatting.AQUA
-                : (ratio > 0.25f ? ChatFormatting.GOLD : ChatFormatting.RED);
+            ChatFormatting color = wearUsed <= 0
+                ? ChatFormatting.DARK_AQUA
+                : (ratio > 0.5f ? ChatFormatting.AQUA : (ratio > 0.25f ? ChatFormatting.GOLD : ChatFormatting.RED));
             lines.add(Component.translatable(
                 "item.chiseled_enchanting_table.master_tome_charges",
                 remaining,
                 maxUses
             ).withStyle(color));
+            if (wearUsed > 0 && cfg.tomeRegenEnabled()) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_regen_hint",
+                    cfg.tomeRegenTier1Shelves(),
+                    cfg.tomeRegenTier2Shelves()
+                ).withStyle(ChatFormatting.DARK_GRAY));
+            }
         });
 
         ClientPlayNetworking.registerGlobalReceiver(ModConfigNetworking.SyncRuntimeConfigPayload.TYPE, (payload, ctx) ->

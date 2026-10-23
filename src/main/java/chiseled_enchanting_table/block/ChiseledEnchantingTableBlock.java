@@ -193,7 +193,13 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide() ? createTickerHelper(type, EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntity::tick) : null;
+        return createTickerHelper(
+            type,
+            EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE,
+            level.isClientSide()
+                ? ChiseledEnchantingTableBlockEntity::tick
+                : ChiseledEnchantingTableBlockEntity::serverTick
+        );
     }
 
     @Override
@@ -263,6 +269,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     epiphanySeed,
                     shelfPower.storedMasterLevels(),
                     shelfPower.crampedLibrary(),
+                    shelfPower.chiseledBookshelvesWithBooks(),
+                    shelfPower.masterTomeCharges(),
                     targetPlayer
                 );
             }
@@ -362,19 +370,26 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             shelfPower.totalChiseledEnchantedBooks(),
             shelfPower.highTierChiseledBooks(),
             shelfPower.storedMasterLevels(),
-            shelfPower.crampedLibrary()
+            shelfPower.crampedLibrary(),
+            shelfPower.chiseledBookshelvesWithBooks(),
+            shelfPower.masterTomeCharges()
         );
     }
 
-    private record ShelfPower(
+    public record ShelfPower(
         int regularBookshelves,
         int chiseledBookshelvesWithBooks,
         int totalChiseledEnchantedBooks,
         int highTierChiseledBooks,
         double totalMasteryUnits,
         Map<Identifier, Integer> storedMasterLevels,
-        boolean crampedLibrary
+        boolean crampedLibrary,
+        Map<EnchantmentWithLevel, Integer> masterTomeCharges
     ) {
+        public int totalLibraryBookshelves() {
+            return Math.max(0, regularBookshelves) + Math.max(0, chiseledBookshelvesWithBooks);
+        }
+
         int xpDiscountPercent() {
             return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(
                 regularBookshelves,
@@ -410,6 +425,10 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             .effectiveShelvesAfterBreathingRoom(rawRegularBookshelves, ceilingBlocked, openAdjacentBlocks, cfg);
     }
 
+    public static boolean hasShelfLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) {
+        return hasClearLineOfSight(level, tablePos, shelfPos);
+    }
+
     private static boolean hasClearLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) {
         int dx = shelfPos.getX() - tablePos.getX();
         int dy = shelfPos.getY() - tablePos.getY();
@@ -430,7 +449,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         return true;
     }
 
-    private static ShelfPower calculateShelfPower(Level level, BlockPos tablePos) {
+    public static ShelfPower calculateShelfPower(Level level, BlockPos tablePos) {
         var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
         int openAdjacent = 0;
         for (int dx = -1; dx <= 1; dx++) {
@@ -484,6 +503,14 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int highTierChiseledBooks = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
             .countQualifyingStoredMasterEnchantments(level, immutableStored);
         double totalUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.totalMasteryUnits(level, immutableStored);
+        Map<EnchantmentWithLevel, Integer> masterTomeCharges = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+            .snapshotLiveMasterCharges(
+                level,
+                tablePos,
+                sgCfg,
+                ChiseledEnchantingTableData.libraryResonanceConfig(),
+                immutableStored
+            );
         return new ShelfPower(
             effectiveRegularBookshelves,
             chiseledBookshelvesWithBooks,
@@ -491,7 +518,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             highTierChiseledBooks,
             totalUnits,
             immutableStored,
-            cramped
+            cramped,
+            masterTomeCharges
         );
     }
 

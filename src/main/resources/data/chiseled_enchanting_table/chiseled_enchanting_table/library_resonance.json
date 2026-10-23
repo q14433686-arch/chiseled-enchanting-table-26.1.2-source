@@ -19,7 +19,13 @@
     "tome_consumption_mode": "wear",
     "max_tome_uses": 16,
     "book_copy_wear_cost": 4,
-    "tome_deplete_behavior": "step_down"
+    "tome_deplete_behavior": "step_down",
+    "tome_regen_enabled": true,
+    "tome_regen_base_seconds": 90,
+    "tome_regen_tier1_shelves": 38,
+    "tome_regen_tier1_seconds": 30,
+    "tome_regen_tier2_shelves": 42,
+    "tome_regen_tier2_seconds": 10
   },
   "epiphany_affinity": {
     "epiphany_probability_global_weight": 0.45,

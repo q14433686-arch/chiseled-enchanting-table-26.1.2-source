@@ -987,11 +987,52 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                             || hoveredRow.enchantable_item.is(net.minecraft.world.item.Items.ENCHANTED_BOOK);
                         int wearCost = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.wearCostForTarget(lrCfg, targetIsBook);
                         if (wearCost > 0) {
-                            rowTip.add(Component.translatable(
-                                "gui.chiseled_enchanting_table.pricing.tome_wear_cost",
-                                wearCost,
-                                lrCfg.maxTomeUses()
-                            ).withStyle(ChatFormatting.GRAY));
+                            int liveRemaining = this.menu.masterTomeRemainingCharges(hoveredRow.enchantment_id, hoveredRow.enchant_level);
+                            if (liveRemaining == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.IMMORTAL_CHARGES) {
+                                rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.tome_wear_infinite")
+                                    .withStyle(ChatFormatting.LIGHT_PURPLE));
+                            } else {
+                                int maxUses = Math.max(1, lrCfg.maxTomeUses());
+                                float ratio = (float) liveRemaining / (float) maxUses;
+                                ChatFormatting chargeColor = ratio > 0.5f
+                                    ? ChatFormatting.AQUA
+                                    : (ratio > 0.25f ? ChatFormatting.GOLD : ChatFormatting.RED);
+                                rowTip.add(Component.translatable(
+                                    "gui.chiseled_enchanting_table.pricing.tome_wear_live",
+                                    liveRemaining,
+                                    maxUses,
+                                    wearCost
+                                ).withStyle(chargeColor));
+                                if (lrCfg.tomeRegenEnabled()) {
+                                    int nearShelves = this.menu.totalLibraryBookshelves();
+                                    double regenSec = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+                                        .computeRegenSeconds(lrCfg, nearShelves);
+                                    int regenTier = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+                                        .regenTierIndex(lrCfg, nearShelves);
+                                    Component tierBadge = switch (regenTier) {
+                                        case 2 -> Component.translatable(
+                                            "gui.chiseled_enchanting_table.pricing.tome_regen_tier2",
+                                            lrCfg.tomeRegenTier2Shelves()
+                                        );
+                                        case 1 -> Component.translatable(
+                                            "gui.chiseled_enchanting_table.pricing.tome_regen_tier1",
+                                            lrCfg.tomeRegenTier1Shelves()
+                                        );
+                                        default -> Component.translatable(
+                                            "gui.chiseled_enchanting_table.pricing.tome_regen_tier0",
+                                            lrCfg.tomeRegenTier1Shelves()
+                                        );
+                                    };
+                                    rowTip.add(Component.translatable(
+                                        "gui.chiseled_enchanting_table.pricing.tome_regen_rate",
+                                        String.format("%.1f", regenSec),
+                                        nearShelves,
+                                        tierBadge
+                                    ).withStyle(regenTier >= 2
+                                        ? ChatFormatting.GOLD
+                                        : (regenTier == 1 ? ChatFormatting.GREEN : ChatFormatting.GRAY)));
+                                }
+                            }
                         }
                     } else if (hoveredRow.existingSameLevel.isPresent() && hoveredRow.existingSameLevel.getAsInt() > 0) {
                         rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.incremental")
@@ -1175,6 +1216,37 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ).withStyle(this.menu.qualifyingChiseledEnchantments() >= sg.tier3QualifyingEnchantments()
                     ? ChatFormatting.GREEN
                     : ChatFormatting.GRAY));
+                var lrPanelCfg = this.menu.libraryResonanceConfig();
+                if (lrPanelCfg.tomeRegenEnabled()
+                    && lrPanelCfg.tomeConsumptionMode() != chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP) {
+                    int nearShelves = this.menu.totalLibraryBookshelves();
+                    double regenSec = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+                        .computeRegenSeconds(lrPanelCfg, nearShelves);
+                    int regenTier = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+                        .regenTierIndex(lrPanelCfg, nearShelves);
+                    Component tierBadge = switch (regenTier) {
+                        case 2 -> Component.translatable(
+                            "gui.chiseled_enchanting_table.pricing.tome_regen_tier2",
+                            lrPanelCfg.tomeRegenTier2Shelves()
+                        );
+                        case 1 -> Component.translatable(
+                            "gui.chiseled_enchanting_table.pricing.tome_regen_tier1",
+                            lrPanelCfg.tomeRegenTier1Shelves()
+                        );
+                        default -> Component.translatable(
+                            "gui.chiseled_enchanting_table.pricing.tome_regen_tier0",
+                            lrPanelCfg.tomeRegenTier1Shelves()
+                        );
+                    };
+                    tip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.pricing.tome_regen_rate",
+                        String.format("%.1f", regenSec),
+                        nearShelves,
+                        tierBadge
+                    ).withStyle(regenTier >= 2
+                        ? ChatFormatting.GOLD
+                        : (regenTier == 1 ? ChatFormatting.GREEN : ChatFormatting.GRAY)));
+                }
                 if (affinityUnits > 0.005) {
                     tip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.resonance.affinity_line",

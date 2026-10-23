@@ -584,7 +584,13 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             cfg.shouldApplyKey("tome_consumption_mode") ? cfg.tomeConsumptionMode() : lr.tomeConsumptionMode(),
             cfg.shouldApplyKey("max_tome_uses") ? cfg.maxTomeUses() : lr.maxTomeUses(),
             cfg.shouldApplyKey("book_copy_wear_cost") ? cfg.bookCopyWearCost() : lr.bookCopyWearCost(),
-            cfg.shouldApplyKey("tome_deplete_behavior") ? cfg.tomeDepleteBehavior() : lr.tomeDepleteBehavior()
+            cfg.shouldApplyKey("tome_deplete_behavior") ? cfg.tomeDepleteBehavior() : lr.tomeDepleteBehavior(),
+            cfg.shouldApplyKey("tome_regen_enabled") ? cfg.tomeRegenEnabled() : lr.tomeRegenEnabled(),
+            cfg.shouldApplyKey("tome_regen_base_seconds") ? cfg.tomeRegenBaseSeconds() : lr.tomeRegenBaseSeconds(),
+            cfg.shouldApplyKey("tome_regen_tier1_shelves") ? cfg.tomeRegenTier1Shelves() : lr.tomeRegenTier1Shelves(),
+            cfg.shouldApplyKey("tome_regen_tier1_seconds") ? cfg.tomeRegenTier1Seconds() : lr.tomeRegenTier1Seconds(),
+            cfg.shouldApplyKey("tome_regen_tier2_shelves") ? cfg.tomeRegenTier2Shelves() : lr.tomeRegenTier2Shelves(),
+            cfg.shouldApplyKey("tome_regen_tier2_seconds") ? cfg.tomeRegenTier2Seconds() : lr.tomeRegenTier2Seconds()
         );
 
         var bu = rawBookUpgradeRules;

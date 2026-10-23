@@ -866,10 +866,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     this.existingSameLevel = OptionalInt.of(currentSameLevel);
                     this.sameEnchantLevelDiff = OptionalInt.of(this.enchant_level - currentSameLevel);
                 }
-                for (var entry : currentEnchants.entrySet()) {
-                    Identifier existingId = EnchantmentToIdentifier(entry.getKey(), this.player);
-                    if (!existingId.equals(this.enchantment_id) && !Enchantment.areCompatible(entry.getKey(), this.enchantment)) {
-                        this.overridenEnchant.add(new EnchantmentWithLevel(existingId, entry.getIntValue()));
+                boolean targetIsBook = enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK);
+                if (!targetIsBook) {
+                    for (var entry : currentEnchants.entrySet()) {
+                        Identifier existingId = EnchantmentToIdentifier(entry.getKey(), this.player);
+                        if (!existingId.equals(this.enchantment_id) && !Enchantment.areCompatible(entry.getKey(), this.enchantment)) {
+                            this.overridenEnchant.add(new EnchantmentWithLevel(existingId, entry.getIntValue()));
+                        }
                     }
                 }
                 this.conflict_refund_points = chiseled_enchanting_table.mechanics.enchanting.EnchantmentApplication

@@ -533,6 +533,57 @@ public final class ConfigCatalog {
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR,
             "config.chiseled_enchanting_table.reason.need_wear_mode"
         ),
+        boolOpt(
+            "tome_regen_enabled", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            d -> d.tomeRegenEnabled, (d, v) -> d.tomeRegenEnabled = v,
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR,
+            "config.chiseled_enchanting_table.reason.need_wear_mode"
+        ),
+        intOpt(
+            "tome_regen_base_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 5, 600, 5,
+            d -> d.tomeRegenBaseSeconds, (d, v) -> d.tomeRegenBaseSeconds = v,
+            d -> d.tomeRegenBaseSeconds + "s",
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
+        intOpt(
+            "tome_regen_tier1_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 4, 96, 1,
+            d -> d.tomeRegenTier1Shelves, (d, v) -> d.tomeRegenTier1Shelves = v,
+            d -> d.tomeRegenTier1Shelves + "",
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
+        intOpt(
+            "tome_regen_tier1_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 2, 300, 1,
+            d -> d.tomeRegenTier1Seconds, (d, v) -> d.tomeRegenTier1Seconds = v,
+            d -> d.tomeRegenTier1Seconds + "s",
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
+        intOpt(
+            "tome_regen_tier2_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 4, 96, 1,
+            d -> d.tomeRegenTier2Shelves, (d, v) -> d.tomeRegenTier2Shelves = v,
+            d -> d.tomeRegenTier2Shelves + "",
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
+        intOpt(
+            "tome_regen_tier2_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 120, 1,
+            d -> d.tomeRegenTier2Seconds, (d, v) -> d.tomeRegenTier2Seconds = v,
+            d -> d.tomeRegenTier2Seconds + "s",
+            d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
+            d -> d.tomeConsumptionMode != MasterTomeWear.ConsumptionMode.WEAR
+                ? "config.chiseled_enchanting_table.reason.need_wear_mode"
+                : "config.chiseled_enchanting_table.reason.need_tome_regen"
+        ),
         intOpt(
             "max_wooden_discount_percent", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 90, 1,
             d -> d.maxWoodenDiscountPercent, (d, v) -> d.maxWoodenDiscountPercent = v,

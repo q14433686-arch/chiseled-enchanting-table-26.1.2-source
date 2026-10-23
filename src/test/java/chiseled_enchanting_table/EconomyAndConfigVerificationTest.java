@@ -75,7 +75,13 @@ class EconomyAndConfigVerificationTest {
                 "specific_enchant_exponent": 1.20,
                 "max_total_xp_discount_percent": 44,
                 "master_tome_upgrade_material_multiplier": 0.75,
-                "incremental_step_credit_factor": 0.60
+                "incremental_step_credit_factor": 0.60,
+                "tome_regen_enabled": false,
+                "tome_regen_base_seconds": 120,
+                "tome_regen_tier1_shelves": 34,
+                "tome_regen_tier1_seconds": 25,
+                "tome_regen_tier2_shelves": 44,
+                "tome_regen_tier2_seconds": 8
               },
               "epiphany_affinity": {
                 "epiphany_probability_global_weight": 0.50,
@@ -107,6 +113,12 @@ class EconomyAndConfigVerificationTest {
         assertEquals(44, c.maxTotalXpDiscountPercent());
         assertEquals(0.75, c.masterTomeUpgradeMaterialMultiplier(), 1e-9);
         assertEquals(0.60, c.incrementalStepCreditFactor(), 1e-9);
+        assertFalse(c.tomeRegenEnabled());
+        assertEquals(120, c.tomeRegenBaseSeconds());
+        assertEquals(34, c.tomeRegenTier1Shelves());
+        assertEquals(25, c.tomeRegenTier1Seconds());
+        assertEquals(44, c.tomeRegenTier2Shelves());
+        assertEquals(8, c.tomeRegenTier2Seconds());
         assertEquals(0.50, c.epiphanyProbabilityGlobalWeight(), 1e-9);
         assertEquals(0.90, c.epiphanyProbabilityAffinityWeight(), 1e-9);
         assertEquals(0.40, c.blankBookAffinityWeight(), 1e-9);
@@ -956,6 +968,112 @@ class EconomyAndConfigVerificationTest {
         assertTrue(cfgScreenSrc.contains("public boolean isPauseScreen() {\n        return true;\n    }"));
         String tableScreenSrc = Files.readString(Path.of("src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java"));
         assertTrue(tableScreenSrc.contains("return this.configOverlay != null && this.configOverlay.isPauseScreen();"));
+    }
+
+    @Test
+    void infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() throws Exception {
+        // 1. Infinity-blessed Master Tomes suffer strictly zero wear across all modes, levels, and targets.
+        for (var mode : MasterTomeWear.ConsumptionMode.values()) {
+            for (var dep : MasterTomeWear.DepleteBehavior.values()) {
+                int level = 5;
+                int wear = 0;
+                for (int i = 0; i < 200; i++) {
+                    var step = MasterTomeWear.computeWearStep(mode, dep, 16, 4, level, wear, (i % 2 == 0), true);
+                    assertEquals(5, step.nextEnchantLevel());
+                    assertEquals(0, step.nextWearUsed());
+                    assertFalse(step.steppedDown());
+                    assertFalse(step.depletedCompletely());
+                }
+            }
+        }
+
+        // 2. Two-tier bookshelf passive regeneration curve (0 -> 90s, Tier 1 @ 38 -> 30s, Tier 2 @ 42 -> 10s).
+        LibraryResonance.Config def = LibraryResonance.Config.DEFAULT;
+        assertTrue(def.tomeRegenEnabled());
+        assertEquals(90, def.tomeRegenBaseSeconds());
+        assertEquals(38, def.tomeRegenTier1Shelves());
+        assertEquals(30, def.tomeRegenTier1Seconds());
+        assertEquals(42, def.tomeRegenTier2Shelves());
+        assertEquals(10, def.tomeRegenTier2Seconds());
+
+        assertEquals(0, MasterTomeWear.regenTierIndex(def, 0));
+        assertEquals(0, MasterTomeWear.regenTierIndex(def, 37));
+        assertEquals(1, MasterTomeWear.regenTierIndex(def, 38));
+        assertEquals(1, MasterTomeWear.regenTierIndex(def, 41));
+        assertEquals(2, MasterTomeWear.regenTierIndex(def, 42));
+        assertEquals(2, MasterTomeWear.regenTierIndex(def, 64));
+
+        assertEquals(90.0, MasterTomeWear.computeRegenSeconds(def, 0), 1e-6);
+        assertEquals(1800, MasterTomeWear.computeRegenIntervalTicks(def, 0));
+        assertEquals(30.0, MasterTomeWear.computeRegenSeconds(def, 38), 1e-6);
+        assertEquals(600, MasterTomeWear.computeRegenIntervalTicks(def, 38));
+        assertEquals(10.0, MasterTomeWear.computeRegenSeconds(def, 42), 1e-6);
+        assertEquals(200, MasterTomeWear.computeRegenIntervalTicks(def, 42));
+
+        // Dramatic two-tier breakthroughs at 37 -> 38 and 41 -> 42 AND strict non-increasing monotonicity for S in [0, 100].
+        assertTrue(
+            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) >= 15.0,
+            "Reaching Tier 1 (38 bookshelves) must deliver a substantial regeneration breakthrough"
+        );
+        assertTrue(
+            MasterTomeWear.computeRegenSeconds(def, 41) - MasterTomeWear.computeRegenSeconds(def, 42) >= 7.5,
+            "Reaching Tier 2 (42 bookshelves) must deliver a dramatic Grand Sanctum regeneration breakthrough"
+        );
+        for (int s = 0; s < 100; s++) {
+            int curTicks = MasterTomeWear.computeRegenIntervalTicks(def, s);
+            int nextTicks = MasterTomeWear.computeRegenIntervalTicks(def, s + 1);
+            assertTrue(
+                nextTicks <= curTicks,
+                "Regen interval ticks must never slow down when adding bookshelves at S=" + s
+            );
+            assertTrue(curTicks >= 100, "Asymptotic floor must stay >= 5.0s (100 ticks)");
+        }
+
+        // Disabled flag cleanly stops passive regeneration.
+        JsonObject disabledJson = JsonParser.parseString("""
+            { "chiseled_mastery": { "tome_regen_enabled": false } }
+            """).getAsJsonObject();
+        LibraryResonance.Config disabledCfg = LibraryResonance.Config.fromJson(disabledJson);
+        assertFalse(disabledCfg.tomeRegenEnabled());
+        assertEquals(Integer.MAX_VALUE, MasterTomeWear.computeRegenIntervalTicks(disabledCfg, 42));
+
+        // 3. ModRuntimeConfig + ConfigCatalog bidirectional reconciliation & two-level applicability.
+        var draft = new chiseled_enchanting_table.config.ModRuntimeConfig.Draft();
+        draft.tomeRegenTier1Shelves = 45;
+        draft.normalizeAfterEdit("tome_regen_tier1_shelves");
+        assertEquals(45, draft.tomeRegenTier2Shelves, "Tier 2 shelves must push up when Tier 1 exceeds it");
+        draft.tomeRegenTier2Shelves = 36;
+        draft.normalizeAfterEdit("tome_regen_tier2_shelves");
+        assertEquals(36, draft.tomeRegenTier1Shelves, "Tier 1 shelves must pull down when Tier 2 drops below it");
+
+        draft.tomeRegenTier1Seconds = 8;
+        draft.normalizeAfterEdit("tome_regen_tier1_seconds");
+        assertEquals(8, draft.tomeRegenTier2Seconds, "Tier 2 interval must stay <= Tier 1 interval");
+
+        var tier2Opt = chiseled_enchanting_table.config.ConfigCatalog.byKey("tome_regen_tier2_shelves").orElseThrow();
+        var liveMode = chiseled_enchanting_table.config.ConfigCatalog.SessionMode.SINGLEPLAYER_LIVE;
+        assertTrue(tier2Opt.evaluate(draft, liveMode).editable());
+        draft.tomeRegenEnabled = false;
+        var offAvail = tier2Opt.evaluate(draft, liveMode);
+        assertFalse(offAvail.editable());
+        assertEquals("config.chiseled_enchanting_table.reason.need_tome_regen", offAvail.inactiveReasonKey());
+        draft.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+        var keepAvail = tier2Opt.evaluate(draft, liveMode);
+        assertFalse(keepAvail.editable());
+        assertEquals("config.chiseled_enchanting_table.reason.need_wear_mode", keepAvail.inactiveReasonKey());
+
+        // 4. Anti-regression static guards on Creative/Survival wear parity & live shelf sync.
+        String enchantAppSrc = Files.readString(
+            Path.of("src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java")
+        );
+        assertFalse(
+            enchantAppSrc.contains("masterTomeUsed && !handler.player.getAbilities().instabuild"),
+            "Master Tome shelf wear must apply identically in Creative and Survival modes"
+        );
+        assertTrue(
+            enchantAppSrc.contains("handler.refreshLiveShelfState();"),
+            "EnchantmentApplication.finish must push live Master Tome charges immediately after enchanting"
+        );
     }
 
     private static int countSubstring(String haystack, String needle) {

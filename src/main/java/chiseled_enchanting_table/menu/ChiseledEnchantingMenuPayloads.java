@@ -129,7 +129,9 @@ public final class ChiseledEnchantingMenuPayloads {
         int high_tier_chiseled_books,
         int epiphany_seed,
         Map<Identifier, Integer> stored_master_levels,
-        boolean cramped_library
+        boolean cramped_library,
+        int chiseled_bookshelves,
+        Map<EnchantmentWithLevel, Integer> master_tome_charges
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_PAYLOAD_ID =
             new CustomPacketPayload.Type<>(AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID);
@@ -137,7 +139,7 @@ public final class ChiseledEnchantingMenuPayloads {
             CustomPacketPayload.codec(AvailableEnchantmentPayload::write, AvailableEnchantmentPayload::read);
 
         public AvailableEnchantmentPayload(Set<EnchantmentWithLevel> unlocked_enchantements) {
-            this(unlocked_enchantements, buildTransformationDisplays(null), 0, 0, 0, 0, 1, Map.of(), false);
+            this(unlocked_enchantements, buildTransformationDisplays(null), 0, 0, 0, 0, 1, Map.of(), false, 0, Map.of());
         }
 
         public AvailableEnchantmentPayload(
@@ -147,7 +149,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int chiseled_book_count,
             int epiphany_seed
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, Map.of(), false);
+            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, Map.of(), false, 0, Map.of());
         }
 
         public AvailableEnchantmentPayload(
@@ -158,7 +160,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int epiphany_seed,
             Map<Identifier, Integer> stored_master_levels
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, stored_master_levels, false);
+            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, stored_master_levels, false, 0, Map.of());
         }
 
         public AvailableEnchantmentPayload(
@@ -170,7 +172,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int epiphany_seed,
             Map<Identifier, Integer> stored_master_levels
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, high_tier_chiseled_books, epiphany_seed, stored_master_levels, false);
+            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, high_tier_chiseled_books, epiphany_seed, stored_master_levels, false, 0, Map.of());
         }
 
         public AvailableEnchantmentPayload(
@@ -193,7 +195,37 @@ public final class ChiseledEnchantingMenuPayloads {
                 high_tier_chiseled_books,
                 epiphany_seed,
                 stored_master_levels,
-                cramped_library
+                cramped_library,
+                0,
+                Map.of()
+            );
+        }
+
+        public AvailableEnchantmentPayload(
+            Set<EnchantmentWithLevel> unlocked_enchantements,
+            int xp_discount_percent,
+            int regular_bookshelves,
+            int chiseled_book_count,
+            int high_tier_chiseled_books,
+            int epiphany_seed,
+            Map<Identifier, Integer> stored_master_levels,
+            boolean cramped_library,
+            int chiseled_bookshelves,
+            Map<EnchantmentWithLevel, Integer> master_tome_charges,
+            @Nullable Player player
+        ) {
+            this(
+                unlocked_enchantements,
+                buildTransformationDisplays(player),
+                xp_discount_percent,
+                regular_bookshelves,
+                chiseled_book_count,
+                high_tier_chiseled_books,
+                epiphany_seed,
+                stored_master_levels,
+                cramped_library,
+                chiseled_bookshelves,
+                master_tome_charges == null ? Map.of() : Map.copyOf(master_tome_charges)
             );
         }
 
@@ -234,6 +266,8 @@ public final class ChiseledEnchantingMenuPayloads {
                 }
             }
             buf.writeBoolean(cramped_library);
+            buf.writeVarInt(Math.max(0, chiseled_bookshelves));
+            writeMasterCharges(buf, master_tome_charges);
         }
 
         private static AvailableEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
@@ -252,6 +286,8 @@ public final class ChiseledEnchantingMenuPayloads {
                 masterLevels.put(id, Math.max(1, lvl));
             }
             boolean crampedLibrary = buf.readBoolean();
+            int chiseledBookshelves = buf.readVarInt();
+            Map<EnchantmentWithLevel, Integer> masterCharges = readMasterCharges(buf);
             return new AvailableEnchantmentPayload(
                 unlocked,
                 transformations,
@@ -261,7 +297,9 @@ public final class ChiseledEnchantingMenuPayloads {
                 highTierChiseledBooks,
                 epiphanySeed,
                 Map.copyOf(masterLevels),
-                crampedLibrary
+                crampedLibrary,
+                chiseledBookshelves,
+                masterCharges
             );
         }
 
@@ -278,7 +316,9 @@ public final class ChiseledEnchantingMenuPayloads {
         int chiseled_book_count,
         int high_tier_chiseled_books,
         Map<Identifier, Integer> stored_master_levels,
-        boolean cramped_library
+        boolean cramped_library,
+        int chiseled_bookshelves,
+        Map<EnchantmentWithLevel, Integer> master_tome_charges
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<LiveShelfStatePayload> TYPE =
             new CustomPacketPayload.Type<>(LIVE_SHELF_STATE_PACKET_ID);
@@ -300,7 +340,31 @@ public final class ChiseledEnchantingMenuPayloads {
                 chiseled_book_count,
                 high_tier_chiseled_books,
                 stored_master_levels,
-                false
+                false,
+                0,
+                Map.of()
+            );
+        }
+
+        public LiveShelfStatePayload(
+            Set<EnchantmentWithLevel> unlocked_enchantements,
+            int xp_discount_percent,
+            int regular_bookshelves,
+            int chiseled_book_count,
+            int high_tier_chiseled_books,
+            Map<Identifier, Integer> stored_master_levels,
+            boolean cramped_library
+        ) {
+            this(
+                unlocked_enchantements,
+                xp_discount_percent,
+                regular_bookshelves,
+                chiseled_book_count,
+                high_tier_chiseled_books,
+                stored_master_levels,
+                cramped_library,
+                0,
+                Map.of()
             );
         }
 
@@ -318,6 +382,8 @@ public final class ChiseledEnchantingMenuPayloads {
                 }
             }
             buf.writeBoolean(cramped_library);
+            buf.writeVarInt(Math.max(0, chiseled_bookshelves));
+            writeMasterCharges(buf, master_tome_charges);
         }
 
         private static LiveShelfStatePayload read(RegistryFriendlyByteBuf buf) {
@@ -334,6 +400,8 @@ public final class ChiseledEnchantingMenuPayloads {
                 masterLevels.put(id, Math.max(1, lvl));
             }
             boolean crampedLibrary = buf.readBoolean();
+            int chiseledBookshelves = buf.readVarInt();
+            Map<EnchantmentWithLevel, Integer> masterCharges = readMasterCharges(buf);
             return new LiveShelfStatePayload(
                 unlocked,
                 xpDiscountPercent,
@@ -341,7 +409,9 @@ public final class ChiseledEnchantingMenuPayloads {
                 chiseledBookCount,
                 highTierChiseledBooks,
                 Map.copyOf(masterLevels),
-                crampedLibrary
+                crampedLibrary,
+                chiseledBookshelves,
+                masterCharges
             );
         }
 
@@ -349,6 +419,33 @@ public final class ChiseledEnchantingMenuPayloads {
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
             return TYPE;
         }
+    }
+
+    private static void writeMasterCharges(
+        RegistryFriendlyByteBuf buf,
+        Map<EnchantmentWithLevel, Integer> charges
+    ) {
+        buf.writeVarInt(charges == null ? 0 : charges.size());
+        if (charges != null) {
+            for (var entry : charges.entrySet()) {
+                EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode(buf, entry.getKey());
+                buf.writeVarInt(entry.getValue());
+            }
+        }
+    }
+
+    private static Map<EnchantmentWithLevel, Integer> readMasterCharges(RegistryFriendlyByteBuf buf) {
+        int size = buf.readVarInt();
+        if (size <= 0) {
+            return Map.of();
+        }
+        Map<EnchantmentWithLevel, Integer> map = new java.util.HashMap<>(Math.max(4, size * 2));
+        for (int i = 0; i < size; i++) {
+            EnchantmentWithLevel key = EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode(buf);
+            int val = buf.readVarInt();
+            map.put(key, val);
+        }
+        return Map.copyOf(map);
     }
 
     public record ApplyEnchantmentPayload(OptionType option_type, Identifier enchantment_id, int enchantment_level) implements CustomPacketPayload {
