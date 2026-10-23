@@ -199,8 +199,6 @@ net.fabricmc.fabric-api:fabric-block-api-v1:3.0.3+ec56b6019e
     | org.gradle.status              | release  |              |
     | org.gradle.category            | library  | library      |
 ...[truncated 1003 lines total]...
-    | org.gradle.dependency.bundling |          | external     |
-    | org.gradle.jvm.environment     |          | standard-jvm |
     | org.gradle.jvm.version         |          | 25           |
 
 net.fabricmc.fabric-api:fabric-networking-api-v1:6.3.3+72073ef09e
@@ -995,6 +993,8 @@ clientCompileClasspath - Compile classpath for source set 'client'.
 A web-based, searchable dependency report is available by adding the --scan option.
 
 == job status: failure ==
+
+== job status: success ==
 
 == job status: success ==
 
