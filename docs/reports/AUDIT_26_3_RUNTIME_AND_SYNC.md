@@ -59,8 +59,10 @@ JEI 的公开 runtime API 提供 hide/add，不提供这里可用的彻底移除
 
 ### CI：真实 Java 与服务器
 
-- 功能源码 `5978595`：[build 39891916743](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/39891916743) 四个 job 全部成功：静态检查、完整 Gradle build/JUnit、无 JEI/REI 编译、真实专服 smoke；[compile-check 39891916730](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/39891916730) 成功。
-- 更严格的精确组件数值断言和条件函数 fixture 为随后测试增强，独立运行结果待补。
+- 最终验证源码 **`f7fd95a`**：[build 39893126235](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/39893126235) 四个 job 全部成功：静态检查、完整 Gradle build/JUnit、无 JEI/REI 编译、真实专服 smoke。
+- [compile-check 39893126344](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/39893126344) 成功。
+- 本次 smoke 包括精确组件数值断言、两个 always-false 条件函数 fixture、游戏 tick 屏障和正常停服；最终游戏日志 **零 `/ERROR]`**，不是沿用早期宽松 smoke 的退出码。
+- CI 日志已快进整合进当前分支；本报告的最后更新仅为文档，不更改上述已验证源码。
 
 JUnit：11 项经济/配置测试 + 8 项网络测试，共 19 项。网络测试直接使用生产 codec，验证读取完缓冲区；包括开屏/live 的非空 ID、集合、32 位 seed，以及 cost/config 中不同字段值、非默认配置、转化描述、空目录、所有操作 token 和损坏输入。
 
