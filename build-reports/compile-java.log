@@ -1,4 +1,4 @@
-commit: ca61a5e3f486f2dccc7a23e2bdccebbb1baa4f9f
+commit: e775a6a7595236cde9179b35296468f2ca003ba7
 branch: arena/680c2b8d-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -18,47 +18,22 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java:50: error: cannot find symbol
-        return StructureProcessorRegistry.BOOKSHELF_REPLACER_PROCESSOR_TYPE;
-                                         ^
-  symbol:   variable BOOKSHELF_REPLACER_PROCESSOR_TYPE
-  location: class StructureProcessorRegistry
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:124: error: cannot find symbol
-                handler.player.displayClientMessage(
-                              ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable player of type Player
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:132: error: cannot find symbol
-                handler.player.displayClientMessage(
-                              ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable player of type Player
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java:72: error: cannot find symbol
-                    BookshelfReplacerProcessor.postProcessBookshelf(level, pos);
-                                              ^
-  symbol:   method postProcessBookshelf(ServerLevel,BlockPos)
-  location: class BookshelfReplacerProcessor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java:74: error: cannot find symbol
-                    BookshelfReplacerProcessor.postProcessFilledBookshelf(level, pos);
-                                              ^
-  symbol:   method postProcessFilledBookshelf(ServerLevel,BlockPos)
-  location: class BookshelfReplacerProcessor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/StructurePlaceSettingsMixin.java:24: error: cannot find symbol
-        augmented.add(BookshelfReplacerProcessor.INSTANCE);
-                                                ^
-  symbol:   variable INSTANCE
-  location: class BookshelfReplacerProcessor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/StructureTemplatePoolProjectionMixin.java:23: error: cannot find symbol
-        return ImmutableList.<StructureProcessor>builder().addAll(original).add(BookshelfReplacerProcessor.INSTANCE).build();
-                                                                                                          ^
-  symbol:   variable INSTANCE
-  location: class BookshelfReplacerProcessor
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java:35: error: cannot find symbol
+        return REPLACEMENT_ENABLED && ChiseledEnchantingTableData.bookshelfBookPoolEnabled();
+                                                                 ^
+  symbol:   method bookshelfBookPoolEnabled()
+  location: class ChiseledEnchantingTableData
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:123: error: cannot find symbol
+            if (handler.player instanceof ServerPlayer serverPlayer) {
+                                          ^
+  symbol:   class ServerPlayer
+  location: class EnchantmentApplication
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-7 errors
+2 errors
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792724739260.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792724889433.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -68,43 +43,18 @@ FAILURE: Build failed with an exception.
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java:50: error: cannot find symbol
-          return StructureProcessorRegistry.BOOKSHELF_REPLACER_PROCESSOR_TYPE;
-                                           ^
-    symbol:   variable BOOKSHELF_REPLACER_PROCESSOR_TYPE
-    location: class StructureProcessorRegistry
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/StructurePlaceSettingsMixin.java:24: error: cannot find symbol
-          augmented.add(BookshelfReplacerProcessor.INSTANCE);
-                                                  ^
-    symbol:   variable INSTANCE
-    location: class BookshelfReplacerProcessor
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/StructureTemplatePoolProjectionMixin.java:23: error: cannot find symbol
-          return ImmutableList.<StructureProcessor>builder().addAll(original).add(BookshelfReplacerProcessor.INSTANCE).build();
-                                                                                                            ^
-    symbol:   variable INSTANCE
-    location: class BookshelfReplacerProcessor
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:123: error: cannot find symbol
+              if (handler.player instanceof ServerPlayer serverPlayer) {
+                                            ^
+    symbol:   class ServerPlayer
+    location: class EnchantmentApplication
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:124: error: cannot find symbol
-                  handler.player.displayClientMessage(
-                                ^
-    symbol:   method displayClientMessage(MutableComponent,boolean)
-    location: variable player of type Player
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:132: error: cannot find symbol
-                  handler.player.displayClientMessage(
-                                ^
-    symbol:   method displayClientMessage(MutableComponent,boolean)
-    location: variable player of type Player
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java:72: error: cannot find symbol
-                      BookshelfReplacerProcessor.postProcessBookshelf(level, pos);
-                                                ^
-    symbol:   method postProcessBookshelf(ServerLevel,BlockPos)
-    location: class BookshelfReplacerProcessor
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java:74: error: cannot find symbol
-                      BookshelfReplacerProcessor.postProcessFilledBookshelf(level, pos);
-                                                ^
-    symbol:   method postProcessFilledBookshelf(ServerLevel,BlockPos)
-    location: class BookshelfReplacerProcessor
-  7 errors
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java:35: error: cannot find symbol
+          return REPLACEMENT_ENABLED && ChiseledEnchantingTableData.bookshelfBookPoolEnabled();
+                                                                   ^
+    symbol:   method bookshelfBookPoolEnabled()
+    location: class ChiseledEnchantingTableData
+  2 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -146,44 +96,19 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java:50: error: cannot find symbol
-        return StructureProcessorRegistry.BOOKSHELF_REPLACER_PROCESSOR_TYPE;
-                                         ^
-  symbol:   variable BOOKSHELF_REPLACER_PROCESSOR_TYPE
-  location: class StructureProcessorRegistry
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:124: error: cannot find symbol
-                handler.player.displayClientMessage(
-                              ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable player of type Player
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:132: error: cannot find symbol
-                handler.player.displayClientMessage(
-                              ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable player of type Player
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java:72: error: cannot find symbol
-                    BookshelfReplacerProcessor.postProcessBookshelf(level, pos);
-                                              ^
-  symbol:   method postProcessBookshelf(ServerLevel,BlockPos)
-  location: class BookshelfReplacerProcessor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/LevelChunkPostProcessMixin.java:74: error: cannot find symbol
-                    BookshelfReplacerProcessor.postProcessFilledBookshelf(level, pos);
-                                              ^
-  symbol:   method postProcessFilledBookshelf(ServerLevel,BlockPos)
-  location: class BookshelfReplacerProcessor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/StructurePlaceSettingsMixin.java:24: error: cannot find symbol
-        augmented.add(BookshelfReplacerProcessor.INSTANCE);
-                                                ^
-  symbol:   variable INSTANCE
-  location: class BookshelfReplacerProcessor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mixin/structure/StructureTemplatePoolProjectionMixin.java:23: error: cannot find symbol
-        return ImmutableList.<StructureProcessor>builder().addAll(original).add(BookshelfReplacerProcessor.INSTANCE).build();
-                                                                                                          ^
-  symbol:   variable INSTANCE
-  location: class BookshelfReplacerProcessor
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfReplacerProcessor.java:35: error: cannot find symbol
+        return REPLACEMENT_ENABLED && ChiseledEnchantingTableData.bookshelfBookPoolEnabled();
+                                                                 ^
+  symbol:   method bookshelfBookPoolEnabled()
+  location: class ChiseledEnchantingTableData
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:123: error: cannot find symbol
+            if (handler.player instanceof ServerPlayer serverPlayer) {
+                                          ^
+  symbol:   class ServerPlayer
+  location: class EnchantmentApplication
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-7 errors
+2 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -318,7 +243,7 @@ Note: Recompile with -Xlint:deprecation for details.
 	... 30 more
 
 
-BUILD FAILED in 16s
+BUILD FAILED in 19s
 1 actionable task: 1 executed
 gradle exit code: 1
 
