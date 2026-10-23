@@ -26,7 +26,7 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 ## What 1.1.0 ships on this line
 
 `1.1.0` is the same feature set as the sister `26.1.2` and `26.3` branches, adapted to this
-Minecraft line. On this `26.2` branch it combines three passes:
+Minecraft line. On this `26.2` branch it combines four passes:
 
 1. the `26.3` back-port that landed on 2026-10-21 — worldgen bookshelf deadlock fix
    ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)),
@@ -37,13 +37,17 @@ Minecraft line. On this `26.2` branch it combines three passes:
 3. the second `26.1.2`-line batch that landed on 2026-10-23 — the illustrated **Arcane Grimoire**
    manual, the dual-tab **Cleanse** system (free disenchant / downgrade / single-trait strip / curse
    purge, with `Cleansing Grit`), incremental upgrade discounting, and the anti-arbitrage economy
-   hardening that is now proven by a compiled JUnit suite.
+   hardening that is now proven by a compiled JUnit suite;
+4. the `26.3`-line feature batch that landed on 2026-10-23 — enchantment provenance with fair
+   refunds, Master-Tome wear with charge lore, the versioned protocol capability channel, the
+   categorized in-game configuration screen, and live per-player unlock catalogs.
 
 What was taken, what was adapted and what was deliberately left out is recorded in
 [`docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md)
-(the 2026-10-22 sync) and in [`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md)
-§3.4 (the 26.3 back-port and the 26.2 port itself); user-visible changes are in
-[`CHANGELOG.md`](CHANGELOG.md).
+(the 2026-10-22/23 syncs), [`docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md)
+(the 2026-10-23 `26.3` feature port) and in
+[`docs/reports/PORTING_26_2_REPORT.md`](docs/reports/PORTING_26_2_REPORT.md) §3.4 (the 26.3
+back-port and the 26.2 port itself); user-visible changes are in [`CHANGELOG.md`](CHANGELOG.md).
 
 Highlights:
 
@@ -75,6 +79,14 @@ Highlights:
   never to beat a Master-Tome re-enchant), `Cleansing Grit` strips a single unwanted trait, and curse
   purging removes `#minecraft:curse` entries. Every ritual keeps a pure-vanilla alternative
   (`disenchanting.json`).
+* **In-game configuration screen**: every rule (bookshelf gates and scan volume, Master-Tome
+  consumption mode and charges, economy discounts and refunds, epiphany odds, cleanse/uninstall
+  switches, worldgen loot policy) is editable live from `/cet config`, the table screen, the
+  grimoire or Mod Menu — with search, sliders, parent/child locking and a read-only inspector mode
+  for players without permission. Saves are atomic, acknowledged and broadcast to everyone online.
+* **Enchantment provenance**: each level remembers whether it was paid for here, looted or
+  creative-granted, so disenchant refunds return what was actually invested
+  (`external_refund_scale` for levels that came from elsewhere) instead of a flat estimate.
 * **Bidirectional JEI & REI support**: full recipe/usage lookup for both **Chiseled Enchanting**
   and **Transmutation & Cleansing** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo
   Shard`, `Bottle o' Enchanting`, `Blank Overwrite`, `Cleansing Grit`, cleanse and curse-purge

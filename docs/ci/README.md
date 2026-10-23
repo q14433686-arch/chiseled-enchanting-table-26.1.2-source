@@ -14,7 +14,7 @@ two reasons:
 2. `scripts/check_release_consistency.sh` reads both `.github/workflows/publish.yml` and
    `docs/ci/publish.yml` to verify five-place version agreement.
 
-## Status on this branch (2026-10-22)
+## Status on this branch (2026-10-22; CI extended 2026-10-23)
 
 Green on commit `61b2431` of `arena/dd589d1c-chiseled-enchanting-table-26-1`:
 
@@ -42,7 +42,8 @@ bash docs/ci/install.sh           # copy the four files into .github/workflows/ 
 
 ## What each workflow does
 
-* **`compile-check.yml`** — compiles **both** source sets (`compileJava compileClientJava`), records
+* **`compile-check.yml`** — compiles **both** source sets and runs the JUnit suites
+  (`compileJava compileClientJava test`, ported from the 26.3 branch), records
   the resolved coordinates for `mezz.jei`, `me.shedaniel`, `dev.architectury`, `net.fabricmc`, and
   `com.mojang` across `compileClasspath` and `clientCompileClasspath`, and pushes
   `build-reports/compile-java.log` (plus `build-reports/compile-deps.log` on failure) back to
@@ -50,8 +51,14 @@ bash docs/ci/install.sh           # copy the four files into .github/workflows/ 
   so `bash -e` does not abort before recording the exit code and failure diagnostics.
 * **`build.yml`** — three offline static gates (`ci_static_checks.py`, `compat_check.py`,
   `check_release_consistency.sh --strict`) in a fast `static` job, then a `gradle build` job that
-  uploads the jar as a 14-day artifact, plus a `no-viewers` job (`-Penable_jei=false -Penable_rei=false`)
-  verifying the optional-dependency escape hatch.
+  uploads the jar as a 14-day artifact, a `no-viewers` job (`-Penable_jei=false -Penable_rei=false`)
+  verifying the optional-dependency escape hatch, and a `server-smoke` job (ported from the 26.3
+  branch) that boots a **fresh disposable flat world** with `runServer`, issues `reload`, spawns
+  named/dyed/frozen table loot plus two always-false conditional loot-function fixtures, asserts the
+  inspected NBT, and shuts down cleanly — the only check that covers world load, datapack reload and
+  loot functions actually executing. It needs `build.gradle`'s `runServer { standardInput = System.in }`
+  (the script drives the server through stdin) and writes `build-reports/server-smoke.log` back to
+  `arena/**` the same way `compile-check.yml` does.
 * **`consistency.yml`** — the five-place version gate and `docs/ci/install.sh --check` drift check on
   its own trigger set, because `build.yml` `paths-ignore`s `*.md`.
 * **`publish.yml`** — manual (`workflow_dispatch`) release workflow targeting Minecraft `26.2` /

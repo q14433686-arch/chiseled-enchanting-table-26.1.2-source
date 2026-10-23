@@ -22,6 +22,12 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > disenchant/cleanse system, the economy anti-arbitrage hardening and the de-hardcoded data-pack
 > configuration) was synced in the same way — the version stays `1.1.0`, since `1.1.0` had not been
 > released from this branch yet and the addition is part of the same feature release.
+> Also on **2026-10-23** the `26.3` branch's *feature* batch (enchantment provenance with fair
+> refunds, Master-Tome wear, the protocol capability channel, the categorized in-game configuration
+> UI, live per-player unlock catalogs) was ported into this line — see
+> [`docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md). The
+> version still stays `1.1.0`: no 26.3 toolchain pin, no 26.3-only API rewrite and no new release
+> were taken, only content that is version-neutral on 26.2.
 
 ## [1.1.0] - 2026-10-23
 
@@ -175,6 +181,45 @@ included as-is.
 - **Localization & docs**: 11 locales extended in full parity (`307` keys), `docs/WIKI.md` rewritten
   as a gameplay guide (formulas, the three shelf roles, every recipe, the cleanse rituals, the
   upstream comparison table).
+
+### Added — `26.3`-line batch: provenance, Master-Tome wear, live config UI (2026-10-23)
+
+Ported from the sister `26.3` branch with 26.2 API/schema adaptations; full mapping in
+[`docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md`](docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md).
+
+- **Enchantment provenance & fair refunds (`EnchantmentProvenance`)**: every level records whether
+  it was paid for at this table, looted, or creative-granted, so disenchanting only refunds what was
+  actually invested. Levels that arrived from outside the table use the new
+  `disenchanting.json` `external_refund_scale` (`0.25`) instead of the full potential.
+- **Master-Tome wear (`MasterTomeWear`)**: a tome now has `max_tome_uses` (`16`) charges, each use
+  costs `4` copies (`cost_per_use`) and steps the charge down; the charge count is shown in the lore
+  and a depleted tome is replaced instead of lingering as a blank. Optional line-of-sight shelf
+  filtering is honoured by the charge accounting.
+- **Protocol capability channel (`EnchantingProtocol`)**: the cost/config channels are versioned
+  (`..._26_2_revision_5`); a zero-byte capability payload is exchanged in both directions at join
+  and a peer that speaks the channel but not this revision is disconnected with an explicit message
+  instead of crashing on a decode. The pre-existing `enchant_cost_table` id is kept as a
+  query-only legacy probe.
+- **Payload hardening (`PayloadLimits`)**: every length-prefixed collection is bounded before
+  allocation/iteration; negative or absurd counts throw instead of allocating.
+- **Runtime configuration + in-game UI (`ModRuntimeConfig`, `ConfigCatalog`, `ModConfigNetworking`,
+  `ChiseledEnchantingConfigScreen`)**: one `config/chiseled_enchanting_table.json` now drives the
+  whole feature set (`override_datapacks` defaults to `true`), editable in-game from a categorized,
+  searchable screen with sliders and parent/child locking — reachable from `/cet config`, the table
+  screen's new config button, the grimoire, and Mod Menu. `/cet reload-config` and
+  `/cet reset-config` added. On a dedicated server only permitted operators (`/cet config/manage`,
+  GAMEMASTERS) may edit; a LAN host keeps its singleplayer authority. Saves are acknowledged by
+  request id and written atomically (temp file + replace); corrupt JSON is rejected with a log line
+  and built-in defaults instead of failing to boot.
+- **Live, per-player unlock catalogs**: the server diffs each player's transformation displays once
+  per second and pushes only changes; an open table menu reacts to its own container only
+  (`LiveShelfStatePayload.container_id`) and is closed on config change or datapack reload so it can
+  never keep a stale snapshot. An empty server catalog is authoritative — the client no longer
+  falls back to its local data-pack values mid-session.
+- **Verification**: two new JUnit 5 suites (`ConfigurationSafetyTest`, `NetworkCompatibilityTest`,
+  `29` tests in total across `src/test/java`), and a new `server-smoke` CI job
+  (`scripts/server_smoke.py`) that boots a disposable world, reloads datapacks, and asserts table
+  loot NBT plus conditional loot functions; `compile-check.yml` now runs `test` as well.
 
 ## [1.0.3] - 2026-10-21
 

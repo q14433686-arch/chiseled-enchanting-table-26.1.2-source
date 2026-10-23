@@ -73,7 +73,7 @@ jobs:
           # Actions 的默认 shell 是 `bash -e`：裸写 `./gradlew ...` 后面跟 `status=$?` 是死代码，
           # 编译失败时脚本会在那一行直接退出，下面的失败诊断也就永远不会生成。必须用 `|| status=$?` 把退出码接住。
           status=0
-          ./gradlew compileJava compileClientJava --console=plain --stacktrace --no-daemon \
+          ./gradlew compileJava compileClientJava test --console=plain --stacktrace --no-daemon \
             >> build-reports/compile-java.log 2>&1 || status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
           # 把「浮动坐标」这次实际解析成了什么记进日志：jei_version 与 rei_version 解析结果都会

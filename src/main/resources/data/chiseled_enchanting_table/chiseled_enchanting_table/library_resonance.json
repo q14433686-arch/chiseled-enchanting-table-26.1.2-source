@@ -15,7 +15,11 @@
     "specific_enchant_exponent": 1.0,
     "max_total_xp_discount_percent": 40,
     "master_tome_upgrade_material_multiplier": 0.80,
-    "incremental_step_credit_factor": 0.85
+    "incremental_step_credit_factor": 0.85,
+    "tome_consumption_mode": "wear",
+    "max_tome_uses": 16,
+    "book_copy_wear_cost": 4,
+    "tome_deplete_behavior": "step_down"
   },
   "epiphany_affinity": {
     "epiphany_probability_global_weight": 0.45,

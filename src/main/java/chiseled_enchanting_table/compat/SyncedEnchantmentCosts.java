@@ -94,6 +94,11 @@ public final class SyncedEnchantmentCosts {
         return p != null ? p.disenchantRefundScale() : ChiseledEnchantingTableData.disenchantRefundScale();
     }
 
+    public static double disenchantExternalRefundScale() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.disenchantExternalRefundScale() : ChiseledEnchantingTableData.disenchantExternalRefundScale();
+    }
+
     public static int epiphanyMinBookshelves() {
         EnchantCostTablePayload p = syncedPayload;
         return p != null ? p.epiphanyMinBookshelves() : ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves();
@@ -209,6 +214,16 @@ public final class SyncedEnchantmentCosts {
             : ChiseledEnchantingTableData.libraryResonanceConfig();
     }
 
+    /** Empty server rule lists are authoritative, not a request for jar-default fallback. */
+    public static java.util.Optional<java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay>> transformationDisplays() {
+        var payload = syncedPayload;
+        return payload == null ? java.util.Optional.empty() : java.util.Optional.of(payload.transformations());
+    }
+
+    public static boolean hasServerData() {
+        return syncedPayload != null;
+    }
+
     public static boolean isEmpty() {
         return rows.isEmpty();
     }
@@ -225,7 +240,8 @@ public final class SyncedEnchantmentCosts {
         for (Runnable listener : LISTENERS) {
             try {
                 listener.run();
-            } catch (RuntimeException ignored) {
+            } catch (RuntimeException error) {
+                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.error("Failed to refresh a synchronized enchanting-data consumer", error);
             }
         }
     }

@@ -60,7 +60,11 @@ public final class LibraryResonance {
         double epiphanyTierPlusMaxProb,
         double epiphanyTierPlusScoreDivisor,
         double epiphanyTierPlusMasteryBonus,
-        double incrementalStepCreditFactor
+        double incrementalStepCreditFactor,
+        MasterTomeWear.ConsumptionMode tomeConsumptionMode,
+        int maxTomeUses,
+        int bookCopyWearCost,
+        MasterTomeWear.DepleteBehavior tomeDepleteBehavior
     ) {
         public static final Config DEFAULT = new Config(
             MIN_DISCOUNT_BOOKSHELVES,
@@ -87,8 +91,79 @@ public final class LibraryResonance {
             0.50,
             110.0,
             0.25,
-            0.85
+            0.85,
+            MasterTomeWear.ConsumptionMode.WEAR,
+            MasterTomeWear.DEFAULT_MAX_TOME_USES,
+            MasterTomeWear.DEFAULT_BOOK_COPY_WEAR_COST,
+            MasterTomeWear.DepleteBehavior.STEP_DOWN
         );
+
+        public Config {
+            tomeConsumptionMode = tomeConsumptionMode != null ? tomeConsumptionMode : MasterTomeWear.ConsumptionMode.WEAR;
+            maxTomeUses = clampInt(maxTomeUses, 1, 1024);
+            bookCopyWearCost = clampInt(bookCopyWearCost, 1, 1024);
+            tomeDepleteBehavior = tomeDepleteBehavior != null ? tomeDepleteBehavior : MasterTomeWear.DepleteBehavior.STEP_DOWN;
+        }
+
+        public Config(
+            int minDiscountBookshelves,
+            int maxDiscountBookshelves,
+            int maxWoodenDiscountPercent,
+            int maxGlobalMasteryDiscountPercent,
+            int maxBaseXpDiscountPercent,
+            int maxSpecificEnchantBonusPercent,
+            double specificEnchantExponent,
+            int maxTotalXpDiscountPercent,
+            double masteryUnitExponent,
+            double globalMasteryMultiplier,
+            double masterTomeUpgradeMaterialMultiplier,
+            double shelfUpgradeMaterialMultiplier,
+            double epiphanyProbabilityGlobalWeight,
+            double epiphanyProbabilityAffinityWeight,
+            double blankBookAffinityWeight,
+            double epiphanyShelfScoreFactor,
+            double epiphanyGlobalMasteryScoreFactor,
+            double epiphanyAffinityMasteryScoreFactor,
+            double epiphanyTier2MaxProb,
+            double epiphanyTier2ScoreDivisor,
+            double epiphanyTier2MasteryBonus,
+            double epiphanyTierPlusMaxProb,
+            double epiphanyTierPlusScoreDivisor,
+            double epiphanyTierPlusMasteryBonus,
+            double incrementalStepCreditFactor
+        ) {
+            this(
+                minDiscountBookshelves,
+                maxDiscountBookshelves,
+                maxWoodenDiscountPercent,
+                maxGlobalMasteryDiscountPercent,
+                maxBaseXpDiscountPercent,
+                maxSpecificEnchantBonusPercent,
+                specificEnchantExponent,
+                maxTotalXpDiscountPercent,
+                masteryUnitExponent,
+                globalMasteryMultiplier,
+                masterTomeUpgradeMaterialMultiplier,
+                shelfUpgradeMaterialMultiplier,
+                epiphanyProbabilityGlobalWeight,
+                epiphanyProbabilityAffinityWeight,
+                blankBookAffinityWeight,
+                epiphanyShelfScoreFactor,
+                epiphanyGlobalMasteryScoreFactor,
+                epiphanyAffinityMasteryScoreFactor,
+                epiphanyTier2MaxProb,
+                epiphanyTier2ScoreDivisor,
+                epiphanyTier2MasteryBonus,
+                epiphanyTierPlusMaxProb,
+                epiphanyTierPlusScoreDivisor,
+                epiphanyTierPlusMasteryBonus,
+                incrementalStepCreditFactor,
+                MasterTomeWear.ConsumptionMode.WEAR,
+                MasterTomeWear.DEFAULT_MAX_TOME_USES,
+                MasterTomeWear.DEFAULT_BOOK_COPY_WEAR_COST,
+                MasterTomeWear.DepleteBehavior.STEP_DOWN
+            );
+        }
 
         public static Config fromJson(JsonObject root) {
             if (root == null) {
@@ -232,8 +307,42 @@ public final class LibraryResonance {
                     doubleFrom(masteryObj, root, "incremental_step_credit_factor", "incremental_threshold_credit_factor", DEFAULT.incrementalStepCreditFactor),
                     0.0,
                     0.95
+                ),
+                MasterTomeWear.ConsumptionMode.fromToken(
+                    stringFrom(masteryObj, root, "tome_consumption_mode", null, DEFAULT.tomeConsumptionMode.token())
+                ),
+                clampInt(
+                    intFrom(masteryObj, root, "max_tome_uses", null, DEFAULT.maxTomeUses),
+                    1,
+                    1024
+                ),
+                clampInt(
+                    intFrom(masteryObj, root, "book_copy_wear_cost", null, DEFAULT.bookCopyWearCost),
+                    1,
+                    1024
+                ),
+                MasterTomeWear.DepleteBehavior.fromToken(
+                    stringFrom(masteryObj, root, "tome_deplete_behavior", null, DEFAULT.tomeDepleteBehavior.token())
                 )
             );
+        }
+
+        private static String stringFrom(JsonObject section, JsonObject root, String primaryKey, String aliasKey, String fallback) {
+            if (section != null) {
+                if (section.has(primaryKey) && section.get(primaryKey).isJsonPrimitive()) {
+                    return section.get(primaryKey).getAsString();
+                }
+                if (aliasKey != null && section.has(aliasKey) && section.get(aliasKey).isJsonPrimitive()) {
+                    return section.get(aliasKey).getAsString();
+                }
+            }
+            if (root.has(primaryKey) && root.get(primaryKey).isJsonPrimitive()) {
+                return root.get(primaryKey).getAsString();
+            }
+            if (aliasKey != null && root.has(aliasKey) && root.get(aliasKey).isJsonPrimitive()) {
+                return root.get(aliasKey).getAsString();
+            }
+            return fallback;
         }
 
         private static JsonObject subObject(JsonObject root, String sectionKey) {

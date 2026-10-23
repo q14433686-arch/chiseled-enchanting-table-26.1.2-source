@@ -2,6 +2,7 @@
   "enabled": true,
   "allow_curse_purge": true,
   "xp_refund_scale": 1.0,
+  "external_xp_refund_scale": 0.25,
   "targeted_strip": {
     "xp_cost_min": 3,
     "xp_cost_max": 10,

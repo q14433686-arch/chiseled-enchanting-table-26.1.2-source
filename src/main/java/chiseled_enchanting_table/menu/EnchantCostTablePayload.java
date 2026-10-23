@@ -31,6 +31,7 @@ public record EnchantCostTablePayload(
     boolean disenchantEnabled,
     boolean disenchantAllowCursePurge,
     double disenchantRefundScale,
+    double disenchantExternalRefundScale,
     int epiphanyMinBookshelves,
     double epiphanyBaseChance,
     double epiphanyPerShelfChance,
@@ -48,9 +49,10 @@ public record EnchantCostTablePayload(
     Set<Identifier> explicitTreasureIds,
     BookshelfProgression.Config shelfGatesConfig,
     LibraryResonance.Config libraryResonanceConfig,
-    List<CostEntry> costs
+    List<CostEntry> costs,
+    List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations
 ) implements CustomPacketPayload {
-    public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table");
+    public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table_" + EnchantingProtocol.REVISION);
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> TYPE =
         new CustomPacketPayload.Type<>(PACKET_ID);
     public static final StreamCodec<RegistryFriendlyByteBuf, EnchantCostTablePayload> CODEC =
@@ -134,6 +136,7 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingTableData.disenchantEnabled(),
             ChiseledEnchantingTableData.disenchantAllowCursePurge(),
             ChiseledEnchantingTableData.disenchantRefundScale(),
+            ChiseledEnchantingTableData.disenchantExternalRefundScale(),
             ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves(),
             ChiseledEnchantingTableData.treasureEpiphanyBaseChance(),
             ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance(),
@@ -151,7 +154,8 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(registryAccess),
             ChiseledEnchantingTableData.shelfGatesConfig(),
             ChiseledEnchantingTableData.libraryResonanceConfig(),
-            List.copyOf(entries)
+            List.copyOf(entries),
+            ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays(player)
         );
     }
 
@@ -163,7 +167,7 @@ public record EnchantCostTablePayload(
     }
 
     private static List<ItemStack> readStacks(RegistryFriendlyByteBuf buf) {
-        int n = buf.readVarInt();
+        int n = PayloadLimits.readCount(buf);
         List<ItemStack> list = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
             ItemStack decoded = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
@@ -180,6 +184,7 @@ public record EnchantCostTablePayload(
         buf.writeBoolean(disenchantEnabled);
         buf.writeBoolean(disenchantAllowCursePurge);
         buf.writeDouble(disenchantRefundScale);
+        buf.writeDouble(disenchantExternalRefundScale);
         buf.writeVarInt(epiphanyMinBookshelves);
         buf.writeDouble(epiphanyBaseChance);
         buf.writeDouble(epiphanyPerShelfChance);
@@ -219,6 +224,10 @@ public record EnchantCostTablePayload(
         buf.writeVarInt(sg.tier3QualifyingEnchantments());
         buf.writeVarInt(sg.baseBatchSize());
         buf.writeVarInt(sg.tier3BatchSize());
+        buf.writeUtf(sg.vanillaTableMode().token());
+        buf.writeBoolean(sg.requireBreathingRoom());
+        buf.writeVarInt(sg.minOpenAdjacentBlocks());
+        buf.writeBoolean(sg.requireLineOfSight());
 
         var lr = libraryResonanceConfig == null ? LibraryResonance.Config.DEFAULT : libraryResonanceConfig;
         buf.writeVarInt(lr.minDiscountBookshelves());
@@ -246,6 +255,10 @@ public record EnchantCostTablePayload(
         buf.writeDouble(lr.epiphanyTierPlusScoreDivisor());
         buf.writeDouble(lr.epiphanyTierPlusMasteryBonus());
         buf.writeDouble(lr.incrementalStepCreditFactor());
+        buf.writeUtf(lr.tomeConsumptionMode().token());
+        buf.writeVarInt(lr.maxTomeUses());
+        buf.writeVarInt(lr.bookCopyWearCost());
+        buf.writeUtf(lr.tomeDepleteBehavior().token());
 
         buf.writeVarInt(costs.size());
         for (CostEntry entry : costs) {
@@ -258,6 +271,10 @@ public record EnchantCostTablePayload(
                 writeStacks(buf, bundle);
             }
         }
+        buf.writeVarInt(transformations.size());
+        for (var display : transformations) {
+            ChiseledEnchantingMenuPayloads.TransformationDisplay.write(buf, display);
+        }
     }
 
     private static EnchantCostTablePayload read(RegistryFriendlyByteBuf buf) {
@@ -266,6 +283,7 @@ public record EnchantCostTablePayload(
         boolean disenchantEnabled = buf.readBoolean();
         boolean disenchantAllowCursePurge = buf.readBoolean();
         double disenchantRefundScale = buf.readDouble();
+        double disenchantExternalRefundScale = buf.readDouble();
         int minShelves = buf.readVarInt();
         double baseChance = buf.readDouble();
         double perShelfChance = buf.readDouble();
@@ -280,7 +298,7 @@ public record EnchantCostTablePayload(
         List<ItemStack> freezeCosts = readStacks(buf);
         int rerollXp = buf.readVarInt();
         List<ItemStack> rerollCosts = readStacks(buf);
-        int treasureIdCount = buf.readVarInt();
+        int treasureIdCount = PayloadLimits.readCount(buf);
         Set<Identifier> treasureIds = new HashSet<>(treasureIdCount * 2);
         for (int i = 0; i < treasureIdCount; i++) {
             treasureIds.add(buf.readIdentifier());
@@ -291,11 +309,11 @@ public record EnchantCostTablePayload(
         var sgBlankMode = BookshelfProgression.BlankMaxTierMode.fromToken(buf.readUtf());
         int sgHScan = buf.readVarInt();
         int sgVScan = buf.readVarInt();
-        int ovCount = buf.readVarInt();
+        int ovCount = PayloadLimits.readCount(buf);
         java.util.Map<Identifier, List<Integer>> sgOverrides = new java.util.HashMap<>();
         for (int i = 0; i < ovCount; i++) {
             Identifier ovId = buf.readIdentifier();
-            int len = buf.readVarInt();
+            int len = PayloadLimits.readCount(buf);
             List<Integer> ladder = new ArrayList<>(len);
             for (int j = 0; j < len; j++) {
                 ladder.add(Math.max(0, buf.readVarInt()));
@@ -310,9 +328,14 @@ public record EnchantCostTablePayload(
         int sgT3 = buf.readVarInt();
         int sgBaseBatch = buf.readVarInt();
         int sgTier3Batch = buf.readVarInt();
+        var sgVanillaMode = BookshelfProgression.VanillaTableMode.fromToken(buf.readUtf());
+        boolean sgBreathing = buf.readBoolean();
+        int sgMinOpen = buf.readVarInt();
+        boolean sgLos = buf.readBoolean();
         var sgConfig = new BookshelfProgression.Config(
             sgEnabled, sgMax, sgGamma, sgBlankMode, sgHScan, sgVScan,
-            sgOverrides, sgT1, sgT2, sgMult, sgT3, sgBaseBatch, sgTier3Batch
+            sgOverrides, sgT1, sgT2, sgMult, sgT3, sgBaseBatch, sgTier3Batch,
+            sgVanillaMode, sgBreathing, sgMinOpen, sgLos
         );
 
         var lrConfig = new LibraryResonance.Config(
@@ -340,17 +363,21 @@ public record EnchantCostTablePayload(
             buf.readDouble(),
             buf.readDouble(),
             buf.readDouble(),
-            buf.readDouble()
+            buf.readDouble(),
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.fromToken(buf.readUtf()),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.fromToken(buf.readUtf())
         );
 
-        int rowCount = buf.readVarInt();
+        int rowCount = PayloadLimits.readCount(buf);
         List<CostEntry> entries = new ArrayList<>(Math.max(16, rowCount));
         for (int i = 0; i < rowCount; i++) {
             OptionType optionType = OptionType.fromToken(buf.readUtf());
             Identifier id = buf.readIdentifier();
             int level = buf.readVarInt();
             int xpLevelCost = buf.readVarInt();
-            int optionCount = buf.readVarInt();
+            int optionCount = PayloadLimits.readCount(buf);
             List<List<ItemStack>> options = new ArrayList<>(optionCount);
             for (int o = 0; o < optionCount; o++) {
                 List<ItemStack> bundle = readStacks(buf);
@@ -360,13 +387,18 @@ public record EnchantCostTablePayload(
             }
             entries.add(new CostEntry(optionType, id, level, xpLevelCost, List.copyOf(options)));
         }
+        int transformationCount = PayloadLimits.readCount(buf);
+        List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations = new ArrayList<>();
+        for (int i = 0; i < transformationCount; i++) {
+            transformations.add(ChiseledEnchantingMenuPayloads.TransformationDisplay.read(buf));
+        }
         return new EnchantCostTablePayload(
             combineEnabled, researchEnabled,
-            disenchantEnabled, disenchantAllowCursePurge, disenchantRefundScale,
+            disenchantEnabled, disenchantAllowCursePurge, disenchantRefundScale, disenchantExternalRefundScale,
             minShelves, baseChance, perShelfChance, perTomeChance, maxChance,
             maxSlotsCap, scorePerSlot, cycleTicks, freezeDurationTicks, maxFreezeTicks,
             freezeXpLevels, freezeCosts, rerollXp, rerollCosts,
-            Set.copyOf(treasureIds), sgConfig, lrConfig, List.copyOf(entries)
+            Set.copyOf(treasureIds), sgConfig, lrConfig, List.copyOf(entries), List.copyOf(transformations)
         );
     }
 

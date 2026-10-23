@@ -34,6 +34,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
         }
 
         ChiseledEnchantingTableData.init();
+        chiseled_enchanting_table.config.ModConfigNetworking.init();
         EnchantCostSync.init();
         BlockRegistry.init();
         EntityRegistry.init();

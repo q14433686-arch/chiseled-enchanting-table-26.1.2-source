@@ -8,7 +8,6 @@ import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.registry.EntityRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
-import com.mojang.serialization.MapCodec;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -48,6 +47,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -55,6 +55,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
+    // 26.2 still requires the per-block codec (26.3 dropped it; do not port that removal).
     public static final MapCodec<ChiseledEnchantingTableBlock> CODEC = simpleCodec(ChiseledEnchantingTableBlock::new);
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
@@ -247,24 +248,26 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         Component title = tableBlockEntity.getDisplayName();
         ShelfPower shelfPower = calculateShelfPower(level, pos);
         Set<EnchantmentWithLevel> unlockedEnchantments = this.get_unlocked_enchantements(state, level, pos);
-        // The available set now carries only real enchantments. Transformations travel on their own
-        // synced channel (TransformationDisplay) inside AvailableEnchantmentPayload, so they no longer
-        // need to be (and must not be) mixed into the enchantment set.
         Set<EnchantmentWithLevel> availableEnchantments = Stream.concat(
             unlockedEnchantments.stream(), this.enchantments_unlocked_by_default(level).stream()
         ).collect(Collectors.toSet());
-
-        AvailableEnchantmentPayload openingPayload = new AvailableEnchantmentPayload(
-            availableEnchantments,
-            shelfPower.xpDiscountPercent(),
-            shelfPower.regularBookshelves(),
-            shelfPower.totalChiseledEnchantedBooks(),
-            shelfPower.highTierChiseledBooks(),
-            tableBlockEntity.getOrInitEpiphanySeed(),
-            shelfPower.storedMasterLevels()
-        );
+        int epiphanySeed = tableBlockEntity.getOrInitEpiphanySeed();
 
         return new ExtendedMenuProvider<AvailableEnchantmentPayload>() {
+            private AvailableEnchantmentPayload buildPayloadFor(Player targetPlayer) {
+                return new AvailableEnchantmentPayload(
+                    availableEnchantments,
+                    shelfPower.xpDiscountPercent(),
+                    shelfPower.regularBookshelves(),
+                    shelfPower.totalChiseledEnchantedBooks(),
+                    shelfPower.highTierChiseledBooks(),
+                    epiphanySeed,
+                    shelfPower.storedMasterLevels(),
+                    shelfPower.crampedLibrary(),
+                    targetPlayer
+                );
+            }
+
             @Override
             public AvailableEnchantmentPayload getScreenOpeningData(ServerPlayer player) {
                 if (shelfPower.chiseledBookshelvesWithBooks() > 0) {
@@ -276,7 +279,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 if (shelfPower.regularBookshelves() >= ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves()) {
                     Advancement.give(player, "grand_library");
                 }
-                return openingPayload;
+                return buildPayloadFor(player);
             }
 
             @Override
@@ -290,7 +293,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 return new ChiseledEnchantingTableScreenHandler(
                     syncId,
                     playerInventory,
-                    openingPayload,
+                    buildPayloadFor(player),
                     ContainerLevelAccess.create(level, pos)
                 );
             }
@@ -346,7 +349,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     public static chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload computeLiveShelfState(
         Level level,
-        BlockPos pos
+        BlockPos pos,
+        int containerId
     ) {
         BlockState state = level.getBlockState(pos);
         ShelfPower shelfPower = calculateShelfPower(level, pos);
@@ -354,12 +358,14 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             ? cetb.getUnlockedEnchantmentsFromPower(level, shelfPower)
             : Set.of();
         return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
+            containerId,
             unlocked,
             shelfPower.xpDiscountPercent(),
             shelfPower.regularBookshelves(),
             shelfPower.totalChiseledEnchantedBooks(),
             shelfPower.highTierChiseledBooks(),
-            shelfPower.storedMasterLevels()
+            shelfPower.storedMasterLevels(),
+            shelfPower.crampedLibrary()
         );
     }
 
@@ -369,7 +375,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int totalChiseledEnchantedBooks,
         int highTierChiseledBooks,
         double totalMasteryUnits,
-        Map<Identifier, Integer> storedMasterLevels
+        Map<Identifier, Integer> storedMasterLevels,
+        boolean crampedLibrary
     ) {
         int xpDiscountPercent() {
             return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(
@@ -396,15 +403,65 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         }
     }
 
+    public static int effectiveShelvesAfterBreathingRoom(
+        int rawRegularBookshelves,
+        boolean ceilingBlocked,
+        int openAdjacentBlocks,
+        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config cfg
+    ) {
+        return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
+            .effectiveShelvesAfterBreathingRoom(rawRegularBookshelves, ceilingBlocked, openAdjacentBlocks, cfg);
+    }
+
+    public static boolean hasClearLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) {
+        int dx = shelfPos.getX() - tablePos.getX();
+        int dy = shelfPos.getY() - tablePos.getY();
+        int dz = shelfPos.getZ() - tablePos.getZ();
+        int steps = Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz)));
+        for (int s = 1; s < steps; s++) {
+            double t = (double) s / (double) steps;
+            BlockPos mid = tablePos.offset(
+                (int) Math.round(dx * t),
+                (int) Math.round(dy * t),
+                (int) Math.round(dz * t)
+            );
+            if (!mid.equals(tablePos) && !mid.equals(shelfPos)
+                && !level.getBlockState(mid).getCollisionShape(level, mid).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static ShelfPower calculateShelfPower(Level level, BlockPos tablePos) {
-        int regularBookshelves = 0;
+        var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
+        int openAdjacent = 0;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = 0; dy <= 1; dy++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
+                    BlockPos adj = tablePos.offset(dx, dy, dz);
+                    if (level.getBlockState(adj).getCollisionShape(level, adj).isEmpty()) {
+                        openAdjacent++;
+                    }
+                }
+            }
+        }
+        BlockPos abovePos = tablePos.above();
+        boolean ceilingBlocked = !level.getBlockState(abovePos).getCollisionShape(level, abovePos).isEmpty();
+        boolean cramped = sgCfg.requireBreathingRoom() && (ceilingBlocked || openAdjacent < sgCfg.minOpenAdjacentBlocks());
+
+        int rawRegularBookshelves = 0;
         int chiseledBookshelvesWithBooks = 0;
         int totalChiseledEnchantedBooks = 0;
         Map<Identifier, Integer> storedMasterLevels = new HashMap<>();
         for (BlockPos scannedPos : streamLibraryPositions(tablePos).toList()) {
+            if (sgCfg.requireLineOfSight() && !hasClearLineOfSight(level, tablePos, scannedPos)) {
+                continue;
+            }
             BlockState nearbyState = level.getBlockState(scannedPos);
             if (isRegularBookshelf(nearbyState)) {
-                regularBookshelves++;
+                rawRegularBookshelves++;
             } else if (nearbyState.is(Blocks.CHISELED_BOOKSHELF)) {
                 BlockEntity be = level.getBlockEntity(scannedPos);
                 if (be instanceof ChiseledBookShelfBlockEntity cbsbe) {
@@ -420,17 +477,24 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 }
             }
         }
+        int effectiveRegularBookshelves = effectiveShelvesAfterBreathingRoom(
+            rawRegularBookshelves,
+            ceilingBlocked,
+            openAdjacent,
+            sgCfg
+        );
         Map<Identifier, Integer> immutableStored = Map.copyOf(storedMasterLevels);
         int highTierChiseledBooks = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
             .countQualifyingStoredMasterEnchantments(level, immutableStored);
         double totalUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.totalMasteryUnits(level, immutableStored);
         return new ShelfPower(
-            regularBookshelves,
+            effectiveRegularBookshelves,
             chiseledBookshelvesWithBooks,
             totalChiseledEnchantedBooks,
             highTierChiseledBooks,
             totalUnits,
-            immutableStored
+            immutableStored,
+            cramped
         );
     }
 
