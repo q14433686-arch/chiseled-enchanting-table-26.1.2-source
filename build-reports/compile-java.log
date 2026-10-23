@@ -1,4 +1,4 @@
-commit: dadb2618b56b427d7cb8cdb04648cac96ff77278
+commit: f6a9fc64f164ab1b9891b1cd0f376260a0a8ed28
 branch: arena/3f862174-chiseled-enchanting-table-26-1
 minecraft: 26.2
 fabric-api: 0.155.2+26.2
@@ -31,6 +31,8 @@ Fabric Loom: 1.17.21
 > Task :compileJava
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
 
 > Task :processResources
 > Task :classes
@@ -55,6 +57,10 @@ ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporary
 
 ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
 
+EconomyAndConfigVerificationTest > bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() PASSED
+
+EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
+
 EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
 
 EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
@@ -66,6 +72,8 @@ EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning(
 EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
 
 EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
+
+EconomyAndConfigVerificationTest > deepRitualPersistenceSkipSlipAndInfinityRulesVerified() PASSED
 
 EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
 
@@ -87,6 +95,20 @@ EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcr
 
 EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
 
+EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
+
+FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
+
+FullPortRuntimeTest > configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() PASSED
+
+FullPortRuntimeTest > ritualWirePreservesMenuSessionAndQueue() PASSED
+
+FullPortRuntimeTest > malformedPolicyNeverBecomesAnUnlockedDefault() PASSED
+
+FullPortRuntimeTest > effectiveDomainAndDirectConsumerAgreeAndFailedSaveDoesNotPublish() PASSED
+
+FullPortRuntimeTest > persistedQueueHasFiniteResourceBounds() PASSED
+
 NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
 
 NetworkCompatibilityTest > allActionTokensAndNoBodyPacketsRoundTrip() PASSED
@@ -104,7 +126,33 @@ NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNot
 NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
 
 NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792756262214.json
+
+RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
+
+RuleArchitectureTest > missingWindowCannotCreditBackpackOrUnloadedTime() PASSED
+
+RuleArchitectureTest > overlapUsesFastestRateIndependentOfProposalOrder() PASSED
+
+RuleArchitectureTest > foreignAndReentrantTransactionsCannotWrite() PASSED
+
+RuleArchitectureTest > acknowledgedReplacementCarriesOnlyItsOwnResidencyForward() PASSED
+
+RuleArchitectureTest > replacementAndConflictingIdentityDoNotInheritProgress() PASSED
+
+RuleArchitectureTest > invalidInputsAndBootstrapOverridesAreRejected() PASSED
+
+RuleArchitectureTest > sessionResetAndDuplicateSettlementAreSafe() PASSED
+
+RuleArchitectureTest > fullyRestoredBooksAreEvictedWithoutOngoingDirtyWrites() PASSED
+
+RuleArchitectureTest > fullLockResolvesEveryDefinedRuntimeKeyNotJustDatapackKeys() PASSED
+
+RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
+
+RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
+
+RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792783379824.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -114,7 +162,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 1m
+BUILD SUCCESSFUL in 1m 3s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
