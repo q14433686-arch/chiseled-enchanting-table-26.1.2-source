@@ -1313,20 +1313,25 @@ class EconomyAndConfigVerificationTest {
         for (String specEntry : List.of(
             "new SpreadSpec(2, 1, 2)",
             "new SpreadSpec(2, 2, 2)",
-            "new SpreadSpec(3, 1, 2)",
-            "new SpreadSpec(3, 2, 2)",
+            "new SpreadSpec(3, 1, 3)",
+            "new SpreadSpec(3, 2, 3)",
+            "new SpreadSpec(3, 3, 3)",
             "new SpreadSpec(4, 1, 2)",
             "new SpreadSpec(4, 2, 2)",
             "new SpreadSpec(5, 1, 2)",
-            "new SpreadSpec(5, 2, 2)"
+            "new SpreadSpec(5, 2, 2)",
+            "new SpreadSpec(7, 1, 2)",
+            "new SpreadSpec(7, 2, 2)"
         )) {
             assertTrue(grimoireScreenSrc.contains(specEntry), "Missing multi-page SpreadSpec: " + specEntry);
         }
         for (String diagFn : List.of(
             "renderChapter2Persistence",
+            "renderChapter3ShelfTaxonomy",
             "renderChapter3Ritual",
             "renderChapter4ThresholdGuide",
-            "renderChapter5InfinityAndRegen"
+            "renderChapter5InfinityAndRegen",
+            "renderChapter7RemnantEconomy"
         )) {
             assertTrue(grimoireScreenSrc.contains(diagFn) && grimoireDiagSrc.contains(diagFn), "Unwired Grimoire diagram: " + diagFn);
         }
@@ -1346,6 +1351,147 @@ class EconomyAndConfigVerificationTest {
                 assertFalse(
                     String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
                 );
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.resonance.broad_breakdown").getAsString(), 40, 32, 2, 6).contains("%s")
+                );
+            }
+        }
+    }
+
+    @Test
+    void bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() throws Exception {
+        // 1. Unified Bookshelf Taxonomy: Regular, Empty Chiseled, Book-Holding Chiseled (incl. Depleted Tome), Master Tome Chiseled
+        var nonShelf = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(false, false, false, false);
+        var regularShelf = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(true, false, false, false);
+        var emptyChiseled = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(false, true, false, false);
+        var depletedOrPlainChiseled = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(false, true, true, false);
+        var masterTomeChiseled = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(false, true, true, true);
+
+        assertFalse(nonShelf.isBroadBookshelf());
+        assertTrue(regularShelf.isBroadBookshelf() && regularShelf.isRegularBookshelf() && !regularShelf.providesMasterTomeResonance());
+        assertTrue(emptyChiseled.isBroadBookshelf() && !emptyChiseled.isRegularBookshelf() && !emptyChiseled.providesMasterTomeResonance());
+        // Chiseled bookshelf holding a Depleted Tome (or plain book) MUST be treated as a Broad Bookshelf (not a Master Tome)
+        assertTrue(depletedOrPlainChiseled.isBroadBookshelf());
+        assertFalse(depletedOrPlainChiseled.isRegularBookshelf());
+        assertFalse(depletedOrPlainChiseled.providesMasterTomeResonance());
+        assertTrue(masterTomeChiseled.isBroadBookshelf() && masterTomeChiseled.providesMasterTomeResonance());
+
+        assertEquals(
+            40,
+            chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.computeBroadBookshelfCount(32, 2, 6)
+        );
+
+        // Verify #minecraft:bookshelf_books includes chiseled_enchanting_table:depleted_tome so players can place it into Chiseled Bookshelves
+        JsonObject bookshelfBooksTag = JsonParser.parseString(
+            Files.readString(Path.of("src/main/resources/data/minecraft/tags/item/bookshelf_books.json"), StandardCharsets.UTF_8)
+        ).getAsJsonObject();
+        assertTrue(bookshelfBooksTag.getAsJsonArray("values").toString().contains("chiseled_enchanting_table:depleted_tome"));
+
+        // 2. Wild Chiseled Bookshelf Weathered Replacement Probability strictly <= 30%
+        double plainRate = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.expectedPlainBookReplacementRate();
+        assertEquals(0.178D, plainRate, 1e-6);
+        assertTrue(plainRate <= 0.30D);
+        for (double enchProb = 0.0D; enchProb <= 1.0D; enchProb += 0.05D) {
+            double totalRate = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                .expectedTotalBookReplacementRate(enchProb);
+            assertTrue(totalRate <= 0.30D, "Total wild shelf book replacement must never exceed 30%: " + totalRate);
+        }
+        var rng = net.minecraft.util.RandomSource.create(20261024L);
+        int replaced = 0;
+        int trials = 100_000;
+        for (int i = 0; i < trials; i++) {
+            double p = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.rollShelfWeatheringProbability(rng);
+            assertTrue(p >= 0.0D && p <= 0.30D, "Single-shelf weathering prob exceeded 30%: " + p);
+            if (rng.nextDouble() < p) {
+                replaced++;
+            }
+        }
+        double empiricalRate = replaced / (double) trials;
+        assertTrue(empiricalRate > 0.16D && empiricalRate < 0.195D && empiricalRate <= 0.30D,
+            "Monte Carlo wild shelf replacement rate out of expected range: " + empiricalRate);
+
+        // 3. World Structure Chest Loot Tiers
+        var libSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/stronghold_library");
+        var desertSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/desert_pyramid");
+        var dungeonSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/simple_dungeon");
+        var trialSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/trial_chambers/reward");
+        var villageSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/village/village_cartographer");
+        assertTrue(libSpec != null && desertSpec != null && dungeonSpec != null && trialSpec != null && villageSpec != null);
+        assertTrue(libSpec.probability() > desertSpec.probability());
+        assertTrue(desertSpec.probability() > dungeonSpec.probability());
+        assertTrue(dungeonSpec.probability() > villageSpec.probability());
+        assertEquals(null, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "entities/zombie"));
+
+        // 4. Librarian Profession Guard, Buyback (2 -> 1 Emerald / 2 Amethyst) & Dynamic Weighted Commission (< Vanilla Mending 24E)
+        assertEquals(2, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.RECYCLE_INPUT_DEPLETED_TOMES);
+        assertEquals(1, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.RECYCLE_OUTPUT_EMERALDS);
+        assertEquals(2, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.RECYCLE_OUTPUT_AMETHYST_SHARDS);
+        assertEquals(4, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.BASE_COMMISSION_LAPIS);
+        assertEquals(2, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.BASE_COMMISSION_INK_SACS);
+        assertEquals(1, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.BASE_COMMISSION_EMERALDS);
+
+        assertTrue(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.isLibrarianProfessionKey(
+            net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.VILLAGER_PROFESSION,
+                Identifier.withDefaultNamespace("librarian")
+            )
+        ));
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.isLibrarianProfessionKey(
+            net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.VILLAGER_PROFESSION,
+                Identifier.withDefaultNamespace("weaponsmith")
+            )
+        ));
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.isLibrarianProfessionKey(
+            net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.VILLAGER_PROFESSION,
+                Identifier.withDefaultNamespace("farmer")
+            )
+        ));
+
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .isAllowedLibrarianCommissionEnchantment(Identifier.withDefaultNamespace("infinity"), false));
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .isAllowedLibrarianCommissionEnchantment(Identifier.withDefaultNamespace("binding_curse"), true));
+        assertTrue(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .isAllowedLibrarianCommissionEnchantment(Identifier.withDefaultNamespace("mending"), false));
+
+        int vanillaMendingTypical = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.VANILLA_TYPICAL_MENDING_EMERALDS;
+        for (int weight = 1; weight <= 10; weight++) {
+            for (int items : List.of(1, 4, 8, 16, 25, 40)) {
+                for (int maxLvl = 1; maxLvl <= 5; maxLvl++) {
+                    for (int lvl = 1; lvl <= maxLvl; lvl++) {
+                        var quote = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                            .computeDynamicCommissionQuote(weight, items, lvl, maxLvl);
+                        assertTrue(quote.emeraldCost() >= 1 && quote.emeraldCost() < vanillaMendingTypical,
+                            "Commission price must strictly stay below vanilla typical Mending price (" + vanillaMendingTypical + "): " + quote.emeraldCost());
+                        assertTrue(quote.lapisCost() >= 4);
+                        assertTrue(quote.inkSacCost() >= 2);
+                        if (lvl > 1) {
+                            var lowerLvl = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                                .computeDynamicCommissionQuote(weight, items, lvl - 1, maxLvl);
+                            assertTrue(quote.tripleWeightedScore() > lowerLvl.tripleWeightedScore());
+                            assertTrue(quote.emeraldCost() >= lowerLvl.emeraldCost());
+                        }
+                        if (weight < 10) {
+                            var moreCommon = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                                .computeDynamicCommissionQuote(weight + 1, items, lvl, maxLvl);
+                            assertTrue(quote.tripleWeightedScore() > moreCommon.tripleWeightedScore());
+                            assertTrue(quote.emeraldCost() >= moreCommon.emeraldCost());
+                        }
+                    }
+                }
             }
         }
     }

@@ -114,6 +114,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public int xpDiscountPercent;
     public int regularBookshelves;
     public int chiseledBookshelves;
+    public int emptyChiseledBookshelves;
     public int chiseledBookCount;
     public int highTierChiseledBooks;
     public java.util.Map<Identifier, Integer> storedMasterLevels;
@@ -205,6 +206,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         );
         this.regularBookshelves = Math.max(0, payload.regular_bookshelves());
         this.chiseledBookshelves = Math.max(0, payload.chiseled_bookshelves());
+        this.emptyChiseledBookshelves = Math.max(0, payload.empty_chiseled_bookshelves());
         this.chiseledBookCount = Math.max(0, payload.chiseled_book_count());
         this.highTierChiseledBooks = Math.max(0, payload.high_tier_chiseled_books());
         this.storedMasterLevels = payload.stored_master_levels() == null
@@ -488,6 +490,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         );
         this.regularBookshelves = Math.max(0, live.regular_bookshelves());
         this.chiseledBookshelves = Math.max(0, live.chiseled_bookshelves());
+        this.emptyChiseledBookshelves = Math.max(0, live.empty_chiseled_bookshelves());
         this.chiseledBookCount = Math.max(0, live.chiseled_book_count());
         this.highTierChiseledBooks = Math.max(0, live.high_tier_chiseled_books());
         this.storedMasterLevels = live.stored_master_levels() == null
@@ -503,7 +506,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public int totalLibraryBookshelves() {
-        return Math.max(0, this.regularBookshelves) + Math.max(0, this.chiseledBookshelves);
+        return chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.computeBroadBookshelfCount(
+            this.regularBookshelves,
+            this.emptyChiseledBookshelves,
+            this.chiseledBookshelves
+        );
     }
 
     public int masterTomeRemainingCharges(Identifier id, int level) {
@@ -531,6 +538,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             || live.xp_discount_percent() != this.xpDiscountPercent
             || live.regular_bookshelves() != this.regularBookshelves
             || live.chiseled_bookshelves() != this.chiseledBookshelves
+            || live.empty_chiseled_bookshelves() != this.emptyChiseledBookshelves
             || live.chiseled_book_count() != this.chiseledBookCount
             || live.high_tier_chiseled_books() != this.highTierChiseledBooks
             || live.cramped_library() != this.crampedLibrary

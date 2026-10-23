@@ -419,14 +419,16 @@ public final class InscriptionRitualMechanics {
             if (!state.is(Blocks.CHISELED_BOOKSHELF)) {
                 continue;
             }
+            // Broad bookshelves (广义书架) include regular bookshelves, empty chiseled bookshelves,
+            // AND book-holding chiseled bookshelves (including Depleted Tomes); only slots holding
+            // Enchanted Books count toward Master Tome resonance below.
+            shelves++;
             if (!(level.getBlockEntity(p) instanceof ChiseledBookShelfBlockEntity shelfBe)) {
                 continue;
             }
-            boolean shelfHasBook = false;
             for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
                 ItemStack book = shelfBe.getItem(slot);
                 if (book.isEmpty()) continue;
-                shelfHasBook = true;
                 ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
                 int count = enchants.size();
                 if (count <= 0) continue;
@@ -437,9 +439,6 @@ public final class InscriptionRitualMechanics {
                 if (hasInf && (count - 1) > 3 && count > maxOverloadedInf) {
                     maxOverloadedInf = count;
                 }
-            }
-            if (shelfHasBook) {
-                shelves++;
             }
         }
         return new LibraryRitualScan(shelves, anyTome, totalTomeEnchants, maxOverloadedInf);

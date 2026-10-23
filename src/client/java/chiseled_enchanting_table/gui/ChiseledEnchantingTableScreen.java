@@ -1160,7 +1160,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                                     };
                                     rowTip.add(Component.translatable(
                                         "gui.chiseled_enchanting_table.pricing.tome_regen_rate",
-                                        String.format("%.1f", regenSec),
+                                        String.format(java.util.Locale.ROOT, "%.1f", regenSec / 1200.0),
                                         nearShelves,
                                         tierBadge
                                     ).withStyle(regenTier >= 2
@@ -1324,6 +1324,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.title", this.menu.xpDiscountPercent)
                     .withStyle(ChatFormatting.GOLD));
+                tip.add(Component.translatable(
+                    "gui.chiseled_enchanting_table.resonance.broad_breakdown",
+                    this.menu.totalLibraryBookshelves(),
+                    this.menu.regularBookshelves,
+                    this.menu.emptyChiseledBookshelves,
+                    this.menu.chiseledBookshelves
+                ).withStyle(ChatFormatting.YELLOW));
                 if (this.menu.crampedLibrary) {
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.cramped")
                         .withStyle(ChatFormatting.RED));

@@ -55,8 +55,12 @@ public class ChiseledEnchantingTable implements ModInitializer {
         // Restrict minecraft:infinity strictly to Exploration loot, Vanilla Enchanting Table random rolls,
         // and Master Tome copying/inscription — strip/replace any Villager / Wandering Trader Infinity offer.
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-            if (!world.isClientSide() && entity instanceof AbstractVillager villager) {
-                sanitizeVillagerInfinityOffers(world, villager.getOffers());
+            if (!world.isClientSide() && entity instanceof AbstractVillager abstractVillager) {
+                sanitizeVillagerInfinityOffers(world, abstractVillager.getOffers());
+                if (abstractVillager instanceof net.minecraft.world.entity.npc.villager.Villager villager) {
+                    chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                        .ensureLibrarianDepletedTomeOffers(world, villager);
+                }
             }
             return InteractionResult.PASS;
         });

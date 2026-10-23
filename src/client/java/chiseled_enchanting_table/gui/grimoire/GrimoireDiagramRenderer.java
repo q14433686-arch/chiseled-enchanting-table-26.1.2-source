@@ -1482,4 +1482,188 @@ public final class GrimoireDiagramRenderer {
         }
         return String.format(java.util.Locale.ROOT, "%.1f", days);
     }
+
+    // =========================================================================
+    // CHAPTER 3 (1/3) — UNIFIED BOOKSHELF TAXONOMY SET DIAGRAM (图示法)
+    // =========================================================================
+    public static void renderChapter3ShelfTaxonomy(
+        GuiGraphicsExtractor ctx,
+        Minecraft mc,
+        int x,
+        int y,
+        int w,
+        int h,
+        int mouseX,
+        int mouseY,
+        List<HoveredSlot> slotsOut
+    ) {
+        Font font = mc.font;
+        drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch3p0_title");
+
+        // Outer set box representing Broad Bookshelves (广义书架 = ① + ② + ③)
+        int setY = y + 17;
+        int setH = 98;
+        ctx.fill(x, setY, x + w, setY + setH, 0xFF8C6218);
+        ctx.fill(x + 1, setY + 1, x + w - 1, setY + setH - 1, CALLOUT_BG);
+        ctx.fill(x + 1, setY + 1, x + w - 1, setY + 13, 0xFF5A3E12);
+        drawCenteredBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_broad_hdr").getString(),
+            x + 4, w - 8, setY + 7.0f, 0.62f, LIGHT_GOLD, false
+        );
+
+        // Top row inside set: [① 普通书架] | [② 空雕纹书架]
+        int topRowY = setY + 16;
+        int topRowH = 34;
+        int colGap = 4;
+        int colW = (w - 8 - colGap) / 2;
+        int c1X = x + 4;
+        int c2X = c1X + colW + colGap;
+
+        ctx.fill(c1X, topRowY, c1X + colW, topRowY + topRowH, CARD_BORDER);
+        ctx.fill(c1X + 1, topRowY + 1, c1X + colW - 1, topRowY + topRowH - 1, CARD_BG);
+        ctx.fill(c1X, topRowY, c1X + 3, topRowY + topRowH, INK_GOLD_DARK);
+        drawSlotItem(
+            ctx, font, new ItemStack(Items.BOOKSHELF),
+            c1X + 4, topRowY + 8, 17, mouseX, mouseY, slotsOut, false, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_c1"),
+            c1X + 23, topRowY + 3, colW - 25, topRowH - 6, 0.58f, 0.52f, INK_PRIMARY, false
+        );
+
+        ctx.fill(c2X, topRowY, c2X + colW, topRowY + topRowH, CARD_BORDER);
+        ctx.fill(c2X + 1, topRowY + 1, c2X + colW - 1, topRowY + topRowH - 1, CARD_BG);
+        ctx.fill(c2X, topRowY, c2X + 3, topRowY + topRowH, 0xFF6B5B45);
+        drawSlotItem(
+            ctx, font, new ItemStack(Items.CHISELED_BOOKSHELF),
+            c2X + 4, topRowY + 8, 17, mouseX, mouseY, slotsOut, false, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_c2"),
+            c2X + 23, topRowY + 3, colW - 25, topRowH - 6, 0.58f, 0.52f, INK_SECONDARY, false
+        );
+
+        // Bottom wide card inside set: [③ 有书雕纹书架：普通书/褪魔残卷 => 广义书架 | 附魔书 => 广义书架 + 母本]
+        int c3Y = topRowY + topRowH + 3;
+        int c3H = setH - (c3Y - setY) - 4;
+        ctx.fill(x + 4, c3Y, x + w - 4, c3Y + c3H, CARD_BORDER);
+        ctx.fill(x + 5, c3Y + 1, x + w - 5, c3Y + c3H - 1, CARD_BG);
+        ctx.fill(x + 4, c3Y, x + 7, c3Y + c3H, INK_EMERALD);
+
+        drawSlotItem(
+            ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME),
+            x + 9, c3Y + 4, 16, mouseX, mouseY, slotsOut, false, false
+        );
+        drawSlotItem(
+            ctx, font, new ItemStack(Items.ENCHANTED_BOOK),
+            x + 9, c3Y + 22, 16, mouseX, mouseY, slotsOut, false, true
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_c3_remnant"),
+            x + 28, c3Y + 3, w - 35, 18, 0.58f, 0.52f, INK_EMERALD, false
+        );
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch3p0_c3_master"),
+            x + 28, c3Y + 22, w - 35, Math.max(16, c3H - 24), 0.58f, 0.52f, INK_PURPLE, false
+        );
+
+        // Bottom scope matrix card showing which mechanics use which shelf definition
+        int mapY = setY + setH + 3;
+        int mapH = Math.max(46, (y + h) - mapY);
+        ctx.fill(x, mapY, x + w, mapY + mapH, CARD_BORDER);
+        ctx.fill(x + 1, mapY + 1, x + w - 1, mapY + mapH - 1, CARD_BG);
+
+        String[] keys = {
+            "gui.chiseled_enchanting_table.grimoire.diag.ch3p0_map_reg",
+            "gui.chiseled_enchanting_table.grimoire.diag.ch3p0_map_broad",
+            "gui.chiseled_enchanting_table.grimoire.diag.ch3p0_map_tome"
+        };
+        int[] accents = { INK_GOLD_DARK, INK_EMERALD, INK_PURPLE };
+        int rowH = Math.max(14, (mapH - 4) / 3);
+        for (int i = 0; i < 3; i++) {
+            int ry = mapY + 2 + i * rowH;
+            ctx.fill(x + 3, ry + 1, x + 6, ry + rowH - 1, accents[i]);
+            drawWrappedBox(
+                ctx, font,
+                Component.translatable(keys[i]),
+                x + 9, ry + 1, w - 13, rowH - 1, 0.57f, 0.50f, INK_PRIMARY, false
+            );
+        }
+    }
+
+    // =========================================================================
+    // CHAPTER 7 (2/2) — DEPLETED TOME WORLD LOOT (<=30%) & LIBRARIAN TRADES
+    // =========================================================================
+    public static void renderChapter7RemnantEconomy(
+        GuiGraphicsExtractor ctx,
+        Minecraft mc,
+        int x,
+        int y,
+        int w,
+        int h,
+        int mouseX,
+        int mouseY,
+        List<HoveredSlot> slotsOut
+    ) {
+        Font font = mc.font;
+        drawPanelHeader(ctx, font, x, y, w, "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_title");
+
+        int bodyTop = y + 17;
+        int totalH = Math.max(120, (y + h) - bodyTop);
+        int gap = 3;
+        int c1H = (totalH - gap * 2) * 32 / 100;
+        int c2H = (totalH - gap * 2) * 31 / 100;
+        int c3H = totalH - gap * 2 - c1H - c2H;
+
+        // Card 1: World Chests + Wild Chiseled Bookshelves (<= 30% book decay)
+        int c1Y = bodyTop;
+        ctx.fill(x, c1Y, x + w, c1Y + c1H, CARD_BORDER);
+        ctx.fill(x + 1, c1Y + 1, x + w - 1, c1Y + c1H - 1, CARD_BG);
+        ctx.fill(x, c1Y, x + 3, c1Y + c1H, INK_GOLD_DARK);
+        drawSlotItem(ctx, font, new ItemStack(Items.CHEST), x + 5, c1Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.CHISELED_BOOKSHELF), x + 23, c1Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawRightArrow(ctx, x + 41, c1Y + 13, 8, INK_GOLD_DARK);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME), x + 51, c1Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world"),
+            x + 70, c1Y + 3, w - 74, c1H - 6, 0.58f, 0.51f, INK_PRIMARY, false
+        );
+
+        // Card 2: Librarian Buyback: 2× Depleted Tome -> 1× Emerald OR 2× Amethyst Shard
+        int c2Y = c1Y + c1H + gap;
+        ctx.fill(x, c2Y, x + w, c2Y + c2H, CARD_BORDER);
+        ctx.fill(x + 1, c2Y + 1, x + w - 1, c2Y + c2H - 1, CARD_BG);
+        ctx.fill(x, c2Y, x + 3, c2Y + c2H, INK_EMERALD);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME, 2), x + 5, c2Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawRightArrow(ctx, x + 23, c2Y + 13, 8, INK_EMERALD);
+        drawSlotItem(ctx, font, new ItemStack(Items.EMERALD, 1), x + 33, c2Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.AMETHYST_SHARD, 2), x + 51, c2Y + 5, 16, mouseX, mouseY, slotsOut, false, false);
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle"),
+            x + 70, c2Y + 3, w - 74, c2H - 6, 0.58f, 0.51f, INK_EMERALD, false
+        );
+
+        // Card 3: Librarian Commission: 4 Lapis / 2 Ink / 1 Emerald base -> Book / Dynamic-Weighted Enchanted Book (< Mending)
+        int c3Y = c2Y + c2H + gap;
+        ctx.fill(x, c3Y, x + w, c3Y + c3H, CARD_BORDER);
+        ctx.fill(x + 1, c3Y + 1, x + w - 1, c3Y + c3H - 1, CALLOUT_BG);
+        ctx.fill(x, c3Y, x + 3, c3Y + c3H, INK_PURPLE);
+        drawSlotItem(ctx, font, new ItemStack(BlockRegistry.DEPLETED_TOME, 1), x + 5, c3Y + 4, 15, mouseX, mouseY, slotsOut, false, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.LAPIS_LAZULI, 4), x + 21, c3Y + 4, 15, mouseX, mouseY, slotsOut, false, false);
+        drawSlotItem(ctx, font, new ItemStack(Items.INK_SAC, 2), x + 37, c3Y + 4, 15, mouseX, mouseY, slotsOut, false, false);
+        drawRightArrow(ctx, x + 54, c3Y + 11, 7, INK_PURPLE);
+        drawSlotItem(ctx, font, new ItemStack(Items.ENCHANTED_BOOK, 1), x + 63, c3Y + 4, 15, mouseX, mouseY, slotsOut, false, true);
+        drawWrappedBox(
+            ctx, font,
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite"),
+            x + 6, c3Y + 21, w - 10, Math.max(18, c3H - 23), 0.58f, 0.51f, INK_PRIMARY, false
+        );
+    }
 }
