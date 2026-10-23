@@ -260,7 +260,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 DataComponents.LORE,
                 new ItemLore(java.util.List.of(
                     Component.translatable("item.chiseled_enchanting_table.frozen_lore", clock)
-                        .withStyle(style -> style.withItalic(false).withColor(net.minecraft.0xFF55FFFF))
+                        .withStyle(style -> style.withItalic(false).withColor(0xFF55FFFF))
                 ))
             );
             componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
