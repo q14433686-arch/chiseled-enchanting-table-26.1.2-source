@@ -1,4 +1,4 @@
-commit: 3a193e02e0c23df2b7d46ce5d191f4acfaceb93e
+commit: 181e996202f890bfc188be68bff1b4d9e8915b1f
 branch: arena/eb218d80-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
@@ -38,12 +38,84 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :compileClientJava
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792732453345.json
+
+> Task :processClientResources
+> Task :clientClasses
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+
+> Task :test
+
+ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
+
+ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
+
+ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
+
+ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
+
+EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
+
+EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
+
+EconomyAndConfigVerificationTest > highMaxLevelShelfCurveDistributesSmoothlyAndCapsScanVolume() PASSED
+
+EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning() PASSED
+
+EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
+
+EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
+
+EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() PASSED
+
+EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
+
+EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
+
+EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
+
+EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
+
+EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
+
+NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
+
+NetworkCompatibilityTest > allActionTokensAndNoBodyPacketsRoundTrip() PASSED
+
+NetworkCompatibilityTest > unknownActionsCannotSilentlyBecomeEnchantment() PASSED
+
+NetworkCompatibilityTest > costTableConfigurationAndRowsRoundTrip() PASSED
+
+NetworkCompatibilityTest > runtimeConfigRequestAndAcknowledgementRoundTrip() PASSED
+
+NetworkCompatibilityTest > liveUpdatesOnlyTargetTheMatchingMenu() PASSED
+
+NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNotUnmoddedPeers() PASSED
+
+NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
+
+NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792732563963.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 1m 14s
-3 actionable tasks: 3 executed
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 19s
+6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
 
