@@ -15,6 +15,19 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
+## [1.1.1] — 26.3 runtime and synchronization audit (version unchanged)
+
+- Synchronize complete server transformation catalogs, including tag inputs and empty catalogs;
+  refresh actual JEI runtime recipes and use dynamic REI displays after synchronization.
+- Bind live shelf updates to their originating container; close old table menus on successful
+  datapack reload so reopened menus receive a fresh transformation snapshot.
+- Reject unknown action tokens, invalid collection lengths and incompatible same-version protocol
+  builds. **Update client and server together**: the current capability is `protocol_26_3_revision_3`.
+- Preserve custom loot-function conditions and server automatic-deduction settings; log failing
+  synchronization listeners rather than swallowing exceptions. Preserve native inventory right click.
+- Add real dedicated-server load/reload/loot-component checks, conditional-loot probes, and
+  headless payload-codec regressions. See [audit and validation boundaries](docs/reports/AUDIT_26_3_RUNTIME_AND_SYNC.md).
+
 ## [1.1.1] — Grimoire mouse-input fix (version unchanged)
 
 - Use platform mouse-button constants in the Grimoire instead of old GLFW button numbers.
