@@ -99,7 +99,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             server.execute(() -> {
                 var pos = payload.pos();
                 if (pos != null
-                    && player.canInteractWithBlock(pos, 4.0)
+                    && player.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= 64.0D
                     && player.level().getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity) {
                     var provider = player.level().getBlockState(pos).getMenuProvider(player.level(), pos);
                     if (provider != null) {
