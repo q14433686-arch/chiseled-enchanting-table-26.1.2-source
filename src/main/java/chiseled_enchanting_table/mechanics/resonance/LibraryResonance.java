@@ -415,7 +415,7 @@ public final class LibraryResonance {
                 clampInt(
                     intFrom(masteryObj, root, "tome_regen_base_seconds", null, DEFAULT.tomeRegenBaseSeconds),
                     1,
-                    7200
+                    86_400
                 ),
                 clampInt(
                     intFrom(masteryObj, root, "tome_regen_tier1_shelves", null, DEFAULT.tomeRegenTier1Shelves),
@@ -425,7 +425,7 @@ public final class LibraryResonance {
                 clampInt(
                     intFrom(masteryObj, root, "tome_regen_tier1_seconds", null, DEFAULT.tomeRegenTier1Seconds),
                     1,
-                    7200
+                    86_400
                 ),
                 clampInt(
                     intFrom(masteryObj, root, "tome_regen_tier2_shelves", null, DEFAULT.tomeRegenTier2Shelves),
@@ -435,7 +435,7 @@ public final class LibraryResonance {
                 clampInt(
                     intFrom(masteryObj, root, "tome_regen_tier2_seconds", null, DEFAULT.tomeRegenTier2Seconds),
                     1,
-                    7200
+                    86_400
                 )
             );
         }

@@ -280,7 +280,7 @@ public final class InscriptionRitualMechanics {
         double cap = usedInfinityMasterTome ? MAX_RUSH_DEGRADE_INFINITY : MAX_RUSH_DEGRADE_NORMAL;
         double remSeconds = remainingTicks / 20.0;
         double raw = cap * (1.0 - Math.exp(-remSeconds / 210.0));
-        return Mth.clamp(raw, 0.01, cap);
+        return Mth.clamp(raw, cap * 0.02, cap);
     }
 
     /**

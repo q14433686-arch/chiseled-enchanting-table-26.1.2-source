@@ -520,7 +520,7 @@
     "gui.chiseled_enchanting_table.ritual.btn_rush": "強跳 %s%%",
     "gui.chiseled_enchanting_table.ritual.tip_sacrifice_title": "⚡ 獻祭經驗跳過等待",
     "gui.chiseled_enchanting_table.ritual.tip_sacrifice_cost": "直接扣除等級：%s 級（目前：%s 級，封頂 15 級）",
-    "gui.chiseled_enchanting_table.ritual.tip_sacrifice_safe": "✦ 穩妥收束：0%% 機率損傷書架母本，立即完成全部佇列附魔",
+    "gui.chiseled_enchanting_table.ritual.tip_sacrifice_safe": "✦ 穩妥收束：0% 機率損傷書架母本，立即完成全部佇列附魔",
     "gui.chiseled_enchanting_table.ritual.tip_rush_title": "🎲 強行跳過（不獻祭經驗）",
     "gui.chiseled_enchanting_table.ritual.tip_rush_risk": "目前母本退化機率：%s%%（上限 %s%%，隨剩餘時間即時遞減）",
     "gui.chiseled_enchanting_table.ritual.tip_rush_priority": "若觸發退化：優先將相對低等級、低附魔數、低稀有度的母本變為「褪魔殘卷」",

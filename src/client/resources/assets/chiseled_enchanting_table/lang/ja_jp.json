@@ -520,7 +520,7 @@
     "gui.chiseled_enchanting_table.ritual.btn_rush": "強行 %s%%",
     "gui.chiseled_enchanting_table.ritual.tip_sacrifice_title": "⚡ Sacrifice XP to Complete Now",
     "gui.chiseled_enchanting_table.ritual.tip_sacrifice_cost": "Direct XP Level Cost: %s Levels (You have: %s, Cap: 15)",
-    "gui.chiseled_enchanting_table.ritual.tip_sacrifice_safe": "✦ Safe Completion: 0%% Master Tome degradation risk",
+    "gui.chiseled_enchanting_table.ritual.tip_sacrifice_safe": "✦ Safe Completion: 0% Master Tome degradation risk",
     "gui.chiseled_enchanting_table.ritual.tip_rush_title": "🎲 Force Rush Skip (No XP Sacrifice)",
     "gui.chiseled_enchanting_table.ritual.tip_rush_risk": "Live Degradation Chance: %s%% (Cap: %s%%, updates live with remaining time)",
     "gui.chiseled_enchanting_table.ritual.tip_rush_priority": "Backfire degrades lowest-level / fewest-enchant / lowest-rarity Master Tome into a Depleted Tome",
