@@ -1,6 +1,6 @@
 # Current Baseline
 
-**Date:** 2026-10-23
+**Date:** 2026-10-24
 **Minecraft Version:** 26.3
 **Fabric Loader:** 0.19.5
 **Fabric API:** 0.162.0+26.3
@@ -13,7 +13,20 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Current incremental port — option 1
+## Current integrated baseline — option 3, source 3e61f5d
+
+The **entire** 26.1.2 gameplay/resource delta through **`3e61f5de3ba7679ccbc92b73443dead149c96840`** (PR #17/#18) is integrated on the current development branch, with architecture-first hardening. It is no longer a foundation-only change.
+
+- Release remains **1.1.0 / MC 26.3**; wire is **`26_3_revision_6`**. Update both ends even if the visible version label is unchanged.
+- One effective `RuntimeFrame`, stored-preference/effective/draft separation, strict policy/reload and persist-before-publish; startup components remain restart-only.
+- Shared shelf recovery is wired to one per-world-session 20-tick scheduler; no legacy absolute-time credit.
+- Persistent inventory and bounded owner/session/target-bound rituals; XP/rush/Infinity slip; registry failures quarantine instead of deleting orders.
+- Depleted-tome chest loot/weathering/librarian commissions, weighted epiphany, new advancements, Grimoire and 11 locales.
+- Source defaults: regen **24,000 / 12,000 / 3,600 seconds**, **38/42** shelves; new configs datapack-first, creative wear retained. Back up old worlds; explicit old preferences are preserved.
+
+[Full architecture/cross-branch report and validation boundaries](docs/reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md). Final game source `9243790` passed build **40007636762** (all four jobs) and compile-check **40007636849**, **52 JUnit**, plus real persisted-ritual/completion/quarantine/stored-input-break probes. Later changes are CI log returns, documentation and explanatory locale text. GUI/LAN/multiplayer/performance are not claimed as manually tested. No PR has been opened/merged in this round.
+
+## Historical merged gameplay baseline — previous option 1
 
 User selected faithful source defaults plus necessary hardening. The complete increment through **`3e081f31f262dc13f6a92f0a50313e12f6af28c0`** is merged; release **1.1.0**, target **MC 26.3**, protocol **`26_3_revision_5`**. This supersedes the previous “audit only / awaiting choice” state.
 

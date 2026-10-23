@@ -93,18 +93,18 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             ChiseledEnchantingMenuPayloads.ReopenTablePayload.TYPE,
             ChiseledEnchantingMenuPayloads.ReopenTablePayload.CODEC
         );
-        ServerPlayNetworking.registerGlobalReceiver(ChiseledEnchantingMenuPayloads.ReopenTablePayload.TYPE, (payload, ctx) -> {
+        PayloadTypeRegistry.serverboundPlay().register(
+            ChiseledEnchantingMenuPayloads.SkipRitualPayload.TYPE,
+            ChiseledEnchantingMenuPayloads.SkipRitualPayload.CODEC
+        );
+        ServerPlayNetworking.registerGlobalReceiver(ChiseledEnchantingMenuPayloads.SkipRitualPayload.TYPE, (payload, ctx) -> {
             var player = ctx.player();
             var server = ctx.server();
             server.execute(() -> {
-                var pos = payload.pos();
-                if (pos != null
-                    && player.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= 64.0D
-                    && player.level().getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity) {
-                    var provider = player.level().getBlockState(pos).getMenuProvider(player.level(), pos);
-                    if (provider != null) {
-                        player.openMenu(provider);
-                    }
+                if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler chiseledEnchantingTableScreenHandler) {
+                    if (chiseledEnchantingTableScreenHandler.containerId == payload.containerId()
+                        && chiseledEnchantingTableScreenHandler.ritualSession() == payload.session())
+                        chiseledEnchantingTableScreenHandler.skipActiveRitual(payload.sacrificeXp());
                 }
             });
         });
@@ -115,26 +115,28 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public final Set<EnchantmentWithLevel> unlocked_enchantements;
     public int xpDiscountPercent;
     public int regularBookshelves;
+    public int chiseledBookshelves;
+    public int emptyChiseledBookshelves;
     public int chiseledBookCount;
     public int highTierChiseledBooks;
     public java.util.Map<Identifier, Integer> storedMasterLevels;
+    public java.util.Map<EnchantmentWithLevel, Integer> masterTomeCharges;
     public boolean crampedLibrary;
     private int epiphanySeed;
     private int syncedCycleIndex;
     private int syncedCountdownSeconds;
     private boolean syncedFrozen;
+    private int syncedRitualRemainingTicks = 0;
+    private int syncedRitualTotalTicks = 0;
+    private List<EnchantmentWithLevel> syncedQueuedSteps = List.of();
+    private boolean syncedUsedInfinityTome = false;
+    private boolean syncedHasAnyMasterTome = false;
     /** Server-synced transformation table, keyed by transformation id. Used by client UI. */
     public java.util.Map<Identifier, TransformationDisplay> transformationDisplays;
     private final Level world;
     private final ContainerLevelAccess access;
-
-    private final Container inventory = new SimpleContainer(2) {
-        @Override
-        public void setChanged() {
-            super.setChanged();
-            ChiseledEnchantingTableScreenHandler.this.slotsChanged(this);
-        }
-    };
+    private final boolean persistentBlockInventory;
+    private final Container inventory;
 
     public static final int ENCHANTABLE_SLOT = 0;
     public static final int COST_SLOT = 1;
@@ -153,6 +155,49 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.access = access;
         this.player = playerInventory.player;
         this.world = playerInventory.player.level();
+        chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity[] backingHolder =
+            new chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity[] { null };
+        if (!this.world.isClientSide()) {
+            this.access.execute((lvl, pos) -> {
+                if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                    backingHolder[0] = be;
+                }
+            });
+        }
+        if (backingHolder[0] != null) {
+            final var backingBe = backingHolder[0];
+            this.persistentBlockInventory = true;
+            this.inventory = new Container() {
+                @Override public int getContainerSize() { return backingBe.getContainerSize(); }
+                @Override public boolean isEmpty() { return backingBe.isEmpty(); }
+                @Override public ItemStack getItem(int slot) { return backingBe.getItem(slot); }
+                @Override public ItemStack removeItem(int slot, int amount) {
+                    ItemStack r = backingBe.removeItem(slot, amount);
+                    ChiseledEnchantingTableScreenHandler.this.slotsChanged(this);
+                    return r;
+                }
+                @Override public ItemStack removeItemNoUpdate(int slot) { return backingBe.removeItemNoUpdate(slot); }
+                @Override public void setItem(int slot, ItemStack stack) {
+                    backingBe.setItem(slot, stack);
+                    ChiseledEnchantingTableScreenHandler.this.slotsChanged(this);
+                }
+                @Override public void setChanged() {
+                    backingBe.setChanged();
+                    ChiseledEnchantingTableScreenHandler.this.slotsChanged(this);
+                }
+                @Override public boolean stillValid(Player p) { return backingBe.stillValid(p); }
+                @Override public void clearContent() { backingBe.clearContent(); }
+            };
+        } else {
+            this.persistentBlockInventory = false;
+            this.inventory = new SimpleContainer(2) {
+                @Override
+                public void setChanged() {
+                    super.setChanged();
+                    ChiseledEnchantingTableScreenHandler.this.slotsChanged(this);
+                }
+            };
+        }
         this.unlocked_enchantements = new HashSet<>(payload.unlocked_enchantements());
         this.xpDiscountPercent = Math.max(
             0,
@@ -162,11 +207,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             )
         );
         this.regularBookshelves = Math.max(0, payload.regular_bookshelves());
+        this.chiseledBookshelves = Math.max(0, payload.chiseled_bookshelves());
+        this.emptyChiseledBookshelves = Math.max(0, payload.empty_chiseled_bookshelves());
         this.chiseledBookCount = Math.max(0, payload.chiseled_book_count());
         this.highTierChiseledBooks = Math.max(0, payload.high_tier_chiseled_books());
         this.storedMasterLevels = payload.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(payload.stored_master_levels());
+        this.masterTomeCharges = payload.master_tome_charges() == null
+            ? java.util.Map.of()
+            : java.util.Map.copyOf(payload.master_tome_charges());
         this.crampedLibrary = payload.cramped_library();
         this.epiphanySeed = payload.epiphany_seed();
         long cycleTicks = Math.max(1L, this.epiphanyCycleTicks());
@@ -205,6 +255,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                     return depletedTomeMaxBatchSize();
                 }
                 return 1;
+            }
+
+            @Override
+            public boolean mayPickup(Player playerEntity) {
+                return !isRitualActive();
+            }
+
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return !isRitualActive();
             }
         });
 
@@ -302,6 +362,51 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 syncedFrozen = (value != 0);
             }
         });
+        // DataSlots 5..8 sync full 31-bit active ritual remaining ticks & total ticks every tick.
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return (int) (serverRitualRemainingTicks() & 0xFFFFL);
+            }
+
+            @Override
+            public void set(int value) {
+                syncedRitualRemainingTicks = (syncedRitualRemainingTicks & 0xFFFF0000) | (value & 0xFFFF);
+            }
+        });
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return (int) ((Math.min(Integer.MAX_VALUE, serverRitualRemainingTicks()) >>> 16) & 0x7FFFL);
+            }
+
+            @Override
+            public void set(int value) {
+                syncedRitualRemainingTicks = (syncedRitualRemainingTicks & 0x0000FFFF) | ((value & 0x7FFF) << 16);
+            }
+        });
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return (int) (serverRitualTotalTicks() & 0xFFFFL);
+            }
+
+            @Override
+            public void set(int value) {
+                syncedRitualTotalTicks = (syncedRitualTotalTicks & 0xFFFF0000) | (value & 0xFFFF);
+            }
+        });
+        this.addDataSlot(new net.minecraft.world.inventory.DataSlot() {
+            @Override
+            public int get() {
+                return (int) ((Math.min(Integer.MAX_VALUE, serverRitualTotalTicks()) >>> 16) & 0x7FFFL);
+            }
+
+            @Override
+            public void set(int value) {
+                syncedRitualTotalTicks = (syncedRitualTotalTicks & 0x0000FFFF) | ((value & 0x7FFF) << 16);
+            }
+        });
     }
 
     private int currentServerEpiphanySeed() {
@@ -386,11 +491,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             )
         );
         this.regularBookshelves = Math.max(0, live.regular_bookshelves());
+        this.chiseledBookshelves = Math.max(0, live.chiseled_bookshelves());
+        this.emptyChiseledBookshelves = Math.max(0, live.empty_chiseled_bookshelves());
         this.chiseledBookCount = Math.max(0, live.chiseled_book_count());
         this.highTierChiseledBooks = Math.max(0, live.high_tier_chiseled_books());
         this.storedMasterLevels = live.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(live.stored_master_levels());
+        this.masterTomeCharges = live.master_tome_charges() == null
+            ? java.util.Map.of()
+            : java.util.Map.copyOf(live.master_tome_charges());
         this.crampedLibrary = live.cramped_library();
         if (this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
@@ -402,6 +512,22 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         for (var display : displays) next.put(display.id(), display);
         this.transformationDisplays = java.util.Map.copyOf(next);
         if (this.onContentChangedCallback != null) this.onContentChangedCallback.run();
+    }
+
+    public int totalLibraryBookshelves() {
+        return chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.computeBroadBookshelfCount(
+            this.regularBookshelves,
+            this.emptyChiseledBookshelves,
+            this.chiseledBookshelves
+        );
+    }
+
+    public int masterTomeRemainingCharges(Identifier id, int level) {
+        if (id == null) {
+            return this.libraryResonanceConfig().maxTomeUses();
+        }
+        Integer live = this.masterTomeCharges.get(new EnchantmentWithLevel(id, Math.max(1, level)));
+        return live != null ? live : this.libraryResonanceConfig().maxTomeUses();
     }
 
     public void refreshLiveShelfState() {
@@ -420,10 +546,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         boolean changed = !live.unlocked_enchantements().equals(this.unlocked_enchantements)
             || live.xp_discount_percent() != this.xpDiscountPercent
             || live.regular_bookshelves() != this.regularBookshelves
+            || live.chiseled_bookshelves() != this.chiseledBookshelves
+            || live.empty_chiseled_bookshelves() != this.emptyChiseledBookshelves
             || live.chiseled_book_count() != this.chiseledBookCount
             || live.high_tier_chiseled_books() != this.highTierChiseledBooks
             || live.cramped_library() != this.crampedLibrary
-            || !live.stored_master_levels().equals(this.storedMasterLevels);
+            || !live.stored_master_levels().equals(this.storedMasterLevels)
+            || !java.util.Objects.equals(live.master_tome_charges(), this.masterTomeCharges);
         if (changed) {
             applyLiveShelfState(live);
             if (this.player instanceof net.minecraft.server.level.ServerPlayer sp
@@ -437,6 +566,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public void broadcastChanges() {
         if (!this.world.isClientSide() && (this.world.getGameTime() % 20L == 0L)) {
             refreshLiveShelfState();
+            pushRitualStateToViewer();
         }
         super.broadcastChanges();
     }
@@ -444,10 +574,277 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     @Override
     public void setData(int id, int data) {
         super.setData(id, data);
-        // Only rebuild scroll list when seed (0/1), cycle (2), or frozen state (4) changes — NOT every second on timer tick (3).
-        if (id != 3 && this.onContentChangedCallback != null) {
+        // Only rebuild scroll list when seed (0/1), cycle (2), or frozen state (4) changes — NOT every tick on timers (3/5/6/7/8).
+        if (id != 3 && id < 5 && this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
         }
+    }
+
+    public long serverRitualRemainingTicks() {
+        long[] out = new long[] { 0L };
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                out[0] = be.ritualRemainingTicks();
+            }
+        });
+        return out[0];
+    }
+
+    public long serverRitualTotalTicks() {
+        long[] out = new long[] { 0L };
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                out[0] = be.ritualTotalTicks();
+            }
+        });
+        return out[0];
+    }
+
+    public long ritualRemainingTicks() {
+        return this.world.isClientSide() ? Math.max(0L, this.syncedRitualRemainingTicks) : serverRitualRemainingTicks();
+    }
+
+    public long ritualTotalTicks() {
+        return this.world.isClientSide() ? Math.max(0L, this.syncedRitualTotalTicks) : serverRitualTotalTicks();
+    }
+
+    public boolean isRitualActive() {
+        return ritualRemainingTicks() > 0L;
+    }
+
+    public List<EnchantmentWithLevel> queuedRitualSteps() {
+        if (this.world.isClientSide()) {
+            return this.syncedQueuedSteps;
+        }
+        List<EnchantmentWithLevel>[] out = new List[] { List.of() };
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                out[0] = be.queuedEnchantmentSummary();
+            }
+        });
+        return out[0];
+    }
+
+    public boolean ritualUsedInfinityTome() {
+        if (this.world.isClientSide()) {
+            return this.syncedUsedInfinityTome;
+        }
+        boolean[] out = new boolean[] { false };
+        this.access.execute((lvl, pos) -> {
+            if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
+                out[0] = be.anyQueuedStepUsedInfinityTome();
+            }
+        });
+        return out[0];
+    }
+
+    public boolean hasAnyMasterTomeInRange() {
+        if (this.world.isClientSide()) {
+            return this.syncedHasAnyMasterTome || !this.storedMasterLevels.isEmpty();
+        }
+        var scan = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.scanLibraryRitualContext(
+            this.world,
+            tableBlockPos(),
+            shelfGatesConfig()
+        );
+        return scan.hasAnyMasterTome();
+    }
+
+    public int currentSacrificeSkipLevels() {
+        return chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(
+            ritualRemainingTicks()
+        );
+    }
+
+    public double currentRushSkipDegradeChance() {
+        return chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(
+            ritualRemainingTicks(),
+            ritualUsedInfinityTome()
+        );
+    }
+
+    public boolean canSacrificeSkipNow() {
+        if (!isRitualActive() || !hasAnyMasterTomeInRange()) {
+            return false;
+        }
+        if (this.player.getAbilities().instabuild) {
+            return true;
+        }
+        return this.player.experienceLevel >= currentSacrificeSkipLevels();
+    }
+
+    public boolean canRushSkipNow() {
+        return isRitualActive() && hasAnyMasterTomeInRange();
+    }
+
+    private long syncedRitualSession;
+    public long ritualSession() {
+        if (this.world.isClientSide()) return this.syncedRitualSession;
+        var pos = tableBlockPos();
+        return pos != null && this.world.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be
+            ? be.ritualSession() : 0L;
+    }
+
+    public void pushRitualStateToViewer() {
+        if (this.world.isClientSide() || !(this.player instanceof net.minecraft.server.level.ServerPlayer sp)) {
+            return;
+        }
+        if (!ServerPlayNetworking.canSend(sp, ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.TYPE)) {
+            return;
+        }
+        var payload = new ChiseledEnchantingMenuPayloads.SyncRitualStatePayload(
+            this.containerId, ritualSession(), queuedRitualSteps(),
+            ritualUsedInfinityTome(),
+            hasAnyMasterTomeInRange()
+        );
+        ServerPlayNetworking.send(sp, payload);
+    }
+
+    public void applySyncedRitualState(ChiseledEnchantingMenuPayloads.SyncRitualStatePayload payload) {
+        if (payload.containerId() != this.containerId) return;
+        this.syncedRitualSession = payload.session();
+        this.syncedQueuedSteps = payload.queuedSteps() != null ? List.copyOf(payload.queuedSteps()) : List.of();
+        this.syncedUsedInfinityTome = payload.usedInfinityTome();
+        this.syncedHasAnyMasterTome = payload.hasAnyMasterTome();
+        if (this.onContentChangedCallback != null) {
+            this.onContentChangedCallback.run();
+        }
+    }
+
+    /**
+     * Returns a virtual copy of {@link #get_enchantable_item()} reflecting all currently queued
+     * inscriptions so players can queue unlimited sequential enchantments cleanly without dupes.
+     */
+    public ItemStack getEffectiveEnchantableItem() {
+        ItemStack base = get_enchantable_item();
+        List<EnchantmentWithLevel> queued = queuedRitualSteps();
+        if (base.isEmpty() || queued.isEmpty()) {
+            return base;
+        }
+        boolean wasBook = base.is(Items.BOOK) || base.is(Items.ENCHANTED_BOOK);
+        ItemStack copy = base.is(Items.BOOK) ? new ItemStack(Items.ENCHANTED_BOOK, 1) : base.copy();
+        var existing = new net.minecraft.world.item.enchantment.ItemEnchantments.Mutable(
+            EnchantmentHelper.getEnchantmentsForCrafting(copy)
+        );
+        for (EnchantmentWithLevel q : queued) {
+            try {
+                Holder<Enchantment> h = IdentifierToEnchantment(q.enchantment_id(), this.world);
+                if (!wasBook) {
+                    var keys = new HashSet<>(existing.keySet());
+                    for (var k : keys) {
+                        if (!Enchantment.areCompatible(k, h)) {
+                            existing.set(k, 0);
+                        }
+                    }
+                }
+                existing.set(h, q.enchantment_level());
+            } catch (RuntimeException ignored) {
+            }
+        }
+        EnchantmentHelper.updateEnchantments(copy, m -> {
+            var mKeys = new HashSet<>(m.keySet());
+            for (var k : mKeys) m.set(k, 0);
+            for (var k : existing.keySet()) {
+                m.set(k, existing.getLevel(k));
+            }
+        });
+        return copy;
+    }
+
+    public boolean skipActiveRitual(boolean sacrificeXp) {
+        if (this.world.isClientSide()) {
+            return false;
+        }
+        refreshLiveShelfState();
+        var pos = tableBlockPos();
+        if (pos == null
+            || !(this.world.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity tableBe)
+            || !tableBe.hasActiveRitual() || !tableBe.ownsRitual(this.player.getUUID())) {
+            pushRitualStateToViewer();
+            return false;
+        }
+        var scan = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.scanLibraryRitualContext(
+            this.world,
+            pos,
+            shelfGatesConfig()
+        );
+        if (!scan.hasAnyMasterTome()) {
+            if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
+                    net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
+                        .withStyle(net.minecraft.ChatFormatting.RED)
+                ));
+            }
+            this.world.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+            pushRitualStateToViewer();
+            return false;
+        }
+
+        if (sacrificeXp) {
+            int levelsCost = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(
+                tableBe.ritualRemainingTicks()
+            );
+            if (!this.player.getAbilities().instabuild && this.player.experienceLevel < levelsCost) {
+                this.world.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+                return false;
+            }
+            if (!tableBe.completeActiveRitual(
+                this.world,
+                pos,
+                this.player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
+                chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.RitualCompletionKind.SACRIFICED_XP
+            )) return false;
+            if (!this.player.getAbilities().instabuild) this.player.giveExperienceLevels(-levelsCost);
+            chiseled_enchanting_table.utils.Advancement.give(this.player, "soul_fed_ink");
+            this.world.playSound(
+                null,
+                pos,
+                net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP,
+                net.minecraft.sounds.SoundSource.PLAYERS,
+                1.0F,
+                0.85F
+            );
+            return true;
+        }
+
+        // Non-sacrifice forced rush skip: dynamic probability of degrading lowest-priority Master Tome to 褪魔残卷!
+        long remBeforeSkip = tableBe.ritualRemainingTicks();
+        boolean usedInfTome = tableBe.anyQueuedStepUsedInfinityTome();
+        double degradeProb = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(
+            remBeforeSkip,
+            usedInfTome
+        );
+        if (!tableBe.completeActiveRitual(
+            this.world,
+            pos,
+            this.player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
+            chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.RitualCompletionKind.RUSHED_NO_SACRIFICE
+        )) return false;
+        if (this.world.getRandom().nextDouble() < degradeProb) {
+            ItemStack degradedTome = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.degradeLowestPriorityMasterTomeInWorld(
+                this.world,
+                pos,
+                shelfGatesConfig()
+            );
+            if (degradedTome != null) {
+                chiseled_enchanting_table.utils.Advancement.give(this.player, "haste_makes_waste");
+                if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                    sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
+                        net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.degraded_to_remnant")
+                            .withStyle(net.minecraft.ChatFormatting.RED)
+                    ));
+                }
+                refreshLiveShelfState();
+                pushRitualStateToViewer();
+                broadcastChanges();
+            }
+        } else if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
+                net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.rush_lucky")
+                    .withStyle(net.minecraft.ChatFormatting.GREEN)
+            ));
+        }
+        return true;
     }
 
     @Override
@@ -730,7 +1127,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (enchantmentId == null || ChiseledEnchantingTableData.isTransformation(enchantmentId)) {
             return 0;
         }
-        ItemStack target = get_enchantable_item();
+        ItemStack target = getEffectiveEnchantableItem();
         if (target.isEmpty()) {
             return 0;
         }
@@ -1405,6 +1802,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public boolean isTreasureEnchantment(Holder.Reference<Enchantment> holder) {
         if (holder.is(CURSE_TAG)) return false;
         Identifier id = holder.key().identifier();
+        if (chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(id)) {
+            return false;
+        }
         Set<Identifier> explicit = this.world.isClientSide()
             ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.explicitTreasureIds()
             : ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(this.world.registryAccess());
@@ -1427,20 +1827,26 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         boolean isBlankBook = targetStack.is(Items.BOOK);
         var registry = this.world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-        java.util.List<Identifier> pool = new java.util.ArrayList<>();
+        java.util.List<Holder.Reference<Enchantment>> poolHolders = new java.util.ArrayList<>();
         for (Holder.Reference<Enchantment> holder : registry.listElements().toList()) {
             if (!isTreasureEnchantment(holder)) continue;
             Identifier id = holder.key().identifier();
             int maxLvl = Math.max(1, holder.value().getMaxLevel());
             if (storedMasterLevel(id) >= maxLvl) continue;
             if (isBlankBook || holder.value().canEnchant(targetStack)) {
-                pool.add(id);
+                poolHolders.add(holder);
             }
         }
-        if (pool.isEmpty()) {
+        if (poolHolders.isEmpty()) {
             return List.of();
         }
-        pool.sort(java.util.Comparator.comparing(Identifier::toString));
+        poolHolders.sort(java.util.Comparator.comparing(h -> h.key().identifier().toString()));
+        java.util.List<Identifier> pool = new java.util.ArrayList<>(poolHolders.size());
+        java.util.List<Double> poolWeights = new java.util.ArrayList<>(poolHolders.size());
+        for (Holder.Reference<Enchantment> h : poolHolders) {
+            pool.add(h.key().identifier());
+            poolWeights.add(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeEpiphanySelectionWeight(h));
+        }
 
         int seed = this.world.isClientSide() ? this.epiphanySeed : currentServerEpiphanySeed();
         int cycle = this.world.isClientSide() ? this.syncedCycleIndex : serverActiveCycleIndex();
@@ -1470,8 +1876,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             double roll = ((h >>> 11) * (1.0 / (1L << 53)));
             if (roll < baseProb * slotFactor) {
                 long pickHash = splitMix64(h ^ 0xBF58476D1CE4E5B9L);
-                int index = (int) Long.remainderUnsigned(pickHash, pool.size());
+                int index = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.pickWeightedIndex(
+                    poolWeights,
+                    pickHash
+                );
                 Identifier chosen = pool.remove(index);
+                poolWeights.remove(index);
                 int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(this.world, chosen);
                 int storedLvl = storedMasterLevel(chosen);
                 int minTier = Math.min(maxLvl, storedLvl + 1);
@@ -1795,22 +2205,34 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             || payload.option_type() == OptionType.DOWNGRADE_ENCHANTMENT
             || payload.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
             || payload.option_type() == OptionType.PURGE_CURSE) {
+            if (isRitualActive()) {
+                return;
+            }
             chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.apply(this, payload);
             return;
         }
         // Prefer the explicit option type from the payload; fall back to a data lookup so older
         // clients (which always send ENCHANTMENT) still route transformations correctly.
         if (payload.option_type() == OptionType.BOOK_COMBINE_UPGRADE || payload.option_type() == OptionType.BOOK_RESEARCH_UPGRADE) {
+            if (isRitualActive()) {
+                return;
+            }
             BookUpgradeApplication.apply(this, payload);
             return;
         }
         boolean isTransformation = payload.option_type() == OptionType.TRANSFORMATION
             || (payload.option_type() == OptionType.ENCHANTMENT && ChiseledEnchantingTableData.isTransformation(payload.enchantment_id()));
         if (isTransformation) {
+            if (isRitualActive()) {
+                return;
+            }
             ItemTransformationApplication.apply(this, payload);
             return;
         }
         if (this.get_cost_item().is(Items.ENCHANTED_BOOK)) {
+            if (isRitualActive()) {
+                return;
+            }
             EnchantmentApplication.applyFromBook(this, payload);
             return;
         }
@@ -1820,13 +2242,17 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     @Override
     public void removed(Player player) {
         super.removed(player);
-        this.clearContainer(player, this.inventory);
+        // Chest-style persistence: items remain stored inside ChiseledEnchantingTableBlockEntity!
+        if (!this.persistentBlockInventory) {
+            this.clearContainer(player, this.inventory);
+        }
     }
 
     @Override
     public void clicked(int slotIndex, int button, net.minecraft.world.inventory.ContainerInput actionType, Player player) {
         if (actionType == net.minecraft.world.inventory.ContainerInput.QUICK_MOVE) {
             if (slotIndex < 0 || slotIndex >= this.slots.size()) return;
+            if (slotIndex == ENCHANTABLE_SLOT && isRitualActive()) return;
             ItemStack clickedStack = this.getSlot(slotIndex).getItem();
             if (clickedStack.isEmpty()) return;
             if ((slotIndex == COST_SLOT) || (slotIndex == ENCHANTABLE_SLOT) ) {

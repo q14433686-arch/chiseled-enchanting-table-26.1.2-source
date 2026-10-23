@@ -11,7 +11,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
  * no probe needs to be sent before the first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final String REVISION = "26_3_revision_5";
+    public static final String REVISION = "26_3_revision_6";
     // Query only. Never register a decoder on this old channel: an old server may send its
     // join-time packet before the client JOIN callback can disconnect it.
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> LEGACY_COST_TYPE =
@@ -19,6 +19,9 @@ public final class EnchantingProtocol {
 
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> PREVIOUS_COST_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_3_revision_4"));
+
+    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_5_COST_TYPE =
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_3_revision_5"));
 
     public static final String MISMATCH_MESSAGE = "Chiseled Enchanting Table network protocol mismatch. "
         + "Install the same current Minecraft 26.3 build on both client and server (version labels alone are not enough).";

@@ -1,10 +1,22 @@
-# Next validation — option 1 port
+# Active implementation — option 3 / 3e61f5d
 
-The user selected **1**. The source increment through **3e081f3** is ported, retaining 26.3 fixes and release **1.1.0**. Wire is revision **5**. See [implementation, migration and evidence](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md).
+User approved **3**, including latest 26.1.2 changes and feedback for 26.1.2/26.2. No fresh design-choice prompt is needed for this agreed scope. Current branch remains `arena/7a86fcca-chiseled-enchanting-table-26-1`; never work on or push other branches.
 
-Final functional source **181e996** passed build **39904722889** (all four jobs), compile-check **39904722983**, 29 JUnit, 15 Python and the real no-player server/reload/loot smoke. No further default-policy decision is pending.
+## Full integration implemented
 
-## Remaining real-client checks
+Source pin: `3e61f5de3ba7679ccbc92b73443dead149c96840`, including PR #17/#18. Effective RuntimeRules/RuntimeFrame, aggregate WorldRegeneration, persistent inventories, bounded/owned ritual sessions, revision 6 wire, depleted-tome world/trade features and all new UI/locales are wired. Do not re-run the one-shot candidate merge scripts; they would overwrite reviewed fixes.
+
+[Current implementation, cross-branch feedback, exact CI evidence and honest boundaries](docs/reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md).
+
+## Remaining acceptance / release work
+
+1. Final game-source CI is green: `9243790`, build 40007636762 (four jobs), compile-check 40007636849, 52 JUnit, real ritual/quarantine/break probes. Preserve these regression gates; never substitute old foundation-only runs.
+2. Complete the real GUI/LAN/multiplayer, hopper/creative/explosion, restart/unload, layered-pack/modpack, trade lifecycle and performance matrix listed in the report.
+3. After the user requests it, open a PR from the existing Arena branch. Do not merge or change other branches without authorization. 26.1.2/26.2 receive the report/core adaptation recommendations, not direct pushes.
+
+## Existing gameplay manual-validation backlog (still relevant)
+
+
 
 1. Singleplayer GUI: SDL left/right/drag, overlay/standalone pause, save/reject feedback and draft retention. Saving closes old table menus; check feedback if the overlay disappears before ACK rendering.
 2. Real dedicated/LAN clients: owner/guest/op permissions, successful/rejected/failed saves, disconnects and config commands. Current smoke has no players and does not execute config commands.
@@ -27,4 +39,4 @@ bash docs/ci/install.sh --check
 ./gradlew -Penable_jei=false -Penable_rei=false compileJava compileClientJava
 ```
 
-Preserve source defaults chosen in option 1 and the 26.3 schema/mouse/protocol/catalog fixes. Use current-source CI, never substitute old green runs. Book stack limits require restart; runtime sync alone cannot update bootstrap item components.
+Preserve the latest 3e61f5d defaults and 26.3 schema/mouse/protocol/catalog fixes. Use current-source CI, never substitute old green runs. Book stack limits require restart; runtime sync alone cannot update bootstrap item components.

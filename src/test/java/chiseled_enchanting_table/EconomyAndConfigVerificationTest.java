@@ -75,7 +75,13 @@ class EconomyAndConfigVerificationTest {
                 "specific_enchant_exponent": 1.20,
                 "max_total_xp_discount_percent": 44,
                 "master_tome_upgrade_material_multiplier": 0.75,
-                "incremental_step_credit_factor": 0.60
+                "incremental_step_credit_factor": 0.60,
+                "tome_regen_enabled": false,
+                "tome_regen_base_seconds": 120,
+                "tome_regen_tier1_shelves": 34,
+                "tome_regen_tier1_seconds": 25,
+                "tome_regen_tier2_shelves": 44,
+                "tome_regen_tier2_seconds": 8
               },
               "epiphany_affinity": {
                 "epiphany_probability_global_weight": 0.50,
@@ -107,6 +113,12 @@ class EconomyAndConfigVerificationTest {
         assertEquals(44, c.maxTotalXpDiscountPercent());
         assertEquals(0.75, c.masterTomeUpgradeMaterialMultiplier(), 1e-9);
         assertEquals(0.60, c.incrementalStepCreditFactor(), 1e-9);
+        assertFalse(c.tomeRegenEnabled());
+        assertEquals(120, c.tomeRegenBaseSeconds());
+        assertEquals(34, c.tomeRegenTier1Shelves());
+        assertEquals(25, c.tomeRegenTier1Seconds());
+        assertEquals(44, c.tomeRegenTier2Shelves());
+        assertEquals(8, c.tomeRegenTier2Seconds());
         assertEquals(0.50, c.epiphanyProbabilityGlobalWeight(), 1e-9);
         assertEquals(0.90, c.epiphanyProbabilityAffinityWeight(), 1e-9);
         assertEquals(0.40, c.blankBookAffinityWeight(), 1e-9);
@@ -746,7 +758,7 @@ class EconomyAndConfigVerificationTest {
     @Test
     void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
-        assertEquals(49, all.size(), "Expected 49 curated in-game configurable entries across 6 categories");
+        assertEquals(55, all.size(), "Expected 55 curated in-game configurable entries across 6 categories");
         for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
                 chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
@@ -903,9 +915,12 @@ class EconomyAndConfigVerificationTest {
             "config.chiseled_enchanting_table.msg.reloaded",
             "config.chiseled_enchanting_table.msg.reset_all",
             "config.chiseled_enchanting_table.reason.server_readonly",
+            "config.chiseled_enchanting_table.reason.pack_locked",
+            "config.chiseled_enchanting_table.reason.datapack_priority",
             "config.chiseled_enchanting_table.reason.need_direct_gates",
             "config.chiseled_enchanting_table.reason.need_breathing_room",
             "config.chiseled_enchanting_table.reason.need_wear_mode",
+            "config.chiseled_enchanting_table.reason.need_tome_regen",
             "config.chiseled_enchanting_table.reason.need_book_combine",
             "config.chiseled_enchanting_table.reason.need_book_research",
             "config.chiseled_enchanting_table.reason.need_disenchant",
@@ -956,6 +971,553 @@ class EconomyAndConfigVerificationTest {
         assertTrue(cfgScreenSrc.contains("public boolean isPauseScreen() {\n        return true;\n    }"));
         String tableScreenSrc = Files.readString(Path.of("src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java"));
         assertTrue(tableScreenSrc.contains("return this.configOverlay != null && this.configOverlay.isPauseScreen();"));
+    }
+
+    @Test
+    void infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() throws Exception {
+        // 1. Infinity-blessed Master Tomes suffer strictly zero wear across all modes, levels, and targets.
+        for (var mode : MasterTomeWear.ConsumptionMode.values()) {
+            for (var dep : MasterTomeWear.DepleteBehavior.values()) {
+                int level = 5;
+                int wear = 0;
+                for (int i = 0; i < 200; i++) {
+                    var step = MasterTomeWear.computeWearStep(mode, dep, 16, 4, level, wear, (i % 2 == 0), true);
+                    assertEquals(5, step.nextEnchantLevel());
+                    assertEquals(0, step.nextWearUsed());
+                    assertFalse(step.steppedDown());
+                    assertFalse(step.depletedCompletely());
+                }
+            }
+        }
+
+        // 2. Two-tier bookshelf passive regeneration curve (0 -> 20d/24000s, Tier 1 @ 38 -> 10d/12000s, Tier 2 @ 42 -> 3d/3600s).
+        LibraryResonance.Config def = LibraryResonance.Config.DEFAULT;
+        assertTrue(def.tomeRegenEnabled());
+        assertEquals(24_000, def.tomeRegenBaseSeconds());
+        assertEquals(38, def.tomeRegenTier1Shelves());
+        assertEquals(12_000, def.tomeRegenTier1Seconds());
+        assertEquals(42, def.tomeRegenTier2Shelves());
+        assertEquals(3_600, def.tomeRegenTier2Seconds());
+
+        assertEquals(0, MasterTomeWear.regenTierIndex(def, 0));
+        assertEquals(0, MasterTomeWear.regenTierIndex(def, 37));
+        assertEquals(1, MasterTomeWear.regenTierIndex(def, 38));
+        assertEquals(1, MasterTomeWear.regenTierIndex(def, 41));
+        assertEquals(2, MasterTomeWear.regenTierIndex(def, 42));
+        assertEquals(2, MasterTomeWear.regenTierIndex(def, 64));
+
+        assertEquals(24_000.0, MasterTomeWear.computeRegenSeconds(def, 0), 1e-6);
+        assertEquals(480_000, MasterTomeWear.computeRegenIntervalTicks(def, 0));
+        // 38 shelves = 10 game days = 12,000s = 240,000 ticks
+        assertEquals(12_000.0, MasterTomeWear.computeRegenSeconds(def, 38), 1e-6);
+        assertEquals(240_000, MasterTomeWear.computeRegenIntervalTicks(def, 38));
+        // 42 shelves = 3 game days = 3,600s = 72,000 ticks
+        assertEquals(3_600.0, MasterTomeWear.computeRegenSeconds(def, 42), 1e-6);
+        assertEquals(72_000, MasterTomeWear.computeRegenIntervalTicks(def, 42));
+
+        // Dramatic two-tier breakthroughs at 37 -> 38 and 41 -> 42 AND strict non-increasing monotonicity for S in [0, 100].
+        assertTrue(
+            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) >= 3_600.0,
+            "Reaching Tier 1 (38 bookshelves -> 10 game days) must deliver a substantial regeneration breakthrough"
+        );
+        assertTrue(
+            MasterTomeWear.computeRegenSeconds(def, 41) - MasterTomeWear.computeRegenSeconds(def, 42) >= 2_400.0,
+            "Reaching Tier 2 (42 bookshelves -> 3 game days) must deliver a dramatic Grand Sanctum regeneration breakthrough"
+        );
+        for (int s = 0; s < 100; s++) {
+            int curTicks = MasterTomeWear.computeRegenIntervalTicks(def, s);
+            int nextTicks = MasterTomeWear.computeRegenIntervalTicks(def, s + 1);
+            assertTrue(
+                nextTicks <= curTicks,
+                "Regen interval ticks must never slow down when adding bookshelves at S=" + s
+            );
+            assertTrue(curTicks >= 36_000, "Asymptotic floor must stay >= 1.5 game days (36,000 ticks)");
+        }
+
+        // Disabled flag cleanly stops passive regeneration.
+        JsonObject disabledJson = JsonParser.parseString("""
+            { "chiseled_mastery": { "tome_regen_enabled": false } }
+            """).getAsJsonObject();
+        LibraryResonance.Config disabledCfg = LibraryResonance.Config.fromJson(disabledJson);
+        assertFalse(disabledCfg.tomeRegenEnabled());
+        assertEquals(Integer.MAX_VALUE, MasterTomeWear.computeRegenIntervalTicks(disabledCfg, 42));
+
+        // 3. ModRuntimeConfig + ConfigCatalog bidirectional reconciliation & two-level applicability.
+        var draft = new chiseled_enchanting_table.config.ModRuntimeConfig.Draft();
+        draft.tomeRegenTier1Shelves = 45;
+        draft.normalizeAfterEdit("tome_regen_tier1_shelves");
+        assertEquals(45, draft.tomeRegenTier2Shelves, "Tier 2 shelves must push up when Tier 1 exceeds it");
+        draft.tomeRegenTier2Shelves = 36;
+        draft.normalizeAfterEdit("tome_regen_tier2_shelves");
+        assertEquals(36, draft.tomeRegenTier1Shelves, "Tier 1 shelves must pull down when Tier 2 drops below it");
+
+        draft.tomeRegenTier1Seconds = 8;
+        draft.normalizeAfterEdit("tome_regen_tier1_seconds");
+        assertEquals(8, draft.tomeRegenTier2Seconds, "Tier 2 interval must stay <= Tier 1 interval");
+
+        var tier2Opt = chiseled_enchanting_table.config.ConfigCatalog.byKey("tome_regen_tier2_shelves").orElseThrow();
+        var liveMode = chiseled_enchanting_table.config.ConfigCatalog.SessionMode.SINGLEPLAYER_LIVE;
+        assertTrue(tier2Opt.evaluate(draft, liveMode).editable());
+        draft.tomeRegenEnabled = false;
+        var offAvail = tier2Opt.evaluate(draft, liveMode);
+        assertFalse(offAvail.editable());
+        assertEquals("config.chiseled_enchanting_table.reason.need_tome_regen", offAvail.inactiveReasonKey());
+        draft.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+        var keepAvail = tier2Opt.evaluate(draft, liveMode);
+        assertFalse(keepAvail.editable());
+        assertEquals("config.chiseled_enchanting_table.reason.need_wear_mode", keepAvail.inactiveReasonKey());
+
+        // 4. Anti-regression static guards on Creative/Survival wear parity & live shelf sync.
+        String enchantAppSrc = Files.readString(
+            Path.of("src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java")
+        );
+        assertFalse(
+            enchantAppSrc.contains("masterTomeUsed && !handler.player.getAbilities().instabuild"),
+            "Master Tome shelf wear must apply identically in Creative and Survival modes"
+        );
+        assertTrue(
+            enchantAppSrc.contains("handler.refreshLiveShelfState();"),
+            "EnchantmentApplication.finish must push live Master Tome charges immediately after enchanting"
+        );
+    }
+
+    @Test
+    void datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() throws Exception {
+        try {
+            // 1. Out-of-the-box default strictly prioritizes external datapacks over in-game config.
+            assertFalse(
+                chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.overrideDatapacks(),
+                "override_datapacks must default to false so external datapacks take strict priority"
+            );
+            JsonObject shippedPolicy = readResourceJson("pack_policy.json");
+            var parsedDefaultPolicy = chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.fromJson(
+                shippedPolicy,
+                Set.of()
+            );
+            assertEquals(chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.NONE, parsedDefaultPolicy);
+
+            // 2. External datapack JSON key extraction covers nested & flat tables accurately.
+            Set<String> lrKeys = chiseled_enchanting_table.data.ChiseledEnchantingTableData.extractConfigKeysFromDatapackJson(
+                "library_resonance",
+                JsonParser.parseString("""
+                    {
+                      "chiseled_mastery": {
+                        "max_tome_uses": 8,
+                        "tome_regen_tier1_shelves": 36
+                      }
+                    }
+                    """).getAsJsonObject()
+            );
+            assertEquals(Set.of("max_tome_uses", "tome_regen_tier1_shelves"), lrKeys);
+
+            // 3. With default override_datapacks=false, even a player-tampered config file cannot beat an active datapack key!
+            var dpPolicy = new chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy(
+                false,
+                false,
+                lrKeys,
+                Set.of()
+            );
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(dpPolicy);
+
+            var tamperedDraft = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
+            tamperedDraft.maxTomeUses = 128;
+            tamperedDraft.customizedKeys.add("max_tome_uses");
+            var tamperedCfg = tamperedDraft.build();
+            assertFalse(
+                tamperedCfg.shouldApplyKey("max_tome_uses"),
+                "Datapack key must win over player config when override_datapacks is false"
+            );
+            assertTrue(
+                tamperedCfg.shouldApplyKey("book_copy_wear_cost"),
+                "Non-datapack keys must still respect the player's in-game config"
+            );
+
+            var live = chiseled_enchanting_table.config.ConfigCatalog.SessionMode.SINGLEPLAYER_LIVE;
+            var maxUsesOpt = chiseled_enchanting_table.config.ConfigCatalog.byKey("max_tome_uses").orElseThrow();
+            var dpAvail = maxUsesOpt.evaluate(tamperedDraft, live);
+            assertFalse(dpAvail.editable());
+            assertEquals("config.chiseled_enchanting_table.reason.datapack_priority", dpAvail.inactiveReasonKey());
+
+            // 4. Modpack enforce_datapack_priority=true blocks even manual "override_datapacks": true tampering on disk!
+            var enforcedPolicy = new chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy(
+                true,
+                false,
+                lrKeys,
+                Set.of("disenchant_enabled")
+            );
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(enforcedPolicy);
+            tamperedDraft.overrideDatapacks = true;
+            var forcedTamper = tamperedDraft.build();
+            assertFalse(forcedTamper.shouldApplyKey("max_tome_uses"));
+            assertFalse(forcedTamper.shouldApplyKey("disenchant_enabled"));
+            var overrideOpt = chiseled_enchanting_table.config.ConfigCatalog.byKey("override_datapacks").orElseThrow();
+            assertFalse(overrideOpt.evaluate(tamperedDraft, live).editable());
+            assertEquals(
+                "config.chiseled_enchanting_table.reason.pack_locked",
+                overrideOpt.evaluate(tamperedDraft, live).inactiveReasonKey()
+            );
+
+            // 5. Full unified pack lock (lock_in_game_config=true) locks ALL 55 options across disk & UI.
+            var fullLock = chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.fromJson(
+                JsonParser.parseString("{\"lock_in_game_config\": true}").getAsJsonObject(),
+                Set.of()
+            );
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(fullLock);
+            for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
+                assertFalse(forcedTamper.shouldApplyKey(opt.key()), "Full pack lock must neutralize " + opt.key());
+                assertFalse(
+                    opt.evaluate(tamperedDraft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.MODPACK_LOCKED).editable()
+                );
+            }
+        } finally {
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(
+                chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.NONE
+            );
+        }
+    }
+
+    @Test
+    void deepRitualPersistenceSkipSlipAndInfinityRulesVerified() throws Exception {
+        // 1. Strict Infinity acquisition rules: excluded from default_enchantments & epiphany_exclusive.
+        JsonObject defEnch = readResourceJson("default_enchantments.json");
+        List<String> excludedDefaults = new java.util.ArrayList<>();
+        defEnch.getAsJsonArray("exclude").forEach(e -> excludedDefaults.add(e.getAsString()));
+        assertTrue(
+            excludedDefaults.contains("minecraft:infinity"),
+            "minecraft:infinity must be excluded from blank table default enchantments"
+        );
+
+        JsonObject epiphanyTag = JsonParser.parseString(Files.readString(
+            Path.of("src/main/resources/data/chiseled_enchanting_table/tags/enchantment/epiphany_exclusive.json")
+        )).getAsJsonObject();
+        List<String> epiphanyTagValues = new java.util.ArrayList<>();
+        epiphanyTag.getAsJsonArray("values").forEach(e -> epiphanyTagValues.add(e.getAsString()));
+        assertFalse(
+            epiphanyTagValues.contains("minecraft:infinity"),
+            "minecraft:infinity must NOT appear in epiphany_exclusive (allows vanilla random bow roll & blocks Epiphany)"
+        );
+
+        // 2. Treasure Epiphany rarity x universality weight: universal Mending < single-weapon Flame/Channeling.
+        double mendingWeight = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeEpiphanySelectionWeight(2, 30);
+        double channelingWeight = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeEpiphanySelectionWeight(1, 1);
+        double flameWeight = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeEpiphanySelectionWeight(2, 1);
+        assertTrue(mendingWeight < channelingWeight && mendingWeight < flameWeight);
+
+        // 3. Overloaded Infinity Master Tome transcription slip («抄错»): ONLY active when Infinity + >3 others (>=5 total),
+        // monotonic in both single-tome enchants & detected shelves, strictly <= 20%.
+        for (int totalEnch = 0; totalEnch <= 4; totalEnch++) {
+            assertEquals(
+                0.0,
+                chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                    .computeTranscriptionSlipChance(totalEnch, 64),
+                1e-9,
+                "Tome with <= 3 other enchants (total <= 4) must NEVER trigger transcription slip"
+            );
+        }
+        double prevE = 0.0;
+        for (int totalEnch = 5; totalEnch <= 9; totalEnch++) {
+            double c = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .computeTranscriptionSlipChance(totalEnch, 35);
+            assertTrue(c >= prevE && c > 0.0 && c <= 0.20 + 1e-9);
+            prevE = c;
+        }
+        assertEquals(
+            0.20,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .computeTranscriptionSlipChance(12, 100),
+            1e-9,
+            "Maximum transcription slip probability must never exceed 20%"
+        );
+        int slipped = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .resolveTranscribedLevel(5, 6, 0.15, 0.05, 0.80);
+        assertEquals(4, slipped);
+
+        // 4. Exact iff activation gate: S >= median(12, 32, 38)=32 OR totalTomeEnchants >= 10, single <= 6000 ticks (5m), unbounded queue sum!
+        int midShelf = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .medianShelfGate(BookshelfProgression.Config.DEFAULT);
+        assertEquals(32, midShelf);
+        assertEquals(0, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(31, midShelf, 9, 5, 5, 2.0));
+        assertTrue(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(32, midShelf, 0, 5, 5, 2.0) > 0);
+        assertTrue(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(0, midShelf, 10, 5, 5, 2.0) > 0);
+        int extremeSingle = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(200, midShelf, 200, 10, 10, 2.35);
+        assertTrue(extremeSingle <= 6_000, "Single enchantment duration must never exceed 5 minutes (6,000 ticks)");
+        // Higher relative level & higher applicability (Infinity/Mending) take strictly longer than low tier narrow enchants.
+        int lowWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(38, midShelf, 12, 1, 5, 1.0);
+        int highWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(38, midShelf, 12, 5, 5, 2.0);
+        assertTrue(highWait > lowWait);
+
+        // 5. Dual skip costs & risks: XP sacrifice in [1..15], non-sacrifice degradation <= 50% normal and <= 70% with Infinity tome.
+        for (long remTicks : List.of(20L, 600L, 3_600L, 6_000L, 50_000L, 500_000L)) {
+            int xpLvls = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .computeSacrificeXpLevels(remTicks);
+            assertTrue(xpLvls >= 1 && xpLvls <= 15);
+            double normalRisk = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .computeRushDegradeChance(remTicks, false);
+            double infRisk = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .computeRushDegradeChance(remTicks, true);
+            assertTrue(normalRisk > 0.0 && normalRisk <= 0.50 + 1e-9);
+            assertTrue(infRisk > normalRisk && infRisk <= 0.70 + 1e-9);
+        }
+        assertEquals(15, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(100_000L));
+        assertEquals(0.50, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(100_000L, false), 1e-6);
+        assertEquals(0.70, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(100_000L, true), 1e-6);
+
+        // 6. Degradation priority order: lowest relative level + fewest enchants + lowest rarity selected FIRST!
+        var weakTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 0, 1, 0.20, 0.10, false
+        );
+        var midTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 1, 2, 0.80, 0.50, false
+        );
+        var grandInfinityTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 2, 5, 1.00, 0.85, true
+        );
+        var chosenVictim = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
+            List.of(grandInfinityTome, midTome, weakTome)
+        );
+        assertEquals(weakTome, chosenVictim, "Lowest-level, fewest-enchant, lowest-rarity tome must degrade first");
+
+        // 7. Queue serialization round-trip + all 5 new custom advancements present.
+        var q1 = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
+            Identifier.withDefaultNamespace("mending"), 1, 0, true, true, 0, false
+        );
+        var q2 = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
+            Identifier.withDefaultNamespace("sharpness"), 5, 2, false, false, 45, false
+        );
+        String encoded = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.serializeQueue(List.of(q1, q2));
+        assertEquals(List.of(q1, q2), chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.deserializeQueue(encoded));
+
+        for (String adv : List.of("haste_makes_waste", "soul_fed_ink", "scribes_slip", "eternal_codex", "patient_archivist")) {
+            assertTrue(
+                Files.exists(Path.of("src/main/resources/data/chiseled_enchanting_table/advancement/" + adv + ".json")),
+                "Missing advancement file: " + adv
+            );
+        }
+
+        // 8. Multi-page Grimoire chapters & new visual diagram coverage across all 11 locales.
+        String grimoireScreenSrc = Files.readString(
+            Path.of("src/client/java/chiseled_enchanting_table/gui/grimoire/ArcaneGrimoireScreen.java")
+        );
+        String grimoireDiagSrc = Files.readString(
+            Path.of("src/client/java/chiseled_enchanting_table/gui/grimoire/GrimoireDiagramRenderer.java")
+        );
+        for (String specEntry : List.of(
+            "new SpreadSpec(2, 1, 2)",
+            "new SpreadSpec(2, 2, 2)",
+            "new SpreadSpec(3, 1, 3)",
+            "new SpreadSpec(3, 2, 3)",
+            "new SpreadSpec(3, 3, 3)",
+            "new SpreadSpec(4, 1, 2)",
+            "new SpreadSpec(4, 2, 2)",
+            "new SpreadSpec(5, 1, 2)",
+            "new SpreadSpec(5, 2, 2)",
+            "new SpreadSpec(7, 1, 2)",
+            "new SpreadSpec(7, 2, 2)"
+        )) {
+            assertTrue(grimoireScreenSrc.contains(specEntry), "Missing multi-page SpreadSpec: " + specEntry);
+        }
+        for (String diagFn : List.of(
+            "renderChapter2Persistence",
+            "renderChapter3ShelfTaxonomy",
+            "renderChapter3Ritual",
+            "renderChapter4ThresholdGuide",
+            "renderChapter5InfinityAndRegen",
+            "renderChapter7RemnantEconomy"
+        )) {
+            assertTrue(grimoireScreenSrc.contains(diagFn) && grimoireDiagSrc.contains(diagFn), "Unwired Grimoire diagram: " + diagFn);
+        }
+
+        try (var langStream = Files.list(Path.of("src/client/resources/assets/chiseled_enchanting_table/lang"))) {
+            for (Path lp : langStream.filter(p -> p.toString().endsWith(".json")).toList()) {
+                JsonObject map = JsonParser.parseString(Files.readString(lp)).getAsJsonObject();
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.lead").getAsString(), 32, 10).contains("%s")
+                );
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step").getAsString(), 40, 18).contains("%s")
+                );
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch5p2.lead").getAsString(), 38, "10", 42, "3").contains("%s")
+                );
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
+                );
+                assertFalse(
+                    String.format(map.get("gui.chiseled_enchanting_table.resonance.broad_breakdown").getAsString(), 40, 32, 2, 6).contains("%s")
+                );
+            }
+        }
+    }
+
+    @Test
+    void bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() throws Exception {
+        // 1. Unified Bookshelf Taxonomy: Regular, Empty Chiseled, Book-Holding Chiseled (incl. Depleted Tome), Master Tome Chiseled
+        var nonShelf = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(false, false, false, false);
+        var regularShelf = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(true, false, false, false);
+        var emptyChiseled = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(false, true, false, false);
+        var depletedOrPlainChiseled = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(false, true, true, false);
+        var masterTomeChiseled = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .classifyBookshelf(false, true, true, true);
+
+        assertFalse(nonShelf.isBroadBookshelf());
+        assertTrue(regularShelf.isBroadBookshelf() && regularShelf.isRegularBookshelf() && !regularShelf.providesMasterTomeResonance());
+        assertTrue(emptyChiseled.isBroadBookshelf() && !emptyChiseled.isRegularBookshelf() && !emptyChiseled.providesMasterTomeResonance());
+        // Chiseled bookshelf holding a Depleted Tome (or plain book) MUST be treated as a Broad Bookshelf (not a Master Tome)
+        assertTrue(depletedOrPlainChiseled.isBroadBookshelf());
+        assertFalse(depletedOrPlainChiseled.isRegularBookshelf());
+        assertFalse(depletedOrPlainChiseled.providesMasterTomeResonance());
+        assertTrue(masterTomeChiseled.isBroadBookshelf() && masterTomeChiseled.providesMasterTomeResonance());
+
+        assertEquals(
+            40,
+            chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.computeBroadBookshelfCount(32, 2, 6)
+        );
+
+        // Verify #minecraft:bookshelf_books includes chiseled_enchanting_table:depleted_tome so players can place it into Chiseled Bookshelves
+        JsonObject bookshelfBooksTag = JsonParser.parseString(
+            Files.readString(Path.of("src/main/resources/data/minecraft/tags/item/bookshelf_books.json"), StandardCharsets.UTF_8)
+        ).getAsJsonObject();
+        assertTrue(bookshelfBooksTag.getAsJsonArray("values").toString().contains("chiseled_enchanting_table:depleted_tome"));
+
+        // 2. Wild Chiseled Bookshelf Weathered Replacement Probability strictly <= 30%
+        double plainRate = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.expectedPlainBookReplacementRate();
+        assertEquals(0.178D, plainRate, 1e-6);
+        assertTrue(plainRate <= 0.30D);
+        for (double enchProb = 0.0D; enchProb <= 1.0D; enchProb += 0.05D) {
+            double totalRate = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                .expectedTotalBookReplacementRate(enchProb);
+            assertTrue(totalRate <= 0.30D, "Total wild shelf book replacement must never exceed 30%: " + totalRate);
+        }
+        var rng = net.minecraft.util.RandomSource.create(20261024L);
+        int replaced = 0;
+        int trials = 100_000;
+        for (int i = 0; i < trials; i++) {
+            double p = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.rollShelfWeatheringProbability(rng);
+            assertTrue(p >= 0.0D && p <= 0.30D, "Single-shelf weathering prob exceeded 30%: " + p);
+            if (rng.nextDouble() < p) {
+                replaced++;
+            }
+        }
+        double empiricalRate = replaced / (double) trials;
+        assertTrue(empiricalRate > 0.16D && empiricalRate < 0.195D && empiricalRate <= 0.30D,
+            "Monte Carlo wild shelf replacement rate out of expected range: " + empiricalRate);
+
+        // 3. World Structure Chest Loot Tiers
+        var libSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/stronghold_library");
+        var desertSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/desert_pyramid");
+        var dungeonSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/simple_dungeon");
+        var trialSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/trial_chambers/reward");
+        var villageSpec = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "chests/village/village_cartographer");
+        assertTrue(libSpec != null && desertSpec != null && dungeonSpec != null && trialSpec != null && villageSpec != null);
+        assertTrue(libSpec.probability() > desertSpec.probability());
+        assertTrue(desertSpec.probability() > dungeonSpec.probability());
+        assertTrue(dungeonSpec.probability() > villageSpec.probability());
+        assertEquals(null, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .chestSpawnSpecForTableId("minecraft", "entities/zombie"));
+
+        // 4. Librarian Profession Guard, Buyback (2 -> 1 Emerald / 2 Amethyst) & Dynamic Weighted Commission (< Vanilla Mending 24E)
+        assertEquals(2, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.RECYCLE_INPUT_DEPLETED_TOMES);
+        assertEquals(1, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.RECYCLE_OUTPUT_EMERALDS);
+        assertEquals(2, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.RECYCLE_OUTPUT_AMETHYST_SHARDS);
+        assertEquals(4, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.BASE_COMMISSION_LAPIS);
+        assertEquals(2, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.BASE_COMMISSION_INK_SACS);
+        assertEquals(1, chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.BASE_COMMISSION_EMERALDS);
+
+        assertTrue(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.isLibrarianProfessionKey(
+            net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.VILLAGER_PROFESSION,
+                Identifier.withDefaultNamespace("librarian")
+            )
+        ));
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.isLibrarianProfessionKey(
+            net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.VILLAGER_PROFESSION,
+                Identifier.withDefaultNamespace("weaponsmith")
+            )
+        ));
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.isLibrarianProfessionKey(
+            net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.VILLAGER_PROFESSION,
+                Identifier.withDefaultNamespace("farmer")
+            )
+        ));
+
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .isAllowedLibrarianCommissionEnchantment(Identifier.withDefaultNamespace("infinity"), false));
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .isAllowedLibrarianCommissionEnchantment(Identifier.withDefaultNamespace("binding_curse"), true));
+        assertTrue(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .isAllowedLibrarianCommissionEnchantment(Identifier.withDefaultNamespace("mending"), false));
+
+        int vanillaMendingTypical = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.VANILLA_TYPICAL_MENDING_EMERALDS;
+        for (int weight = 1; weight <= 10; weight++) {
+            for (int items : List.of(1, 4, 8, 16, 25, 40)) {
+                for (int maxLvl = 1; maxLvl <= 5; maxLvl++) {
+                    for (int lvl = 1; lvl <= maxLvl; lvl++) {
+                        var quote = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                            .computeDynamicCommissionQuote(weight, items, lvl, maxLvl);
+                        assertTrue(quote.emeraldCost() >= 1 && quote.emeraldCost() < vanillaMendingTypical,
+                            "Commission price must strictly stay below vanilla typical Mending price (" + vanillaMendingTypical + "): " + quote.emeraldCost());
+                        assertTrue(quote.requiredVillagerLevel() >= 1 && quote.requiredVillagerLevel() <= 5,
+                            "Required villager level must stay in [1..5]: " + quote.requiredVillagerLevel());
+                        assertTrue(quote.lapisCost() >= 4);
+                        assertTrue(quote.inkSacCost() >= 2);
+                        if (lvl > 1) {
+                            var lowerLvl = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                                .computeDynamicCommissionQuote(weight, items, lvl - 1, maxLvl);
+                            assertTrue(quote.tripleWeightedScore() > lowerLvl.tripleWeightedScore());
+                            assertTrue(quote.emeraldCost() >= lowerLvl.emeraldCost());
+                            assertTrue(quote.requiredVillagerLevel() >= lowerLvl.requiredVillagerLevel());
+                        }
+                        if (weight < 10) {
+                            var moreCommon = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                                .computeDynamicCommissionQuote(weight + 1, items, lvl, maxLvl);
+                            assertTrue(quote.tripleWeightedScore() > moreCommon.tripleWeightedScore());
+                            assertTrue(quote.emeraldCost() >= moreCommon.emeraldCost());
+                            assertTrue(quote.requiredVillagerLevel() >= moreCommon.requiredVillagerLevel());
+                        }
+                    }
+                }
+            }
+        }
+
+        // Verify concrete dynamic Villager rank gates across iconic vanilla enchantments
+        var sharpness1 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(10, 2, 1, 5);
+        var sharpness5 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(10, 2, 5, 5);
+        var unbreaking3 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(5, 25, 3, 3);
+        var mending1 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(2, 25, 1, 1);
+        var silkTouch1 = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+            .computeDynamicCommissionQuote(1, 20, 1, 1);
+
+        assertEquals(1, sharpness1.requiredVillagerLevel());
+        assertEquals(3, sharpness5.requiredVillagerLevel());
+        assertEquals(4, unbreaking3.requiredVillagerLevel());
+        assertEquals(5, mending1.requiredVillagerLevel());
+        assertEquals(5, silkTouch1.requiredVillagerLevel());
+        assertFalse(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.canLibrarianOfferCommission(4, mending1));
+        assertTrue(chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.canLibrarianOfferCommission(5, mending1));
     }
 
     private static int countSubstring(String haystack, String needle) {

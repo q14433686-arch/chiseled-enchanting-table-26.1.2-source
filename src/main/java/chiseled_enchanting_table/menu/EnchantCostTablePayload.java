@@ -259,6 +259,12 @@ public record EnchantCostTablePayload(
         buf.writeVarInt(lr.maxTomeUses());
         buf.writeVarInt(lr.bookCopyWearCost());
         buf.writeUtf(lr.tomeDepleteBehavior().token());
+        buf.writeBoolean(lr.tomeRegenEnabled());
+        buf.writeVarInt(lr.tomeRegenBaseSeconds());
+        buf.writeVarInt(lr.tomeRegenTier1Shelves());
+        buf.writeVarInt(lr.tomeRegenTier1Seconds());
+        buf.writeVarInt(lr.tomeRegenTier2Shelves());
+        buf.writeVarInt(lr.tomeRegenTier2Seconds());
 
         buf.writeVarInt(costs.size());
         for (CostEntry entry : costs) {
@@ -367,7 +373,13 @@ public record EnchantCostTablePayload(
             chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.fromToken(buf.readUtf()),
             buf.readVarInt(),
             buf.readVarInt(),
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.fromToken(buf.readUtf())
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.fromToken(buf.readUtf()),
+            buf.readBoolean(),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readVarInt(),
+            buf.readVarInt()
         );
 
         int rowCount = PayloadLimits.readCount(buf);
