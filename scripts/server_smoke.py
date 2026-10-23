@@ -88,6 +88,8 @@ try:
                     'loot spawn 0 67 0 mine 0 65 0\n'
                     'data get entity @e[type=minecraft:item,limit=1]\n'
                     'loot spawn 3 70 0 loot cet_audit_smoke:remove_false\n'
+                    'tag @e[type=minecraft:item,x=3,y=70,z=0,distance=..1,limit=1] add cet_audit_remove_probe\n'
+                    'data get entity @e[tag=cet_audit_remove_probe,limit=1]\n'
                     'loot spawn 5 70 0 loot cet_audit_smoke:depth_false\n'
                     'tag @e[type=minecraft:item,x=5,y=70,z=0,distance=..1,limit=1] add cet_audit_depth_probe\n'
                     'data get entity @e[tag=cet_audit_depth_probe,limit=1]\n')
@@ -96,8 +98,10 @@ try:
                 'Audit Table', '"minecraft:dyed_color": 1122867', 'pendingFreezeTicks: 1200L',
                 'epiphanySeed: 123456', 'frozenCycleIndex: 17', 'item.chiseled_enchanting_table.frozen_lore')):
                 drop_verified = True
-            elif reloaded and 'cet_audit_smoke:remove_false' in line and 'Dropped 1 ' in line:
-                remove_verified = True
+            elif reloaded and 'cet_audit_remove_probe' in line and 'has the following entity data:' in line:
+                remove_verified = 'minecraft:enchanted_book' in line
+                if not remove_verified:
+                    failed.append('Conditional removal fixture did not preserve its enchanted book')
             elif reloaded and 'cet_audit_depth_probe' in line and 'has the following entity data:' in line:
                 depth_verified = 'minecraft:enchanted_book' in line and 'minecraft:stored_enchantments' not in line
                 if not depth_verified:
