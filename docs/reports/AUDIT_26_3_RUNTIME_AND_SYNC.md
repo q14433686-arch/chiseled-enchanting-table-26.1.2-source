@@ -7,8 +7,8 @@
 ## 结论和必须注意的部署变化
 
 - 保留 26.1.2 已同步的增量功能，以及既有世界加载 schema、秘典鼠标修复；没有回退这些修复或修改默认经济参数。
-- 新增明确的协议能力标识：`chiseled_enchanting_table:protocol_26_3_revision_3`。
-- **客户端和服务器应同时更新到本轮构建。版本文字同为 1.1.1 不再被当作 wire 兼容的证明。** 检测到装有本模组、但没有当前协议能力的对端时，显示明确的不兼容断开提示。没有模组的对端不因这个能力检查本身被误判；这不等于承诺可在原版客户端使用本模组方块。
+- 新增明确的协议能力标识：`chiseled_enchanting_table:protocol_26_3_revision_4`。
+- **客户端和服务器应同时更新到本轮构建。版本文字同为 1.1.1 不再被当作 wire 兼容的证明。** 检测到装有本模组、但没有当前协议能力的对端时，显示明确的不兼容断开提示。cost/live 数据 channel 也带当前 revision，客户端不在旧 channel 注册新 decoder，避免旧服务器在 JOIN 检查前发送旧结构而触发坏包；服务器仅查询旧 cost channel 识别旧客户端。没有模组的对端不因这个能力检查本身被误判；这不等于承诺可在原版客户端使用本模组方块。
 - `/reload` 成功后关闭已打开的本模组附魔台菜单，由原版关闭流程归还输入物品；随后发送新费用、配置、转化目录。重新打开菜单获得新开屏快照，而非继续操作旧转化规则。
 
 ## 发现与修复
@@ -79,6 +79,8 @@ JUnit：11 项经济/配置测试 + 8 项网络测试，共 19 项。网络测�
 已验证的服务器输出中包含：1891 advancements；模组 6 transformations / 41 loot injections；掉落的 `minecraft:custom_name`、`minecraft:dyed_color`、`minecraft:custom_data` 中 `pendingFreezeTicks:1200L`、`epiphanySeed:123456`、`frozenCycleIndex:17`，以及冻结 lore。
 
 早期 smoke 的平坦世界设置缺失产生过 `No key layers in MapLike[{}]`。这是测试脚本配置错误，已补齐生成器设置并将所有游戏 ERROR 视为失败；不能用早期那次绿色退出冒充零错误证据。
+
+条件探针的早期测试还遇到过测试时序问题：生成实体后同一 tick 立即用 `@e` 查询，实体可能尚未进入可查询集合。探针现使用游戏 `schedule function`，等强制加载及后续 game ticks 后再依次检查实体；也不再假设直接 `/loot loot` 的反馈必然带 table ID。这些未完成运行不计作成功证据。
 
 日志：[实际服务器日志](../../build-reports/server-smoke.log)。
 

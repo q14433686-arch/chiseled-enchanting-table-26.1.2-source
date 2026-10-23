@@ -51,7 +51,7 @@ public record EnchantCostTablePayload(
     List<CostEntry> costs,
     List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations
 ) implements CustomPacketPayload {
-    public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table");
+    public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table_" + EnchantingProtocol.REVISION);
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> TYPE =
         new CustomPacketPayload.Type<>(PACKET_ID);
     public static final StreamCodec<RegistryFriendlyByteBuf, EnchantCostTablePayload> CODEC =

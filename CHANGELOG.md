@@ -22,7 +22,7 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 - Bind live shelf updates to their originating container; close old table menus on successful
   datapack reload so reopened menus receive a fresh transformation snapshot.
 - Reject unknown action tokens, invalid collection lengths and incompatible same-version protocol
-  builds. **Update client and server together**: the current capability is `protocol_26_3_revision_3`.
+  builds. **Update client and server together**: the current capability is `protocol_26_3_revision_4`.
 - Preserve custom loot-function conditions and server automatic-deduction settings; log failing
   synchronization listeners rather than swallowing exceptions. Preserve native inventory right click.
 - Add real dedicated-server load/reload/loot-component checks, conditional-loot probes, and

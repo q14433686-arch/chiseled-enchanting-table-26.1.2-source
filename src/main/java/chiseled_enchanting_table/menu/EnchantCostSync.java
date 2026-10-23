@@ -39,7 +39,8 @@ public final class EnchantCostSync {
             ServerPlayer player = listener.player;
             if (player != null) {
                 if (EnchantingProtocol.incompatible(
-                    ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE),
+                    ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)
+                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.LEGACY_COST_TYPE),
                     ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE))) {
                     player.connection.disconnect(net.minecraft.network.chat.Component.literal(EnchantingProtocol.MISMATCH_MESSAGE));
                     return;

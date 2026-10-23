@@ -112,6 +112,9 @@ class NetworkCompatibilityTest {
         assertTrue(chiseled_enchanting_table.menu.EnchantingProtocol.incompatible(true, false));
         assertFalse(chiseled_enchanting_table.menu.EnchantingProtocol.incompatible(true, true));
         assertFalse(chiseled_enchanting_table.menu.EnchantingProtocol.incompatible(false, false));
+        assertNotEquals(chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_COST_TYPE.id(), EnchantCostTablePayload.TYPE.id());
+        assertTrue(EnchantCostTablePayload.TYPE.id().getPath().endsWith(chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
+        assertTrue(LiveShelfStatePayload.TYPE.id().getPath().endsWith(chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
         roundTrip(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.CODEC,
             new chiseled_enchanting_table.menu.EnchantingProtocol.Capability());
     }
