@@ -257,6 +257,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             case DEDICATED_ADMIN -> 0xFF6B4C1B;
             case OFFLINE_CLIENT -> 0xFF1E4C66;
             case DEDICATED_READONLY -> 0xFF662432;
+            case MODPACK_LOCKED -> 0xFF4C2466;
         };
         ctx.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 16, 0xFF8C6F39);
         ctx.fill(badgeX + 1, badgeY + 1, badgeX + badgeW - 1, badgeY + 15, badgeCol);
