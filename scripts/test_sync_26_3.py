@@ -181,6 +181,14 @@ class SyncContracts(unittest.TestCase):
         self.assertIn('SyncedEnchantmentCosts.transformationDisplays()', index)
         self.assertIn('display.input_is_tag()', index)
         self.assertIn('stack.is(tag)', index)
+        jei = (CLIENT / 'compat/jei/ChiseledEnchantingJeiPlugin.java').read_text()
+        self.assertIn('manager.hideRecipes(', jei)
+        self.assertIn('manager.addRecipes(', jei)
+        rei = (CLIENT / 'compat/rei/ChiseledEnchantingReiPlugin.java').read_text()
+        self.assertIn('registry.registerDisplayGenerator(', rei)
+        self.assertIn('EntryStacks.equalsFuzzy(entry, focus)', rei)
+        self.assertNotIn('registry.add(new ReiTransformationDisplay(', rei)
+
 
 
 if __name__ == '__main__':

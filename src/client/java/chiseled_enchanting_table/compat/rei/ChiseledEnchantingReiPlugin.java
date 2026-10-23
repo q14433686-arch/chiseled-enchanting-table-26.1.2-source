@@ -120,7 +120,7 @@ public class ChiseledEnchantingReiPlugin implements REIClientPlugin {
         return new me.shedaniel.rei.api.client.registry.display.DynamicDisplayGenerator<>() {
             @Override
             public java.util.Optional<List<D>> generate(ViewSearchBuilder builder) {
-                // Focused queries go through getRecipeFor/getUsageFor, with component-aware filtering.
+                // Focused queries go through getRecipeFor/getUsageFor, with REI-native fuzzy filtering (including enchanted-book distinctions).
                 return builder.getRecipesFor().isEmpty() && builder.getUsagesFor().isEmpty()
                     ? java.util.Optional.of(displays.get()) : java.util.Optional.empty();
             }
@@ -139,14 +139,11 @@ public class ChiseledEnchantingReiPlugin implements REIClientPlugin {
 
     private static <D extends me.shedaniel.rei.api.common.display.Display>
     java.util.Optional<List<D>> matching(List<D> displays, EntryStack<?> focus, boolean usage) {
-        if (focus.getType() != VanillaEntryTypes.ITEM) return java.util.Optional.empty();
-        ItemStack stack = (ItemStack) focus.getValue();
         return java.util.Optional.of(displays.stream().filter(display -> {
             var ingredients = usage ? display.getInputEntries() : display.getOutputEntries();
             for (var ingredient : ingredients) {
                 for (var entry : ingredient) {
-                    if (entry.getType() == VanillaEntryTypes.ITEM
-                        && ItemStack.isSameItemSameComponents((ItemStack) entry.getValue(), stack)) return true;
+                    if (me.shedaniel.rei.api.common.util.EntryStacks.equalsFuzzy(entry, focus)) return true;
                 }
             }
             return false;
