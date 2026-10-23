@@ -1,4 +1,4 @@
-commit: 6357979157273b02a4b708c1c5a6f7c7982ce2eb
+commit: 99acbbe5cee3035c53371944aaa9c2255766d553
 branch: arena/7a86fcca-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
@@ -97,6 +97,10 @@ EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanc
 
 EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
 
+FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
+
+FullPortRuntimeTest > configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() PASSED
+
 FullPortRuntimeTest > ritualWirePreservesMenuSessionAndQueue() PASSED
 
 FullPortRuntimeTest > malformedPolicyNeverBecomesAnUnlockedDefault() PASSED
@@ -148,7 +152,7 @@ RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
 RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792781717637.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792781837992.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -158,7 +162,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 1m 1s
+BUILD SUCCESSFUL in 52s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
