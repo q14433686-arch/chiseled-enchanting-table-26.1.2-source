@@ -257,4 +257,11 @@ SemVer rule from §5 is unchanged — only *released* content forces a new numbe
 * `bash scripts/check_release_consistency.sh --strict` → **12 passed, 0 warned, 0 failed**.
 * `bash docs/ci/install.sh --check` → the four workflow copies match.
 * Compilation, the JUnit suite and the jar are exercised by the GitHub Actions `compile-check` /
-  `build` workflows; the compile log is committed back as `build-reports/compile-java.log`.
+  `build` workflows. Green at `6173b6f`: `compile-check` `39889855557`, `build` `39889855537`
+  (`static`, `gradle build` incl. `test`, `no-viewers`) and `consistency` `39889855610`; the compile
+  log is committed back as `build-reports/compile-java.log`. Two 26.2 API deltas were found by those
+  runs and fixed: `Minecraft#setScreen`/`#screen` moved to `Gui#setScreen` / `Gui#screen()` in 26.2
+  (three call sites in the grimoire/table client code and the JEI plugin).
+* `build-reports/compile-deps.log` was deleted with the 26.1.2 batch, but the CI `compile-check`
+  workflow writes it back whenever the dependency graph changes (it does here — the JUnit
+  dependencies). It is expected to reappear; it is a CI-owned report, not hand-maintained content.

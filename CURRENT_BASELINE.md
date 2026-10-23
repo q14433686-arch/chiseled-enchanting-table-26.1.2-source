@@ -76,11 +76,12 @@ jar was ever published, so the second batch is part of the same unreleased relea
   `consistency.yml`, `publish.yml`) are installed and verified byte-identical via
   `bash docs/ci/install.sh --check` (`MINECRAFT_VERSION: 26.2`, `VERSION: 1.1.0`,
   `RELEASE_NAME: ... (Unofficial 26.2 Port)`).
-- **CI status (2026-10-22, 1.1.0):** GitHub Actions `compile-check` (run `39819932191`), `build`
-  (run `39819932163` — `static`, `gradle build` and `no-viewers` jobs) and `consistency`
-  (run `39819931994`) are **all green** on Minecraft 26.2 at commit `9f2046c` (the `1.1.0`
-  version bump), and the same three workflows were green at `902e947` (runs `39818720349` /
-  `39818720326` / `39818720363`) for the feature sync itself — i.e.
+- **CI status (2026-10-23, 1.1.0):** GitHub Actions `compile-check` (run `39889855557`), `build`
+  (run `39889855537` — `static`, `gradle build` **including the JUnit suite**, and `no-viewers`
+  jobs) and `consistency` (run `39889855610`) are **all green** on Minecraft 26.2 at commit
+  `6173b6f` (the second `26.1.2` sync), and the same three workflows were green at `9f2046c`
+  (runs `39819932191` / `39819932163` / `39819931994`, the `1.1.0` version bump) and at `902e947`
+  (runs `39818720349` / `39818720326` / `39818720363`, the first sync) — i.e.
   `ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict`,
   `:compileJava`, `:compileClientJava`, `remapJar` (with pinned `jei-26.2-fabric:30.47.0.239` and
   `RoughlyEnoughItems-api-fabric:26.2.821` plus `toolchainPins` exclusions) and
