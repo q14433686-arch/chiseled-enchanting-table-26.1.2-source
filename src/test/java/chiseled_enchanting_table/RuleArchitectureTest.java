@@ -111,34 +111,33 @@ class RuleArchitectureTest {
     @Test void unloadedWindowPausesWithoutCreditingOfflineTimeAndPersistsSnapshots() {
         var scheduler = new RegenerationScheduler<String>(); Object book = new Object();
         assertTrue(scheduler.settle(1000, List.of(observation(book, 16, 40))).isEmpty());
-        // 1 loaded window = 20 ticks accumulated (remaining = 20).
+        // 1 loaded window = 20 ticks accumulated (progressTicks = 20 of 40).
         assertTrue(scheduler.settle(1001, List.of(observation(book, 16, 40))).isEmpty());
-        // Chunk unloads for 99 windows (1,980 offline ticks): paused, NOT evicted, NOT credited!
-        assertTrue(scheduler.settle(1100, List.of()).isEmpty());
+        // Chunk unloads for 99 windows (1,980 offline ticks): paused via retainPausedWhenUnobserved, NOT credited!
+        assertTrue(scheduler.settle(1100, List.of(), slot -> true).isEmpty());
         assertEquals(1, scheduler.trackedSlots());
+        assertTrue(scheduler.isSlotPaused("world/shelf/slot"));
 
-        // Simulate world save + restart via PersistedEntry snapshot round-trip.
-        var snapshots = scheduler.snapshotEntries(key -> key, id -> Integer.toHexString(System.identityHashCode(id)));
+        // Simulate world save + restart via SavedEntry snapshot round-trip.
+        var snapshots = scheduler.exportSavedEntries();
         assertEquals(1, snapshots.size());
-        assertEquals(20, snapshots.getFirst().remainingTicks());
+        assertEquals(20L, snapshots.getFirst().progressTicks());
 
         var restored = new RegenerationScheduler<String>();
-        restored.restoreEntries(
-            snapshots,
-            key -> key,
-            (key, token) -> book
-        );
+        restored.restoreSavedEntries(snapshots);
         assertEquals(1, restored.trackedSlots());
+        Object reloadedBook = new Object();
+        assertTrue(restored.rebindPausedIdentity("world/shelf/slot", book, reloadedBook));
         // First observation after reload re-anchors window without crediting offline gap.
-        assertTrue(restored.settle(2000, List.of(observation(book, 16, 40))).isEmpty());
+        assertTrue(restored.settle(2000, List.of(observation(reloadedBook, 16, 40))).isEmpty());
         // Next loaded window (+20 ticks) completes the remaining 20 ticks and heals +1!
-        var healed = restored.settle(2001, List.of(observation(book, 16, 40))).get("world/shelf/slot");
+        var healed = restored.settle(2001, List.of(observation(reloadedBook, 16, 40))).get("world/shelf/slot");
         assertNotNull(healed);
         assertEquals(1, healed.points());
         assertEquals(15, healed.remainingWear());
 
-        // Removing/moving the book clears the slot immediately.
-        restored.clearSlot("world/shelf/slot");
+        // Removing/moving the book while loaded (retainPausedWhenUnobserved = false) evicts immediately!
+        assertTrue(restored.settle(2002, List.of()).isEmpty());
         assertEquals(0, restored.trackedSlots());
     }
 
