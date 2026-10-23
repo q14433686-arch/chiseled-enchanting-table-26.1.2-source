@@ -117,7 +117,7 @@ public final class ModConfigNetworking {
                             && player.level().getBlockEntity(menu.tableBlockPos()) instanceof
                                 chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity table
                             && table.cancelRitual(player.getUUID())) {
-                            player.sendSystemMessage(Component.literal("Ritual cancelled; stored input retained. Spent fees and wear are not refunded."));
+                            player.sendSystemMessage(Component.translatable("command.chiseled_enchanting_table.ritual_cancelled"));
                             table.syncOpenMenusWatchingTable(player.level(), menu.tableBlockPos());
                             return 1;
                         }

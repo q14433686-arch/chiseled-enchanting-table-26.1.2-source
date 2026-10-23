@@ -788,15 +788,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 this.world.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
                 return false;
             }
-            if (!this.player.getAbilities().instabuild) {
-                this.player.giveExperienceLevels(-levelsCost);
-            }
-            tableBe.completeActiveRitual(
+            if (!tableBe.completeActiveRitual(
                 this.world,
                 pos,
                 this.player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
                 chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.RitualCompletionKind.SACRIFICED_XP
-            );
+            )) return false;
+            if (!this.player.getAbilities().instabuild) this.player.giveExperienceLevels(-levelsCost);
             chiseled_enchanting_table.utils.Advancement.give(this.player, "soul_fed_ink");
             this.world.playSound(
                 null,
@@ -816,12 +814,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             remBeforeSkip,
             usedInfTome
         );
-        tableBe.completeActiveRitual(
+        if (!tableBe.completeActiveRitual(
             this.world,
             pos,
             this.player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
             chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.RitualCompletionKind.RUSHED_NO_SACRIFICE
-        );
+        )) return false;
         if (this.world.getRandom().nextDouble() < degradeProb) {
             ItemStack degradedTome = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.degradeLowestPriorityMasterTomeInWorld(
                 this.world,

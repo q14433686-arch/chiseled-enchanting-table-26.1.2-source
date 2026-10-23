@@ -29,10 +29,10 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Pure deterministic mechanics &amp; world helpers for:
  * <ol>
- *   <li><b>Deep-Resonance Inscription Ritual Waiting &amp; Unbounded Queue Accumulation</b>:
+ *   <li><b>Deep-Resonance Inscription Ritual Waiting &amp; Bounded Persistent Queue Accumulation</b>:
  *       active if and only if {@code nearbyBookshelves >= median(tier1, tier2, maxDirect)}
  *       OR {@code totalMasterTomeEnchantments >= 10}; single step bounded by {@code <= 5 min}
- *       ({@code 6,000 ticks}) with unbounded {@code long} accumulation across multiple queued
+ *       ({@code 6,000 ticks}) with bounded {@code long} accumulation across multiple queued
  *       enchantments.</li>
  *   <li><b>Dual Skip Options</b> (enabled only when at least one Master Tome exists in scan range):
  *       <ul>
@@ -114,7 +114,7 @@ public final class InscriptionRitualMechanics {
                 return null;
             }
             String[] parts = token.split("\\|", -1);
-            if (parts.length < 7) {
+            if (parts.length != 7 || token.length() > 1024) {
                 return null;
             }
             try {
@@ -125,6 +125,11 @@ public final class InscriptionRitualMechanics {
                 boolean infTome = "1".equals(parts[4].trim());
                 int refund = Math.max(0, Integer.parseInt(parts[5].trim()));
                 boolean epip = "1".equals(parts[6].trim());
+                if (targetLvl > 255 || prevLvl > 255 || Integer.parseInt(parts[1].trim()) < 1
+                    || Integer.parseInt(parts[2].trim()) < 0 || Integer.parseInt(parts[5].trim()) < 0
+                    || !Set.of("0", "1").contains(parts[3].trim())
+                    || !Set.of("0", "1").contains(parts[4].trim())
+                    || !Set.of("0", "1").contains(parts[6].trim())) return null;
                 return new QueuedInscription(id, targetLvl, prevLvl, tomeUsed, infTome, refund, epip);
             } catch (RuntimeException ignored) {
                 return null;
@@ -150,12 +155,14 @@ public final class InscriptionRitualMechanics {
         }
         if (raw.length() > 32_000) throw new IllegalArgumentException("Oversized persisted ritual");
         List<QueuedInscription> out = new ArrayList<>();
-        for (String part : raw.split(";")) {
+        long refund = 0;
+        for (String part : raw.split(";", -1)) {
             if (out.size() >= 256) throw new IllegalArgumentException("Too many ritual steps");
             QueuedInscription parsed = QueuedInscription.decode(part);
-            if (parsed != null) {
-                out.add(parsed);
-            }
+            if (parsed == null) throw new IllegalArgumentException("Malformed ritual step");
+            refund += parsed.conflictRefundPoints();
+            if (refund > Integer.MAX_VALUE) throw new IllegalArgumentException("Ritual refund exceeds budget");
+            out.add(parsed);
         }
         return out;
     }

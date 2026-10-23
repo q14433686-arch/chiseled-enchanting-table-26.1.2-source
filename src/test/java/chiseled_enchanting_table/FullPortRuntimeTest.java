@@ -49,9 +49,17 @@ class FullPortRuntimeTest {
         } finally { buffer.release(); }
     }
 
+    @Test void malformedPolicyNeverBecomesAnUnlockedDefault() {
+        assertThrows(IllegalArgumentException.class, () -> ModRuntimeConfig.PackPolicy.fromJsonString("{\"lock_in_game_config\":\"typo\"}"));
+        assertThrows(IllegalArgumentException.class, () -> ModRuntimeConfig.PackPolicy.fromJsonString("{\"locked_keys\":[\"misspelled_rule\"]}"));
+        assertThrows(IllegalArgumentException.class, () -> ModRuntimeConfig.PackPolicy.fromJsonString("{\"locked_keys\":false}"));
+    }
+
     @Test void persistedQueueHasFiniteResourceBounds() {
         assertThrows(IllegalArgumentException.class, () -> InscriptionRitualMechanics.deserializeQueue("x".repeat(32001)));
         var step = new InscriptionRitualMechanics.QueuedInscription(Identifier.withDefaultNamespace("mending"),1,0,true,false,0,false);
+        assertThrows(IllegalArgumentException.class, () -> InscriptionRitualMechanics.deserializeQueue("minecraft:mending|9999|0|1|0|0|0"));
+        assertThrows(IllegalArgumentException.class, () -> InscriptionRitualMechanics.deserializeQueue("not a queue"));
         String token = step.encode();
         assertThrows(IllegalArgumentException.class,
             () -> InscriptionRitualMechanics.deserializeQueue(String.join(";", Collections.nCopies(257, token))));

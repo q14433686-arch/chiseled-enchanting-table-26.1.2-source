@@ -13,6 +13,13 @@ public final class RuntimeRules {
     }
     public static synchronized Prepared prepare(ModRuntimeConfig local, ModRuntimeConfig raw,
                                                  ModRuntimeConfig.PackPolicy policy) {
+        if (policy.lockedKeys().contains("enchanted_book_stack_size")
+            || policy.datapackOverriddenKeys().contains("enchanted_book_stack_size"))
+            throw new IllegalArgumentException("World policy cannot govern a startup item component");
+        Set<String> known = new HashSet<>();
+        for (var option : ConfigCatalog.ALL_OPTIONS) known.add(option.key());
+        if (!known.containsAll(policy.lockedKeys()) || !known.containsAll(policy.datapackOverriddenKeys()))
+            throw new IllegalArgumentException("Unknown policy key");
         if (book == null) {
             Map<String, RuleBook.Definition> definitions = new LinkedHashMap<>();
             var defaults = ModRuntimeConfig.DEFAULT.toDraft();

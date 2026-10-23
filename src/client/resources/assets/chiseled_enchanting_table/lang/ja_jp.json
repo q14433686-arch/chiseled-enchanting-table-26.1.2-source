@@ -618,5 +618,6 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "世界各地の宝箱（10%–55%）\n野生の模様入り本棚風化（合計 ≤30%）",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "【司書】限定買取：\n残巻2 ＝ エメラルド1 または 紫水晶2",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "書き換え依頼：「希少度×汎用度×相対Lv」で【必要司書ランクLv.1–5】と【費用】を決定（上位は達人Lv.5必須・最大18E＜修繕平均24）！",
-  "config.chiseled_enchanting_table.tip.active_value": "Current active value (before restart): %s"
+  "config.chiseled_enchanting_table.tip.active_value": "Current active value (before restart): %s",
+  "command.chiseled_enchanting_table.ritual_cancelled": "Ritual cancelled; stored input retained. Spent fees and wear are not refunded."
 }

@@ -618,5 +618,6 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "World Chests (10%–55%)\nWild Chiseled Shelf Decay (<=30% max)",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "Librarian Villager Only:\n2 Remnants = 1 Emerald or 2 Amethyst",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "Dynamic Commission: (Rarity x Universality x Rel.Lvl) governs BOTH required Librarian Rank (Lv.1–5) & price (base 4 Lapis/2 Ink/1E; Master Lv.5 for top enchants, max 18E < Mending avg 24)!",
-  "config.chiseled_enchanting_table.tip.active_value": "Current active value (before restart): %s"
+  "config.chiseled_enchanting_table.tip.active_value": "Current active value (before restart): %s",
+  "command.chiseled_enchanting_table.ritual_cancelled": "Ritual cancelled; stored input retained. Spent fees and wear are not refunded."
 }

@@ -164,6 +164,23 @@ public record ModRuntimeConfig(
         }
 
         public static PackPolicy fromJson(JsonObject root, Set<String> externalDatapackKeys) {
+            if (root != null) {
+                for (String key : Set.of("enforce_datapack_priority", "lock_in_game_config")) {
+                    if (root.has(key) && (!root.get(key).isJsonPrimitive()
+                        || !root.getAsJsonPrimitive(key).isBoolean()))
+                        throw new IllegalArgumentException("Policy flag must be boolean: " + key);
+                }
+                for (String key : Set.of("locked_keys", "datapack_overridden_keys")) {
+                    if (!root.has(key)) continue;
+                    if (!root.get(key).isJsonArray()) throw new IllegalArgumentException("Policy keys must be array: " + key);
+                    for (var element : root.getAsJsonArray(key)) {
+                        if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isString())
+                            throw new IllegalArgumentException("Policy key must be a string");
+                        if (ConfigCatalog.ALL_OPTIONS.stream().noneMatch(option -> option.key().equals(element.getAsString())))
+                            throw new IllegalArgumentException("Unknown policy key: " + element.getAsString());
+                    }
+                }
+            }
             boolean enforceDp = root != null && boolOr(root, "enforce_datapack_priority", false);
             boolean lockAll = root != null && boolOr(root, "lock_in_game_config", false);
             Set<String> dpKeys = new LinkedHashSet<>();

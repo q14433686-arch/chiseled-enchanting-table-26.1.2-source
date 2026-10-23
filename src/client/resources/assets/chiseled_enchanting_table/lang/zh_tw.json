@@ -618,5 +618,6 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "世界各地結構寶箱（10%–55%）\n野生雕紋書架風化替換（總機率 ≤30%）",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "僅限【圖書管理員】回收：\n2 殘卷 = 1 綠寶石 或 2 紫水晶碎片",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "拜託重繪：按「稀有度×普適度×相對等級」同時決定【村民等級門檻 Lv.1–5】與【要價】（基礎 4青金石/2墨囊/1綠寶石；高階需大師村民，封頂 18 綠寶石 < 原版修補均價 24）！",
-  "config.chiseled_enchanting_table.tip.active_value": "目前實際生效值（重新啟動前）：%s"
+  "config.chiseled_enchanting_table.tip.active_value": "目前實際生效值（重新啟動前）：%s",
+  "command.chiseled_enchanting_table.ritual_cancelled": "已取消儀式並保留輸入物品；已支付的費用和母本磨損不退還。"
 }

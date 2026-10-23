@@ -618,5 +618,6 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_world": "월드 유적 상자 (10%–55%)\n야생 조각된 책장 풍화 (총 ≤30%)",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_recycle": "[사서] 전용 매입:\n잔권 2 = 에메랄드 1 또는 자수정 2",
   "gui.chiseled_enchanting_table.grimoire.diag.ch7p2_rewrite": "복원 의뢰: '희귀도×범용성×상대레벨'로 【필요 사서 등급 Lv.1–5】 & 【가격】 동시 결정 (상위 마법은 달인 Lv.5 필수 · 최대 18E < 수선 평균 24)!",
-  "config.chiseled_enchanting_table.tip.active_value": "Current active value (before restart): %s"
+  "config.chiseled_enchanting_table.tip.active_value": "Current active value (before restart): %s",
+  "command.chiseled_enchanting_table.ritual_cancelled": "Ritual cancelled; stored input retained. Spent fees and wear are not refunded."
 }

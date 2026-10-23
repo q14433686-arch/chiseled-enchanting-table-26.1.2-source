@@ -425,6 +425,16 @@ public final class DepletedTomeWorldMechanics {
         };
     }
 
+    private static final String COMMISSION_BAND = "cet_commission_band";
+    private static boolean hasCommissionBand(MerchantOffers offers, int band) {
+        for (var offer : offers) {
+            if (offer.getItemCostA().item().value() != BlockRegistry.DEPLETED_TOME) continue;
+            var data = offer.getResult().get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+            if (data != null && data.copyTag().getIntOr(COMMISSION_BAND, -1) == band) return true;
+        }
+        return false;
+    }
+
     private record CandidateEnchantRoll(
         Holder.Reference<Enchantment> holder,
         int enchantLevel,
@@ -557,7 +567,7 @@ public final class DepletedTomeWorldMechanics {
         }
         for (Holder.Reference<Enchantment> ref : eligible) {
             Enchantment ench = ref.value();
-            int maxLvl = Math.max(1, ench.getMaxLevel());
+            int maxLvl = Mth.clamp(ench.getMaxLevel(), 1, 255);
             int weight = Math.max(1, ench.definition().weight());
             int supportedCount = Math.max(1, ench.getSupportedItems().size());
             for (int lvl = 1; lvl <= maxLvl; lvl++) {
@@ -589,6 +599,7 @@ public final class DepletedTomeWorldMechanics {
                 continue;
             }
             CandidateEnchantRoll pick = pool.get(rng.nextInt(pool.size()));
+            if (hasCommissionBand(offers, b)) continue;
             if (!canLibrarianOfferCommission(currentVillagerLevel, pick.quote())) {
                 // Villager has not yet reached the dynamic profession rank required for this enchantment!
                 continue;
@@ -601,6 +612,10 @@ public final class DepletedTomeWorldMechanics {
 
             ItemStack bookOut = new ItemStack(Items.ENCHANTED_BOOK, 1);
             EnchantmentHelper.updateEnchantments(bookOut, mutable -> mutable.set(pick.holder(), pick.enchantLevel()));
+            var marker = new net.minecraft.nbt.CompoundTag();
+            marker.putInt(COMMISSION_BAND, b);
+            bookOut.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.of(marker));
 
             offers.add(new MerchantOffer(
                 new ItemCost(BlockRegistry.DEPLETED_TOME, 1),

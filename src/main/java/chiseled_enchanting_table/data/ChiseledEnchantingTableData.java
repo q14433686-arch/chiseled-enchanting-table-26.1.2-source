@@ -513,6 +513,23 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     @Override
     public void onResourceManagerReload(ResourceManager resourceManager) {
+        synchronized (ChiseledEnchantingTableData.class) {
+        var previous_defaultEnchantmentValues = defaultEnchantmentValues;
+        var previous_defaultEnchantmentTags = defaultEnchantmentTags;
+        var previous_defaultExcludedIds = defaultExcludedIds;
+        var previous_defaultExcludedTags = defaultExcludedTags;
+        var previous_costTables = costTables;
+        var previous_rawItemTransformations = rawItemTransformations;
+        var previous_rawVanillaChestBooksMode = rawVanillaChestBooksMode;
+        var previous_lootInjections = lootInjections;
+        var previous_rawBookshelfBookPool = rawBookshelfBookPool;
+        var previous_rawBookUpgradeRules = rawBookUpgradeRules;
+        var previous_rawTreasureEpiphanyRules = rawTreasureEpiphanyRules;
+        var previous_rawDisenchantingRules = rawDisenchantingRules;
+        var previous_rawShelfGatesConfig = rawShelfGatesConfig;
+        var previous_rawLibraryResonanceConfig = rawLibraryResonanceConfig;
+        try {
+        var candidatePolicy = loadPackPolicy(resourceManager);
         DefaultEnchantmentTable loadedDefaults = loadDefaultEnchantments(resourceManager);
         defaultEnchantmentValues = loadedDefaults.values();
         defaultEnchantmentTags = loadedDefaults.tags();
@@ -529,8 +546,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         rawDisenchantingRules = loadDisenchantingRules(resourceManager);
         rawShelfGatesConfig = loadShelfGatesConfig(resourceManager);
         rawLibraryResonanceConfig = loadLibraryResonanceConfig(resourceManager);
-        chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(loadPackPolicy(resourceManager));
-        applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get());
+        applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get(), candidatePolicy, () -> {});
+        chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(candidatePolicy);
         ChiseledEnchantingTable.LOGGER.info(
             "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformations, {} loot injections",
             defaultEnchantmentValues.size(),
@@ -539,6 +556,24 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             itemTransformations.size(),
             lootInjections.size()
         );
+        } catch (RuntimeException failure) {
+            defaultEnchantmentValues = previous_defaultEnchantmentValues;
+            defaultEnchantmentTags = previous_defaultEnchantmentTags;
+            defaultExcludedIds = previous_defaultExcludedIds;
+            defaultExcludedTags = previous_defaultExcludedTags;
+            costTables = previous_costTables;
+            rawItemTransformations = previous_rawItemTransformations;
+            rawVanillaChestBooksMode = previous_rawVanillaChestBooksMode;
+            lootInjections = previous_lootInjections;
+            rawBookshelfBookPool = previous_rawBookshelfBookPool;
+            rawBookUpgradeRules = previous_rawBookUpgradeRules;
+            rawTreasureEpiphanyRules = previous_rawTreasureEpiphanyRules;
+            rawDisenchantingRules = previous_rawDisenchantingRules;
+            rawShelfGatesConfig = previous_rawShelfGatesConfig;
+            rawLibraryResonanceConfig = previous_rawLibraryResonanceConfig;
+            throw failure;
+        }
+        }
     }
 
     /**
@@ -612,35 +647,35 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         var prepared = chiseled_enchanting_table.config.rules.RuntimeRules.prepare(cfg, rawRuntimeConfig(), policy);
         cfg = prepared.configuration();
         var sg = rawShelfGatesConfig;
-        int maxDirect = true ? cfg.maxDirectBookshelves() : sg.maxDirectBookshelves();
-        int t2 = Math.min(maxDirect, true ? cfg.tier2Bookshelves() : sg.tier2Bookshelves());
-        int t1 = Math.min(t2, true ? cfg.tier1Bookshelves() : sg.tier1Bookshelves());
-        int batchCap = true ? cfg.transformationMaxBatchSize() : sg.baseBatchSize();
+        int maxDirect = cfg.maxDirectBookshelves();
+        int t2 = Math.min(maxDirect, cfg.tier2Bookshelves());
+        int t1 = Math.min(t2, cfg.tier1Bookshelves());
+        int batchCap = cfg.transformationMaxBatchSize();
         chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig = new chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config(
-            true ? cfg.directGatesEnabled() : sg.directGatesEnabled(),
+            cfg.directGatesEnabled(),
             maxDirect,
             sg.gamma(),
-            true ? cfg.blankMaxTierMode() : sg.blankMaxTierMode(),
-            true ? cfg.horizontalScanRadius() : sg.horizontalScanRadius(),
-            true ? cfg.verticalScanRadius() : sg.verticalScanRadius(),
+            cfg.blankMaxTierMode(),
+            cfg.horizontalScanRadius(),
+            cfg.verticalScanRadius(),
             sg.overrides(),
             t1,
             t2,
             sg.tier2MaterialMultiplier(),
-            true ? cfg.tier3QualifyingEnchantments() : sg.tier3QualifyingEnchantments(),
+            cfg.tier3QualifyingEnchantments(),
             batchCap,
-            true ? cfg.transformationMaxBatchSize() : sg.tier3BatchSize(),
-            true ? cfg.vanillaTableMode() : sg.vanillaTableMode(),
-            true ? cfg.requireBreathingRoom() : sg.requireBreathingRoom(),
-            true ? cfg.minOpenAdjacentBlocks() : sg.minOpenAdjacentBlocks(),
-            true ? cfg.requireLineOfSight() : sg.requireLineOfSight()
+            cfg.transformationMaxBatchSize(),
+            cfg.vanillaTableMode(),
+            cfg.requireBreathingRoom(),
+            cfg.minOpenAdjacentBlocks(),
+            cfg.requireLineOfSight()
         );
 
         var lr = rawLibraryResonanceConfig;
-        int woodDisc = true ? cfg.maxWoodenDiscountPercent() : lr.maxWoodenDiscountPercent();
+        int woodDisc = cfg.maxWoodenDiscountPercent();
         int totalDisc = Math.max(
             woodDisc,
-            true ? cfg.maxTotalXpDiscountPercent() : lr.maxTotalXpDiscountPercent()
+            cfg.maxTotalXpDiscountPercent()
         );
         chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig = new chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config(
             lr.minDiscountBookshelves(),
@@ -668,55 +703,51 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             lr.epiphanyTierPlusScoreDivisor(),
             lr.epiphanyTierPlusMasteryBonus(),
             lr.incrementalStepCreditFactor(),
-            true ? cfg.tomeConsumptionMode() : lr.tomeConsumptionMode(),
-            true ? cfg.maxTomeUses() : lr.maxTomeUses(),
-            true ? cfg.bookCopyWearCost() : lr.bookCopyWearCost(),
-            true ? cfg.tomeDepleteBehavior() : lr.tomeDepleteBehavior(),
-            true ? cfg.tomeRegenEnabled() : lr.tomeRegenEnabled(),
-            true ? cfg.tomeRegenBaseSeconds() : lr.tomeRegenBaseSeconds(),
-            true ? cfg.tomeRegenTier1Shelves() : lr.tomeRegenTier1Shelves(),
-            true ? cfg.tomeRegenTier1Seconds() : lr.tomeRegenTier1Seconds(),
-            true ? cfg.tomeRegenTier2Shelves() : lr.tomeRegenTier2Shelves(),
-            true ? cfg.tomeRegenTier2Seconds() : lr.tomeRegenTier2Seconds()
+            cfg.tomeConsumptionMode(),
+            cfg.maxTomeUses(),
+            cfg.bookCopyWearCost(),
+            cfg.tomeDepleteBehavior(),
+            cfg.tomeRegenEnabled(),
+            cfg.tomeRegenBaseSeconds(),
+            cfg.tomeRegenTier1Shelves(),
+            cfg.tomeRegenTier1Seconds(),
+            cfg.tomeRegenTier2Shelves(),
+            cfg.tomeRegenTier2Seconds()
         );
 
         var bu = rawBookUpgradeRules;
         BookUpgradeRules bookUpgradeRules = new BookUpgradeRules(
-            true ? cfg.bookCombineEnabled() : bu.combineEnabled(),
-            true ? cfg.bookCombineXpMultiplier() : bu.combineXpMultiplier(),
-            true ? cfg.bookResearchEnabled() : bu.researchEnabled(),
-            true ? cfg.bookResearchXpMultiplier() : bu.researchXpMultiplier(),
+            cfg.bookCombineEnabled(),
+            cfg.bookCombineXpMultiplier(),
+            cfg.bookResearchEnabled(),
+            cfg.bookResearchXpMultiplier(),
             bu.researchMaterialMultiplier(),
             bu.defaultResearchCost(),
             bu.researchOverrides()
         );
 
         var ep = rawTreasureEpiphanyRules;
-        double epBase = true ? cfg.epiphanyBaseChance() : ep.baseChance();
-        double epMax = Math.max(epBase, true ? cfg.epiphanyMaxChance() : ep.maxChance());
-        int frzTicks = true
-            ? Math.max(200, cfg.epiphanyFreezeDurationSeconds() * 20)
-            : ep.freezeDurationTicks();
+        double epBase = cfg.epiphanyBaseChance();
+        double epMax = Math.max(epBase, cfg.epiphanyMaxChance());
+        int frzTicks = Math.max(200, cfg.epiphanyFreezeDurationSeconds() * 20);
         int maxFrzTicks = Math.max(
             frzTicks,
-            true
-                ? Math.max(200, cfg.epiphanyMaxFreezeSeconds() * 20)
-                : ep.maxFreezeTicks()
+            Math.max(200, cfg.epiphanyMaxFreezeSeconds() * 20)
         );
         TreasureEpiphanyRules treasureEpiphanyRules = new TreasureEpiphanyRules(
-            true ? cfg.epiphanyMinBookshelves() : ep.minRegularBookshelves(),
+            cfg.epiphanyMinBookshelves(),
             epBase,
             ep.chancePerExtraBookshelf(),
             ep.chancePerMasterTome(),
             epMax,
-            true ? cfg.epiphanyMaxSlotsCap() : ep.maxSlotsCap(),
+            cfg.epiphanyMaxSlotsCap(),
             ep.scorePerExtraSlot(),
-            true ? Math.max(200, cfg.epiphanyCycleSeconds() * 20) : ep.cycleTicks(),
+            Math.max(200, cfg.epiphanyCycleSeconds() * 20),
             frzTicks,
             maxFrzTicks,
-            true ? cfg.epiphanyFreezeXpLevels() : ep.freezeXpLevels(),
+            cfg.epiphanyFreezeXpLevels(),
             ep.freezeOptions(),
-            true ? cfg.epiphanyRerollXpLevels() : ep.rerollXpLevels(),
+            cfg.epiphanyRerollXpLevels(),
             ep.rerollOptions(),
             ep.explicitTreasureIds(),
             ep.treasureTagIds(),
@@ -727,27 +758,27 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         );
 
         var dis = rawDisenchantingRules;
-        double refScale = true ? cfg.xpRefundScale() : dis.xpRefundScale();
+        double refScale = cfg.xpRefundScale();
         double extScale = Math.min(
             refScale,
-            true ? cfg.externalXpRefundScale() : dis.externalXpRefundScale()
+            cfg.externalXpRefundScale()
         );
-        int sMin = true ? cfg.stripXpMin() : dis.stripXpMin();
-        int sMax = Math.max(sMin, true ? cfg.stripXpMax() : dis.stripXpMax());
+        int sMin = cfg.stripXpMin();
+        int sMax = Math.max(sMin, cfg.stripXpMax());
         DisenchantingRules disenchantingRules = new DisenchantingRules(
-            true ? cfg.disenchantEnabled() : dis.enabled(),
-            true ? cfg.allowCursePurge() : dis.allowCursePurge(),
+            cfg.disenchantEnabled(),
+            cfg.allowCursePurge(),
             refScale,
             extScale,
             sMin,
             sMax,
             dis.stripMaterialCost(),
-            true ? cfg.cursePurgeXpCost() : dis.curseXpCost(),
+            cfg.cursePurgeXpCost(),
             dis.curseMaterialCost()
         );
 
         Map<Identifier, ItemTransformation> itemTransformations;
-        if (true && !cfg.requirePriorDiscovery()) {
+        if (!cfg.requirePriorDiscovery()) {
             Map<Identifier, ItemTransformation> unlockedMap = new java.util.LinkedHashMap<>();
             for (var entry : rawItemTransformations.entrySet()) {
                 ItemTransformation t = entry.getValue();
@@ -775,18 +806,16 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             itemTransformations = rawItemTransformations;
         }
 
-        VanillaChestBooksMode vanillaChestBooksMode = true
-            ? cfg.vanillaChestBooksMode()
-            : rawVanillaChestBooksMode;
+        VanillaChestBooksMode vanillaChestBooksMode = cfg.vanillaChestBooksMode();
 
         var bp = rawBookshelfBookPool;
-        int minB = true ? cfg.bookshelfMinBooks() : bp.minBooks();
-        int maxB = Math.max(minB, true ? cfg.bookshelfMaxBooks() : bp.maxBooks());
+        int minB = cfg.bookshelfMinBooks();
+        int maxB = Math.max(minB, cfg.bookshelfMaxBooks());
         BookshelfBookPool bookshelfBookPool = new BookshelfBookPool(
-            true ? cfg.bookshelfPoolEnabled() : bp.enabled(),
+            cfg.bookshelfPoolEnabled(),
             minB,
             maxB,
-            true ? cfg.bookshelfEnchantedProb() : bp.enchantedBookProbability(),
+            cfg.bookshelfEnchantedProb(),
             bp.enchantPoolSource(),
             bp.useBaseWeight(),
             bp.useVanillaWeightFactor(),
@@ -1036,8 +1065,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 List.copyOf(excludedTags)
             );
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback defaults", DEFAULT_ENCHANTMENTS_ID, e);
-            return builtInDefaultEnchantmentTable();
+            throw new IllegalArgumentException("Invalid data table " + DEFAULT_ENCHANTMENTS_ID, e);
         }
     }
 
@@ -1057,8 +1085,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             return CostTables.fromJson(root);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback costs", ENCHANTMENT_COSTS_ID, e);
-            return CostTables.builtInFallback();
+            throw new IllegalArgumentException("Invalid data table " + ENCHANTMENT_COSTS_ID, e);
         }
     }
 
@@ -1080,8 +1107,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             }
             return Map.copyOf(loaded);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback transformations", ITEM_TRANSFORMATIONS_ID, e);
-            return builtInItemTransformations();
+            throw new IllegalArgumentException("Invalid data table " + ITEM_TRANSFORMATIONS_ID, e);
         }
     }
 
@@ -1740,8 +1766,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             }
             return new LootInjectionTable(mode, List.copyOf(loaded));
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; loot injection disabled", LOOT_INJECTIONS_ID, e);
-            return new LootInjectionTable(VanillaChestBooksMode.KEEP_BOTH, List.of());
+            throw new IllegalArgumentException("Invalid data table " + LOOT_INJECTIONS_ID, e);
         }
     }
 
@@ -1754,8 +1779,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         try (Reader reader = resource.get().openAsReader()) {
             return BookUpgradeRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject());
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback book-upgrade rules", BOOK_UPGRADES_ID, e);
-            return BookUpgradeRules.builtInFallback();
+            throw new IllegalArgumentException("Invalid data table " + BOOK_UPGRADES_ID, e);
         }
     }
 
@@ -1767,8 +1791,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         try (Reader reader = resource.get().openAsReader()) {
             return TreasureEpiphanyRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject());
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in fallback treasure-epiphany rules", TREASURE_EPIPHANY_ID, e);
-            return TreasureEpiphanyRules.builtInFallback();
+            throw new IllegalArgumentException("Invalid data table " + TREASURE_EPIPHANY_ID, e);
         }
     }
 
@@ -1968,8 +1991,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             return BookshelfBookPool.fromJson(root);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; bookshelf book pool disabled", BOOKSHELF_BOOK_POOL_ID, e);
-            return BookshelfBookPool.emptyFallback();
+            throw new IllegalArgumentException("Invalid data table " + BOOKSHELF_BOOK_POOL_ID, e);
         }
     }
 
@@ -2200,8 +2222,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.fromJson(root);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in shelf gate defaults", SHELF_GATES_ID, e);
-            return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT;
+            throw new IllegalArgumentException("Invalid data table " + SHELF_GATES_ID, e);
         }
     }
 
@@ -2216,8 +2237,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.fromJson(root);
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in library resonance defaults", LIBRARY_RESONANCE_ID, e);
-            return chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
+            throw new IllegalArgumentException("Invalid data table " + LIBRARY_RESONANCE_ID, e);
         }
     }
 
@@ -2229,8 +2249,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         try (Reader reader = resource.get().openAsReader()) {
             return DisenchantingRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject());
         } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to load {}; using built-in disenchanting defaults", DISENCHANTING_ID, e);
-            return DisenchantingRules.builtInFallback();
+            throw new IllegalArgumentException("Invalid data table " + DISENCHANTING_ID, e);
         }
     }
 

@@ -72,15 +72,14 @@ public final class EnchantmentApplication {
             && handler.storedMasterLevel(payload.enchantment_id()) >= enchantment_level;
         boolean targetWasBook = enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK);
 
+        int conflictRefund = computeConflictOverwriteRefund(handler, planningStack, preEnchantments, enchantment);
         var admissionPos = handler.tableBlockPos();
         if (admissionPos == null || !(world.getBlockEntity(admissionPos) instanceof
             chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity admissionTable)
-            || !admissionTable.canQueue(handler.player.getUUID()) || enchantment_level < 1 || enchantment_level > 255 || payload.enchantment_id().toString().length() > 512) return false;
+            || !admissionTable.canQueue(handler.player.getUUID(), conflictRefund) || enchantment_level < 1 || enchantment_level > 255 || payload.enchantment_id().toString().length() > 512) return false;
         if (!handler.applyEnchantementCondition(payload)) {
             return false;
         }
-
-        int conflictRefund = computeConflictOverwriteRefund(handler, planningStack, preEnchantments, enchantment);
 
         if (masterTomeUsed) {
             var outcome = MasterTomeWear.applyShelfWear(
@@ -368,7 +367,7 @@ public final class EnchantmentApplication {
         if (!handler.disenchantEnabled()) {
             return 0;
         }
-        int total = 0;
+        long total = 0;
         var cfg = handler.libraryResonanceConfig();
         double tableScale = handler.disenchantRefundScale();
         double externalScale = handler.disenchantExternalRefundScale();
@@ -387,7 +386,7 @@ public final class EnchantmentApplication {
                 );
             }
         }
-        return total;
+        return (int) Math.min(Integer.MAX_VALUE, total);
     }
 
     private static void finish(ChiseledEnchantingTableScreenHandler handler) {

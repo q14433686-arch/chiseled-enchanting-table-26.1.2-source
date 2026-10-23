@@ -76,11 +76,14 @@ public class ChiseledEnchantingTable implements ModInitializer {
         for (int i = 0; i < offers.size(); i++) {
             MerchantOffer offer = offers.get(i);
             ItemStack result = offer.getResult();
-            if (!chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.hasInfinityImmunity(result)) {
+            // Restrict the book economy, not third-party enchanted equipment or arbitrary rewards.
+            if (!result.is(Items.ENCHANTED_BOOK)
+                || !chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.hasInfinityImmunity(result)) {
                 continue;
             }
-            ItemStack replacement = result.copy();
-            EnchantmentHelper.updateEnchantments(replacement, mutable -> {
+            // The offer owns this stack. Mutating only its result preserves uses, discounts,
+            // demand, special price and out-of-stock state (reconstructing an offer loses them).
+            EnchantmentHelper.updateEnchantments(result, mutable -> {
                 mutable.removeIf(h -> h.unwrapKey()
                     .map(ResourceKey::identifier)
                     .filter(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.INFINITY_ENCHANTMENT_ID::equals)
@@ -89,16 +92,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
                     mutable.set(powerHolderOpt.get(), 1);
                 }
             });
-            offers.set(i, new MerchantOffer(
-                offer.getItemCostA(),
-                offer.getItemCostB(),
-                replacement,
-                offer.getUses(),
-                offer.getMaxUses(),
-                offer.getXp(),
-                offer.getPriceMultiplier(),
-                offer.getDemand()
-            ));
+
         }
     }
 

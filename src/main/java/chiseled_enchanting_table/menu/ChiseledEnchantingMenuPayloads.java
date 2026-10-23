@@ -587,6 +587,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(containerId);
             buf.writeLong(session);
             List<EnchantmentWithLevel> list = queuedSteps == null ? List.of() : queuedSteps;
+            if (list.size() > 256) throw new IllegalArgumentException("Too many ritual steps");
             buf.writeVarInt(list.size());
             for (EnchantmentWithLevel e : list) {
                 EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode(buf, e);
@@ -599,6 +600,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int containerId = buf.readVarInt();
             long session = buf.readLong();
             int n = PayloadLimits.readCount(buf);
+            if (n > 256) throw new IllegalArgumentException("Too many ritual steps");
             List<EnchantmentWithLevel> list = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
                 list.add(EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode(buf));
