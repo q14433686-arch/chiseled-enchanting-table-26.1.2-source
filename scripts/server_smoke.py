@@ -36,6 +36,7 @@ def pump():
 threading.Thread(target=pump, daemon=True).start()
 ready = False
 reloaded = False
+drop_verified = False
 failed = []
 start = time.monotonic()
 try:
@@ -61,14 +62,25 @@ try:
                 process.stdin.flush()
             elif ready and ('Loaded ' in line and ' advancements' in line):
                 reloaded = True
+                # Exercise the actual 26.3 block-entity -> loot component path, not just JSON parsing.
+                process.stdin.write(
+                    'forceload add 0 0\n'
+                    'setblock 0 65 0 chiseled_enchanting_table:chiseled_enchanting_table\n'
+                    'data merge block 0 65 0 {color:1122867,CustomName:"Audit Table",epiphanySeed:123456,pendingFreezeTicks:1200L,frozenCycleIndex:17}\n'
+                    'loot spawn 0 67 0 mine 0 65 0\n'
+                    'data get entity @e[type=minecraft:item,limit=1]\n')
+                process.stdin.flush()
+            elif reloaded and all(token in line for token in (
+                'Audit Table', 'minecraft:dyed_color', 'pendingFreezeTicks', 'epiphanySeed')):
+                drop_verified = True
                 process.stdin.write('stop\n')
                 process.stdin.flush()
-        if not ready or not reloaded or failed:
-            raise RuntimeError(f'Smoke test failed: ready={ready}, reloaded={reloaded}, errors={failed}')
+        if not ready or not reloaded or not drop_verified or failed:
+            raise RuntimeError(f'Smoke test failed: ready={ready}, reloaded={reloaded}, drop_verified={drop_verified}, errors={failed}')
     code = process.wait(timeout=45)
     if code:
         raise RuntimeError(f'Server/Gradle exited with {code}')
-    print('SERVER SMOKE PASS: fresh world + reload + clean shutdown')
+    print('SERVER SMOKE PASS: fresh world + reload + named/dyed/frozen table loot + clean shutdown')
 finally:
     if process.poll() is None:
         os.killpg(process.pid, signal.SIGTERM)
