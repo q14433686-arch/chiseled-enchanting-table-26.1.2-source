@@ -53,7 +53,7 @@ public final class ChiseledEnchantingMenuPayloads {
                     return type;
                 }
             }
-            return ENCHANTMENT;
+            throw new IllegalArgumentException("Unknown enchanting option type: " + token);
         }
     }
 
@@ -197,12 +197,12 @@ public final class ChiseledEnchantingMenuPayloads {
         }
 
         private static AvailableEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
-            int unlockedSize = buf.readVarInt();
+            int unlockedSize = PayloadLimits.readCount(buf);
             Set<EnchantmentWithLevel> unlocked = new HashSet<>();
             for (int i = 0; i < unlockedSize; i++) {
                 unlocked.add(EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode(buf));
             }
-            int transformationSize = buf.readVarInt();
+            int transformationSize = PayloadLimits.readCount(buf);
             List<TransformationDisplay> transformations = new ArrayList<>();
             for (int i = 0; i < transformationSize; i++) {
                 transformations.add(TransformationDisplay.read(buf));
@@ -212,7 +212,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int chiseledBookCount = buf.readVarInt();
             int highTierChiseledBooks = buf.readVarInt();
             int epiphanySeed = buf.readInt();
-            int masterSize = buf.readVarInt();
+            int masterSize = PayloadLimits.readCount(buf);
             Map<Identifier, Integer> masterLevels = new java.util.HashMap<>(Math.max(4, masterSize * 2));
             for (int i = 0; i < masterSize; i++) {
                 Identifier id = buf.readIdentifier();
@@ -274,7 +274,7 @@ public final class ChiseledEnchantingMenuPayloads {
         }
 
         private static LiveShelfStatePayload read(RegistryFriendlyByteBuf buf) {
-            int unlockedSize = buf.readVarInt();
+            int unlockedSize = PayloadLimits.readCount(buf);
             Set<EnchantmentWithLevel> unlocked = new HashSet<>();
             for (int i = 0; i < unlockedSize; i++) {
                 unlocked.add(EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode(buf));
@@ -283,7 +283,7 @@ public final class ChiseledEnchantingMenuPayloads {
             int regularBookshelves = buf.readVarInt();
             int chiseledBookCount = buf.readVarInt();
             int highTierChiseledBooks = buf.readVarInt();
-            int masterSize = buf.readVarInt();
+            int masterSize = PayloadLimits.readCount(buf);
             Map<Identifier, Integer> masterLevels = new java.util.HashMap<>(Math.max(4, masterSize * 2));
             for (int i = 0; i < masterSize; i++) {
                 Identifier id = buf.readIdentifier();

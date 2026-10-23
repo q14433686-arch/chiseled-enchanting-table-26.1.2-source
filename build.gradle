@@ -182,3 +182,8 @@ publishing {
         }
     }
 }
+
+// The isolated CI smoke test sends reload/stop through the real dedicated-server console.
+tasks.named('runServer', JavaExec).configure {
+    standardInput = System.in
+}

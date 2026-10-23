@@ -127,3 +127,50 @@ jobs:
 
       - name: compile main + client with both viewers disabled
         run: ./gradlew compileJava compileClientJava -Penable_jei=false -Penable_rei=false --console=plain --stacktrace --no-daemon
+
+  server-smoke:
+    permissions:
+      contents: write
+    name: 26.3 real server world-load and reload
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: static
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x ./gradlew
+      - name: boot fresh world and reload datapacks
+        run: python3 scripts/server_smoke.py
+      - name: smoke-test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-smoke-${{ github.sha }}
+          path: |
+            build-reports/server-smoke.log
+            run/logs/latest.log
+            run/crash-reports/**
+          if-no-files-found: warn
+      - name: return smoke log to development branch
+        if: always() && github.event_name == 'push' && startsWith(github.ref_name, 'arena/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PYLOG'
+          import base64, json, os, pathlib, subprocess
+          path = pathlib.Path('build-reports/server-smoke.log')
+          if path.exists():
+              endpoint = f"repos/{os.environ['GITHUB_REPOSITORY']}/contents/{path}"
+              branch = os.environ['GITHUB_REF_NAME']
+              old = subprocess.run(['gh', 'api', endpoint + '?ref=' + branch], capture_output=True, text=True)
+              data = {'message': 'ci-log: server smoke for ' + os.environ['GITHUB_SHA'],
+                      'branch': branch, 'content': base64.b64encode(path.read_bytes()[-150000:]).decode()}
+              if old.returncode == 0:
+                  data['sha'] = json.loads(old.stdout)['sha']
+              subprocess.run(['gh', 'api', '-X', 'PUT', endpoint, '--input', '-'],
+                             input=json.dumps(data), text=True, check=True, stdout=subprocess.DEVNULL)
+          PYLOG

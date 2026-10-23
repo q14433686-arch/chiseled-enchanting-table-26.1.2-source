@@ -267,6 +267,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.grimoireOverlay.mouseClicked(event, isDoubleClick);
             return true;
         }
+        // Restrict custom actions to the platform left button, but retain vanilla
+        // inventory right-click handling. Overlay events above remain fully forwarded.
+        if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
+            return super.mouseClicked(event, isDoubleClick);
+        }
         if (isOverGrimoireButton(event.x(), event.y())) {
             GrimoireSoundHelper.playOpen();
             this.grimoireOverlay = new ArcaneGrimoireScreen(

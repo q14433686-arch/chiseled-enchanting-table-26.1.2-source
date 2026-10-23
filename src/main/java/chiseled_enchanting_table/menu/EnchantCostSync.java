@@ -42,6 +42,12 @@ public final class EnchantCostSync {
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
             if (!success) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                // An open menu caches transformation IDs/inputs/thresholds from its opening
+                // packet. Reloading only the cost table leaves that snapshot stale. Close just
+                // our menu (vanilla returns its input stacks), then the next open gets fresh data.
+                if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler) {
+                    player.closeContainer();
+                }
                 sendTo(player);
             }
         });
