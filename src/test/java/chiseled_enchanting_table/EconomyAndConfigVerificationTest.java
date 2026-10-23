@@ -290,12 +290,139 @@ class EconomyAndConfigVerificationTest {
 
         var clampedScanCfg = new BookshelfProgression.Config(
             true, 38, 1.25, BookshelfProgression.BlankMaxTierMode.HALF_CEIL,
-            16, 16, java.util.Map.of(), 8, 18, 0.5, 6, 8, 64
+            16, 16, java.util.Map.of(), 12, 32, 0.5, 6, 8, 64
         );
         assertTrue(
             BookshelfProgression.Config.scanVolumeBlocks(clampedScanCfg.horizontalScanRadius(), clampedScanCfg.verticalScanRadius())
                 <= BookshelfProgression.MAX_SCAN_VOLUME_BLOCKS
         );
+    }
+
+    @Test
+    void d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() throws Exception {
+        // D1: Master Tome wear state machine (wear / keep / consume, step_down vs depleted_tome)
+        var wearCfg = LibraryResonance.Config.DEFAULT;
+        assertEquals(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, wearCfg.tomeConsumptionMode());
+        assertEquals(16, wearCfg.maxTomeUses());
+        assertEquals(4, wearCfg.bookCopyWearCost());
+        assertEquals(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN, wearCfg.tomeDepleteBehavior());
+
+        // Simulate 16 gear uses on a Lv.5 Master Tome -> steps down cleanly at use #16 to fresh Lv.4 (0 wear)!
+        int curLevel = 5;
+        int curWear = 0;
+        for (int u = 1; u <= 15; u++) {
+            var res = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.stepWear(
+                curLevel, curWear,
+                chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.wearCostForTarget(wearCfg, false),
+                wearCfg.maxTomeUses(), wearCfg.tomeConsumptionMode(), wearCfg.tomeDepleteBehavior()
+            );
+            assertEquals(5, res.newLevel(), "Should stay Lv.5 through use #" + u);
+            assertEquals(u, res.newWearUsed());
+            curLevel = res.newLevel();
+            curWear = res.newWearUsed();
+        }
+        var sixteenthUse = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.stepWear(
+            curLevel, curWear, 1, wearCfg.maxTomeUses(), wearCfg.tomeConsumptionMode(), wearCfg.tomeDepleteBehavior()
+        );
+        assertEquals(4, sixteenthUse.newLevel(), "16th gear use must step Lv.5 Master Tome down to Lv.4");
+        assertEquals(0, sixteenthUse.newWearUsed(), "Stepped-down Master Tome starts fresh at 0 wear");
+
+        // Copying onto a blank book costs 4 charges -> 4 book copies exhaust 1 Master Tome level
+        var fourthCopy = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.stepWear(
+            1, 12,
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.wearCostForTarget(wearCfg, true),
+            wearCfg.maxTomeUses(), wearCfg.tomeConsumptionMode(), wearCfg.tomeDepleteBehavior()
+        );
+        assertEquals(0, fourthCopy.newLevel(), "4th book copy on Lv.1 tome must exhaust into Depleted Tome (level 0)");
+
+        // D2 + D6: VanillaTableMode & unified 12 / 32 / 38 shelf milestones
+        JsonObject sgJson = readResourceJson("shelf_gates.json");
+        BookshelfProgression.Config sg = BookshelfProgression.Config.fromJson(sgJson);
+        assertEquals(BookshelfProgression.VanillaTableMode.BOOKS, sg.vanillaTableMode());
+        assertEquals(12, sg.tier1Bookshelves());
+        assertEquals(32, sg.tier2Bookshelves());
+        assertEquals(38, sg.maxTierBookshelves());
+        assertTrue(sg.requireBreathingRoom());
+        assertEquals(6, sg.minOpenAdjacentBlocks());
+
+        // D4: Breathing-room pure formula (ceilingBlocked = 0, buried = 0, half-choked 3/6 = 19, corner 7/17 = full 38)
+        assertEquals(0, BookshelfProgression.effectiveShelvesAfterBreathingRoom(38, true, 17, sg));
+        assertEquals(0, BookshelfProgression.effectiveShelvesAfterBreathingRoom(38, false, 0, sg));
+        assertEquals(19, BookshelfProgression.effectiveShelvesAfterBreathingRoom(38, false, 3, sg));
+        assertEquals(38, BookshelfProgression.effectiveShelvesAfterBreathingRoom(38, false, 7, sg));
+
+        // D3: Provenance bitmask & anti-arbitrage across external loot, hybrid upgrade, book transfer & combine
+        JsonObject disJson = readResourceJson("disenchanting.json");
+        assertEquals(1.0, disJson.get("xp_refund_scale").getAsDouble(), 1e-9);
+        assertEquals(0.25, disJson.get("external_xp_refund_scale").getAsDouble(), 1e-9);
+
+        long maskNone = 0L; // purely external Sharpness IV -> 25% refund on every slice
+        long maskUpgradedTo5 = chiseled_enchanting_table.mechanics.enchanting.EnchantmentProvenance
+            .markRangeMask(maskNone, 4, 5); // upgraded 4 -> 5 on our table: bits 1..4 external, bit 5 table!
+        assertEquals(0b10000L, maskUpgradedTo5);
+
+        int fullTablePot5 = DisenchantmentApplication.provenanceSlicePotential(
+            wearCfg, 0b11111L, 0, 5, 5, 1, false, 1.0, 0.25
+        );
+        int pureExternalPot4 = DisenchantmentApplication.provenanceSlicePotential(
+            wearCfg, maskNone, 0, 4, 5, 1, false, 1.0, 0.25
+        );
+        int hybridWipePot5 = DisenchantmentApplication.provenanceSlicePotential(
+            wearCfg, maskUpgradedTo5, 0, 5, 5, 1, false, 1.0, 0.25
+        );
+        int step5DownTo4 = DisenchantmentApplication.provenanceSlicePotential(
+            wearCfg, maskUpgradedTo5, 4, 5, 5, 1, false, 1.0, 0.25
+        );
+        int stepCost4To5 = XpCostConversion.minPointsRequired(
+            XpCostConversion.forIncrementalMasterTomeEnchant(wearCfg, 4, 5, 5, 0, 40)
+        );
+        assertTrue(pureExternalPot4 < fullTablePot5 / 2, "External loot must receive steeply reduced refund");
+        assertTrue(
+            hybridWipePot5 - pureExternalPot4 < stepCost4To5,
+            "Upgrading external Lv.4 -> Lv.5 then wiping ALL must NEVER yield net positive XP profit!"
+        );
+        assertTrue(step5DownTo4 < stepCost4To5, "Stepping hybrid Lv.5 -> Lv.4 must strictly conserve XP");
+
+        // Combine mask: external Lv.4 + external Lv.4 -> Lv.5 marks ONLY bit 5 as table-paid
+        long combinedMask = chiseled_enchanting_table.mechanics.enchanting.EnchantmentProvenance
+            .combineMask(0L, 0L, 5);
+        assertEquals(0b10000L, combinedMask);
+
+        // D5: Exploration-gated transformations vs always-open utility transformations
+        JsonObject transRoot = readResourceJson("item_transformations.json");
+        Set<String> gatedIds = new HashSet<>();
+        Set<String> openIds = new HashSet<>();
+        for (JsonElement el : transRoot.getAsJsonArray("values")) {
+            JsonObject o = el.getAsJsonObject();
+            String id = o.get("id").getAsString();
+            if (o.has("require_prior_discovery") && o.get("require_prior_discovery").getAsBoolean()) {
+                gatedIds.add(id);
+            } else {
+                openIds.add(id);
+            }
+        }
+        assertEquals(
+            Set.of(
+                "chiseled_enchanting_table:enchanted_golden_apple",
+                "chiseled_enchanting_table:totem_of_undying",
+                "chiseled_enchanting_table:trident",
+                "chiseled_enchanting_table:echo_shard"
+            ),
+            gatedIds
+        );
+        assertEquals(
+            Set.of(
+                "chiseled_enchanting_table:blank_overwrite",
+                "chiseled_enchanting_table:experience_bottle"
+            ),
+            openIds
+        );
+
+        // D7: Structure & chest datapack configurability schemas
+        JsonObject poolJson = readResourceJson("bookshelf_book_pool.json");
+        assertTrue(poolJson.get("enabled").getAsBoolean());
+        JsonObject lootJson = readResourceJson("loot_injections.json");
+        assertEquals("keep_both", lootJson.get("vanilla_chest_books").getAsString());
     }
 
     private static JsonObject readClasspathJson(String path) throws Exception {

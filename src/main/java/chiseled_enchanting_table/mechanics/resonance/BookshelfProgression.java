@@ -44,15 +44,44 @@ public final class BookshelfProgression {
     public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = 38;
     public static final double DIRECT_TIER_CURVE_EXPONENT = 1.25;
 
-    public static final int DEFAULT_TIER1_BOOKSHELVES = 8;
-    public static final int DEFAULT_TIER2_BOOKSHELVES = 18;
+    public static final int DEFAULT_TIER1_BOOKSHELVES = 12;
+    public static final int DEFAULT_TIER2_BOOKSHELVES = 32;
     public static final double DEFAULT_TIER2_MATERIAL_MULTIPLIER = 0.50;
     public static final int DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS = 6;
     public static final int DEFAULT_BASE_BATCH_SIZE = 8;
     public static final int DEFAULT_TIER3_BATCH_SIZE = 64;
+    public static final int DEFAULT_MIN_OPEN_ADJACENT_BLOCKS = 6;
 
     private static final TagKey<Enchantment> CURSE_TAG =
         TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+
+    public enum VanillaTableMode {
+        BOOKS,
+        ALIGN_CAPS,
+        ALL,
+        NONE;
+
+        public String token() {
+            return switch (this) {
+                case BOOKS -> "books";
+                case ALIGN_CAPS -> "align_caps";
+                case ALL -> "all";
+                case NONE -> "none";
+            };
+        }
+
+        public static VanillaTableMode fromToken(String raw) {
+            if (raw == null || raw.isBlank()) {
+                return BOOKS;
+            }
+            return switch (raw.trim().toLowerCase(Locale.ROOT)) {
+                case "align_caps", "align", "cap" -> ALIGN_CAPS;
+                case "all", "disable_all" -> ALL;
+                case "none", "vanilla", "off" -> NONE;
+                default -> BOOKS;
+            };
+        }
+    }
 
     public enum BlankMaxTierMode {
         HALF_CEIL,
@@ -99,7 +128,11 @@ public final class BookshelfProgression {
         double tier2MaterialMultiplier,
         int tier3QualifyingEnchantments,
         int baseBatchSize,
-        int tier3BatchSize
+        int tier3BatchSize,
+        VanillaTableMode vanillaTableMode,
+        boolean requireBreathingRoom,
+        int minOpenAdjacentBlocks,
+        boolean requireLineOfSight
     ) {
         public static final Config DEFAULT = new Config(
             true,
@@ -114,12 +147,18 @@ public final class BookshelfProgression {
             DEFAULT_TIER2_MATERIAL_MULTIPLIER,
             DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS,
             DEFAULT_BASE_BATCH_SIZE,
-            DEFAULT_TIER3_BATCH_SIZE
+            DEFAULT_TIER3_BATCH_SIZE,
+            VanillaTableMode.BOOKS,
+            true,
+            DEFAULT_MIN_OPEN_ADJACENT_BLOCKS,
+            false
         );
 
         public Config {
             horizontalScanRadius = clampInt(horizontalScanRadius, 1, MAX_SCAN_HORIZONTAL_RADIUS);
             verticalScanRadius = clampInt(verticalScanRadius, 0, MAX_SCAN_VERTICAL_RADIUS);
+            vanillaTableMode = vanillaTableMode != null ? vanillaTableMode : VanillaTableMode.BOOKS;
+            minOpenAdjacentBlocks = clampInt(minOpenAdjacentBlocks, 1, 17);
             while (verticalScanRadius > 0
                 && scanVolumeBlocks(horizontalScanRadius, verticalScanRadius) > MAX_SCAN_VOLUME_BLOCKS) {
                 verticalScanRadius--;
@@ -128,6 +167,42 @@ public final class BookshelfProgression {
                 && scanVolumeBlocks(horizontalScanRadius, verticalScanRadius) > MAX_SCAN_VOLUME_BLOCKS) {
                 horizontalScanRadius--;
             }
+        }
+
+        public Config(
+            boolean directGatesEnabled,
+            int maxDirectBookshelves,
+            double gamma,
+            BlankMaxTierMode blankMaxTierMode,
+            int horizontalScanRadius,
+            int verticalScanRadius,
+            Map<Identifier, List<Integer>> overrides,
+            int tier1Bookshelves,
+            int tier2Bookshelves,
+            double tier2MaterialMultiplier,
+            int tier3QualifyingEnchantments,
+            int baseBatchSize,
+            int tier3BatchSize
+        ) {
+            this(
+                directGatesEnabled,
+                maxDirectBookshelves,
+                gamma,
+                blankMaxTierMode,
+                horizontalScanRadius,
+                verticalScanRadius,
+                overrides,
+                tier1Bookshelves,
+                tier2Bookshelves,
+                tier2MaterialMultiplier,
+                tier3QualifyingEnchantments,
+                baseBatchSize,
+                tier3BatchSize,
+                VanillaTableMode.BOOKS,
+                true,
+                DEFAULT_MIN_OPEN_ADJACENT_BLOCKS,
+                false
+            );
         }
 
         public Config(
@@ -162,6 +237,36 @@ public final class BookshelfProgression {
             int sy = 2 * Math.max(0, ry) + 1;
             return Math.max(0, sx * sx * sy - 1);
         }
+    }
+
+    /**
+     * Pure breathing-room shelf multiplier ({@code D4}) callable both in-game and in headless tests.
+     */
+    public static int effectiveShelvesAfterBreathingRoom(
+        int rawShelves,
+        boolean ceilingBlocked,
+        int openAdjacentBlocks,
+        Config cfg
+    ) {
+        if (rawShelves <= 0) {
+            return 0;
+        }
+        var c = cfg != null ? cfg : Config.DEFAULT;
+        if (!c.requireBreathingRoom()) {
+            return rawShelves;
+        }
+        if (ceilingBlocked) {
+            return 0;
+        }
+        int minOpen = Math.max(1, c.minOpenAdjacentBlocks());
+        if (openAdjacentBlocks >= minOpen) {
+            return rawShelves;
+        }
+        if (openAdjacentBlocks <= 0) {
+            return 0;
+        }
+        return (int) Math.floor((double) rawShelves * (double) openAdjacentBlocks / (double) minOpen);
+    }
 
         public static Config fromJson(JsonObject root) {
             if (root == null) {
@@ -169,6 +274,13 @@ public final class BookshelfProgression {
             }
             int hRadius = DEFAULT_SCAN_HORIZONTAL_RADIUS;
             int vRadius = DEFAULT_SCAN_VERTICAL_RADIUS;
+            boolean breathingRoom = true;
+            int minOpen = DEFAULT_MIN_OPEN_ADJACENT_BLOCKS;
+            boolean lineOfSight = false;
+            VanillaTableMode vanillaMode = VanillaTableMode.BOOKS;
+            if (root.has("vanilla_table_mode") && root.get("vanilla_table_mode").isJsonPrimitive()) {
+                vanillaMode = VanillaTableMode.fromToken(root.get("vanilla_table_mode").getAsString());
+            }
             if (root.has("scan_volume") && root.get("scan_volume").isJsonObject()) {
                 JsonObject sv = root.getAsJsonObject("scan_volume");
                 if (sv.has("horizontal_radius")) {
@@ -176,6 +288,15 @@ public final class BookshelfProgression {
                 }
                 if (sv.has("vertical_radius")) {
                     vRadius = clampInt(sv.get("vertical_radius").getAsInt(), 0, MAX_SCAN_VERTICAL_RADIUS);
+                }
+                if (sv.has("require_breathing_room")) {
+                    breathingRoom = sv.get("require_breathing_room").getAsBoolean();
+                }
+                if (sv.has("min_open_adjacent_blocks")) {
+                    minOpen = clampInt(sv.get("min_open_adjacent_blocks").getAsInt(), 1, 17);
+                }
+                if (sv.has("require_line_of_sight")) {
+                    lineOfSight = sv.get("require_line_of_sight").getAsBoolean();
                 }
             }
 
@@ -282,7 +403,11 @@ public final class BookshelfProgression {
                 t2Mult,
                 t3Ench,
                 baseBatch,
-                tier3Batch
+                tier3Batch,
+                vanillaMode,
+                breathingRoom,
+                minOpen,
+                lineOfSight
             );
         }
 

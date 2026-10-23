@@ -94,6 +94,11 @@ public final class SyncedEnchantmentCosts {
         return p != null ? p.disenchantRefundScale() : ChiseledEnchantingTableData.disenchantRefundScale();
     }
 
+    public static double disenchantExternalRefundScale() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p != null ? p.disenchantExternalRefundScale() : ChiseledEnchantingTableData.disenchantExternalRefundScale();
+    }
+
     public static int epiphanyMinBookshelves() {
         EnchantCostTablePayload p = syncedPayload;
         return p != null ? p.epiphanyMinBookshelves() : ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves();

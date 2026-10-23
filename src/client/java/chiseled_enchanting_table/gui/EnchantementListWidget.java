@@ -301,6 +301,24 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
+    public EnchantUiEntry hoveredActionRowEntry(double mouseX, double mouseY) {
+        if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
+            return null;
+        }
+        for (EnchantUiEntry entry : this.children()) {
+            if (entry.is_category_header) continue;
+            int dx = entry.effectiveDx();
+            int dy = entry.getY();
+            int dw = entry.effectiveDw();
+            int dh = entry.getHeight();
+            if (mouseX >= dx && mouseX <= dx + dw && mouseY >= dy && mouseY <= dy + dh) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
     public EnchantUiEntry hoveredSpecialRowEntry(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;
@@ -311,7 +329,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             int dw = entry.is_category_header ? (entry.getWidth() - 2) : entry.effectiveDw();
             int dh = entry.getHeight();
             if (mouseX >= dx && mouseX <= dx + dw && mouseY >= dy && mouseY <= dy + dh) {
-                if (entry.shelf_locked) {
+                if (entry.shelf_locked || entry.discovery_locked) {
                     return entry;
                 }
                 if (entry.is_category_header && !entry.cleanse_theme) {
@@ -439,11 +457,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             Holder<Enchantment> holder = holdersById.get(id);
             int curLvl = current.getLevel(holder);
             String headerTitle = Enchantment.getFullname(holder, curLvl).getString();
-            int traitEssence = DisenchantmentApplication.essencePotential(
+            int traitEssence = DisenchantmentApplication.provenanceEssencePotential(
                 this.handler.libraryResonanceConfig(),
+                this.enchantable_item,
                 holder,
                 curLvl,
-                this.handler.disenchantRefundScale()
+                this.handler.disenchantRefundScale(),
+                this.handler.disenchantExternalRefundScale()
             );
             boolean open = isCategoryExpanded(id);
 
@@ -732,7 +752,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public boolean nested_child;
         public boolean last_child;
         public boolean shelf_locked;
+        public boolean discovery_locked;
         public int required_bookshelves;
+        public int conflict_refund_points;
         public boolean cleanse_theme;
         public String category_title;
         public String category_badge;
@@ -833,8 +855,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             this.enchantment = (this.is_transformation || option.isDisenchantAll())
                 ? null
                 : IdentifierToEnchantment(option.id(), this.player);
+            this.discovery_locked = this.is_transformation && !handler.isTransformationUnlocked(this.enchantment_id);
 
             this.overridenEnchant = new ArrayList<>();
+            this.conflict_refund_points = 0;
             if (this.enchantment != null && !option.isCleanseOperation()) {
                 ItemEnchantments currentEnchants = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
                 int currentSameLevel = currentEnchants.getLevel(this.enchantment);
@@ -848,6 +872,8 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                         this.overridenEnchant.add(new EnchantmentWithLevel(existingId, entry.getIntValue()));
                     }
                 }
+                this.conflict_refund_points = chiseled_enchanting_table.mechanics.enchanting.EnchantmentApplication
+                    .computeConflictOverwriteRefund(handler, enchantable_item, currentEnchants, this.enchantment);
             }
         }
 
@@ -919,7 +945,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         public boolean canEnchant() {
             if (is_category_header) return true;
-            if (shelf_locked) return false;
+            if (shelf_locked || discovery_locked) return false;
             return xpConditionMet() && itemCostConditionMet() && !enchantAlreadyExist();
         }
 
@@ -1121,7 +1147,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (firstOverridenEnchant.isPresent() && !enchantable_item.is(Items.ENCHANTED_BOOK)) {
                 var enchant = firstOverridenEnchant.get();
                 var name = Enchantment.getFullname(IdentifierToEnchantment(enchant.enchantment_id(), this.player), enchant.enchantment_level()).getString();
-                return new EnchantmentRowRenderer.OverrideAnnotation("\u2716 " + name, RowRenderSupport.LIGHT_RED);
+                String conflictText = this.conflict_refund_points > 0
+                    ? ("\u2716 " + name + " (+" + this.conflict_refund_points + " XP)")
+                    : ("\u2716 " + name);
+                return new EnchantmentRowRenderer.OverrideAnnotation(conflictText, RowRenderSupport.LIGHT_RED);
             }
             return null;
         }
@@ -1185,7 +1214,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     : outputName;
                 String subText = null;
                 int subColor = RowRenderSupport.LIGHT_GREEN;
-                if (isBlankOverwrite) {
+                if (discovery_locked) {
+                    subText = I18n.get("gui.chiseled_enchanting_table.discovery_locked.sub", baseOutputName);
+                    subColor = 0xFFD4AD6A;
+                } else if (isBlankOverwrite) {
                     var dtTier = handler.depletedTomeTier();
                     var sg = handler.shelfGatesConfig();
                     subText = switch (dtTier) {
@@ -1217,6 +1249,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     ctx, client, dx, dy, dw, dh, isFocused, hovered, canEnchant(),
                     primaryMet, additionalMet, xpMet, rowTitle, subText, subColor, cost, additional_costs, xp_requirement
                 );
+                if (discovery_locked) {
+                    ctx.fill(dx + 3, dy + 3, dx + dw - 3, dy + dh - 3, 0x380A0614);
+                }
                 return;
             }
 

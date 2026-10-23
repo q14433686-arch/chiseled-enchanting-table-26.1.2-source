@@ -8,6 +8,7 @@ import chiseled_enchanting_table.gui.grimoire.GrimoireSoundHelper;
 import chiseled_enchanting_table.gui.grimoire.GrimoireViewerBridge.HoveredSlot;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
+import chiseled_enchanting_table.menu.AvailableOption;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
@@ -716,6 +717,20 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             var specialEntry = this.scrollContainer.hoveredSpecialRowEntry(mouseX, mouseY);
             if (specialEntry != null) {
+                if (specialEntry.discovery_locked) {
+                    String lockedOut = this.menu.syncedTransformationOutputName(specialEntry.enchantment_id);
+                    List<Component> discTip = new ArrayList<>();
+                    discTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.discovery_locked.tip_title",
+                        lockedOut
+                    ).withStyle(ChatFormatting.GOLD));
+                    discTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.discovery_locked.tip_desc",
+                        lockedOut
+                    ).withStyle(ChatFormatting.YELLOW));
+                    ctx.setTooltipForNextFrame(this.font, discTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    return;
+                }
                 if (specialEntry.shelf_locked && specialEntry.enchantment != null) {
                     String lockedName = net.minecraft.world.item.enchantment.Enchantment
                         .getFullname(specialEntry.enchantment, specialEntry.enchant_level)
@@ -822,11 +837,81 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     return;
                 }
             }
+            var hoveredRow = this.scrollContainer.hoveredActionRowEntry(mouseX, mouseY);
+            if (hoveredRow != null) {
+                List<Component> rowTip = new ArrayList<>();
+                AvailableOption hoverOpt = new AvailableOption(
+                    hoveredRow.option_type,
+                    hoveredRow.enchantment_id,
+                    hoveredRow.enchant_level
+                );
+                rowTip.add(Component.literal(this.scrollContainer.displayName(hoverOpt)).withStyle(ChatFormatting.GOLD));
+                boolean fromBook = this.menu.get_cost_item().is(net.minecraft.world.item.Items.ENCHANTED_BOOK)
+                    && hoveredRow.option_type == OptionType.ENCHANTMENT;
+                var lrCfg = this.menu.libraryResonanceConfig();
+                if (fromBook) {
+                    rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.book_transfer")
+                        .withStyle(ChatFormatting.GREEN));
+                } else if (hoveredRow.is_transformation) {
+                    rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.transformation")
+                        .withStyle(ChatFormatting.LIGHT_PURPLE));
+                } else if (hoveredRow.option_type == OptionType.TREASURE_EPIPHANY) {
+                    rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.epiphany")
+                        .withStyle(ChatFormatting.LIGHT_PURPLE));
+                } else if (hoveredRow.option_type == OptionType.DISENCHANT_ALL
+                    || hoveredRow.option_type == OptionType.DOWNGRADE_ENCHANTMENT) {
+                    int extPct = (int) Math.round(this.menu.disenchantExternalRefundScale() * 100.0);
+                    rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_provenance", extPct)
+                        .withStyle(ChatFormatting.AQUA));
+                } else if (hoveredRow.option_type == OptionType.STRIP_SINGLE_ENCHANTMENT
+                    || hoveredRow.option_type == OptionType.PURGE_CURSE) {
+                    rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_targeted")
+                        .withStyle(ChatFormatting.AQUA));
+                } else {
+                    boolean masterBacked = this.menu.storedMasterLevel(hoveredRow.enchantment_id) >= hoveredRow.enchant_level;
+                    if (masterBacked) {
+                        rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.master_tome")
+                            .withStyle(ChatFormatting.GREEN));
+                        boolean targetIsBook = hoveredRow.enchantable_item.is(net.minecraft.world.item.Items.BOOK)
+                            || hoveredRow.enchantable_item.is(net.minecraft.world.item.Items.ENCHANTED_BOOK);
+                        int wearCost = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.wearCostForTarget(lrCfg, targetIsBook);
+                        if (wearCost > 0) {
+                            rowTip.add(Component.translatable(
+                                "gui.chiseled_enchanting_table.pricing.tome_wear_cost",
+                                wearCost,
+                                lrCfg.maxTomeUses()
+                            ).withStyle(ChatFormatting.GRAY));
+                        }
+                    } else if (hoveredRow.existingSameLevel.isPresent() && hoveredRow.existingSameLevel.getAsInt() > 0) {
+                        rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.incremental")
+                            .withStyle(ChatFormatting.AQUA));
+                    } else {
+                        rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.full_ritual")
+                            .withStyle(ChatFormatting.LIGHT_PURPLE));
+                    }
+                }
+                if (hoveredRow.conflict_refund_points > 0) {
+                    rowTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.pricing.conflict_refund",
+                        hoveredRow.conflict_refund_points
+                    ).withStyle(ChatFormatting.GREEN));
+                }
+                int rowDisc = this.menu.effectiveXpDiscountPercent(hoveredRow.enchantment_id, hoveredRow.option_type);
+                if (rowDisc > 0 && !hoveredRow.xp_requirement.isRefund() && !fromBook) {
+                    rowTip.add(Component.translatable(
+                        "gui.chiseled_enchanting_table.pricing.resonance_discount",
+                        rowDisc
+                    ).withStyle(ChatFormatting.DARK_AQUA));
+                }
+                ctx.setTooltipForNextFrame(this.font, rowTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
             if (isOverCleanseAllButton(mouseX, mouseY)) {
                 int refund = DisenchantmentApplication.totalFullDisenchantRefund(
                     this.menu.libraryResonanceConfig(),
                     this.menu.get_enchantable_item(),
-                    this.menu.disenchantRefundScale()
+                    this.menu.disenchantRefundScale(),
+                    this.menu.disenchantExternalRefundScale()
                 );
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_all_title")
@@ -920,7 +1005,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     int refund = DisenchantmentApplication.totalFullDisenchantRefund(
                         this.menu.libraryResonanceConfig(),
                         target,
-                        this.menu.disenchantRefundScale()
+                        this.menu.disenchantRefundScale(),
+                        this.menu.disenchantExternalRefundScale()
                     );
                     List<Component> tip = new ArrayList<>();
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_title")
@@ -951,6 +1037,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.title", this.menu.xpDiscountPercent)
                     .withStyle(ChatFormatting.GOLD));
+                if (this.menu.crampedLibrary) {
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.cramped")
+                        .withStyle(ChatFormatting.RED));
+                }
                 int minDiscShelves = this.menu.libraryResonanceConfig().minDiscountBookshelves();
                 if (this.menu.regularBookshelves < minDiscShelves) {
                     tip.add(Component.translatable(
@@ -1030,7 +1120,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 int refund = DisenchantmentApplication.totalFullDisenchantRefund(
                     this.menu.libraryResonanceConfig(),
                     target,
-                    this.menu.disenchantRefundScale()
+                    this.menu.disenchantRefundScale(),
+                    this.menu.disenchantExternalRefundScale()
                 );
 
                 Component header = Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_title");

@@ -1,6 +1,7 @@
 {
   "_comment": "Weighted 6-slot fill for chiseled bookshelves placed by the structure processor. Tuned for exciting exploration: 12% per-slot enchanted-book rate across generated libraries with rewarding mid/high-tier tome odds.",
   "_schema_version": 2,
+  "enabled": true,
   "book_count": {
     "min": 3,
     "max": 5

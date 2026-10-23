@@ -118,6 +118,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public int chiseledBookCount;
     public int highTierChiseledBooks;
     public java.util.Map<Identifier, Integer> storedMasterLevels;
+    public boolean crampedLibrary;
     private int epiphanySeed;
     private int syncedCycleIndex;
     private int syncedCountdownSeconds;
@@ -166,6 +167,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.storedMasterLevels = payload.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(payload.stored_master_levels());
+        this.crampedLibrary = payload.cramped_library();
         this.epiphanySeed = payload.epiphany_seed();
         long cycleTicks = Math.max(1L, this.epiphanyCycleTicks());
         this.syncedCycleIndex = (int) ((this.world.getGameTime() / cycleTicks) & 0xFFFFL);
@@ -389,6 +391,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.storedMasterLevels = live.stored_master_levels() == null
             ? java.util.Map.of()
             : java.util.Map.copyOf(live.stored_master_levels());
+        this.crampedLibrary = live.cramped_library();
         if (this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
         }
@@ -412,6 +415,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             || live.regular_bookshelves() != this.regularBookshelves
             || live.chiseled_book_count() != this.chiseledBookCount
             || live.high_tier_chiseled_books() != this.highTierChiseledBooks
+            || live.cramped_library() != this.crampedLibrary
             || !live.stored_master_levels().equals(this.storedMasterLevels);
         if (changed) {
             applyLiveShelfState(live);
@@ -521,6 +525,29 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             return Math.max(1, display.min_player_level());
         }
         return ChiseledEnchantingTableData.transformationMinPlayerLevel(id);
+    }
+
+    public boolean isTransformationUnlocked(Identifier id) {
+        if (this.player != null && this.player.getAbilities().instabuild) {
+            return true;
+        }
+        TransformationDisplay display = this.transformationDisplays.get(id);
+        if (display != null) {
+            if (display.unlocked()) {
+                return true;
+            }
+            Item outItem = BuiltInRegistries.ITEM.getValue(display.output_item());
+            if (outItem != null && outItem != Items.AIR && this.player != null) {
+                for (int slot = 0; slot < this.player.getInventory().getContainerSize(); slot++) {
+                    ItemStack st = this.player.getInventory().getItem(slot);
+                    if (!st.isEmpty() && st.is(outItem)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        return ChiseledEnchantingTableData.isTransformationUnlocked(this.player, id);
     }
 
     /** Display (hover) name of a synced transformation's output item. */
@@ -661,6 +688,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return this.world.isClientSide()
             ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.disenchantRefundScale()
             : ChiseledEnchantingTableData.disenchantRefundScale();
+    }
+
+    public double disenchantExternalRefundScale() {
+        return this.world.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.disenchantExternalRefundScale()
+            : ChiseledEnchantingTableData.disenchantExternalRefundScale();
     }
 
     public int currentTargetEnchantLevel(Identifier enchantmentId) {
@@ -1025,7 +1058,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         var resonanceCfg = libraryResonanceConfig();
         if (type == OptionType.DISENCHANT_ALL) {
             int totalRefund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                .totalFullDisenchantRefund(resonanceCfg, get_enchantable_item(), disenchantRefundScale());
+                .totalFullDisenchantRefund(
+                    resonanceCfg,
+                    get_enchantable_item(),
+                    disenchantRefundScale(),
+                    disenchantExternalRefundScale()
+                );
             return XpCostConversion.XpRequirement.refund(totalRefund);
         }
         if (type == OptionType.DOWNGRADE_ENCHANTMENT) {
@@ -1033,7 +1071,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 Holder<Enchantment> holder = IdentifierToEnchantment(e.enchantment_id(), this.world);
                 int cur = currentTargetEnchantLevel(e.enchantment_id());
                 int refund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                    .refundForStepDown(resonanceCfg, holder, cur, e.enchantment_level(), disenchantRefundScale());
+                    .provenanceRefundForStepDown(
+                        resonanceCfg,
+                        get_enchantable_item(),
+                        holder,
+                        cur,
+                        e.enchantment_level(),
+                        disenchantRefundScale(),
+                        disenchantExternalRefundScale()
+                    );
                 return XpCostConversion.XpRequirement.refund(refund);
             } catch (Exception ignored) {
                 return XpCostConversion.XpRequirement.FREE;
@@ -1046,7 +1092,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 try {
                     Holder<Enchantment> holder = IdentifierToEnchantment(e.enchantment_id(), this.world);
                     int refund = chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication
-                        .essencePotential(resonanceCfg, holder, curMap.getLevel(holder), disenchantRefundScale());
+                        .provenanceEssencePotential(
+                            resonanceCfg,
+                            target,
+                            holder,
+                            curMap.getLevel(holder),
+                            disenchantRefundScale(),
+                            disenchantExternalRefundScale()
+                        );
                     return XpCostConversion.XpRequirement.refund(refund);
                 } catch (Exception ignored) {
                     return XpCostConversion.XpRequirement.FREE;

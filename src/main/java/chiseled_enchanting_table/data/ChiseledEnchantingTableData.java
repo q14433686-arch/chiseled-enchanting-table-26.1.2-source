@@ -58,12 +58,38 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static final Identifier SHELF_GATES_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/shelf_gates.json");
     private static final Identifier LIBRARY_RESONANCE_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/library_resonance.json");
 
+    public enum VanillaChestBooksMode {
+        KEEP_BOTH,
+        STRIP_VANILLA,
+        DISABLED;
+
+        public String token() {
+            return switch (this) {
+                case KEEP_BOTH -> "keep_both";
+                case STRIP_VANILLA -> "strip_vanilla";
+                case DISABLED -> "disabled";
+            };
+        }
+
+        public static VanillaChestBooksMode fromToken(String raw) {
+            if (raw == null || raw.isBlank()) {
+                return KEEP_BOTH;
+            }
+            return switch (raw.trim().toLowerCase(java.util.Locale.ROOT)) {
+                case "strip_vanilla", "replace", "strip" -> STRIP_VANILLA;
+                case "disabled", "off", "none", "false" -> DISABLED;
+                default -> KEEP_BOTH;
+            };
+        }
+    }
+
     private static Set<EnchantmentWithLevel> defaultEnchantmentValues = builtInDefaultEnchantments();
     private static List<DefaultEnchantmentTagRule> defaultEnchantmentTags = builtInDefaultEnchantmentTags();
     private static Set<Identifier> defaultExcludedIds = builtInExcludedTreasureIds();
     private static List<Identifier> defaultExcludedTags = builtInExcludedTags();
     private static CostTables costTables = CostTables.builtInFallback();
     private static Map<Identifier, ItemTransformation> itemTransformations = builtInItemTransformations();
+    private static VanillaChestBooksMode vanillaChestBooksMode = VanillaChestBooksMode.KEEP_BOTH;
     private static List<LootInjection> lootInjections = List.of();
     private static BookshelfBookPool bookshelfBookPool = BookshelfBookPool.emptyFallback();
     private static BookUpgradeRules bookUpgradeRules = BookUpgradeRules.builtInFallback();
@@ -327,7 +353,16 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * on dedicated servers). Returns a list of {@code Object[]} {id, inputItemId, outputItemId, level}
      * to avoid a compile dependency from the data package onto the menu package.
      */
+    public static boolean isTransformationUnlocked(@org.jetbrains.annotations.Nullable net.minecraft.world.entity.player.Player player, Identifier id) {
+        ItemTransformation rule = itemTransformations.get(id);
+        return rule == null || rule.isUnlockedFor(player);
+    }
+
     public static List<Object[]> transformationDisplayTuples() {
+        return transformationDisplayTuples(null);
+    }
+
+    public static List<Object[]> transformationDisplayTuples(@org.jetbrains.annotations.Nullable net.minecraft.world.entity.player.Player player) {
         List<Object[]> result = new ArrayList<>();
         for (ItemTransformation transformation : itemTransformations.values()) {
             result.add(new Object[] {
@@ -337,7 +372,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 transformation.level(),
                 transformation.inputIsTag(),
                 transformation.minRequiredLevel(),
-                transformation.deductedLevels()
+                transformation.deductedLevels(),
+                transformation.isUnlockedFor(player)
             });
         }
         return List.copyOf(result);
@@ -418,6 +454,14 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * Weighted 6-slot fill rules for chiseled bookshelves placed by
      * {@code structureProcessor.BookshelfReplacerProcessor}. Also loaded from JSON only.
      */
+    public static VanillaChestBooksMode vanillaChestBooksMode() {
+        return vanillaChestBooksMode;
+    }
+
+    public static boolean bookshelfReplacementEnabled() {
+        return bookshelfBookPool.enabled();
+    }
+
     public static BookshelfBookPool bookshelfBookPool() {
         return bookshelfBookPool;
     }
@@ -436,7 +480,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         defaultExcludedTags = loadedDefaults.excludedTags();
         costTables = loadCostTables(resourceManager);
         itemTransformations = loadItemTransformations(resourceManager);
-        lootInjections = loadLootInjections(resourceManager);
+        LootInjectionTable loadedLoot = loadLootInjections(resourceManager);
+        vanillaChestBooksMode = loadedLoot.mode();
+        lootInjections = loadedLoot.entries();
         bookshelfBookPool = loadBookshelfBookPool(resourceManager);
         bookUpgradeRules = loadBookUpgradeRules(resourceManager);
         treasureEpiphanyRules = loadTreasureEpiphanyRules(resourceManager);
@@ -661,6 +707,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         int xpCost,
         int minRequiredLevel,
         int deductedLevels,
+        boolean requirePriorDiscovery,
+        @org.jetbrains.annotations.Nullable Identifier requiredAdvancement,
         ItemCostOption primaryCost,
         List<ItemCostOption> additionalCosts,
         List<ItemCostOption> alternativePrimaryOptions
@@ -684,6 +732,38 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 xpCost,
                 1,
                 0,
+                false,
+                null,
+                primaryCost,
+                additionalCosts,
+                alternativePrimaryOptions
+            );
+        }
+
+        public ItemTransformation(
+            Identifier id,
+            Identifier inputItemId,
+            boolean inputIsTag,
+            Identifier outputItemId,
+            int level,
+            int xpCost,
+            int minRequiredLevel,
+            int deductedLevels,
+            ItemCostOption primaryCost,
+            List<ItemCostOption> additionalCosts,
+            List<ItemCostOption> alternativePrimaryOptions
+        ) {
+            this(
+                id,
+                inputItemId,
+                inputIsTag,
+                outputItemId,
+                level,
+                xpCost,
+                minRequiredLevel,
+                deductedLevels,
+                false,
+                null,
                 primaryCost,
                 additionalCosts,
                 alternativePrimaryOptions
@@ -710,6 +790,14 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 0,
                 intOr(json, "deducted_levels", intOr(json, "min_deduction_levels", 0))
             );
+            boolean requireDiscovery = boolOr(json, "require_prior_discovery", false);
+            Identifier reqAdv = null;
+            if (json.has("required_advancement") && json.get("required_advancement").isJsonPrimitive()) {
+                String rawAdv = json.get("required_advancement").getAsString().trim();
+                if (!rawAdv.isEmpty()) {
+                    reqAdv = parseIdentifier(rawAdv);
+                }
+            }
             List<ItemCostOption> additionalCosts = new ArrayList<>();
             if (json.has("additional_costs")) {
                 for (JsonElement element : json.getAsJsonArray("additional_costs")) {
@@ -736,6 +824,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 Math.max(0, xpCost),
                 minRequiredLevel,
                 deductedLevels,
+                requireDiscovery,
+                reqAdv,
                 primaryCost,
                 List.copyOf(additionalCosts),
                 List.copyOf(altOptions)
@@ -772,6 +862,54 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
         public ItemStack primaryCostStack(String salt) {
             return primaryCost.toSingleStack(id, level, level, salt);
+        }
+
+        public boolean isUnlockedFor(@org.jetbrains.annotations.Nullable net.minecraft.world.entity.player.Player player) {
+            if (!requirePriorDiscovery && requiredAdvancement == null) {
+                return true;
+            }
+            if (player == null) {
+                return false;
+            }
+            if (player.getAbilities().instabuild) {
+                return true;
+            }
+            Item outItem = BuiltInRegistries.ITEM.getValue(outputItemId);
+            if (requirePriorDiscovery && outItem != null && outItem != Items.AIR) {
+                for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+                    ItemStack st = player.getInventory().getItem(slot);
+                    if (!st.isEmpty() && st.is(outItem)) {
+                        return true;
+                    }
+                }
+                if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                    var stats = sp.getStats();
+                    if (stats.getValue(net.minecraft.stats.Stats.ITEM_PICKED_UP.get(outItem)) > 0
+                        || stats.getValue(net.minecraft.stats.Stats.ITEM_USED.get(outItem)) > 0
+                        || stats.getValue(net.minecraft.stats.Stats.ITEM_CRAFTED.get(outItem)) > 0) {
+                        return true;
+                    }
+                    if (outItem == Items.TOTEM_OF_UNDYING
+                        && hasCompletedAdvancement(sp, Identifier.withDefaultNamespace("adventure/totem_of_undying"))) {
+                        return true;
+                    }
+                }
+            }
+            if (requiredAdvancement != null && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                if (hasCompletedAdvancement(sp, requiredAdvancement)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static boolean hasCompletedAdvancement(net.minecraft.server.level.ServerPlayer sp, Identifier advId) {
+            var server = sp.level().getServer();
+            if (server == null) {
+                return false;
+            }
+            var holder = server.getAdvancements().get(advId);
+            return holder != null && sp.getAdvancements().getOrStartProgress(holder).isDone();
         }
 
         public List<ItemStack> additionalCostStacks(String salt) {
@@ -1120,13 +1258,18 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     // ---------- U1: loot injections + bookshelf book pool ----------
 
-    private static List<LootInjection> loadLootInjections(ResourceManager resourceManager) {
+    private record LootInjectionTable(VanillaChestBooksMode mode, List<LootInjection> entries) {}
+
+    private static LootInjectionTable loadLootInjections(ResourceManager resourceManager) {
         Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(LOOT_INJECTIONS_ID);
         if (resource.isEmpty()) {
-            return List.of();
+            return new LootInjectionTable(VanillaChestBooksMode.KEEP_BOTH, List.of());
         }
         try (Reader reader = resource.get().openAsReader()) {
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+            VanillaChestBooksMode mode = root.has("vanilla_chest_books") && root.get("vanilla_chest_books").isJsonPrimitive()
+                ? VanillaChestBooksMode.fromToken(root.get("vanilla_chest_books").getAsString())
+                : VanillaChestBooksMode.KEEP_BOTH;
             JsonArray entries = root.getAsJsonArray("entries");
             List<LootInjection> loaded = new ArrayList<>();
             if (entries != null) {
@@ -1137,10 +1280,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                     }
                 }
             }
-            return List.copyOf(loaded);
+            return new LootInjectionTable(mode, List.copyOf(loaded));
         } catch (Exception e) {
             ChiseledEnchantingTable.LOGGER.error("Failed to load {}; loot injection disabled", LOOT_INJECTIONS_ID, e);
-            return List.of();
+            return new LootInjectionTable(VanillaChestBooksMode.KEEP_BOTH, List.of());
         }
     }
 
@@ -1441,6 +1584,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * level-penalised at all.</p>
      */
     public record BookshelfBookPool(
+        boolean enabled,
         int minBooks, int maxBooks,
         double enchantedBookProbability,
         String enchantPoolSource,
@@ -1449,11 +1593,33 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         double maxLevelWeightRatio,
         List<List<LootInjectionEntry>> enchantSets
     ) {
+        public BookshelfBookPool(
+            int minBooks, int maxBooks,
+            double enchantedBookProbability,
+            String enchantPoolSource,
+            boolean useBaseWeight,
+            boolean useVanillaWeightFactor,
+            double maxLevelWeightRatio,
+            List<List<LootInjectionEntry>> enchantSets
+        ) {
+            this(
+                true,
+                minBooks, maxBooks,
+                enchantedBookProbability,
+                enchantPoolSource,
+                useBaseWeight,
+                useVanillaWeightFactor,
+                maxLevelWeightRatio,
+                enchantSets
+            );
+        }
+
         static BookshelfBookPool emptyFallback() {
-            return new BookshelfBookPool(3, 5, 0.03, "loot_injections", true, true, 0.1, List.of());
+            return new BookshelfBookPool(true, 3, 5, 0.03, "loot_injections", true, true, 0.1, List.of());
         }
 
         static BookshelfBookPool fromJson(JsonObject root) {
+            boolean enabled = !root.has("enabled") || root.get("enabled").getAsBoolean();
             JsonObject bookCount = root.has("book_count") ? root.getAsJsonObject("book_count") : new JsonObject();
             int minBooks = Math.max(0, intOr(bookCount, "min", 3));
             int maxBooks = Math.max(minBooks, intOr(bookCount, "max", 5));
@@ -1500,6 +1666,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             }
 
             return new BookshelfBookPool(
+                enabled,
                 minBooks, maxBooks, enchantedProb,
                 source, useBase, useVanilla, maxLevelRatio,
                 List.copyOf(sets)
@@ -1534,6 +1701,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     public static double disenchantRefundScale() {
         return disenchantingRules.xpRefundScale();
+    }
+
+    public static double disenchantExternalRefundScale() {
+        return disenchantingRules.externalXpRefundScale();
     }
 
     public static int targetedStripXpCost(Identifier id, int level, int maxLevel) {
@@ -1609,6 +1780,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         boolean enabled,
         boolean allowCursePurge,
         double xpRefundScale,
+        double externalXpRefundScale,
         int stripXpMin,
         int stripXpMax,
         ItemCostRule stripMaterialCost,
@@ -1623,6 +1795,17 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             boolean enabled = boolOr(root, "enabled", true);
             boolean allowCurse = boolOr(root, "allow_curse_purge", true);
             double scale = Math.max(0.0, Math.min(1.0, doubleOr(root, "xp_refund_scale", 1.0)));
+            double extScale = Math.max(
+                0.0,
+                Math.min(
+                    scale,
+                    doubleOr(
+                        root,
+                        "external_xp_refund_scale",
+                        chiseled_enchanting_table.mechanics.enchanting.EnchantmentProvenance.DEFAULT_EXTERNAL_XP_REFUND_SCALE
+                    )
+                )
+            );
 
             JsonObject bundled = null;
             JsonObject stripObj = root.has("targeted_strip") ? root.getAsJsonObject("targeted_strip") : new JsonObject();
@@ -1651,7 +1834,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             }
 
             return new DisenchantingRules(
-                enabled, allowCurse, scale,
+                enabled, allowCurse, scale, extScale,
                 stripMin, stripMax, stripCost,
                 curseXp, curseCost
             );

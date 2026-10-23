@@ -586,7 +586,11 @@ public final class GrimoireDiagramRenderer {
         drawMiniButton(ctx, font, ctrlX + ctrlW - 15, spinY, 15, 13, "+", mouseX, mouseY);
         hits.add(new HitRegion(ctrlX + ctrlW - 15, spinY, 15, 13, ACTION_SHELF_STEP, "+1"));
 
-        int[] presets = {0, sg.tier1Bookshelves(), sg.tier2Bookshelves(), minEpi, maxCap};
+        int[] presets = java.util.stream.IntStream.of(0, sg.tier1Bookshelves(), sg.tier2Bookshelves(), minEpi, maxCap)
+            .filter(v -> v >= 0 && v <= maxCap)
+            .distinct()
+            .sorted()
+            .toArray();
         int pw = (ctrlW - 8) / presets.length;
         int py = topY + 29;
         for (int i = 0; i < presets.length; i++) {

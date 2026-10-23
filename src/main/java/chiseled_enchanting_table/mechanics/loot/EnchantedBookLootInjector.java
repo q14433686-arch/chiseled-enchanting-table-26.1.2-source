@@ -67,18 +67,28 @@ public final class EnchantedBookLootInjector {
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
             if (!source.isBuiltin()) return;
 
+            var chestMode = ChiseledEnchantingTableData.vanillaChestBooksMode();
+            if (chestMode == ChiseledEnchantingTableData.VanillaChestBooksMode.DISABLED) {
+                return;
+            }
+
             List<LootInjection> injections = ChiseledEnchantingTableData.lootInjections();
             if (injections.isEmpty()) return;
 
             HolderGetter<Enchantment> enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT);
             Identifier tableId = key.identifier();
 
+            boolean matchedAny = false;
             for (LootInjection injection : injections) {
                 if (!matches(injection, tableId)) continue;
+                matchedAny = true;
                 LootPool.Builder pool = buildPool(injection, enchantmentLookup);
                 if (pool != null) {
                     tableBuilder.withPool(pool);
                 }
+            }
+            if (matchedAny && chestMode == ChiseledEnchantingTableData.VanillaChestBooksMode.STRIP_VANILLA) {
+                tableBuilder.modifyPools(poolBuilder -> poolBuilder.apply(new RemoveEnchantedBooksFunction()));
             }
         });
     }

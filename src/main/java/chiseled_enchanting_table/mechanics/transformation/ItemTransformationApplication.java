@@ -15,8 +15,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Item transformation gameplay mechanic with strict linear unit/batch consumption:
+ * Item transformation gameplay mechanic with prior-discovery gating ({@code D5}) and strict
+ * linear unit/batch consumption:
  * <ul>
+ *   <li>Exploration transmutations carrying {@code require_prior_discovery = true} or
+ *       {@code required_advancement} verify server-side unlock status before accepting rituals.</li>
  *   <li>Standard transmutations strictly consume {@code 1} input item per ritual, closing the
  *       multi-stack duplication loophole.</li>
  *   <li>{@link ChiseledEnchantingTableData#BLANK_OVERWRITE_ID} supports stack batching up to
@@ -33,6 +36,9 @@ public final class ItemTransformationApplication {
             return false;
         }
         ItemTransformation rule = match.get();
+        if (!rule.isUnlockedFor(handler.player)) {
+            return false;
+        }
         ItemStack input = handler.get_enchantable_item();
         if (!rule.matchesInput(input)) {
             return false;
