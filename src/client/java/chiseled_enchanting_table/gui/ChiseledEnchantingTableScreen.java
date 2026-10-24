@@ -68,6 +68,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final Identifier TAB_INSCRIBE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_inactive.png");
     private static final Identifier TAB_CLEANSE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_active.png");
     private static final Identifier TAB_CLEANSE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_inactive.png");
+    private static final Identifier TOME_BUTTON = ChiseledEnchantingTable.identifier("gui/tome_button.png");
     private static final Identifier TAB_TOME_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_active.png");
     private static final Identifier TAB_TOME_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_inactive.png");
 
@@ -225,11 +226,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private int[] tomeButtonRect(int index) {
         return switch (index) {
-            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 35, 31, 12};
-            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 35, 31, 12};
-            case 2 -> new int[] {PANEL_X + 79, PANEL_Y + 35, 31, 12};
-            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 49, 48, 11};
-            default -> new int[] {PANEL_X + 60, PANEL_Y + 49, 50, 11};
+            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 33, 32, 12};
+            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 33, 32, 12};
+            case 2 -> new int[] {PANEL_X + 79, PANEL_Y + 33, 31, 12};
+            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 47, 48, 11};
+            default -> new int[] {PANEL_X + 60, PANEL_Y + 47, 50, 11};
         };
     }
 
@@ -738,7 +739,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             int sx = i + SACRIFICE_BTN_X;
             ctx.fill(sx, tabY + 1, sx + SACRIFICE_BTN_W, tabY + TAB_H - 2, isOverSacrificeButton(mouseX, mouseY) ? 0xFF6B4E2E : 0xFF3A2A20);
             ctx.fill(sx + 1, tabY + 2, sx + SACRIFICE_BTN_W - 1, tabY + TAB_H - 3, 0xFF241722);
-            String sacText = Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_short", this.menu.sacrificeProgress, 12).getString();
+            String sacText = Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_short", this.menu.sacrificeProgress, this.menu.sacrificeRequired).getString();
             RowRenderSupport.renderCenteredBoxText(ctx, this.minecraft, sacText, sx + 2, SACRIFICE_BTN_W - 4, tabVisualMidY, 0.62f, 0xFFFFC46B);
         }
 
@@ -839,9 +840,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 boolean enabled = b == 4 || (selected != null && (b == 3 ? selected.locked() : !selected.locked()));
                 if (b < 3 && selected != null && selected.wear_used() <= 0 && b != 2) enabled = false;
                 boolean hovered = hoveredTomeButton(mouseX, mouseY) == b;
-                ctx.fill(bx, by, bx + r[2], by + r[3], enabled ? 0xFFE0B85A : 0xFF584E68);
-                ctx.fill(bx + 1, by + 1, bx + r[2] - 1, by + r[3] - 1,
-                    enabled ? (hovered ? 0xFF315A6B : 0xFF1E3542) : 0xFF191522);
+                ctx.blit(TOME_BUTTON, bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);
+                if (!enabled) {
+                    ctx.fill(bx, by, bx + r[2], by + r[3], 0xB0191522);
+                } else if (hovered) {
+                    ctx.fill(bx, by, bx + r[2], by + r[3], 0x332AD4EE);
+                }
                 RowRenderSupport.renderCenteredBoxText(ctx, this.minecraft, labels[b], bx + 1, r[2] - 2, by + r[3] * 0.5f, 0.58f,
                     enabled ? 0xFFDFF7FF : 0xFF7D748D);
             }
@@ -1015,7 +1019,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             if (isOverSacrificeButton(mouseX, mouseY)) {
                 List<Component> tip = List.of(
                     Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_title").withStyle(ChatFormatting.GOLD),
-                    Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_desc", this.menu.sacrificeProgress, 12).withStyle(ChatFormatting.GRAY)
+                    Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_desc", this.menu.sacrificeProgress, this.menu.sacrificeRequired).withStyle(ChatFormatting.GRAY)
                 );
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
@@ -1029,7 +1033,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     case 3 -> "gui.chiseled_enchanting_table.tomes.tip_unlock";
                     default -> "gui.chiseled_enchanting_table.tomes.tip_lock_all";
                 };
-                ctx.setTooltipForNextFrame(this.font, List.of(Component.translatable(key).withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
+                Component tipText = tomeBtn == 3
+                    ? Component.translatable(key,
+                        chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.EARLY_UNLOCK_XP_LEVELS,
+                        chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.EARLY_UNLOCK_GRIT_COUNT)
+                    : Component.translatable(key);
+                ctx.setTooltipForNextFrame(this.font, List.of(tipText.withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
             var hoveredTome = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
@@ -1039,8 +1048,15 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.charges", hoveredTome.remaining_charges(), hoveredTome.effective_max_uses()).withStyle(ChatFormatting.AQUA));
                 if (hoveredTome.locked()) {
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.locked", Component.translatable("gui.chiseled_enchanting_table.tomes.lock_mode." + hoveredTome.lock_mode()).getString(), hoveredTome.lock_owner_name()).withStyle(ChatFormatting.RED));
-                } else if (hoveredTome.charging()) {
-                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.eta", EnchantementListWidget.formatTomeEta(hoveredTome.eta_next_ticks()), EnchantementListWidget.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
+                    int lockEta = hoveredTome.lock_mode() == 0 ? hoveredTome.eta_next_ticks()
+                        : hoveredTome.lock_mode() == 1 ? hoveredTome.eta_full_ticks() : -1;
+                    if (lockEta >= 0) {
+                        tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_lock_remaining", EnchantementListWidget.formatTomeEta(lockEta)).withStyle(ChatFormatting.GOLD));
+                    }
+                }
+                if (hoveredTome.charging()) {
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_next", EnchantementListWidget.formatTomeEta(hoveredTome.eta_next_ticks())).withStyle(ChatFormatting.GREEN));
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", EnchantementListWidget.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
                 }
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.select_hint").withStyle(ChatFormatting.DARK_GRAY));
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
@@ -1543,7 +1559,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     List<Component> tip = new ArrayList<>();
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.panel_title").withStyle(ChatFormatting.AQUA));
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.panel_shelves", this.menu.qualifyingEnchantedBookshelves, this.menu.liveTotalLibraryBookshelves).withStyle(ChatFormatting.GRAY));
-                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.unlock_progress", this.menu.qualifyingEnchantedBookshelves, 4).withStyle(this.menu.isTomePageUnlocked() ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.unlock_progress", this.menu.qualifyingEnchantedBookshelves, this.menu.tomeRequiredShelves).withStyle(this.menu.isTomePageUnlocked() ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
                     var sel = this.scrollContainer.selectedTomeEntry();
                     if (sel != null) tip.add(Component.literal(EnchantementListWidget.tomeTitle(sel, this.menu.player)).withStyle(ChatFormatting.GOLD));
                     ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
@@ -1762,15 +1778,15 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
             if (isTomeTab()) {
                 Component header = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_title");
-                drawAutoScaledText(context, header, lx, ly + 9, 0.82f, 99, 0xFFB9F6FF);
+                drawAutoScaledText(context, header, lx, ly + 8, 0.82f, 99, 0xFFB9F6FF);
                 Component shelves = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_shelves",
                     this.menu.qualifyingEnchantedBookshelves, this.menu.liveTotalLibraryBookshelves);
-                drawAutoScaledText(context, shelves, lx, ly + 19, 0.72f, 99, 0xFFE6F7FF);
+                drawAutoScaledText(context, shelves, lx, ly + 17, 0.72f, 99, 0xFFE6F7FF);
                 String interval = this.menu.regenIntervalTicks > 0 ? EnchantementListWidget.formatTomeEta(this.menu.regenIntervalTicks) : "--:--";
                 Component regen = this.menu.nextRegenTierGap > 0
                     ? Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_gap", this.menu.liveRegenTier + 1, this.menu.nextRegenTierGap, interval)
                     : Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_max", this.menu.liveRegenTier + 1, interval);
-                drawAutoScaledText(context, regen, lx, ly + 28, 0.66f, 99, 0xFFA8FFC4);
+                drawAutoScaledText(context, regen, lx, ly + 25, 0.66f, 99, 0xFFA8FFC4);
                 return;
             }
 

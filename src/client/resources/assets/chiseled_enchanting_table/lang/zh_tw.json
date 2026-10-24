@@ -657,7 +657,7 @@
   "gui.chiseled_enchanting_table.tomes.locked": "已鎖定：%s · %s",
   "gui.chiseled_enchanting_table.tomes.not_charging": "未在充能",
   "gui.chiseled_enchanting_table.tomes.panel_regen_gap": "第 %s 档 · 還差 %s 架 · %s/次",
-  "gui.chiseled_enchanting_table.tomes.panel_regen_max": "第 %s 档（最高）· %s/次",
+  "gui.chiseled_enchanting_table.tomes.panel_regen_max": "Tier %s (max) · Current rate %s/charge",
   "gui.chiseled_enchanting_table.tomes.panel_shelves": "含書書架 %s · 广义書架 %s",
   "gui.chiseled_enchanting_table.tomes.panel_title": "充能总览",
   "gui.chiseled_enchanting_table.tomes.sacrifice_desc": "獻祭附近書架中的褪魔殘卷（%s/%s）以解鎖去除附魔",
@@ -694,5 +694,18 @@
   "gui.chiseled_enchanting_table.grimoire.ch9.s3": "【充能总览】「纂刻的書」頁会列出范围内每一本母本：剩余耐久、代际、恢復 +1 与恢復滿耐久的時間，以及距离下一档恢復速度還差多少書架。",
   "gui.chiseled_enchanting_table.grimoire.ch9.s4": "【鎖定】选中一本書，可锁至 +1、锁至滿耐久或永久鎖定。鎖定的書会继续充能，但不能被取出或用于任何附魔。提前解鎖消耗 1 級經驗 + 1 個退魔砂；限时锁到期会自动解除。",
   "gui.chiseled_enchanting_table.grimoire.ch9.note_t": "一键鎖定与到期提醒",
-  "gui.chiseled_enchanting_table.grimoire.ch9.note_b": "可用「全部锁至滿」一次鎖定所有充能中的書。限时锁会在書架上闪烁粒子，到期时提醒其主人。"
+  "gui.chiseled_enchanting_table.grimoire.ch9.note_b": "可用「全部锁至滿」一次鎖定所有充能中的書。限时锁会在書架上闪烁粒子，到期时提醒其主人。",
+  "gui.chiseled_enchanting_table.tomes.locked_short": "Locked·%s",
+  "gui.chiseled_enchanting_table.tomes.lock_mode_short.0": "+1",
+  "gui.chiseled_enchanting_table.tomes.lock_mode_short.1": "Full",
+  "gui.chiseled_enchanting_table.tomes.lock_mode_short.2": "Perm",
+  "gui.chiseled_enchanting_table.tomes.tip_eta_next": "+1 charge needs %s more",
+  "gui.chiseled_enchanting_table.tomes.tip_eta_full": "Full charge needs %s",
+  "gui.chiseled_enchanting_table.tomes.tip_lock_remaining": "Auto-unlocks in %s",
+  "message.chiseled_enchanting_table.tome_lock.shelf_locked_duration": "This book is locked. Duration: %s",
+  "message.chiseled_enchanting_table.tome_lock.duration_permanent": "permanent",
+  "message.chiseled_enchanting_table.tome_lock.duration_next": "until +1 charge (~%s)",
+  "message.chiseled_enchanting_table.tome_lock.duration_full": "until fully charged (~%s)",
+  "message.chiseled_enchanting_table.tome_lock.duration_next_bare": "until +1 charge",
+  "message.chiseled_enchanting_table.tome_lock.duration_full_bare": "until fully charged"
 }

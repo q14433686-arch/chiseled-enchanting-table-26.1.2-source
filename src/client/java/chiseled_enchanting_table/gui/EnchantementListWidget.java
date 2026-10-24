@@ -1328,8 +1328,19 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     String status;
                     int statusColor;
                     if (this.tome_book.locked()) {
-                        String mode = I18n.get("gui.chiseled_enchanting_table.tomes.lock_mode." + this.tome_book.lock_mode());
-                        status = I18n.get("gui.chiseled_enchanting_table.tomes.locked", mode, this.tome_book.lock_owner_name());
+                        String modeShort = I18n.get(
+                            "gui.chiseled_enchanting_table.tomes.lock_mode_short." + this.tome_book.lock_mode());
+                        StringBuilder lockedLine = new StringBuilder(
+                            I18n.get("gui.chiseled_enchanting_table.tomes.locked_short", modeShort));
+                        int lockEta = this.tome_book.lock_mode() == 0 ? this.tome_book.eta_next_ticks()
+                            : this.tome_book.lock_mode() == 1 ? this.tome_book.eta_full_ticks() : -1;
+                        if (lockEta >= 0) {
+                            lockedLine.append(" · ").append(formatTomeEta(lockEta));
+                        }
+                        if (!this.tome_book.lock_owner_name().isBlank()) {
+                            lockedLine.append(" · ").append(this.tome_book.lock_owner_name());
+                        }
+                        status = lockedLine.toString();
                         statusColor = 0xFFFF9E7A;
                     } else if (this.tome_book.charging()) {
                         status = I18n.get("gui.chiseled_enchanting_table.tomes.eta",

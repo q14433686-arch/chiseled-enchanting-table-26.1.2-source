@@ -884,7 +884,8 @@ public final class GrimoireDiagramRenderer {
         drawWrappedBox(
             ctx,
             font,
-            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5_r3"),
+            Component.translatable("gui.chiseled_enchanting_table.grimoire.diag.ch5_r3",
+                SyncedEnchantmentCosts.libraryResonanceConfig().maxTomeUses()),
             x + 30,
             r3Y + 3,
             w - 35,

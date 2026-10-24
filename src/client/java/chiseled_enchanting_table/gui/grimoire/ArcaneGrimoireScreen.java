@@ -929,7 +929,7 @@ public class ArcaneGrimoireScreen extends Screen {
                         "gui.chiseled_enchanting_table.grimoire.ch3.t2",
                         sg.maxDirectBookshelves()
                     )),
-                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t3")),
+                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t3", lr.maxTomeUses())),
                     PageBlock.callout(
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.note_t"),
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.note_b"),
@@ -1079,10 +1079,14 @@ public class ArcaneGrimoireScreen extends Screen {
             case 9 -> List.of(
                 PageBlock.lead(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.lead")),
                 PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.rules"), INK_GOLD_DARK),
-                PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s1")),
-                PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s2")),
+                PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s1",
+                    chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED)),
+                PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s2",
+                    chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES)),
                 PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s3")),
-                PageBlock.step(4, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s4")),
+                PageBlock.step(4, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s4",
+                    chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.EARLY_UNLOCK_XP_LEVELS,
+                    chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.EARLY_UNLOCK_GRIT_COUNT)),
                 PageBlock.callout(
                     Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.note_t"),
                     Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.note_b"),

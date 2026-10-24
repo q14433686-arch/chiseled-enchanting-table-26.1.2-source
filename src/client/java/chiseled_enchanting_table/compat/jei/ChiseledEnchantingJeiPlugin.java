@@ -116,13 +116,20 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             new ItemStack(BlockRegistry.CHISELED_ENCHANTING_TABLE),
             new ItemStack(Blocks.CHISELED_BOOKSHELF)
         );
+        // Numbers in JEI prose come from the live synced configs, never hardcoded copies.
+        var jeiSg = SyncedEnchantmentCosts.shelfGatesConfig();
+        String jeiScan = (jeiSg.horizontalScanRadius() * 2 + 1) + "\u00d7"
+            + (jeiSg.verticalScanRadius() * 2 + 1) + "\u00d7" + (jeiSg.horizontalScanRadius() * 2 + 1);
+        int jeiMaxUses = SyncedEnchantmentCosts.libraryResonanceConfig().maxTomeUses();
         registration.addItemStackInfo(
             stations,
-            Component.translatable("jei.chiseled_enchanting_table.info.station")
+            Component.translatable("jei.chiseled_enchanting_table.info.station",
+                jeiScan, jeiMaxUses, SyncedEnchantmentCosts.epiphanyMinBookshelves())
         );
         registration.addItemStackInfo(
             List.of(new ItemStack(Blocks.CHISELED_BOOKSHELF)),
-            Component.translatable("jei.chiseled_enchanting_table.info.bookshelf")
+            Component.translatable("jei.chiseled_enchanting_table.info.bookshelf",
+                jeiScan, jeiMaxUses)
         );
         registration.addItemStackInfo(
             List.of(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)),
