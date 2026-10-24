@@ -33,7 +33,7 @@ class AuditMechanicsTest {
         assertEquals(1, TomeWearData.childGeneration(0));
         assertEquals(8, TomeWearData.childGeneration(7));
         assertEquals(255, TomeWearData.childGeneration(255));
-        assertEquals(1, TomeWearData.childGeneration(-1));
+        assertEquals(0, TomeWearData.childGeneration(-1)); // sentinel parent clamps to boundary
         assertEquals(5, TomeWearData.mergedGeneration(2, 5));
         assertEquals(5, TomeWearData.mergedGeneration(5, 2));
         assertEquals(0, TomeWearData.mergedGeneration(-1, -1));
