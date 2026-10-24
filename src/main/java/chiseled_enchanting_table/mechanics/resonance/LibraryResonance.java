@@ -82,7 +82,14 @@ public final class LibraryResonance {
         double unbreakingWaiverMaxChance,
         boolean wildBookWearEnabled,
         List<Integer> wildBookRemainingWeights,
-        TomeWearData.ScapegoatPricing scapegoatPricing
+        TomeWearData.ScapegoatPricing scapegoatPricing,
+        // Tome page & lock settings (datapack section "tome_pages"; also in the GUI config).
+        boolean lockedShelfBreakable,
+        boolean lockedBookExtractionBlocked,
+        int earlyUnlockXpLevels,
+        int earlyUnlockGritCount,
+        int sacrificeRequired,
+        int tomePageRequiredShelves
     ) {
         public static final Config DEFAULT = new Config(
             chiseled_enchanting_table.BundledDefaults.MIN_DISCOUNT_BOOKSHELVES,
@@ -124,7 +131,13 @@ public final class LibraryResonance {
             chiseled_enchanting_table.BundledDefaults.UNBREAKING_WAIVER_MAX_CHANCE,
             chiseled_enchanting_table.BundledDefaults.WILD_BOOK_WEAR_ENABLED,
             chiseled_enchanting_table.BundledDefaults.WILD_REMAINING_WEIGHTS,
-            TomeWearData.ScapegoatPricing.fromToken(chiseled_enchanting_table.BundledDefaults.SCAPEGOAT_PRICING)
+            TomeWearData.ScapegoatPricing.fromToken(chiseled_enchanting_table.BundledDefaults.SCAPEGOAT_PRICING),
+            chiseled_enchanting_table.BundledDefaults.LOCKED_SHELF_BREAKABLE,
+            chiseled_enchanting_table.BundledDefaults.LOCKED_BOOK_EXTRACTION_BLOCKED,
+            chiseled_enchanting_table.BundledDefaults.EARLY_UNLOCK_XP_LEVELS,
+            chiseled_enchanting_table.BundledDefaults.EARLY_UNLOCK_GRIT_COUNT,
+            chiseled_enchanting_table.BundledDefaults.SACRIFICE_REQUIRED,
+            chiseled_enchanting_table.BundledDefaults.TOME_PAGE_REQUIRED_SHELVES
         );
 
         public Config {
@@ -149,6 +162,10 @@ public final class LibraryResonance {
                 }
                 wildBookRemainingWeights = List.copyOf(cleaned);
             }
+            earlyUnlockXpLevels = clampInt(earlyUnlockXpLevels, 0, 512);
+            earlyUnlockGritCount = clampInt(earlyUnlockGritCount, 0, 512);
+            sacrificeRequired = clampInt(sacrificeRequired, 1, 1024);
+            tomePageRequiredShelves = clampInt(tomePageRequiredShelves, 1, 512);
         }
 
         public Config(
@@ -298,7 +315,18 @@ public final class LibraryResonance {
                 MasterTomeWear.DEFAULT_REGEN_TIER1_SHELVES,
                 MasterTomeWear.DEFAULT_REGEN_TIER1_SECONDS,
                 MasterTomeWear.DEFAULT_REGEN_TIER2_SHELVES,
-                MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS
+                MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS,
+                MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_PER_LEVEL,
+                MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_MAX_CHANCE,
+                true,
+                MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS,
+                TomeWearData.ScapegoatPricing.ESSENCE,
+                DEFAULT.lockedShelfBreakable,
+                DEFAULT.lockedBookExtractionBlocked,
+                DEFAULT.earlyUnlockXpLevels,
+                DEFAULT.earlyUnlockGritCount,
+                DEFAULT.sacrificeRequired,
+                DEFAULT.tomePageRequiredShelves
             );
         }
 
@@ -370,6 +398,7 @@ public final class LibraryResonance {
             JsonObject masteryObj = subObject(root, "chiseled_mastery");
             JsonObject epiphanyObj = subObject(root, "epiphany_affinity");
             JsonObject wildWearObj = subObject(root, "wild_book_wear");
+            JsonObject tomePagesObj = subObject(root, "tome_pages");
 
             List<Integer> wildWeights = MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS;
             if (wildWearObj != null
@@ -578,7 +607,13 @@ public final class LibraryResonance {
                 wildWeights,
                 TomeWearData.ScapegoatPricing.fromToken(
                     stringFrom(masteryObj, root, "scapegoat_pricing", null, DEFAULT.scapegoatPricing.token())
-                )
+                ),
+                boolFrom(tomePagesObj, root, "locked_shelf_breakable", null, DEFAULT.lockedShelfBreakable),
+                boolFrom(tomePagesObj, root, "locked_book_extraction_blocked", null, DEFAULT.lockedBookExtractionBlocked),
+                intFrom(tomePagesObj, root, "early_unlock_xp_levels", null, DEFAULT.earlyUnlockXpLevels),
+                intFrom(tomePagesObj, root, "early_unlock_grit_count", null, DEFAULT.earlyUnlockGritCount),
+                intFrom(tomePagesObj, root, "sacrifice_required", null, DEFAULT.sacrificeRequired),
+                intFrom(tomePagesObj, root, "tome_page_required_shelves", null, DEFAULT.tomePageRequiredShelves)
             );
         }
 

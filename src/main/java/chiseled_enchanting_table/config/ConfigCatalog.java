@@ -592,6 +592,40 @@ public final class ConfigCatalog {
                 ? "config.chiseled_enchanting_table.reason.need_wear_mode"
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
+        boolOpt(
+            "locked_shelf_breakable", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            d -> d.lockedShelfBreakable, (d, v) -> d.lockedShelfBreakable = v,
+            ALWAYS, null
+        ),
+        boolOpt(
+            "locked_book_extraction_blocked", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            d -> d.lockedBookExtractionBlocked, (d, v) -> d.lockedBookExtractionBlocked = v,
+            ALWAYS, null
+        ),
+        intOpt(
+            "early_unlock_xp_levels", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 512, 1,
+            d -> d.earlyUnlockXpLevels, (d, v) -> d.earlyUnlockXpLevels = v,
+            d -> d.earlyUnlockXpLevels + "",
+            ALWAYS, null
+        ),
+        intOpt(
+            "early_unlock_grit_count", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 512, 1,
+            d -> d.earlyUnlockGritCount, (d, v) -> d.earlyUnlockGritCount = v,
+            d -> d.earlyUnlockGritCount + "",
+            ALWAYS, null
+        ),
+        intOpt(
+            "sacrifice_required", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 1024, 1,
+            d -> d.sacrificeRequired, (d, v) -> d.sacrificeRequired = v,
+            d -> d.sacrificeRequired + "",
+            ALWAYS, null
+        ),
+        intOpt(
+            "tome_page_required_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 512, 1,
+            d -> d.tomePageRequiredShelves, (d, v) -> d.tomePageRequiredShelves = v,
+            d -> d.tomePageRequiredShelves + "",
+            ALWAYS, null
+        ),
         intOpt(
             "tome_regen_tier1_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 4, 96, 1,
             d -> d.tomeRegenTier1Shelves, (d, v) -> d.tomeRegenTier1Shelves = v,

@@ -57,6 +57,12 @@ public record ModRuntimeConfig(
     int tomeRegenTier1Seconds,
     int tomeRegenTier2Shelves,
     int tomeRegenTier2Seconds,
+    boolean lockedShelfBreakable,
+    boolean lockedBookExtractionBlocked,
+    int earlyUnlockXpLevels,
+    int earlyUnlockGritCount,
+    int sacrificeRequired,
+    int tomePageRequiredShelves,
     int maxWoodenDiscountPercent,
     int maxTotalXpDiscountPercent,
     boolean bookCombineEnabled,
@@ -538,6 +544,12 @@ public record ModRuntimeConfig(
         tomes.addProperty("tome_regen_tier1_seconds", tomeRegenTier1Seconds);
         tomes.addProperty("tome_regen_tier2_shelves", tomeRegenTier2Shelves);
         tomes.addProperty("tome_regen_tier2_seconds", tomeRegenTier2Seconds);
+        tomes.addProperty("locked_shelf_breakable", lockedShelfBreakable);
+        tomes.addProperty("locked_book_extraction_blocked", lockedBookExtractionBlocked);
+        tomes.addProperty("early_unlock_xp_levels", earlyUnlockXpLevels);
+        tomes.addProperty("early_unlock_grit_count", earlyUnlockGritCount);
+        tomes.addProperty("sacrifice_required", sacrificeRequired);
+        tomes.addProperty("tome_page_required_shelves", tomePageRequiredShelves);
         tomes.addProperty("max_wooden_discount_percent", maxWoodenDiscountPercent);
         tomes.addProperty("max_total_xp_discount_percent", maxTotalXpDiscountPercent);
         tomes.addProperty("book_combine_enabled", bookCombineEnabled);
@@ -644,6 +656,12 @@ public record ModRuntimeConfig(
         d.tomeRegenTier1Seconds = intOr(tomes, "tome_regen_tier1_seconds", d.tomeRegenTier1Seconds);
         d.tomeRegenTier2Shelves = intOr(tomes, "tome_regen_tier2_shelves", d.tomeRegenTier2Shelves);
         d.tomeRegenTier2Seconds = intOr(tomes, "tome_regen_tier2_seconds", d.tomeRegenTier2Seconds);
+        d.lockedShelfBreakable = boolOr(tomes, "locked_shelf_breakable", d.lockedShelfBreakable);
+        d.lockedBookExtractionBlocked = boolOr(tomes, "locked_book_extraction_blocked", d.lockedBookExtractionBlocked);
+        d.earlyUnlockXpLevels = intOr(tomes, "early_unlock_xp_levels", d.earlyUnlockXpLevels);
+        d.earlyUnlockGritCount = intOr(tomes, "early_unlock_grit_count", d.earlyUnlockGritCount);
+        d.sacrificeRequired = intOr(tomes, "sacrifice_required", d.sacrificeRequired);
+        d.tomePageRequiredShelves = intOr(tomes, "tome_page_required_shelves", d.tomePageRequiredShelves);
         d.maxWoodenDiscountPercent = intOr(tomes, "max_wooden_discount_percent", d.maxWoodenDiscountPercent);
         d.maxTotalXpDiscountPercent = intOr(tomes, "max_total_xp_discount_percent", d.maxTotalXpDiscountPercent);
         d.bookCombineEnabled = boolOr(tomes, "book_combine_enabled", d.bookCombineEnabled);
@@ -726,6 +744,12 @@ public record ModRuntimeConfig(
         public int tomeRegenTier1Seconds = 3_600;
         public int tomeRegenTier2Shelves = 42;
         public int tomeRegenTier2Seconds = 1_200;
+        public boolean lockedShelfBreakable = true;
+        public boolean lockedBookExtractionBlocked = true;
+        public int earlyUnlockXpLevels = 1;
+        public int earlyUnlockGritCount = 1;
+        public int sacrificeRequired = 12;
+        public int tomePageRequiredShelves = 4;
         public int maxWoodenDiscountPercent = 15;
         public int maxTotalXpDiscountPercent = 40;
         public boolean bookCombineEnabled = true;
@@ -794,6 +818,12 @@ public record ModRuntimeConfig(
             this.tomeRegenTier1Seconds = src.tomeRegenTier1Seconds;
             this.tomeRegenTier2Shelves = src.tomeRegenTier2Shelves;
             this.tomeRegenTier2Seconds = src.tomeRegenTier2Seconds;
+            this.lockedShelfBreakable = src.lockedShelfBreakable;
+            this.lockedBookExtractionBlocked = src.lockedBookExtractionBlocked;
+            this.earlyUnlockXpLevels = src.earlyUnlockXpLevels;
+            this.earlyUnlockGritCount = src.earlyUnlockGritCount;
+            this.sacrificeRequired = src.sacrificeRequired;
+            this.tomePageRequiredShelves = src.tomePageRequiredShelves;
             this.maxWoodenDiscountPercent = src.maxWoodenDiscountPercent;
             this.maxTotalXpDiscountPercent = src.maxTotalXpDiscountPercent;
             this.bookCombineEnabled = src.bookCombineEnabled;
@@ -958,6 +988,12 @@ public record ModRuntimeConfig(
                 tomeRegenTier1Seconds,
                 tomeRegenTier2Shelves,
                 tomeRegenTier2Seconds,
+                lockedShelfBreakable,
+                lockedBookExtractionBlocked,
+                earlyUnlockXpLevels,
+                earlyUnlockGritCount,
+                sacrificeRequired,
+                tomePageRequiredShelves,
                 maxWoodenDiscountPercent,
                 maxTotalXpDiscountPercent,
                 bookCombineEnabled,

@@ -120,7 +120,8 @@ class NetworkCompatibilityTest {
             chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN,
             true, 5400, 34, 2400, 44, 900,
             0.09, 0.27, true, List.of(50, 30, 12, 8),
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT);
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT,
+            false, false, 7, 3, 17, 9);
         var slipCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig(
             3.2, 0.037, 0.17,
             31, 0.011, 37, 0.021, 43, 0.031,

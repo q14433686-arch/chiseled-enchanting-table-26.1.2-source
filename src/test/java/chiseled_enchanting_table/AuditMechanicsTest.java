@@ -123,6 +123,18 @@ class AuditMechanicsTest {
     @Test void timedTomeLocksExpireExactlyAtTargetWear() {
         assertFalse(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 3));
         assertTrue(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 2));
+
+        // Round 4: tome-page knobs parse from the tome_pages JSON section.
+        var cfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.fromJson(
+            com.google.gson.JsonParser.parseString(
+                "{\"tome_pages\":{\"sacrifice_required\":5,\"locked_shelf_breakable\":false,\"early_unlock_grit_count\":0}}"
+            ).getAsJsonObject());
+        assertEquals(5, cfg.sacrificeRequired());
+        assertFalse(cfg.lockedShelfBreakable());
+        assertTrue(cfg.lockedBookExtractionBlocked());
+        assertEquals(0, cfg.earlyUnlockGritCount());
+        assertEquals(1, cfg.earlyUnlockXpLevels());
+        assertEquals(4, cfg.tomePageRequiredShelves());
         assertTrue(TomeLockData.isExpired(TomeLockData.Mode.FULL_CHARGE, 0, 0));
         assertFalse(TomeLockData.isExpired(TomeLockData.Mode.PERMANENT, -1, 0));
     }

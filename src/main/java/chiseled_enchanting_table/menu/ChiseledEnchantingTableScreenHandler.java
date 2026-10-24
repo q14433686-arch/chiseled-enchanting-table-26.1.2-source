@@ -75,9 +75,6 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public int sacrificeRequired = chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED;
     public int tomeRequiredShelves = chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES;
 
-    /** Early-unlock price for a timed/permanent tome lock (field feedback: keep UI text on these). */
-    public static final int EARLY_UNLOCK_XP_LEVELS = 1;
-    public static final int EARLY_UNLOCK_GRIT_COUNT = 1;
     public int qualifyingEnchantedBookshelves;
     public int liveTotalLibraryBookshelves;
     public int liveRegenTier;
@@ -518,10 +515,21 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return live != null ? live : this.libraryResonanceConfig().maxTomeUses();
     }
 
+    /** Configured sacrifice requirement, capped by the criteria the advancement declares. */
+    public int effectiveSacrificeRequired(net.minecraft.server.level.ServerPlayer sp) {
+        int configured = Math.max(1, libraryResonanceConfig().sacrificeRequired());
+        int total = chiseled_enchanting_table.utils.Advancement.totalCriteria(
+            sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
+        return total > 0 ? Math.min(configured, total) : configured;
+    }
+
     public boolean isCleansePageUnlocked() {
         if (!this.world.isClientSide() && this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            return chiseled_enchanting_table.utils.Advancement.hasCompleted(
-                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
+            // The page unlocks at the configured sacrifice count; the advancement itself
+            // still completes at its full criteria list for the achievement.
+            return chiseled_enchanting_table.utils.Advancement.completedCriteria(
+                    sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)
+                >= effectiveSacrificeRequired(sp);
         }
         return this.syncedCleanseUnlocked;
     }
@@ -690,6 +698,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 return;
             }
             writeShelfStack(shelf, payload.shelf_pos(), slot, updated);
+            chiseled_enchanting_table.mechanics.resonance.TomeParticleEffects.portalAt(
+                this.world, payload.shelf_pos(), slot);
             tomeActionMessage("message.chiseled_enchanting_table.tome_lock.locked");
         }
         refreshLiveShelfState();
@@ -714,20 +724,25 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         if (!creative) {
             ItemStack grit = new ItemStack(BlockRegistry.CLEANSING_GRIT);
-            if (sp.experienceLevel < EARLY_UNLOCK_XP_LEVELS || countAvailableInInventory(grit) < EARLY_UNLOCK_GRIT_COUNT) {
-                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost",
-                    EARLY_UNLOCK_XP_LEVELS, EARLY_UNLOCK_GRIT_COUNT);
+            var lrCfg = libraryResonanceConfig();
+            int xpCost = Math.max(0, lrCfg.earlyUnlockXpLevels());
+            int gritCost = Math.max(0, lrCfg.earlyUnlockGritCount());
+            if (sp.experienceLevel < xpCost || countAvailableInInventory(grit) < gritCost) {
+                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost", xpCost, gritCost);
                 return;
             }
-            if (!consumeOneCleansingGrit()) {
-                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost",
-                    EARLY_UNLOCK_XP_LEVELS, EARLY_UNLOCK_GRIT_COUNT);
-                return;
+            for (int i = 0; i < gritCost; i++) {
+                if (!consumeOneCleansingGrit()) {
+                    tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost", xpCost, gritCost);
+                    return;
+                }
             }
-            sp.giveExperienceLevels(-EARLY_UNLOCK_XP_LEVELS);
+            sp.giveExperienceLevels(-xpCost);
         }
         chiseled_enchanting_table.mechanics.resonance.TomeLockData.unlock(updated);
         writeShelfStack(shelf, shelfPos, slot, updated);
+        chiseled_enchanting_table.mechanics.resonance.TomeParticleEffects.endRodAt(
+            this.world, shelfPos, slot);
         tomeActionMessage("message.chiseled_enchanting_table.tome_lock.unlocked");
     }
 
@@ -777,7 +792,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             tomeActionMessage("message.chiseled_enchanting_table.sacrifice.done");
             return;
         }
-        int needed = chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
+        int needed = effectiveSacrificeRequired(sp)
             - chiseled_enchanting_table.utils.Advancement.completedCriteria(
                 sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
         int consumed = 0;
@@ -810,7 +825,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 "message.chiseled_enchanting_table.sacrifice.progress",
                 chiseled_enchanting_table.utils.Advancement.completedCriteria(
                     sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE),
-                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
+                effectiveSacrificeRequired(sp)
             );
         } else {
             tomeActionMessage("message.chiseled_enchanting_table.sacrifice.none");

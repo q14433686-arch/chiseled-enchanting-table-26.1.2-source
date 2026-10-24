@@ -714,5 +714,17 @@
   "gui.chiseled_enchanting_table.tomes.deplete_lose": "When spent, loses %s",
   "gui.chiseled_enchanting_table.tomes.deplete_depleted": "When spent, becomes a Depleted Tome",
   "gui.chiseled_enchanting_table.tomes.consume_lose": "Next use removes %s",
-  "gui.chiseled_enchanting_table.tomes.consume_depleted": "Next use turns it into a Depleted Tome"
+  "gui.chiseled_enchanting_table.tomes.consume_depleted": "Next use turns it into a Depleted Tome",
+  "config.chiseled_enchanting_table.opt.locked_shelf_breakable": "Locked-Tome Shelves Breakable",
+  "config.chiseled_enchanting_table.opt.locked_shelf_breakable.desc": "When on, chiseled bookshelves holding locked tomes can still be broken (books drop with their locks).",
+  "config.chiseled_enchanting_table.opt.locked_book_extraction_blocked": "Block Taking Locked Tomes",
+  "config.chiseled_enchanting_table.opt.locked_book_extraction_blocked.desc": "When on, right-clicking a locked tome on a chiseled bookshelf is refused.",
+  "config.chiseled_enchanting_table.opt.early_unlock_xp_levels": "Early Unlock XP Levels",
+  "config.chiseled_enchanting_table.opt.early_unlock_xp_levels.desc": "XP levels charged for manually unlocking a tome early.",
+  "config.chiseled_enchanting_table.opt.early_unlock_grit_count": "Early Unlock Cleansing Grit",
+  "config.chiseled_enchanting_table.opt.early_unlock_grit_count.desc": "Cleansing Grit charged for manually unlocking a tome early.",
+  "config.chiseled_enchanting_table.opt.sacrifice_required": "Depleted Tomes to Sacrifice",
+  "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Depleted Tomes that must be sacrificed to unlock the Cleanse page (capped by the advancement's criteria count).",
+  "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Shelves for Tomes Page",
+  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page."
 }

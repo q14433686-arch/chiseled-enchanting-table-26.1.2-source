@@ -179,6 +179,7 @@ public final class WorldRegeneration {
                 ItemStack updated = context.identity().copy();
                 MasterTomeWear.setWearUsed(updated, recovery.remainingWear());
                 TomeLockData.Lock expiredLock = TomeLockData.clearExpired(updated);
+                TomeParticleEffects.onRegenSettled(world, slot.position(), slot.slot(), context.identity(), updated);
                 context.shelf().setItem(slot.slot(), updated);
                 context.shelf().setChanged();
                 if (recovery.remainingWear() > 0) {

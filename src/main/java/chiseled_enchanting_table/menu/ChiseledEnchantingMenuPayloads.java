@@ -275,9 +275,7 @@ public final class ChiseledEnchantingMenuPayloads {
                 chiseled_bookshelves,
                 empty_chiseled_bookshelves,
                 master_tome_charges == null ? Map.of() : Map.copyOf(master_tome_charges),
-                player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
-                    && chiseled_enchanting_table.utils.Advancement.hasCompleted(
-                        serverPlayer, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE),
+                cleanseUnlockedFor(player),
                 player instanceof net.minecraft.server.level.ServerPlayer serverPlayer2
                     && chiseled_enchanting_table.utils.Advancement.hasCompleted(
                         serverPlayer2, chiseled_enchanting_table.utils.Advancement.HOW_MUCH_LONGER),
@@ -285,9 +283,23 @@ public final class ChiseledEnchantingMenuPayloads {
                     ? chiseled_enchanting_table.utils.Advancement.completedCriteria(
                         serverPlayer3, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)
                     : 0,
-                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
-                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES
+                Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
+                    .libraryResonanceConfig().sacrificeRequired()),
+                Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
+                    .libraryResonanceConfig().tomePageRequiredShelves())
             );
+        }
+
+        /** Page unlock at the configured sacrifice count (capped by the criteria list). */
+        private static boolean cleanseUnlockedFor(@Nullable Player player) {
+            if (!(player instanceof net.minecraft.server.level.ServerPlayer sp)) return false;
+            int configured = Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
+                .libraryResonanceConfig().sacrificeRequired());
+            int total = chiseled_enchanting_table.utils.Advancement.totalCriteria(
+                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
+            int required = total > 0 ? Math.min(configured, total) : configured;
+            return chiseled_enchanting_table.utils.Advancement.completedCriteria(
+                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE) >= required;
         }
 
         public static List<TransformationDisplay> buildTransformationDisplays() {

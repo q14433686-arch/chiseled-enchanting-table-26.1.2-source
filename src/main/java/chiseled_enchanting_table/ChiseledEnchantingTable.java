@@ -48,6 +48,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
         EnchantCostSync.init();
         chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.init();
         chiseled_enchanting_table.mechanics.resonance.TomeLockGuards.init();
+        chiseled_enchanting_table.mechanics.resonance.TomeParticleEffects.init();
         BlockRegistry.init();
         EntityRegistry.init();
         ScreenHandlerRegistry.init();

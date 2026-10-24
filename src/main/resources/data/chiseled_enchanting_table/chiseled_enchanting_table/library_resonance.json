@@ -99,5 +99,13 @@
     "junk_crossline_share": 0.25,
     "curse_crossline_share": 0.05,
     "pollution_refund_ratio": 0.5
+  },
+  "tome_pages": {
+    "locked_shelf_breakable": true,
+    "locked_book_extraction_blocked": true,
+    "early_unlock_xp_levels": 1,
+    "early_unlock_grit_count": 1,
+    "sacrifice_required": 12,
+    "tome_page_required_shelves": 4
   }
 }

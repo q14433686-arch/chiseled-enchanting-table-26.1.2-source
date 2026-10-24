@@ -838,7 +838,13 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             lr.unbreakingWaiverMaxChance(),
             lr.wildBookWearEnabled(),
             lr.wildBookRemainingWeights(),
-            lr.scapegoatPricing()
+            lr.scapegoatPricing(),
+            cfg.lockedShelfBreakable(),
+            cfg.lockedBookExtractionBlocked(),
+            cfg.earlyUnlockXpLevels(),
+            cfg.earlyUnlockGritCount(),
+            cfg.sacrificeRequired(),
+            cfg.tomePageRequiredShelves()
         );
 
         var bu = rawBookUpgradeRules;

@@ -758,6 +758,12 @@ public final class MasterTomeWear {
         if (outcome == WearOutcome.DEPLETED || outcome == WearOutcome.STEPPED_DOWN) {
             level.playSound(null, chosen.pos(), SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 1.0F, 0.72F);
         }
+        // Round 4 particle cue: full depletion of the consumed enchantment (level
+        // removed or tome reduced to a Depleted Tome) gets teleport particles.
+        boolean fullyDepleted = step.nextEnchantLevel() <= 0 || outcome == WearOutcome.DEPLETED;
+        if (fullyDepleted && cfg.tomeConsumptionMode() != ConsumptionMode.KEEP) {
+            TomeParticleEffects.portalAt(level, chosen.pos(), chosen.slot());
+        }
         return new ResolvedTomeUse(outcome, false, chosenSnapshot);
     }
 }

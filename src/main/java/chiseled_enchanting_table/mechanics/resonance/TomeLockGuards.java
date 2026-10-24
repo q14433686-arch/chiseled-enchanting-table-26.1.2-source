@@ -34,6 +34,11 @@ public final class TomeLockGuards {
             if (player.getAbilities().instabuild) {
                 return true;
             }
+            // Configurable (tome_pages.locked_shelf_breakable, default on): shelves with
+            // locked tomes may be broken; the books drop with their locks intact.
+            if (chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().lockedShelfBreakable()) {
+                return true;
+            }
             for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
                 if (TomeLockData.isEffectivelyLocked(shelf.getItem(slot))) {
                     if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
@@ -61,6 +66,9 @@ public final class TomeLockGuards {
                 return InteractionResult.PASS;
             }
             if (player.getAbilities().instabuild) {
+                return InteractionResult.PASS;
+            }
+            if (!chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().lockedBookExtractionBlocked()) {
                 return InteractionResult.PASS;
             }
             if (!(world.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf)) {

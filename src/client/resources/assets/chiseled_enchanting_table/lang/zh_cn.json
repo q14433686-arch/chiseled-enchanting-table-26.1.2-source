@@ -714,5 +714,17 @@
   "gui.chiseled_enchanting_table.tomes.deplete_lose": "耐久耗尽后失去 %s",
   "gui.chiseled_enchanting_table.tomes.deplete_depleted": "耐久耗尽后化作褪魔残卷",
   "gui.chiseled_enchanting_table.tomes.consume_lose": "下次使用后失去 %s",
-  "gui.chiseled_enchanting_table.tomes.consume_depleted": "下次使用后化作褪魔残卷"
+  "gui.chiseled_enchanting_table.tomes.consume_depleted": "下次使用后化作褪魔残卷",
+  "config.chiseled_enchanting_table.opt.locked_shelf_breakable": "含锁定书的书架可破坏",
+  "config.chiseled_enchanting_table.opt.locked_shelf_breakable.desc": "开启后，装有已锁定母本的雕纹书架仍可被破坏（书会带着锁掉落）。",
+  "config.chiseled_enchanting_table.opt.locked_book_extraction_blocked": "禁止取出已锁定母本",
+  "config.chiseled_enchanting_table.opt.locked_book_extraction_blocked.desc": "开启后，右键点击雕纹书架上已锁定的书会被拒绝。",
+  "config.chiseled_enchanting_table.opt.early_unlock_xp_levels": "提前解锁经验等级",
+  "config.chiseled_enchanting_table.opt.early_unlock_xp_levels.desc": "手动提前解锁一本书消耗的经验等级。",
+  "config.chiseled_enchanting_table.opt.early_unlock_grit_count": "提前解锁退魔砂数量",
+  "config.chiseled_enchanting_table.opt.early_unlock_grit_count.desc": "手动提前解锁一本书消耗的退魔砂数量。",
+  "config.chiseled_enchanting_table.opt.sacrifice_required": "献祭所需褪魔残卷",
+  "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "解锁「去除附魔」页需要累计献祭的褪魔残卷数量（不超过该进度的准则总数）。",
+  "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "纂刻的书解锁书架数",
+  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "解锁「纂刻的书」页所需、各存有至少 1 本附魔书的雕纹书架数量。"
 }

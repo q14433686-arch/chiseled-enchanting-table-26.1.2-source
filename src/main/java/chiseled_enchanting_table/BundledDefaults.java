@@ -44,6 +44,14 @@ public final class BundledDefaults {
     public static final int TOME_REGEN_TIER2_SECONDS = 1200;
     public static final String SCAPEGOAT_PRICING = "essence";
 
+    // ---- library_resonance.json / tome_pages ----
+    public static final boolean LOCKED_SHELF_BREAKABLE = true;
+    public static final boolean LOCKED_BOOK_EXTRACTION_BLOCKED = true;
+    public static final int EARLY_UNLOCK_XP_LEVELS = 1;
+    public static final int EARLY_UNLOCK_GRIT_COUNT = 1;
+    public static final int SACRIFICE_REQUIRED = 12;
+    public static final int TOME_PAGE_REQUIRED_SHELVES = 4;
+
     // ---- library_resonance.json / wild_book_wear ----
     public static final boolean WILD_BOOK_WEAR_ENABLED = true;
     public static final java.util.List<Integer> WILD_REMAINING_WEIGHTS = java.util.List.of(45, 35, 15, 5);

@@ -432,6 +432,12 @@ public record EnchantCostTablePayload(
             buf.writeVarInt(Math.max(0, w));
         }
         buf.writeUtf(lr.scapegoatPricing().token());
+        buf.writeBoolean(lr.lockedShelfBreakable());
+        buf.writeBoolean(lr.lockedBookExtractionBlocked());
+        buf.writeVarInt(lr.earlyUnlockXpLevels());
+        buf.writeVarInt(lr.earlyUnlockGritCount());
+        buf.writeVarInt(lr.sacrificeRequired());
+        buf.writeVarInt(lr.tomePageRequiredShelves());
 
         var rc = ritualConfig == null ? InscriptionRitualMechanics.Config.DEFAULT : ritualConfig;
         buf.writeVarInt(rc.maxSingleWaitSeconds());
@@ -616,12 +622,19 @@ public record EnchantCostTablePayload(
             lrWildWeights.add(Math.max(0, buf.readVarInt()));
         }
         var lrScapegoat = chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.fromToken(buf.readUtf());
+        boolean lrShelfBreakable = buf.readBoolean();
+        boolean lrExtractionBlocked = buf.readBoolean();
+        int lrEarlyXp = buf.readVarInt();
+        int lrEarlyGrit = buf.readVarInt();
+        int lrSacrificeReq = buf.readVarInt();
+        int lrTomeShelves = buf.readVarInt();
 
         var lrConfig = new LibraryResonance.Config(
             lr0, lr1, lr2, lr3, lr4, lr5, lr6, lr7, lr8, lr9, lr10, lr11, lr12,
             lr13, lr14, lr15, lr16, lr17, lr18, lr19, lr20, lr21, lr22, lr23, lr24,
             lrMode, lrMtu, lrBcwc, lrDep, lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec,
-            lrUnbPerLvl, lrUnbMax, lrWildEn, lrWildWeights, lrScapegoat
+            lrUnbPerLvl, lrUnbMax, lrWildEn, lrWildWeights, lrScapegoat,
+            lrShelfBreakable, lrExtractionBlocked, lrEarlyXp, lrEarlyGrit, lrSacrificeReq, lrTomeShelves
         );
 
         int rcMaxWait = buf.readVarInt();

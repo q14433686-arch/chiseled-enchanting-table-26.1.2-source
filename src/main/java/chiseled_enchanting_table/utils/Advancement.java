@@ -52,6 +52,15 @@ public class Advancement {
         return Math.max(0, Math.min(total, total - remaining));
     }
 
+    /** Total criteria declared by the advancement (datapacks may add more), or 0 when absent. */
+    public static int totalCriteria(Player player, String name) {
+        if (!(player instanceof ServerPlayer serverPlayer)) return 0;
+        var server = serverPlayer.level().getServer();
+        if (server == null) return 0;
+        var advancement = server.getAdvancements().get(ChiseledEnchantingTable.identifier(name));
+        return advancement == null ? 0 : advancement.value().criteria().size();
+    }
+
     /** Awards exactly one remaining criterion. Returns {@code true} when one was awarded. */
     public static boolean awardNextCriterion(Player player, String name) {
         if (!(player instanceof ServerPlayer serverPlayer)) return false;

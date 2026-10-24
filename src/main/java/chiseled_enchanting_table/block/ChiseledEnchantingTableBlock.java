@@ -560,13 +560,17 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int sacrificeProgress = 0;
         if (viewer instanceof ServerPlayer serverViewer) {
             int qualifying = qualifyingShelves.size();
-            if (qualifying >= Advancement.TOME_PAGE_REQUIRED_SHELVES
+            if (qualifying >= lrCfg.tomePageRequiredShelves()
                 && !Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER)) {
                 Advancement.give(serverViewer, Advancement.HOW_MUCH_LONGER);
             }
-            cleanseUnlocked = Advancement.hasCompleted(serverViewer, Advancement.DISENCHANT_SACRIFICE);
-            tomeUnlocked = Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER);
+            int sacrificeTotal = Advancement.totalCriteria(serverViewer, Advancement.DISENCHANT_SACRIFICE);
+            int sacrificeReq = sacrificeTotal > 0
+                ? Math.min(Math.max(1, lrCfg.sacrificeRequired()), sacrificeTotal)
+                : Math.max(1, lrCfg.sacrificeRequired());
             sacrificeProgress = Advancement.completedCriteria(serverViewer, Advancement.DISENCHANT_SACRIFICE);
+            cleanseUnlocked = sacrificeProgress >= sacrificeReq;
+            tomeUnlocked = Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER);
         }
 
         return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
@@ -584,9 +588,9 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             cleanseUnlocked,
             tomeUnlocked,
             sacrificeProgress,
-            Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+            Math.max(1, lrCfg.sacrificeRequired()),
             qualifyingShelves.size(),
-            Advancement.TOME_PAGE_REQUIRED_SHELVES,
+            Math.max(1, lrCfg.tomePageRequiredShelves()),
             totalLibrary,
             regenTier,
             nextGap,
