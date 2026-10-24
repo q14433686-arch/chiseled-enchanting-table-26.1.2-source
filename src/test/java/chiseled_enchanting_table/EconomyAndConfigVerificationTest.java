@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
@@ -320,14 +321,14 @@ class EconomyAndConfigVerificationTest {
         // D1: Master Tome wear state machine (wear / keep / consume, step_down vs depleted_tome)
         var wearCfg = LibraryResonance.Config.DEFAULT;
         assertEquals(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, wearCfg.tomeConsumptionMode());
-        assertEquals(16, wearCfg.maxTomeUses());
-        assertEquals(4, wearCfg.bookCopyWearCost());
+        assertEquals(4, wearCfg.maxTomeUses());
+        assertEquals(2, wearCfg.bookCopyWearCost());
         assertEquals(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN, wearCfg.tomeDepleteBehavior());
 
-        // Simulate 16 gear uses on a Lv.5 Master Tome -> steps down cleanly at use #16 to fresh Lv.4 (0 wear)!
+        // Simulate 4 gear uses on a Lv.5 Master Tome -> steps down cleanly at use #4 to fresh Lv.4 (0 wear)!
         int curLevel = 5;
         int curWear = 0;
-        for (int u = 1; u <= 15; u++) {
+        for (int u = 1; u <= 3; u++) {
             var res = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
                 wearCfg.tomeConsumptionMode(),
                 wearCfg.tomeDepleteBehavior(),
@@ -342,7 +343,7 @@ class EconomyAndConfigVerificationTest {
             curLevel = res.nextEnchantLevel();
             curWear = res.nextWearUsed();
         }
-        var sixteenthUse = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
+        var fourthUse = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
             wearCfg.tomeConsumptionMode(),
             wearCfg.tomeDepleteBehavior(),
             wearCfg.maxTomeUses(),
@@ -351,22 +352,22 @@ class EconomyAndConfigVerificationTest {
             curWear,
             false
         );
-        assertEquals(4, sixteenthUse.nextEnchantLevel(), "16th gear use must step Lv.5 Master Tome down to Lv.4");
-        assertEquals(0, sixteenthUse.nextWearUsed(), "Stepped-down Master Tome starts fresh at 0 wear");
-        assertTrue(sixteenthUse.steppedDown());
+        assertEquals(4, fourthUse.nextEnchantLevel(), "4th gear use must step Lv.5 Master Tome down to Lv.4");
+        assertEquals(0, fourthUse.nextWearUsed(), "Stepped-down Master Tome starts fresh at 0 wear");
+        assertTrue(fourthUse.steppedDown());
 
-        // Copying onto a blank book costs 4 charges -> 4th book copy on Lv.1 tome exhausts into Depleted Tome
-        var fourthCopy = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
+        // Copying onto a blank book costs 2 charges -> 2nd book copy on Lv.1 tome exhausts into Depleted Tome
+        var secondCopy = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeWearStep(
             wearCfg.tomeConsumptionMode(),
             wearCfg.tomeDepleteBehavior(),
             wearCfg.maxTomeUses(),
             wearCfg.bookCopyWearCost(),
             1,
-            12,
+            2,
             true
         );
-        assertEquals(0, fourthCopy.nextEnchantLevel(), "4th book copy on Lv.1 tome must exhaust into Depleted Tome (level 0)");
-        assertTrue(fourthCopy.depletedCompletely());
+        assertEquals(0, secondCopy.nextEnchantLevel(), "2nd book copy on Lv.1 tome must exhaust into Depleted Tome (level 0)");
+        assertTrue(secondCopy.depletedCompletely());
 
         // D2 + D6: VanillaTableMode & unified 12 / 32 / 38 shelf milestones
         JsonObject sgJson = readResourceJson("shelf_gates.json");
@@ -579,12 +580,42 @@ class EconomyAndConfigVerificationTest {
 
             // Verify every parameterized Grimoire key formats cleanly with live config values
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15, 40)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4_res").getAsString(), 35, 40)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p0.s3").getAsString(), 15, 38, 42)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3.lead").getAsString(), 3, 2, 12)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.s3").getAsString(), 40, 60)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch5.note_b").getAsString(), 16, 38, 42)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch6.s2").getAsString(), 32, 20, 3)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch8.s4").getAsString(), 12, 35)
+                    .contains("%s"),
+                false
+            );
+            assertEquals(
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4_res").getAsString(), 35, 40)
                     .contains("%s"),
                 false
             );
@@ -758,7 +789,7 @@ class EconomyAndConfigVerificationTest {
     @Test
     void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
-        assertEquals(55, all.size(), "Expected 55 curated in-game configurable entries across 6 categories");
+        assertEquals(57, all.size(), "Expected 57 curated in-game configurable entries across 6 categories");
         for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
                 chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
@@ -990,14 +1021,14 @@ class EconomyAndConfigVerificationTest {
             }
         }
 
-        // 2. Two-tier bookshelf passive regeneration curve (0 -> 20d/24000s, Tier 1 @ 38 -> 10d/12000s, Tier 2 @ 42 -> 3d/3600s).
+        // 2. Two-tier bookshelf passive regeneration curve (0 -> 6d/7200s, Tier 1 @ 38 -> 3d/3600s, Tier 2 @ 42 -> 1d/1200s).
         LibraryResonance.Config def = LibraryResonance.Config.DEFAULT;
         assertTrue(def.tomeRegenEnabled());
-        assertEquals(24_000, def.tomeRegenBaseSeconds());
+        assertEquals(7_200, def.tomeRegenBaseSeconds());
         assertEquals(38, def.tomeRegenTier1Shelves());
-        assertEquals(12_000, def.tomeRegenTier1Seconds());
+        assertEquals(3_600, def.tomeRegenTier1Seconds());
         assertEquals(42, def.tomeRegenTier2Shelves());
-        assertEquals(3_600, def.tomeRegenTier2Seconds());
+        assertEquals(1_200, def.tomeRegenTier2Seconds());
 
         assertEquals(0, MasterTomeWear.regenTierIndex(def, 0));
         assertEquals(0, MasterTomeWear.regenTierIndex(def, 37));
@@ -1006,23 +1037,23 @@ class EconomyAndConfigVerificationTest {
         assertEquals(2, MasterTomeWear.regenTierIndex(def, 42));
         assertEquals(2, MasterTomeWear.regenTierIndex(def, 64));
 
-        assertEquals(24_000.0, MasterTomeWear.computeRegenSeconds(def, 0), 1e-6);
-        assertEquals(480_000, MasterTomeWear.computeRegenIntervalTicks(def, 0));
-        // 38 shelves = 10 game days = 12,000s = 240,000 ticks
-        assertEquals(12_000.0, MasterTomeWear.computeRegenSeconds(def, 38), 1e-6);
-        assertEquals(240_000, MasterTomeWear.computeRegenIntervalTicks(def, 38));
-        // 42 shelves = 3 game days = 3,600s = 72,000 ticks
-        assertEquals(3_600.0, MasterTomeWear.computeRegenSeconds(def, 42), 1e-6);
-        assertEquals(72_000, MasterTomeWear.computeRegenIntervalTicks(def, 42));
+        assertEquals(7_200.0, MasterTomeWear.computeRegenSeconds(def, 0), 1e-6);
+        assertEquals(144_000, MasterTomeWear.computeRegenIntervalTicks(def, 0));
+        // 38 shelves = 3 game days = 3,600s = 72,000 ticks
+        assertEquals(3_600.0, MasterTomeWear.computeRegenSeconds(def, 38), 1e-6);
+        assertEquals(72_000, MasterTomeWear.computeRegenIntervalTicks(def, 38));
+        // 42 shelves = 1 game day = 1,200s = 24,000 ticks
+        assertEquals(1_200.0, MasterTomeWear.computeRegenSeconds(def, 42), 1e-6);
+        assertEquals(24_000, MasterTomeWear.computeRegenIntervalTicks(def, 42));
 
         // Dramatic two-tier breakthroughs at 37 -> 38 and 41 -> 42 AND strict non-increasing monotonicity for S in [0, 100].
         assertTrue(
-            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) >= 3_600.0,
-            "Reaching Tier 1 (38 bookshelves -> 10 game days) must deliver a substantial regeneration breakthrough"
+            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) >= 1_000.0,
+            "Reaching Tier 1 (38 bookshelves -> 3 game days) must deliver a substantial regeneration breakthrough"
         );
         assertTrue(
-            MasterTomeWear.computeRegenSeconds(def, 41) - MasterTomeWear.computeRegenSeconds(def, 42) >= 2_400.0,
-            "Reaching Tier 2 (42 bookshelves -> 3 game days) must deliver a dramatic Grand Sanctum regeneration breakthrough"
+            MasterTomeWear.computeRegenSeconds(def, 41) - MasterTomeWear.computeRegenSeconds(def, 42) >= 800.0,
+            "Reaching Tier 2 (42 bookshelves -> 1 game day) must deliver a dramatic Grand Sanctum regeneration breakthrough"
         );
         for (int s = 0; s < 100; s++) {
             int curTicks = MasterTomeWear.computeRegenIntervalTicks(def, s);
@@ -1031,7 +1062,7 @@ class EconomyAndConfigVerificationTest {
                 nextTicks <= curTicks,
                 "Regen interval ticks must never slow down when adding bookshelves at S=" + s
             );
-            assertTrue(curTicks >= 36_000, "Asymptotic floor must stay >= 1.5 game days (36,000 ticks)");
+            assertTrue(curTicks >= 12_000, "Asymptotic floor must stay >= 0.5 game days (12,000 ticks)");
         }
 
         // Disabled flag cleanly stops passive regeneration.
@@ -1221,15 +1252,15 @@ class EconomyAndConfigVerificationTest {
         for (int totalEnch = 5; totalEnch <= 9; totalEnch++) {
             double c = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeTranscriptionSlipChance(totalEnch, 35);
-            assertTrue(c >= prevE && c > 0.0 && c <= 0.20 + 1e-9);
+            assertTrue(c >= prevE && c > 0.0 && c <= 0.18 + 1e-9);
             prevE = c;
         }
         assertEquals(
-            0.20,
+            0.18,
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeTranscriptionSlipChance(12, 100),
             1e-9,
-            "Maximum transcription slip probability must never exceed 20%"
+            "Maximum transcription slip probability must never exceed 18%"
         );
         int slipped = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .resolveTranscribedLevel(5, 6, 0.15, 0.05, 0.80);
@@ -1258,7 +1289,10 @@ class EconomyAndConfigVerificationTest {
         // 5. Dual skip costs & risks: XP sacrifice in [1..15], non-sacrifice degradation <= 50% normal and <= 70% with Infinity tome.
         for (long remTicks : List.of(20L, 600L, 3_600L, 6_000L, 50_000L, 500_000L)) {
             int xpLvls = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .computeSacrificeXpLevels(remTicks);
+                .computeSacrificeXpLevels(
+                    chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT,
+                    remTicks
+                );
             assertTrue(xpLvls >= 1 && xpLvls <= 15);
             double normalRisk = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeRushDegradeChance(remTicks, false);
@@ -1267,24 +1301,67 @@ class EconomyAndConfigVerificationTest {
             assertTrue(normalRisk > 0.0 && normalRisk <= 0.50 + 1e-9);
             assertTrue(infRisk > normalRisk && infRisk <= 0.70 + 1e-9);
         }
-        assertEquals(15, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(100_000L));
+        assertEquals(15, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT, 100_000L));
         assertEquals(0.50, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(100_000L, false), 1e-6);
         assertEquals(0.70, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(100_000L, true), 1e-6);
 
-        // 6. Degradation priority order: lowest relative level + fewest enchants + lowest rarity selected FIRST!
+        // 6. Degradation priority order: non-Infinity tomes ALWAYS degrade before Infinity tomes;
+        //    within the same group, lowest relative level + fewest enchants + lowest rarity selected FIRST!
         var weakTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
             net.minecraft.core.BlockPos.ZERO, 0, 1, 0.20, 0.10, false
         );
         var midTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
             net.minecraft.core.BlockPos.ZERO, 1, 2, 0.80, 0.50, false
         );
+        var leanInfinityTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 3, 1, 0.10, 0.05, true
+        );
         var grandInfinityTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
             net.minecraft.core.BlockPos.ZERO, 2, 5, 1.00, 0.85, true
         );
         var chosenVictim = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
-            List.of(grandInfinityTome, midTome, weakTome)
+            List.of(grandInfinityTome, leanInfinityTome, midTome, weakTome)
         );
-        assertEquals(weakTome, chosenVictim, "Lowest-level, fewest-enchant, lowest-rarity tome must degrade first");
+        assertEquals(weakTome, chosenVictim, "Lowest-level, fewest-enchant, lowest-rarity non-Infinity tome must degrade first");
+        assertEquals(
+            midTome,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
+                List.of(leanInfinityTome, midTome)
+            ),
+            "Even a higher-tier non-Infinity tome must degrade before an Infinity Master Tome"
+        );
+        assertEquals(
+            leanInfinityTome,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
+                List.of(grandInfinityTome, leanInfinityTome)
+            ),
+            "When only Infinity Master Tomes remain, the weakest Infinity tome degrades first"
+        );
+
+        // 6b. Data-driven Ritual Config (CET-015) & treasure_epiphany.json hygiene.
+        var customRitualJson = JsonParser.parseString("""
+            {
+              "ritual": {
+                "min_tome_enchants_for_wait": 14,
+                "max_single_wait_seconds": 180,
+                "max_sacrifice_xp_levels": 9,
+                "max_rush_degrade_normal": 0.35,
+                "max_rush_degrade_infinity": 0.55,
+                "max_transcription_slip_chance": 0.16
+              }
+            }
+            """).getAsJsonObject();
+        var customRitual = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(customRitualJson);
+        assertEquals(14, customRitual.minTomeEnchantsForWait());
+        assertEquals(3_600, customRitual.maxSingleWaitTicks());
+        assertEquals(9, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(customRitual, 100_000L));
+        assertEquals(0.35, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(customRitual, 100_000L, false), 1e-6);
+        assertEquals(0.55, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(customRitual, 100_000L, true), 1e-6);
+        assertEquals(0.16, customRitual.maxTranscriptionSlipChance(), 1e-6);
+        String epiphanyJsonRaw = Files.readString(
+            Path.of("src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/treasure_epiphany.json")
+        );
+        assertFalse(epiphanyJsonRaw.contains("minecraft:infinity"), "treasure_epiphany.json must not contain dead minecraft:infinity entry");
 
         // 7. Queue serialization round-trip + all 5 new custom advancements present.
         var q1 = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
@@ -1296,7 +1373,7 @@ class EconomyAndConfigVerificationTest {
         String encoded = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.serializeQueue(List.of(q1, q2));
         assertEquals(List.of(q1, q2), chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.deserializeQueue(encoded));
 
-        for (String adv : List.of("haste_makes_waste", "soul_fed_ink", "scribes_slip", "eternal_codex", "patient_archivist")) {
+        for (String adv : List.of("haste_makes_waste", "soul_fed_ink", "scribes_slip", "crossline_slip", "eternal_codex", "patient_archivist")) {
             assertTrue(
                 Files.exists(Path.of("src/main/resources/data/chiseled_enchanting_table/advancement/" + adv + ".json")),
                 "Missing advancement file: " + adv
@@ -1340,19 +1417,19 @@ class EconomyAndConfigVerificationTest {
             for (Path lp : langStream.filter(p -> p.toString().endsWith(".json")).toList()) {
                 JsonObject map = JsonParser.parseString(Files.readString(lp)).getAsJsonObject();
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.lead").getAsString(), 32, 10).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.lead").getAsString(), 32, 10).contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step").getAsString(), 40, 18).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step").getAsString(), 40, 18).contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch5p2.lead").getAsString(), 38, "10", 42, "3").contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch5p2.lead").getAsString(), 38, "10", 42, "3").contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.resonance.broad_breakdown").getAsString(), 40, 32, 2, 6).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.resonance.broad_breakdown").getAsString(), 40, 32, 2, 6).contains("%s")
                 );
             }
         }
@@ -1544,4 +1621,239 @@ class EconomyAndConfigVerificationTest {
         }
         return px;
     }
+    @Test
+    void transformationZeroValuesKeepCanonicalMeaning() {
+        var cfg = LibraryResonance.Config.DEFAULT;
+        var id = Identifier.parse("chiseled_enchanting_table:audit_custom_rule");
+        assertEquals(XpCostConversion.XpRequirement.FREE,
+            XpCostConversion.forTransformation(cfg, id, 0, 0, 17, 2));
+        assertEquals(3, XpCostConversion.forTransformation(cfg, id, 25, 0, 1, 0).deductedLevels());
+        assertEquals(2, XpCostConversion.forTransformation(cfg, id, 25, 0, 1, 2).deductedLevels());
+    }
+
+    @Test
+    void partBTemplateDurabilityWildPreWearUnbreakingWaiverAndCrosslineInvariants() throws Exception {
+        // 1. Data-driven library_resonance.json defaults match Part B exactly
+        JsonObject lrJson = readResourceJson("library_resonance.json");
+        LibraryResonance.Config lr = LibraryResonance.Config.fromJson(lrJson);
+        var ritual = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(lrJson);
+
+        assertEquals(4, lr.maxTomeUses());
+        assertEquals(2, lr.bookCopyWearCost());
+        assertEquals(0.10, lr.unbreakingWaiverPerLevel(), 1e-9);
+        assertEquals(0.30, lr.unbreakingWaiverMaxChance(), 1e-9);
+        assertTrue(lr.wildBookWearEnabled());
+        assertEquals(List.of(45, 35, 15, 5), lr.wildBookRemainingWeights());
+
+        // 2. Unbreaking waiver strictly bounded <= 30% for all levels (including over-leveled Unbreaking X)
+        assertEquals(0.00, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(0, lr), 1e-9);
+        assertEquals(0.10, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(1, lr), 1e-9);
+        assertEquals(0.20, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(2, lr), 1e-9);
+        assertEquals(0.30, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(3, lr), 1e-9);
+        assertEquals(0.30, chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeUnbreakingWaiverChance(10, lr), 1e-9);
+
+        // 3. Wild book pre-wear weights [45, 35, 15, 5] concentrate ~80% at 1..2 charges remaining
+        var rng = net.minecraft.util.RandomSource.create(20261024L);
+        int oneOrTwo = 0;
+        int fullFour = 0;
+        int trials = 20_000;
+        for (int i = 0; i < trials; i++) {
+            int rem = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.rollWildRemainingCharges(
+                rng,
+                lr.maxTomeUses(),
+                lr.wildBookRemainingWeights()
+            );
+            assertTrue(rem >= 1 && rem <= 4);
+            if (rem <= 2) oneOrTwo++;
+            if (rem == 4) fullFour++;
+        }
+        double oneOrTwoShare = (double) oneOrTwo / trials;
+        assertTrue(oneOrTwoShare > 0.78 && oneOrTwoShare < 0.82, "Expected ~80% wild books with 1-2 charges, got " + oneOrTwoShare);
+        assertTrue(fullFour > 800 && fullFour < 1_200, "Expected ~5% intact 4/4 wild books");
+
+        // 4. Qualification load L & exact probability table: P = min(18%, 0.035 * (L - 3) + shelfBonus)
+        var slip = ritual.crosslineSlip();
+        var infOnly = List.of(
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TraitLoadInput(
+                true, false, false, false, 1, 1, 1, 1
+            )
+        );
+        assertEquals(0.0, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeInfinityTomeQualificationLoad(slip, infOnly), 1e-9);
+
+        // Infinity + Mending (treasure, weight=2, broad>=12, 1/1>=0.6) -> >= 3.0!
+        var infPlusMending = List.of(
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TraitLoadInput(
+                true, false, false, false, 1, 1, 1, 1
+            ),
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TraitLoadInput(
+                false, false, true, false, 2, 24, 1, 1
+            )
+        );
+        double mendingLoad = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeInfinityTomeQualificationLoad(slip, infPlusMending);
+        assertEquals(3.0, mendingLoad, 1e-9);
+
+        // Exact probability table verification across L = 2.5, 3, 5, 7, 8, 12 and shelves = 20, 32, 38, 42
+        for (int s : List.of(0, 20, 32, 38, 42, 64)) {
+            assertEquals(0.0, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .computeLoadSlipProbability(ritual, 2.5, s), 1e-9);
+        }
+        assertEquals(0.000, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 20), 1e-9);
+        assertEquals(0.010, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 32), 1e-9);
+        assertEquals(0.020, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 38), 1e-9);
+        assertEquals(0.030, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 42), 1e-9);
+
+        assertEquals(0.070, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 20), 1e-9);
+        assertEquals(0.080, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 32), 1e-9);
+        assertEquals(0.090, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 38), 1e-9);
+        assertEquals(0.100, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 42), 1e-9);
+
+        assertEquals(0.140, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 20), 1e-9);
+        assertEquals(0.150, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 32), 1e-9);
+        assertEquals(0.160, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 38), 1e-9);
+        assertEquals(0.170, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 42), 1e-9);
+
+        assertEquals(0.175, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 20), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 32), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 38), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 42), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 12.0, 64), 1e-9);
+
+        // 5. Single-roll 3-outcome split: 70% TIER_DROP / 25% JUNK_CROSSLINE / 5% CURSE_CROSSLINE
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.NONE,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.20, 0.01)
+        );
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.TIER_DROP,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.10, 0.69)
+        );
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.JUNK_CROSSLINE,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.10, 0.70)
+        );
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.JUNK_CROSSLINE,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.10, 0.94)
+        );
+        assertEquals(
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.SlipOutcomeKind.CURSE_CROSSLINE,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.rollMergedSlipOutcome(ritual, 0.15, 0.10, 0.95)
+        );
+
+        // 6. QueuedInscription 10-field & legacy 7-field round-trip + 50% XP compensation
+        assertEquals(0, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computePollutionXpRefund(ritual, 0));
+        assertEquals(55, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computePollutionXpRefund(ritual, 110));
+        var legacyDecoded = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription
+            .decode("minecraft:sharpness|5|3|1|0|12|0");
+        assertNotNull(legacyDecoded);
+        assertEquals(0.0, legacyDecoded.infinityTomeLoad(), 1e-9);
+        assertEquals(0, legacyDecoded.paidXpPoints());
+        assertTrue(legacyDecoded.paidItems().isEmpty());
+
+        var richStep = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
+            Identifier.withDefaultNamespace("efficiency"),
+            5,
+            2,
+            true,
+            true,
+            18,
+            false,
+            5.5,
+            94,
+            List.of(
+                new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.PaidItemEntry(
+                    Identifier.withDefaultNamespace("lapis_lazuli"), 6
+                ),
+                new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.PaidItemEntry(
+                    Identifier.withDefaultNamespace("amethyst_shard"), 1
+                )
+            ),
+            3
+        );
+        var roundTripped = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription
+            .decode(richStep.encode());
+        assertNotNull(roundTripped);
+        assertEquals(5.5, roundTripped.infinityTomeLoad(), 1e-4);
+        assertEquals(94, roundTripped.paidXpPoints());
+        assertEquals(2, roundTripped.paidItems().size());
+        assertEquals(3, roundTripped.inheritedGeneration());
+        assertEquals(-1, legacyDecoded.inheritedGeneration());
+
+        // 7. Data tag & Option B advancement copywriting verification
+        Path tagPath = Path.of("src/main/resources/data/chiseled_enchanting_table/tags/enchantment/crossline_excluded.json");
+        assertTrue(Files.isRegularFile(tagPath));
+        String tagRaw = Files.readString(tagPath);
+        assertTrue(tagRaw.contains("minecraft:infinity") && tagRaw.contains("minecraft:mending"));
+
+        JsonObject zhLang = JsonParser.parseString(
+            Files.readString(Path.of("src/client/resources/assets/chiseled_enchanting_table/lang/zh_cn.json"))
+        ).getAsJsonObject();
+        assertEquals("……抄串行了", zhLang.get("advancements.chiseled_enchanting_table.crossline_slip.title").getAsString());
+        assertEquals(
+            "往「无限」模板书里塞太多好东西的后果——恭喜，你的镐子学会呼吸（或者别的什么没用的本事）了。",
+            zhLang.get("advancements.chiseled_enchanting_table.crossline_slip.description").getAsString()
+        );
+    }
+
+    @Test
+    void queuedRitualStepsRevalidateAgainstActualItem() {
+        // C-01: planned III (prev II) must not write when an earlier slip left the item at II->II plan broken,
+        // e.g. actual previous is I while the step was priced as II -> III.
+        assertFalse(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(1, 2, 3));
+        // Same-level / downgrade writes are never applicable.
+        assertFalse(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(2, 2, 2));
+        assertFalse(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(3, 3, 2));
+        // The intact plan still applies.
+        assertTrue(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(2, 2, 3));
+        assertTrue(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(0, 0, 1));
+        // Legacy over-level targets clamp to the live definition maximum.
+        assertEquals(5, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .effectiveQueuedTargetLevel(9, 5));
+        assertEquals(1, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .effectiveQueuedTargetLevel(0, 5));
+    }
+
+    @Test
+    void combineSequentialChargesEveryUpgradeOnce() {
+        var a = new XpCostConversion.XpRequirement(10, 10, 3, 0, false);
+        var b = new XpCostConversion.XpRequirement(8, 8, 2, 0, false);
+        var combined = XpCostConversion.combineSequential(java.util.List.of(a, b));
+        // Sequential equivalence: deduct 3+2, and the second upgrade still needs its own
+        // requirement met after the first deduction (8 + 3 = 11 starting level).
+        assertEquals(5, combined.deductedLevels());
+        assertEquals(11, combined.requiredLevel());
+        assertEquals(11, combined.rawRequiredLevel());
+        // Free / refund entries contribute nothing.
+        assertEquals(XpCostConversion.XpRequirement.FREE,
+            XpCostConversion.combineSequential(java.util.List.of()));
+        assertEquals(XpCostConversion.XpRequirement.FREE,
+            XpCostConversion.combineSequential(java.util.List.of(XpCostConversion.XpRequirement.refund(50))));
+        var single = XpCostConversion.combineSequential(java.util.List.of(a, XpCostConversion.XpRequirement.FREE));
+        assertEquals(3, single.deductedLevels());
+        assertEquals(10, single.requiredLevel());
+    }
+
+    @Test
+    void ritualWaitCurveLoadReferencesAreDatapackConfigurable() {
+        var custom = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
+            300, 3, 15, 0.5, 0.7, 0.3, 84.0, 44.0,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig.DEFAULT,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.WaitCurve.DEFAULT
+        );
+        int defaultWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(
+                chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT,
+                42, 30, 22, 5, 5, 1.0);
+        int customWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(custom, 42, 30, 22, 5, 5, 1.0);
+        assertTrue(customWait < defaultWait, "Doubling load references must shorten the wait");
+    }
+
 }

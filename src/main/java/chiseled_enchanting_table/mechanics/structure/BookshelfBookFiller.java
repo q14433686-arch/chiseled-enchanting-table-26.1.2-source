@@ -134,6 +134,22 @@ public final class BookshelfBookFiller {
     public static final String BOOKSHELF_BLOCK_ENTITY_ID = "minecraft:chiseled_bookshelf";
 
     /**
+     * Startup assertion for the one vanilla key this class must hardcode (audit: the id
+     * has to match Mojang's template NBT byte for byte). If a future Minecraft version
+     * renames it, fail loudly in the log at boot instead of silently writing unloadable
+     * block-entity tags into generated structures.
+     */
+    public static void verifyVanillaKeys() {
+        var id = net.minecraft.resources.Identifier.parse(BOOKSHELF_BLOCK_ENTITY_ID);
+        if (net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE.getValue(id) == null) {
+            ChiseledEnchantingTable.LOGGER.error(
+                "Vanilla block-entity id {} is not registered - it may have been renamed upstream; "
+                    + "structure bookshelf filling would write unloadable NBT",
+                BOOKSHELF_BLOCK_ENTITY_ID);
+        }
+    }
+
+    /**
      * Lore line stamped on every generated enchanted book.
      *
      * <p>Translatable, not a literal: the component is stored in the item stack, and vanilla
@@ -537,6 +553,11 @@ public final class BookshelfBookFiller {
         Holder<Enchantment> holder = picked.holder;
         EnchantmentHelper.updateEnchantments(stack, mutable -> mutable.set(holder, level));
         stack.set(DataComponents.LORE, new ItemLore(List.of(LORE)));
+        chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.applyWildBookWear(
+            stack,
+            random,
+            ChiseledEnchantingTableData.libraryResonanceConfig()
+        );
         return stack;
     }
 

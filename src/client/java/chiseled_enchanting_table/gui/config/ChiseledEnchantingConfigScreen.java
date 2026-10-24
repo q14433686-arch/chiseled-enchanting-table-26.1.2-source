@@ -77,7 +77,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     private final SessionMode sessionMode;
     private ModRuntimeConfig baselineConfig;
-    private final Draft draft;
+    private Draft draft;
 
     private CategoryId activeCategory = CategoryId.GENERAL;
     private boolean filterModifiedOnly = false;
@@ -98,6 +98,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     @Nullable
     private SliderTrack activeDraggingSlider = null;
     private boolean draggingScrollbar = false;
+    private long pendingSaveId;
+    private boolean pendingClose;
+    private boolean lastSaveFailed;
     private long statusToastUntilMs = 0L;
 
     public ChiseledEnchantingConfigScreen(@Nullable Screen parentScreen) {
@@ -109,7 +112,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         this.parentScreen = parentScreen;
         this.closeOverride = closeOverride;
         this.sessionMode = detectSessionMode();
-        this.baselineConfig = ModRuntimeConfig.effective();
+        this.baselineConfig = ModRuntimeConfig.preferences();
         this.draft = this.baselineConfig.toDraft();
     }
 
@@ -181,8 +184,17 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return ConfigCatalog.optionsInCategory(this.activeCategory);
     }
 
+    private Draft displayedDraft(OptionEntry entry) {
+        if (this.sessionMode == SessionMode.OFFLINE_CLIENT) return this.draft;
+        var policy = ModRuntimeConfig.effectivePackPolicy();
+        boolean governed = policy.isKeyLocked(entry.key())
+            || (policy.datapackOverriddenKeys().contains(entry.key())
+                && (!this.draft.overrideDatapacks || policy.enforceDatapackPriority()));
+        return governed ? ModRuntimeConfig.effective().toDraft() : this.draft;
+    }
+
     private String formatOptionValue(OptionEntry entry) {
-        String raw = entry.rawOrKeyDisplay(this.draft);
+        String raw = entry.rawOrKeyDisplay(displayedDraft(entry));
         return raw.startsWith("@") ? I18n.get(raw.substring(1)) : raw;
     }
 
@@ -200,29 +212,44 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (!this.sessionMode.writable()) {
             return;
         }
+        if (this.pendingSaveId != 0) return;
         ModRuntimeConfig built = this.draft.build();
-        this.baselineConfig = built;
         playClick(1.12f);
-
-        Minecraft mc = Minecraft.getInstance();
         if (this.sessionMode == SessionMode.OFFLINE_CLIENT) {
-            ModRuntimeConfig.setLocalAndSave(built);
-            ChiseledEnchantingTableData.applyRuntimeConfig(built);
-        } else if (this.sessionMode == SessionMode.SINGLEPLAYER_LIVE) {
-            ModRuntimeConfig.setLocalAndSave(built);
-            ChiseledEnchantingTableData.applyRuntimeConfig(built);
-            var integrated = mc.getSingleplayerServer();
-            if (integrated != null) {
-                integrated.execute(() -> ModConfigNetworking.applyAndBroadcast(integrated, built));
+            try {
+                ModRuntimeConfig.setLocalAndSave(built);
+                ChiseledEnchantingTableData.applyRuntimeConfig(built);
+                this.baselineConfig = built;
+                this.lastSaveFailed = false;
+                this.statusToastUntilMs = System.currentTimeMillis() + 2600L;
+                if (closeAfterSave) onClose();
+            } catch (RuntimeException error) {
+                this.lastSaveFailed = true;
+                this.statusToastUntilMs = System.currentTimeMillis() + 5000L;
             }
-        } else if (this.sessionMode == SessionMode.DEDICATED_ADMIN) {
-            ModRuntimeConfig.applyRemoteSync(built, true);
-            ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(built.toJsonString()));
+            return;
         }
+        // Integrated and dedicated servers share the same authorized, acknowledged path.
+        this.pendingSaveId = ModRuntimeConfig.nextSaveRequestId();
+        this.pendingClose = closeAfterSave;
+        if (ClientPlayNetworking.canSend(ModConfigNetworking.UpdateRuntimeConfigPayload.TYPE)) {
+            ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(
+                built.toJsonString(),
+                this.pendingSaveId,
+                closeAfterSave
+            ));
+        }
+    }
 
-        this.statusToastUntilMs = System.currentTimeMillis() + 2600L;
-        if (closeAfterSave) {
-            onClose();
+    private void reconcileSaveAcknowledgement() {
+        if (this.pendingSaveId == 0 || ModRuntimeConfig.acknowledgedSaveId() != this.pendingSaveId) return;
+        this.pendingSaveId = 0;
+        this.lastSaveFailed = !ModRuntimeConfig.acknowledgedSaveAccepted();
+        this.statusToastUntilMs = System.currentTimeMillis() + 5000L;
+        if (!this.lastSaveFailed) {
+            this.baselineConfig = ModRuntimeConfig.preferences();
+            this.draft = this.baselineConfig.toDraft();
+            if (this.pendingClose) onClose();
         }
     }
 
@@ -233,6 +260,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
+        reconcileSaveAcknowledgement();
         computeLayout();
         this.hitBoxes.clear();
         this.sliderTracks.clear();
@@ -505,7 +533,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean editable = avail.editable();
 
         if (entry.kind() == ControlKind.BOOLEAN) {
-            boolean on = Boolean.TRUE.equals(entry.get(this.draft));
+            boolean on = Boolean.TRUE.equals(entry.get(displayedDraft(entry)));
             boolean over = inClipMouse && editable && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
             int border = !editable ? 0xFF3B3052 : (on ? 0xFF5CE1A6 : 0xFF75609E);
             int fill = !editable ? 0xFF1D172B : (on ? (over ? 0xFF236B4E : 0xFF1A523B) : (over ? 0xFF34264F : 0xFF241A38));
@@ -565,7 +593,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         ctx.fill(plusX + 1, y + 1, plusX + stepW - 1, y + h - 1, overPlus ? 0xFF422E66 : 0xFF211735);
         GrimoireTextLayout.drawCenteredBox(ctx, this.font, "+", plusX, stepW, y + h * 0.5f, 0.76f, editable ? CREAM_TEXT : 0xFF665A7D, true);
 
-        double norm = entry.normalizedSliderValue(this.draft);
+        double norm = entry.normalizedSliderValue(displayedDraft(entry));
         ctx.fill(trackX, y, trackX + trackW, y + h, editable ? 0xFF6D5899 : 0xFF352B4A);
         ctx.fill(trackX + 1, y + 1, trackX + trackW - 1, y + h - 1, 0xFF181126);
         int fillW = Math.round((float) ((trackW - 2) * norm));
@@ -608,6 +636,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             formatOptionValue(entry),
             formatDefaultValue(entry)
         ).withStyle(ChatFormatting.AQUA));
+        if (entry.effectScope() == ConfigCatalog.EffectScope.RESTART_REQUIRED) {
+            String actual = entry.rawOrKeyDisplay(ModRuntimeConfig.effective().toDraft());
+            lines.add(Component.translatable("config.chiseled_enchanting_table.tip.active_value", actual).withStyle(ChatFormatting.GOLD));
+        }
         ChatFormatting scopeFmt = switch (avail.effectScope()) {
             case IMMEDIATE -> ChatFormatting.GREEN;
             case NEW_GENERATION -> ChatFormatting.AQUA;
@@ -664,9 +696,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int statusMaxW = Math.max(40, cancelX - 8 - statusX);
         String statusText;
         int statusCol;
-        if (System.currentTimeMillis() < this.statusToastUntilMs) {
-            statusText = I18n.get("config.chiseled_enchanting_table.msg.saved");
-            statusCol = 0xFF6BFFB3;
+        if (this.pendingSaveId != 0) {
+            statusText = I18n.get("config.chiseled_enchanting_table.msg.saving");
+            statusCol = GOLD_TEXT;
+        } else if (System.currentTimeMillis() < this.statusToastUntilMs) {
+            statusText = I18n.get(this.lastSaveFailed ? "config.chiseled_enchanting_table.msg.save_failed" : "config.chiseled_enchanting_table.msg.saved");
+            statusCol = this.lastSaveFailed ? 0xFFFF6B6B : 0xFF6BFFB3;
         } else if (restartChanged) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.restart_hint");
             statusCol = 0xFFFFC46B;
@@ -714,7 +749,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         double mx = event.x();
         double my = event.y();
 
-        if (event.button() == 0) {
+        if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
             for (SliderTrack slider : this.sliderTracks) {
                 if (slider.contains(mx, my)) {
                     this.activeDraggingSlider = slider;
@@ -735,10 +770,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         for (HitBox box : this.hitBoxes) {
             if (box.contains(mx, my)) {
-                if (event.button() == 0) {
+                if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
                     box.onClick().run();
                     return true;
-                } else if (event.button() == 1 && box.onRightClick() != null) {
+                } else if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT && box.onRightClick() != null) {
                     box.onRightClick().run();
                     return true;
                 }
@@ -749,12 +784,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-        if (this.activeDraggingSlider != null && event.button() == 0) {
+        if (this.activeDraggingSlider != null && event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
             double t = (event.x() - this.activeDraggingSlider.x()) / (double) Math.max(1, this.activeDraggingSlider.w());
             this.activeDraggingSlider.entry().setFromNormalizedSlider(this.draft, t);
             return true;
         }
-        if (this.draggingScrollbar && event.button() == 0) {
+        if (this.draggingScrollbar && event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
             updateScrollFromMouse(event.y());
             return true;
         }
@@ -791,9 +826,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             onClose();
             return true;
         }
-        if (key >= InputConstants.KEY_1 && key <= InputConstants.KEY_6) {
+        // Audit GUI-02: bound by the live enum size instead of hardcoding KEY_6, so adding
+        // or removing a category can never index out of bounds (or silently dead-key).
+        CategoryId[] categories = CategoryId.values();
+        int categoryIndex = key - InputConstants.KEY_1;
+        if (categoryIndex >= 0 && categoryIndex < categories.length) {
             this.filterModifiedOnly = false;
-            this.activeCategory = CategoryId.values()[key - InputConstants.KEY_1];
+            this.activeCategory = categories[categoryIndex];
             this.scrollOffset = 0.0f;
             playClick(1.0f);
             return true;

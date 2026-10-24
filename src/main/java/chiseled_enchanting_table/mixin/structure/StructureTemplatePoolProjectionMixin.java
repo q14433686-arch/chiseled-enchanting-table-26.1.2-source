@@ -20,6 +20,12 @@ import org.spongepowered.asm.mixin.injection.At;
 public class StructureTemplatePoolProjectionMixin {
     @ModifyReturnValue(method = "getProcessors()Lcom/google/common/collect/ImmutableList;", at = @At("RETURN"))
     private ImmutableList<StructureProcessor> chiseled_enchanting_table$appendBookshelfReplacer(ImmutableList<StructureProcessor> original) {
-        return ImmutableList.<StructureProcessor>builder().addAll(original).add(BookshelfReplacerProcessor.INSTANCE).build();
+        if (original.contains(BookshelfReplacerProcessor.INSTANCE)) {
+            return original;
+        }
+        return ImmutableList.<StructureProcessor>builderWithExpectedSize(original.size() + 1)
+            .addAll(original)
+            .add(BookshelfReplacerProcessor.INSTANCE)
+            .build();
     }
 }

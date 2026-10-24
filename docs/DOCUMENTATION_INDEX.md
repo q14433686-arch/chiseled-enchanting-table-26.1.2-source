@@ -71,7 +71,10 @@ Used when publishing an updated release; keeps every platform aligned.
 
 Read these before touching the structure/worldgen code, the recipe-viewer adapters, or CI.
 
-- [**Sync from the 26.3 branch** — what was back-ported, what was adapted, and what was
+- [**Sync from the 26.3 branch (1.1.0 runtime & architecture hardening)** — `RuleBook` / `RuntimeFrame`, per-world-session `WorldRegeneration`, bounded ritual escrow/quarantine, `26_1_2_revision_6` protocol & `26.1.2` vs `26.3` difference matrix](reports/SYNC_FROM_26_3_ARCHITECTURE_BACKPORT.md)
+- [**Sync instruction from the 26.3 branch (2026-10-24)** — layer checklist L0–L5, measured tree/lang/key baselines and acceptance gates](reports/SYNC_TO_26_1_2_2026_10_24.md)
+- [**Design-audit max-package backport (2026-10-24)** — CET/batch 1A/2/3/audit2 + generation fading, essence scapegoat pricing, WaitCurve, single-source `BundledDefaults`, wire `26_1_2_revision_10`](reports/SYNC_FROM_26_3_DESIGN_AUDIT_BACKPORT_2026_10_24.md)
+- [**Sync from the 26.3 branch (1.0.3 initial sync)** — what was back-ported, what was adapted, and what was
   deliberately left behind because it is 26.3-only](reports/SYNC_FROM_26_3_REPORT.md)
 - [Worldgen bookshelf fill deadlock](reports/WORLDGEN_BOOKSHELF_DEADLOCK_REPORT.md) — the
   integrated-server freeze fix ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3))

@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.config;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData.VanillaChestBooksMode;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.BlankMaxTierMode;
@@ -95,6 +96,14 @@ public record ModRuntimeConfig(
     int bookshelfMaxBooks,
     double bookshelfEnchantedProb,
 
+    // Global trade sanitisation master switch (audit: rewriting other mods' villager
+    // Infinity book offers must be opt-outable by the server owner)
+    boolean restrictVillagerInfinityBooks,
+
+    // Grindstone returns a Depleted Tome instead of a plain book (core economy hook;
+    // default ON per the 2026-10-24 audit disposition, opt-out for pack authors)
+    boolean grindstoneDepletedTome,
+
     // Explicit per-field customization tracking (used when overrideDatapacks == false)
     Set<String> customizedKeys
 ) {
@@ -106,6 +115,9 @@ public record ModRuntimeConfig(
     private static volatile ModRuntimeConfig localInstance;
     @Nullable
     private static volatile ModRuntimeConfig remoteServerInstance;
+    private static volatile ModRuntimeConfig remotePreferences;
+    public static ModRuntimeConfig preferences() { return remotePreferences != null ? remotePreferences : get(); }
+    public static void setRemotePreferences(ModRuntimeConfig value) { remotePreferences = value; }
     private static volatile boolean clientCanEditServerConfig = false;
     private static volatile PackPolicy serverPackPolicy = PackPolicy.NONE;
     @Nullable
@@ -160,6 +172,23 @@ public record ModRuntimeConfig(
         }
 
         public static PackPolicy fromJson(JsonObject root, Set<String> externalDatapackKeys) {
+            if (root != null) {
+                for (String key : Set.of("enforce_datapack_priority", "lock_in_game_config")) {
+                    if (root.has(key) && (!root.get(key).isJsonPrimitive()
+                        || !root.getAsJsonPrimitive(key).isBoolean()))
+                        throw new IllegalArgumentException("Policy flag must be boolean: " + key);
+                }
+                for (String key : Set.of("locked_keys", "datapack_overridden_keys")) {
+                    if (!root.has(key)) continue;
+                    if (!root.get(key).isJsonArray()) throw new IllegalArgumentException("Policy keys must be array: " + key);
+                    for (var element : root.getAsJsonArray(key)) {
+                        if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isString())
+                            throw new IllegalArgumentException("Policy key must be a string");
+                        if (ConfigCatalog.ALL_OPTIONS.stream().noneMatch(option -> option.key().equals(element.getAsString())))
+                            throw new IllegalArgumentException("Unknown policy key: " + element.getAsString());
+                    }
+                }
+            }
             boolean enforceDp = root != null && boolOr(root, "enforce_datapack_priority", false);
             boolean lockAll = root != null && boolOr(root, "lock_in_game_config", false);
             Set<String> dpKeys = new LinkedHashSet<>();
@@ -308,19 +337,22 @@ public record ModRuntimeConfig(
     /** Returns server-synced config when connected to a multiplayer server, otherwise local config. */
     public static ModRuntimeConfig effective() {
         ModRuntimeConfig remote = remoteServerInstance;
-        return remote != null ? remote : get();
+        return remote != null ? remote : ChiseledEnchantingTableData.runtimeConfiguration();
     }
 
     public static void setLocalAndSave(ModRuntimeConfig updated) {
         ModRuntimeConfig normalized = updated != null ? updated : DEFAULT;
+        saveToDisk(normalized); // Commit persisted state before publishing the new in-memory value.
         localInstance = normalized;
-        saveToDisk(normalized);
     }
 
+    /** Explicit reload must reject malformed input, not silently replace it with defaults. */
     public static ModRuntimeConfig reloadFromDisk() {
-        ModRuntimeConfig loaded = loadFromDiskOrWriteDefault();
-        localInstance = loaded;
-        return loaded;
+        try (Reader reader = Files.newBufferedReader(configFilePath(), StandardCharsets.UTF_8)) {
+            return fromJson(JsonParser.parseReader(reader).getAsJsonObject());
+        } catch (java.io.IOException error) {
+            throw new java.io.UncheckedIOException("Cannot reload " + FILE_NAME, error);
+        }
     }
 
     public static void applyRemoteSync(ModRuntimeConfig remote, PackPolicy policy, boolean canEdit) {
@@ -335,8 +367,10 @@ public record ModRuntimeConfig(
 
     public static void clearRemoteSync() {
         remoteServerInstance = null;
+        remotePreferences = null;
         remotePackPolicy = null;
         clientCanEditServerConfig = false;
+        acknowledgedSaveId = 0;
     }
 
     public static boolean clientCanEditServerConfig() {
@@ -368,18 +402,89 @@ public record ModRuntimeConfig(
         }
     }
 
-    public static void saveToDisk(ModRuntimeConfig cfg) {
+    /** Exposed path overload allows failure/atomic-replacement tests without Fabric bootstrap. */
+    public static void writeAtomically(Path path, ModRuntimeConfig cfg) throws java.io.IOException {
+        Path parent = path.toAbsolutePath().getParent();
+        Files.createDirectories(parent);
+        String json = GSON.toJson(cfg.toJson()) + "\n";
+        Path temporary = Files.createTempFile(parent, ".cet-config-", ".tmp");
         try {
-            Path path = configFilePath();
-            Files.createDirectories(path.getParent());
-            try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
-                GSON.toJson(cfg.toJson(), writer);
-                writer.write('\n');
+            Files.writeString(temporary, json, StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, path, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                return;
+            } catch (java.io.IOException atomicFailure) {
+                // Windows rejects ATOMIC_MOVE over an existing target with AccessDenied when
+                // the file is read-only or briefly held by an antivirus/launcher sync. Fall
+                // back to progressively weaker replacements instead of failing the save.
+                clearWindowsReadOnly(path);
+                java.io.IOException lastFailure = atomicFailure;
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        Files.move(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        return;
+                    } catch (java.io.IOException moveFailure) {
+                        lastFailure = moveFailure;
+                        pauseBeforeRetry(attempt);
+                    }
+                }
+                try {
+                    Files.copy(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    return;
+                } catch (java.io.IOException copyFailure) {
+                    lastFailure = copyFailure;
+                }
+                // Last resort: write the target directly (throws if truly impossible,
+                // e.g. the target is a directory - which tests rely on staying intact).
+                try {
+                    Files.writeString(path, json, StandardCharsets.UTF_8);
+                } catch (java.io.IOException directFailure) {
+                    directFailure.addSuppressed(lastFailure);
+                    throw directFailure;
+                }
             }
-        } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.warn("Failed to write {}", FILE_NAME, e);
+        } finally {
+            Files.deleteIfExists(temporary);
         }
     }
+
+    private static void clearWindowsReadOnly(Path path) {
+        try {
+            if (Files.isRegularFile(path)) {
+                Files.setAttribute(path, "dos:readonly", false);
+            }
+        } catch (Exception ignored) {
+            // Non-Windows filesystems do not support the DOS view; nothing to clear there.
+        }
+    }
+
+    private static void pauseBeforeRetry(int attempt) {
+        try {
+            Thread.sleep(25L * (attempt + 1));
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public static void saveToDisk(ModRuntimeConfig cfg) {
+        try {
+            writeAtomically(configFilePath(), cfg);
+        } catch (java.io.IOException error) {
+            throw new java.io.UncheckedIOException("Cannot save " + FILE_NAME, error);
+        }
+    }
+
+    private static final java.util.concurrent.atomic.AtomicLong SAVE_REQUEST_IDS = new java.util.concurrent.atomic.AtomicLong();
+    public static long nextSaveRequestId() { return SAVE_REQUEST_IDS.incrementAndGet(); }
+    private static volatile long acknowledgedSaveId;
+    private static volatile boolean acknowledgedSaveAccepted;
+    public static void acknowledgeSave(long id, boolean accepted) {
+        acknowledgedSaveAccepted = accepted;
+        acknowledgedSaveId = id;
+    }
+    public static long acknowledgedSaveId() { return acknowledgedSaveId; }
+    public static boolean acknowledgedSaveAccepted() { return acknowledgedSaveAccepted; }
 
     public String toJsonString() {
         return GSON.toJson(toJson());
@@ -407,6 +512,8 @@ public record ModRuntimeConfig(
         general.addProperty("vanilla_table_mode", vanillaTableMode.token());
         general.addProperty("anvil_flat_repair_cost", anvilFlatRepairCost);
         general.addProperty("anvil_block_same_book_merge", anvilBlockSameBookMerge);
+        general.addProperty("restrict_villager_infinity_books", restrictVillagerInfinityBooks);
+        general.addProperty("grindstone_depleted_tome", grindstoneDepletedTome);
         root.add("general", general);
 
         JsonObject bookshelves = new JsonObject();
@@ -505,6 +612,8 @@ public record ModRuntimeConfig(
         }
         d.anvilFlatRepairCost = boolOr(general, "anvil_flat_repair_cost", d.anvilFlatRepairCost);
         d.anvilBlockSameBookMerge = boolOr(general, "anvil_block_same_book_merge", d.anvilBlockSameBookMerge);
+        d.restrictVillagerInfinityBooks = boolOr(general, "restrict_villager_infinity_books", d.restrictVillagerInfinityBooks);
+        d.grindstoneDepletedTome = boolOr(general, "grindstone_depleted_tome", d.grindstoneDepletedTome);
 
         d.directGatesEnabled = boolOr(shelves, "direct_gates_enabled", d.directGatesEnabled);
         if (shelves.has("blank_max_tier_mode")) {
@@ -590,8 +699,13 @@ public record ModRuntimeConfig(
         public boolean overrideDatapacks = false;
         public int enchantedBookStackSize = 64;
         public VanillaTableMode vanillaTableMode = VanillaTableMode.BOOKS;
-        public boolean anvilFlatRepairCost = true;
+        // Fresh-install defaults: peripheral vanilla-rewrites stay OFF until the
+        // owner opts in (2026-10-24 audit disposition); existing config files keep
+        // their persisted values because loadFromDiskOrWriteDefault reads them first.
+        public boolean anvilFlatRepairCost = false;
         public boolean anvilBlockSameBookMerge = true;
+        public boolean restrictVillagerInfinityBooks = false;
+        public boolean grindstoneDepletedTome = true;
 
         public boolean directGatesEnabled = true;
         public BlankMaxTierMode blankMaxTierMode = BlankMaxTierMode.HALF_CEIL;
@@ -603,15 +717,15 @@ public record ModRuntimeConfig(
         public boolean requireLineOfSight = false;
 
         public MasterTomeWear.ConsumptionMode tomeConsumptionMode = MasterTomeWear.ConsumptionMode.WEAR;
-        public int maxTomeUses = 16;
-        public int bookCopyWearCost = 4;
+        public int maxTomeUses = MasterTomeWear.DEFAULT_MAX_TOME_USES;
+        public int bookCopyWearCost = MasterTomeWear.DEFAULT_BOOK_COPY_WEAR_COST;
         public MasterTomeWear.DepleteBehavior tomeDepleteBehavior = MasterTomeWear.DepleteBehavior.STEP_DOWN;
         public boolean tomeRegenEnabled = true;
-        public int tomeRegenBaseSeconds = 24_000;
+        public int tomeRegenBaseSeconds = 7_200;
         public int tomeRegenTier1Shelves = 38;
-        public int tomeRegenTier1Seconds = 12_000;
+        public int tomeRegenTier1Seconds = 3_600;
         public int tomeRegenTier2Shelves = 42;
-        public int tomeRegenTier2Seconds = 3_600;
+        public int tomeRegenTier2Seconds = 1_200;
         public int maxWoodenDiscountPercent = 15;
         public int maxTotalXpDiscountPercent = 40;
         public boolean bookCombineEnabled = true;
@@ -658,6 +772,8 @@ public record ModRuntimeConfig(
             this.vanillaTableMode = src.vanillaTableMode;
             this.anvilFlatRepairCost = src.anvilFlatRepairCost;
             this.anvilBlockSameBookMerge = src.anvilBlockSameBookMerge;
+            this.restrictVillagerInfinityBooks = src.restrictVillagerInfinityBooks;
+            this.grindstoneDepletedTome = src.grindstoneDepletedTome;
 
             this.directGatesEnabled = src.directGatesEnabled;
             this.blankMaxTierMode = src.blankMaxTierMode;
@@ -874,6 +990,8 @@ public record ModRuntimeConfig(
                 bookshelfMinBooks,
                 bookshelfMaxBooks,
                 bookshelfEnchantedProb,
+                restrictVillagerInfinityBooks,
+                grindstoneDepletedTome,
                 customizedKeys
             );
         }

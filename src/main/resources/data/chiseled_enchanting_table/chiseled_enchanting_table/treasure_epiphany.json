@@ -92,16 +92,6 @@
         ]
       }
     },
-    "minecraft:infinity": {
-      "xp_levels": 26,
-      "material_cost": {
-        "options": [
-          { "item": "minecraft:ender_pearl", "count": 8, "extra": { "item": "minecraft:diamond", "count": 4 } },
-          { "item": "minecraft:ender_eye", "count": 6, "extra": { "item": "minecraft:amethyst_shard", "count": 9 } },
-          { "item": "chiseled_enchanting_table:arcane_catalyst", "count": 1 }
-        ]
-      }
-    },
     "minecraft:mending": {
       "xp_levels": 28,
       "material_cost": {

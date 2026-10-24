@@ -42,6 +42,20 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ChiseledEnchantingTableClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        chiseled_enchanting_table.compat.IrisGlintPreload.register();
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
+        ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> {
+            if (chiseled_enchanting_table.menu.EnchantingProtocol.incompatible(
+                // Peer-has-mod probe: current suffixed apply channel OR the bare
+                // pre-revision_9 one (audit NET-02; probe is query-only, never decoded).
+                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID)
+                    || ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_TYPE),
+                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE))) {
+                listener.getConnection().disconnect(net.minecraft.network.chat.Component.literal(
+                    chiseled_enchanting_table.menu.EnchantingProtocol.MISMATCH_MESSAGE));
+            }
+        });
         ArcaneGrimoireItem.CLIENT_OPEN_ACTION = player -> {
             GrimoireSoundHelper.playOpen();
             Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
@@ -89,10 +103,20 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 lines.add(Component.translatable(
                     "item.chiseled_enchanting_table.master_tome_infinite"
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
+                var rCfg = SyncedEnchantmentCosts.ritualConfig();
+                double loadL = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                    .computeInfinityTomeQualificationLoad(rCfg, stack);
+                if (loadL >= rCfg.crosslineSlip().minLoadThreshold()) {
+                    lines.add(Component.translatable(
+                        "item.chiseled_enchanting_table.master_tome_overloaded_hint",
+                        String.format(java.util.Locale.ROOT, "%.1f", loadL)
+                    ).withStyle(ChatFormatting.GOLD));
+                }
                 return;
             }
             int wearUsed = MasterTomeWear.getWearUsed(stack);
-            int maxUses = Math.max(1, cfg.maxTomeUses());
+            int generation = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(stack);
+            int maxUses = chiseled_enchanting_table.mechanics.resonance.TomeWearData.effectiveMaxUses(cfg.maxTomeUses(), generation);
             int remaining = Math.max(1, maxUses - wearUsed);
             float ratio = (float) remaining / (float) maxUses;
             ChatFormatting color = wearUsed <= 0
@@ -103,6 +127,20 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 remaining,
                 maxUses
             ).withStyle(color));
+            if (generation > 0) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_generation",
+                    generation,
+                    Math.max(0, cfg.maxTomeUses() - maxUses)
+                ).withStyle(ChatFormatting.DARK_PURPLE));
+            }
+            int waiverPct = (int) Math.round(MasterTomeWear.computeUnbreakingWaiverChance(stack, cfg) * 100.0);
+            if (waiverPct > 0) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_unbreaking_hint",
+                    waiverPct
+                ).withStyle(ChatFormatting.DARK_AQUA));
+            }
             if (wearUsed > 0 && cfg.tomeRegenEnabled()) {
                 lines.add(Component.translatable(
                     "item.chiseled_enchanting_table.master_tome_regen_hint",
@@ -114,10 +152,13 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(ModConfigNetworking.SyncRuntimeConfigPayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> {
-                ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.json());
+                ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.effectiveJson());
+                ModRuntimeConfig.setRemotePreferences(ModRuntimeConfig.fromJsonString(payload.json()));
                 ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.PackPolicy.fromJsonString(payload.policyJson());
                 ModRuntimeConfig.applyRemoteSync(synced, policy, payload.canEdit());
-                ChiseledEnchantingTableData.applyRuntimeConfig(synced);
+                // In an integrated server the shared tables were already committed on the server thread.
+                if (!ctx.client().hasSingleplayerServer()) ChiseledEnchantingTableData.applyRuntimeConfig(synced, ModRuntimeConfig.PackPolicy.NONE, () -> {});
+                if (payload.requestId() > 0) ModRuntimeConfig.acknowledgeSave(payload.requestId(), payload.accepted());
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                     if (menu.onContentChangedCallback != null) {
@@ -127,15 +168,13 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             }));
 
         // Server-authoritative costs for the menu and recipe viewers. Sent on join
-        // and after every data pack reload; empty means "fall back to the canonical cost".
+        // and after every data pack reload; server catalogs (even empty) are authoritative.
         ClientPlayNetworking.registerGlobalReceiver(EnchantCostTablePayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> {
                 SyncedEnchantmentCosts.apply(payload);
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
-                    if (menu.onContentChangedCallback != null) {
-                        menu.onContentChangedCallback.run();
-                    }
+                    menu.applyTransformationSnapshot(payload.transformations());
                 }
             }));
 
@@ -160,7 +199,13 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             SyncedEnchantmentCosts.clear();
             ModRuntimeConfig.clearRemoteSync();
-            ChiseledEnchantingTableData.applyRuntimeConfig(ModRuntimeConfig.get());
+            // Audit COUP-04: mirror the SYNC path's guard. In singleplayer the integrated
+            // server may still be saving final chunks that read the shared data tables;
+            // the tables it committed already reflect the local config, so only re-apply
+            // on remote connections where the client alone owns the shared statics.
+            if (!client.hasSingleplayerServer()) {
+                ChiseledEnchantingTableData.applyRuntimeConfig(ModRuntimeConfig.get());
+            }
         });
     }
 }

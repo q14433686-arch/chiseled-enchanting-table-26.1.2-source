@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.mechanics.loot;
 
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.List;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
@@ -26,7 +27,7 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
  */
 public class RemoveEnchantedBooksFunction extends LootItemConditionalFunction {
     public static final MapCodec<RemoveEnchantedBooksFunction> MAP_CODEC =
-        MapCodec.unit(RemoveEnchantedBooksFunction::new);
+        RecordCodecBuilder.mapCodec(i -> commonFields(i).apply(i, RemoveEnchantedBooksFunction::new));
 
     public RemoveEnchantedBooksFunction() {
         this(List.of());

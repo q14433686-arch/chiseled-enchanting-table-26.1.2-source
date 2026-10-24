@@ -61,6 +61,22 @@ public final class SyncedEnchantmentCosts {
         notifyListeners();
     }
 
+    /** True once any server cost table has been received this session. */
+    public static boolean hasServerTable() {
+        return syncedPayload != null;
+    }
+
+    /**
+     * Audit R-01: false when the server had to truncate the table to fit wire budgets.
+     * A missing row then means "not synced", not "price it locally" — the menu layer
+     * fails closed for material-requiring rows instead of previewing local datapack data
+     * the server may not share.
+     */
+    public static boolean costTableComplete() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p == null || p.costTableComplete();
+    }
+
     public static Optional<Cost> find(Identifier enchantmentId, int level) {
         return find(OptionType.ENCHANTMENT, enchantmentId, level);
     }
@@ -214,6 +230,23 @@ public final class SyncedEnchantmentCosts {
             : ChiseledEnchantingTableData.libraryResonanceConfig();
     }
 
+    public static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig() {
+        EnchantCostTablePayload p = syncedPayload;
+        return (p != null && p.ritualConfig() != null)
+            ? p.ritualConfig()
+            : ChiseledEnchantingTableData.ritualConfig();
+    }
+
+    /** Empty server rule lists are authoritative, not a request for jar-default fallback. */
+    public static java.util.Optional<java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay>> transformationDisplays() {
+        var payload = syncedPayload;
+        return payload == null ? java.util.Optional.empty() : java.util.Optional.of(payload.transformations());
+    }
+
+    public static boolean hasServerData() {
+        return syncedPayload != null;
+    }
+
     public static boolean isEmpty() {
         return rows.isEmpty();
     }
@@ -230,7 +263,8 @@ public final class SyncedEnchantmentCosts {
         for (Runnable listener : LISTENERS) {
             try {
                 listener.run();
-            } catch (RuntimeException ignored) {
+            } catch (RuntimeException error) {
+                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.error("Failed to refresh a synchronized enchanting-data consumer", error);
             }
         }
     }

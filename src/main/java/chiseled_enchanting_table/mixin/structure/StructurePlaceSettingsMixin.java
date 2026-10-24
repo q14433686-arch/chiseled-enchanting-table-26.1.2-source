@@ -20,7 +20,11 @@ import org.spongepowered.asm.mixin.injection.At;
 public class StructurePlaceSettingsMixin {
     @ModifyReturnValue(method = "getProcessors()Ljava/util/List;", at = @At("RETURN"))
     private List<StructureProcessor> chiseled_enchanting_table$appendBookshelfReplacer(List<StructureProcessor> original) {
-        List<StructureProcessor> augmented = new ArrayList<>(original);
+        if (original.contains(BookshelfReplacerProcessor.INSTANCE)) {
+            return original;
+        }
+        List<StructureProcessor> augmented = new ArrayList<>(original.size() + 1);
+        augmented.addAll(original);
         augmented.add(BookshelfReplacerProcessor.INSTANCE);
         return augmented;
     }
