@@ -1,4 +1,4 @@
-commit: f9345b6c5c78ff9f29aaf9dc2c63f2b68dd9a474
+commit: 6e8880fe4d56db7c04bb3f500af87d102f1eb5e4
 branch: arena/2d61e52c-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -18,354 +18,49 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:300: error: cannot find symbol
-            buf.writeBoolean(cleanse_unlocked);
-                             ^
-  symbol:   variable cleanse_unlocked
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:301: error: cannot find symbol
-            buf.writeBoolean(tome_page_unlocked);
-                             ^
-  symbol:   variable tome_page_unlocked
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:302: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, sacrifice_progress));
-                                        ^
-  symbol:   variable sacrifice_progress
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:303: error: cannot find symbol
-            buf.writeVarInt(Math.max(1, sacrifice_required));
-                                        ^
-  symbol:   variable sacrifice_required
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:304: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, qualifying_enchanted_bookshelves));
-                                        ^
-  symbol:   variable qualifying_enchanted_bookshelves
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:305: error: cannot find symbol
-            buf.writeVarInt(Math.max(1, tome_page_required_shelves));
-                                        ^
-  symbol:   variable tome_page_required_shelves
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:306: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, total_library_bookshelves));
-                                        ^
-  symbol:   variable total_library_bookshelves
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:307: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, regen_tier));
-                                        ^
-  symbol:   variable regen_tier
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:308: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, next_regen_tier_gap));
-                                        ^
-  symbol:   variable next_regen_tier_gap
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:309: error: cannot find symbol
-            buf.writeVarInt(regen_interval_ticks);
-                            ^
-  symbol:   variable regen_interval_ticks
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:310: error: cannot find symbol
-            PayloadLimits.writeBoundedCount(buf, tome_books.size(), PayloadLimits.MAX_TOME_BOOK_ENTRIES);
-                                                 ^
-  symbol:   variable tome_books
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:311: error: cannot find symbol
-            for (TomeBookEntry entry : tome_books) {
-                                       ^
-  symbol:   variable tome_books
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:510: error: cannot find symbol
-                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
-                                                               ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:518: error: cannot find symbol
-                sp, chiseled_enchanting_table.utils.Advancement.HOW_MUCH_LONGER);
-                                                               ^
-  symbol:   variable HOW_MUCH_LONGER
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:525: error: cannot find symbol
-            sp.displayClientMessage(net.minecraft.network.chat.Component.translatable(key, args), true);
-              ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable sp of type ServerPlayer
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:741: error: cannot find symbol
-        int needed = chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
-                                                                ^
-  symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:743: error: cannot find symbol
-                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
-                                                               ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:755: error: cannot find symbol
-                        sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)) {
-                                                                       ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:774: error: cannot find symbol
-                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
-                                                           ^
-  symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:773: error: cannot find symbol
-                    sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE),
-                                                                   ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/TomeLockGuards.java:28: error: cannot find symbol
-                    player.displayClientMessage(
-                          ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable player of type Player
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:312: error: cannot find symbol
-        ServerPlayer owner = world.getServer().getPlayerList().getPlayer(lock.owner());
-        ^
-  symbol:   class ServerPlayer
-  location: class WorldRegeneration
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:319: error: cannot find symbol
-            SoundEvents.EXPERIENCE_ORB_PICKUP,
-            ^
-  symbol:   variable SoundEvents
-  location: class WorldRegeneration
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:320: error: cannot find symbol
-            SoundSource.PLAYERS,
-            ^
-  symbol:   variable SoundSource
-  location: class WorldRegeneration
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:527: error: cannot find symbol
-            if (qualifying >= Advancement.TOME_PAGE_REQUIRED_SHELVES
-                                         ^
-  symbol:   variable TOME_PAGE_REQUIRED_SHELVES
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:528: error: cannot find symbol
-                && !Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER)) {
-                                                                      ^
-  symbol:   variable HOW_MUCH_LONGER
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:529: error: cannot find symbol
-                Advancement.give(serverViewer, Advancement.HOW_MUCH_LONGER);
-                                                          ^
-  symbol:   variable HOW_MUCH_LONGER
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:531: error: cannot find symbol
-            cleanseUnlocked = Advancement.hasCompleted(serverViewer, Advancement.DISENCHANT_SACRIFICE);
-                                                                                ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:532: error: cannot find symbol
-            tomeUnlocked = Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER);
-                                                                             ^
-  symbol:   variable HOW_MUCH_LONGER
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:533: error: cannot find symbol
-            sacrificeProgress = Advancement.completedCriteria(serverViewer, Advancement.DISENCHANT_SACRIFICE);
-                                                                                       ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:551: error: cannot find symbol
-            Advancement.DISENCHANT_SACRIFICE_REQUIRED,
-                       ^
-  symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:553: error: cannot find symbol
-            Advancement.TOME_PAGE_REQUIRED_SHELVES,
-                       ^
-  symbol:   variable TOME_PAGE_REQUIRED_SHELVES
-  location: class Advancement
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-32 errors
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792853221836.json
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java:1313: error: method drawPlaque in class RowRenderSupport cannot be applied to given types;
+                RowRenderSupport.drawPlaque(ctx, client, dx, dy, dw, dh,
+                                ^
+  required: GuiGraphicsExtractor,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
+  found:    GuiGraphicsExtractor,Minecraft,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
+  reason: actual and formal argument lists differ in length
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+1 error
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792853399392.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava'.
+Execution failed for task ':compileClientJava'.
 > Compilation failed; see the compiler output below.
+  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java:1313: error: method drawPlaque in class RowRenderSupport cannot be applied to given types;
+                  RowRenderSupport.drawPlaque(ctx, client, dx, dy, dw, dh,
+                                  ^
+    required: GuiGraphicsExtractor,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
+    found:    GuiGraphicsExtractor,Minecraft,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
+    reason: actual and formal argument lists differ in length
   Note: Recompile with -Xlint:deprecation for details.
-  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:300: error: cannot find symbol
-              buf.writeBoolean(cleanse_unlocked);
-                               ^
-    symbol:   variable cleanse_unlocked
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:301: error: cannot find symbol
-              buf.writeBoolean(tome_page_unlocked);
-                               ^
-    symbol:   variable tome_page_unlocked
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:302: error: cannot find symbol
-              buf.writeVarInt(Math.max(0, sacrifice_progress));
-                                          ^
-    symbol:   variable sacrifice_progress
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:303: error: cannot find symbol
-              buf.writeVarInt(Math.max(1, sacrifice_required));
-                                          ^
-    symbol:   variable sacrifice_required
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:304: error: cannot find symbol
-              buf.writeVarInt(Math.max(0, qualifying_enchanted_bookshelves));
-                                          ^
-    symbol:   variable qualifying_enchanted_bookshelves
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:305: error: cannot find symbol
-              buf.writeVarInt(Math.max(1, tome_page_required_shelves));
-                                          ^
-    symbol:   variable tome_page_required_shelves
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:306: error: cannot find symbol
-              buf.writeVarInt(Math.max(0, total_library_bookshelves));
-                                          ^
-    symbol:   variable total_library_bookshelves
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:307: error: cannot find symbol
-              buf.writeVarInt(Math.max(0, regen_tier));
-                                          ^
-    symbol:   variable regen_tier
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:308: error: cannot find symbol
-              buf.writeVarInt(Math.max(0, next_regen_tier_gap));
-                                          ^
-    symbol:   variable next_regen_tier_gap
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:309: error: cannot find symbol
-              buf.writeVarInt(regen_interval_ticks);
-                              ^
-    symbol:   variable regen_interval_ticks
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:310: error: cannot find symbol
-              PayloadLimits.writeBoundedCount(buf, tome_books.size(), PayloadLimits.MAX_TOME_BOOK_ENTRIES);
-                                                   ^
-    symbol:   variable tome_books
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:311: error: cannot find symbol
-              for (TomeBookEntry entry : tome_books) {
-                                         ^
-    symbol:   variable tome_books
-    location: class AvailableEnchantmentPayload
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:510: error: cannot find symbol
-                  sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
-                                                                 ^
-    symbol:   variable DISENCHANT_SACRIFICE
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:518: error: cannot find symbol
-                  sp, chiseled_enchanting_table.utils.Advancement.HOW_MUCH_LONGER);
-                                                                 ^
-    symbol:   variable HOW_MUCH_LONGER
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:741: error: cannot find symbol
-          int needed = chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
-                                                                  ^
-    symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:743: error: cannot find symbol
-                  sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
-                                                                 ^
-    symbol:   variable DISENCHANT_SACRIFICE
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:755: error: cannot find symbol
-                          sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)) {
-                                                                         ^
-    symbol:   variable DISENCHANT_SACRIFICE
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:774: error: cannot find symbol
-                  chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
-                                                             ^
-    symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:773: error: cannot find symbol
-                      sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE),
-                                                                     ^
-    symbol:   variable DISENCHANT_SACRIFICE
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:312: error: cannot find symbol
-          ServerPlayer owner = world.getServer().getPlayerList().getPlayer(lock.owner());
-          ^
-    symbol:   class ServerPlayer
-    location: class WorldRegeneration
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:319: error: cannot find symbol
-              SoundEvents.EXPERIENCE_ORB_PICKUP,
-              ^
-    symbol:   variable SoundEvents
-    location: class WorldRegeneration
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:320: error: cannot find symbol
-              SoundSource.PLAYERS,
-              ^
-    symbol:   variable SoundSource
-    location: class WorldRegeneration
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:527: error: cannot find symbol
-              if (qualifying >= Advancement.TOME_PAGE_REQUIRED_SHELVES
-                                           ^
-    symbol:   variable TOME_PAGE_REQUIRED_SHELVES
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:528: error: cannot find symbol
-                  && !Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER)) {
-                                                                        ^
-    symbol:   variable HOW_MUCH_LONGER
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:529: error: cannot find symbol
-                  Advancement.give(serverViewer, Advancement.HOW_MUCH_LONGER);
-                                                            ^
-    symbol:   variable HOW_MUCH_LONGER
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:531: error: cannot find symbol
-              cleanseUnlocked = Advancement.hasCompleted(serverViewer, Advancement.DISENCHANT_SACRIFICE);
-                                                                                  ^
-    symbol:   variable DISENCHANT_SACRIFICE
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:532: error: cannot find symbol
-              tomeUnlocked = Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER);
-                                                                               ^
-    symbol:   variable HOW_MUCH_LONGER
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:533: error: cannot find symbol
-              sacrificeProgress = Advancement.completedCriteria(serverViewer, Advancement.DISENCHANT_SACRIFICE);
-                                                                                         ^
-    symbol:   variable DISENCHANT_SACRIFICE
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:551: error: cannot find symbol
-              Advancement.DISENCHANT_SACRIFICE_REQUIRED,
-                         ^
-    symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-    location: class Advancement
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:553: error: cannot find symbol
-              Advancement.TOME_PAGE_REQUIRED_SHELVES,
-                         ^
-    symbol:   variable TOME_PAGE_REQUIRED_SHELVES
-    location: class Advancement
-  Note: Recompile with -Xlint:unchecked for details.
-  Note: Some input files use or override a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:525: error: cannot find symbol
-              sp.displayClientMessage(net.minecraft.network.chat.Component.translatable(key, args), true);
-                ^
-    symbol:   method displayClientMessage(MutableComponent,boolean)
-    location: variable sp of type ServerPlayer
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/TomeLockGuards.java:28: error: cannot find symbol
-                      player.displayClientMessage(
-                            ^
-    symbol:   method displayClientMessage(MutableComponent,boolean)
-    location: variable player of type Player
-  32 errors
+  1 error
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -400,171 +95,15 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:300: error: cannot find symbol
-            buf.writeBoolean(cleanse_unlocked);
-                             ^
-  symbol:   variable cleanse_unlocked
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:301: error: cannot find symbol
-            buf.writeBoolean(tome_page_unlocked);
-                             ^
-  symbol:   variable tome_page_unlocked
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:302: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, sacrifice_progress));
-                                        ^
-  symbol:   variable sacrifice_progress
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:303: error: cannot find symbol
-            buf.writeVarInt(Math.max(1, sacrifice_required));
-                                        ^
-  symbol:   variable sacrifice_required
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:304: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, qualifying_enchanted_bookshelves));
-                                        ^
-  symbol:   variable qualifying_enchanted_bookshelves
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:305: error: cannot find symbol
-            buf.writeVarInt(Math.max(1, tome_page_required_shelves));
-                                        ^
-  symbol:   variable tome_page_required_shelves
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:306: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, total_library_bookshelves));
-                                        ^
-  symbol:   variable total_library_bookshelves
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:307: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, regen_tier));
-                                        ^
-  symbol:   variable regen_tier
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:308: error: cannot find symbol
-            buf.writeVarInt(Math.max(0, next_regen_tier_gap));
-                                        ^
-  symbol:   variable next_regen_tier_gap
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:309: error: cannot find symbol
-            buf.writeVarInt(regen_interval_ticks);
-                            ^
-  symbol:   variable regen_interval_ticks
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:310: error: cannot find symbol
-            PayloadLimits.writeBoundedCount(buf, tome_books.size(), PayloadLimits.MAX_TOME_BOOK_ENTRIES);
-                                                 ^
-  symbol:   variable tome_books
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java:311: error: cannot find symbol
-            for (TomeBookEntry entry : tome_books) {
-                                       ^
-  symbol:   variable tome_books
-  location: class AvailableEnchantmentPayload
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:510: error: cannot find symbol
-                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
-                                                               ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:518: error: cannot find symbol
-                sp, chiseled_enchanting_table.utils.Advancement.HOW_MUCH_LONGER);
-                                                               ^
-  symbol:   variable HOW_MUCH_LONGER
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:525: error: cannot find symbol
-            sp.displayClientMessage(net.minecraft.network.chat.Component.translatable(key, args), true);
-              ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable sp of type ServerPlayer
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:741: error: cannot find symbol
-        int needed = chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
-                                                                ^
-  symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:743: error: cannot find symbol
-                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
-                                                               ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:755: error: cannot find symbol
-                        sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)) {
-                                                                       ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:774: error: cannot find symbol
-                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
-                                                           ^
-  symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:773: error: cannot find symbol
-                    sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE),
-                                                                   ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/TomeLockGuards.java:28: error: cannot find symbol
-                    player.displayClientMessage(
-                          ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable player of type Player
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:312: error: cannot find symbol
-        ServerPlayer owner = world.getServer().getPlayerList().getPlayer(lock.owner());
-        ^
-  symbol:   class ServerPlayer
-  location: class WorldRegeneration
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:319: error: cannot find symbol
-            SoundEvents.EXPERIENCE_ORB_PICKUP,
-            ^
-  symbol:   variable SoundEvents
-  location: class WorldRegeneration
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:320: error: cannot find symbol
-            SoundSource.PLAYERS,
-            ^
-  symbol:   variable SoundSource
-  location: class WorldRegeneration
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:527: error: cannot find symbol
-            if (qualifying >= Advancement.TOME_PAGE_REQUIRED_SHELVES
-                                         ^
-  symbol:   variable TOME_PAGE_REQUIRED_SHELVES
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:528: error: cannot find symbol
-                && !Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER)) {
-                                                                      ^
-  symbol:   variable HOW_MUCH_LONGER
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:529: error: cannot find symbol
-                Advancement.give(serverViewer, Advancement.HOW_MUCH_LONGER);
-                                                          ^
-  symbol:   variable HOW_MUCH_LONGER
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:531: error: cannot find symbol
-            cleanseUnlocked = Advancement.hasCompleted(serverViewer, Advancement.DISENCHANT_SACRIFICE);
-                                                                                ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:532: error: cannot find symbol
-            tomeUnlocked = Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER);
-                                                                             ^
-  symbol:   variable HOW_MUCH_LONGER
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:533: error: cannot find symbol
-            sacrificeProgress = Advancement.completedCriteria(serverViewer, Advancement.DISENCHANT_SACRIFICE);
-                                                                                       ^
-  symbol:   variable DISENCHANT_SACRIFICE
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:551: error: cannot find symbol
-            Advancement.DISENCHANT_SACRIFICE_REQUIRED,
-                       ^
-  symbol:   variable DISENCHANT_SACRIFICE_REQUIRED
-  location: class Advancement
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:553: error: cannot find symbol
-            Advancement.TOME_PAGE_REQUIRED_SHELVES,
-                       ^
-  symbol:   variable TOME_PAGE_REQUIRED_SHELVES
-  location: class Advancement
-Note: Some input files use or override a deprecated API.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java:1313: error: method drawPlaque in class RowRenderSupport cannot be applied to given types;
+                RowRenderSupport.drawPlaque(ctx, client, dx, dy, dw, dh,
+                                ^
+  required: GuiGraphicsExtractor,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
+  found:    GuiGraphicsExtractor,Minecraft,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
+  reason: actual and formal argument lists differ in length
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-Note: Recompile with -Xlint:unchecked for details.
-32 errors
+1 error
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -705,8 +244,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 23s
-1 actionable task: 1 executed
+BUILD FAILED in 16s
+3 actionable tasks: 3 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
