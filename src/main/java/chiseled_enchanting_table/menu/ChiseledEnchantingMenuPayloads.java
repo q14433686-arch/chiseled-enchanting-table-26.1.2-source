@@ -423,7 +423,16 @@ public final class ChiseledEnchantingMenuPayloads {
         String lock_owner,
         String lock_owner_name,
         int lock_target_wear,
-        boolean locked_by_viewer
+        boolean locked_by_viewer,
+        // Round 3: which enchantment last consumed this tome ("" when unknown) and what
+        // the next exhaustion costs it. deplete_outcome: 0 none, 1 step down one level,
+        // 2 becomes a Depleted Tome, 3 loses the enchantment, 4/5 same as 3/2 but on the
+        // next single use (consume mode). deplete_enchant/level name the reference entry.
+        String last_used_enchant,
+        int last_used_level,
+        int deplete_outcome,
+        String deplete_enchant,
+        int deplete_level
     ) {
         public TomeBookEntry {
             shelf_pos = shelf_pos == null ? BlockPos.ZERO : shelf_pos.immutable();
@@ -438,6 +447,11 @@ public final class ChiseledEnchantingMenuPayloads {
             lock_owner = lock_owner == null ? "" : lock_owner.substring(0, Math.min(64, lock_owner.length()));
             lock_owner_name = lock_owner_name == null ? "" : lock_owner_name.substring(0, Math.min(64, lock_owner_name.length()));
             lock_target_wear = Math.max(-1, lock_target_wear);
+            last_used_enchant = last_used_enchant == null ? "" : last_used_enchant.substring(0, Math.min(128, last_used_enchant.length()));
+            last_used_level = Math.max(0, last_used_level);
+            deplete_outcome = Math.max(0, Math.min(5, deplete_outcome));
+            deplete_enchant = deplete_enchant == null ? "" : deplete_enchant.substring(0, Math.min(128, deplete_enchant.length()));
+            deplete_level = Math.max(0, deplete_level);
         }
 
         public boolean locked() {
@@ -465,6 +479,11 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeUtf(lock_owner_name, 64);
             buf.writeVarInt(lock_target_wear);
             buf.writeBoolean(locked_by_viewer);
+            buf.writeUtf(last_used_enchant, 128);
+            buf.writeVarInt(last_used_level);
+            buf.writeVarInt(deplete_outcome);
+            buf.writeUtf(deplete_enchant, 128);
+            buf.writeVarInt(deplete_level);
         }
 
         private static TomeBookEntry read(RegistryFriendlyByteBuf buf) {
@@ -493,7 +512,12 @@ public final class ChiseledEnchantingMenuPayloads {
                 buf.readUtf(64),
                 buf.readUtf(64),
                 buf.readVarInt(),
-                buf.readBoolean()
+                buf.readBoolean(),
+                buf.readUtf(128),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readUtf(128),
+                buf.readVarInt()
             );
         }
     }

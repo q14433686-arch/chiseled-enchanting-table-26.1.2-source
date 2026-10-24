@@ -43,6 +43,8 @@ public final class TomeWearData {
     public static final String NBT_WEAR_KEY = "cet_tome_wear";
     public static final String NBT_REGEN_TICKS_KEY = "cet_tome_regen_ticks";
     public static final String NBT_REGEN_BUCKET_KEY = "cet_tome_regen_bucket";
+    public static final String NBT_LAST_USED_ENCHANT_KEY = "cet_last_used_enchant";
+    public static final String NBT_LAST_USED_LEVEL_KEY = "cet_last_used_level";
     public static final String NBT_GENERATION_KEY = "cet_generation";
 
     public static final int MAX_GENERATION = 255;
@@ -217,6 +219,46 @@ public final class TomeWearData {
         CompoundTag tag = existing != null ? existing.copyTag() : new CompoundTag();
         tag.putInt(NBT_WEAR_KEY, clamped);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    }
+
+    /**
+     * Records which enchantment most recently consumed this tome's charges, so the Tome
+     * page can say what is actually recharging instead of showing a bare timer (field
+     * feedback 2026-10-25). Stored in CUSTOM_DATA next to the wear keys; a full recovery
+     * keeps the record (it is history, not state).
+     */
+    public static void recordLastUsed(ItemStack stack, net.minecraft.resources.Identifier enchantId, int level) {
+        if (stack == null || stack.isEmpty() || enchantId == null) {
+            return;
+        }
+        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
+        CompoundTag tag = existing != null ? existing.copyTag() : new CompoundTag();
+        tag.putString(NBT_LAST_USED_ENCHANT_KEY, enchantId.toString());
+        tag.putInt(NBT_LAST_USED_LEVEL_KEY, Math.max(1, level));
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    }
+
+    /** Identifier string of the last consumed enchantment, or {@code ""} when never recorded. */
+    public static String getLastUsedEnchant(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return "";
+        }
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null || customData.isEmpty()) {
+            return "";
+        }
+        return customData.copyTag().getStringOr(NBT_LAST_USED_ENCHANT_KEY, "");
+    }
+
+    public static int getLastUsedLevel(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0;
+        }
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData == null || customData.isEmpty()) {
+            return 0;
+        }
+        return Math.max(0, customData.copyTag().getIntOr(NBT_LAST_USED_LEVEL_KEY, 0));
     }
 
     public static int effectiveMaxUses(ItemStack stack, int configuredMaxUses) {

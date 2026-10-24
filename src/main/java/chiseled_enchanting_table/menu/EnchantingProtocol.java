@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier;
  * first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final String REVISION = "26_1_2_revision_12";
+    public static final String REVISION = "26_1_2_revision_13";
     // Query only. Never register a decoder on legacy channels: an old server may send its
     // join-time packet before the client JOIN callback can disconnect it.
     //
@@ -47,6 +47,9 @@ public final class EnchantingProtocol {
 
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_11_COST_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_11"));
+
+    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_12_COST_TYPE =
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_12"));
 
     /**
      * Bare (pre-revision_9) apply channel, query-only like the cost probes above. The

@@ -727,6 +727,11 @@ public final class MasterTomeWear {
             outcome = WearOutcome.DEPLETED;
         } else {
             setWearUsed(mutated, step.nextWearUsed());
+            // Remember which enchantment consumed the charges: the Tome page names it
+            // next to the recharge timers (a tome's durability belongs to one enchantment
+            // at a time, and step-down also only ever touches that one).
+            chosen.holder().unwrapKey().ifPresent(key ->
+                TomeWearData.recordLastUsed(mutated, key.identifier(), chosen.storedLevel()));
             chiseled_enchanting_table.mechanics.enchanting.EnchantmentProvenance.pruneToCurrentEnchantments(
                 mutated,
                 EnchantmentHelper.getEnchantmentsForCrafting(mutated)

@@ -54,7 +54,8 @@ class NetworkCompatibilityTest {
     @Test void tomeDashboardAndActionPayloadsRoundTrip() {
         var entry = new TomeBookEntry(new net.minecraft.core.BlockPos(1, 64, -3), 5, "Archivist",
             List.of(new EnchantmentWithLevel(id("mending"), 1)), 2, 3, 5, 1,
-            true, false, 100, 500, 1, "owner-id", "Owner", 0, true);
+            true, false, 100, 500, 1, "owner-id", "Owner", 0, true,
+            "minecraft:mending", 1, 2, "minecraft:mending", 1);
         var live = new LiveShelfStatePayload(27, Set.of(), 1, 2, 3, 4, Map.of(), false,
             5, 6, Map.of(), true, true, 7, 12, 4, 4, 42, 1, 4, 72000, List.of(entry));
         roundTrip(LiveShelfStatePayload.CODEC, live);
@@ -62,6 +63,9 @@ class NetworkCompatibilityTest {
         assertTrue(live.tome_page_unlocked());
         assertEquals(7, live.sacrifice_progress());
         assertEquals(entry, live.tome_books().getFirst());
+        assertEquals("minecraft:mending", entry.last_used_enchant());
+        assertEquals(2, entry.deplete_outcome());
+        assertEquals(1, entry.deplete_level());
         for (TomePageActionPayload.Action action : TomePageActionPayload.Action.values()) {
             var payload = new TomePageActionPayload(42, action, entry.shelf_pos(), entry.slot());
             roundTrip(TomePageActionPayload.CODEC, payload);

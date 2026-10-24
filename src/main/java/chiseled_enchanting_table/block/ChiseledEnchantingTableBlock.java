@@ -493,6 +493,37 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     case FULL_CHARGE -> 1;
                     case PERMANENT -> 2;
                 };
+                // Reference enchantment for the exhaustion preview: the one that last
+                // consumed this tome when known (step-down only ever touches that one),
+                // otherwise the book's first listed enchantment.
+                String lastUsedEnchantId =
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getLastUsedEnchant(stack);
+                chiseled_enchanting_table.utils.EnchantmentWithLevel refEnchant = null;
+                if (!lastUsedEnchantId.isEmpty()) {
+                    for (var candidate : ench) {
+                        if (candidate.enchantment_id().toString().equals(lastUsedEnchantId)) {
+                            refEnchant = candidate;
+                            break;
+                        }
+                    }
+                }
+                if (refEnchant == null && !ench.isEmpty()) refEnchant = ench.getFirst();
+                int depleteOutcome = 0;
+                String depleteEnchant = refEnchant == null ? "" : refEnchant.enchantment_id().toString();
+                int depleteLevel = refEnchant == null ? 0 : refEnchant.enchantment_level();
+                if (!immune && refEnchant != null) {
+                    var consumptionMode = lrCfg.tomeConsumptionMode();
+                    if (consumptionMode
+                        == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
+                        boolean losesEnchant = lrCfg.tomeDepleteBehavior()
+                                == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.DEPLETED_TOME
+                            || refEnchant.enchantment_level() <= 1;
+                        depleteOutcome = losesEnchant ? (ench.size() <= 1 ? 2 : 3) : 1;
+                    } else if (consumptionMode
+                        == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.CONSUME) {
+                        depleteOutcome = ench.size() <= 1 ? 5 : 4;
+                    }
+                }
                 tomeBooks.add(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry(
                     scanPos.immutable(),
                     slot,
@@ -510,7 +541,12 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     effectivelyLocked ? lock.owner().toString() : "",
                     effectivelyLocked ? lock.ownerName() : "",
                     effectivelyLocked ? lock.targetWear() : -1,
-                    effectivelyLocked && viewer != null && lock.ownedBy(viewer.getUUID())
+                    effectivelyLocked && viewer != null && lock.ownedBy(viewer.getUUID()),
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getLastUsedEnchant(stack),
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getLastUsedLevel(stack),
+                    depleteOutcome,
+                    depleteEnchant,
+                    depleteLevel
                 ));
             }
             if (qualifies) qualifyingShelves.add(scanPos.immutable());
