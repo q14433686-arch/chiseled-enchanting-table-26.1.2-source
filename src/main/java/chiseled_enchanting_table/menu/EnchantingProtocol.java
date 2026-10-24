@@ -12,10 +12,15 @@ import net.minecraft.resources.Identifier;
  * no probe needs to be sent before the first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final String REVISION = "26_3_revision_8";
+    public static final String REVISION = "26_3_revision_9";
 
     // Query only. Never register a decoder on these older channels: an old server may send its
     // join-time packet before the client JOIN callback can disconnect it.
+    //
+    // Probe retirement policy (audit DEAD-03): a probe constant stays while any publicly
+    // shipped build registered that channel, because it is the only signal that lets the
+    // JOIN handshake disconnect an outdated peer gracefully instead of failing later with
+    // a raw decode error. Internal-only revisions may be dropped from this list.
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> LEGACY_COST_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table"));
 
@@ -30,6 +35,18 @@ public final class EnchantingProtocol {
 
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_7_COST_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_3_revision_7"));
+
+    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_8_COST_TYPE =
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_3_revision_8"));
+
+    /**
+     * Bare (pre-revision_9) apply channel, query-only like the cost probes above. The
+     * client JOIN check uses it to detect "peer has some build of this mod" now that the
+     * live apply channel itself carries the revision suffix (audit NET-02: the probe and
+     * the business channel must not be the same channel).
+     */
+    public static final CustomPacketPayload.Type<ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload> LEGACY_APPLY_TYPE =
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment"));
 
     public static final String MISMATCH_MESSAGE = "Chiseled Enchanting Table network protocol mismatch. "
         + "Install the same current Minecraft 26.3 build on both client and server (version labels alone are not enough).";

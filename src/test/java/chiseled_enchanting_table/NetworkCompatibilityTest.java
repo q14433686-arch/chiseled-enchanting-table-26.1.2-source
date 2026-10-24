@@ -94,7 +94,7 @@ class NetworkCompatibilityTest {
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
             11, List.of(), Set.of(id("treasure")), gates, resonance, ritual,
-            List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())), displays);
+            List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())), displays, true);
     }
 
     @Test void emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() {
@@ -111,6 +111,18 @@ class NetworkCompatibilityTest {
 
     @Test void unknownActionsCannotSilentlyBecomeEnchantment() {
         assertThrows(IllegalArgumentException.class, () -> OptionType.fromToken("new_or_mismatched_action"));
+    }
+
+    @Test void applyPayloadRejectsOutOfRangeFieldsAtConstruction() {
+        // Audit NET-03: bounds live in the compact constructor (decode boundary).
+        assertThrows(IllegalArgumentException.class, () -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(-2, OptionType.ENCHANTMENT, id("sharpness"), 1));
+        assertThrows(IllegalArgumentException.class, () -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(0, OptionType.ENCHANTMENT, id("sharpness"), -1));
+        assertThrows(IllegalArgumentException.class, () -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(0, OptionType.ENCHANTMENT, id("sharpness"), 256));
+        assertThrows(IllegalArgumentException.class, () -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(0, null, id("sharpness"), 1));
+        // The DISENCHANT_ALL sentinel (containerless, level 0) stays constructible.
+        var sentinel = new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(-1, OptionType.DISENCHANT_ALL, id("disenchant_all"), 0);
+        assertEquals(-1, sentinel.containerId());
+        assertEquals(0, sentinel.enchantment_level());
     }
 
     @Test void countsAreValidatedBeforeAllocationAndIteration() {
@@ -134,6 +146,15 @@ class NetworkCompatibilityTest {
         assertNotEquals(chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_COST_TYPE.id(), EnchantCostTablePayload.TYPE.id());
         assertTrue(EnchantCostTablePayload.TYPE.id().getPath().endsWith(chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
         assertTrue(LiveShelfStatePayload.TYPE.id().getPath().endsWith(chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
+        // Audit NET-02: every business channel carries the revision suffix; the bare
+        // pre-suffix apply id survives only as a query-only probe.
+        String revision = chiseled_enchanting_table.menu.EnchantingProtocol.REVISION;
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID.id().getPath().endsWith(revision));
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.RerollEpiphanyPayload.TYPE.id().getPath().endsWith(revision));
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload.TYPE.id().getPath().endsWith(revision));
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ReopenTablePayload.TYPE.id().getPath().endsWith(revision));
+        assertEquals("apply_chiseled_enchantment",
+            chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_TYPE.id().getPath());
         roundTrip(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.CODEC,
             new chiseled_enchanting_table.menu.EnchantingProtocol.Capability());
     }

@@ -580,42 +580,42 @@ class EconomyAndConfigVerificationTest {
 
             // Verify every parameterized Grimoire key formats cleanly with live config values
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15, 40)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15, 40)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p0.s3").getAsString(), 15, 38, 42)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p0.s3").getAsString(), 15, 38, 42)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3.lead").getAsString(), 3, 2, 12)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3.lead").getAsString(), 3, 2, 12)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.s3").getAsString(), 40, 60)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.s3").getAsString(), 40, 60)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch5.note_b").getAsString(), 16, 38, 42)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch5.note_b").getAsString(), 16, 38, 42)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch6.s2").getAsString(), 32, 20, 3)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch6.s2").getAsString(), 32, 20, 3)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch8.s4").getAsString(), 12, 35)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch8.s4").getAsString(), 12, 35)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4_res").getAsString(), 35, 40)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4_res").getAsString(), 35, 40)
                     .contains("%s"),
                 false
             );
@@ -1417,19 +1417,19 @@ class EconomyAndConfigVerificationTest {
             for (Path lp : langStream.filter(p -> p.toString().endsWith(".json")).toList()) {
                 JsonObject map = JsonParser.parseString(Files.readString(lp)).getAsJsonObject();
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.lead").getAsString(), 32, 10).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.lead").getAsString(), 32, 10).contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step").getAsString(), 40, 18).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step").getAsString(), 40, 18).contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch5p2.lead").getAsString(), 38, "10", 42, "3").contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch5p2.lead").getAsString(), 38, "10", 42, "3").contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.resonance.broad_breakdown").getAsString(), 40, 32, 2, 6).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.resonance.broad_breakdown").getAsString(), 40, 32, 2, 6).contains("%s")
                 );
             }
         }

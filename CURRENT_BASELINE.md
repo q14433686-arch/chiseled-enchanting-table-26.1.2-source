@@ -17,7 +17,7 @@ reasons; this branch targets **26.3**.
 
 The **entire** 26.1.2 gameplay/resource delta through **`3e61f5de3ba7679ccbc92b73443dead149c96840`** (PR #17/#18) is integrated on the current development branch, with architecture-first hardening. It is no longer a foundation-only change.
 
-- Release remains **1.1.0 / MC 26.3**; wire is **`26_3_revision_6`**. Update both ends even if the visible version label is unchanged.
+- Release remains **1.1.0 / MC 26.3**; wire is **`26_3_revision_9`** (2026-10-24 audit fixes: ritual completion revalidates against the actual item, whole-book combine pricing, fail-closed cost resolution with explicit `material_free`/`xp_only` datapack declarations, cost-table byte budget + `costTableComplete`, ritual load references synced, all business channels revision-suffixed). Update both ends even if the visible version label is unchanged.
 - One effective `RuntimeFrame`, stored-preference/effective/draft separation, strict policy/reload and persist-before-publish; startup components remain restart-only.
 - Shared shelf recovery is wired to one per-world-session 20-tick scheduler; no legacy absolute-time credit.
 - Persistent inventory and bounded owner/session/target-bound rituals; XP/rush/Infinity slip; registry failures quarantine instead of deleting orders.
@@ -52,7 +52,7 @@ alternatives, book upgrades, Blank Overwrite and transformations.
 - Flat anvil prior-work penalty; same-level book merge blocking; stacked-book remainder fix.
 - JSON-driven chest/archaeology loot, depth-based mineshaft Efficiency, weighted structure
   bookshelf replacement/fill with the worldgen-safe NBT pipeline (no live chunk access from workers).
-- Nine registered mixins; `RemoveXpCostScaling` is now active and no longer excluded from compilation.
+- Eleven registered mixins (CI fails on any orphan mixin source); `RemoveXpCostScaling` is active and no longer excluded from compilation.
 
 ## Target-specific contracts (must not regress on future syncs)
 

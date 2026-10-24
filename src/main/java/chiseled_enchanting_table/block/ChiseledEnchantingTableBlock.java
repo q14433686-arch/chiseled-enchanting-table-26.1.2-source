@@ -323,7 +323,11 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 if (shelfPower.totalChiseledEnchantedBooks() > 0) {
                     Advancement.give(player, "unlock_new_enchant");
                 }
-                if (shelfPower.xpDiscountPercent() >= 22 || shelfPower.peakEffectiveXpDiscountPercent(level) >= 35) {
+                // Audit: trigger on actually REACHING the configured total cap, not on the
+                // old hardcoded 22%/35% proxies that drifted from datapack-tunable values
+                // (and from the "-40%" the advancement text advertised).
+                int maxTotalDiscount = ChiseledEnchantingTableData.libraryResonanceConfig().maxTotalXpDiscountPercent();
+                if (maxTotalDiscount > 0 && shelfPower.peakEffectiveXpDiscountPercent(level) >= maxTotalDiscount) {
                     Advancement.give(player, "library_resonance");
                 }
                 if (shelfPower.regularBookshelves() >= ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves()) {

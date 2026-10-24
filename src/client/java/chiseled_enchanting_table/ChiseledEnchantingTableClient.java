@@ -46,7 +46,10 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
         ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> {
             if (chiseled_enchanting_table.menu.EnchantingProtocol.incompatible(
-                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID),
+                // Peer-has-mod probe: current suffixed apply channel OR the bare
+                // pre-revision_9 one (audit NET-02; probe is query-only, never decoded).
+                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID)
+                    || ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_TYPE),
                 ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE))) {
                 listener.getConnection().disconnect(net.minecraft.network.chat.Component.literal(
                     chiseled_enchanting_table.menu.EnchantingProtocol.MISMATCH_MESSAGE));

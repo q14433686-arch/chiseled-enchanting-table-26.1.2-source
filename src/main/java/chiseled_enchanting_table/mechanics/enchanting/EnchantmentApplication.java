@@ -87,7 +87,7 @@ public final class EnchantmentApplication {
         var admissionPos = handler.tableBlockPos();
         if (admissionPos == null || !(world.getBlockEntity(admissionPos) instanceof
             chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity admissionTable)
-            || !admissionTable.canQueue(handler.player.getUUID(), conflictRefund) || payload.enchantment_id().toString().length() > 512) return false;
+            || !admissionTable.canQueue(handler.player.getUUID(), conflictRefund)) return false;
         var receipt = handler.applyEnchantementConditionWithReceipt(payload);
         if (!receipt.accepted()) {
             return false;

@@ -1105,7 +1105,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 return true;
             }
             if (!this.canEnchant()) return false;
-            ClientPlayNetworking.send(new ApplyEnchantmentPayload(handler.containerId, option_type, enchantment_id, enchant_level));
+            if (ClientPlayNetworking.canSend(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID)) {
+                ClientPlayNetworking.send(new ApplyEnchantmentPayload(handler.containerId, option_type, enchantment_id, enchant_level));
+            }
             return true;
         }
 

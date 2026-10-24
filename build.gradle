@@ -118,9 +118,28 @@ test {
 
 processResources {
     inputs.property "version", project.version
+    inputs.property "jeiEnabled", jeiEnabled
+    inputs.property "reiEnabled", reiEnabled
 
     filesMatching("fabric.mod.json") {
         expand "version": inputs.properties.version
+    }
+
+    // API-03: a jar built with -Penable_jei=false / -Penable_rei=false excludes the plugin
+    // classes, so it must not keep advertising their entrypoints either (JEI/REI would try
+    // to instantiate missing classes when such a jar runs alongside them).
+    doLast {
+        if (!jeiEnabled || !reiEnabled) {
+            def f = file("$destinationDir/fabric.mod.json")
+            def json = new groovy.json.JsonSlurper().parse(f)
+            if (!jeiEnabled) {
+                json.entrypoints?.remove('jei_mod_plugin')
+            }
+            if (!reiEnabled) {
+                json.entrypoints?.remove('rei_client')
+            }
+            f.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json)) + "\n"
+        }
     }
 }
 

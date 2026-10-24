@@ -1122,6 +1122,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (row != null) {
             return row.costOptions();
         }
+        if (this.world.isClientSide()
+            && chiseled_enchanting_table.compat.SyncedEnchantmentCosts.hasServerTable()
+            && !chiseled_enchanting_table.compat.SyncedEnchantmentCosts.costTableComplete()) {
+            // Audit R-01: the server truncated its cost table; a missing row is "unknown",
+            // not "price it from the client's datapacks". Empty options fail closed in
+            // findMatchingAffordableCostBundle for every non-whitelisted operation.
+            return List.of();
+        }
         if (type == OptionType.TREASURE_EPIPHANY) {
             return ChiseledEnchantingTableData.treasureEpiphanyCostOptions(
                 e.enchantment_id(),

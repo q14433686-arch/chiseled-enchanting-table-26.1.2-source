@@ -50,6 +50,9 @@ import net.minecraft.world.item.Items;
 @Environment(EnvType.CLIENT)
 public final class GrimoireDiagramRenderer {
 
+    /** Period of the decorative example-item carousel (audit GUI-03). */
+    private static final long EXAMPLE_CYCLE_PERIOD_MS = 1600L;
+
     private static final Identifier XP_ORB_1 = RowRenderSupport.XP_ORB_1;
     private static final Identifier XP_ORB_3 = RowRenderSupport.XP_ORB_3;
     private static final Identifier XP_FLASK = RowRenderSupport.XP_RITUAL_FLASK;
@@ -480,7 +483,7 @@ public final class GrimoireDiagramRenderer {
         ctx.fill(sanX, winY + 8, sanX + sanW, winY + winH - 8, 0xFF241538);
         ctx.fill(sanX + 1, winY + 9, sanX + sanW - 1, winY + 10, 0xFF8B56BA);
         drawBadgeCircle(ctx, font, sanX + 2, winY + 11, "5", 0xFF285E6B);
-        drawLeftCenteredY(ctx, font, "-40%", sanX + 4, winY + 27.0f, 0.62f, sanW - 8, LIGHT_MINT, false);
+        drawLeftCenteredY(ctx, font, "-" + SyncedEnchantmentCosts.libraryResonanceConfig().maxTotalXpDiscountPercent() + "%", sanX + 4, winY + 27.0f, 0.62f, sanW - 8, LIGHT_MINT, false);
         drawLeftCenteredY(ctx, font, "09:42", sanX + 4, winY + 38.0f, 0.58f, sanW - 8, LIGHT_GOLD, false);
         ctx.blit(BTN_FREEZE, sanX + 4, winY + 46, sanX + 15, winY + 57, 0.0f, 1.0f, 0.0f, 1.0f);
         ctx.blit(BTN_REROLL, sanX + 18, winY + 46, sanX + 29, winY + 57, 0.0f, 1.0f, 0.0f, 1.0f);
@@ -1174,7 +1177,10 @@ public final class GrimoireDiagramRenderer {
         if (distinct.isEmpty()) {
             return fallback;
         }
-        int idx = (int) (Math.floorMod(System.currentTimeMillis() / 1600L, distinct.size()));
+        // Audit GUI-03: drive decorative cycling from the game clock (Util.getMillis is
+        // what vanilla GUI animations use) behind a named period constant instead of a
+        // bare System.currentTimeMillis literal.
+        int idx = (int) (Math.floorMod(net.minecraft.Util.getMillis() / EXAMPLE_CYCLE_PERIOD_MS, distinct.size()));
         return distinct.get(idx);
     }
 
