@@ -75,6 +75,17 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final int TAB_Y_OFFSET = -15;
     private static final int TAB_INSCRIBE_X = 14;
     private static final int TAB_CLEANSE_X = 92;
+    private static final int TAB_TOMES_X = 170;
+
+    // «纂刻的书» page geometry (reuses the enchantment-list region + a bottom button strip).
+    private static final int TOMES_X = 7;
+    private static final int TOMES_Y = 17;
+    private static final int TOMES_W = 151;
+    private static final int TOMES_HEADER_H = 20;
+    private static final int TOMES_ROW_H = 16;
+    private static final int TOMES_ROWS = 7;
+    private static final int TOMES_BTN_Y = TOMES_Y + TOMES_HEADER_H + TOMES_ROWS * TOMES_ROW_H + 2;
+    private static final int TOMES_BTN_H = 12;
 
     // Integrated Sanctum / Cleanse Console coordinates inside the cohesive 340x166 window chassis.
     private static final int PANEL_X = 214;
@@ -106,6 +117,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private final BlockPos openedTablePos;
     private int lastBatchSignature = Integer.MIN_VALUE;
     private boolean lastRitualActive = false;
+    /** Selected shelf-tome refs ("posLong:slot") on the «纂刻的书» page. */
+    private final java.util.Set<String> tomeSelection = new java.util.HashSet<>();
+    private int tomeScroll = 0;
 
     public int inventory_size;
     public int hotbar_size;
@@ -153,6 +167,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private boolean isCleanseTab() {
         return this.scrollContainer != null && this.scrollContainer.tabMode() == UiTabMode.CLEANSE;
+    }
+
+    private boolean isTomesTab() {
+        return this.scrollContainer != null && this.scrollContainer.tabMode() == UiTabMode.TOMES;
+    }
+
+    private UiTabMode activeTab() {
+        return this.scrollContainer == null ? UiTabMode.INSCRIBE : this.scrollContainer.tabMode();
     }
 
     @Override
@@ -204,6 +226,32 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
     }
 
+    private boolean isOverTomesTab(double mouseX, double mouseY) {
+        int x0 = this.leftPos + TAB_TOMES_X;
+        int y0 = this.topPos + TAB_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
+    }
+
+    private boolean isOverTomesList(double mouseX, double mouseY) {
+        int x0 = this.leftPos + TOMES_X;
+        int y0 = this.topPos + TOMES_Y + TOMES_HEADER_H;
+        return mouseX >= x0 && mouseX < x0 + TOMES_W
+            && mouseY >= y0 && mouseY < y0 + TOMES_ROWS * TOMES_ROW_H;
+    }
+
+    /** Button index 0..3 on the tomes button strip, or -1. */
+    private int tomesButtonAt(double mouseX, double mouseY) {
+        int y0 = this.topPos + TOMES_BTN_Y;
+        if (mouseY < y0 || mouseY >= y0 + TOMES_BTN_H) return -1;
+        int[] widths = {36, 40, 32, 40};
+        int x = this.leftPos + TOMES_X;
+        for (int i = 0; i < widths.length; i++) {
+            if (mouseX >= x && mouseX < x + widths[i]) return i;
+            x += widths[i] + 1;
+        }
+        return -1;
+    }
+
     public void openConfigFromGrimoire() {
         this.grimoireOverlay = null;
         this.configOverlay = new ChiseledEnchantingConfigScreen(this, () -> {
@@ -232,7 +280,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         areas.add(new net.minecraft.client.renderer.Rect2i(
             this.leftPos + TAB_INSCRIBE_X,
             this.topPos + TAB_Y_OFFSET,
-            (TAB_CLEANSE_X + TAB_W) - TAB_INSCRIBE_X,
+            (TAB_TOMES_X + TAB_W) - TAB_INSCRIBE_X,
             TAB_H
         ));
         areas.add(new net.minecraft.client.renderer.Rect2i(
@@ -347,6 +395,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
+        if (isTomesTab() && isOverTomesList(mouseX, mouseY)) {
+            int maxScroll = Math.max(0, this.menu.shelfTomes.size() - TOMES_ROWS);
+            this.tomeScroll = net.minecraft.util.Mth.clamp(
+                this.tomeScroll + (scrollY < 0 ? 1 : -1), 0, maxScroll);
+            return true;
+        }
         if (isOverEnchantList(mouseX, mouseY) || isOverEnchantListScrollbar(mouseX, mouseY)) {
             return this.scrollContainer.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
@@ -391,18 +445,54 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             return true;
         }
         if (isOverInscribeTab(event.x(), event.y())) {
-            if (isCleanseTab()) {
+            if (activeTab() != UiTabMode.INSCRIBE) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 this.scrollContainer.setTabMode(UiTabMode.INSCRIBE);
             }
             return true;
         }
         if (isOverCleanseTab(event.x(), event.y())) {
+            if (!this.menu.cleanseUnlocked) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+                return true;
+            }
             if (!isCleanseTab()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
                 this.scrollContainer.setTabMode(UiTabMode.CLEANSE);
             }
             return true;
+        }
+        if (isOverTomesTab(event.x(), event.y())) {
+            if (!this.menu.tomesUnlocked) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+                return true;
+            }
+            if (!isTomesTab()) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.02F));
+                this.scrollContainer.setTabMode(UiTabMode.TOMES);
+            }
+            return true;
+        }
+        if (isTomesTab()) {
+            if (isOverTomesList(event.x(), event.y())) {
+                int row = (int) ((event.y() - (this.topPos + TOMES_Y + TOMES_HEADER_H)) / TOMES_ROW_H);
+                int idx = this.tomeScroll + row;
+                var entries = this.menu.shelfTomes;
+                if (idx >= 0 && idx < entries.size()) {
+                    var e = entries.get(idx);
+                    String key = e.pos().asLong() + ":" + e.slot();
+                    if (!this.tomeSelection.remove(key)) {
+                        this.tomeSelection.add(key);
+                    }
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.15F));
+                }
+                return true;
+            }
+            int btn = tomesButtonAt(event.x(), event.y());
+            if (btn >= 0) {
+                sendTomeLockAction(btn);
+                return true;
+            }
         }
         if (isOverSacrificeSkipButton(event.x(), event.y())) {
             if (this.menu.canSacrificeSkipNow()) {
@@ -568,14 +658,159 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         RowRenderSupport.renderBoundedText(ctx, this.minecraft, text.getString(), x, y, maxScale, maxWidth, argbColor);
     }
 
+    /** mm:ss for tick countdowns; {@code --:--} when regeneration is off. */
+    private static String formatTicks(long ticks) {
+        if (ticks == Long.MAX_VALUE || ticks < 0) {
+            return "--:--";
+        }
+        long secs = (ticks + 19L) / 20L;
+        return String.format(java.util.Locale.ROOT, "%d:%02d", secs / 60L, secs % 60L);
+    }
+
+    private void sendTomeLockAction(int button) {
+        var refs = new java.util.ArrayList<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeRef>();
+        for (var e : this.menu.shelfTomes) {
+            if (this.tomeSelection.contains(e.pos().asLong() + ":" + e.slot())) {
+                refs.add(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeRef(e.pos(), e.slot()));
+                if (refs.size() >= chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeLockPayload.MAX_REFS) break;
+            }
+        }
+        if (refs.isEmpty()) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+            return;
+        }
+        int mode = switch (button) {
+            case 0 -> 1;
+            case 1 -> 2;
+            case 2 -> 3;
+            default -> 0;
+        };
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
+        if (ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeLockPayload.TYPE)) {
+            ClientPlayNetworking.send(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads
+                .TomeLockPayload(this.menu.containerId, mode, refs));
+        }
+    }
+
+    /** «纂刻的书» page: realtime charge/lock board for shelf template books. */
+    private void renderTomesPage(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        int x0 = this.leftPos + TOMES_X;
+        int y0 = this.topPos + TOMES_Y;
+        var lr = this.menu.libraryResonanceConfig();
+        int totalChiseled = this.menu.chiseledBookshelves + this.menu.emptyChiseledBookshelves;
+        int nearby = this.menu.regularBookshelves + totalChiseled;
+        int interval = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+            .computeRegenIntervalTicks(lr, nearby);
+        String perCharge = interval == Integer.MAX_VALUE
+            ? Component.translatable("gui.chiseled_enchanting_table.tomes.regen_off").getString()
+            : formatTicks(interval);
+        String nextStage;
+        if (nearby < lr.tomeRegenTier1Shelves()) {
+            nextStage = Component.translatable("gui.chiseled_enchanting_table.tomes.next_stage",
+                lr.tomeRegenTier1Shelves() - nearby).getString();
+        } else if (nearby < lr.tomeRegenTier2Shelves()) {
+            nextStage = Component.translatable("gui.chiseled_enchanting_table.tomes.next_stage",
+                lr.tomeRegenTier2Shelves() - nearby).getString();
+        } else {
+            nextStage = Component.translatable("gui.chiseled_enchanting_table.tomes.max_stage").getString();
+        }
+        drawAutoScaledText(ctx, Component.translatable(
+            "gui.chiseled_enchanting_table.tomes.header_shelves", totalChiseled, this.menu.shelfTomes.size()),
+            x0 + 2, y0 + 1, 0.72f, TOMES_W - 4, 0xFFF3E3B8);
+        drawAutoScaledText(ctx, Component.translatable(
+            "gui.chiseled_enchanting_table.tomes.header_regen", perCharge, nextStage),
+            x0 + 2, y0 + 10, 0.72f, TOMES_W - 4, 0xFFB9D8C8);
+
+        long elapsed = this.minecraft != null && this.minecraft.level != null
+            ? Math.max(0L, this.minecraft.level.getGameTime() - this.menu.liveSyncGameTime)
+            : 0L;
+        var entries = this.menu.shelfTomes;
+        int maxScroll = Math.max(0, entries.size() - TOMES_ROWS);
+        this.tomeScroll = Math.max(0, Math.min(this.tomeScroll, maxScroll));
+        int rowsY = y0 + TOMES_HEADER_H;
+        if (entries.isEmpty()) {
+            drawAutoScaledText(ctx, Component.translatable("gui.chiseled_enchanting_table.tomes.empty"),
+                x0 + 2, rowsY + 4, 0.72f, TOMES_W - 4, 0xFF9A9A9A);
+        }
+        for (int r = 0; r < TOMES_ROWS; r++) {
+            int idx = this.tomeScroll + r;
+            if (idx >= entries.size()) break;
+            var e = entries.get(idx);
+            int ry = rowsY + r * TOMES_ROW_H;
+            boolean selected = this.tomeSelection.contains(e.pos().asLong() + ":" + e.slot());
+            ctx.fill(x0 + 1, ry + 1, x0 + TOMES_W - 1, ry + TOMES_ROW_H - 1,
+                selected ? 0x553A2A08 : 0x33131412);
+            if (selected) {
+                ctx.fill(x0 + 1, ry + 1, x0 + 3, ry + TOMES_ROW_H - 1, 0xFFFFB347);
+            }
+            String name = Component.translatable(
+                "enchantment." + e.enchantment_id().getNamespace() + "." + e.enchantment_id().getPath()).getString();
+            String title = name + (e.level() > 1 ? " " + e.level() : "")
+                + (e.extra_enchants() > 0 ? " +" + e.extra_enchants() : "");
+            int remaining = Math.max(0, e.max_uses() - e.wear_used());
+            StringBuilder sub = new StringBuilder();
+            sub.append(remaining).append('/').append(e.max_uses());
+            if (e.infinite()) {
+                sub.append(" ∞");
+            } else if (e.wear_used() <= 0) {
+                sub.append(' ').append(Component.translatable("gui.chiseled_enchanting_table.tomes.full").getString());
+            } else if (e.interval_ticks() > 0) {
+                long toNext = Math.max(0L, (long) e.interval_ticks() - e.progress_ticks() - elapsed);
+                long toFull = toNext + (long) (e.wear_used() - 1) * e.interval_ticks();
+                sub.append(" +1 ").append(formatTicks(toNext))
+                    .append(' ').append(Component.translatable("gui.chiseled_enchanting_table.tomes.to_full").getString())
+                    .append(' ').append(formatTicks(toFull));
+            }
+            if (e.lock_mode() > 0) {
+                String badgeKey = switch (e.lock_mode()) {
+                    case 1 -> "gui.chiseled_enchanting_table.tomes.badge_next";
+                    case 2 -> "gui.chiseled_enchanting_table.tomes.badge_full";
+                    default -> "gui.chiseled_enchanting_table.tomes.badge_perm";
+                };
+                sub.append("  [").append(Component.translatable(badgeKey).getString());
+                if (!e.lock_mine()) {
+                    sub.append(' ').append(Component.translatable("gui.chiseled_enchanting_table.tomes.badge_other").getString());
+                }
+                sub.append(']');
+            }
+            drawAutoScaledText(ctx, Component.literal(title), x0 + 5, ry + 1, 0.72f, TOMES_W - 8,
+                e.lock_mode() > 0 ? 0xFFFFD28A : 0xFFF3E3B8);
+            drawAutoScaledText(ctx, Component.literal(sub.toString()), x0 + 5, ry + 9, 0.66f, TOMES_W - 8,
+                0xFFB9D8C8);
+        }
+
+        String[] btnKeys = {
+            "gui.chiseled_enchanting_table.tomes.btn_next",
+            "gui.chiseled_enchanting_table.tomes.btn_full",
+            "gui.chiseled_enchanting_table.tomes.btn_perm",
+            "gui.chiseled_enchanting_table.tomes.btn_unlock"
+        };
+        int[] widths = {36, 40, 32, 40};
+        int bx = x0;
+        int by = this.topPos + TOMES_BTN_Y;
+        boolean anySelected = !this.tomeSelection.isEmpty();
+        for (int i3 = 0; i3 < widths.length; i3++) {
+            boolean hover = tomesButtonAt(mouseX, mouseY) == i3;
+            ctx.fill(bx, by, bx + widths[i3], by + TOMES_BTN_H,
+                anySelected ? (hover ? 0x66452A0A : 0x55301E06) : 0x401A1A1A);
+            RowRenderSupport.renderCenteredBoxText(ctx, this.minecraft,
+                Component.translatable(btnKeys[i3]).getString(),
+                bx + 1, widths[i3] - 2, by + 6.0f, 0.66f,
+                anySelected ? 0xFFFFE2B0 : 0xFF8A8A8A);
+            bx += widths[i3] + 1;
+        }
+    }
+
     private void renderModeTabs(GuiGraphicsExtractor ctx, int i, int j, int mouseX, int mouseY) {
         boolean cleanse = isCleanseTab();
+        boolean tomes = isTomesTab();
+        boolean inscribe = !cleanse && !tomes;
         int tabY = j + TAB_Y_OFFSET;
 
         int inscribeX = i + TAB_INSCRIBE_X;
-        Identifier inscribeSprite = cleanse ? TAB_INSCRIBE_INACTIVE : TAB_INSCRIBE_ACTIVE;
+        Identifier inscribeSprite = inscribe ? TAB_INSCRIBE_ACTIVE : TAB_INSCRIBE_INACTIVE;
         ctx.blit(inscribeSprite, inscribeX, tabY, inscribeX + TAB_W, tabY + TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
-        if (cleanse && isOverInscribeTab(mouseX, mouseY)) {
+        if (!inscribe && isOverInscribeTab(mouseX, mouseY)) {
             ctx.fill(inscribeX + 2, tabY + 2, inscribeX + TAB_W - 2, tabY + TAB_H - 3, 0x24FFE082);
         }
         float tabVisualMidY = tabY + 8.0f;
@@ -588,7 +823,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             TAB_W - 10,
             tabVisualMidY,
             0.76f,
-            cleanse ? 0xFFC2B2DC : 0xFFFFF0C8
+            inscribe ? 0xFFFFF0C8 : 0xFFC2B2DC
         );
 
         if (this.menu.disenchantEnabled()) {
@@ -597,6 +832,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             ctx.blit(cleanseSprite, cleanseX, tabY, cleanseX + TAB_W, tabY + TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
             if (!cleanse && isOverCleanseTab(mouseX, mouseY)) {
                 ctx.fill(cleanseX + 2, tabY + 2, cleanseX + TAB_W - 2, tabY + TAB_H - 3, 0x247CFFA6);
+            }
+            if (!this.menu.cleanseUnlocked) {
+                ctx.fill(cleanseX + 2, tabY + 2, cleanseX + TAB_W - 2, tabY + TAB_H - 3, 0x80101818);
             }
             int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(this.menu.get_enchantable_item()).size();
             String baseLabel = Component.translatable("gui.chiseled_enchanting_table.tab.cleanse").getString();
@@ -609,9 +847,32 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 TAB_W - 10,
                 tabVisualMidY,
                 0.76f,
-                cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC)
+                !this.menu.cleanseUnlocked ? 0xFF8A8A8A
+                    : (cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC))
             );
         }
+
+        // Third tab: «纂刻的书» — same skin as Cleanse, amber-tinted (recolor by design).
+        int tomesX = i + TAB_TOMES_X;
+        Identifier tomesSprite = tomes ? TAB_CLEANSE_ACTIVE : TAB_CLEANSE_INACTIVE;
+        ctx.blit(tomesSprite, tomesX, tabY, tomesX + TAB_W, tabY + TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.fill(tomesX + 2, tabY + 2, tomesX + TAB_W - 2, tabY + TAB_H - 3, 0x2EFFB347);
+        if (!tomes && isOverTomesTab(mouseX, mouseY)) {
+            ctx.fill(tomesX + 2, tabY + 2, tomesX + TAB_W - 2, tabY + TAB_H - 3, 0x24FFD28A);
+        }
+        if (!this.menu.tomesUnlocked) {
+            ctx.fill(tomesX + 2, tabY + 2, tomesX + TAB_W - 2, tabY + TAB_H - 3, 0x80101818);
+        }
+        RowRenderSupport.renderCenteredBoxText(
+            ctx,
+            this.minecraft,
+            Component.translatable("gui.chiseled_enchanting_table.tab.tomes").getString(),
+            tomesX + 5,
+            TAB_W - 10,
+            tabVisualMidY,
+            0.76f,
+            !this.menu.tomesUnlocked ? 0xFF8A8A8A : (tomes ? 0xFFFFE2B0 : 0xFFE8C88A)
+        );
 
         int cx = i + CONFIG_BTN_X;
         int cy = j + CONFIG_BTN_Y_OFFSET;
@@ -636,6 +897,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
         // Draw inactive tab under main frame, main frame, then active tab flush on top so its open bottom blends seamlessly!
         ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
+        if (this.scrollContainer != null) {
+            this.scrollContainer.visible = !isTomesTab();
+            this.scrollContainer.active = !isTomesTab();
+        }
         renderModeTabs(ctx, i, j, mouseX, mouseY);
 
         int px = i + PANEL_X;
@@ -813,6 +1078,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             return;
         }
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        if (isTomesTab()) {
+            renderTomesPage(ctx, mouseX, mouseY);
+        }
         if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
             if (isOverConfigButton(mouseX, mouseY)) {
                 List<Component> tip = List.of(
@@ -877,11 +1145,35 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
+            if (isOverCleanseTab(mouseX, mouseY) && !this.menu.cleanseUnlocked) {
+                List<Component> tip = List.of(
+                    Component.translatable("gui.chiseled_enchanting_table.locked.title").withStyle(ChatFormatting.RED),
+                    Component.translatable("gui.chiseled_enchanting_table.locked.grimoire_hint").withStyle(ChatFormatting.GRAY),
+                    Component.translatable(
+                        "gui.chiseled_enchanting_table.locked.cleanse_progress",
+                        this.menu.depletedTomesNearby,
+                        chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.CLEANSE_UNLOCK_DEPLETED_TOMES
+                    ).withStyle(ChatFormatting.GOLD)
+                );
+                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
             if (isOverCleanseTab(mouseX, mouseY)) {
                 List<Component> tip = List.of(
                     Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.title").withStyle(ChatFormatting.AQUA),
                     Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.desc").withStyle(ChatFormatting.GRAY)
                 );
+                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
+            if (isOverTomesTab(mouseX, mouseY)) {
+                List<Component> tip = !this.menu.tomesUnlocked
+                    ? List.of(
+                        Component.translatable("gui.chiseled_enchanting_table.locked.title").withStyle(ChatFormatting.RED),
+                        Component.translatable("gui.chiseled_enchanting_table.locked.grimoire_hint").withStyle(ChatFormatting.GRAY))
+                    : List.of(
+                        Component.translatable("gui.chiseled_enchanting_table.tab.tomes.title").withStyle(ChatFormatting.GOLD),
+                        Component.translatable("gui.chiseled_enchanting_table.tab.tomes.desc").withStyle(ChatFormatting.GRAY));
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }

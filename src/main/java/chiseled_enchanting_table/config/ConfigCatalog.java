@@ -497,6 +497,11 @@ public final class ConfigCatalog {
             d -> d.grindstoneDepletedTome, (d, v) -> d.grindstoneDepletedTome = v,
             ALWAYS, null
         ),
+        boolOpt(
+            "feature_page_locks", CategoryId.GENERAL, EffectScope.IMMEDIATE,
+            d -> d.featurePageLocks, (d, v) -> d.featurePageLocks = v,
+            ALWAYS, null
+        ),
 
         // ==================== 2. BOOKSHELVES ====================
         boolOpt(

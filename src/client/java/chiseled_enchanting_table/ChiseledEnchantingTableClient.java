@@ -95,6 +95,15 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             if (!stack.is(Items.ENCHANTED_BOOK)) {
                 return;
             }
+            var lockMode = chiseled_enchanting_table.mechanics.resonance.TomeLock.getMode(stack);
+            if (lockMode != chiseled_enchanting_table.mechanics.resonance.TomeLock.Mode.NONE) {
+                String lockKey = switch (lockMode) {
+                    case UNTIL_NEXT_CHARGE -> "item.chiseled_enchanting_table.master_tome_locked_next";
+                    case UNTIL_FULL -> "item.chiseled_enchanting_table.master_tome_locked_full";
+                    default -> "item.chiseled_enchanting_table.master_tome_locked_perm";
+                };
+                lines.add(Component.translatable(lockKey).withStyle(ChatFormatting.YELLOW));
+            }
             var cfg = SyncedEnchantmentCosts.libraryResonanceConfig();
             if (cfg.tomeConsumptionMode() == MasterTomeWear.ConsumptionMode.KEEP) {
                 return;

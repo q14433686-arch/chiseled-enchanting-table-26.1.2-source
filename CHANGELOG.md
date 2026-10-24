@@ -15,6 +15,12 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
+## [Unreleased] — 「纂刻的书」与功能页解锁（2026-10-24）
+
+- **新页签「纂刻的书」**：实时耐久/充能看板（书架数、下一阶段差值、每本 +1 与充满倒计时），可多选**锁定**模板书（锁至 +1 / 锁至充满 / 永锁）；锁定免费，锁定中不可取出（含漏斗）、不参与附魔，提前解锁每本 1 级经验 + 1 退魔砂且仅限锁定者。
+- **功能页解锁（按玩家=成就）**：「纂刻的书」需范围内 4 个雕纹书架各有一本附魔书（成就「还要多久……」）；「退魔洗练」在秘典第八章献祭范围内书架中的 12 本褪魔残卷解锁（成就「退魔之途」，老玩家自动祖父解锁）。总开关 `feature_page_locks` 可关闭。
+- **Wire 升级 `26_3_revision_11`**：两端同版；详见 `docs/reports/FEATURE_INSCRIBED_TOMES_PAGE_2026_10_24.md`。
+
 ## [Unreleased] — 2026-10-24 设计审计包
 
 - **世代褪色**：母本传抄出的新书世代 +1，可用次数上限随世代衰减（`cet_generation`）。

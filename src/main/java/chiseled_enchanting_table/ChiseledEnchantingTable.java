@@ -54,6 +54,27 @@ public class ChiseledEnchantingTable implements ModInitializer {
         LootRegistry.init();
         chiseled_enchanting_table.mechanics.structure.BookshelfBookFiller.verifyVanillaKeys();
 
+        // Locked template books: the guard mixin refuses the removal itself; this
+        // callback only explains the refusal to a player whose empty-hand take
+        // would land on a locked book, so the click never feels like dead input.
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+            if (!world.isClientSide()
+                && hand == net.minecraft.world.InteractionHand.MAIN_HAND
+                && player.getMainHandItem().isEmpty()
+                && world.getBlockEntity(hitResult.getBlockPos())
+                    instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity shelf) {
+                int slot = shelf.getLastInteractedSlot();
+                if (slot >= 0 && slot < shelf.getContainerSize()
+                    && chiseled_enchanting_table.mechanics.resonance.TomeLock
+                        .isEffectivelyLocked(shelf.getItem(slot))) {
+                    player.displayClientMessage(
+                        net.minecraft.network.chat.Component.translatable(
+                            "gui.chiseled_enchanting_table.tomes.take_locked"), true);
+                }
+            }
+            return InteractionResult.PASS;
+        });
+
         // Restrict minecraft:infinity strictly to Exploration loot, Vanilla Enchanting Table random rolls,
         // and Master Tome copying/inscription — strip/replace any Villager / Wandering Trader Infinity offer.
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {

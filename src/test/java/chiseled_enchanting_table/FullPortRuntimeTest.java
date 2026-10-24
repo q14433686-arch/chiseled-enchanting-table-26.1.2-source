@@ -64,8 +64,12 @@ class FullPortRuntimeTest {
 
     @Test void liveShelfWirePreservesChargeSentinelsAndCounts() {
         var enchantment = new EnchantmentWithLevel(Identifier.withDefaultNamespace("mending"), 1);
+        var tomeEntry = new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ShelfTomeEntry(
+            new net.minecraft.core.BlockPos(3, 64, -7), 4,
+            Identifier.withDefaultNamespace("mending"), 1, 2, 3, 16, 7200, 1234, 2, true, false);
         var payload = new LiveShelfStatePayload(23, Set.of(enchantment), 10, 12, 5, 4,
-            Map.of(enchantment.enchantment_id(), 1), false, 2, 1, Map.of(enchantment, -1));
+            Map.of(enchantment.enchantment_id(), 1), false, 2, 1, Map.of(enchantment, -1),
+            java.util.List.of(tomeEntry), false, true, 7);
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
         try {
             LiveShelfStatePayload.CODEC.encode(buffer, payload);

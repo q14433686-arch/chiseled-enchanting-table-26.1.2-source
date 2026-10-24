@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:clock"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.how_much_longer.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.how_much_longer.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:craft",
+  "criteria": {
+    "how_much_longer": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "how_much_longer"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

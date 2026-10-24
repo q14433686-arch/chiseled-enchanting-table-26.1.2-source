@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "chiseled_enchanting_table:depleted_tome"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.unlock_cleanse.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.unlock_cleanse.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:craft",
+  "criteria": {
+    "unlock_cleanse": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "unlock_cleanse"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

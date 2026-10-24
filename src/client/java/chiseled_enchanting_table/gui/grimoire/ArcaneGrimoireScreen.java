@@ -145,6 +145,7 @@ public class ArcaneGrimoireScreen extends Screen {
     private static final int NAV_SPREAD = 100;
     private static final int NAV_CLOSE = 101;
     private static final int NAV_OPEN_CONFIG = 102;
+    private static final int NAV_UNLOCK_CLEANSE = 103;
 
     public ArcaneGrimoireScreen(@Nullable Screen parentScreen) {
         this(parentScreen, 0, null, parentScreen != null, 12);
@@ -318,6 +319,29 @@ public class ArcaneGrimoireScreen extends Screen {
             this.leftMaxScroll = res.maxScroll();
             this.leftScroll = Mth.clamp(this.leftScroll, 0.0f, this.leftMaxScroll);
             renderChapterRightDiagram(ctx, spec, rx, py, this.pageW, this.pageH, mouseX, mouseY);
+        }
+
+        // Cleanse-unlock sacrifice button (ch. 8 only): text-only overlay at the
+        // bottom of the right page; the server validates everything and answers
+        // in the action bar, so no return channel is needed here.
+        if (this.spreadIndex != 0 && currentSpec().chapter() == 8) {
+            String label = Component.translatable(
+                "gui.chiseled_enchanting_table.grimoire.ch8.unlock_btn",
+                chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.CLEANSE_UNLOCK_DEPLETED_TOMES
+            ).getString();
+            int bw = Math.min(this.pageW - 8, this.font.width(label) + 16);
+            int bx = rx + (this.pageW - bw) / 2;
+            int by = py + this.pageH - 16;
+            boolean hover = mouseX >= bx && mouseX < bx + bw && mouseY >= by && mouseY < by + 13;
+            ctx.fill(bx, by, bx + bw, by + 13, hover ? 0xFF6B4D16 : 0xFF4A3410);
+            ctx.fill(bx, by, bx + bw, by + 1, 0xFFD9A441);
+            ctx.fill(bx, by + 12, bx + bw, by + 13, 0xFFD9A441);
+            ctx.fill(bx, by, bx + 1, by + 13, 0xFFD9A441);
+            ctx.fill(bx + bw - 1, by, bx + bw, by + 13, 0xFFD9A441);
+            chiseled_enchanting_table.gui.row.RowRenderSupport.renderCenteredBoxText(
+                ctx, this.minecraft, label, bx + 2, bw - 4, by + 6.5f, 0.78f,
+                hover ? 0xFFFFE9B8 : 0xFFF3D98B);
+            this.interactiveRegions.add(new HitRegion(bx, by, bw, 13, NAV_UNLOCK_CLEANSE, ""));
         }
 
         // 5. In-page bottom navigation footers
@@ -1090,7 +1114,18 @@ public class ArcaneGrimoireScreen extends Screen {
                         "gui.chiseled_enchanting_table.grimoire.ch8.s4",
                         curseXp,
                         lr.maxBaseXpDiscountPercent()
-                    ))
+                    )),
+                    PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.unlock_h"), INK_GOLD_DARK),
+                    PageBlock.step(1, Component.translatable(
+                        "gui.chiseled_enchanting_table.grimoire.ch8.unlock_s1",
+                        chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.CLEANSE_UNLOCK_DEPLETED_TOMES
+                    )),
+                    PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.unlock_s2")),
+                    PageBlock.callout(
+                        Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.tomes_t"),
+                        Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.tomes_b"),
+                        INK_EMERALD
+                    )
                 );
             }
         };
@@ -1224,6 +1259,14 @@ public class ArcaneGrimoireScreen extends Screen {
                     switch (region.actionId()) {
                         case NAV_SPREAD -> jumpToSpread(Integer.parseInt(region.payload()), true);
                         case NAV_CLOSE -> onClose();
+                        case NAV_UNLOCK_CLEANSE -> {
+                            GrimoireSoundHelper.playTabSwitch();
+                            if (net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.canSend(
+                                chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.UnlockCleansePayload.TYPE)) {
+                                net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                                    new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.UnlockCleansePayload());
+                            }
+                        }
                         case NAV_OPEN_CONFIG -> {
                             GrimoireSoundHelper.playTabSwitch();
                             if (this.closeOverride != null && this.parentScreen instanceof chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen table) {

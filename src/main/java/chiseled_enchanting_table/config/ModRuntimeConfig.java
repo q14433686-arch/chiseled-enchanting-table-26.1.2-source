@@ -104,6 +104,11 @@ public record ModRuntimeConfig(
     // default ON per the 2026-10-24 audit disposition, opt-out for pack authors)
     boolean grindstoneDepletedTome,
 
+    // Master switch for the per-player feature-page unlocks (Cleanse / Inscribed
+    // Tomes). Off = both pages always usable (locking still requires the page,
+    // which then needs no unlock either).
+    boolean featurePageLocks,
+
     // Explicit per-field customization tracking (used when overrideDatapacks == false)
     Set<String> customizedKeys
 ) {
@@ -514,6 +519,7 @@ public record ModRuntimeConfig(
         general.addProperty("anvil_block_same_book_merge", anvilBlockSameBookMerge);
         general.addProperty("restrict_villager_infinity_books", restrictVillagerInfinityBooks);
         general.addProperty("grindstone_depleted_tome", grindstoneDepletedTome);
+        general.addProperty("feature_page_locks", featurePageLocks);
         root.add("general", general);
 
         JsonObject bookshelves = new JsonObject();
@@ -614,6 +620,7 @@ public record ModRuntimeConfig(
         d.anvilBlockSameBookMerge = boolOr(general, "anvil_block_same_book_merge", d.anvilBlockSameBookMerge);
         d.restrictVillagerInfinityBooks = boolOr(general, "restrict_villager_infinity_books", d.restrictVillagerInfinityBooks);
         d.grindstoneDepletedTome = boolOr(general, "grindstone_depleted_tome", d.grindstoneDepletedTome);
+        d.featurePageLocks = boolOr(general, "feature_page_locks", d.featurePageLocks);
 
         d.directGatesEnabled = boolOr(shelves, "direct_gates_enabled", d.directGatesEnabled);
         if (shelves.has("blank_max_tier_mode")) {
@@ -706,6 +713,7 @@ public record ModRuntimeConfig(
         public boolean anvilBlockSameBookMerge = true;
         public boolean restrictVillagerInfinityBooks = false;
         public boolean grindstoneDepletedTome = true;
+        public boolean featurePageLocks = true;
 
         public boolean directGatesEnabled = true;
         public BlankMaxTierMode blankMaxTierMode = BlankMaxTierMode.HALF_CEIL;
@@ -774,6 +782,7 @@ public record ModRuntimeConfig(
             this.anvilBlockSameBookMerge = src.anvilBlockSameBookMerge;
             this.restrictVillagerInfinityBooks = src.restrictVillagerInfinityBooks;
             this.grindstoneDepletedTome = src.grindstoneDepletedTome;
+            this.featurePageLocks = src.featurePageLocks;
 
             this.directGatesEnabled = src.directGatesEnabled;
             this.blankMaxTierMode = src.blankMaxTierMode;
@@ -992,6 +1001,7 @@ public record ModRuntimeConfig(
                 bookshelfEnchantedProb,
                 restrictVillagerInfinityBooks,
                 grindstoneDepletedTome,
+                featurePageLocks,
                 customizedKeys
             );
         }

@@ -23,6 +23,13 @@ public class Advancement {
         }
     }
 
+    /** Whether the (server) player already owns the named advancement. */
+    public static boolean has(Player player, String name) {
+        if (!(player instanceof ServerPlayer serverPlayer)) return false;
+        var advancement = serverPlayer.level().getServer().getAdvancements().get(ChiseledEnchantingTable.identifier(name));
+        return advancement != null && serverPlayer.getAdvancements().getOrStartProgress(advancement).isDone();
+    }
+
     public static void checkBookMilestones(Player player, Level level, ItemStack stack) {
         if (!stack.is(Items.ENCHANTED_BOOK)) return;
         ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(stack);

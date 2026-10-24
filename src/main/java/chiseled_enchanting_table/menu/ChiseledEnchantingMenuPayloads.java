@@ -31,6 +31,8 @@ public final class ChiseledEnchantingMenuPayloads {
     public static final Identifier REOPEN_TABLE_PACKET_ID = ChiseledEnchantingTable.identifier("reopen_table_" + EnchantingProtocol.REVISION);
     public static final Identifier SKIP_RITUAL_PACKET_ID = ChiseledEnchantingTable.identifier("skip_ritual_" + EnchantingProtocol.REVISION);
     public static final Identifier SYNC_RITUAL_STATE_PACKET_ID = ChiseledEnchantingTable.identifier("sync_ritual_state_" + EnchantingProtocol.REVISION);
+    public static final Identifier TOME_LOCK_PACKET_ID = ChiseledEnchantingTable.identifier("tome_lock_" + EnchantingProtocol.REVISION);
+    public static final Identifier UNLOCK_CLEANSE_PACKET_ID = ChiseledEnchantingTable.identifier("unlock_cleanse_" + EnchantingProtocol.REVISION);
 
     public enum OptionType {
         ENCHANTMENT("enchantment"),
@@ -346,6 +348,67 @@ public final class ChiseledEnchantingMenuPayloads {
         }
     }
 
+    /** One template book in a nearby chiseled bookshelf, for the «纂刻的书» page. */
+    public record ShelfTomeEntry(
+        net.minecraft.core.BlockPos pos,
+        int slot,
+        Identifier enchantment_id,
+        int level,
+        int extra_enchants,
+        int wear_used,
+        int max_uses,
+        int interval_ticks,
+        int progress_ticks,
+        int lock_mode,
+        boolean lock_mine,
+        boolean infinite
+    ) {
+        public static final int MAX_ENTRIES = 256;
+
+        public ShelfTomeEntry {
+            slot = Math.max(0, Math.min(5, slot));
+            level = Math.max(0, Math.min(255, level));
+            extra_enchants = Math.max(0, Math.min(255, extra_enchants));
+            wear_used = Math.max(0, wear_used);
+            max_uses = Math.max(1, max_uses);
+            interval_ticks = Math.max(0, interval_ticks);
+            progress_ticks = Math.max(0, progress_ticks);
+            lock_mode = Math.max(0, Math.min(3, lock_mode));
+        }
+
+        static void write(RegistryFriendlyByteBuf buf, ShelfTomeEntry e) {
+            buf.writeBlockPos(e.pos());
+            buf.writeVarInt(e.slot());
+            buf.writeIdentifier(e.enchantment_id());
+            buf.writeVarInt(e.level());
+            buf.writeVarInt(e.extra_enchants());
+            buf.writeVarInt(e.wear_used());
+            buf.writeVarInt(e.max_uses());
+            buf.writeVarInt(e.interval_ticks());
+            buf.writeVarInt(e.progress_ticks());
+            buf.writeVarInt(e.lock_mode());
+            buf.writeBoolean(e.lock_mine());
+            buf.writeBoolean(e.infinite());
+        }
+
+        static ShelfTomeEntry read(RegistryFriendlyByteBuf buf) {
+            return new ShelfTomeEntry(
+                buf.readBlockPos(),
+                buf.readVarInt(),
+                buf.readIdentifier(),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readVarInt(),
+                buf.readBoolean(),
+                buf.readBoolean()
+            );
+        }
+    }
+
     public record LiveShelfStatePayload(
         int container_id,
         Set<EnchantmentWithLevel> unlocked_enchantements,
@@ -357,7 +420,11 @@ public final class ChiseledEnchantingMenuPayloads {
         boolean cramped_library,
         int chiseled_bookshelves,
         int empty_chiseled_bookshelves,
-        Map<EnchantmentWithLevel, Integer> master_tome_charges
+        Map<EnchantmentWithLevel, Integer> master_tome_charges,
+        List<ShelfTomeEntry> shelf_tomes,
+        boolean cleanse_unlocked,
+        boolean tomes_unlocked,
+        int depleted_tomes_nearby
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<LiveShelfStatePayload> TYPE =
             new CustomPacketPayload.Type<>(LIVE_SHELF_STATE_PACKET_ID);
@@ -366,7 +433,8 @@ public final class ChiseledEnchantingMenuPayloads {
 
         public LiveShelfStatePayload(int containerId, Set<EnchantmentWithLevel> unlocked, int discount, int regular,
             int books, int high, Map<Identifier, Integer> masters, boolean cramped) {
-            this(containerId, unlocked, discount, regular, books, high, masters, cramped, 0, 0, Map.of());
+            this(containerId, unlocked, discount, regular, books, high, masters, cramped, 0, 0, Map.of(),
+                List.of(), true, true, 0);
         }
 
         public boolean targets(int containerId) {
@@ -398,6 +466,20 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(Math.max(0, chiseled_bookshelves));
             buf.writeVarInt(Math.max(0, empty_chiseled_bookshelves));
             writeMasterCharges(buf, master_tome_charges);
+            PayloadLimits.writeBoundedCount(
+                buf,
+                shelf_tomes == null ? 0 : Math.min(ShelfTomeEntry.MAX_ENTRIES, shelf_tomes.size()),
+                ShelfTomeEntry.MAX_ENTRIES
+            );
+            if (shelf_tomes != null) {
+                int n = Math.min(ShelfTomeEntry.MAX_ENTRIES, shelf_tomes.size());
+                for (int i = 0; i < n; i++) {
+                    ShelfTomeEntry.write(buf, shelf_tomes.get(i));
+                }
+            }
+            buf.writeBoolean(cleanse_unlocked);
+            buf.writeBoolean(tomes_unlocked);
+            buf.writeVarInt(Math.max(0, depleted_tomes_nearby));
         }
 
         private static LiveShelfStatePayload read(RegistryFriendlyByteBuf buf) {
@@ -422,6 +504,14 @@ public final class ChiseledEnchantingMenuPayloads {
             int chiseledBookshelves = buf.readVarInt();
             int emptyChiseledBookshelves = buf.readVarInt();
             Map<EnchantmentWithLevel, Integer> masterCharges = readMasterCharges(buf);
+            int tomeCount = PayloadLimits.readBoundedCount(buf, ShelfTomeEntry.MAX_ENTRIES);
+            List<ShelfTomeEntry> shelfTomes = new java.util.ArrayList<>(tomeCount);
+            for (int i = 0; i < tomeCount; i++) {
+                shelfTomes.add(ShelfTomeEntry.read(buf));
+            }
+            boolean cleanseUnlocked = buf.readBoolean();
+            boolean tomesUnlocked = buf.readBoolean();
+            int depletedNearby = Math.max(0, buf.readVarInt());
             return new LiveShelfStatePayload(
                 containerId,
                 unlocked,
@@ -433,7 +523,11 @@ public final class ChiseledEnchantingMenuPayloads {
                 crampedLibrary,
                 chiseledBookshelves,
                 emptyChiseledBookshelves,
-                masterCharges
+                masterCharges,
+                List.copyOf(shelfTomes),
+                cleanseUnlocked,
+                tomesUnlocked,
+                depletedNearby
             );
         }
 
@@ -604,6 +698,76 @@ public final class ChiseledEnchantingMenuPayloads {
                 (payload, buf) -> { buf.writeVarInt(payload.containerId()); buf.writeLong(payload.session()); buf.writeBoolean(payload.sacrificeXp()); },
                 buf -> new SkipRitualPayload(buf.readVarInt(), buf.readLong(), buf.readBoolean())
             );
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** Shelf slot address used by lock actions («纂刻的书» page). */
+    public record TomeRef(net.minecraft.core.BlockPos pos, int slot) {
+        public TomeRef {
+            slot = Math.max(0, Math.min(5, slot));
+        }
+    }
+
+    /**
+     * Lock/unlock request for shelf template books. {@code mode}: 0 = early unlock
+     * (priced, locker only), 1 = until next charge, 2 = until full, 3 = permanent.
+     */
+    public record TomeLockPayload(int containerId, int mode, List<TomeRef> refs) implements CustomPacketPayload {
+        public static final int MAX_REFS = 64;
+        public static final CustomPacketPayload.Type<TomeLockPayload> TYPE =
+            new CustomPacketPayload.Type<>(TOME_LOCK_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, TomeLockPayload> CODEC =
+            CustomPacketPayload.codec(TomeLockPayload::write, TomeLockPayload::read);
+
+        public TomeLockPayload {
+            mode = Math.max(0, Math.min(3, mode));
+            refs = refs == null ? List.of() : List.copyOf(refs);
+            if (refs.size() > MAX_REFS) {
+                refs = refs.subList(0, MAX_REFS);
+            }
+        }
+
+        public boolean targets(int containerId) {
+            return this.containerId == containerId;
+        }
+
+        private void write(RegistryFriendlyByteBuf buf) {
+            buf.writeVarInt(containerId);
+            buf.writeVarInt(mode);
+            PayloadLimits.writeBoundedCount(buf, refs.size(), MAX_REFS);
+            for (TomeRef ref : refs) {
+                buf.writeBlockPos(ref.pos());
+                buf.writeVarInt(ref.slot());
+            }
+        }
+
+        private static TomeLockPayload read(RegistryFriendlyByteBuf buf) {
+            int container = buf.readVarInt();
+            int m = buf.readVarInt();
+            int n = PayloadLimits.readBoundedCount(buf, MAX_REFS);
+            List<TomeRef> list = new java.util.ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                list.add(new TomeRef(buf.readBlockPos(), buf.readVarInt()));
+            }
+            return new TomeLockPayload(container, m, list);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** Grimoire button: sacrifice 12 Depleted Tomes from shelves near a table to unlock Cleanse. */
+    public record UnlockCleansePayload() implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<UnlockCleansePayload> TYPE =
+            new CustomPacketPayload.Type<>(UNLOCK_CLEANSE_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, UnlockCleansePayload> CODEC =
+            CustomPacketPayload.codec((value, buf) -> {}, buf -> new UnlockCleansePayload());
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {

@@ -49,7 +49,11 @@ public final class WorldRegeneration {
     private static final String SAVE_FILENAME = "chiseled_enchanting_table_regen.json";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    record Slot(BlockPos position, int slot) {}
+    /** Identity of one bookshelf slot; public so UI sync can key regen progress by it. */
+    public record Slot(BlockPos position, int slot) {}
+
+    /** Live regeneration progress of one tracked shelf book (for the «纂刻的书» page). */
+    public record RegenProgress(int intervalTicks, long progressTicks) {}
 
     record BookSignature(Map<String, Integer> storedEnchantments, String customName) {
         static BookSignature of(ItemStack stack) {
@@ -175,6 +179,11 @@ public final class WorldRegeneration {
                 }
                 ItemStack updated = context.identity().copy();
                 MasterTomeWear.setWearUsed(updated, recovery.remainingWear());
+                // Timed tome locks («锁至+1 / 充满») expire exactly when their charge
+                // target lands; permanent locks survive regeneration untouched.
+                if (TomeLock.shouldExpire(TomeLock.getMode(updated), context.wear(), recovery.remainingWear())) {
+                    TomeLock.clearLock(updated);
+                }
                 context.shelf().setItem(slot.slot(), updated);
                 context.shelf().setChanged();
                 if (recovery.remainingWear() > 0) {
@@ -289,6 +298,23 @@ public final class WorldRegeneration {
         if (sig != null) {
             window.signatures.put(slot, sig);
         }
+    }
+
+    /**
+     * One-shot snapshot of every tracked book's regen progress in {@code world},
+     * keyed by shelf slot. Built from a single {@code exportSavedEntries()} pass so
+     * UI sync stays O(tracked) instead of O(books x tracked).
+     */
+    public static java.util.Map<Slot, RegenProgress> regenProgressSnapshot(ServerLevel world) {
+        Window window = world == null ? null : WORLDS.get(world);
+        if (window == null) {
+            return java.util.Map.of();
+        }
+        java.util.Map<Slot, RegenProgress> out = new java.util.HashMap<>();
+        for (var entry : window.scheduler.exportSavedEntries()) {
+            out.put(entry.slot(), new RegenProgress(entry.intervalTicks(), entry.progressTicks()));
+        }
+        return out;
     }
 
     public static void observe(

@@ -406,11 +406,45 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         BlockPos pos,
         int containerId
     ) {
+        return computeLiveShelfState(level, pos, containerId, null);
+    }
+
+    /**
+     * Player-aware live state: additionally enumerates every shelf template book
+     * («纂刻的书» page), evaluates the per-player feature-page unlocks and counts
+     * Depleted Tomes in range (Cleanse-unlock sacrifice progress). Advancement
+     * grants happen here because this is the one periodic server pass that already
+     * knows shelf contents and the viewing player.
+     */
+    public static chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload computeLiveShelfState(
+        Level level,
+        BlockPos pos,
+        int containerId,
+        @Nullable net.minecraft.server.level.ServerPlayer viewer
+    ) {
         BlockState state = level.getBlockState(pos);
         ShelfPower shelfPower = calculateShelfPower(level, pos);
         Set<EnchantmentWithLevel> unlocked = state.getBlock() instanceof ChiseledEnchantingTableBlock cetb
             ? cetb.getUnlockedEnchantmentsFromPower(level, shelfPower)
             : Set.of();
+        ShelfTomeScan scan = scanShelfTomes(level, pos, viewer);
+        boolean locksEnabled = chiseled_enchanting_table.config.ModRuntimeConfig.effective().featurePageLocks();
+        boolean cleanseUnlocked = true;
+        boolean tomesUnlocked = true;
+        if (viewer != null && locksEnabled) {
+            // Tomes page: at least 4 chiseled bookshelves in range, each holding an
+            // enchanted book. Granted on sight; the advancement IS the unlock flag.
+            if (scan.shelvesWithEnchantedBook() >= 4) {
+                chiseled_enchanting_table.utils.Advancement.give(viewer, "how_much_longer");
+            }
+            // Grandfather: anyone who already cleansed before page locks existed
+            // keeps the page (cleanse_enchantment predates this feature).
+            if (chiseled_enchanting_table.utils.Advancement.has(viewer, "cleanse_enchantment")) {
+                chiseled_enchanting_table.utils.Advancement.give(viewer, "unlock_cleanse");
+            }
+            cleanseUnlocked = chiseled_enchanting_table.utils.Advancement.has(viewer, "unlock_cleanse");
+            tomesUnlocked = chiseled_enchanting_table.utils.Advancement.has(viewer, "how_much_longer");
+        }
         return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
             containerId,
             unlocked,
@@ -422,8 +456,137 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             shelfPower.crampedLibrary(),
             shelfPower.chiseledBookshelvesWithBooks(),
             shelfPower.emptyChiseledBookshelves(),
-            shelfPower.masterTomeCharges()
+            shelfPower.masterTomeCharges(),
+            scan.entries(),
+            cleanseUnlocked,
+            tomesUnlocked,
+            scan.depletedTomes()
         );
+    }
+
+    /** Result of one shelf enumeration pass for the «纂刻的书» page. */
+    public record ShelfTomeScan(
+        List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ShelfTomeEntry> entries,
+        int shelvesWithEnchantedBook,
+        int depletedTomes
+    ) {}
+
+    /** Depleted Tomes required by the Cleanse-unlock sacrifice (grimoire ch. 8). */
+    public static final int CLEANSE_UNLOCK_DEPLETED_TOMES = 12;
+
+    /**
+     * Enumerates enchanted books in chiseled bookshelves inside the table's scan
+     * range (same offsets/LOS discipline as candidate collection), with wear,
+     * regen progress and lock state per book. Also counts depleted tomes and
+     * shelves carrying at least one enchanted book.
+     */
+    public static ShelfTomeScan scanShelfTomes(
+        Level level,
+        BlockPos tablePos,
+        @Nullable net.minecraft.server.level.ServerPlayer viewer
+    ) {
+        var shelfCfg = ChiseledEnchantingTableData.shelfGatesConfig();
+        var lrCfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        var progress = level instanceof net.minecraft.server.level.ServerLevel serverLevel
+            ? chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.regenProgressSnapshot(serverLevel)
+            : java.util.Map.<chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.Slot,
+                chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.RegenProgress>of();
+        ShelfPower power = calculateShelfPower(level, tablePos, false);
+        int nearby = power.totalLibraryBookshelves();
+        int fallbackInterval = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+            .computeRegenIntervalTicks(lrCfg, nearby);
+        List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ShelfTomeEntry> entries = new java.util.ArrayList<>();
+        java.util.Set<BlockPos> shelvesWithBook = new java.util.HashSet<>();
+        int depleted = 0;
+        boolean checkLos = shelfCfg != null && shelfCfg.requireLineOfSight();
+        for (BlockPos offset : getScanOffsets(shelfCfg)) {
+            BlockPos scanPos = tablePos.offset(offset);
+            if (!level.hasChunkAt(scanPos)) continue;
+            if (checkLos && !hasClearLineOfSight(level, tablePos, scanPos)) continue;
+            if (!level.getBlockState(scanPos).is(net.minecraft.world.level.block.Blocks.CHISELED_BOOKSHELF)) continue;
+            if (!(level.getBlockEntity(scanPos)
+                instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity cbs)) continue;
+            for (int slot = 0; slot < cbs.getContainerSize(); slot++) {
+                net.minecraft.world.item.ItemStack stack = cbs.getItem(slot);
+                if (stack.is(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME)) {
+                    depleted += stack.getCount();
+                    continue;
+                }
+                if (!stack.is(net.minecraft.world.item.Items.ENCHANTED_BOOK)) continue;
+                shelvesWithBook.add(scanPos.immutable());
+                if (entries.size() >= chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads
+                    .ShelfTomeEntry.MAX_ENTRIES) continue;
+                var enchants = net.minecraft.world.item.enchantment.EnchantmentHelper
+                    .getEnchantmentsForCrafting(stack);
+                Identifier firstId = ChiseledEnchantingTable.identifier("unknown");
+                int firstLevel = 0;
+                int count = 0;
+                for (var e : enchants.entrySet()) {
+                    if (count == 0) {
+                        firstId = e.getKey().unwrapKey()
+                            .map(rk -> rk.identifier())
+                            .orElseGet(() -> Identifier.parse(e.getKey().getRegisteredName()));
+                        firstLevel = e.getIntValue();
+                    }
+                    count++;
+                }
+                int wear = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getWearUsed(stack);
+                var rp = progress.get(new chiseled_enchanting_table.mechanics.resonance
+                    .WorldRegeneration.Slot(scanPos.immutable(), slot));
+                int interval = rp != null ? rp.intervalTicks()
+                    : (fallbackInterval == Integer.MAX_VALUE ? 0 : fallbackInterval);
+                long prog = rp != null ? rp.progressTicks() : 0L;
+                var mode = chiseled_enchanting_table.mechanics.resonance.TomeLock.getMode(stack);
+                entries.add(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ShelfTomeEntry(
+                    scanPos.immutable(),
+                    slot,
+                    firstId,
+                    firstLevel,
+                    Math.max(0, count - 1),
+                    wear,
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.effectiveMaxUses(
+                        stack, lrCfg.maxTomeUses()),
+                    interval,
+                    (int) Math.min(Integer.MAX_VALUE, prog),
+                    mode.id(),
+                    viewer != null && chiseled_enchanting_table.mechanics.resonance.TomeLock
+                        .isLockedBy(stack, viewer.getUUID()),
+                    chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.hasInfinityImmunity(stack)
+                ));
+            }
+        }
+        return new ShelfTomeScan(List.copyOf(entries), shelvesWithBook.size(), depleted);
+    }
+
+    /**
+     * Consumes up to {@code amount} Depleted Tomes from chiseled bookshelves in the
+     * table's scan range; returns how many were actually consumed. Only used by the
+     * Cleanse-unlock sacrifice after the caller verified availability.
+     */
+    public static int consumeDepletedTomes(Level level, BlockPos tablePos, int amount) {
+        if (amount <= 0) return 0;
+        var shelfCfg = ChiseledEnchantingTableData.shelfGatesConfig();
+        boolean checkLos = shelfCfg != null && shelfCfg.requireLineOfSight();
+        int remaining = amount;
+        for (BlockPos offset : getScanOffsets(shelfCfg)) {
+            if (remaining <= 0) break;
+            BlockPos scanPos = tablePos.offset(offset);
+            if (!level.hasChunkAt(scanPos)) continue;
+            if (checkLos && !hasClearLineOfSight(level, tablePos, scanPos)) continue;
+            if (!level.getBlockState(scanPos).is(net.minecraft.world.level.block.Blocks.CHISELED_BOOKSHELF)) continue;
+            if (!(level.getBlockEntity(scanPos)
+                instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity cbs)) continue;
+            for (int slot = 0; slot < cbs.getContainerSize() && remaining > 0; slot++) {
+                net.minecraft.world.item.ItemStack stack = cbs.getItem(slot);
+                if (!stack.is(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME)) continue;
+                int take = Math.min(remaining, stack.getCount());
+                stack.shrink(take);
+                remaining -= take;
+                cbs.setItem(slot, stack.isEmpty() ? net.minecraft.world.item.ItemStack.EMPTY : stack);
+                cbs.setChanged();
+            }
+        }
+        return amount - remaining;
     }
 
     public record ShelfPower(

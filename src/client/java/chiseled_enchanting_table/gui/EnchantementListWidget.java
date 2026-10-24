@@ -48,7 +48,8 @@ import org.jetbrains.annotations.Nullable;
 public class EnchantementListWidget extends AbstractSelectionList<EnchantementListWidget.EnchantUiEntry> {
     public enum UiTabMode {
         INSCRIBE,
-        CLEANSE
+        CLEANSE,
+        TOMES
     }
 
     public Set<EnchantmentWithLevel> unlocked_enchantements = null;

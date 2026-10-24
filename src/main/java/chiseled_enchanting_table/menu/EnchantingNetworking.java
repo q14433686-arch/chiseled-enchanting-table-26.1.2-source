@@ -125,5 +125,89 @@ public final class EnchantingNetworking {
                 }
             });
         });
+        PayloadTypeRegistry.serverboundPlay().register(
+            ChiseledEnchantingMenuPayloads.TomeLockPayload.TYPE,
+            ChiseledEnchantingMenuPayloads.TomeLockPayload.CODEC
+        );
+        ServerPlayNetworking.registerGlobalReceiver(ChiseledEnchantingMenuPayloads.TomeLockPayload.TYPE, (payload, ctx) -> {
+            var player = ctx.player();
+            var server = ctx.server();
+            server.execute(() -> {
+                if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
+                    && payload.targets(menu.containerId)
+                    && menu.stillValid(player)) {
+                    menu.applyTomeLock(payload);
+                }
+            });
+        });
+        PayloadTypeRegistry.serverboundPlay().register(
+            ChiseledEnchantingMenuPayloads.UnlockCleansePayload.TYPE,
+            ChiseledEnchantingMenuPayloads.UnlockCleansePayload.CODEC
+        );
+        ServerPlayNetworking.registerGlobalReceiver(ChiseledEnchantingMenuPayloads.UnlockCleansePayload.TYPE, (payload, ctx) -> {
+            var player = ctx.player();
+            var server = ctx.server();
+            server.execute(() -> tryUnlockCleanse(player));
+        });
+    }
+
+    /**
+     * Grimoire ch. 8 sacrifice: consume 12 Depleted Tomes from chiseled bookshelves
+     * in range of the nearest enchanting table (within 6 blocks of the player) and
+     * grant the Cleanse page unlock advancement. All feedback is action-bar text so
+     * the grimoire needs no return channel.
+     */
+    private static void tryUnlockCleanse(net.minecraft.server.level.ServerPlayer player) {
+        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().featurePageLocks()
+            || ChiseledEnchantingTableScreenHandler.isCleanseUnlockedFor(player)) {
+            chiseled_enchanting_table.utils.Advancement.give(player, "unlock_cleanse");
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                "gui.chiseled_enchanting_table.unlock_cleanse.already"), true);
+            return;
+        }
+        var level = player.level();
+        net.minecraft.core.BlockPos origin = player.blockPosition();
+        net.minecraft.core.BlockPos tablePos = null;
+        double best = Double.MAX_VALUE;
+        for (var candidate : net.minecraft.core.BlockPos.betweenClosed(
+            origin.offset(-6, -3, -6), origin.offset(6, 3, 6))) {
+            if (level.getBlockState(candidate).is(BlockRegistry.CHISELED_ENCHANTING_TABLE)) {
+                double d = candidate.distSqr(origin);
+                if (d < best) {
+                    best = d;
+                    tablePos = candidate.immutable();
+                }
+            }
+        }
+        if (tablePos == null) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                "gui.chiseled_enchanting_table.unlock_cleanse.no_table"), true);
+            return;
+        }
+        int need = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.CLEANSE_UNLOCK_DEPLETED_TOMES;
+        var scan = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock
+            .scanShelfTomes(level, tablePos, player);
+        if (scan.depletedTomes() < need) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                "gui.chiseled_enchanting_table.unlock_cleanse.progress",
+                scan.depletedTomes(), need), true);
+            return;
+        }
+        int consumed = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock
+            .consumeDepletedTomes(level, tablePos, need);
+        if (consumed < need) {
+            return;
+        }
+        chiseled_enchanting_table.utils.Advancement.give(player, "unlock_cleanse");
+        level.playSound(
+            null,
+            tablePos,
+            net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_RESONATE,
+            net.minecraft.sounds.SoundSource.BLOCKS,
+            1.0F,
+            1.2F
+        );
+        player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+            "gui.chiseled_enchanting_table.unlock_cleanse.done"), true);
     }
 }
