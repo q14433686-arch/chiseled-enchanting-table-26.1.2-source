@@ -11,9 +11,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * Extraction guard for player-locked template books («纂刻的书» page): every vanilla
  * removal channel of a chiseled bookshelf funnels through the {@code Container}
- * removal methods — the empty-hand take-book interaction and hoppers alike — so
+ * removal method — the empty-hand take-book interaction and hoppers alike — so
  * refusing locked stacks here seals all of them without touching interaction code.
  * In-place mutation (wear/regen via {@code setItem}) is unaffected by design.
+ * ({@code removeItemNoUpdate} is not declared by the 26.3 bookshelf entity and no
+ * extraction path uses it, so it is deliberately not injected.)
  */
 @Mixin(ChiseledBookShelfBlockEntity.class)
 public abstract class LockedTomeGuardMixin {
@@ -27,12 +29,4 @@ public abstract class LockedTomeGuardMixin {
         }
     }
 
-    @Inject(method = "removeItemNoUpdate", at = @At("HEAD"), cancellable = true)
-    private void cet$guardLockedRemoveNoUpdate(int slot, CallbackInfoReturnable<ItemStack> cir) {
-        ChiseledBookShelfBlockEntity self = (ChiseledBookShelfBlockEntity) (Object) this;
-        if (slot >= 0 && slot < self.getContainerSize()
-            && TomeLock.isEffectivelyLocked(self.getItem(slot))) {
-            cir.setReturnValue(ItemStack.EMPTY);
-        }
-    }
 }
