@@ -1,6 +1,7 @@
 package chiseled_enchanting_table;
 
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
+import chiseled_enchanting_table.mechanics.resonance.TomeLockData;
 import chiseled_enchanting_table.mechanics.resonance.TomeWearData;
 import chiseled_enchanting_table.menu.PayloadLimits;
 import io.netty.buffer.Unpooled;
