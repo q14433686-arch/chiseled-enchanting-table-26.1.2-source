@@ -132,7 +132,11 @@ public abstract class GrindstoneBookDepleteMixin extends AbstractContainerMenu {
 
         ItemStack single = source.copyWithCount(1);
         ItemStack stripped = this.removeNonCursesFrom(single);
-        if (stripped.is(Items.BOOK)) {
+        // Audit disposition: the Depleted Tome return is a core economy hook but must
+        // be opt-outable. When off, fall through with the vanilla plain-book result;
+        // the one-at-a-time stack protection above stays (stackable books need it).
+        if (stripped.is(Items.BOOK)
+            && chiseled_enchanting_table.config.ModRuntimeConfig.effective().grindstoneDepletedTome()) {
             ItemStack depleted = new ItemStack(BlockRegistry.DEPLETED_TOME, 1);
             Component customName = source.get(DataComponents.CUSTOM_NAME);
             if (customName != null) {

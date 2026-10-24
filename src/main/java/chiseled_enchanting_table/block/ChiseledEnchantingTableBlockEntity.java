@@ -372,6 +372,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         boolean anyCrosslinePollution = false;
         boolean anyEpiphanyConsumed = false;
         boolean replicatedInfinityFromTome = false;
+        int maxInheritedGeneration = -1;
         Component lastSlippedDesc = null;
         int lastSlippedLevel = 1;
         Component lastCrosslineIntendedDesc = null;
@@ -523,6 +524,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                     anyEpiphanyConsumed = true;
                 }
                 EnchantmentProvenance.recordTablePayment(currentTarget, step.enchantmentId(), actualPrevious, slippedLevel);
+                maxInheritedGeneration = Math.max(maxInheritedGeneration, step.inheritedGeneration());
                 continue;
             }
 
@@ -548,6 +550,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 replicatedInfinityFromTome = true;
             }
             EnchantmentProvenance.recordTablePayment(currentTarget, step.enchantmentId(), step.previousLevel(), finalLevel);
+            maxInheritedGeneration = Math.max(maxInheritedGeneration, step.inheritedGeneration());
         }
 
         EnchantmentHelper.updateEnchantments(currentTarget, m -> {
@@ -561,6 +564,10 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             currentTarget,
             EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
         );
+        if (maxInheritedGeneration >= 0 && currentTarget.is(Items.ENCHANTED_BOOK)) {
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                currentTarget, maxInheritedGeneration);
+        }
         if (anyCrosslinePollution) {
             chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
         }

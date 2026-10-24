@@ -82,15 +82,18 @@ class NetworkCompatibilityTest {
             chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, 6, 3,
             chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN,
             true, 5400, 34, 2400, 44, 900,
-            0.09, 0.27, true, List.of(50, 30, 12, 8));
+            0.09, 0.27, true, List.of(50, 30, 12, 8),
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT);
         var slipCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig(
             3.2, 0.037, 0.17,
             31, 0.011, 37, 0.021, 43, 0.031,
             1.1, 3.1, 2, 1.05, 5, 0.55, 11, 0.45, 0.62, 0.52, 3, 1.15,
             0.68, 0.26, 0.06, 0.52
         );
+        var waitCurve = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.WaitCurve(
+            0.31, 0.69, 0.29, 0.71, 1.27, 0.88, 137);
         var ritual = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
-            270, 12, 14, 0.48, 0.68, 0.17, slipCfg);
+            270, 12, 14, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve);
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
             11, List.of(), Set.of(id("treasure")), gates, resonance, ritual,

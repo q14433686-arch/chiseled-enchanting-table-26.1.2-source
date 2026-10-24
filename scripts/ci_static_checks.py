@@ -417,6 +417,23 @@ def check_locale_safe_formatting() -> None:
         note("all String.format calls pin Locale.ROOT")
 
 
+def check_bundled_defaults_fresh() -> None:
+    """JSON is the single source of truth for mechanic defaults: the checked-in
+    generated BundledDefaults.java must be byte-identical to a fresh regeneration
+    from the datapack JSON (drift gate, 2026-10-24 audit)."""
+    import subprocess
+
+    gen = os.path.join(REPO, "scripts", "gen_bundled_defaults.py")
+    proc = subprocess.run(
+        [sys.executable, gen, "--check"], capture_output=True, text=True, cwd=REPO
+    )
+    if proc.returncode != 0:
+        fail("BundledDefaults.java is stale vs datapack JSON; run scripts/gen_bundled_defaults.py "
+             f"({(proc.stderr or proc.stdout).strip()[:300]})")
+    else:
+        note("BundledDefaults.java matches datapack JSON (single source of truth)")
+
+
 # --------------------------------------------------------------------------- #
 
 def main() -> int:
@@ -430,6 +447,7 @@ def main() -> int:
     check_markdown_links()
     check_locale_safe_formatting()
     check_no_tautological_residue()
+    check_bundled_defaults_fresh()
 
     if args.porcelain:
         for msg in failures:

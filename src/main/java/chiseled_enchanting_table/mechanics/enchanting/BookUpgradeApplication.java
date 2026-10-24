@@ -77,6 +77,13 @@ public final class BookUpgradeApplication {
             targetBook,
             EnchantmentHelper.getEnchantmentsForCrafting(targetBook)
         );
+        // Combine consumes the cost book, so no new generation is minted; the merged
+        // book keeps the more faded lineage of its two parents.
+        chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+            targetBook,
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.mergedGeneration(
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(targetSnapshot),
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(costSnapshot)));
 
         // Drained source book carries arcane residue and becomes a stackable Depleted Tome requiring Blank Overwrite.
         ItemStack depleted = new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1);

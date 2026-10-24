@@ -431,6 +431,7 @@ public record EnchantCostTablePayload(
         for (int w : lr.wildBookRemainingWeights()) {
             buf.writeVarInt(Math.max(0, w));
         }
+        buf.writeUtf(lr.scapegoatPricing().token());
 
         var rc = ritualConfig == null ? InscriptionRitualMechanics.Config.DEFAULT : ritualConfig;
         buf.writeVarInt(rc.maxSingleWaitSeconds());
@@ -467,6 +468,14 @@ public record EnchantCostTablePayload(
         buf.writeDouble(cs.junkCrosslineShare());
         buf.writeDouble(cs.curseCrosslineShare());
         buf.writeDouble(cs.pollutionRefundRatio());
+        var wc = rc.waitCurve();
+        buf.writeDouble(wc.shelfWeight());
+        buf.writeDouble(wc.tomeWeight());
+        buf.writeDouble(wc.levelFloor());
+        buf.writeDouble(wc.levelSpan());
+        buf.writeDouble(wc.levelExponent());
+        buf.writeDouble(wc.saturation());
+        buf.writeVarInt(wc.minTicks());
 
         PayloadLimits.writeBoundedCount(buf, costs.size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
         int writtenStacks = 0;
@@ -606,12 +615,13 @@ public record EnchantCostTablePayload(
         for (int i = 0; i < wildWeightLen; i++) {
             lrWildWeights.add(Math.max(0, buf.readVarInt()));
         }
+        var lrScapegoat = chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.fromToken(buf.readUtf());
 
         var lrConfig = new LibraryResonance.Config(
             lr0, lr1, lr2, lr3, lr4, lr5, lr6, lr7, lr8, lr9, lr10, lr11, lr12,
             lr13, lr14, lr15, lr16, lr17, lr18, lr19, lr20, lr21, lr22, lr23, lr24,
             lrMode, lrMtu, lrBcwc, lrDep, lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec,
-            lrUnbPerLvl, lrUnbMax, lrWildEn, lrWildWeights
+            lrUnbPerLvl, lrUnbMax, lrWildEn, lrWildWeights, lrScapegoat
         );
 
         int rcMaxWait = buf.readVarInt();
@@ -649,8 +659,17 @@ public record EnchantCostTablePayload(
             buf.readDouble(),
             buf.readDouble()
         );
+        var wcConfig = new InscriptionRitualMechanics.WaitCurve(
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readVarInt()
+        );
         var rcConfig = new InscriptionRitualMechanics.Config(
-            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef, csConfig
+            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef, csConfig, wcConfig
         );
 
         int rowCount = PayloadLimits.readCount(buf);

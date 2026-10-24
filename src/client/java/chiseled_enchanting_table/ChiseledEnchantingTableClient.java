@@ -115,7 +115,8 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 return;
             }
             int wearUsed = MasterTomeWear.getWearUsed(stack);
-            int maxUses = Math.max(1, cfg.maxTomeUses());
+            int generation = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(stack);
+            int maxUses = chiseled_enchanting_table.mechanics.resonance.TomeWearData.effectiveMaxUses(cfg.maxTomeUses(), generation);
             int remaining = Math.max(1, maxUses - wearUsed);
             float ratio = (float) remaining / (float) maxUses;
             ChatFormatting color = wearUsed <= 0
@@ -126,6 +127,13 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 remaining,
                 maxUses
             ).withStyle(color));
+            if (generation > 0) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_generation",
+                    generation,
+                    Math.max(0, cfg.maxTomeUses() - maxUses)
+                ).withStyle(ChatFormatting.DARK_PURPLE));
+            }
             int waiverPct = (int) Math.round(MasterTomeWear.computeUnbreakingWaiverChance(stack, cfg) * 100.0);
             if (waiverPct > 0) {
                 lines.add(Component.translatable(

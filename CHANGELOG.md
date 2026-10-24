@@ -15,6 +15,15 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 > javadoc-only; Mojang side: renderer rotation API, `submitModel` arity, loot builder/number
 > providers, `FriendlyByteBuf` collection helpers, loot-table and advancement schemas).
 
+## [Unreleased] — 2026-10-24 设计审计包
+
+- **世代褪色**：母本传抄出的新书世代 +1，可用次数上限随世代衰减（`cet_generation`）。
+- **替罪羊精华定价（默认开）**：溢出献祭按烧掉词条的精华占比恢复次数，`scapegoat_pricing` 可切回 `flat`。
+- **等待曲线数据化**：`ritual.wait_curve` 六系数进数据包并同步客户端；新增 `#wear_immune` 豁免标签。
+- **全新安装默认**：铁砧平价修复与村民无限书限制默认关（已有配置不受影响）；砂轮返枯竭典籍新增开关 `grindstone_depleted_tome`（默认开）。
+- **单一事实源**：机制默认值由 JSON 生成 `BundledDefaults`，CI 增漂移门禁；`TomeWearData`/`EnchantingNetworking`/`DataIds` 有界拆分。
+- **Wire 升级 `26_3_revision_10`**：客户端与服务端必须同版；详见 `docs/reports/AUDIT_2026_10_24_DESIGN_PACKAGE.md`。
+
 ## [1.1.0] — Full 26.1.2 increment and hardened configuration, 2026-10-23
 
 - Restore the requested release label **1.1.0** while retaining MC **26.3**, pinned dependencies and existing worldgen, mouse, menu-routing and authoritative-catalog fixes.

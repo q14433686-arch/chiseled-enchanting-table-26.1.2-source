@@ -487,6 +487,16 @@ public final class ConfigCatalog {
             d -> d.anvilBlockSameBookMerge, (d, v) -> d.anvilBlockSameBookMerge = v,
             ALWAYS, null
         ),
+        boolOpt(
+            "restrict_villager_infinity_books", CategoryId.GENERAL, EffectScope.IMMEDIATE,
+            d -> d.restrictVillagerInfinityBooks, (d, v) -> d.restrictVillagerInfinityBooks = v,
+            ALWAYS, null
+        ),
+        boolOpt(
+            "grindstone_depleted_tome", CategoryId.GENERAL, EffectScope.IMMEDIATE,
+            d -> d.grindstoneDepletedTome, (d, v) -> d.grindstoneDepletedTome = v,
+            ALWAYS, null
+        ),
 
         // ==================== 2. BOOKSHELVES ====================
         boolOpt(

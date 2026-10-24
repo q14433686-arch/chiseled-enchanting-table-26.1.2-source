@@ -184,3 +184,13 @@ tasks.named('runServer', JavaExec).configure {
 tasks.withType(Jar).configureEach {
     exclude 'com/terraformersmc/**'
 }
+
+// Regenerate BundledDefaults.java from the datapack JSON (single source of truth).
+// Deliberately NOT wired into compileJava: the generated file is checked in and the
+// CI freshness gate (scripts/ci_static_checks.py) fails if it drifts from the JSON.
+tasks.register('genBundledDefaults', Exec) {
+    description = 'Regenerate BundledDefaults.java from datapack JSON defaults'
+    group = 'codegen'
+    workingDir = rootProject.projectDir
+    commandLine 'python3', 'scripts/gen_bundled_defaults.py'
+}

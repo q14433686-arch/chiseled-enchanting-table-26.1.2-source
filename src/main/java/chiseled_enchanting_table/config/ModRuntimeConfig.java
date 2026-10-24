@@ -100,6 +100,10 @@ public record ModRuntimeConfig(
     // Infinity book offers must be opt-outable by the server owner)
     boolean restrictVillagerInfinityBooks,
 
+    // Grindstone returns a Depleted Tome instead of a plain book (core economy hook;
+    // default ON per the 2026-10-24 audit disposition, opt-out for pack authors)
+    boolean grindstoneDepletedTome,
+
     // Explicit per-field customization tracking (used when overrideDatapacks == false)
     Set<String> customizedKeys
 ) {
@@ -509,6 +513,7 @@ public record ModRuntimeConfig(
         general.addProperty("anvil_flat_repair_cost", anvilFlatRepairCost);
         general.addProperty("anvil_block_same_book_merge", anvilBlockSameBookMerge);
         general.addProperty("restrict_villager_infinity_books", restrictVillagerInfinityBooks);
+        general.addProperty("grindstone_depleted_tome", grindstoneDepletedTome);
         root.add("general", general);
 
         JsonObject bookshelves = new JsonObject();
@@ -608,6 +613,7 @@ public record ModRuntimeConfig(
         d.anvilFlatRepairCost = boolOr(general, "anvil_flat_repair_cost", d.anvilFlatRepairCost);
         d.anvilBlockSameBookMerge = boolOr(general, "anvil_block_same_book_merge", d.anvilBlockSameBookMerge);
         d.restrictVillagerInfinityBooks = boolOr(general, "restrict_villager_infinity_books", d.restrictVillagerInfinityBooks);
+        d.grindstoneDepletedTome = boolOr(general, "grindstone_depleted_tome", d.grindstoneDepletedTome);
 
         d.directGatesEnabled = boolOr(shelves, "direct_gates_enabled", d.directGatesEnabled);
         if (shelves.has("blank_max_tier_mode")) {
@@ -693,9 +699,13 @@ public record ModRuntimeConfig(
         public boolean overrideDatapacks = false;
         public int enchantedBookStackSize = 64;
         public VanillaTableMode vanillaTableMode = VanillaTableMode.BOOKS;
-        public boolean anvilFlatRepairCost = true;
+        // Fresh-install defaults: peripheral vanilla-rewrites stay OFF until the
+        // owner opts in (2026-10-24 audit disposition); existing config files keep
+        // their persisted values because loadFromDiskOrWriteDefault reads them first.
+        public boolean anvilFlatRepairCost = false;
         public boolean anvilBlockSameBookMerge = true;
-        public boolean restrictVillagerInfinityBooks = true;
+        public boolean restrictVillagerInfinityBooks = false;
+        public boolean grindstoneDepletedTome = true;
 
         public boolean directGatesEnabled = true;
         public BlankMaxTierMode blankMaxTierMode = BlankMaxTierMode.HALF_CEIL;
@@ -763,6 +773,7 @@ public record ModRuntimeConfig(
             this.anvilFlatRepairCost = src.anvilFlatRepairCost;
             this.anvilBlockSameBookMerge = src.anvilBlockSameBookMerge;
             this.restrictVillagerInfinityBooks = src.restrictVillagerInfinityBooks;
+            this.grindstoneDepletedTome = src.grindstoneDepletedTome;
 
             this.directGatesEnabled = src.directGatesEnabled;
             this.blankMaxTierMode = src.blankMaxTierMode;
@@ -980,6 +991,7 @@ public record ModRuntimeConfig(
                 bookshelfMaxBooks,
                 bookshelfEnchantedProb,
                 restrictVillagerInfinityBooks,
+                grindstoneDepletedTome,
                 customizedKeys
             );
         }
