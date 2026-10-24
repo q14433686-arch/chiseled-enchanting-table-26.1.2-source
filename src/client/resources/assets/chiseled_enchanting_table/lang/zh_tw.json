@@ -656,8 +656,8 @@
   "gui.chiseled_enchanting_table.tomes.lock_mode.2": "永久鎖定",
   "gui.chiseled_enchanting_table.tomes.locked": "已鎖定：%s · %s",
   "gui.chiseled_enchanting_table.tomes.not_charging": "未在充能",
-  "gui.chiseled_enchanting_table.tomes.panel_regen_gap": "Tier %s · %s shelves to next tier · Current rate %s/charge",
-  "gui.chiseled_enchanting_table.tomes.panel_regen_max": "Tier %s (max) · Current rate %s/charge",
+  "gui.chiseled_enchanting_table.tomes.panel_regen_gap": "Tier %s · %s shelves to next tier",
+  "gui.chiseled_enchanting_table.tomes.panel_regen_max": "Tier %s (max)",
   "gui.chiseled_enchanting_table.tomes.panel_shelves": "Book shelves %s · Total shelves %s",
   "gui.chiseled_enchanting_table.tomes.panel_title": "充能总览",
   "gui.chiseled_enchanting_table.tomes.sacrifice_desc": "獻祭附近書架中的褪魔殘卷（%s/%s）以解鎖去除附魔",
@@ -707,5 +707,12 @@
   "message.chiseled_enchanting_table.tome_lock.duration_next": "until +1 charge (~%s)",
   "message.chiseled_enchanting_table.tome_lock.duration_full": "until fully charged (~%s)",
   "message.chiseled_enchanting_table.tome_lock.duration_next_bare": "until +1 charge",
-  "message.chiseled_enchanting_table.tome_lock.duration_full_bare": "until fully charged"
+  "message.chiseled_enchanting_table.tome_lock.duration_full_bare": "until fully charged",
+  "gui.chiseled_enchanting_table.tomes.panel_rate": "Current rate %s/charge",
+  "gui.chiseled_enchanting_table.tomes.last_used": "Last consumed: %s",
+  "gui.chiseled_enchanting_table.tomes.deplete_step_down": "When spent, drops to %s",
+  "gui.chiseled_enchanting_table.tomes.deplete_lose": "When spent, loses %s",
+  "gui.chiseled_enchanting_table.tomes.deplete_depleted": "When spent, becomes a Depleted Tome",
+  "gui.chiseled_enchanting_table.tomes.consume_lose": "Next use removes %s",
+  "gui.chiseled_enchanting_table.tomes.consume_depleted": "Next use turns it into a Depleted Tome"
 }

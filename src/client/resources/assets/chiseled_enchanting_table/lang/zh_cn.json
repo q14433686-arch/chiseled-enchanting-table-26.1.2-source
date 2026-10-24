@@ -656,8 +656,8 @@
   "gui.chiseled_enchanting_table.tomes.lock_mode.2": "永久锁定",
   "gui.chiseled_enchanting_table.tomes.locked": "已锁定：%s · %s",
   "gui.chiseled_enchanting_table.tomes.not_charging": "未在充能",
-  "gui.chiseled_enchanting_table.tomes.panel_regen_gap": "第 %s 档 · 还差 %s 架至下一阶段 · 当前速率 %s/次",
-  "gui.chiseled_enchanting_table.tomes.panel_regen_max": "第 %s 档（最高）· 当前速率 %s/次",
+  "gui.chiseled_enchanting_table.tomes.panel_regen_gap": "第 %s 档 · 还差 %s 架至下一阶段",
+  "gui.chiseled_enchanting_table.tomes.panel_regen_max": "第 %s 档（最高）",
   "gui.chiseled_enchanting_table.tomes.panel_shelves": "含书书架 %s · 书架总数 %s",
   "gui.chiseled_enchanting_table.tomes.panel_title": "充能总览",
   "gui.chiseled_enchanting_table.tomes.sacrifice_desc": "献祭附近书架中的褪魔残卷（%s/%s）以解锁去除附魔",
@@ -707,5 +707,12 @@
   "message.chiseled_enchanting_table.tome_lock.duration_next": "锁至恢复 +1 耐久（约 %s）",
   "message.chiseled_enchanting_table.tome_lock.duration_full": "锁至满耐久（约 %s）",
   "message.chiseled_enchanting_table.tome_lock.duration_next_bare": "锁至恢复 +1 耐久",
-  "message.chiseled_enchanting_table.tome_lock.duration_full_bare": "锁至满耐久"
+  "message.chiseled_enchanting_table.tome_lock.duration_full_bare": "锁至满耐久",
+  "gui.chiseled_enchanting_table.tomes.panel_rate": "当前速率 %s/次",
+  "gui.chiseled_enchanting_table.tomes.last_used": "上次消耗：%s",
+  "gui.chiseled_enchanting_table.tomes.deplete_step_down": "耐久耗尽后降为 %s",
+  "gui.chiseled_enchanting_table.tomes.deplete_lose": "耐久耗尽后失去 %s",
+  "gui.chiseled_enchanting_table.tomes.deplete_depleted": "耐久耗尽后化作褪魔残卷",
+  "gui.chiseled_enchanting_table.tomes.consume_lose": "下次使用后失去 %s",
+  "gui.chiseled_enchanting_table.tomes.consume_depleted": "下次使用后化作褪魔残卷"
 }

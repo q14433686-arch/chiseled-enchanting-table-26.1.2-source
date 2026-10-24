@@ -226,11 +226,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private int[] tomeButtonRect(int index) {
         return switch (index) {
-            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 33, 32, 12};
-            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 33, 32, 12};
-            case 2 -> new int[] {PANEL_X + 79, PANEL_Y + 33, 31, 12};
-            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 47, 48, 11};
-            default -> new int[] {PANEL_X + 60, PANEL_Y + 47, 50, 11};
+            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 36, 32, 9};
+            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 36, 32, 9};
+            case 2 -> new int[] {PANEL_X + 79, PANEL_Y + 36, 31, 9};
+            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 46, 48, 9};
+            default -> new int[] {PANEL_X + 60, PANEL_Y + 46, 50, 9};
         };
     }
 
@@ -1046,6 +1046,34 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, this.menu.player)).withStyle(ChatFormatting.GOLD));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.charges", hoveredTome.remaining_charges(), hoveredTome.effective_max_uses()).withStyle(ChatFormatting.AQUA));
+                if (!hoveredTome.last_used_enchant().isBlank() && hoveredTome.last_used_level() > 0) {
+                    var lastId = Identifier.tryParse(hoveredTome.last_used_enchant());
+                    String lastName = lastId == null ? hoveredTome.last_used_enchant()
+                        : EnchantementListWidget.findEnchantment(lastId, this.menu.player)
+                            .map(h -> net.minecraft.world.item.enchantment.Enchantment.getFullname(h, hoveredTome.last_used_level()).getString())
+                            .orElse(hoveredTome.last_used_enchant());
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.last_used", lastName).withStyle(ChatFormatting.LIGHT_PURPLE));
+                }
+                if (hoveredTome.deplete_outcome() > 0 && !hoveredTome.deplete_enchant().isBlank()) {
+                    var depId = Identifier.tryParse(hoveredTome.deplete_enchant());
+                    java.util.function.IntFunction<String> depName = lvl -> depId == null
+                        ? hoveredTome.deplete_enchant()
+                        : EnchantementListWidget.findEnchantment(depId, this.menu.player)
+                            .map(h -> net.minecraft.world.item.enchantment.Enchantment.getFullname(h, lvl).getString())
+                            .orElse(hoveredTome.deplete_enchant());
+                    int depLevel = hoveredTome.deplete_level();
+                    Component depleteLine = switch (hoveredTome.deplete_outcome()) {
+                        case 1 -> Component.translatable("gui.chiseled_enchanting_table.tomes.deplete_step_down", depName.apply(Math.max(1, depLevel - 1)));
+                        case 2 -> Component.translatable("gui.chiseled_enchanting_table.tomes.deplete_depleted", depName.apply(depLevel));
+                        case 3 -> Component.translatable("gui.chiseled_enchanting_table.tomes.deplete_lose", depName.apply(depLevel));
+                        case 4 -> Component.translatable("gui.chiseled_enchanting_table.tomes.consume_lose", depName.apply(depLevel));
+                        case 5 -> Component.translatable("gui.chiseled_enchanting_table.tomes.consume_depleted", depName.apply(depLevel));
+                        default -> null;
+                    };
+                    if (depleteLine != null) {
+                        tip.add(depleteLine.withStyle(ChatFormatting.GOLD));
+                    }
+                }
                 if (hoveredTome.locked()) {
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.locked", Component.translatable("gui.chiseled_enchanting_table.tomes.lock_mode." + hoveredTome.lock_mode()).getString(), hoveredTome.lock_owner_name()).withStyle(ChatFormatting.RED));
                     int lockEta = hoveredTome.lock_mode() == 0 ? hoveredTome.eta_next_ticks()
@@ -1778,15 +1806,17 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
             if (isTomeTab()) {
                 Component header = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_title");
-                drawAutoScaledText(context, header, lx, ly + 8, 0.82f, 99, 0xFFB9F6FF);
+                drawAutoScaledText(context, header, lx, ly + 8, 0.8f, 99, 0xFFB9F6FF);
                 Component shelves = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_shelves",
                     this.menu.qualifyingEnchantedBookshelves, this.menu.liveTotalLibraryBookshelves);
-                drawAutoScaledText(context, shelves, lx, ly + 17, 0.72f, 99, 0xFFE6F7FF);
+                drawAutoScaledText(context, shelves, lx, ly + 15, 0.7f, 99, 0xFFE6F7FF);
+                Component tier = this.menu.nextRegenTierGap > 0
+                    ? Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_gap", this.menu.liveRegenTier + 1, this.menu.nextRegenTierGap)
+                    : Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_max", this.menu.liveRegenTier + 1);
+                drawAutoScaledText(context, tier, lx, ly + 22, 0.64f, 99, 0xFFA8FFC4);
                 String interval = this.menu.regenIntervalTicks > 0 ? EnchantementListWidget.formatTomeEta(this.menu.regenIntervalTicks) : "--:--";
-                Component regen = this.menu.nextRegenTierGap > 0
-                    ? Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_gap", this.menu.liveRegenTier + 1, this.menu.nextRegenTierGap, interval)
-                    : Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_max", this.menu.liveRegenTier + 1, interval);
-                drawAutoScaledText(context, regen, lx, ly + 25, 0.66f, 99, 0xFFA8FFC4);
+                Component rate = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_rate", interval);
+                drawAutoScaledText(context, rate, lx, ly + 29, 0.64f, 99, 0xFFA8FFC4);
                 return;
             }
 

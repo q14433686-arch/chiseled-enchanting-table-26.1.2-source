@@ -1315,7 +1315,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
                 try {
                     String title = tomeTitle(this.tome_book, this.player);
-                    RowRenderSupport.renderBoundedText(ctx, client, title, dx + 7, dy + 3, 0.68f, dw - 14,
+                    RowRenderSupport.renderBoundedText(ctx, client, title, dx + 7, dy + 5, 0.62f, dw - 14,
                         this.tome_book.locked() ? 0xFFFFC46B : 0xFFF7F2EA);
                     String charge = this.tome_book.wear_immune()
                         ? I18n.get("gui.chiseled_enchanting_table.tomes.immune")
@@ -1324,7 +1324,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     if (this.tome_book.generation() > 0) {
                         charge += "  " + I18n.get("gui.chiseled_enchanting_table.tomes.generation", this.tome_book.generation());
                     }
-                    RowRenderSupport.renderBoundedText(ctx, client, charge, dx + 7, dy + 11, 0.56f, dw - 14, 0xFF9ED8FF);
+                    RowRenderSupport.renderBoundedText(ctx, client, charge, dx + 7, dy + 11, 0.52f, dw - 14, 0xFF9ED8FF);
                     String status;
                     int statusColor;
                     if (this.tome_book.locked()) {
@@ -1353,7 +1353,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                         status = I18n.get("gui.chiseled_enchanting_table.tomes.not_charging");
                         statusColor = 0xFFC9BFD8;
                     }
-                    RowRenderSupport.renderBoundedText(ctx, client, status, dx + 7, dy + 18, 0.52f, dw - 14, statusColor);
+                    RowRenderSupport.renderBoundedText(ctx, client, status, dx + 7, dy + 16, 0.5f, dw - 14, statusColor);
                 } finally {
                     RowRenderSupport.endRowContentClip(ctx);
                 }
