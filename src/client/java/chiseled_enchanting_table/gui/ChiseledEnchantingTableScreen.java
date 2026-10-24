@@ -1062,7 +1062,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                             .map(h -> net.minecraft.world.item.enchantment.Enchantment.getFullname(h, lvl).getString())
                             .orElse(hoveredTome.deplete_enchant());
                     int depLevel = hoveredTome.deplete_level();
-                    Component depleteLine = switch (hoveredTome.deplete_outcome()) {
+                    var depleteLine = switch (hoveredTome.deplete_outcome()) {
                         case 1 -> Component.translatable("gui.chiseled_enchanting_table.tomes.deplete_step_down", depName.apply(Math.max(1, depLevel - 1)));
                         case 2 -> Component.translatable("gui.chiseled_enchanting_table.tomes.deplete_depleted", depName.apply(depLevel));
                         case 3 -> Component.translatable("gui.chiseled_enchanting_table.tomes.deplete_lose", depName.apply(depLevel));
