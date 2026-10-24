@@ -265,7 +265,9 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             (payload, ctx) -> ctx.client().execute(() -> {
                 SyncedEnchantmentCosts.updateTransformations(payload.transformations());
                 var player = ctx.client().player;
-                if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                if (player != null
+                    && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
+                    && payload.targets(menu.containerId)) {
                     menu.applyTransformationSnapshot(payload.transformations());
                 }
             })

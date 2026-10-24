@@ -204,7 +204,9 @@ class NetworkCompatibilityTest {
         roundTrip(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.CODEC,
             new chiseled_enchanting_table.menu.EnchantingProtocol.Capability(32));
         var display = new TransformationDisplay(id("delta_rule"), id("input_tag"), true, id("out"), 2, 15, 2, false);
-        roundTrip(SyncTransformationStatePayload.CODEC, new SyncTransformationStatePayload(List.of(display)));
+        var txPayload = new SyncTransformationStatePayload(42, List.of(display));
+        roundTrip(SyncTransformationStatePayload.CODEC, txPayload);
+        assertTrue(txPayload.targets(42) && !txPayload.targets(43));
     }
 
     @Test void runtimeConfigRequestAndAcknowledgementRoundTrip() {
