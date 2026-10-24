@@ -245,7 +245,13 @@ public final class LibraryResonance {
                 MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_MAX_CHANCE,
                 MasterTomeWear.DEFAULT_WILD_BOOK_WEAR_ENABLED,
                 MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS,
-                TomeWearData.ScapegoatPricing.ESSENCE
+                TomeWearData.ScapegoatPricing.ESSENCE,
+                DEFAULT.lockedShelfBreakable(),
+                DEFAULT.lockedBookExtractionBlocked(),
+                DEFAULT.earlyUnlockXpLevels(),
+                DEFAULT.earlyUnlockGritCount(),
+                DEFAULT.sacrificeRequired(),
+                DEFAULT.tomePageRequiredShelves()
             );
         }
 
