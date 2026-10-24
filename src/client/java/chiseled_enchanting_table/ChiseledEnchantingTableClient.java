@@ -42,6 +42,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class ChiseledEnchantingTableClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        chiseled_enchanting_table.compat.IrisGlintPreload.register();
         ClientPlayNetworking.registerGlobalReceiver(
             chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
         ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> {

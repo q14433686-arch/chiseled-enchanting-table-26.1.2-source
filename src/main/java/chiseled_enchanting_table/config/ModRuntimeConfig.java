@@ -402,13 +402,64 @@ public record ModRuntimeConfig(
     public static void writeAtomically(Path path, ModRuntimeConfig cfg) throws java.io.IOException {
         Path parent = path.toAbsolutePath().getParent();
         Files.createDirectories(parent);
+        String json = GSON.toJson(cfg.toJson()) + "\n";
         Path temporary = Files.createTempFile(parent, ".cet-config-", ".tmp");
         try {
-            Files.writeString(temporary, GSON.toJson(cfg.toJson()) + "\n", StandardCharsets.UTF_8);
-            Files.move(temporary, path, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
-                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Files.writeString(temporary, json, StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, path, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                return;
+            } catch (java.io.IOException atomicFailure) {
+                // Windows rejects ATOMIC_MOVE over an existing target with AccessDenied when
+                // the file is read-only or briefly held by an antivirus/launcher sync. Fall
+                // back to progressively weaker replacements instead of failing the save.
+                clearWindowsReadOnly(path);
+                java.io.IOException lastFailure = atomicFailure;
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        Files.move(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        return;
+                    } catch (java.io.IOException moveFailure) {
+                        lastFailure = moveFailure;
+                        pauseBeforeRetry(attempt);
+                    }
+                }
+                try {
+                    Files.copy(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    return;
+                } catch (java.io.IOException copyFailure) {
+                    lastFailure = copyFailure;
+                }
+                // Last resort: write the target directly (throws if truly impossible,
+                // e.g. the target is a directory - which tests rely on staying intact).
+                try {
+                    Files.writeString(path, json, StandardCharsets.UTF_8);
+                } catch (java.io.IOException directFailure) {
+                    directFailure.addSuppressed(lastFailure);
+                    throw directFailure;
+                }
+            }
         } finally {
             Files.deleteIfExists(temporary);
+        }
+    }
+
+    private static void clearWindowsReadOnly(Path path) {
+        try {
+            if (Files.isRegularFile(path)) {
+                Files.setAttribute(path, "dos:readonly", false);
+            }
+        } catch (Exception ignored) {
+            // Non-Windows filesystems do not support the DOS view; nothing to clear there.
+        }
+    }
+
+    private static void pauseBeforeRetry(int attempt) {
+        try {
+            Thread.sleep(25L * (attempt + 1));
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
         }
     }
 
