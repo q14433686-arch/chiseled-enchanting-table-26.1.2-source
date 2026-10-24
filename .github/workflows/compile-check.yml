@@ -73,7 +73,7 @@ jobs:
           # Actions 的默认 shell 是 `bash -e`：裸写 `./gradlew ...` 后面跟 `status=$?` 是死代码，
           # 编译失败时脚本会在那一行直接退出，下面的失败诊断也就永远不会生成。必须用 `|| status=$?` 把退出码接住。
           status=0
-          ./gradlew compileJava compileClientJava --console=plain --stacktrace --no-daemon \
+          ./gradlew compileJava compileClientJava test --console=plain --stacktrace --no-daemon \
             >> build-reports/compile-java.log 2>&1 || status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
           # 把「浮动坐标」这次实际解析成了什么记进日志：jei_version 与 rei_version 解析结果都会
@@ -149,11 +149,20 @@ jobs:
             fi
             echo "" >> "$LOG"
             echo "== job status: ${{ job.status }} ==" >> "$LOG"
-            SHA=$(gh api "repos/${{ github.repository }}/contents/$LOG?ref=$BRANCH" --jq .sha 2>/dev/null || true)
-            ARGS=(-X PUT "repos/${{ github.repository }}/contents/$LOG"
-                  -f message="ci-log: ${KIND} for ${{ github.sha }}"
-                  -f branch="$BRANCH"
-                  -f content="$(base64 -w0 "$LOG")")
-            if [ -n "$SHA" ]; then ARGS+=(-f sha="$SHA"); fi
-            gh api "${ARGS[@]}" --jq .commit.sha
+            # 回推与 server-smoke 的日志回推并发，或分支被别的写入推进时会拿到 409/422。
+            # 每次重试都重新 GET 一次 blob sha（sha 是「文件内容」的版本，不是分支头的），
+            # 三次都失败才让这一步失败 —— 之前一次瞬时冲突就让整个 compile-check 变红。
+            ok=0
+            for attempt in 1 2 3; do
+              SHA=$(gh api "repos/${{ github.repository }}/contents/$LOG?ref=$BRANCH" --jq .sha 2>/dev/null || true)
+              ARGS=(-X PUT "repos/${{ github.repository }}/contents/$LOG"
+                    -f message="ci-log: ${KIND} for ${{ github.sha }}"
+                    -f branch="$BRANCH"
+                    -f content="$(base64 -w0 "$LOG")")
+              if [ -n "$SHA" ]; then ARGS+=(-f sha="$SHA"); fi
+              if gh api "${ARGS[@]}" --jq .commit.sha; then ok=1; break; fi
+              echo "write-back attempt $attempt failed for $LOG; retrying" >&2
+              sleep $((attempt * 5))
+            done
+            [ "$ok" = 1 ] || { echo "::warning::could not push $LOG back to $BRANCH"; exit 1; }
           done

@@ -16,6 +16,8 @@ name: build
 # compileOnly 的可选依赖（gradle.properties: enable_jei / enable_rei），必须保证关掉它们之后
 # client source set 仍然能编译 —— 那是 maven.blamejared.com / maven.shedaniel.me 不可达时的
 # 唯一逃生通道，不能只在文档里写着「可以关」。
+# 反过来，server-smoke job（2026-10-23 从 26.3 移植）是三条线共用的：静态检查与编译都盖不住
+# 「世界能不能真的载入 / datapack 能不能 reload / loot function 是否真的执行」。
 
 permissions:
   contents: read
@@ -124,3 +126,74 @@ jobs:
 
       - name: compile main + client with both viewers disabled
         run: ./gradlew compileJava compileClientJava -Penable_jei=false -Penable_rei=false --console=plain --stacktrace --no-daemon
+
+  server-smoke:
+    permissions:
+      contents: write
+    name: real server world-load + datapack reload
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: static
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: chmod +x ./gradlew
+
+      # 静态检查与编译都盖不住「世界能不能真的载入 / datapack 能不能 reload / loot function
+      # 在真实游戏里是否生效」。本 job 用一次性 flat 世界跑 runServer（需 build.gradle 里
+      # runServer 的 standardInput = System.in，脚本靠 stdin 发 reload/loot/stop），
+      # 绝不对任何已有存档运行。
+      - name: boot fresh world and reload datapacks
+        run: python3 scripts/server_smoke.py
+
+      - name: smoke-test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-smoke-${{ github.sha }}
+          path: |
+            build-reports/server-smoke.log
+            run/logs/latest.log
+            run/crash-reports/**
+          if-no-files-found: warn
+
+      # 与 compile-check 同理：沙箱里读不到 Actions 日志 blob，只能靠 Contents API 把日志
+      # 写回分支（paths-ignore 'build-reports/**' 保证不会自触发）。只在 arena/** 回推。
+      - name: return smoke log to development branch
+        if: always() && github.event_name == 'push' && startsWith(github.ref_name, 'arena/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PYLOG'
+          import base64, json, os, pathlib, subprocess, time
+          path = pathlib.Path('build-reports/server-smoke.log')
+          if path.exists():
+              endpoint = f"repos/{os.environ['GITHUB_REPOSITORY']}/contents/{path}"
+              branch = os.environ['GITHUB_REF_NAME']
+              content = base64.b64encode(path.read_bytes()[-150000:]).decode()
+              # compile-check writes back at the same time; retry instead of failing the job
+              # on a transient 409/422. The blob sha is re-read on every attempt.
+              for attempt in range(1, 4):
+                  old = subprocess.run(['gh', 'api', endpoint + '?ref=' + branch],
+                                       capture_output=True, text=True)
+                  data = {'message': 'ci-log: server smoke for ' + os.environ['GITHUB_SHA'],
+                          'branch': branch, 'content': content}
+                  if old.returncode == 0:
+                      data['sha'] = json.loads(old.stdout)['sha']
+                  put = subprocess.run(['gh', 'api', '-X', 'PUT', endpoint, '--input', '-'],
+                                       input=json.dumps(data), text=True,
+                                       capture_output=True)
+                  if put.returncode == 0:
+                      break
+                  print(f'write-back attempt {attempt} failed: {put.stderr.strip()}')
+                  time.sleep(attempt * 5)
+              else:
+                  print('::warning::could not push the smoke log back to ' + branch)
+          PYLOG

@@ -67,7 +67,7 @@ Based on the Fabric 26.2 article and the comprehensive NeoForged
 
 | 26.2 change | Why this mod is unaffected |
 |---|---|
-| GUI `setScreen`/`screen` moved off `Minecraft` into `Gui`/`Hud` | The mod never calls `Minecraft.getInstance().setScreen()`/`.screen`; screens open via the menu path (`MenuScreens.register` + Fabric `ExtendedMenuProvider`). |
+| GUI `setScreen`/`screen` moved off `Minecraft` into `Gui` | Was not hit by the original port (screens open via the menu path: `MenuScreens.register` + Fabric `ExtendedMenuProvider`). The 2026-10-23 sync **does** hit it: the grimoire overlay opens/closes screens and the JEI plugin inspects the current screen, so all three call sites use `Minecraft.getInstance().gui.setScreen(...)` / `.gui.screen` instead of the removed `Minecraft` members. |
 | Registration: `BlockIds`/`ItemIds` split, `valueLookupBuilder` removed | The mod does no data-generation; it registers directly with `Registry.register(BuiltInRegistries.BLOCK/ITEM/MENU/BLOCK_ENTITY_TYPE/LOOT_FUNCTION_TYPE, ...)`. No `valueLookupBuilder`/`BlockIds` usage anywhere. |
 | Raw OpenGL → Vulkan migration (must go through Blaze3D) | Renderer/GUI already use `com.mojang.blaze3d.*` (`PoseStack`, `RenderPipeline`). No `GL11`/`GlStateManager`/`org.lwjgl.opengl` raw calls. |
 | `ChatFormatting` gutted in favor of `Style` | No `ChatFormatting` usage in the client source. |
@@ -159,7 +159,9 @@ python3 scripts/compat_check.py
 
 The investigation found **zero** direct uses of any API the primer marks as removed or rewritten
 (`Font.draw*`, `ChatFormatting`, `Minecraft.setScreen`/`.screen`, raw OpenGL, `valueLookupBuilder`,
-`MultiBufferSource`). Every API the mod calls is either a stable high-level wrapper confirmed present
+`MultiBufferSource`). The two that have since been hit by new content — `ChatFormatting` and
+`Minecraft#setScreen`/`#screen` — were rewritten for 26.2 as described in §3.1 and in
+[`SYNC_FROM_26_1_2_SIDE_REPORT.md`](SYNC_FROM_26_1_2_SIDE_REPORT.md) §6.2. Every API the mod calls is either a stable high-level wrapper confirmed present
 in 26.2, or a vanilla-internal signature that only a real compile can confirm. Rewriting the renderer
 or screen to hypothetical 26.2 signatures without a compiler to check against would risk breaking
 working code on a guess. The correct, minimal-risk path is: apply the certain declaration changes,

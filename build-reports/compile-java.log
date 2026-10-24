@@ -1,5 +1,5 @@
-commit: 22d7bc7e284dd9254c3ee8866abda2bc7a4a1b17
-branch: arena/dd589d1c-chiseled-enchanting-table-26-1
+commit: f6a9fc64f164ab1b9891b1cd0f376260a0a8ed28
+branch: arena/3f862174-chiseled-enchanting-table-26-1
 minecraft: 26.2
 fabric-api: 0.155.2+26.2
 loader: 0.19.3
@@ -31,30 +31,139 @@ Fabric Loom: 1.17.21
 > Task :compileJava
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
 
 > Task :processResources
 > Task :classes
 
 > Task :compileClientJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/EnchantingRecipeCategory.java:60: warning: [removal] addItemStack(ItemStack) in IIngredientAcceptor has been deprecated and marked for removal
-        builder.addInputSlot(SLOT_ITEM, SLOT_BOOK).addItemStack(recipe.book());
-                                                  ^
-  where THIS is a type-variable:
-    THIS extends IIngredientAcceptor<THIS> declared in interface IIngredientAcceptor
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/jei/EnchantingRecipeCategory.java:71: warning: [removal] addItemStack(ItemStack) in IIngredientAcceptor has been deprecated and marked for removal
-        builder.addOutputSlot(SLOT_OUTPUT_X, 11).addItemStack(output);
-                                                ^
-  where THIS is a type-variable:
-    THIS extends IIngredientAcceptor<THIS> declared in interface IIngredientAcceptor
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-2 warnings
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792617377340.json
+
+> Task :processClientResources
+> Task :clientClasses
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+
+> Task :test
+
+ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
+
+ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
+
+ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
+
+ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
+
+EconomyAndConfigVerificationTest > bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() PASSED
+
+EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
+
+EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
+
+EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
+
+EconomyAndConfigVerificationTest > highMaxLevelShelfCurveDistributesSmoothlyAndCapsScanVolume() PASSED
+
+EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning() PASSED
+
+EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
+
+EconomyAndConfigVerificationTest > deepRitualPersistenceSkipSlipAndInfinityRulesVerified() PASSED
+
+EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
+
+EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() PASSED
+
+EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
+
+EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
+
+EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
+
+EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
+
+EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
+
+EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
+
+FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
+
+FullPortRuntimeTest > configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() PASSED
+
+FullPortRuntimeTest > ritualWirePreservesMenuSessionAndQueue() PASSED
+
+FullPortRuntimeTest > malformedPolicyNeverBecomesAnUnlockedDefault() PASSED
+
+FullPortRuntimeTest > effectiveDomainAndDirectConsumerAgreeAndFailedSaveDoesNotPublish() PASSED
+
+FullPortRuntimeTest > persistedQueueHasFiniteResourceBounds() PASSED
+
+NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
+
+NetworkCompatibilityTest > allActionTokensAndNoBodyPacketsRoundTrip() PASSED
+
+NetworkCompatibilityTest > unknownActionsCannotSilentlyBecomeEnchantment() PASSED
+
+NetworkCompatibilityTest > costTableConfigurationAndRowsRoundTrip() PASSED
+
+NetworkCompatibilityTest > runtimeConfigRequestAndAcknowledgementRoundTrip() PASSED
+
+NetworkCompatibilityTest > liveUpdatesOnlyTargetTheMatchingMenu() PASSED
+
+NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNotUnmoddedPeers() PASSED
+
+NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
+
+NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
+
+RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
+
+RuleArchitectureTest > missingWindowCannotCreditBackpackOrUnloadedTime() PASSED
+
+RuleArchitectureTest > overlapUsesFastestRateIndependentOfProposalOrder() PASSED
+
+RuleArchitectureTest > foreignAndReentrantTransactionsCannotWrite() PASSED
+
+RuleArchitectureTest > acknowledgedReplacementCarriesOnlyItsOwnResidencyForward() PASSED
+
+RuleArchitectureTest > replacementAndConflictingIdentityDoNotInheritProgress() PASSED
+
+RuleArchitectureTest > invalidInputsAndBootstrapOverridesAreRejected() PASSED
+
+RuleArchitectureTest > sessionResetAndDuplicateSettlementAreSafe() PASSED
+
+RuleArchitectureTest > fullyRestoredBooksAreEvictedWithoutOngoingDirtyWrites() PASSED
+
+RuleArchitectureTest > fullLockResolvesEveryDefinedRuntimeKeyNotJustDatapackKeys() PASSED
+
+RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
+
+RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
+
+RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792783379824.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
-BUILD SUCCESSFUL in 1m 1s
-3 actionable tasks: 3 executed
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 3s
+6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
 

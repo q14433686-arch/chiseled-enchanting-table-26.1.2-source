@@ -1,0 +1,46 @@
+{
+  "display": {
+    "icon": {
+      "id": "chiseled_enchanting_table:arcane_catalyst"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.arcane_catalyst.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.arcane_catalyst.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:transmute_item",
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "chiseled_enchanting_table:arcane_catalyst",
+        "ingredients": [
+          {}
+        ]
+      }
+    },
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "chiseled_enchanting_table:arcane_catalyst"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "craft",
+      "obtain"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

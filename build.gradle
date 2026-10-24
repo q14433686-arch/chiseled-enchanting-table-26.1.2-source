@@ -27,13 +27,15 @@ def reiEnabled = project.findProperty('enable_rei') != 'false'
 
 /**
  * Dependency-configuration closure for the optional recipe viewers: a viewer's POM must never move
- * *this* mod's toolchain. Minecraft, fabric-loader and Fabric API are all pinned above, and
- * Fabric API is load-bearing at compile time in a way that is easy to miss — Loom reads the
+ * *this* mod's toolchain. Minecraft, fabric-loader and Fabric API are pinned above, and Fabric API
+ * is load-bearing at compile time in a way that is easy to miss — Loom reads the
  * `injected_interfaces` declared by fabric-api's modules and rewrites the Minecraft classes
  * accordingly (e.g. `Entity implements net.fabricmc.fabric.api.registry.fluid.EntityFluidExtension`,
  * from `fabric-content-registries-v0`). If a viewer transitively upgrades fabric-api to a build for
  * a different Minecraft version, javac sees interfaces that the resolved jar no longer supplies and
  * the *main* source set dies with "cannot access EntityFluidExtension / class file ... not found".
+ * The 26.1.2 sister branch hit exactly that failure as soon as the viewers were added
+ * (docs/reports/SYNC_FROM_26_3_REPORT.md §8 finding 7), so the pins stay applied on every line.
  */
 def toolchainPins = {
     exclude group: 'net.fabricmc.fabric-api'   // Fabric API: pinned by this build (fabric_version)
@@ -70,13 +72,12 @@ sourceSets {
             //     BookshelfBookFiller.
             //   * block/ChiseledBookshelfTick                                                  —
             //     still deferred (adds enchant particles/sound over a chiseled bookshelf).
-            // Legacy upstream mixins still parked pending their own 26.1.2 mapping pass.
             // 1.0.2: vanilla enchanting-table book blocking and narrow book+book same-level
             // anvil merge block restored. 1.0.3: chiseled-bookshelf random-tick ambient
-            // particle/sound restored. Keep only the broader XP-cost anvil tweak parked until
-            // it gets its own live-test pass.
-            exclude 'chiseled_enchanting_table/mixin/anvil/RemoveXpCostScaling.java'
-            exclude 'chiseled_enchanting_table/mixin/accessor/**'
+            // particle/sound, the flat anvil prior-work penalty (`RemoveXpCostScaling`) and the
+            // whole 26.1.2-side A x B x C progression/economy/UI batch are active. 1.1.0 adds the
+            // 26.1.2-side D-config batch (provenance, tome wear, config UI) on top. The parked
+            // `mixin/accessor/ItemAccessor.java` was deleted (nothing used it any more).
             exclude 'chiseled_enchanting_table/mixin/structureProcessor/**'
             exclude 'chiseled_enchanting_table/modifyChestLootTable/**'
             exclude 'chiseled_enchanting_table/structureProcessor/**'
@@ -95,11 +96,8 @@ sourceSets {
             if (!reiEnabled) {
                 exclude 'chiseled_enchanting_table/compat/rei/**'
             }
-            // P3 first establishes a client compile slice. Full UI/renderer migration is still parked.
-            //exclude 'chiseled_enchanting_table/gui/**'
-            // P7: renderer restored for floating book smoke path.
-            // exclude 'chiseled_enchanting_table/render/**'
-            //exclude 'chiseled_enchanting_table/utils/**'
+            // All client screens (table, grimoire, categorized config), row renderers, draw helpers
+            // and the block-entity book renderer compile cleanly on this line.
         }
     }
 }
@@ -127,6 +125,22 @@ dependencies {
         // REI ships both at runtime, so they are compile-time only here as well.
         compileOnly("me.shedaniel.cloth:basic-math:${project.rei_math_version}", toolchainPins)
         compileOnly("dev.architectury:architectury-fabric:${project.rei_architectury_version}", toolchainPins)
+    }
+}
+
+// Headless economy / configuration / network verification: plain JUnit platform, no Loom test
+// bootstrap (the suites only touch compiled data/DTO/mechanics/networking classes).
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
     }
 }
 
@@ -165,4 +179,14 @@ publishing {
             from components.java
         }
     }
+}
+
+// The isolated CI smoke test sends reload/stop through the real dedicated-server console.
+tasks.named('runServer', JavaExec).configure {
+    standardInput = System.in
+}
+
+// Compile-only Mod Menu API shim must not leak into either distributable.
+tasks.withType(Jar).configureEach {
+    exclude 'com/terraformersmc/**'
 }

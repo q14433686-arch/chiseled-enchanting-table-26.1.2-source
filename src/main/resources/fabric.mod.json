@@ -27,6 +27,9 @@
     ],
     "rei_client": [
       "chiseled_enchanting_table.compat.rei.ChiseledEnchantingReiPlugin"
+    ],
+    "modmenu": [
+      "chiseled_enchanting_table.compat.modmenu.ChiseledEnchantingModMenuPlugin"
     ]
   },
   "mixins": [
@@ -40,9 +43,10 @@
   },
   "suggests": {
     "jei": "*",
-    "rei": "*"
+    "rei": "*",
+    "modmenu": "*"
   },
   "custom": {
-    "chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.2. 1.0.3: JSON-driven chest / archaeology loot injection, worldgen-safe structure bookshelf replacement/fill (pure StructureBlockInfo fill + deferred server-thread facing pass), vanilla-anvil-style XP point deduction, restored vanilla enchanting-table book blocking, restored narrow anvil book+book same-level merge blocking, restored enchanted-book chiseled-bookshelf random-tick particles/sound, optional JEI & REI recipe-viewer integration, server-authoritative enchantment cost sync (S2C), and 11 locales with translatable book lore. Active mixins live in chiseled-enchanting-table-port.mixins.json. Still parked: broader anvil XP-cost tweak, Colorful Books integration, enchanted-book stack-size accessor. See CURRENT_BASELINE.md for the capability boundary and docs/EXTENDING.md for data-driven customisation entry points."
+    "chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.2. 1.1.0 layers the whole 26.1.2-line feature set on top of the 26.3-synced baseline: the progression/economy/UI overhaul (three-track 7x5x7 library, Library Resonance, dual-mode XP, yield-aware material curves, Treasure Epiphany with persistent freeze, Depleted Tome / Blank Overwrite, painted UI, bidirectional JEI/REI), the grimoire/cleanse batch (illustrated Arcane Grimoire manual, dual-tab Inscribe/Cleanse console, Cleansing Grit, curse purging), and the 26.3-line 'provenance & live configuration' batch ported here: EnchantmentProvenance (per-level paid-source tracking for fair refunds), MasterTomeWear (wear / keep / one-shot tome consumption with charge lore and depletion), categorized in-game configuration UI with search, sliders and parent/child linkage (/cet config, /cet reload-config, /cet reset-config, Mod Menu entry, table and grimoire entry points), player-specific unlock catalogs pushed every second, 12/32/38 shelf milestones with the cramped-library check, optional line-of-sight shelf filtering, configurable vanilla-table and anvil rules, and a protocol capability channel that refuses mismatched builds. 26.2-specific adaptations: ChatFormatting does not exist on this line, so every styled line uses Style#withColor(ARGB); Minecraft#setScreen/#screen live on Gui (gui.setScreen / gui.screen()); the 26.2 per-block codec, the 26.2 structure-processor API (interface + codec(), registered into BuiltInRegistries.STRUCTURE_PROCESSOR), ChunkAccess#markPosForPostProcessing, the two-argument LivingEntity#drop, the plural conditions[]/functions[] loot schema and the recipe_crafted 'recipe_id' criterion are kept, and the 26.2 GLFW mouse-button numbering is used in the custom screens. Viewers stay pinned to jei-26.2-fabric 30.47.0.239 / RoughlyEnoughItems-api-fabric 26.2.821; Mod Menu is a compile-only shim that is never bundled. See CURRENT_BASELINE.md, docs/reports/SYNC_FROM_26_1_2_SIDE_REPORT.md (sections 6-7) and docs/reports/SYNC_FROM_26_3_SIDE_REPORT.md for the change-by-change mapping and the version adaptations. The 2026-10-24 pass ports the 26.3 'rule architecture' batch (source 3e61f5d): one effective-rule generation (RuntimeRules/RuleBook + pack_policy.json governance), chest-style persistent table storage, bounded owner/session-bound inscription rituals with XP-sacrifice and force-rush skips, passive Master-Tome regeneration (24000/12000/3600 s at 38/42 broad shelves), depleted-tome chest loot / wild-shelf weathering / librarian trades, weighted epiphany, five advancements and 621 locale keys; the wire moves to 26_2_revision_6 with two legacy probes (the unversioned cost channel and 26_2_revision_5). 26.2 adaptations for this pass: 53 ChatFormatting sites became Style#withColor(ARGB), the new loot builders use ConstantValue instead of 26.3's ContextIntProviders, the new block-entity fields persist through ValueInput/ValueOutput, and the smoke fixtures keep the plural loot schema."
   }
 }

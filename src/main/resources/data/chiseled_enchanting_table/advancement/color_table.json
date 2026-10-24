@@ -6,8 +6,12 @@
         "minecraft:dyed_color": 8373791
       }
     },
-    "title": "I hate purple. What if I...",
-    "description": "Use a dye in hand to color a chiseled enchanting table.",
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.color_table.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.color_table.description"
+    },
     "frame": "task",
     "show_toast": true,
     "announce_to_chat": true,

@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "chiseled_enchanting_table:depleted_tome"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.haste_makes_waste.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.haste_makes_waste.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:unlock_new_enchant",
+  "criteria": {
+    "haste_makes_waste": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "haste_makes_waste"
+    ]
+  ],
+  "sends_telemetry_event": false
+}
