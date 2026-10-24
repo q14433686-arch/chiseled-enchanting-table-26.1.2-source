@@ -1180,7 +1180,7 @@ public final class GrimoireDiagramRenderer {
         // Audit GUI-03: drive decorative cycling from the game clock (Util.getMillis is
         // what vanilla GUI animations use) behind a named period constant instead of a
         // bare System.currentTimeMillis literal.
-        int idx = (int) (Math.floorMod(net.minecraft.Util.getMillis() / EXAMPLE_CYCLE_PERIOD_MS, distinct.size()));
+        int idx = (int) (Math.floorMod(net.minecraft.util.Util.getMillis() / EXAMPLE_CYCLE_PERIOD_MS, distinct.size()));
         return distinct.get(idx);
     }
 
