@@ -22,9 +22,9 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :configureLaunch
 
 > Task :runServer
-[14:50:38] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.1.2 with Fabric Loader 0.19.3
-[14:50:38] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[14:50:38] [main/INFO] (FabricLoader) Loading 43 mods:
+[14:52:28] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.1.2 with Fabric Loader 0.19.3
+[14:52:28] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[14:52:28] [main/INFO] (FabricLoader) Loading 43 mods:
 	- chiseled-enchanting-table 1.1.0
 	- fabric-api 0.151.0+26.1.2
 	   |-- fabric-key-mapping-api-v1 2.0.4+e2bdee784c
@@ -75,47 +75,47 @@ Note: Recompile with -Xlint:unchecked for details.
 	- java 25
 	- minecraft 26.1.2
 	- mixinextras 0.5.4
-[14:50:38] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[14:50:38] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[14:50:39] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[14:50:44] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
-[14:50:45] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[14:50:45] [Worker-Main-3/INFO] (Minecraft) No existing world data, creating new world
-[14:50:46] [main/INFO] (Minecraft) Loaded 1522 recipes
-[14:50:46] [main/INFO] (Minecraft) Loaded 1650 advancements
-[14:50:46] [main/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
-[14:50:47] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 1.321 ms
-[14:50:47] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.1.2
-[14:50:47] [Server thread/INFO] (Minecraft) Loading properties
-[14:50:47] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[14:50:47] [Server thread/INFO] (Minecraft) Generating keypair
-[14:50:47] [Server thread/INFO] (Minecraft) Starting Minecraft server on 127.0.0.1:0
-[14:50:47] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
-[14:50:47] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
-[14:50:47] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
-[14:50:47] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
-[14:50:47] [Server thread/INFO] (Minecraft) Preparing level "audit-world"
-[14:50:47] [Server thread/INFO] (Minecraft) Selecting global world spawn...
-[14:50:47] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[14:50:47] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[14:50:47] [Server thread/INFO] (Minecraft) Time elapsed: 388 ms
-[14:50:47] [Server thread/INFO] (Minecraft) Done (0.532s)! For help, type "help"
-[14:50:47] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
-[14:50:47] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
-[14:50:47] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
-[14:50:47] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[14:50:47] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[14:50:47] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[14:50:47] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-[14:50:47] [Server thread/INFO] (Minecraft) Reloading!
-[14:50:48] [Server thread/INFO] (Minecraft) Loaded 1522 recipes
-[14:50:48] [Server thread/INFO] (Minecraft) Loaded 1650 advancements
-[14:50:48] [Server thread/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
-[14:50:48] [Server thread/INFO] (Minecraft) Marked chunk [0, 0] in minecraft:overworld to be force loaded
-[14:50:48] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:spawn_table' in 20 tick(s) at gametime 21
-[14:50:48] [Server thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod chiseled-enchanting-table failed chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> net.minecraft.world.ContainerHelper: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zdi000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
+[14:52:28] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[14:52:28] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[14:52:29] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[14:52:33] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
+[14:52:33] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[14:52:34] [Worker-Main-1/INFO] (Minecraft) No existing world data, creating new world
+[14:52:35] [main/INFO] (Minecraft) Loaded 1522 recipes
+[14:52:35] [main/INFO] (Minecraft) Loaded 1650 advancements
+[14:52:35] [main/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
+[14:52:35] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 986.8 μs
+[14:52:35] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.1.2
+[14:52:35] [Server thread/INFO] (Minecraft) Loading properties
+[14:52:35] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[14:52:35] [Server thread/INFO] (Minecraft) Generating keypair
+[14:52:35] [Server thread/INFO] (Minecraft) Starting Minecraft server on 127.0.0.1:0
+[14:52:35] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[14:52:35] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
+[14:52:35] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[14:52:35] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
+[14:52:35] [Server thread/INFO] (Minecraft) Preparing level "audit-world"
+[14:52:35] [Server thread/INFO] (Minecraft) Selecting global world spawn...
+[14:52:36] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[14:52:36] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[14:52:36] [Server thread/INFO] (Minecraft) Time elapsed: 334 ms
+[14:52:36] [Server thread/INFO] (Minecraft) Done (0.439s)! For help, type "help"
+[14:52:36] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
+[14:52:36] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
+[14:52:36] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
+[14:52:36] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[14:52:36] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[14:52:36] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[14:52:36] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[14:52:36] [Server thread/INFO] (Minecraft) Reloading!
+[14:52:36] [Server thread/INFO] (Minecraft) Loaded 1522 recipes
+[14:52:36] [Server thread/INFO] (Minecraft) Loaded 1650 advancements
+[14:52:36] [Server thread/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
+[14:52:37] [Server thread/INFO] (Minecraft) Marked chunk [0, 0] in minecraft:overworld to be force loaded
+[14:52:37] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:spawn_table' in 20 tick(s) at gametime 36
+[14:52:38] [Server thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod chiseled-enchanting-table failed chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> net.minecraft.world.ContainerHelper: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zle000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
 
-org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zdi000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zle000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
 	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:346)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:369)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:340)
@@ -151,14 +151,14 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Crit
 	at knot//net.minecraft.server.commands.data.DataCommands.lambda$register$1(DataCommands.java:70)
 	at knot//com.mojang.brigadier.context.ContextChain.runExecutable$mixinextras$wrapped$10(ContextChain.java:73)
 	at knot//com.mojang.brigadier.context.ContextChain.mixinextras$bridge$runExecutable$mixinextras$wrapped$10$11(ContextChain.java)
-	at knot//com.mojang.brigadier.context.ContextChain.wrapMethod$zff000$fabric-entity-events-v1$onRunExecutable(ContextChain.java:1057)
+	at knot//com.mojang.brigadier.context.ContextChain.wrapMethod$zfp000$fabric-entity-events-v1$onRunExecutable(ContextChain.java:1057)
 	at knot//com.mojang.brigadier.context.ContextChain.runExecutable(ContextChain.java)
 	at knot//net.minecraft.commands.execution.tasks.ExecuteCommand.execute(ExecuteCommand.java:29)
 	at knot//net.minecraft.commands.execution.tasks.ExecuteCommand.execute(ExecuteCommand.java:13)
 	at knot//net.minecraft.commands.execution.UnboundEntryAction.lambda$bind$0(UnboundEntryAction.java:8)
 	at knot//net.minecraft.commands.execution.CommandQueueEntry.execute$mixinextras$wrapped$8(CommandQueueEntry.java:8)
 	at knot//net.minecraft.commands.execution.CommandQueueEntry.mixinextras$bridge$execute$mixinextras$wrapped$8$9(CommandQueueEntry.java)
-	at knot//net.minecraft.commands.execution.CommandQueueEntry.wrapMethod$zfe000$fabric-entity-events-v1$onExecute(CommandQueueEntry.java:549)
+	at knot//net.minecraft.commands.execution.CommandQueueEntry.wrapMethod$zfo000$fabric-entity-events-v1$onExecute(CommandQueueEntry.java:549)
 	at knot//net.minecraft.commands.execution.CommandQueueEntry.execute(CommandQueueEntry.java)
 	at knot//net.minecraft.commands.execution.ExecutionContext.runCommandQueue(ExecutionContext.java:106)
 	at knot//net.minecraft.commands.Commands.executeCommandInContext(Commands.java:432)
@@ -177,7 +177,7 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Crit
 	at knot//net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:774)
 	at knot//net.minecraft.server.MinecraftServer.lambda$spin$0(MinecraftServer.java:321)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[14:50:48] [Server thread/WARN] (Minecraft) Failed to execute function cet_audit_smoke:spawn_table
+[14:52:38] [Server thread/WARN] (Minecraft) Failed to execute function cet_audit_smoke:spawn_table
 
 java.lang.RuntimeException: Mixin transformation of net.minecraft.world.ContainerHelper failed
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:440)
@@ -194,14 +194,14 @@ java.lang.RuntimeException: Mixin transformation of net.minecraft.world.Containe
 	at knot//net.minecraft.server.commands.data.DataCommands.lambda$register$1(DataCommands.java:70)
 	at knot//com.mojang.brigadier.context.ContextChain.runExecutable$mixinextras$wrapped$10(ContextChain.java:73)
 	at knot//com.mojang.brigadier.context.ContextChain.mixinextras$bridge$runExecutable$mixinextras$wrapped$10$11(ContextChain.java)
-	at knot//com.mojang.brigadier.context.ContextChain.wrapMethod$zff000$fabric-entity-events-v1$onRunExecutable(ContextChain.java:1057)
+	at knot//com.mojang.brigadier.context.ContextChain.wrapMethod$zfp000$fabric-entity-events-v1$onRunExecutable(ContextChain.java:1057)
 	at knot//com.mojang.brigadier.context.ContextChain.runExecutable(ContextChain.java)
 	at knot//net.minecraft.commands.execution.tasks.ExecuteCommand.execute(ExecuteCommand.java:29)
 	at knot//net.minecraft.commands.execution.tasks.ExecuteCommand.execute(ExecuteCommand.java:13)
 	at knot//net.minecraft.commands.execution.UnboundEntryAction.lambda$bind$0(UnboundEntryAction.java:8)
 	at knot//net.minecraft.commands.execution.CommandQueueEntry.execute$mixinextras$wrapped$8(CommandQueueEntry.java:8)
 	at knot//net.minecraft.commands.execution.CommandQueueEntry.mixinextras$bridge$execute$mixinextras$wrapped$8$9(CommandQueueEntry.java)
-	at knot//net.minecraft.commands.execution.CommandQueueEntry.wrapMethod$zfe000$fabric-entity-events-v1$onExecute(CommandQueueEntry.java:549)
+	at knot//net.minecraft.commands.execution.CommandQueueEntry.wrapMethod$zfo000$fabric-entity-events-v1$onExecute(CommandQueueEntry.java:549)
 	at knot//net.minecraft.commands.execution.CommandQueueEntry.execute(CommandQueueEntry.java)
 	at knot//net.minecraft.commands.execution.ExecutionContext.runCommandQueue(ExecutionContext.java:106)
 	at knot//net.minecraft.commands.Commands.executeCommandInContext(Commands.java:432)
@@ -231,7 +231,7 @@ Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [chisel
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:636)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:367)
 	... 42 more
-Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zdi000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
+Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zle000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
 	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:346)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:369)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:340)
@@ -252,9 +252,13 @@ Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionExce
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
 	... 42 more
-[14:50:48] [Server thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod chiseled-enchanting-table failed chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> net.minecraft.world.ContainerHelper: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zdi000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
+[14:52:38] [Server thread/INFO] (Minecraft) Stopping the server
+[14:52:38] [Server thread/INFO] (Minecraft) Stopping server
+[14:52:38] [Server thread/INFO] (Minecraft) Saving players
+[14:52:38] [Server thread/INFO] (Minecraft) Saving worlds
+[14:52:38] [Server thread/ERROR] (FabricLoader/Mixin) Mixin apply for mod chiseled-enchanting-table failed chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> net.minecraft.world.ContainerHelper: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zle000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
 
-org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zdi000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zle000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
 	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:346)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:369)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:340)
@@ -288,20 +292,18 @@ org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Crit
 	at knot//net.minecraft.world.level.chunk.LevelChunk.getBlockEntityNbtForSaving(LevelChunk.java:466)
 	at knot//net.minecraft.world.level.chunk.storage.SerializableChunkData.copyOf(SerializableChunkData.java:370)
 	at knot//net.minecraft.server.level.ChunkMap.save(ChunkMap.java:799)
-	at knot//net.minecraft.server.level.ChunkMap.saveChunkIfNeeded(ChunkMap.java:764)
-	at knot//net.minecraft.server.level.ChunkMap.saveChunksEagerly(ChunkMap.java:533)
-	at knot//net.minecraft.server.level.ChunkMap.processUnloads(ChunkMap.java:509)
+	at knot//net.minecraft.server.level.ChunkMap.lambda$scheduleUnload$0(ChunkMap.java:557)
+	at java.base/java.util.concurrent.CompletableFuture$UniRun.tryFire(CompletableFuture.java:808)
+	at java.base/java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:503)
+	at knot//net.minecraft.server.level.ChunkMap.processUnloads(ChunkMap.java:506)
 	at knot//net.minecraft.server.level.ChunkMap.tick(ChunkMap.java:469)
 	at knot//net.minecraft.server.level.ServerChunkCache.tick(ServerChunkCache.java:322)
-	at knot//net.minecraft.server.level.ServerLevel.tick(ServerLevel.java:379)
-	at knot//net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:1138)
-	at knot//net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:1002)
-	at knot//net.minecraft.server.dedicated.DedicatedServer.tickServer(DedicatedServer.java:322)
-	at knot//net.minecraft.server.MinecraftServer.processPacketsAndTick(MinecraftServer.java:1035)
-	at knot//net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:774)
+	at knot//net.minecraft.server.MinecraftServer.stopServer(MinecraftServer.java:692)
+	at knot//net.minecraft.server.dedicated.DedicatedServer.stopServer(DedicatedServer.java:741)
+	at knot//net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:815)
 	at knot//net.minecraft.server.MinecraftServer.lambda$spin$0(MinecraftServer.java:321)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
-[14:50:48] [Server thread/ERROR] (Minecraft) Failed to save chunk 0,0
+[14:52:38] [Server thread/ERROR] (Minecraft) Failed to save chunk 0,0
 
 java.lang.RuntimeException: Mixin transformation of net.minecraft.world.ContainerHelper failed
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:440)
@@ -316,17 +318,15 @@ java.lang.RuntimeException: Mixin transformation of net.minecraft.world.Containe
 	at knot//net.minecraft.world.level.chunk.LevelChunk.getBlockEntityNbtForSaving(LevelChunk.java:466)
 	at knot//net.minecraft.world.level.chunk.storage.SerializableChunkData.copyOf(SerializableChunkData.java:370)
 	at knot//net.minecraft.server.level.ChunkMap.save(ChunkMap.java:799)
-	at knot//net.minecraft.server.level.ChunkMap.saveChunkIfNeeded(ChunkMap.java:764)
-	at knot//net.minecraft.server.level.ChunkMap.saveChunksEagerly(ChunkMap.java:533)
-	at knot//net.minecraft.server.level.ChunkMap.processUnloads(ChunkMap.java:509)
+	at knot//net.minecraft.server.level.ChunkMap.lambda$scheduleUnload$0(ChunkMap.java:557)
+	at java.base/java.util.concurrent.CompletableFuture$UniRun.tryFire(CompletableFuture.java:808)
+	at java.base/java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:503)
+	at knot//net.minecraft.server.level.ChunkMap.processUnloads(ChunkMap.java:506)
 	at knot//net.minecraft.server.level.ChunkMap.tick(ChunkMap.java:469)
 	at knot//net.minecraft.server.level.ServerChunkCache.tick(ServerChunkCache.java:322)
-	at knot//net.minecraft.server.level.ServerLevel.tick(ServerLevel.java:379)
-	at knot//net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:1138)
-	at knot//net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:1002)
-	at knot//net.minecraft.server.dedicated.DedicatedServer.tickServer(DedicatedServer.java:322)
-	at knot//net.minecraft.server.MinecraftServer.processPacketsAndTick(MinecraftServer.java:1035)
-	at knot//net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:774)
+	at knot//net.minecraft.server.MinecraftServer.stopServer(MinecraftServer.java:692)
+	at knot//net.minecraft.server.dedicated.DedicatedServer.stopServer(DedicatedServer.java:741)
+	at knot//net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:815)
 	at knot//net.minecraft.server.MinecraftServer.lambda$spin$0(MinecraftServer.java:321)
 	at java.base/java.lang.Thread.run(Thread.java:1474)
 Caused by: org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError: An unexpected critical error was encountered
@@ -334,13 +334,13 @@ Caused by: org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerEr
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
 	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
-	... 24 more
+	... 22 more
 Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table] from phase [DEFAULT] in config [chiseled-enchanting-table-port.mixins.json] FAILED during APPLY
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:685)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:636)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:367)
-	... 27 more
-Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zdi000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
+	... 25 more
+Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Critical injection failure: @Inject annotation on cet$blockLockedRemove could not find any targets matching 'removeItem(Lnet/minecraft/core/NonNullList;II)Lnet/minecraft/world/item/ItemStack;' in net/minecraft/world/ContainerHelper. No refMap loaded. [INJECT_PREPARE Applicator Phase -> chiseled-enchanting-table-port.mixins.json:bookshelf.LockedBookContainerMixin from mod chiseled-enchanting-table -> Prepare Injections -> handler$zle000$chiseled-enchanting-table$cet$blockLockedRemove(Lnet/minecraft/core/NonNullList;IILorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V -> Parse ->  -> Validate Targets]
 	at org.spongepowered.asm.mixin.injection.selectors.TargetSelectors.validate(TargetSelectors.java:346)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.readAnnotation(InjectionInfo.java:369)
 	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.<init>(InjectionInfo.java:340)
@@ -360,20 +360,16 @@ Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionExce
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
 	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
 	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
-	... 27 more
-[14:50:49] [Server thread/INFO] (Minecraft) Stopping the server
-[14:50:49] [Server thread/INFO] (Minecraft) Stopping server
-[14:50:49] [IO-Worker-6/INFO] (Minecraft) Saved details to debug/chunk-audit-world-2026-10-24_14.50.49-server.txt
-[14:50:49] [Server thread/INFO] (Minecraft) Saving players
-[14:50:49] [Server thread/INFO] (Minecraft) Saving worlds
-[14:50:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
-[14:50:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
-[14:50:49] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
-[14:50:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[14:50:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[14:50:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[14:50:49] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792853414927.json
+	... 25 more
+[14:52:38] [IO-Worker-8/INFO] (Minecraft) Saved details to debug/chunk-audit-world-2026-10-24_14.52.38-server.txt
+[14:52:38] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
+[14:52:38] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
+[14:52:38] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
+[14:52:38] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[14:52:38] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[14:52:38] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[14:52:38] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792853528840.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -383,6 +379,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 39s
+BUILD SUCCESSFUL in 34s
 5 actionable tasks: 5 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
