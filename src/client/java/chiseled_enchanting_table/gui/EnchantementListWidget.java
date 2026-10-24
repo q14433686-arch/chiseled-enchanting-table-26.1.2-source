@@ -1310,7 +1310,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 int dx = effectiveDx();
                 int dw = effectiveDw();
                 boolean selected = parent.isTomeSelected(this.tome_book);
-                RowRenderSupport.drawPlaque(ctx, client, dx, dy, dw, dh,
+                RowRenderSupport.drawPlaque(ctx, dx, dy, dw, dh,
                     RowRenderSupport.RowVisualStyle.STANDARD, true, hovered, isFocused || selected);
                 RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
                 try {
