@@ -16,6 +16,21 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > what was deliberately *not* taken because it is 26.3-only — is in
 > [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
 
+## [1.1.0] - 2026-10-24 (26.3 design-audit sync)
+
+- **26.3 audit batches backported** (per `docs/reports/SYNC_TO_26_1_2_2026_10_24.md`, executed in
+  `docs/reports/SYNC_FROM_26_3_DESIGN_AUDIT_BACKPORT_2026_10_24.md`): CET-001..015, data-driven
+  template wear (4/2) with wild pre-wear and Unbreaking ward, unified overloaded-Infinity crossline
+  system, batch 1A conservation, batch 2 usability, batch 3 protocol hardening, audit2 hygiene.
+- **Design-audit max package**: copy generation fading (`cet_generation`, effective cap
+  `max(1, maxUses - generation)`), essence scapegoat pricing (default on, datapack-switchable),
+  datapack-driven ritual WaitCurve, `#chiseled_enchanting_table:wear_immune` tag, peripheral
+  fresh-install defaults OFF (existing config files win), `grindstone_depleted_tome` switch
+  (ConfigCatalog 55 -> 57), single-source `BundledDefaults` code generation.
+- **Protocol**: wire revision `26_1_2_revision_10`; older revisions remain query-only probes so
+  outdated peers are disconnected politely at JOIN instead of failing on decode. Client and
+  server must both run this build.
+
 ## [1.1.0] - 2026-10-23
 
 ### Added — Illustrated In-Game Manual (`纂刻秘典` / `chiseled_enchanting_table:arcane_grimoire`)

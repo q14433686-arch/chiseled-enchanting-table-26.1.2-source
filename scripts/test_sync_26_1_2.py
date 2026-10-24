@@ -105,6 +105,26 @@ class SyncContracts26_1_2(unittest.TestCase):
         self.assertIn('MAX_QUEUE_STEPS = 256', ritual)
         self.assertIn('MAX_QUEUE_CHARACTERS = 32_000', ritual)
 
+    def test_design_audit_package_anchors(self):
+        self.assertTrue((MAIN / 'mechanics/resonance/TomeWearData.java').exists())
+        self.assertTrue((MAIN / 'BundledDefaults.java').exists())
+        self.assertTrue((MAIN / 'data/DataIds.java').exists())
+        self.assertTrue((MAIN / 'menu/EnchantingNetworking.java').exists())
+        self.assertTrue((MAIN / 'mechanics/enchanting/BookConversion.java').exists())
+        self.assertTrue((MAIN / 'mechanics/enchanting/InkStainLore.java').exists())
+        self.assertTrue((MAIN / 'mechanics/loot/ApplyWildBookWearFunction.java').exists())
+        wear = (MAIN / 'mechanics/resonance/TomeWearData.java').read_text()
+        self.assertIn('cet_generation', wear)
+        self.assertIn('computeOverflowNextWear', wear)
+        catalog = (MAIN / 'config/ConfigCatalog.java').read_text()
+        self.assertIn('grindstone_depleted_tome', catalog)
+        self.assertIn('restrict_villager_infinity_books', catalog)
+        tag = ROOT / 'src/main/resources/data/chiseled_enchanting_table/tags/enchantment/wear_immune.json'
+        self.assertTrue(tag.exists())
+        self.assertIn('minecraft:infinity', tag.read_text())
+        gen = ROOT / 'scripts/gen_bundled_defaults.py'
+        self.assertTrue(gen.exists())
+
     def test_audit_guards_authoritative_sync_and_input(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
         self.assertIn('26_1_2_revision_10', protocol)
