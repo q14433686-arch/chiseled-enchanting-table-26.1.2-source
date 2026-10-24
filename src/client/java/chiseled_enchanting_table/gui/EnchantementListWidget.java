@@ -137,6 +137,21 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         this.setScrollAmount(Math.min(savedScroll, this.maxScrollAmount()));
     }
 
+    @Override
+    protected int addEntry(EnchantUiEntry entry) {
+        entry.cachedRowIndex = this.children().size();
+        return super.addEntry(entry);
+    }
+
+    public static boolean isWearImmuneEnchantmentId(Identifier id, @Nullable Player player) {
+        if (id == null) {
+            return false;
+        }
+        return findEnchantment(id, player)
+            .map(chiseled_enchanting_table.mechanics.resonance.TomeWearData::isWearImmuneEnchantment)
+            .orElseGet(() -> chiseled_enchanting_table.mechanics.resonance.TomeWearData.INFINITY_ENCHANTMENT_ID.equals(id));
+    }
+
     public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Player player) {
         if (id == null || player == null) {
             return java.util.Optional.empty();
@@ -871,6 +886,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public ChiseledEnchantingTableScreenHandler handler;
         public EnchantementListWidget parent;
         public boolean is_tome_entry;
+        public int cachedRowIndex = -1;
         @Nullable
         public ChiseledEnchantingMenuPayloads.TomeBookEntry tome_book;
 
@@ -1201,6 +1217,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean serverSendApplyEnchant() {
+            return serverSendApplyEnchant(false);
+        }
+
+        public boolean serverSendApplyEnchant(boolean shiftBypass) {
             if (is_tome_entry) {
                 parent.selectTome(this.tome_book);
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
@@ -1214,8 +1234,15 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 return true;
             }
             if (!this.canEnchant()) return false;
+            if (option_type == OptionType.DISENCHANT_ALL
+                && Minecraft.getInstance().screen instanceof ChiseledEnchantingTableScreen tableScreen) {
+                tableScreen.requestDisenchantAll(shiftBypass);
+                return true;
+            }
             if (ClientPlayNetworking.canSend(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID)) {
                 ClientPlayNetworking.send(new ApplyEnchantmentPayload(handler.containerId, option_type, enchantment_id, enchant_level));
+            } else {
+                ChiseledEnchantingTableScreen.notifyChannelUnavailableClient();
             }
             return true;
         }
@@ -1228,12 +1255,20 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
                 return false;
             }
-            return serverSendApplyEnchant();
+            return serverSendApplyEnchant(event.hasShiftDown());
         }
 
         @Override
         public boolean isMouseOver(double mouseX, double mouseY) {
-            int index = parent.children().indexOf(this);
+            int index = this.cachedRowIndex;
+            var rows = parent.children();
+            if (index < 0 || index >= rows.size() || rows.get(index) != this) {
+                index = rows.indexOf(this);
+                this.cachedRowIndex = index;
+            }
+            if (index < 0) {
+                return false;
+            }
             int top = parent.getRowTop(index);
             int bottom = parent.getRowBottom(index);
             int left = parent.getRowLeft();
@@ -1253,6 +1288,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 );
             }
             if (option_type == OptionType.DISENCHANT_ALL) {
+                if (Minecraft.getInstance().screen instanceof ChiseledEnchantingTableScreen tableScreen
+                    && tableScreen.isDisenchantAllConfirmPending()) {
+                    return new EnchantmentRowRenderer.OverrideAnnotation(
+                        I18n.get("gui.chiseled_enchanting_table.cleanse.confirm_row_sub"),
+                        RowRenderSupport.EPIPHANY_GOLD
+                    );
+                }
                 String sub = enchantable_item.is(Items.ENCHANTED_BOOK)
                     ? I18n.get("gui.chiseled_enchanting_table.cleanse.all_sub_book")
                     : I18n.get("gui.chiseled_enchanting_table.cleanse.all_sub_item");
@@ -1317,19 +1359,19 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     String title = tomeTitle(this.tome_book, this.player);
                     RowRenderSupport.renderBoundedText(ctx, client, title, dx + 7, dy + 5, 0.62f, dw - 14,
                         this.tome_book.locked() ? 0xFFFFC46B : 0xFFF7F2EA);
-                    // Round 4: a book carrying minecraft:infinity shows its Infinity
-                    // identity exactly like the item tooltip (never a durability count).
-                    boolean hasInfinity = this.tome_book.enchantments().stream().anyMatch(e ->
-                        chiseled_enchanting_table.mechanics.resonance.TomeWearData
-                            .INFINITY_ENCHANTMENT_ID.equals(e.enchantment_id()));
-                    String charge = hasInfinity
+                    boolean hasWearImmuneTag = this.tome_book.enchantments().stream()
+                        .anyMatch(e -> isWearImmuneEnchantmentId(e.enchantment_id(), this.player));
+                    boolean purelyImmune = this.tome_book.wear_immune()
+                        && this.tome_book.wear_used() <= 0
+                        && this.tome_book.remaining_charges() >= this.tome_book.effective_max_uses();
+                    String charge = (hasWearImmuneTag && purelyImmune)
                         ? I18n.get("item.chiseled_enchanting_table.master_tome_infinite")
-                        : this.tome_book.wear_immune()
+                        : (this.tome_book.wear_immune() && purelyImmune)
                             ? I18n.get("gui.chiseled_enchanting_table.tomes.immune")
                             : I18n.get("gui.chiseled_enchanting_table.tomes.charges",
                                 this.tome_book.remaining_charges(), this.tome_book.effective_max_uses());
-                    int chargeColor = hasInfinity ? 0xFFFF55FF : 0xFF9ED8FF;
-                    if (!hasInfinity && this.tome_book.generation() > 0) {
+                    int chargeColor = this.tome_book.wear_immune() ? 0xFFFF55FF : 0xFF9ED8FF;
+                    if (this.tome_book.generation() > 0) {
                         charge += "  " + I18n.get("gui.chiseled_enchanting_table.tomes.generation", this.tome_book.generation());
                     }
                     RowRenderSupport.renderBoundedText(ctx, client, charge, dx + 7, dy + 11, 0.52f, dw - 14, chargeColor);

@@ -35,6 +35,10 @@ public final class BundledDefaults {
     public static final int BOOK_COPY_WEAR_COST = 2;
     public static final double UNBREAKING_WAIVER_PER_LEVEL = 0.1;
     public static final double UNBREAKING_WAIVER_MAX_CHANCE = 0.3;
+    public static final double MAX_MASTERY_UNITS_PER_SLOT = 3.5;
+    public static final int WEAR_IMMUNE_MAX_GENERATION = 2;
+    public static final int WEAR_IMMUNE_FULL_WAIVER_MAX_ENCHANTS = 4;
+    public static final double WEAR_IMMUNE_OVERLOAD_WAIVER_DECAY = 0.06;
     public static final String TOME_DEPLETE_BEHAVIOR = "step_down";
     public static final boolean TOME_REGEN_ENABLED = true;
     public static final int TOME_REGEN_BASE_SECONDS = 7200;
@@ -74,9 +78,12 @@ public final class BundledDefaults {
     public static final int MAX_SINGLE_WAIT_SECONDS = 300;
     public static final int MIN_TOME_ENCHANTS_FOR_WAIT = 10;
     public static final int MAX_SACRIFICE_XP_LEVELS = 15;
+    public static final int SACRIFICE_EXTRA_XP_PER_QUEUED_STEP = 4;
+    public static final double SACRIFICE_XP_TIME_CONSTANT_SECONDS = 240.0;
     public static final double MAX_RUSH_DEGRADE_NORMAL = 0.5;
     public static final double MAX_RUSH_DEGRADE_INFINITY = 0.7;
-    public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = 0.18;
+    public static final double RUSH_DEGRADE_TIME_CONSTANT_SECONDS = 210.0;
+    public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = 0.25;
     public static final double SHELF_LOAD_REFERENCE = 42.0;
     public static final double TOME_LOAD_REFERENCE = 22.0;
 
@@ -92,7 +99,7 @@ public final class BundledDefaults {
     // ---- library_resonance.json / crossline_slip ----
     public static final double CROSSLINE_MIN_LOAD_THRESHOLD = 3.0;
     public static final double CROSSLINE_PER_LOAD_SLOPE = 0.035;
-    public static final double CROSSLINE_MAX_SLIP_CHANCE = 0.18;
+    public static final double CROSSLINE_MAX_SLIP_CHANCE = 0.25;
     public static final int CROSSLINE_SHELF_TIER1_COUNT = 32;
     public static final double CROSSLINE_SHELF_TIER1_BONUS = 0.01;
     public static final int CROSSLINE_SHELF_TIER2_COUNT = 38;

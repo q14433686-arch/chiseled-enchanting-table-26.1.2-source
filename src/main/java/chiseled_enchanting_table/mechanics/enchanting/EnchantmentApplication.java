@@ -142,13 +142,18 @@ public final class EnchantmentApplication {
             tablePos,
             shelfCfg
         );
-        // Iron Rule #2: bind Infinity flag AND qualification load L strictly to the exact Master Tome consumed by THIS step!
+        // Iron Rule #2: bind wear-immunity flag AND qualification load L (max of chosen tome load
+        // and library-wide Sigma L across active wear-immune Master Tomes) to this step!
         boolean usedInfinityTome = masterTomeUsed && resolvedWear.usedInfinityTome();
-        double infinityTomeLoad = usedInfinityTome
+        double singleTomeLoad = usedInfinityTome
             ? chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeInfinityTomeQualificationLoad(
                 handler.ritualConfig(),
+                handler.libraryResonanceConfig(),
                 resolvedWear.chosenTomeSnapshot()
             )
+            : 0.0;
+        double infinityTomeLoad = usedInfinityTome
+            ? Math.max(singleTomeLoad, ritualScan.totalWearImmuneLoad())
             : 0.0;
         int maxLvl = Math.max(1, enchantment.value().getMaxLevel());
         double appFactor = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeApplicabilityFactor(
@@ -280,7 +285,9 @@ public final class EnchantmentApplication {
         }
 
         finish(handler);
-        if (masterTomeUsed && MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(payload.enchantment_id())) {
+        if (masterTomeUsed
+            && (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(payload.enchantment_id())
+                || chiseled_enchanting_table.mechanics.resonance.TomeWearData.isWearImmuneEnchantment(enchantment))) {
             Advancement.give(handler.player, "eternal_codex");
         }
         if (consumedEpiphany) {

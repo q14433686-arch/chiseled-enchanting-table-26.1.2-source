@@ -438,6 +438,10 @@ public record EnchantCostTablePayload(
         buf.writeVarInt(lr.earlyUnlockGritCount());
         buf.writeVarInt(lr.sacrificeRequired());
         buf.writeVarInt(lr.tomePageRequiredShelves());
+        buf.writeDouble(lr.maxMasteryUnitsPerSlot());
+        buf.writeVarInt(lr.wearImmuneMaxGeneration());
+        buf.writeVarInt(lr.wearImmuneFullWaiverMaxEnchants());
+        buf.writeDouble(lr.wearImmuneOverloadWaiverDecay());
 
         var rc = ritualConfig == null ? InscriptionRitualMechanics.Config.DEFAULT : ritualConfig;
         buf.writeVarInt(rc.maxSingleWaitSeconds());
@@ -448,6 +452,9 @@ public record EnchantCostTablePayload(
         buf.writeDouble(rc.maxTranscriptionSlipChance());
         buf.writeDouble(rc.shelfLoadReference());
         buf.writeDouble(rc.tomeLoadReference());
+        buf.writeVarInt(rc.sacrificeExtraXpPerQueuedStep());
+        buf.writeDouble(rc.sacrificeXpTimeConstantSeconds());
+        buf.writeDouble(rc.rushDegradeTimeConstantSeconds());
         var cs = rc.crosslineSlip();
         buf.writeDouble(cs.minLoadThreshold());
         buf.writeDouble(cs.perLoadSlope());
@@ -628,13 +635,18 @@ public record EnchantCostTablePayload(
         int lrEarlyGrit = buf.readVarInt();
         int lrSacrificeReq = buf.readVarInt();
         int lrTomeShelves = buf.readVarInt();
+        double lrMaxMasterySlot = buf.readDouble();
+        int lrWearMaxGen = buf.readVarInt();
+        int lrWearFullEnch = buf.readVarInt();
+        double lrWearDecay = buf.readDouble();
 
         var lrConfig = new LibraryResonance.Config(
             lr0, lr1, lr2, lr3, lr4, lr5, lr6, lr7, lr8, lr9, lr10, lr11, lr12,
             lr13, lr14, lr15, lr16, lr17, lr18, lr19, lr20, lr21, lr22, lr23, lr24,
             lrMode, lrMtu, lrBcwc, lrDep, lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec,
             lrUnbPerLvl, lrUnbMax, lrWildEn, lrWildWeights, lrScapegoat,
-            lrShelfBreakable, lrExtractionBlocked, lrEarlyXp, lrEarlyGrit, lrSacrificeReq, lrTomeShelves
+            lrShelfBreakable, lrExtractionBlocked, lrEarlyXp, lrEarlyGrit, lrSacrificeReq, lrTomeShelves,
+            lrMaxMasterySlot, lrWearMaxGen, lrWearFullEnch, lrWearDecay
         );
 
         int rcMaxWait = buf.readVarInt();
@@ -645,6 +657,9 @@ public record EnchantCostTablePayload(
         double rcSlipCap = buf.readDouble();
         double rcShelfRef = buf.readDouble();
         double rcTomeRef = buf.readDouble();
+        int rcExtraSacPerStep = buf.readVarInt();
+        double rcSacTau = buf.readDouble();
+        double rcRushTau = buf.readDouble();
         var csConfig = new InscriptionRitualMechanics.CrosslineSlipConfig(
             buf.readDouble(),
             buf.readDouble(),
@@ -682,7 +697,8 @@ public record EnchantCostTablePayload(
             buf.readVarInt()
         );
         var rcConfig = new InscriptionRitualMechanics.Config(
-            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef, csConfig, wcConfig
+            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef, csConfig, wcConfig,
+            rcExtraSacPerStep, rcSacTau, rcRushTau
         );
 
         int rowCount = PayloadLimits.readCount(buf);

@@ -16,6 +16,24 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > what was deliberately *not* taken because it is 26.3-only — is in
 > [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
 
+## [1.1.0] - 2026-10-25 (Code Audit & Balance Remediation)
+
+- **Infinity / `#wear_immune` Balance Overhaul (`curve_sum_gen`)**:
+  - Continuous wear-immunity curve by single-tome non-curse enchantment count (`100%` at `N <= 4`, `-6%` per extra enchantment down to `unbreaking_waiver_max_chance = 30%`);
+  - Library-wide `ΣL` overload transcription-slip load aggregated across all active wear-immune Master Tomes in scan range (closing the split-book loophole), capped at `25%` (`0.25`);
+  - Copy generation cap (`wear_immune_max_generation = 2`): copies at `Gen >= 3` lose wear-immunity privilege and revert to normal wear/Unbreaking mechanics;
+  - Unified `#chiseled_enchanting_table:wear_immune` across wear waiver, overload load scoring, villager offer sanitization, rush-skip cap, `eternal_codex`, and UI tooltips.
+- **Bookshelf Taxonomy, World Regen & Mastery Spread (`fast_non_empty`, `slot_spread_and_queue_scale`)**:
+  - Empty Chiseled Bookshelves (`0` books in all 6 slots) no longer count toward broad bookshelves `S_广义`; occupied chiseled shelves (`>= 1` book/remnant) continue to count;
+  - Kept passive tome regeneration schedule at `7200s / 3600s / 1200s` (`6d -> 38 shelves 3d -> 42 shelves 1d`), resolved wear via `TomeWearData.getWearUsed`, clamped scan volume, and synced `docs/WIKI.md`;
+  - Added `max_mastery_units_per_slot = 4.0` so maxing global `-20%` mastery XP discount requires spreading enchantments across multiple stored tome slots;
+  - Scaled ritual XP sacrifice skip cap with queued step count (`+4L/step` up to `45L`), prioritized active-ritual-backing tomes on rush degradation, and data-drove `240s` / `210s` ritual curve constants in `library_resonance.json`.
+- **UX, Tome Lock Lifecycle, Networking & Hygiene (`confirm_hud_clear_lock`, `26_1_2_revision_15`)**:
+  - Added 5-second 2nd-click confirmation (or `Shift`+click immediate bypass) on `DISENCHANT_ALL` for Enchanted Books with `>= 3` non-curse enchantments or wear immunity;
+  - Added persistent compact `W / S` bookshelf count + next-tier progress bar badge in the `ChiseledEnchantingTableScreen` header bar with full hover breakdown;
+  - Scoped `LockedBookContainerMixin` to `ChiseledBookShelfBlockEntity`, fixed server-side config lookup in `TomeLockGuards`, and auto-cleared tome locks on broken shelves (`AddRandomTick#affectNeighborsAfterRemoval` & `PlayerBlockBreakEvents.BEFORE`) and table slot insertion;
+  - Bumped wire protocol to `26_1_2_revision_15`, added `LEGACY_APPLY_PROBES` (`9..14`), `Capability(enchantedBookStackSize)` mismatch check, localized disconnect reasons, 20-tick lightweight `SyncTransformationStatePayload` delta sync, `canInteractWithBlock` & per-tick apply burst guard, side-isolated anvil config reads, fail-safe zero-refund reload fallback, `O(1)` `cachedRowIndex` in `EnchantementListWidget`, `fabric-api >=0.151.0`, and deleted dead `ModBootstrapConfig`.
+
 ## [1.1.0] - 2026-10-24 (26.3 design-audit sync)
 
 - **26.3 audit batches backported** (per `docs/reports/SYNC_TO_26_1_2_2026_10_24.md`, executed in

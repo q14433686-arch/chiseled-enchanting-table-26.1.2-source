@@ -1252,15 +1252,15 @@ class EconomyAndConfigVerificationTest {
         for (int totalEnch = 5; totalEnch <= 9; totalEnch++) {
             double c = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeTranscriptionSlipChance(totalEnch, 35);
-            assertTrue(c >= prevE && c > 0.0 && c <= 0.18 + 1e-9);
+            assertTrue(c >= prevE && c > 0.0 && c <= 0.25 + 1e-9);
             prevE = c;
         }
         assertEquals(
-            0.18,
+            0.25,
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeTranscriptionSlipChance(12, 100),
             1e-9,
-            "Maximum transcription slip probability must never exceed 18%"
+            "Maximum transcription slip probability must never exceed 25%"
         );
         int slipped = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .resolveTranscribedLevel(5, 6, 0.15, 0.05, 0.80);
@@ -1451,7 +1451,8 @@ class EconomyAndConfigVerificationTest {
 
         assertFalse(nonShelf.isBroadBookshelf());
         assertTrue(regularShelf.isBroadBookshelf() && regularShelf.isRegularBookshelf() && !regularShelf.providesMasterTomeResonance());
-        assertTrue(emptyChiseled.isBroadBookshelf() && !emptyChiseled.isRegularBookshelf() && !emptyChiseled.providesMasterTomeResonance());
+        assertFalse(emptyChiseled.isBroadBookshelf(), "Empty chiseled bookshelf (0 books) must NOT count toward broad bookshelves");
+        assertTrue(!emptyChiseled.isRegularBookshelf() && !emptyChiseled.providesMasterTomeResonance());
         // Chiseled bookshelf holding a Depleted Tome (or plain book) MUST be treated as a Broad Bookshelf (not a Master Tome)
         assertTrue(depletedOrPlainChiseled.isBroadBookshelf());
         assertFalse(depletedOrPlainChiseled.isRegularBookshelf());
@@ -1459,7 +1460,7 @@ class EconomyAndConfigVerificationTest {
         assertTrue(masterTomeChiseled.isBroadBookshelf() && masterTomeChiseled.providesMasterTomeResonance());
 
         assertEquals(
-            40,
+            38,
             chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.computeBroadBookshelfCount(32, 2, 6)
         );
 
@@ -1715,10 +1716,10 @@ class EconomyAndConfigVerificationTest {
         assertEquals(0.170, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 42), 1e-9);
 
         assertEquals(0.175, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 20), 1e-9);
-        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 32), 1e-9);
-        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 38), 1e-9);
-        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 42), 1e-9);
-        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 12.0, 64), 1e-9);
+        assertEquals(0.185, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 32), 1e-9);
+        assertEquals(0.195, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 38), 1e-9);
+        assertEquals(0.205, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 42), 1e-9);
+        assertEquals(0.250, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 12.0, 64), 1e-9);
 
         // 5. Single-roll 3-outcome split: 70% TIER_DROP / 25% JUNK_CROSSLINE / 5% CURSE_CROSSLINE
         assertEquals(

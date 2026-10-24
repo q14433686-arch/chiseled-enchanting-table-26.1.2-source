@@ -33,6 +33,7 @@ public final class ChiseledEnchantingMenuPayloads {
     public static final Identifier SKIP_RITUAL_PACKET_ID = ChiseledEnchantingTable.identifier("skip_ritual_" + EnchantingProtocol.REVISION);
     public static final Identifier SYNC_RITUAL_STATE_PACKET_ID = ChiseledEnchantingTable.identifier("sync_ritual_state_" + EnchantingProtocol.REVISION);
     public static final Identifier TOME_PAGE_ACTION_PACKET_ID = ChiseledEnchantingTable.identifier("tome_page_action_" + EnchantingProtocol.REVISION);
+    public static final Identifier SYNC_TRANSFORMATION_STATE_PACKET_ID = ChiseledEnchantingTable.identifier("sync_transformation_state_" + EnchantingProtocol.REVISION);
 
     public enum OptionType {
         ENCHANTMENT("enchantment"),
@@ -122,12 +123,54 @@ public final class ChiseledEnchantingMenuPayloads {
         boolean tome_page_unlocked,
         int sacrifice_progress,
         int sacrifice_required,
-        int tome_page_required_shelves
+        int tome_page_required_shelves,
+        double effective_mastery_units
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_PAYLOAD_ID =
             new CustomPacketPayload.Type<>(AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_CODEC =
             CustomPacketPayload.codec(AvailableEnchantmentPayload::write, AvailableEnchantmentPayload::read);
+
+        public AvailableEnchantmentPayload(
+            Set<EnchantmentWithLevel> unlocked_enchantements,
+            List<TransformationDisplay> transformations,
+            int xp_discount_percent,
+            int regular_bookshelves,
+            int chiseled_book_count,
+            int high_tier_chiseled_books,
+            int epiphany_seed,
+            Map<Identifier, Integer> stored_master_levels,
+            boolean cramped_library,
+            int chiseled_bookshelves,
+            int empty_chiseled_bookshelves,
+            Map<EnchantmentWithLevel, Integer> master_tome_charges,
+            boolean cleanse_unlocked,
+            boolean tome_page_unlocked,
+            int sacrifice_progress,
+            int sacrifice_required,
+            int tome_page_required_shelves
+        ) {
+            this(
+                unlocked_enchantements,
+                transformations,
+                xp_discount_percent,
+                regular_bookshelves,
+                chiseled_book_count,
+                high_tier_chiseled_books,
+                epiphany_seed,
+                stored_master_levels,
+                cramped_library,
+                chiseled_bookshelves,
+                empty_chiseled_bookshelves,
+                master_tome_charges,
+                cleanse_unlocked,
+                tome_page_unlocked,
+                sacrifice_progress,
+                sacrifice_required,
+                tome_page_required_shelves,
+                -1.0
+            );
+        }
 
         public AvailableEnchantmentPayload(Set<EnchantmentWithLevel> unlocked, List<TransformationDisplay> transforms,
             int discount, int regular, int books, int high, int seed, Map<Identifier,Integer> masters, boolean cramped) {
@@ -286,7 +329,52 @@ public final class ChiseledEnchantingMenuPayloads {
                 Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
                     .libraryResonanceConfig().sacrificeRequired()),
                 Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
-                    .libraryResonanceConfig().tomePageRequiredShelves())
+                    .libraryResonanceConfig().tomePageRequiredShelves()),
+                -1.0
+            );
+        }
+
+        public AvailableEnchantmentPayload(
+            Set<EnchantmentWithLevel> unlocked_enchantements,
+            int xp_discount_percent,
+            int regular_bookshelves,
+            int chiseled_book_count,
+            int high_tier_chiseled_books,
+            int epiphany_seed,
+            Map<Identifier, Integer> stored_master_levels,
+            boolean cramped_library,
+            int chiseled_bookshelves,
+            int empty_chiseled_bookshelves,
+            Map<EnchantmentWithLevel, Integer> master_tome_charges,
+            double effective_mastery_units,
+            @Nullable Player player
+        ) {
+            this(
+                unlocked_enchantements,
+                buildTransformationDisplays(player),
+                xp_discount_percent,
+                regular_bookshelves,
+                chiseled_book_count,
+                high_tier_chiseled_books,
+                epiphany_seed,
+                stored_master_levels,
+                cramped_library,
+                chiseled_bookshelves,
+                empty_chiseled_bookshelves,
+                master_tome_charges == null ? Map.of() : Map.copyOf(master_tome_charges),
+                cleanseUnlockedFor(player),
+                player instanceof net.minecraft.server.level.ServerPlayer serverPlayer2
+                    && chiseled_enchanting_table.utils.Advancement.hasCompleted(
+                        serverPlayer2, chiseled_enchanting_table.utils.Advancement.HOW_MUCH_LONGER),
+                player instanceof net.minecraft.server.level.ServerPlayer serverPlayer3
+                    ? chiseled_enchanting_table.utils.Advancement.completedCriteria(
+                        serverPlayer3, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)
+                    : 0,
+                Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
+                    .libraryResonanceConfig().sacrificeRequired()),
+                Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
+                    .libraryResonanceConfig().tomePageRequiredShelves()),
+                effective_mastery_units
             );
         }
 
@@ -356,6 +444,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(Math.max(0, sacrifice_progress));
             buf.writeVarInt(Math.max(1, sacrifice_required));
             buf.writeVarInt(Math.max(1, tome_page_required_shelves));
+            buf.writeDouble(Double.isFinite(effective_mastery_units) ? effective_mastery_units : -1.0);
         }
 
         private static AvailableEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
@@ -390,6 +479,10 @@ public final class ChiseledEnchantingMenuPayloads {
             int sacrificeProgressValue = buf.readVarInt();
             int sacrificeRequiredValue = buf.readVarInt();
             int tomePageRequiredShelvesValue = buf.readVarInt();
+            double effectiveMasteryUnits = buf.readDouble();
+            if (!Double.isFinite(effectiveMasteryUnits)) {
+                effectiveMasteryUnits = -1.0;
+            }
             return new AvailableEnchantmentPayload(
                 unlocked,
                 transformations,
@@ -407,7 +500,8 @@ public final class ChiseledEnchantingMenuPayloads {
                 tomePageUnlocked,
                 sacrificeProgressValue,
                 sacrificeRequiredValue,
-                tomePageRequiredShelvesValue
+                tomePageRequiredShelvesValue,
+                effectiveMasteryUnits
             );
         }
 
@@ -556,7 +650,8 @@ public final class ChiseledEnchantingMenuPayloads {
         int regen_tier,
         int next_regen_tier_gap,
         int regen_interval_ticks,
-        List<TomeBookEntry> tome_books
+        List<TomeBookEntry> tome_books,
+        double effective_mastery_units
     ) implements CustomPacketPayload {
         public LiveShelfStatePayload {
             tome_books = tome_books == null ? List.of() : List.copyOf(tome_books.subList(0, Math.min(PayloadLimits.MAX_TOME_BOOK_ENTRIES, tome_books.size())));
@@ -568,10 +663,61 @@ public final class ChiseledEnchantingMenuPayloads {
         public static final StreamCodec<RegistryFriendlyByteBuf, LiveShelfStatePayload> CODEC =
             CustomPacketPayload.codec(LiveShelfStatePayload::write, LiveShelfStatePayload::read);
 
+        public LiveShelfStatePayload(
+            int container_id,
+            Set<EnchantmentWithLevel> unlocked_enchantements,
+            int xp_discount_percent,
+            int regular_bookshelves,
+            int chiseled_book_count,
+            int high_tier_chiseled_books,
+            Map<Identifier, Integer> stored_master_levels,
+            boolean cramped_library,
+            int chiseled_bookshelves,
+            int empty_chiseled_bookshelves,
+            Map<EnchantmentWithLevel, Integer> master_tome_charges,
+            boolean cleanse_unlocked,
+            boolean tome_page_unlocked,
+            int sacrifice_progress,
+            int sacrifice_required,
+            int qualifying_enchanted_bookshelves,
+            int tome_page_required_shelves,
+            int total_library_bookshelves,
+            int regen_tier,
+            int next_regen_tier_gap,
+            int regen_interval_ticks,
+            List<TomeBookEntry> tome_books
+        ) {
+            this(
+                container_id,
+                unlocked_enchantements,
+                xp_discount_percent,
+                regular_bookshelves,
+                chiseled_book_count,
+                high_tier_chiseled_books,
+                stored_master_levels,
+                cramped_library,
+                chiseled_bookshelves,
+                empty_chiseled_bookshelves,
+                master_tome_charges,
+                cleanse_unlocked,
+                tome_page_unlocked,
+                sacrifice_progress,
+                sacrifice_required,
+                qualifying_enchanted_bookshelves,
+                tome_page_required_shelves,
+                total_library_bookshelves,
+                regen_tier,
+                next_regen_tier_gap,
+                regen_interval_ticks,
+                tome_books,
+                -1.0
+            );
+        }
+
         public LiveShelfStatePayload(int containerId, Set<EnchantmentWithLevel> unlocked, int discount, int regular,
             int books, int high, Map<Identifier, Integer> masters, boolean cramped) {
             this(containerId, unlocked, discount, regular, books, high, masters, cramped, 0, 0, Map.of(),
-                false, false, 0, 12, 0, 4, 0, 0, 0, -1, List.of());
+                false, false, 0, 12, 0, 4, 0, 0, 0, -1, List.of(), -1.0);
         }
 
         /** Revision-10-shaped constructor retained for existing callers and codec tests. */
@@ -581,7 +727,7 @@ public final class ChiseledEnchantingMenuPayloads {
             Map<EnchantmentWithLevel, Integer> masterTomeCharges) {
             this(containerId, unlocked, discount, regular, books, high, masters, cramped,
                 chiseledBookshelves, emptyChiseledBookshelves, masterTomeCharges,
-                false, false, 0, 12, 0, 4, 0, 0, 0, -1, List.of());
+                false, false, 0, 12, 0, 4, 0, 0, 0, -1, List.of(), -1.0);
         }
 
         public boolean targets(int containerId) {
@@ -627,6 +773,7 @@ public final class ChiseledEnchantingMenuPayloads {
             for (TomeBookEntry entry : tome_books) {
                 entry.write(buf);
             }
+            buf.writeDouble(Double.isFinite(effective_mastery_units) ? effective_mastery_units : -1.0);
         }
 
         private static LiveShelfStatePayload read(RegistryFriendlyByteBuf buf) {
@@ -666,6 +813,10 @@ public final class ChiseledEnchantingMenuPayloads {
             for (int i = 0; i < tomeCount; i++) {
                 tomeBooks.add(TomeBookEntry.read(buf));
             }
+            double effectiveMasteryUnits = buf.readDouble();
+            if (!Double.isFinite(effectiveMasteryUnits)) {
+                effectiveMasteryUnits = -1.0;
+            }
             return new LiveShelfStatePayload(
                 containerId,
                 unlocked,
@@ -688,7 +839,8 @@ public final class ChiseledEnchantingMenuPayloads {
                 regenTier,
                 regenGap,
                 regenInterval,
-                tomeBooks
+                tomeBooks,
+                effectiveMasteryUnits
             );
         }
 
@@ -976,6 +1128,49 @@ public final class ChiseledEnchantingMenuPayloads {
             boolean tome = buf.readBoolean();
             boolean blocked = buf.readBoolean();
             return new SyncRitualStatePayload(containerId, session, List.copyOf(list), inf, tome, blocked);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record SyncTransformationStatePayload(
+        int containerId,
+        List<TransformationDisplay> transformations
+    ) implements CustomPacketPayload {
+        public SyncTransformationStatePayload {
+            transformations = transformations == null
+                ? List.of()
+                : List.copyOf(transformations.subList(0, Math.min(PayloadLimits.MAX_COLLECTION_ENTRIES, transformations.size())));
+        }
+
+        public static final CustomPacketPayload.Type<SyncTransformationStatePayload> TYPE =
+            new CustomPacketPayload.Type<>(SYNC_TRANSFORMATION_STATE_PACKET_ID);
+        public static final StreamCodec<RegistryFriendlyByteBuf, SyncTransformationStatePayload> CODEC =
+            CustomPacketPayload.codec(SyncTransformationStatePayload::write, SyncTransformationStatePayload::read);
+
+        public boolean targets(int activeContainerId) {
+            return activeContainerId > 0 && this.containerId == activeContainerId;
+        }
+
+        private void write(RegistryFriendlyByteBuf buf) {
+            buf.writeVarInt(containerId);
+            PayloadLimits.writeBoundedCount(buf, transformations.size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
+            for (TransformationDisplay value : transformations) {
+                TransformationDisplay.write(buf, value);
+            }
+        }
+
+        private static SyncTransformationStatePayload read(RegistryFriendlyByteBuf buf) {
+            int containerId = buf.readVarInt();
+            int size = PayloadLimits.readCount(buf);
+            List<TransformationDisplay> displays = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                displays.add(TransformationDisplay.read(buf));
+            }
+            return new SyncTransformationStatePayload(containerId, List.copyOf(displays));
         }
 
         @Override

@@ -194,4 +194,72 @@ class AuditMechanicsTest {
             buf.release();
         }
     }
+
+    // ---------- 2026-10-25 balance & audit additions ----------
+
+    @Test void wearImmunityCurveDecaysSmoothlyAndGenerationCapStripsImmunity() {
+        var cfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
+        assertEquals(4, cfg.wearImmuneFullWaiverMaxEnchants());
+        assertEquals(0.06, cfg.wearImmuneOverloadDecayPerEnchant(), 1e-9);
+        assertEquals(2, cfg.wearImmuneMaxGeneration());
+        assertEquals(4.0, cfg.maxMasteryUnitsPerSlot(), 1e-9);
+
+        // N <= 4 -> 100% waiver; N = 5 -> 94%; N = 10 -> 64%; N = 20 -> clamped at floor 30%
+        for (int n = 0; n <= 4; n++) {
+            assertEquals(1.0, TomeWearData.computeWearImmuneWaiverChance(cfg, n), 1e-9);
+        }
+        assertEquals(0.94, TomeWearData.computeWearImmuneWaiverChance(cfg, 5), 1e-9);
+        assertEquals(0.88, TomeWearData.computeWearImmuneWaiverChance(cfg, 6), 1e-9);
+        assertEquals(0.64, TomeWearData.computeWearImmuneWaiverChance(cfg, 10), 1e-9);
+        assertEquals(0.30, TomeWearData.computeWearImmuneWaiverChance(cfg, 20), 1e-9);
+
+        assertTrue(TomeWearData.isGenerationEligibleForWearImmunity(0, cfg.wearImmuneMaxGeneration()));
+        assertTrue(TomeWearData.isGenerationEligibleForWearImmunity(2, cfg.wearImmuneMaxGeneration()));
+        assertFalse(TomeWearData.isGenerationEligibleForWearImmunity(3, cfg.wearImmuneMaxGeneration()));
+    }
+
+    @Test void perSlotMasteryCapPreventsSingleSuperBookFromMaxingGlobalDiscount() {
+        var cfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
+        // One super-book carrying 16 max-level enchants in a single slot is capped at 4.0 units (+5% instead of +20%)
+        double singleSlotCapped = chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .capSlotMasteryUnits(cfg, 16.0);
+        assertEquals(4.0, singleSlotCapped, 1e-9);
+        assertEquals(5, chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .computeGlobalMasteryDiscountPercent(cfg, singleSlotCapped));
+
+        // Spreading 4 max-level enchants across 4 separate slots reaches 16.0 units -> full 20% global mastery discount
+        double fourSlotsSum = 0.0;
+        for (int i = 0; i < 4; i++) {
+            fourSlotsSum += chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+                .capSlotMasteryUnits(cfg, 4.0);
+        }
+        assertEquals(20, chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .computeGlobalMasteryDiscountPercent(cfg, fourSlotsSum));
+    }
+
+    @Test void queueScaledSacrificeSkipAndActiveRitualVictimPriority() {
+        var rCfg = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT;
+        // Single step caps at 15 levels; 4 queued steps cap at 15 + 3 * 4 = 27 levels; huge queue caps at 45 levels
+        assertEquals(15, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSacrificeXpLevels(rCfg, 200_000L, 1));
+        assertEquals(27, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSacrificeXpLevels(rCfg, 200_000L, 4));
+        assertEquals(45, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSacrificeXpLevels(rCfg, 200_000L, 20));
+
+        // Cheap unrelated scapegoat book (backsActiveRitual = false) must NOT shield the tome backing the active ritual!
+        var unrelatedDecoy = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 0, 1, 0.10, 0.05, false, false
+        );
+        var activeBackingTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 1, 3, 1.00, 0.80, false, true
+        );
+        assertEquals(
+            activeBackingTome,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
+                java.util.List.of(unrelatedDecoy, activeBackingTome)
+            ),
+            "Active-ritual-backing tome must degrade before an unrelated decoy book"
+        );
+    }
 }

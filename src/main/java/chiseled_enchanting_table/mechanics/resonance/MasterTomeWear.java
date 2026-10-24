@@ -265,11 +265,20 @@ public final class MasterTomeWear {
     }
 
     /**
-     * Returns {@code true} iff {@code stack} carries {@code minecraft:infinity} at level {@code >= 1},
-     * granting complete Master Tome durability immunity for every enchantment on this book.
+     * Returns {@code true} iff {@code stack} carries an active {@code #wear_immune} enchantment AND
+     * its copy lineage generation does not exceed {@code cfg.wearImmuneMaxGeneration()}.
+     */
+    public static boolean hasEffectiveWearImmunity(LibraryResonance.Config cfg, ItemStack stack) {
+        LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
+        return TomeWearData.hasEffectiveWearImmunity(stack, c.wearImmuneMaxGeneration());
+    }
+
+    /**
+     * Returns {@code true} iff {@code stack} qualifies for effective wear immunity under the active
+     * server resonance configuration.
      */
     public static boolean hasInfinityImmunity(ItemStack stack) {
-        return TomeWearData.hasWearImmunity(stack);
+        return hasEffectiveWearImmunity(LibraryResonance.activeServerConfig(), stack);
     }
 
     /** Wear immunity via {@code #chiseled_enchanting_table:wear_immune} (ships with Infinity). */
@@ -496,6 +505,7 @@ public final class MasterTomeWear {
         Level level,
         BlockPos tablePos,
         BookshelfProgression.Config shelfCfg,
+        LibraryResonance.Config resonanceCfg,
         Holder<Enchantment> targetHolder,
         int requiredLevel
     ) {
@@ -506,6 +516,7 @@ public final class MasterTomeWear {
                 return List.of();
             }
         }
+        LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
         List<CandidateSlot> candidates = new ArrayList<>();
         boolean checkLos = shelfCfg != null && shelfCfg.requireLineOfSight();
         for (BlockPos offset : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(shelfCfg)) {
@@ -524,7 +535,7 @@ public final class MasterTomeWear {
                 if (TomeLockData.isEffectivelyLocked(slotStack)) continue;
                 int storedLvl = EnchantmentHelper.getEnchantmentsForCrafting(slotStack).getLevel(targetHolder);
                 if (storedLvl >= requiredLevel) {
-                    boolean inf = hasInfinityImmunity(slotStack);
+                    boolean inf = hasEffectiveWearImmunity(cfg, slotStack);
                     candidates.add(new CandidateSlot(
                         cbs,
                         scanPos.immutable(),
@@ -533,7 +544,7 @@ public final class MasterTomeWear {
                         slotStack,
                         targetHolder,
                         storedLvl,
-                        inf ? 0 : getWearUsed(slotStack),
+                        getWearUsed(slotStack),
                         inf
                     ));
                 }
@@ -546,7 +557,7 @@ public final class MasterTomeWear {
     /**
      * Builds the exact per-{@link chiseled_enchanting_table.utils.EnchantmentWithLevel} live Master Tome
      * charge map using the identical candidate order used when applying wear ({@link #IMMORTAL_CHARGES}
-     * when backed by an {@code Infinity} tome, or exact remaining charges {@code 1..maxTomeUses}).
+     * when backed by an unoverloaded {@code #wear_immune} tome within generation bounds, or exact remaining charges).
      */
     public static Map<chiseled_enchanting_table.utils.EnchantmentWithLevel, Integer> snapshotLiveMasterCharges(
         Level level,
@@ -570,14 +581,17 @@ public final class MasterTomeWear {
             } catch (Exception ignored) {
                 continue;
             }
-            List<CandidateSlot> allForId = collectCandidates(level, tablePos, shelfCfg, holder, 1);
+            List<CandidateSlot> allForId = collectCandidates(level, tablePos, shelfCfg, cfg, holder, 1);
             if (allForId.isEmpty()) {
                 continue;
             }
             for (int reqLvl = 1; reqLvl <= topLvl; reqLvl++) {
                 for (CandidateSlot c : allForId) {
                     if (c.storedLevel() >= reqLvl) {
-                        int chargeVal = c.infinite()
+                        boolean fullImmortal = c.infinite()
+                            && c.wearUsed() == 0
+                            && TomeWearData.countNonCurseStoredEnchantments(c.stack()) <= cfg.wearImmuneFullWaiverMaxEnchants();
+                        int chargeVal = fullImmortal
                             ? IMMORTAL_CHARGES
                             : TomeWearData.remainingCharges(cfg.maxTomeUses(), TomeWearData.getGeneration(c.stack()), c.wearUsed());
                         out.put(new chiseled_enchanting_table.utils.EnchantmentWithLevel(id, reqLvl), chargeVal);
@@ -660,24 +674,33 @@ public final class MasterTomeWear {
             return ResolvedTomeUse.NONE;
         }
 
-        List<CandidateSlot> candidates = collectCandidates(level, tablePos, shelfCfg, targetHolder, requiredLevel);
+        List<CandidateSlot> candidates = collectCandidates(level, tablePos, shelfCfg, cfg, targetHolder, requiredLevel);
         if (candidates.isEmpty()) {
             return ResolvedTomeUse.NONE;
         }
 
         CandidateSlot chosen = candidates.getFirst();
         ItemStack chosenSnapshot = chosen.stack().copy();
-        if (chosen.infinite()) {
-            return new ResolvedTomeUse(WearOutcome.IMMORTAL, true, chosenSnapshot);
+        boolean usedWearImmuneTome = chosen.infinite();
+        if (usedWearImmuneTome) {
+            int nonCurseCount = TomeWearData.countNonCurseStoredEnchantments(chosenSnapshot);
+            double immuneWaiver = TomeWearData.computeWearImmuneWaiverChance(cfg, nonCurseCount);
+            double unbreakingWaiver = computeUnbreakingWaiverChance(cfg, getUnbreakingLevel(chosenSnapshot));
+            double effectiveWaiver = Math.max(immuneWaiver, unbreakingWaiver);
+            if (effectiveWaiver >= 1.0 || level.getRandom().nextDouble() < effectiveWaiver) {
+                return new ResolvedTomeUse(WearOutcome.IMMORTAL, true, chosenSnapshot);
+            }
         }
         if (cfg.tomeConsumptionMode() == ConsumptionMode.KEEP) {
-            return new ResolvedTomeUse(WearOutcome.NONE, false, chosenSnapshot);
+            return new ResolvedTomeUse(WearOutcome.NONE, usedWearImmuneTome, chosenSnapshot);
         }
 
-        int unbreakingLvl = getUnbreakingLevel(chosenSnapshot);
-        double waiveChance = computeUnbreakingWaiverChance(cfg, unbreakingLvl);
-        if (waiveChance > 0.0 && level.getRandom().nextDouble() < waiveChance) {
-            return new ResolvedTomeUse(WearOutcome.WAIVED_BY_UNBREAKING, false, chosenSnapshot);
+        if (!usedWearImmuneTome) {
+            int unbreakingLvl = getUnbreakingLevel(chosenSnapshot);
+            double waiveChance = computeUnbreakingWaiverChance(cfg, unbreakingLvl);
+            if (waiveChance > 0.0 && level.getRandom().nextDouble() < waiveChance) {
+                return new ResolvedTomeUse(WearOutcome.WAIVED_BY_UNBREAKING, false, chosenSnapshot);
+            }
         }
 
         // Generation fade + essence-priced scapegoat: price the worn entry against the
@@ -742,7 +765,7 @@ public final class MasterTomeWear {
 
         chosen.shelf().setItem(chosen.slot(), mutated);
         chosen.shelf().setChanged();
-        if (outcome == WearOutcome.WORN) {
+        if ((outcome == WearOutcome.WORN || outcome == WearOutcome.STEPPED_DOWN) && step.nextWearUsed() > 0) {
             WorldRegeneration.acknowledgeInPlaceWear(
                 level,
                 chosen.pos(),
@@ -764,6 +787,6 @@ public final class MasterTomeWear {
         if (fullyDepleted && cfg.tomeConsumptionMode() != ConsumptionMode.KEEP) {
             TomeParticleEffects.portalAt(level, chosen.pos(), chosen.slot());
         }
-        return new ResolvedTomeUse(outcome, false, chosenSnapshot);
+        return new ResolvedTomeUse(outcome, usedWearImmuneTome, chosenSnapshot);
     }
 }

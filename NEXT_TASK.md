@@ -1,17 +1,17 @@
-# Next Task: post-1.0.3 backlog (Minecraft 26.1.2 line)
+# Next Task: post-1.1.0 backlog (Minecraft 26.1.2 line)
 
 > **Unofficial community port.** All instructions below apply to the unofficial 26.1.2 port
 > (this repository). The upstream `Sacramentix/chiseled-enchanting-table` project is not affected
 > by this version line.
 
-**Current mod version:** `1.0.3` · **Minecraft:** `26.1.2` · **Fabric API:** `0.151.0+26.1.2` ·
+**Current mod version:** `1.1.0` · **Minecraft:** `26.1.2` · **Fabric API:** `0.151.0+26.1.2` ·
 **Loader:** `0.19.3` · **Loom:** `1.16-SNAPSHOT` · **Gradle wrapper:** 9.4.1. See
-`CURRENT_BASELINE.md` for the currently-shipping capability boundary, `CHANGELOG.md` for the 1.0.3
+`CURRENT_BASELINE.md` for the currently-shipping capability boundary, `CHANGELOG.md` for the 1.1.0
 change list, and [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md)
 for what the 1.0.3 round actually did (back-port of the sister `26.3` branch's fixes/features, *not*
 a Minecraft port) — including the list of 26.3-only changes that must **not** be copied here.
 
-## How to build 1.0.3 from a fresh clone
+## How to build 1.1.0 from a fresh clone
 
 The source tree is Gradle + Loom + Fabric API + Java 25:
 
@@ -51,11 +51,10 @@ To build without the optional viewers (offline-friendly, and what CI's `no-viewe
 ./gradlew build -Penable_jei=false -Penable_rei=false
 ```
 
-`jei_version` (`29.47.0.111`) and `rei_version` (`26.1.819`) are pinned to what CI resolved. Bumping
-either is a deliberate act: JEI has already removed `IIngredientAcceptor#addItemStack` on its `26.1`
-branch (it is deprecated-for-removal in the pinned jar, which is the two warnings in the green log),
-so a bump must migrate `EnchantingRecipeCategory`'s `addItemStack` / `addItemStacks` calls in the
-same commit — see `docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.
+`jei_version` (`29.47.0.111`) and `rei_version` (`26.1.819`) are pinned to what CI resolved. Note
+that `EnchantingRecipeCategory` already uses the non-deprecated `IIngredientAcceptor#add` /
+`addItemStacks` overloads (zero JEI deprecation warnings) — see
+`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6.
 
 ## Open items (roughly in priority order)
 

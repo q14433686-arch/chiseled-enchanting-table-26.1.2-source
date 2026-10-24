@@ -591,7 +591,7 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b": "광의의 책장 %s개: %s 게임일마다 +1 · %s개: %s 게임일마다 +1!",
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_t": "Infinity Tome: <=4 Enchants = 0% Slip",
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_b": "0 durability wear forever! Avoid stuffing 5+ enchants onto one Infinity book or tier-slip rises up to 20%.",
-  "gui.chiseled_enchanting_table.resonance.broad_breakdown": "광의의 책장: %s개 (일반 %s · 빈 조각 %s · 책 든 조각[잔권 포함] %s)",
+  "gui.chiseled_enchanting_table.resonance.broad_breakdown": "총 책장: %s (일반 %s · 빈 조각 책장 %s [미포함] · 책 보관 조각 책장 %s)",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.title": "책장 총괄 분류 및 적용 범위",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.lead": "설명에 등장하는 '책장'은 종류별로 적용되는 시스템이 명확히 나뉩니다:",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.s1": "[total nearby bookshelves = All 3 Combined]: Includes (1) Regular Bookshelves, (2) Empty Chiseled Bookshelves, and (3) Book-Holding Chiseled Bookshelves (including plain books, grimoires, Enchanted Books, AND Depleted Tomes).",
@@ -726,5 +726,18 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required": "Depleted Tomes to Sacrifice",
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Depleted Tomes that must be sacrificed to unlock the Cleanse page (capped by the advancement's criteria count).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Shelves for Tomes Page",
-  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page."
+  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page.",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "조각된 마법 부여대 클라이언트와 서버 버전이 일치하지 않습니다 (Minecraft 26.1.2용 동일 빌드 필요).",
+  "disconnect.chiseled_enchanting_table.book_stack_mismatch": "마법이 부여된 책 겹침 수 불일치: 클라이언트=%s, 서버=%s. 양쪽 config/chiseled_enchanting_table.json을 맞추고 재시작하세요.",
+  "gui.chiseled_enchanting_table.network.channel_unavailable": "사용 불가: 서버에 필요한 네트워크 채널이 없습니다.",
+  "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "5초 안에 '모두 정화'를 다시 클릭하여 확인하세요 (Shift+클릭 시 즉시 실행).",
+  "gui.chiseled_enchanting_table.cleanse.confirm_row_sub": "⚠ 5초 내 다시 클릭하여 모두 정화 확인",
+  "gui.chiseled_enchanting_table.cleanse.confirm_hint_shift": "두 번 클릭하여 확인 (Shift+클릭 시 즉시 실행)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_gap": "나무 %s · 합계 %s (+%s)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_max": "나무 %s · 합계 %s (최대)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_cramped": "나무 %s · 합계 %s (협소!)",
+  "gui.chiseled_enchanting_table.resonance.slot_cap_hint": "슬롯당 숙련 상한: %s점 (최대 -20%%를 위해 여러 슬롯에 분산 보관)",
+  "item.chiseled_enchanting_table.master_tome_overload_waiver": "✦ 과부하 마모 면제율: %s%% (비저주 마법 %s개)",
+  "item.chiseled_enchanting_table.master_tome_generation_lost_immunity": "✦ %s세대 필사본 (>%s세대): 마모 면제 만료 — 일반 내구도 소모",
+  "message.chiseled_enchanting_table.tome_lock_expired": "(%s, %s, %s) 위치의 템플릿 책 보호 잠금이 만료되었습니다."
 }

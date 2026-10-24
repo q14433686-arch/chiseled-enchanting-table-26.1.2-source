@@ -591,7 +591,7 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b": "%s Broad Shelves: +1 every %s game days · %s Broad Shelves: +1 every %s game days!",
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_t": "Infinity Tome: <=4 Enchants = 0% Slip",
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_b": "0 durability wear forever! Avoid stuffing 5+ enchants onto one Infinity book or tier-slip rises up to 20%.",
-  "gui.chiseled_enchanting_table.resonance.broad_breakdown": "Bücherregale im weiteren Sinn: %s (Normal %s · Leer gearbeitet %s · Gefüllt gearbeitet [inkl. Relikte] %s)",
+  "gui.chiseled_enchanting_table.resonance.broad_breakdown": "Regale gesamt: %s (Normal %s · Leer gemeißelt %s [zählt nicht] · Befüllt gemeißelt %s)",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.title": "Regal-Klassifikation & Rollen",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.lead": "'Bookshelves' fall into clear categories — here is how every type counts across the mod:",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.s1": "[total nearby bookshelves = All 3 Combined]: Includes (1) Regular Bookshelves, (2) Empty Chiseled Bookshelves, and (3) Book-Holding Chiseled Bookshelves (including plain books, grimoires, Enchanted Books, AND Depleted Tomes).",
@@ -726,5 +726,18 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required": "Depleted Tomes to Sacrifice",
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Depleted Tomes that must be sacrificed to unlock the Cleanse page (capped by the advancement's criteria count).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Shelves for Tomes Page",
-  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page."
+  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page.",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Versionskonflikt bei Chiseled Enchanting Table zwischen Client und Server (beide Seiten benötigen denselben Build für Minecraft 26.1.2).",
+  "disconnect.chiseled_enchanting_table.book_stack_mismatch": "Stapelgrößen-Konflikt für Verzauberte Bücher: Client=%s, Server=%s. Bitte config/chiseled_enchanting_table.json angleichen und neu starten.",
+  "gui.chiseled_enchanting_table.network.channel_unavailable": "Aktion nicht verfügbar: Dem Server fehlt der erforderliche Netzwerkkanal.",
+  "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "Erneut innerhalb von 5s klicken zum Bestätigen (oder Umschalt+Klick für sofort).",
+  "gui.chiseled_enchanting_table.cleanse.confirm_row_sub": "⚠ Innerhalb von 5s erneut klicken zum Bestätigen",
+  "gui.chiseled_enchanting_table.cleanse.confirm_hint_shift": "2. Klick bestätigt (Umschalt+Klick sofort)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_gap": "W %s · S %s (+%s)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_max": "W %s · S %s (MAX)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_cramped": "W %s · S %s (Eng!)",
+  "gui.chiseled_enchanting_table.resonance.slot_cap_hint": "Slot-Meisterungslimit: %s Pkt. (Verzauberungen auf mehrere Slots verteilen für -20%%)",
+  "item.chiseled_enchanting_table.master_tome_overload_waiver": "✦ Überlast-Verschleißschutz: %s%% (%s Verzauberungen auf einem Band)",
+  "item.chiseled_enchanting_table.master_tome_generation_lost_immunity": "✦ Kopie-Gen %s (>%s): Verschleißschutz erloschen — nutzt normale Ladungen",
+  "message.chiseled_enchanting_table.tome_lock_expired": "Die Schutzsperre eines Vorlagenbuchs bei (%s, %s, %s) ist abgelaufen."
 }

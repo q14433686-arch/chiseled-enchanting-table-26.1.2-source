@@ -89,7 +89,11 @@ public final class LibraryResonance {
         int earlyUnlockXpLevels,
         int earlyUnlockGritCount,
         int sacrificeRequired,
-        int tomePageRequiredShelves
+        int tomePageRequiredShelves,
+        double maxMasteryUnitsPerSlot,
+        int wearImmuneMaxGeneration,
+        int wearImmuneFullWaiverMaxEnchants,
+        double wearImmuneOverloadWaiverDecay
     ) {
         public static final Config DEFAULT = new Config(
             chiseled_enchanting_table.BundledDefaults.MIN_DISCOUNT_BOOKSHELVES,
@@ -137,7 +141,11 @@ public final class LibraryResonance {
             chiseled_enchanting_table.BundledDefaults.EARLY_UNLOCK_XP_LEVELS,
             chiseled_enchanting_table.BundledDefaults.EARLY_UNLOCK_GRIT_COUNT,
             chiseled_enchanting_table.BundledDefaults.SACRIFICE_REQUIRED,
-            chiseled_enchanting_table.BundledDefaults.TOME_PAGE_REQUIRED_SHELVES
+            chiseled_enchanting_table.BundledDefaults.TOME_PAGE_REQUIRED_SHELVES,
+            chiseled_enchanting_table.BundledDefaults.MAX_MASTERY_UNITS_PER_SLOT,
+            chiseled_enchanting_table.BundledDefaults.WEAR_IMMUNE_MAX_GENERATION,
+            chiseled_enchanting_table.BundledDefaults.WEAR_IMMUNE_FULL_WAIVER_MAX_ENCHANTS,
+            chiseled_enchanting_table.BundledDefaults.WEAR_IMMUNE_OVERLOAD_WAIVER_DECAY
         );
 
         public Config {
@@ -166,6 +174,112 @@ public final class LibraryResonance {
             earlyUnlockGritCount = clampInt(earlyUnlockGritCount, 0, 512);
             sacrificeRequired = clampInt(sacrificeRequired, 1, 1024);
             tomePageRequiredShelves = clampInt(tomePageRequiredShelves, 1, 512);
+            maxMasteryUnitsPerSlot = clampDouble(maxMasteryUnitsPerSlot, 0.0, 256.0);
+            wearImmuneMaxGeneration = clampInt(wearImmuneMaxGeneration, 0, TomeWearData.MAX_GENERATION);
+            wearImmuneFullWaiverMaxEnchants = clampInt(wearImmuneFullWaiverMaxEnchants, 1, 64);
+            wearImmuneOverloadWaiverDecay = clampDouble(wearImmuneOverloadWaiverDecay, 0.0, 1.0);
+        }
+
+        public Config(
+            int minDiscountBookshelves,
+            int maxDiscountBookshelves,
+            int maxWoodenDiscountPercent,
+            int maxGlobalMasteryDiscountPercent,
+            int maxBaseXpDiscountPercent,
+            int maxSpecificEnchantBonusPercent,
+            double specificEnchantExponent,
+            int maxTotalXpDiscountPercent,
+            double masteryUnitExponent,
+            double globalMasteryMultiplier,
+            double masterTomeUpgradeMaterialMultiplier,
+            double shelfUpgradeMaterialMultiplier,
+            double epiphanyProbabilityGlobalWeight,
+            double epiphanyProbabilityAffinityWeight,
+            double blankBookAffinityWeight,
+            double epiphanyShelfScoreFactor,
+            double epiphanyGlobalMasteryScoreFactor,
+            double epiphanyAffinityMasteryScoreFactor,
+            double epiphanyTier2MaxProb,
+            double epiphanyTier2ScoreDivisor,
+            double epiphanyTier2MasteryBonus,
+            double epiphanyTierPlusMaxProb,
+            double epiphanyTierPlusScoreDivisor,
+            double epiphanyTierPlusMasteryBonus,
+            double incrementalStepCreditFactor,
+            MasterTomeWear.ConsumptionMode tomeConsumptionMode,
+            int maxTomeUses,
+            int bookCopyWearCost,
+            MasterTomeWear.DepleteBehavior tomeDepleteBehavior,
+            boolean tomeRegenEnabled,
+            int tomeRegenBaseSeconds,
+            int tomeRegenTier1Shelves,
+            int tomeRegenTier1Seconds,
+            int tomeRegenTier2Shelves,
+            int tomeRegenTier2Seconds,
+            double unbreakingWaiverPerLevel,
+            double unbreakingWaiverMaxChance,
+            boolean wildBookWearEnabled,
+            List<Integer> wildBookRemainingWeights,
+            TomeWearData.ScapegoatPricing scapegoatPricing,
+            boolean lockedShelfBreakable,
+            boolean lockedBookExtractionBlocked,
+            int earlyUnlockXpLevels,
+            int earlyUnlockGritCount,
+            int sacrificeRequired,
+            int tomePageRequiredShelves
+        ) {
+            this(
+                minDiscountBookshelves,
+                maxDiscountBookshelves,
+                maxWoodenDiscountPercent,
+                maxGlobalMasteryDiscountPercent,
+                maxBaseXpDiscountPercent,
+                maxSpecificEnchantBonusPercent,
+                specificEnchantExponent,
+                maxTotalXpDiscountPercent,
+                masteryUnitExponent,
+                globalMasteryMultiplier,
+                masterTomeUpgradeMaterialMultiplier,
+                shelfUpgradeMaterialMultiplier,
+                epiphanyProbabilityGlobalWeight,
+                epiphanyProbabilityAffinityWeight,
+                blankBookAffinityWeight,
+                epiphanyShelfScoreFactor,
+                epiphanyGlobalMasteryScoreFactor,
+                epiphanyAffinityMasteryScoreFactor,
+                epiphanyTier2MaxProb,
+                epiphanyTier2ScoreDivisor,
+                epiphanyTier2MasteryBonus,
+                epiphanyTierPlusMaxProb,
+                epiphanyTierPlusScoreDivisor,
+                epiphanyTierPlusMasteryBonus,
+                incrementalStepCreditFactor,
+                tomeConsumptionMode,
+                maxTomeUses,
+                bookCopyWearCost,
+                tomeDepleteBehavior,
+                tomeRegenEnabled,
+                tomeRegenBaseSeconds,
+                tomeRegenTier1Shelves,
+                tomeRegenTier1Seconds,
+                tomeRegenTier2Shelves,
+                tomeRegenTier2Seconds,
+                unbreakingWaiverPerLevel,
+                unbreakingWaiverMaxChance,
+                wildBookWearEnabled,
+                wildBookRemainingWeights,
+                scapegoatPricing,
+                lockedShelfBreakable,
+                lockedBookExtractionBlocked,
+                earlyUnlockXpLevels,
+                earlyUnlockGritCount,
+                sacrificeRequired,
+                tomePageRequiredShelves,
+                chiseled_enchanting_table.BundledDefaults.MAX_MASTERY_UNITS_PER_SLOT,
+                chiseled_enchanting_table.BundledDefaults.WEAR_IMMUNE_MAX_GENERATION,
+                chiseled_enchanting_table.BundledDefaults.WEAR_IMMUNE_FULL_WAIVER_MAX_ENCHANTS,
+                chiseled_enchanting_table.BundledDefaults.WEAR_IMMUNE_OVERLOAD_WAIVER_DECAY
+            );
         }
 
         public Config(
@@ -619,7 +733,27 @@ public final class LibraryResonance {
                 intFrom(tomePagesObj, root, "early_unlock_xp_levels", null, DEFAULT.earlyUnlockXpLevels),
                 intFrom(tomePagesObj, root, "early_unlock_grit_count", null, DEFAULT.earlyUnlockGritCount),
                 intFrom(tomePagesObj, root, "sacrifice_required", null, DEFAULT.sacrificeRequired),
-                intFrom(tomePagesObj, root, "tome_page_required_shelves", null, DEFAULT.tomePageRequiredShelves)
+                intFrom(tomePagesObj, root, "tome_page_required_shelves", null, DEFAULT.tomePageRequiredShelves),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "max_mastery_units_per_slot", null, DEFAULT.maxMasteryUnitsPerSlot),
+                    0.0,
+                    256.0
+                ),
+                clampInt(
+                    intFrom(masteryObj, root, "wear_immune_max_generation", null, DEFAULT.wearImmuneMaxGeneration),
+                    0,
+                    TomeWearData.MAX_GENERATION
+                ),
+                clampInt(
+                    intFrom(masteryObj, root, "wear_immune_full_waiver_max_enchants", null, DEFAULT.wearImmuneFullWaiverMaxEnchants),
+                    1,
+                    64
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "wear_immune_overload_waiver_decay", null, DEFAULT.wearImmuneOverloadWaiverDecay),
+                    0.0,
+                    1.0
+                )
             );
         }
 
@@ -783,6 +917,55 @@ public final class LibraryResonance {
             }
         }
         return sum;
+    }
+
+    /** Caps the mastery units contributed by a single occupied Master Tome slot ({@code <= 0} disables per-slot cap). */
+    public static double capSingleSlotMasteryUnits(Config cfg, double rawSlotUnits) {
+        if (rawSlotUnits <= 0.0) {
+            return 0.0;
+        }
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        double cap = c.maxMasteryUnitsPerSlot();
+        return cap > 0.0 ? Math.min(cap, rawSlotUnits) : rawSlotUnits;
+    }
+
+    /**
+     * Combines deduplicated library mastery units ({@code U_dedup}) with the sum of per-slot capped units
+     * ({@code sum_i min(maxMasteryUnitsPerSlot, u_i)}), defeating both single-slot super-book stacking
+     * and multi-slot duplicate-enchantment farming.
+     */
+    public static double effectiveTotalMasteryUnits(
+        Config cfg,
+        double deduplicatedLibraryUnits,
+        double sumOfSlotCappedUnits
+    ) {
+        if (deduplicatedLibraryUnits <= 0.0 || sumOfSlotCappedUnits <= 0.0) {
+            return 0.0;
+        }
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        if (c.maxMasteryUnitsPerSlot() <= 0.0) {
+            return deduplicatedLibraryUnits;
+        }
+        return Math.min(deduplicatedLibraryUnits, sumOfSlotCappedUnits);
+    }
+
+    /** Computes the capped mastery-unit budget of one Enchanted Book slot inside a Chiseled Bookshelf. */
+    public static double slotCappedMasteryUnits(Config cfg, Level level, ItemStack tomeStack) {
+        if (tomeStack == null || tomeStack.isEmpty() || !tomeStack.is(Items.ENCHANTED_BOOK)) {
+            return 0.0;
+        }
+        Config c = cfg != null ? cfg : Config.DEFAULT;
+        var enchants = net.minecraft.world.item.enchantment.EnchantmentHelper.getEnchantmentsForCrafting(tomeStack);
+        if (enchants.isEmpty()) {
+            return 0.0;
+        }
+        double raw = 0.0;
+        for (var entry : enchants.entrySet()) {
+            int lvl = entry.getIntValue();
+            if (lvl <= 0 || entry.getKey().is(CURSE_TAG)) continue;
+            raw += masteryUnitsForEntry(c, lvl, entry.getKey().value().getMaxLevel());
+        }
+        return capSingleSlotMasteryUnits(c, raw);
     }
 
     public static double affinityMasteryUnits(

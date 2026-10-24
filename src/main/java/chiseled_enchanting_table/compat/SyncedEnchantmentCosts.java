@@ -243,6 +243,46 @@ public final class SyncedEnchantmentCosts {
         return payload == null ? java.util.Optional.empty() : java.util.Optional.of(payload.transformations());
     }
 
+    /** Applies a lightweight delta update to the cached transformation unlock list. */
+    public static void updateTransformations(
+        java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations
+    ) {
+        EnchantCostTablePayload p = syncedPayload;
+        if (p == null || transformations == null) {
+            return;
+        }
+        syncedPayload = new EnchantCostTablePayload(
+            p.combineEnabled(),
+            p.researchEnabled(),
+            p.disenchantEnabled(),
+            p.disenchantAllowCursePurge(),
+            p.disenchantRefundScale(),
+            p.disenchantExternalRefundScale(),
+            p.epiphanyMinBookshelves(),
+            p.epiphanyBaseChance(),
+            p.epiphanyChancePerShelf(),
+            p.epiphanyChancePerTome(),
+            p.epiphanyMaxChance(),
+            p.epiphanyMaxSlotsCap(),
+            p.epiphanyScorePerSlot(),
+            p.epiphanyCycleTicks(),
+            p.epiphanyFreezeDurationTicks(),
+            p.epiphanyMaxFreezeTicks(),
+            p.epiphanyFreezeXpLevels(),
+            p.epiphanyFreezeCosts(),
+            p.epiphanyRerollXpLevels(),
+            p.epiphanyRerollCosts(),
+            p.explicitTreasureIds(),
+            p.shelfGatesConfig(),
+            p.libraryResonanceConfig(),
+            p.ritualConfig(),
+            p.costs(),
+            java.util.List.copyOf(transformations),
+            p.costTableComplete()
+        );
+        notifyListeners();
+    }
+
     public static boolean hasServerData() {
         return syncedPayload != null;
     }

@@ -182,6 +182,9 @@ public final class WorldRegeneration {
                 TomeParticleEffects.onRegenSettled(world, slot.position(), slot.slot(), context.identity(), updated);
                 context.shelf().setItem(slot.slot(), updated);
                 context.shelf().setChanged();
+                if (expiredLock != null) {
+                    notifyLockExpired(world, expiredLock);
+                }
                 if (recovery.remainingWear() > 0) {
                     window.scheduler.acknowledgeReplacement(slot, recovery.expectedIdentity(), updated, recovery.remainingWear());
                     window.signatures.put(slot, BookSignature.of(updated));
@@ -235,7 +238,7 @@ public final class WorldRegeneration {
             return false;
         }
         ItemStack current = shelf.getItem(slot.slot());
-        if (!current.is(Items.ENCHANTED_BOOK) || MasterTomeWear.hasInfinityImmunity(current)) {
+        if (!current.is(Items.ENCHANTED_BOOK)) {
             return false;
         }
         int currentWear = MasterTomeWear.getWearUsed(current);
@@ -262,7 +265,9 @@ public final class WorldRegeneration {
         BlockPos shelfPos,
         BookshelfProgression.Config sgCfg
     ) {
-        int rx = sgCfg == null ? 3 : Math.max(1, sgCfg.horizontalScanRadius());
+        int rx = sgCfg == null
+            ? BookshelfProgression.DEFAULT_SCAN_HORIZONTAL_RADIUS
+            : Math.max(1, Math.min(BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS, sgCfg.horizontalScanRadius()));
         int minCx = (shelfPos.getX() - rx) >> 4;
         int maxCx = (shelfPos.getX() + rx) >> 4;
         int minCz = (shelfPos.getZ() - rx) >> 4;
@@ -291,25 +296,6 @@ public final class WorldRegeneration {
         Window window = WORLDS.get(world);
         if (window == null) return -1;
         return window.scheduler.intervalTicks(new Slot(shelfPos.immutable(), slotIndex));
-    }
-
-    private static ItemStack clearExpiredLock(
-        ServerLevel world,
-        ChiseledBookShelfBlockEntity shelf,
-        BlockPos shelfPos,
-        int slotIndex,
-        ItemStack stack
-    ) {
-        // In-place: clearExpired edits the live stack. Re-storing the same instance keeps
-        // the scheduler's reference identity (and earned charge progress) intact.
-        TomeLockData.Lock expired = TomeLockData.clearExpired(stack);
-        if (expired == null) return stack;
-        shelf.setItem(slotIndex, stack);
-        shelf.setChanged();
-        var state = world.getBlockState(shelfPos);
-        world.sendBlockUpdated(shelfPos, state, state, Block.UPDATE_ALL);
-        notifyLockExpired(world, expired);
-        return stack;
     }
 
     private static void notifyLockExpired(ServerLevel world, TomeLockData.Lock lock) {
@@ -372,7 +358,7 @@ public final class WorldRegeneration {
             if (!(world.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf)) continue;
             for (int i = 0; i < 6; i++) {
                 ItemStack book = shelf.getItem(i);
-                if (!book.is(Items.ENCHANTED_BOOK) || MasterTomeWear.hasInfinityImmunity(book)) continue;
+                if (!book.is(Items.ENCHANTED_BOOK)) continue;
                 int wear = MasterTomeWear.getWearUsed(book);
                 if (wear <= 0) continue;
                 BookSignature sig = BookSignature.of(book);

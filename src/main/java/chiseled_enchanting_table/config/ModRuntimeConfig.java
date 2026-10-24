@@ -346,6 +346,20 @@ public record ModRuntimeConfig(
         return remote != null ? remote : ChiseledEnchantingTableData.runtimeConfiguration();
     }
 
+    /**
+     * Side-isolated config accessor for dual-side menu mixins (such as {@code AnvilMenu}):
+     * server threads always read {@link ChiseledEnchantingTableData#runtimeConfiguration()}, while
+     * client threads read the server-synced snapshot (returning {@code null} during the brief
+     * pre-sync join window so client prediction never diverges from an unsynced local disk file).
+     */
+    @Nullable
+    public static ModRuntimeConfig forAnvilSide(boolean isClientSide) {
+        if (!isClientSide) {
+            return ChiseledEnchantingTableData.runtimeConfiguration();
+        }
+        return remoteServerInstance;
+    }
+
     public static void setLocalAndSave(ModRuntimeConfig updated) {
         ModRuntimeConfig normalized = updated != null ? updated : DEFAULT;
         saveToDisk(normalized); // Commit persisted state before publishing the new in-memory value.

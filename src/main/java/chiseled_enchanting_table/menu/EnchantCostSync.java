@@ -32,21 +32,31 @@ public final class EnchantCostSync {
      * {@link EnchantingProtocol}).
      */
     private static boolean peerHasAnyCostChannel(ServerPlayer player) {
-        return ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.LEGACY_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.PREVIOUS_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_5_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_6_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_7_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_8_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_9_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_10_COST_TYPE);
+        if (ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)) {
+            return true;
+        }
+        for (var probe : EnchantingProtocol.LEGACY_COST_PROBES) {
+            if (ServerPlayNetworking.canSend(player, probe)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void init() {
         PayloadTypeRegistry.clientboundPlay().register(EnchantingProtocol.Capability.TYPE, EnchantingProtocol.Capability.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(EnchantingProtocol.Capability.TYPE, EnchantingProtocol.Capability.CODEC);
-        ServerPlayNetworking.registerGlobalReceiver(EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
+        ServerPlayNetworking.registerGlobalReceiver(EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {
+            var player = ctx.player();
+            ctx.server().execute(() -> {
+                int serverStack = ChiseledEnchantingTable.bootEnchantedBookStackSize();
+                if (EnchantingProtocol.stackSizeIncompatible(serverStack, payload.enchantedBookStackSize())) {
+                    player.connection.disconnect(
+                        EnchantingProtocol.stackSizeMismatchComponent(serverStack, payload.enchantedBookStackSize())
+                    );
+                }
+            });
+        });
         PayloadTypeRegistry.clientboundPlay().register(EnchantCostTablePayload.TYPE, EnchantCostTablePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(
             ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.TYPE,
@@ -56,6 +66,10 @@ public final class EnchantCostSync {
             ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.TYPE,
             ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.CODEC
         );
+        PayloadTypeRegistry.clientboundPlay().register(
+            ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE,
+            ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.CODEC
+        );
 
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
             ServerPlayer player = listener.player;
@@ -63,8 +77,11 @@ public final class EnchantCostSync {
                 if (EnchantingProtocol.incompatible(
                     peerHasAnyCostChannel(player),
                     ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE))) {
-                    player.connection.disconnect(net.minecraft.network.chat.Component.literal(EnchantingProtocol.MISMATCH_MESSAGE));
+                    player.connection.disconnect(EnchantingProtocol.protocolMismatchComponent());
                     return;
+                }
+                if (ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) {
+                    ServerPlayNetworking.send(player, new EnchantingProtocol.Capability());
                 }
                 chiseled_enchanting_table.config.ModConfigNetworking.sendToPlayer(player);
                 sendTo(player);
@@ -76,7 +93,21 @@ public final class EnchantCostSync {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (!ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) continue;
                 var displays = ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays(player);
-                if (!displays.equals(LAST_DISPLAYS.get(player))) sendTo(player);
+                if (!displays.equals(LAST_DISPLAYS.get(player))) {
+                    LAST_DISPLAYS.put(player, displays);
+                    int activeContainerId = player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
+                        ? menu.containerId
+                        : PayloadLimits.NO_CONTAINER;
+                    if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                        menu.applyTransformationSnapshot(displays);
+                    }
+                    if (ServerPlayNetworking.canSend(player, ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE)) {
+                        ServerPlayNetworking.send(
+                            player,
+                            new ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload(activeContainerId, displays)
+                        );
+                    }
+                }
             }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_DISPLAYS.clear());

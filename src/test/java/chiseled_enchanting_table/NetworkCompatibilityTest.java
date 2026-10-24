@@ -112,7 +112,7 @@ class NetworkCompatibilityTest {
             BookshelfProgression.BlankMaxTierMode.FULL_CURVE, 4, 3,
             Map.of(id("override"), List.of(0, 3, 11, 23, 47)), 2, 19, 0.41, 9, 7, 61,
             BookshelfProgression.VanillaTableMode.BOOKS, true, 6, false);
-        // Distinct values catch field swaps hidden by equal default config values.
+        // Distinct values catch field swaps hidden by equal default config values (all 50 fields).
         var resonance = new LibraryResonance.Config(13, 39, 21, 8, 29, 12, 1.13, 41,
             1.21, 1.31, 0.73, 0.83, 0.43, 0.53, 0.63, 1.03, 2.13, 3.23,
             0.67, 81.0, 0.17, 0.57, 111.0, 0.27, 0.87,
@@ -121,7 +121,8 @@ class NetworkCompatibilityTest {
             true, 5400, 34, 2400, 44, 900,
             0.09, 0.27, true, List.of(50, 30, 12, 8),
             chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT,
-            false, false, 7, 3, 17, 9);
+            false, false, 7, 3, 17, 9,
+            5, 0.07, 3, 4.5);
         var slipCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig(
             3.2, 0.037, 0.17,
             31, 0.011, 37, 0.021, 43, 0.031,
@@ -131,7 +132,7 @@ class NetworkCompatibilityTest {
         var waitCurve = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.WaitCurve(
             0.31, 0.69, 0.29, 0.71, 1.27, 0.88, 137);
         var ritual = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
-            270, 12, 14, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve);
+            270, 12, 14, 5, 42, 225.0, 195.0, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve);
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
             11, List.of(), Set.of(id("treasure")), gates, resonance, ritual,
@@ -194,10 +195,16 @@ class NetworkCompatibilityTest {
         assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.RerollEpiphanyPayload.TYPE.id().getPath().endsWith(revision));
         assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload.TYPE.id().getPath().endsWith(revision));
         assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ReopenTablePayload.TYPE.id().getPath().endsWith(revision));
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE.id().getPath().endsWith(revision));
         assertEquals("apply_chiseled_enchantment",
             chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_TYPE.id().getPath());
+        assertTrue(chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_PROBES.size() >= 7);
+        assertTrue(chiseled_enchanting_table.menu.EnchantingProtocol.stackSizeIncompatible(16, 64));
+        assertFalse(chiseled_enchanting_table.menu.EnchantingProtocol.stackSizeIncompatible(64, 64));
         roundTrip(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.CODEC,
-            new chiseled_enchanting_table.menu.EnchantingProtocol.Capability());
+            new chiseled_enchanting_table.menu.EnchantingProtocol.Capability(32));
+        var display = new TransformationDisplay(id("delta_rule"), id("input_tag"), true, id("out"), 2, 15, 2, false);
+        roundTrip(SyncTransformationStatePayload.CODEC, new SyncTransformationStatePayload(List.of(display)));
     }
 
     @Test void runtimeConfigRequestAndAcknowledgementRoundTrip() {

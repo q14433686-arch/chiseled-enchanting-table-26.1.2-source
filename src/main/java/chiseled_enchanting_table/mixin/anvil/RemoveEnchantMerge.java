@@ -101,7 +101,9 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
             this.broadcastChanges();
             return;
         }
-        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().anvilBlockSameBookMerge()) {
+        boolean clientSide = this.player != null && this.player.level() != null && this.player.level().isClientSide();
+        var runtimeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.forAnvilSide(clientSide);
+        if (runtimeCfg == null || !runtimeCfg.anvilBlockSameBookMerge()) {
             return;
         }
         ItemStack left = this.inputSlots.getItem(0);

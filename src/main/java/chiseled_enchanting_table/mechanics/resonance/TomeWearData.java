@@ -102,6 +102,17 @@ public final class TomeWearData {
         return false;
     }
 
+    public static boolean isWearImmuneEnchantment(net.minecraft.core.Holder<Enchantment> holder) {
+        if (holder == null) {
+            return false;
+        }
+        if (holder.is(WEAR_IMMUNE_TAG)) {
+            return true;
+        }
+        var keyOpt = holder.unwrapKey();
+        return keyOpt.isPresent() && INFINITY_ENCHANTMENT_ID.equals(keyOpt.get().identifier());
+    }
+
     public static boolean hasWearImmunity(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return false;
@@ -111,15 +122,74 @@ public final class TomeWearData {
             if (entry.getIntValue() <= 0) {
                 continue;
             }
-            if (entry.getKey().is(WEAR_IMMUNE_TAG)) {
-                return true;
-            }
-            var keyOpt = entry.getKey().unwrapKey();
-            if (keyOpt.isPresent() && INFINITY_ENCHANTMENT_ID.equals(keyOpt.get().identifier())) {
+            if (isWearImmuneEnchantment(entry.getKey())) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** Pure lineage check: copies beyond {@code maxAllowedGeneration} forfeit wear-immunity privilege. */
+    public static boolean hasEffectiveWearImmunity(
+        boolean hasWearImmunityTrait,
+        int generation,
+        int maxAllowedGeneration
+    ) {
+        return hasWearImmunityTrait && clampGeneration(generation) <= Math.max(0, maxAllowedGeneration);
+    }
+
+    /** Returns {@code true} iff {@code stack} carries {@code #wear_immune} AND its copy generation is within {@code maxAllowedGeneration}. */
+    public static boolean hasEffectiveWearImmunity(ItemStack stack, int maxAllowedGeneration) {
+        return hasWearImmunity(stack) && getGeneration(stack) <= Math.max(0, maxAllowedGeneration);
+    }
+
+    /** Counts non-curse stored enchantments ({@code level > 0}) on {@code stack}. */
+    public static int countNonCurseStoredEnchantments(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 0;
+        }
+        ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(stack);
+        int count = 0;
+        for (var entry : enchants.entrySet()) {
+            if (entry.getIntValue() > 0 && !entry.getKey().is(net.minecraft.tags.EnchantmentTags.CURSE)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Continuous wear-waiver curve for {@code #wear_immune} Master Tomes:
+     * {@code nonCurseEnchantCount <= fullWaiverMaxEnchants} keeps {@code 100%} waiver;
+     * each extra non-curse enchantment reduces waiver by {@code overloadDecayPerExtra} down to {@code floorWaiverChance}.
+     */
+    public static double computeWearImmuneWaiverChance(
+        int nonCurseEnchantCount,
+        int fullWaiverMaxEnchants,
+        double overloadDecayPerExtra,
+        double floorWaiverChance
+    ) {
+        if (nonCurseEnchantCount <= 0) {
+            return 0.0;
+        }
+        int fullCap = Math.max(1, fullWaiverMaxEnchants);
+        double floor = Double.isFinite(floorWaiverChance) ? Math.max(0.0, Math.min(1.0, floorWaiverChance)) : 0.30;
+        if (nonCurseEnchantCount <= fullCap) {
+            return 1.0;
+        }
+        double decayStep = Double.isFinite(overloadDecayPerExtra) ? Math.max(0.0, overloadDecayPerExtra) : 0.06;
+        double raw = 1.0 - decayStep * (nonCurseEnchantCount - fullCap);
+        return Math.max(floor, Math.min(1.0, raw));
+    }
+
+    public static double computeWearImmuneWaiverChance(LibraryResonance.Config cfg, int nonCurseEnchantCount) {
+        LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
+        return computeWearImmuneWaiverChance(
+            nonCurseEnchantCount,
+            c.wearImmuneFullWaiverMaxEnchants(),
+            c.wearImmuneOverloadWaiverDecay(),
+            c.unbreakingWaiverMaxChance()
+        );
     }
 
     // ------------------------------------------------------------------

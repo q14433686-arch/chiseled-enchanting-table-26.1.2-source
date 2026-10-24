@@ -40,20 +40,52 @@ import net.minecraft.world.level.block.state.BlockState;
 
 @Environment(EnvType.CLIENT)
 public class ChiseledEnchantingTableClient implements ClientModInitializer {
+    private static boolean serverHasAnyApplyChannel() {
+        if (ClientPlayNetworking.canSend(
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID
+        )) {
+            return true;
+        }
+        for (var probe : chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_PROBES) {
+            if (ClientPlayNetworking.canSend(probe)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void onInitializeClient() {
         chiseled_enchanting_table.compat.IrisGlintPreload.register();
         ClientPlayNetworking.registerGlobalReceiver(
-            chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
+            chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE,
+            (payload, ctx) -> ctx.client().execute(() -> {
+                int localStack = ChiseledEnchantingTable.bootEnchantedBookStackSize();
+                if (chiseled_enchanting_table.menu.EnchantingProtocol.stackSizeIncompatible(
+                    localStack, payload.enchantedBookStackSize()
+                )) {
+                    var conn = ctx.client().getConnection();
+                    if (conn != null) {
+                        conn.getConnection().disconnect(
+                            chiseled_enchanting_table.menu.EnchantingProtocol.stackSizeMismatchComponent(
+                                localStack, payload.enchantedBookStackSize()
+                            )
+                        );
+                    }
+                }
+            })
+        );
         ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> {
             if (chiseled_enchanting_table.menu.EnchantingProtocol.incompatible(
-                // Peer-has-mod probe: current suffixed apply channel OR the bare
-                // pre-revision_9 one (audit NET-02; probe is query-only, never decoded).
-                ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID)
-                    || ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_TYPE),
+                serverHasAnyApplyChannel(),
                 ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE))) {
-                listener.getConnection().disconnect(net.minecraft.network.chat.Component.literal(
-                    chiseled_enchanting_table.menu.EnchantingProtocol.MISMATCH_MESSAGE));
+                listener.getConnection().disconnect(
+                    chiseled_enchanting_table.menu.EnchantingProtocol.protocolMismatchComponent()
+                );
+                return;
+            }
+            if (ClientPlayNetworking.canSend(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE)) {
+                ClientPlayNetworking.send(new chiseled_enchanting_table.menu.EnchantingProtocol.Capability());
             }
         });
         ArcaneGrimoireItem.CLIENT_OPEN_ACTION = player -> {
@@ -99,23 +131,53 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             if (cfg.tomeConsumptionMode() == MasterTomeWear.ConsumptionMode.KEEP) {
                 return;
             }
-            if (MasterTomeWear.hasInfinityImmunity(stack)) {
+            boolean rawImmuneTag = MasterTomeWear.hasInfinityImmunity(stack);
+            boolean effectiveImmune = MasterTomeWear.hasEffectiveWearImmunity(cfg, stack);
+            int wearUsed = MasterTomeWear.getWearUsed(stack);
+            int generation = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(stack);
+            if (effectiveImmune) {
                 lines.add(Component.translatable(
                     "item.chiseled_enchanting_table.master_tome_infinite"
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
+                int nonCurseCount = chiseled_enchanting_table.mechanics.resonance.TomeWearData
+                    .countNonCurseStoredEnchantments(stack);
+                int waiverPct = (int) Math.round(
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData
+                        .computeWearImmuneWaiverChance(cfg, stack) * 100.0
+                );
+                if (nonCurseCount > cfg.wearImmuneFullWaiverMaxEnchants()) {
+                    lines.add(Component.translatable(
+                        "item.chiseled_enchanting_table.master_tome_overload_waiver",
+                        waiverPct,
+                        nonCurseCount
+                    ).withStyle(ChatFormatting.GOLD));
+                }
                 var rCfg = SyncedEnchantmentCosts.ritualConfig();
                 double loadL = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                    .computeInfinityTomeQualificationLoad(rCfg, stack);
+                    .computeInfinityTomeQualificationLoad(rCfg, cfg, stack);
                 if (loadL >= rCfg.crosslineSlip().minLoadThreshold()) {
                     lines.add(Component.translatable(
                         "item.chiseled_enchanting_table.master_tome_overloaded_hint",
                         String.format(java.util.Locale.ROOT, "%.1f", loadL)
                     ).withStyle(ChatFormatting.GOLD));
                 }
-                return;
+                if (wearUsed <= 0 && nonCurseCount <= cfg.wearImmuneFullWaiverMaxEnchants()) {
+                    if (generation > 0) {
+                        lines.add(Component.translatable(
+                            "item.chiseled_enchanting_table.master_tome_generation",
+                            generation,
+                            0
+                        ).withStyle(ChatFormatting.DARK_PURPLE));
+                    }
+                    return;
+                }
+            } else if (rawImmuneTag && generation > cfg.wearImmuneMaxGeneration()) {
+                lines.add(Component.translatable(
+                    "item.chiseled_enchanting_table.master_tome_generation_lost_immunity",
+                    generation,
+                    cfg.wearImmuneMaxGeneration()
+                ).withStyle(ChatFormatting.GOLD));
             }
-            int wearUsed = MasterTomeWear.getWearUsed(stack);
-            int generation = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(stack);
             int maxUses = chiseled_enchanting_table.mechanics.resonance.TomeWearData.effectiveMaxUses(cfg.maxTomeUses(), generation);
             int remaining = Math.max(1, maxUses - wearUsed);
             float ratio = (float) remaining / (float) maxUses;
@@ -134,12 +196,14 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                     Math.max(0, cfg.maxTomeUses() - maxUses)
                 ).withStyle(ChatFormatting.DARK_PURPLE));
             }
-            int waiverPct = (int) Math.round(MasterTomeWear.computeUnbreakingWaiverChance(stack, cfg) * 100.0);
-            if (waiverPct > 0) {
-                lines.add(Component.translatable(
-                    "item.chiseled_enchanting_table.master_tome_unbreaking_hint",
-                    waiverPct
-                ).withStyle(ChatFormatting.DARK_AQUA));
+            if (!effectiveImmune) {
+                int waiverPct = (int) Math.round(MasterTomeWear.computeUnbreakingWaiverChance(stack, cfg) * 100.0);
+                if (waiverPct > 0) {
+                    lines.add(Component.translatable(
+                        "item.chiseled_enchanting_table.master_tome_unbreaking_hint",
+                        waiverPct
+                    ).withStyle(ChatFormatting.DARK_AQUA));
+                }
             }
             if (wearUsed > 0 && cfg.tomeRegenEnabled()) {
                 lines.add(Component.translatable(
@@ -193,6 +257,16 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                     menu.applySyncedRitualState(payload);
+                }
+            })
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE,
+            (payload, ctx) -> ctx.client().execute(() -> {
+                SyncedEnchantmentCosts.updateTransformations(payload.transformations());
+                var player = ctx.client().player;
+                if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                    menu.applyTransformationSnapshot(payload.transformations());
                 }
             })
         );

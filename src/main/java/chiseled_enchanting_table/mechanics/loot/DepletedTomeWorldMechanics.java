@@ -75,7 +75,9 @@ public final class DepletedTomeWorldMechanics {
         MASTER_TOME_CHISELED_BOOKSHELF;
 
         public boolean isBroadBookshelf() {
-            return this != NONE;
+            return this == REGULAR_BOOKSHELF
+                || this == BOOK_CHISELED_BOOKSHELF
+                || this == MASTER_TOME_CHISELED_BOOKSHELF;
         }
 
         public boolean isRegularBookshelf() {
@@ -107,13 +109,17 @@ public final class DepletedTomeWorldMechanics {
             : ShelfTaxonomyKind.BOOK_CHISELED_BOOKSHELF;
     }
 
+    /**
+     * Computes broad-sense bookshelf count ({@code 广义书架}): regular bookshelves plus occupied
+     * chiseled bookshelves (holding at least one book, including Depleted Tomes). Empty chiseled
+     * bookshelves ({@code 0} books) provide zero arcane resonance and are excluded.
+     */
     public static int computeBroadBookshelfCount(
         int regularBookshelves,
         int emptyChiseledBookshelves,
         int occupiedChiseledBookshelvesIncludingDepletedTome
     ) {
         return Math.max(0, regularBookshelves)
-            + Math.max(0, emptyChiseledBookshelves)
             + Math.max(0, occupiedChiseledBookshelvesIncludingDepletedTome);
     }
 

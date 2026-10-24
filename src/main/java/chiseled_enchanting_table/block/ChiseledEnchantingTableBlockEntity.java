@@ -411,11 +411,12 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 continue;
             }
 
-            // Iron Rule #2: ONLY steps actually copied from an overloaded Infinity Master Tome roll slip/cross-line!
+            // Iron Rule #2: ONLY steps actually copied from an overloaded wear-immune Master Tome roll slip/cross-line,
+            // evaluated against max(step's queue-time load, live library-wide Sigma L across active wear-immune tomes)!
             double stepSlipProb = (step.masterTomeUsed() && step.usedInfinityTome())
                 ? InscriptionRitualMechanics.computeLoadSlipProbability(
                     ritualCfg,
-                    step.infinityTomeLoad(),
+                    Math.max(step.infinityTomeLoad(), scan.totalWearImmuneLoad()),
                     scan.totalDetectedBookshelves()
                 )
                 : 0.0;
@@ -546,7 +547,9 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             if (step.consumedEpiphany()) {
                 anyEpiphanyConsumed = true;
             }
-            if (step.masterTomeUsed() && MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(step.enchantmentId())) {
+            if (step.masterTomeUsed()
+                && (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(step.enchantmentId())
+                    || chiseled_enchanting_table.mechanics.resonance.TomeWearData.isWearImmuneEnchantment(holder))) {
                 replicatedInfinityFromTome = true;
             }
             EnchantmentProvenance.recordTablePayment(currentTarget, step.enchantmentId(), step.previousLevel(), finalLevel);

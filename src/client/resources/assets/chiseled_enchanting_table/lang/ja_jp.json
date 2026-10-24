@@ -591,7 +591,7 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b": "広義の本棚 %s 個：%s ゲーム日ごとに+1 · %s 個：%s ゲーム日ごとに+1！",
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_t": "Infinity Tome: <=4 Enchants = 0% Slip",
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_b": "0 durability wear forever! Avoid stuffing 5+ enchants onto one Infinity book or tier-slip rises up to 20%.",
-  "gui.chiseled_enchanting_table.resonance.broad_breakdown": "広義の本棚：%s 個（通常 %s · 空の模様入り %s · 本入り模様入り［残巻含む］%s）",
+  "gui.chiseled_enchanting_table.resonance.broad_breakdown": "本棚合計: %s（通常 %s · 空の模様入り %s［対象外］· 収納済み模様入り %s）",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.title": "本棚の総区分と役割一覧",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.lead": "説明中の「本棚」は種類ごとに役割が明確に分かれています：",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.s1": "[total nearby bookshelves = All 3 Combined]: Includes (1) Regular Bookshelves, (2) Empty Chiseled Bookshelves, and (3) Book-Holding Chiseled Bookshelves (including plain books, grimoires, Enchanted Books, AND Depleted Tomes).",
@@ -726,5 +726,18 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required": "Depleted Tomes to Sacrifice",
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Depleted Tomes that must be sacrificed to unlock the Cleanse page (capped by the advancement's criteria count).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Shelves for Tomes Page",
-  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page."
+  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page.",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "模様入りエンチャントテーブルのクライアントとサーバーのバージョンが一致しません（Minecraft 26.1.2 用の同一ビルドが必要です）。",
+  "disconnect.chiseled_enchanting_table.book_stack_mismatch": "エンチャントの本のスタック上限が不一致です（クライアント=%s、サーバー=%s）。両側の config/chiseled_enchanting_table.json を揃えて再起動してください。",
+  "gui.chiseled_enchanting_table.network.channel_unavailable": "操作できません：サーバーに必要なネットワークチャンネルがありません。",
+  "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "5秒以内にもう一度「すべて浄化」をクリックして確定（Shift+クリックで即時実行）。",
+  "gui.chiseled_enchanting_table.cleanse.confirm_row_sub": "⚠ 5秒以内に再クリックですべて浄化を確定",
+  "gui.chiseled_enchanting_table.cleanse.confirm_hint_shift": "2回クリックで確定（Shift+クリックで即時実行）",
+  "gui.chiseled_enchanting_table.header.shelf_hud_gap": "木 %s · 計 %s (+%s)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_max": "木 %s · 計 %s (最大)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_cramped": "木 %s · 計 %s (過密!)",
+  "gui.chiseled_enchanting_table.resonance.slot_cap_hint": "1スロット熟練上限: %s pt（複数スロットに分散保管で最大 -20%%）",
+  "item.chiseled_enchanting_table.master_tome_overload_waiver": "✦ 過負荷摩耗免除率: %s%%（非呪いエンチャント %s 個）",
+  "item.chiseled_enchanting_table.master_tome_generation_lost_immunity": "✦ 第 %s 世代写本（>%s 世代）：摩耗免除が失効し通常耐久を消費",
+  "message.chiseled_enchanting_table.tome_lock_expired": "(%s, %s, %s) のテンプレート本の保護ロックが期限切れになりました。"
 }

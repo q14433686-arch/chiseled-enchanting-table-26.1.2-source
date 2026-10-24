@@ -262,19 +262,33 @@ public final class DisenchantmentApplication {
         return v;
     }
 
-    public static void verifyRuntimeConservation(double refundScale) {
-        verifyRuntimeConservation(LibraryResonance.activeServerConfig(), refundScale);
+    private static final int[] CONSERVATION_PROBE_MAX_LEVELS = buildConservationProbeMaxLevels();
+
+    private static int[] buildConservationProbeMaxLevels() {
+        int[] extra = {80, 100, 127, 150, 200, 255};
+        int[] out = new int[64 + extra.length];
+        for (int m = 1; m <= 64; m++) {
+            out[m - 1] = m;
+        }
+        System.arraycopy(extra, 0, out, 64, extra.length);
+        return out;
     }
 
-    public static void verifyRuntimeConservation(LibraryResonance.Config resonanceCfg, double refundScale) {
+    public static boolean verifyRuntimeConservation(double refundScale) {
+        return verifyRuntimeConservation(LibraryResonance.activeServerConfig(), refundScale);
+    }
+
+    public static boolean verifyRuntimeConservation(LibraryResonance.Config resonanceCfg, double refundScale) {
         try {
             assertRuntimeConservationStrict(resonanceCfg, refundScale);
+            return true;
         } catch (IllegalStateException ex) {
             ChiseledEnchantingTable.LOGGER.error(
-                "Disenchant XP conservation invariant triggered during datapack reload; continuing safely: {}",
+                "Disenchant XP conservation invariant triggered during datapack reload; activating zero-refund fail-safe: {}",
                 ex.getMessage(),
                 ex
             );
+            return false;
         }
     }
 
@@ -282,25 +296,32 @@ public final class DisenchantmentApplication {
         clearPotentialCache();
         LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
         int maxDiscount = cfg.maxTotalXpDiscountPercent();
-        int[] probeMaxLevels = {1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 64, 100, 127, 150, 255};
         int[] probeAnvilCosts = {1, 2, 4, 8, 25, 100};
-        for (int m : probeMaxLevels) {
+        for (int m : CONSERVATION_PROBE_MAX_LEVELS) {
+            int[] fullMins = new int[m + 1];
+            int[][] stepMins = new int[m + 1][m + 1];
+            for (int k = 1; k <= m; k++) {
+                fullMins[k] = XpCostConversion.minPointsRequired(
+                    XpCostConversion.forMasterTomeEnchant(cfg, k, m, 0, maxDiscount)
+                );
+                for (int a = 1; a < k; a++) {
+                    stepMins[a][k] = XpCostConversion.minPointsRequired(
+                        XpCostConversion.forIncrementalMasterTomeEnchant(cfg, a, k, m, 0, maxDiscount)
+                    );
+                }
+            }
             for (int anvil : probeAnvilCosts) {
                 for (boolean treas : new boolean[] {false, true}) {
                     int[] v = buildPotentialTable(cfg, m, anvil, treas, refundScale);
                     for (int k = 1; k <= m; k++) {
-                        int fullMin = XpCostConversion.minPointsRequired(
-                            XpCostConversion.forMasterTomeEnchant(cfg, k, m, 0, maxDiscount)
-                        );
+                        int fullMin = fullMins[k];
                         if (v[k] < v[k - 1] || v[k] > fullMin) {
                             throw new IllegalStateException(
                                 "Disenchant XP conservation violated at M=" + m + ", k=" + k + ": V=" + v[k] + ", minFull=" + fullMin
                             );
                         }
                         for (int a = 1; a < k; a++) {
-                            int stepMin = XpCostConversion.minPointsRequired(
-                                XpCostConversion.forIncrementalMasterTomeEnchant(cfg, a, k, m, 0, maxDiscount)
-                            );
+                            int stepMin = stepMins[a][k];
                             if (v[k] - v[a] > stepMin) {
                                 throw new IllegalStateException(
                                     "Disenchant step conservation violated at M=" + m + ", " + a + "->" + k

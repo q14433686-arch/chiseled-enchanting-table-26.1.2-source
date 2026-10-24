@@ -844,7 +844,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             cfg.earlyUnlockXpLevels(),
             cfg.earlyUnlockGritCount(),
             cfg.sacrificeRequired(),
-            cfg.tomePageRequiredShelves()
+            cfg.tomePageRequiredShelves(),
+            lr.maxMasteryUnitsPerSlot(),
+            lr.wearImmuneMaxGeneration(),
+            lr.wearImmuneFullWaiverMaxEnchants(),
+            lr.wearImmuneOverloadWaiverDecay()
         );
 
         var bu = rawBookUpgradeRules;
@@ -956,10 +960,25 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             bp.enchantSets()
         );
 
-        chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.verifyRuntimeConservation(
+        if (!chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication.verifyRuntimeConservation(
             libraryResonanceConfig,
             disenchantingRules.xpRefundScale()
-        );
+        )) {
+            ChiseledEnchantingTable.LOGGER.error(
+                "Forcing disenchanting XP refund scales to 0.0 as fail-safe after conservation check failure"
+            );
+            disenchantingRules = new DisenchantingRules(
+                disenchantingRules.enabled(),
+                disenchantingRules.allowCursePurge(),
+                0.0,
+                0.0,
+                disenchantingRules.stripXpMin(),
+                disenchantingRules.stripXpMax(),
+                disenchantingRules.stripMaterialCost(),
+                disenchantingRules.cursePurgeXpCost(),
+                disenchantingRules.curseMaterialCost()
+            );
+        }
         var activeRitualCfg = rawRitualConfig != null
             ? rawRitualConfig
             : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT;

@@ -591,7 +591,7 @@
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b": "%s Broad Shelves: +1 every %s game days · %s Broad Shelves: +1 every %s game days!",
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_t": "Infinity Tome: <=4 Enchants = 0% Slip",
   "gui.chiseled_enchanting_table.grimoire.diag.ch5p2_inf_b": "0 durability wear forever! Avoid stuffing 5+ enchants onto one Infinity book or tier-slip rises up to 20%.",
-  "gui.chiseled_enchanting_table.resonance.broad_breakdown": "Полки (широкий учёт): %s (Обычные %s · Пустые резные %s · Резные с книгами/свитками %s)",
+  "gui.chiseled_enchanting_table.resonance.broad_breakdown": "Всего полок: %s (Обычные %s · Пустые резные %s [не считаются] · Занятые резные %s)",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.title": "Классификация книжных полок",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.lead": "'Bookshelves' fall into clear categories — here is how every type counts across the mod:",
   "gui.chiseled_enchanting_table.grimoire.ch3p0.s1": "[total nearby bookshelves = All 3 Combined]: Includes (1) Regular Bookshelves, (2) Empty Chiseled Bookshelves, and (3) Book-Holding Chiseled Bookshelves (including plain books, grimoires, Enchanted Books, AND Depleted Tomes).",
@@ -726,5 +726,18 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required": "Depleted Tomes to Sacrifice",
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Depleted Tomes that must be sacrificed to unlock the Cleanse page (capped by the advancement's criteria count).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Shelves for Tomes Page",
-  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page."
+  "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page.",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Несовпадение версий Chiseled Enchanting Table между клиентом и сервером (нужна одинаковая сборка для Minecraft 26.1.2).",
+  "disconnect.chiseled_enchanting_table.book_stack_mismatch": "Несовпадение размера стака чародейских книг: клиент=%s, сервер=%s. Синхронизируйте config/chiseled_enchanting_table.json и перезапустите игру.",
+  "gui.chiseled_enchanting_table.network.channel_unavailable": "Действие недоступно: на сервере отсутствует нужный сетевой канал.",
+  "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "Нажмите ещё раз в течение 5 с для подтверждения (Shift+клик — сразу).",
+  "gui.chiseled_enchanting_table.cleanse.confirm_row_sub": "⚠ Нажмите повторно за 5 с для подтверждения",
+  "gui.chiseled_enchanting_table.cleanse.confirm_hint_shift": "2-й клик подтверждает (Shift+клик сразу)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_gap": "Д %s · В %s (+%s)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_max": "Д %s · В %s (МАКС)",
+  "gui.chiseled_enchanting_table.header.shelf_hud_cramped": "Д %s · В %s (Тесно!)",
+  "gui.chiseled_enchanting_table.resonance.slot_cap_hint": "Лимит мастерства слота: %s очк. (распределите фолианты по слотам для -20%%)",
+  "item.chiseled_enchanting_table.master_tome_overload_waiver": "✦ Защита при перегрузке: %s%% (%s чар без проклятий)",
+  "item.chiseled_enchanting_table.master_tome_generation_lost_immunity": "✦ Копия пок. %s (>%s): иммунитет к износу утрачен — тратит заряды",
+  "message.chiseled_enchanting_table.tome_lock_expired": "Срок защиты шаблонного фолианта на (%s, %s, %s) истёк."
 }

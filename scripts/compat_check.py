@@ -1173,8 +1173,11 @@ def check_grimoire_recipes_sounds_and_textures() -> None:
     if cm.get("unbreaking_waiver_max_chance", 1.0) > 0.30 + 1e-9:
         errors.append("library_resonance.json unbreaking_waiver_max_chance must be <= 0.30")
     cs = lr_json.get("crossline_slip", {})
-    if cs.get("max_slip_chance") != 0.18 or cs.get("tier_drop_share") != 0.70 or cs.get("junk_crossline_share") != 0.25 or cs.get("curse_crossline_share") != 0.05:
-        errors.append("library_resonance.json crossline_slip must default to 0.18 cap and 0.70 / 0.25 / 0.05 outcome split")
+    rit = lr_json.get("ritual", {})
+    if cs.get("max_slip_chance") != 0.25 or cs.get("tier_drop_share") != 0.70 or cs.get("junk_crossline_share") != 0.25 or cs.get("curse_crossline_share") != 0.05:
+        errors.append("library_resonance.json crossline_slip must default to 0.25 cap and 0.70 / 0.25 / 0.05 outcome split")
+    if rit.get("max_transcription_slip_chance") != cs.get("max_slip_chance"):
+        errors.append("library_resonance.json ritual.max_transcription_slip_chance must match crossline_slip.max_slip_chance")
 
     sg_json = json.loads((data_dir / "shelf_gates.json").read_text(encoding="utf-8"))
     dtg = sg_json.get("depleted_tome_gradients", {})
