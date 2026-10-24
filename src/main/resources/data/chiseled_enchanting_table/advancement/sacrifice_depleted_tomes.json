@@ -1,0 +1,95 @@
+{
+  "display": {
+    "icon": {
+      "id": "chiseled_enchanting_table:depleted_tome"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.sacrifice_depleted_tomes.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.sacrifice_depleted_tomes.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:craft",
+  "criteria": {
+    "sacrifice_01": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_02": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_03": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_04": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_05": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_06": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_07": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_08": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_09": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_10": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_11": {
+      "trigger": "minecraft:impossible"
+    },
+    "sacrifice_12": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "sacrifice_01"
+    ],
+    [
+      "sacrifice_02"
+    ],
+    [
+      "sacrifice_03"
+    ],
+    [
+      "sacrifice_04"
+    ],
+    [
+      "sacrifice_05"
+    ],
+    [
+      "sacrifice_06"
+    ],
+    [
+      "sacrifice_07"
+    ],
+    [
+      "sacrifice_08"
+    ],
+    [
+      "sacrifice_09"
+    ],
+    [
+      "sacrifice_10"
+    ],
+    [
+      "sacrifice_11"
+    ],
+    [
+      "sacrifice_12"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

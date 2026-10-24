@@ -28,17 +28,23 @@ public final class ModConfigNetworking {
     public static final Identifier CONFIG_MANAGE_PERMISSION =
         ChiseledEnchantingTable.identifier("config/manage");
 
-    public record SyncRuntimeConfigPayload(String json, String policyJson, boolean canEdit) implements CustomPacketPayload {
+    public record SyncRuntimeConfigPayload(String json, String policyJson, String effectiveJson, boolean canEdit, long requestId, boolean accepted) implements CustomPacketPayload {
+        public SyncRuntimeConfigPayload(String json, boolean edit, long request, boolean accepted) {
+            this(json, "", json, edit, request, accepted);
+        }
         public static final CustomPacketPayload.Type<SyncRuntimeConfigPayload> TYPE =
-            new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("sync_runtime_config"));
+            new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("sync_runtime_config_" + chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
 
         public static final StreamCodec<FriendlyByteBuf, SyncRuntimeConfigPayload> CODEC = StreamCodec.of(
             (buf, payload) -> {
                 buf.writeUtf(payload.json(), 262_144);
                 buf.writeUtf(payload.policyJson() == null ? "" : payload.policyJson(), 65_536);
+                buf.writeUtf(payload.effectiveJson(), 262_144);
                 buf.writeBoolean(payload.canEdit());
+                buf.writeLong(payload.requestId());
+                buf.writeBoolean(payload.accepted());
             },
-            buf -> new SyncRuntimeConfigPayload(buf.readUtf(262_144), buf.readUtf(65_536), buf.readBoolean())
+            buf -> new SyncRuntimeConfigPayload(buf.readUtf(262_144), buf.readUtf(65_536), buf.readUtf(262_144), buf.readBoolean(), buf.readLong(), buf.readBoolean())
         );
 
         @Override
@@ -47,29 +53,37 @@ public final class ModConfigNetworking {
         }
     }
 
-    public record UpdateRuntimeConfigPayload(String json) implements CustomPacketPayload {
+    public record UpdateRuntimeConfigPayload(String json, long requestId, boolean closeContainer) implements CustomPacketPayload {
+        public UpdateRuntimeConfigPayload(String json, long requestId) {
+            this(json, requestId, true);
+        }
+
         public static final CustomPacketPayload.Type<UpdateRuntimeConfigPayload> TYPE =
-            new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("update_runtime_config"));
+            new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("update_runtime_config_" + chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
 
         public static final StreamCodec<FriendlyByteBuf, UpdateRuntimeConfigPayload> CODEC = StreamCodec.of(
-            (buf, payload) -> buf.writeUtf(payload.json(), 262_144),
-            buf -> new UpdateRuntimeConfigPayload(buf.readUtf(262_144))
+            (buf, payload) -> {
+                buf.writeUtf(payload.json(), 262_144);
+                buf.writeLong(payload.requestId());
+                buf.writeBoolean(payload.closeContainer());
+            },
+            buf -> new UpdateRuntimeConfigPayload(buf.readUtf(262_144), buf.readLong(), buf.readBoolean())
         );
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
             return TYPE;
         }
+    }
+
+    public static boolean mayManage(boolean dedicated, boolean owner, boolean permitted) {
+        return (!dedicated && owner) || permitted;
     }
 
     public static boolean canPlayerManageConfig(MinecraftServer server, ServerPlayer player) {
-        if (ModRuntimeConfig.serverPackPolicy().lockInGameConfig()) {
-            return false;
-        }
-        if (!server.isDedicatedServer()) {
-            return true;
-        }
-        return player.checkPermission(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS);
+        if (ModRuntimeConfig.serverPackPolicy().lockInGameConfig()) return false;
+        return mayManage(server.isDedicatedServer(), server.isSingleplayerOwner(player.nameAndId()),
+            player.checkPermission(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS));
     }
 
     public static void init() {
@@ -86,16 +100,37 @@ public final class ModConfigNetworking {
             ServerPlayer player = ctx.player();
             MinecraftServer server = player.level().getServer();
             if (server == null || !canPlayerManageConfig(server, player)) {
-                sendToPlayer(player);
+                sendToPlayer(player, payload.requestId(), false);
                 return;
             }
-            ModRuntimeConfig parsed = ModRuntimeConfig.fromJsonString(payload.json());
-            applyAndBroadcast(server, parsed);
+            try {
+                if (payload.requestId() <= 0 || payload.json().isBlank()) throw new IllegalArgumentException("Invalid save request");
+                ModRuntimeConfig parsed = ModRuntimeConfig.fromJsonString(payload.json());
+                applyAndBroadcast(server, parsed, payload.closeContainer() ? null : player);
+                sendToPlayer(player, payload.requestId(), true);
+            } catch (RuntimeException error) {
+                ChiseledEnchantingTable.LOGGER.warn("Rejected config update from {}", player.getName().getString(), error);
+                sendToPlayer(player, payload.requestId(), false);
+                player.sendSystemMessage(Component.translatable("config.chiseled_enchanting_table.msg.save_failed"));
+            }
         });
 
         CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) -> {
             dispatcher.register(
                 Commands.literal("cet")
+                    .then(Commands.literal("cancel-ritual").executes(ctx -> {
+                        ServerPlayer player = ctx.getSource().getPlayerOrException();
+                        if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
+                            && menu.tableBlockPos() != null
+                            && player.level().getBlockEntity(menu.tableBlockPos()) instanceof
+                                chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity table
+                            && table.cancelRitual(player.getUUID())) {
+                            player.sendSystemMessage(Component.translatable("command.chiseled_enchanting_table.ritual_cancelled"));
+                            table.syncOpenMenusWatchingTable(player.level(), menu.tableBlockPos());
+                            return 1;
+                        }
+                        return 0;
+                    }))
                     .then(Commands.literal("reload-config")
                         .requires(PermissionPredicates.require(CONFIG_MANAGE_PERMISSION, PermissionLevel.GAMEMASTERS))
                         .executes(ctx -> {
@@ -130,20 +165,38 @@ public final class ModConfigNetworking {
     }
 
     public static void applyAndBroadcast(MinecraftServer server, ModRuntimeConfig updated) {
+        applyAndBroadcast(server, updated, null);
+    }
+
+    public static void applyAndBroadcast(
+        MinecraftServer server,
+        ModRuntimeConfig updated,
+        @org.jetbrains.annotations.Nullable ServerPlayer keepOpenCaller
+    ) {
         ModRuntimeConfig sanitized = updated.withEnforcedPolicy(ModRuntimeConfig.serverPackPolicy());
-        ModRuntimeConfig.setLocalAndSave(sanitized);
-        ChiseledEnchantingTableData.applyRuntimeConfig(sanitized);
+        ChiseledEnchantingTableData.applyRuntimeConfig(sanitized, ModRuntimeConfig.serverPackPolicy(),
+            () -> ModRuntimeConfig.setLocalAndSave(sanitized));
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            // Rule changes can invalidate opening-time unlock/scan snapshots. Vanilla returns inputs.
+            if (p.containerMenu instanceof ChiseledEnchantingTableScreenHandler openMenu) {
+                if (keepOpenCaller != null && p == keepOpenCaller) {
+                    sendToPlayer(p);
+                    EnchantCostSync.sendTo(p);
+                    openMenu.refreshAfterRuntimeConfigChange();
+                    continue;
+                }
+                p.closeContainer();
+            }
             sendToPlayer(p);
             EnchantCostSync.sendTo(p);
-            if (p.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
-                menu.refreshLiveShelfState();
-                menu.broadcastChanges();
-            }
         }
     }
 
     public static void sendToPlayer(ServerPlayer player) {
+        sendToPlayer(player, 0L, true);
+    }
+
+    private static void sendToPlayer(ServerPlayer player, long requestId, boolean accepted) {
         MinecraftServer server = player.level().getServer();
         if (server == null || !ServerPlayNetworking.canSend(player, SyncRuntimeConfigPayload.TYPE)) {
             return;
@@ -154,7 +207,8 @@ public final class ModConfigNetworking {
                 new SyncRuntimeConfigPayload(
                     ModRuntimeConfig.get().toJsonString(),
                     ModRuntimeConfig.serverPackPolicy().toJsonString(),
-                    canPlayerManageConfig(server, player)
+                    ChiseledEnchantingTableData.runtimeConfiguration().toJsonString(),
+                    canPlayerManageConfig(server, player), requestId, accepted
                 )
             );
         } catch (RuntimeException e) {

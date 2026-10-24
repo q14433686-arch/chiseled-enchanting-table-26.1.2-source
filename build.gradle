@@ -67,16 +67,11 @@ sourceSets {
             //     book combines to the table, and flattens anvil prior-work XP scaling.
             //   * block/ChiseledBookshelfTick & mixin/structure/* — chiseled-bookshelf ambient rune
             //     particles/sound and structure bookshelf population.
-            // Remaining excluded legacy upstream directories:
-            //   * integration/* — unported 1.20 third-party mod hooks (Colorful Books etc.).
-            //   * mixin/structureProcessor/* & structureProcessor/* — replaced by mixin/structure/*.
-            //   * modifyChestLootTable/* & utils/ChiseledBookshelfLootTable.java — replaced by
-            //     JSON-driven LootRegistry + BookshelfBookFiller.
-            exclude 'chiseled_enchanting_table/mixin/structureProcessor/**'
-            exclude 'chiseled_enchanting_table/modifyChestLootTable/**'
-            exclude 'chiseled_enchanting_table/structureProcessor/**'
-            exclude 'chiseled_enchanting_table/integration/**'
-            exclude 'chiseled_enchanting_table/utils/ChiseledBookshelfLootTable.java'
+            // Legacy upstream directories (mixin/structureProcessor/*, structureProcessor/*,
+            // modifyChestLootTable/*, integration/*, utils/ChiseledBookshelfLootTable.java)
+            // were removed in the 2026-10-24 sync (source c1ec2f7): the live replacements are
+            // mixin/structure/* + mechanics/structure/* and the JSON-driven LootRegistry /
+            // BookshelfBookFiller, so no source-set exclusions remain for them.
         }
     }
     client {
@@ -170,6 +165,18 @@ jar {
     from("LICENSE") {
         rename { "${it}_${inputs.properties.archivesName}" }
     }
+}
+
+// The isolated CI smoke test sends reload/stop through the real dedicated-server console.
+tasks.register('genBundledDefaults', Exec) {
+    description = 'Regenerate BundledDefaults.java from datapack JSON defaults'
+    group = 'codegen'
+    workingDir = rootProject.projectDir
+    commandLine 'python3', 'scripts/gen_bundled_defaults.py'
+}
+
+tasks.named('runServer', JavaExec).configure {
+    standardInput = System.in
 }
 
 publishing {

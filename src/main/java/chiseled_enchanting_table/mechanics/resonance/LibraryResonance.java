@@ -2,7 +2,10 @@ package chiseled_enchanting_table.mechanics.resonance;
 
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -25,12 +28,16 @@ import net.minecraft.world.level.Level;
  * {@link chiseled_enchanting_table.menu.EnchantCostTablePayload}.</p>
  */
 public final class LibraryResonance {
-    public static final int MIN_DISCOUNT_BOOKSHELVES = 12;
-    public static final int MAX_WOODEN_DISCOUNT_PERCENT = 15;
-    public static final int MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT = 20;
-    public static final int MAX_BASE_XP_DISCOUNT_PERCENT = 35;
-    public static final int MAX_SPECIFIC_ENCHANT_BONUS_PERCENT = 15;
-    public static final int MAX_TOTAL_XP_DISCOUNT_PERCENT = 40;
+    // Generated from library_resonance.json (single source of truth); see BundledDefaults.
+    public static final int MIN_DISCOUNT_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.MIN_DISCOUNT_BOOKSHELVES;
+    public static final int MAX_WOODEN_DISCOUNT_PERCENT = chiseled_enchanting_table.BundledDefaults.MAX_WOODEN_DISCOUNT_PERCENT;
+    public static final int MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT = chiseled_enchanting_table.BundledDefaults.MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT;
+    // NOTE (audit BAL-02): with the shipped defaults MAX_BASE == wooden + mastery, so this
+    // layer only starts to bite when a datapack raises either sub-cap; that is intentional
+    // (it is the datapack-visible brake on the sum), and the value stays independently settable.
+    public static final int MAX_BASE_XP_DISCOUNT_PERCENT = chiseled_enchanting_table.BundledDefaults.MAX_BASE_XP_DISCOUNT_PERCENT;
+    public static final int MAX_SPECIFIC_ENCHANT_BONUS_PERCENT = chiseled_enchanting_table.BundledDefaults.MAX_SPECIFIC_ENCHANT_BONUS_PERCENT;
+    public static final int MAX_TOTAL_XP_DISCOUNT_PERCENT = chiseled_enchanting_table.BundledDefaults.MAX_TOTAL_XP_DISCOUNT_PERCENT;
 
     private static final TagKey<Enchantment> CURSE_TAG =
         TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
@@ -70,48 +77,72 @@ public final class LibraryResonance {
         int tomeRegenTier1Shelves,
         int tomeRegenTier1Seconds,
         int tomeRegenTier2Shelves,
-        int tomeRegenTier2Seconds
+        int tomeRegenTier2Seconds,
+        double unbreakingWaiverPerLevel,
+        double unbreakingWaiverMaxChance,
+        boolean wildBookWearEnabled,
+        List<Integer> wildBookRemainingWeights,
+        TomeWearData.ScapegoatPricing scapegoatPricing,
+        // Tome page & lock settings (datapack section "tome_pages"; also in the GUI config).
+        boolean lockedShelfBreakable,
+        boolean lockedBookExtractionBlocked,
+        int earlyUnlockXpLevels,
+        int earlyUnlockGritCount,
+        int sacrificeRequired,
+        int tomePageRequiredShelves
     ) {
         public static final Config DEFAULT = new Config(
-            MIN_DISCOUNT_BOOKSHELVES,
-            38,
-            MAX_WOODEN_DISCOUNT_PERCENT,
-            MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT,
-            MAX_BASE_XP_DISCOUNT_PERCENT,
-            MAX_SPECIFIC_ENCHANT_BONUS_PERCENT,
-            1.0,
-            MAX_TOTAL_XP_DISCOUNT_PERCENT,
-            1.25,
-            1.25,
-            0.80,
-            0.90,
-            0.45,
-            0.85,
-            0.50,
-            1.0,
-            2.2,
-            3.5,
-            0.65,
-            80.0,
-            0.20,
-            0.50,
-            110.0,
-            0.25,
-            0.85,
-            MasterTomeWear.ConsumptionMode.WEAR,
-            MasterTomeWear.DEFAULT_MAX_TOME_USES,
-            MasterTomeWear.DEFAULT_BOOK_COPY_WEAR_COST,
-            MasterTomeWear.DepleteBehavior.STEP_DOWN,
-            MasterTomeWear.DEFAULT_REGEN_ENABLED,
-            MasterTomeWear.DEFAULT_REGEN_BASE_SECONDS,
-            MasterTomeWear.DEFAULT_REGEN_TIER1_SHELVES,
-            MasterTomeWear.DEFAULT_REGEN_TIER1_SECONDS,
-            MasterTomeWear.DEFAULT_REGEN_TIER2_SHELVES,
-            MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS
+            chiseled_enchanting_table.BundledDefaults.MIN_DISCOUNT_BOOKSHELVES,
+            chiseled_enchanting_table.BundledDefaults.MAX_DISCOUNT_BOOKSHELVES,
+            chiseled_enchanting_table.BundledDefaults.MAX_WOODEN_DISCOUNT_PERCENT,
+            chiseled_enchanting_table.BundledDefaults.MAX_GLOBAL_MASTERY_DISCOUNT_PERCENT,
+            chiseled_enchanting_table.BundledDefaults.MAX_BASE_XP_DISCOUNT_PERCENT,
+            chiseled_enchanting_table.BundledDefaults.MAX_SPECIFIC_ENCHANT_BONUS_PERCENT,
+            chiseled_enchanting_table.BundledDefaults.SPECIFIC_ENCHANT_EXPONENT,
+            chiseled_enchanting_table.BundledDefaults.MAX_TOTAL_XP_DISCOUNT_PERCENT,
+            chiseled_enchanting_table.BundledDefaults.MASTERY_UNIT_EXPONENT,
+            chiseled_enchanting_table.BundledDefaults.GLOBAL_MASTERY_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.MASTER_TOME_UPGRADE_MATERIAL_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.SHELF_UPGRADE_MATERIAL_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_PROBABILITY_GLOBAL_WEIGHT,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_PROBABILITY_AFFINITY_WEIGHT,
+            chiseled_enchanting_table.BundledDefaults.BLANK_BOOK_AFFINITY_WEIGHT,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_SHELF_SCORE_FACTOR,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_GLOBAL_MASTERY_SCORE_FACTOR,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_AFFINITY_MASTERY_SCORE_FACTOR,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_TIER2_MAX_PROB,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_TIER2_SCORE_DIVISOR,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_TIER2_MASTERY_BONUS,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_TIER_PLUS_MAX_PROB,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_TIER_PLUS_SCORE_DIVISOR,
+            chiseled_enchanting_table.BundledDefaults.EPIPHANY_TIER_PLUS_MASTERY_BONUS,
+            chiseled_enchanting_table.BundledDefaults.INCREMENTAL_STEP_CREDIT_FACTOR,
+            MasterTomeWear.ConsumptionMode.fromToken(chiseled_enchanting_table.BundledDefaults.TOME_CONSUMPTION_MODE),
+            chiseled_enchanting_table.BundledDefaults.MAX_TOME_USES,
+            chiseled_enchanting_table.BundledDefaults.BOOK_COPY_WEAR_COST,
+            MasterTomeWear.DepleteBehavior.fromToken(chiseled_enchanting_table.BundledDefaults.TOME_DEPLETE_BEHAVIOR),
+            chiseled_enchanting_table.BundledDefaults.TOME_REGEN_ENABLED,
+            chiseled_enchanting_table.BundledDefaults.TOME_REGEN_BASE_SECONDS,
+            chiseled_enchanting_table.BundledDefaults.TOME_REGEN_TIER1_SHELVES,
+            chiseled_enchanting_table.BundledDefaults.TOME_REGEN_TIER1_SECONDS,
+            chiseled_enchanting_table.BundledDefaults.TOME_REGEN_TIER2_SHELVES,
+            chiseled_enchanting_table.BundledDefaults.TOME_REGEN_TIER2_SECONDS,
+            chiseled_enchanting_table.BundledDefaults.UNBREAKING_WAIVER_PER_LEVEL,
+            chiseled_enchanting_table.BundledDefaults.UNBREAKING_WAIVER_MAX_CHANCE,
+            chiseled_enchanting_table.BundledDefaults.WILD_BOOK_WEAR_ENABLED,
+            chiseled_enchanting_table.BundledDefaults.WILD_REMAINING_WEIGHTS,
+            TomeWearData.ScapegoatPricing.fromToken(chiseled_enchanting_table.BundledDefaults.SCAPEGOAT_PRICING),
+            chiseled_enchanting_table.BundledDefaults.LOCKED_SHELF_BREAKABLE,
+            chiseled_enchanting_table.BundledDefaults.LOCKED_BOOK_EXTRACTION_BLOCKED,
+            chiseled_enchanting_table.BundledDefaults.EARLY_UNLOCK_XP_LEVELS,
+            chiseled_enchanting_table.BundledDefaults.EARLY_UNLOCK_GRIT_COUNT,
+            chiseled_enchanting_table.BundledDefaults.SACRIFICE_REQUIRED,
+            chiseled_enchanting_table.BundledDefaults.TOME_PAGE_REQUIRED_SHELVES
         );
 
         public Config {
             tomeConsumptionMode = tomeConsumptionMode != null ? tomeConsumptionMode : MasterTomeWear.ConsumptionMode.WEAR;
+            scapegoatPricing = scapegoatPricing != null ? scapegoatPricing : TomeWearData.ScapegoatPricing.ESSENCE;
             maxTomeUses = clampInt(maxTomeUses, 1, 1024);
             bookCopyWearCost = clampInt(bookCopyWearCost, 1, 1024);
             tomeDepleteBehavior = tomeDepleteBehavior != null ? tomeDepleteBehavior : MasterTomeWear.DepleteBehavior.STEP_DOWN;
@@ -120,6 +151,108 @@ public final class LibraryResonance {
             tomeRegenTier1Seconds = clampInt(tomeRegenTier1Seconds, 1, tomeRegenBaseSeconds);
             tomeRegenTier2Shelves = clampInt(tomeRegenTier2Shelves, tomeRegenTier1Shelves, 256);
             tomeRegenTier2Seconds = clampInt(tomeRegenTier2Seconds, 1, tomeRegenTier1Seconds);
+            unbreakingWaiverPerLevel = clampDouble(unbreakingWaiverPerLevel, 0.0, 0.30);
+            unbreakingWaiverMaxChance = clampDouble(unbreakingWaiverMaxChance, 0.0, 0.30);
+            if (wildBookRemainingWeights == null || wildBookRemainingWeights.isEmpty()) {
+                wildBookRemainingWeights = MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS;
+            } else {
+                List<Integer> cleaned = new ArrayList<>(wildBookRemainingWeights.size());
+                for (Integer w : wildBookRemainingWeights) {
+                    cleaned.add(w == null ? 0 : clampInt(w, 0, 10_000));
+                }
+                wildBookRemainingWeights = List.copyOf(cleaned);
+            }
+            earlyUnlockXpLevels = clampInt(earlyUnlockXpLevels, 0, 512);
+            earlyUnlockGritCount = clampInt(earlyUnlockGritCount, 0, 512);
+            sacrificeRequired = clampInt(sacrificeRequired, 1, 1024);
+            tomePageRequiredShelves = clampInt(tomePageRequiredShelves, 1, 512);
+        }
+
+        public Config(
+            int minDiscountBookshelves,
+            int maxDiscountBookshelves,
+            int maxWoodenDiscountPercent,
+            int maxGlobalMasteryDiscountPercent,
+            int maxBaseXpDiscountPercent,
+            int maxSpecificEnchantBonusPercent,
+            double specificEnchantExponent,
+            int maxTotalXpDiscountPercent,
+            double masteryUnitExponent,
+            double globalMasteryMultiplier,
+            double masterTomeUpgradeMaterialMultiplier,
+            double shelfUpgradeMaterialMultiplier,
+            double epiphanyProbabilityGlobalWeight,
+            double epiphanyProbabilityAffinityWeight,
+            double blankBookAffinityWeight,
+            double epiphanyShelfScoreFactor,
+            double epiphanyGlobalMasteryScoreFactor,
+            double epiphanyAffinityMasteryScoreFactor,
+            double epiphanyTier2MaxProb,
+            double epiphanyTier2ScoreDivisor,
+            double epiphanyTier2MasteryBonus,
+            double epiphanyTierPlusMaxProb,
+            double epiphanyTierPlusScoreDivisor,
+            double epiphanyTierPlusMasteryBonus,
+            double incrementalStepCreditFactor,
+            MasterTomeWear.ConsumptionMode tomeConsumptionMode,
+            int maxTomeUses,
+            int bookCopyWearCost,
+            MasterTomeWear.DepleteBehavior tomeDepleteBehavior,
+            boolean tomeRegenEnabled,
+            int tomeRegenBaseSeconds,
+            int tomeRegenTier1Shelves,
+            int tomeRegenTier1Seconds,
+            int tomeRegenTier2Shelves,
+            int tomeRegenTier2Seconds
+        ) {
+            this(
+                minDiscountBookshelves,
+                maxDiscountBookshelves,
+                maxWoodenDiscountPercent,
+                maxGlobalMasteryDiscountPercent,
+                maxBaseXpDiscountPercent,
+                maxSpecificEnchantBonusPercent,
+                specificEnchantExponent,
+                maxTotalXpDiscountPercent,
+                masteryUnitExponent,
+                globalMasteryMultiplier,
+                masterTomeUpgradeMaterialMultiplier,
+                shelfUpgradeMaterialMultiplier,
+                epiphanyProbabilityGlobalWeight,
+                epiphanyProbabilityAffinityWeight,
+                blankBookAffinityWeight,
+                epiphanyShelfScoreFactor,
+                epiphanyGlobalMasteryScoreFactor,
+                epiphanyAffinityMasteryScoreFactor,
+                epiphanyTier2MaxProb,
+                epiphanyTier2ScoreDivisor,
+                epiphanyTier2MasteryBonus,
+                epiphanyTierPlusMaxProb,
+                epiphanyTierPlusScoreDivisor,
+                epiphanyTierPlusMasteryBonus,
+                incrementalStepCreditFactor,
+                tomeConsumptionMode,
+                maxTomeUses,
+                bookCopyWearCost,
+                tomeDepleteBehavior,
+                tomeRegenEnabled,
+                tomeRegenBaseSeconds,
+                tomeRegenTier1Shelves,
+                tomeRegenTier1Seconds,
+                tomeRegenTier2Shelves,
+                tomeRegenTier2Seconds,
+                MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_PER_LEVEL,
+                MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_MAX_CHANCE,
+                MasterTomeWear.DEFAULT_WILD_BOOK_WEAR_ENABLED,
+                MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS,
+                TomeWearData.ScapegoatPricing.ESSENCE,
+                DEFAULT.lockedShelfBreakable(),
+                DEFAULT.lockedBookExtractionBlocked(),
+                DEFAULT.earlyUnlockXpLevels(),
+                DEFAULT.earlyUnlockGritCount(),
+                DEFAULT.sacrificeRequired(),
+                DEFAULT.tomePageRequiredShelves()
+            );
         }
 
         public Config(
@@ -188,7 +321,18 @@ public final class LibraryResonance {
                 MasterTomeWear.DEFAULT_REGEN_TIER1_SHELVES,
                 MasterTomeWear.DEFAULT_REGEN_TIER1_SECONDS,
                 MasterTomeWear.DEFAULT_REGEN_TIER2_SHELVES,
-                MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS
+                MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS,
+                MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_PER_LEVEL,
+                MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_MAX_CHANCE,
+                true,
+                MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS,
+                TomeWearData.ScapegoatPricing.ESSENCE,
+                DEFAULT.lockedShelfBreakable,
+                DEFAULT.lockedBookExtractionBlocked,
+                DEFAULT.earlyUnlockXpLevels,
+                DEFAULT.earlyUnlockGritCount,
+                DEFAULT.sacrificeRequired,
+                DEFAULT.tomePageRequiredShelves
             );
         }
 
@@ -259,6 +403,24 @@ public final class LibraryResonance {
             JsonObject woodObj = subObject(root, "wooden_bookshelves");
             JsonObject masteryObj = subObject(root, "chiseled_mastery");
             JsonObject epiphanyObj = subObject(root, "epiphany_affinity");
+            JsonObject wildWearObj = subObject(root, "wild_book_wear");
+            JsonObject tomePagesObj = subObject(root, "tome_pages");
+
+            List<Integer> wildWeights = MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS;
+            if (wildWearObj != null
+                && wildWearObj.has("remaining_durability_weights")
+                && wildWearObj.get("remaining_durability_weights").isJsonArray()) {
+                JsonArray arr = wildWearObj.getAsJsonArray("remaining_durability_weights");
+                List<Integer> parsed = new ArrayList<>(arr.size());
+                for (var el : arr) {
+                    if (el != null && el.isJsonPrimitive() && el.getAsJsonPrimitive().isNumber()) {
+                        parsed.add(clampInt(el.getAsInt(), 0, 10_000));
+                    }
+                }
+                if (!parsed.isEmpty()) {
+                    wildWeights = List.copyOf(parsed);
+                }
+            }
 
             int minShelves = clampInt(
                 intFrom(woodObj, root, "min_discount_bookshelves", null, DEFAULT.minDiscountBookshelves),
@@ -436,7 +598,28 @@ public final class LibraryResonance {
                     intFrom(masteryObj, root, "tome_regen_tier2_seconds", null, DEFAULT.tomeRegenTier2Seconds),
                     1,
                     86_400
-                )
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "unbreaking_waiver_per_level", null, DEFAULT.unbreakingWaiverPerLevel),
+                    0.0,
+                    0.30
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "unbreaking_waiver_max_chance", null, DEFAULT.unbreakingWaiverMaxChance),
+                    0.0,
+                    0.30
+                ),
+                boolFrom(wildWearObj, root, "enabled", "wild_book_wear_enabled", DEFAULT.wildBookWearEnabled),
+                wildWeights,
+                TomeWearData.ScapegoatPricing.fromToken(
+                    stringFrom(masteryObj, root, "scapegoat_pricing", null, DEFAULT.scapegoatPricing.token())
+                ),
+                boolFrom(tomePagesObj, root, "locked_shelf_breakable", null, DEFAULT.lockedShelfBreakable),
+                boolFrom(tomePagesObj, root, "locked_book_extraction_blocked", null, DEFAULT.lockedBookExtractionBlocked),
+                intFrom(tomePagesObj, root, "early_unlock_xp_levels", null, DEFAULT.earlyUnlockXpLevels),
+                intFrom(tomePagesObj, root, "early_unlock_grit_count", null, DEFAULT.earlyUnlockGritCount),
+                intFrom(tomePagesObj, root, "sacrifice_required", null, DEFAULT.sacrificeRequired),
+                intFrom(tomePagesObj, root, "tome_page_required_shelves", null, DEFAULT.tomePageRequiredShelves)
             );
         }
 
@@ -822,7 +1005,7 @@ public final class LibraryResonance {
     ) {
         Config c = cfg != null ? cfg : Config.DEFAULT;
         if (regularBookshelves < minBookshelves) {
-            return 0.0 >= 0.0 && regularBookshelves < minBookshelves ? 0 : 0;
+            return 0;
         }
         double score = epiphanyResonanceScore(c, regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
         int step = Math.max(1, scoreStepPerExtraSlot);

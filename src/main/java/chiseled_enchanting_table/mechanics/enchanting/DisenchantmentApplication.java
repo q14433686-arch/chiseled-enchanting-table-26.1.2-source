@@ -422,12 +422,12 @@ public final class DisenchantmentApplication {
     }
 
     public static void apply(ChiseledEnchantingTableScreenHandler menu, ApplyEnchantmentPayload payload) {
-        if (!ChiseledEnchantingTableData.disenchantEnabled()) {
+        if (!ChiseledEnchantingTableData.disenchantEnabled() || menu.isRitualActive()) {
             return;
         }
         OptionType type = payload.option_type();
         ItemStack target = menu.get_enchantable_item();
-        if (target.isEmpty()) {
+        if (target.isEmpty() || target.getCount() != 1) {
             return;
         }
 
@@ -465,6 +465,7 @@ public final class DisenchantmentApplication {
         }
 
         ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         awardRefundOrbs(menu, totalRefund);
         playCleanseFeedback(menu, 1.15f);
@@ -542,6 +543,7 @@ public final class DisenchantmentApplication {
         }
 
         ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         playCleanseFeedback(menu, 0.95f);
         Advancement.give(menu.player, "cleanse_enchantment");
@@ -578,6 +580,7 @@ public final class DisenchantmentApplication {
         }
 
         ItemStack resulting = finishEnchantmentWrite(target, next.toImmutable());
+        InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         playCleanseFeedback(menu, 0.72f);
         Advancement.give(menu.player, "purge_curse");

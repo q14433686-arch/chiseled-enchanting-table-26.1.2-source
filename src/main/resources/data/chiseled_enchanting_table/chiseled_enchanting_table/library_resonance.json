@@ -1,10 +1,10 @@
 {
-  "_comment": "Full data-driven configuration for Library & Master Tome Resonance. Every key below is read directly by LibraryResonance.Config.fromJson and synced to clients in EnchantCostTablePayload.",
+  "_comment": "Full data-driven configuration for Library & Master Tome Resonance, Wild Book Wear, Unbreaking Waivers, and Overloaded Infinity Cross-Line Slips. Every key below is read directly by LibraryResonance.Config.fromJson / InscriptionRitualMechanics.Config.fromJson and synced to clients in EnchantCostTablePayload.",
   "wooden_bookshelves": {
     "min_discount_bookshelves": 12,
     "max_discount_bookshelves": 38,
     "max_wooden_discount_percent": 15,
-    "shelf_upgrade_material_multiplier": 0.90
+    "shelf_upgrade_material_multiplier": 0.9
   },
   "chiseled_mastery": {
     "mastery_unit_exponent": 1.25,
@@ -14,31 +14,98 @@
     "max_specific_enchant_bonus_percent": 15,
     "specific_enchant_exponent": 1.0,
     "max_total_xp_discount_percent": 40,
-    "master_tome_upgrade_material_multiplier": 0.80,
+    "master_tome_upgrade_material_multiplier": 0.8,
     "incremental_step_credit_factor": 0.85,
     "tome_consumption_mode": "wear",
-    "max_tome_uses": 16,
-    "book_copy_wear_cost": 4,
+    "max_tome_uses": 4,
+    "book_copy_wear_cost": 2,
+    "unbreaking_waiver_per_level": 0.1,
+    "unbreaking_waiver_max_chance": 0.3,
     "tome_deplete_behavior": "step_down",
     "tome_regen_enabled": true,
-    "tome_regen_base_seconds": 24000,
+    "tome_regen_base_seconds": 7200,
     "tome_regen_tier1_shelves": 38,
-    "tome_regen_tier1_seconds": 12000,
+    "tome_regen_tier1_seconds": 3600,
     "tome_regen_tier2_shelves": 42,
-    "tome_regen_tier2_seconds": 3600
+    "tome_regen_tier2_seconds": 1200,
+    "scapegoat_pricing": "essence"
+  },
+  "wild_book_wear": {
+    "enabled": true,
+    "remaining_durability_weights": [
+      45,
+      35,
+      15,
+      5
+    ]
   },
   "epiphany_affinity": {
     "epiphany_probability_global_weight": 0.45,
     "epiphany_probability_affinity_weight": 0.85,
-    "blank_book_affinity_weight": 0.50,
+    "blank_book_affinity_weight": 0.5,
     "epiphany_shelf_score_factor": 1.0,
     "epiphany_global_mastery_score_factor": 2.2,
     "epiphany_affinity_mastery_score_factor": 3.5,
     "epiphany_tier2_max_prob": 0.65,
     "epiphany_tier2_score_divisor": 80.0,
-    "epiphany_tier2_mastery_bonus": 0.20,
-    "epiphany_tier_plus_max_prob": 0.50,
+    "epiphany_tier2_mastery_bonus": 0.2,
+    "epiphany_tier_plus_max_prob": 0.5,
     "epiphany_tier_plus_score_divisor": 110.0,
+    "_epiphany_tier_plus_score_divisor_note": "score divisor for tier+ epiphany rolls",
     "epiphany_tier_plus_mastery_bonus": 0.25
+  },
+  "ritual": {
+    "max_single_wait_seconds": 300,
+    "min_tome_enchants_for_wait": 10,
+    "max_sacrifice_xp_levels": 15,
+    "max_rush_degrade_normal": 0.5,
+    "max_rush_degrade_infinity": 0.7,
+    "max_transcription_slip_chance": 0.18,
+    "shelf_load_reference": 42.0,
+    "tome_load_reference": 22.0,
+    "wait_curve": {
+      "shelf_weight": 0.42,
+      "tome_weight": 0.58,
+      "level_floor": 0.35,
+      "level_span": 0.65,
+      "level_exponent": 1.15,
+      "saturation": 0.62,
+      "min_ticks": 100
+    }
+  },
+  "crossline_slip": {
+    "min_load_threshold": 3.0,
+    "per_load_slope": 0.035,
+    "max_slip_chance": 0.18,
+    "shelf_tier1_count": 32,
+    "shelf_tier1_bonus": 0.01,
+    "shelf_tier2_count": 38,
+    "shelf_tier2_bonus": 0.02,
+    "shelf_tier3_count": 42,
+    "shelf_tier3_bonus": 0.03,
+    "treasure_score": 1.0,
+    "single_treasure_min_load": 3.0,
+    "high_rarity_max_weight": 2,
+    "high_rarity_score": 1.0,
+    "mid_rarity_max_weight": 5,
+    "mid_rarity_score": 0.5,
+    "broad_applicability_min_items": 12,
+    "broad_applicability_score": 0.5,
+    "relative_level_min_ratio": 0.6,
+    "relative_level_score": 0.5,
+    "unbreaking_high_min_level": 3,
+    "unbreaking_high_score": 1.0,
+    "tier_drop_share": 0.7,
+    "junk_crossline_share": 0.25,
+    "curse_crossline_share": 0.05,
+    "pollution_refund_ratio": 0.5
+  },
+  "tome_pages": {
+    "locked_shelf_breakable": true,
+    "locked_book_extraction_blocked": true,
+    "early_unlock_xp_levels": 1,
+    "early_unlock_grit_count": 1,
+    "sacrifice_required": 12,
+    "tome_page_required_shelves": 4
   }
 }

@@ -47,6 +47,9 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
     private HolderLookup.Provider cachedRegistries;
     private List<EnchantQueryIndex.Entry> cachedIndex;
     private GrimoireViewerBridge.Backend bridgeBackend;
+    private IJeiRuntime runtime;
+    private List<EnchantingRecipe> registeredEnchanting = List.of();
+    private List<TransformationRecipe> registeredTransformations = List.of();
 
     public ChiseledEnchantingJeiPlugin() {
         SyncedEnchantmentCosts.addListener(this::invalidateCache);
@@ -55,6 +58,27 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
     private void invalidateCache() {
         this.cachedIndex = null;
         this.cachedRecipes = null;
+        Minecraft.getInstance().execute(this::refreshRuntimeRecipes);
+    }
+
+    private void refreshRuntimeRecipes() {
+        if (this.runtime == null || !SyncedEnchantmentCosts.hasServerData()) return;
+        var manager = this.runtime.getRecipeManager();
+        var enchanting = recipes();
+        var transformations = TransformationQueryIndex.build().stream().map(TransformationRecipe::of).toList();
+        // JEI's public runtime API provides hide/add, not removal. Hide superseded snapshots.
+        if (!this.registeredEnchanting.equals(enchanting)) {
+            manager.hideRecipes(EnchantingRecipeCategory.RECIPE_TYPE, this.registeredEnchanting);
+            manager.addRecipes(EnchantingRecipeCategory.RECIPE_TYPE, enchanting);
+            manager.unhideRecipes(EnchantingRecipeCategory.RECIPE_TYPE, enchanting);
+            this.registeredEnchanting = enchanting;
+        }
+        if (!this.registeredTransformations.equals(transformations)) {
+            manager.hideRecipes(TransformationRecipeCategory.RECIPE_TYPE, this.registeredTransformations);
+            manager.addRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
+            manager.unhideRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
+            this.registeredTransformations = transformations;
+        }
     }
 
     @Override
@@ -85,17 +109,27 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             registration.addRecipes(TransformationRecipeCategory.RECIPE_TYPE, transformations);
         }
 
+        this.registeredEnchanting = recipes;
+        this.registeredTransformations = transformations;
+
         List<ItemStack> stations = List.of(
             new ItemStack(BlockRegistry.CHISELED_ENCHANTING_TABLE),
             new ItemStack(Blocks.CHISELED_BOOKSHELF)
         );
+        // Numbers in JEI prose come from the live synced configs, never hardcoded copies.
+        var jeiSg = SyncedEnchantmentCosts.shelfGatesConfig();
+        String jeiScan = (jeiSg.horizontalScanRadius() * 2 + 1) + "\u00d7"
+            + (jeiSg.verticalScanRadius() * 2 + 1) + "\u00d7" + (jeiSg.horizontalScanRadius() * 2 + 1);
+        int jeiMaxUses = SyncedEnchantmentCosts.libraryResonanceConfig().maxTomeUses();
         registration.addItemStackInfo(
             stations,
-            Component.translatable("jei.chiseled_enchanting_table.info.station")
+            Component.translatable("jei.chiseled_enchanting_table.info.station",
+                jeiScan, jeiMaxUses, SyncedEnchantmentCosts.epiphanyMinBookshelves())
         );
         registration.addItemStackInfo(
             List.of(new ItemStack(Blocks.CHISELED_BOOKSHELF)),
-            Component.translatable("jei.chiseled_enchanting_table.info.bookshelf")
+            Component.translatable("jei.chiseled_enchanting_table.info.bookshelf",
+                jeiScan, jeiMaxUses)
         );
         registration.addItemStackInfo(
             List.of(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)),
@@ -222,6 +256,7 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
 
     @Override
     public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
+        this.runtime = jeiRuntime;
         if (this.bridgeBackend != null) {
             GrimoireViewerBridge.unregisterBackend(this.bridgeBackend);
         }
@@ -244,10 +279,17 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             }
         };
         GrimoireViewerBridge.registerBackend(this.bridgeBackend);
+        Minecraft.getInstance().execute(this::refreshRuntimeRecipes);
     }
 
     @Override
     public void onRuntimeUnavailable() {
+        this.runtime = null;
+        this.registeredEnchanting = List.of();
+        this.registeredTransformations = List.of();
+        this.cachedRegistries = null;
+        this.cachedIndex = null;
+        this.cachedRecipes = null;
         if (this.bridgeBackend != null) {
             GrimoireViewerBridge.unregisterBackend(this.bridgeBackend);
             this.bridgeBackend = null;

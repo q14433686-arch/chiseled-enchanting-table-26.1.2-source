@@ -219,6 +219,9 @@ public final class ConfigCatalog {
             return getter.apply(d);
         }
 
+        /** Resolver-only assignment; normalize all related fields once after the complete overlay. */
+        public void setResolvedValue(Draft d, Object v) { setter.accept(d, v); }
+
         public void set(Draft d, Object v) {
             setter.accept(d, v);
             d.normalizeAfterEdit(key);
@@ -484,6 +487,16 @@ public final class ConfigCatalog {
             d -> d.anvilBlockSameBookMerge, (d, v) -> d.anvilBlockSameBookMerge = v,
             ALWAYS, null
         ),
+        boolOpt(
+            "restrict_villager_infinity_books", CategoryId.GENERAL, EffectScope.IMMEDIATE,
+            d -> d.restrictVillagerInfinityBooks, (d, v) -> d.restrictVillagerInfinityBooks = v,
+            ALWAYS, null
+        ),
+        boolOpt(
+            "grindstone_depleted_tome", CategoryId.GENERAL, EffectScope.IMMEDIATE,
+            d -> d.grindstoneDepletedTome, (d, v) -> d.grindstoneDepletedTome = v,
+            ALWAYS, null
+        ),
 
         // ==================== 2. BOOKSHELVES ====================
         boolOpt(
@@ -579,6 +592,40 @@ public final class ConfigCatalog {
                 ? "config.chiseled_enchanting_table.reason.need_wear_mode"
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
+        boolOpt(
+            "locked_shelf_breakable", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            d -> d.lockedShelfBreakable, (d, v) -> d.lockedShelfBreakable = v,
+            ALWAYS, null
+        ),
+        boolOpt(
+            "locked_book_extraction_blocked", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            d -> d.lockedBookExtractionBlocked, (d, v) -> d.lockedBookExtractionBlocked = v,
+            ALWAYS, null
+        ),
+        intOpt(
+            "early_unlock_xp_levels", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 512, 1,
+            d -> d.earlyUnlockXpLevels, (d, v) -> d.earlyUnlockXpLevels = v,
+            d -> d.earlyUnlockXpLevels + "",
+            ALWAYS, null
+        ),
+        intOpt(
+            "early_unlock_grit_count", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 512, 1,
+            d -> d.earlyUnlockGritCount, (d, v) -> d.earlyUnlockGritCount = v,
+            d -> d.earlyUnlockGritCount + "",
+            ALWAYS, null
+        ),
+        intOpt(
+            "sacrifice_required", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 1024, 1,
+            d -> d.sacrificeRequired, (d, v) -> d.sacrificeRequired = v,
+            d -> d.sacrificeRequired + "",
+            ALWAYS, null
+        ),
+        intOpt(
+            "tome_page_required_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 512, 1,
+            d -> d.tomePageRequiredShelves, (d, v) -> d.tomePageRequiredShelves = v,
+            d -> d.tomePageRequiredShelves + "",
+            ALWAYS, null
+        ),
         intOpt(
             "tome_regen_tier1_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 4, 96, 1,
             d -> d.tomeRegenTier1Shelves, (d, v) -> d.tomeRegenTier1Shelves = v,
@@ -635,7 +682,7 @@ public final class ConfigCatalog {
         doubleOpt(
             "book_combine_xp_multiplier", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0.10, 3.00, 0.05,
             d -> d.bookCombineXpMultiplier, (d, v) -> d.bookCombineXpMultiplier = v,
-            d -> String.format("%.2f\u00d7", d.bookCombineXpMultiplier),
+            d -> String.format(java.util.Locale.ROOT, "%.2f\u00d7", d.bookCombineXpMultiplier),
             d -> d.bookCombineEnabled, d -> "config.chiseled_enchanting_table.reason.need_book_combine"
         ),
         boolOpt(
@@ -646,7 +693,7 @@ public final class ConfigCatalog {
         doubleOpt(
             "book_research_xp_multiplier", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0.10, 3.00, 0.05,
             d -> d.bookResearchXpMultiplier, (d, v) -> d.bookResearchXpMultiplier = v,
-            d -> String.format("%.2f\u00d7", d.bookResearchXpMultiplier),
+            d -> String.format(java.util.Locale.ROOT, "%.2f\u00d7", d.bookResearchXpMultiplier),
             d -> d.bookResearchEnabled, d -> "config.chiseled_enchanting_table.reason.need_book_research"
         ),
 
@@ -836,6 +883,6 @@ public final class ConfigCatalog {
         if (sec % 60 == 0) {
             return (sec / 60) + "m (" + sec + "s)";
         }
-        return String.format("%dm%02ds", sec / 60, sec % 60);
+        return String.format(java.util.Locale.ROOT, "%dm%02ds", sec / 60, sec % 60);
     }
 }

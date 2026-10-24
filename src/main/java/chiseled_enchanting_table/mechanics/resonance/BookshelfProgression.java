@@ -37,21 +37,22 @@ import net.minecraft.world.level.Level;
  * </ol>
  */
 public final class BookshelfProgression {
-    public static final int DEFAULT_SCAN_HORIZONTAL_RADIUS = 3;
-    public static final int DEFAULT_SCAN_VERTICAL_RADIUS = 2;
+    // Generated from shelf_gates.json (single source of truth); see BundledDefaults.
+    public static final int DEFAULT_SCAN_HORIZONTAL_RADIUS = chiseled_enchanting_table.BundledDefaults.SCAN_HORIZONTAL_RADIUS;
+    public static final int DEFAULT_SCAN_VERTICAL_RADIUS = chiseled_enchanting_table.BundledDefaults.SCAN_VERTICAL_RADIUS;
     public static final int MAX_SCAN_HORIZONTAL_RADIUS = 8;
     public static final int MAX_SCAN_VERTICAL_RADIUS = 6;
     public static final int MAX_SCAN_VOLUME_BLOCKS = 2048;
-    public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = 38;
-    public static final double DIRECT_TIER_CURVE_EXPONENT = 1.25;
+    public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.MAX_DIRECT_BOOKSHELVES;
+    public static final double DIRECT_TIER_CURVE_EXPONENT = chiseled_enchanting_table.BundledDefaults.DIRECT_TIER_GAMMA;
 
-    public static final int DEFAULT_TIER1_BOOKSHELVES = 12;
-    public static final int DEFAULT_TIER2_BOOKSHELVES = 32;
-    public static final double DEFAULT_TIER2_MATERIAL_MULTIPLIER = 0.50;
-    public static final int DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS = 6;
-    public static final int DEFAULT_BASE_BATCH_SIZE = 64;
-    public static final int DEFAULT_TIER3_BATCH_SIZE = 64;
-    public static final int DEFAULT_MIN_OPEN_ADJACENT_BLOCKS = 6;
+    public static final int DEFAULT_TIER1_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER1_BOOKSHELVES;
+    public static final int DEFAULT_TIER2_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER2_BOOKSHELVES;
+    public static final double DEFAULT_TIER2_MATERIAL_MULTIPLIER = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER2_MATERIAL_MULTIPLIER;
+    public static final int DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER3_QUALIFYING_ENCHANTMENTS;
+    public static final int DEFAULT_BASE_BATCH_SIZE = chiseled_enchanting_table.BundledDefaults.DEPLETED_BASE_BATCH_SIZE;
+    public static final int DEFAULT_TIER3_BATCH_SIZE = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER3_BATCH_SIZE;
+    public static final int DEFAULT_MIN_OPEN_ADJACENT_BLOCKS = chiseled_enchanting_table.BundledDefaults.MIN_OPEN_ADJACENT_BLOCKS;
 
     private static final TagKey<Enchantment> CURSE_TAG =
         TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
@@ -142,10 +143,10 @@ public final class BookshelfProgression {
         boolean requireLineOfSight
     ) {
         public static final Config DEFAULT = new Config(
-            true,
+            chiseled_enchanting_table.BundledDefaults.DIRECT_GATES_ENABLED,
             DEFAULT_MAX_DIRECT_BOOKSHELVES,
             DIRECT_TIER_CURVE_EXPONENT,
-            BlankMaxTierMode.HALF_CEIL,
+            BlankMaxTierMode.fromToken(chiseled_enchanting_table.BundledDefaults.BLANK_MAX_TIER_MODE),
             DEFAULT_SCAN_HORIZONTAL_RADIUS,
             DEFAULT_SCAN_VERTICAL_RADIUS,
             Map.of(),
@@ -155,10 +156,10 @@ public final class BookshelfProgression {
             DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS,
             DEFAULT_BASE_BATCH_SIZE,
             DEFAULT_TIER3_BATCH_SIZE,
-            VanillaTableMode.BOOKS,
-            true,
+            VanillaTableMode.fromToken(chiseled_enchanting_table.BundledDefaults.VANILLA_TABLE_MODE),
+            chiseled_enchanting_table.BundledDefaults.REQUIRE_BREATHING_ROOM,
             DEFAULT_MIN_OPEN_ADJACENT_BLOCKS,
-            false
+            chiseled_enchanting_table.BundledDefaults.REQUIRE_LINE_OF_SIGHT
         );
 
         public Config {
@@ -595,7 +596,10 @@ public final class BookshelfProgression {
             return List.of();
         }
         if (tier == DepletedTomeTier.TIER_3_FREE) {
-            return List.of();
+            // One explicitly-empty bundle = legally material-free (audit H-02). Returning a
+            // completely empty option list here used to be indistinguishable from missing
+            // cost data, which the menu layer now treats as fail-closed.
+            return List.of(List.of());
         }
         int safeBatch = Math.max(1, batchCount);
         double mult = (tier == DepletedTomeTier.TIER_2_DISCOUNT_MAT)
@@ -604,7 +608,10 @@ public final class BookshelfProgression {
 
         List<List<ItemStack>> out = new ArrayList<>(baseBundles.size());
         for (List<ItemStack> bundle : baseBundles) {
-            if (bundle.isEmpty()) continue;
+            if (bundle.isEmpty()) {
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> scaled = new ArrayList<>(bundle.size());
             for (ItemStack stack : bundle) {
                 ItemStack copy = stack.copy();
@@ -632,7 +639,11 @@ public final class BookshelfProgression {
         }
         List<List<ItemStack>> out = new ArrayList<>(unitBundles.size());
         for (List<ItemStack> bundle : unitBundles) {
-            if (bundle.isEmpty()) continue;
+            if (bundle.isEmpty()) {
+                // Explicitly-empty (material-free) bundles survive batch scaling (audit H-02).
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> scaled = new ArrayList<>(bundle.size());
             for (ItemStack stack : bundle) {
                 ItemStack copy = stack.copy();

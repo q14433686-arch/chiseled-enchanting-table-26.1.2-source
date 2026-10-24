@@ -100,7 +100,10 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
                 ? "jei.chiseled_enchanting_table.tooltip.cost_synced"
                 : "jei.chiseled_enchanting_table.tooltip.cost_hint"
         ));
-        lines.add(Component.translatable("jei.chiseled_enchanting_table.tooltip.bookshelf"));
+        lines.add(Component.translatable(
+            "jei.chiseled_enchanting_table.tooltip.bookshelf",
+            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().maxTotalXpDiscountPercent()
+        ));
         if (!display.conflicts().isEmpty()) {
             lines.add(Component.translatable(
                 "jei.chiseled_enchanting_table.tooltip.conflicts",

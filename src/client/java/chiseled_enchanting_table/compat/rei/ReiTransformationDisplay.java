@@ -60,6 +60,7 @@ public final class ReiTransformationDisplay implements Display {
     public Optional<Identifier> getDisplayLocation() {
         return Optional.of(ChiseledEnchantingTable.identifier(
             "transformation/" + entry.id().getNamespace() + "/" + entry.id().getPath()
+                + "/input/" + net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(entry.inputStack().getItem()).toString().replace(':', '/')
         ));
     }
 

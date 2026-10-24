@@ -71,9 +71,21 @@ public class BookshelfReplacerProcessor extends StructureProcessor {
 
         long seed = worldSeed(world);
         HolderGetter<Enchantment> enchantments = null;
+        // Audit: only finish entries this processor created from a plain BOOKSHELF in
+        // processBlock. A template that intentionally ships an empty chiseled bookshelf
+        // (or one produced empty by another processor) must not be filled with loot.
+        java.util.Map<BlockPos, BlockState> originalStates = new java.util.HashMap<>(originalBlockInfos.size());
+        for (StructureTemplate.StructureBlockInfo original : originalBlockInfos) {
+            originalStates.put(original.pos(), original.state());
+        }
         List<StructureTemplate.StructureBlockInfo> result = new ArrayList<>(currentBlockInfos.size());
         for (StructureTemplate.StructureBlockInfo info : currentBlockInfos) {
             if (!info.state().is(Blocks.CHISELED_BOOKSHELF) || info.nbt() != null) {
+                result.add(info);
+                continue;
+            }
+            BlockState originalState = originalStates.get(info.pos());
+            if (originalState == null || !originalState.is(Blocks.BOOKSHELF)) {
                 result.add(info);
                 continue;
             }

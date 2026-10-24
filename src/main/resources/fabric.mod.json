@@ -43,7 +43,8 @@
 	},
 	"suggests": {
 		"jei": "*",
-		"rei": "*"
+		"rei": "*",
+		"modmenu": "*"
 	},
 	"custom": {
 		"chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.1.2. Includes worldgen-safe chiseled bookshelf filling and facing, full dyeable Chiseled Enchanting Table rendering/drop support, stackable 64 enchanted books, flat anvil prior-work cost scaling (RemoveXpCostScaling), depth-scaled Mineshaft Efficiency II-V loot, complete 10-advancement progression localized across all 11 shipped languages, full S2C cost synchronization across direct enchants / book upgrades / transformations, and optional JEI/REI multi-cost integration. Active mixins live in chiseled-enchanting-table-port.mixins.json. See CURRENT_BASELINE.md and docs/EXTENDING.md for details."

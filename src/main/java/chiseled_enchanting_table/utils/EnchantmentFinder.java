@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.utils;
 
+import chiseled_enchanting_table.mechanics.resonance.TomeLockData;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import java.util.stream.Stream;
 import net.minecraft.core.component.DataComponents;
@@ -24,13 +25,14 @@ public class EnchantmentFinder {
         return Stream.iterate(0, i -> i + 1)
             .limit(cbsbe.getContainerSize())
             .map(cbsbe::getItem)
+            .filter(stack -> !TomeLockData.isEffectivelyLocked(stack))
             .flatMap(stack -> {
                 ItemEnchantments itemEnchantmentsComponent = stack.get(DataComponents.STORED_ENCHANTMENTS);
                 if (itemEnchantmentsComponent == null) return Stream.empty();
                 return itemEnchantmentsComponent.entrySet().stream()
-                    .filter(e -> !e.getKey().is(CURSE_TAG) && e.getIntValue() > 0)
+                    .filter(e -> !e.getKey().is(CURSE_TAG) && e.getIntValue() > 0 && e.getKey().unwrapKey().isPresent())
                     .map(e -> new EnchantmentWithLevel(
-                        ChiseledEnchantingTableScreenHandler.EnchantmentToIdentifier(e.getKey()),
+                        e.getKey().unwrapKey().orElseThrow().identifier(),
                         e.getIntValue()
                     ));
             });
