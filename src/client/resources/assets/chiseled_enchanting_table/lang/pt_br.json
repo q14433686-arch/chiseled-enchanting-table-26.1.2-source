@@ -746,7 +746,7 @@
   "config.chiseled_enchanting_table.opt.classic_1_0_3_mode": "1.0.3 Classic Purist Mode",
   "config.chiseled_enchanting_table.opt.classic_1_0_3_mode.desc": "Restores authentic 1.0.3 enchanting rules (+W/3 shelf boost on defaults & stored books, 5x5x5 scan, immortal books, instant enchanting, plain Book return, 2 classic transformations) and hides post-1.0.3 tabs & side consoles.",
   "gui.chiseled_enchanting_table.ritual.tip_sacrifice_currency": "Currency: Pay XP levels for 0% Master Tome degradation risk.",
-  "gui.chiseled_enchanting_table.ritual.tip_rush_currency": "Currency: Save 100% XP, paid in Master Tome expected lifespan (up to %s%% with wear-immune tomes).",
+  "gui.chiseled_enchanting_table.ritual.tip_rush_currency": "Currency: Save 100%% XP, paid in Master Tome expected lifespan (up to %s%% with wear-immune tomes).",
   "gui.chiseled_enchanting_table.resonance.overload_sigma_line": "Library Overload ΣL: %s → Slip Risk: %s%% (triggers at ΣL ≥ %s)",
   "gui.chiseled_enchanting_table.resonance.scapegoat_order_line": "Scapegoat / Rush Order: Active ritual tomes → low-tier mortal tomes → wear-immune tomes.",
   "config.chiseled_enchanting_table.preset.label": "Predef.",

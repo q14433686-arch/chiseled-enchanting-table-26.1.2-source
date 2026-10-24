@@ -255,10 +255,10 @@ class AuditMechanicsTest {
     @Test void queuedInscriptionCodecRoundTripsAndMatchesLegacyStringEncoding() {
         var steps = java.util.List.of(
             new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
-                net.minecraft.resources.Identifier.withDefaultNamespace("sharpness"), 5, 240, true, false, 12, false
+                net.minecraft.resources.Identifier.withDefaultNamespace("sharpness"), 5, 4, true, false, 12, false
             ),
             new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
-                net.minecraft.resources.Identifier.withDefaultNamespace("infinity"), 1, 600, false, true, 30, true
+                net.minecraft.resources.Identifier.withDefaultNamespace("infinity"), 1, 0, false, true, 30, true
             )
         );
         var listCodec = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription.CODEC.listOf();

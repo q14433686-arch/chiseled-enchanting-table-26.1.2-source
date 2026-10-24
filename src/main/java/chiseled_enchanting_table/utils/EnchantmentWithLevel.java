@@ -9,6 +9,10 @@ public record EnchantmentWithLevel(Identifier enchantment_id, int enchantment_le
     public static final int MIN_WIRE_LEVEL = 1;
     public static final int MAX_WIRE_LEVEL = 255;
 
+    public EnchantmentWithLevel {
+        java.util.Objects.requireNonNull(enchantment_id, "enchantment_id");
+    }
+
     /**
      * Bounded network codec (audit {@code CODEC-03}): rejects out-of-range levels {@code < 1}
      * or {@code > 255} on wire decode so malformed packets cannot poison enchantment caches.

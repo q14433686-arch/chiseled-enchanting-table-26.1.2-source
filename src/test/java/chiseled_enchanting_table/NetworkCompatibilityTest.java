@@ -47,9 +47,21 @@ class NetworkCompatibilityTest {
         assertEquals(12, openingState.sacrifice_required());
         assertEquals(4, openingState.tome_page_required_shelves());
         assertEquals(java.util.Optional.of(new net.minecraft.core.BlockPos(12, 70, -34)), openingState.table_pos());
-        assertThrows(IllegalArgumentException.class, () -> new EnchantmentWithLevel(id("zero"), 0));
-        assertThrows(IllegalArgumentException.class, () -> new EnchantmentWithLevel(id("huge"), 256));
-        assertThrows(IllegalArgumentException.class, () -> new EnchantmentWithLevel(null, 1));
+        assertThrows(NullPointerException.class, () -> new EnchantmentWithLevel(null, 1));
+        for (int badLevel : new int[] {0, -1, 256}) {
+            RegistryFriendlyByteBuf outBuf = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
+            try {
+                assertThrows(IllegalArgumentException.class, () ->
+                    EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode(outBuf, new EnchantmentWithLevel(id("bad"), badLevel)));
+            } finally { outBuf.release(); }
+            RegistryFriendlyByteBuf inBuf = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
+            try {
+                Identifier.STREAM_CODEC.encode(inBuf, id("bad"));
+                net.minecraft.network.codec.ByteBufCodecs.VAR_INT.encode(inBuf, badLevel);
+                assertThrows(IllegalArgumentException.class, () ->
+                    EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode(inBuf));
+            } finally { inBuf.release(); }
+        }
         roundTrip(LiveShelfStatePayload.CODEC,
             new LiveShelfStatePayload(27, unlocked, 37, 38, 123, 17, masters, true));
         roundTrip(LiveShelfStatePayload.CODEC,
