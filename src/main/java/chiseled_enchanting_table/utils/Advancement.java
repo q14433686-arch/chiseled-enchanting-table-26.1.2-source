@@ -23,6 +23,45 @@ public class Advancement {
         }
     }
 
+    public static boolean hasCompleted(Player player, String name) {
+        if (!(player instanceof ServerPlayer serverPlayer)) return false;
+        var server = serverPlayer.level().getServer();
+        if (server == null) return false;
+        var advancement = server.getAdvancements().get(ChiseledEnchantingTable.identifier(name));
+        return advancement != null && serverPlayer.getAdvancements().getOrStartProgress(advancement).isDone();
+    }
+
+    /** Number of criteria already awarded for {@code name}; {@code 0} when unavailable. */
+    public static int completedCriteria(Player player, String name) {
+        if (!(player instanceof ServerPlayer serverPlayer)) return 0;
+        var server = serverPlayer.level().getServer();
+        if (server == null) return 0;
+        var advancement = server.getAdvancements().get(ChiseledEnchantingTable.identifier(name));
+        if (advancement == null) return 0;
+        var progress = serverPlayer.getAdvancements().getOrStartProgress(advancement);
+        int total = advancement.value().criteria().size();
+        int remaining = 0;
+        for (var ignored : progress.getRemainingCriteria()) {
+            remaining++;
+        }
+        return Math.max(0, Math.min(total, total - remaining));
+    }
+
+    /** Awards exactly one remaining criterion. Returns {@code true} when one was awarded. */
+    public static boolean awardNextCriterion(Player player, String name) {
+        if (!(player instanceof ServerPlayer serverPlayer)) return false;
+        var server = serverPlayer.level().getServer();
+        if (server == null) return false;
+        var advancement = server.getAdvancements().get(ChiseledEnchantingTable.identifier(name));
+        if (advancement == null) return false;
+        var progress = serverPlayer.getAdvancements().getOrStartProgress(advancement);
+        if (progress.isDone()) return false;
+        for (var criterion : progress.getRemainingCriteria()) {
+            return serverPlayer.getAdvancements().award(advancement, criterion);
+        }
+        return false;
+    }
+
     public static void checkBookMilestones(Player player, Level level, ItemStack stack) {
         if (!stack.is(Items.ENCHANTED_BOOK)) return;
         ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(stack);

@@ -175,6 +175,7 @@ public final class WorldRegeneration {
                 }
                 ItemStack updated = context.identity().copy();
                 MasterTomeWear.setWearUsed(updated, recovery.remainingWear());
+                TomeLockData.Lock expiredLock = TomeLockData.clearExpired(updated);
                 context.shelf().setItem(slot.slot(), updated);
                 context.shelf().setChanged();
                 if (recovery.remainingWear() > 0) {
@@ -270,6 +271,56 @@ public final class WorldRegeneration {
             }
         }
         return false;
+    }
+
+    /** Elapsed ticks toward the next +1 charge for a shelf slot, or {@code -1} if untracked. */
+    public static long regenProgressTicks(Level level, BlockPos shelfPos, int slotIndex) {
+        if (!(level instanceof ServerLevel world) || shelfPos == null) return -1L;
+        Window window = WORLDS.get(world);
+        if (window == null) return -1L;
+        return window.scheduler.progressTicks(new Slot(shelfPos.immutable(), slotIndex));
+    }
+
+    /** Current per-charge interval for a shelf slot, or {@code -1} if untracked. */
+    public static int regenIntervalTicks(Level level, BlockPos shelfPos, int slotIndex) {
+        if (!(level instanceof ServerLevel world) || shelfPos == null) return -1;
+        Window window = WORLDS.get(world);
+        if (window == null) return -1;
+        return window.scheduler.intervalTicks(new Slot(shelfPos.immutable(), slotIndex));
+    }
+
+    private static ItemStack clearExpiredLock(
+        ServerLevel world,
+        ChiseledBookShelfBlockEntity shelf,
+        BlockPos shelfPos,
+        int slotIndex,
+        ItemStack stack
+    ) {
+        ItemStack updated = stack.copy();
+        TomeLockData.Lock expired = TomeLockData.clearExpired(updated);
+        if (expired == null) return stack;
+        shelf.setItem(slotIndex, updated);
+        shelf.setChanged();
+        var state = world.getBlockState(shelfPos);
+        world.sendBlockUpdated(shelfPos, state, state, Block.UPDATE_ALL);
+        notifyLockExpired(world, expired);
+        return updated;
+    }
+
+    private static void notifyLockExpired(ServerLevel world, TomeLockData.Lock lock) {
+        if (lock == null || world.getServer() == null) return;
+        ServerPlayer owner = world.getServer().getPlayerList().getPlayer(lock.owner());
+        if (owner == null) return;
+        owner.displayClientMessage(
+            Component.translatable("message.chiseled_enchanting_table.tome_lock.expired"), true);
+        world.playSound(
+            null,
+            owner.blockPosition(),
+            SoundEvents.EXPERIENCE_ORB_PICKUP,
+            SoundSource.PLAYERS,
+            0.8F,
+            1.25F
+        );
     }
 
     public static void acknowledgeInPlaceWear(

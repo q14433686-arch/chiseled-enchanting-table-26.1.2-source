@@ -109,6 +109,21 @@ public final class EnchantingNetworking {
             });
         });
         PayloadTypeRegistry.serverboundPlay().register(
+            ChiseledEnchantingMenuPayloads.TomePageActionPayload.TYPE,
+            ChiseledEnchantingMenuPayloads.TomePageActionPayload.CODEC
+        );
+        ServerPlayNetworking.registerGlobalReceiver(ChiseledEnchantingMenuPayloads.TomePageActionPayload.TYPE, (payload, ctx) -> {
+            var player = ctx.player();
+            var server = ctx.server();
+            server.execute(() -> {
+                if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
+                    && payload.targets(menu.containerId)
+                    && menu.stillValid(player)) {
+                    menu.handleTomePageAction(payload);
+                }
+            });
+        });
+        PayloadTypeRegistry.serverboundPlay().register(
             ChiseledEnchantingMenuPayloads.SkipRitualPayload.TYPE,
             ChiseledEnchantingMenuPayloads.SkipRitualPayload.CODEC
         );

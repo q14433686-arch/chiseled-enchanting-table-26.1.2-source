@@ -8,6 +8,10 @@ public final class PayloadLimits {
     public static final int MAX_COST_OPTIONS = 256;
     public static final int MAX_BUNDLE_STACKS = 64;
     public static final int MAX_TOTAL_COST_STACKS = 131_072;
+    /** Dashboard cap: shelf scans are bounded well below the generic collection limit. */
+    public static final int MAX_TOME_BOOK_ENTRIES = 256;
+    /** Per-book enchantment list cap used by the tome dashboard wire format. */
+    public static final int MAX_TOME_BOOK_ENCHANTMENTS = 64;
 
     // Audit NET-03: named bounds for the apply payload, enforced at decode time in the
     // record's compact constructor instead of deep inside business logic.

@@ -69,6 +69,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public java.util.Map<Identifier, Integer> storedMasterLevels;
     public java.util.Map<EnchantmentWithLevel, Integer> masterTomeCharges;
     public boolean crampedLibrary;
+    public boolean syncedCleanseUnlocked;
+    public boolean syncedTomePageUnlocked;
+    public int sacrificeProgress;
+    public int qualifyingEnchantedBookshelves;
+    public int liveTotalLibraryBookshelves;
+    public int liveRegenTier;
+    public int nextRegenTierGap;
+    public int regenIntervalTicks = -1;
+    public java.util.List<ChiseledEnchantingMenuPayloads.TomeBookEntry> tomeBooks = List.of();
     private int epiphanySeed;
     private int syncedCycleIndex;
     private int syncedCountdownSeconds;
@@ -458,6 +467,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             ? java.util.Map.of()
             : java.util.Map.copyOf(live.master_tome_charges());
         this.crampedLibrary = live.cramped_library();
+        this.syncedCleanseUnlocked = live.cleanse_unlocked();
+        this.syncedTomePageUnlocked = live.tome_page_unlocked();
+        this.sacrificeProgress = Math.max(0, live.sacrifice_progress());
+        this.qualifyingEnchantedBookshelves = Math.max(0, live.qualifying_enchanted_bookshelves());
+        this.liveTotalLibraryBookshelves = Math.max(0, live.total_library_bookshelves());
+        this.liveRegenTier = Math.max(0, live.regen_tier());
+        this.nextRegenTierGap = Math.max(0, live.next_regen_tier_gap());
+        this.regenIntervalTicks = live.regen_interval_ticks();
+        this.tomeBooks = live.tome_books() == null ? List.of() : List.copyOf(live.tome_books());
         if (this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
         }
@@ -486,6 +504,280 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return live != null ? live : this.libraryResonanceConfig().maxTomeUses();
     }
 
+    public boolean isCleansePageUnlocked() {
+        if (!this.world.isClientSide() && this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            return chiseled_enchanting_table.utils.Advancement.hasCompleted(
+                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
+        }
+        return this.syncedCleanseUnlocked;
+    }
+
+    public boolean isTomePageUnlocked() {
+        if (!this.world.isClientSide() && this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            return chiseled_enchanting_table.utils.Advancement.hasCompleted(
+                sp, chiseled_enchanting_table.utils.Advancement.HOW_MUCH_LONGER);
+        }
+        return this.syncedTomePageUnlocked;
+    }
+
+    private void tomeActionMessage(String key, Object... args) {
+        if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            sp.displayClientMessage(net.minecraft.network.chat.Component.translatable(key, args), true);
+        }
+    }
+
+    private boolean shelfScanBlockedByBreathingRoom(net.minecraft.core.BlockPos tablePos) {
+        var cfg = shelfGatesConfig();
+        if (cfg == null || !cfg.requireBreathingRoom()) return false;
+        boolean ceilingBlocked = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock
+            .isTableCeilingBlocked(this.world, tablePos);
+        int openAdj = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock
+            .countOpenAdjacentBlocks(this.world, tablePos);
+        return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
+            .effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, cfg) <= 0;
+    }
+
+    private boolean isShelfInScope(net.minecraft.core.BlockPos tablePos, net.minecraft.core.BlockPos shelfPos) {
+        if (tablePos == null || shelfPos == null || shelfScanBlockedByBreathingRoom(tablePos)) return false;
+        var cfg = shelfGatesConfig();
+        net.minecraft.core.BlockPos delta = shelfPos.subtract(tablePos);
+        if (!chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(cfg).contains(delta)) {
+            return false;
+        }
+        if (!this.world.hasChunkAt(shelfPos)) return false;
+        return cfg == null || !cfg.requireLineOfSight()
+            || chiseled_enchanting_table.block.ChiseledEnchantingTableBlock
+                .hasClearLineOfSight(this.world, tablePos, shelfPos);
+    }
+
+    private java.util.List<net.minecraft.core.BlockPos> scopedShelfPositions(net.minecraft.core.BlockPos tablePos) {
+        java.util.List<net.minecraft.core.BlockPos> out = new java.util.ArrayList<>();
+        if (tablePos == null || shelfScanBlockedByBreathingRoom(tablePos)) return out;
+        var cfg = shelfGatesConfig();
+        for (net.minecraft.core.BlockPos offset
+            : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(cfg)) {
+            net.minecraft.core.BlockPos pos = tablePos.offset(offset);
+            if (isShelfInScope(tablePos, pos)
+                && this.world.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity) {
+                out.add(pos.immutable());
+            }
+        }
+        return out;
+    }
+
+    private void writeShelfStack(
+        net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity shelf,
+        net.minecraft.core.BlockPos shelfPos,
+        int slot,
+        ItemStack stack
+    ) {
+        shelf.setItem(slot, stack);
+        shelf.setChanged();
+        var state = this.world.getBlockState(shelfPos);
+        this.world.sendBlockUpdated(
+            shelfPos, state, state, net.minecraft.world.level.block.Block.UPDATE_ALL);
+    }
+
+    private boolean consumeOneCleansingGrit() {
+        for (int slot = 0; slot < this.player.getInventory().getContainerSize(); slot++) {
+            ItemStack candidate = this.player.getInventory().getItem(slot);
+            if (candidate.is(BlockRegistry.CLEANSING_GRIT)) {
+                candidate.shrink(1);
+                this.player.getInventory().setChanged();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Server-authoritative handler for every Tome-page button. */
+    public void handleTomePageAction(ChiseledEnchantingMenuPayloads.TomePageActionPayload payload) {
+        if (this.world.isClientSide() || !(this.player instanceof net.minecraft.server.level.ServerPlayer sp)) return;
+        refreshLiveShelfState();
+        net.minecraft.core.BlockPos tablePos = tableBlockPos();
+        if (tablePos == null) return;
+
+        if (payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.SACRIFICE_DEPLETED) {
+            sacrificeDepletedTomes(sp, tablePos);
+            refreshLiveShelfState();
+            return;
+        }
+        if (!isTomePageUnlocked()) {
+            tomeActionMessage("gui.chiseled_enchanting_table.tab.locked_tooltip");
+            return;
+        }
+        if (payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_ALL_FULL) {
+            int locked = lockAllChargingTomes(sp, tablePos);
+            tomeActionMessage("message.chiseled_enchanting_table.tome_lock.batch", locked);
+            refreshLiveShelfState();
+            return;
+        }
+        if (!isShelfInScope(tablePos, payload.shelf_pos())
+            || !(this.world.getBlockEntity(payload.shelf_pos())
+                instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity shelf)) {
+            tomeActionMessage("message.chiseled_enchanting_table.tome_action.invalid");
+            return;
+        }
+        int slot = payload.slot();
+        ItemStack current = shelf.getItem(slot);
+        if (!current.is(Items.ENCHANTED_BOOK)) {
+            tomeActionMessage("message.chiseled_enchanting_table.tome_action.invalid");
+            return;
+        }
+        ItemStack updated = current.copy();
+        var expired = chiseled_enchanting_table.mechanics.resonance.TomeLockData.clearExpired(updated);
+        if (expired != null
+            && payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK) {
+            writeShelfStack(shelf, payload.shelf_pos(), slot, updated);
+            tomeActionMessage("message.chiseled_enchanting_table.tome_lock.expired");
+            refreshLiveShelfState();
+            return;
+        }
+
+        if (payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK) {
+            unlockTome(sp, shelf, payload.shelf_pos(), slot, updated);
+        } else {
+            var mode = switch (payload.action()) {
+                case LOCK_NEXT -> chiseled_enchanting_table.mechanics.resonance.TomeLockData.Mode.NEXT_CHARGE;
+                case LOCK_FULL -> chiseled_enchanting_table.mechanics.resonance.TomeLockData.Mode.FULL_CHARGE;
+                case LOCK_PERMANENT -> chiseled_enchanting_table.mechanics.resonance.TomeLockData.Mode.PERMANENT;
+                default -> null;
+            };
+            if (mode == null) return;
+            if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(updated)) {
+                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.already_locked");
+                return;
+            }
+            if (!chiseled_enchanting_table.mechanics.resonance.TomeLockData.lock(
+                updated, sp.getUUID(), sp.getName().getString(), mode)) {
+                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.full");
+                return;
+            }
+            writeShelfStack(shelf, payload.shelf_pos(), slot, updated);
+            tomeActionMessage("message.chiseled_enchanting_table.tome_lock.locked");
+        }
+        refreshLiveShelfState();
+    }
+
+    private void unlockTome(
+        net.minecraft.server.level.ServerPlayer sp,
+        net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity shelf,
+        net.minecraft.core.BlockPos shelfPos,
+        int slot,
+        ItemStack updated
+    ) {
+        var lock = chiseled_enchanting_table.mechanics.resonance.TomeLockData.getLock(updated);
+        if (lock == null || !chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(updated)) {
+            tomeActionMessage("message.chiseled_enchanting_table.tome_lock.not_locked");
+            return;
+        }
+        boolean creative = sp.getAbilities().instabuild;
+        if (!creative && !lock.ownedBy(sp.getUUID())) {
+            tomeActionMessage("message.chiseled_enchanting_table.tome_lock.not_owner", lock.ownerName());
+            return;
+        }
+        if (!creative) {
+            ItemStack grit = new ItemStack(BlockRegistry.CLEANSING_GRIT);
+            if (sp.experienceLevel < 1 || countAvailableInInventory(grit) < 1) {
+                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost");
+                return;
+            }
+            if (!consumeOneCleansingGrit()) {
+                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost");
+                return;
+            }
+            sp.giveExperienceLevels(-1);
+        }
+        chiseled_enchanting_table.mechanics.resonance.TomeLockData.unlock(updated);
+        writeShelfStack(shelf, shelfPos, slot, updated);
+        tomeActionMessage("message.chiseled_enchanting_table.tome_lock.unlocked");
+    }
+
+    private int lockAllChargingTomes(
+        net.minecraft.server.level.ServerPlayer sp,
+        net.minecraft.core.BlockPos tablePos
+    ) {
+        var cfg = libraryResonanceConfig();
+        if (!cfg.tomeRegenEnabled()
+            || cfg.tomeConsumptionMode() != chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
+            return 0;
+        }
+        int locked = 0;
+        for (net.minecraft.core.BlockPos shelfPos : scopedShelfPositions(tablePos)) {
+            if (!(this.world.getBlockEntity(shelfPos)
+                instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity shelf)) continue;
+            for (int slot = 0; slot < net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
+                ItemStack current = shelf.getItem(slot);
+                if (!current.is(Items.ENCHANTED_BOOK)
+                    || chiseled_enchanting_table.mechanics.resonance.TomeWearData.hasWearImmunity(current)
+                    || chiseled_enchanting_table.mechanics.resonance.TomeWearData.getWearUsed(current) <= 0
+                    || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(current)) {
+                    continue;
+                }
+                ItemStack updated = current.copy();
+                chiseled_enchanting_table.mechanics.resonance.TomeLockData.clearExpired(updated);
+                if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.lock(
+                    updated,
+                    sp.getUUID(),
+                    sp.getName().getString(),
+                    chiseled_enchanting_table.mechanics.resonance.TomeLockData.Mode.FULL_CHARGE
+                )) {
+                    writeShelfStack(shelf, shelfPos, slot, updated);
+                    locked++;
+                }
+            }
+        }
+        return locked;
+    }
+
+    private void sacrificeDepletedTomes(
+        net.minecraft.server.level.ServerPlayer sp,
+        net.minecraft.core.BlockPos tablePos
+    ) {
+        if (isCleansePageUnlocked()) {
+            tomeActionMessage("message.chiseled_enchanting_table.sacrifice.done");
+            return;
+        }
+        int needed = chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
+            - chiseled_enchanting_table.utils.Advancement.completedCriteria(
+                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
+        int consumed = 0;
+        for (net.minecraft.core.BlockPos shelfPos : scopedShelfPositions(tablePos)) {
+            if (needed <= 0) break;
+            if (!(this.world.getBlockEntity(shelfPos)
+                instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity shelf)) continue;
+            for (int slot = 0; slot < net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE && needed > 0; slot++) {
+                ItemStack current = shelf.getItem(slot);
+                if (!current.is(BlockRegistry.DEPLETED_TOME)) continue;
+                int here = 0;
+                while (here < current.getCount() && needed > 0
+                    && chiseled_enchanting_table.utils.Advancement.awardNextCriterion(
+                        sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)) {
+                    here++;
+                    needed--;
+                    consumed++;
+                }
+                if (here > 0) {
+                    ItemStack updated = current.copy();
+                    updated.shrink(here);
+                    writeShelfStack(shelf, shelfPos, slot, updated.isEmpty() ? ItemStack.EMPTY : updated);
+                }
+            }
+        }
+        if (isCleansePageUnlocked()) {
+            tomeActionMessage("message.chiseled_enchanting_table.sacrifice.done");
+        } else if (consumed > 0) {
+            tomeActionMessage(
+                "message.chiseled_enchanting_table.sacrifice.progress",
+                chiseled_enchanting_table.utils.Advancement.completedCriteria(
+                    sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE),
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED
+            );
+        } else {
+            tomeActionMessage("message.chiseled_enchanting_table.sacrifice.none");
+        }
+    }
+
     public void refreshLiveShelfState() {
         if (this.world.isClientSide()) {
             return;
@@ -493,7 +785,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         ChiseledEnchantingMenuPayloads.LiveShelfStatePayload[] holder =
             new ChiseledEnchantingMenuPayloads.LiveShelfStatePayload[] { null };
         this.access.execute((lvl, pos) ->
-            holder[0] = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.computeLiveShelfState(lvl, pos, this.containerId)
+            holder[0] = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.computeLiveShelfState(lvl, pos, this.containerId, this.player)
         );
         var live = holder[0];
         if (live == null) {
@@ -508,7 +800,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             || live.high_tier_chiseled_books() != this.highTierChiseledBooks
             || live.cramped_library() != this.crampedLibrary
             || !live.stored_master_levels().equals(this.storedMasterLevels)
-            || !java.util.Objects.equals(live.master_tome_charges(), this.masterTomeCharges);
+            || !java.util.Objects.equals(live.master_tome_charges(), this.masterTomeCharges)
+            || live.cleanse_unlocked() != this.syncedCleanseUnlocked
+            || live.tome_page_unlocked() != this.syncedTomePageUnlocked
+            || live.sacrifice_progress() != this.sacrificeProgress
+            || live.qualifying_enchanted_bookshelves() != this.qualifyingEnchantedBookshelves
+            || live.total_library_bookshelves() != this.liveTotalLibraryBookshelves
+            || live.regen_tier() != this.liveRegenTier
+            || live.next_regen_tier_gap() != this.nextRegenTierGap
+            || live.regen_interval_ticks() != this.regenIntervalTicks
+            || !live.tome_books().equals(this.tomeBooks);
         if (changed) {
             applyLiveShelfState(live);
             if (this.player instanceof net.minecraft.server.level.ServerPlayer sp
@@ -2326,6 +2627,19 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     public void applyEnchantement(ApplyEnchantmentPayload payload) {
         refreshLiveShelfState();
+        if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(get_enchantable_item())
+            || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(get_cost_item())) {
+            tomeActionMessage("message.chiseled_enchanting_table.tome_lock.locked_input");
+            return;
+        }
+        boolean cleanseAction = payload.option_type() == OptionType.DISENCHANT_ALL
+            || payload.option_type() == OptionType.DOWNGRADE_ENCHANTMENT
+            || payload.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
+            || payload.option_type() == OptionType.PURGE_CURSE;
+        if (cleanseAction && !isCleansePageUnlocked()) {
+            tomeActionMessage("gui.chiseled_enchanting_table.tab.locked_tooltip");
+            return;
+        }
         if (payload.option_type() == OptionType.DISENCHANT_ALL
             || payload.option_type() == OptionType.DOWNGRADE_ENCHANTMENT
             || payload.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT

@@ -109,6 +109,11 @@ public abstract class GrindstoneBookDepleteMixin extends AbstractContainerMenu {
         ItemStack additional,
         CallbackInfoReturnable<ItemStack> cir
     ) {
+        if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(input)
+            || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(additional)) {
+            cir.setReturnValue(ItemStack.EMPTY);
+            return;
+        }
         if (!input.is(Items.ENCHANTED_BOOK) && !additional.is(Items.ENCHANTED_BOOK)) {
             return;
         }

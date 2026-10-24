@@ -52,7 +52,9 @@ public final class ChiseledBookshelfTick {
         if (!(level.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf)) return;
 
         int slot = random.nextInt(ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE);
-        if (!shelf.getItem(slot).is(Items.ENCHANTED_BOOK)) return;
+        var picked = shelf.getItem(slot);
+        if (!picked.is(Items.ENCHANTED_BOOK)) return;
+        boolean locked = chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(picked);
 
         Direction facing = state.getValue(ChiseledBookShelfBlock.FACING);
         Direction right = facing.getClockWise();
@@ -63,6 +65,11 @@ public final class ChiseledBookshelfTick {
         double x = pos.getX() + 0.5D + facing.getStepX() * 0.56D + right.getStepX() * sideOffset;
         double y = pos.getY() + (row == 0 ? 0.72D : 0.38D);
         double z = pos.getZ() + 0.5D + facing.getStepZ() * 0.56D + right.getStepZ() * sideOffset;
+
+        if (locked) {
+            level.sendParticles(ParticleTypes.WITCH, x, y + 0.05D, z, 5, 0.05D, 0.05D, 0.05D, 0.01D);
+            level.sendParticles(ParticleTypes.ENCHANTED_HIT, x, y, z, 3, 0.03D, 0.03D, 0.03D, 0.01D);
+        }
 
         level.playSound(
             null,

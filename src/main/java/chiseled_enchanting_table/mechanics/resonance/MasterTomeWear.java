@@ -520,6 +520,8 @@ public final class MasterTomeWear {
             for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
                 ItemStack slotStack = cbs.getItem(slot);
                 if (!slotStack.is(Items.ENCHANTED_BOOK)) continue;
+                // Player-locked tomes keep regenerating but can never back an enchantment.
+                if (TomeLockData.isEffectivelyLocked(slotStack)) continue;
                 int storedLvl = EnchantmentHelper.getEnchantmentsForCrafting(slotStack).getLevel(targetHolder);
                 if (storedLvl >= requiredLevel) {
                     boolean inf = hasInfinityImmunity(slotStack);

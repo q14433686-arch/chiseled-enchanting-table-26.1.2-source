@@ -412,11 +412,127 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         BlockPos pos,
         int containerId
     ) {
+        return computeLiveShelfState(level, pos, containerId, null);
+    }
+
+    public static chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload computeLiveShelfState(
+        Level level,
+        BlockPos pos,
+        int containerId,
+        @Nullable Player viewer
+    ) {
         BlockState state = level.getBlockState(pos);
         ShelfPower shelfPower = calculateShelfPower(level, pos);
         Set<EnchantmentWithLevel> unlocked = state.getBlock() instanceof ChiseledEnchantingTableBlock cetb
             ? cetb.getUnlockedEnchantmentsFromPower(level, shelfPower)
             : Set.of();
+
+        var lrCfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        int totalLibrary = shelfPower.totalLibraryBookshelves();
+        int regenTier = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.regenTierIndex(lrCfg, totalLibrary);
+        int nextGap = switch (regenTier) {
+            case 0 -> Math.max(0, lrCfg.tomeRegenTier1Shelves() - totalLibrary);
+            case 1 -> Math.max(0, lrCfg.tomeRegenTier2Shelves() - totalLibrary);
+            default -> 0;
+        };
+        boolean regenActive = lrCfg.tomeRegenEnabled()
+            && lrCfg.tomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR;
+        int interval = regenActive
+            ? chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeRegenIntervalTicks(lrCfg, totalLibrary)
+            : -1;
+        if (interval == Integer.MAX_VALUE) interval = -1;
+
+        var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
+        boolean checkLos = sgCfg != null && sgCfg.requireLineOfSight();
+        java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry> tomeBooks =
+            new java.util.ArrayList<>();
+        java.util.Set<BlockPos> qualifyingShelves = new java.util.HashSet<>();
+        for (BlockPos offset : getScanOffsets(sgCfg)) {
+            BlockPos scanPos = pos.offset(offset);
+            if (!level.hasChunkAt(scanPos)) continue;
+            if (checkLos && !hasClearLineOfSight(level, pos, scanPos)) continue;
+            if (!(level.getBlockEntity(scanPos) instanceof ChiseledBookShelfBlockEntity shelf)) continue;
+            boolean qualifies = false;
+            for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
+                ItemStack stack = shelf.getItem(slot);
+                if (!stack.is(net.minecraft.world.item.Items.ENCHANTED_BOOK)) continue;
+                qualifies = true;
+                if (tomeBooks.size() >= chiseled_enchanting_table.menu.PayloadLimits.MAX_TOME_BOOK_ENTRIES) continue;
+                java.util.List<EnchantmentWithLevel> ench = new java.util.ArrayList<>();
+                net.minecraft.world.item.enchantment.EnchantmentHelper.getEnchantmentsForCrafting(stack)
+                    .entrySet()
+                    .stream()
+                    .filter(e -> e.getIntValue() > 0 && e.getKey().unwrapKey().isPresent())
+                    .map(e -> new EnchantmentWithLevel(
+                        e.getKey().unwrapKey().orElseThrow().identifier(), e.getIntValue()))
+                    .sorted(java.util.Comparator.comparing((EnchantmentWithLevel e) -> e.enchantment_id().toString())
+                        .thenComparingInt(EnchantmentWithLevel::enchantment_level))
+                    .forEach(ench::add);
+                int wear = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getWearUsed(stack);
+                boolean immune = chiseled_enchanting_table.mechanics.resonance.TomeWearData.hasWearImmunity(stack);
+                int effectiveMax = chiseled_enchanting_table.mechanics.resonance.TomeWearData
+                    .effectiveMaxUses(stack, lrCfg.maxTomeUses());
+                int remaining = immune ? effectiveMax
+                    : chiseled_enchanting_table.mechanics.resonance.TomeWearData.remainingCharges(stack, lrCfg.maxTomeUses());
+                boolean charging = regenActive && !immune && wear > 0;
+                long progress = charging
+                    ? chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.regenProgressTicks(level, scanPos, slot)
+                    : -1L;
+                int etaNext = charging
+                    ? chiseled_enchanting_table.mechanics.resonance.TomeLockData.ticksToNextCharge(
+                        wear, Math.max(0L, progress), interval)
+                    : -1;
+                int etaFull = charging
+                    ? chiseled_enchanting_table.mechanics.resonance.TomeLockData.ticksToFullCharge(
+                        wear, Math.max(0L, progress), interval)
+                    : -1;
+                var lock = chiseled_enchanting_table.mechanics.resonance.TomeLockData.getLock(stack);
+                boolean effectivelyLocked = lock != null && !lock.expiredAt(wear);
+                int lockMode = !effectivelyLocked ? -1 : switch (lock.mode()) {
+                    case NEXT_CHARGE -> 0;
+                    case FULL_CHARGE -> 1;
+                    case PERMANENT -> 2;
+                };
+                tomeBooks.add(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry(
+                    scanPos.immutable(),
+                    slot,
+                    stack.getHoverName().getString(),
+                    ench,
+                    wear,
+                    remaining,
+                    effectiveMax,
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(stack),
+                    charging,
+                    immune,
+                    etaNext,
+                    etaFull,
+                    lockMode,
+                    effectivelyLocked ? lock.owner().toString() : "",
+                    effectivelyLocked ? lock.ownerName() : "",
+                    effectivelyLocked ? lock.targetWear() : -1,
+                    effectivelyLocked && viewer != null && lock.ownedBy(viewer.getUUID())
+                ));
+            }
+            if (qualifies) qualifyingShelves.add(scanPos.immutable());
+        }
+        tomeBooks.sort(java.util.Comparator
+            .comparing((chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry e) -> e.shelf_pos().asLong())
+            .thenComparingInt(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry::slot));
+
+        boolean cleanseUnlocked = false;
+        boolean tomeUnlocked = false;
+        int sacrificeProgress = 0;
+        if (viewer instanceof ServerPlayer serverViewer) {
+            int qualifying = qualifyingShelves.size();
+            if (qualifying >= Advancement.TOME_PAGE_REQUIRED_SHELVES
+                && !Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER)) {
+                Advancement.give(serverViewer, Advancement.HOW_MUCH_LONGER);
+            }
+            cleanseUnlocked = Advancement.hasCompleted(serverViewer, Advancement.DISENCHANT_SACRIFICE);
+            tomeUnlocked = Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER);
+            sacrificeProgress = Advancement.completedCriteria(serverViewer, Advancement.DISENCHANT_SACRIFICE);
+        }
+
         return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
             containerId,
             unlocked,
@@ -428,7 +544,18 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             shelfPower.crampedLibrary(),
             shelfPower.chiseledBookshelvesWithBooks(),
             shelfPower.emptyChiseledBookshelves(),
-            shelfPower.masterTomeCharges()
+            shelfPower.masterTomeCharges(),
+            cleanseUnlocked,
+            tomeUnlocked,
+            sacrificeProgress,
+            Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+            qualifyingShelves.size(),
+            Advancement.TOME_PAGE_REQUIRED_SHELVES,
+            totalLibrary,
+            regenTier,
+            nextGap,
+            interval,
+            tomeBooks
         );
     }
 

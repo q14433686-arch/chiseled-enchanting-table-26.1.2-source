@@ -39,7 +39,8 @@ public final class EnchantCostSync {
             || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_6_COST_TYPE)
             || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_7_COST_TYPE)
             || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_8_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_9_COST_TYPE);
+            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_9_COST_TYPE)
+            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_10_COST_TYPE);
     }
 
     public static void init() {

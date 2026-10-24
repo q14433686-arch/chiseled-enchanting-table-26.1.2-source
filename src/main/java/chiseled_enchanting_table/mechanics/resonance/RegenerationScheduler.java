@@ -195,6 +195,18 @@ public final class RegenerationScheduler<K> {
         return state != null && state.paused();
     }
 
+    /** Elapsed ticks toward the next +1 charge for {@code slot}, or {@code -1} if untracked. */
+    public long progressTicks(K slot) {
+        Progress state = previous.get(slot);
+        return state == null ? -1L : state.ticks();
+    }
+
+    /** Current per-charge interval for {@code slot}, or {@code -1} if untracked. */
+    public int intervalTicks(K slot) {
+        Progress state = previous.get(slot);
+        return state == null ? -1 : state.interval();
+    }
+
     public Object trackedIdentity(K slot) {
         Progress state = previous.get(slot);
         return state != null ? state.identity() : null;

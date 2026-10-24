@@ -92,6 +92,15 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
 
     @Unique
     private void cet$filterSameLevelMerge() {
+        ItemStack lockedLeft = this.inputSlots.getItem(0);
+        ItemStack lockedRight = this.inputSlots.getItem(1);
+        if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(lockedLeft)
+            || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(lockedRight)) {
+            this.resultSlots.setItem(0, ItemStack.EMPTY);
+            this.cost.set(0);
+            this.broadcastChanges();
+            return;
+        }
         if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().anvilBlockSameBookMerge()) {
             return;
         }
