@@ -1,4 +1,4 @@
-commit: 8049bf07082baf5fbede53f8fb68529018756237
+commit: ab071221ae7fd745b162d9427822eed9ed1fb5e7
 branch: arena/0e406cfe-chiseled-enchanting-table-26-1
 gradle exit code: 1
 
@@ -1000,4 +1000,4 @@ clientCompileClasspath - Compile classpath for source set 'client'.
 
 A web-based, searchable dependency report is available by adding the --scan option.
 
-== job status: failure ==
+== job status: cancelled ==
