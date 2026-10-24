@@ -173,6 +173,13 @@ jar {
 }
 
 // The isolated CI smoke test sends reload/stop through the real dedicated-server console.
+tasks.register('genBundledDefaults', Exec) {
+    description = 'Regenerate BundledDefaults.java from datapack JSON defaults'
+    group = 'codegen'
+    workingDir = rootProject.projectDir
+    commandLine 'python3', 'scripts/gen_bundled_defaults.py'
+}
+
 tasks.named('runServer', JavaExec).configure {
     standardInput = System.in
 }

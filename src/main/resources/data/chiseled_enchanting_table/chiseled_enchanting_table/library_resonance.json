@@ -27,7 +27,8 @@
     "tome_regen_tier1_shelves": 38,
     "tome_regen_tier1_seconds": 3600,
     "tome_regen_tier2_shelves": 42,
-    "tome_regen_tier2_seconds": 1200
+    "tome_regen_tier2_seconds": 1200,
+    "scapegoat_pricing": "essence"
   },
   "wild_book_wear": {
     "enabled": true,
@@ -61,7 +62,16 @@
     "max_rush_degrade_infinity": 0.7,
     "max_transcription_slip_chance": 0.18,
     "shelf_load_reference": 42.0,
-    "tome_load_reference": 22.0
+    "tome_load_reference": 22.0,
+    "wait_curve": {
+      "shelf_weight": 0.42,
+      "tome_weight": 0.58,
+      "level_floor": 0.35,
+      "level_span": 0.65,
+      "level_exponent": 1.15,
+      "saturation": 0.62,
+      "min_ticks": 100
+    }
   },
   "crossline_slip": {
     "min_load_threshold": 3.0,

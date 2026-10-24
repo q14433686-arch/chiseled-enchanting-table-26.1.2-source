@@ -18,13 +18,13 @@ class FullPortRuntimeTest {
         try {
             var draft = ModRuntimeConfig.DEFAULT.toDraft();
             draft.maxTomeUses = 128;
-            draft.anvilFlatRepairCost = false;
+            draft.anvilFlatRepairCost = true; // non-default since fresh installs default it off
             var policy = new ModRuntimeConfig.PackPolicy(true, true, Set.of("max_tome_uses"), Set.of());
             ChiseledEnchantingTableData.applyRuntimeConfig(draft.build(), policy, () -> {});
             var frame = ChiseledEnchantingTableData.runtimeFrame();
             assertEquals(4, frame.configuration().maxTomeUses());
             assertEquals(frame.configuration().maxTomeUses(), ChiseledEnchantingTableData.libraryResonanceConfig().maxTomeUses());
-            assertTrue(ModRuntimeConfig.effective().anvilFlatRepairCost());
+            assertFalse(ModRuntimeConfig.effective().anvilFlatRepairCost()); // enforced datapack domain wins over draft
             assertEquals(4, frame.rules().rule("max_tome_uses").effective());
             assertThrows(IllegalStateException.class, () -> ChiseledEnchantingTableData.applyRuntimeConfig(
                 draft.build(), ModRuntimeConfig.PackPolicy.NONE, () -> { throw new IllegalStateException("disk error"); }));

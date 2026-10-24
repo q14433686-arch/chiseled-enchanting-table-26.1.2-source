@@ -47,18 +47,18 @@ import net.minecraft.world.item.enchantment.Enchantment;
 public final class ChiseledEnchantingTableData implements SimpleSynchronousResourceReloadListener {
     private static final Gson GSON = new Gson();
     private static final Identifier RELOAD_ID = ChiseledEnchantingTable.identifier("data_tables");
-    private static final Identifier DEFAULT_ENCHANTMENTS_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/default_enchantments.json");
-    private static final Identifier ENCHANTMENT_COSTS_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/enchantment_costs.json");
-    private static final Identifier ITEM_TRANSFORMATIONS_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/item_transformations.json");
-    // U1: JSON tables backing the (new to the port) loot-injection and structure-bookshelf features.
-    private static final Identifier LOOT_INJECTIONS_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/loot_injections.json");
-    private static final Identifier BOOKSHELF_BOOK_POOL_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/bookshelf_book_pool.json");
-    private static final Identifier BOOK_UPGRADES_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/book_upgrades.json");
-    private static final Identifier TREASURE_EPIPHANY_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/treasure_epiphany.json");
-    private static final Identifier DISENCHANTING_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/disenchanting.json");
-    private static final Identifier SHELF_GATES_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/shelf_gates.json");
-    private static final Identifier LIBRARY_RESONANCE_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/library_resonance.json");
-    private static final Identifier PACK_POLICY_ID = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/pack_policy.json");
+    // Table identifiers live in DataIds (god-class split, 2026-10-24 audit); aliases keep call sites stable.
+    private static final Identifier DEFAULT_ENCHANTMENTS_ID = DataIds.DEFAULT_ENCHANTMENTS_ID;
+    private static final Identifier ENCHANTMENT_COSTS_ID = DataIds.ENCHANTMENT_COSTS_ID;
+    private static final Identifier ITEM_TRANSFORMATIONS_ID = DataIds.ITEM_TRANSFORMATIONS_ID;
+    private static final Identifier LOOT_INJECTIONS_ID = DataIds.LOOT_INJECTIONS_ID;
+    private static final Identifier BOOKSHELF_BOOK_POOL_ID = DataIds.BOOKSHELF_BOOK_POOL_ID;
+    private static final Identifier BOOK_UPGRADES_ID = DataIds.BOOK_UPGRADES_ID;
+    private static final Identifier TREASURE_EPIPHANY_ID = DataIds.TREASURE_EPIPHANY_ID;
+    private static final Identifier DISENCHANTING_ID = DataIds.DISENCHANTING_ID;
+    private static final Identifier SHELF_GATES_ID = DataIds.SHELF_GATES_ID;
+    private static final Identifier LIBRARY_RESONANCE_ID = DataIds.LIBRARY_RESONANCE_ID;
+    private static final Identifier PACK_POLICY_ID = DataIds.PACK_POLICY_ID;
 
     public enum VanillaChestBooksMode {
         KEEP_BOTH,
@@ -837,7 +837,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             lr.unbreakingWaiverPerLevel(),
             lr.unbreakingWaiverMaxChance(),
             lr.wildBookWearEnabled(),
-            lr.wildBookRemainingWeights()
+            lr.wildBookRemainingWeights(),
+            lr.scapegoatPricing()
         );
 
         var bu = rawBookUpgradeRules;

@@ -327,6 +327,45 @@ def check_markdown_links() -> None:
         note(f"markdown links ok ({scanned} file(s) scanned)")
 
 
+
+def check_locale_safe_formatting() -> None:
+    """DATA-03/DATA-04: String.format must pin Locale.ROOT (server default locales
+    otherwise leak localized digits/decimals into lore, logs and config values)."""
+    import re as _re
+
+    pattern = _re.compile(r"String\.format\((?!\s*(?:java\.util\.)?Locale\b)")
+    offenders = []
+    for root, _dirs, files in os.walk(os.path.join(REPO, "src")):
+        for name in files:
+            if not name.endswith(".java"):
+                continue
+            path = os.path.join(root, name)
+            with open(path, encoding="utf-8") as fh:
+                for lineno, line in enumerate(fh, 1):
+                    if pattern.search(line):
+                        offenders.append(f"{os.path.relpath(path, REPO)}:{lineno}")
+    for offender in offenders:
+        fail(f"String.format without Locale.ROOT: {offender}")
+    if not offenders:
+        note("all String.format calls pin Locale.ROOT")
+
+
+def check_bundled_defaults_fresh() -> None:
+    """JSON is the single source of truth for mechanic defaults: the checked-in
+    generated BundledDefaults.java must be byte-identical to a fresh regeneration
+    from the datapack JSON (drift gate, 2026-10-24 audit)."""
+    import subprocess
+
+    gen = os.path.join(REPO, "scripts", "gen_bundled_defaults.py")
+    proc = subprocess.run(
+        [sys.executable, gen, "--check"], capture_output=True, text=True, cwd=REPO
+    )
+    if proc.returncode != 0:
+        fail("BundledDefaults.java is stale vs datapack JSON; run scripts/gen_bundled_defaults.py "
+             f"({(proc.stderr or proc.stdout).strip()[:300]})")
+    else:
+        note("BundledDefaults.java matches datapack JSON (single source of truth)")
+
 # --------------------------------------------------------------------------- #
 
 def main() -> int:
@@ -338,6 +377,8 @@ def main() -> int:
     check_lang_parity()
     check_no_embedded_json_fallbacks()
     check_markdown_links()
+    check_locale_safe_formatting()
+    check_bundled_defaults_fresh()
 
     if args.porcelain:
         for msg in failures:

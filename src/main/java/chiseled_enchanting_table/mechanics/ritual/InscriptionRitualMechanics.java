@@ -73,27 +73,71 @@ public final class InscriptionRitualMechanics {
     public static final int MAX_QUEUE_STEPS = 256;
     public static final int MAX_QUEUE_CHARACTERS = 32_000;
     /** Default wait-curve normalization denominators (BAL-01); datapack-overridable via {@link Config}. */
-    public static final double DEFAULT_SHELF_LOAD_REFERENCE = 42.0;
-    public static final double DEFAULT_TOME_LOAD_REFERENCE = 22.0;
-    private static final double WAIT_SHELF_WEIGHT = 0.42;
-    private static final double WAIT_TOME_WEIGHT = 0.58;
-    private static final double WAIT_LEVEL_FLOOR = 0.35;
-    private static final double WAIT_LEVEL_SPAN = 0.65;
-    private static final double WAIT_LEVEL_EXPONENT = 1.15;
-    private static final double WAIT_SATURATION = 0.62;
-    private static final int WAIT_MIN_TICKS = 100;
+    public static final double DEFAULT_SHELF_LOAD_REFERENCE = chiseled_enchanting_table.BundledDefaults.SHELF_LOAD_REFERENCE;
+    public static final double DEFAULT_TOME_LOAD_REFERENCE = chiseled_enchanting_table.BundledDefaults.TOME_LOAD_REFERENCE;
+
+    /**
+     * Saturation curve of a single inscription wait (audit P0: these six numbers used
+     * to be private literals that no datapack could reach). Loaded from
+     * library_resonance.json ritual.wait_curve and synced in EnchantCostTablePayload.
+     */
+    public record WaitCurve(
+        double shelfWeight,
+        double tomeWeight,
+        double levelFloor,
+        double levelSpan,
+        double levelExponent,
+        double saturation,
+        int minTicks
+    ) {
+        public static final WaitCurve DEFAULT = new WaitCurve(
+            chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_SHELF_WEIGHT,
+            chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_TOME_WEIGHT,
+            chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_LEVEL_FLOOR,
+            chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_LEVEL_SPAN,
+            chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_LEVEL_EXPONENT,
+            chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_SATURATION,
+            chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_MIN_TICKS
+        );
+
+        public WaitCurve {
+            shelfWeight = Double.isFinite(shelfWeight) ? net.minecraft.util.Mth.clamp(shelfWeight, 0.0, 10.0) : chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_SHELF_WEIGHT;
+            tomeWeight = Double.isFinite(tomeWeight) ? net.minecraft.util.Mth.clamp(tomeWeight, 0.0, 10.0) : chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_TOME_WEIGHT;
+            levelFloor = Double.isFinite(levelFloor) ? net.minecraft.util.Mth.clamp(levelFloor, 0.0, 10.0) : chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_LEVEL_FLOOR;
+            levelSpan = Double.isFinite(levelSpan) ? net.minecraft.util.Mth.clamp(levelSpan, 0.0, 10.0) : chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_LEVEL_SPAN;
+            levelExponent = Double.isFinite(levelExponent) ? net.minecraft.util.Mth.clamp(levelExponent, 0.1, 5.0) : chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_LEVEL_EXPONENT;
+            saturation = Double.isFinite(saturation) ? net.minecraft.util.Mth.clamp(saturation, 0.01, 10.0) : chiseled_enchanting_table.BundledDefaults.WAIT_CURVE_SATURATION;
+            minTicks = net.minecraft.util.Mth.clamp(minTicks, 1, 6_000);
+        }
+
+        static WaitCurve fromJson(@Nullable com.google.gson.JsonObject ritual) {
+            if (ritual == null || !ritual.has("wait_curve") || !ritual.get("wait_curve").isJsonObject()) {
+                return DEFAULT;
+            }
+            com.google.gson.JsonObject w = ritual.getAsJsonObject("wait_curve");
+            return new WaitCurve(
+                Config.doubleOr(w, "shelf_weight", DEFAULT.shelfWeight),
+                Config.doubleOr(w, "tome_weight", DEFAULT.tomeWeight),
+                Config.doubleOr(w, "level_floor", DEFAULT.levelFloor),
+                Config.doubleOr(w, "level_span", DEFAULT.levelSpan),
+                Config.doubleOr(w, "level_exponent", DEFAULT.levelExponent),
+                Config.doubleOr(w, "saturation", DEFAULT.saturation),
+                Config.intOr(w, "min_ticks", DEFAULT.minTicks)
+            );
+        }
+    }
 
     /** Maximum wait ticks for ANY single enchantment step: 5 real minutes = 300s = 6,000 ticks. */
-    public static final int MAX_SINGLE_WAIT_TICKS = 20 * 300;
+    public static final int MAX_SINGLE_WAIT_TICKS = 20 * chiseled_enchanting_table.BundledDefaults.MAX_SINGLE_WAIT_SECONDS;
     /** Minimum surrounding Master Tome enchantments that activate ritual waiting below the shelf threshold. */
-    public static final int MIN_TOME_ENCHANTS_FOR_WAIT = 10;
+    public static final int MIN_TOME_ENCHANTS_FOR_WAIT = chiseled_enchanting_table.BundledDefaults.MIN_TOME_ENCHANTS_FOR_WAIT;
     /** Maximum direct XP levels sacrificed when skipping an active ritual via XP sacrifice. */
-    public static final int MAX_SACRIFICE_XP_LEVELS = 15;
+    public static final int MAX_SACRIFICE_XP_LEVELS = chiseled_enchanting_table.BundledDefaults.MAX_SACRIFICE_XP_LEVELS;
     /** Hard cap on non-sacrifice rush degradation chance normally (50%) vs with Infinity tome (70%). */
-    public static final double MAX_RUSH_DEGRADE_NORMAL = 0.50;
-    public static final double MAX_RUSH_DEGRADE_INFINITY = 0.70;
+    public static final double MAX_RUSH_DEGRADE_NORMAL = chiseled_enchanting_table.BundledDefaults.MAX_RUSH_DEGRADE_NORMAL;
+    public static final double MAX_RUSH_DEGRADE_INFINITY = chiseled_enchanting_table.BundledDefaults.MAX_RUSH_DEGRADE_INFINITY;
     /** Hard cap on overloaded Infinity Master Tome merged slip («抄错 / 抄串行») chance (18%). */
-    public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = 0.18;
+    public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = chiseled_enchanting_table.BundledDefaults.MAX_TRANSCRIPTION_SLIP_CHANCE;
 
     public static final TagKey<Enchantment> EPIPHANY_EXCLUSIVE_TAG =
         TagKey.create(Registries.ENCHANTMENT, ChiseledEnchantingTable.identifier("epiphany_exclusive"));
@@ -132,23 +176,23 @@ public final class InscriptionRitualMechanics {
         double pollutionRefundRatio
     ) {
         public static final CrosslineSlipConfig DEFAULT = new CrosslineSlipConfig(
-            3.0,
-            0.035,
-            MAX_TRANSCRIPTION_SLIP_CHANCE,
-            32, 0.01,
-            38, 0.02,
-            42, 0.03,
-            1.0,
-            3.0,
-            2, 1.0,
-            5, 0.5,
-            12, 0.5,
-            0.60, 0.5,
-            3, 1.0,
-            0.70,
-            0.25,
-            0.05,
-            0.50
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_MIN_LOAD_THRESHOLD,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_PER_LOAD_SLOPE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_MAX_SLIP_CHANCE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_SHELF_TIER1_COUNT, chiseled_enchanting_table.BundledDefaults.CROSSLINE_SHELF_TIER1_BONUS,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_SHELF_TIER2_COUNT, chiseled_enchanting_table.BundledDefaults.CROSSLINE_SHELF_TIER2_BONUS,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_SHELF_TIER3_COUNT, chiseled_enchanting_table.BundledDefaults.CROSSLINE_SHELF_TIER3_BONUS,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_TREASURE_SCORE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_SINGLE_TREASURE_MIN_LOAD,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_HIGH_RARITY_MAX_WEIGHT, chiseled_enchanting_table.BundledDefaults.CROSSLINE_HIGH_RARITY_SCORE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_MID_RARITY_MAX_WEIGHT, chiseled_enchanting_table.BundledDefaults.CROSSLINE_MID_RARITY_SCORE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_BROAD_APPLICABILITY_MIN_ITEMS, chiseled_enchanting_table.BundledDefaults.CROSSLINE_BROAD_APPLICABILITY_SCORE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_RELATIVE_LEVEL_MIN_RATIO, chiseled_enchanting_table.BundledDefaults.CROSSLINE_RELATIVE_LEVEL_SCORE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_UNBREAKING_HIGH_MIN_LEVEL, chiseled_enchanting_table.BundledDefaults.CROSSLINE_UNBREAKING_HIGH_SCORE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_TIER_DROP_SHARE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_JUNK_SHARE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_CURSE_SHARE,
+            chiseled_enchanting_table.BundledDefaults.CROSSLINE_POLLUTION_REFUND_RATIO
         );
 
         public CrosslineSlipConfig {
@@ -252,7 +296,8 @@ public final class InscriptionRitualMechanics {
         double maxTranscriptionSlipChance,
         double shelfLoadReference,
         double tomeLoadReference,
-        CrosslineSlipConfig crosslineSlip
+        CrosslineSlipConfig crosslineSlip,
+        WaitCurve waitCurve
     ) {
         public static final Config DEFAULT = new Config(
             MAX_SINGLE_WAIT_TICKS / 20,
@@ -263,7 +308,8 @@ public final class InscriptionRitualMechanics {
             MAX_TRANSCRIPTION_SLIP_CHANCE,
             DEFAULT_SHELF_LOAD_REFERENCE,
             DEFAULT_TOME_LOAD_REFERENCE,
-            CrosslineSlipConfig.DEFAULT
+            CrosslineSlipConfig.DEFAULT,
+            WaitCurve.DEFAULT
         );
 
         public Config(
@@ -284,7 +330,8 @@ public final class InscriptionRitualMechanics {
                 maxTranscriptionSlipChance,
                 DEFAULT_SHELF_LOAD_REFERENCE,
                 DEFAULT_TOME_LOAD_REFERENCE,
-                crosslineSlip
+                crosslineSlip,
+                WaitCurve.DEFAULT
             );
         }
 
@@ -305,7 +352,8 @@ public final class InscriptionRitualMechanics {
                 maxTranscriptionSlipChance,
                 DEFAULT_SHELF_LOAD_REFERENCE,
                 DEFAULT_TOME_LOAD_REFERENCE,
-                CrosslineSlipConfig.fromJson(null, maxTranscriptionSlipChance)
+                CrosslineSlipConfig.fromJson(null, maxTranscriptionSlipChance),
+                WaitCurve.DEFAULT
             );
         }
 
@@ -327,6 +375,7 @@ public final class InscriptionRitualMechanics {
                 ? Mth.clamp(tomeLoadReference, 1.0, 512.0)
                 : DEFAULT_TOME_LOAD_REFERENCE;
             crosslineSlip = crosslineSlip != null ? crosslineSlip : CrosslineSlipConfig.fromJson(null, maxTranscriptionSlipChance);
+            waitCurve = waitCurve != null ? waitCurve : WaitCurve.DEFAULT;
         }
 
         public int maxSingleWaitTicks() {
@@ -349,7 +398,7 @@ public final class InscriptionRitualMechanics {
             double shelfRef = r != null ? doubleOr(r, "shelf_load_reference", DEFAULT.shelfLoadReference) : DEFAULT.shelfLoadReference;
             double tomeRef = r != null ? doubleOr(r, "tome_load_reference", DEFAULT.tomeLoadReference) : DEFAULT.tomeLoadReference;
             CrosslineSlipConfig crossline = CrosslineSlipConfig.fromJson(root, slipCap);
-            return new Config(maxWaitSec, minTomeEnch, maxSacXp, rushNorm, rushInf, crossline.maxSlipChance(), shelfRef, tomeRef, crossline);
+            return new Config(maxWaitSec, minTomeEnch, maxSacXp, rushNorm, rushInf, crossline.maxSlipChance(), shelfRef, tomeRef, crossline, WaitCurve.fromJson(r));
         }
 
         static int intOr(com.google.gson.JsonObject obj, String key, int fallback) {
@@ -402,12 +451,14 @@ public final class InscriptionRitualMechanics {
         boolean consumedEpiphany,
         double infinityTomeLoad,
         int paidXpPoints,
-        List<PaidItemEntry> paidItems
+        List<PaidItemEntry> paidItems,
+        int inheritedGeneration
     ) {
         public QueuedInscription {
             infinityTomeLoad = Double.isFinite(infinityTomeLoad) ? Math.max(0.0, Math.min(256.0, infinityTomeLoad)) : 0.0;
             paidXpPoints = Math.max(0, Math.min(1_000_000, paidXpPoints));
             paidItems = paidItems == null ? List.of() : List.copyOf(paidItems);
+            inheritedGeneration = inheritedGeneration < 0 ? -1 : Math.min(255, inheritedGeneration);
         }
 
         public QueuedInscription(
@@ -429,7 +480,8 @@ public final class InscriptionRitualMechanics {
                 consumedEpiphany,
                 0.0,
                 0,
-                List.of()
+                List.of(),
+                -1
             );
         }
 
@@ -466,7 +518,8 @@ public final class InscriptionRitualMechanics {
                 + "|" + (consumedEpiphany ? 1 : 0)
                 + "|" + String.format(Locale.ROOT, "%.4f", infinityTomeLoad)
                 + "|" + paidXpPoints
-                + "|" + itemsEnc;
+                + "|" + itemsEnc
+                + "|" + inheritedGeneration;
         }
 
         @Nullable
@@ -475,7 +528,7 @@ public final class InscriptionRitualMechanics {
                 return null;
             }
             String[] parts = token.split("\\|", -1);
-            if ((parts.length != 7 && parts.length != 10) || token.length() > 2048) {
+            if ((parts.length != 7 && parts.length != 10 && parts.length != 11) || token.length() > 2048) {
                 return null;
             }
             try {
@@ -500,6 +553,13 @@ public final class InscriptionRitualMechanics {
                 if (!Double.isFinite(load) || load < 0.0 || load > 256.0 || paidXp < 0 || paidXp > 1_000_000) {
                     return null;
                 }
+                int inheritedGen = -1;
+                if (parts.length == 11) {
+                    inheritedGen = Integer.parseInt(parts[10].trim());
+                    if (inheritedGen < -1 || inheritedGen > 255) {
+                        return null;
+                    }
+                }
                 List<PaidItemEntry> items = new ArrayList<>();
                 String rawItems = parts[9].trim();
                 if (!rawItems.isEmpty()) {
@@ -520,7 +580,7 @@ public final class InscriptionRitualMechanics {
                         items.add(new PaidItemEntry(itemId, cnt));
                     }
                 }
-                return new QueuedInscription(id, rawTarget, rawPrev, tomeUsed, infTome, rawRefund, epip, load, paidXp, items);
+                return new QueuedInscription(id, rawTarget, rawPrev, tomeUsed, infTome, rawRefund, epip, load, paidXp, items, inheritedGen);
             } catch (RuntimeException ignored) {
                 return null;
             }
@@ -678,13 +738,14 @@ public final class InscriptionRitualMechanics {
         double relLevel = Mth.clamp((double) Math.max(1, targetLevel) / (double) Math.max(1, maxLevel), 0.10, 1.0);
         double shelfLoad = Math.max(0.0, nearbyBookshelves) / c.shelfLoadReference();
         double tomeLoad = Math.max(0.0, totalMasterTomeEnchantments) / c.tomeLoadReference();
-        double intensity = (WAIT_SHELF_WEIGHT * shelfLoad + WAIT_TOME_WEIGHT * tomeLoad)
-            * (WAIT_LEVEL_FLOOR + WAIT_LEVEL_SPAN * Math.pow(relLevel, WAIT_LEVEL_EXPONENT))
+        WaitCurve w = c.waitCurve();
+        double intensity = (w.shelfWeight() * shelfLoad + w.tomeWeight() * tomeLoad)
+            * (w.levelFloor() + w.levelSpan() * Math.pow(relLevel, w.levelExponent()))
             * Math.max(1.0, applicabilityFactor);
         double maxSec = c.maxSingleWaitSeconds();
-        double seconds = maxSec * (1.0 - Math.exp(-WAIT_SATURATION * intensity));
+        double seconds = maxSec * (1.0 - Math.exp(-w.saturation() * intensity));
         int ticks = (int) Math.round(seconds * 20.0);
-        return Mth.clamp(ticks, WAIT_MIN_TICKS, c.maxSingleWaitTicks());
+        return Mth.clamp(ticks, w.minTicks(), c.maxSingleWaitTicks());
     }
 
     /**

@@ -165,6 +165,16 @@ public final class EnchantmentApplication {
             appFactor
         );
 
+        // Generation fade: a shelf-tome transcription onto a book target produces a
+        // copy one generation below the exact tome this step consumed (snapshot-bound,
+        // same discipline as the Infinity-load binding above). Gear targets and
+        // direct/epiphany inscriptions have no parent tome and keep -1 (no stamp).
+        int inheritedGeneration = (masterTomeUsed && targetWasBook
+            && resolvedWear.chosenTomeSnapshot() != null
+            && !resolvedWear.chosenTomeSnapshot().isEmpty())
+            ? chiseled_enchanting_table.mechanics.resonance.TomeWearData.childGeneration(
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(resolvedWear.chosenTomeSnapshot()))
+            : -1;
         var queuedStep = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
             payload.enchantment_id(),
             enchantment_level,
@@ -177,7 +187,8 @@ public final class EnchantmentApplication {
             receipt.paidXpPoints(),
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription.fromStacks(
                 receipt.paidMaterials()
-            )
+            ),
+            inheritedGeneration
         );
 
         if (tablePos != null
@@ -260,6 +271,9 @@ public final class EnchantmentApplication {
 
         EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, finalLevel);
         EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+        if (inheritedGeneration >= 0 && target.is(Items.ENCHANTED_BOOK)) {
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(target, inheritedGeneration);
+        }
 
         if (conflictRefund > 0) {
             DisenchantmentApplication.awardRefundOrbs(handler, conflictRefund);
@@ -380,6 +394,14 @@ public final class EnchantmentApplication {
 
         EnchantmentProvenance.recordBookTransfer(sourceBookSnapshot, target, payload.enchantment_id(), enchantment_level);
         EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+        // Transfers move (never duplicate) an entry, so the result keeps the more
+        // faded parent's generation instead of advancing it: consolidation is not
+        // a fresh copy, but a faded lineage must not be laundered through a fresh book.
+        if (target.is(Items.ENCHANTED_BOOK)) {
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                target,
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(sourceBookSnapshot));
+        }
 
         if (conflictRefund > 0) {
             DisenchantmentApplication.awardRefundOrbs(handler, conflictRefund);

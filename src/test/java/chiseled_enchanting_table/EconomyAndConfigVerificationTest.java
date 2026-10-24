@@ -789,7 +789,7 @@ class EconomyAndConfigVerificationTest {
     @Test
     void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
-        assertEquals(55, all.size(), "Expected 55 curated in-game configurable entries across 6 categories");
+        assertEquals(57, all.size(), "Expected 57 curated in-game configurable entries across 6 categories");
         for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
                 chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
@@ -1769,7 +1769,8 @@ class EconomyAndConfigVerificationTest {
                 new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.PaidItemEntry(
                     Identifier.withDefaultNamespace("amethyst_shard"), 1
                 )
-            )
+            ),
+            3
         );
         var roundTripped = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription
             .decode(richStep.encode());
@@ -1777,6 +1778,8 @@ class EconomyAndConfigVerificationTest {
         assertEquals(5.5, roundTripped.infinityTomeLoad(), 1e-4);
         assertEquals(94, roundTripped.paidXpPoints());
         assertEquals(2, roundTripped.paidItems().size());
+        assertEquals(3, roundTripped.inheritedGeneration());
+        assertEquals(-1, legacyDecoded.inheritedGeneration());
 
         // 7. Data tag & Option B advancement copywriting verification
         Path tagPath = Path.of("src/main/resources/data/chiseled_enchanting_table/tags/enchantment/crossline_excluded.json");
@@ -1841,7 +1844,8 @@ class EconomyAndConfigVerificationTest {
     void ritualWaitCurveLoadReferencesAreDatapackConfigurable() {
         var custom = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
             300, 3, 15, 0.5, 0.7, 0.3, 84.0, 44.0,
-            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig.DEFAULT
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig.DEFAULT,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.WaitCurve.DEFAULT
         );
         int defaultWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .computeSingleEnchantWaitTicks(

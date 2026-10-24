@@ -80,7 +80,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeIdentifier(value.input_item());
             buf.writeBoolean(value.input_is_tag());
             buf.writeIdentifier(value.output_item());
-            buf.writeInt(value.level());
+            buf.writeVarInt(Math.max(0, value.level()));
             buf.writeVarInt(Math.max(1, value.min_player_level()));
             buf.writeVarInt(Math.max(0, value.deducted_levels()));
             buf.writeBoolean(value.unlocked());
@@ -91,7 +91,7 @@ public final class ChiseledEnchantingMenuPayloads {
             Identifier input = buf.readIdentifier();
             boolean isTag = buf.readBoolean();
             Identifier output = buf.readIdentifier();
-            int level = buf.readInt();
+            int level = Math.max(0, buf.readVarInt());
             int minPlayerLevel = Math.max(1, buf.readVarInt());
             int deductedLevels = Math.max(0, buf.readVarInt());
             boolean unlocked = buf.readBoolean();

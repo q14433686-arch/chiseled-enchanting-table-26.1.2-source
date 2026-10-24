@@ -107,7 +107,7 @@ class SyncContracts26_1_2(unittest.TestCase):
 
     def test_audit_guards_authoritative_sync_and_input(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('26_1_2_revision_9', protocol)
+        self.assertIn('26_1_2_revision_10', protocol)
         self.assertNotIn('Minecraft 26.3', protocol)
 
         sync = (MAIN / 'menu/EnchantCostSync.java').read_text()
