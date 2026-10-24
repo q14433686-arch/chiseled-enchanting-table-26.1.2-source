@@ -474,7 +474,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                         .thenComparingInt(EnchantmentWithLevel::enchantment_level))
                     .forEach(ench::add);
                 int wear = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getWearUsed(stack);
-                boolean immune = chiseled_enchanting_table.mechanics.resonance.TomeWearData
+                boolean immune = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
                     .hasEffectiveWearImmunity(lrCfg, stack);
                 int nonCurseCount = chiseled_enchanting_table.mechanics.resonance.TomeWearData
                     .countNonCurseStoredEnchantments(stack);
@@ -763,12 +763,16 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                                 mergeHighestLevel(slotLevels, clamped);
                             }
                             slotCappedMasteryUnits += chiseled_enchanting_table.mechanics.resonance.LibraryResonance
-                                .slotMasteryContribution(lrCfg, level, slotLevels);
+                                .capSingleSlotMasteryUnits(
+                                    lrCfg,
+                                    chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+                                        .totalMasteryUnits(lrCfg, level, slotLevels)
+                                );
                         }
                     }
                     var kind = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
                         .classifyBookshelf(false, true, anyBookInShelf, anyEnchantedInShelf);
-                    if (kind == chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.BookshelfKind.EMPTY_CHISELED_BOOKSHELF) {
+                    if (kind == chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.ShelfTaxonomyKind.EMPTY_CHISELED_BOOKSHELF) {
                         rawEmptyChiseledBookshelves++;
                     } else if (kind.isBroadBookshelf()) {
                         rawOccupiedChiseledBookshelves++;
@@ -777,7 +781,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     boolean occupied = hasOccupiedChiseledSlot(nearbyState);
                     var kind = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
                         .classifyBookshelf(false, true, occupied, false);
-                    if (kind == chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.BookshelfKind.EMPTY_CHISELED_BOOKSHELF) {
+                    if (kind == chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.ShelfTaxonomyKind.EMPTY_CHISELED_BOOKSHELF) {
                         rawEmptyChiseledBookshelves++;
                     } else if (kind.isBroadBookshelf()) {
                         rawOccupiedChiseledBookshelves++;
@@ -806,8 +810,10 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         Map<Identifier, Integer> immutableStored = Map.copyOf(storedMasterLevels);
         int highTierChiseledBooks = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
             .countQualifyingStoredMasterEnchantments(level, immutableStored);
+        double dedupMasteryUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .totalMasteryUnits(lrCfg, level, immutableStored);
         double totalUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance
-            .effectiveTotalMasteryUnits(lrCfg, level, immutableStored, slotCappedMasteryUnits);
+            .effectiveTotalMasteryUnits(lrCfg, dedupMasteryUnits, slotCappedMasteryUnits);
         Map<EnchantmentWithLevel, Integer> masterTomeCharges = !includeCharges ? Map.of() : chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
             .snapshotLiveMasterCharges(
                 level,

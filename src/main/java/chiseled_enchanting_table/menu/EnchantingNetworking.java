@@ -112,11 +112,12 @@ public final class EnchantingNetworking {
                 if (pos == null || player.isSpectator() || !player.level().hasChunkAt(pos)) {
                     return;
                 }
-                if (!player.canInteractWithBlock(pos, 4.0D)) {
-                    return;
-                }
                 var state = player.level().getBlockState(pos);
                 if (!state.is(BlockRegistry.CHISELED_ENCHANTING_TABLE)) {
+                    return;
+                }
+                if (!(player.level().getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity tableBe)
+                    || !tableBe.stillValid(player)) {
                     return;
                 }
                 var provider = state.getMenuProvider(player.level(), pos);

@@ -131,7 +131,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             if (cfg.tomeConsumptionMode() == MasterTomeWear.ConsumptionMode.KEEP) {
                 return;
             }
-            boolean rawImmuneTag = MasterTomeWear.hasInfinityImmunity(stack);
+            boolean rawImmuneTag = chiseled_enchanting_table.mechanics.resonance.TomeWearData.hasWearImmunity(stack);
             boolean effectiveImmune = MasterTomeWear.hasEffectiveWearImmunity(cfg, stack);
             int wearUsed = MasterTomeWear.getWearUsed(stack);
             int generation = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(stack);
@@ -143,7 +143,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                     .countNonCurseStoredEnchantments(stack);
                 int waiverPct = (int) Math.round(
                     chiseled_enchanting_table.mechanics.resonance.TomeWearData
-                        .computeWearImmuneWaiverChance(cfg, stack) * 100.0
+                        .computeWearImmuneWaiverChance(cfg, nonCurseCount) * 100.0
                 );
                 if (nonCurseCount > cfg.wearImmuneFullWaiverMaxEnchants()) {
                     lines.add(Component.translatable(

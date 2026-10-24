@@ -27,7 +27,7 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
   - Empty Chiseled Bookshelves (`0` books in all 6 slots) no longer count toward broad bookshelves `S_广义`; occupied chiseled shelves (`>= 1` book/remnant) continue to count;
   - Kept passive tome regeneration schedule at `7200s / 3600s / 1200s` (`6d -> 38 shelves 3d -> 42 shelves 1d`), resolved wear via `TomeWearData.getWearUsed`, clamped scan volume, and synced `docs/WIKI.md`;
   - Added `max_mastery_units_per_slot = 4.0` so maxing global `-20%` mastery XP discount requires spreading enchantments across multiple stored tome slots;
-  - Scaled ritual XP sacrifice skip cap with queued step count (`+4L/step` up to `45L`), prioritized active-ritual-backing tomes on rush degradation, and data-drove `240s` / `210s` ritual curve constants in `library_resonance.json`.
+  - Scaled ritual XP sacrifice skip cap with queued step count (`+5L/step`), prioritized active-ritual-backing tomes on rush degradation, and data-drove `240s` / `210s` ritual curve constants in `library_resonance.json`.
 - **UX, Tome Lock Lifecycle, Networking & Hygiene (`confirm_hud_clear_lock`, `26_1_2_revision_15`)**:
   - Added 5-second 2nd-click confirmation (or `Shift`+click immediate bypass) on `DISENCHANT_ALL` for Enchanted Books with `>= 3` non-curse enchantments or wear immunity;
   - Added persistent compact `W / S` bookshelf count + next-tier progress bar badge in the `ChiseledEnchantingTableScreen` header bar with full hover breakdown;

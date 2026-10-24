@@ -975,7 +975,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 disenchantingRules.stripXpMin(),
                 disenchantingRules.stripXpMax(),
                 disenchantingRules.stripMaterialCost(),
-                disenchantingRules.cursePurgeXpCost(),
+                disenchantingRules.curseXpCost(),
                 disenchantingRules.curseMaterialCost()
             );
         }
