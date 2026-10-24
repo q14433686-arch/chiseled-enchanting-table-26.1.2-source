@@ -21,6 +21,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagKey;
@@ -480,6 +481,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return direct != null && !direct.isEmpty();
     }
 
+    /** Hard ceiling for one merged cost entry; exceeding it invalidates the bundle (audit R-02). */
+    public static final int MAX_MERGED_COST_COUNT = 4096;
+
     /**
      * Merges repeated {@link ItemStack#isSameItemSameComponents} stacks inside one cost bundle so
      * duplicate materials across primary + additional costs never under-check or partially deduct.
@@ -497,8 +501,18 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             for (int i = 0; i < merged.size(); i++) {
                 ItemStack existing = merged.get(i);
                 if (ItemStack.isSameItemSameComponents(existing, stack)) {
+                    long total = (long) existing.getCount() + (long) stack.getCount();
+                    // Audit R-02: an over-ceiling merge used to be silently clamped to 4096,
+                    // discounting the cost. Over-large bundles are invalid datapack data and
+                    // must fail closed instead of undercharging.
+                    if (total > MAX_MERGED_COST_COUNT) {
+                        ChiseledEnchantingTable.LOGGER.warn(
+                            "Rejected merged cost {} x{} exceeding max {}; treating bundle as invalid.",
+                            BuiltInRegistries.ITEM.getKey(stack.getItem()), total, MAX_MERGED_COST_COUNT);
+                        return List.of();
+                    }
                     ItemStack updated = existing.copy();
-                    updated.setCount(Math.min(4096, existing.getCount() + stack.getCount()));
+                    updated.setCount((int) total);
                     merged.set(i, updated);
                     combined = true;
                     break;
@@ -908,7 +922,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                         null,
                         t.primaryCost(),
                         t.additionalCosts(),
-                        t.alternativePrimaryOptions()
+                        t.alternativePrimaryOptions(),
+                        t.materialFree()
                     )
                 );
             }
@@ -1341,8 +1356,31 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         @org.jetbrains.annotations.Nullable Identifier requiredAdvancement,
         ItemCostOption primaryCost,
         List<ItemCostOption> additionalCosts,
-        List<ItemCostOption> alternativePrimaryOptions
+        List<ItemCostOption> alternativePrimaryOptions,
+        boolean materialFree
     ) {
+        public ItemTransformation(
+            Identifier id,
+            Identifier inputItemId,
+            boolean inputIsTag,
+            Identifier outputItemId,
+            int level,
+            int xpCost,
+            int minRequiredLevel,
+            int deductedLevels,
+            boolean requirePriorDiscovery,
+            @org.jetbrains.annotations.Nullable Identifier requiredAdvancement,
+            ItemCostOption primaryCost,
+            List<ItemCostOption> additionalCosts,
+            List<ItemCostOption> alternativePrimaryOptions
+        ) {
+            this(
+                id, inputItemId, inputIsTag, outputItemId, level, xpCost, minRequiredLevel,
+                deductedLevels, requirePriorDiscovery, requiredAdvancement, primaryCost,
+                additionalCosts, alternativePrimaryOptions, false
+            );
+        }
+
         public ItemTransformation(
             Identifier id,
             Identifier inputItemId,
@@ -1366,7 +1404,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 null,
                 primaryCost,
                 additionalCosts,
-                alternativePrimaryOptions
+                alternativePrimaryOptions,
+                false
             );
         }
 
@@ -1396,7 +1435,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 null,
                 primaryCost,
                 additionalCosts,
-                alternativePrimaryOptions
+                alternativePrimaryOptions,
+                false
             );
         }
 
@@ -1464,7 +1504,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 reqAdv,
                 primaryCost,
                 List.copyOf(additionalCosts),
-                List.copyOf(altOptions)
+                List.copyOf(altOptions),
+                materialFree
             );
         }
 
@@ -1768,7 +1809,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
     }
 
-    private record ItemCostRule(List<ItemCostOption> options, Map<Integer, ItemCostRule> levelOverrides, ItemCostRule maxLevelOverride) {
+    private record ItemCostRule(List<ItemCostOption> options, Map<Integer, ItemCostRule> levelOverrides, ItemCostRule maxLevelOverride, boolean materialFree) {
+        ItemCostRule(List<ItemCostOption> options, Map<Integer, ItemCostRule> levelOverrides, ItemCostRule maxLevelOverride) {
+            this(options, levelOverrides, maxLevelOverride, false);
+        }
+
         static ItemCostRule single(Identifier itemId, int count, int countPerLevel, int minCount, int maxCount) {
             return new ItemCostRule(List.of(new ItemCostOption(itemId, count, countPerLevel, minCount, maxCount, 0, 0, 1.0, List.of())), Map.of(), null);
         }
@@ -1798,10 +1843,14 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 options.add(ItemCostOption.fromJson(json));
             }
 
-            if (options.isEmpty()) {
+            // Audit H-02: a datapack may declare an explicitly material-free rule
+            // ("material_free": true, alias "xp_only"). Only then is an empty option list
+            // legal; missing/unresolvable data must never degrade into a free cost.
+            boolean materialFree = boolOr(json, "material_free", boolOr(json, "xp_only", false));
+            if (options.isEmpty() && !materialFree) {
                 options.add(new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 0, 0, 0, 0, 3, 20, 1.3, List.of()));
             }
-            return new ItemCostRule(List.copyOf(options), Map.copyOf(levelOverrides), maxLevelOverride);
+            return new ItemCostRule(List.copyOf(options), Map.copyOf(levelOverrides), maxLevelOverride, materialFree && options.isEmpty());
         }
 
         List<List<ItemStack>> toBundles(Identifier enchantmentId, int level, int maxLevel) {
@@ -1859,17 +1908,32 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             );
         }
 
+        /** Upper bound for any single datapack-declared count field (audit R-02). */
+        private static final int MAX_DECLARED_COUNT = MAX_MERGED_COST_COUNT;
+
+        private static int checkedCount(JsonObject json, String key, int fallback) {
+            int value = intOr(json, key, fallback);
+            if (value < 0 || value > MAX_DECLARED_COUNT) {
+                throw new IllegalArgumentException(
+                    "Invalid item cost '" + key + "'=" + value + " (allowed 0.." + MAX_DECLARED_COUNT + ")");
+            }
+            return value;
+        }
+
         static ItemCostOption fromJson(JsonObject json) {
             String rawItem = json.get("item").getAsString();
             boolean isTag = rawItem.startsWith("#");
             Identifier itemId = parseIdentifier(stripTagPrefix(rawItem));
-            int count = intOr(json, "count", 0);
-            int countPerLevel = intOr(json, "count_per_level", 0);
-            int minCount = intOr(json, "min_count", 0);
-            int maxCount = intOr(json, "max_count", 0);
-            int baseCount = intOr(json, "base_count", 0);
-            int maxLevelCount = intOr(json, "max_level_count", 0);
+            int count = checkedCount(json, "count", 0);
+            int countPerLevel = checkedCount(json, "count_per_level", 0);
+            int minCount = checkedCount(json, "min_count", 0);
+            int maxCount = checkedCount(json, "max_count", 0);
+            int baseCount = checkedCount(json, "base_count", 0);
+            int maxLevelCount = checkedCount(json, "max_level_count", 0);
             double levelExponent = doubleOr(json, "level_exponent", 1.3D);
+            if (!Double.isFinite(levelExponent) || levelExponent <= 0.0 || levelExponent > 10.0) {
+                throw new IllegalArgumentException("Invalid item cost 'level_exponent'=" + levelExponent + " (allowed (0, 10])");
+            }
             List<ItemCostOption> extras = new ArrayList<>();
             if (json.has("extra")) {
                 extras.add(fromJson(json.getAsJsonObject("extra")));
@@ -1911,29 +1975,72 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             return List.of(single.get());
         }
 
+        /** Total bundle cap for nested cartesian expansion (audit H-03/R-02). */
+        private static final int MAX_EXPANDED_BUNDLES = 256;
+        private static final int MAX_EXTRAS_DEPTH = 16;
+
         List<List<ItemStack>> expandBundles(Identifier enchantmentId, int level, int maxLevel, String salt) {
+            return expandBundles(enchantmentId, level, maxLevel, salt, 0);
+        }
+
+        /**
+         * Audit H-03: extras recurse fully. Previously every extra collapsed through
+         * {@link #toSingleStack} to its first tag candidate and its own nested extras were
+         * silently dropped, so datapacks undercharged. Now each extra expands to its own
+         * bundle alternatives and the cartesian product is taken (bounded, with a warning
+         * on truncation so datapack authors notice).
+         */
+        private List<List<ItemStack>> expandBundles(Identifier enchantmentId, int level, int maxLevel, String salt, int depth) {
             int computedCount = computeCount(level, maxLevel);
             List<Item> primaries = candidateItems();
             if (primaries.isEmpty()) {
                 return List.of();
             }
-            List<ItemStack> resolvedExtras = new ArrayList<>(extras.size());
+            if (depth > MAX_EXTRAS_DEPTH) {
+                ChiseledEnchantingTable.LOGGER.warn("Item cost extras nested deeper than {}; treating option as invalid.", MAX_EXTRAS_DEPTH);
+                return List.of();
+            }
+            List<List<ItemStack>> partials = new ArrayList<>();
+            partials.add(List.of());
             for (ItemCostOption extra : extras) {
-                ItemStack extraStack = extra.toSingleStack(enchantmentId, level, maxLevel, salt);
-                if (extraStack.isEmpty()) {
+                List<List<ItemStack>> extraBundles = extra.expandBundles(enchantmentId, level, maxLevel, salt, depth + 1);
+                if (extraBundles.isEmpty()) {
                     return List.of();
                 }
-                resolvedExtras.add(extraStack);
-            }
-            List<List<ItemStack>> out = new ArrayList<>(primaries.size());
-            for (Item primary : primaries) {
-                List<ItemStack> bundle = new ArrayList<>(1 + resolvedExtras.size());
-                bundle.add(new ItemStack(primary, computedCount));
-                bundle.addAll(resolvedExtras);
-                List<ItemStack> normalized = mergeEquivalentCostBundle(bundle);
-                if (!normalized.isEmpty()) {
-                    out.add(normalized);
+                List<List<ItemStack>> next = new ArrayList<>();
+                for (List<ItemStack> partial : partials) {
+                    for (List<ItemStack> extraBundle : extraBundles) {
+                        if (next.size() >= MAX_EXPANDED_BUNDLES) break;
+                        List<ItemStack> joined = new ArrayList<>(partial.size() + extraBundle.size());
+                        joined.addAll(partial);
+                        joined.addAll(extraBundle);
+                        next.add(joined);
+                    }
+                    if (next.size() >= MAX_EXPANDED_BUNDLES) break;
                 }
+                if ((long) partials.size() * extraBundles.size() > MAX_EXPANDED_BUNDLES) {
+                    ChiseledEnchantingTable.LOGGER.warn(
+                        "Item cost expansion for {} exceeded {} bundles; truncating alternatives.",
+                        enchantmentId, MAX_EXPANDED_BUNDLES);
+                }
+                partials = next;
+                if (partials.isEmpty()) {
+                    return List.of();
+                }
+            }
+            List<List<ItemStack>> out = new ArrayList<>();
+            for (Item primary : primaries) {
+                for (List<ItemStack> extraBundle : partials) {
+                    if (out.size() >= MAX_EXPANDED_BUNDLES) break;
+                    List<ItemStack> bundle = new ArrayList<>(1 + extraBundle.size());
+                    bundle.add(new ItemStack(primary, computedCount));
+                    bundle.addAll(extraBundle);
+                    List<ItemStack> normalized = mergeEquivalentCostBundle(bundle);
+                    if (!normalized.isEmpty()) {
+                        out.add(normalized);
+                    }
+                }
+                if (out.size() >= MAX_EXPANDED_BUNDLES) break;
             }
             return List.copyOf(out);
         }

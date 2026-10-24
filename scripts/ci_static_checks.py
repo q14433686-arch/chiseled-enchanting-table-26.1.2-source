@@ -184,6 +184,44 @@ def check_mixin_configs() -> None:
     else:
         note(f"{declared} declared mixin class reference(s) checked")
 
+    # Orphan gate (audit H-05): a mixin class present in the tree but missing from every
+    # config silently never loads (structure bookshelf replacement was dead for a whole
+    # release this way). Every *Mixin/accessor source under a mixin package must be
+    # declared in some *.mixins.json.
+    declared_fqcn = set()
+    mixin_packages = set()
+    for cfg in configs:
+        try:
+            data = read_json(cfg)
+        except Exception:  # noqa: BLE001
+            continue
+        package = data.get("package", "")
+        if not package:
+            continue
+        mixin_packages.add(package.replace(".", "/"))
+        for section in MIXIN_SECTIONS:
+            for mixin in data.get(section) or []:
+                declared_fqcn.add(f"{package}.{mixin}")
+
+    orphans = []
+    for root, _dirs, files in os.walk(os.path.join(REPO, "src")):
+        for name in files:
+            if not name.endswith(".java"):
+                continue
+            path = os.path.join(root, name)
+            rel = os.path.relpath(path, REPO).replace(os.sep, "/")
+            for pkg_path in mixin_packages:
+                marker = f"/{pkg_path}/"
+                if marker in f"/{rel}":
+                    fqcn = (pkg_path + "/" + f"/{rel}".split(marker, 1)[1])[:-5].replace("/", ".")
+                    if fqcn not in declared_fqcn:
+                        orphans.append(f"{rel} ({fqcn})")
+                    break
+    for orphan in sorted(orphans):
+        fail(f"orphan mixin source not declared in any *.mixins.json: {orphan}")
+    if not orphans:
+        note("no orphan mixin sources")
+
 
 # --------------------------------------------------------------------------- #
 # Tier C

@@ -9,6 +9,9 @@
     "enchanting_table.DisableBookEnchanting",
     "grindstone.GrindstoneBookDepleteMixin",
     "loot.ReloadableServerRegistriesMixin",
+    "structure.LevelChunkPostProcessMixin",
+    "structure.StructurePieceAccessor",
+    "structure.StructurePieceMarkMixin",
     "structure.StructurePlaceSettingsMixin",
     "structure.StructureTemplatePoolProjectionMixin"
   ],

@@ -595,7 +595,10 @@ public final class BookshelfProgression {
             return List.of();
         }
         if (tier == DepletedTomeTier.TIER_3_FREE) {
-            return List.of();
+            // One explicitly-empty bundle = legally material-free (audit H-02). Returning a
+            // completely empty option list here used to be indistinguishable from missing
+            // cost data, which the menu layer now treats as fail-closed.
+            return List.of(List.of());
         }
         int safeBatch = Math.max(1, batchCount);
         double mult = (tier == DepletedTomeTier.TIER_2_DISCOUNT_MAT)

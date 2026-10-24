@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.mixin.anvil;
 
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AnvilMenu;
@@ -32,6 +33,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *       the vanilla multi-item {@code cost = 40} lock while preserving {@code count - 1} remainders
  *       in both slot 0 and slot 1 upon {@code onTake}.</li>
  * </ol>
+ *
+ * <p>Audit MX-04/M-07: the count normalisation used to be a HEAD/RETURN inject pair mutating the
+ * real input stack — any exception or third-party cancellation inside vanilla
+ * {@code createResult} skipped the RETURN restore and permanently shrank the player's stack to 1.
+ * It is now a single {@code @WrapMethod} with a Java {@code try/finally}, and the saved count is a
+ * method-local instead of a cross-tick field. The {@code onTake} remainder capture no longer
+ * depends on {@code onlyRenaming} alone: a non-empty right slot that contributes no enchantment
+ * cost can still make vanilla report {@code onlyRenaming == true} while its {@code onTake}
+ * empties the left slot, which used to lose the stacked remainder.</p>
  */
 @Mixin(AnvilMenu.class)
 public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
@@ -41,9 +51,6 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
 
     @Shadow
     private boolean onlyRenaming;
-
-    @Unique
-    private int cet$savedLeftBookCount = 0;
 
     @Unique
     private ItemStack cet$leftBookRemainder = ItemStack.EMPTY;
@@ -61,28 +68,34 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
         super(type, syncId, playerInventory, context, forgingSlotsManager);
     }
 
-    @Inject(method = "createResult", at = @At("HEAD"))
-    private void cet$normalizeStackedLeftBookHead(CallbackInfo ci) {
-        this.cet$savedLeftBookCount = 0;
+    @WrapMethod(method = "createResult")
+    private void cet$wrapCreateResult(Operation<Void> original) {
         ItemStack left = this.inputSlots.getItem(0);
         ItemStack right = this.inputSlots.getItem(1);
+        int savedLeftCount = 0;
         if (!right.isEmpty() && left.is(Items.ENCHANTED_BOOK) && left.getCount() > 1) {
-            this.cet$savedLeftBookCount = left.getCount();
+            savedLeftCount = left.getCount();
             left.setCount(1);
         }
+        try {
+            original.call();
+        } finally {
+            if (savedLeftCount > 1) {
+                ItemStack current = this.inputSlots.getItem(0);
+                if (current == left && current.is(Items.ENCHANTED_BOOK)) {
+                    current.setCount(savedLeftCount);
+                }
+            }
+        }
+        cet$filterSameLevelMerge();
     }
 
-    @Inject(method = "createResult", at = @At("RETURN"))
-    private void cet$restoreStackedLeftBookAndFilterSameLevelMerge(CallbackInfo ci) {
-        ItemStack left = this.inputSlots.getItem(0);
-        if (this.cet$savedLeftBookCount > 1 && left.is(Items.ENCHANTED_BOOK)) {
-            left.setCount(this.cet$savedLeftBookCount);
-        }
-        this.cet$savedLeftBookCount = 0;
-
+    @Unique
+    private void cet$filterSameLevelMerge() {
         if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().anvilBlockSameBookMerge()) {
             return;
         }
+        ItemStack left = this.inputSlots.getItem(0);
         ItemStack right = this.inputSlots.getItem(1);
         if (!left.is(Items.ENCHANTED_BOOK) || !right.is(Items.ENCHANTED_BOOK)) {
             return;
@@ -114,12 +127,15 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
         this.cet$leftBookRemainder = ItemStack.EMPTY;
         this.cet$rightBookRemainder = ItemStack.EMPTY;
 
+        // Audit M-07: onlyRenaming can be true even with a non-empty right slot (the right
+        // book contributes no enchantment cost), and vanilla onTake still empties the left
+        // slot in that case. Capture whenever a take could consume the slot.
+        ItemStack right = this.inputSlots.getItem(1);
         ItemStack left = this.inputSlots.getItem(0);
-        if (!this.onlyRenaming && left.is(Items.ENCHANTED_BOOK) && left.getCount() > 1) {
+        if ((!this.onlyRenaming || !right.isEmpty()) && left.is(Items.ENCHANTED_BOOK) && left.getCount() > 1) {
             this.cet$leftBookRemainder = left.copyWithCount(left.getCount() - 1);
         }
 
-        ItemStack right = this.inputSlots.getItem(1);
         if (right.is(Items.ENCHANTED_BOOK) && right.getCount() > 1) {
             this.cet$rightBookRemainder = right.copyWithCount(right.getCount() - 1);
         }

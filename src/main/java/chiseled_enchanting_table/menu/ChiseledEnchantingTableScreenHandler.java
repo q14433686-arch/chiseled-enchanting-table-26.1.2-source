@@ -31,6 +31,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.Container;
@@ -281,14 +282,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         ) {
             @Override
             public int getMaxStackSize(ItemStack stack) {
+                // Audit H-04: batch caps are additionally bounded by the item's own stack
+                // limit so Slot / BE admission / hoppers agree (glass bottles stop at 16).
                 if (stack.is(BlockRegistry.DEPLETED_TOME)) {
-                    return depletedTomeMaxBatchSize();
+                    return Math.max(1, Math.min(depletedTomeMaxBatchSize(), stack.getMaxStackSize()));
                 }
                 if (!stack.is(Items.BOOK)
                     && !stack.is(Items.ENCHANTED_BOOK)
                     && !stack.isEnchantable()
                     && !syncedTransformationsFor(stack).isEmpty()) {
-                    return transformationMaxBatchSize();
+                    return Math.max(1, Math.min(transformationMaxBatchSize(), stack.getMaxStackSize()));
                 }
                 return 1;
             }
@@ -806,15 +809,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         boolean wasBook = base.is(Items.BOOK) || base.is(Items.ENCHANTED_BOOK);
         ItemStack copy;
         if (base.is(Items.BOOK)) {
-            copy = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            var customName = base.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
-            if (customName != null) {
-                copy.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
-            }
-            var customData = base.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-            if (customData != null) {
-                copy.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, customData);
-            }
+            // Preview and completion share one conversion (audit M-05) so the planned
+            // item can never diverge from what the ritual actually produces.
+            copy = chiseled_enchanting_table.mechanics.enchanting.BookConversion.toEnchantedBook(base.copyWithCount(1));
         } else {
             copy = base.copy();
         }

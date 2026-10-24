@@ -195,8 +195,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         return false;
     }
 
-    public static final int MAX_RITUAL_STEPS = 256;
-    public static final int MAX_RITUAL_CHARACTERS = 32_000;
+    public static final int MAX_RITUAL_STEPS = InscriptionRitualMechanics.MAX_QUEUE_STEPS;
+    public static final int MAX_RITUAL_CHARACTERS = InscriptionRitualMechanics.MAX_QUEUE_CHARACTERS;
     private long ritualSession;
     private ItemStack ritualTarget = ItemStack.EMPTY;
     private boolean ritualBlocked;
@@ -257,6 +257,10 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             } else {
                 maxAllowed = 1;
             }
+            // Audit H-04: batch caps never exceed the item's own stack limit (e.g. glass
+            // bottles cap at 16), so the persistent BE, menu Slot, client prediction
+            // container and hoppers all agree on one capacity.
+            maxAllowed = Math.max(1, Math.min(maxAllowed, stack.getMaxStackSize()));
             ItemStack existing = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
             if (!existing.isEmpty()) {
                 return maxAllowed > 1
@@ -354,12 +358,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
         boolean targetWasBook = currentTarget.is(Items.BOOK) || currentTarget.is(Items.ENCHANTED_BOOK);
         if (currentTarget.is(Items.BOOK)) {
-            ItemStack converted = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            var customNameComp = currentTarget.get(DataComponents.CUSTOM_NAME);
-            if (customNameComp != null) {
-                converted.set(DataComponents.CUSTOM_NAME, customNameComp);
-            }
-            currentTarget = converted;
+            currentTarget = chiseled_enchanting_table.mechanics.enchanting.BookConversion.toEnchantedBook(currentTarget);
         }
 
         ItemEnchantments.Mutable working = new ItemEnchantments.Mutable(
@@ -670,6 +669,47 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.setChanged();
         syncOpenMenusWatchingTable(level, pos);
         return true;
+    }
+
+    /**
+     * Audit C-02: recomputes the conflict-overwrite refund from the enchantments actually
+     * present on the in-progress item (and their recorded provenance), mirroring
+     * {@code EnchantmentApplication.computeConflictOverwriteRefund} at queue time. The
+     * persisted {@code conflictRefundPoints} of a queued step is a virtual-plan estimate
+     * and is never paid out directly anymore.
+     */
+    private static int actualConflictRefundPoints(
+        ItemStack provenanceSource,
+        ItemEnchantments actualCurrent,
+        Holder<Enchantment> incoming,
+        boolean targetWasBook
+    ) {
+        if (targetWasBook || provenanceSource == null || provenanceSource.isEmpty() || actualCurrent == null) {
+            return 0;
+        }
+        if (!ChiseledEnchantingTableData.disenchantEnabled()) {
+            return 0;
+        }
+        long total = 0L;
+        var cfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        double tableScale = ChiseledEnchantingTableData.disenchantRefundScale();
+        double externalScale = ChiseledEnchantingTableData.disenchantExternalRefundScale();
+        for (var entry : actualCurrent.entrySet()) {
+            Holder<Enchantment> existingHolder = entry.getKey();
+            if (!existingHolder.equals(incoming)
+                && !Enchantment.areCompatible(existingHolder, incoming)
+                && !DisenchantmentApplication.isCurse(existingHolder)) {
+                total += DisenchantmentApplication.provenanceEssencePotential(
+                    cfg,
+                    provenanceSource,
+                    existingHolder,
+                    entry.getIntValue(),
+                    tableScale,
+                    externalScale
+                );
+            }
+        }
+        return (int) Math.min(Integer.MAX_VALUE, total);
     }
 
     public static void syncOpenMenusWatchingTable(Level level, BlockPos pos) {
