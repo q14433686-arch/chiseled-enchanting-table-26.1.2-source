@@ -1,4 +1,4 @@
-commit: e7f932107059cfd6fce26a5c3512e5a30a054a1c
+commit: 2521c347d663d4e4ff216239d855de13b18b50c0
 branch: arena/2d61e52c-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -37,6 +37,22 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :testClasses
 
 > Task :test
+
+AuditMechanicsTest > essenceWearStepOnlyBuysBackWhatWasBurned() PASSED
+
+AuditMechanicsTest > remainingChargesRespectFadedCap() PASSED
+
+AuditMechanicsTest > scapegoatTokensRoundTripAndDefaultToEssence() PASSED
+
+AuditMechanicsTest > boundedCountsAcceptInRangeAndRejectOutside() PASSED
+
+AuditMechanicsTest > flatPricingKeepsHistoricalFullReset() PASSED
+
+AuditMechanicsTest > generationFadesCapacityWithFloorOfOne() PASSED
+
+AuditMechanicsTest > essencePricingRestoresProportionally() PASSED
+
+AuditMechanicsTest > lineageAdvancesOnCopyAndMergesToMoreFadedParent() PASSED
 
 ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
 
@@ -93,14 +109,14 @@ EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanc
 EconomyAndConfigVerificationTest > combineSequentialChargesEveryUpgradeOnce() PASSED
 
 EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() STANDARD_OUT
-    [05:21:43] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+    [05:24:15] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
     java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
     	at java.base/java.nio.file.Files.provider(Files.java:103)
     	at java.base/java.nio.file.Files.exists(Files.java:2289)
     	at net.fabricmc.loader.impl.FabricLoaderImpl.getConfigDir(FabricLoaderImpl.java:177)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:377)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:383)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:325)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:381)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:387)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:329)
     	at chiseled_enchanting_table.data.ChiseledEnchantingTableData.<clinit>(ChiseledEnchantingTableData.java:149)
     	at chiseled_enchanting_table.EconomyAndConfigVerificationTest.datapackPriorityDefaultAndPackPolicyAntiTamperGovernance(EconomyAndConfigVerificationTest.java:1131)
     	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
@@ -245,7 +261,7 @@ RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
 RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792819283867.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792819428822.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -255,7 +271,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 24s
+BUILD SUCCESSFUL in 33s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
