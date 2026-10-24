@@ -52,3 +52,17 @@ Batch **Lock All Full** locks every currently charging, unlocked book.
 - JUnit: pure TomeLock target/expiry/ETA tests in `AuditMechanicsTest`;
   full live-state + tome-action codec round trips in `NetworkCompatibilityTest`
 - GitHub Actions compile, JUnit, and server smoke on Minecraft 26.1.2
+
+## Field fix (2026-10-24, integrated-server log)
+
+A user log (Minecraft 26.1.2 integrated server, 49 repeated errors) showed
+`LockedBookContainerMixin` failing to apply: the jar predated commit
+`25a19ef` and still targeted `removeItem(NonNullList, int, int)`, while
+26.1.2's `ContainerHelper` declares `removeItem(List, int, int)`. Because the
+mixin config is `defaultRequire: 1`, the failed injection broke the
+`ContainerHelper` transformation itself, cascading into block-entity
+load/save failures (enchanting table, chiseled shelves, hoppers, barrels)
+and suppressed packet-handling errors. Fix: the `List` descriptors (already
+in `25a19ef`, verified by the CI server smoke) plus `require = 0` on both
+auxiliary injections, so any future descriptor drift degrades the lock
+guard instead of corrupting world I/O.
