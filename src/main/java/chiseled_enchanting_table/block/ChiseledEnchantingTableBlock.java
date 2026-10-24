@@ -227,6 +227,17 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         return super.useItemOn(stack, state, level, pos, player, hand, hit);
     }
 
+    /**
+     * Audit: the Reopen-table payload resolves the provider through
+     * {@code BlockState#getMenuProvider}, which delegates here. Without this override the
+     * block only exposed its provider to direct right-clicks and Reopen silently did
+     * nothing. Both paths now share the same provider factory.
+     */
+    @Override
+    protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
+        return createChiseledEnchantingTableMenuProvider(state, level, pos);
+    }
+
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (level.isClientSide()) {

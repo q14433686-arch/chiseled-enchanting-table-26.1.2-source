@@ -50,6 +50,9 @@ import net.minecraft.world.item.Items;
  */
 public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu {
 
+    /** Per-player game-time of the last accepted Reopen payload (server thread only). */
+    private static final java.util.Map<java.util.UUID, Long> LAST_REOPEN_TICK = new java.util.HashMap<>();
+
     public static void init() {
         PayloadTypeRegistry.serverboundPlay().register(
             ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID,
@@ -104,6 +107,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             var player = ctx.player();
             var server = ctx.server();
             server.execute(() -> {
+                // Audit: reopening runs the full shelf scan + cost-table build, so a
+                // spammed payload must not be able to re-trigger it every tick.
+                long now = player.level().getGameTime();
+                Long last = LAST_REOPEN_TICK.get(player.getUUID());
+                if (last != null && now - last < 10L) {
+                    return;
+                }
+                LAST_REOPEN_TICK.put(player.getUUID(), now);
                 var pos = payload.pos();
                 if (pos == null || !player.level().hasChunkAt(pos)) {
                     return;

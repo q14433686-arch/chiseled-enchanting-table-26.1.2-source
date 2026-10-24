@@ -96,6 +96,10 @@ public record ModRuntimeConfig(
     int bookshelfMaxBooks,
     double bookshelfEnchantedProb,
 
+    // Global trade sanitisation master switch (audit: rewriting other mods' villager
+    // Infinity book offers must be opt-outable by the server owner)
+    boolean restrictVillagerInfinityBooks,
+
     // Explicit per-field customization tracking (used when overrideDatapacks == false)
     Set<String> customizedKeys
 ) {
@@ -453,6 +457,7 @@ public record ModRuntimeConfig(
         general.addProperty("vanilla_table_mode", vanillaTableMode.token());
         general.addProperty("anvil_flat_repair_cost", anvilFlatRepairCost);
         general.addProperty("anvil_block_same_book_merge", anvilBlockSameBookMerge);
+        general.addProperty("restrict_villager_infinity_books", restrictVillagerInfinityBooks);
         root.add("general", general);
 
         JsonObject bookshelves = new JsonObject();
@@ -551,6 +556,7 @@ public record ModRuntimeConfig(
         }
         d.anvilFlatRepairCost = boolOr(general, "anvil_flat_repair_cost", d.anvilFlatRepairCost);
         d.anvilBlockSameBookMerge = boolOr(general, "anvil_block_same_book_merge", d.anvilBlockSameBookMerge);
+        d.restrictVillagerInfinityBooks = boolOr(general, "restrict_villager_infinity_books", d.restrictVillagerInfinityBooks);
 
         d.directGatesEnabled = boolOr(shelves, "direct_gates_enabled", d.directGatesEnabled);
         if (shelves.has("blank_max_tier_mode")) {
@@ -638,6 +644,7 @@ public record ModRuntimeConfig(
         public VanillaTableMode vanillaTableMode = VanillaTableMode.BOOKS;
         public boolean anvilFlatRepairCost = true;
         public boolean anvilBlockSameBookMerge = true;
+        public boolean restrictVillagerInfinityBooks = true;
 
         public boolean directGatesEnabled = true;
         public BlankMaxTierMode blankMaxTierMode = BlankMaxTierMode.HALF_CEIL;
@@ -704,6 +711,7 @@ public record ModRuntimeConfig(
             this.vanillaTableMode = src.vanillaTableMode;
             this.anvilFlatRepairCost = src.anvilFlatRepairCost;
             this.anvilBlockSameBookMerge = src.anvilBlockSameBookMerge;
+            this.restrictVillagerInfinityBooks = src.restrictVillagerInfinityBooks;
 
             this.directGatesEnabled = src.directGatesEnabled;
             this.blankMaxTierMode = src.blankMaxTierMode;
@@ -920,6 +928,7 @@ public record ModRuntimeConfig(
                 bookshelfMinBooks,
                 bookshelfMaxBooks,
                 bookshelfEnchantedProb,
+                restrictVillagerInfinityBooks,
                 customizedKeys
             );
         }

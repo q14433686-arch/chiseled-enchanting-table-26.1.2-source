@@ -57,7 +57,13 @@ public class ChiseledEnchantingTable implements ModInitializer {
         // and Master Tome copying/inscription — strip/replace any Villager / Wandering Trader Infinity offer.
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (!world.isClientSide() && entity instanceof AbstractVillager abstractVillager) {
-                sanitizeVillagerInfinityOffers(world, abstractVillager.getOffers());
+                // Audit: this is a destructive global rewrite of trade offers (including
+                // other mods' intentional Infinity trades), so the server owner can turn
+                // it off via general.restrict_villager_infinity_books=false. The additive
+                // librarian depleted-tome offers below are unaffected.
+                if (chiseled_enchanting_table.config.ModRuntimeConfig.effective().restrictVillagerInfinityBooks()) {
+                    sanitizeVillagerInfinityOffers(world, abstractVillager.getOffers());
+                }
                 if (abstractVillager instanceof net.minecraft.world.entity.npc.villager.Villager villager) {
                     chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
                         .ensureLibrarianDepletedTomeOffers(world, villager);
