@@ -178,11 +178,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     public static void notifyChannelUnavailableClient() {
         Minecraft mc = Minecraft.getInstance();
         mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
-        if (mc.player != null) {
-            mc.player.displayClientMessage(
+        if (mc.gui != null) {
+            mc.gui.setOverlayMessage(
                 Component.translatable("gui.chiseled_enchanting_table.network.channel_unavailable")
                     .withStyle(ChatFormatting.RED),
-                true
+                false
             );
         }
     }
@@ -230,11 +230,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.lastConfirmPending = true;
             Minecraft mc = Minecraft.getInstance();
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.85F));
-            if (mc.player != null) {
-                mc.player.displayClientMessage(
+            if (mc.gui != null) {
+                mc.gui.setOverlayMessage(
                     Component.translatable("gui.chiseled_enchanting_table.cleanse.confirm_prompt")
                         .withStyle(ChatFormatting.GOLD),
-                    true
+                    false
                 );
             }
             if (this.scrollContainer != null) {
