@@ -1,5 +1,5 @@
-commit: 0d60469a7410e0e9b1302e5078ba809d39df5dfb
-branch: arena/0e406cfe-chiseled-enchanting-table-26-1
+commit: 21962d8955659f4c8be006c3bb351ffd34262fd8
+branch: arena/6df3e4da-chiseled-enchanting-table-26-1
 gradle exit code: 1
 
 === dependencyInsight: net.fabricmc.fabric-api on compileClasspath ===
@@ -198,7 +198,11 @@ net.fabricmc.fabric-api:fabric-api-lookup-api-v1:2.0.24+3434d6d95d
 +--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3
 |    \--- compileClasspath
 \--- net.fabricmc.fabric-api:fabric-transfer-api-v1:8.0.25+fcdff87f5d
-...[truncated 1003 lines total]...
+...[truncated 2454 lines total]...
+|    \--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
++--- net.fabricmc.fabric-api:fabric-particles-v1:5.0.25+3434d6d95d
+|    \--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
++--- net.fabricmc.fabric-api:fabric-recipe-api-v1:10.0.9+b9b88df45d
 |    +--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
 |    \--- net.fabricmc.fabric-api:fabric-data-generation-api-v1:27.3.0+5be2453c5d
 |         \--- net.fabricmc.fabric-api:fabric-api:0.162.0+26.3 (*)
@@ -997,7 +1001,3 @@ clientCompileClasspath - Compile classpath for source set 'client'.
 A web-based, searchable dependency report is available by adding the --scan option.
 
 == job status: failure ==
-
-== job status: success ==
-
-== job status: success ==
