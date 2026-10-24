@@ -1,4 +1,4 @@
-commit: d498d4ec856051a3488c18bb085230c0745c188d
+commit: 817fbe793c48f37d00438bd930e8af0b745a5220
 branch: arena/2d61e52c-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -26,39 +26,275 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :processResources
 > Task :classes
 
-> Task :compileClientJava FAILED
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1041: error: cannot find symbol
-                ctx.setTooltipForNextFrame(this.font, List.of(tipText.withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
-                                                                     ^
-  symbol:   method withStyle(ChatFormatting)
-  location: variable tipText of type Component
+> Task :compileClientJava
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-1 error
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792857175770.json
+
+> Task :processClientResources
+> Task :clientClasses
+> Task :compileTestJava
+> Task :processTestResources NO-SOURCE
+> Task :testClasses
+
+> Task :test
+
+AuditMechanicsTest > tomeLockEtaIncludesCurrentAndRemainingCharges() PASSED
+
+AuditMechanicsTest > timedTomeLocksExpireExactlyAtTargetWear() PASSED
+
+AuditMechanicsTest > essenceWearStepOnlyBuysBackWhatWasBurned() PASSED
+
+AuditMechanicsTest > remainingChargesRespectFadedCap() PASSED
+
+AuditMechanicsTest > tomeLockTargetsFollowWear() PASSED
+
+AuditMechanicsTest > scapegoatTokensRoundTripAndDefaultToEssence() PASSED
+
+AuditMechanicsTest > boundedCountsAcceptInRangeAndRejectOutside() PASSED
+
+AuditMechanicsTest > flatPricingKeepsHistoricalFullReset() PASSED
+
+AuditMechanicsTest > generationFadesCapacityWithFloorOfOne() PASSED
+
+AuditMechanicsTest > essencePricingRestoresProportionally() PASSED
+
+AuditMechanicsTest > lineageAdvancesOnCopyAndMergesToMoreFadedParent() PASSED
+
+ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
+
+ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
+
+ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
+
+ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
+
+EconomyAndConfigVerificationTest > bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() PASSED
+
+EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
+
+EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
+
+EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
+
+EconomyAndConfigVerificationTest > highMaxLevelShelfCurveDistributesSmoothlyAndCapsScanVolume() PASSED
+
+EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning() PASSED
+
+EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
+
+EconomyAndConfigVerificationTest > deepRitualPersistenceSkipSlipAndInfinityRulesVerified() PASSED
+
+EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
+
+EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() PASSED
+
+EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
+
+EconomyAndConfigVerificationTest > partBTemplateDurabilityWildPreWearUnbreakingWaiverAndCrosslineInvariants() PASSED
+
+EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
+
+EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() FAILED
+    org.opentest4j.AssertionFailedError: Placeholder %s count mismatch in de_de.json:gui.chiseled_enchanting_table.grimoire.ch3.t3 ==> expected: <1> but was: <0>
+        at app//org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+        at app//org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+        at app//org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+        at app//org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+        at app//org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+        at app//chiseled_enchanting_table.EconomyAndConfigVerificationTest.disenchantingAndWordingAccuracyZeroDriftGate(EconomyAndConfigVerificationTest.java:682)
+
+EconomyAndConfigVerificationTest > ritualWaitCurveLoadReferencesAreDatapackConfigurable() PASSED
+
+EconomyAndConfigVerificationTest > queuedRitualStepsRevalidateAgainstActualItem() PASSED
+
+EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
+
+EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
+
+EconomyAndConfigVerificationTest > combineSequentialChargesEveryUpgradeOnce() PASSED
+
+EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() STANDARD_OUT
+    [15:55:36] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+    java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
+    	at java.base/java.nio.file.Files.provider(Files.java:103)
+    	at java.base/java.nio.file.Files.exists(Files.java:2289)
+    	at net.fabricmc.loader.impl.FabricLoaderImpl.getConfigDir(FabricLoaderImpl.java:177)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:381)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:387)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:329)
+    	at chiseled_enchanting_table.data.ChiseledEnchantingTableData.<clinit>(ChiseledEnchantingTableData.java:149)
+    	at chiseled_enchanting_table.EconomyAndConfigVerificationTest.datapackPriorityDefaultAndPackPolicyAntiTamperGovernance(EconomyAndConfigVerificationTest.java:1131)
+    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+    	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
+    	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+    	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
+    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
+    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
+    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
+    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
+    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+    	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+    	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+    	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.processAllTestDefinitions(JUnitPlatformTestDefinitionProcessor.java:179)
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.access$000(JUnitPlatformTestDefinitionProcessor.java:122)
+    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor.stop(JUnitPlatformTestDefinitionProcessor.java:116)
+    	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.stop(SuiteTestDefinitionProcessor.java:63)
+    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+    	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+    	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
+    	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
+    	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
+    	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+    	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
+    	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:195)
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+    	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+    	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+    	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+    	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+    	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+
+EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
+
+FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
+
+FullPortRuntimeTest > configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() PASSED
+
+FullPortRuntimeTest > ritualWirePreservesMenuSessionQueueAndBlockedState() PASSED
+
+FullPortRuntimeTest > malformedPolicyNeverBecomesAnUnlockedDefault() PASSED
+
+FullPortRuntimeTest > effectiveDomainAndDirectConsumerAgreeAndFailedSaveDoesNotPublish() PASSED
+
+FullPortRuntimeTest > persistedQueueHasFiniteResourceBounds() PASSED
+
+NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
+
+NetworkCompatibilityTest > unknownActionsCannotSilentlyBecomeEnchantment() PASSED
+
+NetworkCompatibilityTest > allActionTokensAndMenuTargetedPacketsRoundTrip() PASSED
+
+NetworkCompatibilityTest > costTableConfigurationAndRowsRoundTrip() PASSED
+
+NetworkCompatibilityTest > runtimeConfigRequestAndAcknowledgementRoundTrip() PASSED
+
+NetworkCompatibilityTest > applyPayloadRejectsOutOfRangeFieldsAtConstruction() PASSED
+
+NetworkCompatibilityTest > liveUpdatesOnlyTargetTheMatchingMenu() PASSED
+
+NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNotUnmoddedPeers() PASSED
+
+NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
+
+NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
+
+NetworkCompatibilityTest > tomeDashboardAndActionPayloadsRoundTrip() PASSED
+
+RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
+
+RuleArchitectureTest > overlapUsesFastestRateIndependentOfProposalOrder() PASSED
+
+RuleArchitectureTest > foreignAndReentrantTransactionsCannotWrite() PASSED
+
+RuleArchitectureTest > acknowledgedReplacementCarriesOnlyItsOwnResidencyForward() PASSED
+
+RuleArchitectureTest > replacementAndConflictingIdentityDoNotInheritProgress() PASSED
+
+RuleArchitectureTest > invalidInputsAndBootstrapOverridesAreRejected() PASSED
+
+RuleArchitectureTest > sessionResetAndDuplicateSettlementAreSafe() PASSED
+
+RuleArchitectureTest > fullyRestoredBooksAreEvictedWithoutOngoingDirtyWrites() PASSED
+
+RuleArchitectureTest > fullLockResolvesEveryDefinedRuntimeKeyNotJustDatapackKeys() PASSED
+
+RuleArchitectureTest > unloadedWindowPausesWithoutCreditingOfflineTimeAndPersistsSnapshots() PASSED
+
+RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
+
+RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
+
+RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
+
+69 tests completed, 1 failed
+
+> Task :test FAILED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792857311965.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileClientJava'.
-> Compilation failed; see the compiler output below.
-  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
-  Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1041: error: cannot find symbol
-                  ctx.setTooltipForNextFrame(this.font, List.of(tipText.withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
-                                                                       ^
-    symbol:   method withStyle(ChatFormatting)
-    location: variable tipText of type Component
-  1 error
+Execution failed for task ':test'.
+> There were failing tests. See the report at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/tests/test/index.html
 
 * Try:
-> Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':test'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -92,49 +328,12 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
-Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1041: error: cannot find symbol
-                ctx.setTooltipForNextFrame(this.font, List.of(tipText.withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
-                                                                     ^
-  symbol:   method withStyle(ChatFormatting)
-  location: variable tipText of type Component
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-1 error
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:38)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:38)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:46)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:36)
-	at org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler.execute(DefaultToolchainJavaCompiler.java:57)
-	at org.gradle.api.tasks.compile.JavaCompile.lambda$createToolchainCompiler$3(JavaCompile.java:206)
-	at org.gradle.api.internal.tasks.compile.CleaningJavaCompiler.execute(CleaningJavaCompiler.java:53)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalCompilerFactory.lambda$createRebuildAllCompiler$0(IncrementalCompilerFactory.java:55)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:70)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:44)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:66)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:64)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:48)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler.execute(CompileJavaBuildOperationReportingCompiler.java:48)
-	at org.gradle.api.tasks.compile.JavaCompile.performCompilation(JavaCompile.java:224)
-	at org.gradle.api.tasks.compile.JavaCompile.performIncrementalCompilation(JavaCompile.java:165)
-	at org.gradle.api.tasks.compile.JavaCompile.compile(JavaCompile.java:150)
+Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There were failing tests. See the report at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/tests/test/index.html
+	at org.gradle.api.tasks.testing.AbstractTestTask.executeTests(AbstractTestTask.java:615)
+	at org.gradle.api.tasks.testing.Test.executeTests(Test.java:760)
 	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
-	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.doExecute(IncrementalTaskAction.java:45)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.doExecute(StandardTaskAction.java:58)
 	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
-	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.execute(IncrementalTaskAction.java:26)
 	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
 	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:259)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
@@ -241,8 +440,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 14s
-3 actionable tasks: 3 executed
+BUILD FAILED in 30s
+6 actionable tasks: 6 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
