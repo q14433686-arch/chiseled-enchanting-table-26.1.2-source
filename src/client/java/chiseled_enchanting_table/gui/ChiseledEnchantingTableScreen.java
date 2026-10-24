@@ -1033,7 +1033,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     case 3 -> "gui.chiseled_enchanting_table.tomes.tip_unlock";
                     default -> "gui.chiseled_enchanting_table.tomes.tip_lock_all";
                 };
-                Component tipText = tomeBtn == 3
+                var tipText = tomeBtn == 3
                     ? Component.translatable(key,
                         chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.EARLY_UNLOCK_XP_LEVELS,
                         chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.EARLY_UNLOCK_GRIT_COUNT)
