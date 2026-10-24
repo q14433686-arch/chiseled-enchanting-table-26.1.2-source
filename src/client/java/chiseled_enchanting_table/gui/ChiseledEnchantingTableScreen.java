@@ -231,12 +231,15 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private int[] tomeButtonRect(int index) {
+        // Panel inner decorative frame (measured on cleanse_panel.png): lines at
+        // x 5-7 / 111-113 and y 5-7 / 53-55 in panel-relative GUI pixels. Both button
+        // rows must end at x <= 109 and y <= 51 to keep a dark pixel clear of them.
         return switch (index) {
-            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 36, 32, 9};
-            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 36, 32, 9};
-            case 2 -> new int[] {PANEL_X + 79, PANEL_Y + 36, 31, 9};
-            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 46, 48, 9};
-            default -> new int[] {PANEL_X + 60, PANEL_Y + 46, 50, 9};
+            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 35, 32, 8};
+            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 35, 32, 8};
+            case 2 -> new int[] {PANEL_X + 78, PANEL_Y + 35, 31, 8};
+            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 44, 48, 8};
+            default -> new int[] {PANEL_X + 59, PANEL_Y + 44, 50, 8};
         };
     }
 
