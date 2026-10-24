@@ -604,7 +604,10 @@ public final class BookshelfProgression {
 
         List<List<ItemStack>> out = new ArrayList<>(baseBundles.size());
         for (List<ItemStack> bundle : baseBundles) {
-            if (bundle.isEmpty()) continue;
+            if (bundle.isEmpty()) {
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> scaled = new ArrayList<>(bundle.size());
             for (ItemStack stack : bundle) {
                 ItemStack copy = stack.copy();
@@ -632,7 +635,11 @@ public final class BookshelfProgression {
         }
         List<List<ItemStack>> out = new ArrayList<>(unitBundles.size());
         for (List<ItemStack> bundle : unitBundles) {
-            if (bundle.isEmpty()) continue;
+            if (bundle.isEmpty()) {
+                // Explicitly-empty (material-free) bundles survive batch scaling (audit H-02).
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> scaled = new ArrayList<>(bundle.size());
             for (ItemStack stack : bundle) {
                 ItemStack copy = stack.copy();

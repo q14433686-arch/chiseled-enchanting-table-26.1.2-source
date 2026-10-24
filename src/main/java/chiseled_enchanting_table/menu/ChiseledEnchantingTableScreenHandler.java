@@ -1322,6 +1322,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         List<List<ItemStack>> out = new ArrayList<>(targetBundles.size() + researchBundles.size());
         for (int bIdx = 0; bIdx < targetBundles.size(); bIdx++) {
             List<ItemStack> tgtBundle = targetBundles.get(bIdx);
+            if (tgtBundle.isEmpty()) {
+                // Explicitly material-free datapack rule stays free on upgrades (audit H-02).
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> prvBundle = bIdx < prevBundles.size() ? prevBundles.get(bIdx) : List.of();
             List<ItemStack> resMatch = findResearchBundleByPrimary(researchBundles, tgtBundle.isEmpty() ? ItemStack.EMPTY : tgtBundle.getFirst());
 
@@ -1648,7 +1653,46 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public XpCostConversion.XpRequirement resolveXpRequirement(EnchantmentWithLevel e, OptionType type) {
+        // Audit H-01: every preview/affordability query for a combine row must quote the
+        // whole-book price the server will actually deduct for that click.
+        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
+            return bookCombineXpRequirement();
+        }
         return resolveEffectiveXpRequirement(e, type);
+    }
+
+    /**
+     * Audit H-01: whole-book price for BOOK_COMBINE. One combine click merges <b>every</b>
+     * enchantment of the cost book (anvil-style), so it must charge for every entry whose
+     * merged level actually rises above the target book's current level - not only the
+     * clicked row. Each rising entry is priced at its merged final level through the same
+     * BOOK_COMBINE discount path, then combined with sequential semantics. Shared by the
+     * server deduction and the client preview so both always agree.
+     */
+    public XpCostConversion.XpRequirement bookCombineXpRequirement() {
+        ItemStack targetBook = get_enchantable_item();
+        ItemStack costBook = get_cost_item();
+        if (!targetBook.is(Items.ENCHANTED_BOOK) || !costBook.is(Items.ENCHANTED_BOOK)) {
+            return XpCostConversion.XpRequirement.FREE;
+        }
+        ItemEnchantments targetEnchants = EnchantmentHelper.getEnchantmentsForCrafting(targetBook);
+        ItemEnchantments costEnchants = EnchantmentHelper.getEnchantmentsForCrafting(costBook);
+        java.util.List<XpCostConversion.XpRequirement> parts = new java.util.ArrayList<>();
+        for (var entry : costEnchants.entrySet()) {
+            var incoming = entry.getKey();
+            int current = targetEnchants.getLevel(incoming);
+            int incomingLevel = entry.getIntValue();
+            int mergedLevel = current == incomingLevel
+                ? Math.min(Math.max(1, incoming.value().getMaxLevel()), incomingLevel + 1)
+                : Math.max(current, incomingLevel);
+            if (mergedLevel > current) {
+                parts.add(resolveEffectiveXpRequirement(
+                    new EnchantmentWithLevel(EnchantmentToIdentifier(incoming), mergedLevel),
+                    OptionType.BOOK_COMBINE_UPGRADE
+                ));
+            }
+        }
+        return XpCostConversion.combineSequential(parts);
     }
 
     public int syncedTransformationDeductedLevels(Identifier id) {
@@ -2244,10 +2288,37 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     @org.jetbrains.annotations.Nullable
+    /**
+     * Audit H-02: the exhaustive whitelist of operations that are <b>by design</b> allowed to
+     * run without material cost even when no cost option exists. Everything else with an
+     * empty/unresolvable option list is a datapack data error and must fail closed instead
+     * of silently becoming free.
+     */
+    public boolean isMaterialFreeOperation(EnchantmentWithLevel ewl, OptionType type) {
+        return switch (type) {
+            case BOOK_COMBINE_UPGRADE, DISENCHANT_ALL, DOWNGRADE_ENCHANTMENT -> true;
+            case STRIP_SINGLE_ENCHANTMENT ->
+                EnchantmentHelper.getEnchantmentsForCrafting(get_enchantable_item()).size() <= 1;
+            case TRANSFORMATION ->
+                ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(ewl.enchantment_id())
+                    && depletedTomeTier()
+                        == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.TIER_3_FREE;
+            default -> false;
+        };
+    }
+
     public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
         List<List<ItemStack>> options = getEffectiveItemCostOptions(ewl, type);
         if (options.isEmpty()) {
-            return List.of();
+            // Fail closed (audit H-02): "no pricing data" is only free for whitelisted
+            // material-free operations; datapacks declare XP-only costs explicitly via
+            // "material_free": true, which produces one empty bundle instead.
+            return isMaterialFreeOperation(ewl, type) ? List.of() : null;
+        }
+        for (List<ItemStack> bundle : options) {
+            if (bundle.isEmpty()) {
+                return List.of();
+            }
         }
         if (this.player.getAbilities().instabuild) {
             return ChiseledEnchantingTableData.mergeEquivalentCostBundle(options.getFirst());

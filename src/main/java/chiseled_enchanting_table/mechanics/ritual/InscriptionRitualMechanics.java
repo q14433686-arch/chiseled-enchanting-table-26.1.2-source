@@ -69,6 +69,20 @@ public final class InscriptionRitualMechanics {
     public static final int TICKS_PER_GAME_DAY = 24_000;
     public static final int SECONDS_PER_GAME_DAY = 1_200;
 
+    /** Single source of truth for persisted ritual-queue bounds (DATA-01). */
+    public static final int MAX_QUEUE_STEPS = 256;
+    public static final int MAX_QUEUE_CHARACTERS = 32_000;
+    /** Default wait-curve normalization denominators (BAL-01); datapack-overridable via {@link Config}. */
+    public static final double DEFAULT_SHELF_LOAD_REFERENCE = 42.0;
+    public static final double DEFAULT_TOME_LOAD_REFERENCE = 22.0;
+    private static final double WAIT_SHELF_WEIGHT = 0.42;
+    private static final double WAIT_TOME_WEIGHT = 0.58;
+    private static final double WAIT_LEVEL_FLOOR = 0.35;
+    private static final double WAIT_LEVEL_SPAN = 0.65;
+    private static final double WAIT_LEVEL_EXPONENT = 1.15;
+    private static final double WAIT_SATURATION = 0.62;
+    private static final int WAIT_MIN_TICKS = 100;
+
     /** Maximum wait ticks for ANY single enchantment step: 5 real minutes = 300s = 6,000 ticks. */
     public static final int MAX_SINGLE_WAIT_TICKS = 20 * 300;
     /** Minimum surrounding Master Tome enchantments that activate ritual waiting below the shelf threshold. */
@@ -236,6 +250,8 @@ public final class InscriptionRitualMechanics {
         double maxRushDegradeNormal,
         double maxRushDegradeInfinity,
         double maxTranscriptionSlipChance,
+        double shelfLoadReference,
+        double tomeLoadReference,
         CrosslineSlipConfig crosslineSlip
     ) {
         public static final Config DEFAULT = new Config(
@@ -245,8 +261,32 @@ public final class InscriptionRitualMechanics {
             MAX_RUSH_DEGRADE_NORMAL,
             MAX_RUSH_DEGRADE_INFINITY,
             MAX_TRANSCRIPTION_SLIP_CHANCE,
+            DEFAULT_SHELF_LOAD_REFERENCE,
+            DEFAULT_TOME_LOAD_REFERENCE,
             CrosslineSlipConfig.DEFAULT
         );
+
+        public Config(
+            int maxSingleWaitSeconds,
+            int minTomeEnchantsForWait,
+            int maxSacrificeXpLevels,
+            double maxRushDegradeNormal,
+            double maxRushDegradeInfinity,
+            double maxTranscriptionSlipChance,
+            CrosslineSlipConfig crosslineSlip
+        ) {
+            this(
+                maxSingleWaitSeconds,
+                minTomeEnchantsForWait,
+                maxSacrificeXpLevels,
+                maxRushDegradeNormal,
+                maxRushDegradeInfinity,
+                maxTranscriptionSlipChance,
+                DEFAULT_SHELF_LOAD_REFERENCE,
+                DEFAULT_TOME_LOAD_REFERENCE,
+                crosslineSlip
+            );
+        }
 
         public Config(
             int maxSingleWaitSeconds,
@@ -263,6 +303,8 @@ public final class InscriptionRitualMechanics {
                 maxRushDegradeNormal,
                 maxRushDegradeInfinity,
                 maxTranscriptionSlipChance,
+                DEFAULT_SHELF_LOAD_REFERENCE,
+                DEFAULT_TOME_LOAD_REFERENCE,
                 CrosslineSlipConfig.fromJson(null, maxTranscriptionSlipChance)
             );
         }
@@ -278,6 +320,12 @@ public final class InscriptionRitualMechanics {
             maxTranscriptionSlipChance = Double.isFinite(maxTranscriptionSlipChance)
                 ? Mth.clamp(maxTranscriptionSlipChance, 0.0, 1.0)
                 : MAX_TRANSCRIPTION_SLIP_CHANCE;
+            shelfLoadReference = Double.isFinite(shelfLoadReference) && shelfLoadReference > 0.0
+                ? Mth.clamp(shelfLoadReference, 4.0, 512.0)
+                : DEFAULT_SHELF_LOAD_REFERENCE;
+            tomeLoadReference = Double.isFinite(tomeLoadReference) && tomeLoadReference > 0.0
+                ? Mth.clamp(tomeLoadReference, 1.0, 512.0)
+                : DEFAULT_TOME_LOAD_REFERENCE;
             crosslineSlip = crosslineSlip != null ? crosslineSlip : CrosslineSlipConfig.fromJson(null, maxTranscriptionSlipChance);
         }
 
@@ -298,8 +346,10 @@ public final class InscriptionRitualMechanics {
             double rushNorm = r != null ? doubleOr(r, "max_rush_degrade_normal", DEFAULT.maxRushDegradeNormal) : DEFAULT.maxRushDegradeNormal;
             double rushInf = r != null ? doubleOr(r, "max_rush_degrade_infinity", DEFAULT.maxRushDegradeInfinity) : DEFAULT.maxRushDegradeInfinity;
             double slipCap = r != null ? doubleOr(r, "max_transcription_slip_chance", DEFAULT.maxTranscriptionSlipChance) : DEFAULT.maxTranscriptionSlipChance;
+            double shelfRef = r != null ? doubleOr(r, "shelf_load_reference", DEFAULT.shelfLoadReference) : DEFAULT.shelfLoadReference;
+            double tomeRef = r != null ? doubleOr(r, "tome_load_reference", DEFAULT.tomeLoadReference) : DEFAULT.tomeLoadReference;
             CrosslineSlipConfig crossline = CrosslineSlipConfig.fromJson(root, slipCap);
-            return new Config(maxWaitSec, minTomeEnch, maxSacXp, rushNorm, rushInf, crossline.maxSlipChance(), crossline);
+            return new Config(maxWaitSec, minTomeEnch, maxSacXp, rushNorm, rushInf, crossline.maxSlipChance(), shelfRef, tomeRef, crossline);
         }
 
         static int intOr(com.google.gson.JsonObject obj, String key, int fallback) {
@@ -493,11 +543,11 @@ public final class InscriptionRitualMechanics {
         if (raw == null || raw.isBlank()) {
             return new ArrayList<>();
         }
-        if (raw.length() > 32_000) throw new IllegalArgumentException("Oversized persisted ritual");
+        if (raw.length() > MAX_QUEUE_CHARACTERS) throw new IllegalArgumentException("Oversized persisted ritual");
         List<QueuedInscription> out = new ArrayList<>();
         long refund = 0;
         for (String part : raw.split(";", -1)) {
-            if (out.size() >= 256) throw new IllegalArgumentException("Too many ritual steps");
+            if (out.size() >= MAX_QUEUE_STEPS) throw new IllegalArgumentException("Too many ritual steps");
             QueuedInscription parsed = QueuedInscription.decode(part);
             if (parsed == null) throw new IllegalArgumentException("Malformed ritual step");
             refund += parsed.conflictRefundPoints();
@@ -626,23 +676,39 @@ public final class InscriptionRitualMechanics {
             return 0;
         }
         double relLevel = Mth.clamp((double) Math.max(1, targetLevel) / (double) Math.max(1, maxLevel), 0.10, 1.0);
-        double shelfLoad = Math.max(0.0, nearbyBookshelves) / 42.0;
-        double tomeLoad = Math.max(0.0, totalMasterTomeEnchantments) / 22.0;
-        double intensity = (0.42 * shelfLoad + 0.58 * tomeLoad)
-            * (0.35 + 0.65 * Math.pow(relLevel, 1.15))
+        double shelfLoad = Math.max(0.0, nearbyBookshelves) / c.shelfLoadReference();
+        double tomeLoad = Math.max(0.0, totalMasterTomeEnchantments) / c.tomeLoadReference();
+        double intensity = (WAIT_SHELF_WEIGHT * shelfLoad + WAIT_TOME_WEIGHT * tomeLoad)
+            * (WAIT_LEVEL_FLOOR + WAIT_LEVEL_SPAN * Math.pow(relLevel, WAIT_LEVEL_EXPONENT))
             * Math.max(1.0, applicabilityFactor);
         double maxSec = c.maxSingleWaitSeconds();
-        double seconds = maxSec * (1.0 - Math.exp(-0.62 * intensity));
+        double seconds = maxSec * (1.0 - Math.exp(-WAIT_SATURATION * intensity));
         int ticks = (int) Math.round(seconds * 20.0);
-        return Mth.clamp(ticks, 100, c.maxSingleWaitTicks());
+        return Mth.clamp(ticks, WAIT_MIN_TICKS, c.maxSingleWaitTicks());
+    }
+
+    /**
+     * Pure completion-time guard for queued inscriptions (audit C-01): a step priced against the
+     * virtual planned item may only be written when the <b>actual</b> current level still equals
+     * the planned previous level and the effective target is a strict upgrade. Otherwise the
+     * step must be skipped (and its unexecuted cost refunded) instead of jumping levels.
+     */
+    public static boolean isQueuedStepStillApplicable(
+        int actualPreviousLevel,
+        int plannedPreviousLevel,
+        int effectiveTargetLevel
+    ) {
+        return actualPreviousLevel == plannedPreviousLevel && effectiveTargetLevel > actualPreviousLevel;
+    }
+
+    /** Clamps a (possibly legacy/over-leveled) queued target to the live definition maximum. */
+    public static int effectiveQueuedTargetLevel(int queuedTargetLevel, int definitionMaxLevel) {
+        return Math.max(1, Math.min(Math.max(1, queuedTargetLevel), Math.max(1, definitionMaxLevel)));
     }
 
     /**
      * Direct XP level sacrifice cost ({@code 1..maxSacrificeXpLevels}) derived smoothly from live remaining ticks.
      */
-    public static int computeSacrificeXpLevels(long remainingTicks) {
-        return computeSacrificeXpLevels(Config.DEFAULT, remainingTicks);
-    }
 
     public static int computeSacrificeXpLevels(@Nullable Config ritualCfg, long remainingTicks) {
         if (remainingTicks <= 0L) {
@@ -1003,6 +1069,30 @@ public final class InscriptionRitualMechanics {
         }
         int rounded = Math.max(1, (int) Math.round(paidXpPoints * ratio));
         return Math.min(paidXpPoints, rounded);
+    }
+
+    /**
+     * Full (100%) material refund stacks for a queued step that never executed because its
+     * planned precondition no longer holds at completion time (audit C-01). Unlike pollution
+     * compensation this is not a partial consolation: nothing was inscribed for this receipt.
+     */
+    public static List<ItemStack> fullMaterialRefundStacks(List<PaidItemEntry> paidItems) {
+        if (paidItems == null || paidItems.isEmpty()) {
+            return List.of();
+        }
+        List<ItemStack> refunded = new ArrayList<>();
+        for (PaidItemEntry entry : paidItems) {
+            if (entry == null || entry.count() <= 0) continue;
+            Item item = BuiltInRegistries.ITEM.getValue(entry.itemId());
+            if (item == Items.AIR) continue;
+            int remaining = entry.count();
+            while (remaining > 0) {
+                int batch = Math.min(remaining, Math.max(1, item.getDefaultMaxStackSize()));
+                refunded.add(new ItemStack(item, batch));
+                remaining -= batch;
+            }
+        }
+        return List.copyOf(refunded);
     }
 
     /**

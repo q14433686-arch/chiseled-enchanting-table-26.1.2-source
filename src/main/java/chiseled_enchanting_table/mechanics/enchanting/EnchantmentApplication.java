@@ -315,6 +315,11 @@ public final class EnchantmentApplication {
 
         ItemStack sourceBookSnapshot = enchanted_book.copyWithCount(1);
         ItemEnchantments preTargetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
+        // Audit M-03: transferring a same-or-lower level must not consume the source book
+        // entry for zero gain. Reject before any slot mutation.
+        if (preTargetEnchantments.getLevel(enchantment) >= enchantment_level) {
+            return false;
+        }
         int conflictRefund = computeConflictOverwriteRefund(handler, enchantable_item, preTargetEnchantments, enchantment);
 
         ItemEnchantments.Mutable new_enchanted_book_enchants = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);

@@ -175,6 +175,49 @@ public final class XpCostConversion {
         return total;
     }
 
+    /**
+     * Sequential-equivalence sum of several priced upgrades performed by one click (audit H-01,
+     * multi-entry book combine): the combined requirement deducts the sum of every upgrade's
+     * deducted levels and requires enough starting level to have afforded each upgrade in the
+     * given order one after another ({@code required = max_i(R_i + sum_{j<i} D_j)}), mirroring
+     * {@link #scaleTransformationXpForBatch}. Refund/free entries contribute nothing.
+     */
+    public static XpRequirement combineSequential(java.util.List<XpRequirement> requirements) {
+        if (requirements == null || requirements.isEmpty()) {
+            return XpRequirement.FREE;
+        }
+        long rawNeeded = 0L;
+        long needed = 0L;
+        long spentRaw = 0L;
+        long spent = 0L;
+        XpRequirement firstCharged = null;
+        for (XpRequirement req : requirements) {
+            if (req == null || req.isRefund() || (req.requiredLevel() <= 0 && req.deductedLevels() <= 0)) {
+                continue;
+            }
+            if (firstCharged == null) {
+                firstCharged = req;
+            }
+            rawNeeded = Math.max(rawNeeded, (long) req.rawRequiredLevel() + spentRaw);
+            needed = Math.max(needed, (long) req.requiredLevel() + spent);
+            spentRaw += Math.max(0, req.deductedLevels());
+            spent += Math.max(0, req.deductedLevels());
+        }
+        if (firstCharged == null || spent <= 0L) {
+            return XpRequirement.FREE;
+        }
+        int deducted = (int) Math.min(Integer.MAX_VALUE, spent);
+        int required = (int) Math.min(Integer.MAX_VALUE, Math.max(needed, deducted));
+        int rawRequired = (int) Math.min(Integer.MAX_VALUE, Math.max(rawNeeded, deducted));
+        return new XpRequirement(
+            rawRequired,
+            required,
+            deducted,
+            firstCharged.discountPercent(),
+            firstCharged.vanillaTierMode()
+        );
+    }
+
     public static void deductXp(Player player, XpRequirement req) {
         if (player.getAbilities().instabuild) {
             return;

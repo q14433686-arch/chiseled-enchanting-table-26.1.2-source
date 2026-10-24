@@ -84,39 +84,39 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
     }
 
-    private static Map<Identifier, ItemTransformation> rawItemTransformations = builtInItemTransformations();
+    private static volatile Map<Identifier, ItemTransformation> rawItemTransformations = builtInItemTransformations();
     private static final LootInjectionTable BUILT_IN_LOOT_TABLE = builtInLootInjections();
-    private static VanillaChestBooksMode rawVanillaChestBooksMode = BUILT_IN_LOOT_TABLE.mode();
-    private static BookshelfBookPool rawBookshelfBookPool = BookshelfBookPool.emptyFallback();
-    private static BookUpgradeRules rawBookUpgradeRules = BookUpgradeRules.builtInFallback();
-    private static TreasureEpiphanyRules rawTreasureEpiphanyRules = TreasureEpiphanyRules.builtInFallback();
-    private static DisenchantingRules rawDisenchantingRules = DisenchantingRules.builtInFallback();
-    private static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config rawShelfGatesConfig =
+    private static volatile VanillaChestBooksMode rawVanillaChestBooksMode = BUILT_IN_LOOT_TABLE.mode();
+    private static volatile BookshelfBookPool rawBookshelfBookPool = BookshelfBookPool.emptyFallback();
+    private static volatile BookUpgradeRules rawBookUpgradeRules = BookUpgradeRules.builtInFallback();
+    private static volatile TreasureEpiphanyRules rawTreasureEpiphanyRules = TreasureEpiphanyRules.builtInFallback();
+    private static volatile DisenchantingRules rawDisenchantingRules = DisenchantingRules.builtInFallback();
+    private static volatile chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config rawShelfGatesConfig =
         chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT;
-    private static chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config rawLibraryResonanceConfig =
+    private static volatile chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config rawLibraryResonanceConfig =
         chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
-    private static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config rawRitualConfig =
+    private static volatile chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config rawRitualConfig =
         builtInRitualConfig();
 
-    private static Set<EnchantmentWithLevel> defaultEnchantmentValues = builtInDefaultEnchantments();
-    private static List<DefaultEnchantmentTagRule> defaultEnchantmentTags = builtInDefaultEnchantmentTags();
-    private static Set<Identifier> defaultExcludedIds = builtInExcludedTreasureIds();
-    private static List<Identifier> defaultExcludedTags = builtInExcludedTags();
-    private static CostTables costTables = CostTables.builtInFallback();
-    private static Map<Identifier, ItemTransformation> itemTransformations = rawItemTransformations;
-    private static VanillaChestBooksMode vanillaChestBooksMode = rawVanillaChestBooksMode;
-    private static List<LootInjection> lootInjections = BUILT_IN_LOOT_TABLE.entries();
+    private static volatile Set<EnchantmentWithLevel> defaultEnchantmentValues = builtInDefaultEnchantments();
+    private static volatile List<DefaultEnchantmentTagRule> defaultEnchantmentTags = builtInDefaultEnchantmentTags();
+    private static volatile Set<Identifier> defaultExcludedIds = builtInExcludedTreasureIds();
+    private static volatile List<Identifier> defaultExcludedTags = builtInExcludedTags();
+    private static volatile CostTables costTables = CostTables.builtInFallback();
+    private static volatile Map<Identifier, ItemTransformation> itemTransformations = rawItemTransformations;
+    private static volatile VanillaChestBooksMode vanillaChestBooksMode = rawVanillaChestBooksMode;
+    private static volatile List<LootInjection> lootInjections = BUILT_IN_LOOT_TABLE.entries();
     private static volatile List<LootInjection> preloadedLootInjections = null;
     private static volatile VanillaChestBooksMode preloadedVanillaChestBooksMode = null;
-    private static BookshelfBookPool bookshelfBookPool = rawBookshelfBookPool;
-    private static BookUpgradeRules bookUpgradeRules = rawBookUpgradeRules;
-    private static TreasureEpiphanyRules treasureEpiphanyRules = rawTreasureEpiphanyRules;
-    private static DisenchantingRules disenchantingRules = rawDisenchantingRules;
-    private static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig =
+    private static volatile BookshelfBookPool bookshelfBookPool = rawBookshelfBookPool;
+    private static volatile BookUpgradeRules bookUpgradeRules = rawBookUpgradeRules;
+    private static volatile TreasureEpiphanyRules treasureEpiphanyRules = rawTreasureEpiphanyRules;
+    private static volatile DisenchantingRules disenchantingRules = rawDisenchantingRules;
+    private static volatile chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig =
         rawShelfGatesConfig;
-    private static chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig =
+    private static volatile chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig =
         rawLibraryResonanceConfig;
-    private static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig =
+    private static volatile chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig =
         rawRitualConfig;
 
     public record RuntimeFrame(Map<Identifier, ItemTransformation> itemTransformations,
@@ -184,7 +184,16 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         Set<EnchantmentWithLevel> result = new HashSet<>();
         for (EnchantmentWithLevel explicit : (runtimeFrame == null ? defaultEnchantmentValues : runtimeFrame.defaultEnchantmentValues())) {
             if (!excluded.contains(explicit.enchantment_id())) {
-                result.add(explicit);
+                // Audit H-06: datapack "unlocked level" entries never exceed the live
+                // definition maximum (over-level unlocks used to leak into inscription).
+                int unlocked = Math.max(1, explicit.enchantment_level());
+                var holder = enchantmentLookup.get(ResourceKey.create(Registries.ENCHANTMENT, explicit.enchantment_id()));
+                if (holder.isPresent()) {
+                    unlocked = Math.min(unlocked, Math.max(1, holder.get().value().getMaxLevel()));
+                }
+                result.add(unlocked == explicit.enchantment_level()
+                    ? explicit
+                    : new EnchantmentWithLevel(explicit.enchantment_id(), unlocked));
             }
         }
         for (DefaultEnchantmentTagRule rule : (runtimeFrame == null ? defaultEnchantmentTags : runtimeFrame.defaultEnchantmentTags())) {
@@ -192,7 +201,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             enchantmentLookup.get(tagKey).ifPresent(named -> named.stream().forEach(holder ->
                 holder.unwrapKey().ifPresent(key -> {
                     if (!excluded.contains(key.identifier())) {
-                        result.add(new EnchantmentWithLevel(key.identifier(), rule.level()));
+                        int unlocked = Math.max(1, Math.min(
+                            Math.max(1, rule.level()),
+                            Math.max(1, holder.value().getMaxLevel())
+                        ));
+                        result.add(new EnchantmentWithLevel(key.identifier(), unlocked));
                     }
                 })
             ));
@@ -1398,6 +1411,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             Identifier input = parseIdentifier(stripTagPrefix(rawInput));
             Identifier output = parseIdentifier(json.get("output").getAsString());
             int level = intOr(json, "level", intOr(json, "count", 1));
+            // Audit R-02: reject absurd transformation levels at load time (reload rollback
+            // keeps the previous table instead of silently clamping economy data).
+            if (level < 1 || level > 64) {
+                throw new IllegalArgumentException("Invalid transformation level " + level + " for " + id + " (allowed 1..64)");
+            }
+            boolean materialFree = boolOr(json, "material_free", boolOr(json, "xp_only", false));
             int xpCost = intOr(json, "required_player_level", intOr(json, "xp_cost", intOr(json, "xp_levels", 0)));
             int minRequiredLevel = Math.max(
                 1,
@@ -1497,13 +1516,28 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
 
         public List<List<ItemStack>> resolvedBundles() {
-            List<ItemStack> sharedAdditional = new ArrayList<>(additionalCosts.size());
+            if (materialFree) {
+                return List.of(List.of());
+            }
+            // Audit H-03: additional costs expand recursively like extras instead of being
+            // collapsed to a single first-candidate stack.
+            List<List<ItemStack>> additionalAlternatives = new ArrayList<>();
+            additionalAlternatives.add(List.of());
             for (ItemCostOption option : additionalCosts) {
-                ItemStack extra = option.toSingleStack(id, level, level, "");
-                if (extra.isEmpty()) {
+                List<List<ItemStack>> expandedExtras = option.expandBundles(id, level, level, "");
+                if (expandedExtras.isEmpty()) {
                     return List.of();
                 }
-                sharedAdditional.add(extra);
+                List<List<ItemStack>> next = new ArrayList<>();
+                for (List<ItemStack> base : additionalAlternatives) {
+                    for (List<ItemStack> extraBundle : expandedExtras) {
+                        List<ItemStack> joined = new ArrayList<>(base.size() + extraBundle.size());
+                        joined.addAll(base);
+                        joined.addAll(extraBundle);
+                        next.add(joined);
+                    }
+                }
+                additionalAlternatives = next;
             }
 
             List<ItemCostOption> primarySources = !alternativePrimaryOptions.isEmpty()
@@ -1513,12 +1547,14 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             for (ItemCostOption opt : primarySources) {
                 for (List<ItemStack> expanded : opt.expandBundles(id, level, level, "")) {
                     if (expanded.isEmpty()) continue;
-                    List<ItemStack> combined = new ArrayList<>(expanded.size() + sharedAdditional.size());
-                    combined.addAll(expanded);
-                    combined.addAll(sharedAdditional);
-                    List<ItemStack> normalized = mergeEquivalentCostBundle(combined);
-                    if (!normalized.isEmpty()) {
-                        bundles.add(normalized);
+                    for (List<ItemStack> additional : additionalAlternatives) {
+                        List<ItemStack> combined = new ArrayList<>(expanded.size() + additional.size());
+                        combined.addAll(expanded);
+                        combined.addAll(additional);
+                        List<ItemStack> normalized = mergeEquivalentCostBundle(combined);
+                        if (!normalized.isEmpty()) {
+                            bundles.add(normalized);
+                        }
                     }
                 }
             }
@@ -1776,6 +1812,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             if (level >= maxLevel && maxLevelOverride != null) {
                 return maxLevelOverride.toBundles(enchantmentId, level, maxLevel);
             }
+            if (materialFree) {
+                // One explicitly-empty bundle = "XP only", distinguishable from "no data"
+                // (an empty outer list), which the menu layer treats as fail-closed.
+                return List.of(List.of());
+            }
             List<List<ItemStack>> bundles = new ArrayList<>(options.size());
             for (ItemCostOption opt : options) {
                 bundles.addAll(opt.expandBundles(enchantmentId, level, maxLevel, ""));
@@ -1917,30 +1958,36 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
          * while allowing datapacks with {@code maxLevel > 5} to scale smoothly up to {@code 1.30x}.</p>
          */
         private int computeCount(int level, int maxLevel) {
-            int computedCount;
+            // Audit R-02: long arithmetic so large datapack multipliers cannot overflow
+            // into a negative (free) count; results cap at the merge ceiling, where a
+            // still-too-large total invalidates the bundle in mergeEquivalentCostBundle.
+            long computedCount;
             if (baseCount > 0 && maxLevelCount >= baseCount) {
                 int safeMax = Math.max(1, maxLevel);
                 int safeLvl = Math.max(1, Math.min(safeMax, level));
                 if (safeMax == 1) {
-                    computedCount = Math.max(1, (int) Math.round(baseCount + (maxLevelCount - baseCount) * 0.45));
+                    computedCount = Math.max(1, Math.round(baseCount + (maxLevelCount - baseCount) * 0.45));
                 } else {
                     double span = Math.min(1.30, 0.52 + 0.096 * safeMax);
                     double effectiveMax = baseCount + (maxLevelCount - baseCount) * span;
                     double u = (double) (safeLvl - 1) / (double) (safeMax - 1);
                     double exp = levelExponent > 0.0 ? levelExponent : 1.30;
-                    computedCount = Math.max(1, (int) Math.round(baseCount + (effectiveMax - baseCount) * Math.pow(u, exp)));
+                    double curved = baseCount + (effectiveMax - baseCount) * Math.pow(u, exp);
+                    computedCount = Double.isFinite(curved)
+                        ? Math.max(1, Math.round(curved))
+                        : MAX_MERGED_COST_COUNT;
                 }
             } else if (count > 0) {
                 computedCount = count;
             } else if (minCount > 0 && maxCount >= minCount) {
-                computedCount = (minCount + maxCount + 1) / 2;
+                computedCount = ((long) minCount + (long) maxCount + 1L) / 2L;
             } else {
-                computedCount = countPerLevel * Math.max(1, level);
+                computedCount = (long) countPerLevel * Math.max(1, level);
             }
             if (countPerLevel > 0 && (count > 0 || minCount > 0)) {
-                computedCount += countPerLevel * Math.max(1, level);
+                computedCount += (long) countPerLevel * Math.max(1, level);
             }
-            return Math.max(1, computedCount);
+            return (int) Math.max(1L, Math.min((long) MAX_MERGED_COST_COUNT, computedCount));
         }
 
         boolean hasResolvableItems() {

@@ -50,8 +50,9 @@ public final class BookUpgradeApplication {
         ItemEnchantments costEnchants = EnchantmentHelper.getEnchantmentsForCrafting(costBook);
         if (targetEnchants.getLevel(enchantment) != sourceLevel || costEnchants.getLevel(enchantment) != sourceLevel) return false;
 
-        EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), targetLevel);
-        var xpReq = handler.resolveEffectiveXpRequirement(ewl, OptionType.BOOK_COMBINE_UPGRADE);
+        // Audit H-01: charge for every enchantment this click actually raises on the
+        // merged book, not just the clicked row (the merge below applies all of them).
+        var xpReq = handler.bookCombineXpRequirement();
         if (!xpReq.isMetBy(handler.player)) return false;
         XpCostConversion.deductXp(handler.player, xpReq);
 
