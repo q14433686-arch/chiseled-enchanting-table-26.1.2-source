@@ -11,6 +11,7 @@ import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.menu.AvailableOption;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
+import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
@@ -48,7 +49,8 @@ import org.jetbrains.annotations.Nullable;
 public class EnchantementListWidget extends AbstractSelectionList<EnchantementListWidget.EnchantUiEntry> {
     public enum UiTabMode {
         INSCRIBE,
-        CLEANSE
+        CLEANSE,
+        TOMES
     }
 
     public Set<EnchantmentWithLevel> unlocked_enchantements = null;
@@ -57,6 +59,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     public Player player;
     public ChiseledEnchantingTableScreenHandler handler;
     private UiTabMode tabMode = UiTabMode.INSCRIBE;
+    @Nullable
+    private net.minecraft.core.BlockPos selectedTomeShelf;
+    private int selectedTomeSlot = -1;
     private final Set<Identifier> expandedInscribeCategories = new HashSet<>();
     private final Set<Identifier> expandedCleanseCategories = new HashSet<>();
     private ItemStack lastTargetSnapshot = ItemStack.EMPTY;
@@ -80,6 +85,30 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
     public UiTabMode tabMode() {
         return this.tabMode;
+    }
+
+    public boolean isTomeSelected(ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
+        return entry != null && this.selectedTomeShelf != null
+            && this.selectedTomeShelf.equals(entry.shelf_pos()) && this.selectedTomeSlot == entry.slot();
+    }
+
+    public void selectTome(@Nullable ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
+        if (entry == null) {
+            this.selectedTomeShelf = null;
+            this.selectedTomeSlot = -1;
+        } else {
+            this.selectedTomeShelf = entry.shelf_pos().immutable();
+            this.selectedTomeSlot = entry.slot();
+        }
+    }
+
+    @Nullable
+    public ChiseledEnchantingMenuPayloads.TomeBookEntry selectedTomeEntry() {
+        if (this.handler == null || this.handler.tomeBooks == null || this.handler.tomeBooks.isEmpty()) return null;
+        for (var entry : this.handler.tomeBooks) {
+            if (isTomeSelected(entry)) return entry;
+        }
+        return this.handler.tomeBooks.getFirst();
     }
 
     public void setTabMode(UiTabMode nextMode) {
@@ -310,12 +339,21 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
+    public ChiseledEnchantingMenuPayloads.TomeBookEntry hoveredTomeEntry(double mouseX, double mouseY) {
+        if (this.tabMode != UiTabMode.TOMES) return null;
+        for (EnchantUiEntry entry : this.children()) {
+            if (entry.is_tome_entry && entry.tome_book != null && entry.isMouseOver(mouseX, mouseY)) return entry.tome_book;
+        }
+        return null;
+    }
+
+    @Nullable
     public EnchantUiEntry hoveredActionRowEntry(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;
         }
         for (EnchantUiEntry entry : this.children()) {
-            if (entry.is_category_header) continue;
+            if (entry.is_category_header || entry.is_tome_entry) continue;
             int dx = entry.effectiveDx();
             int dy = entry.getY();
             int dw = entry.effectiveDw();
@@ -379,11 +417,51 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         this.enchantable_item = enchantable_item;
         this.cost_item_stack = cost_item_stack;
 
+        if (this.tabMode == UiTabMode.TOMES) {
+            populateTomeEntries(previousScroll);
+            return;
+        }
         if (this.tabMode == UiTabMode.CLEANSE) {
             populateCleanseEntries(navigationIndex, targetChanged, previousScroll);
             return;
         }
         populateInscribeEntries(navigationIndex, targetChanged, previousScroll);
+    }
+
+    private void populateTomeEntries(double previousScroll) {
+        if (!this.handler.isTomePageUnlocked()) {
+            selectTome(null);
+            return;
+        }
+        var selected = selectedTomeEntry();
+        selectTome(selected);
+        for (var book : this.handler.tomeBooks) {
+            this.addEntry(EnchantUiEntry.tomeEntry(minecraft, this.handler, book, this));
+        }
+        this.setScrollAmount(Math.min(previousScroll, this.maxScrollAmount()));
+    }
+
+    static String tomeTitle(ChiseledEnchantingMenuPayloads.TomeBookEntry book, Player player) {
+        String custom = book.custom_name() == null ? "" : book.custom_name().trim();
+        String defaultName = new ItemStack(Items.ENCHANTED_BOOK).getHoverName().getString();
+        if (!custom.isEmpty() && !custom.equals(defaultName)) return custom;
+        if (book.enchantments().isEmpty()) return custom.isEmpty() ? defaultName : custom;
+        var first = book.enchantments().getFirst();
+        var holder = findEnchantment(first.enchantment_id(), player);
+        String title = holder.map(h -> Enchantment.getFullname(h, first.enchantment_level()).getString())
+            .orElse(first.enchantment_id().toString());
+        return book.enchantments().size() > 1 ? title + " +" + (book.enchantments().size() - 1) : title;
+    }
+
+    static String formatTomeEta(int ticks) {
+        if (ticks < 0) return "--:--";
+        long seconds = (ticks + 19L) / 20L;
+        long hours = seconds / 3600L;
+        long mins = (seconds % 3600L) / 60L;
+        long secs = seconds % 60L;
+        return hours > 0
+            ? String.format(java.util.Locale.ROOT, "%d:%02d:%02d", hours, mins, secs)
+            : String.format(java.util.Locale.ROOT, "%02d:%02d", mins, secs);
     }
 
     private void addActionEntry(AvailableOption opt, boolean nested, boolean lastChild) {
@@ -792,6 +870,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public OptionalInt sameEnchantLevelDiff = OptionalInt.empty();
         public ChiseledEnchantingTableScreenHandler handler;
         public EnchantementListWidget parent;
+        public boolean is_tome_entry;
+        @Nullable
+        public ChiseledEnchantingMenuPayloads.TomeBookEntry tome_book;
 
         public static EnchantUiEntry categoryEntry(
             Minecraft client,
@@ -818,6 +899,28 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             entry.category_badge = badgeText;
             entry.category_badge_color = badgeColor;
             entry.category_refund_points = refundPreviewPoints;
+            entry.option_type = OptionType.ENCHANTMENT;
+            entry.cost_options = List.of();
+            entry.xp_requirement = XpCostConversion.XpRequirement.FREE;
+            entry.overridenEnchant = new ArrayList<>();
+            return entry;
+        }
+
+        public static EnchantUiEntry tomeEntry(
+            Minecraft client,
+            ChiseledEnchantingTableScreenHandler handler,
+            ChiseledEnchantingMenuPayloads.TomeBookEntry book,
+            EnchantementListWidget parent
+        ) {
+            EnchantUiEntry entry = new EnchantUiEntry();
+            entry.client = client;
+            entry.handler = handler;
+            entry.parent = parent;
+            entry.enchantable_item = handler.getEffectiveEnchantableItem();
+            entry.cost_item_stack = handler.get_cost_item();
+            entry.player = handler.player;
+            entry.is_tome_entry = true;
+            entry.tome_book = book;
             entry.option_type = OptionType.ENCHANTMENT;
             entry.cost_options = List.of();
             entry.xp_requirement = XpCostConversion.XpRequirement.FREE;
@@ -957,6 +1060,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean canEnchant() {
+            if (is_tome_entry) return false;
             if (is_category_header) return true;
             if (shelf_locked || discovery_locked || handler.isRitualBlocked()) return false;
             if (handler.isRitualActive()) {
@@ -1029,7 +1133,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         @Nullable
         public ItemStack hoveredCostItem(double mouseX, double mouseY) {
-            if (is_category_header) return null;
+            if (is_category_header || is_tome_entry) return null;
             int dx = effectiveDx();
             int dy = this.getY();
             int dw = effectiveDw();
@@ -1063,7 +1167,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         @Nullable
         public List<List<ItemStack>> hoveredCostOptions(double mouseX, double mouseY) {
-            if (is_category_header) return null;
+            if (is_category_header || is_tome_entry) return null;
             int dx = effectiveDx();
             int dy = this.getY();
             int dw = effectiveDw();
@@ -1085,7 +1189,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean isOverXpBadge(double mouseX, double mouseY) {
-            if (is_category_header) return false;
+            if (is_category_header || is_tome_entry) return false;
             int dx = effectiveDx();
             int dy = this.getY();
             int dw = effectiveDw();
@@ -1097,6 +1201,11 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean serverSendApplyEnchant() {
+            if (is_tome_entry) {
+                parent.selectTome(this.tome_book);
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                return true;
+            }
             if (is_category_header) {
                 Minecraft.getInstance().getSoundManager().play(
                     SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, parent.isCategoryExpanded(enchantment_id) ? 0.92F : 1.08F)
@@ -1196,6 +1305,49 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             int dy = this.getY();
             int dh = this.getHeight();
             boolean isFocused = parent.getFocused() == this;
+
+            if (is_tome_entry && this.tome_book != null) {
+                int dx = effectiveDx();
+                int dw = effectiveDw();
+                boolean selected = parent.isTomeSelected(this.tome_book);
+                RowRenderSupport.drawPlaque(ctx, client, dx, dy, dw, dh,
+                    RowRenderSupport.RowVisualStyle.STANDARD, true, hovered, isFocused || selected);
+                RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
+                try {
+                    String title = tomeTitle(this.tome_book, this.player);
+                    RowRenderSupport.renderBoundedText(ctx, client, title, dx + 7, dy + 3, 0.68f, dw - 14,
+                        this.tome_book.locked() ? 0xFFFFC46B : 0xFFF7F2EA);
+                    String charge = this.tome_book.wear_immune()
+                        ? I18n.get("gui.chiseled_enchanting_table.tomes.immune")
+                        : I18n.get("gui.chiseled_enchanting_table.tomes.charges",
+                            this.tome_book.remaining_charges(), this.tome_book.effective_max_uses());
+                    if (this.tome_book.generation() > 0) {
+                        charge += "  " + I18n.get("gui.chiseled_enchanting_table.tomes.generation", this.tome_book.generation());
+                    }
+                    RowRenderSupport.renderBoundedText(ctx, client, charge, dx + 7, dy + 11, 0.56f, dw - 14, 0xFF9ED8FF);
+                    String status;
+                    int statusColor;
+                    if (this.tome_book.locked()) {
+                        String mode = I18n.get("gui.chiseled_enchanting_table.tomes.lock_mode." + this.tome_book.lock_mode());
+                        status = I18n.get("gui.chiseled_enchanting_table.tomes.locked", mode, this.tome_book.lock_owner_name());
+                        statusColor = 0xFFFF9E7A;
+                    } else if (this.tome_book.charging()) {
+                        status = I18n.get("gui.chiseled_enchanting_table.tomes.eta",
+                            formatTomeEta(this.tome_book.eta_next_ticks()), formatTomeEta(this.tome_book.eta_full_ticks()));
+                        statusColor = 0xFFA8FFC4;
+                    } else if (this.tome_book.wear_used() <= 0) {
+                        status = I18n.get("gui.chiseled_enchanting_table.tomes.full");
+                        statusColor = 0xFFA8FFC4;
+                    } else {
+                        status = I18n.get("gui.chiseled_enchanting_table.tomes.not_charging");
+                        statusColor = 0xFFC9BFD8;
+                    }
+                    RowRenderSupport.renderBoundedText(ctx, client, status, dx + 7, dy + 18, 0.52f, dw - 14, statusColor);
+                } finally {
+                    RowRenderSupport.endRowContentClip(ctx);
+                }
+                return;
+            }
 
             if (is_category_header) {
                 CategoryRowRenderer.render(

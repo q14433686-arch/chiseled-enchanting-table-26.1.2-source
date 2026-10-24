@@ -50,7 +50,7 @@ public class ArcaneGrimoireScreen extends Screen {
     /** Base UV coordinate system of {@code gui/grimoire_spread.png} (672x424 = 2x of 336x212). */
     public static final int BASE_BOOK_W = 336;
     public static final int BASE_BOOK_H = 212;
-    public static final int CHAPTER_COUNT = 8;
+    public static final int CHAPTER_COUNT = 9;
 
     /** Maps every spread index (`0 = Home`, `1..N = multi-page chapter spreads`) to `(chapter, subPage, totalPages)`. */
     public record SpreadSpec(int chapter, int subPage, int totalPages) {}
@@ -70,7 +70,8 @@ public class ArcaneGrimoireScreen extends Screen {
         new SpreadSpec(6, 1, 1), // 11: Ch 6 — 宝藏顿悟（稀有×通用加权）、冰封与重随
         new SpreadSpec(7, 1, 2), // 12: Ch 7 (1/2) — 物品批量置换与台内残卷 4 档还原
         new SpreadSpec(7, 2, 2), // 13: Ch 7 (2/2) — 褪魔残卷：世界宝箱、野生书架(<=30%)与图书管理员交易
-        new SpreadSpec(8, 1, 1)  // 14: Ch 8 — 退魔返经验、单洗词条与破除诅咒
+        new SpreadSpec(8, 1, 1), // 14: Ch 8 — 退魔返经验、单洗词条与破除诅咒
+        new SpreadSpec(9, 1, 1)  // 15: Ch 9 — 功能页解锁、纂刻的书与母本锁定
     );
 
     public static final int MAX_SPREAD_INDEX = SPREAD_SPECS.size() - 1;
@@ -106,7 +107,8 @@ public class ArcaneGrimoireScreen extends Screen {
         0xFF4C236E,
         0xFF8B5E14,
         0xFF2B6B58,
-        0xFF7D2430
+        0xFF7D2430,
+        0xFF285E8B
     };
 
     @Nullable
@@ -204,7 +206,8 @@ public class ArcaneGrimoireScreen extends Screen {
                 new ItemStack(Items.ENCHANTED_BOOK),
                 new ItemStack(BlockRegistry.ARCANE_CATALYST),
                 new ItemStack(Items.ENCHANTED_GOLDEN_APPLE),
-                new ItemStack(BlockRegistry.CLEANSING_GRIT)
+                new ItemStack(BlockRegistry.CLEANSING_GRIT),
+                new ItemStack(Items.CLOCK)
             );
         }
     }
@@ -1073,6 +1076,19 @@ public class ArcaneGrimoireScreen extends Screen {
                         INK_PURPLE
                     )
                 );
+            case 9 -> List.of(
+                PageBlock.lead(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.lead")),
+                PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.rules"), INK_GOLD_DARK),
+                PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s1")),
+                PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s2")),
+                PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s3")),
+                PageBlock.step(4, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s4")),
+                PageBlock.callout(
+                    Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.note_t"),
+                    Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.note_b"),
+                    INK_PURPLE
+                )
+            );
             default -> {
                 int curseXp = SyncedEnchantmentCosts.find(
                     chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.PURGE_CURSE,
@@ -1185,6 +1201,9 @@ public class ArcaneGrimoireScreen extends Screen {
                         );
                     }
                 }
+                case 9 -> GrimoireDiagramRenderer.renderChapter5InfinityAndRegen(
+                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, this.itemSlots
+                );
                 default -> GrimoireDiagramRenderer.renderChapter8Cleanse(
                     ctx, this.minecraft, x, y, w, h, mouseX, mouseY, this.itemSlots
                 );
