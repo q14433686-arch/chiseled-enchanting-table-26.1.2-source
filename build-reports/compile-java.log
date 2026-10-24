@@ -1,4 +1,4 @@
-commit: bf782ef107630082eb14a374791f50881880ff37
+commit: f9bf9f34575489c08666d6deba4012d4b70d707b
 branch: arena/649fac5c-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -18,110 +18,60 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:298: error: method getMenuProvider(BlockState,Level,BlockPos) is already defined in class ChiseledEnchantingTableBlock
-    protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-                           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:469: error: cannot find symbol
-            chiseled_enchanting_table.utils.CetCustomData.mutate(sanitized, t -> t.remove(LEGACY_COMMISSION_BAND_KEY));
-                                                         ^
-  symbol:   method mutate(ItemStack,(t)->t.rem[...]_KEY))
-  location: class CetCustomData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:90: error: cannot find symbol
-            EnchantmentProvenance.clearAll(targetBook);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:143: error: cannot find symbol
-            EnchantmentProvenance.clearAll(targetBook);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:285: error: cannot find symbol
-            EnchantmentProvenance.clearAll(target);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:425: error: cannot find symbol
-            EnchantmentProvenance.clearAll(target);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:580: error: cannot find symbol
-            EnchantmentProvenance.clearAll(currentTarget);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/ChiseledEnchantingTable.java:90: error: incompatible types: no instance(s) of type variable(s) E exist so that Optional<Registry<E>> conforms to Optional<RegistryLookup<Enchantment>>
-            world.registryAccess().lookup(Registries.ENCHANTMENT);
-                                         ^
-  where E is a type-variable:
-    E extends Object declared in method <E>lookup(ResourceKey<? extends Registry<? extends E>>)
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-8 errors
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792882865939.json
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processClientResources
+> Task :clientClasses
+
+> Task :compileTestJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:380: error: cannot find symbol
+        assertEquals(22, BookshelfProgression.requiredBookshelvesForUpgrade(2, 2, null, sg));
+                                             ^
+  symbol:   method requiredBookshelvesForUpgrade(int,int,<null>,Config)
+  location: class BookshelfProgression
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:381: error: cannot find symbol
+        assertEquals(38, BookshelfProgression.requiredBookshelvesForUpgrade(3, 3, null, sg));
+                                             ^
+  symbol:   method requiredBookshelvesForUpgrade(int,int,<null>,Config)
+  location: class BookshelfProgression
+2 errors
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792882997120.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava'.
+Execution failed for task ':compileTestJava'.
 > Compilation failed; see the compiler output below.
-  Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/ChiseledEnchantingTable.java:90: error: incompatible types: no instance(s) of type variable(s) E exist so that Optional<Registry<E>> conforms to Optional<RegistryLookup<Enchantment>>
-              world.registryAccess().lookup(Registries.ENCHANTMENT);
-                                           ^
-    where E is a type-variable:
-      E extends Object declared in method <E>lookup(ResourceKey<? extends Registry<? extends E>>)
-  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-  Note: Recompile with -Xlint:unchecked for details.
-  Note: Some input files use or override a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:469: error: cannot find symbol
-              chiseled_enchanting_table.utils.CetCustomData.mutate(sanitized, t -> t.remove(LEGACY_COMMISSION_BAND_KEY));
-                                                           ^
-    symbol:   method mutate(ItemStack,(t)->t.rem[...]_KEY))
-    location: class CetCustomData
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:90: error: cannot find symbol
-              EnchantmentProvenance.clearAll(targetBook);
-                                   ^
-    symbol:   method clearAll(ItemStack)
-    location: class EnchantmentProvenance
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:143: error: cannot find symbol
-              EnchantmentProvenance.clearAll(targetBook);
-                                   ^
-    symbol:   method clearAll(ItemStack)
-    location: class EnchantmentProvenance
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:285: error: cannot find symbol
-              EnchantmentProvenance.clearAll(target);
-                                   ^
-    symbol:   method clearAll(ItemStack)
-    location: class EnchantmentProvenance
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:425: error: cannot find symbol
-              EnchantmentProvenance.clearAll(target);
-                                   ^
-    symbol:   method clearAll(ItemStack)
-    location: class EnchantmentProvenance
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:580: error: cannot find symbol
-              EnchantmentProvenance.clearAll(currentTarget);
-                                   ^
-    symbol:   method clearAll(ItemStack)
-    location: class EnchantmentProvenance
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:298: error: method getMenuProvider(BlockState,Level,BlockPos) is already defined in class ChiseledEnchantingTableBlock
-      protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-                             ^
-  8 errors
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:380: error: cannot find symbol
+          assertEquals(22, BookshelfProgression.requiredBookshelvesForUpgrade(2, 2, null, sg));
+                                               ^
+    symbol:   method requiredBookshelvesForUpgrade(int,int,<null>,Config)
+    location: class BookshelfProgression
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:381: error: cannot find symbol
+          assertEquals(38, BookshelfProgression.requiredBookshelvesForUpgrade(3, 3, null, sg));
+                                               ^
+    symbol:   method requiredBookshelvesForUpgrade(int,int,<null>,Config)
+    location: class BookshelfProgression
+  2 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileTestJava'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -156,49 +106,17 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:298: error: method getMenuProvider(BlockState,Level,BlockPos) is already defined in class ChiseledEnchantingTableBlock
-    protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-                           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/loot/DepletedTomeWorldMechanics.java:469: error: cannot find symbol
-            chiseled_enchanting_table.utils.CetCustomData.mutate(sanitized, t -> t.remove(LEGACY_COMMISSION_BAND_KEY));
-                                                         ^
-  symbol:   method mutate(ItemStack,(t)->t.rem[...]_KEY))
-  location: class CetCustomData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:90: error: cannot find symbol
-            EnchantmentProvenance.clearAll(targetBook);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:143: error: cannot find symbol
-            EnchantmentProvenance.clearAll(targetBook);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:285: error: cannot find symbol
-            EnchantmentProvenance.clearAll(target);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:425: error: cannot find symbol
-            EnchantmentProvenance.clearAll(target);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:580: error: cannot find symbol
-            EnchantmentProvenance.clearAll(currentTarget);
-                                 ^
-  symbol:   method clearAll(ItemStack)
-  location: class EnchantmentProvenance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/ChiseledEnchantingTable.java:90: error: incompatible types: no instance(s) of type variable(s) E exist so that Optional<Registry<E>> conforms to Optional<RegistryLookup<Enchantment>>
-            world.registryAccess().lookup(Registries.ENCHANTMENT);
-                                         ^
-  where E is a type-variable:
-    E extends Object declared in method <E>lookup(ResourceKey<? extends Registry<? extends E>>)
-Note: Some input files use or override a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-Note: Recompile with -Xlint:unchecked for details.
-8 errors
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:380: error: cannot find symbol
+        assertEquals(22, BookshelfProgression.requiredBookshelvesForUpgrade(2, 2, null, sg));
+                                             ^
+  symbol:   method requiredBookshelvesForUpgrade(int,int,<null>,Config)
+  location: class BookshelfProgression
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:381: error: cannot find symbol
+        assertEquals(38, BookshelfProgression.requiredBookshelvesForUpgrade(3, 3, null, sg));
+                                             ^
+  symbol:   method requiredBookshelvesForUpgrade(int,int,<null>,Config)
+  location: class BookshelfProgression
+2 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -339,8 +257,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 26s
-1 actionable task: 1 executed
+BUILD FAILED in 22s
+5 actionable tasks: 5 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
