@@ -22,10 +22,10 @@ class FullPortRuntimeTest {
             var policy = new ModRuntimeConfig.PackPolicy(true, true, Set.of("max_tome_uses"), Set.of());
             ChiseledEnchantingTableData.applyRuntimeConfig(draft.build(), policy, () -> {});
             var frame = ChiseledEnchantingTableData.runtimeFrame();
-            assertEquals(16, frame.configuration().maxTomeUses());
+            assertEquals(4, frame.configuration().maxTomeUses());
             assertEquals(frame.configuration().maxTomeUses(), ChiseledEnchantingTableData.libraryResonanceConfig().maxTomeUses());
             assertTrue(ModRuntimeConfig.effective().anvilFlatRepairCost());
-            assertEquals(16, frame.rules().rule("max_tome_uses").effective());
+            assertEquals(4, frame.rules().rule("max_tome_uses").effective());
             assertThrows(IllegalStateException.class, () -> ChiseledEnchantingTableData.applyRuntimeConfig(
                 draft.build(), ModRuntimeConfig.PackPolicy.NONE, () -> { throw new IllegalStateException("disk error"); }));
             assertSame(frame, ChiseledEnchantingTableData.runtimeFrame());
@@ -34,14 +34,16 @@ class FullPortRuntimeTest {
         }
     }
 
-    @Test void ritualWirePreservesMenuSessionAndQueue() {
+    @Test void ritualWirePreservesMenuSessionQueueAndBlockedState() {
         var step = new EnchantmentWithLevel(Identifier.withDefaultNamespace("sharpness"), 5);
-        var sync = new SyncRitualStatePayload(27, 987654321L, List.of(step), true, false);
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
         try {
-            SyncRitualStatePayload.CODEC.encode(buffer, sync);
-            assertEquals(sync, SyncRitualStatePayload.CODEC.decode(buffer));
-            assertEquals(0, buffer.readableBytes());
+            for (boolean blocked : new boolean[] {false, true}) {
+                var sync = new SyncRitualStatePayload(27, 987654321L, List.of(step), true, false, blocked);
+                SyncRitualStatePayload.CODEC.encode(buffer, sync);
+                assertEquals(sync, SyncRitualStatePayload.CODEC.decode(buffer));
+                assertEquals(0, buffer.readableBytes());
+            }
             var skip = new SkipRitualPayload(27, 987654321L, true);
             SkipRitualPayload.CODEC.encode(buffer, skip);
             assertEquals(skip, SkipRitualPayload.CODEC.decode(buffer));

@@ -4,6 +4,7 @@ import chiseled_enchanting_table.ChiseledEnchantingTable;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
 /**
  * Capability channel, independent of the unchanged release version. Bump its ID whenever any
@@ -12,7 +13,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
  * first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final String REVISION = "26_1_2_revision_6";
+    public static final String REVISION = "26_1_2_revision_8";
     // Query only. Never register a decoder on legacy channels: an old server may send its
     // join-time packet before the client JOIN callback can disconnect it.
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> LEGACY_COST_TYPE =
@@ -24,10 +25,20 @@ public final class EnchantingProtocol {
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_5_COST_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_5"));
 
+    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_6_COST_TYPE =
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_6"));
+
+    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_7_COST_TYPE =
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_7"));
+
     public static final String MISMATCH_MESSAGE = "Chiseled Enchanting Table network protocol mismatch. "
         + "Install the same current Minecraft 26.1.2 build on both client and server (version labels alone are not enough).";
 
     private EnchantingProtocol() {}
+
+    public static Identifier id(String baseName) {
+        return ChiseledEnchantingTable.identifier(baseName + "_" + REVISION);
+    }
 
     public static boolean incompatible(boolean peerHasMod, boolean peerHasRevision) {
         return peerHasMod && !peerHasRevision;

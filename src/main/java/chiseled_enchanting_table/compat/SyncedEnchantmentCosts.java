@@ -214,6 +214,13 @@ public final class SyncedEnchantmentCosts {
             : ChiseledEnchantingTableData.libraryResonanceConfig();
     }
 
+    public static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig() {
+        EnchantCostTablePayload p = syncedPayload;
+        return (p != null && p.ritualConfig() != null)
+            ? p.ritualConfig()
+            : ChiseledEnchantingTableData.ritualConfig();
+    }
+
     /** Empty server rule lists are authoritative, not a request for jar-default fallback. */
     public static java.util.Optional<java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay>> transformationDisplays() {
         var payload = syncedPayload;

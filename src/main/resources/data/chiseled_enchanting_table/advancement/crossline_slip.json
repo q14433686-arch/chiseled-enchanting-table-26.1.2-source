@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:ink_sac"
+    },
+    "title": {
+      "translate": "advancements.chiseled_enchanting_table.crossline_slip.title"
+    },
+    "description": {
+      "translate": "advancements.chiseled_enchanting_table.crossline_slip.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "chiseled_enchanting_table:enchant_from_book",
+  "criteria": {
+    "crossline_slip": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "crossline_slip"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

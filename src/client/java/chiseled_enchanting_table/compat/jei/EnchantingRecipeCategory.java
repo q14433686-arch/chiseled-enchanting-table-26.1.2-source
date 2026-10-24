@@ -134,7 +134,8 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
                 : "jei.chiseled_enchanting_table.tooltip.cost_hint"
         ));
         tooltip.add(Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.bookshelf"
+            "jei.chiseled_enchanting_table.tooltip.bookshelf",
+            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().maxTotalXpDiscountPercent()
         ));
         if (!recipe.conflictingEnchantments().isEmpty()) {
             tooltip.add(Component.translatable(

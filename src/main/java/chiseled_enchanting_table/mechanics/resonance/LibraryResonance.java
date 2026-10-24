@@ -2,7 +2,10 @@ package chiseled_enchanting_table.mechanics.resonance;
 
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -70,7 +73,11 @@ public final class LibraryResonance {
         int tomeRegenTier1Shelves,
         int tomeRegenTier1Seconds,
         int tomeRegenTier2Shelves,
-        int tomeRegenTier2Seconds
+        int tomeRegenTier2Seconds,
+        double unbreakingWaiverPerLevel,
+        double unbreakingWaiverMaxChance,
+        boolean wildBookWearEnabled,
+        List<Integer> wildBookRemainingWeights
     ) {
         public static final Config DEFAULT = new Config(
             MIN_DISCOUNT_BOOKSHELVES,
@@ -107,7 +114,11 @@ public final class LibraryResonance {
             MasterTomeWear.DEFAULT_REGEN_TIER1_SHELVES,
             MasterTomeWear.DEFAULT_REGEN_TIER1_SECONDS,
             MasterTomeWear.DEFAULT_REGEN_TIER2_SHELVES,
-            MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS
+            MasterTomeWear.DEFAULT_REGEN_TIER2_SECONDS,
+            MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_PER_LEVEL,
+            MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_MAX_CHANCE,
+            MasterTomeWear.DEFAULT_WILD_BOOK_WEAR_ENABLED,
+            MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS
         );
 
         public Config {
@@ -120,6 +131,97 @@ public final class LibraryResonance {
             tomeRegenTier1Seconds = clampInt(tomeRegenTier1Seconds, 1, tomeRegenBaseSeconds);
             tomeRegenTier2Shelves = clampInt(tomeRegenTier2Shelves, tomeRegenTier1Shelves, 256);
             tomeRegenTier2Seconds = clampInt(tomeRegenTier2Seconds, 1, tomeRegenTier1Seconds);
+            unbreakingWaiverPerLevel = clampDouble(unbreakingWaiverPerLevel, 0.0, 0.30);
+            unbreakingWaiverMaxChance = clampDouble(unbreakingWaiverMaxChance, 0.0, 0.30);
+            if (wildBookRemainingWeights == null || wildBookRemainingWeights.isEmpty()) {
+                wildBookRemainingWeights = MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS;
+            } else {
+                List<Integer> cleaned = new ArrayList<>(wildBookRemainingWeights.size());
+                for (Integer w : wildBookRemainingWeights) {
+                    cleaned.add(w == null ? 0 : clampInt(w, 0, 10_000));
+                }
+                wildBookRemainingWeights = List.copyOf(cleaned);
+            }
+        }
+
+        public Config(
+            int minDiscountBookshelves,
+            int maxDiscountBookshelves,
+            int maxWoodenDiscountPercent,
+            int maxGlobalMasteryDiscountPercent,
+            int maxBaseXpDiscountPercent,
+            int maxSpecificEnchantBonusPercent,
+            double specificEnchantExponent,
+            int maxTotalXpDiscountPercent,
+            double masteryUnitExponent,
+            double globalMasteryMultiplier,
+            double masterTomeUpgradeMaterialMultiplier,
+            double shelfUpgradeMaterialMultiplier,
+            double epiphanyProbabilityGlobalWeight,
+            double epiphanyProbabilityAffinityWeight,
+            double blankBookAffinityWeight,
+            double epiphanyShelfScoreFactor,
+            double epiphanyGlobalMasteryScoreFactor,
+            double epiphanyAffinityMasteryScoreFactor,
+            double epiphanyTier2MaxProb,
+            double epiphanyTier2ScoreDivisor,
+            double epiphanyTier2MasteryBonus,
+            double epiphanyTierPlusMaxProb,
+            double epiphanyTierPlusScoreDivisor,
+            double epiphanyTierPlusMasteryBonus,
+            double incrementalStepCreditFactor,
+            MasterTomeWear.ConsumptionMode tomeConsumptionMode,
+            int maxTomeUses,
+            int bookCopyWearCost,
+            MasterTomeWear.DepleteBehavior tomeDepleteBehavior,
+            boolean tomeRegenEnabled,
+            int tomeRegenBaseSeconds,
+            int tomeRegenTier1Shelves,
+            int tomeRegenTier1Seconds,
+            int tomeRegenTier2Shelves,
+            int tomeRegenTier2Seconds
+        ) {
+            this(
+                minDiscountBookshelves,
+                maxDiscountBookshelves,
+                maxWoodenDiscountPercent,
+                maxGlobalMasteryDiscountPercent,
+                maxBaseXpDiscountPercent,
+                maxSpecificEnchantBonusPercent,
+                specificEnchantExponent,
+                maxTotalXpDiscountPercent,
+                masteryUnitExponent,
+                globalMasteryMultiplier,
+                masterTomeUpgradeMaterialMultiplier,
+                shelfUpgradeMaterialMultiplier,
+                epiphanyProbabilityGlobalWeight,
+                epiphanyProbabilityAffinityWeight,
+                blankBookAffinityWeight,
+                epiphanyShelfScoreFactor,
+                epiphanyGlobalMasteryScoreFactor,
+                epiphanyAffinityMasteryScoreFactor,
+                epiphanyTier2MaxProb,
+                epiphanyTier2ScoreDivisor,
+                epiphanyTier2MasteryBonus,
+                epiphanyTierPlusMaxProb,
+                epiphanyTierPlusScoreDivisor,
+                epiphanyTierPlusMasteryBonus,
+                incrementalStepCreditFactor,
+                tomeConsumptionMode,
+                maxTomeUses,
+                bookCopyWearCost,
+                tomeDepleteBehavior,
+                tomeRegenEnabled,
+                tomeRegenBaseSeconds,
+                tomeRegenTier1Shelves,
+                tomeRegenTier1Seconds,
+                tomeRegenTier2Shelves,
+                tomeRegenTier2Seconds,
+                MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_PER_LEVEL,
+                MasterTomeWear.DEFAULT_UNBREAKING_WAIVER_MAX_CHANCE,
+                MasterTomeWear.DEFAULT_WILD_BOOK_WEAR_ENABLED,
+                MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS
+            );
         }
 
         public Config(
@@ -259,6 +361,23 @@ public final class LibraryResonance {
             JsonObject woodObj = subObject(root, "wooden_bookshelves");
             JsonObject masteryObj = subObject(root, "chiseled_mastery");
             JsonObject epiphanyObj = subObject(root, "epiphany_affinity");
+            JsonObject wildWearObj = subObject(root, "wild_book_wear");
+
+            List<Integer> wildWeights = MasterTomeWear.DEFAULT_WILD_REMAINING_WEIGHTS;
+            if (wildWearObj != null
+                && wildWearObj.has("remaining_durability_weights")
+                && wildWearObj.get("remaining_durability_weights").isJsonArray()) {
+                JsonArray arr = wildWearObj.getAsJsonArray("remaining_durability_weights");
+                List<Integer> parsed = new ArrayList<>(arr.size());
+                for (var el : arr) {
+                    if (el != null && el.isJsonPrimitive() && el.getAsJsonPrimitive().isNumber()) {
+                        parsed.add(clampInt(el.getAsInt(), 0, 10_000));
+                    }
+                }
+                if (!parsed.isEmpty()) {
+                    wildWeights = List.copyOf(parsed);
+                }
+            }
 
             int minShelves = clampInt(
                 intFrom(woodObj, root, "min_discount_bookshelves", null, DEFAULT.minDiscountBookshelves),
@@ -436,7 +555,19 @@ public final class LibraryResonance {
                     intFrom(masteryObj, root, "tome_regen_tier2_seconds", null, DEFAULT.tomeRegenTier2Seconds),
                     1,
                     86_400
-                )
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "unbreaking_waiver_per_level", null, DEFAULT.unbreakingWaiverPerLevel),
+                    0.0,
+                    0.30
+                ),
+                clampDouble(
+                    doubleFrom(masteryObj, root, "unbreaking_waiver_max_chance", null, DEFAULT.unbreakingWaiverMaxChance),
+                    0.0,
+                    0.30
+                ),
+                boolFrom(wildWearObj, root, "enabled", "wild_book_wear_enabled", DEFAULT.wildBookWearEnabled),
+                wildWeights
             );
         }
 

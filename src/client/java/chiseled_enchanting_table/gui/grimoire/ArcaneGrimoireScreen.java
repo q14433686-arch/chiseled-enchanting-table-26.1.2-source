@@ -901,7 +901,12 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.rules"), INK_GOLD_DARK),
                     PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.s1")),
                     PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.s2")),
-                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.s3")),
+                    PageBlock.step(3, Component.translatable(
+                        "gui.chiseled_enchanting_table.grimoire.ch3p0.s3",
+                        lr.maxWoodenDiscountPercent(),
+                        lr.tomeRegenTier1Shelves(),
+                        lr.tomeRegenTier2Shelves()
+                    )),
                     PageBlock.callout(
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.note_t"),
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.note_b"),
@@ -912,7 +917,8 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.lead(Component.translatable(
                         "gui.chiseled_enchanting_table.grimoire.ch3.lead",
                         sg.horizontalScanRadius(),
-                        sg.verticalScanRadius()
+                        sg.verticalScanRadius(),
+                        sg.minOpenAdjacentBlocks()
                     )),
                     PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.tracks"), INK_GOLD_DARK),
                     PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t1")),
@@ -931,12 +937,16 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.lead(Component.translatable(
                         "gui.chiseled_enchanting_table.grimoire.ch3p2.lead",
                         midShelf,
-                        10
+                        SyncedEnchantmentCosts.ritualConfig().minTomeEnchantsForWait()
                     )),
                     PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.rules"), INK_PURPLE),
                     PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.s1")),
                     PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.s2")),
-                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.s3")),
+                    PageBlock.step(3, Component.translatable(
+                        "gui.chiseled_enchanting_table.grimoire.ch3p2.s3",
+                        (int) Math.round(SyncedEnchantmentCosts.ritualConfig().maxRushDegradeNormal() * 100.0),
+                        (int) Math.round(SyncedEnchantmentCosts.ritualConfig().maxRushDegradeInfinity() * 100.0)
+                    )),
                     PageBlock.callout(
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.note_t"),
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.note_b"),
@@ -958,7 +968,8 @@ public class ArcaneGrimoireScreen extends Screen {
                             lr.maxWoodenDiscountPercent(),
                             lr.maxGlobalMasteryDiscountPercent(),
                             lr.maxBaseXpDiscountPercent(),
-                            lr.maxSpecificEnchantBonusPercent()
+                            lr.maxSpecificEnchantBonusPercent(),
+                            lr.maxTotalXpDiscountPercent()
                         ),
                         INK_EMERALD
                     )
@@ -984,7 +995,12 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch5.s3")),
                     PageBlock.callout(
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch5.note_t"),
-                        Component.translatable("gui.chiseled_enchanting_table.grimoire.ch5.note_b"),
+                        Component.translatable(
+                            "gui.chiseled_enchanting_table.grimoire.ch5.note_b",
+                            lr.maxTomeUses(),
+                            lr.tomeRegenTier1Shelves(),
+                            lr.tomeRegenTier2Shelves()
+                        ),
                         INK_GOLD_DARK
                     )
                 )
@@ -1013,6 +1029,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 PageBlock.step(2, Component.translatable(
                     "gui.chiseled_enchanting_table.grimoire.ch6.s2",
                     SyncedEnchantmentCosts.epiphanyMinBookshelves(),
+                    Math.max(1, Math.round(SyncedEnchantmentCosts.epiphanyCycleTicks() / 1200.0f)),
                     SyncedEnchantmentCosts.epiphanyMaxSlotsCap()
                 )),
                 PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch6.s3")),
@@ -1056,14 +1073,26 @@ public class ArcaneGrimoireScreen extends Screen {
                         INK_PURPLE
                     )
                 );
-            default -> List.of(
-                PageBlock.lead(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.lead")),
-                PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.steps"), INK_CRIMSON),
-                PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s1")),
-                PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s2")),
-                PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s3")),
-                PageBlock.step(4, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s4"))
-            );
+            default -> {
+                int curseXp = SyncedEnchantmentCosts.find(
+                    chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.PURGE_CURSE,
+                    net.minecraft.resources.Identifier.withDefaultNamespace("binding_curse"),
+                    1
+                ).map(SyncedEnchantmentCosts.Cost::xpLevelCost)
+                    .orElseGet(chiseled_enchanting_table.data.ChiseledEnchantingTableData::cursePurgeXpCost);
+                yield List.of(
+                    PageBlock.lead(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.lead")),
+                    PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.steps"), INK_CRIMSON),
+                    PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s1")),
+                    PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s2")),
+                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s3")),
+                    PageBlock.step(4, Component.translatable(
+                        "gui.chiseled_enchanting_table.grimoire.ch8.s4",
+                        curseXp,
+                        lr.maxBaseXpDiscountPercent()
+                    ))
+                );
+            }
         };
 
         return GrimoireTextLayout.renderStructuredColumn(

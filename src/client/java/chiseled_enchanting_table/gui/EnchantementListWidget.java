@@ -108,10 +108,18 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         this.setScrollAmount(Math.min(savedScroll, this.maxScrollAmount()));
     }
 
+    public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Player player) {
+        if (id == null || player == null) {
+            return java.util.Optional.empty();
+        }
+        return player.level().registryAccess()
+            .lookup(Registries.ENCHANTMENT)
+            .flatMap(reg -> reg.get(ResourceKey.create(Registries.ENCHANTMENT, id)));
+    }
+
     public static Holder<Enchantment> IdentifierToEnchantment(Identifier id, Player player) {
-        RegistryAccess registryAccess = player.level().registryAccess();
-        Registry<Enchantment> registry = registryAccess.lookupOrThrow(Registries.ENCHANTMENT);
-        return registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, id));
+        return findEnchantment(id, player)
+            .orElseThrow(() -> new IllegalArgumentException("Unknown enchantment: " + id));
     }
 
     public static Identifier EnchantmentToIdentifier(Holder<Enchantment> enchant, Player player) {
@@ -166,10 +174,11 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     @Override
     public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
-        if (keyCode == 257 || keyCode == 335) {
+        if (keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_RETURN
+            || keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_NUMPADENTER) {
             var focusedEntry = this.getFocused();
-            if (focusedEntry != null) {
-                focusedEntry.serverSendApplyEnchant();
+            if (focusedEntry != null && focusedEntry.serverSendApplyEnchant()) {
+                return true;
             }
         }
         return super.keyPressed(event);
@@ -520,7 +529,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         } else if (!cost_item_stack.is(Items.BOOK)) {
             if (unlocked_enchantements != null) {
                 for (EnchantmentWithLevel e : unlocked_enchantements) {
-                    Holder<Enchantment> h = IdentifierToEnchantment(e.enchantment_id(), this.player);
+                    var optH = findEnchantment(e.enchantment_id(), this.player);
+                    if (optH.isEmpty()) continue;
+                    Holder<Enchantment> h = optH.get();
                     int existingLvl = targetEnchantments.getLevel(h);
                     if (e.enchantment_level() >= existingLvl) {
                         optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(e), false, 0));
@@ -549,7 +560,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 }
             }
             for (EnchantmentWithLevel epiphany : this.handler.computeActiveTreasureEpiphanies(enchantable_item)) {
-                Holder<Enchantment> h = IdentifierToEnchantment(epiphany.enchantment_id(), this.player);
+                var optH = findEnchantment(epiphany.enchantment_id(), this.player);
+                if (optH.isEmpty()) continue;
+                Holder<Enchantment> h = optH.get();
                 if (epiphany.enchantment_level() > targetEnchantments.getLevel(h)) {
                     optionSlots.add(new DisplayOptionSlot(
                         AvailableOption.treasureEpiphany(epiphany.enchantment_id(), epiphany.enchantment_level()),
@@ -627,7 +640,11 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
                 return false;
             }
-            Holder<Enchantment> enchant = IdentifierToEnchantment(option.id(), this.player);
+            var optEnchant = findEnchantment(option.id(), this.player);
+            if (optEnchant.isEmpty()) {
+                return false;
+            }
+            Holder<Enchantment> enchant = optEnchant.get();
             return enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchant.value().canEnchant(enchantable_item);
         }).toList();
 
@@ -789,7 +806,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             entry.client = client;
             entry.handler = handler;
             entry.parent = parent;
-            entry.enchantable_item = handler.get_enchantable_item();
+            entry.enchantable_item = handler.getEffectiveEnchantableItem();
             entry.cost_item_stack = handler.get_cost_item();
             entry.player = handler.player;
             entry.is_category_header = true;
@@ -842,7 +859,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             this.client = client;
             this.handler = handler;
             this.parent = parent;
-            this.enchantable_item = handler.get_enchantable_item();
+            this.enchantable_item = handler.getEffectiveEnchantableItem();
             this.cost_item_stack = handler.get_cost_item();
             this.player = handler.player;
             this.option_type = option.type();
@@ -939,7 +956,20 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         public boolean canEnchant() {
             if (is_category_header) return true;
-            if (shelf_locked || discovery_locked) return false;
+            if (shelf_locked || discovery_locked || handler.isRitualBlocked()) return false;
+            if (handler.isRitualActive()) {
+                boolean nonQueueable = is_transformation
+                    || option_type == OptionType.BOOK_COMBINE_UPGRADE
+                    || option_type == OptionType.BOOK_RESEARCH_UPGRADE
+                    || option_type == OptionType.DISENCHANT_ALL
+                    || option_type == OptionType.DOWNGRADE_ENCHANTMENT
+                    || option_type == OptionType.STRIP_SINGLE_ENCHANTMENT
+                    || option_type == OptionType.PURGE_CURSE
+                    || cost_item_stack.is(Items.ENCHANTED_BOOK);
+                if (nonQueueable) {
+                    return false;
+                }
+            }
             return xpConditionMet() && itemCostConditionMet() && !enchantAlreadyExist();
         }
 
@@ -1073,7 +1103,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 return true;
             }
             if (!this.canEnchant()) return false;
-            ClientPlayNetworking.send(new ApplyEnchantmentPayload(option_type, enchantment_id, enchant_level));
+            ClientPlayNetworking.send(new ApplyEnchantmentPayload(handler.containerId, option_type, enchantment_id, enchant_level));
             return true;
         }
 
