@@ -1,4 +1,4 @@
-commit: 6e8880fe4d56db7c04bb3f500af87d102f1eb5e4
+commit: 12fb1d831b5f1406e753d327d198519e446962f8
 branch: arena/2d61e52c-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -26,41 +26,234 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :processResources
 > Task :classes
 
-> Task :compileClientJava FAILED
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java:1313: error: method drawPlaque in class RowRenderSupport cannot be applied to given types;
-                RowRenderSupport.drawPlaque(ctx, client, dx, dy, dw, dh,
-                                ^
-  required: GuiGraphicsExtractor,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
-  found:    GuiGraphicsExtractor,Minecraft,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
-  reason: actual and formal argument lists differ in length
+> Task :compileClientJava
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-1 error
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792853399392.json
+
+> Task :processClientResources
+> Task :clientClasses
+
+> Task :compileTestJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:115: error: package TomeLockData does not exist
+        assertEquals(2, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 3));
+                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:115: error: cannot find symbol
+        assertEquals(2, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 3));
+                        ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:116: error: package TomeLockData does not exist
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 0));
+                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:116: error: cannot find symbol
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 0));
+                        ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:117: error: package TomeLockData does not exist
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.FULL_CHARGE, 3));
+                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:117: error: cannot find symbol
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.FULL_CHARGE, 3));
+                        ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:118: error: package TomeLockData does not exist
+        assertEquals(-1, TomeLockData.targetWearFor(TomeLockData.Mode.PERMANENT, 3));
+                                                                ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:118: error: cannot find symbol
+        assertEquals(-1, TomeLockData.targetWearFor(TomeLockData.Mode.PERMANENT, 3));
+                         ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:119: error: cannot find symbol
+        assertEquals(-1, TomeLockData.targetWearFor(null, 3));
+                         ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:123: error: package TomeLockData does not exist
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 3));
+                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:123: error: cannot find symbol
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 3));
+                    ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:124: error: package TomeLockData does not exist
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 2));
+                                                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:124: error: cannot find symbol
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 2));
+                   ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:125: error: package TomeLockData does not exist
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.FULL_CHARGE, 0, 0));
+                                                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:125: error: cannot find symbol
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.FULL_CHARGE, 0, 0));
+                   ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:126: error: package TomeLockData does not exist
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.PERMANENT, -1, 0));
+                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:126: error: cannot find symbol
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.PERMANENT, -1, 0));
+                    ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:130: error: cannot find symbol
+        assertEquals(900, TomeLockData.ticksToNextCharge(3, 100L, 1000));
+                          ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:131: error: cannot find symbol
+        assertEquals(2900, TomeLockData.ticksToFullCharge(3, 100L, 1000));
+                           ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:132: error: cannot find symbol
+        assertEquals(-1, TomeLockData.ticksToNextCharge(0, 100L, 1000));
+                         ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:133: error: cannot find symbol
+        assertEquals(-1, TomeLockData.ticksToFullCharge(3, 100L, Integer.MAX_VALUE));
+                         ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:134: error: package TomeLockData does not exist
+        assertEquals(TomeLockData.Mode.FULL_CHARGE, TomeLockData.Mode.fromToken("full_charge"));
+                                 ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:134: error: package TomeLockData does not exist
+        assertEquals(TomeLockData.Mode.FULL_CHARGE, TomeLockData.Mode.fromToken("full_charge"));
+                                                                ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:135: error: package TomeLockData does not exist
+        assertEquals(TomeLockData.Mode.PERMANENT, TomeLockData.Mode.fromToken("unknown"));
+                                 ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:135: error: package TomeLockData does not exist
+        assertEquals(TomeLockData.Mode.PERMANENT, TomeLockData.Mode.fromToken("unknown"));
+                                                              ^
+25 errors
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792853518199.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileClientJava'.
+Execution failed for task ':compileTestJava'.
 > Compilation failed; see the compiler output below.
-  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java:1313: error: method drawPlaque in class RowRenderSupport cannot be applied to given types;
-                  RowRenderSupport.drawPlaque(ctx, client, dx, dy, dw, dh,
-                                  ^
-    required: GuiGraphicsExtractor,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
-    found:    GuiGraphicsExtractor,Minecraft,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
-    reason: actual and formal argument lists differ in length
-  Note: Recompile with -Xlint:deprecation for details.
-  1 error
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:115: error: cannot find symbol
+          assertEquals(2, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 3));
+                          ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:116: error: cannot find symbol
+          assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 0));
+                          ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:117: error: cannot find symbol
+          assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.FULL_CHARGE, 3));
+                          ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:118: error: cannot find symbol
+          assertEquals(-1, TomeLockData.targetWearFor(TomeLockData.Mode.PERMANENT, 3));
+                           ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:119: error: cannot find symbol
+          assertEquals(-1, TomeLockData.targetWearFor(null, 3));
+                           ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:123: error: cannot find symbol
+          assertFalse(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 3));
+                      ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:124: error: cannot find symbol
+          assertTrue(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 2));
+                     ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:125: error: cannot find symbol
+          assertTrue(TomeLockData.isExpired(TomeLockData.Mode.FULL_CHARGE, 0, 0));
+                     ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:126: error: cannot find symbol
+          assertFalse(TomeLockData.isExpired(TomeLockData.Mode.PERMANENT, -1, 0));
+                      ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:130: error: cannot find symbol
+          assertEquals(900, TomeLockData.ticksToNextCharge(3, 100L, 1000));
+                            ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:131: error: cannot find symbol
+          assertEquals(2900, TomeLockData.ticksToFullCharge(3, 100L, 1000));
+                             ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:132: error: cannot find symbol
+          assertEquals(-1, TomeLockData.ticksToNextCharge(0, 100L, 1000));
+                           ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:133: error: cannot find symbol
+          assertEquals(-1, TomeLockData.ticksToFullCharge(3, 100L, Integer.MAX_VALUE));
+                           ^
+    symbol:   variable TomeLockData
+    location: class AuditMechanicsTest
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:115: error: package TomeLockData does not exist
+          assertEquals(2, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 3));
+                                                                 ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:116: error: package TomeLockData does not exist
+          assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 0));
+                                                                 ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:117: error: package TomeLockData does not exist
+          assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.FULL_CHARGE, 3));
+                                                                 ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:118: error: package TomeLockData does not exist
+          assertEquals(-1, TomeLockData.targetWearFor(TomeLockData.Mode.PERMANENT, 3));
+                                                                  ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:123: error: package TomeLockData does not exist
+          assertFalse(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 3));
+                                                         ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:124: error: package TomeLockData does not exist
+          assertTrue(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 2));
+                                                        ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:125: error: package TomeLockData does not exist
+          assertTrue(TomeLockData.isExpired(TomeLockData.Mode.FULL_CHARGE, 0, 0));
+                                                        ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:126: error: package TomeLockData does not exist
+          assertFalse(TomeLockData.isExpired(TomeLockData.Mode.PERMANENT, -1, 0));
+                                                         ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:134: error: package TomeLockData does not exist
+          assertEquals(TomeLockData.Mode.FULL_CHARGE, TomeLockData.Mode.fromToken("full_charge"));
+                                   ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:134: error: package TomeLockData does not exist
+          assertEquals(TomeLockData.Mode.FULL_CHARGE, TomeLockData.Mode.fromToken("full_charge"));
+                                                                  ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:135: error: package TomeLockData does not exist
+          assertEquals(TomeLockData.Mode.PERMANENT, TomeLockData.Mode.fromToken("unknown"));
+                                   ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:135: error: package TomeLockData does not exist
+          assertEquals(TomeLockData.Mode.PERMANENT, TomeLockData.Mode.fromToken("unknown"));
+                                                                ^
+  25 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileTestJava'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -95,15 +288,108 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/EnchantementListWidget.java:1313: error: method drawPlaque in class RowRenderSupport cannot be applied to given types;
-                RowRenderSupport.drawPlaque(ctx, client, dx, dy, dw, dh,
-                                ^
-  required: GuiGraphicsExtractor,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
-  found:    GuiGraphicsExtractor,Minecraft,int,int,int,int,RowVisualStyle,boolean,boolean,boolean
-  reason: actual and formal argument lists differ in length
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-1 error
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:115: error: package TomeLockData does not exist
+        assertEquals(2, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 3));
+                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:115: error: cannot find symbol
+        assertEquals(2, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 3));
+                        ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:116: error: package TomeLockData does not exist
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 0));
+                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:116: error: cannot find symbol
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 0));
+                        ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:117: error: package TomeLockData does not exist
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.FULL_CHARGE, 3));
+                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:117: error: cannot find symbol
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.FULL_CHARGE, 3));
+                        ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:118: error: package TomeLockData does not exist
+        assertEquals(-1, TomeLockData.targetWearFor(TomeLockData.Mode.PERMANENT, 3));
+                                                                ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:118: error: cannot find symbol
+        assertEquals(-1, TomeLockData.targetWearFor(TomeLockData.Mode.PERMANENT, 3));
+                         ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:119: error: cannot find symbol
+        assertEquals(-1, TomeLockData.targetWearFor(null, 3));
+                         ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:123: error: package TomeLockData does not exist
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 3));
+                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:123: error: cannot find symbol
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 3));
+                    ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:124: error: package TomeLockData does not exist
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 2));
+                                                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:124: error: cannot find symbol
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 2));
+                   ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:125: error: package TomeLockData does not exist
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.FULL_CHARGE, 0, 0));
+                                                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:125: error: cannot find symbol
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.FULL_CHARGE, 0, 0));
+                   ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:126: error: package TomeLockData does not exist
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.PERMANENT, -1, 0));
+                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:126: error: cannot find symbol
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.PERMANENT, -1, 0));
+                    ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:130: error: cannot find symbol
+        assertEquals(900, TomeLockData.ticksToNextCharge(3, 100L, 1000));
+                          ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:131: error: cannot find symbol
+        assertEquals(2900, TomeLockData.ticksToFullCharge(3, 100L, 1000));
+                           ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:132: error: cannot find symbol
+        assertEquals(-1, TomeLockData.ticksToNextCharge(0, 100L, 1000));
+                         ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:133: error: cannot find symbol
+        assertEquals(-1, TomeLockData.ticksToFullCharge(3, 100L, Integer.MAX_VALUE));
+                         ^
+  symbol:   variable TomeLockData
+  location: class AuditMechanicsTest
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:134: error: package TomeLockData does not exist
+        assertEquals(TomeLockData.Mode.FULL_CHARGE, TomeLockData.Mode.fromToken("full_charge"));
+                                 ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:134: error: package TomeLockData does not exist
+        assertEquals(TomeLockData.Mode.FULL_CHARGE, TomeLockData.Mode.fromToken("full_charge"));
+                                                                ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:135: error: package TomeLockData does not exist
+        assertEquals(TomeLockData.Mode.PERMANENT, TomeLockData.Mode.fromToken("unknown"));
+                                 ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditMechanicsTest.java:135: error: package TomeLockData does not exist
+        assertEquals(TomeLockData.Mode.PERMANENT, TomeLockData.Mode.fromToken("unknown"));
+                                                              ^
+25 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -244,8 +530,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 16s
-3 actionable tasks: 3 executed
+BUILD FAILED in 19s
+5 actionable tasks: 5 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
