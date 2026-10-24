@@ -67,9 +67,11 @@ public class ChiseledEnchantingTable implements ModInitializer {
                 if (slot >= 0 && slot < shelf.getContainerSize()
                     && chiseled_enchanting_table.mechanics.resonance.TomeLock
                         .isEffectivelyLocked(shelf.getItem(slot))) {
-                    player.displayClientMessage(
-                        net.minecraft.network.chat.Component.translatable(
-                            "gui.chiseled_enchanting_table.tomes.take_locked"), true);
+                    if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                        sp.sendSystemMessage(
+                            net.minecraft.network.chat.Component.translatable(
+                                "gui.chiseled_enchanting_table.tomes.take_locked"), true);
+                    }
                 }
             }
             return InteractionResult.PASS;

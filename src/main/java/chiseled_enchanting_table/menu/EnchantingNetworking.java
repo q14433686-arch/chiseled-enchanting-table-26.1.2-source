@@ -161,7 +161,7 @@ public final class EnchantingNetworking {
         if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().featurePageLocks()
             || ChiseledEnchantingTableScreenHandler.isCleanseUnlockedFor(player)) {
             chiseled_enchanting_table.utils.Advancement.give(player, "unlock_cleanse");
-            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
                 "gui.chiseled_enchanting_table.unlock_cleanse.already"), true);
             return;
         }
@@ -180,7 +180,7 @@ public final class EnchantingNetworking {
             }
         }
         if (tablePos == null) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
                 "gui.chiseled_enchanting_table.unlock_cleanse.no_table"), true);
             return;
         }
@@ -188,7 +188,7 @@ public final class EnchantingNetworking {
         var scan = chiseled_enchanting_table.block.ChiseledEnchantingTableBlock
             .scanShelfTomes(level, tablePos, player);
         if (scan.depletedTomes() < need) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
                 "gui.chiseled_enchanting_table.unlock_cleanse.progress",
                 scan.depletedTomes(), need), true);
             return;
@@ -207,7 +207,7 @@ public final class EnchantingNetworking {
             1.0F,
             1.2F
         );
-        player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+        player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
             "gui.chiseled_enchanting_table.unlock_cleanse.done"), true);
     }
 }

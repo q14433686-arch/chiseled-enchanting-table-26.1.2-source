@@ -518,7 +518,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     .ShelfTomeEntry.MAX_ENTRIES) continue;
                 var enchants = net.minecraft.world.item.enchantment.EnchantmentHelper
                     .getEnchantmentsForCrafting(stack);
-                Identifier firstId = ChiseledEnchantingTable.identifier("unknown");
+                Identifier firstId = chiseled_enchanting_table.ChiseledEnchantingTable.identifier("unknown");
                 int firstLevel = 0;
                 int count = 0;
                 for (var e : enchants.entrySet()) {

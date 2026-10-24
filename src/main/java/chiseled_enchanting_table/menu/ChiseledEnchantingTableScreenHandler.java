@@ -2342,6 +2342,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     // ---- Dispatch ----
 
+    /** Action-bar feedback for tome-lock/cleanse-gate outcomes (server only). */
+    private void actionBar(net.minecraft.network.chat.Component message, boolean overlay) {
+        if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            sp.sendSystemMessage(message, overlay);
+        }
+    }
+
     /** Server-side Cleanse page gate (per-player advancement + master config switch). */
     public static boolean isCleanseUnlockedFor(Player who) {
         if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().featurePageLocks()) {
@@ -2385,12 +2392,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                         continue;
                     }
                     if (this.player.experienceLevel < 1) {
-                        this.player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                        actionBar(net.minecraft.network.chat.Component.translatable(
                             "gui.chiseled_enchanting_table.tomes.unlock_need_xp"), true);
                         return;
                     }
                     if (!consumeOneCleansingGrit()) {
-                        this.player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                        actionBar(net.minecraft.network.chat.Component.translatable(
                             "gui.chiseled_enchanting_table.tomes.unlock_need_grit"), true);
                         return;
                     }
@@ -2410,7 +2417,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                     }
                     if (mode != chiseled_enchanting_table.mechanics.resonance.TomeLock.Mode.PERMANENT
                         && chiseled_enchanting_table.mechanics.resonance.TomeWearData.getWearUsed(book) <= 0) {
-                        this.player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                        actionBar(net.minecraft.network.chat.Component.translatable(
                             "gui.chiseled_enchanting_table.tomes.lock_already_full"), true);
                         continue;
                     }
@@ -2424,11 +2431,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             }
         });
         if (denied[0]) {
-            this.player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+            actionBar(net.minecraft.network.chat.Component.translatable(
                 "gui.chiseled_enchanting_table.tomes.lock_not_yours"), true);
         }
         if (done[0] > 0) {
-            this.player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+            actionBar(net.minecraft.network.chat.Component.translatable(
                 payload.mode() == 0
                     ? "gui.chiseled_enchanting_table.tomes.unlocked"
                     : "gui.chiseled_enchanting_table.tomes.locked", done[0]), true);
@@ -2459,7 +2466,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             }
             // Feature-page lock is enforced server-side; a locked client tab is only UI.
             if (!isCleanseUnlockedFor(this.player)) {
-                this.player.displayClientMessage(
+                actionBar(
                     net.minecraft.network.chat.Component.translatable(
                         "gui.chiseled_enchanting_table.locked.cleanse_hint"), true);
                 return;
