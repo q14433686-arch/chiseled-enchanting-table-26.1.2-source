@@ -35,6 +35,16 @@ class NetworkCompatibilityTest {
         var display = new TransformationDisplay(id("rule"), id("input_tag"), true, id("out"), 2, 30, 3, true);
         roundTrip(AvailableEnchantmentPayload.AVAILABLE_CHISELED_ENCHANTMENT_CODEC,
             new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789, masters, true));
+        // Round 2: persistent page state (unlock flags + sacrifice progress) rides the
+        // opening payload and must survive the codec bit-exactly.
+        var openingState = new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789,
+            masters, true, 9, 2, Map.of(new EnchantmentWithLevel(id("one"), 1), 3), true, false, 7, 12, 4);
+        roundTrip(AvailableEnchantmentPayload.AVAILABLE_CHISELED_ENCHANTMENT_CODEC, openingState);
+        assertTrue(openingState.cleanse_unlocked());
+        assertFalse(openingState.tome_page_unlocked());
+        assertEquals(7, openingState.sacrifice_progress());
+        assertEquals(12, openingState.sacrifice_required());
+        assertEquals(4, openingState.tome_page_required_shelves());
         roundTrip(LiveShelfStatePayload.CODEC,
             new LiveShelfStatePayload(27, unlocked, 37, 38, 123, 17, masters, true));
         roundTrip(LiveShelfStatePayload.CODEC,

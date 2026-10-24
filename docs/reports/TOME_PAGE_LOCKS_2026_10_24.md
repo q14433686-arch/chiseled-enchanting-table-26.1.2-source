@@ -66,3 +66,18 @@ and suppressed packet-handling errors. Fix: the `List` descriptors (already
 in `25a19ef`, verified by the CI server smoke) plus `require = 0` on both
 auxiliary injections, so any future descriptor drift degrades the lock
 guard instead of corrupting world I/O.
+
+## 现场反馈第二轮（2026-10-24 23:10 截图）修复记录
+
+玩家在实机截图中报告十项问题，逐项定位与修复如下（线协议升至 `26_1_2_revision_12`，`revision_11` 按策略保留为 query-only 探针）：
+
+1. **UI 文字溢出/挤压**：锁定行改用短模式文案（已锁·满/永久/+1）并附剩余时间与主人，行内文字由 bounded 渲染裁剪；右侧按钮上移并改 AI 贴图底（见 9）。
+2. **解锁判定延迟约 1 秒**：解锁标记与献祭进度本质是按玩家持久化的进度（advancement），现随**开屏载荷**（`AvailableEnchantmentPayload` 新增 5 字段）从服务端进度直接下发，第一帧即正确，不再等 20 tick 广播；后续仍由实时广播保鲜。
+3. **献祭 0/12 不变**：同 2，开屏即显示真实进度；献祭扫描放宽为扫描体积内全部雕纹书架（不再受呼吸空间/视线门控误杀），且无可献祭时提示写明需先放入附魔台周围雕纹书架。
+4. **锁定剩余时间不可见**：列表行、悬停提示均显示限时锁的剩余时长（锁至 +1 用 eta_next、锁至满用 eta_full），新增「还需 %s 后自动解除」提示行。
+5. **锁定书可右键取出**：原版右键取书不走 `ContainerHelper`，改由 `UseBlockCallback` 在书架正面按原版命中槽位公式拦截，并发送动作栏提示「该书已被锁定，时长为：…」（永久/约 X 时长，按最近附魔台的实时速率估算）。
+6. **献祭未记载在册**：献祭进度以 12 条成就准则为唯一记录（玩家进度文件持久化），修复后计数在开屏与献祭后即时可见、可核查。
+7. **文本数值与事实脱节**：秘典第 3 章、图示 5、JEI 两条信息、WIKI 中的「每级 16 次/16 件」均为旧值——现全部由实时配置注入（捆绑默认 `max_tome_uses = 4`、`book_copy_wear_cost = 2`，见 `library_resonance.json`）；秘典第 9 章的献祭数/书架数/解锁费用改为读取代码常量；提前解锁费用抽为 `EARLY_UNLOCK_*` 常量供服务端与文案共用。
+8. **易读性**：纂刻的书页移除「广义书架」，改为「书架总数」；「还差 XX 架」改为「还差 XX 架至下一阶段」；速率行加「当前速率」前缀；左侧列表悬停提示改为「+1 耐久还需 … / 满耐久则需 …」。注：用户提及的文字建议 ZIP 未随本次反馈送达工作区，以上按本条明确要求执行，如 ZIP 另有细则可再对齐。
+9. **新 UI 素材**：页签（激活/未激活）与锁定按钮底图改用 AI 生成的秘术风格贴图（`tab_tome_active/inactive.png`、`tome_button.png`，148×36 / 100×24，已按原 UV 尺寸落盘）。
+10. **锁定/解锁重置充能进度（BUG）**：根因是锁定写回用了 `ItemStack.copy()` 新实例，而恢复调度器按**引用同一性**认书，新实例被当作新书从零计时。现锁定/批量锁定/到期解锁全部改为**原地修改**同一实例（`TomeLockData` 本就原地编辑 CUSTOM_DATA），调度进度得以保留；`WorldRegeneration` 的到期解锁同改。
