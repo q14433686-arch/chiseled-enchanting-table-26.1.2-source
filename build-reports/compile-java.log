@@ -1,4 +1,4 @@
-commit: 0ef18307b3b16a34a2bb522e2595c71e80b4d3e5
+commit: 028a2d615e345450bea09156e3464b198a26c238
 branch: arena/649fac5c-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -76,17 +76,17 @@ ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
 
 ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
 
-ConfigurationSafetyTest > allFourPresetsRoundTripPreserveStackSizeAndRestore103Semantics() STANDARD_OUT
-    [23:09:18] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+ConfigurationSafetyTest > allFourPresetsRoundTripRestore64BookStackAnd103Semantics() STANDARD_OUT
+    [23:31:36] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
     java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
     	at java.base/java.nio.file.Files.provider(Files.java:103)
     	at java.base/java.nio.file.Files.exists(Files.java:2289)
     	at net.fabricmc.loader.impl.FabricLoaderImpl.getConfigDir(FabricLoaderImpl.java:177)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:634)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:640)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:568)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:650)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:656)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:563)
     	at chiseled_enchanting_table.data.ChiseledEnchantingTableData.<clinit>(ChiseledEnchantingTableData.java:149)
-    	at chiseled_enchanting_table.ConfigurationSafetyTest.allFourPresetsRoundTripPreserveStackSizeAndRestore103Semantics(ConfigurationSafetyTest.java:80)
+    	at chiseled_enchanting_table.ConfigurationSafetyTest.allFourPresetsRoundTripRestore64BookStackAnd103Semantics(ConfigurationSafetyTest.java:80)
     	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
     	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
     	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
@@ -170,7 +170,7 @@ ConfigurationSafetyTest > allFourPresetsRoundTripPreserveStackSizeAndRestore103S
     	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
     	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
 
-ConfigurationSafetyTest > allFourPresetsRoundTripPreserveStackSizeAndRestore103Semantics() PASSED
+ConfigurationSafetyTest > allFourPresetsRoundTripRestore64BookStackAnd103Semantics() PASSED
 
 ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
 
@@ -281,7 +281,7 @@ RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
 RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792883336510.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792884678221.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -291,7 +291,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 33s
+BUILD SUCCESSFUL in 30s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
