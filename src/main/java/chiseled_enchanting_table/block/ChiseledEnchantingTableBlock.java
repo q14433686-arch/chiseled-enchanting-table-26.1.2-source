@@ -294,12 +294,6 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     }
 
     @Nullable
-    @Override
-    protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
-        return createChiseledEnchantingTableMenuProvider(state, level, pos);
-    }
-
-    @Nullable
     protected MenuProvider createChiseledEnchantingTableMenuProvider(BlockState state, Level level, BlockPos pos) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (!(blockEntity instanceof ChiseledEnchantingTableBlockEntity tableBlockEntity)) {

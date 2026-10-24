@@ -127,4 +127,8 @@ public final class CetCustomData {
             stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
         }
     }
+
+    public static void mutate(ItemStack stack, Consumer<CompoundTag> mutator) {
+        update(stack, mutator);
+    }
 }

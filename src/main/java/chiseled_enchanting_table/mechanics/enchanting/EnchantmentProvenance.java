@@ -180,6 +180,14 @@ public final class EnchantmentProvenance {
         });
     }
 
+    /** Clears all table-provenance metadata from {@code stack} (e.g. in 1.0.3 Classic Purist mode). */
+    public static void clearAll(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !CetCustomData.read(stack).map(r -> r.contains(NBT_PROVENANCE_KEY)).orElse(false)) {
+            return;
+        }
+        CetCustomData.update(stack, root -> root.remove(NBT_PROVENANCE_KEY));
+    }
+
     private static void applyCanonicalProvenance(CompoundTag root, CompoundTag unsortedProv) {
         if (unsortedProv == null || unsortedProv.isEmpty()) {
             root.remove(NBT_PROVENANCE_KEY);

@@ -86,8 +86,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
             || !ModRuntimeConfig.effective().restrictVillagerInfinityBooks()) {
             return;
         }
-        java.util.Optional<net.minecraft.core.HolderLookup.RegistryLookup<net.minecraft.world.item.enchantment.Enchantment>> enchRegistryOpt =
-            world.registryAccess().lookup(Registries.ENCHANTMENT);
+        var enchRegistryOpt = world.registryAccess().lookup(Registries.ENCHANTMENT);
         for (int i = 0; i < offers.size(); i++) {
             MerchantOffer offer = offers.get(i);
             ItemStack result = offer.getResult();
