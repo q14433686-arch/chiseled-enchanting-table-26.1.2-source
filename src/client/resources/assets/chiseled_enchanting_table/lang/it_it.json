@@ -752,10 +752,9 @@
   "config.chiseled_enchanting_table.preset.label": "Predefiniti",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.short": "1.0.3 Classico",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.title": "Preset: 1.0.3 Classic Purist",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.desc": "Restores 1.0.3 behavior: +Bookshelves/3 boost on defaults & stored books, 5x5x5 scan, immortal books, 0s wait, plain Book return, only Enchanted Golden Apple & Bottle o' Enchanting transformations, and hides Cleanse/Tomes tabs & side consoles.",
+  "config.chiseled_enchanting_table.preset.classic_1_0_3.desc": "Restores 1.0.3 behavior: 64-stackable Enchanted Books, +Bookshelves/3 boost on defaults & stored books, 5x5x5 scan, immortal books, 0s wait, plain Book return, only Enchanted Golden Apple & Bottle o' Enchanting transformations, and hides Cleanse/Tomes tabs & side consoles.",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.inert_note": "Note: Post-1.0.3 items (Depleted Tome, Arcane Grimoire) and loot codecs remain registered for world safety and are rendered gameplay-inert.",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.stack_warning": "Warning: Enchanted Book stack size (1 in 1.0.3 vs 64 default) is NOT auto-lowered. Lowering 64 → 1 requires a restart AND risks item loss/load errors if existing chests hold stacked Enchanted Books!",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice": "1.0.3 Classic preset loaded into draft — click Save & Apply (stack size preserved for save safety).",
+  "config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice": "1.0.3 Classic preset loaded into draft — click Save & Apply to synchronize.",
   "config.chiseled_enchanting_table.preset.casual.short": "Casual",
   "config.chiseled_enchanting_table.preset.casual.title": "Preset: Casual",
   "config.chiseled_enchanting_table.preset.casual.desc": "Relaxed progression: immortal Master Tomes, no direct shelf gates or line-of-sight block, wider 9x5x9 scan, faster regen, up to -50% XP discount, and 100% table XP refund.",
@@ -768,5 +767,5 @@
   "config.chiseled_enchanting_table.preset.note_new_chunks": "Worldgen & structure loot settings only affect newly generated chunks / unopened chests.",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "Save Risk: Lowering stack size requires a full client+server restart and can truncate or break loading of containers that already hold stacked Enchanted Books!",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ Lowering book stack size needs restart & risks stacked books in saves!",
-  "config.chiseled_enchanting_table.msg.classic_1_0_3_active": "1.0.3 Classic Mode active (new-chunk & stack-size caveats apply)"
+  "config.chiseled_enchanting_table.msg.classic_1_0_3_active": "1.0.3 Classic Mode active (worldgen settings apply to new chunks)"
 }

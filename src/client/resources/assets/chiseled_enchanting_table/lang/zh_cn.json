@@ -752,10 +752,9 @@
   "config.chiseled_enchanting_table.preset.label": "预设",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.short": "1.0.3 原味",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.title": "预设：1.0.3 原汁原味",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.desc": "逐项还原 1.0.3 玩法：默认魔咒与雕纹书架藏书均按 +普通书架/3 提级、5×5×5 无视线扫描、母本无限不磨损、0 秒等待、空书返还原版书、仅保留附魔金苹果(3级)与附魔之瓶(1级)两项置换，并隐藏去除附魔/纂刻的书页签与右侧面板。",
+  "config.chiseled_enchanting_table.preset.classic_1_0_3.desc": "逐项还原 1.0.3 玩法：64 附魔书堆叠上限、默认魔咒与雕纹书架藏书均按 +普通书架/3 提级、5×5×5 无视线扫描、母本无限不磨损、0 秒等待、空书返还原版书、仅保留附魔金苹果(3级)与附魔之瓶(1级)两项置换，并隐藏去除附魔/纂刻的书页签与右侧面板。",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.inert_note": "说明：1.0.3 之后新增的物品（褪魔残卷、奥术秘典等）与战利品序列化器仍保留注册以保障存档兼容，相关新机制已做无效化处理。",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.stack_warning": "⚠ 重要提示：附魔书堆叠上限（1.0.3 为 1，当前默认 64）不会被本预设自动改小！因为修改堆叠上限必须重启客户端与服务端，且若存档箱子内已有堆叠数 >1 的附魔书，强行调小会导致物品截断或区块读取异常！",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice": "已载入「1.0.3 原汁原味」预设草稿，请点击「保存并应用」（为保护已有存档未改动附魔书堆叠上限）。",
+  "config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice": "已载入「1.0.3 原汁原味」预设草稿，请点击「保存并应用」以同步生效。",
   "config.chiseled_enchanting_table.preset.casual.short": "休闲",
   "config.chiseled_enchanting_table.preset.casual.title": "预设：休闲模式",
   "config.chiseled_enchanting_table.preset.casual.desc": "轻松护肝：母本无限不磨损、无书架直附门槛与视线遮挡限制、9×5×9 大范围扫描、温养翻倍提速、最高 -50% 经验减免、台内退魔 100% 返还。",
@@ -768,5 +767,5 @@
   "config.chiseled_enchanting_table.preset.note_new_chunks": "提示：世界生成与结构宝箱战利品选项仅对新探索区块与未开启的箱子生效。",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "⚠ 存档风险：调小附魔书堆叠上限需重启双端；若现有存档容器内已存放堆叠数 >1 的附魔书，调小上限可能导致物品丢失或读取报错！",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ 调小附魔书堆叠需重启，且对已有堆叠附魔书的存档存在风险！",
-  "config.chiseled_enchanting_table.msg.classic_1_0_3_active": "已启用 1.0.3 原汁原味模式（新区块与堆叠上限注意事项见悬停说明）"
+  "config.chiseled_enchanting_table.msg.classic_1_0_3_active": "已启用 1.0.3 原汁原味模式（新区块生成注意事项见悬停说明）"
 }

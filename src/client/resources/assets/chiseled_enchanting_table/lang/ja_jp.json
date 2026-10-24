@@ -752,10 +752,9 @@
   "config.chiseled_enchanting_table.preset.label": "プリセット",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.short": "1.0.3 原点",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.title": "プリセット：1.0.3 クラシック",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.desc": "1.0.3の仕様を再現：+通常本棚/3補正、5×5×5走査、原典無限、待機0秒、空本は本に返却、エンチャントされた金のリンゴとエンチャントの瓶のみ変換、浄化・原典タブと右パネルを非表示にします。",
+  "config.chiseled_enchanting_table.preset.classic_1_0_3.desc": "1.0.3の仕様を再現：エンチャント本64スタック、+通常本棚/3補正、5×5×5走査、原典無限、待機0秒、空本は本に返却、エンチャントされた金のリンゴとエンチャントの瓶のみ変換、浄化・原典タブと右パネルを非表示にします。",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.inert_note": "補足：セーブ互換のため1.0.3以降のアイテム登録は維持され、新要素は無効化処理されます。",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.stack_warning": "⚠ 注意：エンチャント本のスタック数（1.0.3は1、標準64）は自動変更しません。64→1への縮小は再起動が必要で、既存チェスト内のスタック本が消失・読込異常を起こす恐れがあります！",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice": "「1.0.3 クラシック」を下書きに読み込みました。「保存して適用」を押してください（セーブ保護のためスタック数は維持）。",
+  "config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice": "「1.0.3 クラシック」を下書きに読み込みました。「保存して適用」を押してください。",
   "config.chiseled_enchanting_table.preset.casual.short": "カジュアル",
   "config.chiseled_enchanting_table.preset.casual.title": "プリセット：カジュアル",
   "config.chiseled_enchanting_table.preset.casual.desc": "快適重視：原典摩耗なし、本棚段階制限・視線制限なし、9×5×9広範囲走査、高速回復、最大-50%経験値割引。",
@@ -768,5 +767,5 @@
   "config.chiseled_enchanting_table.preset.note_new_chunks": "ワールド生成・構造物チェスト設定は新規生成チャンクと未開封チェストにのみ適用されます。",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "⚠ セーブ危険：スタック上限を下げると再起動が必要で、既にスタックされたエンチャント本があるワールドで消失・エラーの原因になります！",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ スタック上限の縮小は再起動必須＆既存スタック本に危険あり！",
-  "config.chiseled_enchanting_table.msg.classic_1_0_3_active": "1.0.3 クラシック有効（新規チャンク・スタック上限の注意はツールチップ参照）"
+  "config.chiseled_enchanting_table.msg.classic_1_0_3_active": "1.0.3 クラシック有効（ワールド生成設定は新規チャンクに適用）"
 }

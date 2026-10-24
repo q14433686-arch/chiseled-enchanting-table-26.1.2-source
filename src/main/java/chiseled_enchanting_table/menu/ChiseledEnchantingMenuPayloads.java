@@ -467,7 +467,10 @@ public final class ChiseledEnchantingMenuPayloads {
         }
 
         public static List<TransformationDisplay> buildTransformationDisplays(@Nullable Player player) {
-            boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+            boolean classic103 = (player != null
+                ? chiseled_enchanting_table.config.ModRuntimeConfig.forSide(player.level().isClientSide())
+                : chiseled_enchanting_table.config.ModRuntimeConfig.forSide(false)
+            ).classic103Mode();
             if (classic103) {
                 return List.of(
                     new TransformationDisplay(

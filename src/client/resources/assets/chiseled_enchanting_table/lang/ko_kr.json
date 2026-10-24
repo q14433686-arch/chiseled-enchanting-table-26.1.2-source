@@ -752,10 +752,9 @@
   "config.chiseled_enchanting_table.preset.label": "프리셋",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.short": "1.0.3 원작",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.title": "프리셋: 1.0.3 클래식",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.desc": "1.0.3 규칙 복원: +일반 책장/3 보너스, 5×5×5 스캔, 원본 무제한, 대기 0초, 빈 책 반환, 마법이 부여된 황금 사과·경험치 병 변환만 유지, 정화/원본 탭 및 우측 패널 숨김.",
+  "config.chiseled_enchanting_table.preset.classic_1_0_3.desc": "1.0.3 규칙 복원: 마법 책 64개 겹침, +일반 책장/3 보너스, 5×5×5 스캔, 원본 무제한, 대기 0초, 빈 책 반환, 마법이 부여된 황금 사과·경험치 병 변환만 유지, 정화/원본 탭 및 우측 패널 숨김.",
   "config.chiseled_enchanting_table.preset.classic_1_0_3.inert_note": "참고: 월드 호환성을 위해 1.0.3 이후 추가된 아이템은 등록 상태로 유지되며 관련 신규 기능은 비활성화됩니다.",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.stack_warning": "⚠ 경고: 마법이 부여된 책 겹침 수(1.0.3은 1, 기본 64)는 자동 축소하지 않습니다! 64→1 축소는 재시작이 필요하며 기존 상자에 겹쳐진 책이 있으면 유실·오류가 발생할 수 있습니다!",
-  "config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice": "'1.0.3 클래식' 프리셋을 불러왔습니다. '저장 및 적용'을 누르세요 (세이브 보호를 위해 겹침 수는 유지됨).",
+  "config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice": "'1.0.3 클래식' 프리셋을 불러왔습니다. '저장 및 적용'을 누르세요.",
   "config.chiseled_enchanting_table.preset.casual.short": "캐주얼",
   "config.chiseled_enchanting_table.preset.casual.title": "프리셋: 캐주얼",
   "config.chiseled_enchanting_table.preset.casual.desc": "편안한 진행: 원본 무제한, 책장 단계 및 시야 제한 해제, 9×5×9 스캔, 빠른 회복, 최대 -50% 경험치 할인.",
@@ -768,5 +767,5 @@
   "config.chiseled_enchanting_table.preset.note_new_chunks": "월드 생성 및 구조물 전리품 설정은 새로 생성되는 청크와 아직 열지 않은 상자에만 적용됩니다.",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "⚠ 세이브 위험: 겹침 한도를 낮추면 재시작이 필요하며, 이미 겹쳐진 마법 책이 들어 있는 보관함에서 아이템 손실이나 오류가 날 수 있습니다!",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ 마법 책 겹침 축소는 재시작 필요 및 기존 세이브 손실 위험!",
-  "config.chiseled_enchanting_table.msg.classic_1_0_3_active": "1.0.3 클래식 모드 활성 (신규 청크·겹침 수 주의사항은 툴팁 참고)"
+  "config.chiseled_enchanting_table.msg.classic_1_0_3_active": "1.0.3 클래식 모드 활성 (월드 생성 설정은 신규 청크에 적용)"
 }

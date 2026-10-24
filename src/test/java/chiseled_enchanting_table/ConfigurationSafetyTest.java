@@ -47,17 +47,17 @@ class ConfigurationSafetyTest {
         assertFalse(ModRuntimeConfig.acknowledgedSaveAccepted());
     }
 
-    @Test void allFourPresetsRoundTripPreserveStackSizeAndRestore103Semantics() {
+    @Test void allFourPresetsRoundTripRestore64BookStackAnd103Semantics() {
         var draft = ModRuntimeConfig.DEFAULT.toDraft();
-        draft.enchantedBookStackSize = 64;
+        draft.enchantedBookStackSize = 1;
         draft.overrideDatapacks = true;
-        assertTrue(ModRuntimeConfig.Preset.STANDARD.matches(draft));
 
         for (ModRuntimeConfig.Preset preset : ModRuntimeConfig.Preset.values()) {
+            draft.enchantedBookStackSize = 1;
             preset.applyTo(draft);
             assertTrue(preset.matches(draft), "Preset must match draft right after applyTo: " + preset);
             assertEquals(64, draft.enchantedBookStackSize,
-                "Presets must NEVER auto-shrink enchantedBookStackSize (save-truncation safety): " + preset);
+                "All 4 presets (including 1.0.3 Classic) must set 64 Enchanted Book stack size: " + preset);
             assertTrue(draft.overrideDatapacks, "Presets must preserve overrideDatapacks governance toggle");
             var roundTripped = ModRuntimeConfig.fromJsonString(draft.build().toJsonString()).toDraft();
             assertTrue(preset.matches(roundTripped), "Preset must survive JSON round-trip: " + preset);

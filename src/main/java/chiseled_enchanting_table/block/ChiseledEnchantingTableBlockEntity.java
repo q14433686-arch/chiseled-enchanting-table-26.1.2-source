@@ -563,7 +563,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 m.set(key, working.getLevel(key));
             }
         });
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig
+            .forSide(level != null && level.isClientSide()).classic103Mode();
         if (!classic103) {
             EnchantmentProvenance.pruneToCurrentEnchantments(
                 currentTarget,

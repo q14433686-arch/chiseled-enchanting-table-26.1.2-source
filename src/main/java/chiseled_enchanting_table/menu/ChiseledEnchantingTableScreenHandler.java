@@ -530,7 +530,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean isClassic103Mode() {
-        return chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        return chiseled_enchanting_table.config.ModRuntimeConfig.forSide(this.world.isClientSide()).classic103Mode();
     }
 
     public boolean isCleansePageUnlocked() {

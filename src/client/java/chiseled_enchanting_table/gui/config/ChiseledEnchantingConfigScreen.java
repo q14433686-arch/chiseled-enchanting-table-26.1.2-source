@@ -174,8 +174,6 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (preset == ModRuntimeConfig.Preset.CLASSIC_1_0_3) {
             lines.add(Component.translatable("config.chiseled_enchanting_table.preset.classic_1_0_3.inert_note")
                 .withStyle(ChatFormatting.YELLOW));
-            lines.add(Component.translatable("config.chiseled_enchanting_table.preset.classic_1_0_3.stack_warning")
-                .withStyle(ChatFormatting.RED));
         }
         return lines;
     }

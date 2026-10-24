@@ -172,28 +172,24 @@ public record ModRuntimeConfig(
         }
 
         /**
-         * Applies this preset onto {@code draft} while preserving {@code enchantedBookStackSize}
-         * (startup-only DataComponent limit whose sudden reduction from 64 to 1 on an existing save
-         * holding stacked Enchanted Books would risk chunk/inventory load validation errors) and
-         * preserving the user's {@code overrideDatapacks} governance flag.
+         * Applies this preset onto {@code draft} with the canonical 64 Enchanted Book stack limit
+         * (all 4 presets — including 1.0.3 Classic — natively use 64-stackable Enchanted Books,
+         * which never shrinks container stacks) while preserving the user's {@code overrideDatapacks}
+         * governance flag.
          */
         public void applyTo(Draft draft) {
             if (draft == null) {
                 return;
             }
-            int preservedStackSize = draft.enchantedBookStackSize;
             boolean preservedOverrideDp = draft.overrideDatapacks;
 
             Draft fresh = new Draft();
-            fresh.enchantedBookStackSize = preservedStackSize;
+            fresh.enchantedBookStackSize = 64;
             fresh.overrideDatapacks = preservedOverrideDp;
 
             switch (this) {
                 case STANDARD -> {
-                    // Pure shipped defaults; clear customizedKeys except stack-size if non-default.
-                    if (preservedStackSize != 64) {
-                        fresh.customizedKeys.add("enchanted_book_stack_size");
-                    }
+                    // Pure shipped defaults (including 64-stackable Enchanted Books).
                 }
                 case CLASSIC_1_0_3 -> {
                     fresh.classic103Mode = true;
@@ -323,9 +319,8 @@ public record ModRuntimeConfig(
             draft.copyFrom(fresh);
         }
 
-        public ModRuntimeConfig createConfig(int stackSize, boolean overrideDp) {
+        public ModRuntimeConfig createConfig(boolean overrideDp) {
             Draft probe = new Draft();
-            probe.enchantedBookStackSize = stackSize;
             probe.overrideDatapacks = overrideDp;
             applyTo(probe);
             return probe.build();
@@ -335,7 +330,7 @@ public record ModRuntimeConfig(
             if (draft == null) {
                 return false;
             }
-            return draft.build().equals(createConfig(draft.enchantedBookStackSize, draft.overrideDatapacks));
+            return draft.build().equals(createConfig(draft.overrideDatapacks));
         }
 
         private static void markModifiedRuntimeKeys(Draft target) {
@@ -577,6 +572,27 @@ public record ModRuntimeConfig(
     public static ModRuntimeConfig effective() {
         ModRuntimeConfig remote = remoteServerInstance;
         return remote != null ? remote : ChiseledEnchantingTableData.runtimeConfiguration();
+    }
+
+    /**
+     * Side-aware authoritative config accessor: server threads (Dedicated Server and LAN/Singleplayer
+     * IntegratedServer) always read {@link ChiseledEnchantingTableData#runtimeConfiguration()}, while
+     * client threads read the server-synced {@link #effective()} snapshot.
+     */
+    public static ModRuntimeConfig forSide(boolean isClientSide) {
+        return isClientSide ? effective() : ChiseledEnchantingTableData.runtimeConfiguration();
+    }
+
+    /**
+     * Updates {@link #remoteServerInstance} immediately on the same JVM when an IntegratedServer
+     * (Singleplayer / Open-to-LAN host) commits a config change, eliminating any 1-tick client/server
+     * snapshot lag before the loopback sync packet executes on the render thread.
+     */
+    public static void refreshSameJvmRemoteIfPresent(ModRuntimeConfig effectiveSynced, PackPolicy policy) {
+        if (remoteServerInstance != null) {
+            remoteServerInstance = effectiveSynced;
+            remotePackPolicy = policy;
+        }
     }
 
     /**

@@ -193,6 +193,10 @@ public final class ModConfigNetworking {
         ModRuntimeConfig sanitized = updated.withEnforcedPolicy(ModRuntimeConfig.serverPackPolicy());
         ChiseledEnchantingTableData.applyRuntimeConfig(sanitized, ModRuntimeConfig.serverPackPolicy(),
             () -> ModRuntimeConfig.setLocalAndSave(sanitized));
+        ModRuntimeConfig.refreshSameJvmRemoteIfPresent(
+            ChiseledEnchantingTableData.runtimeConfiguration(),
+            ModRuntimeConfig.serverPackPolicy()
+        );
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             // Rule changes can invalidate opening-time unlock/scan snapshots. Vanilla returns inputs.
             if (p.containerMenu instanceof ChiseledEnchantingTableScreenHandler openMenu) {

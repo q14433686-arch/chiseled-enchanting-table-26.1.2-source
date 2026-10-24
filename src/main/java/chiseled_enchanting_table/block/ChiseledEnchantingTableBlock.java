@@ -380,7 +380,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public Set<EnchantmentWithLevel> enchantments_unlocked_by_default(Level level) {
         var lookup = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         Set<EnchantmentWithLevel> base = ChiseledEnchantingTableData.defaultEnchantments(lookup);
-        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode()) {
+        if (!chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).classic103Mode()) {
             return base;
         }
         java.util.HashSet<EnchantmentWithLevel> classic = new java.util.HashSet<>(base);
@@ -399,7 +399,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     private Set<EnchantmentWithLevel> getUnlockedEnchantmentsFromPower(Level level, ShelfPower shelfPower) {
         Map<Identifier, Integer> highestLevels = new HashMap<>();
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).classic103Mode();
 
         if (classic103) {
             // 1.0.3 exact rule: both default enchantments and stored Chiseled Bookshelf books gain +W/3 up to maxLevel.
