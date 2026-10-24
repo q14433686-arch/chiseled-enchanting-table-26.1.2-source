@@ -68,7 +68,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final Identifier TAB_INSCRIBE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_inactive.png");
     private static final Identifier TAB_CLEANSE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_active.png");
     private static final Identifier TAB_CLEANSE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_inactive.png");
-    private static final Identifier TOME_BUTTON = ChiseledEnchantingTable.identifier("gui/tome_button.png");
+    private static final Identifier[] TOME_BUTTONS = {
+        ChiseledEnchantingTable.identifier("gui/tome_button_0.png"),
+        ChiseledEnchantingTable.identifier("gui/tome_button_1.png"),
+        ChiseledEnchantingTable.identifier("gui/tome_button_2.png"),
+        ChiseledEnchantingTable.identifier("gui/tome_button_3.png"),
+        ChiseledEnchantingTable.identifier("gui/tome_button_4.png")
+    };
     private static final Identifier TAB_TOME_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_active.png");
     private static final Identifier TAB_TOME_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_inactive.png");
 
@@ -840,7 +846,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 boolean enabled = b == 4 || (selected != null && (b == 3 ? selected.locked() : !selected.locked()));
                 if (b < 3 && selected != null && selected.wear_used() <= 0 && b != 2) enabled = false;
                 boolean hovered = hoveredTomeButton(mouseX, mouseY) == b;
-                ctx.blit(TOME_BUTTON, bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);
+                ctx.blit(TOME_BUTTONS[b], bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);
                 if (!enabled) {
                     ctx.fill(bx, by, bx + r[2], by + r[3], 0xB0191522);
                 } else if (hovered) {
@@ -1046,7 +1052,26 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             if (hoveredTome != null) {
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, this.menu.player)).withStyle(ChatFormatting.GOLD));
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.charges", hoveredTome.remaining_charges(), hoveredTome.effective_max_uses()).withStyle(ChatFormatting.AQUA));
+                boolean tomeHasInfinity = hoveredTome.enchantments().stream().anyMatch(e ->
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData
+                        .INFINITY_ENCHANTMENT_ID.equals(e.enchantment_id()));
+                if (tomeHasInfinity) {
+                    // Same identity block as the item tooltip: Infinity name + description
+                    // in vanilla style, then the LIGHT_PURPLE infinite-durability line.
+                    var infinityId = chiseled_enchanting_table.mechanics.resonance.TomeWearData.INFINITY_ENCHANTMENT_ID;
+                    EnchantementListWidget.findEnchantment(infinityId, this.menu.player).ifPresent(h -> {
+                        tip.add(net.minecraft.world.item.enchantment.Enchantment.getFullname(h, 1)
+                            .copy().withStyle(ChatFormatting.GRAY));
+                        String descKey = "enchantment.minecraft.infinity.desc";
+                        if (net.minecraft.locale.Language.getInstance().has(descKey)) {
+                            tip.add(Component.translatable(descKey).withStyle(ChatFormatting.DARK_GRAY));
+                        }
+                    });
+                    tip.add(Component.translatable("item.chiseled_enchanting_table.master_tome_infinite")
+                        .withStyle(ChatFormatting.LIGHT_PURPLE));
+                } else {
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.charges", hoveredTome.remaining_charges(), hoveredTome.effective_max_uses()).withStyle(ChatFormatting.AQUA));
+                }
                 if (!hoveredTome.last_used_enchant().isBlank() && hoveredTome.last_used_level() > 0) {
                     var lastId = Identifier.tryParse(hoveredTome.last_used_enchant());
                     String lastName = lastId == null ? hoveredTome.last_used_enchant()
@@ -1807,17 +1832,17 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
             if (isTomeTab()) {
                 Component header = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_title");
-                drawAutoScaledText(context, header, lx, ly + 8, 0.8f, 99, 0xFFB9F6FF);
+                drawAutoScaledText(context, header, lx, ly + 9, 0.8f, 99, 0xFFB9F6FF);
                 Component shelves = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_shelves",
                     this.menu.qualifyingEnchantedBookshelves, this.menu.liveTotalLibraryBookshelves);
-                drawAutoScaledText(context, shelves, lx, ly + 15, 0.7f, 99, 0xFFE6F7FF);
+                drawAutoScaledText(context, shelves, lx, ly + 16, 0.7f, 99, 0xFFE6F7FF);
                 Component tier = this.menu.nextRegenTierGap > 0
                     ? Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_gap", this.menu.liveRegenTier + 1, this.menu.nextRegenTierGap)
                     : Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_max", this.menu.liveRegenTier + 1);
-                drawAutoScaledText(context, tier, lx, ly + 22, 0.64f, 99, 0xFFA8FFC4);
+                drawAutoScaledText(context, tier, lx, ly + 23, 0.64f, 99, 0xFFA8FFC4);
                 String interval = this.menu.regenIntervalTicks > 0 ? EnchantementListWidget.formatTomeEta(this.menu.regenIntervalTicks) : "--:--";
                 Component rate = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_rate", interval);
-                drawAutoScaledText(context, rate, lx, ly + 29, 0.64f, 99, 0xFFA8FFC4);
+                drawAutoScaledText(context, rate, lx, ly + 30, 0.64f, 99, 0xFFA8FFC4);
                 return;
             }
 

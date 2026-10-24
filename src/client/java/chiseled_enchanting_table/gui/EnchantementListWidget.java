@@ -1317,14 +1317,22 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     String title = tomeTitle(this.tome_book, this.player);
                     RowRenderSupport.renderBoundedText(ctx, client, title, dx + 7, dy + 5, 0.62f, dw - 14,
                         this.tome_book.locked() ? 0xFFFFC46B : 0xFFF7F2EA);
-                    String charge = this.tome_book.wear_immune()
-                        ? I18n.get("gui.chiseled_enchanting_table.tomes.immune")
-                        : I18n.get("gui.chiseled_enchanting_table.tomes.charges",
-                            this.tome_book.remaining_charges(), this.tome_book.effective_max_uses());
-                    if (this.tome_book.generation() > 0) {
+                    // Round 4: a book carrying minecraft:infinity shows its Infinity
+                    // identity exactly like the item tooltip (never a durability count).
+                    boolean hasInfinity = this.tome_book.enchantments().stream().anyMatch(e ->
+                        chiseled_enchanting_table.mechanics.resonance.TomeWearData
+                            .INFINITY_ENCHANTMENT_ID.equals(e.enchantment_id()));
+                    String charge = hasInfinity
+                        ? I18n.get("item.chiseled_enchanting_table.master_tome_infinite")
+                        : this.tome_book.wear_immune()
+                            ? I18n.get("gui.chiseled_enchanting_table.tomes.immune")
+                            : I18n.get("gui.chiseled_enchanting_table.tomes.charges",
+                                this.tome_book.remaining_charges(), this.tome_book.effective_max_uses());
+                    int chargeColor = hasInfinity ? 0xFFFF55FF : 0xFF9ED8FF;
+                    if (!hasInfinity && this.tome_book.generation() > 0) {
                         charge += "  " + I18n.get("gui.chiseled_enchanting_table.tomes.generation", this.tome_book.generation());
                     }
-                    RowRenderSupport.renderBoundedText(ctx, client, charge, dx + 7, dy + 11, 0.52f, dw - 14, 0xFF9ED8FF);
+                    RowRenderSupport.renderBoundedText(ctx, client, charge, dx + 7, dy + 11, 0.52f, dw - 14, chargeColor);
                     String status;
                     int statusColor;
                     if (this.tome_book.locked()) {
