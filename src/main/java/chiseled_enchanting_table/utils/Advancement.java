@@ -37,9 +37,12 @@ public class Advancement {
         long totalKnownEnchantments = level.registryAccess()
             .lookupOrThrow(Registries.ENCHANTMENT)
             .listElements()
-            .filter(holder -> holder.value().getMaxLevel() > 0)
+            .filter(holder -> holder.value().getMaxLevel() > 0 && !holder.is(net.minecraft.tags.EnchantmentTags.CURSE))
             .count();
-        if (totalKnownEnchantments > 0 && enchantments.size() >= totalKnownEnchantments) {
+        long nonCurseOnBook = enchantments.keySet().stream()
+            .filter(holder -> !holder.is(net.minecraft.tags.EnchantmentTags.CURSE))
+            .count();
+        if (totalKnownEnchantments > 0 && nonCurseOnBook >= totalKnownEnchantments) {
             give(player, "all_enchant_book");
         }
     }

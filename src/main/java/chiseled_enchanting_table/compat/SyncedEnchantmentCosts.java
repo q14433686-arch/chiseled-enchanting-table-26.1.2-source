@@ -61,6 +61,22 @@ public final class SyncedEnchantmentCosts {
         notifyListeners();
     }
 
+    /** True once any server cost table has been received this session. */
+    public static boolean hasServerTable() {
+        return syncedPayload != null;
+    }
+
+    /**
+     * Audit R-01: false when the server had to truncate the table to fit wire budgets.
+     * A missing row then means "not synced", not "price it locally" — the menu layer
+     * fails closed for material-requiring rows instead of previewing local datapack data
+     * the server may not share.
+     */
+    public static boolean costTableComplete() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p == null || p.costTableComplete();
+    }
+
     public static Optional<Cost> find(Identifier enchantmentId, int level) {
         return find(OptionType.ENCHANTMENT, enchantmentId, level);
     }
@@ -212,6 +228,13 @@ public final class SyncedEnchantmentCosts {
         return (p != null && p.libraryResonanceConfig() != null)
             ? p.libraryResonanceConfig()
             : ChiseledEnchantingTableData.libraryResonanceConfig();
+    }
+
+    public static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig() {
+        EnchantCostTablePayload p = syncedPayload;
+        return (p != null && p.ritualConfig() != null)
+            ? p.ritualConfig()
+            : ChiseledEnchantingTableData.ritualConfig();
     }
 
     /** Empty server rule lists are authoritative, not a request for jar-default fallback. */

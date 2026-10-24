@@ -22,10 +22,14 @@ public final class ChiseledBookshelfTick {
     private static BlockPos findNearestChiseledTable(ServerLevel level, BlockPos shelfPos) {
         BlockPos best = null;
         double bestDist = Double.MAX_VALUE;
-        for (int dx = -3; dx <= 3; dx++) {
-            for (int dy = -2; dy <= 2; dy++) {
-                for (int dz = -3; dz <= 3; dz++) {
+        var sgCfg = chiseled_enchanting_table.data.ChiseledEnchantingTableData.shelfGatesConfig();
+        int rx = sgCfg == null ? 3 : Math.max(1, sgCfg.horizontalScanRadius());
+        int ry = sgCfg == null ? 2 : Math.max(0, sgCfg.verticalScanRadius());
+        for (int dx = -rx; dx <= rx; dx++) {
+            for (int dy = -ry; dy <= ry; dy++) {
+                for (int dz = -rx; dz <= rx; dz++) {
                     BlockPos candidate = shelfPos.offset(dx, dy, dz);
+                    if (!level.hasChunkAt(candidate)) continue;
                     if (level.getBlockState(candidate).is(BlockRegistry.CHISELED_ENCHANTING_TABLE)) {
                         double d = dx * dx + dy * dy + dz * dz;
                         if (d < bestDist) {

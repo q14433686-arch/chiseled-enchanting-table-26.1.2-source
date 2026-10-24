@@ -32,7 +32,7 @@ class NetworkCompatibilityTest {
     @Test void openingAndLiveShelfCodecsPreserveAllFields() {
         var unlocked = Set.of(new EnchantmentWithLevel(id("one"), 1), new EnchantmentWithLevel(id("two"), 255));
         var masters = Map.of(id("one"), 7, id("two"), 255);
-        var display = new TransformationDisplay(id("rule"), id("input_tag"), true, id("out"), 2, 30, 3);
+        var display = new TransformationDisplay(id("rule"), id("input_tag"), true, id("out"), 2, 30, 3, true);
         roundTrip(AvailableEnchantmentPayload.AVAILABLE_CHISELED_ENCHANTMENT_CODEC,
             new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789, masters, true));
         roundTrip(LiveShelfStatePayload.CODEC,
@@ -48,18 +48,24 @@ class NetworkCompatibilityTest {
         assertFalse(live.targets(0));
     }
 
-    @Test void allActionTokensAndNoBodyPacketsRoundTrip() {
+    @Test void allActionTokensAndMenuTargetedPacketsRoundTrip() {
         for (OptionType type : OptionType.values()) {
-            roundTrip(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_CODEC,
-                new ApplyEnchantmentPayload(type, id("action"), 255));
+            var apply = new ApplyEnchantmentPayload(42, type, id("action"), 255);
+            roundTrip(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_CODEC, apply);
+            assertTrue(apply.targets(42));
+            assertFalse(apply.targets(43));
         }
-        roundTrip(RerollEpiphanyPayload.CODEC, new RerollEpiphanyPayload());
-        roundTrip(FreezeEpiphanyPayload.CODEC, new FreezeEpiphanyPayload());
+        var reroll = new RerollEpiphanyPayload(42);
+        var freeze = new FreezeEpiphanyPayload(42);
+        roundTrip(RerollEpiphanyPayload.CODEC, reroll);
+        roundTrip(FreezeEpiphanyPayload.CODEC, freeze);
+        assertTrue(reroll.targets(42) && !reroll.targets(7));
+        assertTrue(freeze.targets(42) && !freeze.targets(7));
     }
 
     @Test void costTableConfigurationAndRowsRoundTrip() {
         // No ItemStack fields in this fixture: validates every config field/order headlessly.
-        var display = new TransformationDisplay(id("custom_rule"), id("tag"), true, id("custom_output"), 7, 29, 2);
+        var display = new TransformationDisplay(id("custom_rule"), id("tag"), true, id("custom_output"), 7, 29, 2, true);
         roundTrip(EnchantCostTablePayload.CODEC, table(List.of(display)));
         roundTrip(EnchantCostTablePayload.CODEC, table(List.of()));
     }
@@ -73,12 +79,25 @@ class NetworkCompatibilityTest {
         var resonance = new LibraryResonance.Config(13, 39, 21, 8, 29, 12, 1.13, 41,
             1.21, 1.31, 0.73, 0.83, 0.43, 0.53, 0.63, 1.03, 2.13, 3.23,
             0.67, 81.0, 0.17, 0.57, 111.0, 0.27, 0.87,
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, 16, 4,
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN);
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, 6, 3,
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN,
+            true, 5400, 34, 2400, 44, 900,
+            0.09, 0.27, true, List.of(50, 30, 12, 8),
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT);
+        var slipCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig(
+            3.2, 0.037, 0.17,
+            31, 0.011, 37, 0.021, 43, 0.031,
+            1.1, 3.1, 2, 1.05, 5, 0.55, 11, 0.45, 0.62, 0.52, 3, 1.15,
+            0.68, 0.26, 0.06, 0.52
+        );
+        var waitCurve = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.WaitCurve(
+            0.31, 0.69, 0.29, 0.71, 1.27, 0.88, 137);
+        var ritual = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
+            270, 12, 14, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve);
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
-            11, List.of(), Set.of(id("treasure")), gates, resonance,
-            List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())), displays);
+            11, List.of(), Set.of(id("treasure")), gates, resonance, ritual,
+            List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())), displays, true);
     }
 
     @Test void emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() {
@@ -95,6 +114,18 @@ class NetworkCompatibilityTest {
 
     @Test void unknownActionsCannotSilentlyBecomeEnchantment() {
         assertThrows(IllegalArgumentException.class, () -> OptionType.fromToken("new_or_mismatched_action"));
+    }
+
+    @Test void applyPayloadRejectsOutOfRangeFieldsAtConstruction() {
+        // Audit NET-03: bounds live in the compact constructor (decode boundary).
+        assertThrows(IllegalArgumentException.class, () -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(-2, OptionType.ENCHANTMENT, id("sharpness"), 1));
+        assertThrows(IllegalArgumentException.class, () -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(0, OptionType.ENCHANTMENT, id("sharpness"), -1));
+        assertThrows(IllegalArgumentException.class, () -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(0, OptionType.ENCHANTMENT, id("sharpness"), 256));
+        assertThrows(IllegalArgumentException.class, () -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(0, null, id("sharpness"), 1));
+        // The DISENCHANT_ALL sentinel (containerless, level 0) stays constructible.
+        var sentinel = new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload(-1, OptionType.DISENCHANT_ALL, id("disenchant_all"), 0);
+        assertEquals(-1, sentinel.containerId());
+        assertEquals(0, sentinel.enchantment_level());
     }
 
     @Test void countsAreValidatedBeforeAllocationAndIteration() {
@@ -118,14 +149,25 @@ class NetworkCompatibilityTest {
         assertNotEquals(chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_COST_TYPE.id(), EnchantCostTablePayload.TYPE.id());
         assertTrue(EnchantCostTablePayload.TYPE.id().getPath().endsWith(chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
         assertTrue(LiveShelfStatePayload.TYPE.id().getPath().endsWith(chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
+        // Audit NET-02: every business channel carries the revision suffix; the bare
+        // pre-suffix apply id survives only as a query-only probe.
+        String revision = chiseled_enchanting_table.menu.EnchantingProtocol.REVISION;
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID.id().getPath().endsWith(revision));
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.RerollEpiphanyPayload.TYPE.id().getPath().endsWith(revision));
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload.TYPE.id().getPath().endsWith(revision));
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ReopenTablePayload.TYPE.id().getPath().endsWith(revision));
+        assertEquals("apply_chiseled_enchantment",
+            chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_TYPE.id().getPath());
         roundTrip(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.CODEC,
             new chiseled_enchanting_table.menu.EnchantingProtocol.Capability());
     }
 
     @Test void runtimeConfigRequestAndAcknowledgementRoundTrip() {
         var config = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toJsonString();
-        roundTrip(chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload.CODEC,
-            new chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload(config, 8123456789L));
+        for (boolean closeContainer : new boolean[] {false, true}) {
+            roundTrip(chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload.CODEC,
+                new chiseled_enchanting_table.config.ModConfigNetworking.UpdateRuntimeConfigPayload(config, 8123456789L, closeContainer));
+        }
         for (boolean accepted : new boolean[] {false, true}) {
             roundTrip(chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload.CODEC,
                 new chiseled_enchanting_table.config.ModConfigNetworking.SyncRuntimeConfigPayload(config, true, 8123456789L, accepted));

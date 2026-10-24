@@ -1,6 +1,7 @@
 package chiseled_enchanting_table.registry;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import chiseled_enchanting_table.mechanics.loot.ApplyWildBookWearFunction;
 import chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics;
 import chiseled_enchanting_table.mechanics.loot.DepthBasedEfficiencyFunction;
 import chiseled_enchanting_table.mechanics.loot.EnchantedBookLootInjector;
@@ -13,6 +14,7 @@ import net.minecraft.world.level.storage.loot.functions.LootItemFunction;
 public final class LootRegistry {
     public static MapCodec<? extends LootItemFunction> REMOVE_ENCHANTED_BOOKS;
     public static MapCodec<? extends LootItemFunction> DEPTH_BASED_EFFICIENCY;
+    public static MapCodec<? extends LootItemFunction> APPLY_WILD_BOOK_WEAR;
 
     private LootRegistry() {}
 
@@ -26,6 +28,11 @@ public final class LootRegistry {
             BuiltInRegistries.LOOT_FUNCTION_TYPE,
             ChiseledEnchantingTable.identifier("depth_based_efficiency"),
             DepthBasedEfficiencyFunction.MAP_CODEC
+        );
+        APPLY_WILD_BOOK_WEAR = Registry.register(
+            BuiltInRegistries.LOOT_FUNCTION_TYPE,
+            ChiseledEnchantingTable.identifier("apply_wild_book_wear"),
+            ApplyWildBookWearFunction.MAP_CODEC
         );
         EnchantedBookLootInjector.init();
         DepletedTomeWorldMechanics.initChestLootInjection();

@@ -46,10 +46,10 @@ class SyncContracts(unittest.TestCase):
                 self.assertNotIn(call, source, str(java))
         payload = (MAIN / 'menu/ChiseledEnchantingMenuPayloads.java').read_text()
         for token in ['stored_master_levels', 'epiphany_seed', 'RerollEpiphanyPayload',
-                      'FreezeEpiphanyPayload', 'buf.writeVarInt(unlocked_enchantements.size())']:
+                      'FreezeEpiphanyPayload', 'PayloadLimits.writeBoundedCount(']:
             self.assertIn(token, payload)
-        handler = (MAIN / 'menu/ChiseledEnchantingTableScreenHandler.java').read_text()
-        self.assertIn('drop(overflow, false, net.minecraft.util.Prediction.PREDICTED)', handler)
+        inv_utils = (MAIN / 'utils/InventoryUtils.java').read_text()
+        self.assertIn('net.minecraft.util.Prediction.PREDICTED', inv_utils)
 
     def test_features_and_mixins_present(self):
         for path in ['mechanics/resonance/LibraryResonance.java',
@@ -212,15 +212,15 @@ class SyncContracts(unittest.TestCase):
 
     def test_new_source_features_keep_port_specific_safeguards(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('26_3_revision_5', protocol)
-        self.assertIn('enchant_cost_table_26_3_revision_4', protocol)
+        self.assertIn('26_3_revision_7', protocol)
+        self.assertIn('enchant_cost_table_26_3_revision_6', protocol)
         wear = (MAIN / 'mechanics/resonance/MasterTomeWear.java').read_text()
         self.assertIn('hasClearLineOfSight(level, tablePos, scanPos)', wear)
         processor = (MAIN / 'mechanics/structure/BookshelfReplacerProcessor.java').read_text()
         self.assertIn('implements StructureProcessor', processor)
         self.assertIn('bookshelfReplacementEnabled()', processor)
-        cost = (MAIN / 'menu/EnchantCostTablePayload.java').read_text()
-        self.assertIn('buildTransformationDisplays(player)', cost)
+        sync = (MAIN / 'menu/EnchantCostSync.java').read_text()
+        self.assertIn('buildTransformationDisplays(player)', sync)
 
 
 if __name__ == '__main__':

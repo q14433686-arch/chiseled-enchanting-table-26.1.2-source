@@ -28,9 +28,9 @@ public class EnchantmentFinder {
                 ItemEnchantments itemEnchantmentsComponent = stack.get(DataComponents.STORED_ENCHANTMENTS);
                 if (itemEnchantmentsComponent == null) return Stream.empty();
                 return itemEnchantmentsComponent.entrySet().stream()
-                    .filter(e -> !e.getKey().is(CURSE_TAG) && e.getIntValue() > 0)
+                    .filter(e -> !e.getKey().is(CURSE_TAG) && e.getIntValue() > 0 && e.getKey().unwrapKey().isPresent())
                     .map(e -> new EnchantmentWithLevel(
-                        ChiseledEnchantingTableScreenHandler.EnchantmentToIdentifier(e.getKey()),
+                        e.getKey().unwrapKey().orElseThrow().identifier(),
                         e.getIntValue()
                     ));
             });

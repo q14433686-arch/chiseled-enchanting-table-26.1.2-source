@@ -1,6 +1,5 @@
 package chiseled_enchanting_table.block;
 import chiseled_enchanting_table.utils.EnchantmentFinder;
-import chiseled_enchanting_table.utils.BlockPosStream;
 
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
@@ -148,6 +147,9 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 continue;
             }
             BlockPos shelfPos = pos.offset(offset);
+            if (!level.hasChunkAt(shelfPos)) {
+                continue;
+            }
             BlockState shelfState = level.getBlockState(shelfPos);
             boolean activeShelf = isRegularBookshelf(shelfState)
                 || (shelfState.is(Blocks.CHISELED_BOOKSHELF) && hasOccupiedChiseledSlot(shelfState));
@@ -223,6 +225,17 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             return InteractionResult.SUCCESS;
         }
         return super.useItemOn(stack, state, level, pos, player, hand, hit);
+    }
+
+    /**
+     * Audit: the Reopen-table payload resolves the provider through
+     * {@code BlockState#getMenuProvider}, which delegates here. Without this override the
+     * block only exposed its provider to direct right-clicks and Reopen silently did
+     * nothing. Both paths now share the same provider factory.
+     */
+    @Override
+    protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
+        return createChiseledEnchantingTableMenuProvider(state, level, pos);
     }
 
     @Override
@@ -310,7 +323,11 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 if (shelfPower.totalChiseledEnchantedBooks() > 0) {
                     Advancement.give(player, "unlock_new_enchant");
                 }
-                if (shelfPower.xpDiscountPercent() >= 22 || shelfPower.peakEffectiveXpDiscountPercent(level) >= 35) {
+                // Audit: trigger on actually REACHING the configured total cap, not on the
+                // old hardcoded 22%/35% proxies that drifted from datapack-tunable values
+                // (and from the "-40%" the advancement text advertised).
+                int maxTotalDiscount = ChiseledEnchantingTableData.libraryResonanceConfig().maxTotalXpDiscountPercent();
+                if (maxTotalDiscount > 0 && shelfPower.peakEffectiveXpDiscountPercent(level) >= maxTotalDiscount) {
                     Advancement.give(player, "library_resonance");
                 }
                 if (shelfPower.regularBookshelves() >= ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves()) {
@@ -488,25 +505,34 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         return true;
     }
 
-    public static ShelfPower calculateShelfPower(Level level, BlockPos tablePos) {
-        return calculateShelfPower(level, tablePos, true);
-    }
-    public static ShelfPower calculateShelfPower(Level level, BlockPos tablePos, boolean includeCharges) {
-        var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
+    public static int countOpenAdjacentBlocks(Level level, BlockPos tablePos) {
         int openAdjacent = 0;
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = 0; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     if (dx == 0 && dy == 0 && dz == 0) continue;
                     BlockPos adj = tablePos.offset(dx, dy, dz);
-                    if (level.getBlockState(adj).getCollisionShape(level, adj).isEmpty()) {
+                    if (level.hasChunkAt(adj) && level.getBlockState(adj).getCollisionShape(level, adj).isEmpty()) {
                         openAdjacent++;
                     }
                 }
             }
         }
+        return openAdjacent;
+    }
+
+    public static boolean isTableCeilingBlocked(Level level, BlockPos tablePos) {
         BlockPos abovePos = tablePos.above();
-        boolean ceilingBlocked = !level.getBlockState(abovePos).getCollisionShape(level, abovePos).isEmpty();
+        return !level.hasChunkAt(abovePos) || !level.getBlockState(abovePos).getCollisionShape(level, abovePos).isEmpty();
+    }
+
+    public static ShelfPower calculateShelfPower(Level level, BlockPos tablePos) {
+        return calculateShelfPower(level, tablePos, true);
+    }
+    public static ShelfPower calculateShelfPower(Level level, BlockPos tablePos, boolean includeCharges) {
+        var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
+        int openAdjacent = countOpenAdjacentBlocks(level, tablePos);
+        boolean ceilingBlocked = isTableCeilingBlocked(level, tablePos);
         boolean cramped = sgCfg.requireBreathingRoom() && (ceilingBlocked || openAdjacent < sgCfg.minOpenAdjacentBlocks());
 
         int rawRegularBookshelves = 0;
@@ -515,6 +541,9 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int totalChiseledEnchantedBooks = 0;
         Map<Identifier, Integer> storedMasterLevels = new HashMap<>();
         for (BlockPos scannedPos : streamLibraryPositions(tablePos).toList()) {
+            if (!level.hasChunkAt(scannedPos)) {
+                continue;
+            }
             if (sgCfg.requireLineOfSight() && !hasClearLineOfSight(level, tablePos, scannedPos)) {
                 continue;
             }

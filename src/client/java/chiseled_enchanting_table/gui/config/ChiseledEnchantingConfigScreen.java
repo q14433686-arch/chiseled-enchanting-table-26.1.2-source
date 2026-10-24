@@ -232,7 +232,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         // Integrated and dedicated servers share the same authorized, acknowledged path.
         this.pendingSaveId = ModRuntimeConfig.nextSaveRequestId();
         this.pendingClose = closeAfterSave;
-        ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(built.toJsonString(), this.pendingSaveId));
+        if (ClientPlayNetworking.canSend(ModConfigNetworking.UpdateRuntimeConfigPayload.TYPE)) {
+            ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(
+                built.toJsonString(),
+                this.pendingSaveId,
+                closeAfterSave
+            ));
+        }
     }
 
     private void reconcileSaveAcknowledgement() {
@@ -695,7 +701,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             statusCol = GOLD_TEXT;
         } else if (System.currentTimeMillis() < this.statusToastUntilMs) {
             statusText = I18n.get(this.lastSaveFailed ? "config.chiseled_enchanting_table.msg.save_failed" : "config.chiseled_enchanting_table.msg.saved");
-            statusCol = 0xFF6BFFB3;
+            statusCol = this.lastSaveFailed ? 0xFFFF6B6B : 0xFF6BFFB3;
         } else if (restartChanged) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.restart_hint");
             statusCol = 0xFFFFC46B;
@@ -820,9 +826,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             onClose();
             return true;
         }
-        if (key >= InputConstants.KEY_1 && key <= InputConstants.KEY_6) {
+        // Audit GUI-02: bound by the live enum size instead of hardcoding KEY_6, so adding
+        // or removing a category can never index out of bounds (or silently dead-key).
+        CategoryId[] categories = CategoryId.values();
+        int categoryIndex = key - InputConstants.KEY_1;
+        if (categoryIndex >= 0 && categoryIndex < categories.length) {
             this.filterModifiedOnly = false;
-            this.activeCategory = CategoryId.values()[key - InputConstants.KEY_1];
+            this.activeCategory = categories[categoryIndex];
             this.scrollOffset = 0.0f;
             playClick(1.0f);
             return true;

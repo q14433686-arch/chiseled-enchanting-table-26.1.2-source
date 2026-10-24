@@ -184,6 +184,44 @@ def check_mixin_configs() -> None:
     else:
         note(f"{declared} declared mixin class reference(s) checked")
 
+    # Orphan gate (audit H-05): a mixin class present in the tree but missing from every
+    # config silently never loads (structure bookshelf replacement was dead for a whole
+    # release this way). Every *Mixin/accessor source under a mixin package must be
+    # declared in some *.mixins.json.
+    declared_fqcn = set()
+    mixin_packages = set()
+    for cfg in configs:
+        try:
+            data = read_json(cfg)
+        except Exception:  # noqa: BLE001
+            continue
+        package = data.get("package", "")
+        if not package:
+            continue
+        mixin_packages.add(package.replace(".", "/"))
+        for section in MIXIN_SECTIONS:
+            for mixin in data.get(section) or []:
+                declared_fqcn.add(f"{package}.{mixin}")
+
+    orphans = []
+    for root, _dirs, files in os.walk(os.path.join(REPO, "src")):
+        for name in files:
+            if not name.endswith(".java"):
+                continue
+            path = os.path.join(root, name)
+            rel = os.path.relpath(path, REPO).replace(os.sep, "/")
+            for pkg_path in mixin_packages:
+                marker = f"/{pkg_path}/"
+                if marker in f"/{rel}":
+                    fqcn = (pkg_path + "/" + f"/{rel}".split(marker, 1)[1])[:-5].replace("/", ".")
+                    if fqcn not in declared_fqcn:
+                        orphans.append(f"{rel} ({fqcn})")
+                    break
+    for orphan in sorted(orphans):
+        fail(f"orphan mixin source not declared in any *.mixins.json: {orphan}")
+    if not orphans:
+        note("no orphan mixin sources")
+
 
 # --------------------------------------------------------------------------- #
 # Tier C
@@ -327,6 +365,75 @@ def check_markdown_links() -> None:
         note(f"markdown links ok ({scanned} file(s) scanned)")
 
 
+def check_no_tautological_residue() -> None:
+    """Generated-merge residue sweep: tautological conditions and same-value ternaries
+    (e.g. `0.0 >= 0.0 && x ? 0 : 0`) compile fine but prove a line was never re-read.
+    New audit P0: keep the tree free of them mechanically."""
+    import re as _re
+
+    patterns = [
+        _re.compile(r"0\.0\s*(?:>=|<=|==)\s*0\.0"),
+        _re.compile(r"\bif\s*\(\s*(?:true|false)\s*\)"),
+        _re.compile(r"\?\s*([A-Za-z0-9_.]+)\s*:\s*\1(?![A-Za-z0-9_.])"),
+    ]
+    offenders = []
+    for root, _dirs, files in os.walk(os.path.join(REPO, "src")):
+        for name in files:
+            if not name.endswith(".java"):
+                continue
+            path = os.path.join(root, name)
+            with open(path, encoding="utf-8") as fh:
+                for lineno, line in enumerate(fh, 1):
+                    stripped = line.strip()
+                    if stripped.startswith("//") or stripped.startswith("*"):
+                        continue
+                    if any(p.search(line) for p in patterns):
+                        offenders.append(f"{os.path.relpath(path, REPO)}:{lineno}")
+    for offender in offenders:
+        fail(f"tautological/generated residue: {offender}")
+    if not offenders:
+        note("no tautological generated residue")
+
+
+def check_locale_safe_formatting() -> None:
+    """DATA-03/DATA-04: String.format must pin Locale.ROOT (server default locales
+    otherwise leak localized digits/decimals into lore, logs and config values)."""
+    import re as _re
+
+    pattern = _re.compile(r"String\.format\((?!\s*(?:java\.util\.)?Locale\b)")
+    offenders = []
+    for root, _dirs, files in os.walk(os.path.join(REPO, "src")):
+        for name in files:
+            if not name.endswith(".java"):
+                continue
+            path = os.path.join(root, name)
+            with open(path, encoding="utf-8") as fh:
+                for lineno, line in enumerate(fh, 1):
+                    if pattern.search(line):
+                        offenders.append(f"{os.path.relpath(path, REPO)}:{lineno}")
+    for offender in offenders:
+        fail(f"String.format without Locale.ROOT: {offender}")
+    if not offenders:
+        note("all String.format calls pin Locale.ROOT")
+
+
+def check_bundled_defaults_fresh() -> None:
+    """JSON is the single source of truth for mechanic defaults: the checked-in
+    generated BundledDefaults.java must be byte-identical to a fresh regeneration
+    from the datapack JSON (drift gate, 2026-10-24 audit)."""
+    import subprocess
+
+    gen = os.path.join(REPO, "scripts", "gen_bundled_defaults.py")
+    proc = subprocess.run(
+        [sys.executable, gen, "--check"], capture_output=True, text=True, cwd=REPO
+    )
+    if proc.returncode != 0:
+        fail("BundledDefaults.java is stale vs datapack JSON; run scripts/gen_bundled_defaults.py "
+             f"({(proc.stderr or proc.stdout).strip()[:300]})")
+    else:
+        note("BundledDefaults.java matches datapack JSON (single source of truth)")
+
+
 # --------------------------------------------------------------------------- #
 
 def main() -> int:
@@ -338,6 +445,9 @@ def main() -> int:
     check_lang_parity()
     check_no_embedded_json_fallbacks()
     check_markdown_links()
+    check_locale_safe_formatting()
+    check_no_tautological_residue()
+    check_bundled_defaults_fresh()
 
     if args.porcelain:
         for msg in failures:

@@ -1,5 +1,9 @@
 # Chiseled Enchanting Table — Unofficial 26.3 Port
 
+[![compile-check](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/workflows/compile-check.yml/badge.svg?branch=26.3)](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/workflows/compile-check.yml)
+[![build](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/workflows/build.yml/badge.svg?branch=26.3)](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/workflows/build.yml)
+[![consistency](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/workflows/consistency.yml/badge.svg?branch=26.3)](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/workflows/consistency.yml)
+
 ![Chiseled enchanting table banner](./banner.png)
 
 > ⚠️ **Unofficial community port.** This repository is a community-maintained, unofficial port of
@@ -10,125 +14,96 @@
 > bug reports about this port to **this** repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`),
 > not to the upstream project.
 
-**Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*
+Targeted, deterministic enchanting for Fabric **26.3** — choose exact enchantments instead of rolling random offers, store Enchanted Books in Chiseled Bookshelves as reusable Template Books, and strip or downgrade unwanted traits anytime without losing your progress.
 
-> The full 26.1.2 delta through `3e61f5d` (PR #17/#18) is integrated using **option 3**: effective-rule and shared-recovery architecture, persistent inventories, guarded rituals, depleted-tome world/trade features and updated Grimoire/locales, retaining the 26.3 fixes.
-> See the [implementation, cross-branch feedback and verification report](docs/reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md). Protocol revision is **6** despite the unchanged 1.1.0 release label: update both client and server.
-> **Back up existing worlds:** defaults now include mother-tome wear (16 charges, copying costs 4), reduced refunds for unmarked/external items, new-config datapack priority, and 24,000 / 12,000 / 3,600-second recovery tiers (38/42 shelves). Existing explicit settings are preserved. 52 JUnit and real server probes pass; GUI/multiplayer interaction still requires manual validation.
-**Target:** Minecraft `26.3`, Fabric Loader `>=0.19.5`, Fabric API `0.162.0+26.3`, Java `>=25`.
+**Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*  
+**Target:** Minecraft `26.3`, Fabric Loader `>=0.19.5`, Fabric API `0.162.0+26.3`, Java `>=25`
 
-📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)**
+📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)** · **Release History: [`CHANGELOG.md`](CHANGELOG.md)**
 
-`1.1.0` builds on the `1.0.3` 26.3-sync baseline ([issue #3](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/issues/3)
-worldgen deadlock fix, S2C enchantment costs, 11 languages, and CI triad — see
-[`docs/reports/SYNC_FROM_26_1_2_REPORT.md`](docs/reports/SYNC_FROM_26_1_2_REPORT.md)) with a comprehensive
-progression, balance, UI/UX, and recipe-viewer overhaul; user-visible changes are in
-[`CHANGELOG.md`](CHANGELOG.md) and [`docs/WIKI.md`](docs/WIKI.md).
+> ⚠️ **Upgrading existing worlds to `1.1.0` (network protocol v8):** Back up your world and update **both client and server** together.
+> - **Template Book durability, `Unbreaking` ward & wild pre-wear:** Non-`Infinity` Enchanted Books in Chiseled Bookshelves hold **`4`** durability per tier (enchanting gear spends **`1`**, copying onto a book spends **`2`**; `Unbreaking` grants up to **`30%`** wear waiver; wild loot/bookshelf books spawn pre-worn with most at **`1–2`** charges left; `Infinity` books never wear out) and passively recharge in the shelf over **6 / 3 / 1 game days** (`0 / 38 / 42` total nearby shelves).
+> - **Overloaded `Infinity` Tome slip & cross-line (`<= 18%`):** Copying from a heavily loaded `Infinity` Template Book (`L >= 3`) risks a single-roll miscopy (`70%` `-1` tier / `25%` useless low-rarity enchant / `5%` curse); cross-line pollution never deletes your existing enchantments, refunds **`50%`** XP & materials, and leaves an Ink Stain washed off by Cleanse.
+> - **External disenchant refund:** Enchantments not inscribed at this table refund XP at `25%` by default to prevent mob-loot XP farming.
+> - **Config & datapack priority:** Saved in-game config settings are preserved across updates while explicit datapack overrides take precedence (`docs/reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md`, `docs/reports/SYNC_FROM_26_1_2_REPORT.md`).
 
-A Minecraft Fabric mod that enhances the enchanting experience.
+---
 
-## Concept
+## Core Features
 
-* **Smooth entry, Vanilla Upgrade & Illustrated In-Game Manual (`纂刻秘典` / `Chiseled Grimoire`)**: craft the table directly with `2 Diamonds + 1 Chiseled Bookshelf + 3 Crying Obsidian + 1 Book`, upgrade a vanilla Enchanting Table, craft `8× Crying Obsidian` from `8× Obsidian + 1× Ghast Tear`, and craft the full interactive illustrated manual via **`Book and Quill + Chiseled Bookshelf`** OR **`Depleted Tome + Ink Sac`** (or open it directly from the button above the table UI).
-* **Three-track library progression, Live World Sync & Conservation-Verified Dual-Mode XP Formula (see [`docs/WIKI.md`](docs/WIKI.md))**:
-  * **Regular Bookshelves (`#chiseled_enchanting_table:regular_bookshelves`, configurable `7×5×7`)** unlock blank inscriptions up to mid-tier (`ceil(maxLevel / 2)`), smoothly scale upgrades on already-inscribed gear/books up to `MAX` along `0..38` shelves (`gamma = 1.25`: `I(0) → II(7) → III(16) → IV(27) → V(38)`), grant XP reduction starting at `12+` shelves, and at **`32+` Bookshelves** awaken **Treasure Epiphany**.
-  * **Chiseled Bookshelves (`7×5×7`)** turn stored Enchanted Books into permanent **Master Tomes** unlocking tiers `1..k` directly on blank items (including Treasures), counting deduplicated qualifying enchantments toward free Depleted Tome restoration, adding global & per-enchantment XP discounts (data-driven via `library_resonance.json`, up to **`-40%`**), and switching inscriptions into **Vanilla Mass-Production XP Mode (`1–3` levels deducted)**.
-  * **Inductive XP Conservation & Standalone-Vanilla Cleanse Alternatives**: full wipes (`DISENCHANT_ALL`) and step-downs (`DOWNGRADE_ENCHANTMENT`) satisfy exact telescoping conservation (`V[k] - V[j] <= Cost_min(j -> k)` across all `maxLevel = 1..255`), while targeted trait stripping and curse purging support both custom catalysts (`Cleansing Grit`, `Arcane Synthesis Crystal`) and pure standalone vanilla item bundles (`disenchanting.json`).
-  * **Bidirectional JEI & REI Support**: full recipe & usage lookup for both **Chiseled Enchanting** and **Transmutation & Cleansing** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo Shard`, `Bottle o' Enchanting`, `Blank Overwrite`, `Cleansing Grit`, and Cleanse / Curse-Purge rituals).
+### Getting Started & Illustrated Guide (`纂刻秘典` / `Chiseled Grimoire`)
 
-## Installation
+* Craft the table directly (`1 Book + 2 Diamonds + 1 Chiseled Bookshelf + 3 Crying Obsidian`) or upgrade a vanilla Enchanting Table (`Enchanting Table + 1 Chiseled Bookshelf + 2 Crying Obsidian`).
+* Craft `8× Crying Obsidian` from `8× Obsidian + 1× Ghast Tear`.
+* Craft the illustrated in-game guide (`Chiseled Grimoire`) with **`Book and Quill + Chiseled Bookshelf`** or **`Depleted Tome + Ink Sac`** — or open it anytime from the book button above the table UI.
 
-Grab the latest `chiseled-enchanting-table-1.1.0.jar` from the `build` workflow's artifact on the
-branch you want (Actions → *build* → **Artifacts**, kept 14 days) or from
-`release_output/chiseled_enchanting_table_1_1_0/` when a release is staged there, and drop it into
-your Fabric `mods/` folder alongside Fabric API `0.162.0+26.3`.
+### How Bookshelves Work (`7×5×7` Scan Range)
 
-To build it yourself: JDK 25 + network access to `maven.fabricmc.net` (the dev sandbox this port is
-maintained in has neither, which is why CI does the compiling — see below):
+| Shelf Type | Unlocks Tiers? | Cuts XP Cost? | Speeds Up Recharge & Timers? |
+|---|---|---|---|
+| **Wooden Bookshelf** (`#regular_bookshelves`) | Yes — blank gear starts up to mid-tier (`ceil(max / 2)`), and upgrades scale smoothly to max along `0..38` shelves (`I(0) → II(7) → III(16) → IV(27) → V(38)`). `32+` shelves unlock **Treasure Epiphany** | Yes (`12+` shelves, up to `-15%`) | Yes (counts toward total nearby shelves: `38 / 42` tiers) |
+| **Chiseled Bookshelf (with Enchanted Books)** | Yes — stored books act as **Template Books**, unlocking their exact tiers (`1..k`, including Treasures) on blank items and switching XP cost to **Vanilla `1–3` Level Mode** | Yes (up to `-20%` global + `-15%` matching trait; total cap **`-40%`**) | Yes (counts toward total nearby shelves) |
+| **Empty Chiseled Bookshelf / Depleted Tome** | No | No | Yes — counts toward total nearby shelves (`6 → 3 → 1` game-day recharge & shorter ritual timers) |
+
+### Safe Disenchanting & Curse Removal
+
+* **Clear All or Step Down 1 Level:** Zero material cost; refunds a conservation-verified XP floor so repeated enchanting and stripping can never create free XP.
+* **Remove 1 Chosen Enchantment:** `Lv.3–10` XP + `Cleansing Grit` (or `Amethyst Shard + Glow Ink Sac` / `Arcane Synthesis Crystal`) removes one unwanted trait while keeping every other enchantment intact.
+* **Purge Curses:** `Lv.12` XP + `Ghast Tear` (or `3 Golden Apples + 3 Cleansing Grit` / `1 Arcane Synthesis Crystal + 2 Cleansing Grit`), reduced by library XP discounts.
+
+### Bidirectional JEI & REI Integration
+
+* Press **Recipes (`R`)** on an Enchanted Book to see every item it can enchant, or **Uses (`U`)** on gear to see every compatible enchantment, material option, XP mode, and conflict rule.
+* Dedicated **Transmutation & Cleansing** category covers batch transmutations (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo Shard`, `Bottle o' Enchanting`, free `Depleted Tome -> Book` restoration) and Cleanse / Curse-Purge recipes, synced live from your server's rules on join and `/reload`.
+
+---
+
+## Installation (Players & Servers)
+
+1. Install **Minecraft `26.3`**, **Fabric Loader `>=0.19.5`**, and **Fabric API `0.162.0+26.3`** (requires **Java 25+**).
+2. Download `chiseled-enchanting-table-1.1.0.jar` from this repository's [Releases](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/releases) or from the latest [`build` workflow artifact](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/workflows/build.yml) (kept 14 days), and place it in `mods/` on **both client and server**.
+3. *(Optional)* Install **JEI** or **REI** on the client for recipe and usage lookup — neither viewer is required at runtime.
+
+> This unofficial port is **not** published under the original author's Modrinth or CurseForge pages. Any builds for this port are distributed exclusively through this repository.
+
+## Localization
+
+Ships with 11 built-in translations: `de_de`, `en_us`, `es_es`, `fr_fr`, `it_it`, `ja_jp`, `ko_kr`, `pt_br`, `ru_ru`, `zh_cn`, and `zh_tw` (missing keys fall back to `en_us`). Generated book lore components use server-neutral translation keys so items read naturally in each player's client language.
+
+---
+
+## Building from Source & CI
+
+Building locally requires **JDK 25** and network access to `maven.fabricmc.net`:
 
 ```bash
 chmod +x ./gradlew
-python3 scripts/compat_check.py          # offline data-pack sanity, needs no JDK
-./gradlew build                          # jars land in build/libs/
+./gradlew build   # output jars in build/libs/ (pass -Penable_jei=false -Penable_rei=false for viewer-free compile)
 ```
 
-### Optional: JEI / REI
-
-Neither viewer is required, bundled, or a runtime dependency — the mod ships one client-side adapter
-for each and only loads it when the viewer is installed. Both are compile-only and can be switched
-off (`-Penable_jei=false` / `-Penable_rei=false`, or the same keys in `gradle.properties`), which is
-what CI's `no-viewers` job verifies on every push. With either viewer installed you get a
-**Chiseled Enchanting** category that answers both directions of the mechanic: focus an enchanted
-book to see every item it can enchant, focus an item to see every book that works on it, with the XP
-cost, the material cost and the conflicts list on the row. Costs shown there are the ones *your
-server* resolved for *you* (they are synced on join and after every `/reload`).
-
-This unofficial port is **not** currently published to Modrinth or CurseForge under the original
-mod's listing. If a release is published, it will be under the unofficial-port repository's own
-release page, not the upstream listing.
-
-## Usage
-
-Once installed, the Chiseled Enchanting Table will be available in your game. Craft it using the new recipe and start enchanting!
-
-In-game text ships in eleven languages: `de_de`, `en_us`, `es_es`, `fr_fr`, `it_it`, `ja_jp`,
-`ko_kr`, `pt_br`, `ru_ru`, `zh_cn`, `zh_tw` (missing keys fall back to English per key, as in
-vanilla). The lore line stamped on generated enchanted books is translatable too, so a book produced
-by a dedicated server reads in each player's own language.
-
-## Continuous integration
-
-CI mirrors the triad used by the sister port
-[`q14433686-arch/TaCZ_Refabricated_Unofficial`](https://github.com/q14433686-arch/TaCZ_Refabricated_Unofficial)
-and by this repository's own `26.3` branch, because this port is developed in a sandbox that cannot
-reach `maven.fabricmc.net` (nor the JEI/REI mavens) and therefore cannot compile locally — the
-compile has to happen on Actions and the log has to come back to the branch.
-
-**Status: green.** On commit `da77188` (2026-10-21): `compile-check` run `39670181582`
-(`BUILD SUCCESSFUL in 48s`, `compileJava` + `compileClientJava` with JEI and REI enabled, 2
-deprecation warnings from JEI's API), `build.yml` run `39670181557` (static gates → full build + jar
-artifact → `no-viewers`), `consistency.yml` run `39670181572`. `docs/ci/README.md` records the
-history, including the two failed runs and what each one taught us.
-
-| Workflow | What it does | Trigger |
-|---|---|---|
-| [`compile-check.yml`](.github/workflows/compile-check.yml) | `compileJava compileClientJava`, then **pushes the compile log back to `arena/**` branches** as `build-reports/compile-java.log` via the Contents API (Actions log blobs are unreachable from the sandbox). The log also records which artifact versions the floating viewer coordinates resolved to, and a failure additionally commits back `build-reports/compile-deps.log` with the dependency graph | push to `arena/**` / this branch, PRs |
-| [`build.yml`](.github/workflows/build.yml) | static gates first (no network needed) → full `./gradlew build` + jar artifact (14 days), plus a **`no-viewers`** job that compiles with `-Penable_jei=false -Penable_rei=false` | push / PR |
-| [`consistency.yml`](.github/workflows/consistency.yml) | version gate for "bumped one place, forgot the other four", plus a warn-only `docs/ci` drift check | changes to `gradle.properties`, `README.md`, `fabric.mod.json`, `publish.yml`, `docs/ci/publish.yml` |
-| [`publish.yml`](.github/workflows/publish.yml) | manual release to GitHub / Modrinth (`MINECRAFT_VERSION: 26.3`, `VERSION: 1.1.0`) | `workflow_dispatch` only |
-
-`docs/ci/` keeps byte-identical reference copies of all four, because a GitHub App token without
-`workflows: write` cannot create or update workflow files; `bash docs/ci/install.sh --check` reports
-drift and `bash docs/ci/install.sh` re-applies them. Details: [`docs/ci/README.md`](docs/ci/README.md).
-
-The three static gates run in seconds and need no Gradle, no JDK and no network, so they also work
-offline (and are what a contributor should run before pushing):
+Offline static verification gates (no JDK or network required):
 
 ```bash
-python3 scripts/ci_static_checks.py                 # mixin configs resolvable + registered mixins not excluded + lang parity across all 11 languages
-python3 scripts/compat_check.py                     # data-pack schema / JSON-vs-Java drift (Tier 1) — including the 26.3 loot/advancement schema gates
-bash scripts/check_release_consistency.sh --strict  # gradle.properties / README / fabric.mod.json / publish.yml agree
-bash docs/ci/install.sh --check                     # docs/ci ≡ .github/workflows
+python3 scripts/ci_static_checks.py                 # mixin registration + 11-locale key parity
+python3 scripts/compat_check.py                     # 26.3 datapack, loot & advancement schema checks
+bash scripts/check_release_consistency.sh --strict  # gradle.properties / README / fabric.mod.json / publish.yml sync
+bash docs/ci/install.sh --check                     # workflow reference mirror check (see docs/ci/README.md)
 ```
 
-Optional warn-only pre-commit reminder: `bash scripts/install-hooks.sh` (it never blocks a commit;
-CI is the real gate).
+| Workflow | Purpose | Trigger |
+|---|---|---|
+| [`compile-check.yml`](.github/workflows/compile-check.yml) | Compiles main + client + test sources, runs JUnit verification suites, and commits `build-reports/` logs back to `arena/**` branches | Push / PR |
+| [`build.yml`](.github/workflows/build.yml) | Static checks → full `./gradlew build` + artifact upload → `no-viewers` compile gate → headless Minecraft `26.3` server smoke test | Push / PR |
+| [`consistency.yml`](.github/workflows/consistency.yml) | Cross-checks version strings across `gradle.properties`, `README.md`, `fabric.mod.json`, and `publish.yml` | Version/doc edits |
+| [`publish.yml`](.github/workflows/publish.yml) | Manual release pipeline (`MINECRAFT_VERSION: 26.3`, `VERSION: 1.1.0`) | `workflow_dispatch` |
 
-## Forge (or other modloader) port
+## Other Mod Loaders (Forge / NeoForge)
 
-Not planned at the moment.
-But if the mod get more popular, I might have a look at it!
+This repository maintains a **Fabric-only** port for Minecraft `26.3`; Forge and NeoForge builds are not planned here.
 
-## Contributing
+## Contributing & Credits
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
+Contributions, issue reports, and pull requests for the `26.3` port are welcome in this repository!
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
-## Inspiration
-
-I've looked at RPG enchanting table to get the base concept done
-https://github.com/TheRedBrain/rpg-enchanting
-If you are looking for a more RPG approch be sure to check out this mod!
+* **Original Mod Author:** [Sacramentix](https://github.com/Sacramentix/chiseled-enchanting-table) — original concept, code, and artwork ([MIT License](LICENSE)).
+* **Upstream Concept Inspiration:** Sacramentix credited [TheRedBrain/rpg-enchanting](https://github.com/TheRedBrain/rpg-enchanting) as an early design inspiration for the original mod.

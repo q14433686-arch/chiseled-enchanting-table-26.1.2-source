@@ -1,5 +1,5 @@
-commit: 0c292e3615c485588f03d7bd47b41e59733b3fa6
-branch: arena/7a86fcca-chiseled-enchanting-table-26-1
+commit: 5cff4693bbc891ea4cbe9856908346df8d0e45e8
+branch: arena/6df3e4da-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
 loader: 0.19.5
@@ -29,17 +29,78 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.17.21
 
 > Task :compileJava
-Note: Some input files use or override a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-Note: Recompile with -Xlint:unchecked for details.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:47: warning: [deprecation] SimpleSynchronousResourceReloadListener in net.fabricmc.fabric.api.resource has been deprecated
+public final class ChiseledEnchantingTableData implements SimpleSynchronousResourceReloadListener {
+                                                          ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:153: warning: [deprecation] ResourceManagerHelper in net.fabricmc.fabric.api.resource has been deprecated
+        net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(PackType.SERVER_DATA)
+                                        ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:154: warning: [deprecation] registerReloadListener(IdentifiableResourceReloadListener) in ResourceManagerHelper has been deprecated
+            .registerReloadListener(new ChiseledEnchantingTableData());
+            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:608: warning: [unchecked] unchecked conversion
+        List<EnchantmentWithLevel>[] out = new List[] { List.of() };
+                                           ^
+  required: List<EnchantmentWithLevel>[]
+  found:    List[]
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1321: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+            if (!level.hasChunkAt(p)) {
+                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1397: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+            if (!level.hasChunkAt(p)) {
+                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1449: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+            if (!level.hasChunkAt(p)) {
+                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/MasterTomeWear.java:513: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+            if (!level.hasChunkAt(scanPos)) continue;
+                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:148: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+                && world.hasChunkAt(slot.position())
+                        ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:171: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+                    || !world.hasChunkAt(slot.position())
+                             ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:223: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+        if (!world.hasChunkAt(slot.position())) {
+                  ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:314: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+            if (!world.hasChunkAt(pos) || (shelves != null && shelves.requireLineOfSight()
+                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:829: warning: [deprecation] getSeed(int,int,int) in Mth has been deprecated
+            int init = (int) Mth.getSeed(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
+                                ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:1041: warning: [deprecation] removeComponentsFromTag(ValueOutput) in BlockEntity has been deprecated
+    public void removeComponentsFromTag(ValueOutput output) {
+                ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantingNetworking.java:95: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+                if (pos == null || !player.level().hasChunkAt(pos)) {
+                                                  ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledBookshelfTick.java:32: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+                    if (!level.hasChunkAt(candidate)) continue;
+                              ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:150: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+            if (!level.hasChunkAt(shelfPos)) {
+                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:515: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+                    if (level.hasChunkAt(adj) && level.getBlockState(adj).getCollisionShape(level, adj).isEmpty()) {
+                             ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:526: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+        return !level.hasChunkAt(abovePos) || !level.getBlockState(abovePos).getCollisionShape(level, abovePos).isEmpty();
+                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:544: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
+            if (!level.hasChunkAt(scannedPos)) {
+                      ^
+20 warnings
 
 > Task :processResources
 > Task :classes
 
 > Task :compileClientJava
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:64: warning: [deprecation] BlockEntityRendererRegistry in net.fabricmc.fabric.api.client.rendering.v1 has been deprecated
+        BlockEntityRendererRegistry.register(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
+        ^
+1 warning
 
 > Task :processClientResources
 > Task :clientClasses
@@ -48,6 +109,22 @@ Note: Recompile with -Xlint:deprecation for details.
 > Task :testClasses
 
 > Task :test
+
+AuditMechanicsTest > essenceWearStepOnlyBuysBackWhatWasBurned() PASSED
+
+AuditMechanicsTest > remainingChargesRespectFadedCap() PASSED
+
+AuditMechanicsTest > scapegoatTokensRoundTripAndDefaultToEssence() PASSED
+
+AuditMechanicsTest > boundedCountsAcceptInRangeAndRejectOutside() PASSED
+
+AuditMechanicsTest > flatPricingKeepsHistoricalFullReset() PASSED
+
+AuditMechanicsTest > generationFadesCapacityWithFloorOfOne() PASSED
+
+AuditMechanicsTest > essencePricingRestoresProportionally() PASSED
+
+AuditMechanicsTest > lineageAdvancesOnCopyAndMergesToMoreFadedParent() PASSED
 
 ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
 
@@ -85,15 +162,23 @@ EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndE
 
 EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
 
+EconomyAndConfigVerificationTest > partBTemplateDurabilityWildPreWearUnbreakingWaiverAndCrosslineInvariants() PASSED
+
 EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
 
 EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
 
 EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
 
+EconomyAndConfigVerificationTest > ritualWaitCurveLoadReferencesAreDatapackConfigurable() PASSED
+
+EconomyAndConfigVerificationTest > queuedRitualStepsRevalidateAgainstActualItem() PASSED
+
 EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
 
 EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
+
+EconomyAndConfigVerificationTest > combineSequentialChargesEveryUpgradeOnce() PASSED
 
 EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
 
@@ -101,7 +186,7 @@ FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
 
 FullPortRuntimeTest > configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() PASSED
 
-FullPortRuntimeTest > ritualWirePreservesMenuSessionAndQueue() PASSED
+FullPortRuntimeTest > ritualWirePreservesMenuSessionQueueAndBlockedState() PASSED
 
 FullPortRuntimeTest > malformedPolicyNeverBecomesAnUnlockedDefault() PASSED
 
@@ -111,13 +196,15 @@ FullPortRuntimeTest > persistedQueueHasFiniteResourceBounds() PASSED
 
 NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
 
-NetworkCompatibilityTest > allActionTokensAndNoBodyPacketsRoundTrip() PASSED
-
 NetworkCompatibilityTest > unknownActionsCannotSilentlyBecomeEnchantment() PASSED
+
+NetworkCompatibilityTest > allActionTokensAndMenuTargetedPacketsRoundTrip() PASSED
 
 NetworkCompatibilityTest > costTableConfigurationAndRowsRoundTrip() PASSED
 
 NetworkCompatibilityTest > runtimeConfigRequestAndAcknowledgementRoundTrip() PASSED
+
+NetworkCompatibilityTest > applyPayloadRejectsOutOfRangeFieldsAtConstruction() PASSED
 
 NetworkCompatibilityTest > liveUpdatesOnlyTargetTheMatchingMenu() PASSED
 
@@ -128,8 +215,6 @@ NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
 NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
 
 RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
-
-RuleArchitectureTest > missingWindowCannotCreditBackpackOrUnloadedTime() PASSED
 
 RuleArchitectureTest > overlapUsesFastestRateIndependentOfProposalOrder() PASSED
 
@@ -147,12 +232,14 @@ RuleArchitectureTest > fullyRestoredBooksAreEvictedWithoutOngoingDirtyWrites() P
 
 RuleArchitectureTest > fullLockResolvesEveryDefinedRuntimeKeyNotJustDatapackKeys() PASSED
 
+RuleArchitectureTest > unloadedWindowPausesWithoutCreditingOfflineTimeAndPersistsSnapshots() PASSED
+
 RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
 
 RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792782160873.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792814786010.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -162,7 +249,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 1m 10s
+BUILD SUCCESSFUL in 1m 11s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0

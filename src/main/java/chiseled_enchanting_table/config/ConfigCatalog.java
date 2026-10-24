@@ -487,6 +487,16 @@ public final class ConfigCatalog {
             d -> d.anvilBlockSameBookMerge, (d, v) -> d.anvilBlockSameBookMerge = v,
             ALWAYS, null
         ),
+        boolOpt(
+            "restrict_villager_infinity_books", CategoryId.GENERAL, EffectScope.IMMEDIATE,
+            d -> d.restrictVillagerInfinityBooks, (d, v) -> d.restrictVillagerInfinityBooks = v,
+            ALWAYS, null
+        ),
+        boolOpt(
+            "grindstone_depleted_tome", CategoryId.GENERAL, EffectScope.IMMEDIATE,
+            d -> d.grindstoneDepletedTome, (d, v) -> d.grindstoneDepletedTome = v,
+            ALWAYS, null
+        ),
 
         // ==================== 2. BOOKSHELVES ====================
         boolOpt(
@@ -638,7 +648,7 @@ public final class ConfigCatalog {
         doubleOpt(
             "book_combine_xp_multiplier", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0.10, 3.00, 0.05,
             d -> d.bookCombineXpMultiplier, (d, v) -> d.bookCombineXpMultiplier = v,
-            d -> String.format("%.2f\u00d7", d.bookCombineXpMultiplier),
+            d -> String.format(java.util.Locale.ROOT, "%.2f\u00d7", d.bookCombineXpMultiplier),
             d -> d.bookCombineEnabled, d -> "config.chiseled_enchanting_table.reason.need_book_combine"
         ),
         boolOpt(
@@ -649,7 +659,7 @@ public final class ConfigCatalog {
         doubleOpt(
             "book_research_xp_multiplier", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0.10, 3.00, 0.05,
             d -> d.bookResearchXpMultiplier, (d, v) -> d.bookResearchXpMultiplier = v,
-            d -> String.format("%.2f\u00d7", d.bookResearchXpMultiplier),
+            d -> String.format(java.util.Locale.ROOT, "%.2f\u00d7", d.bookResearchXpMultiplier),
             d -> d.bookResearchEnabled, d -> "config.chiseled_enchanting_table.reason.need_book_research"
         ),
 
@@ -839,6 +849,6 @@ public final class ConfigCatalog {
         if (sec % 60 == 0) {
             return (sec / 60) + "m (" + sec + "s)";
         }
-        return String.format("%dm%02ds", sec / 60, sec % 60);
+        return String.format(java.util.Locale.ROOT, "%dm%02ds", sec / 60, sec % 60);
     }
 }
