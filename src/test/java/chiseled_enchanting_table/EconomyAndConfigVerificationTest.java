@@ -1289,7 +1289,10 @@ class EconomyAndConfigVerificationTest {
         // 5. Dual skip costs & risks: XP sacrifice in [1..15], non-sacrifice degradation <= 50% normal and <= 70% with Infinity tome.
         for (long remTicks : List.of(20L, 600L, 3_600L, 6_000L, 50_000L, 500_000L)) {
             int xpLvls = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .computeSacrificeXpLevels(remTicks);
+                .computeSacrificeXpLevels(
+                    chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT,
+                    remTicks
+                );
             assertTrue(xpLvls >= 1 && xpLvls <= 15);
             double normalRisk = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeRushDegradeChance(remTicks, false);
