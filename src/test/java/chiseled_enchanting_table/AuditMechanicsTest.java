@@ -202,7 +202,7 @@ class AuditMechanicsTest {
         assertEquals(4, cfg.wearImmuneFullWaiverMaxEnchants());
         assertEquals(0.06, cfg.wearImmuneOverloadWaiverDecay(), 1e-9);
         assertEquals(2, cfg.wearImmuneMaxGeneration());
-        assertEquals(4.0, cfg.maxMasteryUnitsPerSlot(), 1e-9);
+        assertEquals(3.5, cfg.maxMasteryUnitsPerSlot(), 1e-9);
 
         // N = 1..4 -> 100% waiver; N = 5 -> 94%; N = 10 -> 64%; N = 20 -> clamped at floor 30%
         for (int n = 1; n <= 4; n++) {
@@ -220,29 +220,29 @@ class AuditMechanicsTest {
 
     @Test void perSlotMasteryCapPreventsSingleSuperBookFromMaxingGlobalDiscount() {
         var cfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
-        // One super-book carrying 16 max-level enchants in a single slot is capped at 4.0 units (+5% instead of +20%)
+        // One super-book carrying 16 max-level enchants in a single slot is capped at 3.5 units (+4% instead of +20%)
         double singleSlotCapped = chiseled_enchanting_table.mechanics.resonance.LibraryResonance
             .capSingleSlotMasteryUnits(cfg, 16.0);
-        assertEquals(4.0, singleSlotCapped, 1e-9);
-        assertEquals(5, chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+        assertEquals(3.5, singleSlotCapped, 1e-9);
+        assertEquals(4, chiseled_enchanting_table.mechanics.resonance.LibraryResonance
             .globalMasteryDiscountPercent(cfg, singleSlotCapped));
 
-        // Spreading 4 max-level enchants across 4 separate slots reaches 16.0 units -> full 20% global mastery discount
-        double fourSlotsSum = 0.0;
-        for (int i = 0; i < 4; i++) {
-            fourSlotsSum += chiseled_enchanting_table.mechanics.resonance.LibraryResonance
-                .capSingleSlotMasteryUnits(cfg, 4.0);
+        // Spreading max-level enchants across 5 separate slots reaches 17.5 units -> full 20% global mastery discount
+        double fiveSlotsSum = 0.0;
+        for (int i = 0; i < 5; i++) {
+            fiveSlotsSum += chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+                .capSingleSlotMasteryUnits(cfg, 3.5);
         }
         assertEquals(20, chiseled_enchanting_table.mechanics.resonance.LibraryResonance
-            .globalMasteryDiscountPercent(cfg, fourSlotsSum));
+            .globalMasteryDiscountPercent(cfg, fiveSlotsSum));
     }
 
     @Test void queueScaledSacrificeSkipAndActiveRitualVictimPriority() {
         var rCfg = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT;
-        // Single step caps at 15 levels; 4 queued steps cap at 15 + 3 * 5 = 30 levels; huge queue caps at 255 levels
+        // Single step caps at 15 levels; 4 queued steps cap at 15 + 3 * 4 = 27 levels; huge queue caps at 255 levels
         assertEquals(15, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .computeSacrificeXpLevels(rCfg, 500_000L, 1));
-        assertEquals(30, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+        assertEquals(27, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .computeSacrificeXpLevels(rCfg, 500_000L, 4));
         assertEquals(255, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .computeSacrificeXpLevels(rCfg, 10_000_000L, 100));
