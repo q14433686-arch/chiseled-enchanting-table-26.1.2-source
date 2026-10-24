@@ -775,6 +775,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig = new chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config(
             cfg.directGatesEnabled(),
             maxDirect,
+            Math.min(maxDirect, sg.twoLevelMaxBookshelves()),
             sg.gamma(),
             cfg.blankMaxTierMode(),
             cfg.horizontalScanRadius(),
@@ -836,7 +837,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             cfg.tomeRegenTier2Seconds(),
             lr.unbreakingWaiverPerLevel(),
             lr.unbreakingWaiverMaxChance(),
-            lr.wildBookWearEnabled(),
+            !cfg.classic103Mode() && lr.wildBookWearEnabled(),
             lr.wildBookRemainingWeights(),
             lr.scapegoatPricing(),
             cfg.lockedShelfBreakable(),
@@ -902,7 +903,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         int sMin = cfg.stripXpMin();
         int sMax = Math.max(sMin, cfg.stripXpMax());
         DisenchantingRules disenchantingRules = new DisenchantingRules(
-            cfg.disenchantEnabled(),
+            !cfg.classic103Mode() && cfg.disenchantEnabled(),
             cfg.allowCursePurge(),
             refScale,
             extScale,
@@ -914,7 +915,50 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         );
 
         Map<Identifier, ItemTransformation> itemTransformations;
-        if (!cfg.requirePriorDiscovery()) {
+        if (cfg.classic103Mode()) {
+            Identifier egaId = ChiseledEnchantingTable.identifier("enchanted_golden_apple");
+            Identifier bottleId = ChiseledEnchantingTable.identifier("experience_bottle");
+            Map<Identifier, ItemTransformation> classicMap = new java.util.LinkedHashMap<>();
+            classicMap.put(
+                egaId,
+                new ItemTransformation(
+                    egaId,
+                    Identifier.withDefaultNamespace("golden_apple"),
+                    false,
+                    Identifier.withDefaultNamespace("enchanted_golden_apple"),
+                    1,
+                    3,
+                    0,
+                    0,
+                    false,
+                    null,
+                    new ItemCostOption(Identifier.withDefaultNamespace("gold_block"), 8, 0, 0, 0, 0, 0, 1.0, List.of()),
+                    List.of(new ItemCostOption(Identifier.withDefaultNamespace("emerald"), 2, 0, 0, 0, 0, 0, 1.0, List.of())),
+                    List.of(),
+                    false
+                )
+            );
+            classicMap.put(
+                bottleId,
+                new ItemTransformation(
+                    bottleId,
+                    Identifier.withDefaultNamespace("glass_bottle"),
+                    false,
+                    Identifier.withDefaultNamespace("experience_bottle"),
+                    1,
+                    1,
+                    0,
+                    0,
+                    false,
+                    null,
+                    new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 6, 0, 0, 0, 0, 0, 1.0, List.of()),
+                    List.of(new ItemCostOption(Identifier.withDefaultNamespace("amethyst_shard"), 2, 0, 0, 0, 0, 0, 1.0, List.of())),
+                    List.of(),
+                    false
+                )
+            );
+            itemTransformations = Map.copyOf(classicMap);
+        } else if (!cfg.requirePriorDiscovery()) {
             Map<Identifier, ItemTransformation> unlockedMap = new java.util.LinkedHashMap<>();
             for (var entry : rawItemTransformations.entrySet()) {
                 ItemTransformation t = entry.getValue();

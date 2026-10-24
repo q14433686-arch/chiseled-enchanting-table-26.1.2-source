@@ -110,6 +110,11 @@ public record ModRuntimeConfig(
     // default ON per the 2026-10-24 audit disposition, opt-out for pack authors)
     boolean grindstoneDepletedTome,
 
+    // Faithful 1.0.3 Classic Purist mode: restores 1.0.3 +W/3 shelf boost, instant
+    // full-point enchanting, classic 2 transformations, plain Book drain, and hides
+    // post-1.0.3 UI tabs & feature consoles while keeping new registry items save-safe.
+    boolean classic103Mode,
+
     // Explicit per-field customization tracking (used when overrideDatapacks == false)
     Set<String> customizedKeys
 ) {
@@ -117,6 +122,234 @@ public record ModRuntimeConfig(
     public static final String FILE_NAME = "chiseled_enchanting_table.json";
 
     public static final ModRuntimeConfig DEFAULT = new Draft().build();
+
+    /**
+     * Built-in one-click gameplay presets exposed in {@code ChiseledEnchantingConfigScreen}
+     * and {@code /cet preset <id>}:
+     * <ul>
+     *   <li>{@link #CLASSIC_1_0_3}: 1:1 faithful restoration of release {@code 1.0.3};</li>
+     *   <li>{@link #CASUAL}: relaxed progression with infinite Master Tomes and generous discounts;</li>
+     *   <li>{@link #STANDARD}: shipped default balance ({@link #DEFAULT});</li>
+     *   <li>{@link #EXPERT}: high-stakes archivist rules with LOS, discovery gates, and strict wear.</li>
+     * </ul>
+     */
+    public enum Preset {
+        CLASSIC_1_0_3("classic_1_0_3"),
+        CASUAL("casual"),
+        STANDARD("standard"),
+        EXPERT("expert");
+
+        private final String id;
+
+        Preset(String id) {
+            this.id = id;
+        }
+
+        public String id() {
+            return this.id;
+        }
+
+        public String buttonKey() {
+            return "config.chiseled_enchanting_table.preset." + this.id;
+        }
+
+        public String tooltipKey() {
+            return "config.chiseled_enchanting_table.preset." + this.id + ".desc";
+        }
+
+        @Nullable
+        public static Preset fromToken(String raw) {
+            if (raw == null || raw.isBlank()) {
+                return null;
+            }
+            return switch (raw.trim().toLowerCase(java.util.Locale.ROOT)) {
+                case "1.0.3", "classic", "classic_1_0_3", "103", "purist" -> CLASSIC_1_0_3;
+                case "casual", "easy", "relaxed" -> CASUAL;
+                case "standard", "default", "normal" -> STANDARD;
+                case "expert", "hard", "archivist" -> EXPERT;
+                default -> null;
+            };
+        }
+
+        /**
+         * Applies this preset onto {@code draft} while preserving {@code enchantedBookStackSize}
+         * (startup-only DataComponent limit whose sudden reduction from 64 to 1 on an existing save
+         * holding stacked Enchanted Books would risk chunk/inventory load validation errors) and
+         * preserving the user's {@code overrideDatapacks} governance flag.
+         */
+        public void applyTo(Draft draft) {
+            if (draft == null) {
+                return;
+            }
+            int preservedStackSize = draft.enchantedBookStackSize;
+            boolean preservedOverrideDp = draft.overrideDatapacks;
+
+            Draft fresh = new Draft();
+            fresh.enchantedBookStackSize = preservedStackSize;
+            fresh.overrideDatapacks = preservedOverrideDp;
+
+            switch (this) {
+                case STANDARD -> {
+                    // Pure shipped defaults; clear customizedKeys except stack-size if non-default.
+                    if (preservedStackSize != 64) {
+                        fresh.customizedKeys.add("enchanted_book_stack_size");
+                    }
+                }
+                case CLASSIC_1_0_3 -> {
+                    fresh.classic103Mode = true;
+                    fresh.vanillaTableMode = VanillaTableMode.BOOKS;
+                    fresh.anvilFlatRepairCost = false;
+                    fresh.anvilBlockSameBookMerge = true;
+                    fresh.restrictVillagerInfinityBooks = false;
+                    fresh.grindstoneDepletedTome = false;
+
+                    fresh.directGatesEnabled = false;
+                    fresh.blankMaxTierMode = BlankMaxTierMode.FULL_CURVE;
+                    fresh.horizontalScanRadius = 2;
+                    fresh.verticalScanRadius = 2;
+                    fresh.requireBreathingRoom = false;
+                    fresh.requireLineOfSight = false;
+
+                    fresh.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+                    fresh.tomeRegenEnabled = false;
+                    fresh.lockedShelfBreakable = true;
+                    fresh.lockedBookExtractionBlocked = false;
+                    fresh.maxWoodenDiscountPercent = 0;
+                    fresh.maxTotalXpDiscountPercent = 0;
+                    fresh.bookCombineEnabled = true;
+                    fresh.bookCombineXpMultiplier = 1.00;
+                    fresh.bookResearchEnabled = true;
+                    fresh.bookResearchXpMultiplier = 0.50;
+
+                    fresh.epiphanyBaseChance = 0.0;
+                    fresh.epiphanyMaxChance = 0.0;
+
+                    fresh.disenchantEnabled = false;
+                    fresh.allowCursePurge = false;
+                    fresh.requirePriorDiscovery = false;
+                    fresh.transformationMaxBatchSize = 1;
+
+                    fresh.vanillaChestBooksMode = VanillaChestBooksMode.KEEP_BOTH;
+                    fresh.bookshelfPoolEnabled = true;
+                    markModifiedRuntimeKeys(fresh);
+                }
+                case CASUAL -> {
+                    fresh.classic103Mode = false;
+                    fresh.vanillaTableMode = VanillaTableMode.BOOKS;
+                    fresh.anvilFlatRepairCost = true;
+                    fresh.anvilBlockSameBookMerge = false;
+                    fresh.restrictVillagerInfinityBooks = false;
+                    fresh.grindstoneDepletedTome = false;
+
+                    fresh.directGatesEnabled = false;
+                    fresh.blankMaxTierMode = BlankMaxTierMode.FULL_CURVE;
+                    fresh.horizontalScanRadius = 4;
+                    fresh.verticalScanRadius = 2;
+                    fresh.requireBreathingRoom = false;
+                    fresh.requireLineOfSight = false;
+
+                    fresh.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+                    fresh.tomeRegenEnabled = true;
+                    fresh.tomeRegenBaseSeconds = 3_600;
+                    fresh.tomeRegenTier1Seconds = 1_800;
+                    fresh.tomeRegenTier2Seconds = 600;
+                    fresh.lockedShelfBreakable = true;
+                    fresh.lockedBookExtractionBlocked = false;
+                    fresh.maxWoodenDiscountPercent = 20;
+                    fresh.maxTotalXpDiscountPercent = 50;
+                    fresh.bookCombineEnabled = true;
+                    fresh.bookCombineXpMultiplier = 0.50;
+                    fresh.bookResearchEnabled = true;
+                    fresh.bookResearchXpMultiplier = 1.00;
+
+                    fresh.epiphanyMinBookshelves = 16;
+                    fresh.epiphanyBaseChance = 0.45;
+                    fresh.epiphanyMaxChance = 0.95;
+
+                    fresh.disenchantEnabled = true;
+                    fresh.xpRefundScale = 1.00;
+                    fresh.externalXpRefundScale = 0.50;
+                    fresh.allowCursePurge = true;
+                    fresh.cursePurgeXpCost = 6;
+                    fresh.requirePriorDiscovery = false;
+                    markModifiedRuntimeKeys(fresh);
+                }
+                case EXPERT -> {
+                    fresh.classic103Mode = false;
+                    fresh.vanillaTableMode = VanillaTableMode.ALIGN_CAPS;
+                    fresh.anvilFlatRepairCost = false;
+                    fresh.anvilBlockSameBookMerge = true;
+                    fresh.restrictVillagerInfinityBooks = true;
+                    fresh.grindstoneDepletedTome = true;
+
+                    fresh.directGatesEnabled = true;
+                    fresh.blankMaxTierMode = BlankMaxTierMode.LEVEL_ONE_ONLY;
+                    fresh.maxDirectBookshelves = 42;
+                    fresh.horizontalScanRadius = 3;
+                    fresh.verticalScanRadius = 2;
+                    fresh.requireBreathingRoom = true;
+                    fresh.minOpenAdjacentBlocks = 8;
+                    fresh.requireLineOfSight = true;
+
+                    fresh.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.WEAR;
+                    fresh.maxTomeUses = 3;
+                    fresh.bookCopyWearCost = 2;
+                    fresh.tomeDepleteBehavior = MasterTomeWear.DepleteBehavior.DEPLETED_TOME;
+                    fresh.tomeRegenEnabled = true;
+                    fresh.lockedShelfBreakable = false;
+                    fresh.lockedBookExtractionBlocked = true;
+                    fresh.maxWoodenDiscountPercent = 12;
+                    fresh.maxTotalXpDiscountPercent = 30;
+                    fresh.bookCombineEnabled = true;
+                    fresh.bookCombineXpMultiplier = 0.85;
+                    fresh.bookResearchEnabled = true;
+                    fresh.bookResearchXpMultiplier = 1.75;
+
+                    fresh.epiphanyMinBookshelves = 36;
+                    fresh.epiphanyBaseChance = 0.22;
+                    fresh.epiphanyMaxChance = 0.80;
+
+                    fresh.disenchantEnabled = true;
+                    fresh.xpRefundScale = 0.75;
+                    fresh.externalXpRefundScale = 0.15;
+                    fresh.allowCursePurge = true;
+                    fresh.cursePurgeXpCost = 18;
+                    fresh.requirePriorDiscovery = true;
+                    markModifiedRuntimeKeys(fresh);
+                }
+            }
+
+            fresh.normalizeAfterEdit(null);
+            draft.copyFrom(fresh);
+        }
+
+        public ModRuntimeConfig createConfig(int stackSize, boolean overrideDp) {
+            Draft probe = new Draft();
+            probe.enchantedBookStackSize = stackSize;
+            probe.overrideDatapacks = overrideDp;
+            applyTo(probe);
+            return probe.build();
+        }
+
+        public boolean matches(Draft draft) {
+            if (draft == null) {
+                return false;
+            }
+            return draft.build().equals(createConfig(draft.enchantedBookStackSize, draft.overrideDatapacks));
+        }
+
+        private static void markModifiedRuntimeKeys(Draft target) {
+            Draft def = new Draft();
+            for (var opt : ConfigCatalog.ALL_OPTIONS) {
+                if ("override_datapacks".equals(opt.key()) || "enchanted_book_stack_size".equals(opt.key())) {
+                    continue;
+                }
+                if (!java.util.Objects.equals(opt.get(target), opt.get(def))) {
+                    target.customizedKeys.add(opt.key());
+                }
+            }
+        }
+    }
 
     private static volatile ModRuntimeConfig localInstance;
     @Nullable
@@ -534,6 +767,7 @@ public record ModRuntimeConfig(
         general.addProperty("anvil_block_same_book_merge", anvilBlockSameBookMerge);
         general.addProperty("restrict_villager_infinity_books", restrictVillagerInfinityBooks);
         general.addProperty("grindstone_depleted_tome", grindstoneDepletedTome);
+        general.addProperty("classic_1_0_3_mode", classic103Mode);
         root.add("general", general);
 
         JsonObject bookshelves = new JsonObject();
@@ -640,6 +874,7 @@ public record ModRuntimeConfig(
         d.anvilBlockSameBookMerge = boolOr(general, "anvil_block_same_book_merge", d.anvilBlockSameBookMerge);
         d.restrictVillagerInfinityBooks = boolOr(general, "restrict_villager_infinity_books", d.restrictVillagerInfinityBooks);
         d.grindstoneDepletedTome = boolOr(general, "grindstone_depleted_tome", d.grindstoneDepletedTome);
+        d.classic103Mode = boolOr(general, "classic_1_0_3_mode", d.classic103Mode);
 
         d.directGatesEnabled = boolOr(shelves, "direct_gates_enabled", d.directGatesEnabled);
         if (shelves.has("blank_max_tier_mode")) {
@@ -738,6 +973,7 @@ public record ModRuntimeConfig(
         public boolean anvilBlockSameBookMerge = true;
         public boolean restrictVillagerInfinityBooks = false;
         public boolean grindstoneDepletedTome = true;
+        public boolean classic103Mode = false;
 
         public boolean directGatesEnabled = true;
         public BlankMaxTierMode blankMaxTierMode = BlankMaxTierMode.HALF_CEIL;
@@ -812,6 +1048,7 @@ public record ModRuntimeConfig(
             this.anvilBlockSameBookMerge = src.anvilBlockSameBookMerge;
             this.restrictVillagerInfinityBooks = src.restrictVillagerInfinityBooks;
             this.grindstoneDepletedTome = src.grindstoneDepletedTome;
+            this.classic103Mode = src.classic103Mode;
 
             this.directGatesEnabled = src.directGatesEnabled;
             this.blankMaxTierMode = src.blankMaxTierMode;
@@ -977,6 +1214,82 @@ public record ModRuntimeConfig(
             this.bookshelfEnchantedProb = round2(clampDouble(this.bookshelfEnchantedProb, 0.0, 1.0));
         }
 
+        public void copyFrom(Draft other) {
+            if (other == null || other == this) return;
+            ModRuntimeConfig snap = other.build();
+            this.overrideDatapacks = snap.overrideDatapacks;
+            this.enchantedBookStackSize = snap.enchantedBookStackSize;
+            this.vanillaTableMode = snap.vanillaTableMode;
+            this.anvilFlatRepairCost = snap.anvilFlatRepairCost;
+            this.anvilBlockSameBookMerge = snap.anvilBlockSameBookMerge;
+            this.restrictVillagerInfinityBooks = snap.restrictVillagerInfinityBooks;
+            this.grindstoneDepletedTome = snap.grindstoneDepletedTome;
+            this.classic103Mode = snap.classic103Mode;
+
+            this.directGatesEnabled = snap.directGatesEnabled;
+            this.blankMaxTierMode = snap.blankMaxTierMode;
+            this.maxDirectBookshelves = snap.maxDirectBookshelves;
+            this.horizontalScanRadius = snap.horizontalScanRadius;
+            this.verticalScanRadius = snap.verticalScanRadius;
+            this.requireBreathingRoom = snap.requireBreathingRoom;
+            this.minOpenAdjacentBlocks = snap.minOpenAdjacentBlocks;
+            this.requireLineOfSight = snap.requireLineOfSight;
+
+            this.tomeConsumptionMode = snap.tomeConsumptionMode;
+            this.maxTomeUses = snap.maxTomeUses;
+            this.bookCopyWearCost = snap.bookCopyWearCost;
+            this.tomeDepleteBehavior = snap.tomeDepleteBehavior;
+            this.tomeRegenEnabled = snap.tomeRegenEnabled;
+            this.tomeRegenBaseSeconds = snap.tomeRegenBaseSeconds;
+            this.tomeRegenTier1Shelves = snap.tomeRegenTier1Shelves;
+            this.tomeRegenTier1Seconds = snap.tomeRegenTier1Seconds;
+            this.tomeRegenTier2Shelves = snap.tomeRegenTier2Shelves;
+            this.tomeRegenTier2Seconds = snap.tomeRegenTier2Seconds;
+            this.lockedShelfBreakable = snap.lockedShelfBreakable;
+            this.lockedBookExtractionBlocked = snap.lockedBookExtractionBlocked;
+            this.earlyUnlockXpLevels = snap.earlyUnlockXpLevels;
+            this.earlyUnlockGritCount = snap.earlyUnlockGritCount;
+            this.sacrificeRequired = snap.sacrificeRequired;
+            this.tomePageRequiredShelves = snap.tomePageRequiredShelves;
+            this.maxWoodenDiscountPercent = snap.maxWoodenDiscountPercent;
+            this.maxTotalXpDiscountPercent = snap.maxTotalXpDiscountPercent;
+            this.bookCombineEnabled = snap.bookCombineEnabled;
+            this.bookCombineXpMultiplier = snap.bookCombineXpMultiplier;
+            this.bookResearchEnabled = snap.bookResearchEnabled;
+            this.bookResearchXpMultiplier = snap.bookResearchXpMultiplier;
+
+            this.epiphanyMinBookshelves = snap.epiphanyMinBookshelves;
+            this.epiphanyBaseChance = snap.epiphanyBaseChance;
+            this.epiphanyMaxChance = snap.epiphanyMaxChance;
+            this.epiphanyMaxSlotsCap = snap.epiphanyMaxSlotsCap;
+            this.epiphanyCycleSeconds = snap.epiphanyCycleSeconds;
+            this.epiphanyFreezeXpLevels = snap.epiphanyFreezeXpLevels;
+            this.epiphanyFreezeDurationSeconds = snap.epiphanyFreezeDurationSeconds;
+            this.epiphanyMaxFreezeSeconds = snap.epiphanyMaxFreezeSeconds;
+            this.epiphanyRerollXpLevels = snap.epiphanyRerollXpLevels;
+
+            this.disenchantEnabled = snap.disenchantEnabled;
+            this.xpRefundScale = snap.xpRefundScale;
+            this.externalXpRefundScale = snap.externalXpRefundScale;
+            this.stripXpMin = snap.stripXpMin;
+            this.stripXpMax = snap.stripXpMax;
+            this.allowCursePurge = snap.allowCursePurge;
+            this.cursePurgeXpCost = snap.cursePurgeXpCost;
+            this.requirePriorDiscovery = snap.requirePriorDiscovery;
+            this.tier1Bookshelves = snap.tier1Bookshelves;
+            this.tier2Bookshelves = snap.tier2Bookshelves;
+            this.tier3QualifyingEnchantments = snap.tier3QualifyingEnchantments;
+            this.transformationMaxBatchSize = snap.transformationMaxBatchSize;
+
+            this.vanillaChestBooksMode = snap.vanillaChestBooksMode;
+            this.bookshelfPoolEnabled = snap.bookshelfPoolEnabled;
+            this.bookshelfMinBooks = snap.bookshelfMinBooks;
+            this.bookshelfMaxBooks = snap.bookshelfMaxBooks;
+            this.bookshelfEnchantedProb = snap.bookshelfEnchantedProb;
+            this.customizedKeys.clear();
+            this.customizedKeys.addAll(snap.customizedKeys);
+        }
+
         public ModRuntimeConfig build() {
             return new ModRuntimeConfig(
                 overrideDatapacks,
@@ -1042,6 +1355,7 @@ public record ModRuntimeConfig(
                 bookshelfEnchantedProb,
                 restrictVillagerInfinityBooks,
                 grindstoneDepletedTome,
+                classic103Mode,
                 customizedKeys
             );
         }

@@ -160,7 +160,8 @@ public final class EnchantmentApplication {
             payload.enchantment_id(),
             enchantment
         );
-        int waitTicks = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
+        boolean classic103 = handler.isClassic103Mode();
+        int waitTicks = classic103 ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
             handler.ritualConfig(),
             ritualScan.totalDetectedBookshelves(),
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.medianShelfGate(shelfCfg),
@@ -174,7 +175,7 @@ public final class EnchantmentApplication {
         // copy one generation below the exact tome this step consumed (snapshot-bound,
         // same discipline as the Infinity-load binding above). Gear targets and
         // direct/epiphany inscriptions have no parent tome and keep -1 (no stamp).
-        int inheritedGeneration = (masterTomeUsed && targetWasBook
+        int inheritedGeneration = (!classic103 && masterTomeUsed && targetWasBook
             && resolvedWear.chosenTomeSnapshot() != null
             && !resolvedWear.chosenTomeSnapshot().isEmpty())
             ? chiseled_enchanting_table.mechanics.resonance.TomeWearData.childGeneration(
@@ -274,10 +275,14 @@ public final class EnchantmentApplication {
             }
         });
 
-        EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, finalLevel);
-        EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
-        if (inheritedGeneration >= 0 && target.is(Items.ENCHANTED_BOOK)) {
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(target, inheritedGeneration);
+        if (!classic103) {
+            EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, finalLevel);
+            EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+            if (inheritedGeneration >= 0 && target.is(Items.ENCHANTED_BOOK)) {
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(target, inheritedGeneration);
+            }
+        } else {
+            EnchantmentProvenance.clearAll(target);
         }
 
         if (conflictRefund > 0) {
@@ -356,14 +361,20 @@ public final class EnchantmentApplication {
             for (var entry : new_enchanted_book_enchants.keySet()) m.set(entry, new_enchanted_book_enchants.getLevel(entry));
         });
 
+        boolean classic103 = handler.isClassic103Mode();
         ItemStack remainderBook;
         if (EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook).isEmpty()) {
-            remainderBook = new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1);
-        } else {
-            EnchantmentProvenance.pruneToCurrentEnchantments(
-                updatedSingleBook,
-                EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook)
+            remainderBook = new ItemStack(
+                classic103 ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
+                1
             );
+        } else {
+            if (!classic103) {
+                EnchantmentProvenance.pruneToCurrentEnchantments(
+                    updatedSingleBook,
+                    EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook)
+                );
+            }
             remainderBook = updatedSingleBook;
         }
         if (enchanted_book.getCount() <= 1) {
@@ -399,15 +410,19 @@ public final class EnchantmentApplication {
             }
         });
 
-        EnchantmentProvenance.recordBookTransfer(sourceBookSnapshot, target, payload.enchantment_id(), enchantment_level);
-        EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
-        // Transfers move (never duplicate) an entry, so the result keeps the more
-        // faded parent's generation instead of advancing it: consolidation is not
-        // a fresh copy, but a faded lineage must not be laundered through a fresh book.
-        if (target.is(Items.ENCHANTED_BOOK)) {
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
-                target,
-                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(sourceBookSnapshot));
+        if (!classic103) {
+            EnchantmentProvenance.recordBookTransfer(sourceBookSnapshot, target, payload.enchantment_id(), enchantment_level);
+            EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+            // Transfers move (never duplicate) an entry, so the result keeps the more
+            // faded parent's generation instead of advancing it: consolidation is not
+            // a fresh copy, but a faded lineage must not be laundered through a fresh book.
+            if (target.is(Items.ENCHANTED_BOOK)) {
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                    target,
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(sourceBookSnapshot));
+            }
+        } else {
+            EnchantmentProvenance.clearAll(target);
         }
 
         if (conflictRefund > 0) {

@@ -59,8 +59,7 @@ public abstract class LockedBookContainerMixin {
     @Inject(
         method = "removeItemNoUpdate(I)Lnet/minecraft/world/item/ItemStack;",
         at = @At("HEAD"),
-        cancellable = true,
-        require = 0
+        cancellable = true
     )
     private void cet$blockLockedShelfRemoveNoUpdate(
         int slot,
@@ -82,8 +81,7 @@ public abstract class LockedBookContainerMixin {
 
     @Inject(
         method = "removeItemNoUpdate(I)Lnet/minecraft/world/item/ItemStack;",
-        at = @At("RETURN"),
-        require = 0
+        at = @At("RETURN")
     )
     private void cet$clearLockOnShelfExitNoUpdate(
         int slot,

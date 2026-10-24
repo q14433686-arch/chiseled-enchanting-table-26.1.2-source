@@ -11,6 +11,7 @@
   "direct_upgrade_gates": {
     "enabled": true,
     "max_bookshelves": 38,
+    "two_level_max_bookshelves": 22,
     "gamma": 1.25,
     "blank_max_tier_mode": "half_ceil",
     "overrides": {}

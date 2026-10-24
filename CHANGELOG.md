@@ -16,8 +16,19 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > what was deliberately *not* taken because it is 26.3-only — is in
 > [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
 
-## [1.1.0] - 2026-10-25 (Code Audit & Balance Remediation)
+## [1.1.0] - 2026-10-25 (Code Audit Round 2, Curve Smoothing, JEI/REI Fix & 1.0.3 Preset)
 
+- **Bug Fixes (`wear_immune` Lineage Cap & JEI/REI Seamless Return)**:
+  - **Bug 1 (`gen3_deduct_one`)**: `#chiseled_enchanting_table:wear_immune` enchanted books now keep full `4/4` max uses across `Gen 0..2` (`effectiveGen = max(0, generation - wearImmuneMaxGeneration)`), starting max-durability deduction at `Gen 3` (`Gen 3 = 3/4`, `Gen 4 = 2/4`, `Gen 5+ = 1/4`), and `TomeWearData.getWearUsed` / `setWearUsed` read/write actual wear whenever overloaded (`N > 4`) or `Gen > 2`;
+  - **Bug 2 (JEI / REI Compatibility)**: Viewing recipes/uses via Right-click / `R` / `U` inside `ChiseledEnchantingTableScreen` and returning via `ESC` / Back now preserves all inventory icons, enchantment list rows, active tab, and scroll offset without closing or reopening the block (`ChiseledEnchantingTableBlock#getMenuProvider`, client-side `menu.removed` guard, `ReopenTablePayload` in-place slot resync, and `ChiseledEnchantingTableScreen#restoreAfterExternalScreenReturn`).
+- **4-Preset System (`1.0.3 Classic`, `Casual`, `Standard`, `Expert`) & UX Transparency**:
+  - Added 4 one-click presets in `ChiseledEnchantingConfigScreen`, including **`1.0.3 Classic Purist`** (`classic_1_0_3_mode`) which faithfully restores `1.0.3` mechanics (`+W/3` shelf boost on defaults & stored books, `5x5x5` scan, immortal books, `0s` instant enchanting, plain `Book` return, classic 2 transformations, hidden post-`1.0.3` tabs/consoles, inert new items/loot, and explicit stack-shrink & new-chunk safety warnings);
+  - Added hover transparency for library-wide `ΣL` overload slip %, scapegoat/rush sacrifice priority order, and ritual currency framing; replaced hardcoded `R`/`U` in `ArcaneGrimoireScreen` with configurable Fabric `KeyMapping`s (`GUI-03`) and added full keyboard navigation to `ChiseledEnchantingConfigScreen`.
+- **Curve Smoothing (`BAL-01..03`) & Full Architectural/Protocol Hardening (`26_1_2_revision_16`)**:
+  - `BAL-01`: Smoothed `maxLevel = 2` (`Fire Aspect`, `Knockback`, `Punch`, `Frost Walker`) `I -> II` upgrade shelf requirement to `two_level_max_bookshelves = 22` (`shelf_gates.json`);
+  - `BAL-02`: Replaced `mid1`/`mid2` step cliffs in `MasterTomeWear.computeRegenSeconds` with smooth piecewise-linear interpolation across `0 shelves (7200s) -> 38 shelves (3600s) -> 42 shelves (1200s)`;
+  - `BAL-03`: Lowered `min_discount_bookshelves` from `12` to `3` (`max_discount_bookshelves = 45`, smooth `+1%` per ~3 wooden shelves up to `-15%`);
+  - Full audit hardening (`CetTags`, `CetCustomData` with `cet_schema = 1` + legacy save migration, `QueuedInscription.CODEC` with legacy `;` fallback, `PayloadLimits.estimateStackBytes` 900KB custom-component estimation + C2S rate limiting, `[1..255]` `EnchantmentWithLevel` codec bounds, `hasChunkAt` guards, safe `MerchantOffer` copy replacement, and `ReloadableServerRegistriesMixin` / `RemoveXpCostScaling` hygiene).
 - **Infinity / `#wear_immune` Balance Overhaul (`curve_sum_gen`)**:
   - Continuous wear-immunity curve by single-tome non-curse enchantment count (`100%` at `N <= 4`, `-6%` per extra enchantment down to `unbreaking_waiver_max_chance = 30%`);
   - Library-wide `ΣL` overload transcription-slip load aggregated across all active wear-immune Master Tomes in scan range (closing the split-book loophole), capped at `25%` (`0.25`);

@@ -83,6 +83,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private boolean filterModifiedOnly = false;
     private float scrollOffset = 0.0f;
     private float maxScroll = 0.0f;
+    private int focusedOptionIndex = -1;
 
     private int panelX;
     private int panelY;
@@ -156,9 +157,27 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         int railW = Math.min(118, Math.max(94, this.panelW * 28 / 100));
         this.listX = this.panelX + railW + 8;
-        this.listY = this.panelY + 46;
+        this.listY = this.panelY + 63;
         this.listW = this.panelW - railW - 16;
-        this.listH = this.panelH - 76;
+        this.listH = this.panelH - 93;
+    }
+
+    private List<Component> buildPresetTooltip(ModRuntimeConfig.Preset preset) {
+        String key = preset.id();
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.translatable("config.chiseled_enchanting_table.preset." + key + ".title")
+            .withStyle(ChatFormatting.GOLD));
+        lines.add(Component.translatable("config.chiseled_enchanting_table.preset." + key + ".desc")
+            .withStyle(ChatFormatting.GRAY));
+        lines.add(Component.translatable("config.chiseled_enchanting_table.preset.note_new_chunks")
+            .withStyle(ChatFormatting.AQUA));
+        if (preset == ModRuntimeConfig.Preset.CLASSIC_1_0_3) {
+            lines.add(Component.translatable("config.chiseled_enchanting_table.preset.classic_1_0_3.inert_note")
+                .withStyle(ChatFormatting.YELLOW));
+            lines.add(Component.translatable("config.chiseled_enchanting_table.preset.classic_1_0_3.stack_warning")
+                .withStyle(ChatFormatting.RED));
+        }
+        return lines;
     }
 
     @Override
@@ -371,8 +390,67 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             }
         }
 
+        // 4-Preset Bar (1.0.3 Classic / Casual / Standard / Expert)
+        int presetY = this.panelY + headerH + 3;
+        int presetH = 15;
+        ModRuntimeConfig.Preset[] presets = ModRuntimeConfig.Preset.values();
+        int presetGap = 3;
+        int presetLabelW = 34;
+        RowRenderSupport.renderCenteredYText(
+            ctx, Minecraft.getInstance(), I18n.get("config.chiseled_enchanting_table.preset.label"),
+            this.listX, presetY + presetH * 0.5f, 0.66f, presetLabelW, GOLD_TEXT
+        );
+        int presetBarX = this.listX + presetLabelW + 2;
+        int presetBarW = Math.max(80, this.listW - presetLabelW - 2);
+        int singlePresetW = (presetBarW - presetGap * (presets.length - 1)) / presets.length;
+        for (int pIdx = 0; pIdx < presets.length; pIdx++) {
+            ModRuntimeConfig.Preset preset = presets[pIdx];
+            int px = presetBarX + pIdx * (singlePresetW + presetGap);
+            int pw = (pIdx == presets.length - 1) ? (this.listX + this.listW - px) : singlePresetW;
+            boolean activePreset = preset.matches(this.draft);
+            boolean canApplyPreset = this.sessionMode.writable();
+            boolean overPreset = mouseX >= px && mouseX < px + pw && mouseY >= presetY && mouseY < presetY + presetH;
+            int pBorder = activePreset
+                ? 0xFF56E39F
+                : (canApplyPreset ? (overPreset ? GOLD_TEXT : 0xFF6B5396) : 0xFF342A47);
+            int pFill = activePreset
+                ? 0xFF1E5940
+                : (overPreset && canApplyPreset ? 0xFF392759 : 0xFF211834);
+            ctx.fill(px, presetY, px + pw, presetY + presetH, pBorder);
+            ctx.fill(px + 1, presetY + 1, px + pw - 1, presetY + presetH - 1, pFill);
+            GrimoireTextLayout.drawCenteredBox(
+                ctx,
+                this.font,
+                I18n.get("config.chiseled_enchanting_table.preset." + preset.id() + ".short"),
+                px + 2,
+                pw - 4,
+                presetY + presetH * 0.5f,
+                0.64f,
+                activePreset ? 0xFFA8FFD8 : (canApplyPreset ? CREAM_TEXT : 0xFF6B607E),
+                true
+            );
+            if (overPreset) {
+                pendingTooltip = buildPresetTooltip(preset);
+            }
+            if (canApplyPreset) {
+                final ModRuntimeConfig.Preset chosenPreset = preset;
+                this.hitBoxes.add(new HitBox(px, presetY, pw, presetH, () -> {
+                    chosenPreset.applyTo(this.draft);
+                    this.focusedOptionIndex = -1;
+                    playClick(1.06f);
+                    if (chosenPreset == ModRuntimeConfig.Preset.CLASSIC_1_0_3 && Minecraft.getInstance().gui != null) {
+                        Minecraft.getInstance().gui.setOverlayMessage(
+                            Component.translatable("config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice")
+                                .withStyle(ChatFormatting.GOLD),
+                            false
+                        );
+                    }
+                }, null));
+            }
+        }
+
         // Category Banner + Category Reset Button
-        int subY = this.panelY + headerH + 4;
+        int subY = presetY + presetH + 3;
         int resetCatW = 68;
         int resetCatX = this.listX + this.listW - resetCatW;
         String subHeader = this.filterModifiedOnly
@@ -431,12 +509,15 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                     && mouseY >= ry && mouseY < ry + ROW_H;
 
                 OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
+                boolean keyFocused = idx == this.focusedOptionIndex;
                 int cardFill = !avail.parentApplicable()
                     ? CARD_BG_DISABLED
-                    : (rowHover ? CARD_BG_HOVER : CARD_BG);
-                int borderCol = avail.modifiedFromDefault()
-                    ? 0xFFBA9244
-                    : (avail.parentApplicable() ? 0xFF3E2E5C : 0xFF281F3B);
+                    : ((rowHover || keyFocused) ? CARD_BG_HOVER : CARD_BG);
+                int borderCol = keyFocused
+                    ? GOLD_TEXT
+                    : (avail.modifiedFromDefault()
+                        ? 0xFFBA9244
+                        : (avail.parentApplicable() ? 0xFF3E2E5C : 0xFF281F3B));
 
                 ctx.fill(this.listX, ry, this.listX + innerCardW, ry + ROW_H, borderCol);
                 ctx.fill(this.listX + 1, ry + 1, this.listX + innerCardW - 1, ry + ROW_H - 1, cardFill);
@@ -639,6 +720,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (entry.effectScope() == ConfigCatalog.EffectScope.RESTART_REQUIRED) {
             String actual = entry.rawOrKeyDisplay(ModRuntimeConfig.effective().toDraft());
             lines.add(Component.translatable("config.chiseled_enchanting_table.tip.active_value", actual).withStyle(ChatFormatting.GOLD));
+            if ("enchanted_book_stack_size".equals(entry.key())) {
+                lines.add(Component.translatable("config.chiseled_enchanting_table.tip.stack_shrink_save_risk")
+                    .withStyle(ChatFormatting.RED));
+            }
         }
         ChatFormatting scopeFmt = switch (avail.effectScope()) {
             case IMMEDIATE -> ChatFormatting.GREEN;
@@ -660,6 +745,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         ModRuntimeConfig currentPreview = this.draft.build();
         boolean hasUnsaved = !currentPreview.equals(this.baselineConfig);
         boolean restartChanged = currentPreview.enchantedBookStackSize() != ModRuntimeConfig.get().enchantedBookStackSize();
+        boolean stackShrinkRisk = currentPreview.enchantedBookStackSize()
+            < chiseled_enchanting_table.ChiseledEnchantingTable.bootEnchantedBookStackSize();
 
         int btnH = 18;
         int saveW = 86;
@@ -702,9 +789,15 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         } else if (System.currentTimeMillis() < this.statusToastUntilMs) {
             statusText = I18n.get(this.lastSaveFailed ? "config.chiseled_enchanting_table.msg.save_failed" : "config.chiseled_enchanting_table.msg.saved");
             statusCol = this.lastSaveFailed ? 0xFFFF6B6B : 0xFF6BFFB3;
+        } else if (stackShrinkRisk) {
+            statusText = I18n.get("config.chiseled_enchanting_table.msg.stack_shrink_risk");
+            statusCol = 0xFFFF6B6B;
         } else if (restartChanged) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.restart_hint");
             statusCol = 0xFFFFC46B;
+        } else if (currentPreview.classic103Mode()) {
+            statusText = I18n.get("config.chiseled_enchanting_table.msg.classic_1_0_3_active");
+            statusCol = 0xFFFFD87A;
         } else if (hasUnsaved) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.unsaved");
             statusCol = GOLD_TEXT;
@@ -833,9 +926,53 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (categoryIndex >= 0 && categoryIndex < categories.length) {
             this.filterModifiedOnly = false;
             this.activeCategory = categories[categoryIndex];
+            this.focusedOptionIndex = -1;
             this.scrollOffset = 0.0f;
             playClick(1.0f);
             return true;
+        }
+        List<OptionEntry> visible = visibleOptions();
+        if (!visible.isEmpty()) {
+            if (key == InputConstants.KEY_TAB || key == InputConstants.KEY_DOWN || key == InputConstants.KEY_UP) {
+                int delta = (key == InputConstants.KEY_UP || (key == InputConstants.KEY_TAB && event.hasShiftDown())) ? -1 : 1;
+                if (this.focusedOptionIndex < 0) {
+                    this.focusedOptionIndex = delta > 0 ? 0 : visible.size() - 1;
+                } else {
+                    this.focusedOptionIndex = Math.floorMod(this.focusedOptionIndex + delta, visible.size());
+                }
+                float rowTop = this.focusedOptionIndex * (ROW_H + ROW_GAP);
+                float rowBottom = rowTop + ROW_H;
+                if (rowTop < this.scrollOffset) {
+                    this.scrollOffset = Mth.clamp(rowTop, 0.0f, this.maxScroll);
+                } else if (rowBottom > this.scrollOffset + this.listH) {
+                    this.scrollOffset = Mth.clamp(rowBottom - this.listH, 0.0f, this.maxScroll);
+                }
+                playClick(1.0f);
+                return true;
+            }
+            if (this.focusedOptionIndex >= 0 && this.focusedOptionIndex < visible.size()) {
+                OptionEntry entry = visible.get(this.focusedOptionIndex);
+                OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
+                if (avail.editable()) {
+                    if (key == InputConstants.KEY_LEFT || key == InputConstants.KEY_RIGHT) {
+                        int dir = key == InputConstants.KEY_RIGHT ? 1 : -1;
+                        if (entry.kind() == ControlKind.BOOLEAN || entry.kind() == ControlKind.ENUM_CYCLE) {
+                            entry.toggleOrCycle(this.draft, dir);
+                        } else {
+                            entry.stepValue(this.draft, event.hasShiftDown() ? dir * 5 : dir);
+                        }
+                        playClick(dir > 0 ? 1.04f : 0.96f);
+                        return true;
+                    }
+                    if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_SPACE) {
+                        if (entry.kind() == ControlKind.BOOLEAN || entry.kind() == ControlKind.ENUM_CYCLE) {
+                            entry.toggleOrCycle(this.draft, 1);
+                            playClick(1.04f);
+                            return true;
+                        }
+                    }
+                }
+            }
         }
         return super.keyPressed(event);
     }

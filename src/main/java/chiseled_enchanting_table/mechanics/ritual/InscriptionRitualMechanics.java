@@ -143,9 +143,11 @@ public final class InscriptionRitualMechanics {
     public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = chiseled_enchanting_table.BundledDefaults.CROSSLINE_MAX_SLIP_CHANCE;
 
     public static final TagKey<Enchantment> EPIPHANY_EXCLUSIVE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, ChiseledEnchantingTable.identifier("epiphany_exclusive"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.EPIPHANY_EXCLUSIVE;
     public static final TagKey<Enchantment> CROSSLINE_EXCLUDED_TAG =
-        TagKey.create(Registries.ENCHANTMENT, ChiseledEnchantingTable.identifier("crossline_excluded"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.CROSSLINE_EXCLUDED;
+    public static final TagKey<Enchantment> BROAD_APPLICABILITY_TAG =
+        chiseled_enchanting_table.registry.CetTags.Enchantments.BROAD_APPLICABILITY;
 
     /**
      * Data-driven qualification load, probability curve, 3-branch outcome split ({@code 70% / 25% / 5%}),
@@ -515,6 +517,12 @@ public final class InscriptionRitualMechanics {
 
     /** Compact persisted material cost entry for 50% cross-line pollution compensation. */
     public record PaidItemEntry(Identifier itemId, int count) {
+        public static final com.mojang.serialization.Codec<PaidItemEntry> CODEC =
+            com.mojang.serialization.codecs.RecordCodecBuilder.create(instance -> instance.group(
+                Identifier.CODEC.fieldOf("item").forGetter(PaidItemEntry::itemId),
+                com.mojang.serialization.Codec.intRange(1, 1024).fieldOf("count").forGetter(PaidItemEntry::count)
+            ).apply(instance, PaidItemEntry::new));
+
         public PaidItemEntry {
             count = Mth.clamp(count, 1, 1024);
         }
@@ -534,6 +542,20 @@ public final class InscriptionRitualMechanics {
         List<PaidItemEntry> paidItems,
         int inheritedGeneration
     ) {
+        public static final com.mojang.serialization.Codec<QueuedInscription> CODEC =
+            com.mojang.serialization.codecs.RecordCodecBuilder.create(instance -> instance.group(
+                Identifier.CODEC.fieldOf("id").forGetter(QueuedInscription::enchantmentId),
+                com.mojang.serialization.Codec.intRange(1, 255).fieldOf("target_level").forGetter(QueuedInscription::targetLevel),
+                com.mojang.serialization.Codec.intRange(0, 255).fieldOf("previous_level").forGetter(QueuedInscription::previousLevel),
+                com.mojang.serialization.Codec.BOOL.optionalFieldOf("master_tome_used", false).forGetter(QueuedInscription::masterTomeUsed),
+                com.mojang.serialization.Codec.BOOL.optionalFieldOf("used_infinity_tome", false).forGetter(QueuedInscription::usedInfinityTome),
+                com.mojang.serialization.Codec.intRange(0, Integer.MAX_VALUE).optionalFieldOf("conflict_refund", 0).forGetter(QueuedInscription::conflictRefundPoints),
+                com.mojang.serialization.Codec.BOOL.optionalFieldOf("consumed_epiphany", false).forGetter(QueuedInscription::consumedEpiphany),
+                com.mojang.serialization.Codec.doubleRange(0.0, 256.0).optionalFieldOf("infinity_load", 0.0).forGetter(QueuedInscription::infinityTomeLoad),
+                com.mojang.serialization.Codec.intRange(0, 1_000_000).optionalFieldOf("paid_xp", 0).forGetter(QueuedInscription::paidXpPoints),
+                PaidItemEntry.CODEC.sizeLimitedListOf(64).optionalFieldOf("paid_items", List.of()).forGetter(QueuedInscription::paidItems),
+                com.mojang.serialization.Codec.intRange(-1, 255).optionalFieldOf("inherited_gen", -1).forGetter(QueuedInscription::inheritedGeneration)
+            ).apply(instance, QueuedInscription::new));
         public QueuedInscription {
             infinityTomeLoad = Double.isFinite(infinityTomeLoad) ? Math.max(0.0, Math.min(256.0, infinityTomeLoad)) : 0.0;
             paidXpPoints = Math.max(0, Math.min(1_000_000, paidXpPoints));
@@ -667,6 +689,25 @@ public final class InscriptionRitualMechanics {
         }
     }
 
+    /** Structured list codec for persisted ritual steps (CODEC-02), paired with legacy ';'-string fallback. */
+    public static final com.mojang.serialization.Codec<List<QueuedInscription>> STRUCTURED_QUEUE_CODEC =
+        QueuedInscription.CODEC.sizeLimitedListOf(MAX_QUEUE_STEPS);
+
+    public static final com.mojang.serialization.Codec<List<QueuedInscription>> QUEUE_CODEC =
+        com.mojang.serialization.Codec.withAlternative(
+            STRUCTURED_QUEUE_CODEC,
+            com.mojang.serialization.Codec.STRING.comapFlatMap(
+                raw -> {
+                    try {
+                        return com.mojang.serialization.DataResult.success(List.copyOf(deserializeQueue(raw)));
+                    } catch (IllegalArgumentException e) {
+                        return com.mojang.serialization.DataResult.error(e::getMessage);
+                    }
+                },
+                InscriptionRitualMechanics::serializeQueue
+            )
+        );
+
     public static String serializeQueue(List<QueuedInscription> queue) {
         if (queue == null || queue.isEmpty()) {
             return "";
@@ -788,6 +829,15 @@ public final class InscriptionRitualMechanics {
 
     /** Applicability factor reflecting enchantment universality &amp; keystone impact ({@code >= 1.0}). */
     public static double computeApplicabilityFactor(Identifier enchantmentId, int supportedItemCount, int anvilWeight) {
+        return computeApplicabilityFactor(enchantmentId, supportedItemCount, anvilWeight, HIGH_APPLICABILITY_IDS.contains(enchantmentId));
+    }
+
+    private static double computeApplicabilityFactor(
+        Identifier enchantmentId,
+        int supportedItemCount,
+        int anvilWeight,
+        boolean broadApplicabilityTagged
+    ) {
         double itemBreadth = 1.0 + 0.42 * Mth.clamp((supportedItemCount - 1) / 24.0, 0.0, 1.0);
         double rarityBoost = anvilWeight <= 1 ? 1.18 : (anvilWeight <= 2 ? 1.12 : (anvilWeight <= 5 ? 1.05 : 1.0));
         double keystone = 1.0;
@@ -795,7 +845,7 @@ public final class InscriptionRitualMechanics {
             keystone = 1.55;
         } else if (UNBREAKING_ID.equals(enchantmentId)) {
             keystone = 1.32;
-        } else if (HIGH_APPLICABILITY_IDS.contains(enchantmentId)) {
+        } else if (broadApplicabilityTagged || HIGH_APPLICABILITY_IDS.contains(enchantmentId)) {
             keystone = 1.20;
         }
         return Mth.clamp(itemBreadth * rarityBoost * keystone, 1.0, 2.35);
@@ -804,7 +854,8 @@ public final class InscriptionRitualMechanics {
     public static double computeApplicabilityFactor(Identifier enchantmentId, Holder<Enchantment> holder) {
         int supportedCount = holder.value().definition().supportedItems().size();
         int weight = holder.value().definition().weight();
-        return computeApplicabilityFactor(enchantmentId, supportedCount, weight);
+        boolean broadTagged = holder.is(BROAD_APPLICABILITY_TAG);
+        return computeApplicabilityFactor(enchantmentId, supportedCount, weight, broadTagged);
     }
 
     /**

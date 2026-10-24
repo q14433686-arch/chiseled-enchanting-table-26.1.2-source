@@ -84,7 +84,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeBoolean(value.input_is_tag());
             buf.writeIdentifier(value.output_item());
             buf.writeVarInt(Math.max(0, value.level()));
-            buf.writeVarInt(Math.max(1, value.min_player_level()));
+            buf.writeVarInt(Math.max(0, value.min_player_level()));
             buf.writeVarInt(Math.max(0, value.deducted_levels()));
             buf.writeBoolean(value.unlocked());
         }
@@ -95,7 +95,7 @@ public final class ChiseledEnchantingMenuPayloads {
             boolean isTag = buf.readBoolean();
             Identifier output = buf.readIdentifier();
             int level = Math.max(0, buf.readVarInt());
-            int minPlayerLevel = Math.max(1, buf.readVarInt());
+            int minPlayerLevel = Math.max(0, buf.readVarInt());
             int deductedLevels = Math.max(0, buf.readVarInt());
             boolean unlocked = buf.readBoolean();
             return new TransformationDisplay(id, input, isTag, output, level, minPlayerLevel, deductedLevels, unlocked);
@@ -124,12 +124,84 @@ public final class ChiseledEnchantingMenuPayloads {
         int sacrifice_progress,
         int sacrifice_required,
         int tome_page_required_shelves,
-        double effective_mastery_units
+        double effective_mastery_units,
+        java.util.Optional<BlockPos> table_pos
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_PAYLOAD_ID =
             new CustomPacketPayload.Type<>(AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_CODEC =
             CustomPacketPayload.codec(AvailableEnchantmentPayload::write, AvailableEnchantmentPayload::read);
+
+        public AvailableEnchantmentPayload {
+            table_pos = table_pos == null ? java.util.Optional.empty() : table_pos.map(BlockPos::immutable);
+        }
+
+        public AvailableEnchantmentPayload withTablePos(@Nullable BlockPos pos) {
+            return new AvailableEnchantmentPayload(
+                unlocked_enchantements,
+                transformations,
+                xp_discount_percent,
+                regular_bookshelves,
+                chiseled_book_count,
+                high_tier_chiseled_books,
+                epiphany_seed,
+                stored_master_levels,
+                cramped_library,
+                chiseled_bookshelves,
+                empty_chiseled_bookshelves,
+                master_tome_charges,
+                cleanse_unlocked,
+                tome_page_unlocked,
+                sacrifice_progress,
+                sacrifice_required,
+                tome_page_required_shelves,
+                effective_mastery_units,
+                pos == null ? java.util.Optional.empty() : java.util.Optional.of(pos.immutable())
+            );
+        }
+
+        public AvailableEnchantmentPayload(
+            Set<EnchantmentWithLevel> unlocked_enchantements,
+            List<TransformationDisplay> transformations,
+            int xp_discount_percent,
+            int regular_bookshelves,
+            int chiseled_book_count,
+            int high_tier_chiseled_books,
+            int epiphany_seed,
+            Map<Identifier, Integer> stored_master_levels,
+            boolean cramped_library,
+            int chiseled_bookshelves,
+            int empty_chiseled_bookshelves,
+            Map<EnchantmentWithLevel, Integer> master_tome_charges,
+            boolean cleanse_unlocked,
+            boolean tome_page_unlocked,
+            int sacrifice_progress,
+            int sacrifice_required,
+            int tome_page_required_shelves,
+            double effective_mastery_units
+        ) {
+            this(
+                unlocked_enchantements,
+                transformations,
+                xp_discount_percent,
+                regular_bookshelves,
+                chiseled_book_count,
+                high_tier_chiseled_books,
+                epiphany_seed,
+                stored_master_levels,
+                cramped_library,
+                chiseled_bookshelves,
+                empty_chiseled_bookshelves,
+                master_tome_charges,
+                cleanse_unlocked,
+                tome_page_unlocked,
+                sacrifice_progress,
+                sacrifice_required,
+                tome_page_required_shelves,
+                effective_mastery_units,
+                java.util.Optional.empty()
+            );
+        }
 
         public AvailableEnchantmentPayload(
             Set<EnchantmentWithLevel> unlocked_enchantements,
@@ -395,6 +467,31 @@ public final class ChiseledEnchantingMenuPayloads {
         }
 
         public static List<TransformationDisplay> buildTransformationDisplays(@Nullable Player player) {
+            boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+            if (classic103) {
+                return List.of(
+                    new TransformationDisplay(
+                        chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple"),
+                        Identifier.withDefaultNamespace("golden_apple"),
+                        false,
+                        Identifier.withDefaultNamespace("enchanted_golden_apple"),
+                        1,
+                        0,
+                        0,
+                        true
+                    ),
+                    new TransformationDisplay(
+                        chiseled_enchanting_table.ChiseledEnchantingTable.identifier("experience_bottle"),
+                        Identifier.withDefaultNamespace("glass_bottle"),
+                        false,
+                        Identifier.withDefaultNamespace("experience_bottle"),
+                        1,
+                        0,
+                        0,
+                        true
+                    )
+                );
+            }
             List<TransformationDisplay> displays = new ArrayList<>();
             for (var desc : ChiseledEnchantingTableData.transformationDescriptors(player)) {
                 displays.add(new TransformationDisplay(
@@ -445,6 +542,8 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(Math.max(1, sacrifice_required));
             buf.writeVarInt(Math.max(1, tome_page_required_shelves));
             buf.writeDouble(Double.isFinite(effective_mastery_units) ? effective_mastery_units : -1.0);
+            buf.writeBoolean(table_pos.isPresent());
+            table_pos.ifPresent(buf::writeBlockPos);
         }
 
         private static AvailableEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
@@ -483,6 +582,9 @@ public final class ChiseledEnchantingMenuPayloads {
             if (!Double.isFinite(effectiveMasteryUnits)) {
                 effectiveMasteryUnits = -1.0;
             }
+            java.util.Optional<BlockPos> tablePos = buf.readBoolean()
+                ? java.util.Optional.of(buf.readBlockPos().immutable())
+                : java.util.Optional.empty();
             return new AvailableEnchantmentPayload(
                 unlocked,
                 transformations,
@@ -501,7 +603,8 @@ public final class ChiseledEnchantingMenuPayloads {
                 sacrificeProgressValue,
                 sacrificeRequiredValue,
                 tomePageRequiredShelvesValue,
-                effectiveMasteryUnits
+                effectiveMasteryUnits,
+                tablePos
             );
         }
 

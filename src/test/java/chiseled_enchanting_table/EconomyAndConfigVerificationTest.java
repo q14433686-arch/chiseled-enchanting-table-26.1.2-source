@@ -376,6 +376,14 @@ class EconomyAndConfigVerificationTest {
         assertEquals(12, sg.tier1Bookshelves());
         assertEquals(32, sg.tier2Bookshelves());
         assertEquals(38, sg.maxDirectBookshelves());
+        assertEquals(22, sg.twoLevelMaxBookshelves(), "BAL-01: Max-level-2 enchantments unlock II at 22 wooden shelves");
+        assertEquals(22, BookshelfProgression.requiredBookshelvesForUpgrade(2, 2, null, sg));
+        assertEquals(38, BookshelfProgression.requiredBookshelvesForUpgrade(3, 3, null, sg));
+        assertEquals(3, wearCfg.minDiscountBookshelves(), "BAL-03: Wooden discount starts smoothly at 3 shelves");
+        assertEquals(45, wearCfg.maxDiscountBookshelves(), "BAL-03: Wooden discount reaches 15% smoothly at 45 shelves");
+        assertEquals(0, LibraryResonance.woodenBookshelfDiscountPercent(wearCfg, 2));
+        assertEquals(1, LibraryResonance.woodenBookshelfDiscountPercent(wearCfg, 3));
+        assertEquals(15, LibraryResonance.woodenBookshelfDiscountPercent(wearCfg, 45));
         assertTrue(sg.requireBreathingRoom());
         assertEquals(6, sg.minOpenAdjacentBlocks());
 
@@ -789,7 +797,7 @@ class EconomyAndConfigVerificationTest {
     @Test
     void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
-        assertEquals(63, all.size(), "Expected 63 curated in-game configurable entries across 6 categories");
+        assertEquals(64, all.size(), "Expected 64 curated in-game configurable entries across 6 categories");
         for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
                 chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
@@ -1046,15 +1054,18 @@ class EconomyAndConfigVerificationTest {
         assertEquals(1_200.0, MasterTomeWear.computeRegenSeconds(def, 42), 1e-6);
         assertEquals(24_000, MasterTomeWear.computeRegenIntervalTicks(def, 42));
 
-        // Dramatic two-tier breakthroughs at 37 -> 38 and 41 -> 42 AND strict non-increasing monotonicity for S in [0, 100].
+        // BAL-02: Smooth piecewise-linear interpolation across (0 -> 7200s) -> (38 -> 3600s) -> (42 -> 1200s)
+        // with zero artificial step cliffs at 37->38 or 41->42, plus strict non-increasing monotonicity on [0, 100].
+        assertEquals(5_400.0, MasterTomeWear.computeRegenSeconds(def, 19), 1e-6,
+            "Midpoint S=19 in [0, 38] must interpolate linearly to 5,400s (4.5 game days)");
         assertTrue(
-            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) >= 1_000.0,
-            "Reaching Tier 1 (38 bookshelves -> 3 game days) must deliver a substantial regeneration breakthrough"
+            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) < 120.0,
+            "BAL-02: Transition 37 -> 38 must be smooth (~94.7s/shelf) without an artificial cliff"
         );
-        assertTrue(
-            MasterTomeWear.computeRegenSeconds(def, 41) - MasterTomeWear.computeRegenSeconds(def, 42) >= 800.0,
-            "Reaching Tier 2 (42 bookshelves -> 1 game day) must deliver a dramatic Grand Sanctum regeneration breakthrough"
-        );
+        assertEquals(2_400.0, MasterTomeWear.computeRegenSeconds(def, 40), 1e-6,
+            "Midpoint S=40 in [38, 42] must interpolate linearly to 2,400s (2.0 game days)");
+        assertEquals(1_800.0, MasterTomeWear.computeRegenSeconds(def, 41), 1e-6,
+            "S=41 in [38, 42] must interpolate linearly to 1,800s (1.5 game days)");
         for (int s = 0; s < 100; s++) {
             int curTicks = MasterTomeWear.computeRegenIntervalTicks(def, s);
             int nextTicks = MasterTomeWear.computeRegenIntervalTicks(def, s + 1);

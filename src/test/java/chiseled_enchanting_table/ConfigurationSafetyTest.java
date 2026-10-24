@@ -46,4 +46,49 @@ class ConfigurationSafetyTest {
         assertEquals(first, ModRuntimeConfig.acknowledgedSaveId());
         assertFalse(ModRuntimeConfig.acknowledgedSaveAccepted());
     }
+
+    @Test void allFourPresetsRoundTripPreserveStackSizeAndRestore103Semantics() {
+        var draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.enchantedBookStackSize = 64;
+        draft.overrideDatapacks = true;
+        assertTrue(ModRuntimeConfig.Preset.STANDARD.matches(draft));
+
+        for (ModRuntimeConfig.Preset preset : ModRuntimeConfig.Preset.values()) {
+            preset.applyTo(draft);
+            assertTrue(preset.matches(draft), "Preset must match draft right after applyTo: " + preset);
+            assertEquals(64, draft.enchantedBookStackSize,
+                "Presets must NEVER auto-shrink enchantedBookStackSize (save-truncation safety): " + preset);
+            assertTrue(draft.overrideDatapacks, "Presets must preserve overrideDatapacks governance toggle");
+            var roundTripped = ModRuntimeConfig.fromJsonString(draft.build().toJsonString()).toDraft();
+            assertTrue(preset.matches(roundTripped), "Preset must survive JSON round-trip: " + preset);
+        }
+
+        ModRuntimeConfig.Preset.CLASSIC_1_0_3.applyTo(draft);
+        var classic = draft.build();
+        assertTrue(classic.classic103Mode());
+        assertEquals(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP, classic.tomeConsumptionMode());
+        assertFalse(classic.tomeRegenEnabled());
+        assertFalse(classic.disenchantEnabled());
+        assertEquals(0.0, classic.epiphanyMaxChance(), 1e-9);
+        assertEquals(2, classic.horizontalScanRadius());
+        assertEquals(2, classic.verticalScanRadius());
+        assertFalse(classic.requireBreathingRoom());
+        assertFalse(classic.requireLineOfSight());
+        assertEquals(0, classic.maxWoodenDiscountPercent());
+        assertEquals(0, classic.maxTotalXpDiscountPercent());
+
+        var original = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
+        try {
+            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+                classic, ModRuntimeConfig.PackPolicy.NONE, () -> {}
+            );
+            var classicFrame = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
+            assertEquals(2, classicFrame.itemTransformations().size(),
+                "1.0.3 Classic mode must expose only the 2 original item transformations (Golden Apple & Experience Bottle)");
+        } finally {
+            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+                original.configuration(), original.policy(), () -> {}
+            );
+        }
+    }
 }

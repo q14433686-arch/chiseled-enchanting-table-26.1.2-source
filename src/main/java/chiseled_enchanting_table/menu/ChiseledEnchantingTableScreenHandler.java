@@ -96,6 +96,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public java.util.Map<Identifier, TransformationDisplay> transformationDisplays;
     private final Level world;
     private final ContainerLevelAccess access;
+    @org.jetbrains.annotations.Nullable
+    private final net.minecraft.core.BlockPos syncedTablePos;
     private final boolean persistentBlockInventory;
     private final Container inventory;
 
@@ -114,6 +116,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     ) {
         super(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, syncId);
         this.access = access;
+        this.syncedTablePos = payload.table_pos().orElse(null);
         this.player = playerInventory.player;
         this.world = playerInventory.player.level();
         chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity[] backingHolder =
@@ -526,7 +529,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return total > 0 ? Math.min(configured, total) : configured;
     }
 
+    public boolean isClassic103Mode() {
+        return chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+    }
+
     public boolean isCleansePageUnlocked() {
+        if (isClassic103Mode()) {
+            return false;
+        }
         if (!this.world.isClientSide() && this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
             // The page unlocks at the configured sacrifice count; the advancement itself
             // still completes at its full criteria list for the achievement.
@@ -538,6 +548,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean isTomePageUnlocked() {
+        if (isClassic103Mode()) {
+            return false;
+        }
         if (!this.world.isClientSide() && this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
             return chiseled_enchanting_table.utils.Advancement.hasCompleted(
                 sp, chiseled_enchanting_table.utils.Advancement.HOW_MUCH_LONGER);
@@ -765,7 +778,6 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             for (int slot = 0; slot < net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
                 ItemStack current = shelf.getItem(slot);
                 if (!current.is(Items.ENCHANTED_BOOK)
-                    || chiseled_enchanting_table.mechanics.resonance.TomeWearData.hasWearImmunity(current)
                     || chiseled_enchanting_table.mechanics.resonance.TomeWearData.getWearUsed(current) <= 0
                     || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(current)) {
                     continue;
@@ -1405,6 +1417,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (type == OptionType.BOOK_COMBINE_UPGRADE) {
             return List.of();
         }
+        if (isClassic103Mode()
+            && (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id()))) {
+            if (chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple").equals(e.enchantment_id())) {
+                return List.of(List.of(new ItemStack(Items.GOLD_BLOCK, 8), new ItemStack(Items.EMERALD, 2)));
+            }
+            if (chiseled_enchanting_table.ChiseledEnchantingTable.identifier("experience_bottle").equals(e.enchantment_id())) {
+                return List.of(List.of(new ItemStack(Items.LAPIS_LAZULI, 6), new ItemStack(Items.AMETHYST_SHARD, 2)));
+            }
+        }
         var row = syncedRow(e, type);
         if (row != null) {
             return row.costOptions();
@@ -1478,6 +1499,15 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public int getBaseEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
+        if (isClassic103Mode()
+            && (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id()))) {
+            if (chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple").equals(e.enchantment_id())) {
+                return 3;
+            }
+            if (chiseled_enchanting_table.ChiseledEnchantingTable.identifier("experience_bottle").equals(e.enchantment_id())) {
+                return 1;
+            }
+        }
         var serverRow = syncedRow(e, type);
         if (serverRow != null) {
             return serverRow.xpLevelCost();
@@ -1515,6 +1545,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean disenchantEnabled() {
+        if (isClassic103Mode()) {
+            return false;
+        }
         return this.world.isClientSide()
             ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.disenchantEnabled()
             : ChiseledEnchantingTableData.disenchantEnabled();
@@ -1600,7 +1633,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
 
         int existingLevel = currentTargetEnchantLevel(e.enchantment_id());
-        if (existingLevel <= 0 || e.enchantment_level() <= existingLevel) {
+        if (isClassic103Mode() || existingLevel <= 0 || e.enchantment_level() <= existingLevel) {
             return getEnchantmentItemCostOptions(e, type);
         }
 
@@ -1691,7 +1724,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public net.minecraft.core.BlockPos tableBlockPos() {
         net.minecraft.core.BlockPos[] holder = new net.minecraft.core.BlockPos[] { null };
         this.access.execute((lvl, pos) -> holder[0] = pos);
-        return holder[0];
+        return holder[0] != null ? holder[0] : this.syncedTablePos;
     }
 
     public chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier depletedTomeTier() {
@@ -2070,6 +2103,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
         int rawCost = getBaseEnchantmentXpLevelCost(e, type);
         int discount = effectiveXpDiscountPercent(e.enchantment_id(), type);
+        if (isClassic103Mode()) {
+            // 1.0.3 exact XP pricing: full level-cost point deduction without 1-3L mass-production tiers or incremental credit.
+            return XpCostConversion.forFullArcaneRitual(resonanceCfg, rawCost, 0);
+        }
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
             var baseTransformXp = XpCostConversion.forTransformation(
                 resonanceCfg,
@@ -2154,9 +2191,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     private static final net.minecraft.tags.TagKey<Enchantment> TREASURE_TAG =
-        net.minecraft.tags.TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("treasure"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.TREASURE;
     private static final net.minecraft.tags.TagKey<Enchantment> CURSE_TAG =
-        net.minecraft.tags.TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.CURSE;
 
     public int epiphanyMinBookshelves() {
         return this.world.isClientSide()
@@ -2766,7 +2803,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public void removed(Player player) {
         super.removed(player);
         // Chest-style persistence: items remain stored inside ChiseledEnchantingTableBlockEntity!
-        if (!this.persistentBlockInventory) {
+        // Never run clearContainer on the client (where persistentBlockInventory == false),
+        // because external viewer screens (JEI / REI) invoke Screen#removed() on setScreen().
+        if (!this.persistentBlockInventory && !player.level().isClientSide()) {
             this.clearContainer(player, this.inventory);
         }
     }

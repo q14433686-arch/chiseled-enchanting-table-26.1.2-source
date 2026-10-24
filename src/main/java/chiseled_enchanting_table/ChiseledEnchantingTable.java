@@ -86,8 +86,8 @@ public class ChiseledEnchantingTable implements ModInitializer {
             || !ModRuntimeConfig.effective().restrictVillagerInfinityBooks()) {
             return;
         }
-        var enchRegistry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-        var powerHolderOpt = enchRegistry.get(Enchantments.POWER);
+        java.util.Optional<net.minecraft.core.HolderLookup.RegistryLookup<net.minecraft.world.item.enchantment.Enchantment>> enchRegistryOpt =
+            world.registryAccess().lookup(Registries.ENCHANTMENT);
         for (int i = 0; i < offers.size(); i++) {
             MerchantOffer offer = offers.get(i);
             ItemStack result = offer.getResult();
@@ -96,9 +96,11 @@ public class ChiseledEnchantingTable implements ModInitializer {
                 || !chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.hasInfinityImmunity(result)) {
                 continue;
             }
-            // The offer owns this stack. Mutating only its result preserves uses, discounts,
-            // demand, special price and out-of-stock state (reconstructing an offer loses them).
-            EnchantmentHelper.updateEnchantments(result, mutable -> {
+            var powerHolderOpt = enchRegistryOpt.flatMap(reg -> reg.get(Enchantments.POWER));
+            // Clone the result stack and replace the MerchantOffer instead of mutating offer.getResult()
+            // in-place (API-03), while preserving uses, demand, XP, price multiplier, and specialPriceDiff.
+            ItemStack sanitizedResult = result.copy();
+            EnchantmentHelper.updateEnchantments(sanitizedResult, mutable -> {
                 mutable.removeIf(chiseled_enchanting_table.mechanics.resonance.TomeWearData::isWearImmuneEnchantment);
                 if (mutable.keySet().isEmpty()
                     && powerHolderOpt.isPresent()
@@ -106,6 +108,18 @@ public class ChiseledEnchantingTable implements ModInitializer {
                     mutable.set(powerHolderOpt.get(), 1);
                 }
             });
+            MerchantOffer replacement = new MerchantOffer(
+                offer.getItemCostA(),
+                offer.getItemCostB(),
+                sanitizedResult,
+                offer.getUses(),
+                offer.getMaxUses(),
+                offer.getXp(),
+                offer.getPriceMultiplier(),
+                offer.getDemand()
+            );
+            replacement.setSpecialPriceDiff(offer.getSpecialPriceDiff());
+            offers.set(i, replacement);
         }
     }
 

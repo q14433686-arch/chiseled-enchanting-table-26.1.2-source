@@ -53,9 +53,17 @@ public abstract class RemoveXpCostScaling extends ItemCombinerMenu {
 		}
 	}
 
+	@Unique
+	private static final java.util.concurrent.atomic.AtomicBoolean CET_LOGGED_UNSCOPED_ANVIL_CALL = new java.util.concurrent.atomic.AtomicBoolean(false);
+
 	@Inject(method = "calculateIncreasedRepairCost", at = @At("HEAD"), cancellable = true)
 	private static void cet$keepFlatRepairCost(int oldRepairCost, CallbackInfoReturnable<Integer> cir) {
 		Boolean clientSide = CET_CLIENT_ANVIL_SIDE.get();
+		if (clientSide == null && CET_LOGGED_UNSCOPED_ANVIL_CALL.compareAndSet(false, true)) {
+			chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.debug(
+				"AnvilMenu.calculateIncreasedRepairCost invoked outside AnvilMenu.createResult; falling back to server runtimeConfiguration()"
+			);
+		}
 		ModRuntimeConfig cfg = clientSide != null
 			? ModRuntimeConfig.forAnvilSide(clientSide)
 			: ChiseledEnchantingTableData.runtimeConfiguration();

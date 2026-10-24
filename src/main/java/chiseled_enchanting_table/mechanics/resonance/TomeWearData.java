@@ -1,13 +1,12 @@
 package chiseled_enchanting_table.mechanics.resonance;
 
+import chiseled_enchanting_table.registry.CetTags;
+import chiseled_enchanting_table.utils.CetCustomData;
 import java.util.Locale;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
@@ -36,9 +35,8 @@ public final class TomeWearData {
     public static final Identifier INFINITY_ENCHANTMENT_ID = Identifier.withDefaultNamespace("infinity");
     public static final Identifier UNBREAKING_ENCHANTMENT_ID = Identifier.withDefaultNamespace("unbreaking");
 
-    /** Datapack-extensible wear immunity (audit P1): default data ships only {@code minecraft:infinity}. */
-    public static final TagKey<Enchantment> WEAR_IMMUNE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.fromNamespaceAndPath("chiseled_enchanting_table", "wear_immune"));
+    /** Datapack-extensible wear immunity (audit API-02): centralized in {@link CetTags.Enchantments#WEAR_IMMUNE}. */
+    public static final TagKey<Enchantment> WEAR_IMMUNE_TAG = CetTags.Enchantments.WEAR_IMMUNE;
 
     public static final String NBT_WEAR_KEY = "cet_tome_wear";
     public static final String NBT_REGEN_TICKS_KEY = "cet_tome_regen_ticks";
@@ -200,9 +198,31 @@ public final class TomeWearData {
         return Math.max(0, Math.min(MAX_GENERATION, generation));
     }
 
-    /** Charge cap of a tome of {@code generation} under a configured cap: fades by 1 per generation, floor 1. */
+    /** Charge cap of a non-immune tome of {@code generation} under a configured cap: fades by 1 per generation, floor 1. */
     public static int effectiveMaxUses(int configuredMaxUses, int generation) {
-        return Math.max(1, Math.max(1, configuredMaxUses) - clampGeneration(generation));
+        return effectiveMaxUses(configuredMaxUses, generation, false, 0);
+    }
+
+    /**
+     * Charge cap of a tome accounting for {@code #wear_immune} copy-lineage grace generations:
+     * <ul>
+     *   <li>Non-immune tomes: {@code effectiveGen = generation} ({@code Gen 1 -> max - 1}, {@code Gen 2 -> max - 2}, ...).</li>
+     *   <li>{@code #wear_immune} tomes: {@code effectiveGen = max(0, generation - wearImmuneMaxGeneration)}
+     *       so {@code Gen 0..2} retain full {@code 4/4} capacity while {@code Gen 3 -> 3/4},
+     *       {@code Gen 4 -> 2/4}, {@code Gen 5+ -> 1/4}.</li>
+     * </ul>
+     */
+    public static int effectiveMaxUses(
+        int configuredMaxUses,
+        int generation,
+        boolean hasWearImmunityTrait,
+        int wearImmuneMaxGeneration
+    ) {
+        int gen = clampGeneration(generation);
+        int effectiveGen = hasWearImmunityTrait
+            ? Math.max(0, gen - Math.max(0, wearImmuneMaxGeneration))
+            : gen;
+        return Math.max(1, Math.max(1, configuredMaxUses) - effectiveGen);
     }
 
     /** Generation stamped onto a fresh copy of a parent of {@code parentGeneration}. */
@@ -219,19 +239,28 @@ public final class TomeWearData {
         return Math.max(1, effectiveMaxUses(configuredMaxUses, generation) - Math.max(0, wearUsed));
     }
 
+    public static int remainingCharges(
+        int configuredMaxUses,
+        int generation,
+        int wearUsed,
+        boolean hasWearImmunityTrait,
+        int wearImmuneMaxGeneration
+    ) {
+        return Math.max(
+            1,
+            effectiveMaxUses(configuredMaxUses, generation, hasWearImmunityTrait, wearImmuneMaxGeneration)
+                - Math.max(0, wearUsed)
+        );
+    }
+
     // ------------------------------------------------------------------
-    // CUSTOM_DATA accessors (wear + generation)
+    // CUSTOM_DATA accessors (wear + generation, schema-managed via CetCustomData)
     // ------------------------------------------------------------------
 
     public static int getGeneration(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return 0;
-        }
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null || customData.isEmpty()) {
-            return 0;
-        }
-        return clampGeneration(customData.copyTag().getIntOr(NBT_GENERATION_KEY, 0));
+        return CetCustomData.read(stack)
+            .map(root -> clampGeneration(root.getIntOr(NBT_GENERATION_KEY, 0)))
+            .orElse(0);
     }
 
     /** Writes {@code cet_generation}; generation 0 removes the key so fresh books stay stackable. */
@@ -240,23 +269,16 @@ public final class TomeWearData {
             return;
         }
         int clamped = clampGeneration(generation);
-        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
-        if (clamped == 0) {
-            if (existing == null || existing.isEmpty()) {
-                return;
-            }
-            CompoundTag tag = existing.copyTag();
-            tag.remove(NBT_GENERATION_KEY);
-            if (tag.isEmpty()) {
-                stack.remove(DataComponents.CUSTOM_DATA);
-            } else {
-                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-            }
+        if (clamped == 0 && CetCustomData.read(stack).isEmpty()) {
             return;
         }
-        CompoundTag tag = existing != null ? existing.copyTag() : new CompoundTag();
-        tag.putInt(NBT_GENERATION_KEY, clamped);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        CetCustomData.update(stack, tag -> {
+            if (clamped == 0) {
+                tag.remove(NBT_GENERATION_KEY);
+            } else {
+                tag.putInt(NBT_GENERATION_KEY, clamped);
+            }
+        });
     }
 
     /**
@@ -269,44 +291,33 @@ public final class TomeWearData {
         return next;
     }
 
+    /**
+     * Reads actual persisted wear on {@code stack} (including overloaded {@code N > 4} or
+     * post-immunity {@code Gen >= 3} {@code #wear_immune} tomes that lost a charge).
+     */
     public static int getWearUsed(ItemStack stack) {
-        if (stack == null || stack.isEmpty() || hasWearImmunity(stack)) {
-            return 0;
-        }
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null || customData.isEmpty()) {
-            return 0;
-        }
-        CompoundTag root = customData.copyTag();
-        return Math.max(0, root.getIntOr(NBT_WEAR_KEY, 0));
+        return CetCustomData.read(stack)
+            .map(root -> Math.max(0, root.getIntOr(NBT_WEAR_KEY, 0)))
+            .orElse(0);
     }
 
     public static void setWearUsed(ItemStack stack, int wearUsed) {
         if (stack == null || stack.isEmpty()) {
             return;
         }
-        int clamped = hasWearImmunity(stack) ? 0 : Math.max(0, wearUsed);
-        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
-        if (clamped == 0) {
-            if (existing == null || existing.isEmpty()) {
-                return;
-            }
-            CompoundTag tag = existing.copyTag();
-            tag.remove(NBT_WEAR_KEY);
-            tag.remove(NBT_REGEN_TICKS_KEY);
-            tag.remove(NBT_REGEN_BUCKET_KEY);
-            // Generation and provenance deliberately survive a full wear recovery:
-            // a regenerated copy is rested, not reborn.
-            if (tag.isEmpty()) {
-                stack.remove(DataComponents.CUSTOM_DATA);
-            } else {
-                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-            }
+        int clamped = Math.max(0, wearUsed);
+        if (clamped == 0 && CetCustomData.read(stack).isEmpty()) {
             return;
         }
-        CompoundTag tag = existing != null ? existing.copyTag() : new CompoundTag();
-        tag.putInt(NBT_WEAR_KEY, clamped);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        CetCustomData.update(stack, tag -> {
+            if (clamped == 0) {
+                tag.remove(NBT_WEAR_KEY);
+                tag.remove(NBT_REGEN_TICKS_KEY);
+                tag.remove(NBT_REGEN_BUCKET_KEY);
+            } else {
+                tag.putInt(NBT_WEAR_KEY, clamped);
+            }
+        });
     }
 
     /**
@@ -319,42 +330,58 @@ public final class TomeWearData {
         if (stack == null || stack.isEmpty() || enchantId == null) {
             return;
         }
-        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
-        CompoundTag tag = existing != null ? existing.copyTag() : new CompoundTag();
-        tag.putString(NBT_LAST_USED_ENCHANT_KEY, enchantId.toString());
-        tag.putInt(NBT_LAST_USED_LEVEL_KEY, Math.max(1, level));
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        CetCustomData.update(stack, tag -> {
+            tag.putString(NBT_LAST_USED_ENCHANT_KEY, enchantId.toString());
+            tag.putInt(NBT_LAST_USED_LEVEL_KEY, Math.max(1, level));
+        });
     }
 
     /** Identifier string of the last consumed enchantment, or {@code ""} when never recorded. */
     public static String getLastUsedEnchant(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return "";
-        }
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null || customData.isEmpty()) {
-            return "";
-        }
-        return customData.copyTag().getStringOr(NBT_LAST_USED_ENCHANT_KEY, "");
+        return CetCustomData.read(stack)
+            .map(root -> root.getStringOr(NBT_LAST_USED_ENCHANT_KEY, ""))
+            .orElse("");
     }
 
     public static int getLastUsedLevel(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return 0;
-        }
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null || customData.isEmpty()) {
-            return 0;
-        }
-        return Math.max(0, customData.copyTag().getIntOr(NBT_LAST_USED_LEVEL_KEY, 0));
+        return CetCustomData.read(stack)
+            .map(root -> Math.max(0, root.getIntOr(NBT_LAST_USED_LEVEL_KEY, 0)))
+            .orElse(0);
     }
 
     public static int effectiveMaxUses(ItemStack stack, int configuredMaxUses) {
-        return effectiveMaxUses(configuredMaxUses, getGeneration(stack));
+        return effectiveMaxUses(
+            stack,
+            configuredMaxUses,
+            chiseled_enchanting_table.BundledDefaults.WEAR_IMMUNE_MAX_GENERATION
+        );
+    }
+
+    public static int effectiveMaxUses(ItemStack stack, int configuredMaxUses, int wearImmuneMaxGeneration) {
+        return effectiveMaxUses(
+            configuredMaxUses,
+            getGeneration(stack),
+            hasWearImmunity(stack),
+            wearImmuneMaxGeneration
+        );
     }
 
     public static int remainingCharges(ItemStack stack, int configuredMaxUses) {
-        return remainingCharges(configuredMaxUses, getGeneration(stack), getWearUsed(stack));
+        return remainingCharges(
+            stack,
+            configuredMaxUses,
+            chiseled_enchanting_table.BundledDefaults.WEAR_IMMUNE_MAX_GENERATION
+        );
+    }
+
+    public static int remainingCharges(ItemStack stack, int configuredMaxUses, int wearImmuneMaxGeneration) {
+        return remainingCharges(
+            configuredMaxUses,
+            getGeneration(stack),
+            getWearUsed(stack),
+            hasWearImmunity(stack),
+            wearImmuneMaxGeneration
+        );
     }
 
     // ------------------------------------------------------------------

@@ -15,7 +15,7 @@ import net.minecraft.resources.Identifier;
  * first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final String REVISION = "26_1_2_revision_15";
+    public static final String REVISION = "26_1_2_revision_16";
     // Query only. Never register a decoder on legacy channels: an old server may send its
     // join-time packet before the client JOIN callback can disconnect it.
     //
@@ -59,6 +59,9 @@ public final class EnchantingProtocol {
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_14_COST_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_14"));
 
+    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_15_COST_TYPE =
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_15"));
+
     /** Authoritative list of all historical cost-table probes so handshake checks never omit a revision. */
     public static final List<CustomPacketPayload.Type<EnchantCostTablePayload>> LEGACY_COST_PROBES = List.of(
         LEGACY_COST_TYPE,
@@ -75,7 +78,8 @@ public final class EnchantingProtocol {
         REVISION_11_COST_TYPE,
         REVISION_12_COST_TYPE,
         REVISION_13_COST_TYPE,
-        REVISION_14_COST_TYPE
+        REVISION_14_COST_TYPE,
+        REVISION_15_COST_TYPE
     );
 
     /**
@@ -92,7 +96,8 @@ public final class EnchantingProtocol {
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_11")),
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_12")),
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_13")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_14"))
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_14")),
+        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_15"))
     );
 
     public static final String MISMATCH_MESSAGE = "Chiseled Enchanting Table network protocol mismatch. "

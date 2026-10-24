@@ -563,16 +563,21 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 m.set(key, working.getLevel(key));
             }
         });
-        EnchantmentProvenance.pruneToCurrentEnchantments(
-            currentTarget,
-            EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
-        );
-        if (maxInheritedGeneration >= 0 && currentTarget.is(Items.ENCHANTED_BOOK)) {
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
-                currentTarget, maxInheritedGeneration);
-        }
-        if (anyCrosslinePollution) {
-            chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        if (!classic103) {
+            EnchantmentProvenance.pruneToCurrentEnchantments(
+                currentTarget,
+                EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
+            );
+            if (maxInheritedGeneration >= 0 && currentTarget.is(Items.ENCHANTED_BOOK)) {
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                    currentTarget, maxInheritedGeneration);
+            }
+            if (anyCrosslinePollution) {
+                chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
+            }
+        } else {
+            EnchantmentProvenance.clearAll(currentTarget);
         }
 
         this.items.set(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT, currentTarget);
@@ -760,6 +765,9 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         ContainerHelper.saveAllItems(output, this.items);
         output.putLong("ritualSession", this.ritualSession);
         if (!this.ritualTarget.isEmpty()) output.store("ritualTarget", ItemStack.CODEC, this.ritualTarget);
+        if (!this.ritualQueue.isEmpty() && this.ritualCorruptQueue.isEmpty()) {
+            output.store("ritualQueueData", InscriptionRitualMechanics.STRUCTURED_QUEUE_CODEC, this.ritualQueue);
+        }
         output.putString("ritualQueue", this.ritualCorruptQueue.isEmpty()
             ? InscriptionRitualMechanics.serializeQueue(this.ritualQueue) : this.ritualCorruptQueue);
         output.putBoolean("ritualBlocked", this.ritualBlocked);
@@ -782,10 +790,24 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.ritualSession = input.getLongOr("ritualSession", 0L);
         this.ritualTarget = input.read("ritualTarget", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         String rawQueue = input.getStringOr("ritualQueue", "");
+        java.util.Optional<List<QueuedInscription>> structuredQueue =
+            input.read("ritualQueueData", InscriptionRitualMechanics.STRUCTURED_QUEUE_CODEC);
         this.ritualCorruptQueue = "";
         this.ritualBlocked = input.getBooleanOr("ritualBlocked", false);
         try {
-            this.ritualQueue = InscriptionRitualMechanics.deserializeQueue(rawQueue);
+            if (structuredQueue.isPresent()
+                && (rawQueue.isBlank() || InscriptionRitualMechanics.serializeQueue(structuredQueue.get()).equals(rawQueue))) {
+                long refund = 0L;
+                for (QueuedInscription step : structuredQueue.get()) {
+                    refund += step.conflictRefundPoints();
+                    if (refund > Integer.MAX_VALUE) {
+                        throw new IllegalArgumentException("Ritual refund exceeds budget");
+                    }
+                }
+                this.ritualQueue = new ArrayList<>(structuredQueue.get());
+            } else {
+                this.ritualQueue = InscriptionRitualMechanics.deserializeQueue(rawQueue);
+            }
         } catch (IllegalArgumentException malformed) {
             this.ritualQueue = new ArrayList<>();
             this.ritualCorruptQueue = rawQueue.substring(0, Math.min(rawQueue.length(), MAX_RITUAL_CHARACTERS));

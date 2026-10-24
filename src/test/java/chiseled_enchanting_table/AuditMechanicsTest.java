@@ -216,6 +216,57 @@ class AuditMechanicsTest {
         assertTrue(TomeWearData.hasEffectiveWearImmunity(true, 0, cfg.wearImmuneMaxGeneration()));
         assertTrue(TomeWearData.hasEffectiveWearImmunity(true, 2, cfg.wearImmuneMaxGeneration()));
         assertFalse(TomeWearData.hasEffectiveWearImmunity(true, 3, cfg.wearImmuneMaxGeneration()));
+
+        // Bug 1 (gen3_deduct_one): #wear_immune books keep 4/4 max uses across Gen 0..2,
+        // then deduct 1 per generation starting at Gen 3 (Gen 3 -> 3/4, Gen 4 -> 2/4, Gen 5+ -> 1/4).
+        assertEquals(4, TomeWearData.effectiveMaxUses(4, 0, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(4, TomeWearData.effectiveMaxUses(4, 1, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(4, TomeWearData.effectiveMaxUses(4, 2, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(3, TomeWearData.effectiveMaxUses(4, 3, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(2, TomeWearData.effectiveMaxUses(4, 4, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(1, TomeWearData.effectiveMaxUses(4, 5, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(1, TomeWearData.effectiveMaxUses(4, 12, true, cfg.wearImmuneMaxGeneration()));
+        // Mortal books deduct from Gen 1 as before (4 -> 3 -> 2 -> 1).
+        assertEquals(4, TomeWearData.effectiveMaxUses(4, 0, false, cfg.wearImmuneMaxGeneration()));
+        assertEquals(3, TomeWearData.effectiveMaxUses(4, 1, false, cfg.wearImmuneMaxGeneration()));
+        assertEquals(2, TomeWearData.effectiveMaxUses(4, 2, false, cfg.wearImmuneMaxGeneration()));
+        assertEquals(1, TomeWearData.effectiveMaxUses(4, 3, false, cfg.wearImmuneMaxGeneration()));
+    }
+
+    @Test void cetCustomDataStampsSchemaAndReadsLegacyUnversionedTags() {
+        var legacyTag = new net.minecraft.nbt.CompoundTag();
+        legacyTag.putInt("cet_tome_wear", 2);
+        legacyTag.putInt("cet_generation", 3);
+        assertEquals(0, chiseled_enchanting_table.utils.CetCustomData.readSchemaVersion(legacyTag));
+        assertEquals(2, legacyTag.getIntOr("cet_tome_wear", 0));
+
+        chiseled_enchanting_table.utils.CetCustomData.normalizeSchemaTag(legacyTag);
+        assertEquals(
+            chiseled_enchanting_table.utils.CetCustomData.CURRENT_SCHEMA_VERSION,
+            chiseled_enchanting_table.utils.CetCustomData.readSchemaVersion(legacyTag)
+        );
+
+        legacyTag.remove("cet_tome_wear");
+        legacyTag.remove("cet_generation");
+        chiseled_enchanting_table.utils.CetCustomData.normalizeSchemaTag(legacyTag);
+        assertFalse(legacyTag.contains(chiseled_enchanting_table.utils.CetCustomData.NBT_SCHEMA_KEY));
+    }
+
+    @Test void queuedInscriptionCodecRoundTripsAndMatchesLegacyStringEncoding() {
+        var steps = java.util.List.of(
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
+                net.minecraft.resources.Identifier.withDefaultNamespace("sharpness"), 5, 240, true, false, 12, false
+            ),
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
+                net.minecraft.resources.Identifier.withDefaultNamespace("infinity"), 1, 600, false, true, 30, true
+            )
+        );
+        var listCodec = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription.CODEC.listOf();
+        var encoded = listCodec.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, steps).getOrThrow();
+        var decoded = listCodec.parse(net.minecraft.nbt.NbtOps.INSTANCE, encoded).getOrThrow();
+        assertEquals(steps, decoded);
+        String legacyWire = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.serializeQueue(steps);
+        assertEquals(steps, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.deserializeQueue(legacyWire));
     }
 
     @Test void perSlotMasteryCapPreventsSingleSuperBookFromMaxingGlobalDiscount() {

@@ -31,12 +31,44 @@ public final class PayloadLimits {
     public static final int ESTIMATED_HEADER_BYTES = 8_192;
     /** Conservative per-row estimate (token + identifier + ints + option counts). */
     public static final int ESTIMATED_BYTES_PER_ROW = 96;
-    /** Conservative per-stack estimate (plain cost stacks carry no custom components). */
+    /** Conservative per-stack estimate for plain stacks without custom components. */
     public static final int ESTIMATED_BYTES_PER_STACK = 96;
     /** Total estimated-byte budget for one EnchantCostTablePayload. */
     public static final int MAX_ESTIMATED_PAYLOAD_BYTES = 900_000;
 
     private PayloadLimits() {}
+
+    /**
+     * Conservative encoded-size estimate for an {@link net.minecraft.world.item.ItemStack},
+     * accounting for custom data, lore, custom names, and non-default component patches so
+     * datapack cost stacks with rich components cannot blow past {@link #MAX_ESTIMATED_PAYLOAD_BYTES}.
+     */
+    public static int estimateStackBytes(net.minecraft.world.item.ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return 8;
+        }
+        int bytes = ESTIMATED_BYTES_PER_STACK;
+        var patch = stack.getComponentsPatch();
+        if (patch == null || patch.isEmpty()) {
+            return bytes;
+        }
+        bytes += patch.size() * 48;
+        var customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        if (customData != null && !customData.isEmpty()) {
+            bytes += Math.max(64, customData.copyTag().toString().length() * 2);
+        }
+        var customName = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+        if (customName != null) {
+            bytes += Math.max(32, customName.getString().length() * 4);
+        }
+        var lore = stack.get(net.minecraft.core.component.DataComponents.LORE);
+        if (lore != null && !lore.lines().isEmpty()) {
+            for (var line : lore.lines()) {
+                bytes += 24 + line.getString().length() * 4;
+            }
+        }
+        return bytes;
+    }
 
     public static int readCount(RegistryFriendlyByteBuf buf) {
         return readBoundedCount(buf, MAX_COLLECTION_ENTRIES);

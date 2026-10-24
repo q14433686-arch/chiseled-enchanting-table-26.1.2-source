@@ -39,8 +39,7 @@ public final class LibraryResonance {
     public static final int MAX_SPECIFIC_ENCHANT_BONUS_PERCENT = chiseled_enchanting_table.BundledDefaults.MAX_SPECIFIC_ENCHANT_BONUS_PERCENT;
     public static final int MAX_TOTAL_XP_DISCOUNT_PERCENT = chiseled_enchanting_table.BundledDefaults.MAX_TOTAL_XP_DISCOUNT_PERCENT;
 
-    private static final TagKey<Enchantment> CURSE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+    private static final TagKey<Enchantment> CURSE_TAG = chiseled_enchanting_table.registry.CetTags.Enchantments.CURSE;
 
     public record Config(
         int minDiscountBookshelves,
@@ -1011,7 +1010,7 @@ public final class LibraryResonance {
 
     public static int woodenBookshelfDiscountPercent(Config cfg, int regularBookshelves) {
         Config c = cfg != null ? cfg : Config.DEFAULT;
-        if (regularBookshelves < c.minDiscountBookshelves()) {
+        if (regularBookshelves < c.minDiscountBookshelves() || c.maxWoodenDiscountPercent() <= 0) {
             return 0;
         }
         int clamped = Math.min(c.maxDiscountBookshelves(), regularBookshelves);

@@ -135,6 +135,7 @@ FIELDS: list[tuple[str | None, str, str, str, tuple[str, ...]]] = [
     (None, "REQUIRE_LINE_OF_SIGHT", "boolean", "sg", ("scan_volume", "require_line_of_sight")),
     (None, "DIRECT_GATES_ENABLED", "boolean", "sg", ("direct_upgrade_gates", "enabled")),
     (None, "MAX_DIRECT_BOOKSHELVES", "int", "sg", ("direct_upgrade_gates", "max_bookshelves")),
+    (None, "TWO_LEVEL_MAX_BOOKSHELVES", "int", "sg", ("direct_upgrade_gates", "two_level_max_bookshelves")),
     (None, "DIRECT_TIER_GAMMA", "double", "sg", ("direct_upgrade_gates", "gamma")),
     (None, "BLANK_MAX_TIER_MODE", "String", "sg", ("direct_upgrade_gates", "blank_max_tier_mode")),
     (None, "DEPLETED_TIER1_BOOKSHELVES", "int", "sg", ("depleted_tome_gradients", "tier1_bookshelves")),

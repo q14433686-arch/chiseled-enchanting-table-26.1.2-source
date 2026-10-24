@@ -27,7 +27,7 @@ public class DepthBasedEfficiencyFunction extends LootItemConditionalFunction {
         RecordCodecBuilder.mapCodec(i -> commonFields(i).apply(i, DepthBasedEfficiencyFunction::new));
 
     private static final ResourceKey<Enchantment> EFFICIENCY_KEY =
-        ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("efficiency"));
+        net.minecraft.world.item.enchantment.Enchantments.EFFICIENCY;
 
     public DepthBasedEfficiencyFunction() {
         this(List.of());
@@ -47,8 +47,8 @@ public class DepthBasedEfficiencyFunction extends LootItemConditionalFunction {
         if (!stack.is(Items.ENCHANTED_BOOK)) return stack;
         ServerLevel level = context.getLevel();
         Holder<Enchantment> efficiency = level.registryAccess()
-            .lookupOrThrow(Registries.ENCHANTMENT)
-            .get(EFFICIENCY_KEY)
+            .lookup(Registries.ENCHANTMENT)
+            .flatMap(reg -> reg.get(EFFICIENCY_KEY))
             .orElse(null);
         if (efficiency == null) return stack;
 

@@ -1,0 +1,18 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:protection",
+    "minecraft:sharpness",
+    "minecraft:efficiency",
+    "minecraft:fortune",
+    "minecraft:looting",
+    "minecraft:power",
+    "minecraft:silk_touch",
+    "minecraft:wind_burst",
+    "minecraft:breach",
+    "minecraft:density",
+    "minecraft:unbreaking",
+    "minecraft:mending",
+    "#minecraft:curse"
+  ]
+}

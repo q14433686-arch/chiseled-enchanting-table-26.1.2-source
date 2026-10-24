@@ -934,11 +934,12 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         "0.85×",
         "Lv.4~10",
         "涤魔碎砂",
+        "38 - 12",
     ):
         if stale_fragment in wiki_text:
             errors.append(f"docs/WIKI.md still contains stale formula/filename '{stale_fragment}' (R2-5)")
     for required_fragment in (
-        "38 - 12",
+        "45 - 3",
         "r(e)^{1.25}",
         "blank_book_affinity_weight = 0.50",
         "giveExperienceLevels",

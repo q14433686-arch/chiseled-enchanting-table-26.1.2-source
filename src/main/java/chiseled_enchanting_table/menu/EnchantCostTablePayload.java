@@ -166,6 +166,17 @@ public record EnchantCostTablePayload(
         return List.copyOf(out);
     }
 
+    private static int estimateEntryStackBytes(List<List<ItemStack>> options) {
+        int bytes = 0;
+        for (List<ItemStack> bundle : options) {
+            bytes += 8;
+            for (ItemStack stack : bundle) {
+                bytes += PayloadLimits.estimateStackBytes(stack);
+            }
+        }
+        return bytes;
+    }
+
     private static boolean tryAppendEntry(
         List<CostEntry> entries,
         int[] totalStacks,
@@ -184,9 +195,9 @@ public record EnchantCostTablePayload(
         if (totalStacks[0] + stackDelta > PayloadLimits.MAX_TOTAL_COST_STACKS) {
             return false;
         }
-        // Audit R-01: counts alone don't bound encoded size; enforce a byte budget too.
+        // Audit R-01 / NET-04: account for custom component payloads on datapack cost stacks too.
         int byteDelta = PayloadLimits.ESTIMATED_BYTES_PER_ROW
-            + stackDelta * PayloadLimits.ESTIMATED_BYTES_PER_STACK;
+            + estimateEntryStackBytes(opts);
         if (estimatedBytes[0] + byteDelta > PayloadLimits.MAX_ESTIMATED_PAYLOAD_BYTES) {
             return false;
         }
@@ -365,6 +376,7 @@ public record EnchantCostTablePayload(
         var sg = shelfGatesConfig == null ? BookshelfProgression.Config.DEFAULT : shelfGatesConfig;
         buf.writeBoolean(sg.directGatesEnabled());
         buf.writeVarInt(sg.maxDirectBookshelves());
+        buf.writeVarInt(sg.twoLevelMaxBookshelves());
         buf.writeDouble(sg.gamma());
         buf.writeUtf(sg.blankMaxTierMode().token());
         buf.writeVarInt(sg.horizontalScanRadius());
@@ -552,6 +564,7 @@ public record EnchantCostTablePayload(
         }
         boolean sgEnabled = buf.readBoolean();
         int sgMax = buf.readVarInt();
+        int sgTwoLevelMax = buf.readVarInt();
         double sgGamma = buf.readDouble();
         var sgBlankMode = BookshelfProgression.BlankMaxTierMode.fromToken(buf.readUtf());
         int sgHScan = buf.readVarInt();
@@ -580,7 +593,7 @@ public record EnchantCostTablePayload(
         int sgMinOpen = buf.readVarInt();
         boolean sgLos = buf.readBoolean();
         var sgConfig = new BookshelfProgression.Config(
-            sgEnabled, sgMax, sgGamma, sgBlankMode, sgHScan, sgVScan,
+            sgEnabled, sgMax, sgTwoLevelMax, sgGamma, sgBlankMode, sgHScan, sgVScan,
             sgOverrides, sgT1, sgT2, sgMult, sgT3, sgBaseBatch, sgTier3Batch,
             sgVanillaMode, sgBreathing, sgMinOpen, sgLos
         );

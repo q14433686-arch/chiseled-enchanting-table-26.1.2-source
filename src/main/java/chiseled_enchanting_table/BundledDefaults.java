@@ -15,8 +15,8 @@ public final class BundledDefaults {
     private BundledDefaults() {}
 
     // ---- library_resonance.json / wooden_bookshelves ----
-    public static final int MIN_DISCOUNT_BOOKSHELVES = 12;
-    public static final int MAX_DISCOUNT_BOOKSHELVES = 38;
+    public static final int MIN_DISCOUNT_BOOKSHELVES = 3;
+    public static final int MAX_DISCOUNT_BOOKSHELVES = 45;
     public static final int MAX_WOODEN_DISCOUNT_PERCENT = 15;
     public static final double SHELF_UPGRADE_MATERIAL_MULTIPLIER = 0.9;
 
@@ -132,6 +132,7 @@ public final class BundledDefaults {
     public static final boolean REQUIRE_LINE_OF_SIGHT = false;
     public static final boolean DIRECT_GATES_ENABLED = true;
     public static final int MAX_DIRECT_BOOKSHELVES = 38;
+    public static final int TWO_LEVEL_MAX_BOOKSHELVES = 22;
     public static final double DIRECT_TIER_GAMMA = 1.25;
     public static final String BLANK_MAX_TIER_MODE = "half_ceil";
     public static final int DEPLETED_TIER1_BOOKSHELVES = 12;

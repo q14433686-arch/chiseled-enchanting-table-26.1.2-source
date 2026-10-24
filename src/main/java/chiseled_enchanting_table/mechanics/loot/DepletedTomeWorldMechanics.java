@@ -409,10 +409,7 @@ public final class DepletedTomeWorldMechanics {
     }
 
     public static final net.minecraft.tags.TagKey<Enchantment> EPIPHANY_EXCLUSIVE_TAG =
-        net.minecraft.tags.TagKey.create(
-            Registries.ENCHANTMENT,
-            ChiseledEnchantingTable.identifier("epiphany_exclusive")
-        );
+        chiseled_enchanting_table.registry.CetTags.Enchantments.EPIPHANY_EXCLUSIVE;
 
     /** True only for non-curse enchantments excluding {@code minecraft:infinity}. */
     public static boolean isAllowedLibrarianCommissionEnchantment(Identifier enchantmentId, boolean isCurse) {
@@ -437,7 +434,7 @@ public final class DepletedTomeWorldMechanics {
     }
 
     public static final ResourceKey<VillagerProfession> LIBRARIAN_PROFESSION_KEY =
-        ResourceKey.create(Registries.VILLAGER_PROFESSION, Identifier.withDefaultNamespace("librarian"));
+        VillagerProfession.LIBRARIAN;
 
     /** Pure profession check helper for JUnit tests and runtime guard. */
     public static boolean isLibrarianProfessionKey(@Nullable ResourceKey<VillagerProfession> key) {
@@ -459,7 +456,8 @@ public final class DepletedTomeWorldMechanics {
      * upgraded worlds never hand out unstackable Enchanted Books.
      */
     private static void sanitizeLegacyCommissionOffers(MerchantOffers offers) {
-        for (MerchantOffer offer : offers) {
+        for (int i = 0; i < offers.size(); i++) {
+            MerchantOffer offer = offers.get(i);
             if (offer.getItemCostA().item().value() != BlockRegistry.DEPLETED_TOME) continue;
             ItemStack result = offer.getResult();
             if (!result.is(Items.ENCHANTED_BOOK)) continue;
@@ -467,15 +465,20 @@ public final class DepletedTomeWorldMechanics {
             if (custom == null) continue;
             var tag = custom.copyTag();
             if (!tag.contains(LEGACY_COMMISSION_BAND_KEY)) continue;
-            tag.remove(LEGACY_COMMISSION_BAND_KEY);
-            if (tag.isEmpty()) {
-                result.remove(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-            } else {
-                result.set(
-                    net.minecraft.core.component.DataComponents.CUSTOM_DATA,
-                    net.minecraft.world.item.component.CustomData.of(tag)
-                );
-            }
+            ItemStack sanitized = result.copy();
+            chiseled_enchanting_table.utils.CetCustomData.mutate(sanitized, t -> t.remove(LEGACY_COMMISSION_BAND_KEY));
+            MerchantOffer replacement = new MerchantOffer(
+                offer.getItemCostA(),
+                offer.getItemCostB(),
+                sanitized,
+                offer.getUses(),
+                offer.getMaxUses(),
+                offer.getXp(),
+                offer.getPriceMultiplier(),
+                offer.getDemand()
+            );
+            replacement.setSpecialPriceDiff(offer.getSpecialPriceDiff());
+            offers.set(i, replacement);
         }
     }
 
@@ -558,7 +561,8 @@ public final class DepletedTomeWorldMechanics {
      * duplicating prior trades.
      */
     public static void ensureLibrarianDepletedTomeOffers(Level world, Villager villager) {
-        if (world == null || villager == null) {
+        if (world == null || villager == null
+            || chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode()) {
             return;
         }
         if (!villager.getVillagerData().profession().is(LIBRARIAN_PROFESSION_KEY)) {

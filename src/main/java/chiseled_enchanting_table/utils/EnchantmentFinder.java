@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 
 public class EnchantmentFinder {
     private static final TagKey<Enchantment> CURSE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.CURSE;
 
     /**
      * Extracts qualifying (non-curse, {@code level > 0}) stored enchantments from a single

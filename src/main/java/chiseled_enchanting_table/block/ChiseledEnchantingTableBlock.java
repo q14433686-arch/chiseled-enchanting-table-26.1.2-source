@@ -58,10 +58,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
     public static final net.minecraft.tags.TagKey<Block> REGULAR_BOOKSHELVES_TAG =
-        net.minecraft.tags.TagKey.create(
-            Registries.BLOCK,
-            chiseled_enchanting_table.ChiseledEnchantingTable.identifier("regular_bookshelves")
-        );
+        chiseled_enchanting_table.registry.CetTags.Blocks.REGULAR_BOOKSHELVES;
 
     public static boolean isRegularBookshelf(BlockState state) {
         return !state.is(Blocks.CHISELED_BOOKSHELF)
@@ -297,6 +294,12 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     }
 
     @Nullable
+    @Override
+    protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
+        return createChiseledEnchantingTableMenuProvider(state, level, pos);
+    }
+
+    @Nullable
     protected MenuProvider createChiseledEnchantingTableMenuProvider(BlockState state, Level level, BlockPos pos) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         if (!(blockEntity instanceof ChiseledEnchantingTableBlockEntity tableBlockEntity)) {
@@ -326,7 +329,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     shelfPower.masterTomeCharges(),
                     shelfPower.totalMasteryUnits(),
                     targetPlayer
-                );
+                ).withTablePos(pos);
             }
 
             @Override
@@ -365,13 +368,34 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         };
     }
 
+    private static final List<Identifier> CLASSIC_103_DEFAULT_TREASURES = List.of(
+        Identifier.withDefaultNamespace("frost_walker"),
+        Identifier.withDefaultNamespace("binding_curse"),
+        Identifier.withDefaultNamespace("soul_speed"),
+        Identifier.withDefaultNamespace("swift_sneak"),
+        Identifier.withDefaultNamespace("mending"),
+        Identifier.withDefaultNamespace("vanishing_curse"),
+        Identifier.withDefaultNamespace("wind_burst")
+    );
+
     /**
      * Default-unlocked enchantments, including any third-party enchantment whose mod tags it with
      * one of the JSON {@code tags} rules (e.g. {@code #minecraft:non_treasure} by default) — see
      * {@link ChiseledEnchantingTableData#defaultEnchantments(net.minecraft.core.HolderGetter)}.
      */
     public Set<EnchantmentWithLevel> enchantments_unlocked_by_default(Level level) {
-        return ChiseledEnchantingTableData.defaultEnchantments(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT));
+        var lookup = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        Set<EnchantmentWithLevel> base = ChiseledEnchantingTableData.defaultEnchantments(lookup);
+        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode()) {
+            return base;
+        }
+        java.util.HashSet<EnchantmentWithLevel> classic = new java.util.HashSet<>(base);
+        for (Identifier id : CLASSIC_103_DEFAULT_TREASURES) {
+            if (lookup.get(net.minecraft.resources.ResourceKey.create(Registries.ENCHANTMENT, id)).isPresent()) {
+                classic.add(new EnchantmentWithLevel(id, 1));
+            }
+        }
+        return classic;
     }
 
     public Set<EnchantmentWithLevel> get_unlocked_enchantements(BlockState state, Level level, BlockPos pos) {
@@ -381,16 +405,36 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     private Set<EnchantmentWithLevel> getUnlockedEnchantmentsFromPower(Level level, ShelfPower shelfPower) {
         Map<Identifier, Integer> highestLevels = new HashMap<>();
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
 
-        // Track 1 (Wooden Bookshelves): scale default baseline smoothly along the blank cap curve.
-        for (EnchantmentWithLevel base : this.enchantments_unlocked_by_default(level)) {
-            mergeHighestLevel(highestLevels, withWoodenShelfBoost(level, base, shelfPower.regularBookshelves()));
-        }
+        if (classic103) {
+            // 1.0.3 exact rule: both default enchantments and stored Chiseled Bookshelf books gain +W/3 up to maxLevel.
+            for (EnchantmentWithLevel base : this.enchantments_unlocked_by_default(level)) {
+                mergeHighestLevel(highestLevels, withClassic103ShelfBoost(level, base, shelfPower.regularBookshelves()));
+            }
+            for (Map.Entry<Identifier, Integer> entry : shelfPower.storedMasterLevels().entrySet()) {
+                if (entry.getValue() > 0) {
+                    mergeHighestLevel(
+                        highestLevels,
+                        withClassic103ShelfBoost(
+                            level,
+                            new EnchantmentWithLevel(entry.getKey(), entry.getValue()),
+                            shelfPower.regularBookshelves()
+                        )
+                    );
+                }
+            }
+        } else {
+            // Track 1 (Wooden Bookshelves): scale default baseline smoothly along the blank cap curve.
+            for (EnchantmentWithLevel base : this.enchantments_unlocked_by_default(level)) {
+                mergeHighestLevel(highestLevels, withWoodenShelfBoost(level, base, shelfPower.regularBookshelves()));
+            }
 
-        // Track 3 (Chiseled Bookshelves): unlock each stored Master Tome 1:1 from the already-scanned map.
-        for (Map.Entry<Identifier, Integer> entry : shelfPower.storedMasterLevels().entrySet()) {
-            if (entry.getValue() > 0) {
-                mergeHighestLevel(highestLevels, new EnchantmentWithLevel(entry.getKey(), entry.getValue()));
+            // Track 3 (Chiseled Bookshelves): unlock each stored Master Tome 1:1 from the already-scanned map.
+            for (Map.Entry<Identifier, Integer> entry : shelfPower.storedMasterLevels().entrySet()) {
+                if (entry.getValue() > 0) {
+                    mergeHighestLevel(highestLevels, new EnchantmentWithLevel(entry.getKey(), entry.getValue()));
+                }
             }
         }
 
@@ -402,6 +446,12 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             }
         }
         return unlocked;
+    }
+
+    private static EnchantmentWithLevel withClassic103ShelfBoost(Level level, EnchantmentWithLevel enchantment, int regularBookshelfPower) {
+        int boostedLevel = enchantment.enchantment_level() + Math.max(0, regularBookshelfPower) / 3;
+        int maxLvl = maxLevel(level, enchantment.enchantment_id());
+        return new EnchantmentWithLevel(enchantment.enchantment_id(), Math.max(1, Math.min(maxLvl, boostedLevel)));
     }
 
     public static final int MAX_XP_DISCOUNT_PERCENT =
@@ -482,9 +532,10 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     && wear <= 0
                     && nonCurseCount <= lrCfg.wearImmuneFullWaiverMaxEnchants();
                 int effectiveMax = chiseled_enchanting_table.mechanics.resonance.TomeWearData
-                    .effectiveMaxUses(stack, lrCfg.maxTomeUses());
+                    .effectiveMaxUses(stack, lrCfg.maxTomeUses(), lrCfg.wearImmuneMaxGeneration());
                 int remaining = purelyImmune ? effectiveMax
-                    : chiseled_enchanting_table.mechanics.resonance.TomeWearData.remainingCharges(stack, lrCfg.maxTomeUses());
+                    : chiseled_enchanting_table.mechanics.resonance.TomeWearData.remainingCharges(
+                        stack, lrCfg.maxTomeUses(), lrCfg.wearImmuneMaxGeneration());
                 boolean charging = regenActive && wear > 0;
                 long progress = charging
                     ? chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.regenProgressTicks(level, scanPos, slot)
@@ -683,7 +734,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 (int) Math.round(dz * t)
             );
             if (!mid.equals(tablePos) && !mid.equals(shelfPos)
-                && !level.getBlockState(mid).getCollisionShape(level, mid).isEmpty()) {
+                && (!level.hasChunkAt(mid) || !level.getBlockState(mid).getCollisionShape(level, mid).isEmpty())) {
                 return false;
             }
         }

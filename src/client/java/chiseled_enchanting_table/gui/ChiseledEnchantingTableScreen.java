@@ -128,6 +128,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private long disenchantConfirmUntilMs = 0L;
     private ItemStack disenchantConfirmSnapshot = ItemStack.EMPTY;
     private boolean lastConfirmPending = false;
+    private boolean returningFromExternalScreen = false;
+    private double savedScrollAmount = 0.0;
+    private UiTabMode savedTabMode = UiTabMode.INSCRIBE;
 
     public int inventory_size;
     public int hotbar_size;
@@ -137,12 +140,18 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         this.hotbar_size = Inventory.getSelectionSize();
         this.inventory_size = inventory.getContainerSize();
         Minecraft mc = Minecraft.getInstance();
-        this.openedTablePos = (mc.hitResult instanceof BlockHitResult bhr)
-            ? bhr.getBlockPos().immutable()
-            : null;
+        BlockPos menuPos = handler.tableBlockPos();
+        this.openedTablePos = menuPos != null
+            ? menuPos.immutable()
+            : ((mc.hitResult instanceof BlockHitResult bhr) ? bhr.getBlockPos().immutable() : null);
 
         handler.onContentChangedCallback = () -> {
-            this.scrollContainer.updateEntry(handler.getEffectiveEnchantableItem(), handler.get_cost_item());
+            if (this.scrollContainer != null) {
+                if (handler.isClassic103Mode() && this.scrollContainer.tabMode() != UiTabMode.INSCRIBE) {
+                    this.scrollContainer.setTabMode(UiTabMode.INSCRIBE);
+                }
+                this.scrollContainer.updateEntry(handler.getEffectiveEnchantableItem(), handler.get_cost_item());
+            }
         };
         this.scrollContainer = new EnchantementListWidget(
             mc,
@@ -154,6 +163,58 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         );
     }
 
+    @Nullable
+    private BlockPos effectiveTablePos() {
+        BlockPos menuPos = this.menu.tableBlockPos();
+        return menuPos != null ? menuPos : this.openedTablePos;
+    }
+
+    @Override
+    public void removed() {
+        if (this.scrollContainer != null) {
+            this.savedScrollAmount = this.scrollContainer.scrollAmount();
+            this.savedTabMode = this.scrollContainer.tabMode();
+        }
+        if (this.minecraft != null
+            && this.minecraft.player != null
+            && this.minecraft.player.containerMenu == this.menu) {
+            // Container menu stayed open while Screen#removed() ran (e.g. JEI / REI viewer screen opened).
+            this.returningFromExternalScreen = true;
+        }
+        super.removed();
+    }
+
+    private void restoreAfterExternalScreenReturn(boolean requestServerSync) {
+        if (this.width > 0 && this.height > 0) {
+            this.leftPos = (this.width - this.imageWidth) / 2;
+            this.topPos = (this.height - this.imageHeight) / 2;
+        }
+        if (this.scrollContainer != null) {
+            if (!this.children().contains(this.scrollContainer)) {
+                this.addRenderableWidget(this.scrollContainer);
+            }
+            this.scrollContainer.updateSizeAndPosition(151, 141, this.leftPos + 7, this.topPos + 17);
+            boolean wasReturning = this.returningFromExternalScreen;
+            double restoreScroll = wasReturning ? this.savedScrollAmount : this.scrollContainer.scrollAmount();
+            UiTabMode targetTab = this.menu.isClassic103Mode()
+                ? UiTabMode.INSCRIBE
+                : (wasReturning ? this.savedTabMode : this.scrollContainer.tabMode());
+            if (targetTab != null && this.scrollContainer.tabMode() != targetTab) {
+                this.scrollContainer.setTabMode(targetTab);
+            }
+            this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+            this.scrollContainer.setScrollAmount(Math.min(restoreScroll, this.scrollContainer.maxScrollAmount()));
+        }
+        BlockPos pos = effectiveTablePos();
+        boolean menuDetached = this.minecraft != null
+            && this.minecraft.player != null
+            && this.minecraft.player.containerMenu != this.menu;
+        if ((requestServerSync || menuDetached) && pos != null && ClientPlayNetworking.canSend(ReopenTablePayload.TYPE)) {
+            ClientPlayNetworking.send(new ReopenTablePayload(pos));
+        }
+        this.returningFromExternalScreen = false;
+    }
+
     @Override
     public boolean isPauseScreen() {
         return this.configOverlay != null && this.configOverlay.isPauseScreen();
@@ -162,6 +223,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     protected void containerTick() {
         super.containerTick();
+        if (this.returningFromExternalScreen
+            || (this.scrollContainer != null
+                && isInscribeTab()
+                && !this.menu.getEffectiveEnchantableItem().isEmpty()
+                && this.scrollContainer.children().isEmpty())) {
+            restoreAfterExternalScreenReturn(this.returningFromExternalScreen);
+        }
         int sig = this.menu.transformationBatchSignature();
         boolean activeNow = this.menu.isRitualActive();
         boolean confirmNow = isDisenchantAllConfirmPending();
@@ -258,6 +326,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private boolean isOverShelfHudBadge(double mouseX, double mouseY) {
+        if (this.menu.isClassic103Mode()) return false;
         int x0 = this.leftPos + SHELF_HUD_X;
         int y0 = this.topPos + SHELF_HUD_Y;
         return mouseX >= x0 && mouseX < x0 + SHELF_HUD_W && mouseY >= y0 && mouseY < y0 + SHELF_HUD_H;
@@ -300,19 +369,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     protected void init() {
         super.init();
-        // G1 safety net: if an external modal (such as JEI RecipesGui) replaced the active screen
-        // and later restored this instance after closing the underlying container menu, request a
-        // validated server reopen of the block at openedTablePos so the table never stays zombie.
-        if (this.minecraft != null
-            && this.minecraft.player != null
-            && this.minecraft.player.containerMenu != this.menu
-            && this.openedTablePos != null) {
-            if (ClientPlayNetworking.canSend(ReopenTablePayload.TYPE)) {
-                ClientPlayNetworking.send(new ReopenTablePayload(this.openedTablePos));
-            }
-        }
-        this.addRenderableWidget(this.scrollContainer);
-        this.scrollContainer.updateSizeAndPosition(151, 141, this.leftPos + 7, this.topPos + 17);
+        boolean shouldSync = this.returningFromExternalScreen
+            || (this.minecraft != null && this.minecraft.player != null && this.minecraft.player.containerMenu != this.menu);
+        restoreAfterExternalScreenReturn(shouldSync);
         if (this.grimoireOverlay != null) {
             this.grimoireOverlay.initOverlay(this.minecraft, this.width, this.height);
         }
@@ -324,7 +383,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     protected void repositionElements() {
         super.repositionElements();
-        this.scrollContainer.updateSizeAndPosition(151, 141, this.leftPos + 7, this.topPos + 17);
+        boolean shouldSync = this.returningFromExternalScreen
+            || (this.minecraft != null && this.minecraft.player != null && this.minecraft.player.containerMenu != this.menu);
+        restoreAfterExternalScreenReturn(shouldSync);
         if (this.grimoireOverlay != null) {
             this.grimoireOverlay.initOverlay(this.minecraft, this.width, this.height);
         }
@@ -334,19 +395,21 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private boolean isOverInscribeTab(double mouseX, double mouseY) {
+        if (this.menu.isClassic103Mode()) return false;
         int x0 = this.leftPos + TAB_INSCRIBE_X;
         int y0 = this.topPos + TAB_Y_OFFSET;
         return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
     }
 
     private boolean isOverTomeTab(double mouseX, double mouseY) {
+        if (this.menu.isClassic103Mode()) return false;
         int x0 = this.leftPos + TAB_TOMES_X;
         int y0 = this.topPos + TAB_Y_OFFSET;
         return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
     }
 
     private boolean isOverSacrificeButton(double mouseX, double mouseY) {
-        if (this.menu.isCleansePageUnlocked()) return false;
+        if (this.menu.isClassic103Mode() || this.menu.isCleansePageUnlocked()) return false;
         int x0 = this.leftPos + SACRIFICE_BTN_X;
         int y0 = this.topPos + TAB_Y_OFFSET;
         return mouseX >= x0 && mouseX < x0 + SACRIFICE_BTN_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
@@ -423,12 +486,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     public List<net.minecraft.client.renderer.Rect2i> extraViewerExclusionAreas() {
         List<net.minecraft.client.renderer.Rect2i> areas = new ArrayList<>(5);
-        areas.add(new net.minecraft.client.renderer.Rect2i(
-            this.leftPos + TAB_INSCRIBE_X,
-            this.topPos + TAB_Y_OFFSET,
-            (TAB_TOMES_X + TAB_W) - TAB_INSCRIBE_X,
-            TAB_H
-        ));
+        if (!this.menu.isClassic103Mode()) {
+            areas.add(new net.minecraft.client.renderer.Rect2i(
+                this.leftPos + TAB_INSCRIBE_X,
+                this.topPos + TAB_Y_OFFSET,
+                (TAB_TOMES_X + TAB_W) - TAB_INSCRIBE_X,
+                TAB_H
+            ));
+        }
         areas.add(new net.minecraft.client.renderer.Rect2i(
             this.leftPos + CONFIG_BTN_X,
             this.topPos + CONFIG_BTN_Y_OFFSET,
@@ -487,14 +552,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private boolean isOverFreezeButton(double mouseX, double mouseY) {
-        if (!isInscribeTab() || this.menu.isRitualActive()) return false;
+        if (this.menu.isClassic103Mode() || !isInscribeTab() || this.menu.isRitualActive()) return false;
         int x0 = this.leftPos + FREEZE_BTN_X;
         int y0 = this.topPos + FREEZE_BTN_Y;
         return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
     }
 
     private boolean isOverRerollButton(double mouseX, double mouseY) {
-        if (!isInscribeTab() || this.menu.isRitualActive()) return false;
+        if (this.menu.isClassic103Mode() || !isInscribeTab() || this.menu.isRitualActive()) return false;
         int x0 = this.leftPos + REROLL_BTN_X;
         int y0 = this.topPos + REROLL_BTN_Y;
         return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
@@ -528,6 +593,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private boolean isOverSanctumPanel(double mouseX, double mouseY) {
+        if (this.menu.isClassic103Mode() && !this.menu.isRitualActive()) return false;
         int x0 = this.leftPos + PANEL_X;
         int y0 = this.topPos + PANEL_Y;
         return mouseX >= x0 && mouseX < x0 + PANEL_W && mouseY >= y0 && mouseY < y0 + PANEL_H;
@@ -804,6 +870,21 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private void renderModeTabs(GuiGraphicsExtractor ctx, int i, int j, int mouseX, int mouseY) {
+        if (this.menu.isClassic103Mode()) {
+            int cx = i + CONFIG_BTN_X;
+            int cy = j + CONFIG_BTN_Y_OFFSET;
+            ctx.blit(BTN_CONFIG, cx, cy, cx + CONFIG_BTN_SIZE, cy + CONFIG_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+            if (isOverConfigButton(mouseX, mouseY)) {
+                ctx.fill(cx + 1, cy + 1, cx + CONFIG_BTN_SIZE - 1, cy + CONFIG_BTN_SIZE - 1, 0x2EFFDF82);
+            }
+            int gx = i + GRIMOIRE_BTN_X;
+            int gy = j + GRIMOIRE_BTN_Y_OFFSET;
+            ctx.blit(BTN_GRIMOIRE, gx, gy, gx + GRIMOIRE_BTN_SIZE, gy + GRIMOIRE_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+            if (isOverGrimoireButton(mouseX, mouseY)) {
+                ctx.fill(gx + 1, gy + 1, gx + GRIMOIRE_BTN_SIZE - 1, gy + GRIMOIRE_BTN_SIZE - 1, 0x2EFFDF82);
+            }
+            return;
+        }
         boolean cleanse = isCleanseTab();
         boolean tome = isTomeTab();
         boolean inscribe = isInscribeTab();
@@ -897,6 +978,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
+        if (this.returningFromExternalScreen) {
+            restoreAfterExternalScreenReturn(true);
+        }
         super.extractBackground(ctx, mouseX, mouseY, partialTick);
         int i = this.leftPos;
         int j = this.topPos;
@@ -904,10 +988,15 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         // Draw inactive tab under main frame, main frame, then active tab flush on top so its open bottom blends seamlessly!
         ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
         renderModeTabs(ctx, i, j, mouseX, mouseY);
-        renderHeaderShelfHudBadge(ctx, i, j, mouseX, mouseY);
+        if (!this.menu.isClassic103Mode()) {
+            renderHeaderShelfHudBadge(ctx, i, j, mouseX, mouseY);
+        }
 
         int px = i + PANEL_X;
         int py = j + PANEL_Y;
+        if (this.menu.isClassic103Mode() && !this.menu.isRitualActive()) {
+            return;
+        }
 
         if (this.menu.isRitualActive()) {
             ctx.blit(EPIPHANY_PANEL_FROZEN, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
@@ -1280,6 +1369,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ).withStyle(this.menu.player.experienceLevel >= lvls ? ChatFormatting.GREEN : ChatFormatting.RED));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_safe")
                     .withStyle(ChatFormatting.AQUA));
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_currency")
+                    .withStyle(ChatFormatting.DARK_GRAY));
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
@@ -1289,6 +1380,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 int capPct = (int) Math.round(100.0 * (this.menu.ritualUsedInfinityTome()
                     ? rCfg.maxRushDegradeInfinity()
                     : rCfg.maxRushDegradeNormal()));
+                int infCapPct = (int) Math.round(100.0 * rCfg.maxRushDegradeInfinity());
                 boolean hasTome = this.menu.hasAnyMasterTomeInRange();
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_rush_title")
@@ -1300,6 +1392,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ).withStyle(ChatFormatting.GOLD));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_rush_priority")
                     .withStyle(ChatFormatting.GRAY));
+                tip.add(Component.translatable(
+                    "gui.chiseled_enchanting_table.ritual.tip_rush_currency",
+                    infCapPct
+                ).withStyle(ChatFormatting.DARK_GRAY));
                 if (!hasTome) {
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
                         .withStyle(ChatFormatting.RED));
@@ -1965,6 +2061,23 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
         tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.treasure_rule")
             .withStyle(ChatFormatting.DARK_GRAY));
+        BlockPos scanPos = effectiveTablePos();
+        if (this.minecraft != null && this.minecraft.level != null && scanPos != null) {
+            var ritScan = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .scanLibraryRitualContext(this.minecraft.level, scanPos, sg);
+            var rCfg = this.menu.ritualConfig();
+            double sigmaL = ritScan.totalWearImmuneLoad();
+            double slipPct = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+                .computeLoadSlipProbability(rCfg, sigmaL, ritScan.totalDetectedBookshelves()) * 100.0;
+            tip.add(Component.translatable(
+                "gui.chiseled_enchanting_table.resonance.overload_sigma_line",
+                String.format(java.util.Locale.ROOT, "%.1f", sigmaL),
+                String.format(java.util.Locale.ROOT, "%.1f", slipPct),
+                String.format(java.util.Locale.ROOT, "%.1f", rCfg.crosslineSlip().minLoadThreshold())
+            ).withStyle(slipPct > 0.005 ? ChatFormatting.GOLD : ChatFormatting.GRAY));
+        }
+        tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.scapegoat_order_line")
+            .withStyle(ChatFormatting.DARK_GRAY));
         return tip;
     }
 
@@ -1973,38 +2086,44 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         // Purple stitched header cloth spans y = [1.0 .. 15.0] (center = 8.0); place visual ink center at 7.6f!
         RowRenderSupport.renderCenteredYText(context, this.minecraft, this.title.getString(), 18, 7.6f, 0.94f, 190, 0xFFFFF0C8);
 
-        int broadShelves = this.menu.totalLibraryBookshelves();
-        int nextTarget = computeNextShelfMilestoneTarget();
-        int gap = Math.max(0, nextTarget - broadShelves);
-        String hudText = this.menu.crampedLibrary
-            ? Component.translatable(
-                "gui.chiseled_enchanting_table.header.shelf_hud_cramped",
-                this.menu.regularBookshelves,
-                broadShelves
-            ).getString()
-            : (gap > 0
+        if (this.menu.isClassic103Mode()) {
+            if (!this.menu.isRitualActive()) {
+                return;
+            }
+        } else {
+            int broadShelves = this.menu.totalLibraryBookshelves();
+            int nextTarget = computeNextShelfMilestoneTarget();
+            int gap = Math.max(0, nextTarget - broadShelves);
+            String hudText = this.menu.crampedLibrary
                 ? Component.translatable(
-                    "gui.chiseled_enchanting_table.header.shelf_hud_gap",
-                    this.menu.regularBookshelves,
-                    broadShelves,
-                    gap
-                ).getString()
-                : Component.translatable(
-                    "gui.chiseled_enchanting_table.header.shelf_hud_max",
+                    "gui.chiseled_enchanting_table.header.shelf_hud_cramped",
                     this.menu.regularBookshelves,
                     broadShelves
-                ).getString());
-        int hudTextColor = this.menu.crampedLibrary ? 0xFFFF8A96 : (gap == 0 ? 0xFFFFE58F : 0xFFC8F7EA);
-        RowRenderSupport.renderCenteredBoxText(
-            context,
-            this.minecraft,
-            hudText,
-            SHELF_HUD_X + 3,
-            SHELF_HUD_W - 6,
-            SHELF_HUD_Y + 4.8f,
-            0.58f,
-            hudTextColor
-        );
+                ).getString()
+                : (gap > 0
+                    ? Component.translatable(
+                        "gui.chiseled_enchanting_table.header.shelf_hud_gap",
+                        this.menu.regularBookshelves,
+                        broadShelves,
+                        gap
+                    ).getString()
+                    : Component.translatable(
+                        "gui.chiseled_enchanting_table.header.shelf_hud_max",
+                        this.menu.regularBookshelves,
+                        broadShelves
+                    ).getString());
+            int hudTextColor = this.menu.crampedLibrary ? 0xFFFF8A96 : (gap == 0 ? 0xFFFFE58F : 0xFFC8F7EA);
+            RowRenderSupport.renderCenteredBoxText(
+                context,
+                this.minecraft,
+                hudText,
+                SHELF_HUD_X + 3,
+                SHELF_HUD_W - 6,
+                SHELF_HUD_Y + 4.8f,
+                0.58f,
+                hudTextColor
+            );
+        }
 
         int lx = PANEL_X + 10;
         int ly = PANEL_Y;

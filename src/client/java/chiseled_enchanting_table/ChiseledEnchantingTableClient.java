@@ -40,6 +40,11 @@ import net.minecraft.world.level.block.state.BlockState;
 
 @Environment(EnvType.CLIENT)
 public class ChiseledEnchantingTableClient implements ClientModInitializer {
+    public static final net.minecraft.client.KeyMapping.Category KEY_CATEGORY =
+        net.minecraft.client.KeyMapping.Category.register(ChiseledEnchantingTable.identifier("keybindings"));
+    public static net.minecraft.client.KeyMapping KEY_GRIMOIRE_RECIPE;
+    public static net.minecraft.client.KeyMapping KEY_GRIMOIRE_USES;
+
     private static boolean serverHasAnyApplyChannel() {
         if (ClientPlayNetworking.canSend(
             chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID
@@ -56,6 +61,22 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        KEY_GRIMOIRE_RECIPE = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
+            new net.minecraft.client.KeyMapping(
+                "key.chiseled_enchanting_table.grimoire_recipe",
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                com.mojang.blaze3d.platform.InputConstants.KEY_R,
+                KEY_CATEGORY
+            )
+        );
+        KEY_GRIMOIRE_USES = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
+            new net.minecraft.client.KeyMapping(
+                "key.chiseled_enchanting_table.grimoire_uses",
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                com.mojang.blaze3d.platform.InputConstants.KEY_U,
+                KEY_CATEGORY
+            )
+        );
         chiseled_enchanting_table.compat.IrisGlintPreload.register();
         ClientPlayNetworking.registerGlobalReceiver(
             chiseled_enchanting_table.menu.EnchantingProtocol.Capability.TYPE,
@@ -124,7 +145,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         );
 
         ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipFlag, lines) -> {
-            if (!stack.is(Items.ENCHANTED_BOOK)) {
+            if (!stack.is(Items.ENCHANTED_BOOK) || ModRuntimeConfig.effective().classic103Mode()) {
                 return;
             }
             var cfg = SyncedEnchantmentCosts.libraryResonanceConfig();
@@ -178,7 +199,12 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                     cfg.wearImmuneMaxGeneration()
                 ).withStyle(ChatFormatting.GOLD));
             }
-            int maxUses = chiseled_enchanting_table.mechanics.resonance.TomeWearData.effectiveMaxUses(cfg.maxTomeUses(), generation);
+            int maxUses = chiseled_enchanting_table.mechanics.resonance.TomeWearData.effectiveMaxUses(
+                cfg.maxTomeUses(),
+                generation,
+                rawImmuneTag,
+                cfg.wearImmuneMaxGeneration()
+            );
             int remaining = Math.max(1, maxUses - wearUsed);
             float ratio = (float) remaining / (float) maxUses;
             ChatFormatting color = wearUsed <= 0

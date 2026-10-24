@@ -27,6 +27,9 @@ public final class ModConfigNetworking {
 
     public static final Identifier CONFIG_MANAGE_PERMISSION =
         ChiseledEnchantingTable.identifier("config/manage");
+    /** Per-player game-time throttle for UpdateRuntimeConfigPayload (NET-03). */
+    private static final java.util.Map<java.util.UUID, Long> LAST_CONFIG_UPDATE_NANO = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long MIN_CONFIG_UPDATE_INTERVAL_NANOS = 250_000_000L; // 250ms max 4 saves/s per admin
 
     public record SyncRuntimeConfigPayload(String json, String policyJson, String effectiveJson, boolean canEdit, long requestId, boolean accepted) implements CustomPacketPayload {
         public SyncRuntimeConfigPayload(String json, boolean edit, long request, boolean accepted) {
@@ -96,6 +99,13 @@ public final class ModConfigNetworking {
             UpdateRuntimeConfigPayload.CODEC
         );
 
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register(
+            (listener, srv) -> LAST_CONFIG_UPDATE_NANO.remove(listener.player.getUUID())
+        );
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(
+            srv -> LAST_CONFIG_UPDATE_NANO.clear()
+        );
+
         ServerPlayNetworking.registerGlobalReceiver(UpdateRuntimeConfigPayload.TYPE, (payload, ctx) -> {
             ServerPlayer player = ctx.player();
             MinecraftServer server = player.level().getServer();
@@ -103,6 +113,13 @@ public final class ModConfigNetworking {
                 sendToPlayer(player, payload.requestId(), false);
                 return;
             }
+            long nowNano = System.nanoTime();
+            Long prevNano = LAST_CONFIG_UPDATE_NANO.get(player.getUUID());
+            if (prevNano != null && nowNano - prevNano < MIN_CONFIG_UPDATE_INTERVAL_NANOS) {
+                sendToPlayer(player, payload.requestId(), false);
+                return;
+            }
+            LAST_CONFIG_UPDATE_NANO.put(player.getUUID(), nowNano);
             try {
                 if (payload.requestId() <= 0 || payload.json().isBlank()) throw new IllegalArgumentException("Invalid save request");
                 ModRuntimeConfig parsed = ModRuntimeConfig.fromJsonString(payload.json());

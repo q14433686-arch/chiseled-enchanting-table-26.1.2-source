@@ -497,6 +497,11 @@ public final class ConfigCatalog {
             d -> d.grindstoneDepletedTome, (d, v) -> d.grindstoneDepletedTome = v,
             ALWAYS, null
         ),
+        boolOpt(
+            "classic_1_0_3_mode", CategoryId.GENERAL, EffectScope.IMMEDIATE,
+            d -> d.classic103Mode, (d, v) -> d.classic103Mode = v,
+            ALWAYS, null
+        ),
 
         // ==================== 2. BOOKSHELVES ====================
         boolOpt(

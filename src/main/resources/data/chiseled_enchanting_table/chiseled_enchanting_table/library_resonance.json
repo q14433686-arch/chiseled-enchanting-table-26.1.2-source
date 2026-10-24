@@ -1,8 +1,8 @@
 {
   "_comment": "Full data-driven configuration for Library & Master Tome Resonance, Wild Book Wear, Unbreaking Waivers, and Overloaded Infinity Cross-Line Slips. Every key below is read directly by LibraryResonance.Config.fromJson / InscriptionRitualMechanics.Config.fromJson and synced to clients in EnchantCostTablePayload.",
   "wooden_bookshelves": {
-    "min_discount_bookshelves": 12,
-    "max_discount_bookshelves": 38,
+    "min_discount_bookshelves": 3,
+    "max_discount_bookshelves": 45,
     "max_wooden_discount_percent": 15,
     "shelf_upgrade_material_multiplier": 0.9
   },

@@ -1322,8 +1322,12 @@ public class ArcaneGrimoireScreen extends Screen {
             return true;
         }
 
-        // Direct R / U recipe-viewer lookup fallback when hovering an item slot
-        if ((keyCode == InputConstants.KEY_R || keyCode == InputConstants.KEY_U) && GrimoireViewerBridge.isAvailable()) {
+        // Configurable recipe-viewer lookup keybindings when hovering an item slot (GUI-03)
+        boolean matchRecipe = chiseled_enchanting_table.ChiseledEnchantingTableClient.KEY_GRIMOIRE_RECIPE != null
+            && chiseled_enchanting_table.ChiseledEnchantingTableClient.KEY_GRIMOIRE_RECIPE.matches(event);
+        boolean matchUses = chiseled_enchanting_table.ChiseledEnchantingTableClient.KEY_GRIMOIRE_USES != null
+            && chiseled_enchanting_table.ChiseledEnchantingTableClient.KEY_GRIMOIRE_USES.matches(event);
+        if ((matchRecipe || matchUses) && GrimoireViewerBridge.isAvailable()) {
             double mx = this.minecraft.mouseHandler.xpos()
                 * (double) this.minecraft.getWindow().getGuiScaledWidth()
                 / (double) this.minecraft.getWindow().getScreenWidth();
@@ -1332,7 +1336,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 / (double) this.minecraft.getWindow().getScreenHeight();
             HoveredSlot slot = hoveredIngredient(mx, my);
             if (slot != null) {
-                boolean opened = (keyCode == InputConstants.KEY_R)
+                boolean opened = matchRecipe
                     ? GrimoireViewerBridge.openRecipes(slot.stack())
                     : GrimoireViewerBridge.openUses(slot.stack());
                 if (opened) {

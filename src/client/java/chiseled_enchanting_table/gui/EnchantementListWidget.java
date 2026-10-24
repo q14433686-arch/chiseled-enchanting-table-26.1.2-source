@@ -637,7 +637,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             }
             // Track 2 (Existing-category upgrade on gear): once an item already carries level >= 1,
             // regular bookshelves unlock upgrades up to maxUnlockedDirectTier (1..MAX at 38 shelves).
-            if (!enchantable_item.is(Items.ENCHANTED_BOOK) && !enchantable_item.is(Items.BOOK)) {
+            if (!this.handler.isClassic103Mode()
+                && !enchantable_item.is(Items.ENCHANTED_BOOK)
+                && !enchantable_item.is(Items.BOOK)) {
                 for (var existingEntry : targetEnchantments.entrySet()) {
                     int existingLvl = existingEntry.getIntValue();
                     int maxLvl = Math.max(1, existingEntry.getKey().value().getMaxLevel());
@@ -684,7 +686,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     && !cost_item_stack.is(Items.ENCHANTED_BOOK)
                     && !cost_item_stack.is(Items.BOOK)
                     && !unlockedDirectSet.contains(new EnchantmentWithLevel(id, targetLevel))) {
-                    if (this.handler.canDirectResearchUpgradeTo(id, targetLevel)) {
+                    if (this.handler.isClassic103Mode() || this.handler.canDirectResearchUpgradeTo(id, targetLevel)) {
                         optionSlots.add(new DisplayOptionSlot(AvailableOption.bookResearchUpgrade(id, targetLevel), false, 0));
                         maxAddedTierById.merge(id, targetLevel, Math::max);
                     } else if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
@@ -701,7 +703,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         // Surface greyed-out shelf-locked direct tiers (with exact bookshelf goal) rather than hiding goals!
-        if (!enchantFromBook && !cost_item_stack.is(Items.BOOK) && !ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+        if (!this.handler.isClassic103Mode()
+            && !enchantFromBook
+            && !cost_item_stack.is(Items.BOOK)
+            && !ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
             Set<Identifier> candidateDirectIds = new LinkedHashSet<>(maxAddedTierById.keySet());
             for (var entry : targetEnchantments.entrySet()) {
                 Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);

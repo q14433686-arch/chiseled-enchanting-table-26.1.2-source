@@ -44,6 +44,7 @@ public final class BookshelfProgression {
     public static final int MAX_SCAN_VERTICAL_RADIUS = 6;
     public static final int MAX_SCAN_VOLUME_BLOCKS = 2048;
     public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.MAX_DIRECT_BOOKSHELVES;
+    public static final int DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.TWO_LEVEL_MAX_BOOKSHELVES;
     public static final double DIRECT_TIER_CURVE_EXPONENT = chiseled_enchanting_table.BundledDefaults.DIRECT_TIER_GAMMA;
 
     public static final int DEFAULT_TIER1_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER1_BOOKSHELVES;
@@ -54,8 +55,7 @@ public final class BookshelfProgression {
     public static final int DEFAULT_TIER3_BATCH_SIZE = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER3_BATCH_SIZE;
     public static final int DEFAULT_MIN_OPEN_ADJACENT_BLOCKS = chiseled_enchanting_table.BundledDefaults.MIN_OPEN_ADJACENT_BLOCKS;
 
-    private static final TagKey<Enchantment> CURSE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+    private static final TagKey<Enchantment> CURSE_TAG = chiseled_enchanting_table.registry.CetTags.Enchantments.CURSE;
 
     public static int scanVolumeBlocks(int horizontalRadius, int verticalRadius) {
         int h = Math.max(1, horizontalRadius);
@@ -126,6 +126,7 @@ public final class BookshelfProgression {
     public record Config(
         boolean directGatesEnabled,
         int maxDirectBookshelves,
+        int twoLevelMaxBookshelves,
         double gamma,
         BlankMaxTierMode blankMaxTierMode,
         int horizontalScanRadius,
@@ -145,6 +146,7 @@ public final class BookshelfProgression {
         public static final Config DEFAULT = new Config(
             chiseled_enchanting_table.BundledDefaults.DIRECT_GATES_ENABLED,
             DEFAULT_MAX_DIRECT_BOOKSHELVES,
+            DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES,
             DIRECT_TIER_CURVE_EXPONENT,
             BlankMaxTierMode.fromToken(chiseled_enchanting_table.BundledDefaults.BLANK_MAX_TIER_MODE),
             DEFAULT_SCAN_HORIZONTAL_RADIUS,
@@ -163,6 +165,8 @@ public final class BookshelfProgression {
         );
 
         public Config {
+            maxDirectBookshelves = clampInt(maxDirectBookshelves, 1, 256);
+            twoLevelMaxBookshelves = clampInt(twoLevelMaxBookshelves, 1, maxDirectBookshelves);
             horizontalScanRadius = clampInt(horizontalScanRadius, 1, MAX_SCAN_HORIZONTAL_RADIUS);
             verticalScanRadius = clampInt(verticalScanRadius, 0, MAX_SCAN_VERTICAL_RADIUS);
             vanillaTableMode = vanillaTableMode != null ? vanillaTableMode : VanillaTableMode.BOOKS;
@@ -175,6 +179,47 @@ public final class BookshelfProgression {
                 && scanVolumeBlocks(horizontalScanRadius, verticalScanRadius) > MAX_SCAN_VOLUME_BLOCKS) {
                 horizontalScanRadius--;
             }
+        }
+
+        public Config(
+            boolean directGatesEnabled,
+            int maxDirectBookshelves,
+            double gamma,
+            BlankMaxTierMode blankMaxTierMode,
+            int horizontalScanRadius,
+            int verticalScanRadius,
+            Map<Identifier, List<Integer>> overrides,
+            int tier1Bookshelves,
+            int tier2Bookshelves,
+            double tier2MaterialMultiplier,
+            int tier3QualifyingEnchantments,
+            int baseBatchSize,
+            int tier3BatchSize,
+            VanillaTableMode vanillaTableMode,
+            boolean requireBreathingRoom,
+            int minOpenAdjacentBlocks,
+            boolean requireLineOfSight
+        ) {
+            this(
+                directGatesEnabled,
+                maxDirectBookshelves,
+                Math.min(Math.max(1, maxDirectBookshelves), DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES),
+                gamma,
+                blankMaxTierMode,
+                horizontalScanRadius,
+                verticalScanRadius,
+                overrides,
+                tier1Bookshelves,
+                tier2Bookshelves,
+                tier2MaterialMultiplier,
+                tier3QualifyingEnchantments,
+                baseBatchSize,
+                tier3BatchSize,
+                vanillaTableMode,
+                requireBreathingRoom,
+                minOpenAdjacentBlocks,
+                requireLineOfSight
+            );
         }
 
         public Config(
@@ -280,6 +325,7 @@ public final class BookshelfProgression {
 
             boolean enabled = true;
             int maxDirect = DEFAULT_MAX_DIRECT_BOOKSHELVES;
+            int twoLevelMax = DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES;
             double curveExp = DIRECT_TIER_CURVE_EXPONENT;
             BlankMaxTierMode blankMode = BlankMaxTierMode.HALF_CEIL;
             Map<Identifier, List<Integer>> parsedOverrides = new HashMap<>();
@@ -291,6 +337,10 @@ public final class BookshelfProgression {
                 }
                 if (directObj.has("max_bookshelves")) {
                     maxDirect = clampInt(directObj.get("max_bookshelves").getAsInt(), 1, 256);
+                }
+                twoLevelMax = Math.min(maxDirect, DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES);
+                if (directObj.has("two_level_max_bookshelves")) {
+                    twoLevelMax = clampInt(directObj.get("two_level_max_bookshelves").getAsInt(), 1, maxDirect);
                 }
                 if (directObj.has("gamma")) {
                     double rawExp = directObj.get("gamma").getAsDouble();
@@ -371,6 +421,7 @@ public final class BookshelfProgression {
             return new Config(
                 enabled,
                 maxDirect,
+                twoLevelMax,
                 curveExp,
                 blankMode,
                 hRadius,
@@ -454,7 +505,10 @@ public final class BookshelfProgression {
                 return Math.max(0, ladder.get(targetLevel - 1));
             }
         }
-        return requiredBookshelvesForDirectTier(targetLevel, maxLevel, cfg.maxDirectBookshelves(), cfg.gamma());
+        int effectiveCap = Math.max(1, maxLevel) == 2
+            ? Math.min(cfg.maxDirectBookshelves(), cfg.twoLevelMaxBookshelves())
+            : cfg.maxDirectBookshelves();
+        return requiredBookshelvesForDirectTier(targetLevel, maxLevel, effectiveCap, cfg.gamma());
     }
 
     public static int maxUnlockedDirectTier(

@@ -300,7 +300,7 @@ public final class MasterTomeWear {
 
     public static int effectiveMaxUses(ItemStack stack, LibraryResonance.Config cfg) {
         LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
-        return TomeWearData.effectiveMaxUses(stack, c.maxTomeUses());
+        return TomeWearData.effectiveMaxUses(stack, c.maxTomeUses(), c.wearImmuneMaxGeneration());
     }
 
     /**
@@ -321,8 +321,9 @@ public final class MasterTomeWear {
 
     /**
      * Computes exact game ticks ({@code 20 ticks = 1.0s}) required to passively regenerate {@code +1}
-     * Master Tome durability charge at {@code nearbyBookshelves}, featuring two resonance breakthroughs
-     * at {@code tier1Shelves} (default {@code 38 -> 3,600s}) and {@code tier2Shelves} (default {@code 42 -> 1,200s}).
+     * Master Tome durability charge at {@code nearbyBookshelves}, interpolating piecewise-linearly
+     * with zero step cliffs through {@code (0, baseTicks)} -&gt; {@code (tier1Shelves=38, tier1Ticks=3600s)}
+     * -&gt; {@code (tier2Shelves=42, tier2Ticks=1200s)}.
      */
     public static int computeRegenIntervalTicks(LibraryResonance.Config cfg, int nearbyBookshelves) {
         LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
@@ -337,15 +338,13 @@ public final class MasterTomeWear {
         int tier1Ticks = Math.max(20, Math.min(baseTicks, c.tomeRegenTier1Seconds() * 20));
         int tier2Ticks = Math.max(20, Math.min(tier1Ticks, c.tomeRegenTier2Seconds() * 20));
 
-        if (s < s1) {
-            double mid1 = Math.max(tier1Ticks, 0.5 * (baseTicks + tier1Ticks));
-            double raw = baseTicks - ((baseTicks - mid1) * s) / (double) s1;
+        if (s <= s1) {
+            double raw = baseTicks - ((double) (baseTicks - tier1Ticks) * s) / (double) s1;
             return Math.max(tier1Ticks, (int) Math.round(raw));
         }
         if (s < s2) {
-            double mid2 = Math.max(tier2Ticks, 0.5 * (tier1Ticks + tier2Ticks));
             double span = Math.max(1, s2 - s1);
-            double raw = tier1Ticks - ((tier1Ticks - mid2) * (s - s1)) / span;
+            double raw = tier1Ticks - ((double) (tier1Ticks - tier2Ticks) * (s - s1)) / span;
             return Math.max(tier2Ticks, (int) Math.round(raw));
         }
         int excess = s - s2;
@@ -477,7 +476,7 @@ public final class MasterTomeWear {
     /** Remaining charges against the generation-faded cap (never below 1 while the entry exists). */
     public static int remainingCharges(ItemStack stack, LibraryResonance.Config cfg) {
         LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
-        return TomeWearData.remainingCharges(stack, c.maxTomeUses());
+        return TomeWearData.remainingCharges(stack, c.maxTomeUses(), c.wearImmuneMaxGeneration());
     }
 
     public static void setWearUsed(ItemStack stack, int wearUsed) {
@@ -593,7 +592,13 @@ public final class MasterTomeWear {
                             && TomeWearData.countNonCurseStoredEnchantments(c.stack()) <= cfg.wearImmuneFullWaiverMaxEnchants();
                         int chargeVal = fullImmortal
                             ? IMMORTAL_CHARGES
-                            : TomeWearData.remainingCharges(cfg.maxTomeUses(), TomeWearData.getGeneration(c.stack()), c.wearUsed());
+                            : TomeWearData.remainingCharges(
+                                cfg.maxTomeUses(),
+                                TomeWearData.getGeneration(c.stack()),
+                                c.wearUsed(),
+                                TomeWearData.hasWearImmunity(c.stack()),
+                                cfg.wearImmuneMaxGeneration()
+                            );
                         out.put(new chiseled_enchanting_table.utils.EnchantmentWithLevel(id, reqLvl), chargeVal);
                         break;
                     }
@@ -717,7 +722,7 @@ public final class MasterTomeWear {
         WearStepResult step = computeWearStep(
             cfg.tomeConsumptionMode(),
             cfg.tomeDepleteBehavior(),
-            TomeWearData.effectiveMaxUses(chosenSnapshot, cfg.maxTomeUses()),
+            TomeWearData.effectiveMaxUses(chosenSnapshot, cfg.maxTomeUses(), cfg.wearImmuneMaxGeneration()),
             cfg.bookCopyWearCost(),
             chosen.storedLevel(),
             chosen.wearUsed(),

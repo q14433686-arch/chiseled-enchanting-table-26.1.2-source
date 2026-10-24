@@ -42,9 +42,9 @@ public final class DisenchantmentApplication {
     public static final int CONSERVATION_SAFETY_MARGIN_POINTS = 5;
 
     private static final TagKey<Enchantment> CURSE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.CURSE;
     private static final TagKey<Enchantment> TREASURE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("treasure"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.TREASURE;
 
     private record PotentialCacheKey(
         int maxLevel,

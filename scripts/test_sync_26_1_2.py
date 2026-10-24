@@ -127,7 +127,8 @@ class SyncContracts26_1_2(unittest.TestCase):
 
     def test_audit_guards_authoritative_sync_and_input(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('REVISION = "26_1_2_revision_15"', protocol)
+        self.assertIn('REVISION = "26_1_2_revision_16"', protocol)
+        self.assertIn('26_1_2_revision_15', protocol)  # shipped revision stays query-only probe
         self.assertIn('26_1_2_revision_14', protocol)  # shipped revision stays query-only probe
         self.assertIn('26_1_2_revision_13', protocol)  # shipped revision stays query-only probe
         self.assertIn('26_1_2_revision_12', protocol)  # shipped revision stays query-only probe
