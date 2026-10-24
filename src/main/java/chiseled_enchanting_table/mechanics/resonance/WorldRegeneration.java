@@ -299,15 +299,16 @@ public final class WorldRegeneration {
         int slotIndex,
         ItemStack stack
     ) {
-        ItemStack updated = stack.copy();
-        TomeLockData.Lock expired = TomeLockData.clearExpired(updated);
+        // In-place: clearExpired edits the live stack. Re-storing the same instance keeps
+        // the scheduler's reference identity (and earned charge progress) intact.
+        TomeLockData.Lock expired = TomeLockData.clearExpired(stack);
         if (expired == null) return stack;
-        shelf.setItem(slotIndex, updated);
+        shelf.setItem(slotIndex, stack);
         shelf.setChanged();
         var state = world.getBlockState(shelfPos);
         world.sendBlockUpdated(shelfPos, state, state, Block.UPDATE_ALL);
         notifyLockExpired(world, expired);
-        return updated;
+        return stack;
     }
 
     private static void notifyLockExpired(ServerLevel world, TomeLockData.Lock lock) {

@@ -72,6 +72,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public boolean syncedCleanseUnlocked;
     public boolean syncedTomePageUnlocked;
     public int sacrificeProgress;
+    public int sacrificeRequired = chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED;
+    public int tomeRequiredShelves = chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES;
+
+    /** Early-unlock price for a timed/permanent tome lock (field feedback: keep UI text on these). */
+    public static final int EARLY_UNLOCK_XP_LEVELS = 1;
+    public static final int EARLY_UNLOCK_GRIT_COUNT = 1;
     public int qualifyingEnchantedBookshelves;
     public int liveTotalLibraryBookshelves;
     public int liveRegenTier;
@@ -175,6 +181,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             ? java.util.Map.of()
             : java.util.Map.copyOf(payload.master_tome_charges());
         this.crampedLibrary = payload.cramped_library();
+        // Persistent per-player page state from the opening payload: correct at frame one.
+        this.syncedCleanseUnlocked = payload.cleanse_unlocked();
+        this.syncedTomePageUnlocked = payload.tome_page_unlocked();
+        this.sacrificeProgress = Math.max(0, payload.sacrifice_progress());
+        this.sacrificeRequired = Math.max(1, payload.sacrifice_required());
+        this.tomeRequiredShelves = Math.max(1, payload.tome_page_required_shelves());
         this.epiphanySeed = payload.epiphany_seed();
         long cycleTicks = Math.max(1L, this.epiphanyCycleTicks());
         this.syncedCycleIndex = (int) ((this.world.getGameTime() / cycleTicks) & 0xFFFFL);
@@ -470,6 +482,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.syncedCleanseUnlocked = live.cleanse_unlocked();
         this.syncedTomePageUnlocked = live.tome_page_unlocked();
         this.sacrificeProgress = Math.max(0, live.sacrifice_progress());
+        this.sacrificeRequired = Math.max(1, live.sacrifice_required());
+        this.tomeRequiredShelves = Math.max(1, live.tome_page_required_shelves());
         this.qualifyingEnchantedBookshelves = Math.max(0, live.qualifying_enchanted_bookshelves());
         this.liveTotalLibraryBookshelves = Math.max(0, live.total_library_bookshelves());
         this.liveRegenTier = Math.max(0, live.regen_tier());
@@ -565,6 +579,25 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return out;
     }
 
+    /** Sacrifice scan: any loaded chiseled bookshelf inside the configured scan volume. */
+    private java.util.List<net.minecraft.core.BlockPos> sacrificeShelfPositions(
+        net.minecraft.core.BlockPos tablePos
+    ) {
+        java.util.List<net.minecraft.core.BlockPos> out = new java.util.ArrayList<>();
+        if (tablePos == null) return out;
+        var cfg = shelfGatesConfig();
+        for (net.minecraft.core.BlockPos offset
+            : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(cfg)) {
+            net.minecraft.core.BlockPos pos = tablePos.offset(offset);
+            if (this.world.hasChunkAt(pos)
+                && this.world.getBlockEntity(pos)
+                    instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity) {
+                out.add(pos.immutable());
+            }
+        }
+        return out;
+    }
+
     private void writeShelfStack(
         net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity shelf,
         net.minecraft.core.BlockPos shelfPos,
@@ -624,7 +657,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             tomeActionMessage("message.chiseled_enchanting_table.tome_action.invalid");
             return;
         }
-        ItemStack updated = current.copy();
+        // In-place mutation only: TomeLockData edits the stack's CUSTOM_DATA component, and
+        // writeShelfStack re-stores the SAME instance. A copy() here would change the stack
+        // reference the regeneration scheduler tracks and reset earned charge progress.
+        ItemStack updated = current;
         var expired = chiseled_enchanting_table.mechanics.resonance.TomeLockData.clearExpired(updated);
         if (expired != null
             && payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK) {
@@ -678,15 +714,17 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         if (!creative) {
             ItemStack grit = new ItemStack(BlockRegistry.CLEANSING_GRIT);
-            if (sp.experienceLevel < 1 || countAvailableInInventory(grit) < 1) {
-                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost");
+            if (sp.experienceLevel < EARLY_UNLOCK_XP_LEVELS || countAvailableInInventory(grit) < EARLY_UNLOCK_GRIT_COUNT) {
+                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost",
+                    EARLY_UNLOCK_XP_LEVELS, EARLY_UNLOCK_GRIT_COUNT);
                 return;
             }
             if (!consumeOneCleansingGrit()) {
-                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost");
+                tomeActionMessage("message.chiseled_enchanting_table.tome_lock.cost",
+                    EARLY_UNLOCK_XP_LEVELS, EARLY_UNLOCK_GRIT_COUNT);
                 return;
             }
-            sp.giveExperienceLevels(-1);
+            sp.giveExperienceLevels(-EARLY_UNLOCK_XP_LEVELS);
         }
         chiseled_enchanting_table.mechanics.resonance.TomeLockData.unlock(updated);
         writeShelfStack(shelf, shelfPos, slot, updated);
@@ -714,7 +752,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                     || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(current)) {
                     continue;
                 }
-                ItemStack updated = current.copy();
+                // Same in-place rule as single-book locking: never swap the stack instance.
+                ItemStack updated = current;
                 chiseled_enchanting_table.mechanics.resonance.TomeLockData.clearExpired(updated);
                 if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.lock(
                     updated,
@@ -742,7 +781,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             - chiseled_enchanting_table.utils.Advancement.completedCriteria(
                 sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
         int consumed = 0;
-        for (net.minecraft.core.BlockPos shelfPos : scopedShelfPositions(tablePos)) {
+        for (net.minecraft.core.BlockPos shelfPos : sacrificeShelfPositions(tablePos)) {
             if (needed <= 0) break;
             if (!(this.world.getBlockEntity(shelfPos)
                 instanceof net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity shelf)) continue;

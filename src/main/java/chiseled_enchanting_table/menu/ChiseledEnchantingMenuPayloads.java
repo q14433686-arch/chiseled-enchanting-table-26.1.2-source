@@ -113,7 +113,16 @@ public final class ChiseledEnchantingMenuPayloads {
         boolean cramped_library,
         int chiseled_bookshelves,
         int empty_chiseled_bookshelves,
-        Map<EnchantmentWithLevel, Integer> master_tome_charges
+        Map<EnchantmentWithLevel, Integer> master_tome_charges,
+        // Field feedback 2026-10-24 (round 2): per-player persistent page state rides the
+        // opening payload so unlock flags and sacrifice progress are correct on the first
+        // frame, straight from the player's advancements, instead of appearing up to a
+        // second later via the periodic live-state broadcast.
+        boolean cleanse_unlocked,
+        boolean tome_page_unlocked,
+        int sacrifice_progress,
+        int sacrifice_required,
+        int tome_page_required_shelves
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<AvailableEnchantmentPayload> AVAILABLE_CHISELED_ENCHANTMENT_PAYLOAD_ID =
             new CustomPacketPayload.Type<>(AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID);
@@ -122,11 +131,17 @@ public final class ChiseledEnchantingMenuPayloads {
 
         public AvailableEnchantmentPayload(Set<EnchantmentWithLevel> unlocked, List<TransformationDisplay> transforms,
             int discount, int regular, int books, int high, int seed, Map<Identifier,Integer> masters, boolean cramped) {
-            this(unlocked, transforms, discount, regular, books, high, seed, masters, cramped, 0, 0, Map.of());
+            this(unlocked, transforms, discount, regular, books, high, seed, masters, cramped, 0, 0, Map.of(),
+                false, false, 0,
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES);
         }
 
         public AvailableEnchantmentPayload(Set<EnchantmentWithLevel> unlocked_enchantements) {
-            this(unlocked_enchantements, buildTransformationDisplays(null), 0, 0, 0, 0, 1, Map.of(), false, 0, 0, Map.of());
+            this(unlocked_enchantements, buildTransformationDisplays(null), 0, 0, 0, 0, 1, Map.of(), false, 0, 0, Map.of(),
+                false, false, 0,
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES);
         }
 
         public AvailableEnchantmentPayload(
@@ -136,7 +151,10 @@ public final class ChiseledEnchantingMenuPayloads {
             int chiseled_book_count,
             int epiphany_seed
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, Map.of(), false, 0, 0, Map.of());
+            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, Map.of(), false, 0, 0, Map.of(),
+                false, false, 0,
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES);
         }
 
         public AvailableEnchantmentPayload(
@@ -147,7 +165,10 @@ public final class ChiseledEnchantingMenuPayloads {
             int epiphany_seed,
             Map<Identifier, Integer> stored_master_levels
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, stored_master_levels, false, 0, 0, Map.of());
+            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, 0, epiphany_seed, stored_master_levels, false, 0, 0, Map.of(),
+                false, false, 0,
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES);
         }
 
         public AvailableEnchantmentPayload(
@@ -159,7 +180,10 @@ public final class ChiseledEnchantingMenuPayloads {
             int epiphany_seed,
             Map<Identifier, Integer> stored_master_levels
         ) {
-            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, high_tier_chiseled_books, epiphany_seed, stored_master_levels, false, 0, 0, Map.of());
+            this(unlocked_enchantements, buildTransformationDisplays(null), xp_discount_percent, regular_bookshelves, chiseled_book_count, high_tier_chiseled_books, epiphany_seed, stored_master_levels, false, 0, 0, Map.of(),
+                false, false, 0,
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES);
         }
 
         public AvailableEnchantmentPayload(
@@ -185,7 +209,10 @@ public final class ChiseledEnchantingMenuPayloads {
                 cramped_library,
                 0,
                 0,
-                Map.of()
+                Map.of(),
+                false, false, 0,
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES
             );
         }
 
@@ -214,7 +241,10 @@ public final class ChiseledEnchantingMenuPayloads {
                 cramped_library,
                 chiseled_bookshelves,
                 0,
-                master_tome_charges == null ? Map.of() : Map.copyOf(master_tome_charges)
+                master_tome_charges == null ? Map.of() : Map.copyOf(master_tome_charges),
+                false, false, 0,
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES
             );
         }
 
@@ -244,7 +274,19 @@ public final class ChiseledEnchantingMenuPayloads {
                 cramped_library,
                 chiseled_bookshelves,
                 empty_chiseled_bookshelves,
-                master_tome_charges == null ? Map.of() : Map.copyOf(master_tome_charges)
+                master_tome_charges == null ? Map.of() : Map.copyOf(master_tome_charges),
+                player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+                    && chiseled_enchanting_table.utils.Advancement.hasCompleted(
+                        serverPlayer, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE),
+                player instanceof net.minecraft.server.level.ServerPlayer serverPlayer2
+                    && chiseled_enchanting_table.utils.Advancement.hasCompleted(
+                        serverPlayer2, chiseled_enchanting_table.utils.Advancement.HOW_MUCH_LONGER),
+                player instanceof net.minecraft.server.level.ServerPlayer serverPlayer3
+                    ? chiseled_enchanting_table.utils.Advancement.completedCriteria(
+                        serverPlayer3, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)
+                    : 0,
+                chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE_REQUIRED,
+                chiseled_enchanting_table.utils.Advancement.TOME_PAGE_REQUIRED_SHELVES
             );
         }
 
@@ -297,6 +339,11 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(Math.max(0, chiseled_bookshelves));
             buf.writeVarInt(Math.max(0, empty_chiseled_bookshelves));
             writeMasterCharges(buf, master_tome_charges);
+            buf.writeBoolean(cleanse_unlocked);
+            buf.writeBoolean(tome_page_unlocked);
+            buf.writeVarInt(Math.max(0, sacrifice_progress));
+            buf.writeVarInt(Math.max(1, sacrifice_required));
+            buf.writeVarInt(Math.max(1, tome_page_required_shelves));
         }
 
         private static AvailableEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
@@ -326,6 +373,11 @@ public final class ChiseledEnchantingMenuPayloads {
             int chiseledBookshelves = buf.readVarInt();
             int emptyChiseledBookshelves = buf.readVarInt();
             Map<EnchantmentWithLevel, Integer> masterCharges = readMasterCharges(buf);
+            boolean cleanseUnlocked = buf.readBoolean();
+            boolean tomePageUnlocked = buf.readBoolean();
+            int sacrificeProgressValue = buf.readVarInt();
+            int sacrificeRequiredValue = buf.readVarInt();
+            int tomePageRequiredShelvesValue = buf.readVarInt();
             return new AvailableEnchantmentPayload(
                 unlocked,
                 transformations,
@@ -338,7 +390,12 @@ public final class ChiseledEnchantingMenuPayloads {
                 crampedLibrary,
                 chiseledBookshelves,
                 emptyChiseledBookshelves,
-                masterCharges
+                masterCharges,
+                cleanseUnlocked,
+                tomePageUnlocked,
+                sacrificeProgressValue,
+                sacrificeRequiredValue,
+                tomePageRequiredShelvesValue
             );
         }
 
