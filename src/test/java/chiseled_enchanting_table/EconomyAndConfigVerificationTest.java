@@ -377,8 +377,8 @@ class EconomyAndConfigVerificationTest {
         assertEquals(32, sg.tier2Bookshelves());
         assertEquals(38, sg.maxDirectBookshelves());
         assertEquals(22, sg.twoLevelMaxBookshelves(), "BAL-01: Max-level-2 enchantments unlock II at 22 wooden shelves");
-        assertEquals(22, BookshelfProgression.requiredBookshelvesForUpgrade(2, 2, null, sg));
-        assertEquals(38, BookshelfProgression.requiredBookshelvesForUpgrade(3, 3, null, sg));
+        assertEquals(22, BookshelfProgression.requiredBookshelvesForDirectTier(sg, null, 2, 2));
+        assertEquals(38, BookshelfProgression.requiredBookshelvesForDirectTier(sg, null, 3, 3));
         assertEquals(3, wearCfg.minDiscountBookshelves(), "BAL-03: Wooden discount starts smoothly at 3 shelves");
         assertEquals(45, wearCfg.maxDiscountBookshelves(), "BAL-03: Wooden discount reaches 15% smoothly at 45 shelves");
         assertEquals(0, LibraryResonance.woodenBookshelfDiscountPercent(wearCfg, 2));
