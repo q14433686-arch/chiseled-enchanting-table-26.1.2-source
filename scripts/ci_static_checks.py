@@ -365,6 +365,36 @@ def check_markdown_links() -> None:
         note(f"markdown links ok ({scanned} file(s) scanned)")
 
 
+def check_no_tautological_residue() -> None:
+    """Generated-merge residue sweep: tautological conditions and same-value ternaries
+    (e.g. `0.0 >= 0.0 && x ? 0 : 0`) compile fine but prove a line was never re-read.
+    New audit P0: keep the tree free of them mechanically."""
+    import re as _re
+
+    patterns = [
+        _re.compile(r"0\.0\s*(?:>=|<=|==)\s*0\.0"),
+        _re.compile(r"\bif\s*\(\s*(?:true|false)\s*\)"),
+        _re.compile(r"\?\s*([A-Za-z0-9_.]+)\s*:\s*\1(?![A-Za-z0-9_.])"),
+    ]
+    offenders = []
+    for root, _dirs, files in os.walk(os.path.join(REPO, "src")):
+        for name in files:
+            if not name.endswith(".java"):
+                continue
+            path = os.path.join(root, name)
+            with open(path, encoding="utf-8") as fh:
+                for lineno, line in enumerate(fh, 1):
+                    stripped = line.strip()
+                    if stripped.startswith("//") or stripped.startswith("*"):
+                        continue
+                    if any(p.search(line) for p in patterns):
+                        offenders.append(f"{os.path.relpath(path, REPO)}:{lineno}")
+    for offender in offenders:
+        fail(f"tautological/generated residue: {offender}")
+    if not offenders:
+        note("no tautological generated residue")
+
+
 def check_locale_safe_formatting() -> None:
     """DATA-03/DATA-04: String.format must pin Locale.ROOT (server default locales
     otherwise leak localized digits/decimals into lore, logs and config values)."""
@@ -399,6 +429,7 @@ def main() -> int:
     check_no_embedded_json_fallbacks()
     check_markdown_links()
     check_locale_safe_formatting()
+    check_no_tautological_residue()
 
     if args.porcelain:
         for msg in failures:

@@ -52,6 +52,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
         ScreenHandlerRegistry.init();
         StructureProcessorRegistry.init();
         LootRegistry.init();
+        chiseled_enchanting_table.mechanics.structure.BookshelfBookFiller.verifyVanillaKeys();
 
         // Restrict minecraft:infinity strictly to Exploration loot, Vanilla Enchanting Table random rolls,
         // and Master Tome copying/inscription — strip/replace any Villager / Wandering Trader Infinity offer.
@@ -73,8 +74,18 @@ public class ChiseledEnchantingTable implements ModInitializer {
         });
     }
 
-    private static void sanitizeVillagerInfinityOffers(net.minecraft.world.level.Level world, MerchantOffers offers) {
-        if (offers == null || offers.isEmpty()) {
+    /**
+     * Strips Infinity enchanted-book offers (replaced by Power I when that was the only
+     * enchantment). Called from the use-entity callback and from
+     * {@code VillagerInfinitySanitizeMixin} on every server-side {@code getOffers()},
+     * so offers created or opened without a right-click (wandering traders, other
+     * mods opening trade screens programmatically) are covered too. The
+     * {@code restrict_villager_infinity_books} gate lives here so every callsite is
+     * covered by it; the rewrite is idempotent, so repeated calls are harmless.
+     */
+    public static void sanitizeVillagerInfinityOffers(net.minecraft.world.level.Level world, MerchantOffers offers) {
+        if (offers == null || offers.isEmpty()
+            || !chiseled_enchanting_table.config.ModRuntimeConfig.effective().restrictVillagerInfinityBooks()) {
             return;
         }
         var enchRegistry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);

@@ -147,6 +147,9 @@ tasks.withType(JavaCompile).configureEach {
     // Minecraft 26.3 still requires Java 25 (Fabric API 0.162.0+26.3 depends on java >=25).
     options.release = 25
     options.encoding = 'UTF-8'
+    // Surface deprecated-API usage in CI logs immediately (audit: client entrypoint
+    // currently "uses or overrides a deprecated API"); unchecked stays visible too.
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
 }
 
 java {

@@ -52,7 +52,7 @@ alternatives, book upgrades, Blank Overwrite and transformations.
 - Flat anvil prior-work penalty; same-level book merge blocking; stacked-book remainder fix.
 - JSON-driven chest/archaeology loot, depth-based mineshaft Efficiency, weighted structure
   bookshelf replacement/fill with the worldgen-safe NBT pipeline (no live chunk access from workers).
-- Eleven registered mixins (CI fails on any orphan mixin source); `RemoveXpCostScaling` is active and no longer excluded from compilation.
+- Twelve registered mixins (CI fails on any orphan mixin source); `RemoveXpCostScaling` is active and no longer excluded from compilation.
 
 ## Target-specific contracts (must not regress on future syncs)
 

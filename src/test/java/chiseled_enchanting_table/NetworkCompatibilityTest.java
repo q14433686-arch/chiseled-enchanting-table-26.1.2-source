@@ -32,7 +32,7 @@ class NetworkCompatibilityTest {
     @Test void openingAndLiveShelfCodecsPreserveAllFields() {
         var unlocked = Set.of(new EnchantmentWithLevel(id("one"), 1), new EnchantmentWithLevel(id("two"), 255));
         var masters = Map.of(id("one"), 7, id("two"), 255);
-        var display = new TransformationDisplay(id("rule"), id("input_tag"), true, id("out"), 2, 30, 3);
+        var display = new TransformationDisplay(id("rule"), id("input_tag"), true, id("out"), 2, 30, 3, true);
         roundTrip(AvailableEnchantmentPayload.AVAILABLE_CHISELED_ENCHANTMENT_CODEC,
             new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789, masters, true));
         roundTrip(LiveShelfStatePayload.CODEC,
@@ -65,7 +65,7 @@ class NetworkCompatibilityTest {
 
     @Test void costTableConfigurationAndRowsRoundTrip() {
         // No ItemStack fields in this fixture: validates every config field/order headlessly.
-        var display = new TransformationDisplay(id("custom_rule"), id("tag"), true, id("custom_output"), 7, 29, 2);
+        var display = new TransformationDisplay(id("custom_rule"), id("tag"), true, id("custom_output"), 7, 29, 2, true);
         roundTrip(EnchantCostTablePayload.CODEC, table(List.of(display)));
         roundTrip(EnchantCostTablePayload.CODEC, table(List.of()));
     }

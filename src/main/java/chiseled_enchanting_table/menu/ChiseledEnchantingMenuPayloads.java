@@ -75,33 +75,6 @@ public final class ChiseledEnchantingMenuPayloads {
         int deducted_levels,
         boolean unlocked
     ) {
-        public TransformationDisplay(Identifier id, Identifier input_item, Identifier output_item, int level) {
-            this(id, input_item, false, output_item, level, 1, 0, true);
-        }
-
-        public TransformationDisplay(
-            Identifier id,
-            Identifier input_item,
-            boolean input_is_tag,
-            Identifier output_item,
-            int level,
-            int min_player_level
-        ) {
-            this(id, input_item, input_is_tag, output_item, level, min_player_level, 0, true);
-        }
-
-        public TransformationDisplay(
-            Identifier id,
-            Identifier input_item,
-            boolean input_is_tag,
-            Identifier output_item,
-            int level,
-            int min_player_level,
-            int deducted_levels
-        ) {
-            this(id, input_item, input_is_tag, output_item, level, min_player_level, deducted_levels, true);
-        }
-
         public static void write(RegistryFriendlyByteBuf buf, TransformationDisplay value) {
             buf.writeIdentifier(value.id());
             buf.writeIdentifier(value.input_item());

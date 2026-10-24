@@ -54,6 +54,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     private static final java.util.Map<java.util.UUID, Long> LAST_REOPEN_TICK = new java.util.HashMap<>();
 
     public static void init() {
+        // Lifecycle discipline for static per-player state (audit): throttle entries die
+        // with the connection, mirroring EnchantCostSync.LAST_DISPLAYS, so long-running
+        // servers do not accumulate one UUID entry per player who ever joined.
+        ServerPlayConnectionEvents.DISCONNECT.register(
+            (listener, server) -> LAST_REOPEN_TICK.remove(listener.player.getUUID()));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_REOPEN_TICK.clear());
         PayloadTypeRegistry.serverboundPlay().register(
             ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID,
             ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_CODEC

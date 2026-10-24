@@ -13,7 +13,8 @@
     "structure.StructurePieceAccessor",
     "structure.StructurePieceMarkMixin",
     "structure.StructurePlaceSettingsMixin",
-    "structure.StructureTemplatePoolProjectionMixin"
+    "structure.StructureTemplatePoolProjectionMixin",
+    "villager.VillagerInfinitySanitizeMixin"
   ],
   "injectors": {
     "defaultRequire": 1
