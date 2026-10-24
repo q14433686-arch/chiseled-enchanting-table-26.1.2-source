@@ -26,6 +26,21 @@ public final class EnchantCostSync {
     private EnchantCostSync() {}
     private static final java.util.Map<ServerPlayer, java.util.List<ChiseledEnchantingMenuPayloads.TransformationDisplay>> LAST_DISPLAYS = new java.util.WeakHashMap<>();
 
+    /**
+     * "Peer has some build of this mod" signal for the JOIN handshake: the current cost
+     * channel or any query-only legacy probe (see the retirement policy in
+     * {@link EnchantingProtocol}).
+     */
+    private static boolean peerHasAnyCostChannel(ServerPlayer player) {
+        return ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)
+            || ServerPlayNetworking.canSend(player, EnchantingProtocol.LEGACY_COST_TYPE)
+            || ServerPlayNetworking.canSend(player, EnchantingProtocol.PREVIOUS_COST_TYPE)
+            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_5_COST_TYPE)
+            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_6_COST_TYPE)
+            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_7_COST_TYPE)
+            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_8_COST_TYPE);
+    }
+
     public static void init() {
         PayloadTypeRegistry.clientboundPlay().register(EnchantingProtocol.Capability.TYPE, EnchantingProtocol.Capability.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(EnchantingProtocol.Capability.TYPE, EnchantingProtocol.Capability.CODEC);
@@ -44,12 +59,7 @@ public final class EnchantCostSync {
             ServerPlayer player = listener.player;
             if (player != null) {
                 if (EnchantingProtocol.incompatible(
-                    ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)
-                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.LEGACY_COST_TYPE)
-                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.PREVIOUS_COST_TYPE)
-                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_5_COST_TYPE)
-                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_6_COST_TYPE)
-                        || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_7_COST_TYPE),
+                    peerHasAnyCostChannel(player),
                     ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE))) {
                     player.connection.disconnect(net.minecraft.network.chat.Component.literal(EnchantingProtocol.MISMATCH_MESSAGE));
                     return;

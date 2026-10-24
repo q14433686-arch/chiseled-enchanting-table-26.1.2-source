@@ -953,7 +953,7 @@ public final class LibraryResonance {
     ) {
         Config c = cfg != null ? cfg : Config.DEFAULT;
         if (regularBookshelves < minBookshelves) {
-            return 0.0 >= 0.0 && regularBookshelves < minBookshelves ? 0 : 0;
+            return 0;
         }
         double score = epiphanyResonanceScore(c, regularBookshelves, minBookshelves, totalMasteryUnits, affinityMasteryUnits);
         int step = Math.max(1, scoreStepPerExtraSlot);

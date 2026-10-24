@@ -533,7 +533,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     if (optH.isEmpty()) continue;
                     Holder<Enchantment> h = optH.get();
                     int existingLvl = targetEnchantments.getLevel(h);
-                    if (e.enchantment_level() >= existingLvl) {
+                    // Audit M-04: strictly-greater only — the server rejects same-level and
+                    // downgrade applies, so listing them as candidates was a dead click.
+                    if (e.enchantment_level() > existingLvl) {
                         optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(e), false, 0));
                         unlockedDirectSet.add(e);
                         maxAddedTierById.merge(e.enchantment_id(), e.enchantment_level(), Math::max);
@@ -1103,12 +1105,20 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 return true;
             }
             if (!this.canEnchant()) return false;
-            ClientPlayNetworking.send(new ApplyEnchantmentPayload(handler.containerId, option_type, enchantment_id, enchant_level));
+            if (ClientPlayNetworking.canSend(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID)) {
+                ClientPlayNetworking.send(new ApplyEnchantmentPayload(handler.containerId, option_type, enchantment_id, enchant_level));
+            }
             return true;
         }
 
         @Override
         public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDouble) {
+            // Audit M-01: only the left mouse button may apply an enchantment (or toggle a
+            // category). Right/middle clicks used to enchant as well, which made inspecting
+            // a row with other buttons spend XP and materials.
+            if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
+                return false;
+            }
             return serverSendApplyEnchant();
         }
 

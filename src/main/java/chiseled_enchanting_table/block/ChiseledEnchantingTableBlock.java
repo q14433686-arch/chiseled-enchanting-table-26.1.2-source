@@ -233,6 +233,17 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         return super.useItemOn(stack, state, level, pos, player, hand, hit);
     }
 
+    /**
+     * Audit: the Reopen-table payload resolves the provider through
+     * {@code BlockState#getMenuProvider}, which delegates here. Without this override the
+     * block only exposed its provider to direct right-clicks and Reopen silently did
+     * nothing. Both paths now share the same provider factory.
+     */
+    @Override
+    protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
+        return createChiseledEnchantingTableMenuProvider(state, level, pos);
+    }
+
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (level.isClientSide()) {
@@ -318,7 +329,11 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 if (shelfPower.totalChiseledEnchantedBooks() > 0) {
                     Advancement.give(player, "unlock_new_enchant");
                 }
-                if (shelfPower.xpDiscountPercent() >= 22 || shelfPower.peakEffectiveXpDiscountPercent(level) >= 35) {
+                // Audit: trigger on actually REACHING the configured total cap, not on the
+                // old hardcoded 22%/35% proxies that drifted from datapack-tunable values
+                // (and from the "-40%" the advancement text advertised).
+                int maxTotalDiscount = ChiseledEnchantingTableData.libraryResonanceConfig().maxTotalXpDiscountPercent();
+                if (maxTotalDiscount > 0 && shelfPower.peakEffectiveXpDiscountPercent(level) >= maxTotalDiscount) {
                     Advancement.give(player, "library_resonance");
                 }
                 if (shelfPower.regularBookshelves() >= ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves()) {

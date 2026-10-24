@@ -96,14 +96,18 @@ class SyncContracts26_1_2(unittest.TestCase):
         self.assertIn('hasClearLineOfSight(level, tablePos, scanPos)', wear)
 
         be = (MAIN / 'block/ChiseledEnchantingTableBlockEntity.java').read_text()
-        for token in ['MAX_RITUAL_STEPS = 256', 'MAX_RITUAL_CHARACTERS = 32_000',
+        for token in ['MAX_RITUAL_STEPS = InscriptionRitualMechanics.MAX_QUEUE_STEPS',
+                      'MAX_RITUAL_CHARACTERS = InscriptionRitualMechanics.MAX_QUEUE_CHARACTERS',
                       'ritualSession', 'ritualTarget', 'ritualBlocked',
                       'canPlaceItem', 'canTakeItem', 'menu.world() == level']:
             self.assertIn(token, be)
+        ritual = (MAIN / 'mechanics/ritual/InscriptionRitualMechanics.java').read_text()
+        self.assertIn('MAX_QUEUE_STEPS = 256', ritual)
+        self.assertIn('MAX_QUEUE_CHARACTERS = 32_000', ritual)
 
     def test_audit_guards_authoritative_sync_and_input(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('26_1_2_revision_6', protocol)
+        self.assertIn('26_1_2_revision_9', protocol)
         self.assertNotIn('Minecraft 26.3', protocol)
 
         sync = (MAIN / 'menu/EnchantCostSync.java').read_text()

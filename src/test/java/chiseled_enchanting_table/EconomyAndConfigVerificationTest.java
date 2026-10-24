@@ -580,42 +580,42 @@ class EconomyAndConfigVerificationTest {
 
             // Verify every parameterized Grimoire key formats cleanly with live config values
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15, 40)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch4.res_b").getAsString(), 15, 20, 35, 15, 40)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p0.s3").getAsString(), 15, 38, 42)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p0.s3").getAsString(), 15, 38, 42)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3.lead").getAsString(), 3, 2, 12)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3.lead").getAsString(), 3, 2, 12)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.s3").getAsString(), 40, 60)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.s3").getAsString(), 40, 60)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch5.note_b").getAsString(), 16, 38, 42)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch5.note_b").getAsString(), 16, 38, 42)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch6.s2").getAsString(), 32, 20, 3)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch6.s2").getAsString(), 32, 20, 3)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch8.s4").getAsString(), 12, 35)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch8.s4").getAsString(), 12, 35)
                     .contains("%s"),
                 false
             );
             assertEquals(
-                String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4_res").getAsString(), 35, 40)
+                String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4_res").getAsString(), 35, 40)
                     .contains("%s"),
                 false
             );
@@ -1289,7 +1289,10 @@ class EconomyAndConfigVerificationTest {
         // 5. Dual skip costs & risks: XP sacrifice in [1..15], non-sacrifice degradation <= 50% normal and <= 70% with Infinity tome.
         for (long remTicks : List.of(20L, 600L, 3_600L, 6_000L, 50_000L, 500_000L)) {
             int xpLvls = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .computeSacrificeXpLevels(remTicks);
+                .computeSacrificeXpLevels(
+                    chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT,
+                    remTicks
+                );
             assertTrue(xpLvls >= 1 && xpLvls <= 15);
             double normalRisk = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeRushDegradeChance(remTicks, false);
@@ -1298,7 +1301,7 @@ class EconomyAndConfigVerificationTest {
             assertTrue(normalRisk > 0.0 && normalRisk <= 0.50 + 1e-9);
             assertTrue(infRisk > normalRisk && infRisk <= 0.70 + 1e-9);
         }
-        assertEquals(15, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(100_000L));
+        assertEquals(15, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT, 100_000L));
         assertEquals(0.50, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(100_000L, false), 1e-6);
         assertEquals(0.70, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(100_000L, true), 1e-6);
 
@@ -1414,19 +1417,19 @@ class EconomyAndConfigVerificationTest {
             for (Path lp : langStream.filter(p -> p.toString().endsWith(".json")).toList()) {
                 JsonObject map = JsonParser.parseString(Files.readString(lp)).getAsJsonObject();
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.lead").getAsString(), 32, 10).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch3p2.lead").getAsString(), 32, 10).contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step").getAsString(), 40, 18).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch4p2_step").getAsString(), 40, 18).contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.ch5p2.lead").getAsString(), 38, "10", 42, "3").contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.ch5p2.lead").getAsString(), 38, "10", 42, "3").contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.grimoire.diag.ch5p2_regen_b").getAsString(), 38, "10", 42, "3").contains("%s")
                 );
                 assertFalse(
-                    String.format(map.get("gui.chiseled_enchanting_table.resonance.broad_breakdown").getAsString(), 40, 32, 2, 6).contains("%s")
+                    String.format(java.util.Locale.ROOT, map.get("gui.chiseled_enchanting_table.resonance.broad_breakdown").getAsString(), 40, 32, 2, 6).contains("%s")
                 );
             }
         }
@@ -1789,6 +1792,64 @@ class EconomyAndConfigVerificationTest {
             "往「无限」模板书里塞太多好东西的后果——恭喜，你的镐子学会呼吸（或者别的什么没用的本事）了。",
             zhLang.get("advancements.chiseled_enchanting_table.crossline_slip.description").getAsString()
         );
+    }
+
+    @Test
+    void queuedRitualStepsRevalidateAgainstActualItem() {
+        // C-01: planned III (prev II) must not write when an earlier slip left the item at II->II plan broken,
+        // e.g. actual previous is I while the step was priced as II -> III.
+        assertFalse(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(1, 2, 3));
+        // Same-level / downgrade writes are never applicable.
+        assertFalse(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(2, 2, 2));
+        assertFalse(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(3, 3, 2));
+        // The intact plan still applies.
+        assertTrue(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(2, 2, 3));
+        assertTrue(chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .isQueuedStepStillApplicable(0, 0, 1));
+        // Legacy over-level targets clamp to the live definition maximum.
+        assertEquals(5, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .effectiveQueuedTargetLevel(9, 5));
+        assertEquals(1, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .effectiveQueuedTargetLevel(0, 5));
+    }
+
+    @Test
+    void combineSequentialChargesEveryUpgradeOnce() {
+        var a = new XpCostConversion.XpRequirement(10, 10, 3, 0, false);
+        var b = new XpCostConversion.XpRequirement(8, 8, 2, 0, false);
+        var combined = XpCostConversion.combineSequential(java.util.List.of(a, b));
+        // Sequential equivalence: deduct 3+2, and the second upgrade still needs its own
+        // requirement met after the first deduction (8 + 3 = 11 starting level).
+        assertEquals(5, combined.deductedLevels());
+        assertEquals(11, combined.requiredLevel());
+        assertEquals(11, combined.rawRequiredLevel());
+        // Free / refund entries contribute nothing.
+        assertEquals(XpCostConversion.XpRequirement.FREE,
+            XpCostConversion.combineSequential(java.util.List.of()));
+        assertEquals(XpCostConversion.XpRequirement.FREE,
+            XpCostConversion.combineSequential(java.util.List.of(XpCostConversion.XpRequirement.refund(50))));
+        var single = XpCostConversion.combineSequential(java.util.List.of(a, XpCostConversion.XpRequirement.FREE));
+        assertEquals(3, single.deductedLevels());
+        assertEquals(10, single.requiredLevel());
+    }
+
+    @Test
+    void ritualWaitCurveLoadReferencesAreDatapackConfigurable() {
+        var custom = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
+            300, 3, 15, 0.5, 0.7, 0.3, 84.0, 44.0,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig.DEFAULT
+        );
+        int defaultWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(
+                chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT,
+                42, 30, 22, 5, 5, 1.0);
+        int customWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSingleEnchantWaitTicks(custom, 42, 30, 22, 5, 5, 1.0);
+        assertTrue(customWait < defaultWait, "Doubling load references must shorten the wait");
     }
 
 }

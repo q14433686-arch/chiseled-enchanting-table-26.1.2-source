@@ -786,8 +786,12 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         os.path.join(REPO, "src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java"),
         encoding="utf-8",
     ).read()
-    if "resolveEffectiveXpRequirement(ewl, OptionType.BOOK_COMBINE_UPGRADE)" not in bua_java:
-        errors.append("BookUpgradeApplication.applyCombine must use resolveEffectiveXpRequirement + deductXp (R2-1)")
+    # H-01 (supersedes the R2-1 single-entry contract): one combine click merges every
+    # enchantment, so applyCombine must charge the whole-book sequential price.
+    if "handler.bookCombineXpRequirement()" not in bua_java or "deductXp(handler.player, xpReq)" not in bua_java:
+        errors.append("BookUpgradeApplication.applyCombine must use handler.bookCombineXpRequirement() + deductXp (H-01)")
+    if "combineSequential" not in sh_java:
+        errors.append("ScreenHandler.bookCombineXpRequirement must combine per-entry prices via XpCostConversion.combineSequential (H-01)")
     if "type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE" not in sh_java:
         errors.append("ScreenHandler must apply min(rawCost, deltaRaw) to BOOK_COMBINE_UPGRADE so 0.6x multiplier takes effect (R2-1)")
     if "/ 12000L" in sh_java:

@@ -16,7 +16,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
@@ -31,6 +33,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.Container;
@@ -49,7 +52,16 @@ import net.minecraft.world.item.Items;
  */
 public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu {
 
+    /** Per-player game-time of the last accepted Reopen payload (server thread only). */
+    private static final java.util.Map<java.util.UUID, Long> LAST_REOPEN_TICK = new java.util.HashMap<>();
+
     public static void init() {
+        // Lifecycle discipline for static per-player state (audit): throttle entries die
+        // with the connection, mirroring EnchantCostSync.LAST_DISPLAYS, so long-running
+        // servers do not accumulate one UUID entry per player who ever joined.
+        ServerPlayConnectionEvents.DISCONNECT.register(
+            (listener, server) -> LAST_REOPEN_TICK.remove(listener.player.getUUID()));
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_REOPEN_TICK.clear());
         PayloadTypeRegistry.serverboundPlay().register(
             ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID,
             ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_CODEC
@@ -103,6 +115,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             var player = ctx.player();
             var server = ctx.server();
             server.execute(() -> {
+                // Audit: reopening runs the full shelf scan + cost-table build, so a
+                // spammed payload must not be able to re-trigger it every tick.
+                long now = player.level().getGameTime();
+                Long last = LAST_REOPEN_TICK.get(player.getUUID());
+                if (last != null && now - last < 10L) {
+                    return;
+                }
+                LAST_REOPEN_TICK.put(player.getUUID(), now);
                 var pos = payload.pos();
                 if (pos == null || !player.level().hasChunkAt(pos)) {
                     return;
@@ -281,14 +301,16 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         ) {
             @Override
             public int getMaxStackSize(ItemStack stack) {
+                // Audit H-04: batch caps are additionally bounded by the item's own stack
+                // limit so Slot / BE admission / hoppers agree (glass bottles stop at 16).
                 if (stack.is(BlockRegistry.DEPLETED_TOME)) {
-                    return depletedTomeMaxBatchSize();
+                    return Math.max(1, Math.min(depletedTomeMaxBatchSize(), stack.getMaxStackSize()));
                 }
                 if (!stack.is(Items.BOOK)
                     && !stack.is(Items.ENCHANTED_BOOK)
                     && !stack.isEnchantable()
                     && !syncedTransformationsFor(stack).isEmpty()) {
-                    return transformationMaxBatchSize();
+                    return Math.max(1, Math.min(transformationMaxBatchSize(), stack.getMaxStackSize()));
                 }
                 return 1;
             }
@@ -806,15 +828,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         boolean wasBook = base.is(Items.BOOK) || base.is(Items.ENCHANTED_BOOK);
         ItemStack copy;
         if (base.is(Items.BOOK)) {
-            copy = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            var customName = base.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
-            if (customName != null) {
-                copy.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
-            }
-            var customData = base.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-            if (customData != null) {
-                copy.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, customData);
-            }
+            // Preview and completion share one conversion (audit M-05) so the planned
+            // item can never diverge from what the ritual actually produces.
+            copy = chiseled_enchanting_table.mechanics.enchanting.BookConversion.toEnchantedBook(base.copyWithCount(1));
         } else {
             copy = base.copy();
         }
@@ -1114,6 +1130,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (row != null) {
             return row.costOptions();
         }
+        if (this.world.isClientSide()
+            && chiseled_enchanting_table.compat.SyncedEnchantmentCosts.hasServerTable()
+            && !chiseled_enchanting_table.compat.SyncedEnchantmentCosts.costTableComplete()) {
+            // Audit R-01: the server truncated its cost table; a missing row is "unknown",
+            // not "price it from the client's datapacks". Empty options fail closed in
+            // findMatchingAffordableCostBundle for every non-whitelisted operation.
+            return List.of();
+        }
         if (type == OptionType.TREASURE_EPIPHANY) {
             return ChiseledEnchantingTableData.treasureEpiphanyCostOptions(
                 e.enchantment_id(),
@@ -1322,6 +1346,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         List<List<ItemStack>> out = new ArrayList<>(targetBundles.size() + researchBundles.size());
         for (int bIdx = 0; bIdx < targetBundles.size(); bIdx++) {
             List<ItemStack> tgtBundle = targetBundles.get(bIdx);
+            if (tgtBundle.isEmpty()) {
+                // Explicitly material-free datapack rule stays free on upgrades (audit H-02).
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> prvBundle = bIdx < prevBundles.size() ? prevBundles.get(bIdx) : List.of();
             List<ItemStack> resMatch = findResearchBundleByPrimary(researchBundles, tgtBundle.isEmpty() ? ItemStack.EMPTY : tgtBundle.getFirst());
 
@@ -1648,7 +1677,46 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public XpCostConversion.XpRequirement resolveXpRequirement(EnchantmentWithLevel e, OptionType type) {
+        // Audit H-01: every preview/affordability query for a combine row must quote the
+        // whole-book price the server will actually deduct for that click.
+        if (type == OptionType.BOOK_COMBINE_UPGRADE) {
+            return bookCombineXpRequirement();
+        }
         return resolveEffectiveXpRequirement(e, type);
+    }
+
+    /**
+     * Audit H-01: whole-book price for BOOK_COMBINE. One combine click merges <b>every</b>
+     * enchantment of the cost book (anvil-style), so it must charge for every entry whose
+     * merged level actually rises above the target book's current level - not only the
+     * clicked row. Each rising entry is priced at its merged final level through the same
+     * BOOK_COMBINE discount path, then combined with sequential semantics. Shared by the
+     * server deduction and the client preview so both always agree.
+     */
+    public XpCostConversion.XpRequirement bookCombineXpRequirement() {
+        ItemStack targetBook = get_enchantable_item();
+        ItemStack costBook = get_cost_item();
+        if (!targetBook.is(Items.ENCHANTED_BOOK) || !costBook.is(Items.ENCHANTED_BOOK)) {
+            return XpCostConversion.XpRequirement.FREE;
+        }
+        ItemEnchantments targetEnchants = EnchantmentHelper.getEnchantmentsForCrafting(targetBook);
+        ItemEnchantments costEnchants = EnchantmentHelper.getEnchantmentsForCrafting(costBook);
+        java.util.List<XpCostConversion.XpRequirement> parts = new java.util.ArrayList<>();
+        for (var entry : costEnchants.entrySet()) {
+            var incoming = entry.getKey();
+            int current = targetEnchants.getLevel(incoming);
+            int incomingLevel = entry.getIntValue();
+            int mergedLevel = current == incomingLevel
+                ? Math.min(Math.max(1, incoming.value().getMaxLevel()), incomingLevel + 1)
+                : Math.max(current, incomingLevel);
+            if (mergedLevel > current) {
+                parts.add(resolveEffectiveXpRequirement(
+                    new EnchantmentWithLevel(EnchantmentToIdentifier(incoming), mergedLevel),
+                    OptionType.BOOK_COMBINE_UPGRADE
+                ));
+            }
+        }
+        return XpCostConversion.combineSequential(parts);
     }
 
     public int syncedTransformationDeductedLevels(Identifier id) {
@@ -2244,10 +2312,37 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     @org.jetbrains.annotations.Nullable
+    /**
+     * Audit H-02: the exhaustive whitelist of operations that are <b>by design</b> allowed to
+     * run without material cost even when no cost option exists. Everything else with an
+     * empty/unresolvable option list is a datapack data error and must fail closed instead
+     * of silently becoming free.
+     */
+    public boolean isMaterialFreeOperation(EnchantmentWithLevel ewl, OptionType type) {
+        return switch (type) {
+            case BOOK_COMBINE_UPGRADE, DISENCHANT_ALL, DOWNGRADE_ENCHANTMENT -> true;
+            case STRIP_SINGLE_ENCHANTMENT ->
+                EnchantmentHelper.getEnchantmentsForCrafting(get_enchantable_item()).size() <= 1;
+            case TRANSFORMATION ->
+                ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(ewl.enchantment_id())
+                    && depletedTomeTier()
+                        == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.TIER_3_FREE;
+            default -> false;
+        };
+    }
+
     public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
         List<List<ItemStack>> options = getEffectiveItemCostOptions(ewl, type);
         if (options.isEmpty()) {
-            return List.of();
+            // Fail closed (audit H-02): "no pricing data" is only free for whitelisted
+            // material-free operations; datapacks declare XP-only costs explicitly via
+            // "material_free": true, which produces one empty bundle instead.
+            return isMaterialFreeOperation(ewl, type) ? List.of() : null;
+        }
+        for (List<ItemStack> bundle : options) {
+            if (bundle.isEmpty()) {
+                return List.of();
+            }
         }
         if (this.player.getAbilities().instabuild) {
             return ChiseledEnchantingTableData.mergeEquivalentCostBundle(options.getFirst());

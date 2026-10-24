@@ -430,7 +430,7 @@ public class ArcaneGrimoireScreen extends Screen {
         if (this.spreadIndex == 0) {
             crumb = Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.crumb_home").getString();
         } else {
-            String base = String.format("%02d / %02d  ", curSpec.chapter(), CHAPTER_COUNT)
+            String base = String.format(java.util.Locale.ROOT, "%02d / %02d  ", curSpec.chapter(), CHAPTER_COUNT)
                 + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + curSpec.chapter() + ".short").getString();
             crumb = curSpec.totalPages() > 1
                 ? base + " · " + curSpec.subPage() + "/" + curSpec.totalPages()
@@ -475,7 +475,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 drawCenteredBox(
                     ctx,
                     this.font,
-                    String.format("%02d", i),
+                    String.format(java.util.Locale.ROOT, "%02d", i),
                     tx + 2,
                     tw - 4,
                     ty + tabH * 0.5f,
@@ -491,7 +491,7 @@ public class ArcaneGrimoireScreen extends Screen {
                     hoveredTabTip.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.home")
                         .withStyle(ChatFormatting.GOLD));
                 } else {
-                    hoveredTabTip.add(Component.literal(String.format("%02d  ", i))
+                    hoveredTabTip.add(Component.literal(String.format(java.util.Locale.ROOT, "%02d  ", i))
                         .append(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + i + ".title"))
                         .withStyle(ChatFormatting.GOLD));
                     hoveredTabTip.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + i + ".sub")
@@ -600,7 +600,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 this.interactiveRegions.add(new HitRegion(cx, fy, chipW, this.footerH, NAV_SPREAD, String.valueOf(spreadOf(curSpec.chapter(), p))));
             }
         } else {
-            String pageCounter = String.format("%d / %d", this.spreadIndex, MAX_SPREAD_INDEX);
+            String pageCounter = String.format(java.util.Locale.ROOT, "%d / %d", this.spreadIndex, MAX_SPREAD_INDEX);
             drawLeftCenteredY(ctx, this.font, pageCounter, rx + 2, fy + this.footerH * 0.5f, 0.68f, 52, INK_MUTED, false);
         }
 
@@ -798,7 +798,7 @@ public class ArcaneGrimoireScreen extends Screen {
             pose.popMatrix();
             this.itemSlots.add(new HoveredSlot(icon, new Rect2i(iconX - 1, ry + 1, iconSize + 2, rowH - 2), false));
 
-            String title = String.format("%02d  ", ch)
+            String title = String.format(java.util.Locale.ROOT, "%02d  ", ch)
                 + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + ch + ".title").getString();
             drawLeftCenteredY(
                 ctx,
@@ -838,8 +838,8 @@ public class ArcaneGrimoireScreen extends Screen {
         String d2 = GrimoireDiagramRenderer.formatCleanGameDays(lr.tomeRegenTier2Seconds());
 
         String badge = spec.totalPages() > 1
-            ? String.format("%02d·%d", ch, sub)
-            : String.format("%02d", ch);
+            ? String.format(java.util.Locale.ROOT, "%02d·%d", ch, sub)
+            : String.format(java.util.Locale.ROOT, "%02d", ch);
         Component title;
         if (ch == 3 && sub == 1) {
             title = Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.title");

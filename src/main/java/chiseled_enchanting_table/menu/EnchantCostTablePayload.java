@@ -53,7 +53,9 @@ public record EnchantCostTablePayload(
     LibraryResonance.Config libraryResonanceConfig,
     InscriptionRitualMechanics.Config ritualConfig,
     List<CostEntry> costs,
-    List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations
+    List<ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations,
+    /** False when wire-safety budgets truncated rows; clients must then fail closed on missing rows (audit R-01). */
+    boolean costTableComplete
 ) implements CustomPacketPayload {
     public static final Identifier PACKET_ID = ChiseledEnchantingTable.identifier("enchant_cost_table_" + EnchantingProtocol.REVISION);
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> TYPE =
@@ -114,7 +116,8 @@ public record EnchantCostTablePayload(
             libraryResonanceConfig,
             InscriptionRitualMechanics.Config.DEFAULT,
             costs,
-            transformations
+            transformations,
+            true
         );
     }
 
@@ -140,9 +143,20 @@ public record EnchantCostTablePayload(
         }
         int limit = Math.min(raw.size(), PayloadLimits.MAX_COST_OPTIONS);
         List<List<ItemStack>> out = new ArrayList<>(limit);
+        boolean keptEmptyBundle = false;
         for (int i = 0; i < limit; i++) {
             List<ItemStack> b = raw.get(i);
-            if (b == null || b.isEmpty()) continue;
+            if (b == null) continue;
+            if (b.isEmpty()) {
+                // Audit H-02: an explicitly-empty bundle means "material-free by datapack
+                // declaration" and must survive sync, or the client would price the row
+                // differently from the server. Keep exactly one marker.
+                if (!keptEmptyBundle) {
+                    out.add(List.of());
+                    keptEmptyBundle = true;
+                }
+                continue;
+            }
             if (b.size() > PayloadLimits.MAX_BUNDLE_STACKS) {
                 out.add(List.copyOf(b.subList(0, PayloadLimits.MAX_BUNDLE_STACKS)));
             } else {
@@ -155,6 +169,7 @@ public record EnchantCostTablePayload(
     private static boolean tryAppendEntry(
         List<CostEntry> entries,
         int[] totalStacks,
+        int[] estimatedBytes,
         OptionType type,
         Identifier id,
         int level,
@@ -169,7 +184,14 @@ public record EnchantCostTablePayload(
         if (totalStacks[0] + stackDelta > PayloadLimits.MAX_TOTAL_COST_STACKS) {
             return false;
         }
+        // Audit R-01: counts alone don't bound encoded size; enforce a byte budget too.
+        int byteDelta = PayloadLimits.ESTIMATED_BYTES_PER_ROW
+            + stackDelta * PayloadLimits.ESTIMATED_BYTES_PER_STACK;
+        if (estimatedBytes[0] + byteDelta > PayloadLimits.MAX_ESTIMATED_PAYLOAD_BYTES) {
+            return false;
+        }
         totalStacks[0] += stackDelta;
+        estimatedBytes[0] += byteDelta;
         entries.add(new CostEntry(type, id, level, xpCost, opts));
         return true;
     }
@@ -177,6 +199,7 @@ public record EnchantCostTablePayload(
     public static EnchantCostTablePayload build(Player player) {
         List<CostEntry> entries = new ArrayList<>();
         int[] totalStacks = new int[] { 0 };
+        int[] estimatedBytes = new int[] { PayloadLimits.ESTIMATED_HEADER_BYTES };
         boolean truncated = false;
 
         // 1. Emit active transformation rows first so transformations are never truncated by over-leveled enchantments.
@@ -187,6 +210,7 @@ public record EnchantCostTablePayload(
                 if (!tryAppendEntry(
                     entries,
                     totalStacks,
+                    estimatedBytes,
                     OptionType.TRANSFORMATION,
                     transId,
                     trans.level(),
@@ -218,26 +242,26 @@ public record EnchantCostTablePayload(
                 }
                 Identifier id = holder.key().identifier();
                 EnchantmentWithLevel key = new EnchantmentWithLevel(id, level);
-                if (!tryAppendEntry(entries, totalStacks, OptionType.TREASURE_EPIPHANY, id, level,
+                if (!tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.TREASURE_EPIPHANY, id, level,
                         ChiseledEnchantingTableData.treasureEpiphanyXpCost(id, level, maxLevel),
                         ChiseledEnchantingTableData.treasureEpiphanyCostOptions(id, level, maxLevel))
-                    || !tryAppendEntry(entries, totalStacks, OptionType.ENCHANTMENT, id, level,
+                    || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.ENCHANTMENT, id, level,
                         ChiseledEnchantingTableData.xpCost(key, maxLevel),
                         ChiseledEnchantingTableData.itemCostOptions(key, maxLevel))
-                    || !tryAppendEntry(entries, totalStacks, OptionType.STRIP_SINGLE_ENCHANTMENT, id, level,
+                    || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.STRIP_SINGLE_ENCHANTMENT, id, level,
                         ChiseledEnchantingTableData.targetedStripXpCost(id, level, maxLevel),
                         ChiseledEnchantingTableData.targetedStripCostOptions(id, level, maxLevel))
-                    || !tryAppendEntry(entries, totalStacks, OptionType.PURGE_CURSE, id, level,
+                    || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.PURGE_CURSE, id, level,
                         ChiseledEnchantingTableData.cursePurgeXpCost(),
                         ChiseledEnchantingTableData.cursePurgeCostOptions(id))) {
                     truncated = true;
                     break outer;
                 }
                 if (level >= 2) {
-                    if (!tryAppendEntry(entries, totalStacks, OptionType.BOOK_COMBINE_UPGRADE, id, level,
+                    if (!tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.BOOK_COMBINE_UPGRADE, id, level,
                             ChiseledEnchantingTableData.bookCombineXpCost(key, maxLevel),
                             List.of())
-                        || !tryAppendEntry(entries, totalStacks, OptionType.BOOK_RESEARCH_UPGRADE, id, level,
+                        || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.BOOK_RESEARCH_UPGRADE, id, level,
                             ChiseledEnchantingTableData.bookResearchXpCost(key, maxLevel),
                             ChiseledEnchantingTableData.bookResearchCostOptions(key, maxLevel))) {
                         truncated = true;
@@ -248,9 +272,11 @@ public record EnchantCostTablePayload(
         }
         if (truncated) {
             ChiseledEnchantingTable.LOGGER.warn(
-                "Capped EnchantCostTablePayload at {} rows / {} cost stacks to honor wire safety limits",
+                "Capped EnchantCostTablePayload at {} rows / {} cost stacks / ~{} estimated bytes to honor wire safety limits; "
+                    + "clients will fail closed on missing rows (costTableComplete=false)",
                 entries.size(),
-                totalStacks[0]
+                totalStacks[0],
+                estimatedBytes[0]
             );
         }
 
@@ -258,6 +284,7 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays(player);
         if (displays.size() > PayloadLimits.MAX_COLLECTION_ENTRIES) {
             displays = List.copyOf(displays.subList(0, PayloadLimits.MAX_COLLECTION_ENTRIES));
+            truncated = true;
         }
 
         return new EnchantCostTablePayload(
@@ -286,7 +313,8 @@ public record EnchantCostTablePayload(
             ChiseledEnchantingTableData.libraryResonanceConfig(),
             ChiseledEnchantingTableData.ritualConfig(),
             List.copyOf(entries),
-            displays
+            displays,
+            !truncated
         );
     }
 
@@ -411,6 +439,8 @@ public record EnchantCostTablePayload(
         buf.writeDouble(rc.maxRushDegradeNormal());
         buf.writeDouble(rc.maxRushDegradeInfinity());
         buf.writeDouble(rc.maxTranscriptionSlipChance());
+        buf.writeDouble(rc.shelfLoadReference());
+        buf.writeDouble(rc.tomeLoadReference());
         var cs = rc.crosslineSlip();
         buf.writeDouble(cs.minLoadThreshold());
         buf.writeDouble(cs.perLoadSlope());
@@ -469,6 +499,7 @@ public record EnchantCostTablePayload(
         for (var display : transformations) {
             ChiseledEnchantingMenuPayloads.TransformationDisplay.write(buf, display);
         }
+        buf.writeBoolean(costTableComplete);
     }
 
     private static EnchantCostTablePayload read(RegistryFriendlyByteBuf buf) {
@@ -589,6 +620,8 @@ public record EnchantCostTablePayload(
         double rcRushNorm = buf.readDouble();
         double rcRushInf = buf.readDouble();
         double rcSlipCap = buf.readDouble();
+        double rcShelfRef = buf.readDouble();
+        double rcTomeRef = buf.readDouble();
         var csConfig = new InscriptionRitualMechanics.CrosslineSlipConfig(
             buf.readDouble(),
             buf.readDouble(),
@@ -617,14 +650,14 @@ public record EnchantCostTablePayload(
             buf.readDouble()
         );
         var rcConfig = new InscriptionRitualMechanics.Config(
-            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, csConfig
+            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef, csConfig
         );
 
         int rowCount = PayloadLimits.readCount(buf);
         List<CostEntry> entries = new ArrayList<>(Math.min(4096, Math.max(16, rowCount)));
         int decodedStacks = 0;
         for (int i = 0; i < rowCount; i++) {
-            OptionType optionType = OptionType.fromToken(buf.readUtf());
+            OptionType optionType = OptionType.fromToken(buf.readUtf(PayloadLimits.MAX_OPTION_TOKEN_LENGTH));
             Identifier id = buf.readIdentifier();
             int level = buf.readVarInt();
             int xpLevelCost = buf.readVarInt();
@@ -639,9 +672,8 @@ public record EnchantCostTablePayload(
                         + decodedStacks + " > " + PayloadLimits.MAX_TOTAL_COST_STACKS
                     );
                 }
-                if (!bundle.isEmpty()) {
-                    options.add(bundle);
-                }
+                // Audit H-02: preserve explicitly-empty (material-free) bundles verbatim.
+                options.add(bundle);
             }
             entries.add(new CostEntry(optionType, id, level, xpLevelCost, List.copyOf(options)));
         }
@@ -650,13 +682,15 @@ public record EnchantCostTablePayload(
         for (int i = 0; i < transformationCount; i++) {
             transformations.add(ChiseledEnchantingMenuPayloads.TransformationDisplay.read(buf));
         }
+        boolean costTableComplete = buf.readBoolean();
         return new EnchantCostTablePayload(
             combineEnabled, researchEnabled,
             disenchantEnabled, disenchantAllowCursePurge, disenchantRefundScale, disenchantExternalRefundScale,
             minShelves, baseChance, perShelfChance, perTomeChance, maxChance,
             maxSlotsCap, scorePerSlot, cycleTicks, freezeDurationTicks, maxFreezeTicks,
             freezeXpLevels, freezeCosts, rerollXp, rerollCosts,
-            Set.copyOf(treasureIds), sgConfig, lrConfig, rcConfig, List.copyOf(entries), List.copyOf(transformations)
+            Set.copyOf(treasureIds), sgConfig, lrConfig, rcConfig, List.copyOf(entries), List.copyOf(transformations),
+            costTableComplete
         );
     }
 

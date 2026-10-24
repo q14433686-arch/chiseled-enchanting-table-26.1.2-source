@@ -23,10 +23,12 @@ public final class ChiseledEnchantingMenuPayloads {
 
     public static final Identifier AVAILABLE_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("available_chiseled_enchantment_" + EnchantingProtocol.REVISION);
     public static final Identifier LIVE_SHELF_STATE_PACKET_ID = ChiseledEnchantingTable.identifier("live_shelf_state_" + EnchantingProtocol.REVISION);
-    public static final Identifier APPLY_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("apply_chiseled_enchantment");
-    public static final Identifier REROLL_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("reroll_epiphany");
-    public static final Identifier FREEZE_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("freeze_epiphany");
-    public static final Identifier REOPEN_TABLE_PACKET_ID = ChiseledEnchantingTable.identifier("reopen_table");
+    // Audit NET-02: every business channel carries the protocol revision suffix. The bare
+    // pre-revision_9 ids survive only as query-only probes in EnchantingProtocol.
+    public static final Identifier APPLY_CHISELED_ENCHANTMENT_PACKET_ID = ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_" + EnchantingProtocol.REVISION);
+    public static final Identifier REROLL_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("reroll_epiphany_" + EnchantingProtocol.REVISION);
+    public static final Identifier FREEZE_EPIPHANY_PACKET_ID = ChiseledEnchantingTable.identifier("freeze_epiphany_" + EnchantingProtocol.REVISION);
+    public static final Identifier REOPEN_TABLE_PACKET_ID = ChiseledEnchantingTable.identifier("reopen_table_" + EnchantingProtocol.REVISION);
     public static final Identifier SKIP_RITUAL_PACKET_ID = ChiseledEnchantingTable.identifier("skip_ritual_" + EnchantingProtocol.REVISION);
     public static final Identifier SYNC_RITUAL_STATE_PACKET_ID = ChiseledEnchantingTable.identifier("sync_ritual_state_" + EnchantingProtocol.REVISION);
 
@@ -57,7 +59,9 @@ public final class ChiseledEnchantingMenuPayloads {
                     return type;
                 }
             }
-            throw new IllegalArgumentException("Unknown enchanting option type: " + token);
+            // Audit NET-03: never echo attacker-controlled input into server logs.
+            throw new IllegalArgumentException(
+                "Unknown enchanting option type (token length " + (token == null ? -1 : token.length()) + ")");
         }
     }
 
@@ -71,33 +75,6 @@ public final class ChiseledEnchantingMenuPayloads {
         int deducted_levels,
         boolean unlocked
     ) {
-        public TransformationDisplay(Identifier id, Identifier input_item, Identifier output_item, int level) {
-            this(id, input_item, false, output_item, level, 1, 0, true);
-        }
-
-        public TransformationDisplay(
-            Identifier id,
-            Identifier input_item,
-            boolean input_is_tag,
-            Identifier output_item,
-            int level,
-            int min_player_level
-        ) {
-            this(id, input_item, input_is_tag, output_item, level, min_player_level, 0, true);
-        }
-
-        public TransformationDisplay(
-            Identifier id,
-            Identifier input_item,
-            boolean input_is_tag,
-            Identifier output_item,
-            int level,
-            int min_player_level,
-            int deducted_levels
-        ) {
-            this(id, input_item, input_is_tag, output_item, level, min_player_level, deducted_levels, true);
-        }
-
         public static void write(RegistryFriendlyByteBuf buf, TransformationDisplay value) {
             buf.writeIdentifier(value.id());
             buf.writeIdentifier(value.input_item());
@@ -500,6 +477,27 @@ public final class ChiseledEnchantingMenuPayloads {
         Identifier enchantment_id,
         int enchantment_level
     ) implements CustomPacketPayload {
+        /**
+         * Audit NET-03: decode-boundary validation lives in the compact constructor so no
+         * construction path (wire or programmatic) can smuggle out-of-range values into
+         * business logic. Level {@code 0} stays legal because DISENCHANT_ALL uses it as a
+         * sentinel; per-operation ranges are still enforced by the appliers.
+         */
+        public ApplyEnchantmentPayload {
+            if (containerId < PayloadLimits.NO_CONTAINER) {
+                throw new IllegalArgumentException("Invalid container id: " + containerId);
+            }
+            if (option_type == null) {
+                throw new IllegalArgumentException("Missing enchanting option type");
+            }
+            if (enchantment_id == null || enchantment_id.toString().length() > PayloadLimits.MAX_IDENTIFIER_LENGTH) {
+                throw new IllegalArgumentException("Invalid enchantment identifier");
+            }
+            if (enchantment_level < 0 || enchantment_level > PayloadLimits.MAX_ENCHANTMENT_LEVEL) {
+                throw new IllegalArgumentException("Invalid enchantment level: " + enchantment_level);
+            }
+        }
+
         public static final CustomPacketPayload.Type<ApplyEnchantmentPayload> APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID = new CustomPacketPayload.Type<>(APPLY_CHISELED_ENCHANTMENT_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, ApplyEnchantmentPayload> APPLY_CHISELED_ENCHANTMENT_CODEC =
             CustomPacketPayload.codec(ApplyEnchantmentPayload::write, ApplyEnchantmentPayload::read);
@@ -525,7 +523,7 @@ public final class ChiseledEnchantingMenuPayloads {
 
         private static ApplyEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
             int containerId = buf.readVarInt();
-            OptionType optionType = OptionType.fromToken(buf.readUtf());
+            OptionType optionType = OptionType.fromToken(buf.readUtf(PayloadLimits.MAX_OPTION_TOKEN_LENGTH));
             int enchantmentLevel = buf.readInt();
             Identifier enchantmentId = buf.readIdentifier();
             return new ApplyEnchantmentPayload(containerId, optionType, enchantmentId, enchantmentLevel);

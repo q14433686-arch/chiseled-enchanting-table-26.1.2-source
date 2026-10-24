@@ -65,10 +65,17 @@ public abstract class GrindstoneBookDepleteMixin extends AbstractContainerMenu {
         }
         Slot delegate = this.slots.get(GrindstoneMenu.RESULT_SLOT);
         Container repairRef = this.repairSlots;
-        Slot wrapped = new Slot(this.resultSlots, 2, delegate.x, delegate.y) {
+        // Audit MX-05: derive the backing container + index from the delegate itself
+        // instead of hardcoding the current vanilla layout (container slot 2).
+        Slot wrapped = new Slot(delegate.container, delegate.getContainerSlot(), delegate.x, delegate.y) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return delegate.mayPlace(stack);
+            }
+
+            @Override
+            public boolean mayPickup(Player player) {
+                return delegate.mayPickup(player);
             }
 
             @Override

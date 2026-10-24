@@ -595,7 +595,10 @@ public final class BookshelfProgression {
             return List.of();
         }
         if (tier == DepletedTomeTier.TIER_3_FREE) {
-            return List.of();
+            // One explicitly-empty bundle = legally material-free (audit H-02). Returning a
+            // completely empty option list here used to be indistinguishable from missing
+            // cost data, which the menu layer now treats as fail-closed.
+            return List.of(List.of());
         }
         int safeBatch = Math.max(1, batchCount);
         double mult = (tier == DepletedTomeTier.TIER_2_DISCOUNT_MAT)
@@ -604,7 +607,10 @@ public final class BookshelfProgression {
 
         List<List<ItemStack>> out = new ArrayList<>(baseBundles.size());
         for (List<ItemStack> bundle : baseBundles) {
-            if (bundle.isEmpty()) continue;
+            if (bundle.isEmpty()) {
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> scaled = new ArrayList<>(bundle.size());
             for (ItemStack stack : bundle) {
                 ItemStack copy = stack.copy();
@@ -632,7 +638,11 @@ public final class BookshelfProgression {
         }
         List<List<ItemStack>> out = new ArrayList<>(unitBundles.size());
         for (List<ItemStack> bundle : unitBundles) {
-            if (bundle.isEmpty()) continue;
+            if (bundle.isEmpty()) {
+                // Explicitly-empty (material-free) bundles survive batch scaling (audit H-02).
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> scaled = new ArrayList<>(bundle.size());
             for (ItemStack stack : bundle) {
                 ItemStack copy = stack.copy();

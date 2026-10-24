@@ -46,6 +46,11 @@ public final class EnchantmentApplication {
             return false;
         }
         Holder<Enchantment> enchantment = optEnchantment.get();
+        // Audit H-06: validate the requested level against the live definition maximum
+        // BEFORE any pricing, receipt or wear side effect can run.
+        if (enchantment_level < 1 || enchantment_level > Math.max(1, enchantment.value().getMaxLevel())) {
+            return false;
+        }
         if (!(planningStack.is(Items.BOOK) || planningStack.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(planningStack))) {
             return false;
         }
@@ -82,7 +87,7 @@ public final class EnchantmentApplication {
         var admissionPos = handler.tableBlockPos();
         if (admissionPos == null || !(world.getBlockEntity(admissionPos) instanceof
             chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity admissionTable)
-            || !admissionTable.canQueue(handler.player.getUUID(), conflictRefund) || enchantment_level < 1 || enchantment_level > 255 || payload.enchantment_id().toString().length() > 512) return false;
+            || !admissionTable.canQueue(handler.player.getUUID(), conflictRefund)) return false;
         var receipt = handler.applyEnchantementConditionWithReceipt(payload);
         if (!receipt.accepted()) {
             return false;
@@ -240,12 +245,7 @@ public final class EnchantmentApplication {
         newEnchantmentsComponent.set(enchantment, finalLevel);
 
         if (enchantable_item.is(Items.BOOK)) {
-            ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            var customName = enchantable_item.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
-            if (customName != null) {
-                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
-            }
-            handler.setEnchantableSlot(stack);
+            handler.setEnchantableSlot(BookConversion.toEnchantedBook(enchantable_item));
             enchantable_item = handler.get_enchantable_item();
         }
 
@@ -315,6 +315,11 @@ public final class EnchantmentApplication {
 
         ItemStack sourceBookSnapshot = enchanted_book.copyWithCount(1);
         ItemEnchantments preTargetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
+        // Audit M-03: transferring a same-or-lower level must not consume the source book
+        // entry for zero gain. Reject before any slot mutation.
+        if (preTargetEnchantments.getLevel(enchantment) >= enchantment_level) {
+            return false;
+        }
         int conflictRefund = computeConflictOverwriteRefund(handler, enchantable_item, preTargetEnchantments, enchantment);
 
         ItemEnchantments.Mutable new_enchanted_book_enchants = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
@@ -360,12 +365,7 @@ public final class EnchantmentApplication {
         newEnchantmentsComponent.set(enchantment, enchantment_level);
 
         if (enchantable_item.is(Items.BOOK)) {
-            ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            var customName = enchantable_item.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
-            if (customName != null) {
-                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
-            }
-            handler.setEnchantableSlot(stack);
+            handler.setEnchantableSlot(BookConversion.toEnchantedBook(enchantable_item));
             enchantable_item = handler.get_enchantable_item();
         }
 
