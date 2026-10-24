@@ -190,7 +190,13 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             SyncedEnchantmentCosts.clear();
             ModRuntimeConfig.clearRemoteSync();
-            ChiseledEnchantingTableData.applyRuntimeConfig(ModRuntimeConfig.get());
+            // Audit COUP-04: mirror the SYNC path's guard. In singleplayer the integrated
+            // server may still be saving final chunks that read the shared data tables;
+            // the tables it committed already reflect the local config, so only re-apply
+            // on remote connections where the client alone owns the shared statics.
+            if (!client.hasSingleplayerServer()) {
+                ChiseledEnchantingTableData.applyRuntimeConfig(ModRuntimeConfig.get());
+            }
         });
     }
 }
