@@ -41,6 +41,29 @@ class NetworkCompatibilityTest {
             new LiveShelfStatePayload(3, Set.of(), 0, 0, 0, 0, Map.of(), false));
     }
 
+    @Test void tomeDashboardAndActionPayloadsRoundTrip() {
+        var entry = new TomeBookEntry(new net.minecraft.core.BlockPos(1, 64, -3), 5, "Archivist",
+            List.of(new EnchantmentWithLevel(id("mending"), 1)), 2, 3, 5, 1,
+            true, false, 100, 500, 1, "owner-id", "Owner", 0, true);
+        var live = new LiveShelfStatePayload(27, Set.of(), 1, 2, 3, 4, Map.of(), false,
+            5, 6, Map.of(), true, true, 7, 12, 4, 4, 42, 1, 4, 72000, List.of(entry));
+        roundTrip(LiveShelfStatePayload.CODEC, live);
+        assertTrue(live.cleanse_unlocked());
+        assertTrue(live.tome_page_unlocked());
+        assertEquals(7, live.sacrifice_progress());
+        assertEquals(entry, live.tome_books().getFirst());
+        for (TomePageActionPayload.Action action : TomePageActionPayload.Action.values()) {
+            var payload = new TomePageActionPayload(42, action, entry.shelf_pos(), entry.slot());
+            roundTrip(TomePageActionPayload.CODEC, payload);
+            assertTrue(payload.targets(42));
+            assertFalse(payload.targets(43));
+        }
+        assertThrows(IllegalArgumentException.class,
+            () -> new TomePageActionPayload(42, TomePageActionPayload.Action.UNLOCK, entry.shelf_pos(), 6));
+        assertThrows(IllegalArgumentException.class,
+            () -> new TomePageActionPayload(-2, TomePageActionPayload.Action.UNLOCK, entry.shelf_pos(), 0));
+    }
+
     @Test void liveUpdatesOnlyTargetTheMatchingMenu() {
         var live = new LiveShelfStatePayload(27, Set.of(), 0, 0, 0, 0, Map.of(), false);
         assertTrue(live.targets(27));

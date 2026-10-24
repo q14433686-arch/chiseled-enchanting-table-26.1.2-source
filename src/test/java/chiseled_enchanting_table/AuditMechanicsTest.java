@@ -109,6 +109,32 @@ class AuditMechanicsTest {
         assertEquals("flat", TomeWearData.ScapegoatPricing.FLAT.token());
     }
 
+    // ---------- tome locks ----------
+
+    @Test void tomeLockTargetsFollowWear() {
+        assertEquals(2, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 3));
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.NEXT_CHARGE, 0));
+        assertEquals(0, TomeLockData.targetWearFor(TomeLockData.Mode.FULL_CHARGE, 3));
+        assertEquals(-1, TomeLockData.targetWearFor(TomeLockData.Mode.PERMANENT, 3));
+        assertEquals(-1, TomeLockData.targetWearFor(null, 3));
+    }
+
+    @Test void timedTomeLocksExpireExactlyAtTargetWear() {
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 3));
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.NEXT_CHARGE, 2, 2));
+        assertTrue(TomeLockData.isExpired(TomeLockData.Mode.FULL_CHARGE, 0, 0));
+        assertFalse(TomeLockData.isExpired(TomeLockData.Mode.PERMANENT, -1, 0));
+    }
+
+    @Test void tomeLockEtaIncludesCurrentAndRemainingCharges() {
+        assertEquals(900, TomeLockData.ticksToNextCharge(3, 100L, 1000));
+        assertEquals(2900, TomeLockData.ticksToFullCharge(3, 100L, 1000));
+        assertEquals(-1, TomeLockData.ticksToNextCharge(0, 100L, 1000));
+        assertEquals(-1, TomeLockData.ticksToFullCharge(3, 100L, Integer.MAX_VALUE));
+        assertEquals(TomeLockData.Mode.FULL_CHARGE, TomeLockData.Mode.fromToken("full_charge"));
+        assertEquals(TomeLockData.Mode.PERMANENT, TomeLockData.Mode.fromToken("unknown"));
+    }
+
     // ---------- payload bounds (fuzz-style) ----------
 
     @Test void boundedCountsAcceptInRangeAndRejectOutside() {
