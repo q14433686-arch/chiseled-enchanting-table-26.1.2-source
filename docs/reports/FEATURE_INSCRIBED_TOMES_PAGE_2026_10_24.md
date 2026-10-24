@@ -41,6 +41,9 @@
 - 本地：`ci_static_checks.py`（13 mixin、678 语言键 parity、代码→语言覆盖）与
   `compat_check.py` 双绿；新 `TomeLockTest` 覆盖到期/倒计时/载荷往返；
   `FullPortRuntimeTest` 实时载荷以区分值往返新字段。
-- CI（compile-check + build 含真实服务器冒烟）见分支运行记录。
+- CI：首推 compile-check 抓到 `displayClientMessage` 在 26.3 映射不存在（改为
+  `sendSystemMessage(...,true)`）+ 主类需全限定名；服务器冒烟继而抓到书架实体未声明
+  `removeItemNoUpdate`（删除该注入，仅守 `removeItem`）。修正后 compile-check 与 build
+  （静态+gradle+无 JEI/REI 编译+服务器冒烟）全绿（run 40065705892）。
 - 未实测：真实 GUI 手感（行高 16 的两行小字在 0.72/0.66 缩放下的可读性）、
   多人下他人锁的提示路径、漏斗实机抽取拦截。
