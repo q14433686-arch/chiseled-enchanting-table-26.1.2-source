@@ -25,10 +25,12 @@ public final class TomeLockGuards {
             }
             for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
                 if (TomeLockData.isEffectivelyLocked(shelf.getItem(slot))) {
-                    player.displayClientMessage(
-                        Component.translatable("message.chiseled_enchanting_table.tome_lock.shelf_break_blocked"),
-                        true
-                    );
+                    if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                        serverPlayer.sendSystemMessage(
+                            Component.translatable("message.chiseled_enchanting_table.tome_lock.shelf_break_blocked"),
+                            true
+                        );
+                    }
                     return false;
                 }
             }

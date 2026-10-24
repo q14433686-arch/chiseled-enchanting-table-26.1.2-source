@@ -297,20 +297,6 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(Math.max(0, chiseled_bookshelves));
             buf.writeVarInt(Math.max(0, empty_chiseled_bookshelves));
             writeMasterCharges(buf, master_tome_charges);
-            buf.writeBoolean(cleanse_unlocked);
-            buf.writeBoolean(tome_page_unlocked);
-            buf.writeVarInt(Math.max(0, sacrifice_progress));
-            buf.writeVarInt(Math.max(1, sacrifice_required));
-            buf.writeVarInt(Math.max(0, qualifying_enchanted_bookshelves));
-            buf.writeVarInt(Math.max(1, tome_page_required_shelves));
-            buf.writeVarInt(Math.max(0, total_library_bookshelves));
-            buf.writeVarInt(Math.max(0, regen_tier));
-            buf.writeVarInt(Math.max(0, next_regen_tier_gap));
-            buf.writeVarInt(regen_interval_ticks);
-            PayloadLimits.writeBoundedCount(buf, tome_books.size(), PayloadLimits.MAX_TOME_BOOK_ENTRIES);
-            for (TomeBookEntry entry : tome_books) {
-                entry.write(buf);
-            }
         }
 
         private static AvailableEnchantmentPayload read(RegistryFriendlyByteBuf buf) {

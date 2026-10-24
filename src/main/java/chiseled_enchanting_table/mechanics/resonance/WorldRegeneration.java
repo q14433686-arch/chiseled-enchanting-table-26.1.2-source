@@ -31,6 +31,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -311,7 +314,7 @@ public final class WorldRegeneration {
         if (lock == null || world.getServer() == null) return;
         ServerPlayer owner = world.getServer().getPlayerList().getPlayer(lock.owner());
         if (owner == null) return;
-        owner.displayClientMessage(
+        owner.sendSystemMessage(
             Component.translatable("message.chiseled_enchanting_table.tome_lock.expired"), true);
         world.playSound(
             null,

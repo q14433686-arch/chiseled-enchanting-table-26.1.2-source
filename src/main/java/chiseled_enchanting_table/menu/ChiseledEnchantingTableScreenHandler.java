@@ -522,7 +522,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     private void tomeActionMessage(String key, Object... args) {
         if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            sp.displayClientMessage(net.minecraft.network.chat.Component.translatable(key, args), true);
+            sp.sendSystemMessage(net.minecraft.network.chat.Component.translatable(key, args), true);
         }
     }
 

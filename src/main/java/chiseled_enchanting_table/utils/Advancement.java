@@ -12,6 +12,11 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 
 public class Advancement {
+    public static final String DISENCHANT_SACRIFICE = "sacrifice_depleted_tomes";
+    public static final String HOW_MUCH_LONGER = "how_much_longer";
+    public static final int DISENCHANT_SACRIFICE_REQUIRED = 12;
+    public static final int TOME_PAGE_REQUIRED_SHELVES = 4;
+
     public static void give(Player player, String name) {
         if (!(player instanceof ServerPlayer serverPlayer)) return;
         var advancement = serverPlayer.level().getServer().getAdvancements().get(ChiseledEnchantingTable.identifier(name));
