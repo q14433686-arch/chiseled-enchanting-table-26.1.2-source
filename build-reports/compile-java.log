@@ -1,4 +1,4 @@
-commit: e9775a045b74fd5b9c97e88916339610d958f91c
+commit: 8049bf07082baf5fbede53f8fb68529018756237
 branch: arena/0e406cfe-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
@@ -29,124 +29,52 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.17.21
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:190: error: cannot find symbol
-                var holder = enchantmentLookup.get(ResourceKey.create(Registries.ENCHANTMENT, explicit.enchantment_id()));
-                                                   ^
-  symbol:   variable ResourceKey
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1519: error: cannot find symbol
-            if (materialFree) {
-                ^
-  symbol:   variable materialFree
-  location: class ItemTransformation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1815: error: cannot find symbol
-            if (materialFree) {
-                ^
-  symbol:   variable materialFree
-  location: class ItemCostRule
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1978: error: cannot find symbol
-                        : MAX_MERGED_COST_COUNT;
-                          ^
-  symbol:   variable MAX_MERGED_COST_COUNT
-  location: class ItemCostOption
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1990: error: cannot find symbol
-            return (int) Math.max(1L, Math.min((long) MAX_MERGED_COST_COUNT, computedCount));
-                                                      ^
-  symbol:   variable MAX_MERGED_COST_COUNT
-  location: class ItemCostOption
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1678: error: cannot find symbol
-        ItemEnchantments targetEnchants = EnchantmentHelper.getEnchantmentsForCrafting(targetBook);
-        ^
-  symbol:   class ItemEnchantments
-  location: class ChiseledEnchantingTableScreenHandler
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1679: error: cannot find symbol
-        ItemEnchantments costEnchants = EnchantmentHelper.getEnchantmentsForCrafting(costBook);
-        ^
-  symbol:   class ItemEnchantments
-  location: class ChiseledEnchantingTableScreenHandler
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:510: error: cannot find symbol
-                int tierDropConflictRefund = actualConflictRefundPoints(
-                                             ^
-  symbol:   method actualConflictRefundPoints(ItemStack,ItemEnchantments,Holder<Enchantment>,boolean)
-  location: class ChiseledEnchantingTableBlockEntity
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:532: error: cannot find symbol
-            int cleanConflictRefund = actualConflictRefundPoints(
-                                      ^
-  symbol:   method actualConflictRefundPoints(ItemStack,ItemEnchantments,Holder<Enchantment>,boolean)
-  location: class ChiseledEnchantingTableBlockEntity
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-9 errors
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792802015277.json
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processClientResources
+> Task :clientClasses
+
+> Task :compileTestJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:1292: error: method computeSacrificeXpLevels in class InscriptionRitualMechanics cannot be applied to given types;
+                .computeSacrificeXpLevels(remTicks);
+                ^
+  required: Config,long
+  found:    long
+  reason: actual and formal argument lists differ in length
+1 error
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792802633369.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+Execution failed for task ':compileTestJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
 > Compilation failed; see the compiler output below.
-  Note: Recompile with -Xlint:deprecation for details.
-  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:190: error: cannot find symbol
-                  var holder = enchantmentLookup.get(ResourceKey.create(Registries.ENCHANTMENT, explicit.enchantment_id()));
-                                                     ^
-    symbol:   variable ResourceKey
-    location: class ChiseledEnchantingTableData
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1519: error: cannot find symbol
-              if (materialFree) {
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:1292: error: method computeSacrificeXpLevels in class InscriptionRitualMechanics cannot be applied to given types;
+                  .computeSacrificeXpLevels(remTicks);
                   ^
-    symbol:   variable materialFree
-    location: class ItemTransformation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1815: error: cannot find symbol
-              if (materialFree) {
-                  ^
-    symbol:   variable materialFree
-    location: class ItemCostRule
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1978: error: cannot find symbol
-                          : MAX_MERGED_COST_COUNT;
-                            ^
-    symbol:   variable MAX_MERGED_COST_COUNT
-    location: class ItemCostOption
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1990: error: cannot find symbol
-              return (int) Math.max(1L, Math.min((long) MAX_MERGED_COST_COUNT, computedCount));
-                                                        ^
-    symbol:   variable MAX_MERGED_COST_COUNT
-    location: class ItemCostOption
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1678: error: cannot find symbol
-          ItemEnchantments targetEnchants = EnchantmentHelper.getEnchantmentsForCrafting(targetBook);
-          ^
-    symbol:   class ItemEnchantments
-    location: class ChiseledEnchantingTableScreenHandler
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1679: error: cannot find symbol
-          ItemEnchantments costEnchants = EnchantmentHelper.getEnchantmentsForCrafting(costBook);
-          ^
-    symbol:   class ItemEnchantments
-    location: class ChiseledEnchantingTableScreenHandler
-  Note: Recompile with -Xlint:unchecked for details.
-  Note: Some input files use or override a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:510: error: cannot find symbol
-                  int tierDropConflictRefund = actualConflictRefundPoints(
-                                               ^
-    symbol:   method actualConflictRefundPoints(ItemStack,ItemEnchantments,Holder<Enchantment>,boolean)
-    location: class ChiseledEnchantingTableBlockEntity
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:532: error: cannot find symbol
-              int cleanConflictRefund = actualConflictRefundPoints(
-                                        ^
-    symbol:   method actualConflictRefundPoints(ItemStack,ItemEnchantments,Holder<Enchantment>,boolean)
-    location: class ChiseledEnchantingTableBlockEntity
-  9 errors
+    required: Config,long
+    found:    long
+    reason: actual and formal argument lists differ in length
+  1 error
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileTestJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -181,56 +109,13 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:190: error: cannot find symbol
-                var holder = enchantmentLookup.get(ResourceKey.create(Registries.ENCHANTMENT, explicit.enchantment_id()));
-                                                   ^
-  symbol:   variable ResourceKey
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1519: error: cannot find symbol
-            if (materialFree) {
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/EconomyAndConfigVerificationTest.java:1292: error: method computeSacrificeXpLevels in class InscriptionRitualMechanics cannot be applied to given types;
+                .computeSacrificeXpLevels(remTicks);
                 ^
-  symbol:   variable materialFree
-  location: class ItemTransformation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1815: error: cannot find symbol
-            if (materialFree) {
-                ^
-  symbol:   variable materialFree
-  location: class ItemCostRule
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1978: error: cannot find symbol
-                        : MAX_MERGED_COST_COUNT;
-                          ^
-  symbol:   variable MAX_MERGED_COST_COUNT
-  location: class ItemCostOption
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1990: error: cannot find symbol
-            return (int) Math.max(1L, Math.min((long) MAX_MERGED_COST_COUNT, computedCount));
-                                                      ^
-  symbol:   variable MAX_MERGED_COST_COUNT
-  location: class ItemCostOption
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1678: error: cannot find symbol
-        ItemEnchantments targetEnchants = EnchantmentHelper.getEnchantmentsForCrafting(targetBook);
-        ^
-  symbol:   class ItemEnchantments
-  location: class ChiseledEnchantingTableScreenHandler
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1679: error: cannot find symbol
-        ItemEnchantments costEnchants = EnchantmentHelper.getEnchantmentsForCrafting(costBook);
-        ^
-  symbol:   class ItemEnchantments
-  location: class ChiseledEnchantingTableScreenHandler
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:510: error: cannot find symbol
-                int tierDropConflictRefund = actualConflictRefundPoints(
-                                             ^
-  symbol:   method actualConflictRefundPoints(ItemStack,ItemEnchantments,Holder<Enchantment>,boolean)
-  location: class ChiseledEnchantingTableBlockEntity
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:532: error: cannot find symbol
-            int cleanConflictRefund = actualConflictRefundPoints(
-                                      ^
-  symbol:   method actualConflictRefundPoints(ItemStack,ItemEnchantments,Holder<Enchantment>,boolean)
-  location: class ChiseledEnchantingTableBlockEntity
-Note: Some input files use or override a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-Note: Recompile with -Xlint:unchecked for details.
-9 errors
+  required: Config,long
+  found:    long
+  reason: actual and formal argument lists differ in length
+1 error
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -371,8 +256,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 45s
-1 actionable task: 1 executed
+BUILD FAILED in 42s
+5 actionable tasks: 5 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
