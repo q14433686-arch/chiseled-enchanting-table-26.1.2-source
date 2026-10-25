@@ -973,5 +973,6 @@
   "config.chiseled_enchanting_table.trace.prefix_modern": "Modern:",
   "gui.chiseled_enchanting_table.transformation.batch_tip_survival": "Stapel: %s / %s Items (Überleben: begrenzt durch EP & Katalysator)",
   "gui.chiseled_enchanting_table.transformation.batch_tip_creative": "Stapel: %s / %s Items (Kreativ: EP- & Katalysatorlimit umgangen)",
-  "message.chiseled_enchanting_table.reload_closed": "Gemeißelter Zaubertisch geschlossen, um neu geladene Datenpaket-Regeln zu übernehmen."
+  "message.chiseled_enchanting_table.reload_closed": "Gemeißelter Zaubertisch geschlossen, um neu geladene Datenpaket-Regeln zu übernehmen.",
+  "message.chiseled_enchanting_table.cost_sync_failed": "Verzauberungsregeln konnten nicht synchronisiert werden. Bitte den Serveradministrator, Datenpaketkosten und Umwandlungen zu prüfen."
 }
