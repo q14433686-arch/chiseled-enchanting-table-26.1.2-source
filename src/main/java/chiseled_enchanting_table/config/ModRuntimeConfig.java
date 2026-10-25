@@ -496,13 +496,15 @@ public record ModRuntimeConfig(
         }
     }
 
+    public static final int CLASSIC_RULE_ATOM_COUNT = 19;
+
     /**
      * Returns {@code true} iff all 19 core mechanism atoms currently match their {@code 1.0.3}
      * classic state. Derived directly from the active rule atoms — never stored as a separate
      * desynchronizable flag.
      */
     public boolean isAllClassicAtoms() {
-        return countClassic103Atoms() == 19;
+        return countClassic103Atoms() == CLASSIC_RULE_ATOM_COUNT;
     }
 
     /** Convenience derived alias preserved for callers checking pure-1.0.3 presentation state. */
@@ -1248,6 +1250,12 @@ public record ModRuntimeConfig(
 
     /** Mutable editor buffer enforcing live cross-field coherence as users drag sliders or click toggles. */
     public static final class Draft {
+        public void markCustomized(String key) {
+            if (key != null && !key.isBlank()) {
+                this.customizedKeys.add(key);
+            }
+        }
+
         public boolean overrideDatapacks = false;
         public int enchantedBookStackSize = 64;
         public VanillaTableMode vanillaTableMode = VanillaTableMode.BOOKS;

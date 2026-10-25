@@ -1202,7 +1202,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         Box sb = row.scopeBadgeBox();
         String scopeGlyph = (!editable ? "\uD83D\uDD12" : "") + avail.effectScope().glyph();
         int scopeColor = switch (avail.effectScope()) {
-            case LIVE_HOT_RELOAD -> EMERALD_TEXT;
+            case IMMEDIATE -> EMERALD_TEXT;
             case NEW_GENERATION -> CYAN_TEXT;
             case RESTART_REQUIRED -> AMBER_TEXT;
         };
@@ -1443,7 +1443,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
 
         ChatFormatting scopeFmt = switch (avail.effectScope()) {
-            case LIVE_HOT_RELOAD -> ChatFormatting.GREEN;
+            case IMMEDIATE -> ChatFormatting.GREEN;
             case NEW_GENERATION -> ChatFormatting.AQUA;
             case RESTART_REQUIRED -> ChatFormatting.GOLD;
         };
