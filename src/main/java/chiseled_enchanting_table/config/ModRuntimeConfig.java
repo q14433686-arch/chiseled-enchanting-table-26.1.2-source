@@ -403,7 +403,6 @@ public record ModRuntimeConfig(
                     markModifiedRuntimeKeys(fresh);
                 }
                 case EXPERT -> {
-                    fresh.enchantedBookStackSize = 1;
                     fresh.vanillaTableMode = VanillaTableMode.ALL;
                     fresh.anvilFlatRepairCost = false;
                     fresh.anvilBlockSameBookMerge = true;

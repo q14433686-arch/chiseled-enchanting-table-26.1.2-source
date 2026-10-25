@@ -435,9 +435,10 @@ class ConfigurationSafetyTest {
             highDisc.maxTotalXpDiscountPercent = 80;
             ChiseledEnchantingTableData.applyRuntimeConfig(highDisc.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
             var highLr = ChiseledEnchantingTableData.libraryResonanceConfig();
-            assertEquals(55, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.woodenBookshelfDiscountPercent(highLr, 30));
-            assertEquals(55, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(highLr, 30, 0.0));
-            assertEquals(80, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.effectiveXpDiscountPercent(highLr, 30, 30.0, 5, 5));
+            int maxWoodShelves = highLr.maxDiscountBookshelves();
+            assertEquals(55, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.woodenBookshelfDiscountPercent(highLr, maxWoodShelves));
+            assertEquals(55, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(highLr, maxWoodShelves, 0.0));
+            assertEquals(80, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.effectiveXpDiscountPercent(highLr, maxWoodShelves, 30.0, 5, 5));
 
             var lowDisc = ModRuntimeConfig.DEFAULT.toDraft();
             lowDisc.libraryDiscountEnabled = true;
@@ -445,9 +446,9 @@ class ConfigurationSafetyTest {
             lowDisc.maxTotalXpDiscountPercent = 18;
             ChiseledEnchantingTableData.applyRuntimeConfig(lowDisc.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
             var lowLr = ChiseledEnchantingTableData.libraryResonanceConfig();
-            assertEquals(8, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.woodenBookshelfDiscountPercent(lowLr, 30));
-            assertEquals(18, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(lowLr, 30, 30.0));
-            assertEquals(18, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.effectiveXpDiscountPercent(lowLr, 30, 30.0, 5, 5));
+            assertEquals(8, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.woodenBookshelfDiscountPercent(lowLr, maxWoodShelves));
+            assertEquals(18, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(lowLr, maxWoodShelves, 30.0));
+            assertEquals(18, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.effectiveXpDiscountPercent(lowLr, maxWoodShelves, 30.0, 5, 5));
 
             // 4. Expert preset is strictly harder & matches cleanly
             ModRuntimeConfig std = ModRuntimeConfig.Preset.STANDARD.createConfig(false);

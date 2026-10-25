@@ -936,7 +936,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             lr.specificEnchantExponent(),
             totalDisc,
             lr.masteryUnitExponent(),
-            lr.globalMasteryMultiplier(),
+            lr.globalMasteryMultiplier() * masteryScale,
             lr.masterTomeUpgradeMaterialMultiplier(),
             lr.shelfUpgradeMaterialMultiplier(),
             lr.epiphanyProbabilityGlobalWeight(),
