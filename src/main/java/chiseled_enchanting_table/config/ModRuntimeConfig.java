@@ -16,11 +16,15 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,9 +33,9 @@ import org.jetbrains.annotations.Nullable;
  * ({@code config/chiseled_enchanting_table.json}) and granular runtime gameplay rules across all
  * mod subsystems, with built-in cross-field coherence invariants and client/server synchronization.
  *
- * <p>Every historical difference between {@code 1.0.3} and {@code 1.1.0} is represented as an
+ * <p>Every historical difference between classic and modern rulesets is represented as an
  * explicit, orthogonal rule atom in its natural domain rather than hidden behind a monolithic lock
- * switch. Presets ({@link Preset#CLASSIC_1_0_3}, {@link Preset#STANDARD}, etc.) act purely as
+ * switch. Presets ({@link Preset#CLASSIC}, {@link Preset#STANDARD}, etc.) act purely as
  * one-click profile writers.</p>
  */
 public record ModRuntimeConfig(
@@ -133,6 +137,43 @@ public record ModRuntimeConfig(
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final String FILE_NAME = "chiseled_enchanting_table.json";
 
+    private static <E extends Enum<E>> Optional<E> tryParseEnumToken(
+        String fieldName,
+        @Nullable String raw,
+        E[] values,
+        Function<E, String> tokenExtractor,
+        Map<String, E> legacyAliases,
+        E fallbackDefault
+    ) {
+        String accepted = Arrays.stream(values).map(tokenExtractor).toList().toString();
+        if (raw == null || raw.isBlank()) {
+            ChiseledEnchantingTable.LOGGER.warn(
+                "Empty config token for '{}'; expected one of {} — failing closed to default '{}'",
+                fieldName, accepted, tokenExtractor.apply(fallbackDefault)
+            );
+            return Optional.empty();
+        }
+        String normalized = raw.trim().toLowerCase(Locale.ROOT);
+        for (E candidate : values) {
+            if (tokenExtractor.apply(candidate).equalsIgnoreCase(normalized)) {
+                return Optional.of(candidate);
+            }
+        }
+        E legacy = legacyAliases.get(normalized);
+        if (legacy != null) {
+            ChiseledEnchantingTable.LOGGER.warn(
+                "Config field '{}' uses deprecated legacy token '{}' (alias for '{}'); legacy aliases will be removed in 2.0",
+                fieldName, raw.trim(), tokenExtractor.apply(legacy)
+            );
+            return Optional.of(legacy);
+        }
+        ChiseledEnchantingTable.LOGGER.warn(
+            "Unrecognized config token '{}' for '{}'; expected one of {} — failing closed to default '{}'",
+            raw.trim(), fieldName, accepted, tokenExtractor.apply(fallbackDefault)
+        );
+        return Optional.empty();
+    }
+
     /** Atom #1: How regular wooden bookshelves boost stored/default tiers. */
     public enum ShelfBoostModel {
         MODERN_CURVE("modern_curve"),
@@ -141,11 +182,11 @@ public record ModRuntimeConfig(
         private final String token;
         ShelfBoostModel(String token) { this.token = token; }
         public String token() { return token; }
-        public static ShelfBoostModel fromToken(String raw) {
-            if (raw != null && raw.trim().equalsIgnoreCase("classic_floor_third")) {
-                return CLASSIC_FLOOR_THIRD;
-            }
-            return MODERN_CURVE;
+        public static Optional<ShelfBoostModel> tryFromToken(@Nullable String raw) {
+            return tryParseEnumToken("shelf_boost_model", raw, values(), ShelfBoostModel::token, Map.of(), MODERN_CURVE);
+        }
+        public static ShelfBoostModel fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(MODERN_CURVE);
         }
     }
 
@@ -157,11 +198,11 @@ public record ModRuntimeConfig(
         private final String token;
         DefaultUnlockFilter(String token) { this.token = token; }
         public String token() { return token; }
-        public static DefaultUnlockFilter fromToken(String raw) {
-            if (raw != null && raw.trim().equalsIgnoreCase("classic_unfiltered")) {
-                return CLASSIC_UNFILTERED;
-            }
-            return EXCLUDE_SPECIAL;
+        public static Optional<DefaultUnlockFilter> tryFromToken(@Nullable String raw) {
+            return tryParseEnumToken("default_unlock_filter", raw, values(), DefaultUnlockFilter::token, Map.of(), EXCLUDE_SPECIAL);
+        }
+        public static DefaultUnlockFilter fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(EXCLUDE_SPECIAL);
         }
     }
 
@@ -173,39 +214,50 @@ public record ModRuntimeConfig(
         private final String token;
         XpSettlementMode(String token) { this.token = token; }
         public String token() { return token; }
-        public static XpSettlementMode fromToken(String raw) {
-            if (raw != null && raw.trim().equalsIgnoreCase("classic_full_points")) {
-                return CLASSIC_FULL_POINTS;
-            }
-            return DUAL_STORED_DISCOUNT;
+        public static Optional<XpSettlementMode> tryFromToken(@Nullable String raw) {
+            return tryParseEnumToken("xp_mode", raw, values(), XpSettlementMode::token, Map.of(), DUAL_STORED_DISCOUNT);
+        }
+        public static XpSettlementMode fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(DUAL_STORED_DISCOUNT);
         }
     }
 
     /**
      * Atom #7: Underlying cost &amp; book-upgrade data table.
-     * {@link #CLASSIC_1_0_3} uses {@code enchantment_costs_classic_1_0_3.json} and
-     * {@code book_upgrades_classic_1_0_3.json} (themed specialty &amp; multi-material costs such as
-     * Smite requiring Bones/Rotten Flesh plus Emerald/Diamond at max tier);
-     * {@link #MODERN_1_1_0} uses {@code enchantment_costs.json} (flat Lapis / Emerald / Amethyst).
+     * {@link #CLASSIC} uses {@code enchantment_costs_classic_1_0_3.json} and
+     * {@code book_upgrades_classic_1_0_3.json} (themed specialty &amp; multi-material costs);
+     * {@link #MODERN} uses {@code enchantment_costs.json} (flat Lapis / Emerald / Amethyst).
      */
     public enum CostTableDataset {
-        MODERN_1_1_0("modern_1_1_0"),
-        CLASSIC_1_0_3("classic_1_0_3");
+        MODERN("modern"),
+        CLASSIC("classic");
+
+        /** @deprecated Compatibility alias for {@link #CLASSIC}; prefer {@link #CLASSIC}. */
+        @Deprecated
+        public static final CostTableDataset CLASSIC_1_0_3 = CLASSIC;
+
+        public static final Map<String, CostTableDataset> LEGACY_ALIASES = Map.of(
+            "modern_" + "1_1_0", MODERN,
+            "1." + "1.0", MODERN,
+            "classic_1_0_3", CLASSIC,
+            "1.0.3", CLASSIC,
+            "103", CLASSIC
+        );
 
         private final String token;
         CostTableDataset(String token) { this.token = token; }
         public String token() { return token; }
-        public static CostTableDataset fromToken(String raw) {
-            if (raw != null && (raw.trim().equalsIgnoreCase("classic_1_0_3") || raw.trim().equalsIgnoreCase("1.0.3"))) {
-                return CLASSIC_1_0_3;
-            }
-            return MODERN_1_1_0;
+        public static Optional<CostTableDataset> tryFromToken(@Nullable String raw) {
+            return tryParseEnumToken("cost_table", raw, values(), CostTableDataset::token, LEGACY_ALIASES, MODERN);
+        }
+        public static CostTableDataset fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(MODERN);
         }
     }
 
     /**
      * Atom #6: How alternative material options and min/max ranges in the active cost table resolve.
-     * Orthogonal to {@link CostTableDataset}: works seamlessly on both 1.0.3 and 1.1.0 tables.
+     * Orthogonal to {@link CostTableDataset}: works seamlessly on both classic and modern tables.
      */
     public enum MaterialSelectionMode {
         ALL_OPTIONS_MIDPOINT("all_options_midpoint"),
@@ -214,11 +266,11 @@ public record ModRuntimeConfig(
         private final String token;
         MaterialSelectionMode(String token) { this.token = token; }
         public String token() { return token; }
-        public static MaterialSelectionMode fromToken(String raw) {
-            if (raw != null && raw.trim().equalsIgnoreCase("player_salted_single")) {
-                return PLAYER_SALTED_SINGLE;
-            }
-            return ALL_OPTIONS_MIDPOINT;
+        public static Optional<MaterialSelectionMode> tryFromToken(@Nullable String raw) {
+            return tryParseEnumToken("material_selection", raw, values(), MaterialSelectionMode::token, Map.of(), ALL_OPTIONS_MIDPOINT);
+        }
+        public static MaterialSelectionMode fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(ALL_OPTIONS_MIDPOINT);
         }
     }
 
@@ -230,11 +282,11 @@ public record ModRuntimeConfig(
         private final String token;
         ResearchRoundingMode(String token) { this.token = token; }
         public String token() { return token; }
-        public static ResearchRoundingMode fromToken(String raw) {
-            if (raw != null && raw.trim().equalsIgnoreCase("floor_down")) {
-                return FLOOR_DOWN;
-            }
-            return ROUND_NEAREST;
+        public static Optional<ResearchRoundingMode> tryFromToken(@Nullable String raw) {
+            return tryParseEnumToken("research_rounding", raw, values(), ResearchRoundingMode::token, Map.of(), ROUND_NEAREST);
+        }
+        public static ResearchRoundingMode fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(ROUND_NEAREST);
         }
     }
 
@@ -246,11 +298,11 @@ public record ModRuntimeConfig(
         private final String token;
         TransformationSetMode(String token) { this.token = token; }
         public String token() { return token; }
-        public static TransformationSetMode fromToken(String raw) {
-            if (raw != null && raw.trim().equalsIgnoreCase("classic_two")) {
-                return CLASSIC_TWO;
-            }
-            return FULL_SIX;
+        public static Optional<TransformationSetMode> tryFromToken(@Nullable String raw) {
+            return tryParseEnumToken("transformation_set", raw, values(), TransformationSetMode::token, Map.of(), FULL_SIX);
+        }
+        public static TransformationSetMode fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(FULL_SIX);
         }
     }
 
@@ -262,11 +314,11 @@ public record ModRuntimeConfig(
         private final String token;
         DrainedBookResult(String token) { this.token = token; }
         public String token() { return token; }
-        public static DrainedBookResult fromToken(String raw) {
-            if (raw != null && raw.trim().equalsIgnoreCase("plain_book")) {
-                return PLAIN_BOOK;
-            }
-            return DEPLETED_TOME;
+        public static Optional<DrainedBookResult> tryFromToken(@Nullable String raw) {
+            return tryParseEnumToken("drained_book_result", raw, values(), DrainedBookResult::token, Map.of(), DEPLETED_TOME);
+        }
+        public static DrainedBookResult fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(DEPLETED_TOME);
         }
     }
 
@@ -299,17 +351,36 @@ public record ModRuntimeConfig(
      * Built-in one-click gameplay presets exposed in {@code ChiseledEnchantingConfigScreen}
      * and {@code /cet}:
      * <ul>
-     *   <li>{@link #CLASSIC_1_0_3}: 1:1 faithful profile of release {@code 1.0.3};</li>
+     *   <li>{@link #CLASSIC}: 1:1 faithful profile of classic {@code 1.0.3} rules;</li>
      *   <li>{@link #CASUAL}: relaxed progression with infinite Master Tomes and generous discounts;</li>
-     *   <li>{@link #STANDARD}: shipped {@code 1.1.0} default balance ({@link #DEFAULT});</li>
+     *   <li>{@link #STANDARD}: shipped default balance ({@link #DEFAULT});</li>
      *   <li>{@link #EXPERT}: high-stakes archivist rules with LOS, discovery gates, and strict wear.</li>
      * </ul>
      */
     public enum Preset {
-        CLASSIC_1_0_3("classic_1_0_3"),
+        CLASSIC("classic"),
         CASUAL("casual"),
         STANDARD("standard"),
         EXPERT("expert");
+
+        /** @deprecated Compatibility alias for {@link #CLASSIC}; prefer {@link #CLASSIC}. */
+        @Deprecated
+        public static final Preset CLASSIC_1_0_3 = CLASSIC;
+
+        public static final Map<String, Preset> LEGACY_ALIASES = Map.ofEntries(
+            Map.entry("classic_1_0_3", CLASSIC),
+            Map.entry("1.0.3", CLASSIC),
+            Map.entry("103", CLASSIC),
+            Map.entry("purist", CLASSIC),
+            Map.entry("easy", CASUAL),
+            Map.entry("relaxed", CASUAL),
+            Map.entry("generous", CASUAL),
+            Map.entry("default", STANDARD),
+            Map.entry("normal", STANDARD),
+            Map.entry("1." + "1.0", STANDARD),
+            Map.entry("hard", EXPERT),
+            Map.entry("archivist", EXPERT)
+        );
 
         private final String id;
 
@@ -329,18 +400,16 @@ public record ModRuntimeConfig(
             return "config.chiseled_enchanting_table.preset." + this.id + ".desc";
         }
 
-        @Nullable
-        public static Preset fromToken(String raw) {
+        public static Optional<Preset> tryFromToken(@Nullable String raw) {
             if (raw == null || raw.isBlank()) {
-                return null;
+                return Optional.empty();
             }
-            return switch (raw.trim().toLowerCase(Locale.ROOT)) {
-                case "1.0.3", "classic", "classic_1_0_3", "103", "purist" -> CLASSIC_1_0_3;
-                case "casual", "easy", "relaxed", "generous" -> CASUAL;
-                case "standard", "default", "normal", "1.1.0" -> STANDARD;
-                case "expert", "hard", "archivist" -> EXPERT;
-                default -> null;
-            };
+            return tryParseEnumToken("preset", raw, values(), Preset::id, LEGACY_ALIASES, STANDARD);
+        }
+
+        @Nullable
+        public static Preset fromToken(@Nullable String raw) {
+            return tryFromToken(raw).orElse(null);
         }
 
         public void applyTo(Draft draft) {
@@ -357,7 +426,7 @@ public record ModRuntimeConfig(
                 case STANDARD -> {
                     // Pure shipped defaults (including 64-stackable Enchanted Books).
                 }
-                case CLASSIC_1_0_3 -> {
+                case CLASSIC -> {
                     fresh.applyClassic103Overrides();
                     markModifiedRuntimeKeys(fresh);
                 }
@@ -560,7 +629,7 @@ public record ModRuntimeConfig(
         if (!directTierUpgrade) n++;
         if (!incrementalCredit) n++;
         if (xpMode == XpSettlementMode.CLASSIC_FULL_POINTS) n++;
-        if (costTableDataset == CostTableDataset.CLASSIC_1_0_3) n++;
+        if (costTableDataset == CostTableDataset.CLASSIC) n++;
         if (materialSelectionMode == MaterialSelectionMode.PLAYER_SALTED_SINGLE) n++;
         if (researchRoundingMode == ResearchRoundingMode.FLOOR_DOWN) n++;
         if (!libraryDiscountEnabled) n++;
@@ -736,11 +805,11 @@ public record ModRuntimeConfig(
         tomePageRequiredShelves = clampInt(tomePageRequiredShelves, 1, 512);
 
         xpMode = xpMode != null ? xpMode : XpSettlementMode.DUAL_STORED_DISCOUNT;
-        costTableDataset = costTableDataset != null ? costTableDataset : CostTableDataset.MODERN_1_1_0;
+        costTableDataset = costTableDataset != null ? costTableDataset : CostTableDataset.MODERN;
         materialSelectionMode = materialSelectionMode != null ? materialSelectionMode : MaterialSelectionMode.ALL_OPTIONS_MIDPOINT;
         researchRoundingMode = researchRoundingMode != null ? researchRoundingMode : ResearchRoundingMode.ROUND_NEAREST;
-        maxWoodenDiscountPercent = clampInt(maxWoodenDiscountPercent, 0, 90);
-        maxTotalXpDiscountPercent = clampInt(maxTotalXpDiscountPercent, maxWoodenDiscountPercent, 90);
+        maxTotalXpDiscountPercent = clampInt(maxTotalXpDiscountPercent, 0, 90);
+        maxWoodenDiscountPercent = clampInt(maxWoodenDiscountPercent, 0, maxTotalXpDiscountPercent);
         bookCombineXpMultiplier = round2(clampDouble(bookCombineXpMultiplier, 0.10, 3.00));
         bookResearchXpMultiplier = round2(clampDouble(bookResearchXpMultiplier, 0.10, 3.00));
 
@@ -1341,7 +1410,7 @@ public record ModRuntimeConfig(
         public int tomePageRequiredShelves = 4;
         public boolean incrementalCredit = true;
         public XpSettlementMode xpMode = XpSettlementMode.DUAL_STORED_DISCOUNT;
-        public CostTableDataset costTableDataset = CostTableDataset.MODERN_1_1_0;
+        public CostTableDataset costTableDataset = CostTableDataset.MODERN;
         public MaterialSelectionMode materialSelectionMode = MaterialSelectionMode.ALL_OPTIONS_MIDPOINT;
         public ResearchRoundingMode researchRoundingMode = ResearchRoundingMode.ROUND_NEAREST;
         public boolean libraryDiscountEnabled = true;
@@ -1488,10 +1557,10 @@ public record ModRuntimeConfig(
                 // Align default combine/research XP multipliers with the selected table unless
                 // the player has explicitly customized those sliders.
                 if (!this.customizedKeys.contains("book_combine_xp_multiplier")) {
-                    this.bookCombineXpMultiplier = this.costTableDataset == CostTableDataset.CLASSIC_1_0_3 ? 1.00 : 0.60;
+                    this.bookCombineXpMultiplier = this.costTableDataset == CostTableDataset.CLASSIC ? 1.00 : 0.60;
                 }
                 if (!this.customizedKeys.contains("book_research_xp_multiplier")) {
-                    this.bookResearchXpMultiplier = this.costTableDataset == CostTableDataset.CLASSIC_1_0_3 ? 0.50 : 1.40;
+                    this.bookResearchXpMultiplier = this.costTableDataset == CostTableDataset.CLASSIC ? 0.50 : 1.40;
                 }
             }
 
@@ -1683,14 +1752,14 @@ public record ModRuntimeConfig(
             this.customizedKeys.addAll(snap.customizedKeys);
         }
 
-        /** Sets all 19 core mechanism rule atoms to their {@code 1.0.3} values. */
+        /** Sets all 19 core mechanism rule atoms to their classic {@code 1.0.3} values. */
         public void applyClassic103Atoms() {
             shelfBoostModel = ShelfBoostModel.CLASSIC_FLOOR_THIRD;
             defaultUnlockFilter = DefaultUnlockFilter.CLASSIC_UNFILTERED;
             directTierUpgrade = false;
             incrementalCredit = false;
             xpMode = XpSettlementMode.CLASSIC_FULL_POINTS;
-            costTableDataset = CostTableDataset.CLASSIC_1_0_3;
+            costTableDataset = CostTableDataset.CLASSIC;
             materialSelectionMode = MaterialSelectionMode.PLAYER_SALTED_SINGLE;
             researchRoundingMode = ResearchRoundingMode.FLOOR_DOWN;
             libraryDiscountEnabled = false;
@@ -1706,14 +1775,14 @@ public record ModRuntimeConfig(
             librarianTomeOffers = false;
         }
 
-        /** Sets all 19 core mechanism rule atoms to their {@code 1.1.0} default values. */
+        /** Sets all 19 core mechanism rule atoms to their modern default values. */
         public void applyModern110Atoms() {
             shelfBoostModel = ShelfBoostModel.MODERN_CURVE;
             defaultUnlockFilter = DefaultUnlockFilter.EXCLUDE_SPECIAL;
             directTierUpgrade = true;
             incrementalCredit = true;
             xpMode = XpSettlementMode.DUAL_STORED_DISCOUNT;
-            costTableDataset = CostTableDataset.MODERN_1_1_0;
+            costTableDataset = CostTableDataset.MODERN;
             materialSelectionMode = MaterialSelectionMode.ALL_OPTIONS_MIDPOINT;
             researchRoundingMode = ResearchRoundingMode.ROUND_NEAREST;
             libraryDiscountEnabled = true;

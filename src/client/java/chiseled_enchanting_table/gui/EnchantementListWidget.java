@@ -46,6 +46,13 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Legacy spelling preserved as a binary/source compatibility bridge; prefer
+ * {@link EnchantmentListWidget} in new code.
+ *
+ * @deprecated Prefer {@link EnchantmentListWidget}.
+ */
+@Deprecated(forRemoval = false)
 public class EnchantementListWidget extends AbstractSelectionList<EnchantementListWidget.EnchantUiEntry> {
     public enum UiTabMode {
         INSCRIBE,
@@ -161,13 +168,25 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             .flatMap(reg -> reg.get(ResourceKey.create(Registries.ENCHANTMENT, id)));
     }
 
-    public static Holder<Enchantment> IdentifierToEnchantment(Identifier id, Player player) {
+    public static Holder<Enchantment> identifierToEnchantment(Identifier id, Player player) {
         return findEnchantment(id, player)
             .orElseThrow(() -> new IllegalArgumentException("Unknown enchantment: " + id));
     }
 
+    public static Identifier enchantmentToIdentifier(Holder<Enchantment> enchant) {
+        return enchant.unwrapKey().orElseThrow().identifier();
+    }
+
+    /** @deprecated Prefer {@link #identifierToEnchantment(Identifier, Player)}. */
+    @Deprecated(forRemoval = false)
+    public static Holder<Enchantment> IdentifierToEnchantment(Identifier id, Player player) {
+        return identifierToEnchantment(id, player);
+    }
+
+    /** @deprecated Prefer {@link #enchantmentToIdentifier(Holder)}. */
+    @Deprecated(forRemoval = false)
     public static Identifier EnchantmentToIdentifier(Holder<Enchantment> enchant, Player player) {
-        return enchant.unwrapKey().get().identifier();
+        return enchantmentToIdentifier(enchant);
     }
 
     public static String baseEnchantmentName(Holder<Enchantment> ench) {
@@ -192,7 +211,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             }
             return out;
         }
-        Holder<Enchantment> ench = IdentifierToEnchantment(option.id(), this.player);
+        Holder<Enchantment> ench = identifierToEnchantment(option.id(), this.player);
         String name = Enchantment.getFullname(ench, option.level()).getString();
         if (option.isDowngrade()) {
             int curLvl = this.handler.currentTargetEnchantLevel(option.id());
@@ -249,6 +268,30 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    /**
+     * Jumps proportionally along the scrollbar track when the player clicks outside the current
+     * scroller thumb, while preserving smooth thumb-anchored dragging when clicking inside the thumb.
+     */
+    public void jumpScrollbarToMouseY(double mouseY) {
+        int maxScroll = this.maxScrollAmount();
+        if (maxScroll <= 0) {
+            return;
+        }
+        int totalContentH = this.height + maxScroll;
+        int scrollerH = Math.clamp(
+            (int) ((float) (this.height * this.height) / (float) Math.max(1, totalContentH)),
+            32,
+            Math.max(32, this.height - 8)
+        );
+        int travel = Math.max(1, this.height - scrollerH);
+        double thumbTop = this.getY() + (this.scrollAmount() / (double) maxScroll) * travel;
+        double thumbBottom = thumbTop + scrollerH;
+        if (mouseY < thumbTop || mouseY > thumbBottom) {
+            double centeredRatio = Math.clamp((mouseY - this.getY() - scrollerH * 0.5) / (double) travel, 0.0, 1.0);
+            this.setScrollAmount(centeredRatio * maxScroll);
+        }
     }
 
     @Override
@@ -528,7 +571,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         for (Holder<Enchantment> holder : sortedKeys) {
             int curLvl = current.getLevel(holder);
             if (curLvl <= 0) continue;
-            Identifier id = EnchantmentToIdentifier(holder, this.player);
+            Identifier id = enchantmentToIdentifier(holder);
             if (DisenchantmentApplication.isCurse(holder)) {
                 if (this.handler.disenchantAllowCursePurge()) {
                     addActionEntry(AvailableOption.purgeCurse(id, curLvl), false, false);
@@ -615,7 +658,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             for (var entry : enchantments.entrySet()) {
                 int existingLvl = targetEnchantments.getLevel(entry.getKey());
                 if (entry.getIntValue() > existingLvl) {
-                    Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
+                    Identifier id = enchantmentToIdentifier(entry.getKey());
                     optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(id, entry.getIntValue()), false, 0));
                 }
             }
@@ -644,7 +687,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     int existingLvl = existingEntry.getIntValue();
                     int maxLvl = Math.max(1, existingEntry.getKey().value().getMaxLevel());
                     if (existingLvl < 1 || existingLvl >= maxLvl) continue;
-                    Identifier id = EnchantmentToIdentifier(existingEntry.getKey(), this.player);
+                    Identifier id = enchantmentToIdentifier(existingEntry.getKey());
                     for (int lvl = existingLvl + 1; lvl <= maxLvl; lvl++) {
                         EnchantmentWithLevel candidate = new EnchantmentWithLevel(id, lvl);
                         if (!unlockedDirectSet.contains(candidate)
@@ -677,7 +720,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 int level = entry.getIntValue();
                 int maxLevel = entry.getKey().value().getMaxLevel();
                 if (level >= maxLevel) continue;
-                Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
+                Identifier id = enchantmentToIdentifier(entry.getKey());
                 int targetLevel = level + 1;
                 if (combineEnabled && cost_item_stack.is(Items.ENCHANTED_BOOK) && costEnchantments.getLevel(entry.getKey()) == level) {
                     optionSlots.add(new DisplayOptionSlot(AvailableOption.bookCombineUpgrade(id, targetLevel), false, 0));
@@ -709,13 +752,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             && !ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
             Set<Identifier> candidateDirectIds = new LinkedHashSet<>(maxAddedTierById.keySet());
             for (var entry : targetEnchantments.entrySet()) {
-                Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
+                Identifier id = enchantmentToIdentifier(entry.getKey());
                 if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
                     candidateDirectIds.add(id);
                 }
             }
             for (Identifier enchId : candidateDirectIds) {
-                Holder<Enchantment> holder = IdentifierToEnchantment(enchId, this.player);
+                Holder<Enchantment> holder = identifierToEnchantment(enchId, this.player);
                 if (!isDirectWoodenShelfEligible(holder, enchId)) continue;
                 int maxLevel = Math.max(1, holder.value().getMaxLevel());
                 int existingLvl = targetEnchantments.getLevel(holder);
@@ -770,8 +813,8 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             .sorted((s1, s2) -> {
                 AvailableOption o1 = s1.option();
                 AvailableOption o2 = s2.option();
-                String n1 = baseEnchantmentName(IdentifierToEnchantment(o1.id(), this.player));
-                String n2 = baseEnchantmentName(IdentifierToEnchantment(o2.id(), this.player));
+                String n1 = baseEnchantmentName(identifierToEnchantment(o1.id(), this.player));
+                String n2 = baseEnchantmentName(identifierToEnchantment(o2.id(), this.player));
                 int c = n1.compareTo(n2);
                 if (c != 0) return c;
                 int lvlCmp = Integer.compare(o1.level(), o2.level());
@@ -793,7 +836,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         for (var groupEntry : groupedEnchants.entrySet()) {
             Identifier enchId = groupEntry.getKey();
             List<DisplayOptionSlot> children = groupEntry.getValue();
-            Holder<Enchantment> holder = IdentifierToEnchantment(enchId, this.player);
+            Holder<Enchantment> holder = identifierToEnchantment(enchId, this.player);
             String categoryName = baseEnchantmentName(holder);
             int curLvl = targetEnchantments.getLevel(holder);
             int minTier = children.getFirst().option().level();
@@ -817,7 +860,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     .mapToInt(DisplayOptionSlot::requiredBookshelves)
                     .findFirst()
                     .orElse(0);
-                badgeText = "\uD83D\uDD12 " + romanNumeral(curLvl + 1) + " (" + nextReq + ")";
+                badgeText = "\u2298 " + romanNumeral(curLvl + 1) + " (" + nextReq + ")";
                 badgeColor = RowRenderSupport.EPIPHANY_GOLD;
             } else if (curLvl > 0 && maxUnlockedTier == curLvl) {
                 badgeText = "\u2714 " + romanNumeral(curLvl);
@@ -997,7 +1040,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             this.xp_level_cost = xp_requirement.requiredLevel();
             this.enchantment = (this.is_transformation || option.isDisenchantAll())
                 ? null
-                : IdentifierToEnchantment(option.id(), this.player);
+                : identifierToEnchantment(option.id(), this.player);
             this.discovery_locked = this.is_transformation && !handler.isTransformationUnlocked(this.enchantment_id);
 
             this.overridenEnchant = new ArrayList<>();
@@ -1012,7 +1055,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 boolean targetIsBook = enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK);
                 if (!targetIsBook) {
                     for (var entry : currentEnchants.entrySet()) {
-                        Identifier existingId = EnchantmentToIdentifier(entry.getKey(), this.player);
+                        Identifier existingId = enchantmentToIdentifier(entry.getKey());
                         if (!existingId.equals(this.enchantment_id) && !Enchantment.areCompatible(entry.getKey(), this.enchantment)) {
                             this.overridenEnchant.add(new EnchantmentWithLevel(existingId, entry.getIntValue()));
                         }
@@ -1343,7 +1386,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             var firstOverridenEnchant = this.overridenEnchant.stream().findFirst();
             if (firstOverridenEnchant.isPresent() && !enchantable_item.is(Items.ENCHANTED_BOOK)) {
                 var enchant = firstOverridenEnchant.get();
-                var name = Enchantment.getFullname(IdentifierToEnchantment(enchant.enchantment_id(), this.player), enchant.enchantment_level()).getString();
+                var name = Enchantment.getFullname(identifierToEnchantment(enchant.enchantment_id(), this.player), enchant.enchantment_level()).getString();
                 String conflictText = this.conflict_refund_points > 0
                     ? ("\u2716 " + name + " (+" + this.conflict_refund_points + " XP)")
                     : ("\u2716 " + name);

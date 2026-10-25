@@ -157,7 +157,7 @@ public final class EnchantmentApplication {
             : 0.0;
         int maxLvl = Math.max(1, enchantment.value().getMaxLevel());
         double appFactor = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeApplicabilityFactor(
-            payload.enchantment_id(),
+            handler.ritualConfig(),
             enchantment
         );
         boolean ritualQueueEnabled = handler.isRitualQueueEnabled();

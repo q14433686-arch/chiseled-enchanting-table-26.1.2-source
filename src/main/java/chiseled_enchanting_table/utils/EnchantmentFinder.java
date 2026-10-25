@@ -45,10 +45,16 @@ public class EnchantmentFinder {
      * books stored inside {@code cbsbe}, ensuring multi-enchant books contribute every qualifying
      * enchantment entry while curses never pollute Master Tome unlocks or Library Resonance.
      */
-    public static Stream<EnchantmentWithLevel> streamAllEnchantements(ChiseledBookShelfBlockEntity cbsbe, Level level) {
+    public static Stream<EnchantmentWithLevel> streamAllEnchantments(ChiseledBookShelfBlockEntity cbsbe) {
         return Stream.iterate(0, i -> i + 1)
             .limit(cbsbe.getContainerSize())
             .map(cbsbe::getItem)
             .flatMap(stack -> extractUnlockedSlotEnchantments(stack).stream());
+    }
+
+    /** @deprecated Use {@link #streamAllEnchantments(ChiseledBookShelfBlockEntity)} (Audit API-01). */
+    @Deprecated
+    public static Stream<EnchantmentWithLevel> streamAllEnchantements(ChiseledBookShelfBlockEntity cbsbe, Level level) {
+        return streamAllEnchantments(cbsbe);
     }
 }

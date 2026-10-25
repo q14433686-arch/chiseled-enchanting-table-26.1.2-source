@@ -154,7 +154,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 this.scrollContainer.updateEntry(handler.getEffectiveEnchantableItem(), handler.get_cost_item());
             }
         };
-        this.scrollContainer = new EnchantementListWidget(
+        this.scrollContainer = new EnchantmentListWidget(
             mc,
             handler,
             151,
@@ -801,6 +801,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.setFocused(this.scrollContainer);
             this.scrollContainer.setFocused(true);
             if (isOverEnchantListScrollbar(event.x(), event.y())) {
+                this.scrollContainer.jumpScrollbarToMouseY(event.y());
                 this.scrollContainer.setDragging(true);
                 this.scrollContainer.updateScrolling(event);
                 return true;
@@ -840,20 +841,25 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return super.mouseReleased(event);
     }
 
-    // Modal overlay contract (audit GUI-01): while configOverlay/grimoireOverlay is open,
-    // EVERY input callback is forwarded to it and the event is consumed here, regardless of
-    // the overlay's own return value — input must never fall through to the container
-    // beneath. Scroll/drag/release return the overlay result because those handshakes care
-    // about it, but the event still cannot reach the parent screen. ESC-to-close is each
-    // overlay's own responsibility (its onClose clears the field via callback).
+    // Modal overlay contract (GUI-04 / GUI-05): while configOverlay/grimoireOverlay is open,
+    // EVERY input callback (mouseScrolled, mouseClicked, mouseDragged, mouseReleased,
+    // keyPressed, charTyped, keyReleased) is forwarded to it and consumed here so input never
+    // leaks to the container beneath. If an overlay fails to handle ESC itself (returns false),
+    // the parent screen enforces closing via overlay.onClose() so no future overlay can soft-lock.
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (this.configOverlay != null) {
-            this.configOverlay.keyPressed(event);
+            boolean handled = this.configOverlay.keyPressed(event);
+            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.configOverlay != null) {
+                this.configOverlay.onClose();
+            }
             return true;
         }
         if (this.grimoireOverlay != null) {
-            this.grimoireOverlay.keyPressed(event);
+            boolean handled = this.grimoireOverlay.keyPressed(event);
+            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.grimoireOverlay != null) {
+                this.grimoireOverlay.onClose();
+            }
             return true;
         }
         if (this.scrollContainer.keyPressed(event)) {
@@ -870,6 +876,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
         if (this.grimoireOverlay != null) {
             this.grimoireOverlay.charTyped(event);
+            return true;
+        }
+        if (this.scrollContainer.charTyped(event)) {
             return true;
         }
         return super.charTyped(event);
@@ -1793,6 +1802,17 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 } else if (hoveredRow.is_transformation) {
                     rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.transformation")
                         .withStyle(ChatFormatting.LIGHT_PURPLE));
+                    if (hoveredRow.enchantable_item != null && hoveredRow.enchantable_item.getCount() > 1) {
+                        int batch = this.menu.resolveTransformationBatchCount(hoveredRow.enchantment_id);
+                        int inSlot = hoveredRow.enchantable_item.getCount();
+                        rowTip.add(Component.translatable(
+                            this.menu.player.getAbilities().instabuild
+                                ? "gui.chiseled_enchanting_table.transformation.batch_tip_creative"
+                                : "gui.chiseled_enchanting_table.transformation.batch_tip_survival",
+                            batch,
+                            inSlot
+                        ).withStyle(ChatFormatting.AQUA));
+                    }
                 } else if (hoveredRow.option_type == OptionType.TREASURE_EPIPHANY) {
                     rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.epiphany")
                         .withStyle(ChatFormatting.LIGHT_PURPLE));

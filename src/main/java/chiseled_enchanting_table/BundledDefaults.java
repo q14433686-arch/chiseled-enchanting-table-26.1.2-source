@@ -74,6 +74,13 @@ public final class BundledDefaults {
     public static final double EPIPHANY_TIER_PLUS_SCORE_DIVISOR = 110.0;
     public static final double EPIPHANY_TIER_PLUS_MASTERY_BONUS = 0.25;
 
+    // ---- library_resonance.json / essence_valuation ----
+    public static final double ESSENCE_RARITY_MIN_MULTIPLIER = 1.0;
+    public static final double ESSENCE_RARITY_MAX_MULTIPLIER = 1.45;
+    public static final double ESSENCE_RARITY_LOG_SLOPE = 0.18;
+    public static final double ESSENCE_TREASURE_MULTIPLIER = 1.15;
+    public static final int CONSERVATION_SAFETY_MARGIN_POINTS = 5;
+
     // ---- library_resonance.json / ritual ----
     public static final int MAX_SINGLE_WAIT_SECONDS = 300;
     public static final int MIN_TOME_ENCHANTS_FOR_WAIT = 10;
@@ -95,6 +102,18 @@ public final class BundledDefaults {
     public static final double WAIT_CURVE_LEVEL_EXPONENT = 1.15;
     public static final double WAIT_CURVE_SATURATION = 0.62;
     public static final int WAIT_CURVE_MIN_TICKS = 100;
+
+    // ---- library_resonance.json / ritual.applicability ----
+    public static final double APPLICABILITY_ITEM_BREADTH_REFERENCE = 24.0;
+    public static final double APPLICABILITY_BREADTH_WEIGHT = 0.42;
+    public static final double APPLICABILITY_KEYSTONE_MAJOR_MULTIPLIER = 1.55;
+    public static final double APPLICABILITY_KEYSTONE_MINOR_MULTIPLIER = 1.32;
+    public static final double APPLICABILITY_BROAD_MULTIPLIER = 1.2;
+    public static final double APPLICABILITY_RARITY_WEIGHT_1_MULTIPLIER = 1.18;
+    public static final double APPLICABILITY_RARITY_WEIGHT_2_MULTIPLIER = 1.12;
+    public static final double APPLICABILITY_RARITY_WEIGHT_5_MULTIPLIER = 1.05;
+    public static final double APPLICABILITY_MIN_FACTOR = 1.0;
+    public static final double APPLICABILITY_MAX_FACTOR = 2.35;
 
     // ---- library_resonance.json / crossline_slip ----
     public static final double CROSSLINE_MIN_LOAD_THRESHOLD = 3.0;

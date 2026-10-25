@@ -4,6 +4,10 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 
 /** Bound length-prefixed data before allocation/iteration; never treat negative counts as empty. */
 public final class PayloadLimits {
+    /** Single source of truth for the maximum configurable {@code Items.ENCHANTED_BOOK} stack size (API-05). */
+    public static final int MAX_ENCHANTED_BOOK_STACK = 64;
+    /** Maximum wire-decoded stack size accepted on capability handshake before treating packet as malformed (NET-03). */
+    public static final int MAX_WIRE_CAPABILITY_STACK = 1_024;
     public static final int MAX_COLLECTION_ENTRIES = 65_536;
     public static final int MAX_COST_OPTIONS = 256;
     public static final int MAX_BUNDLE_STACKS = 64;
@@ -24,9 +28,9 @@ public final class PayloadLimits {
     /** Container id sentinel used for payloads not bound to an open menu. */
     public static final int NO_CONTAINER = -1;
 
-    // Audit R-01: entry/stack counts alone do not bound encoded size. The cost-table
-    // builder tracks a conservative byte estimate and truncates (marking the table
-    // incomplete) before the payload can exceed vanilla's custom-payload ceiling.
+    // Audit R-01 / CODEC-05: entry/stack counts alone do not bound encoded size. The cost-table
+    // builder tracks a conservative byte estimate as a fast pre-screen AND verifies real encoded
+    // byte length against MAX_SAFE_ENCODED_PAYLOAD_BYTES before dispatch.
     /** Estimated fixed header size (flags, configs, ids) of EnchantCostTablePayload. */
     public static final int ESTIMATED_HEADER_BYTES = 8_192;
     /** Conservative per-row estimate (token + identifier + ints + option counts). */
@@ -35,6 +39,8 @@ public final class PayloadLimits {
     public static final int ESTIMATED_BYTES_PER_STACK = 96;
     /** Total estimated-byte budget for one EnchantCostTablePayload. */
     public static final int MAX_ESTIMATED_PAYLOAD_BYTES = 900_000;
+    /** Hard real-encoded byte ceiling safely below vanilla's 1 MiB (1,048,576 B) custom payload cap. */
+    public static final int MAX_SAFE_ENCODED_PAYLOAD_BYTES = 980_000;
 
     private PayloadLimits() {}
 

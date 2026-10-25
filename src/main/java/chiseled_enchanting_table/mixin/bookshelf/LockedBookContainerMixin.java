@@ -2,9 +2,12 @@ package chiseled_enchanting_table.mixin.bookshelf;
 
 import chiseled_enchanting_table.mechanics.resonance.LibraryResonance;
 import chiseled_enchanting_table.mechanics.resonance.TomeLockData;
+import java.util.List;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -57,25 +60,43 @@ public abstract class LockedBookContainerMixin implements net.minecraft.world.Co
     }
 
     /**
-     * Audit MIXIN-02: {@link ChiseledBookShelfBlockEntity} inherits {@code removeItemNoUpdate(int)}
-     * as an interface default method rather than declaring it in class bytecode (so {@code @Inject}
-     * cannot target it with {@code require = 1}). Overriding {@link net.minecraft.world.Container#removeItemNoUpdate(int)}
-     * directly on the target class closes the {@code removeItemNoUpdate} extraction path fail-closed
-     * and keeps shelf blockstate occupancy flags synchronized.
+     * Audit MIXIN-01 / MIXIN-02: {@link ChiseledBookShelfBlockEntity} inherits
+     * {@code removeItemNoUpdate(int)} as an interface default method rather than declaring it in
+     * class bytecode (so {@code @Inject} cannot target it with {@code require = 1}). Overriding
+     * {@link net.minecraft.world.Container#removeItemNoUpdate(int)} directly on the target class
+     * blocks extraction of locked Master Tomes fail-closed while preserving vanilla's full-slot
+     * {@code NoUpdate} contract ({@link ContainerHelper#takeItem(List, int)} removes the entire
+     * stack — including 64-stacked Enchanted Books — without triggering {@code setChanged()} or
+     * comparator/blockstate churn).
      */
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
         ChiseledBookShelfBlockEntity self = (ChiseledBookShelfBlockEntity) (Object) this;
-        if (slot < 0 || slot >= self.getContainerSize()) {
+        boolean clientSide = self.getLevel() != null && self.getLevel().isClientSide();
+        boolean enforceLock = LibraryResonance.configForSide(clientSide).lockedBookExtractionBlocked();
+        return cet$takeUnlockedFullSlotNoUpdate(self.getItems(), slot, enforceLock);
+    }
+
+    @Unique
+    private static ItemStack cet$takeUnlockedFullSlotNoUpdate(
+        List<ItemStack> items,
+        int slot,
+        boolean enforceLock
+    ) {
+        if (items == null || slot < 0 || slot >= items.size()) {
             return ItemStack.EMPTY;
         }
-        boolean clientSide = self.getLevel() != null && self.getLevel().isClientSide();
-        if (LibraryResonance.configForSide(clientSide).lockedBookExtractionBlocked()) {
-            ItemStack current = self.getItem(slot);
-            if (!current.isEmpty() && TomeLockData.isEffectivelyLocked(current)) {
-                return ItemStack.EMPTY;
-            }
+        ItemStack current = items.get(slot);
+        if (current.isEmpty()) {
+            return ItemStack.EMPTY;
         }
-        return self.removeItem(slot, 1);
+        if (enforceLock && TomeLockData.isEffectivelyLocked(current)) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack removed = ContainerHelper.takeItem(items, slot);
+        if (!removed.isEmpty()) {
+            TomeLockData.unlock(removed);
+        }
+        return removed;
     }
 }

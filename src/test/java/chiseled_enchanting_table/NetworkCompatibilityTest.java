@@ -130,16 +130,23 @@ class NetworkCompatibilityTest {
             Map.of(id("override"), List.of(0, 3, 11, 23, 47)), 2, 19, 0.41, 9, 7, 61,
             BookshelfProgression.VanillaTableMode.BOOKS, true, 6, false);
         // Distinct values catch field swaps hidden by equal default config values (all 50 fields).
-        var resonance = new LibraryResonance.Config(13, 39, 21, 8, 29, 12, 1.13, 41,
-            1.21, 1.31, 0.73, 0.83, 0.43, 0.53, 0.63, 1.03, 2.13, 3.23,
-            0.67, 81.0, 0.17, 0.57, 111.0, 0.27, 0.87,
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, 6, 3,
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN,
-            true, 5400, 34, 2400, 44, 900,
-            0.09, 0.27, true, List.of(50, 30, 12, 8),
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT,
-            false, false, 7, 3, 17, 9,
-            4.5, 3, 5, 0.07);
+        var resonance = new LibraryResonance.Config(
+            new LibraryResonance.WoodenBookshelves(13, 39, 21, 0.83),
+            new LibraryResonance.ChiseledMastery(
+                new LibraryResonance.MasteryScaling(1.21, 1.31, 8, 29, 12, 1.13, 41, 0.73, 0.87, 4.5, 3, 5, 0.07),
+                new LibraryResonance.TomeLifecycle(
+                    chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR,
+                    6, 3, 0.09, 0.27,
+                    chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN,
+                    true, 5400, 34, 2400, 44, 900,
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT
+                )
+            ),
+            new LibraryResonance.EpiphanyAffinity(0.43, 0.53, 0.63, 1.03, 2.13, 3.23, 0.67, 81.0, 0.17, 0.57, 111.0, 0.27),
+            new LibraryResonance.WildBookWear(true, List.of(50, 30, 12, 8)),
+            new LibraryResonance.TomePages(false, false, 7, 3, 17, 9),
+            new LibraryResonance.EssenceValuation(0.91, 1.63, 0.19, 1.41, 7)
+        );
         var slipCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig(
             3.2, 0.037, 0.17,
             31, 0.011, 37, 0.021, 43, 0.031,
@@ -148,8 +155,10 @@ class NetworkCompatibilityTest {
         );
         var waitCurve = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.WaitCurve(
             0.31, 0.69, 0.29, 0.71, 1.27, 0.88, 137);
+        var appCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.ApplicabilityConfig(
+            0.74, 1.38, 1.29, 0.09, 1.34, 1.19);
         var ritual = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
-            270, 12, 14, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve, 6, 225.0, 195.0);
+            270, 12, 14, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve, 6, 225.0, 195.0, appCfg);
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
             11, List.of(), Set.of(id("treasure")), gates, resonance, ritual,

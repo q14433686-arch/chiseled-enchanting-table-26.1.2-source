@@ -157,7 +157,31 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     private CategoryId activeCategory = CategoryId.BOOKSHELVES;
     private boolean ruleTracePage = false;
+    public static final int MAX_SEARCH_CODE_POINTS = chiseled_enchanting_table.config.SearchTextBuffer.DEFAULT_MAX_CODE_POINTS;
+
+    private static final java.util.Map<CategoryId, Integer> CATEGORY_HOTKEYS;
+    private static final int RULE_TRACE_HOTKEY = InputConstants.KEY_8;
+
+    static {
+        java.util.EnumMap<CategoryId, Integer> map = new java.util.EnumMap<>(CategoryId.class);
+        map.put(CategoryId.BOOKSHELVES, InputConstants.KEY_1);
+        map.put(CategoryId.EXPERIENCE_ECONOMY, InputConstants.KEY_2);
+        map.put(CategoryId.TOME_DURABILITY, InputConstants.KEY_3);
+        map.put(CategoryId.EPIPHANY, InputConstants.KEY_4);
+        map.put(CategoryId.CLEANSE_TRANSMUTE, InputConstants.KEY_5);
+        map.put(CategoryId.WORLD_LOOT, InputConstants.KEY_6);
+        map.put(CategoryId.GENERAL, InputConstants.KEY_7);
+        if (map.size() != CategoryId.values().length
+            || new java.util.HashSet<>(map.values()).size() != map.size()
+            || map.containsValue(RULE_TRACE_HOTKEY)) {
+            throw new IllegalStateException("Category hotkey table out of sync with CategoryId.values()");
+        }
+        CATEGORY_HOTKEYS = java.util.Collections.unmodifiableMap(map);
+    }
+
     private boolean filterModifiedOnly = false;
+    private final chiseled_enchanting_table.config.SearchTextBuffer searchBuffer =
+        new chiseled_enchanting_table.config.SearchTextBuffer(MAX_SEARCH_CODE_POINTS);
     private String searchQuery = "";
     private boolean searchFocused = false;
 
@@ -196,7 +220,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         this.baselineConfig = ModRuntimeConfig.preferences();
         this.draft = this.baselineConfig.toDraft();
         Draft classicRef = new Draft();
-        ModRuntimeConfig.Preset.CLASSIC_1_0_3.applyTo(classicRef);
+        ModRuntimeConfig.Preset.CLASSIC.applyTo(classicRef);
         this.classicReferenceDraft = classicRef;
         this.activeCategory = CategoryId.BOOKSHELVES;
         syncAutoCollapsedSections();
@@ -545,7 +569,14 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     }
 
     private void setSearchQuery(String next) {
-        this.searchQuery = next;
+        this.searchBuffer.setAll(next);
+        this.searchQuery = this.searchBuffer.text();
+        this.focusedOptionIndex = -1;
+        this.listScroll = 0.0f;
+    }
+
+    private void syncSearchQueryFromBuffer() {
+        this.searchQuery = this.searchBuffer.text();
         this.focusedOptionIndex = -1;
         this.listScroll = 0.0f;
     }
@@ -727,7 +758,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             case OFFLINE_CLIENT -> CYAN_TEXT;
             case DEDICATED_READONLY, MODPACK_LOCKED -> AMBER_TEXT;
         };
-        String modeLabel = (shownMode.writable() ? "\u270e " : "\uD83D\uDD12 ") + I18n.get(shownMode.bannerKey());
+        String modeLabel = (shownMode.writable() ? "\u270e " : "\u2298 ") + I18n.get(shownMode.bannerKey());
         drawClampedCenteredText(
             ctx,
             modeLabel,
@@ -801,8 +832,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int clearW = hasQuery ? 14 : 0;
         Box searchTextBox = new Box(sb.x() + 6, sb.y(), Math.max(20, sb.w() - 12 - clearW), sb.h());
         String displaySearch = hasQuery
-            ? (this.searchFocused ? this.searchQuery + "_" : this.searchQuery)
-            : (this.searchFocused ? "_" : "/ " + I18n.get("config.chiseled_enchanting_table.search.placeholder"));
+            ? this.searchBuffer.renderWithCaret(this.searchFocused)
+            : (this.searchFocused ? "|" : "/ " + I18n.get("config.chiseled_enchanting_table.search.placeholder"));
         drawClampedLeftText(
             ctx,
             displaySearch,
@@ -1131,7 +1162,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         boolean allGated = sec.sectionActiveCount() == 0 && sec.sectionTotalCount() > 0;
         String rightTag = allGated
-            ? ("\uD83D\uDD12 " + sec.sectionTotalCount())
+            ? ("\u2298 " + sec.sectionTotalCount())
             : Integer.toString(sec.sectionTotalCount());
         int rightW = Math.max(20, Math.round(this.font.width(rightTag) * ConfigLayoutSpec.SECONDARY_TEXT_SCALE) + 8);
         Box rightBox = new Box(x + w - 9 - rightW, y, rightW, box.h());
@@ -1232,9 +1263,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             nameColor
         );
 
-        // 3. Dual-coded Scope + Lock Glyph Chip (strictly >= 0.75f, never color-only)
+        // 3. Dual-coded Scope + Lock Glyph Chip (strictly >= 0.75f, BMP-safe geometric glyphs)
         Box sb = row.scopeBadgeBox();
-        String scopeGlyph = (!editable ? "\uD83D\uDD12" : "") + avail.effectScope().glyph();
+        String scopeGlyph = (!editable ? "\u2298" : "") + avail.effectScope().glyph();
         int scopeColor = switch (avail.effectScope()) {
             case IMMEDIATE -> EMERALD_TEXT;
             case NEW_GENERATION -> CYAN_TEXT;
@@ -1490,7 +1521,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             .withStyle(scopeFmt));
 
         if (avail.inactiveReasonKey() != null) {
-            lines.add(Component.literal("\uD83D\uDD12 ")
+            lines.add(Component.literal("\u2298 ")
                 .append(Component.translatable(avail.inactiveReasonKey()))
                 .withStyle(ChatFormatting.RED));
         }
@@ -1623,7 +1654,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             int cBot1 = Math.min(clipBottom, btnClassic.bottom());
             if (cBot1 > cTop1) {
                 this.hitBoxes.add(new HitBox(new Box(btnClassic.x(), cTop1, btnClassic.w(), cBot1 - cTop1), () -> {
-                    ModRuntimeConfig.Preset.CLASSIC_1_0_3.applyTo(this.draft);
+                    ModRuntimeConfig.Preset.CLASSIC.applyTo(this.draft);
                     syncAutoCollapsedSections();
                     playClick(1.06f);
                 }, null));
@@ -1737,7 +1768,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         blitNineSliceRect(ctx, tSprite, tb.x(), tb.y(), tb.w(), tb.h(), 4, 4, 64, 18);
         String tLabel = trace.derived()
             ? I18n.get("config.chiseled_enchanting_table.trace.derived_badge")
-            : (isClassic ? "1.0.3 \u21c4" : "1.1.0 \u21c4");
+            : I18n.get(isClassic
+                ? "config.chiseled_enchanting_table.trace.toggle_classic"
+                : "config.chiseled_enchanting_table.trace.toggle_modern");
         drawClampedCenteredText(
             ctx,
             tLabel,
@@ -1757,14 +1790,16 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             }
         }
 
-        // Bottom comparison pills: [1.0.3: ...]  vs  [1.1.0: ...]
+        // Bottom comparison pills: localized Classic vs Modern prefixes
         Box cPill = tc.classicPillBox();
         Box mPill = tc.modernPillBox();
         ctx.fill(cPill.x(), cPill.y(), cPill.right(), cPill.bottom(), isClassic ? 0xCC4A3316 : 0xAA120C20);
         ctx.fill(mPill.x(), mPill.y(), mPill.right(), mPill.bottom(), !isClassic ? 0xCC163D2E : 0xAA120C20);
 
-        String cText = (isClassic ? "\u25cf 1.0.3: " : "1.0.3: ") + I18n.get(trace.classicSummaryKey());
-        String mText = (!isClassic ? "\u25cf 1.1.0: " : "1.1.0: ") + I18n.get(trace.modernSummaryKey());
+        String classicPrefix = I18n.get("config.chiseled_enchanting_table.trace.prefix_classic");
+        String modernPrefix = I18n.get("config.chiseled_enchanting_table.trace.prefix_modern");
+        String cText = (isClassic ? "\u25cf " : "") + classicPrefix + " " + I18n.get(trace.classicSummaryKey());
+        String mText = (!isClassic ? "\u25cf " : "") + modernPrefix + " " + I18n.get(trace.modernSummaryKey());
         drawClampedLeftText(
             ctx,
             cText,
@@ -1785,10 +1820,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (hovered) {
             List<Component> cardTip = new ArrayList<>();
             cardTip.add(Component.translatable(trace.titleKey()).withStyle(ChatFormatting.GOLD));
-            cardTip.add(Component.literal("1.0.3: ")
+            cardTip.add(Component.translatable("config.chiseled_enchanting_table.trace.prefix_classic")
+                .append(Component.literal(" "))
                 .append(Component.translatable(trace.classicSummaryKey()))
                 .withStyle(isClassic ? ChatFormatting.YELLOW : ChatFormatting.GRAY));
-            cardTip.add(Component.literal("1.1.0: ")
+            cardTip.add(Component.translatable("config.chiseled_enchanting_table.trace.prefix_modern")
+                .append(Component.literal(" "))
                 .append(Component.translatable(trace.modernSummaryKey()))
                 .withStyle(!isClassic ? ChatFormatting.GREEN : ChatFormatting.GRAY));
             cardTip.add(Component.translatable(trace.impactKey()).withStyle(ChatFormatting.AQUA));
@@ -2069,9 +2106,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (this.searchFocused) {
-            int cp = event.codepoint();
-            if (cp >= 32 && cp != 127 && this.searchQuery.length() < 40) {
-                setSearchQuery(this.searchQuery + Character.toString(cp));
+            if (this.searchBuffer.insertCodePoint(event.codepoint())) {
+                syncSearchQueryFromBuffer();
             }
             return true;
         }
@@ -2083,28 +2119,79 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int key = event.key();
         if (this.searchFocused) {
             if (key == InputConstants.KEY_ESCAPE) {
-                if (!this.searchQuery.isEmpty()) {
+                if (this.searchBuffer.hasSelection()) {
+                    this.searchBuffer.collapseSelection();
+                } else if (!this.searchBuffer.isEmpty()) {
                     setSearchQuery("");
                 } else {
                     this.searchFocused = false;
                 }
                 return true;
             }
+            if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
+                this.searchFocused = false;
+                return true;
+            }
             if (key == InputConstants.KEY_BACKSPACE) {
-                if (!this.searchQuery.isEmpty()) {
-                    setSearchQuery(this.searchQuery.substring(0, this.searchQuery.length() - 1));
+                if (this.searchBuffer.deleteBackward()) {
+                    syncSearchQueryFromBuffer();
                 }
                 return true;
             }
             if (key == InputConstants.KEY_DELETE) {
-                setSearchQuery("");
+                if (this.searchBuffer.deleteForward()) {
+                    syncSearchQueryFromBuffer();
+                }
                 return true;
             }
-            if (key == InputConstants.KEY_RETURN) {
-                this.searchFocused = false;
+            if (key == InputConstants.KEY_LEFT) {
+                this.searchBuffer.moveByCodePoints(-1, event.hasShiftDown());
                 return true;
             }
-            return true;
+            if (key == InputConstants.KEY_RIGHT) {
+                this.searchBuffer.moveByCodePoints(1, event.hasShiftDown());
+                return true;
+            }
+            if (key == InputConstants.KEY_HOME) {
+                this.searchBuffer.moveHome(event.hasShiftDown());
+                return true;
+            }
+            if (key == InputConstants.KEY_END) {
+                this.searchBuffer.moveEnd(event.hasShiftDown());
+                return true;
+            }
+            if (event.hasControlDown()) {
+                if (key == InputConstants.KEY_A) {
+                    this.searchBuffer.selectAll();
+                    return true;
+                }
+                if (key == InputConstants.KEY_C && this.minecraft != null) {
+                    if (this.searchBuffer.hasSelection()) {
+                        this.minecraft.keyboardHandler.setClipboard(this.searchBuffer.selectedText());
+                    }
+                    return true;
+                }
+                if (key == InputConstants.KEY_X && this.minecraft != null) {
+                    String cut = this.searchBuffer.cutSelection();
+                    if (!cut.isEmpty()) {
+                        this.minecraft.keyboardHandler.setClipboard(cut);
+                        syncSearchQueryFromBuffer();
+                    }
+                    return true;
+                }
+                if (key == InputConstants.KEY_V && this.minecraft != null) {
+                    String pasted = this.minecraft.keyboardHandler.getClipboard();
+                    if (this.searchBuffer.insertText(pasted)) {
+                        syncSearchQueryFromBuffer();
+                    }
+                    return true;
+                }
+            }
+            if (this.minecraft != null && this.minecraft.options.keyInventory.matches(event)) {
+                // Keep 'E' (inventory key) from closing the screen while typing in search.
+                return true;
+            }
+            return super.keyPressed(event);
         }
 
         if (key == InputConstants.KEY_ESCAPE) {
@@ -2117,10 +2204,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             return true;
         }
 
-        // Domain shortcuts 1..7 + Rule Trace shortcut 8
-        CategoryId[] categories = CategoryId.values();
-        int catIdx = key - InputConstants.KEY_1;
-        if (key == InputConstants.KEY_8) {
+        // Validated table-driven domain hotkeys + Rule Trace hotkey (GUI-07)
+        if (key == RULE_TRACE_HOTKEY) {
             this.ruleTracePage = true;
             this.filterModifiedOnly = false;
             setSearchQuery("");
@@ -2128,15 +2213,17 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             playClick(1.02f);
             return true;
         }
-        if (catIdx >= 0 && catIdx < categories.length) {
-            this.ruleTracePage = false;
-            this.filterModifiedOnly = false;
-            this.activeCategory = categories[catIdx];
-            setSearchQuery("");
-            this.focusedOptionIndex = -1;
-            this.listScroll = 0.0f;
-            playClick(1.0f);
-            return true;
+        for (var entry : CATEGORY_HOTKEYS.entrySet()) {
+            if (entry.getValue() == key) {
+                this.ruleTracePage = false;
+                this.filterModifiedOnly = false;
+                this.activeCategory = entry.getKey();
+                setSearchQuery("");
+                this.focusedOptionIndex = -1;
+                this.listScroll = 0.0f;
+                playClick(1.0f);
+                return true;
+            }
         }
 
         if (!this.ruleTracePage || isSearchMode() || this.filterModifiedOnly) {

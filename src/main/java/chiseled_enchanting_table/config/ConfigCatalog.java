@@ -1128,7 +1128,7 @@ public final class ConfigCatalog {
         new RuleTraceEntry("direct_tier_upgrade", CategoryId.BOOKSHELVES, "direct_tier_upgrade",
             Boolean.FALSE, Boolean.TRUE, false),
         new RuleTraceEntry("cost_table", CategoryId.EXPERIENCE_ECONOMY, "cost_table",
-            CostTableDataset.CLASSIC_1_0_3, CostTableDataset.MODERN_1_1_0, false),
+            CostTableDataset.CLASSIC, CostTableDataset.MODERN, false),
         new RuleTraceEntry("material_selection", CategoryId.EXPERIENCE_ECONOMY, "material_selection",
             MaterialSelectionMode.PLAYER_SALTED_SINGLE, MaterialSelectionMode.ALL_OPTIONS_MIDPOINT, false),
         new RuleTraceEntry("xp_mode", CategoryId.EXPERIENCE_ECONOMY, "xp_mode",

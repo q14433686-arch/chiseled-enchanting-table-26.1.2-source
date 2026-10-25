@@ -148,6 +148,86 @@ public final class InscriptionRitualMechanics {
         chiseled_enchanting_table.registry.CetTags.Enchantments.CROSSLINE_EXCLUDED;
     public static final TagKey<Enchantment> BROAD_APPLICABILITY_TAG =
         chiseled_enchanting_table.registry.CetTags.Enchantments.BROAD_APPLICABILITY;
+    public static final TagKey<Enchantment> KEYSTONE_MAJOR_TAG =
+        chiseled_enchanting_table.registry.CetTags.Enchantments.KEYSTONE_MAJOR;
+    public static final TagKey<Enchantment> KEYSTONE_MINOR_TAG =
+        chiseled_enchanting_table.registry.CetTags.Enchantments.KEYSTONE_MINOR;
+
+    /**
+     * Data-driven universality &amp; keystone applicability multipliers loaded from
+     * {@code library_resonance.json -> ritual.applicability} (Audit COUP-01 / BAL-02 / BAL-03).
+     */
+    public record ApplicabilityConfig(
+        double itemBreadthReference,
+        double breadthWeight,
+        double keystoneMajorMultiplier,
+        double keystoneMinorMultiplier,
+        double broadMultiplier,
+        double rarityWeight1Multiplier,
+        double rarityWeight2Multiplier,
+        double rarityWeight5Multiplier,
+        double minFactor,
+        double maxFactor
+    ) {
+        public static final ApplicabilityConfig DEFAULT = new ApplicabilityConfig(
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_ITEM_BREADTH_REFERENCE,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_BREADTH_WEIGHT,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_KEYSTONE_MAJOR_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_KEYSTONE_MINOR_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_BROAD_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W1_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W2_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W5_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_MIN_FACTOR,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_MAX_FACTOR
+        );
+
+        public ApplicabilityConfig {
+            itemBreadthReference = Double.isFinite(itemBreadthReference) && itemBreadthReference >= 1.0
+                ? Mth.clamp(itemBreadthReference, 1.0, 1024.0)
+                : DEFAULT.itemBreadthReference;
+            breadthWeight = Double.isFinite(breadthWeight) ? Mth.clamp(breadthWeight, 0.0, 4.0) : DEFAULT.breadthWeight;
+            keystoneMajorMultiplier = Double.isFinite(keystoneMajorMultiplier)
+                ? Mth.clamp(keystoneMajorMultiplier, 1.0, 5.0)
+                : DEFAULT.keystoneMajorMultiplier;
+            keystoneMinorMultiplier = Double.isFinite(keystoneMinorMultiplier)
+                ? Mth.clamp(keystoneMinorMultiplier, 1.0, 5.0)
+                : DEFAULT.keystoneMinorMultiplier;
+            broadMultiplier = Double.isFinite(broadMultiplier)
+                ? Mth.clamp(broadMultiplier, 1.0, 5.0)
+                : DEFAULT.broadMultiplier;
+            rarityWeight1Multiplier = Double.isFinite(rarityWeight1Multiplier)
+                ? Mth.clamp(rarityWeight1Multiplier, 1.0, 5.0)
+                : DEFAULT.rarityWeight1Multiplier;
+            rarityWeight2Multiplier = Double.isFinite(rarityWeight2Multiplier)
+                ? Mth.clamp(rarityWeight2Multiplier, 1.0, 5.0)
+                : DEFAULT.rarityWeight2Multiplier;
+            rarityWeight5Multiplier = Double.isFinite(rarityWeight5Multiplier)
+                ? Mth.clamp(rarityWeight5Multiplier, 1.0, 5.0)
+                : DEFAULT.rarityWeight5Multiplier;
+            minFactor = Double.isFinite(minFactor) ? Mth.clamp(minFactor, 0.5, 5.0) : DEFAULT.minFactor;
+            maxFactor = Double.isFinite(maxFactor) ? Mth.clamp(maxFactor, minFactor, 10.0) : Math.max(minFactor, DEFAULT.maxFactor);
+        }
+
+        static ApplicabilityConfig fromJson(@Nullable com.google.gson.JsonObject ritual) {
+            if (ritual == null || !ritual.has("applicability") || !ritual.get("applicability").isJsonObject()) {
+                return DEFAULT;
+            }
+            com.google.gson.JsonObject a = ritual.getAsJsonObject("applicability");
+            return new ApplicabilityConfig(
+                Config.doubleOr(a, "item_breadth_reference", DEFAULT.itemBreadthReference),
+                Config.doubleOr(a, "breadth_weight", DEFAULT.breadthWeight),
+                Config.doubleOr(a, "keystone_major_multiplier", DEFAULT.keystoneMajorMultiplier),
+                Config.doubleOr(a, "keystone_minor_multiplier", DEFAULT.keystoneMinorMultiplier),
+                Config.doubleOr(a, "broad_multiplier", DEFAULT.broadMultiplier),
+                Config.doubleOr(a, "rarity_weight_1_multiplier", DEFAULT.rarityWeight1Multiplier),
+                Config.doubleOr(a, "rarity_weight_2_multiplier", DEFAULT.rarityWeight2Multiplier),
+                Config.doubleOr(a, "rarity_weight_5_multiplier", DEFAULT.rarityWeight5Multiplier),
+                Config.doubleOr(a, "min_factor", DEFAULT.minFactor),
+                Config.doubleOr(a, "max_factor", DEFAULT.maxFactor)
+            );
+        }
+    }
 
     /**
      * Data-driven qualification load, probability curve, 3-branch outcome split ({@code 70% / 25% / 5%}),
@@ -305,7 +385,8 @@ public final class InscriptionRitualMechanics {
         WaitCurve waitCurve,
         int sacrificeExtraXpPerQueuedStep,
         double sacrificeXpTimeConstantSeconds,
-        double rushDegradeTimeConstantSeconds
+        double rushDegradeTimeConstantSeconds,
+        ApplicabilityConfig applicability
     ) {
         public static final Config DEFAULT = new Config(
             MAX_SINGLE_WAIT_TICKS / 20,
@@ -320,8 +401,42 @@ public final class InscriptionRitualMechanics {
             WaitCurve.DEFAULT,
             DEFAULT_SACRIFICE_EXTRA_XP_PER_QUEUED_STEP,
             DEFAULT_SACRIFICE_XP_TIME_CONSTANT_SECONDS,
-            DEFAULT_RUSH_DEGRADE_TIME_CONSTANT_SECONDS
+            DEFAULT_RUSH_DEGRADE_TIME_CONSTANT_SECONDS,
+            ApplicabilityConfig.DEFAULT
         );
+
+        public Config(
+            int maxSingleWaitSeconds,
+            int minTomeEnchantsForWait,
+            int maxSacrificeXpLevels,
+            double maxRushDegradeNormal,
+            double maxRushDegradeInfinity,
+            double maxTranscriptionSlipChance,
+            double shelfLoadReference,
+            double tomeLoadReference,
+            CrosslineSlipConfig crosslineSlip,
+            WaitCurve waitCurve,
+            int sacrificeExtraXpPerQueuedStep,
+            double sacrificeXpTimeConstantSeconds,
+            double rushDegradeTimeConstantSeconds
+        ) {
+            this(
+                maxSingleWaitSeconds,
+                minTomeEnchantsForWait,
+                maxSacrificeXpLevels,
+                maxRushDegradeNormal,
+                maxRushDegradeInfinity,
+                maxTranscriptionSlipChance,
+                shelfLoadReference,
+                tomeLoadReference,
+                crosslineSlip,
+                waitCurve,
+                sacrificeExtraXpPerQueuedStep,
+                sacrificeXpTimeConstantSeconds,
+                rushDegradeTimeConstantSeconds,
+                ApplicabilityConfig.DEFAULT
+            );
+        }
 
         public Config(
             int maxSingleWaitSeconds,
@@ -423,6 +538,7 @@ public final class InscriptionRitualMechanics {
             rushDegradeTimeConstantSeconds = Double.isFinite(rushDegradeTimeConstantSeconds) && rushDegradeTimeConstantSeconds > 0.0
                 ? Mth.clamp(rushDegradeTimeConstantSeconds, 5.0, 3_600.0)
                 : DEFAULT_RUSH_DEGRADE_TIME_CONSTANT_SECONDS;
+            applicability = applicability != null ? applicability : ApplicabilityConfig.DEFAULT;
         }
 
         public int maxSingleWaitTicks() {
@@ -479,7 +595,8 @@ public final class InscriptionRitualMechanics {
                 WaitCurve.fromJson(r),
                 extraSacPerStep,
                 sacTau,
-                rushTau
+                rushTau,
+                ApplicabilityConfig.fromJson(r)
             );
         }
 
@@ -500,18 +617,6 @@ public final class InscriptionRitualMechanics {
 
     public static final Identifier MENDING_ID = Identifier.withDefaultNamespace("mending");
     public static final Identifier UNBREAKING_ID = Identifier.withDefaultNamespace("unbreaking");
-    private static final Set<Identifier> HIGH_APPLICABILITY_IDS = Set.of(
-        Identifier.withDefaultNamespace("protection"),
-        Identifier.withDefaultNamespace("sharpness"),
-        Identifier.withDefaultNamespace("efficiency"),
-        Identifier.withDefaultNamespace("fortune"),
-        Identifier.withDefaultNamespace("looting"),
-        Identifier.withDefaultNamespace("power"),
-        Identifier.withDefaultNamespace("silk_touch"),
-        Identifier.withDefaultNamespace("wind_burst"),
-        Identifier.withDefaultNamespace("breach"),
-        Identifier.withDefaultNamespace("density")
-    );
 
     private InscriptionRitualMechanics() {}
 
@@ -827,35 +932,57 @@ public final class InscriptionRitualMechanics {
             || Math.max(0, totalMasterTomeEnchantments) >= c.minTomeEnchantsForWait();
     }
 
-    /** Applicability factor reflecting enchantment universality &amp; keystone impact ({@code >= 1.0}). */
-    public static double computeApplicabilityFactor(Identifier enchantmentId, int supportedItemCount, int anvilWeight) {
-        return computeApplicabilityFactor(enchantmentId, supportedItemCount, anvilWeight, HIGH_APPLICABILITY_IDS.contains(enchantmentId));
-    }
-
-    private static double computeApplicabilityFactor(
-        Identifier enchantmentId,
+    /**
+     * Pure tag- and config-driven applicability factor reflecting enchantment universality &amp;
+     * keystone impact (Audit COUP-01 / DEAD-03 / BAL-02 / BAL-03).
+     *
+     * <p>Replaces the legacy hardcoded {@code HIGH_APPLICABILITY_IDS} list and 3-arg bypass overload
+     * with datapack-modifiable tags ({@code #keystone_major}, {@code #keystone_minor},
+     * {@code #broad_applicability}) and {@code ritual.applicability} curve parameters.
+     */
+    public static double computeApplicabilityFactorFromTags(
+        @Nullable ApplicabilityConfig appCfg,
         int supportedItemCount,
         int anvilWeight,
-        boolean broadApplicabilityTagged
+        boolean keystoneMajor,
+        boolean keystoneMinor,
+        boolean broadApplicability
     ) {
-        double itemBreadth = 1.0 + 0.42 * Mth.clamp((supportedItemCount - 1) / 24.0, 0.0, 1.0);
-        double rarityBoost = anvilWeight <= 1 ? 1.18 : (anvilWeight <= 2 ? 1.12 : (anvilWeight <= 5 ? 1.05 : 1.0));
-        double keystone = 1.0;
-        if (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(enchantmentId) || MENDING_ID.equals(enchantmentId)) {
-            keystone = 1.55;
-        } else if (UNBREAKING_ID.equals(enchantmentId)) {
-            keystone = 1.32;
-        } else if (broadApplicabilityTagged || HIGH_APPLICABILITY_IDS.contains(enchantmentId)) {
-            keystone = 1.20;
-        }
-        return Mth.clamp(itemBreadth * rarityBoost * keystone, 1.0, 2.35);
+        ApplicabilityConfig a = appCfg != null ? appCfg : ApplicabilityConfig.DEFAULT;
+        double itemBreadth = 1.0 + a.breadthWeight()
+            * Mth.clamp((supportedItemCount - 1) / a.itemBreadthReference(), 0.0, 1.0);
+        double rarityBoost = anvilWeight <= 1
+            ? a.rarityWeight1Multiplier()
+            : (anvilWeight <= 2
+                ? a.rarityWeight2Multiplier()
+                : (anvilWeight <= 5 ? a.rarityWeight5Multiplier() : 1.0));
+        double keystone = keystoneMajor
+            ? a.keystoneMajorMultiplier()
+            : (keystoneMinor
+                ? a.keystoneMinorMultiplier()
+                : (broadApplicability ? a.broadMultiplier() : 1.0));
+        return Mth.clamp(itemBreadth * rarityBoost * keystone, a.minFactor(), a.maxFactor());
+    }
+
+    public static double computeApplicabilityFactor(
+        @Nullable Config ritualCfg,
+        Holder<Enchantment> holder
+    ) {
+        Config c = ritualCfg != null ? ritualCfg : Config.DEFAULT;
+        int supportedCount = holder.value().definition().supportedItems().size();
+        int weight = holder.value().definition().weight();
+        return computeApplicabilityFactorFromTags(
+            c.applicability(),
+            supportedCount,
+            weight,
+            holder.is(KEYSTONE_MAJOR_TAG),
+            holder.is(KEYSTONE_MINOR_TAG),
+            holder.is(BROAD_APPLICABILITY_TAG)
+        );
     }
 
     public static double computeApplicabilityFactor(Identifier enchantmentId, Holder<Enchantment> holder) {
-        int supportedCount = holder.value().definition().supportedItems().size();
-        int weight = holder.value().definition().weight();
-        boolean broadTagged = holder.is(BROAD_APPLICABILITY_TAG);
-        return computeApplicabilityFactor(enchantmentId, supportedCount, weight, broadTagged);
+        return computeApplicabilityFactor(Config.DEFAULT, holder);
     }
 
     /**

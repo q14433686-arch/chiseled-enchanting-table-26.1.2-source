@@ -2,6 +2,8 @@ package chiseled_enchanting_table.menu;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -9,78 +11,35 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 /**
- * Capability channel, independent of the unchanged release version. Bump its ID whenever any
- * menu/cost payload wire layout changes, and version the affected data channel IDs too.
- * Registration in both directions advertises compatibility; no probe needs to be sent before the
- * first cost/menu packet can safely be decoded.
+ * Capability channel, independent of the unchanged release version. Bump
+ * {@link #CURRENT_REVISION_NUMBER} whenever any menu/cost payload wire layout changes, and record
+ * the wire change in {@code docs/PROTOCOL_HISTORY.md}. Registration in both directions advertises
+ * compatibility; no probe needs to be sent before the first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final String REVISION = "26_1_2_revision_16";
+    public static final int CURRENT_REVISION_NUMBER = 17;
+    public static final String REVISION = "26_1_2_revision_" + CURRENT_REVISION_NUMBER;
+
     // Query only. Never register a decoder on legacy channels: an old server may send its
     // join-time packet before the client JOIN callback can disconnect it.
     //
-    // Probe retirement policy (audit DEAD-03): a probe constant stays while any publicly
-    // shipped build registered that channel, because it is the only signal that lets the
-    // JOIN handshake disconnect an outdated peer gracefully instead of failing later with
-    // a raw decode error. Internal-only revisions may be dropped from this list.
+    // Probe retirement policy (see docs/PROTOCOL_HISTORY.md): a probe channel remains listed while
+    // any publicly shipped build registered that channel, because it is the signal that lets the
+    // JOIN handshake disconnect an outdated peer gracefully instead of failing later with a raw
+    // decode error. Generating 1..(CURRENT_REVISION_NUMBER - 1) automatically prevents forgetting
+    // the immediately preceding revision on bump.
     public static final CustomPacketPayload.Type<EnchantCostTablePayload> LEGACY_COST_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table"));
 
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> PREVIOUS_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_4"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_5_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_5"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_6_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_6"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_7_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_7"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_8_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_8"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_9_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_9"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_10_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_10"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_11_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_11"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_12_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_12"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_13_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_13"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_14_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_14"));
-
-    public static final CustomPacketPayload.Type<EnchantCostTablePayload> REVISION_15_COST_TYPE =
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_15"));
-
-    /** Authoritative list of all historical cost-table probes so handshake checks never omit a revision. */
-    public static final List<CustomPacketPayload.Type<EnchantCostTablePayload>> LEGACY_COST_PROBES = List.of(
-        LEGACY_COST_TYPE,
-        PREVIOUS_COST_TYPE,
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_1")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_2")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_3")),
-        REVISION_5_COST_TYPE,
-        REVISION_6_COST_TYPE,
-        REVISION_7_COST_TYPE,
-        REVISION_8_COST_TYPE,
-        REVISION_9_COST_TYPE,
-        REVISION_10_COST_TYPE,
-        REVISION_11_COST_TYPE,
-        REVISION_12_COST_TYPE,
-        REVISION_13_COST_TYPE,
-        REVISION_14_COST_TYPE,
-        REVISION_15_COST_TYPE
-    );
+    /** Authoritative list of all historical cost-table probes (`enchant_cost_table` + `revision_1..N-1`). */
+    public static final List<CustomPacketPayload.Type<EnchantCostTablePayload>> LEGACY_COST_PROBES =
+        Stream.concat(
+            Stream.of(LEGACY_COST_TYPE),
+            IntStream.range(1, CURRENT_REVISION_NUMBER)
+                .mapToObj(rev -> new CustomPacketPayload.Type<EnchantCostTablePayload>(
+                    ChiseledEnchantingTable.identifier("enchant_cost_table_26_1_2_revision_" + rev)
+                ))
+        ).toList();
 
     /**
      * Bare (pre-revision_9) apply channel, query-only like the cost probes above.
@@ -88,17 +47,15 @@ public final class EnchantingProtocol {
     public static final CustomPacketPayload.Type<ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload> LEGACY_APPLY_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment"));
 
-    /** Authoritative list of all historical serverbound apply probes for client JOIN detection. */
-    public static final List<CustomPacketPayload.Type<ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload>> LEGACY_APPLY_PROBES = List.of(
-        LEGACY_APPLY_TYPE,
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_9")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_10")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_11")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_12")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_13")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_14")),
-        new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_15"))
-    );
+    /** Authoritative list of all historical serverbound apply probes (`apply_chiseled_enchantment` + `revision_9..N-1`). */
+    public static final List<CustomPacketPayload.Type<ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload>> LEGACY_APPLY_PROBES =
+        Stream.concat(
+            Stream.of(LEGACY_APPLY_TYPE),
+            IntStream.range(9, CURRENT_REVISION_NUMBER)
+                .mapToObj(rev -> new CustomPacketPayload.Type<ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload>(
+                    ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_1_2_revision_" + rev)
+                ))
+        ).toList();
 
     public static final String MISMATCH_MESSAGE = "Chiseled Enchanting Table network protocol mismatch. "
         + "Install the same current Minecraft 26.1.2 build on both client and server (version labels alone are not enough).";
@@ -139,7 +96,12 @@ public final class EnchantingProtocol {
 
     public record Capability(int enchantedBookStackSize) implements CustomPacketPayload {
         public Capability {
-            enchantedBookStackSize = Math.max(1, Math.min(64, enchantedBookStackSize));
+            if (enchantedBookStackSize < 1 || enchantedBookStackSize > PayloadLimits.MAX_WIRE_CAPABILITY_STACK) {
+                throw new IllegalArgumentException(
+                    "Capability enchantedBookStackSize out of wire bounds [1, "
+                        + PayloadLimits.MAX_WIRE_CAPABILITY_STACK + "]: " + enchantedBookStackSize
+                );
+            }
         }
 
         public Capability() {

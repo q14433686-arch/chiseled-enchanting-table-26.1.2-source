@@ -43,6 +43,11 @@ public final class ChiseledBookshelfTick {
         BlockPos pos,
         RandomSource random
     ) {
+        // Audit MIXIN-05: skip block-entity lookup, 343-block table scan, and S2C particles when
+        // no player is within ambient perception range of the library.
+        if (!level.hasNearbyAlivePlayer(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 24.0D)) {
+            return;
+        }
         if (!(level.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf)) return;
 
         int slot = random.nextInt(ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE);
@@ -51,14 +56,12 @@ public final class ChiseledBookshelfTick {
         boolean locked = chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(picked);
 
         Direction facing = state.getValue(ChiseledBookShelfBlock.FACING);
-        Direction right = facing.getClockWise();
-        int column = slot % 3;
-        int row = slot / 3;
-
-        double sideOffset = (column - 1) * 0.25D;
-        double x = pos.getX() + 0.5D + facing.getStepX() * 0.56D + right.getStepX() * sideOffset;
-        double y = pos.getY() + (row == 0 ? 0.72D : 0.38D);
-        double z = pos.getZ() + 0.5D + facing.getStepZ() * 0.56D + right.getStepZ() * sideOffset;
+        Direction right = facing.getCounterClockWise();
+        double[] coords = chiseled_enchanting_table.mechanics.resonance.TomeParticleEffects
+            .slotWorldCoordinates(pos, facing, slot);
+        double x = coords[0];
+        double y = coords[1];
+        double z = coords[2];
 
         if (locked) {
             level.sendParticles(ParticleTypes.WITCH, x, y + 0.05D, z, 5, 0.05D, 0.05D, 0.05D, 0.01D);

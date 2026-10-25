@@ -3,8 +3,14 @@ package chiseled_enchanting_table.mechanics.loot;
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.registry.BlockRegistry;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,18 +101,20 @@ public final class DepletedTomeWorldMechanics {
         boolean anySlotHasBookIncludingDepletedTome,
         boolean anySlotHasEnchantedBook
     ) {
+        // Audit COUP-05: enforce W ∩ C = ∅ unconditionally; Chiseled Bookshelves always classify
+        // under the Chiseled branch even if a datapack erroneously adds them to #regular_bookshelves.
+        if (chiseledBookshelfBlock) {
+            if (!anySlotHasBookIncludingDepletedTome) {
+                return ShelfTaxonomyKind.EMPTY_CHISELED_BOOKSHELF;
+            }
+            return anySlotHasEnchantedBook
+                ? ShelfTaxonomyKind.MASTER_TOME_CHISELED_BOOKSHELF
+                : ShelfTaxonomyKind.BOOK_CHISELED_BOOKSHELF;
+        }
         if (regularWoodenBookshelf) {
             return ShelfTaxonomyKind.REGULAR_BOOKSHELF;
         }
-        if (!chiseledBookshelfBlock) {
-            return ShelfTaxonomyKind.NONE;
-        }
-        if (!anySlotHasBookIncludingDepletedTome) {
-            return ShelfTaxonomyKind.EMPTY_CHISELED_BOOKSHELF;
-        }
-        return anySlotHasEnchantedBook
-            ? ShelfTaxonomyKind.MASTER_TOME_CHISELED_BOOKSHELF
-            : ShelfTaxonomyKind.BOOK_CHISELED_BOOKSHELF;
+        return ShelfTaxonomyKind.NONE;
     }
 
     /**
@@ -168,66 +176,168 @@ public final class DepletedTomeWorldMechanics {
     }
 
     // -------------------------------------------------------------------------
-    // 3. Structure Chest Loot Spawn Table
+    // 3. Structure Chest Loot Spawn Table (Data-Driven via loot_injections.json)
     // -------------------------------------------------------------------------
 
     public record ChestLootSpec(String category, float probability, int minCount, int maxCount) {}
 
-    private static final Map<String, ChestLootSpec> EXACT_CHEST_SPECS = Map.ofEntries(
-        // Tier S — Ancient Libraries & Grand Archives (35% - 55%)
-        Map.entry("chests/stronghold_library", new ChestLootSpec("archive", 0.55F, 1, 3)),
-        Map.entry("chests/woodland_mansion", new ChestLootSpec("archive", 0.42F, 1, 2)),
-        Map.entry("chests/ancient_city", new ChestLootSpec("archive", 0.40F, 1, 3)),
-        Map.entry("chests/ancient_city_ice_box", new ChestLootSpec("archive", 0.28F, 1, 2)),
-        Map.entry("chests/end_city_treasure", new ChestLootSpec("archive", 0.35F, 1, 2)),
-        // Tier A — Temples, Strongholds, Bastions & Nether Fortresses (24% - 30%)
-        Map.entry("chests/desert_pyramid", new ChestLootSpec("temple", 0.30F, 1, 2)),
-        Map.entry("chests/jungle_temple", new ChestLootSpec("temple", 0.30F, 1, 2)),
-        Map.entry("chests/stronghold_corridor", new ChestLootSpec("temple", 0.28F, 1, 2)),
-        Map.entry("chests/stronghold_crossing", new ChestLootSpec("temple", 0.28F, 1, 2)),
-        Map.entry("chests/nether_bridge", new ChestLootSpec("temple", 0.25F, 1, 2)),
-        Map.entry("chests/bastion_treasure", new ChestLootSpec("temple", 0.28F, 1, 2)),
-        Map.entry("chests/bastion_other", new ChestLootSpec("temple", 0.24F, 1, 2)),
-        Map.entry("chests/bastion_bridge", new ChestLootSpec("temple", 0.22F, 1, 2)),
-        Map.entry("chests/bastion_hoglin_stable", new ChestLootSpec("temple", 0.20F, 1, 1)),
-        Map.entry("chests/ruined_portal", new ChestLootSpec("temple", 0.24F, 1, 2)),
-        // Tier B — Dungeons, Mineshafts, Shipwrecks & Ruins (18% - 20%)
-        Map.entry("chests/simple_dungeon", new ChestLootSpec("dungeon", 0.20F, 1, 2)),
-        Map.entry("chests/abandoned_mineshaft", new ChestLootSpec("dungeon", 0.20F, 1, 2)),
-        Map.entry("chests/shipwreck_map", new ChestLootSpec("dungeon", 0.22F, 1, 2)),
-        Map.entry("chests/shipwreck_treasure", new ChestLootSpec("dungeon", 0.18F, 1, 1)),
-        Map.entry("chests/underwater_ruin_big", new ChestLootSpec("dungeon", 0.20F, 1, 2)),
-        Map.entry("chests/underwater_ruin_small", new ChestLootSpec("dungeon", 0.16F, 1, 1)),
-        Map.entry("chests/pillager_outpost", new ChestLootSpec("dungeon", 0.18F, 1, 1)),
-        Map.entry("chests/igloo_chest", new ChestLootSpec("dungeon", 0.18F, 1, 1)),
-        Map.entry("chests/buried_treasure", new ChestLootSpec("dungeon", 0.18F, 1, 1))
-    );
+    public record PrefixRule(String namespaceAndPathPrefix, ChestLootSpec spec) {}
+
+    /**
+     * Data-driven chest spawn table loaded from {@code loot_injections.json -> depleted_tome_chest_spawns}
+     * (Audit CODEC-06: eliminates the hardcoded 24-entry {@code EXACT_CHEST_SPECS} map and prefix rules).
+     */
+    public record DepletedTomeChestSpawnConfig(
+        boolean allowNonBuiltinTables,
+        Map<Identifier, ChestLootSpec> exactTables,
+        List<PrefixRule> prefixRules
+    ) {
+        public static final DepletedTomeChestSpawnConfig EMPTY =
+            new DepletedTomeChestSpawnConfig(false, Map.of(), List.of());
+
+        public static DepletedTomeChestSpawnConfig fromLootInjectionsJson(@Nullable JsonObject root) {
+            if (root == null
+                || !root.has("depleted_tome_chest_spawns")
+                || !root.get("depleted_tome_chest_spawns").isJsonObject()) {
+                return BUNDLED_CHEST_SPAWN_CONFIG != null ? BUNDLED_CHEST_SPAWN_CONFIG : EMPTY;
+            }
+            return parseSection(root.getAsJsonObject("depleted_tome_chest_spawns"));
+        }
+
+        private static DepletedTomeChestSpawnConfig parseSection(JsonObject sec) {
+            boolean allowNonBuiltin = sec.has("allow_non_builtin_tables")
+                && sec.get("allow_non_builtin_tables").isJsonPrimitive()
+                && sec.get("allow_non_builtin_tables").getAsBoolean();
+
+            Map<Identifier, ChestLootSpec> exact = new LinkedHashMap<>();
+            if (sec.has("exact_tables") && sec.get("exact_tables").isJsonObject()) {
+                for (Map.Entry<String, JsonElement> e : sec.getAsJsonObject("exact_tables").entrySet()) {
+                    if (e.getKey().startsWith("_") || !e.getValue().isJsonObject()) continue;
+                    Identifier tableId = parseLootTableKey(e.getKey());
+                    ChestLootSpec spec = parseChestSpec(e.getValue().getAsJsonObject());
+                    if (tableId != null && spec != null) {
+                        exact.put(tableId, spec);
+                    }
+                }
+            }
+
+            List<PrefixRule> prefixes = new ArrayList<>();
+            if (sec.has("prefix_rules") && sec.get("prefix_rules").isJsonArray()) {
+                for (JsonElement el : sec.getAsJsonArray("prefix_rules")) {
+                    if (el == null || !el.isJsonObject()) continue;
+                    JsonObject ruleObj = el.getAsJsonObject();
+                    if (!ruleObj.has("prefix") || !ruleObj.get("prefix").isJsonPrimitive()) continue;
+                    String rawPrefix = ruleObj.get("prefix").getAsString().trim();
+                    if (rawPrefix.isEmpty()) continue;
+                    String normalizedPrefix = rawPrefix.contains(":") ? rawPrefix : ("minecraft:" + rawPrefix);
+                    ChestLootSpec spec = parseChestSpec(ruleObj);
+                    if (spec != null) {
+                        prefixes.add(new PrefixRule(normalizedPrefix, spec));
+                    }
+                }
+            }
+
+            return new DepletedTomeChestSpawnConfig(
+                allowNonBuiltin,
+                Map.copyOf(exact),
+                List.copyOf(prefixes)
+            );
+        }
+
+        @Nullable
+        private static Identifier parseLootTableKey(String rawKey) {
+            String trimmed = rawKey == null ? "" : rawKey.trim();
+            if (trimmed.isEmpty()) return null;
+            return trimmed.contains(":")
+                ? Identifier.tryParse(trimmed)
+                : Identifier.tryParse("minecraft:" + trimmed);
+        }
+
+        @Nullable
+        private static ChestLootSpec parseChestSpec(JsonObject obj) {
+            String category = obj.has("category") && obj.get("category").isJsonPrimitive()
+                ? obj.get("category").getAsString()
+                : "dungeon";
+            float prob = obj.has("probability") && obj.get("probability").isJsonPrimitive()
+                ? Mth.clamp(obj.get("probability").getAsFloat(), 0.0F, 1.0F)
+                : 0.0F;
+            int minC = obj.has("min_count") && obj.get("min_count").isJsonPrimitive()
+                ? Mth.clamp(obj.get("min_count").getAsInt(), 0, 64)
+                : 1;
+            int maxC = obj.has("max_count") && obj.get("max_count").isJsonPrimitive()
+                ? Mth.clamp(obj.get("max_count").getAsInt(), minC, 64)
+                : Math.max(1, minC);
+            return new ChestLootSpec(category, prob, minC, maxC);
+        }
+    }
+
+    private static final String BUNDLED_LOOT_INJECTIONS_PATH =
+        "/data/chiseled_enchanting_table/chiseled_enchanting_table/loot_injections.json";
+
+    private static final DepletedTomeChestSpawnConfig BUNDLED_CHEST_SPAWN_CONFIG = loadBundledChestSpawnConfig();
+    private static volatile DepletedTomeChestSpawnConfig activeChestSpawnConfig = BUNDLED_CHEST_SPAWN_CONFIG;
+
+    private static DepletedTomeChestSpawnConfig loadBundledChestSpawnConfig() {
+        try (var in = DepletedTomeWorldMechanics.class.getResourceAsStream(BUNDLED_LOOT_INJECTIONS_PATH)) {
+            if (in != null) {
+                JsonObject root = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
+                if (root.has("depleted_tome_chest_spawns") && root.get("depleted_tome_chest_spawns").isJsonObject()) {
+                    return DepletedTomeChestSpawnConfig.parseSection(root.getAsJsonObject("depleted_tome_chest_spawns"));
+                }
+            }
+        } catch (Exception ex) {
+            ChiseledEnchantingTable.LOGGER.error("Failed to load bundled depleted_tome_chest_spawns from loot_injections.json", ex);
+        }
+        return DepletedTomeChestSpawnConfig.EMPTY;
+    }
+
+    public static DepletedTomeChestSpawnConfig activeChestSpawnConfig() {
+        return activeChestSpawnConfig;
+    }
+
+    public static void updateChestSpawnConfig(@Nullable DepletedTomeChestSpawnConfig updated) {
+        activeChestSpawnConfig = updated != null ? updated : BUNDLED_CHEST_SPAWN_CONFIG;
+    }
 
     @Nullable
     public static ChestLootSpec chestSpawnSpecForTableId(String namespace, String path) {
-        if (!"minecraft".equals(namespace) || path == null) {
+        return chestSpawnSpecForTableId(activeChestSpawnConfig, namespace, path);
+    }
+
+    @Nullable
+    public static ChestLootSpec chestSpawnSpecForTableId(
+        @Nullable DepletedTomeChestSpawnConfig cfg,
+        String namespace,
+        String path
+    ) {
+        if (namespace == null || path == null || namespace.isEmpty() || path.isEmpty()) {
             return null;
         }
-        ChestLootSpec exact = EXACT_CHEST_SPECS.get(path);
-        if (exact != null) {
-            return exact;
+        DepletedTomeChestSpawnConfig active = cfg != null ? cfg : BUNDLED_CHEST_SPAWN_CONFIG;
+        Identifier tableId = Identifier.tryBuild(namespace, path);
+        if (tableId != null) {
+            ChestLootSpec exact = active.exactTables().get(tableId);
+            if (exact != null) {
+                return exact.probability() > 0.0F ? exact : null;
+            }
         }
-        if (path.startsWith("chests/trial_chambers/")) {
-            return new ChestLootSpec("temple", 0.28F, 1, 2);
-        }
-        if (path.startsWith("chests/village/")) {
-            return new ChestLootSpec("village", 0.10F, 1, 1);
+        String fullId = namespace + ":" + path;
+        for (PrefixRule rule : active.prefixRules()) {
+            if (fullId.startsWith(rule.namespaceAndPathPrefix())) {
+                return rule.spec().probability() > 0.0F ? rule.spec() : null;
+            }
         }
         return null;
     }
 
     public static void initChestLootInjection() {
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
-            if (!source.isBuiltin()) {
+            DepletedTomeChestSpawnConfig cfg = activeChestSpawnConfig;
+            if (!source.isBuiltin() && !cfg.allowNonBuiltinTables()) {
                 return;
             }
             Identifier id = key.identifier();
-            ChestLootSpec spec = chestSpawnSpecForTableId(id.getNamespace(), id.getPath());
+            ChestLootSpec spec = chestSpawnSpecForTableId(cfg, id.getNamespace(), id.getPath());
             if (spec == null || spec.probability() <= 0.0F) {
                 return;
             }

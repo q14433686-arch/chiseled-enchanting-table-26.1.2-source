@@ -18,11 +18,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Prevents the anvil's prior-work penalty (`DataComponents.REPAIR_COST`) from scaling
- * exponentially (`2 * cost + 1`), keeping repeated anvil repairs and book applications
+ * Prevents the anvil's prior-work penalty ({@code DataComponents.REPAIR_COST}) from scaling
+ * exponentially ({@code 2 * cost + 1}), keeping repeated anvil repairs and book applications
  * flat instead of hitting "Too Expensive!".
+ *
+ * <p>Audit MIXIN-02 / NET-04: {@link AnvilMenu#calculateIncreasedRepairCost(int)} is a
+ * {@code static} helper with no {@link AnvilMenu} receiver, so the active menu's logical side
+ * ({@code player.level().isClientSide()}) is propagated via {@link #CET_CLIENT_ANVIL_SIDE}.
+ * Explicit {@code priority = 900} guarantees this wrapper is ALWAYS outermost around
+ * {@link RemoveEnchantMerge} ({@code priority = 1100}), keeping side context active throughout
+ * count normalization, vanilla {@code createResult}, and post-merge filtering.</p>
  */
-@Mixin(AnvilMenu.class)
+@Mixin(value = AnvilMenu.class, priority = 900)
 public abstract class RemoveXpCostScaling extends ItemCombinerMenu {
 	@Unique
 	private static final ThreadLocal<Boolean> CET_CLIENT_ANVIL_SIDE = new ThreadLocal<>();
@@ -60,8 +67,11 @@ public abstract class RemoveXpCostScaling extends ItemCombinerMenu {
 	private static void cet$keepFlatRepairCost(int oldRepairCost, CallbackInfoReturnable<Integer> cir) {
 		Boolean clientSide = CET_CLIENT_ANVIL_SIDE.get();
 		if (clientSide == null && CET_LOGGED_UNSCOPED_ANVIL_CALL.compareAndSet(false, true)) {
-			chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.debug(
-				"AnvilMenu.calculateIncreasedRepairCost invoked outside AnvilMenu.createResult; falling back to server runtimeConfiguration()"
+			StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+			String caller = trace.length > 3 ? trace[3].toString() : "unknown";
+			chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.warn(
+				"AnvilMenu.calculateIncreasedRepairCost invoked outside AnvilMenu.createResult (caller: {}); falling back to server runtimeConfiguration()",
+				caller
 			);
 		}
 		ModRuntimeConfig cfg = clientSide != null

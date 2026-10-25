@@ -13,8 +13,8 @@ import chiseled_enchanting_table.item.ArcaneGrimoireItem;
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.menu.EnchantCostTablePayload;
+import chiseled_enchanting_table.registry.BlockEntityRegistry;
 import chiseled_enchanting_table.registry.BlockRegistry;
-import chiseled_enchanting_table.registry.EntityRegistry;
 import chiseled_enchanting_table.registry.ScreenHandlerRegistry;
 import chiseled_enchanting_table.render.ChiseledEnchantingTableBlockEntityRenderer;
 import java.util.List;
@@ -114,7 +114,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             Minecraft.getInstance().setScreen(new ArcaneGrimoireScreen(null));
         };
         MenuScreens.register(ScreenHandlerRegistry.CHISELED_ENCHANTING_TABLE_SCREEN_HANDLER, ChiseledEnchantingTableScreen::new);
-        BlockEntityRendererRegistry.register(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
+        BlockEntityRendererRegistry.register(BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
             dispatcher.register(

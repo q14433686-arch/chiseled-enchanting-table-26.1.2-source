@@ -47,10 +47,22 @@ public final class CetTags {
             Identifier.fromNamespaceAndPath(ChiseledEnchantingTable.MOD_ID, "crossline_excluded")
         );
 
-        /** Broadly applicable utility/curse enchantments penalized in Epiphany &amp; overload universality scoring. */
+        /** Broadly applicable utility/curse enchantments receiving the broad applicability multiplier. */
         public static final TagKey<Enchantment> BROAD_APPLICABILITY = TagKey.create(
             Registries.ENCHANTMENT,
             Identifier.fromNamespaceAndPath(ChiseledEnchantingTable.MOD_ID, "broad_applicability")
+        );
+
+        /** Tier-1 keystone enchantments receiving the major applicability multiplier (ships with infinity &amp; mending). */
+        public static final TagKey<Enchantment> KEYSTONE_MAJOR = TagKey.create(
+            Registries.ENCHANTMENT,
+            Identifier.fromNamespaceAndPath(ChiseledEnchantingTable.MOD_ID, "keystone_major")
+        );
+
+        /** Tier-2 keystone enchantments receiving the minor applicability multiplier (ships with unbreaking). */
+        public static final TagKey<Enchantment> KEYSTONE_MINOR = TagKey.create(
+            Registries.ENCHANTMENT,
+            Identifier.fromNamespaceAndPath(ChiseledEnchantingTable.MOD_ID, "keystone_minor")
         );
 
         /** Vanilla curse tag reference ({@link EnchantmentTags#CURSE}). */

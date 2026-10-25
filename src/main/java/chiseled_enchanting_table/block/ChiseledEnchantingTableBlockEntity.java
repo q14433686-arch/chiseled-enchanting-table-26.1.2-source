@@ -7,7 +7,7 @@ import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics;
 import chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
-import chiseled_enchanting_table.registry.EntityRegistry;
+import chiseled_enchanting_table.registry.BlockEntityRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
@@ -97,7 +97,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     public float tRot;
 
     public ChiseledEnchantingTableBlockEntity(BlockPos pos, BlockState state) {
-        super(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, pos, state);
+        super(BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, pos, state);
     }
 
     // ---- Persistent Container implementation (Chest-style persistence) ----

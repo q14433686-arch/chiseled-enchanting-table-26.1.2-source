@@ -1,10 +1,15 @@
 package chiseled_enchanting_table.menu;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -24,7 +29,10 @@ import net.minecraft.server.level.ServerPlayer;
  */
 public final class EnchantCostSync {
     private EnchantCostSync() {}
-    private static final java.util.Map<ServerPlayer, java.util.List<ChiseledEnchantingMenuPayloads.TransformationDisplay>> LAST_DISPLAYS = new java.util.WeakHashMap<>();
+
+    /** Keyed by immutable player {@link UUID} (never live {@link ServerPlayer} instances across respawns). */
+    private static final Map<UUID, List<ChiseledEnchantingMenuPayloads.TransformationDisplay>> LAST_DISPLAYS =
+        new ConcurrentHashMap<>();
 
     /**
      * "Peer has some build of this mod" signal for the JOIN handshake: the current cost
@@ -92,9 +100,10 @@ public final class EnchantCostSync {
             if (server.getTickCount() % 20 != 0) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (!ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) continue;
+                UUID playerId = player.getUUID();
                 var displays = ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays(player);
-                if (!displays.equals(LAST_DISPLAYS.get(player))) {
-                    LAST_DISPLAYS.put(player, displays);
+                if (!displays.equals(LAST_DISPLAYS.get(playerId))) {
+                    LAST_DISPLAYS.put(playerId, displays);
                     int activeContainerId = player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
                         ? menu.containerId
                         : PayloadLimits.NO_CONTAINER;
@@ -111,16 +120,23 @@ public final class EnchantCostSync {
             }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_DISPLAYS.clear());
-        ServerPlayConnectionEvents.DISCONNECT.register((listener, server) -> LAST_DISPLAYS.remove(listener.player));
+        ServerPlayConnectionEvents.DISCONNECT.register(
+            (listener, server) -> LAST_DISPLAYS.remove(listener.player.getUUID())
+        );
 
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
             if (!success) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 // An open menu caches transformation IDs/inputs/thresholds from its opening
                 // packet. Reloading only the cost table leaves that snapshot stale. Close just
-                // our menu (vanilla returns its input stacks), then the next open gets fresh data.
+                // our menu (vanilla returns its input stacks), notify the player cleanly, and let
+                // the next open read freshly reloaded datapack data.
                 if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler) {
                     player.closeContainer();
+                    player.displayClientMessage(
+                        Component.translatable("message.chiseled_enchanting_table.reload_closed"),
+                        true
+                    );
                 }
                 chiseled_enchanting_table.config.ModConfigNetworking.sendToPlayer(player);
                 sendTo(player);
@@ -137,7 +153,7 @@ public final class EnchantCostSync {
         try {
             var payload = EnchantCostTablePayload.build(player);
             ServerPlayNetworking.send(player, payload);
-            LAST_DISPLAYS.put(player, payload.transformations());
+            LAST_DISPLAYS.put(player.getUUID(), payload.transformations());
             if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                 menu.applyTransformationSnapshot(payload.transformations());
             }

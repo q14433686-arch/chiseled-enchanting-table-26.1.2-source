@@ -4,7 +4,7 @@ import chiseled_enchanting_table.utils.EnchantmentFinder;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.registry.EntityRegistry;
+import chiseled_enchanting_table.registry.BlockEntityRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import com.mojang.serialization.MapCodec;
@@ -38,6 +38,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.ChiseledBookShelfBlock;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
@@ -60,8 +61,13 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         chiseled_enchanting_table.registry.CetTags.Blocks.REGULAR_BOOKSHELVES;
 
     public static boolean isRegularBookshelf(BlockState state) {
-        return !state.is(Blocks.CHISELED_BOOKSHELF)
-            && (state.is(REGULAR_BOOKSHELVES_TAG) || state.is(net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER));
+        if (state == null
+            || state.is(Blocks.CHISELED_BOOKSHELF)
+            || state.getBlock() instanceof ChiseledBookShelfBlock) {
+            return false;
+        }
+        return state.is(REGULAR_BOOKSHELVES_TAG)
+            || state.is(net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER);
     }
 
     private static final java.util.concurrent.ConcurrentHashMap<Long, List<BlockPos>> SCAN_OFFSETS_CACHE =
@@ -197,7 +203,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(
             type,
-            EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE,
+            BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE,
             level.isClientSide()
                 ? ChiseledEnchantingTableBlockEntity::tick
                 : ChiseledEnchantingTableBlockEntity::serverTick

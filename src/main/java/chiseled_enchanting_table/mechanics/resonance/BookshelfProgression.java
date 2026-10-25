@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.mechanics.resonance;
 
+import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import com.google.gson.JsonElement;
@@ -28,8 +29,9 @@ import net.minecraft.world.level.Level;
  *       Enchanted Book already carries {@code existingLevel >= 1}, regular bookshelves unlock step
  *       upgrades all the way to {@code MAX} at {@code 38} shelves ({@code [0, 7, 16, 27, 38]} for
  *       {@code maxLevel = 5}, {@code [0, 10, 23, 38]} for {@code maxLevel = 4}, {@code [0, 16, 38]}
- *       for {@code maxLevel = 3}, {@code [0, 38]} for {@code maxLevel = 2}, strictly increasing
- *       for {@code 1 <= maxLevel <= anchor + 1}, and smoothly distributed across all {@code 39}
+ *       for {@code maxLevel = 3}, {@code [0, 22]} for {@code maxLevel = 2} via
+ *       {@code two_level_max_bookshelves = 22}, strictly increasing for
+ *       {@code 1 <= maxLevel <= anchor + 1}, and smoothly distributed across all {@code 39}
  *       discrete shelf counts {@code 0..anchor} when {@code maxLevel > anchor + 1}).</li>
  *   <li><b>Depleted Tome 3-Gradient Restoration</b> ({@link DepletedTomeTier}): linear batch
  *       conversion with configurable batch sizes and deduplicated distinct high-tier Master Tome
@@ -355,35 +357,71 @@ public final class BookshelfProgression {
                 if (directObj.has("overrides") && directObj.get("overrides").isJsonObject()) {
                     JsonObject ovRoot = directObj.getAsJsonObject("overrides");
                     for (Map.Entry<String, JsonElement> entry : ovRoot.entrySet()) {
+                        if (entry.getKey().startsWith("_")) continue;
                         Identifier id = Identifier.tryParse(entry.getKey());
-                        if (id == null) continue;
+                        if (id == null) {
+                            ChiseledEnchantingTable.LOGGER.warn(
+                                "shelf_gates.json direct_upgrade_gates.overrides has malformed enchantment ID '{}'; ignoring",
+                                entry.getKey()
+                            );
+                            continue;
+                        }
+                        List<Integer> rawLadder = null;
                         if (entry.getValue().isJsonArray()) {
-                            List<Integer> ladder = new ArrayList<>();
+                            rawLadder = new ArrayList<>();
+                            boolean validNumbers = true;
                             for (JsonElement elem : entry.getValue().getAsJsonArray()) {
-                                ladder.add(clampInt(elem.getAsInt(), 0, 256));
+                                if (elem == null || !elem.isJsonPrimitive() || !elem.getAsJsonPrimitive().isNumber()) {
+                                    validNumbers = false;
+                                    break;
+                                }
+                                rawLadder.add(elem.getAsInt());
                             }
-                            if (!ladder.isEmpty()) {
-                                parsedOverrides.put(id, List.copyOf(ladder));
+                            if (!validNumbers) {
+                                ChiseledEnchantingTable.LOGGER.warn(
+                                    "shelf_gates.json direct_upgrade_gates.overrides '{}' contains non-numeric entry; falling back to default curve",
+                                    id
+                                );
+                                rawLadder = null;
                             }
                         } else if (entry.getValue().isJsonObject()) {
                             int maxKey = 0;
                             Map<Integer, Integer> sparse = new HashMap<>();
+                            boolean validSparse = true;
                             for (Map.Entry<String, JsonElement> lvlEntry : entry.getValue().getAsJsonObject().entrySet()) {
+                                if (lvlEntry.getKey().startsWith("_")) continue;
                                 try {
                                     int lvl = Integer.parseInt(lvlEntry.getKey());
-                                    if (lvl >= 1) {
-                                        maxKey = Math.max(maxKey, lvl);
-                                        sparse.put(lvl, clampInt(lvlEntry.getValue().getAsInt(), 0, 256));
+                                    if (lvl < 1
+                                        || lvlEntry.getValue() == null
+                                        || !lvlEntry.getValue().isJsonPrimitive()
+                                        || !lvlEntry.getValue().getAsJsonPrimitive().isNumber()) {
+                                        validSparse = false;
+                                        break;
                                     }
-                                } catch (Exception ignored) {
+                                    maxKey = Math.max(maxKey, lvl);
+                                    sparse.put(lvl, lvlEntry.getValue().getAsInt());
+                                } catch (Exception ex) {
+                                    validSparse = false;
+                                    break;
                                 }
                             }
-                            if (maxKey >= 1) {
-                                List<Integer> ladder = new ArrayList<>(maxKey);
+                            if (!validSparse) {
+                                ChiseledEnchantingTable.LOGGER.warn(
+                                    "shelf_gates.json direct_upgrade_gates.overrides '{}' contains invalid sparse level mapping; falling back to default curve",
+                                    id
+                                );
+                            } else if (maxKey >= 1) {
+                                rawLadder = new ArrayList<>(maxKey);
                                 for (int l = 1; l <= maxKey; l++) {
-                                    ladder.add(sparse.getOrDefault(l, requiredBookshelvesForDirectTier(l, maxKey, maxDirect, curveExp)));
+                                    rawLadder.add(sparse.getOrDefault(l, requiredBookshelvesForDirectTier(l, maxKey, maxDirect, curveExp)));
                                 }
-                                parsedOverrides.put(id, List.copyOf(ladder));
+                            }
+                        }
+                        if (rawLadder != null && !rawLadder.isEmpty()) {
+                            List<Integer> validated = validateOverrideLadder(id, rawLadder, maxDirect);
+                            if (validated != null) {
+                                parsedOverrides.put(id, validated);
                             }
                         }
                     }
@@ -528,11 +566,27 @@ public final class BookshelfProgression {
             int req = requiredBookshelvesForDirectTier(cfg, enchantmentId, lvl, clampedMax);
             if (shelves >= req) {
                 unlocked = lvl;
-            } else {
-                break;
             }
         }
         return unlocked;
+    }
+
+    public static List<Integer> validateOverrideLadder(Identifier id, List<Integer> rawLadder, int maxDirect) {
+        int prev = -1;
+        for (int i = 0; i < rawLadder.size(); i++) {
+            int req = rawLadder.get(i);
+            if (req < 0 || req > maxDirect || req < prev) {
+                ChiseledEnchantingTable.LOGGER.warn(
+                    "shelf_gates.json direct_upgrade_gates.overrides '{}' must be monotonically non-decreasing within [0, {}] (got {}); falling back to default curve",
+                    id,
+                    maxDirect,
+                    rawLadder
+                );
+                return null;
+            }
+            prev = req;
+        }
+        return List.copyOf(rawLadder);
     }
 
     public static int maxBlankWoodenTier(

@@ -27,7 +27,7 @@ A Minecraft Fabric mod that enhances the enchanting experience.
 
 * **Smooth entry, Vanilla Upgrade & Illustrated In-Game Manual (`纂刻秘典` / `Chiseled Grimoire`)**: craft the table directly with `2 Diamonds + 1 Chiseled Bookshelf + 3 Crying Obsidian + 1 Book`, upgrade a vanilla Enchanting Table, craft `8× Crying Obsidian` from `8× Obsidian + 1× Ghast Tear`, and craft the full interactive illustrated manual via **`Book and Quill + Chiseled Bookshelf`** OR **`Depleted Tome + Ink Sac`** (or open it directly from the button above the table UI).
 * **Three-track library progression, Live World Sync & Conservation-Verified Dual-Mode XP Formula (see [`docs/WIKI.md`](docs/WIKI.md))**:
-  * **Regular Bookshelves (`#chiseled_enchanting_table:regular_bookshelves`, configurable `7×5×7`)** unlock blank inscriptions up to mid-tier (`ceil(maxLevel / 2)`), smoothly scale upgrades on already-inscribed gear/books up to `MAX` along `0..38` shelves (`gamma = 1.25`: `I(0) → II(7) → III(16) → IV(27) → V(38)`), grant XP reduction starting at `12+` shelves, and at **`32+` Bookshelves** awaken **Treasure Epiphany**.
+  * **Regular Bookshelves (`#chiseled_enchanting_table:regular_bookshelves`, configurable `7×5×7`)** unlock blank inscriptions up to mid-tier (`ceil(maxLevel / 2)`), smoothly scale upgrades on already-inscribed gear/books up to `MAX` along `0..38` shelves (`gamma = 1.25`: `I(0) → II(7) → III(16) → IV(27) → V(38)`, `MAX = 2` smoothed to `22` shelves), grant XP reduction starting at `3+` shelves (up to `-15%` at `45` shelves), and at **`32+` Bookshelves** awaken **Treasure Epiphany**.
   * **Chiseled Bookshelves (`7×5×7`)** turn stored Enchanted Books into permanent **Master Tomes** unlocking tiers `1..k` directly on blank items (including Treasures), counting deduplicated qualifying enchantments toward free Depleted Tome restoration, adding global & per-enchantment XP discounts (data-driven via `library_resonance.json`, up to **`-40%`**), and switching inscriptions into **Vanilla Mass-Production XP Mode (`1–3` levels deducted)**.
   * **Inductive XP Conservation & Standalone-Vanilla Cleanse Alternatives**: full wipes (`DISENCHANT_ALL`) and step-downs (`DOWNGRADE_ENCHANTMENT`) satisfy exact telescoping conservation (`V[k] - V[j] <= Cost_min(j -> k)` across all `maxLevel = 1..255`), while targeted trait stripping and curse purging support both custom catalysts (`Cleansing Grit`, `Arcane Synthesis Crystal`) and pure standalone vanilla item bundles (`disenchanting.json`).
   * **Bidirectional JEI & REI Support**: full recipe & usage lookup for both **Chiseled Enchanting** and **Transmutation & Cleansing** (`Enchanted Golden Apple`, `Trident`, `Totem of Undying`, `Echo Shard`, `Bottle o' Enchanting`, `Blank Overwrite`, `Cleansing Grit`, and Cleanse / Curse-Purge rituals).
@@ -110,21 +110,18 @@ bash docs/ci/install.sh --check                     # docs/ci ≡ .github/workfl
 Optional warn-only pre-commit reminder: `bash scripts/install-hooks.sh` (it never blocks a commit;
 CI is the real gate).
 
-## Forge (or other modloader) port
+## Other modloaders
 
-Not planned at the moment.
-But if the mod get more popular, I might have a look at it!
+NeoForge / Forge ports are not currently planned for this unofficial community repository, which tracks Fabric on Minecraft `26.1.2`.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
+Contributions are welcome! Please feel free to submit a pull request or open an issue against this repository (`q14433686-arch/chiseled-enchanting-table-26.1.2-source`).
 
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
 
-## Inspiration
+## Upstream Credits & Inspiration
 
-I've looked at RPG enchanting table to get the base concept done
-https://github.com/TheRedBrain/rpg-enchanting
-If you are looking for a more RPG approch be sure to check out this mod!
+Original mod design, baseline mechanics, and core assets by [Sacramentix](https://github.com/Sacramentix/chiseled-enchanting-table), who credited TheRedBrain's [RPG Enchanting](https://github.com/TheRedBrain/rpg-enchanting) as an inspiration for the original concept.
