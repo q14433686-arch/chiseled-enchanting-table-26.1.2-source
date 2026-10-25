@@ -1,4 +1,4 @@
-commit: 89de2b62ac86d3399acd5b9602ba903a1d0eb463
+commit: e8ee9a2bc5e7b78995cfb5762d55d15a8eff069e
 branch: arena/b99a37c2-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -19,10 +19,10 @@ Fabric Loom: 1.16.3
 
 > Task :compileJava
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:420: error: cannot find symbol
-            && ChiseledEnchantingTableData.masterTomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
-                                          ^
-  symbol:   method masterTomeConsumptionMode()
-  location: class ChiseledEnchantingTableData
+            && ChiseledEnchantingTableData.libraryResonanceConfig().consumptionMode()
+                                                                   ^
+  symbol:   method consumptionMode()
+  location: class Config
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
@@ -30,7 +30,7 @@ Note: Recompile with -Xlint:unchecked for details.
 1 error
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792920463088.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792920604405.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -44,10 +44,10 @@ Execution failed for task ':compileJava'.
   Note: Recompile with -Xlint:unchecked for details.
   Note: Some input files use or override a deprecated API.
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:420: error: cannot find symbol
-              && ChiseledEnchantingTableData.masterTomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
-                                            ^
-    symbol:   method masterTomeConsumptionMode()
-    location: class ChiseledEnchantingTableData
+              && ChiseledEnchantingTableData.libraryResonanceConfig().consumptionMode()
+                                                                     ^
+    symbol:   method consumptionMode()
+    location: class Config
   1 error
 
 * Try:
@@ -91,10 +91,10 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:420: error: cannot find symbol
-            && ChiseledEnchantingTableData.masterTomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
-                                          ^
-  symbol:   method masterTomeConsumptionMode()
-  location: class ChiseledEnchantingTableData
+            && ChiseledEnchantingTableData.libraryResonanceConfig().consumptionMode()
+                                                                   ^
+  symbol:   method consumptionMode()
+  location: class Config
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
@@ -240,7 +240,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 24s
+BUILD FAILED in 15s
 1 actionable task: 1 executed
 gradle exit code: 1
 
