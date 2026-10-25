@@ -123,6 +123,10 @@ class ConfigurationSafetyTest {
 
     @Test
     void classicFrameUses103CostAndBookUpgradeTables() {
+        // Item cost resolution touches BuiltInRegistries; unit tests run without
+        // a server bootstrap, so initialize it exactly like a dedicated server.
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
         // Audit findings 06/07/08 (external report): "full price" in classic must
         // mean the 1.0.3 prices — XP table, research materials and the golden
         // apple's ranged emerald cost all come from tag 26.1.2_1.0.3 data.
