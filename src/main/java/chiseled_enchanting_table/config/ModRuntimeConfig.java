@@ -1351,7 +1351,46 @@ public record ModRuntimeConfig(
             this.customizedKeys.addAll(snap.customizedKeys);
         }
 
+        /** Forces every classic-subordinate field to its 1.0.3 value on this draft. */
+        public void applyClassic103Overrides() {
+            enchantedBookStackSize = 64;
+            vanillaTableMode = VanillaTableMode.BOOKS;
+            anvilFlatRepairCost = false;
+            anvilBlockSameBookMerge = true;
+            restrictVillagerInfinityBooks = false;
+            grindstoneDepletedTome = false;
+            directGatesEnabled = false;
+            blankMaxTierMode = BlankMaxTierMode.FULL_CURVE;
+            horizontalScanRadius = 2;
+            verticalScanRadius = 2;
+            requireBreathingRoom = false;
+            requireLineOfSight = false;
+            tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+            tomeRegenEnabled = false;
+            lockedShelfBreakable = true;
+            lockedBookExtractionBlocked = false;
+            maxWoodenDiscountPercent = 0;
+            maxTotalXpDiscountPercent = 0;
+            bookCombineEnabled = true;
+            bookCombineXpMultiplier = 1.00;
+            bookResearchEnabled = true;
+            bookResearchXpMultiplier = 0.50;
+            epiphanyBaseChance = 0.0;
+            epiphanyMaxChance = 0.0;
+            disenchantEnabled = false;
+            allowCursePurge = false;
+            requirePriorDiscovery = false;
+            transformationMaxBatchSize = 1;
+            bookshelfEnchantedProb = 0.03;
+        }
+
         public ModRuntimeConfig build() {
+            // Normalize the draft itself (not only the built record) so config
+            // screens display the EFFECTIVE classic values and draft <-> JSON
+            // round-trips stay lossless under the master switch.
+            if (classic103Mode) {
+                applyClassic103Overrides();
+            }
             return new ModRuntimeConfig(
                 overrideDatapacks,
                 enchantedBookStackSize,

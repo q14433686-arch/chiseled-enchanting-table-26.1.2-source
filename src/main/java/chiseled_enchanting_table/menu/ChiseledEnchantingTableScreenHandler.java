@@ -442,6 +442,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public void advanceTableEpiphanySeed(boolean consumedEpiphanyOrForceClearFreeze) {
+        if (isClassic103Mode()) {
+            return;
+        }
         this.access.execute((lvl, pos) -> {
             if (lvl.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be) {
                 if (consumedEpiphanyOrForceClearFreeze) {
@@ -1913,6 +1916,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             return false;
         }
         int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(this.world, enchantmentId);
+        // 1.0.3 Classic: research upgrades had no bookshelf direct-tier gate (that
+        // is BookshelfProgression, post-1.0.3). The widget already bypassed the gate
+        // in classic, but the server check did not — UI offered a row the server
+        // then rejected. Align server with widget + 1.0.3.
+        if (isClassic103Mode()) {
+            return targetLevel >= 1 && targetLevel <= maxLvl;
+        }
         int cap = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.effectiveUnlockedTierCap(
             shelfGatesConfig(),
             enchantmentId,
@@ -2211,6 +2221,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public double epiphanyChance(ItemStack targetStack) {
+        // 1.0.3 Classic: no Treasure Epiphany exists — treasure enchantments are
+        // static default/stored unlocks, never a shelf/mastery-driven refresh roll.
+        // Hard-zero here (not only via cfg chances) so a stale synced table can
+        // never resurrect the roll.
+        if (isClassic103Mode()) {
+            return 0.0;
+        }
         double base = this.world.isClientSide()
             ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyBaseChance()
             : ChiseledEnchantingTableData.treasureEpiphanyBaseChance();
@@ -2241,6 +2258,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public int epiphanyMaxSlots(ItemStack targetStack) {
+        if (isClassic103Mode()) {
+            return 0;
+        }
         int cap = this.world.isClientSide()
             ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.epiphanyMaxSlotsCap()
             : ChiseledEnchantingTableData.treasureEpiphanyMaxSlotsCap();
@@ -2317,6 +2337,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
      * distinct matching Treasure Enchantments at Level 1) identically on server & client.
      */
     public List<EnchantmentWithLevel> computeActiveTreasureEpiphanies(ItemStack targetStack) {
+        if (isClassic103Mode()) {
+            return List.of();
+        }
         int minShelves = epiphanyMinBookshelves();
         int maxSlots = epiphanyMaxSlots(targetStack);
         if (this.regularBookshelves < minShelves
@@ -2457,6 +2480,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean canAffordRerollEpiphany() {
+        if (isClassic103Mode()) return false;
         if (this.regularBookshelves < epiphanyMinBookshelves()) return false;
         if (this.player.getAbilities().instabuild) return true;
         if (this.player.experienceLevel < epiphanyRerollXpLevels()) return false;
