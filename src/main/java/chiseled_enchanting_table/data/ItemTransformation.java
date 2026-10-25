@@ -1,5 +1,7 @@
 package chiseled_enchanting_table.data;
 
+import static chiseled_enchanting_table.data.ChiseledEnchantingTableData.*;
+
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.DataCostTables.BookUpgradeRules;
 import chiseled_enchanting_table.data.DataCostTables.CostTables;
