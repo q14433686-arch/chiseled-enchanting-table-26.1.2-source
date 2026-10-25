@@ -48,4 +48,4 @@ Currently the container exposes `ENCHANTABLE_SLOT` + `COST_SLOT`, while `additio
 ### C. Optional Third-Party Mod Integrations
 
 - `chiseled_enchanting_table.integration.*` — Colorful Books visual integration remains parked/opt-in until verified against a `26.1.2` build of the target mod.
-- Cross-branch maintenance (`26.2` / `26.3` branches): propagate `SearchTextBuffer`, `PayloadLimits`, and the 11-locale translation completions when syncing sister branches.
+- Cross-branch maintenance (`26.2` / `26.3` branches): sync Waves A–D (`Tome` locks, 80-option layered config + 20-atom Rule Trace, datapack unification, `SearchTextBuffer`, `PayloadLimits`, and 975-key 11-locale translations) following [`docs/reports/SYNC_TO_26_2_AND_26_3_2026_10_26.md`](docs/reports/SYNC_TO_26_2_AND_26_3_2026_10_26.md).
