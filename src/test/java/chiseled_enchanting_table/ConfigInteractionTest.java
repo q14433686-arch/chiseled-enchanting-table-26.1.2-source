@@ -63,6 +63,18 @@ class ConfigInteractionTest {
         assertEquals(0, saves.pendingRequestId());
         assertTrue(saves.toastUntil() > 100);
     }
+    @Test void destructiveConfirmationTracksTargetIdentityAndTimeout() {
+        var confirmation = new ConfirmationWindow<String>(5000, value -> value, String::equals);
+        confirmation.arm("target A", 100);
+        assertTrue(confirmation.pending("target A", 200));
+        assertFalse(confirmation.pending("target B", 201));
+        assertFalse(confirmation.pending("target A", 202));
+        confirmation.arm("target A", 100);
+        assertFalse(confirmation.pending("target A", 5101));
+        confirmation.arm("target A", 6000);
+        confirmation.clear();
+        assertFalse(confirmation.pending("target A", 6001));
+    }
     @Test void allPresetEditsSurviveSerializationBeforeSubmission() {
         var editor = new ConfigEditSession(ModRuntimeConfig.DEFAULT);
         for (var preset : ModRuntimeConfig.Preset.values()) {

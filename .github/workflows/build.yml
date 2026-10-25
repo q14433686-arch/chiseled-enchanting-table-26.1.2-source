@@ -54,6 +54,7 @@ jobs:
         run: |
           python3 scripts/test_baseline_mixins.py
           python3 scripts/test_ci_diagnostics.py
+          python3 scripts/check_repository_hygiene.py
 
       - name: 26.3 sync regression checks
         run: python3 scripts/test_sync_26_3.py

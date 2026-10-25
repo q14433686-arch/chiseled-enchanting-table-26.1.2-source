@@ -93,6 +93,41 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
     }
 
+    private static volatile Map<Identifier, ItemTransformation> rawItemTransformations = builtInItemTransformations();
+    private static final LootInjectionTable BUILT_IN_LOOT_TABLE = builtInLootInjections();
+    private static volatile VanillaChestBooksMode rawVanillaChestBooksMode = BUILT_IN_LOOT_TABLE.mode();
+    private static volatile BookshelfBookPool rawBookshelfBookPool = BookshelfBookPool.emptyFallback();
+    private static volatile BookUpgradeRules rawBookUpgradeRules = builtInBookUpgradeRules();
+    // Classic overlay set: bundled baselines, replaceable per-file by a
+    // datapack carrying the same path (loaded in the reload listener below).
+    private static final CostTables BUILT_IN_CLASSIC_COSTS = CostTables.fromJson(readBundledJsonObject("enchantment_costs_classic_1_0_3.json"));
+    private static final BookUpgradeRules BUILT_IN_CLASSIC_UPGRADES = BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades_classic_1_0_3.json"));
+    private static final Map<Identifier, ItemTransformation> BUILT_IN_CLASSIC_TRANSFORMATIONS = classic103ItemTransformations();
+    private static volatile CostTables classicCostTables = BUILT_IN_CLASSIC_COSTS;
+    private static volatile BookUpgradeRules classicBookUpgradeRules = BUILT_IN_CLASSIC_UPGRADES;
+    private static volatile Map<Identifier, ItemTransformation> classicItemTransformations = BUILT_IN_CLASSIC_TRANSFORMATIONS;
+    private static volatile TreasureEpiphanyRules rawTreasureEpiphanyRules = builtInTreasureEpiphanyRules();
+    private static volatile DisenchantingRules rawDisenchantingRules = builtInDisenchantingRules();
+    private static volatile chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config rawShelfGatesConfig =
+        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT;
+    private static volatile chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config rawLibraryResonanceConfig =
+        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
+    private static volatile chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config rawRitualConfig =
+        builtInRitualConfig();
+
+    private static volatile Set<EnchantmentWithLevel> defaultEnchantmentValues = builtInDefaultEnchantments();
+    private static volatile List<DefaultEnchantmentTagRule> defaultEnchantmentTags = builtInDefaultEnchantmentTags();
+    private static volatile Set<Identifier> defaultExcludedIds = builtInExcludedTreasureIds();
+    private static volatile List<Identifier> defaultExcludedTags = builtInExcludedTags();
+    private static volatile CostTables costTables = builtInCostTables();
+    private static volatile Map<Identifier, ItemTransformation> itemTransformations = rawItemTransformations;
+    private static volatile VanillaChestBooksMode vanillaChestBooksMode = rawVanillaChestBooksMode;
+    private static volatile List<LootInjection> lootInjections = BUILT_IN_LOOT_TABLE.entries();
+    /** Registry preparation is NOT a live gameplay generation; failed reloads must not leak it. */
+    public record LootRegistryBuildRules(List<LootInjection> entries, VanillaChestBooksMode mode,
+        chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns) {
+        public LootRegistryBuildRules { entries = List.copyOf(entries); }
+    }
     private static volatile LootRegistryBuildRules pendingLootRegistryBuild;
     public static void clearLootRegistryBuildRules() { pendingLootRegistryBuild = null; }
     public static LootRegistryBuildRules lootRegistryBuildRules() {
@@ -1057,12 +1092,6 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     public static Set<String> extractConfigKeysFromDatapackJson(String tableName, JsonObject root) {
         return DatapackKeyExtractor.extractConfigKeysFromDatapackJson(tableName, root);
-    }
-
-    /** Accepts both {@code "#namespace:path"} (data-pack tag convention) and a bare id. */
-
-    private static Map<Identifier, ItemTransformation> builtInItemTransformations() {
-        return parseItemTransformations(readBundledJsonObject("item_transformations.json"));
     }
 
     /** One {@code tags} entry: every enchantment in {@code tagId} unlocks at {@code level}. */

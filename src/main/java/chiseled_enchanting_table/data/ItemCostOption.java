@@ -117,7 +117,7 @@ public record ItemCostOption(
         );
     }
 
-    private List<Item> candidateItems() {
+    List<Item> candidateItems() {
         if (itemIsTag) {
             List<Item> out = new ArrayList<>();
             BuiltInRegistries.ITEM.get(TagKey.create(Registries.ITEM, itemId))

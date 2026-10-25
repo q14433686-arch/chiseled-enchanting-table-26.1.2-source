@@ -126,8 +126,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private final BlockPos openedTablePos;
     private int lastBatchSignature = Integer.MIN_VALUE;
     private boolean lastRitualActive = false;
-    private long disenchantConfirmUntilMs = 0L;
-    private ItemStack disenchantConfirmSnapshot = ItemStack.EMPTY;
+    private final chiseled_enchanting_table.config.ConfirmationWindow<ItemStack> disenchantConfirmation =
+        new chiseled_enchanting_table.config.ConfirmationWindow<>(DISENCHANT_CONFIRM_WINDOW_MS,
+            ItemStack::copy, (current, snapshot) -> !current.isEmpty() && ItemStack.isSameItemSameComponents(current, snapshot));
     private boolean lastConfirmPending = false;
     private boolean returningFromExternalScreen = false;
     private double savedScrollAmount = 0.0;
@@ -283,26 +284,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     public boolean isDisenchantAllConfirmPending() {
-        if (this.disenchantConfirmUntilMs <= 0L) {
-            return false;
-        }
-        long now = net.minecraft.util.Util.getMillis();
-        ItemStack current = this.menu.get_enchantable_item();
-        if (now > this.disenchantConfirmUntilMs
-            || current.isEmpty()
-            || !ItemStack.isSameItemSameComponents(current, this.disenchantConfirmSnapshot)) {
-            this.disenchantConfirmUntilMs = 0L;
-            this.disenchantConfirmSnapshot = ItemStack.EMPTY;
-            return false;
-        }
-        return true;
+        return this.disenchantConfirmation.pending(this.menu.get_enchantable_item(), net.minecraft.util.Util.getMillis());
     }
 
     public void requestDisenchantAll(boolean shiftBypass) {
         ItemStack target = this.menu.get_enchantable_item();
         if (!shiftBypass && requiresDisenchantAllConfirm(target) && !isDisenchantAllConfirmPending()) {
-            this.disenchantConfirmUntilMs = net.minecraft.util.Util.getMillis() + DISENCHANT_CONFIRM_WINDOW_MS;
-            this.disenchantConfirmSnapshot = target.copy();
+            this.disenchantConfirmation.arm(target, net.minecraft.util.Util.getMillis());
             this.lastConfirmPending = true;
             Minecraft mc = Minecraft.getInstance();
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.85F));
@@ -318,8 +306,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             return;
         }
-        this.disenchantConfirmUntilMs = 0L;
-        this.disenchantConfirmSnapshot = ItemStack.EMPTY;
+        this.disenchantConfirmation.clear();
         this.lastConfirmPending = false;
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
         sendServerboundOrWarn(

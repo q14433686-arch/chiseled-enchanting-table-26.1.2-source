@@ -1996,138 +1996,22 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     @Override
     public void clicked(int slotIndex, int button, net.minecraft.world.inventory.ContainerInput actionType, Player player) {
-        if (actionType == net.minecraft.world.inventory.ContainerInput.QUICK_MOVE) {
-            if (slotIndex < 0 || slotIndex >= this.slots.size()) return;
-            Slot sourceSlot = this.getSlot(slotIndex);
-            if (!sourceSlot.hasItem() || !sourceSlot.mayPickup(player)) return;
-            ItemStack clickedStack = sourceSlot.getItem();
-            if (clickedStack.isEmpty()) return;
-
-            if (slotIndex == COST_SLOT || slotIndex == ENCHANTABLE_SLOT) {
-                if (slotIndex == ENCHANTABLE_SLOT && isRitualActive()) return;
-                ItemStack moving = clickedStack.copy();
-                sourceSlot.set(ItemStack.EMPTY);
-                chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, moving, java.util.Optional.empty());
-                this.inventory.setChanged();
-                this.player.getInventory().setChanged();
-                return;
-            }
-
-            Slot targetSlot = this.getSlot(ENCHANTABLE_SLOT);
-            boolean ritualLocked = isRitualActive();
-
-            if (!ritualLocked && targetSlot.mayPlace(clickedStack)) {
-                ItemStack existingTarget = targetSlot.getItem();
-                int maxTargetAllowed = Math.max(1, targetSlot.getMaxStackSize(clickedStack));
-
-                if (!existingTarget.isEmpty()
-                    && maxTargetAllowed > 1
-                    && ItemStack.isSameItemSameComponents(clickedStack, existingTarget)
-                    && existingTarget.getCount() < maxTargetAllowed) {
-                    int move = Math.min(maxTargetAllowed - existingTarget.getCount(), clickedStack.getCount());
-                    ItemStack updatedTarget = existingTarget.copyWithCount(existingTarget.getCount() + move);
-                    ItemStack remainingSource = clickedStack.getCount() > move
-                        ? clickedStack.copyWithCount(clickedStack.getCount() - move)
-                        : ItemStack.EMPTY;
-                    targetSlot.set(updatedTarget);
-                    sourceSlot.set(remainingSource);
-                    this.inventory.setChanged();
-                    this.player.getInventory().setChanged();
-                    return;
-
-                }
-
-                ItemStack clickedStackNoEnchant = clickedStack.copyWithCount(1);
-                EnchantmentHelper.updateEnchantments(clickedStackNoEnchant, m -> {
-                    var keys = new java.util.HashSet<>(m.keySet());
-                    for (var k : keys) m.set(k, 0);
-                });
-                boolean isBook = clickedStackNoEnchant.is(Items.BOOK) || clickedStackNoEnchant.is(Items.ENCHANTED_BOOK);
-                boolean hasExistingEnchants = !EnchantmentHelper.getEnchantmentsForCrafting(clickedStack).isEmpty();
-                boolean isDedicatedTransformInput = clickedStack.is(BlockRegistry.DEPLETED_TOME)
-                    || ChiseledEnchantingTableData.isResidualBook(clickedStack)
-                    || (!targetSlot.hasItem() && !this.syncedTransformationsFor(clickedStack).isEmpty());
-
-                boolean wantsTargetSlot = clickedStackNoEnchant.isEnchantable()
-                    || isDedicatedTransformInput
-                    || (hasExistingEnchants && !isBook && !targetSlot.hasItem())
-                    || (isBook && !targetSlot.hasItem());
-
-                if (wantsTargetSlot && (!targetSlot.hasItem() || targetSlot.mayPickup(player))) {
-                    ItemStack displaced = existingTarget.isEmpty() ? ItemStack.EMPTY : existingTarget.copy();
-                    int moveCount = Math.min(maxTargetAllowed, clickedStack.getCount());
-                    ItemStack placed = clickedStack.copyWithCount(moveCount);
-                    ItemStack remainingSource = clickedStack.getCount() > moveCount
-                        ? clickedStack.copyWithCount(clickedStack.getCount() - moveCount)
-                        : ItemStack.EMPTY;
-
-                    targetSlot.set(placed);
-                    if (displaced.isEmpty()) {
-                        sourceSlot.set(remainingSource);
-                    } else if (remainingSource.isEmpty()) {
-                        sourceSlot.set(displaced);
-                    } else {
-                        sourceSlot.set(remainingSource);
-                        int containerSlot = sourceSlot.getContainerSlot();
-                        java.util.Optional<Integer> preferredSlot = (containerSlot >= 0 && containerSlot < 36)
-                            ? java.util.Optional.of(containerSlot)
-                            : java.util.Optional.empty();
-                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, displaced, preferredSlot);
-                    }
-                    this.inventory.setChanged();
-                    this.player.getInventory().setChanged();
-                    return;
-                }
-            } else {
-                // While a ritual is active, never route enchantable gear or blank books into COST_SLOT by accident unless valid cost!
-                ItemStack probe = clickedStack.copyWithCount(1);
-                EnchantmentHelper.updateEnchantments(probe, m -> {
-                    var keys = new java.util.HashSet<>(m.keySet());
-                    for (var k : keys) m.set(k, 0);
-                });
-                if (probe.isEnchantable() || clickedStack.is(BlockRegistry.DEPLETED_TOME)) {
-                    return;
-                }
-            }
-
-            Slot costSlotObj = this.getSlot(COST_SLOT);
-            if (!costSlotObj.mayPlace(clickedStack)) {
-                return;
-            }
-            if (!costSlotObj.hasItem()) {
-                this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT + 1, false);
-            } else {
-                ItemStack costSlotStack = costSlotObj.getItem();
-                if (ItemStack.isSameItemSameComponents(clickedStack, costSlotStack)) {
-                    this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT + 1, false);
-                } else if (costSlotObj.mayPickup(player)) {
-                    int containerSlot = sourceSlot.getContainerSlot();
-                    java.util.Optional<Integer> preferredSlot = (containerSlot >= 0 && containerSlot < 36)
-                        ? java.util.Optional.of(containerSlot)
-                        : java.util.Optional.empty();
-                    ItemStack returning = costSlotStack.copy();
-                    int maxCostAllowed = Math.max(1, costSlotObj.getMaxStackSize(clickedStack));
-                    int moveCount = Math.min(maxCostAllowed, clickedStack.getCount());
-                    ItemStack placedCost = clickedStack.copyWithCount(moveCount);
-                    ItemStack remainingSource = clickedStack.getCount() > moveCount
-                        ? clickedStack.copyWithCount(clickedStack.getCount() - moveCount)
-                        : ItemStack.EMPTY;
-
-                    costSlotObj.set(placedCost);
-                    if (remainingSource.isEmpty()) {
-                        sourceSlot.set(returning);
-                    } else {
-                        sourceSlot.set(remainingSource);
-                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, returning, preferredSlot);
-                    }
-                }
-            }
-            this.inventory.setChanged();
-            this.player.getInventory().setChanged();
-            return;
+        if (!MenuQuickMove.handle(this.quickMoveAccess, this.player, slotIndex, actionType, player)) {
+            super.clicked(slotIndex, button, actionType, player);
         }
-        super.clicked(slotIndex, button, actionType, player);
     }
+
+    private final MenuQuickMove.Access quickMoveAccess = new MenuQuickMove.Access() {
+        public int slotCount() { return slots.size(); }
+        public Slot slot(int index) { return getSlot(index); }
+        public boolean ritualActive() { return isRitualActive(); }
+        public boolean hasTransformation(ItemStack stack) { return !syncedTransformationsFor(stack).isEmpty(); }
+        public void insertCost(ItemStack stack) { moveItemStackTo(stack, COST_SLOT, COST_SLOT + 1, false); }
+        public void changed() {
+            inventory.setChanged();
+            ChiseledEnchantingTableScreenHandler.this.player.getInventory().setChanged();
+        }
+    };
 
     public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;
