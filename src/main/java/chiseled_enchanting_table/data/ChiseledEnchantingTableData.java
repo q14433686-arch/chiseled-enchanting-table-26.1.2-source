@@ -98,9 +98,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static volatile BookUpgradeRules rawBookUpgradeRules = builtInBookUpgradeRules();
     // Classic overlay set: bundled baselines, replaceable per-file by a
     // datapack carrying the same path (loaded in the reload listener below).
-    private static volatile CostTables classicCostTables = CostTables.fromJson(readBundledJsonObject("enchantment_costs_classic_1_0_3.json"));
-    private static volatile BookUpgradeRules classicBookUpgradeRules = BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades_classic_1_0_3.json"));
-    private static volatile Map<Identifier, ItemTransformation> classicItemTransformations = classic103ItemTransformations();
+    private static final CostTables BUILT_IN_CLASSIC_COSTS = CostTables.fromJson(readBundledJsonObject("enchantment_costs_classic_1_0_3.json"));
+    private static final BookUpgradeRules BUILT_IN_CLASSIC_UPGRADES = BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades_classic_1_0_3.json"));
+    private static final Map<Identifier, ItemTransformation> BUILT_IN_CLASSIC_TRANSFORMATIONS = classic103ItemTransformations();
+    private static volatile CostTables classicCostTables = BUILT_IN_CLASSIC_COSTS;
+    private static volatile BookUpgradeRules classicBookUpgradeRules = BUILT_IN_CLASSIC_UPGRADES;
+    private static volatile Map<Identifier, ItemTransformation> classicItemTransformations = BUILT_IN_CLASSIC_TRANSFORMATIONS;
     private static volatile TreasureEpiphanyRules rawTreasureEpiphanyRules = builtInTreasureEpiphanyRules();
     private static volatile DisenchantingRules rawDisenchantingRules = builtInDisenchantingRules();
     private static volatile chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config rawShelfGatesConfig =
@@ -802,12 +805,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         costTables = loadCostTables(resourceManager);
         rawItemTransformations = loadItemTransformations(resourceManager);
         classicCostTables = loadClassicJson(resourceManager,
-            "enchantment_costs_classic_1_0_3.json", CostTables::fromJson, classicCostTables);
+            "enchantment_costs_classic_1_0_3.json", CostTables::fromJson, BUILT_IN_CLASSIC_COSTS);
         classicBookUpgradeRules = loadClassicJson(resourceManager,
-            "book_upgrades_classic_1_0_3.json", BookUpgradeRules::fromJson, classicBookUpgradeRules);
+            "book_upgrades_classic_1_0_3.json", BookUpgradeRules::fromJson, BUILT_IN_CLASSIC_UPGRADES);
         classicItemTransformations = loadClassicJson(resourceManager,
             "item_transformations_classic_1_0_3.json",
-            root -> parseItemTransformations(root), classicItemTransformations);
+            root -> parseItemTransformations(root), BUILT_IN_CLASSIC_TRANSFORMATIONS);
         LootInjectionTable loadedLoot = loadLootInjections(resourceManager);
         rawVanillaChestBooksMode = loadedLoot.mode();
         lootInjections = loadedLoot.entries();
@@ -1295,7 +1298,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * Classic overlay entry point: a datapack file at
      * {@code data/chiseled_enchanting_table/chiseled_enchanting_table/<file>}
      * replaces the bundled 1.0.3 baseline for that table; without one, the
-     * previously loaded (bundled) table is kept.
+     * immutable bundled baseline is restored (never a removed pack's previous override).
      */
     private static <T> T loadClassicJson(
         ResourceManager resourceManager,

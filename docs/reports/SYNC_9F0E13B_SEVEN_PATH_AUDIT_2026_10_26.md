@@ -22,6 +22,7 @@
 | RULE-02 | 共性，数据包失去治理权 | 任意外部包只要 JSON 等于 bundled 就被当作 own，无法用默认值覆盖非默认本地偏好。内容比较现在仅给 `fabric`/`vanilla` 聚合内置来源兜底；明确的 own 来源保留，普通 external 始终参与来源判定。 | 两条其他线建议同步 |
 | RELOAD-01 | 共性，静默吞错/代际混用 | preload catch 只 warn，外层 falsely 声称 fallback；旧 staged 值可能被继续使用。移除吞错；26.3 reload HEAD 注入返回 failed future，拒绝这轮 registry build，不用旧规则构建新表。 | 逻辑共性；Mixin 签名各线适配 |
 | RELOAD-02 | 共性，准备状态泄露到玩法 | 原 preload 直接更新 live getter 和 chest spawn cache。改成单个不可变 **`LootRegistryBuildRules`**，只由两类 loot table MODIFY 回调消费；玩法仍读已发布 `RuntimeFrame`。成功/失败 reload 结束与 server started 清 stage；preload 不改 active chest cache。 | 两条其他线建议同步 |
+| RELOAD-03 | 共性，移除 Classic 数据包后仍沿用旧值 | 三个 Classic loader 把当前可变表当作缺资源 fallback；包移除后旧成本/升级/转化被继续保留。独立保存三个不可变 bundled 基线，每轮缺资源回到基线，补完整 loader 添加→移除回归。 | 两条其他线建议同步 |
 | NET-01 | 共性，成本包仍可超限 | 裁剪仅处理成本行；行为空/裁到零后仍可能让超限配置头或转化列表出站。现在实测仍超上限就抛错；实际 Netty 测试覆盖可裁剪与不可裁剪。**不丢弃配置字段伪造一致性。** | 两条其他线建议同步 |
 | NET-02 | 共性，失败后继续显示旧价 | cost sync 并非纯装饰；捕获失败只 warn 会留下本地/旧报价。现在清 display cache，明确报错断开该客户端；管理员修复包后可重新连接。新增 11 语言报错。 | 两条其他线建议同步；属于有意 fail-closed 行为 |
 | MIXIN-01 | 共性，Creative 豁免与底层守卫冲突 | UseBlockCallback 的 Creative PASS 无法绕过容器 removeItem 锁。新增 **实际 vanilla `removeBook` HEAD** 注入，仅服务端 Creative 的真实取书操作先解锁该格；普通点击/插入不解锁，漏斗不继承豁免。 | 语义共性；各线核对私有静态方法签名 |

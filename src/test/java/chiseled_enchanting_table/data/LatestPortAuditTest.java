@@ -90,6 +90,38 @@ class LatestPortAuditTest {
         }
     }
 
+    private static Object dataField(String name) throws Exception {
+        var field = ChiseledEnchantingTableData.class.getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(null);
+    }
+
+    @Test void removingClassicOverlayRestoresAllThreeImmutableBundledBaselines() throws Exception {
+        var previousFrame = ChiseledEnchantingTableData.runtimeFrame();
+        var previousPolicy = chiseled_enchanting_table.config.ModRuntimeConfig.serverPackPolicy();
+        var resources = new java.util.HashMap<Identifier, Resource>();
+        for (String file : List.of("enchantment_costs", "book_upgrades", "item_transformations")) {
+            resources.put(Identifier.fromNamespaceAndPath("chiseled_enchanting_table",
+                "chiseled_enchanting_table/" + file + "_classic_1_0_3.json"), resource("file/classic_overlay", "{\"values\":[]}"));
+        }
+        var loader = new ChiseledEnchantingTableData();
+        try {
+            loader.onResourceManagerReload(manager(resources));
+            assertNotSame(dataField("BUILT_IN_CLASSIC_COSTS"), dataField("classicCostTables"));
+            assertNotSame(dataField("BUILT_IN_CLASSIC_UPGRADES"), dataField("classicBookUpgradeRules"));
+            assertTrue(((Map<?, ?>) dataField("classicItemTransformations")).isEmpty());
+            loader.onResourceManagerReload(manager(Map.of()));
+            assertSame(dataField("BUILT_IN_CLASSIC_COSTS"), dataField("classicCostTables"));
+            assertSame(dataField("BUILT_IN_CLASSIC_UPGRADES"), dataField("classicBookUpgradeRules"));
+            assertSame(dataField("BUILT_IN_CLASSIC_TRANSFORMATIONS"), dataField("classicItemTransformations"));
+            assertFalse(((Map<?, ?>) dataField("classicItemTransformations")).isEmpty());
+        } finally {
+            loader.onResourceManagerReload(manager(Map.of()));
+            ChiseledEnchantingTableData.applyRuntimeConfig(previousFrame.configuration(), previousFrame.policy(), () -> {});
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(previousPolicy);
+        }
+    }
+
     @Test void registryPreloadDoesNotPublishToGameplayOrChestSpawnCache() {
         var liveEntries = ChiseledEnchantingTableData.lootInjections();
         var liveMode = ChiseledEnchantingTableData.vanillaChestBooksMode();
