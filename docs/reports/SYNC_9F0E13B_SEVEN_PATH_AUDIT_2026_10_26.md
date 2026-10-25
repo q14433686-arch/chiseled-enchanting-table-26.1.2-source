@@ -77,9 +77,17 @@
 - `python3 scripts/compat_check.py`：PASS；沙箱没有 MC jar，因此本地 registry/tag Tier-2 两项跳过，不能声称查过。
 - `git diff --check`。
 
-新增真实 Java 回归：外部包 pin 默认值、聚合内置来源、六项 tome page 的解析→来源→resolver→frame、preload 不污染 live/chest cache、无效 loot/policy 不发布半份候选、实编码成本行裁剪与空行后 header 仍超预算拒绝。已有本轮移植测试还覆盖 Codec 往返、80 项目录/20 原子、四预设、Unicode 搜索、锁时长与持久队列。
+新增真实 Java 回归：外部包 pin 默认值、聚合内置来源、六项 tome page 的解析→来源→resolver→frame、preload 不污染 live/chest cache、无效 loot/policy 不发布半份候选、Classic 三表添加→移除回到 bundled、实编码成本行裁剪与空行后 header 仍超预算拒绝。已有本轮移植测试还覆盖 Codec 往返、80 项目录/20 原子、四预设、Unicode 搜索、锁时长与持久队列。
 
-远程最新源码的编译、JUnit、可选依赖关闭、真实服务端 smoke **正在验证，完成后在本节补证据**。较早源码 `5a1db65`、`07a4c7f` 的真实服务器 world-load/reload 与既有仪式/隔离/输入返还探针已通过，不等同于最终源码全通过。
+最终游戏/测试源码 **`23ef23be8a11b797977b92e50083a54170692c19`** 已通过：
+
+- [compile-check 40241535541](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40241535541)：`compileJava compileClientJava test` 成功；JUnit XML **96 tests / 0 failures / 0 errors / 0 skipped**。
+- [build 40241535552](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40241535552)：**四个 job 全成功**（静态检查、完整构建及 jar artifact、关闭 JEI/REI 的双源集编译、真实 26.3 服务端 smoke）。
+- `build-reports/compile-java.log` 首行固定该源码 SHA，包含各测试类统计；`LatestPortAuditTest` 5 项全过，包括完整 loader 的 Classic 三表添加→移除。
+- 真实 smoke 覆盖新世界启动、`/reload`、方块掉落组件、条件 loot 函数、持久仪式队列待机→完成、失效附魔引用隔离、破坏时输入返还。14 Mixin 在真实服务端启动期间正常应用。
+- 最终报告补证据的提交只更新文档；CI 日志回推不改变已验证游戏源码。
+
+中间失败没有算作通过证据：初次新增 API 编译错误已修；新回归测试曾把 `PackPolicy` 的来源集合误传为锁集合，已修正 fixture 后重跑全套。
 
 未人工验证：Iris 实机/F3+T、Creative 与漏斗的玩家交互、GUI/IME/缩放、真实多客户端/LAN、JEI/REI 返回菜单、长时间性能与第三方组合。不得把 headless smoke 或源码断言写成这些项目通过。
 
@@ -87,6 +95,6 @@ CI 诊断同时修复了大日志回写：base64 不再作为单个命令行参�
 
 ## 5. 反哺其他两个分支
 
-建议 26.1.2/26.2 优先吸收 RULE-01/02、RELOAD-01/02、NET-01/02、LIFE-01，并核对 Creative 取书与底层守卫冲突。最小重构单元是“来源提取 + raw bridge + resolver/frame 一致性回归”和“registry-build 候选与 live generation 分离”，不要只 cherry-pick 文案或 Codec。
+建议 26.1.2/26.2 优先吸收 RULE-01/02、RELOAD-01/02/03、NET-01/02、LIFE-01，并核对 Creative 取书与底层守卫冲突。最小重构单元是“来源提取 + raw bridge + resolver/frame 一致性回归”和“registry-build 候选与 live generation 分离”，不要只 cherry-pick 文案或 Codec。
 
 26.3 的 BlockEntityTypes、四参 reload、input/render/loot schema 与 Iris workaround 是版本专属，不能照搬到其他线。本会话只修改当前 Arena 分支，没有代改或推送其他两个分支，也没有本轮 PR/合并授权。
