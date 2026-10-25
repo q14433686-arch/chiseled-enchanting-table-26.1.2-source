@@ -562,7 +562,7 @@ public final class DepletedTomeWorldMechanics {
      */
     public static void ensureLibrarianDepletedTomeOffers(Level world, Villager villager) {
         if (world == null || villager == null
-            || chiseled_enchanting_table.config.ModRuntimeConfig.forSide(world.isClientSide()).classic103Mode()) {
+            || !chiseled_enchanting_table.config.ModRuntimeConfig.forSide(world.isClientSide()).librarianTomeOffers()) {
             return;
         }
         if (!villager.getVillagerData().profession().is(LIBRARIAN_PROFESSION_KEY)) {

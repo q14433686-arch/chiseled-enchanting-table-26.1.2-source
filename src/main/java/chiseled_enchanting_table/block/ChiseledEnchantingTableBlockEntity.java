@@ -353,8 +353,10 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         // Classic steps are enqueued with a 1-tick completion only as an internal
         // transport, so the completion path must not roll post-1.0.3 ritual outcomes
         // for them — previously a wear-immune tome could still «抄错» in classic.
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig
-            .forSide(level != null && level.isClientSide()).classic103Mode();
+        var activeCfg = chiseled_enchanting_table.config.ModRuntimeConfig
+            .forSide(level != null && level.isClientSide());
+        boolean ritualQueueEnabled = activeCfg.ritualQueueEnabled();
+        boolean provenanceEnabled = activeCfg.provenanceEnabled();
 
         var ritualCfg = ChiseledEnchantingTableData.ritualConfig();
         var scan = InscriptionRitualMechanics.scanLibraryRitualContext(
@@ -421,7 +423,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
             // Iron Rule #2: ONLY steps actually copied from an overloaded wear-immune Master Tome roll slip/cross-line,
             // evaluated against max(step's queue-time load, live library-wide Sigma L across active wear-immune tomes)!
-            double stepSlipProb = (!classic103 && step.masterTomeUsed() && step.usedInfinityTome())
+            double stepSlipProb = (ritualQueueEnabled && step.masterTomeUsed() && step.usedInfinityTome())
                 ? InscriptionRitualMechanics.computeLoadSlipProbability(
                     ritualCfg,
                     Math.max(step.infinityTomeLoad(), scan.totalWearImmuneLoad()),
@@ -571,7 +573,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 m.set(key, working.getLevel(key));
             }
         });
-        if (!classic103) {
+        if (provenanceEnabled) {
             EnchantmentProvenance.pruneToCurrentEnchantments(
                 currentTarget,
                 EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
@@ -585,6 +587,9 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             }
         } else {
             EnchantmentProvenance.clearAll(currentTarget);
+            if (anyCrosslinePollution && ritualQueueEnabled) {
+                chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
+            }
         }
 
         this.items.set(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT, currentTarget);

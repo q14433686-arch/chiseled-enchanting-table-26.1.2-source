@@ -797,7 +797,7 @@ class EconomyAndConfigVerificationTest {
     @Test
     void configCatalogCoversAllSevenCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
-        assertEquals(64, all.size(), "Expected 64 curated in-game configurable entries across 7 categories");
+        assertEquals(80, all.size(), "Expected 80 curated in-game configurable entries (including granular 1.0.3/1.1.0 rule atoms) across 7 categories");
         for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
                 chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
@@ -981,6 +981,7 @@ class EconomyAndConfigVerificationTest {
         for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
             requiredKeys.add(opt.nameKey());
             requiredKeys.add(opt.descKey());
+            requiredKeys.add(opt.sectionTitleKey());
             if (opt.kind() == chiseled_enchanting_table.config.ConfigCatalog.ControlKind.ENUM_CYCLE) {
                 for (int i = 0; i < 8; i++) {
                     String formatted = opt.rawOrKeyDisplay(probe);
@@ -988,6 +989,12 @@ class EconomyAndConfigVerificationTest {
                     opt.toggleOrCycle(probe, 1);
                 }
             }
+        }
+        for (var trace : chiseled_enchanting_table.config.ConfigCatalog.RULE_TRACE_ENTRIES) {
+            requiredKeys.add(trace.titleKey());
+            requiredKeys.add(trace.impactKey());
+            requiredKeys.add(trace.classicSummaryKey());
+            requiredKeys.add(trace.modernSummaryKey());
         }
 
         for (Path lf : langFiles) {

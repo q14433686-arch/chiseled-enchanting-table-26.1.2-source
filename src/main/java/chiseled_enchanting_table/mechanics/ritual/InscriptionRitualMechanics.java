@@ -1569,7 +1569,8 @@ public final class InscriptionRitualMechanics {
                 int count = enchants.size();
                 if (count <= 0) continue;
                 anyEnchantedInShelf = true;
-                if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book)) {
+                if (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
+                    && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book)) {
                     continue;
                 }
                 anyTome = true;
@@ -1637,7 +1638,8 @@ public final class InscriptionRitualMechanics {
             for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
                 ItemStack book = shelfBe.getItem(slot);
                 if (book.isEmpty()
-                    || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book)
+                    || (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
+                        && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book))
                     || !MasterTomeWear.hasEffectiveWearImmunity(lrCfg, book)) continue;
                 ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
                 for (var entry : enchants.entrySet()) {
@@ -1703,7 +1705,8 @@ public final class InscriptionRitualMechanics {
             for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
                 ItemStack book = shelfBe.getItem(slot);
                 if (book.isEmpty()
-                    || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book)) continue;
+                    || (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
+                        && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book))) continue;
                 ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
                 if (enchants.isEmpty()) continue;
                 int count = enchants.size();

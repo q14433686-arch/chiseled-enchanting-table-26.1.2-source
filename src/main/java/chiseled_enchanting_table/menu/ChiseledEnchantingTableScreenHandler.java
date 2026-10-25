@@ -442,7 +442,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public void advanceTableEpiphanySeed(boolean consumedEpiphanyOrForceClearFreeze) {
-        if (isClassic103Mode()) {
+        if (!isEpiphanyEnabled()) {
             return;
         }
         this.access.execute((lvl, pos) -> {
@@ -532,17 +532,85 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return total > 0 ? Math.min(configured, total) : configured;
     }
 
+    public chiseled_enchanting_table.config.ModRuntimeConfig activeRuntimeConfig() {
+        return chiseled_enchanting_table.config.ModRuntimeConfig.forSide(this.world.isClientSide());
+    }
+
     public boolean isClassic103Mode() {
-        return chiseled_enchanting_table.config.ModRuntimeConfig.forSide(this.world.isClientSide()).classic103Mode();
+        return activeRuntimeConfig().isAllClassicAtoms();
+    }
+
+    public boolean usesClassicShelfBoost() {
+        return activeRuntimeConfig().shelfBoostModel()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.ShelfBoostModel.CLASSIC_FLOOR_THIRD;
+    }
+
+    public boolean allowsDirectTierUpgrade() {
+        return activeRuntimeConfig().directTierUpgrade();
+    }
+
+    public boolean usesIncrementalCredit() {
+        return activeRuntimeConfig().incrementalCredit();
+    }
+
+    public boolean usesClassicFullPointXp() {
+        return activeRuntimeConfig().xpMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.XpSettlementMode.CLASSIC_FULL_POINTS;
+    }
+
+    public boolean usesSaltedSingleMaterial() {
+        return activeRuntimeConfig().materialSelectionMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.MaterialSelectionMode.PLAYER_SALTED_SINGLE;
+    }
+
+    public boolean usesClassicCostTable() {
+        return activeRuntimeConfig().costTableDataset()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.CostTableDataset.CLASSIC_1_0_3;
+    }
+
+    public boolean isLibraryDiscountEnabled() {
+        return activeRuntimeConfig().libraryDiscountEnabled();
+    }
+
+    public boolean isTomeLocksEnabled() {
+        return activeRuntimeConfig().tomeLocksEnabled();
+    }
+
+    public boolean isProvenanceEnabled() {
+        return activeRuntimeConfig().provenanceEnabled();
+    }
+
+    public boolean isRitualQueueEnabled() {
+        return activeRuntimeConfig().ritualQueueEnabled();
+    }
+
+    public boolean isEpiphanyEnabled() {
+        return activeRuntimeConfig().epiphanyEnabled();
+    }
+
+    public boolean usesClassicTransformations() {
+        return activeRuntimeConfig().transformationSetMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.TransformationSetMode.CLASSIC_TWO;
+    }
+
+    public boolean returnsPlainDrainedBook() {
+        return activeRuntimeConfig().drainedBookResult()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.DrainedBookResult.PLAIN_BOOK;
+    }
+
+    public boolean isTomePageEnabled() {
+        return activeRuntimeConfig().tomePageEnabled();
+    }
+
+    public boolean hasSecondaryTabs() {
+        return disenchantEnabled() || isTomePageEnabled();
     }
 
     public boolean isCleansePageUnlocked() {
-        if (isClassic103Mode()) {
+        if (!disenchantEnabled()) {
             return false;
         }
         if (!this.world.isClientSide() && this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            // The page unlocks at the configured sacrifice count; the advancement itself
-            // still completes at its full criteria list for the achievement.
             return chiseled_enchanting_table.utils.Advancement.completedCriteria(
                     sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)
                 >= effectiveSacrificeRequired(sp);
@@ -551,7 +619,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean isTomePageUnlocked() {
-        if (isClassic103Mode()) {
+        if (!isTomePageEnabled()) {
             return false;
         }
         if (!this.world.isClientSide() && this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
@@ -653,11 +721,13 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     /** Server-authoritative handler for every Tome-page button. */
     public void handleTomePageAction(ChiseledEnchantingMenuPayloads.TomePageActionPayload payload) {
         if (this.world.isClientSide() || !(this.player instanceof net.minecraft.server.level.ServerPlayer sp)) return;
-        // 1.0.3 Classic: the Tome page (locks, regen, depleted-tome sacrifice/early
-        // unlock) did not exist. The UI hides the tab, but the server must reject the
-        // payload too — SACRIFICE_DEPLETED was previously handled BEFORE the unlock
-        // check, so it stayed live in classic behind a hidden button.
-        if (isClassic103Mode()) return;
+        if (payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.SACRIFICE_DEPLETED) {
+            if (!disenchantEnabled() && !isTomePageEnabled()) {
+                return;
+            }
+        } else if (!isTomePageEnabled()) {
+            return;
+        }
         refreshLiveShelfState();
         net.minecraft.core.BlockPos tablePos = tableBlockPos();
         if (tablePos == null) return;
@@ -669,6 +739,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         if (!isTomePageUnlocked()) {
             tomeActionMessage("gui.chiseled_enchanting_table.tab.locked_tooltip");
+            return;
+        }
+        if (payload.action() != ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK
+            && !isTomeLocksEnabled()) {
             return;
         }
         if (payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_ALL_FULL) {
@@ -1439,28 +1513,22 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             // "price it from the client's local tables".
             return List.of();
         }
-        if (isClassic103Mode()
+        if (usesSaltedSingleMaterial()
             && (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id()))) {
-            // 1.0.3 Classic: resolve from the frame's classic transformations,
-            // including the Enchanted Golden Apple's ranged emerald cost (2-5,
-            // per-player salted exactly as in tag 26.1.2_1.0.3). Previously this
-            // hardcoded emerald x2 while every other display read the rule.
             List<ItemStack> classicBundle = ChiseledEnchantingTableData.classicTransformationCosts(
                 e.enchantment_id(), this.player.getStringUUID());
             if (!classicBundle.isEmpty()) {
                 return List.of(classicBundle);
             }
         }
-        if (isClassic103Mode() && type == OptionType.ENCHANTMENT) {
-            // 1.0.3 Classic (R2-03): materials resolve per player by stable hash
-            // — one option, salted counts — not "all options at midpoint".
+        if (usesSaltedSingleMaterial() && type == OptionType.ENCHANTMENT) {
             var salted = ChiseledEnchantingTableData.classicSaltedItemCosts(
                 e, getEnchantmentMaxLevel(e), this.player.getStringUUID());
             if (!salted.isEmpty()) {
                 return List.of(salted);
             }
         }
-        if (isClassic103Mode() && type == OptionType.BOOK_RESEARCH_UPGRADE) {
+        if (usesSaltedSingleMaterial() && type == OptionType.BOOK_RESEARCH_UPGRADE) {
             var salted = ChiseledEnchantingTableData.classicSaltedResearchCosts(
                 e, getEnchantmentMaxLevel(e), this.player.getStringUUID());
             if (!salted.isEmpty()) {
@@ -1534,10 +1602,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (serverRow != null) {
             return serverRow.xpLevelCost();
         }
-        if (isClassic103Mode()
+        if (usesClassicTransformations()
             && (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id()))) {
-            // XP comes from the active (possibly datapack-overlaid) classic
-            // transformation table — never hardcoded 3/1 (round 5, #15).
             int xp = ChiseledEnchantingTableData.classicTransformationXpCost(e.enchantment_id());
             if (xp >= 0) {
                 return xp;
@@ -1576,7 +1642,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean disenchantEnabled() {
-        if (isClassic103Mode()) {
+        if (!activeRuntimeConfig().disenchantEnabled()) {
             return false;
         }
         return this.world.isClientSide()
@@ -1664,7 +1730,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
 
         int existingLevel = currentTargetEnchantLevel(e.enchantment_id());
-        if (isClassic103Mode() || existingLevel <= 0 || e.enchantment_level() <= existingLevel) {
+        if (!usesIncrementalCredit() || existingLevel <= 0 || e.enchantment_level() <= existingLevel) {
             return getEnchantmentItemCostOptions(e, type);
         }
 
@@ -1919,7 +1985,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         int existingLevel,
         int targetLevel
     ) {
-        if (existingLevel < 1 || targetLevel <= existingLevel || holder == null || holder.is(CURSE_TAG)) {
+        if (!allowsDirectTierUpgrade()
+            || existingLevel < 1
+            || targetLevel <= existingLevel
+            || holder == null
+            || holder.is(CURSE_TAG)) {
             return false;
         }
         int maxLvl = Math.max(1, holder.value().getMaxLevel());
@@ -1943,7 +2013,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         // is BookshelfProgression, post-1.0.3). The widget already bypassed the gate
         // in classic, but the server check did not — UI offered a row the server
         // then rejected. Align server with widget + 1.0.3.
-        if (isClassic103Mode()) {
+        if (usesClassicShelfBoost()) {
             return targetLevel >= 1 && targetLevel <= maxLvl;
         }
         int cap = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.effectiveUnlockedTierCap(
@@ -2141,11 +2211,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
         int rawCost = getBaseEnchantmentXpLevelCost(e, type);
         int discount = effectiveXpDiscountPercent(e.enchantment_id(), type);
-        if (isClassic103Mode()) {
-            // 1.0.3 exact XP pricing: full level-cost point deduction without 1-3L mass-production tiers or incremental credit.
-            return XpCostConversion.forFullArcaneRitual(resonanceCfg, rawCost, 0);
-        }
+        boolean classicFullXp = usesClassicFullPointXp();
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
+            if (classicFullXp && usesClassicTransformations()) {
+                return XpCostConversion.forFullArcaneRitual(resonanceCfg, rawCost, discount);
+            }
             var baseTransformXp = XpCostConversion.forTransformation(
                 resonanceCfg,
                 e.enchantment_id(),
@@ -2171,8 +2241,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             this.world,
             e.enchantment_id()
         );
-        if (existingLevel > 0 && e.enchantment_level() > existingLevel) {
-            if (storedMasterLevel(e.enchantment_id()) >= e.enchantment_level()
+        if (usesIncrementalCredit() && existingLevel > 0 && e.enchantment_level() > existingLevel) {
+            if (!classicFullXp
+                && storedMasterLevel(e.enchantment_id()) >= e.enchantment_level()
                 && (type == OptionType.ENCHANTMENT
                     || type == OptionType.BOOK_RESEARCH_UPGRADE
                     || type == OptionType.BOOK_COMBINE_UPGRADE)) {
@@ -2201,6 +2272,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             int effectiveRaw = (type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE)
                 ? Math.min(rawCost, deltaRaw)
                 : deltaRaw;
+            if (classicFullXp) {
+                return XpCostConversion.forFullArcaneRitual(resonanceCfg, effectiveRaw, discount);
+            }
             return XpCostConversion.forFullArcaneEnchantOrUpgrade(
                 resonanceCfg,
                 existingLevel,
@@ -2211,6 +2285,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             );
         }
 
+        if (classicFullXp) {
+            return XpCostConversion.forFullArcaneRitual(resonanceCfg, rawCost, discount);
+        }
         if (isMasterTomeBacked(e, type)) {
             return XpCostConversion.forMasterTomeEnchant(resonanceCfg, e.enchantment_level(), maxLvl, rawCost, discount);
         }
@@ -2244,11 +2321,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public double epiphanyChance(ItemStack targetStack) {
-        // 1.0.3 Classic: no Treasure Epiphany exists — treasure enchantments are
-        // static default/stored unlocks, never a shelf/mastery-driven refresh roll.
-        // Hard-zero here (not only via cfg chances) so a stale synced table can
-        // never resurrect the roll.
-        if (isClassic103Mode()) {
+        if (!isEpiphanyEnabled()) {
             return 0.0;
         }
         double base = this.world.isClientSide()
@@ -2281,7 +2354,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public int epiphanyMaxSlots(ItemStack targetStack) {
-        if (isClassic103Mode()) {
+        if (!isEpiphanyEnabled()) {
             return 0;
         }
         int cap = this.world.isClientSide()
@@ -2360,7 +2433,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
      * distinct matching Treasure Enchantments at Level 1) identically on server & client.
      */
     public List<EnchantmentWithLevel> computeActiveTreasureEpiphanies(ItemStack targetStack) {
-        if (isClassic103Mode()) {
+        if (!isEpiphanyEnabled()) {
             return List.of();
         }
         int minShelves = epiphanyMinBookshelves();
@@ -2503,7 +2576,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean canAffordRerollEpiphany() {
-        if (isClassic103Mode()) return false;
+        if (!isEpiphanyEnabled()) return false;
         if (this.regularBookshelves < epiphanyMinBookshelves()) return false;
         if (this.player.getAbilities().instabuild) return true;
         if (this.player.experienceLevel < epiphanyRerollXpLevels()) return false;
@@ -2511,7 +2584,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean canAffordFreezeEpiphany() {
-        if (isClassic103Mode()) return false;
+        if (!isEpiphanyEnabled()) return false;
         if (this.regularBookshelves < epiphanyMinBookshelves()) return false;
         int maxSec = Math.max(10, epiphanyMaxFreezeTicks() / 20);
         if (isEpiphanyFrozen() && countdownSeconds() >= maxSec - 2) return false;
@@ -2801,8 +2874,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     public void applyEnchantement(ApplyEnchantmentPayload payload) {
         refreshLiveShelfState();
-        if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(get_enchantable_item())
-            || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(get_cost_item())) {
+        if (isTomeLocksEnabled()
+            && (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(get_enchantable_item())
+                || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(get_cost_item()))) {
             tomeActionMessage("message.chiseled_enchanting_table.tome_lock.locked_input");
             return;
         }

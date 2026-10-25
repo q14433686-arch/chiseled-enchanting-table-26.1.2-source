@@ -182,14 +182,15 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         // #minecraft:in_enchanting_table with NO treasure/curse/epiphany exclusions.
         // Filtering first and re-adding 7 vanilla IDs afterwards (the previous
         // approach) still dropped third-party enchantments carrying both tags.
-        boolean classic103 = runtimeConfiguration().classic103Mode();
-        Set<Identifier> excluded = classic103
+        boolean unfilteredDefaults = runtimeConfiguration().defaultUnlockFilter()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.DefaultUnlockFilter.CLASSIC_UNFILTERED;
+        Set<Identifier> excluded = unfilteredDefaults
             ? new HashSet<>()
             : new HashSet<>((runtimeFrame == null ? defaultExcludedIds : runtimeFrame.defaultExcludedIds()));
-        if (!classic103) {
+        if (!unfilteredDefaults) {
             excluded.addAll((runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).explicitTreasureIds());
         }
-        for (Identifier exTag : classic103
+        for (Identifier exTag : unfilteredDefaults
             ? List.<Identifier>of()
             : (runtimeFrame == null ? defaultExcludedTags : runtimeFrame.defaultExcludedTags())) {
             TagKey<Enchantment> tagKey = TagKey.create(Registries.ENCHANTMENT, exTag);
@@ -282,7 +283,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         var rules = (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules());
         int direct = (runtimeFrame == null ? costTables : runtimeFrame.costTables()).xpCost(target, Math.max(1, maxLevel));
         // 1.0.3 Classic (R2-04): research XP floors (15 x 0.5 = 7, not 8).
-        return runtimeConfiguration().classic103Mode()
+        return runtimeConfiguration().researchRoundingMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.ResearchRoundingMode.FLOOR_DOWN
             ? rules.classicResearchXpCost(target, Math.max(1, maxLevel), direct)
             : rules.researchXpCost(target, Math.max(1, maxLevel), direct);
     }
@@ -902,8 +904,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         // produced non-zero values that leaked into tooltips ("额外 -15% (共 -0%)")
         // even though the charged XP correctly used 0. Zero every sub-cap at the
         // source so mechanism, payload sync and every floating text agree: -0%.
-        boolean classic103 = cfg.classic103Mode();
-        if (classic103) {
+        boolean resDiscountOff = !cfg.libraryDiscountEnabled();
+        if (resDiscountOff) {
             woodDisc = 0;
             totalDisc = 0;
         }
@@ -911,9 +913,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             lr.minDiscountBookshelves(),
             Math.max(lr.minDiscountBookshelves() + 1, lr.maxDiscountBookshelves()),
             woodDisc,
-            classic103 ? 0 : lr.maxGlobalMasteryDiscountPercent(),
-            classic103 ? 0 : lr.maxBaseXpDiscountPercent(),
-            classic103 ? 0 : lr.maxSpecificEnchantBonusPercent(),
+            resDiscountOff ? 0 : lr.maxGlobalMasteryDiscountPercent(),
+            resDiscountOff ? 0 : lr.maxBaseXpDiscountPercent(),
+            resDiscountOff ? 0 : lr.maxSpecificEnchantBonusPercent(),
             lr.specificEnchantExponent(),
             totalDisc,
             lr.masteryUnitExponent(),
@@ -945,11 +947,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             cfg.tomeRegenTier2Seconds(),
             lr.unbreakingWaiverPerLevel(),
             lr.unbreakingWaiverMaxChance(),
-            !cfg.classic103Mode() && lr.wildBookWearEnabled(),
+            cfg.tomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR
+                && lr.wildBookWearEnabled(),
             lr.wildBookRemainingWeights(),
             lr.scapegoatPricing(),
-            cfg.lockedShelfBreakable(),
-            cfg.lockedBookExtractionBlocked(),
+            !cfg.tomeLocksEnabled() || cfg.lockedShelfBreakable(),
+            cfg.tomeLocksEnabled() && cfg.lockedBookExtractionBlocked(),
             cfg.earlyUnlockXpLevels(),
             cfg.earlyUnlockGritCount(),
             cfg.sacrificeRequired(),
@@ -960,30 +963,30 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             lr.wearImmuneOverloadWaiverDecay()
         );
 
-        var bu = rawBookUpgradeRules;
-        if (classic103) {
-            // 1.0.3 Classic data set (audit findings 06/07): "full price" must mean
-            // the 1.0.3 prices, not full price at 1.1.0 rates. The classic
-            // *_classic_1_0_3.json tables (bundled baselines, datapack-overridable
-            // per R2-09) parse through the same loaders and own their XP
-            // multipliers while the mode is on; cfg multipliers are editable
-            // preferences for standard mode and must not leak into classic.
-            bu = classicBookUpgradeRules;
-        }
+        boolean useClassicCostTable = cfg.costTableDataset()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.CostTableDataset.CLASSIC_1_0_3;
+        var bu = useClassicCostTable ? classicBookUpgradeRules : rawBookUpgradeRules;
+        double effectiveCombineMult = (useClassicCostTable && !cfg.customizedKeys().contains("book_combine_xp_multiplier"))
+            ? bu.combineXpMultiplier()
+            : cfg.bookCombineXpMultiplier();
+        double effectiveResearchMult = (useClassicCostTable && !cfg.customizedKeys().contains("book_research_xp_multiplier"))
+            ? bu.researchXpMultiplier()
+            : cfg.bookResearchXpMultiplier();
         BookUpgradeRules bookUpgradeRules = new BookUpgradeRules(
             cfg.bookCombineEnabled(),
-            classic103 ? bu.combineXpMultiplier() : cfg.bookCombineXpMultiplier(),
+            effectiveCombineMult,
             cfg.bookResearchEnabled(),
-            classic103 ? bu.researchXpMultiplier() : cfg.bookResearchXpMultiplier(),
+            effectiveResearchMult,
             bu.researchMaterialMultiplier(),
             bu.defaultResearchCost(),
             bu.researchOverrides()
         );
-        CostTables frameCostTables = classic103 ? classicCostTables : costTables;
+        CostTables frameCostTables = useClassicCostTable ? classicCostTables : costTables;
 
         var ep = rawTreasureEpiphanyRules;
-        double epBase = classic103 ? 0.0 : cfg.epiphanyBaseChance();
-        double epMax = classic103 ? 0.0 : Math.max(epBase, cfg.epiphanyMaxChance());
+        boolean epiphanyOff = !cfg.epiphanyEnabled();
+        double epBase = epiphanyOff ? 0.0 : cfg.epiphanyBaseChance();
+        double epMax = epiphanyOff ? 0.0 : Math.max(epBase, cfg.epiphanyMaxChance());
         int frzTicks = Math.max(200, cfg.epiphanyFreezeDurationSeconds() * 20);
         int maxFrzTicks = Math.max(
             frzTicks,
@@ -992,11 +995,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         TreasureEpiphanyRules treasureEpiphanyRules = new TreasureEpiphanyRules(
             cfg.epiphanyMinBookshelves(),
             epBase,
-            // 1.0.3 had no Epiphany at all: per-shelf/per-tome chances come from the
-            // datapack JSON, not from cfg, so zeroing only cfg base/max was not enough
-            // to sever the "shelves/mastery -> treasure refresh" relation.
-            classic103 ? 0.0 : ep.chancePerExtraBookshelf(),
-            classic103 ? 0.0 : ep.chancePerMasterTome(),
+            epiphanyOff ? 0.0 : ep.chancePerExtraBookshelf(),
+            epiphanyOff ? 0.0 : ep.chancePerMasterTome(),
             epMax,
             cfg.epiphanyMaxSlotsCap(),
             ep.scorePerExtraSlot(),
@@ -1024,7 +1024,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         int sMin = cfg.stripXpMin();
         int sMax = Math.max(sMin, cfg.stripXpMax());
         DisenchantingRules disenchantingRules = new DisenchantingRules(
-            !cfg.classic103Mode() && cfg.disenchantEnabled(),
+            cfg.disenchantEnabled(),
             cfg.allowCursePurge(),
             refScale,
             extScale,
@@ -1036,7 +1036,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         );
 
         Map<Identifier, ItemTransformation> itemTransformations;
-        if (cfg.classic103Mode()) {
+        if (cfg.transformationSetMode() == chiseled_enchanting_table.config.ModRuntimeConfig.TransformationSetMode.CLASSIC_TWO) {
             itemTransformations = classicItemTransformations;
         } else if (!cfg.requirePriorDiscovery()) {
             Map<Identifier, ItemTransformation> unlockedMap = new java.util.LinkedHashMap<>();

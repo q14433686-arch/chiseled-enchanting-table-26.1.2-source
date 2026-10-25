@@ -1,22 +1,34 @@
 package chiseled_enchanting_table.gui.config;
 
+import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.config.ConfigCatalog;
 import chiseled_enchanting_table.config.ConfigCatalog.CategoryId;
 import chiseled_enchanting_table.config.ConfigCatalog.ControlKind;
 import chiseled_enchanting_table.config.ConfigCatalog.EffectScope;
 import chiseled_enchanting_table.config.ConfigCatalog.OptionAvailability;
 import chiseled_enchanting_table.config.ConfigCatalog.OptionEntry;
+import chiseled_enchanting_table.config.ConfigCatalog.RuleTraceEntry;
 import chiseled_enchanting_table.config.ConfigCatalog.SessionMode;
+import chiseled_enchanting_table.config.ConfigLayoutSpec;
+import chiseled_enchanting_table.config.ConfigLayoutSpec.Box;
+import chiseled_enchanting_table.config.ConfigLayoutSpec.ModalLayout;
+import chiseled_enchanting_table.config.ConfigLayoutSpec.OptionRowLayout;
+import chiseled_enchanting_table.config.ConfigLayoutSpec.SliderControlLayout;
+import chiseled_enchanting_table.config.ConfigLayoutSpec.TraceCardLayout;
 import chiseled_enchanting_table.config.ModConfigNetworking;
 import chiseled_enchanting_table.config.ModRuntimeConfig;
 import chiseled_enchanting_table.config.ModRuntimeConfig.Draft;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -37,83 +49,95 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Built-in responsive in-game configuration screen supporting both standalone presentation
- * (ModMenu, {@code /cet config}, Arcane Grimoire) and lossless container-modal overlay rendering
- * directly inside {@link chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen}.
+ * Layered pixel-art L0–L3 Configuration &amp; Rule Trace screen supporting both standalone
+ * presentation (ModMenu, {@code /cet config}, Arcane Grimoire) and lossless centered modal overlay
+ * rendering directly inside {@link chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen}.
  */
 @Environment(EnvType.CLIENT)
 public class ChiseledEnchantingConfigScreen extends Screen {
 
-    private static final int BG_DIM = 0xCA07050E;
-    private static final int CHASSIS_OUTER = 0xFFD9B266;
-    private static final int CHASSIS_INNER = 0xFF171124;
-    private static final int HEADER_BG = 0xFF241838;
-    private static final int RAIL_BG = 0xFF130E1F;
-    private static final int CARD_BG = 0xFF211833;
-    private static final int CARD_BG_HOVER = 0xFF2B2042;
-    private static final int CARD_BG_DISABLED = 0xFF181325;
+    // ---- Color Palette (Obsidian / Crying Amethyst / Gilded Brass) ----
+    private static final int BG_SCRIM = 0xD206040D;
+    private static final int BACKDROP_WASH = 0x6E0B0715;
     private static final int GOLD_TEXT = 0xFFFFE599;
-    private static final int CREAM_TEXT = 0xFFF3ECFF;
-    private static final int MUTED_TEXT = 0xFF9C8FB5;
+    private static final int CREAM_TEXT = 0xFFF5EEFF;
+    private static final int MUTED_TEXT = 0xFF9F91B8;
+    private static final int DIM_TEXT = 0xFF75688C;
+    private static final int EMERALD_TEXT = 0xFF7CFFA8;
+    private static final int CYAN_TEXT = 0xFF82EEFF;
+    private static final int AMBER_TEXT = 0xFFFFC978;
+    private static final int CORAL_TEXT = 0xFFFF8585;
 
-    private static final int ROW_H = 31;
-    private static final int ROW_GAP = 4;
-    private static final int SECTION_H = 17;
+    private static final float GLYPH_INK_H = 8.0f;
 
-    private static final Identifier PANEL_FRAME =
-        chiseled_enchanting_table.ChiseledEnchantingTable.identifier("gui/config/config_panel_frame.png");
-    private static final Identifier CLASSIC_ICON =
-        chiseled_enchanting_table.ChiseledEnchantingTable.identifier("gui/config/category_classic.png");
+    // ---- Modular 2x HD Pixel-Art Layers (assets/chiseled_enchanting_table/gui/config/) ----
+    private static final Identifier MODAL_FRAME = ChiseledEnchantingTable.identifier("gui/config/modal_frame.png");
+    private static final Identifier FRAME_GEM_PIP = ChiseledEnchantingTable.identifier("gui/config/frame_gem_pip.png");
+    private static final Identifier BACKDROP_TILE = ChiseledEnchantingTable.identifier("gui/config/backdrop_tile.png");
+    private static final Identifier DIVIDER_ORNAMENT = ChiseledEnchantingTable.identifier("gui/config/divider_ornament.png");
+    private static final Identifier EMBLEM_TRACE_LARGE = ChiseledEnchantingTable.identifier("gui/config/emblem_trace_large.png");
 
-    private static Identifier categoryIcon(CategoryId category) {
-        return chiseled_enchanting_table.ChiseledEnchantingTable.identifier(
-            "gui/config/category_" + category.id() + ".png");
+    private static final Identifier RAIL_TAB = ChiseledEnchantingTable.identifier("gui/config/rail_tab.png");
+    private static final Identifier RAIL_TAB_ACTIVE = ChiseledEnchantingTable.identifier("gui/config/rail_tab_active.png");
+
+    private static final Identifier SECTION_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/section_plaque.png");
+    private static final Identifier ROW_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/row_plaque.png");
+    private static final Identifier ROW_PLAQUE_HOVER = ChiseledEnchantingTable.identifier("gui/config/row_plaque_hover.png");
+    private static final Identifier ROW_PLAQUE_ATOM = ChiseledEnchantingTable.identifier("gui/config/row_plaque_atom.png");
+    private static final Identifier ROW_PLAQUE_DISABLED = ChiseledEnchantingTable.identifier("gui/config/row_plaque_disabled.png");
+
+    private static final Identifier BTN_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/btn_plaque.png");
+    private static final Identifier BTN_PLAQUE_HOVER = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_hover.png");
+    private static final Identifier BTN_PLAQUE_GOLD = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_gold.png");
+    private static final Identifier BTN_PLAQUE_DISABLED = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_disabled.png");
+
+    private static final Identifier SEARCH_BOX = ChiseledEnchantingTable.identifier("gui/config/search_box.png");
+    private static final Identifier SEARCH_BOX_FOCUS = ChiseledEnchantingTable.identifier("gui/config/search_box_focus.png");
+
+    private static final Identifier TOGGLE_ON = ChiseledEnchantingTable.identifier("gui/config/toggle_on.png");
+    private static final Identifier TOGGLE_OFF = ChiseledEnchantingTable.identifier("gui/config/toggle_off.png");
+    private static final Identifier TOGGLE_LOCKED = ChiseledEnchantingTable.identifier("gui/config/toggle_locked.png");
+
+    private static final Identifier SLIDER_TRACK = ChiseledEnchantingTable.identifier("gui/config/slider_track.png");
+    private static final Identifier SLIDER_FILL = ChiseledEnchantingTable.identifier("gui/config/slider_fill.png");
+    private static final Identifier SLIDER_KNOB = ChiseledEnchantingTable.identifier("gui/config/slider_knob.png");
+    private static final Identifier SLIDER_KNOB_HOVER = ChiseledEnchantingTable.identifier("gui/config/slider_knob_hover.png");
+
+    private static final Identifier ICON_TRACE = ChiseledEnchantingTable.identifier("gui/config/icon_domain_trace.png");
+
+    private static Identifier domainIcon(CategoryId category) {
+        return ChiseledEnchantingTable.identifier("gui/config/" + category.iconFile());
     }
 
-    private static void blitNineSlice(
-        GuiGraphicsExtractor ctx, Identifier texture, int x, int y, int w, int h, int corner, int textureSize
+    // ---- Interactive Hit Regions ----
+    private record HitBox(Box box, Runnable onLeftClick, @Nullable Runnable onRightClick) {
+        boolean contains(double mx, double my) {
+            return box.contains(mx, my);
+        }
+    }
+
+    private record SliderTrack(OptionEntry entry, Box box) {
+        boolean contains(double mx, double my) {
+            return box.contains(mx, my);
+        }
+    }
+
+    private record DisplayItem(
+        boolean isSectionHeader,
+        @Nullable String sectionKey,
+        @Nullable String sectionTitle,
+        int sectionTotalCount,
+        int sectionActiveCount,
+        boolean sectionExpanded,
+        @Nullable OptionEntry option,
+        int flatOptionIndex
     ) {
-        float c = (float) corner / (float) textureSize;
-        ctx.blit(texture, x, y, x + corner, y + corner, 0.0f, c, 0.0f, c);
-        ctx.blit(texture, x + w - corner, y, x + w, y + corner, 1.0f - c, 1.0f, 0.0f, c);
-        ctx.blit(texture, x, y + h - corner, x + corner, y + h, 0.0f, c, 1.0f - c, 1.0f);
-        ctx.blit(texture, x + w - corner, y + h - corner, x + w, y + h, 1.0f - c, 1.0f, 1.0f - c, 1.0f);
-        ctx.blit(texture, x + corner, y, x + w - corner, y + corner, c, 1.0f - c, 0.0f, c);
-        ctx.blit(texture, x + corner, y + h - corner, x + w - corner, y + h, c, 1.0f - c, 1.0f - c, 1.0f);
-        ctx.blit(texture, x, y + corner, x + corner, y + h - corner, 0.0f, c, c, 1.0f - c);
-        ctx.blit(texture, x + w - corner, y + corner, x + w, y + h - corner, 1.0f - c, 1.0f, c, 1.0f - c);
-    }
-
-    private record HitBox(int x, int y, int w, int h, Runnable onClick, @Nullable Runnable onRightClick) {
-        boolean contains(double mx, double my) {
-            return mx >= x && mx < x + w && my >= y && my < y + h;
-        }
-    }
-
-    private record DisplayRow(@Nullable CategoryId section, int sectionCount, @Nullable OptionEntry entry, int optionIndex) {
-        static DisplayRow section(CategoryId category, int count) {
-            return new DisplayRow(category, count, null, -1);
-        }
-
-        static DisplayRow option(OptionEntry entry, int optionIndex) {
-            return new DisplayRow(null, 0, entry, optionIndex);
-        }
-
-        boolean isSection() {
-            return entry == null;
-        }
-
         int height() {
-            return isSection() ? SECTION_H : ROW_H;
+            return isSectionHeader ? ConfigLayoutSpec.SECTION_HEADER_H : ConfigLayoutSpec.OPTION_ROW_H;
         }
     }
 
-    private record SliderTrack(OptionEntry entry, int x, int y, int w, int h) {
-        boolean contains(double mx, double my) {
-            return mx >= x && mx < x + w && my >= y && my < y + h;
-        }
-    }
-
+    // ---- State ----
     @Nullable
     private final Screen parentScreen;
     @Nullable
@@ -122,39 +146,36 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private final SessionMode sessionMode;
     private ModRuntimeConfig baselineConfig;
     private Draft draft;
+    private final Draft defaultReferenceDraft = new Draft();
+    private final Draft classicReferenceDraft;
 
-    private CategoryId activeCategory = CategoryId.GENERAL;
+    private CategoryId activeCategory = CategoryId.BOOKSHELVES;
+    private boolean ruleTracePage = false;
+    private boolean filterModifiedOnly = false;
     private String searchQuery = "";
     private boolean searchFocused = false;
-    private int searchBoxX;
-    private int searchBoxY;
-    private int searchBoxW;
-    private int searchBoxH;
-    // Pseudo-page (not a seventh catalog category): every option the 1.0.3
-    // Classic profile touches, collected in one place and editable there.
-    private boolean classicPage = false;
-    private boolean filterModifiedOnly = false;
-    private float scrollOffset = 0.0f;
-    private float maxScroll = 0.0f;
+
+    private final Set<String> collapsedSections = new HashSet<>();
+    private final Set<String> userToggledSections = new HashSet<>();
+
+    private float listScroll = 0.0f;
+    private float maxListScroll = 0.0f;
+    private float railScroll = 0.0f;
+    private float maxRailScroll = 0.0f;
     private int focusedOptionIndex = -1;
 
-    private int panelX;
-    private int panelY;
-    private int panelW;
-    private int panelH;
-    private int listX;
-    private int listY;
-    private int listW;
-    private int listH;
+    private ModalLayout layout;
+    private int stickyBodyOffset = 0;
 
     private final List<HitBox> hitBoxes = new ArrayList<>();
     private final List<SliderTrack> sliderTracks = new ArrayList<>();
     @Nullable
     private SliderTrack activeDraggingSlider = null;
     private boolean draggingScrollbar = false;
-    private long pendingSaveId;
-    private boolean pendingClose;
-    private boolean lastSaveFailed;
+
+    private long pendingSaveId = 0L;
+    private boolean pendingClose = false;
+    private boolean lastSaveFailed = false;
     private long statusToastUntilMs = 0L;
 
     public ChiseledEnchantingConfigScreen(@Nullable Screen parentScreen) {
@@ -168,6 +189,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         this.sessionMode = detectSessionMode();
         this.baselineConfig = ModRuntimeConfig.preferences();
         this.draft = this.baselineConfig.toDraft();
+        Draft classicRef = new Draft();
+        ModRuntimeConfig.Preset.CLASSIC_1_0_3.applyTo(classicRef);
+        this.classicReferenceDraft = classicRef;
+        this.activeCategory = CategoryId.BOOKSHELVES;
+        syncAutoCollapsedSections();
     }
 
     public void initOverlay(Minecraft mc, int fullWidth, int fullHeight) {
@@ -177,7 +203,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     }
 
     public Rect2i fullGuiBounds() {
-        return new Rect2i(this.panelX, this.panelY, this.panelW, this.panelH);
+        if (this.layout == null) {
+            recomputeLayout();
+        }
+        Box m = this.layout.modal();
+        return new Rect2i(m.x(), m.y(), m.w(), m.h());
     }
 
     private static SessionMode detectSessionMode() {
@@ -199,36 +229,43 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        computeLayout();
+        recomputeLayout();
     }
 
-    private void computeLayout() {
-        this.panelW = Mth.clamp(this.width - 24, 296, 444);
-        this.panelH = Mth.clamp(this.height - 20, 184, 266);
-        this.panelX = (this.width - this.panelW) / 2;
-        this.panelY = (this.height - this.panelH) / 2;
-
-        int railW = Math.min(118, Math.max(94, this.panelW * 28 / 100));
-        this.listX = this.panelX + railW + 8;
-        this.listY = this.panelY + 63;
-        this.listW = this.panelW - railW - 16;
-        this.listH = this.panelH - 93;
+    private void recomputeLayout() {
+        int railCount = CategoryId.values().length + 1; // 7 domains + Rule Trace
+        this.layout = ConfigLayoutSpec.compute(
+            Math.max(320, this.width),
+            Math.max(220, this.height),
+            ModRuntimeConfig.Preset.values().length,
+            railCount
+        );
+        this.maxRailScroll = Math.max(0.0f, this.layout.railContentHeight() - this.layout.railViewport().h());
+        this.railScroll = Mth.clamp(this.railScroll, 0.0f, this.maxRailScroll);
     }
 
-    private List<Component> buildPresetTooltip(ModRuntimeConfig.Preset preset) {
-        String key = preset.id();
-        List<Component> lines = new ArrayList<>();
-        lines.add(Component.translatable("config.chiseled_enchanting_table.preset." + key + ".title")
-            .withStyle(ChatFormatting.GOLD));
-        lines.add(Component.translatable("config.chiseled_enchanting_table.preset." + key + ".desc")
-            .withStyle(ChatFormatting.GRAY));
-        lines.add(Component.translatable("config.chiseled_enchanting_table.preset.note_new_chunks")
-            .withStyle(ChatFormatting.AQUA));
-        if (preset == ModRuntimeConfig.Preset.CLASSIC_1_0_3) {
-            lines.add(Component.translatable("config.chiseled_enchanting_table.preset.classic_1_0_3.inert_note")
-                .withStyle(ChatFormatting.YELLOW));
+    /**
+     * Auto-collapses fine-tuning subsections whose options are ALL currently gated off by a parent
+     * rule atom (unless the user explicitly expanded/collapsed that subsection during this session).
+     */
+    private void syncAutoCollapsedSections() {
+        for (CategoryId cat : CategoryId.values()) {
+            Map<String, List<OptionEntry>> bySec = new LinkedHashMap<>();
+            for (OptionEntry entry : ConfigCatalog.optionsInCategory(cat)) {
+                if (entry.isCoreRuleAtom() || entry.sectionId().endsWith("_core")) continue;
+                bySec.computeIfAbsent(cat.id() + ":" + entry.sectionId(), k -> new ArrayList<>()).add(entry);
+            }
+            for (var e : bySec.entrySet()) {
+                String key = e.getKey();
+                if (this.userToggledSections.contains(key)) continue;
+                boolean anyApplicable = e.getValue().stream().anyMatch(opt -> opt.isParentApplicable(this.draft));
+                if (!anyApplicable) {
+                    this.collapsedSections.add(key);
+                } else {
+                    this.collapsedSections.remove(key);
+                }
+            }
         }
-        return lines;
     }
 
     @Override
@@ -245,73 +282,158 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
     }
 
+    // ---- Nine-Slice & Tiled Layer Primitives ----
+
+    private static void blitNineSliceRect(
+        GuiGraphicsExtractor ctx,
+        Identifier texture,
+        int x,
+        int y,
+        int w,
+        int h,
+        int cornerX,
+        int cornerY,
+        int texW,
+        int texH
+    ) {
+        if (w <= 0 || h <= 0) return;
+        int cx = Math.min(cornerX, w / 2);
+        int cy = Math.min(cornerY, h / 2);
+        float u0 = (float) cx / (float) texW;
+        float u1 = 1.0f - u0;
+        float v0 = (float) cy / (float) texH;
+        float v1 = 1.0f - v0;
+
+        // 4 corners
+        ctx.blit(texture, x, y, x + cx, y + cy, 0.0f, u0, 0.0f, v0);
+        ctx.blit(texture, x + w - cx, y, x + w, y + cy, u1, 1.0f, 0.0f, v0);
+        ctx.blit(texture, x, y + h - cy, x + cx, y + h, 0.0f, u0, v1, 1.0f);
+        ctx.blit(texture, x + w - cx, y + h - cy, x + w, y + h, u1, 1.0f, v1, 1.0f);
+
+        // Top & bottom edges
+        if (w > cx * 2) {
+            ctx.blit(texture, x + cx, y, x + w - cx, y + cy, u0, u1, 0.0f, v0);
+            ctx.blit(texture, x + cx, y + h - cy, x + w - cx, y + h, u0, u1, v1, 1.0f);
+        }
+        // Left & right edges
+        if (h > cy * 2) {
+            ctx.blit(texture, x, y + cy, x + cx, y + h - cy, 0.0f, u0, v0, v1);
+            ctx.blit(texture, x + w - cx, y + cy, x + w, y + h - cy, u1, 1.0f, v0, v1);
+        }
+        // Center fill
+        if (w > cx * 2 && h > cy * 2) {
+            ctx.blit(texture, x + cx, y + cy, x + w - cx, y + h - cy, u0, u1, v0, v1);
+        }
+    }
+
+    private static void blitTiledBackdrop(GuiGraphicsExtractor ctx, Box area) {
+        int tileSize = 64;
+        for (int ty = area.y(); ty < area.bottom(); ty += tileSize) {
+            int drawH = Math.min(tileSize, area.bottom() - ty);
+            float vMax = (float) drawH / (float) tileSize;
+            for (int tx = area.x(); tx < area.right(); tx += tileSize) {
+                int drawW = Math.min(tileSize, area.right() - tx);
+                float uMax = (float) drawW / (float) tileSize;
+                ctx.blit(BACKDROP_TILE, tx, ty, tx + drawW, ty + drawH, 0.0f, uMax, 0.0f, vMax);
+            }
+        }
+        ctx.fill(area.x(), area.y(), area.right(), area.bottom(), BACKDROP_WASH);
+    }
+
+    private static void blitOrnamentDivider(GuiGraphicsExtractor ctx, Box divBox) {
+        int cy = Math.round(divBox.centerY());
+        ctx.fill(divBox.x(), cy, divBox.right(), cy + 1, 0x665E4788);
+        int ornW = Math.min(136, divBox.w() - 16);
+        if (ornW >= 48) {
+            int ox = Math.round(divBox.centerX() - ornW * 0.5f);
+            ctx.blit(DIVIDER_ORNAMENT, ox, divBox.y() - 2, ox + ornW, divBox.y() + 7, 0.0f, 1.0f, 0.0f, 1.0f);
+        }
+    }
+
+    // ---- Typography Helpers Enforcing >= 0.85x Primary & >= 0.75x Secondary Floors ----
+
+    private String fitTextAtScale(String text, float scale, int maxWidthPx) {
+        if (text == null || text.isEmpty() || maxWidthPx <= 4) return "";
+        int maxRaw = Math.max(4, (int) Math.floor(maxWidthPx / scale));
+        if (this.font.width(text) <= maxRaw) {
+            return text;
+        }
+        String ellipsis = "\u2026";
+        int ellW = this.font.width(ellipsis);
+        int subW = Math.max(2, maxRaw - ellW);
+        return this.font.plainSubstrByWidth(text, subW) + ellipsis;
+    }
+
+    private float chooseClampedScale(String text, float preferredScale, float minScale, int maxWidthPx) {
+        if (text == null || text.isEmpty() || maxWidthPx <= 4) return preferredScale;
+        int rawW = Math.max(1, this.font.width(text));
+        if (rawW * preferredScale <= maxWidthPx) {
+            return preferredScale;
+        }
+        return Math.max(minScale, Math.min(preferredScale, (float) maxWidthPx / (float) rawW));
+    }
+
+    private void drawClampedLeftText(
+        GuiGraphicsExtractor ctx,
+        String text,
+        Box box,
+        float preferredScale,
+        float minScale,
+        int argbColor
+    ) {
+        if (text == null || text.isEmpty() || box.w() <= 4) return;
+        float scale = chooseClampedScale(text, preferredScale, minScale, box.w());
+        String fitted = fitTextAtScale(text, scale, box.w());
+        if (fitted.isEmpty()) return;
+        float drawY = box.centerY() - (GLYPH_INK_H * scale) * 0.5f;
+        drawScaledString(ctx, fitted, box.x(), drawY, scale, argbColor);
+    }
+
+    private void drawClampedCenteredText(
+        GuiGraphicsExtractor ctx,
+        String text,
+        Box box,
+        float preferredScale,
+        float minScale,
+        int argbColor
+    ) {
+        if (text == null || text.isEmpty() || box.w() <= 4) return;
+        float scale = chooseClampedScale(text, preferredScale, minScale, box.w());
+        String fitted = fitTextAtScale(text, scale, box.w());
+        if (fitted.isEmpty()) return;
+        float renderedW = this.font.width(fitted) * scale;
+        float drawX = box.x() + (box.w() - renderedW) * 0.5f;
+        float drawY = box.centerY() - (GLYPH_INK_H * scale) * 0.5f;
+        drawScaledString(ctx, fitted, drawX, drawY, scale, argbColor);
+    }
+
+    private void drawScaledString(GuiGraphicsExtractor ctx, String text, float x, float y, float scale, int color) {
+        var pose = ctx.pose();
+        pose.pushMatrix();
+        pose.translate(x, y);
+        pose.scale(scale, scale);
+        ctx.text(this.font, text, 0, 0, color, true);
+        pose.popMatrix();
+    }
+
+    // ---- Search, Filtering & Section Building ----
+
+    private boolean isSearchMode() {
+        return !this.searchQuery.isBlank();
+    }
+
     private boolean matchesSearch(OptionEntry entry) {
-        String query = this.searchQuery.trim().toLowerCase(java.util.Locale.ROOT);
-        if (query.isEmpty()) return true;
-        return entry.key().contains(query)
-            || I18n.get(entry.nameKey()).toLowerCase(java.util.Locale.ROOT).contains(query)
-            || I18n.get(entry.descKey()).toLowerCase(java.util.Locale.ROOT).contains(query)
-            || I18n.get(entry.category().titleKey()).toLowerCase(java.util.Locale.ROOT).contains(query);
+        String q = this.searchQuery.trim().toLowerCase(Locale.ROOT);
+        if (q.isEmpty()) return true;
+        return entry.key().contains(q)
+            || I18n.get(entry.nameKey()).toLowerCase(Locale.ROOT).contains(q)
+            || I18n.get(entry.descKey()).toLowerCase(Locale.ROOT).contains(q)
+            || I18n.get(entry.category().titleKey()).toLowerCase(Locale.ROOT).contains(q)
+            || I18n.get(entry.sectionTitleKey()).toLowerCase(Locale.ROOT).contains(q);
     }
 
-    private List<DisplayRow> displayRows(List<OptionEntry> visible) {
-        boolean grouped = this.classicPage || !this.searchQuery.isBlank();
-        List<DisplayRow> rows = new ArrayList<>();
-        if (!grouped) {
-            for (int i = 0; i < visible.size(); i++) {
-                rows.add(DisplayRow.option(visible.get(i), i));
-            }
-            return rows;
-        }
-        // Source-category sections (classic page & global search results):
-        // rows stay under the category a player would find them in normally;
-        // inside a classic section live preferences precede rule-owned rows.
-        for (CategoryId category : CategoryId.values()) {
-            List<Integer> indices = new ArrayList<>();
-            for (int i = 0; i < visible.size(); i++) {
-                if (visible.get(i).category() == category) {
-                    indices.add(i);
-                }
-            }
-            if (indices.isEmpty()) continue;
-            indices.sort(java.util.Comparator.comparing(
-                i -> ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(visible.get(i).key())));
-            rows.add(DisplayRow.section(category, indices.size()));
-            for (int index : indices) {
-                rows.add(DisplayRow.option(visible.get(index), index));
-            }
-        }
-        return rows;
-    }
-
-    private static int displayContentHeight(List<DisplayRow> rows) {
-        if (rows.isEmpty()) return 0;
-        int height = -ROW_GAP;
-        for (DisplayRow row : rows) {
-            height += row.height() + ROW_GAP;
-        }
-        return height;
-    }
-
-    private static float displayRowTop(List<DisplayRow> rows, int optionIndex) {
-        float top = 0.0f;
-        for (DisplayRow row : rows) {
-            if (!row.isSection() && row.optionIndex() == optionIndex) {
-                return top;
-            }
-            top += row.height() + ROW_GAP;
-        }
-        return top;
-    }
-
-    private void setSearchQuery(String query) {
-        this.searchQuery = query;
-        this.focusedOptionIndex = -1;
-        this.scrollOffset = 0.0f;
-    }
-
-    private List<OptionEntry> visibleOptions() {
-        if (!this.searchQuery.isBlank()) {
+    private List<OptionEntry> flatFilteredOptions() {
+        if (isSearchMode()) {
             return ConfigCatalog.ALL_OPTIONS.stream().filter(this::matchesSearch).toList();
         }
         if (this.filterModifiedOnly) {
@@ -319,73 +441,72 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 .filter(o -> o.isModifiedFromDefault(this.draft))
                 .toList();
         }
-        if (this.classicPage) {
-            // Two groups (audit round 4, #16): live preferences first, then the
-            // rule-owned keys the classic frame overrides (rendered locked).
-            return ConfigCatalog.ALL_OPTIONS.stream()
-                .filter(o -> "classic_1_0_3_mode".equals(o.key())
-                    || ConfigCatalog.CLASSIC_LOCKED_KEYS.contains(o.key()))
-                .sorted(java.util.Comparator.comparing(
-                    o -> ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(o.key())))
-                .toList();
-        }
         return ConfigCatalog.optionsInCategory(this.activeCategory);
     }
 
-    private int rowListTop() {
-        return this.listY + (this.classicPage ? 19 : 0);
-    }
+    private List<DisplayItem> buildDisplayItems(List<OptionEntry> sourceOptions) {
+        List<DisplayItem> items = new ArrayList<>();
+        if (sourceOptions.isEmpty()) return items;
 
-    private int rowListHeight() {
-        return this.listH - (this.classicPage ? 19 : 0);
-    }
-
-    // Classic page summary strip (chosen style: gold-framed dark-purple card,
-    // gold padlock, editable/locked count badges) — audit round 5, #13.
-    private void renderClassicSummaryCard(net.minecraft.client.gui.GuiGraphicsExtractor ctx, List<OptionEntry> visible) {
-        long locked = visible.stream()
-            .filter(o -> ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(o.key()))
-            .count();
-        long editable = visible.size() - locked;
-        int x = this.listX;
-        int y = this.listY;
-        int w = this.listW;
-        int h = 16;
-        ctx.fill(x, y, x + w, y + h, GOLD_TEXT);
-        ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFF241A38);
-        // padlock glyph drawn from fills (body + shackle + keyhole)
-        ctx.fill(x + 5, y + 7, x + 12, y + 13, GOLD_TEXT);
-        ctx.fill(x + 6, y + 4, x + 11, y + 7, GOLD_TEXT);
-        ctx.fill(x + 7, y + 5, x + 10, y + 7, 0xFF241A38);
-        ctx.fill(x + 8, y + 9, x + 9, y + 11, 0xFF241A38);
-        String summary = I18n.get(
-            "config.chiseled_enchanting_table.classic_page.summary", editable, locked);
-        RowRenderSupport.renderCenteredYText(
-            ctx, Minecraft.getInstance(), summary,
-            x + 16, y + h * 0.5f, 0.70f, Math.max(40, w - 16 - 56), CREAM_TEXT);
-        // count badges: teal = editable, purple = rule-owned
-        int badgeW = 24;
-        int tealX = x + w - badgeW * 2 - 7;
-        ctx.fill(tealX, y + 3, tealX + badgeW, y + h - 3, 0xFF1A523B);
-        GrimoireTextLayout.drawCenteredBox(ctx, this.font, Long.toString(editable),
-            tealX, badgeW, y + h * 0.5f, 0.68f, 0xFF5CE1A6, true);
-        int purpleX = x + w - badgeW - 4;
-        ctx.fill(purpleX, y + 3, purpleX + badgeW, y + h - 3, 0xFF4B3378);
-        GrimoireTextLayout.drawCenteredBox(ctx, this.font, Long.toString(locked),
-            purpleX, badgeW, y + h * 0.5f, 0.68f, 0xFFD9CCFA, true);
-    }
-
-    private OptionAvailability availFor(OptionEntry entry) {
-        OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
-        // On the Classic merged page the classic-locked rows are the point of
-        // the page: they stay editable (values are live preferences; the
-        // mechanisms themselves remain gated on the master switch).
-        if (this.classicPage && this.sessionMode.writable()
-            && "config.chiseled_enchanting_table.reason.classic_1_0_3".equals(avail.inactiveReasonKey())) {
-            return new OptionAvailability(true, true, null, avail.effectScope(), avail.modifiedFromDefault());
+        if (isSearchMode() || this.filterModifiedOnly) {
+            // Group across natural domains so search & modified views show exact domain context.
+            int optIdx = 0;
+            for (CategoryId cat : CategoryId.values()) {
+                List<OptionEntry> inCat = sourceOptions.stream().filter(o -> o.category() == cat).toList();
+                if (inCat.isEmpty()) continue;
+                int activeCount = (int) inCat.stream().filter(o -> o.isParentApplicable(this.draft)).count();
+                String secKey = "global:" + cat.id();
+                boolean expanded = !this.collapsedSections.contains(secKey) || isSearchMode();
+                items.add(new DisplayItem(
+                    true, secKey, I18n.get(cat.titleKey()), inCat.size(), activeCount, expanded, null, -1
+                ));
+                if (expanded) {
+                    for (OptionEntry entry : inCat) {
+                        items.add(new DisplayItem(false, secKey, null, 0, 0, true, entry, optIdx++));
+                    }
+                }
+            }
+            return items;
         }
-        return avail;
+
+        // Standard L1 Domain View: Core Rule Atoms first (expanded at top), followed by L2 collapsible subsections!
+        Map<String, List<OptionEntry>> bySection = new LinkedHashMap<>();
+        for (OptionEntry entry : sourceOptions) {
+            bySection.computeIfAbsent(entry.sectionId(), k -> new ArrayList<>()).add(entry);
+        }
+
+        int optIdx = 0;
+        for (var secEntry : bySection.entrySet()) {
+            String secId = secEntry.getKey();
+            List<OptionEntry> group = secEntry.getValue();
+            if (group.isEmpty()) continue;
+            String collapseKey = this.activeCategory.id() + ":" + secId;
+            boolean expanded = !this.collapsedSections.contains(collapseKey);
+            int activeCount = (int) group.stream().filter(o -> o.isParentApplicable(this.draft)).count();
+            String secTitle = I18n.get(group.getFirst().sectionTitleKey());
+
+            items.add(new DisplayItem(
+                true, collapseKey, secTitle, group.size(), activeCount, expanded, null, -1
+            ));
+            if (expanded) {
+                for (OptionEntry entry : group) {
+                    items.add(new DisplayItem(false, collapseKey, null, 0, 0, true, entry, optIdx++));
+                }
+            }
+        }
+        return items;
     }
+
+    private static int computeDisplayHeight(List<DisplayItem> items) {
+        if (items.isEmpty()) return 0;
+        int total = -ConfigLayoutSpec.ROW_GAP;
+        for (DisplayItem item : items) {
+            total += item.height() + ConfigLayoutSpec.ROW_GAP;
+        }
+        return Math.max(0, total);
+    }
+
+    // ---- Value & Provenance Formatting ----
 
     private Draft displayedDraft(OptionEntry entry) {
         if (this.sessionMode == SessionMode.OFFLINE_CLIENT) return this.draft;
@@ -396,26 +517,32 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return governed ? ModRuntimeConfig.effective().toDraft() : this.draft;
     }
 
-    private String formatOptionValue(OptionEntry entry) {
-        String raw = entry.rawOrKeyDisplay(displayedDraft(entry));
+    private String formatValueFrom(OptionEntry entry, Draft source) {
+        String raw = entry.rawOrKeyDisplay(source);
         return raw.startsWith("@") ? I18n.get(raw.substring(1)) : raw;
     }
 
-    private String formatDefaultValue(OptionEntry entry) {
-        Draft def = new Draft();
-        String raw = entry.rawOrKeyDisplay(def);
-        return raw.startsWith("@") ? I18n.get(raw.substring(1)) : raw;
+    private void onDraftMutated(@Nullable String editedKey) {
+        this.draft.normalizeAfterEdit(editedKey);
+        syncAutoCollapsedSections();
     }
 
     private void playClick(float pitch) {
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, pitch));
     }
 
+    private void setSearchQuery(String next) {
+        this.searchQuery = next;
+        this.focusedOptionIndex = -1;
+        this.listScroll = 0.0f;
+    }
+
+    // ---- Save & Sync Lifecycle ----
+
     private void saveAndApply(boolean closeAfterSave) {
-        if (!this.sessionMode.writable()) {
+        if (!this.sessionMode.writable() || this.pendingSaveId != 0) {
             return;
         }
-        if (this.pendingSaveId != 0) return;
         ModRuntimeConfig built = this.draft.build();
         playClick(1.12f);
         if (this.sessionMode == SessionMode.OFFLINE_CLIENT) {
@@ -432,7 +559,6 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             }
             return;
         }
-        // Integrated and dedicated servers share the same authorized, acknowledged path.
         this.pendingSaveId = ModRuntimeConfig.nextSaveRequestId();
         this.pendingClose = closeAfterSave;
         if (ClientPlayNetworking.canSend(ModConfigNetworking.UpdateRuntimeConfigPayload.TYPE)) {
@@ -452,480 +578,727 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (!this.lastSaveFailed) {
             this.baselineConfig = ModRuntimeConfig.preferences();
             this.draft = this.baselineConfig.toDraft();
+            syncAutoCollapsedSections();
             if (this.pendingClose) onClose();
         }
     }
 
+    // ---- Main Layered Render Pass ----
+
     @Override
     public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
-        // Drawn inside extractRenderState for zero double-blur artifacts.
+        // Rendered inside extractRenderState to prevent double-blur artifacts when opened over world/table.
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         reconcileSaveAcknowledgement();
-        computeLayout();
+        recomputeLayout();
         this.hitBoxes.clear();
         this.sliderTracks.clear();
+        this.stickyBodyOffset = 0;
         List<Component> pendingTooltip = null;
 
-        // Backdrop & outer gilded chassis
-        ctx.fill(0, 0, this.width, this.height, BG_DIM);
-        ctx.fill(this.panelX - 1, this.panelY - 1, this.panelX + this.panelW + 1, this.panelY + this.panelH + 1, CHASSIS_OUTER);
-        ctx.fill(this.panelX, this.panelY, this.panelX + this.panelW, this.panelY + this.panelH, CHASSIS_INNER);
-        blitNineSlice(ctx, PANEL_FRAME, this.panelX - 2, this.panelY - 2, this.panelW + 4, this.panelH + 4, 12, 48);
+        Box modal = this.layout.modal();
 
-        // Top Header Bar
-        int headerH = 24;
-        ctx.fill(this.panelX, this.panelY, this.panelX + this.panelW, this.panelY + headerH, HEADER_BG);
-        ctx.fill(this.panelX, this.panelY + headerH - 1, this.panelX + this.panelW, this.panelY + headerH, 0xFF4B3570);
+        // Layer 0: Full-viewport scrim + tiled arcane backdrop + 9-slice sculpted obsidian/brass frame + gem clasps
+        ctx.fill(0, 0, this.width, this.height, BG_SCRIM);
+        blitTiledBackdrop(ctx, this.layout.backdropArea());
+        blitNineSliceRect(ctx, MODAL_FRAME, modal.x(), modal.y(), modal.w(), modal.h(), 28, 28, 96, 96);
 
-        String sessionBadge = I18n.get(this.sessionMode.bannerKey());
-        int badgeW = Math.min(156, Math.round(this.font.width(sessionBadge) * 0.72f) + 12);
-        int badgeX = this.panelX + this.panelW - badgeW - 6;
-        int badgeY = this.panelY + 4;
-        int badgeCol = switch (this.sessionMode) {
-            case SINGLEPLAYER_LIVE -> 0xFF1B5E42;
-            case DEDICATED_ADMIN -> 0xFF6B4C1B;
-            case OFFLINE_CLIENT -> 0xFF1E4C66;
-            case DEDICATED_READONLY -> 0xFF662432;
-            case MODPACK_LOCKED -> 0xFF4C2466;
-        };
-        ctx.fill(badgeX, badgeY, badgeX + badgeW, badgeY + 16, 0xFF8C6F39);
-        ctx.fill(badgeX + 1, badgeY + 1, badgeX + badgeW - 1, badgeY + 15, badgeCol);
-        GrimoireTextLayout.drawCenteredBox(
-            ctx, this.font, sessionBadge, badgeX + 3, badgeW - 6, badgeY + 8.0f, 0.70f, CREAM_TEXT, true
+        int topGemX = Math.round(modal.centerX() - 8.0f);
+        ctx.blit(FRAME_GEM_PIP, topGemX, modal.y() - 2, topGemX + 16, modal.y() + 14, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.blit(FRAME_GEM_PIP, topGemX, modal.bottom() - 14, topGemX + 16, modal.bottom() + 2, 0.0f, 1.0f, 0.0f, 1.0f);
+
+        // Layer 1 (L0): Header & Preset/Search Toolbar
+        List<Component> l0Tip = renderL0HeaderAndToolbar(ctx, mouseX, mouseY);
+        if (l0Tip != null) pendingTooltip = l0Tip;
+        blitOrnamentDivider(ctx, this.layout.topDivider());
+
+        // Layer 2 (L1): Left Domain Rail + Rule Trace Entry
+        List<Component> railTip = renderL1DomainRail(ctx, mouseX, mouseY);
+        if (railTip != null && pendingTooltip == null) pendingTooltip = railTip;
+
+        // Layer 3 (L2 / L3 / Rule Trace): Main Right Viewport
+        List<Component> bodyTip = (this.ruleTracePage && !isSearchMode() && !this.filterModifiedOnly)
+            ? renderRuleTraceViewport(ctx, mouseX, mouseY)
+            : renderOptionListViewport(ctx, mouseX, mouseY);
+        if (bodyTip != null && pendingTooltip == null) pendingTooltip = bodyTip;
+
+        // Layer 4: Bottom Divider & Action Footer
+        blitOrnamentDivider(ctx, this.layout.bottomDivider());
+        List<Component> footTip = renderFooterBar(ctx, mouseX, mouseY);
+        if (footTip != null && pendingTooltip == null) pendingTooltip = footTip;
+
+        if (pendingTooltip != null && !pendingTooltip.isEmpty()) {
+            ctx.setTooltipForNextFrame(this.font, pendingTooltip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+        }
+    }
+
+    private List<Component> renderL0HeaderAndToolbar(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        List<Component> tip = null;
+
+        // L0-A1: Title
+        drawClampedLeftText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.title"),
+            this.layout.headerTitleBox(),
+            ConfigLayoutSpec.PRIMARY_TEXT_SCALE + 0.04f,
+            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+            GOLD_TEXT
         );
 
-        int maxTitleW = Math.max(80, badgeX - (this.panelX + 10));
-        RowRenderSupport.renderCenteredYText(
-            ctx, Minecraft.getInstance(), I18n.get("config.chiseled_enchanting_table.title"),
-            this.panelX + 8, this.panelY + 12.0f, 0.86f, maxTitleW, GOLD_TEXT
-        );
-
-        // Left Category Rail
-        int railX = this.panelX + 4;
-        int railY = this.panelY + headerH + 4;
-        int railW = this.listX - 4 - railX;
-        int railH = this.panelH - headerH - 34;
-        ctx.fill(railX, railY, railX + railW, railY + railH, RAIL_BG);
-
-        int totalModified = (int) ConfigCatalog.ALL_OPTIONS.stream()
+        // L0-A2: Modified Filter Chip ("★ N")
+        int modCount = (int) ConfigCatalog.ALL_OPTIONS.stream()
             .filter(o -> o.isModifiedFromDefault(this.draft))
             .count();
-
-        // Filter button: [All / Modified (N)]
-        int filterY = railY + 3;
-        int filterH = 17;
-        boolean overFilter = mouseX >= railX + 3 && mouseX < railX + railW - 3 && mouseY >= filterY && mouseY < filterY + filterH;
-        int filterFill = this.filterModifiedOnly ? 0xFF5D3F92 : (overFilter ? 0xFF2E2249 : 0xFF211834);
-        ctx.fill(railX + 3, filterY, railX + railW - 3, filterY + filterH, this.filterModifiedOnly ? GOLD_TEXT : 0xFF523E78);
-        ctx.fill(railX + 4, filterY + 1, railX + railW - 4, filterY + filterH - 1, filterFill);
-        String filterLabel = this.filterModifiedOnly
-            ? I18n.get("config.chiseled_enchanting_table.filter.modified", totalModified)
-            : I18n.get("config.chiseled_enchanting_table.filter.all", ConfigCatalog.ALL_OPTIONS.size());
-        GrimoireTextLayout.drawCenteredBox(
-            ctx, this.font, filterLabel, railX + 6, railW - 12, filterY + filterH * 0.5f, 0.68f,
-            this.filterModifiedOnly ? GOLD_TEXT : CREAM_TEXT, true
+        Box modBtn = this.layout.modifiedFilterBtn();
+        boolean overMod = modBtn.contains(mouseX, mouseY);
+        Identifier modSprite = this.filterModifiedOnly
+            ? BTN_PLAQUE_GOLD
+            : (overMod ? BTN_PLAQUE_HOVER : BTN_PLAQUE);
+        blitNineSliceRect(ctx, modSprite, modBtn.x(), modBtn.y(), modBtn.w(), modBtn.h(), 6, 6, 64, 18);
+        String modLabel = "\u2605 " + modCount;
+        drawClampedCenteredText(
+            ctx,
+            modLabel,
+            new Box(modBtn.x() + 4, modBtn.y(), Math.max(12, modBtn.w() - 8), modBtn.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            this.filterModifiedOnly ? GOLD_TEXT : (modCount > 0 ? EMERALD_TEXT : MUTED_TEXT)
         );
-        this.hitBoxes.add(new HitBox(railX + 3, filterY, railW - 6, filterH, () -> {
-            this.searchFocused = false;
-            setSearchQuery("");
+        this.hitBoxes.add(new HitBox(modBtn, () -> {
             this.filterModifiedOnly = !this.filterModifiedOnly;
-            this.scrollOffset = 0.0f;
+            if (this.filterModifiedOnly) {
+                this.ruleTracePage = false;
+            }
+            this.listScroll = 0.0f;
             playClick(1.0f);
         }, null));
+        if (overMod) {
+            tip = List.of(
+                Component.translatable("config.chiseled_enchanting_table.filter.modified_only", modCount)
+                    .withStyle(ChatFormatting.GOLD),
+                Component.translatable("config.chiseled_enchanting_table.filter.modified_hint")
+                    .withStyle(ChatFormatting.GRAY)
+            );
+        }
 
-        // Global search: label / description / raw key across all 64 options.
-        int searchY = filterY + filterH + 4;
-        int searchH = 16;
-        this.searchBoxX = railX + 3;
-        this.searchBoxY = searchY;
-        this.searchBoxW = railW - 6;
-        this.searchBoxH = searchH;
-        boolean overSearch = mouseX >= this.searchBoxX && mouseX < this.searchBoxX + this.searchBoxW
-            && mouseY >= searchY && mouseY < searchY + searchH;
-        ctx.fill(this.searchBoxX, searchY, this.searchBoxX + this.searchBoxW, searchY + searchH,
-            this.searchFocused ? GOLD_TEXT : (overSearch ? 0xFF876BB8 : 0xFF523E78));
-        ctx.fill(this.searchBoxX + 1, searchY + 1, this.searchBoxX + this.searchBoxW - 1, searchY + searchH - 1, 0xFF181126);
-        String searchShown = this.searchQuery.isEmpty()
-            ? I18n.get("config.chiseled_enchanting_table.search.placeholder")
-            : this.searchQuery + (this.searchFocused && (System.currentTimeMillis() / 500L) % 2L == 0L ? "_" : "");
-        RowRenderSupport.renderCenteredYText(
-            ctx, Minecraft.getInstance(), searchShown,
-            this.searchBoxX + 6, searchY + searchH * 0.5f, 0.72f, this.searchBoxW - 12,
-            this.searchQuery.isEmpty() ? MUTED_TEXT : CREAM_TEXT
+        // L0-A3: Session Mode Badge
+        Box modeBox = this.layout.sessionBadgeBox();
+        int modeFill = switch (this.sessionMode) {
+            case SINGLEPLAYER_LIVE -> 0xCC164A35;
+            case DEDICATED_ADMIN -> 0xCC593E14;
+            case OFFLINE_CLIENT -> 0xCC183D54;
+            case DEDICATED_READONLY -> 0xCC571D2A;
+            case MODPACK_LOCKED -> 0xCC3F1E59;
+        };
+        int modeBorder = this.sessionMode.writable() ? 0xFFA88948 : 0xFF8C4A63;
+        ctx.fill(modeBox.x(), modeBox.y(), modeBox.right(), modeBox.bottom(), modeBorder);
+        ctx.fill(modeBox.x() + 1, modeBox.y() + 1, modeBox.right() - 1, modeBox.bottom() - 1, modeFill);
+        String modeLabel = (this.sessionMode.writable() ? "\u270e " : "\uD83D\uDD12 ") + I18n.get(this.sessionMode.bannerKey());
+        drawClampedCenteredText(
+            ctx,
+            modeLabel,
+            new Box(modeBox.x() + 4, modeBox.y(), Math.max(16, modeBox.w() - 8), modeBox.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            CREAM_TEXT
         );
-        this.hitBoxes.add(new HitBox(this.searchBoxX, searchY, this.searchBoxW, searchH, () -> {
+        if (modeBox.contains(mouseX, mouseY)) {
+            tip = List.of(
+                Component.translatable(this.sessionMode.bannerKey()).withStyle(ChatFormatting.GOLD),
+                Component.translatable(this.sessionMode.writable()
+                    ? "config.chiseled_enchanting_table.mode.writable_desc"
+                    : "config.chiseled_enchanting_table.mode.readonly_desc").withStyle(ChatFormatting.GRAY)
+            );
+        }
+
+        // L0-B1: 4 One-Click Presets
+        ModRuntimeConfig.Preset[] presets = ModRuntimeConfig.Preset.values();
+        List<Box> presetBoxes = this.layout.presetButtons();
+        for (int i = 0; i < presets.length && i < presetBoxes.size(); i++) {
+            ModRuntimeConfig.Preset preset = presets[i];
+            Box pb = presetBoxes.get(i);
+            boolean active = preset.matches(this.draft);
+            boolean writable = this.sessionMode.writable();
+            boolean over = pb.contains(mouseX, mouseY);
+            Identifier sprite = !writable
+                ? BTN_PLAQUE_DISABLED
+                : (active ? BTN_PLAQUE_GOLD : (over ? BTN_PLAQUE_HOVER : BTN_PLAQUE));
+            blitNineSliceRect(ctx, sprite, pb.x(), pb.y(), pb.w(), pb.h(), 6, 6, 64, 18);
+
+            String title = I18n.get("config.chiseled_enchanting_table.preset." + preset.id() + ".short");
+            if (title.startsWith("config.")) {
+                title = I18n.get("config.chiseled_enchanting_table.preset." + preset.id() + ".title");
+            }
+            String label = active ? ("\u25cf " + title) : title;
+            drawClampedCenteredText(
+                ctx,
+                label,
+                new Box(pb.x() + 4, pb.y(), Math.max(12, pb.w() - 8), pb.h()),
+                ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+                ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+                !writable ? DIM_TEXT : (active ? GOLD_TEXT : CREAM_TEXT)
+            );
+
+            if (writable) {
+                this.hitBoxes.add(new HitBox(pb, () -> {
+                    preset.applyTo(this.draft);
+                    syncAutoCollapsedSections();
+                    playClick(1.06f);
+                }, null));
+            }
+            if (over) {
+                tip = buildPresetTooltip(preset, active);
+            }
+        }
+
+        // L0-B2: Global Search Box
+        Box sb = this.layout.searchBox();
+        boolean overSearch = sb.contains(mouseX, mouseY);
+        blitNineSliceRect(
+            ctx,
+            (this.searchFocused || !this.searchQuery.isEmpty()) ? SEARCH_BOX_FOCUS : SEARCH_BOX,
+            sb.x(), sb.y(), sb.w(), sb.h(), 8, 6, 80, 18
+        );
+
+        boolean hasQuery = !this.searchQuery.isEmpty();
+        int clearW = hasQuery ? 14 : 0;
+        Box searchTextBox = new Box(sb.x() + 6, sb.y(), Math.max(20, sb.w() - 12 - clearW), sb.h());
+        String displaySearch = hasQuery
+            ? (this.searchFocused ? this.searchQuery + "_" : this.searchQuery)
+            : (this.searchFocused ? "_" : "/ " + I18n.get("config.chiseled_enchanting_table.search.placeholder"));
+        drawClampedLeftText(
+            ctx,
+            displaySearch,
+            searchTextBox,
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            (hasQuery || this.searchFocused) ? CREAM_TEXT : MUTED_TEXT
+        );
+
+        if (hasQuery) {
+            Box clearBox = new Box(sb.right() - 16, sb.y() + 1, 15, sb.h() - 2);
+            boolean overClear = clearBox.contains(mouseX, mouseY);
+            drawClampedCenteredText(
+                ctx,
+                "\u00d7",
+                clearBox,
+                ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
+                ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+                overClear ? CORAL_TEXT : GOLD_TEXT
+            );
+            this.hitBoxes.add(new HitBox(clearBox, () -> {
+                setSearchQuery("");
+                playClick(0.95f);
+            }, null));
+        }
+
+        this.hitBoxes.add(new HitBox(new Box(sb.x(), sb.y(), sb.w() - clearW, sb.h()), () -> {
             this.searchFocused = true;
             playClick(1.0f);
         }, () -> {
             setSearchQuery("");
             this.searchFocused = true;
-            playClick(0.92f);
+            playClick(0.95f);
         }));
-        if (overSearch) {
-            pendingTooltip = List.of(
-                Component.translatable("config.chiseled_enchanting_table.search.title").withStyle(ChatFormatting.GOLD),
-                Component.translatable("config.chiseled_enchanting_table.search.desc").withStyle(ChatFormatting.GRAY)
+        if (overSearch && tip == null) {
+            tip = List.of(
+                Component.translatable("config.chiseled_enchanting_table.search.tip_title").withStyle(ChatFormatting.GOLD),
+                Component.translatable("config.chiseled_enchanting_table.search.tip_desc").withStyle(ChatFormatting.GRAY)
             );
         }
 
-        // Category buttons (split catalogue domains + Classic pseudo-page)
-        CategoryId[] cats = CategoryId.values();
-        int catStartY = searchY + searchH + 5;
-        int availCatH = Math.max(96, railH - (catStartY - railY) - 4);
-        int catStepY = availCatH / (cats.length + 1);
-        int catBtnH = Math.max(15, Math.min(25, catStepY - 2));
+        return tip;
+    }
 
-        for (int i = 0; i < cats.length; i++) {
-            CategoryId cat = cats[i];
-            int cy = catStartY + i * catStepY;
-            boolean selected = !this.filterModifiedOnly && !this.classicPage && this.activeCategory == cat;
-            boolean over = mouseX >= railX + 3 && mouseX < railX + railW - 3 && mouseY >= cy && mouseY < cy + catBtnH;
-            int modInCat = (int) ConfigCatalog.optionsInCategory(cat).stream()
-                .filter(o -> o.isModifiedFromDefault(this.draft))
-                .count();
+    private List<Component> buildPresetTooltip(ModRuntimeConfig.Preset preset, boolean active) {
+        String key = preset.id();
+        int diffs = preset.countDeviations(this.draft);
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.translatable("config.chiseled_enchanting_table.preset." + key + ".title")
+            .withStyle(ChatFormatting.GOLD));
+        lines.add(Component.translatable("config.chiseled_enchanting_table.preset." + key + ".desc")
+            .withStyle(ChatFormatting.GRAY));
+        lines.add((active
+            ? Component.translatable("config.chiseled_enchanting_table.preset.status_active")
+            : Component.translatable("config.chiseled_enchanting_table.preset.status_diff", diffs))
+            .withStyle(active ? ChatFormatting.GREEN : ChatFormatting.AQUA));
+        lines.add(Component.translatable("config.chiseled_enchanting_table.preset.note_new_chunks")
+            .withStyle(ChatFormatting.DARK_GRAY));
+        return lines;
+    }
 
-            ctx.fill(railX + 3, cy, railX + railW - 3, cy + catBtnH, selected ? GOLD_TEXT : 0xFF392B56);
-            ctx.fill(railX + 4, cy + 1, railX + railW - 4, cy + catBtnH - 1, selected ? 0xFF352454 : (over ? 0xFF281D3F : 0xFF1B142B));
-            ctx.fill(railX + 4, cy + 1, railX + 7, cy + catBtnH - 1, cat.accentColor());
-            int iconSize = Math.min(14, Math.max(10, catBtnH - 3));
-            int iconY = cy + (catBtnH - iconSize) / 2;
-            ctx.blit(categoryIcon(cat), railX + 8, iconY, railX + 8 + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
+    // ---- L1 Domain Rail + Rule Trace Entry ----
 
-            String catTitle = I18n.get(cat.titleKey()) + (modInCat > 0 ? (" \u2605" + modInCat) : "");
-            RowRenderSupport.renderCenteredYText(
-                ctx, Minecraft.getInstance(), catTitle,
-                railX + 25, cy + catBtnH * 0.5f, 0.78f, railW - 29,
-                selected ? GOLD_TEXT : CREAM_TEXT
-            );
-            final CategoryId chosen = cat;
-            this.hitBoxes.add(new HitBox(railX + 3, cy, railW - 6, catBtnH, () -> {
-                this.filterModifiedOnly = false;
-                this.classicPage = false;
-                this.searchFocused = false;
-                setSearchQuery("");
-                this.activeCategory = chosen;
-                this.scrollOffset = 0.0f;
-                playClick(1.0f);
-            }, null));
-            if (over) {
-                pendingTooltip = List.of(
-                    Component.translatable(cat.titleKey()).withStyle(ChatFormatting.GOLD),
-                    Component.translatable(cat.subtitleKey()).withStyle(ChatFormatting.GRAY)
-                );
-            }
-        }
+    private List<Component> renderL1DomainRail(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        List<Component> tip = null;
+        Box rail = this.layout.railViewport();
+        ctx.fill(rail.x() - 1, rail.y() - 1, rail.right() + 1, rail.bottom() + 1, 0x66160F24);
 
-        {
-            int cy = catStartY + cats.length * catStepY;
-            boolean selected = !this.filterModifiedOnly && this.classicPage;
-            boolean over = mouseX >= railX + 3 && mouseX < railX + railW - 3 && mouseY >= cy && mouseY < cy + catBtnH;
-            ctx.fill(railX + 3, cy, railX + railW - 3, cy + catBtnH, selected ? GOLD_TEXT : 0xFF392B56);
-            ctx.fill(railX + 4, cy + 1, railX + railW - 4, cy + catBtnH - 1, selected ? 0xFF352454 : (over ? 0xFF281D3F : 0xFF1B142B));
-            ctx.fill(railX + 4, cy + 1, railX + 7, cy + catBtnH - 1, 0xFFE6B566);
-            int classicIconSize = Math.min(14, Math.max(10, catBtnH - 3));
-            int classicIconY = cy + (catBtnH - classicIconSize) / 2;
-            ctx.blit(CLASSIC_ICON, railX + 8, classicIconY, railX + 8 + classicIconSize, classicIconY + classicIconSize, 0.0f, 1.0f, 0.0f, 1.0f);
-            RowRenderSupport.renderCenteredYText(
-                ctx, Minecraft.getInstance(), I18n.get("config.chiseled_enchanting_table.cat.classic_merged"),
-                railX + 25, cy + catBtnH * 0.5f, 0.78f, railW - 29,
-                selected ? GOLD_TEXT : CREAM_TEXT
-            );
-            this.hitBoxes.add(new HitBox(railX + 3, cy, railW - 6, catBtnH, () -> {
-                this.filterModifiedOnly = false;
-                this.classicPage = true;
-                this.searchFocused = false;
-                setSearchQuery("");
-                this.scrollOffset = 0.0f;
-                playClick(1.0f);
-            }, null));
-            if (over) {
-                pendingTooltip = List.of(
-                    Component.translatable("config.chiseled_enchanting_table.cat.classic_merged").withStyle(ChatFormatting.GOLD),
-                    Component.translatable("config.chiseled_enchanting_table.cat.classic_merged.sub").withStyle(ChatFormatting.GRAY)
-                );
-            }
-        }
+        CategoryId[] categories = CategoryId.values();
+        List<Box> tabBoxes = this.layout.railTabBoxes();
+        int scrollY = Math.round(this.railScroll);
 
-        // 4-Preset Bar (1.0.3 Classic / Casual / Standard / Expert)
-        int presetY = this.panelY + headerH + 3;
-        int presetH = 15;
-        ModRuntimeConfig.Preset[] presets = ModRuntimeConfig.Preset.values();
-        int presetGap = 3;
-        int presetLabelW = 34;
-        RowRenderSupport.renderCenteredYText(
-            ctx, Minecraft.getInstance(), I18n.get("config.chiseled_enchanting_table.preset.label"),
-            this.listX, presetY + presetH * 0.5f, 0.66f, presetLabelW, GOLD_TEXT
-        );
-        int presetBarX = this.listX + presetLabelW + 2;
-        int presetBarW = Math.max(80, this.listW - presetLabelW - 2);
-        int singlePresetW = (presetBarW - presetGap * (presets.length - 1)) / presets.length;
-        for (int pIdx = 0; pIdx < presets.length; pIdx++) {
-            ModRuntimeConfig.Preset preset = presets[pIdx];
-            int px = presetBarX + pIdx * (singlePresetW + presetGap);
-            int pw = (pIdx == presets.length - 1) ? (this.listX + this.listW - px) : singlePresetW;
-            boolean activePreset = preset.matches(this.draft);
-            boolean canApplyPreset = this.sessionMode.writable();
-            boolean overPreset = mouseX >= px && mouseX < px + pw && mouseY >= presetY && mouseY < presetY + presetH;
-            int pBorder = activePreset
-                ? 0xFF56E39F
-                : (canApplyPreset ? (overPreset ? GOLD_TEXT : 0xFF6B5396) : 0xFF342A47);
-            int pFill = activePreset
-                ? 0xFF1E5940
-                : (overPreset && canApplyPreset ? 0xFF392759 : 0xFF211834);
-            ctx.fill(px, presetY, px + pw, presetY + presetH, pBorder);
-            ctx.fill(px + 1, presetY + 1, px + pw - 1, presetY + presetH - 1, pFill);
-            GrimoireTextLayout.drawCenteredBox(
-                ctx,
-                this.font,
-                I18n.get("config.chiseled_enchanting_table.preset." + preset.id() + ".short"),
-                px + 2,
-                pw - 4,
-                presetY + presetH * 0.5f,
-                0.64f,
-                activePreset ? 0xFFA8FFD8 : (canApplyPreset ? CREAM_TEXT : 0xFF6B607E),
-                true
-            );
-            if (overPreset) {
-                pendingTooltip = buildPresetTooltip(preset);
-            }
-            if (canApplyPreset) {
-                final ModRuntimeConfig.Preset chosenPreset = preset;
-                this.hitBoxes.add(new HitBox(px, presetY, pw, presetH, () -> {
-                    chosenPreset.applyTo(this.draft);
-                    this.focusedOptionIndex = -1;
-                    playClick(1.06f);
-                    if (chosenPreset == ModRuntimeConfig.Preset.CLASSIC_1_0_3 && Minecraft.getInstance().gui != null) {
-                        Minecraft.getInstance().gui.setOverlayMessage(
-                            Component.translatable("config.chiseled_enchanting_table.preset.classic_1_0_3.applied_notice")
-                                .withStyle(ChatFormatting.GOLD),
-                            false
-                        );
-                    }
-                }, null));
-            }
-        }
-
-        // Category Banner + Category Reset Button
-        int subY = presetY + presetH + 3;
-        int resetCatW = 68;
-        int resetCatX = this.listX + this.listW - resetCatW;
-        List<OptionEntry> visible = visibleOptions();
-        String subHeader = !this.searchQuery.isBlank()
-            ? I18n.get("config.chiseled_enchanting_table.search.results", visible.size(), ConfigCatalog.ALL_OPTIONS.size())
-            : this.filterModifiedOnly
-                ? I18n.get("config.chiseled_enchanting_table.filter.modified_desc")
-                : I18n.get(this.classicPage
-                    ? "config.chiseled_enchanting_table.cat.classic_merged.sub"
-                    : this.activeCategory.subtitleKey());
-        RowRenderSupport.renderCenteredYText(
-            ctx, Minecraft.getInstance(), subHeader,
-            this.listX, subY + 8.0f, 0.75f, Math.max(60, this.listW - resetCatW - 6), 0xFFD9CCFA
-        );
-
-        boolean anyModInView = visible.stream().anyMatch(o -> o.isModifiedFromDefault(this.draft));
-        boolean canResetPage = this.sessionMode.writable() && anyModInView;
-        boolean overResetCat = canResetPage
-            && mouseX >= resetCatX && mouseX < resetCatX + resetCatW
-            && mouseY >= subY && mouseY < subY + 16;
-        ctx.fill(resetCatX, subY, resetCatX + resetCatW, subY + 16, canResetPage ? (overResetCat ? GOLD_TEXT : 0xFF7B63A6) : 0xFF342A47);
-        ctx.fill(resetCatX + 1, subY + 1, resetCatX + resetCatW - 1, subY + 15, overResetCat ? 0xFF422E68 : 0xFF211834);
-        GrimoireTextLayout.drawCenteredBox(
-            ctx, this.font, I18n.get("config.chiseled_enchanting_table.btn.reset_page"),
-            resetCatX + 3, resetCatW - 6, subY + 8.0f, 0.66f,
-            canResetPage ? CREAM_TEXT : 0xFF6B607E, true
-        );
-        if (canResetPage) {
-            this.hitBoxes.add(new HitBox(resetCatX, subY, resetCatW, 16, () -> {
-                for (OptionEntry entry : new ArrayList<>(visible)) {
-                    entry.resetToDefault(this.draft);
-                }
-                playClick(0.92f);
-            }, null));
-        }
-
-        // Scrollable Option Cards Area
-        if (this.classicPage) {
-            renderClassicSummaryCard(ctx, visible);
-        }
-        List<DisplayRow> displayRows = displayRows(visible);
-        int contentH = displayContentHeight(displayRows);
-        this.maxScroll = Math.max(0.0f, contentH - rowListHeight());
-        this.scrollOffset = Mth.clamp(this.scrollOffset, 0.0f, this.maxScroll);
-
-        int innerCardW = this.maxScroll > 0.5f ? (this.listW - 7) : this.listW;
-        ctx.enableScissor(this.listX, rowListTop(), this.listX + this.listW, rowListTop() + rowListHeight());
+        ctx.enableScissor(rail.x(), rail.y(), rail.right(), rail.bottom());
         try {
-            if (visible.isEmpty()) {
-                GrimoireTextLayout.drawCenteredBox(
-                    ctx, this.font, this.searchQuery.isBlank()
-                        ? I18n.get("config.chiseled_enchanting_table.empty_modified")
-                        : I18n.get("config.chiseled_enchanting_table.search.empty"),
-                    this.listX + 8, this.listW - 16, rowListTop() + rowListHeight() * 0.5f, 0.78f, MUTED_TEXT, true
-                );
-            }
-            int displayCursor = 0;
-            for (DisplayRow displayRow : displayRows) {
-                int ry = Math.round(rowListTop() + displayCursor - this.scrollOffset);
-                displayCursor += displayRow.height() + ROW_GAP;
-                if (displayRow.isSection()) {
-                    if (ry + SECTION_H < rowListTop() || ry > rowListTop() + rowListHeight()) {
-                        continue;
-                    }
-                    CategoryId section = displayRow.section();
-                    ctx.fill(this.listX, ry, this.listX + innerCardW, ry + SECTION_H, section.accentColor());
-                    ctx.fill(this.listX + 1, ry + 1, this.listX + innerCardW - 1, ry + SECTION_H - 1, 0xFF1B142B);
-                    ctx.blit(categoryIcon(section), this.listX + 4, ry + 2, this.listX + 17, ry + 15, 0.0f, 1.0f, 0.0f, 1.0f);
-                    RowRenderSupport.renderCenteredYText(
-                        ctx, Minecraft.getInstance(),
-                        I18n.get(section.titleKey()) + "  \u00b7  " + displayRow.sectionCount(),
-                        this.listX + 21, ry + SECTION_H * 0.5f, 0.75f, Math.max(40, innerCardW - 25),
-                        CREAM_TEXT
-                    );
-                    continue;
+            for (int i = 0; i < tabBoxes.size(); i++) {
+                Box raw = tabBoxes.get(i);
+                Box tb = new Box(raw.x(), raw.y() - scrollY, raw.w(), raw.h());
+                if (tb.bottom() <= rail.y() || tb.y() >= rail.bottom()) continue;
+
+                boolean isTraceTab = (i == categories.length);
+                CategoryId cat = isTraceTab ? null : categories[i];
+                boolean selected = !isSearchMode() && !this.filterModifiedOnly
+                    && (isTraceTab ? this.ruleTracePage : (!this.ruleTracePage && this.activeCategory == cat));
+                boolean hovered = rail.contains(mouseX, mouseY) && tb.contains(mouseX, mouseY);
+
+                // Subtle separator line right above Rule Trace tab
+                if (isTraceTab) {
+                    ctx.fill(tb.x() + 6, tb.y() - 3, tb.right() - 6, tb.y() - 2, 0x887A5C38);
                 }
-                OptionEntry entry = displayRow.entry();
-                int idx = displayRow.optionIndex();
-                if (ry + ROW_H < rowListTop() || ry > rowListTop() + rowListHeight()) {
-                    continue;
-                }
-                boolean inClipMouse = mouseY >= rowListTop() && mouseY < rowListTop() + rowListHeight();
-                boolean rowHover = inClipMouse
-                    && mouseX >= this.listX && mouseX < this.listX + innerCardW
-                    && mouseY >= ry && mouseY < ry + ROW_H;
 
-                OptionAvailability avail = availFor(entry);
-                boolean keyFocused = idx == this.focusedOptionIndex;
-                int cardFill = !avail.parentApplicable()
-                    ? CARD_BG_DISABLED
-                    : ((rowHover || keyFocused) ? CARD_BG_HOVER : CARD_BG);
-                int borderCol = keyFocused
-                    ? GOLD_TEXT
-                    : (avail.modifiedFromDefault()
-                        ? 0xFFBA9244
-                        : (avail.parentApplicable() ? 0xFF3E2E5C : 0xFF281F3B));
-
-                ctx.fill(this.listX, ry, this.listX + innerCardW, ry + ROW_H, borderCol);
-                ctx.fill(this.listX + 1, ry + 1, this.listX + innerCardW - 1, ry + ROW_H - 1, cardFill);
-
-                int resetBtnW = 14;
-                int ctrlW = Math.min(120, Math.max(92, innerCardW * 38 / 100));
-                int resetX = this.listX + innerCardW - resetBtnW - 4;
-                int ctrlX = resetX - ctrlW - 4;
-                int ctrlY = ry + 7;
-                int ctrlH = 17;
-
-                // Option Title + Scope / Applicability Subtitle
-                int textMaxW = Math.max(52, ctrlX - (this.listX + 8));
-                String titlePrefix = avail.modifiedFromDefault() ? "\u2605 " : "";
-                int titleColor = avail.parentApplicable() ? (avail.modifiedFromDefault() ? GOLD_TEXT : CREAM_TEXT) : 0xFF817599;
-                RowRenderSupport.renderCenteredYText(
-                    ctx, Minecraft.getInstance(), titlePrefix + I18n.get(entry.nameKey()),
-                    this.listX + 6, ry + 9.5f, 0.84f, textMaxW, titleColor
+                blitNineSliceRect(
+                    ctx,
+                    selected ? RAIL_TAB_ACTIVE : RAIL_TAB,
+                    tb.x(), tb.y(), tb.w(), tb.h(), 12, 5, 80, 22
                 );
+                if (!selected && hovered) {
+                    ctx.fill(tb.x() + 2, tb.y() + 2, tb.right() - 2, tb.bottom() - 2, 0x22FFE49E);
+                }
 
-                String subLine;
-                int subColor;
-                if (!avail.parentApplicable() && avail.inactiveReasonKey() != null) {
-                    subLine = "\u26a0 " + I18n.get(avail.inactiveReasonKey());
-                    subColor = 0xFFE6B566;
+                // 14x14 crisp pixel-art domain icon (7px inset clears 5.5px brass pillar)
+                Identifier icon = isTraceTab ? ICON_TRACE : domainIcon(cat);
+                int iconSize = 14;
+                int iconX = tb.x() + 7;
+                int iconY = Math.round(tb.centerY() - iconSize * 0.5f);
+                ctx.blit(icon, iconX, iconY, iconX + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
+
+                // Right-side count badge (modified count for domains; classic atom ratio for Rule Trace)
+                String badgeStr = "";
+                int badgeColor = MUTED_TEXT;
+                if (isTraceTab) {
+                    int classicAtoms = this.draft.build().countClassic103Atoms();
+                    badgeStr = classicAtoms + "/" + ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT;
+                    badgeColor = classicAtoms > 0 ? AMBER_TEXT : MUTED_TEXT;
                 } else {
-                    // Shape + colour dual coding: a scope glyph remains legible
-                    // even when colour perception or a theme makes hues ambiguous.
-                    String scopeGlyph = switch (avail.effectScope()) {
-                        case IMMEDIATE -> "\u25cf";
-                        case NEW_GENERATION -> "\u25c6";
-                        case RESTART_REQUIRED -> "\u25b2";
-                    };
-                    subLine = scopeGlyph + " " + I18n.get(avail.effectScope().badgeKey()) + " \u00b7 " + I18n.get(entry.descKey());
-                    subColor = avail.effectScope() == EffectScope.IMMEDIATE ? MUTED_TEXT : avail.effectScope().color();
-                }
-                RowRenderSupport.renderCenteredYText(
-                    ctx, Minecraft.getInstance(), subLine,
-                    this.listX + 6, ry + 22.0f, 0.75f, textMaxW, subColor
-                );
-
-                // Control Widget (Boolean / Enum / Slider with - & + step buttons)
-                renderOptionControl(ctx, entry, avail, ctrlX, ctrlY, ctrlW, ctrlH, mouseX, mouseY, inClipMouse);
-
-                // Per-option Reset button [↺]
-                boolean canResetRow = this.sessionMode.writable() && avail.modifiedFromDefault();
-                boolean overResetRow = inClipMouse && canResetRow
-                    && mouseX >= resetX && mouseX < resetX + resetBtnW
-                    && mouseY >= ctrlY && mouseY < ctrlY + ctrlH;
-                ctx.fill(resetX, ctrlY, resetX + resetBtnW, ctrlY + ctrlH, canResetRow ? (overResetRow ? GOLD_TEXT : 0xFF7B63A6) : 0xFF2B223D);
-                ctx.fill(resetX + 1, ctrlY + 1, resetX + resetBtnW - 1, ctrlY + ctrlH - 1, overResetRow ? 0xFF4B3378 : 0xFF1B1429);
-                GrimoireTextLayout.drawCenteredBox(
-                    ctx, this.font, "\u21ba", resetX + 1, resetBtnW - 2, ctrlY + ctrlH * 0.5f, 0.72f,
-                    canResetRow ? GOLD_TEXT : 0xFF564B6B, false
-                );
-                if (canResetRow && inClipMouse) {
-                    this.hitBoxes.add(new HitBox(resetX, ctrlY, resetBtnW, ctrlH, () -> {
-                        entry.resetToDefault(this.draft);
-                        playClick(0.92f);
-                    }, null));
+                    int catMod = (int) ConfigCatalog.optionsInCategory(cat).stream()
+                        .filter(o -> o.isModifiedFromDefault(this.draft))
+                        .count();
+                    if (catMod > 0) {
+                        badgeStr = Integer.toString(catMod);
+                        badgeColor = EMERALD_TEXT;
+                    }
                 }
 
-                if (rowHover) {
-                    pendingTooltip = buildOptionTooltip(entry, avail);
+                int badgeW = badgeStr.isEmpty()
+                    ? 0
+                    : Math.max(14, Math.round(this.font.width(badgeStr) * ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE) + 4);
+                int labelX = iconX + iconSize + 4;
+                int labelRight = tb.right() - 7 - (badgeW > 0 ? badgeW + 3 : 0);
+                Box labelBox = new Box(labelX, tb.y(), Math.max(24, labelRight - labelX), tb.h());
+                String title = isTraceTab
+                    ? I18n.get("config.chiseled_enchanting_table.trace.tab_title")
+                    : I18n.get(cat.titleKey());
+
+                drawClampedLeftText(
+                    ctx,
+                    title,
+                    labelBox,
+                    ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+                    ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+                    selected ? GOLD_TEXT : (isTraceTab ? AMBER_TEXT : CREAM_TEXT)
+                );
+
+                if (badgeW > 0) {
+                    Box bBox = new Box(tb.right() - 7 - badgeW, tb.y(), badgeW, tb.h());
+                    drawClampedCenteredText(
+                        ctx,
+                        badgeStr,
+                        bBox,
+                        ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+                        ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+                        badgeColor
+                    );
+                }
+
+                int clippedTop = Math.max(rail.y(), tb.y());
+                int clippedBot = Math.min(rail.bottom(), tb.bottom());
+                if (clippedBot > clippedTop) {
+                    Box clickBox = new Box(tb.x(), clippedTop, tb.w(), clippedBot - clippedTop);
+                    if (isTraceTab) {
+                        this.hitBoxes.add(new HitBox(clickBox, () -> {
+                            this.ruleTracePage = true;
+                            this.filterModifiedOnly = false;
+                            setSearchQuery("");
+                            this.searchFocused = false;
+                            this.listScroll = 0.0f;
+                            playClick(1.02f);
+                        }, null));
+                    } else {
+                        CategoryId targetCat = cat;
+                        this.hitBoxes.add(new HitBox(clickBox, () -> {
+                            this.ruleTracePage = false;
+                            this.filterModifiedOnly = false;
+                            this.activeCategory = targetCat;
+                            setSearchQuery("");
+                            this.searchFocused = false;
+                            this.focusedOptionIndex = -1;
+                            this.listScroll = 0.0f;
+                            playClick(1.0f);
+                        }, null));
+                    }
+                }
+
+                if (hovered) {
+                    tip = isTraceTab
+                        ? List.of(
+                            Component.translatable("config.chiseled_enchanting_table.trace.tab_title").withStyle(ChatFormatting.GOLD),
+                            Component.translatable("config.chiseled_enchanting_table.trace.tab_desc").withStyle(ChatFormatting.GRAY)
+                        )
+                        : List.of(
+                            Component.translatable(cat.titleKey()).withStyle(ChatFormatting.GOLD),
+                            Component.translatable(cat.subtitleKey()).withStyle(ChatFormatting.GRAY)
+                        );
                 }
             }
         } finally {
             ctx.disableScissor();
         }
+        return tip;
+    }
 
-        // Scrollbar
-        if (this.maxScroll > 0.5f) {
-            int sbX = this.listX + this.listW - 4;
-            ctx.fill(sbX, rowListTop(), sbX + 4, rowListTop() + rowListHeight(), 0xFF120D1C);
-            int thumbH = Math.max(18, Math.round((float) rowListHeight() * rowListHeight() / (rowListHeight() + this.maxScroll)));
-            int thumbY = rowListTop() + Math.round((this.scrollOffset / this.maxScroll) * (rowListHeight() - thumbH));
-            ctx.fill(sbX, thumbY, sbX + 4, thumbY + thumbH, this.draggingScrollbar ? GOLD_TEXT : 0xFF8C72BD);
+    // ---- L2 / L3 Option Rows & Sticky Collapsible Subsections ----
+
+    private List<Component> renderOptionListViewport(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        List<Component> tip = null;
+        Box vp = this.layout.listViewport();
+        Box col = this.layout.listContentColumn();
+
+        List<OptionEntry> flatOptions = flatFilteredOptions();
+        List<DisplayItem> items = buildDisplayItems(flatOptions);
+
+        if (items.isEmpty()) {
+            this.maxListScroll = 0.0f;
+            this.listScroll = 0.0f;
+            ctx.enableScissor(vp.x(), vp.y(), vp.right(), vp.bottom());
+            try {
+                int embSize = 40;
+                int ex = Math.round(vp.centerX() - embSize * 0.5f);
+                int ey = Math.max(vp.y() + 8, Math.round(vp.centerY() - 32.0f));
+                ctx.blit(EMBLEM_TRACE_LARGE, ex, ey, ex + embSize, ey + embSize, 0.0f, 1.0f, 0.0f, 1.0f);
+                String emptyMsg = I18n.get(this.filterModifiedOnly
+                    ? "config.chiseled_enchanting_table.empty.modified"
+                    : "config.chiseled_enchanting_table.empty.search");
+                drawClampedCenteredText(
+                    ctx,
+                    emptyMsg,
+                    new Box(vp.x() + 10, ey + embSize + 6, Math.max(40, vp.w() - 20), 16),
+                    ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
+                    ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+                    MUTED_TEXT
+                );
+            } finally {
+                ctx.disableScissor();
+            }
+            return null;
         }
 
-        // Bottom Footer Bar
-        renderFooterBar(ctx, mouseX, mouseY);
+        int totalContentH = computeDisplayHeight(items);
+        this.maxListScroll = Math.max(0.0f, totalContentH - vp.h());
+        this.listScroll = Mth.clamp(this.listScroll, 0.0f, this.maxListScroll);
+        int scrollPx = Math.round(this.listScroll);
 
-        if (pendingTooltip != null) {
-            ctx.setTooltipForNextFrame(this.font, pendingTooltip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+        // Determine sticky active section header when scrolled past an expanded section's header
+        DisplayItem stickySection = null;
+        int cursorCheck = 0;
+        for (DisplayItem item : items) {
+            if (item.isSectionHeader()) {
+                if (cursorCheck < scrollPx && item.sectionExpanded()) {
+                    stickySection = item;
+                } else if (cursorCheck >= scrollPx) {
+                    break;
+                }
+            }
+            cursorCheck += item.height() + ConfigLayoutSpec.ROW_GAP;
         }
+
+        int stickyH = stickySection != null ? ConfigLayoutSpec.SECTION_HEADER_H + 2 : 0;
+        this.stickyBodyOffset = stickyH;
+        int rowsClipTop = vp.y() + stickyH;
+
+        ctx.enableScissor(vp.x(), rowsClipTop, vp.right(), vp.bottom());
+        try {
+            int curY = vp.y() - scrollPx;
+            for (DisplayItem item : items) {
+                int h = item.height();
+                if (curY + h > rowsClipTop && curY < vp.bottom()) {
+                    if (item.isSectionHeader()) {
+                        List<Component> secTip = renderSectionHeaderRow(
+                            ctx, item, col.x(), curY, col.w(), mouseX, mouseY, rowsClipTop, vp.bottom()
+                        );
+                        if (secTip != null && tip == null) tip = secTip;
+                    } else if (item.option() != null) {
+                        List<Component> rowTip = renderSingleOptionRow(
+                            ctx, item.option(), item.flatOptionIndex(), col.x(), curY, col.w(),
+                            mouseX, mouseY, rowsClipTop, vp.bottom()
+                        );
+                        if (rowTip != null && tip == null) tip = rowTip;
+                    }
+                }
+                curY += h + ConfigLayoutSpec.ROW_GAP;
+            }
+        } finally {
+            ctx.disableScissor();
+        }
+
+        // Render pinned sticky section header cleanly above scrolling rows
+        if (stickySection != null) {
+            ctx.enableScissor(vp.x(), vp.y(), vp.right(), vp.y() + stickyH);
+            try {
+                ctx.fill(col.x(), vp.y(), col.right(), vp.y() + stickyH, 0xEE0E091A);
+                List<Component> stTip = renderSectionHeaderRow(
+                    ctx, stickySection, col.x(), vp.y(), col.w(), mouseX, mouseY, vp.y(), vp.y() + stickyH
+                );
+                if (stTip != null) tip = stTip;
+            } finally {
+                ctx.disableScissor();
+            }
+        }
+
+        renderListScrollbar(ctx, totalContentH, mouseX, mouseY);
+        return tip;
+    }
+
+    private List<Component> renderSectionHeaderRow(
+        GuiGraphicsExtractor ctx,
+        DisplayItem sec,
+        int x,
+        int y,
+        int w,
+        int mouseX,
+        int mouseY,
+        int clipTop,
+        int clipBottom
+    ) {
+        Box box = new Box(x, y, w, ConfigLayoutSpec.SECTION_HEADER_H);
+        boolean inClip = mouseY >= clipTop && mouseY < clipBottom;
+        boolean hovered = inClip && box.contains(mouseX, mouseY);
+
+        blitNineSliceRect(ctx, SECTION_PLAQUE, x, y, w, box.h(), 14, 5, 96, 18);
+        if (hovered) {
+            ctx.fill(x + 2, y + 2, x + w - 2, y + box.h() - 2, 0x22FFE599);
+        }
+
+        RowRenderSupport.drawDisclosureTriangle(
+            ctx, x + 9, box.centerY(), sec.sectionExpanded(), GOLD_TEXT
+        );
+
+        boolean allGated = sec.sectionActiveCount() == 0 && sec.sectionTotalCount() > 0;
+        String rightTag = allGated
+            ? ("\uD83D\uDD12 " + sec.sectionTotalCount())
+            : Integer.toString(sec.sectionTotalCount());
+        int rightW = Math.max(20, Math.round(this.font.width(rightTag) * ConfigLayoutSpec.SECONDARY_TEXT_SCALE) + 8);
+        Box rightBox = new Box(x + w - 9 - rightW, y, rightW, box.h());
+        Box titleBox = new Box(x + 20, y, Math.max(36, rightBox.x() - 4 - (x + 20)), box.h());
+
+        drawClampedLeftText(
+            ctx,
+            sec.sectionTitle() == null ? "" : sec.sectionTitle(),
+            titleBox,
+            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+            allGated ? MUTED_TEXT : GOLD_TEXT
+        );
+        drawClampedCenteredText(
+            ctx,
+            rightTag,
+            rightBox,
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            allGated ? AMBER_TEXT : MUTED_TEXT
+        );
+
+        int cTop = Math.max(clipTop, y);
+        int cBot = Math.min(clipBottom, y + box.h());
+        if (cBot > cTop && sec.sectionKey() != null) {
+            String key = sec.sectionKey();
+            this.hitBoxes.add(new HitBox(new Box(x, cTop, w, cBot - cTop), () -> {
+                this.userToggledSections.add(key);
+                if (!this.collapsedSections.remove(key)) {
+                    this.collapsedSections.add(key);
+                }
+                playClick(0.98f);
+            }, null));
+        }
+
+        if (hovered && allGated) {
+            return List.of(
+                Component.literal(sec.sectionTitle() == null ? "" : sec.sectionTitle()).withStyle(ChatFormatting.GOLD),
+                Component.translatable("config.chiseled_enchanting_table.sec.gated_hint").withStyle(ChatFormatting.YELLOW)
+            );
+        }
+        return null;
+    }
+
+    private List<Component> renderSingleOptionRow(
+        GuiGraphicsExtractor ctx,
+        OptionEntry entry,
+        int flatIndex,
+        int x,
+        int y,
+        int w,
+        int mouseX,
+        int mouseY,
+        int clipTop,
+        int clipBottom
+    ) {
+        OptionRowLayout row = ConfigLayoutSpec.computeOptionRow(x, y, w);
+        OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
+        boolean editable = avail.editable();
+        boolean inClip = mouseY >= clipTop && mouseY < clipBottom;
+        boolean hovered = inClip && row.plaque().contains(mouseX, mouseY);
+        boolean focused = (flatIndex == this.focusedOptionIndex);
+
+        Identifier plaqueSprite = !editable
+            ? ROW_PLAQUE_DISABLED
+            : (hovered ? ROW_PLAQUE_HOVER : (entry.isCoreRuleAtom() ? ROW_PLAQUE_ATOM : ROW_PLAQUE));
+        blitNineSliceRect(ctx, plaqueSprite, x, y, w, row.plaque().h(), 16, 6, 96, 24);
+
+        if (focused) {
+            ctx.fill(x + 1, y + 1, x + w - 1, y + 2, GOLD_TEXT);
+            ctx.fill(x + 1, y + row.plaque().h() - 2, x + w - 1, y + row.plaque().h() - 1, GOLD_TEXT);
+        }
+
+        // 1. Modified indicator pip
+        if (avail.modifiedFromDefault()) {
+            Box pip = row.modifiedPip();
+            int cx = Math.round(pip.centerX());
+            int cy = Math.round(pip.centerY());
+            ctx.fill(cx - 2, cy - 2, cx + 2, cy + 2, GOLD_TEXT);
+        } else if (entry.isCoreRuleAtom()) {
+            Box pip = row.modifiedPip();
+            int cx = Math.round(pip.centerX());
+            int cy = Math.round(pip.centerY());
+            ctx.fill(cx - 1, cy - 1, cx + 2, cy + 2, editable ? 0xFFB995FF : DIM_TEXT);
+        }
+
+        // 2. Option Title (strictly >= 0.85f)
+        String name = I18n.get(entry.nameKey());
+        int nameColor = !editable
+            ? MUTED_TEXT
+            : (entry.isCoreRuleAtom() ? GOLD_TEXT : CREAM_TEXT);
+        drawClampedLeftText(
+            ctx,
+            name,
+            row.labelBox(),
+            ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
+            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+            nameColor
+        );
+
+        // 3. Dual-coded Scope + Lock Glyph Chip (strictly >= 0.75f, never color-only)
+        Box sb = row.scopeBadgeBox();
+        String scopeGlyph = (!editable ? "\uD83D\uDD12" : "") + avail.effectScope().glyph();
+        int scopeColor = switch (avail.effectScope()) {
+            case LIVE_HOT_RELOAD -> EMERALD_TEXT;
+            case NEW_GENERATION -> CYAN_TEXT;
+            case RESTART_REQUIRED -> AMBER_TEXT;
+        };
+        if (!editable) scopeColor = MUTED_TEXT;
+        ctx.fill(sb.x(), sb.y(), sb.right(), sb.bottom(), 0x88140D22);
+        drawClampedCenteredText(
+            ctx,
+            scopeGlyph,
+            sb,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            scopeColor
+        );
+
+        // 4. Interactive Control (Boolean Toggle / Enum Plaque / Slider)
+        renderOptionControl(ctx, entry, row.controlBox(), editable, inClip, mouseX, mouseY, clipTop, clipBottom);
+
+        // 5. Reset-to-default button
+        Box rb = row.resetBox();
+        boolean canReset = editable && avail.modifiedFromDefault();
+        boolean overReset = inClip && canReset && rb.contains(mouseX, mouseY);
+        blitNineSliceRect(
+            ctx,
+            canReset ? (overReset ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
+            rb.x(), rb.y(), rb.w(), rb.h(), 4, 4, 64, 18
+        );
+        drawClampedCenteredText(
+            ctx,
+            "\u21ba",
+            rb,
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            canReset ? (overReset ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT
+        );
+        if (canReset) {
+            int cTop = Math.max(clipTop, rb.y());
+            int cBot = Math.min(clipBottom, rb.bottom());
+            if (cBot > cTop) {
+                this.hitBoxes.add(new HitBox(new Box(rb.x(), cTop, rb.w(), cBot - cTop), () -> {
+                    entry.resetToDefault(this.draft);
+                    syncAutoCollapsedSections();
+                    playClick(0.92f);
+                }, null));
+            }
+        }
+
+        return hovered ? buildL3ProvenanceTooltip(entry, avail) : null;
     }
 
     private void renderOptionControl(
         GuiGraphicsExtractor ctx,
         OptionEntry entry,
-        OptionAvailability avail,
-        int x,
-        int y,
-        int w,
-        int h,
+        Box cb,
+        boolean editable,
+        boolean inClip,
         int mouseX,
         int mouseY,
-        boolean inClipMouse
+        int clipTop,
+        int clipBottom
     ) {
-        String valText = formatOptionValue(entry);
-        boolean editable = avail.editable();
+        Draft shown = displayedDraft(entry);
+        String valText = formatValueFrom(entry, shown);
+        int cTop = Math.max(clipTop, cb.y());
+        int cBot = Math.min(clipBottom, cb.bottom());
+        boolean hitValid = cBot > cTop;
 
         if (entry.kind() == ControlKind.BOOLEAN) {
-            boolean on = Boolean.TRUE.equals(entry.get(displayedDraft(entry)));
-            boolean over = inClipMouse && editable && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
-            int border = !editable ? 0xFF3B3052 : (on ? 0xFF5CE1A6 : 0xFF75609E);
-            int fill = !editable ? 0xFF1D172B : (on ? (over ? 0xFF236B4E : 0xFF1A523B) : (over ? 0xFF34264F : 0xFF241A38));
-            ctx.fill(x, y, x + w, y + h, border);
-            ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, fill);
-            GrimoireTextLayout.drawCenteredBox(
-                ctx, this.font, (on ? "\u25cf " : "\u25cb ") + valText,
-                x + 4, w - 8, y + h * 0.5f, 0.72f,
-                editable ? (on ? 0xFF9EFFD2 : CREAM_TEXT) : 0xFF6E6285, true
+            boolean isOn = "true".equals(entry.rawOrKeyDisplay(shown));
+            int swW = 36;
+            int swH = 16;
+            int swX = cb.right() - swW;
+            int swY = Math.round(cb.centerY() - swH * 0.5f);
+            Identifier swSprite = !editable ? TOGGLE_LOCKED : (isOn ? TOGGLE_ON : TOGGLE_OFF);
+            ctx.blit(swSprite, swX, swY, swX + swW, swY + swH, 0.0f, 1.0f, 0.0f, 1.0f);
+
+            Box stateTextBox = new Box(cb.x(), cb.y(), Math.max(20, swX - 4 - cb.x()), cb.h());
+            String stateText = I18n.get(isOn
+                ? "config.chiseled_enchanting_table.val.on"
+                : "config.chiseled_enchanting_table.val.off");
+            drawClampedCenteredText(
+                ctx,
+                stateText,
+                stateTextBox,
+                ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+                ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+                !editable ? DIM_TEXT : (isOn ? EMERALD_TEXT : MUTED_TEXT)
             );
-            if (editable && inClipMouse) {
-                this.hitBoxes.add(new HitBox(x, y, w, h, () -> {
+
+            if (editable && hitValid) {
+                this.hitBoxes.add(new HitBox(new Box(cb.x(), cTop, cb.w(), cBot - cTop), () -> {
                     entry.toggleOrCycle(this.draft, 1);
+                    syncAutoCollapsedSections();
                     playClick(1.04f);
                 }, () -> {
                     entry.toggleOrCycle(this.draft, -1);
+                    syncAutoCollapsedSections();
                     playClick(0.96f);
                 }));
             }
@@ -933,243 +1306,678 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
 
         if (entry.kind() == ControlKind.ENUM_CYCLE) {
-            boolean over = inClipMouse && editable && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
-            ctx.fill(x, y, x + w, y + h, editable ? (over ? GOLD_TEXT : 0xFF876BB8) : 0xFF3B3052);
-            ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, !editable ? 0xFF1D172B : (over ? 0xFF3B2A5E : 0xFF291D42));
-            GrimoireTextLayout.drawCenteredBox(
-                ctx, this.font, "\u25c2 " + valText + " \u25b8",
-                x + 3, w - 6, y + h * 0.5f, 0.68f,
-                editable ? GOLD_TEXT : 0xFF6E6285, true
+            boolean over = inClip && editable && cb.contains(mouseX, mouseY);
+            Identifier sprite = !editable
+                ? BTN_PLAQUE_DISABLED
+                : (over ? BTN_PLAQUE_HOVER : (entry.isCoreRuleAtom() ? BTN_PLAQUE_GOLD : BTN_PLAQUE));
+            blitNineSliceRect(ctx, sprite, cb.x(), cb.y(), cb.w(), cb.h(), 6, 6, 64, 18);
+
+            String decorated = "\u25c2 " + valText + " \u25b8";
+            drawClampedCenteredText(
+                ctx,
+                decorated,
+                new Box(cb.x() + 4, cb.y(), Math.max(16, cb.w() - 8), cb.h()),
+                ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+                ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+                !editable ? DIM_TEXT : CREAM_TEXT
             );
-            if (editable && inClipMouse) {
-                this.hitBoxes.add(new HitBox(x, y, w, h, () -> {
+
+            if (editable && hitValid) {
+                this.hitBoxes.add(new HitBox(new Box(cb.x(), cTop, cb.w(), cBot - cTop), () -> {
                     entry.toggleOrCycle(this.draft, 1);
-                    playClick(1.05f);
+                    syncAutoCollapsedSections();
+                    playClick(1.04f);
                 }, () -> {
                     entry.toggleOrCycle(this.draft, -1);
-                    playClick(0.95f);
+                    syncAutoCollapsedSections();
+                    playClick(0.96f);
                 }));
             }
             return;
         }
 
-        // Numeric slider with [-] [==== track ====] [+]
-        int stepW = 12;
-        int trackX = x + stepW + 2;
-        int trackW = Math.max(30, w - (stepW + 2) * 2);
-        int plusX = trackX + trackW + 2;
+        // Numeric Slider: [valuePill] [-] [=== unobstructed track + knob ===] [+]
+        SliderControlLayout sc = ConfigLayoutSpec.computeSliderControl(cb);
+        Box valuePill = sc.valuePill();
+        Box minusBox = sc.minusBtn();
+        Box trackArea = sc.trackArea();
+        Box plusBox = sc.plusBtn();
 
-        boolean overMinus = inClipMouse && editable && mouseX >= x && mouseX < x + stepW && mouseY >= y && mouseY < y + h;
-        boolean overPlus = inClipMouse && editable && mouseX >= plusX && mouseX < plusX + stepW && mouseY >= y && mouseY < y + h;
-        ctx.fill(x, y, x + stepW, y + h, editable ? (overMinus ? GOLD_TEXT : 0xFF6D5899) : 0xFF352B4A);
-        ctx.fill(x + 1, y + 1, x + stepW - 1, y + h - 1, overMinus ? 0xFF422E66 : 0xFF211735);
-        GrimoireTextLayout.drawCenteredBox(ctx, this.font, "-", x, stepW, y + h * 0.5f, 0.76f, editable ? CREAM_TEXT : 0xFF665A7D, true);
-
-        ctx.fill(plusX, y, plusX + stepW, y + h, editable ? (overPlus ? GOLD_TEXT : 0xFF6D5899) : 0xFF352B4A);
-        ctx.fill(plusX + 1, y + 1, plusX + stepW - 1, y + h - 1, overPlus ? 0xFF422E66 : 0xFF211735);
-        GrimoireTextLayout.drawCenteredBox(ctx, this.font, "+", plusX, stepW, y + h * 0.5f, 0.76f, editable ? CREAM_TEXT : 0xFF665A7D, true);
-
-        double norm = entry.normalizedSliderValue(displayedDraft(entry));
-        ctx.fill(trackX, y, trackX + trackW, y + h, editable ? 0xFF6D5899 : 0xFF352B4A);
-        ctx.fill(trackX + 1, y + 1, trackX + trackW - 1, y + h - 1, 0xFF181126);
-        int fillW = Math.round((float) ((trackW - 2) * norm));
-        if (fillW > 0) {
-            ctx.fill(trackX + 1, y + 1, trackX + 1 + fillW, y + h - 1, editable ? 0xFF563B8C : 0xFF2E2444);
-        }
-        int knobX = trackX + 1 + Mth.clamp(fillW, 0, Math.max(0, trackW - 4));
-        ctx.fill(knobX, y + 1, Math.min(trackX + trackW - 1, knobX + 2), y + h - 1, editable ? GOLD_TEXT : 0xFF6B6080);
-
-        GrimoireTextLayout.drawCenteredBox(
-            ctx, this.font, valText, trackX + 2, trackW - 4, y + h * 0.5f, 0.70f,
-            editable ? CREAM_TEXT : 0xFF6E6285, true
+        // Dedicated left value readout pill (never overlaps sliding knob)
+        ctx.fill(valuePill.x(), valuePill.y(), valuePill.right(), valuePill.bottom(), 0xCC110B1F);
+        ctx.fill(valuePill.x(), valuePill.bottom() - 1, valuePill.right(), valuePill.bottom(), 0x667A5C38);
+        drawClampedCenteredText(
+            ctx,
+            valText,
+            new Box(valuePill.x() + 2, valuePill.y(), Math.max(12, valuePill.w() - 4), valuePill.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            editable ? GOLD_TEXT : DIM_TEXT
         );
 
-        if (editable && inClipMouse) {
-            this.hitBoxes.add(new HitBox(x, y, stepW, h, () -> {
+        boolean overMinus = inClip && editable && minusBox.contains(mouseX, mouseY);
+        boolean overPlus = inClip && editable && plusBox.contains(mouseX, mouseY);
+        boolean overTrack = inClip && editable && trackArea.contains(mouseX, mouseY);
+
+        blitNineSliceRect(ctx, !editable ? BTN_PLAQUE_DISABLED : (overMinus ? BTN_PLAQUE_HOVER : BTN_PLAQUE),
+            minusBox.x(), minusBox.y(), minusBox.w(), minusBox.h(), 4, 4, 64, 18);
+        drawClampedCenteredText(ctx, "-", minusBox,
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            editable ? CREAM_TEXT : DIM_TEXT);
+
+        blitNineSliceRect(ctx, !editable ? BTN_PLAQUE_DISABLED : (overPlus ? BTN_PLAQUE_HOVER : BTN_PLAQUE),
+            plusBox.x(), plusBox.y(), plusBox.w(), plusBox.h(), 4, 4, 64, 18);
+        drawClampedCenteredText(ctx, "+", plusBox,
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            editable ? CREAM_TEXT : DIM_TEXT);
+
+        int barH = 8;
+        int barY = Math.round(trackArea.centerY() - barH * 0.5f);
+        blitNineSliceRect(ctx, SLIDER_TRACK, trackArea.x(), barY, trackArea.w(), barH, 4, 3, 64, 8);
+
+        double norm = entry.normalizedSliderValue(shown);
+        int fillW = Math.round((float) (trackArea.w() * norm));
+        if (fillW > 2) {
+            blitNineSliceRect(ctx, SLIDER_FILL, trackArea.x(), barY, fillW, barH, 4, 3, 64, 8);
+        }
+
+        int knobW = 10;
+        int knobH = 14;
+        int knobX = trackArea.x() + Mth.clamp(fillW - knobW / 2, 0, Math.max(0, trackArea.w() - knobW));
+        int knobY = Math.round(trackArea.centerY() - knobH * 0.5f);
+        ctx.blit(overTrack ? SLIDER_KNOB_HOVER : SLIDER_KNOB, knobX, knobY, knobX + knobW, knobY + knobH, 0.0f, 1.0f, 0.0f, 1.0f);
+
+        if (editable && hitValid) {
+            this.hitBoxes.add(new HitBox(new Box(minusBox.x(), cTop, minusBox.w(), cBot - cTop), () -> {
                 entry.stepValue(this.draft, -1);
+                syncAutoCollapsedSections();
                 playClick(0.96f);
             }, () -> {
                 entry.stepValue(this.draft, -5);
+                syncAutoCollapsedSections();
                 playClick(0.90f);
             }));
-            this.hitBoxes.add(new HitBox(plusX, y, stepW, h, () -> {
+            this.hitBoxes.add(new HitBox(new Box(plusBox.x(), cTop, plusBox.w(), cBot - cTop), () -> {
                 entry.stepValue(this.draft, 1);
+                syncAutoCollapsedSections();
                 playClick(1.04f);
             }, () -> {
                 entry.stepValue(this.draft, 5);
+                syncAutoCollapsedSections();
                 playClick(1.10f);
             }));
-            this.sliderTracks.add(new SliderTrack(entry, trackX, y, trackW, h));
+            this.sliderTracks.add(new SliderTrack(entry, new Box(trackArea.x(), cTop, trackArea.w(), cBot - cTop)));
         }
     }
 
-    private List<Component> buildOptionTooltip(OptionEntry entry, OptionAvailability avail) {
+    /**
+     * Builds the L3 3-Value Provenance Tooltip:
+     * Pending Draft value vs Live Effective value vs 1.1.0 Default (+ 1.0.3 Classic reference),
+     * dual-coded effect scope explanation, and parent-atom / governance lock reason.
+     */
+    private List<Component> buildL3ProvenanceTooltip(OptionEntry entry, OptionAvailability avail) {
         List<Component> lines = new ArrayList<>();
-        lines.add(Component.translatable(entry.nameKey()).withStyle(ChatFormatting.GOLD));
-        lines.add(Component.translatable(entry.descKey()).withStyle(ChatFormatting.GRAY));
-        lines.add(Component.translatable(
-            "config.chiseled_enchanting_table.tip.current_default",
-            formatOptionValue(entry),
-            formatDefaultValue(entry)
-        ).withStyle(ChatFormatting.AQUA));
-        if (entry.effectScope() == ConfigCatalog.EffectScope.RESTART_REQUIRED) {
-            String actual = entry.rawOrKeyDisplay(ModRuntimeConfig.effective().toDraft());
-            lines.add(Component.translatable("config.chiseled_enchanting_table.tip.active_value", actual).withStyle(ChatFormatting.GOLD));
-            if ("enchanted_book_stack_size".equals(entry.key())) {
-                lines.add(Component.translatable("config.chiseled_enchanting_table.tip.stack_shrink_save_risk")
-                    .withStyle(ChatFormatting.RED));
-            }
+        String titlePrefix = entry.isCoreRuleAtom() ? "\u2726 " : "";
+        lines.add(Component.literal(titlePrefix).append(Component.translatable(entry.nameKey())).withStyle(ChatFormatting.GOLD));
+        if (entry.isCoreRuleAtom()) {
+            lines.add(Component.translatable("config.chiseled_enchanting_table.tip.core_atom_badge")
+                .withStyle(ChatFormatting.LIGHT_PURPLE));
         }
+        lines.add(Component.translatable(entry.descKey()).withStyle(ChatFormatting.GRAY));
+
+        String draftVal = formatValueFrom(entry, this.draft);
+        String effectiveVal = formatValueFrom(entry, ModRuntimeConfig.effective().toDraft());
+        String defaultVal = formatValueFrom(entry, this.defaultReferenceDraft);
+        String classicVal = formatValueFrom(entry, this.classicReferenceDraft);
+
+        lines.add(Component.translatable("config.chiseled_enchanting_table.tip.prov_draft", draftVal)
+            .withStyle(avail.modifiedFromDefault() ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
+        lines.add(Component.translatable("config.chiseled_enchanting_table.tip.prov_effective", effectiveVal)
+            .withStyle(draftVal.equals(effectiveVal) ? ChatFormatting.AQUA : ChatFormatting.GOLD));
+        lines.add(Component.translatable("config.chiseled_enchanting_table.tip.prov_defaults", defaultVal, classicVal)
+            .withStyle(ChatFormatting.DARK_AQUA));
+
+        if ("enchanted_book_stack_size".equals(entry.key())) {
+            lines.add(Component.translatable("config.chiseled_enchanting_table.tip.stack_shrink_save_risk")
+                .withStyle(ChatFormatting.RED));
+        }
+
         ChatFormatting scopeFmt = switch (avail.effectScope()) {
-            case IMMEDIATE -> ChatFormatting.GREEN;
+            case LIVE_HOT_RELOAD -> ChatFormatting.GREEN;
             case NEW_GENERATION -> ChatFormatting.AQUA;
             case RESTART_REQUIRED -> ChatFormatting.GOLD;
         };
-        lines.add(Component.translatable(avail.effectScope().badgeKey() + ".detail").withStyle(scopeFmt));
+        lines.add(Component.literal(avail.effectScope().glyph() + " ")
+            .append(Component.translatable(avail.effectScope().badgeKey() + ".detail"))
+            .withStyle(scopeFmt));
+
         if (avail.inactiveReasonKey() != null) {
-            lines.add(Component.translatable(avail.inactiveReasonKey()).withStyle(ChatFormatting.RED));
+            lines.add(Component.literal("\uD83D\uDD12 ")
+                .append(Component.translatable(avail.inactiveReasonKey()))
+                .withStyle(ChatFormatting.RED));
         }
         return lines;
     }
 
-    private void renderFooterBar(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
-        int footY = this.panelY + this.panelH - 25;
-        ctx.fill(this.panelX, footY - 2, this.panelX + this.panelW, this.panelY + this.panelH, HEADER_BG);
-        ctx.fill(this.panelX, footY - 2, this.panelX + this.panelW, footY - 1, 0xFF4B3570);
+    // ---- Rule Trace (1.0.3 <-> 1.1.0) Comparison & Interactive Atom Matrix ----
 
-        ModRuntimeConfig currentPreview = this.draft.build();
-        boolean hasUnsaved = !currentPreview.equals(this.baselineConfig);
-        boolean restartChanged = currentPreview.enchantedBookStackSize() != ModRuntimeConfig.get().enchantedBookStackSize();
-        boolean stackShrinkRisk = currentPreview.enchantedBookStackSize()
-            < chiseled_enchanting_table.ChiseledEnchantingTable.bootEnchantedBookStackSize();
+    private List<Component> renderRuleTraceViewport(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        List<Component> tip = null;
+        Box vp = this.layout.listViewport();
+        Box col = this.layout.listContentColumn();
 
-        int btnH = 18;
-        int saveW = 86;
-        int cancelW = 60;
-        int resetAllW = 74;
+        List<RuleTraceEntry> entries = ConfigCatalog.RULE_TRACE_ENTRIES;
+        int totalH = ConfigLayoutSpec.TRACE_BANNER_H + ConfigLayoutSpec.TRACE_CARD_GAP
+            + entries.size() * (ConfigLayoutSpec.TRACE_CARD_H + ConfigLayoutSpec.TRACE_CARD_GAP)
+            - ConfigLayoutSpec.TRACE_CARD_GAP;
+        this.maxListScroll = Math.max(0.0f, totalH - vp.h());
+        this.listScroll = Mth.clamp(this.listScroll, 0.0f, this.maxListScroll);
+        int scrollPx = Math.round(this.listScroll);
 
-        int saveX = this.panelX + this.panelW - saveW - 6;
-        int cancelX = saveX - cancelW - 5;
-        int resetAllX = this.panelX + 6;
+        ctx.enableScissor(vp.x(), vp.y(), vp.right(), vp.bottom());
+        try {
+            int curY = vp.y() - scrollPx;
 
-        // Reset All button
+            // 1. Top Arcane Emblem & Parity Banner
+            if (curY + ConfigLayoutSpec.TRACE_BANNER_H > vp.y() && curY < vp.bottom()) {
+                List<Component> bTip = renderTraceBanner(ctx, col.x(), curY, col.w(), mouseX, mouseY, vp.y(), vp.bottom());
+                if (bTip != null) tip = bTip;
+            }
+            curY += ConfigLayoutSpec.TRACE_BANNER_H + ConfigLayoutSpec.TRACE_CARD_GAP;
+
+            // 2. 20 Rule Trace Cards
+            for (int idx = 0; idx < entries.size(); idx++) {
+                RuleTraceEntry trace = entries.get(idx);
+                if (curY + ConfigLayoutSpec.TRACE_CARD_H > vp.y() && curY < vp.bottom()) {
+                    List<Component> cTip = renderSingleTraceCard(
+                        ctx, idx + 1, trace, col.x(), curY, col.w(), mouseX, mouseY, vp.y(), vp.bottom()
+                    );
+                    if (cTip != null && tip == null) tip = cTip;
+                }
+                curY += ConfigLayoutSpec.TRACE_CARD_H + ConfigLayoutSpec.TRACE_CARD_GAP;
+            }
+        } finally {
+            ctx.disableScissor();
+        }
+
+        renderListScrollbar(ctx, totalH, mouseX, mouseY);
+        return tip;
+    }
+
+    private List<Component> renderTraceBanner(
+        GuiGraphicsExtractor ctx,
+        int x,
+        int y,
+        int w,
+        int mouseX,
+        int mouseY,
+        int clipTop,
+        int clipBottom
+    ) {
+        Box banner = new Box(x, y, w, ConfigLayoutSpec.TRACE_BANNER_H);
+        blitNineSliceRect(ctx, ROW_PLAQUE_ATOM, x, y, w, banner.h(), 16, 6, 96, 24);
+
+        int embSize = 32;
+        int embX = x + 10;
+        int embY = Math.round(banner.centerY() - embSize * 0.5f);
+        ctx.blit(EMBLEM_TRACE_LARGE, embX, embY, embX + embSize, embY + embSize, 0.0f, 1.0f, 0.0f, 1.0f);
+
+        int btnW = Math.min(76, Math.max(54, w * 21 / 100));
+        int btnH = 16;
+        Box btnClassic = new Box(x + w - 10 - btnW, y + 5, btnW, btnH);
+        Box btnModern = new Box(x + w - 10 - btnW, y + banner.h() - 5 - btnH, btnW, btnH);
+
+        int textLeft = embX + embSize + 6;
+        int textW = Math.max(40, btnClassic.x() - 6 - textLeft);
+        Box titleBox = new Box(textLeft, y + 5, textW, 15);
+        Box subBox = new Box(textLeft, y + 22, textW, 15);
+
+        int activeClassic = this.draft.build().countClassic103Atoms();
+        drawClampedLeftText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.trace.banner_title"),
+            titleBox,
+            ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
+            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+            GOLD_TEXT
+        );
+        drawClampedLeftText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.trace.banner_ratio",
+                activeClassic, ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT),
+            subBox,
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            activeClassic == ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT ? GOLD_TEXT : CYAN_TEXT
+        );
+
+        boolean writable = this.sessionMode.writable();
+        boolean inClip = mouseY >= clipTop && mouseY < clipBottom;
+
+        // Quick-apply all 19 classic atoms
+        boolean overClassic = inClip && writable && btnClassic.contains(mouseX, mouseY);
+        blitNineSliceRect(ctx, !writable ? BTN_PLAQUE_DISABLED : (overClassic ? BTN_PLAQUE_HOVER : BTN_PLAQUE_GOLD),
+            btnClassic.x(), btnClassic.y(), btnClassic.w(), btnClassic.h(), 4, 4, 64, 18);
+        drawClampedCenteredText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.trace.btn_all_103"),
+            new Box(btnClassic.x() + 3, btnClassic.y(), Math.max(12, btnClassic.w() - 6), btnClassic.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            writable ? GOLD_TEXT : DIM_TEXT
+        );
+
+        // Quick-restore all 19 modern 1.1.0 atoms
+        boolean overModern = inClip && writable && btnModern.contains(mouseX, mouseY);
+        blitNineSliceRect(ctx, !writable ? BTN_PLAQUE_DISABLED : (overModern ? BTN_PLAQUE_HOVER : BTN_PLAQUE),
+            btnModern.x(), btnModern.y(), btnModern.w(), btnModern.h(), 4, 4, 64, 18);
+        drawClampedCenteredText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.trace.btn_all_110"),
+            new Box(btnModern.x() + 3, btnModern.y(), Math.max(12, btnModern.w() - 6), btnModern.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            writable ? EMERALD_TEXT : DIM_TEXT
+        );
+
+        if (writable) {
+            int cTop1 = Math.max(clipTop, btnClassic.y());
+            int cBot1 = Math.min(clipBottom, btnClassic.bottom());
+            if (cBot1 > cTop1) {
+                this.hitBoxes.add(new HitBox(new Box(btnClassic.x(), cTop1, btnClassic.w(), cBot1 - cTop1), () -> {
+                    ModRuntimeConfig.Preset.CLASSIC_1_0_3.applyTo(this.draft);
+                    syncAutoCollapsedSections();
+                    playClick(1.06f);
+                }, null));
+            }
+            int cTop2 = Math.max(clipTop, btnModern.y());
+            int cBot2 = Math.min(clipBottom, btnModern.bottom());
+            if (cBot2 > cTop2) {
+                this.hitBoxes.add(new HitBox(new Box(btnModern.x(), cTop2, btnModern.w(), cBot2 - cTop2), () -> {
+                    ModRuntimeConfig.Preset.STANDARD.applyTo(this.draft);
+                    syncAutoCollapsedSections();
+                    playClick(1.04f);
+                }, null));
+            }
+        }
+        return null;
+    }
+
+    private boolean isAtomInClassicState(RuleTraceEntry trace) {
+        return trace.isUsingClassic103(this.draft);
+    }
+
+    private void toggleTraceAtom(RuleTraceEntry trace) {
+        if (trace.derived() || trace.optionKey() == null) return;
+        boolean currentlyClassic = trace.isUsingClassic103(this.draft);
+        if ("tome_consumption_mode".equals(trace.optionKey())) {
+            this.draft.tomeConsumptionMode = currentlyClassic
+                ? chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR
+                : chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP;
+            this.draft.tomeRegenEnabled = currentlyClassic;
+            this.draft.markCustomized("tome_consumption_mode");
+            this.draft.markCustomized("tome_regen_enabled");
+        } else if (currentlyClassic) {
+            trace.applyModern110(this.draft);
+        } else {
+            trace.applyClassic103(this.draft);
+        }
+        syncAutoCollapsedSections();
+    }
+
+    private List<Component> renderSingleTraceCard(
+        GuiGraphicsExtractor ctx,
+        int ordinal,
+        RuleTraceEntry trace,
+        int x,
+        int y,
+        int w,
+        int mouseX,
+        int mouseY,
+        int clipTop,
+        int clipBottom
+    ) {
+        TraceCardLayout tc = ConfigLayoutSpec.computeTraceCard(x, y, w);
+        boolean inClip = mouseY >= clipTop && mouseY < clipBottom;
+        boolean hovered = inClip && tc.card().contains(mouseX, mouseY);
+        boolean isClassic = isAtomInClassicState(trace);
+
+        blitNineSliceRect(
+            ctx,
+            hovered ? ROW_PLAQUE_HOVER : (isClassic ? ROW_PLAQUE_ATOM : ROW_PLAQUE),
+            x, y, w, tc.card().h(), 16, 6, 96, 24
+        );
+
+        // Top-left: #NN + Atom Name
+        String title = String.format(Locale.ROOT, "#%02d ", ordinal) + I18n.get(trace.titleKey());
+        drawClampedLeftText(
+            ctx,
+            title,
+            tc.titleBox(),
+            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
+            isClassic ? GOLD_TEXT : CREAM_TEXT
+        );
+
+        // Top-middle: Domain Jump Chip ("[↗ Pricing]")
+        Box jb = tc.domainJumpBox();
+        boolean overJump = inClip && jb.contains(mouseX, mouseY);
+        ctx.fill(jb.x(), jb.y(), jb.right(), jb.bottom(), overJump ? 0xCC4B3475 : 0x88241838);
+        String jumpText = "\u2197 " + I18n.get(trace.domain().titleKey());
+        drawClampedCenteredText(
+            ctx,
+            jumpText,
+            new Box(jb.x() + 2, jb.y(), Math.max(12, jb.w() - 4), jb.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            overJump ? GOLD_TEXT : CYAN_TEXT
+        );
+        int jTop = Math.max(clipTop, jb.y());
+        int jBot = Math.min(clipBottom, jb.bottom());
+        if (jBot > jTop) {
+            this.hitBoxes.add(new HitBox(new Box(jb.x(), jTop, jb.w(), jBot - jTop), () -> {
+                this.ruleTracePage = false;
+                this.filterModifiedOnly = false;
+                this.activeCategory = trace.domain();
+                setSearchQuery("");
+                this.listScroll = 0.0f;
+                playClick(1.0f);
+            }, null));
+        }
+
+        // Top-right: Direct Atom Toggle or [Derived] badge
+        Box tb = tc.toggleActionBox();
+        boolean canToggle = !trace.derived()
+            && trace.optionKey() != null
+            && ConfigCatalog.byKey(trace.optionKey())
+                .map(o -> o.evaluate(this.draft, this.sessionMode).editable())
+                .orElse(false);
+        boolean overToggle = inClip && canToggle && tb.contains(mouseX, mouseY);
+        Identifier tSprite = trace.derived()
+            ? BTN_PLAQUE_DISABLED
+            : (!canToggle ? BTN_PLAQUE_DISABLED : (overToggle ? BTN_PLAQUE_HOVER : (isClassic ? BTN_PLAQUE_GOLD : BTN_PLAQUE)));
+        blitNineSliceRect(ctx, tSprite, tb.x(), tb.y(), tb.w(), tb.h(), 4, 4, 64, 18);
+        String tLabel = trace.derived()
+            ? I18n.get("config.chiseled_enchanting_table.trace.derived_badge")
+            : (isClassic ? "1.0.3 \u21c4" : "1.1.0 \u21c4");
+        drawClampedCenteredText(
+            ctx,
+            tLabel,
+            new Box(tb.x() + 3, tb.y(), Math.max(12, tb.w() - 6), tb.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            trace.derived() ? MUTED_TEXT : (isClassic ? GOLD_TEXT : EMERALD_TEXT)
+        );
+        if (canToggle) {
+            int tTop = Math.max(clipTop, tb.y());
+            int tBot = Math.min(clipBottom, tb.bottom());
+            if (tBot > tTop) {
+                this.hitBoxes.add(new HitBox(new Box(tb.x(), tTop, tb.w(), tBot - tTop), () -> {
+                    toggleTraceAtom(trace);
+                    playClick(1.04f);
+                }, null));
+            }
+        }
+
+        // Bottom comparison pills: [1.0.3: ...]  vs  [1.1.0: ...]
+        Box cPill = tc.classicPillBox();
+        Box mPill = tc.modernPillBox();
+        ctx.fill(cPill.x(), cPill.y(), cPill.right(), cPill.bottom(), isClassic ? 0xCC4A3316 : 0xAA120C20);
+        ctx.fill(mPill.x(), mPill.y(), mPill.right(), mPill.bottom(), !isClassic ? 0xCC163D2E : 0xAA120C20);
+
+        String cText = (isClassic ? "\u25cf 1.0.3: " : "1.0.3: ") + I18n.get(trace.classicSummaryKey());
+        String mText = (!isClassic ? "\u25cf 1.1.0: " : "1.1.0: ") + I18n.get(trace.modernSummaryKey());
+        drawClampedLeftText(
+            ctx,
+            cText,
+            new Box(cPill.x() + 3, cPill.y(), Math.max(16, cPill.w() - 6), cPill.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            isClassic ? GOLD_TEXT : 0xFFB8AAD2
+        );
+        drawClampedLeftText(
+            ctx,
+            mText,
+            new Box(mPill.x() + 3, mPill.y(), Math.max(16, mPill.w() - 6), mPill.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            !isClassic ? EMERALD_TEXT : 0xFFB8AAD2
+        );
+
+        if (hovered) {
+            List<Component> cardTip = new ArrayList<>();
+            cardTip.add(Component.translatable(trace.titleKey()).withStyle(ChatFormatting.GOLD));
+            cardTip.add(Component.literal("1.0.3: ")
+                .append(Component.translatable(trace.classicSummaryKey()))
+                .withStyle(isClassic ? ChatFormatting.YELLOW : ChatFormatting.GRAY));
+            cardTip.add(Component.literal("1.1.0: ")
+                .append(Component.translatable(trace.modernSummaryKey()))
+                .withStyle(!isClassic ? ChatFormatting.GREEN : ChatFormatting.GRAY));
+            cardTip.add(Component.translatable(trace.impactKey()).withStyle(ChatFormatting.AQUA));
+            return cardTip;
+        }
+        return null;
+    }
+
+    private void renderListScrollbar(GuiGraphicsExtractor ctx, int totalContentH, int mouseX, int mouseY) {
+        if (this.maxListScroll <= 0.5f) return;
+        Box track = this.layout.scrollbarTrack();
+        ctx.fill(track.x(), track.y(), track.right(), track.bottom(), 0xAA100B1C);
+        ctx.fill(track.x() + 1, track.y() + 1, track.right() - 1, track.bottom() - 1, 0xFF1F1633);
+
+        int thumbH = Math.max(18, Math.round((float) track.h() * (float) track.h() / (float) Math.max(1, totalContentH)));
+        int travel = Math.max(1, track.h() - thumbH);
+        int thumbY = track.y() + Math.round((this.listScroll / this.maxListScroll) * travel);
+        boolean over = track.contains(mouseX, mouseY) || this.draggingScrollbar;
+        ctx.fill(track.x(), thumbY, track.right(), thumbY + thumbH, over ? GOLD_TEXT : 0xFFA88948);
+        ctx.fill(track.x() + 1, thumbY + 1, track.right() - 1, thumbY + thumbH - 1, over ? 0xFF7052A8 : 0xFF4C3578);
+    }
+
+    // ---- Footer Bar ----
+
+    private List<Component> renderFooterBar(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        List<Component> tip = null;
+        ModRuntimeConfig preview = this.draft.build();
+        boolean hasUnsaved = !preview.equals(this.baselineConfig);
+        boolean restartChanged = preview.enchantedBookStackSize() != ModRuntimeConfig.get().enchantedBookStackSize();
+        boolean stackShrinkRisk = preview.enchantedBookStackSize()
+            < ChiseledEnchantingTable.bootEnchantedBookStackSize();
+
+        // 0. Reset Page
+        Box resetPageBtn = this.layout.resetPageBtn();
+        List<OptionEntry> pageOpts = (this.ruleTracePage && !isSearchMode() && !this.filterModifiedOnly)
+            ? ConfigCatalog.ALL_OPTIONS.stream().filter(OptionEntry::isCoreRuleAtom).toList()
+            : flatFilteredOptions();
+        boolean canResetPage = this.sessionMode.writable()
+            && pageOpts.stream().anyMatch(o -> o.isModifiedFromDefault(this.draft));
+        boolean overResetPage = canResetPage && resetPageBtn.contains(mouseX, mouseY);
+        blitNineSliceRect(
+            ctx,
+            canResetPage ? (overResetPage ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
+            resetPageBtn.x(), resetPageBtn.y(), resetPageBtn.w(), resetPageBtn.h(), 10, 5, 64, 18
+        );
+        drawClampedCenteredText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.btn.reset_page"),
+            new Box(resetPageBtn.x() + 5, resetPageBtn.y(), Math.max(16, resetPageBtn.w() - 10), resetPageBtn.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            canResetPage ? CREAM_TEXT : DIM_TEXT
+        );
+        if (canResetPage) {
+            this.hitBoxes.add(new HitBox(resetPageBtn, () -> {
+                for (OptionEntry entry : pageOpts) {
+                    if (entry.evaluate(this.draft, this.sessionMode).editable()) {
+                        entry.resetToDefault(this.draft);
+                    }
+                }
+                syncAutoCollapsedSections();
+                playClick(0.92f);
+            }, null));
+        }
+
+        // 1. Reset All
+        Box resetBtn = this.layout.resetAllBtn();
         boolean anyCustom = ConfigCatalog.ALL_OPTIONS.stream().anyMatch(o -> o.isModifiedFromDefault(this.draft));
         boolean canResetAll = this.sessionMode.writable() && anyCustom;
-        boolean overResetAll = canResetAll && mouseX >= resetAllX && mouseX < resetAllX + resetAllW && mouseY >= footY + 2 && mouseY < footY + 2 + btnH;
-        ctx.fill(resetAllX, footY + 2, resetAllX + resetAllW, footY + 2 + btnH, canResetAll ? (overResetAll ? 0xFFFF9B85 : 0xFF8C4A52) : 0xFF352B47);
-        ctx.fill(resetAllX + 1, footY + 3, resetAllX + resetAllW - 1, footY + 1 + btnH, overResetAll ? 0xFF572631 : 0xFF241834);
-        GrimoireTextLayout.drawCenteredBox(
-            ctx, this.font, I18n.get("config.chiseled_enchanting_table.btn.reset_all"),
-            resetAllX + 3, resetAllW - 6, footY + 2 + btnH * 0.5f, 0.68f,
-            canResetAll ? CREAM_TEXT : 0xFF665A7D, true
+        boolean overReset = canResetAll && resetBtn.contains(mouseX, mouseY);
+        blitNineSliceRect(
+            ctx,
+            canResetAll ? (overReset ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
+            resetBtn.x(), resetBtn.y(), resetBtn.w(), resetBtn.h(), 10, 5, 64, 18
+        );
+        drawClampedCenteredText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.btn.reset_all"),
+            new Box(resetBtn.x() + 4, resetBtn.y(), Math.max(16, resetBtn.w() - 8), resetBtn.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            canResetAll ? CORAL_TEXT : DIM_TEXT
         );
         if (canResetAll) {
-            this.hitBoxes.add(new HitBox(resetAllX, footY + 2, resetAllW, btnH, () -> {
+            this.hitBoxes.add(new HitBox(resetBtn, () -> {
                 for (OptionEntry entry : ConfigCatalog.ALL_OPTIONS) {
                     entry.resetToDefault(this.draft);
                 }
                 this.draft.customizedKeys.clear();
+                syncAutoCollapsedSections();
                 playClick(0.88f);
             }, null));
         }
 
-        // Center status line
-        int statusX = resetAllX + resetAllW + 8;
-        int statusMaxW = Math.max(40, cancelX - 8 - statusX);
+        // 2. Center Status Line
         String statusText;
-        int statusCol;
+        int statusColor;
         if (this.pendingSaveId != 0) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.saving");
-            statusCol = GOLD_TEXT;
+            statusColor = GOLD_TEXT;
         } else if (System.currentTimeMillis() < this.statusToastUntilMs) {
-            statusText = I18n.get(this.lastSaveFailed ? "config.chiseled_enchanting_table.msg.save_failed" : "config.chiseled_enchanting_table.msg.saved");
-            statusCol = this.lastSaveFailed ? 0xFFFF6B6B : 0xFF6BFFB3;
+            statusText = I18n.get(this.lastSaveFailed
+                ? "config.chiseled_enchanting_table.msg.save_failed"
+                : "config.chiseled_enchanting_table.msg.saved");
+            statusColor = this.lastSaveFailed ? CORAL_TEXT : EMERALD_TEXT;
         } else if (stackShrinkRisk) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.stack_shrink_risk");
-            statusCol = 0xFFFF6B6B;
+            statusColor = CORAL_TEXT;
         } else if (restartChanged) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.restart_hint");
-            statusCol = 0xFFFFC46B;
-        } else if (currentPreview.classic103Mode()) {
-            statusText = I18n.get(ModRuntimeConfig.Preset.CLASSIC_1_0_3.matches(this.draft)
-                ? "config.chiseled_enchanting_table.msg.classic_1_0_3_active"
-                : "config.chiseled_enchanting_table.msg.classic_1_0_3_custom");
-            statusCol = 0xFFFFD87A;
+            statusColor = AMBER_TEXT;
         } else if (hasUnsaved) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.unsaved");
-            statusCol = GOLD_TEXT;
+            statusColor = GOLD_TEXT;
+        } else if (preview.isAllClassicAtoms()) {
+            statusText = I18n.get("config.chiseled_enchanting_table.msg.classic_1_0_3_active");
+            statusColor = AMBER_TEXT;
         } else {
-            statusText = I18n.get("config.chiseled_enchanting_table.msg.synced");
-            statusCol = MUTED_TEXT;
+            int classicAtoms = preview.countClassic103Atoms();
+            statusText = classicAtoms > 0
+                ? I18n.get("config.chiseled_enchanting_table.msg.hybrid_atoms",
+                    classicAtoms, ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT)
+                : I18n.get("config.chiseled_enchanting_table.msg.synced");
+            statusColor = classicAtoms > 0 ? CYAN_TEXT : MUTED_TEXT;
         }
-        RowRenderSupport.renderCenteredYText(
-            ctx, Minecraft.getInstance(), statusText, statusX, footY + 2 + btnH * 0.5f, 0.68f, statusMaxW, statusCol
+        drawClampedLeftText(
+            ctx,
+            statusText,
+            this.layout.footerStatusBox(),
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            statusColor
         );
+        if (this.layout.footerStatusBox().contains(mouseX, mouseY)) {
+            tip = List.of(Component.literal(statusText).withStyle(ChatFormatting.GRAY));
+        }
 
-        // Cancel / Close button
-        boolean overCancel = mouseX >= cancelX && mouseX < cancelX + cancelW && mouseY >= footY + 2 && mouseY < footY + 2 + btnH;
-        ctx.fill(cancelX, footY + 2, cancelX + cancelW, footY + 2 + btnH, overCancel ? GOLD_TEXT : 0xFF6F5D94);
-        ctx.fill(cancelX + 1, footY + 3, cancelX + cancelW - 1, footY + 1 + btnH, overCancel ? 0xFF3A2959 : 0xFF231936);
-        GrimoireTextLayout.drawCenteredBox(
-            ctx, this.font, I18n.get("config.chiseled_enchanting_table.btn.close"),
-            cancelX + 3, cancelW - 6, footY + 2 + btnH * 0.5f, 0.70f, CREAM_TEXT, true
+        // 3. Close Button
+        Box closeBtn = this.layout.closeBtn();
+        boolean overClose = closeBtn.contains(mouseX, mouseY);
+        blitNineSliceRect(
+            ctx,
+            overClose ? BTN_PLAQUE_HOVER : BTN_PLAQUE,
+            closeBtn.x(), closeBtn.y(), closeBtn.w(), closeBtn.h(), 6, 6, 64, 18
         );
-        this.hitBoxes.add(new HitBox(cancelX, footY + 2, cancelW, btnH, () -> {
+        drawClampedCenteredText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.btn.close"),
+            new Box(closeBtn.x() + 4, closeBtn.y(), Math.max(16, closeBtn.w() - 8), closeBtn.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            CREAM_TEXT
+        );
+        this.hitBoxes.add(new HitBox(closeBtn, () -> {
             playClick(0.95f);
             onClose();
         }, null));
 
-        // Save & Apply button
+        // 4. Save & Apply Button
+        Box saveBtn = this.layout.saveBtn();
         boolean canSave = this.sessionMode.writable();
-        boolean overSave = canSave && mouseX >= saveX && mouseX < saveX + saveW && mouseY >= footY + 2 && mouseY < footY + 2 + btnH;
-        ctx.fill(saveX, footY + 2, saveX + saveW, footY + 2 + btnH, canSave ? (overSave ? 0xFFFFF0A6 : 0xFF56E39F) : 0xFF3A304D);
-        ctx.fill(saveX + 1, footY + 3, saveX + saveW - 1, footY + 1 + btnH, canSave ? (overSave ? 0xFF237552 : 0xFF19593E) : 0xFF211B2E);
-        GrimoireTextLayout.drawCenteredBox(
-            ctx, this.font, I18n.get("config.chiseled_enchanting_table.btn.save"),
-            saveX + 3, saveW - 6, footY + 2 + btnH * 0.5f, 0.72f,
-            canSave ? CREAM_TEXT : 0xFF695E7D, true
+        boolean overSave = canSave && saveBtn.contains(mouseX, mouseY);
+        blitNineSliceRect(
+            ctx,
+            !canSave ? BTN_PLAQUE_DISABLED : (overSave ? BTN_PLAQUE_HOVER : BTN_PLAQUE_GOLD),
+            saveBtn.x(), saveBtn.y(), saveBtn.w(), saveBtn.h(), 6, 6, 64, 18
+        );
+        drawClampedCenteredText(
+            ctx,
+            I18n.get("config.chiseled_enchanting_table.btn.save"),
+            new Box(saveBtn.x() + 4, saveBtn.y(), Math.max(16, saveBtn.w() - 8), saveBtn.h()),
+            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
+            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
+            canSave ? GOLD_TEXT : DIM_TEXT
         );
         if (canSave) {
-            this.hitBoxes.add(new HitBox(saveX, footY + 2, saveW, btnH, () -> saveAndApply(true), () -> saveAndApply(false)));
+            this.hitBoxes.add(new HitBox(saveBtn, () -> saveAndApply(true), () -> saveAndApply(false)));
+            if (overSave) {
+                tip = List.of(
+                    Component.translatable("config.chiseled_enchanting_table.btn.save").withStyle(ChatFormatting.GOLD),
+                    Component.translatable("config.chiseled_enchanting_table.btn.save_tip").withStyle(ChatFormatting.GRAY)
+                );
+            }
         }
+
+        return tip;
     }
+
+    // ---- Mouse & Keyboard Input ----
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (this.layout == null) recomputeLayout();
         double mx = event.x();
         double my = event.y();
-        boolean overSearchBox = mx >= this.searchBoxX && mx < this.searchBoxX + this.searchBoxW
-            && my >= this.searchBoxY && my < this.searchBoxY + this.searchBoxH;
-        if (!overSearchBox) {
+
+        if (!this.layout.searchBox().contains(mx, my)) {
             this.searchFocused = false;
         }
 
-        if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             for (SliderTrack slider : this.sliderTracks) {
                 if (slider.contains(mx, my)) {
                     this.activeDraggingSlider = slider;
-                    double t = (mx - slider.x()) / (double) Math.max(1, slider.w());
+                    double t = (mx - slider.box().x()) / (double) Math.max(1, slider.box().w());
                     slider.entry().setFromNormalizedSlider(this.draft, t);
+                    syncAutoCollapsedSections();
                     playClick(1.02f);
                     return true;
                 }
             }
-            if (this.maxScroll > 0.5f
-                && mx >= this.listX + this.listW - 6 && mx <= this.listX + this.listW
-                && my >= rowListTop() && my < rowListTop() + rowListHeight()) {
+            if (this.maxListScroll > 0.5f && this.layout.scrollbarTrack().contains(mx, my)) {
                 this.draggingScrollbar = true;
-                updateScrollFromMouse(my);
+                updateListScrollFromMouse(my);
                 return true;
             }
         }
 
-        for (HitBox box : this.hitBoxes) {
-            if (box.contains(mx, my)) {
-                if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
-                    box.onClick().run();
+        // Iterate in reverse so topmost elements (e.g. sticky section header, clear 'x' inside search) win cleanly.
+        for (int i = this.hitBoxes.size() - 1; i >= 0; i--) {
+            HitBox hb = this.hitBoxes.get(i);
+            if (hb.contains(mx, my)) {
+                if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+                    hb.onLeftClick().run();
                     return true;
-                } else if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT && box.onRightClick() != null) {
-                    box.onRightClick().run();
+                } else if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT && hb.onRightClick() != null) {
+                    hb.onRightClick().run();
                     return true;
                 }
             }
@@ -1179,13 +1987,15 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-        if (this.activeDraggingSlider != null && event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
-            double t = (event.x() - this.activeDraggingSlider.x()) / (double) Math.max(1, this.activeDraggingSlider.w());
+        if (this.activeDraggingSlider != null && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+            Box sb = this.activeDraggingSlider.box();
+            double t = (event.x() - sb.x()) / (double) Math.max(1, sb.w());
             this.activeDraggingSlider.entry().setFromNormalizedSlider(this.draft, t);
+            syncAutoCollapsedSections();
             return true;
         }
-        if (this.draggingScrollbar && event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
-            updateScrollFromMouse(event.y());
+        if (this.draggingScrollbar && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+            updateListScrollFromMouse(event.y());
             return true;
         }
         return super.mouseDragged(event, dragX, dragY);
@@ -1198,17 +2008,21 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return super.mouseReleased(event);
     }
 
-    private void updateScrollFromMouse(double my) {
-        float ratio = Mth.clamp((float) ((my - rowListTop()) / Math.max(1.0, rowListHeight())), 0.0f, 1.0f);
-        this.scrollOffset = ratio * this.maxScroll;
+    private void updateListScrollFromMouse(double my) {
+        Box track = this.layout.scrollbarTrack();
+        float ratio = Mth.clamp((float) ((my - track.y()) / Math.max(1.0, track.h())), 0.0f, 1.0f);
+        this.listScroll = ratio * this.maxListScroll;
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (this.maxScroll > 0.5f
-            && mouseX >= this.listX && mouseX < this.listX + this.listW
-            && mouseY >= rowListTop() && mouseY < rowListTop() + rowListHeight()) {
-            this.scrollOffset = Mth.clamp(this.scrollOffset - (float) (scrollY * 18.0), 0.0f, this.maxScroll);
+        if (this.layout == null) recomputeLayout();
+        if (this.maxRailScroll > 0.5f && this.layout.railViewport().contains(mouseX, mouseY)) {
+            this.railScroll = Mth.clamp(this.railScroll - (float) (scrollY * 18.0), 0.0f, this.maxRailScroll);
+            return true;
+        }
+        if (this.maxListScroll > 0.5f && this.layout.listViewport().contains(mouseX, mouseY)) {
+            this.listScroll = Mth.clamp(this.listScroll - (float) (scrollY * 22.0), 0.0f, this.maxListScroll);
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -1217,9 +2031,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     @Override
     public boolean charTyped(CharacterEvent event) {
         if (this.searchFocused) {
-            int codepoint = event.codepoint();
-            if (codepoint >= 32 && codepoint != 127 && this.searchQuery.length() < 40) {
-                setSearchQuery(this.searchQuery + Character.toString(codepoint));
+            int cp = event.codepoint();
+            if (cp >= 32 && cp != 127 && this.searchQuery.length() < 40) {
+                setSearchQuery(this.searchQuery + Character.toString(cp));
             }
             return true;
         }
@@ -1252,7 +2066,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 this.searchFocused = false;
                 return true;
             }
+            return true;
         }
+
         if (key == InputConstants.KEY_ESCAPE) {
             onClose();
             return true;
@@ -1262,74 +2078,89 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             playClick(1.0f);
             return true;
         }
-        // Bound by the live enum size so adding/removing a category can never
-        // index out of bounds (or silently dead-key). Seven domains use 1-7;
-        // the Classic pseudo-page takes the next key, 8.
+
+        // Domain shortcuts 1..7 + Rule Trace shortcut 8
         CategoryId[] categories = CategoryId.values();
-        int categoryIndex = key - InputConstants.KEY_1;
+        int catIdx = key - InputConstants.KEY_1;
         if (key == InputConstants.KEY_8) {
+            this.ruleTracePage = true;
             this.filterModifiedOnly = false;
-            this.classicPage = true;
-            this.searchFocused = false;
             setSearchQuery("");
-            this.scrollOffset = 0.0f;
-            playClick(1.0f);
+            this.listScroll = 0.0f;
+            playClick(1.02f);
             return true;
         }
-        if (categoryIndex >= 0 && categoryIndex < categories.length) {
+        if (catIdx >= 0 && catIdx < categories.length) {
+            this.ruleTracePage = false;
             this.filterModifiedOnly = false;
-            this.classicPage = false;
-            this.searchFocused = false;
+            this.activeCategory = categories[catIdx];
             setSearchQuery("");
-            this.activeCategory = categories[categoryIndex];
             this.focusedOptionIndex = -1;
-            this.scrollOffset = 0.0f;
+            this.listScroll = 0.0f;
             playClick(1.0f);
             return true;
         }
-        List<OptionEntry> visible = visibleOptions();
-        if (!visible.isEmpty()) {
-            if (key == InputConstants.KEY_TAB || key == InputConstants.KEY_DOWN || key == InputConstants.KEY_UP) {
-                int delta = (key == InputConstants.KEY_UP || (key == InputConstants.KEY_TAB && event.hasShiftDown())) ? -1 : 1;
-                if (this.focusedOptionIndex < 0) {
-                    this.focusedOptionIndex = delta > 0 ? 0 : visible.size() - 1;
-                } else {
-                    this.focusedOptionIndex = Math.floorMod(this.focusedOptionIndex + delta, visible.size());
-                }
-                float rowTop = displayRowTop(displayRows(visible), this.focusedOptionIndex);
-                float rowBottom = rowTop + ROW_H;
-                if (rowTop < this.scrollOffset) {
-                    this.scrollOffset = Mth.clamp(rowTop, 0.0f, this.maxScroll);
-                } else if (rowBottom > this.scrollOffset + rowListHeight()) {
-                    this.scrollOffset = Mth.clamp(rowBottom - rowListHeight(), 0.0f, this.maxScroll);
-                }
-                playClick(1.0f);
-                return true;
-            }
-            if (this.focusedOptionIndex >= 0 && this.focusedOptionIndex < visible.size()) {
-                OptionEntry entry = visible.get(this.focusedOptionIndex);
-                OptionAvailability avail = availFor(entry);
-                if (avail.editable()) {
-                    if (key == InputConstants.KEY_LEFT || key == InputConstants.KEY_RIGHT) {
-                        int dir = key == InputConstants.KEY_RIGHT ? 1 : -1;
-                        if (entry.kind() == ControlKind.BOOLEAN || entry.kind() == ControlKind.ENUM_CYCLE) {
-                            entry.toggleOrCycle(this.draft, dir);
-                        } else {
-                            entry.stepValue(this.draft, event.hasShiftDown() ? dir * 5 : dir);
-                        }
-                        playClick(dir > 0 ? 1.04f : 0.96f);
-                        return true;
+
+        if (!this.ruleTracePage || isSearchMode() || this.filterModifiedOnly) {
+            List<DisplayItem> displayItems = buildDisplayItems(flatFilteredOptions());
+            List<DisplayItem> optionItems = displayItems.stream().filter(d -> !d.isSectionHeader()).toList();
+            if (!optionItems.isEmpty()) {
+                if (key == InputConstants.KEY_TAB || key == InputConstants.KEY_DOWN || key == InputConstants.KEY_UP) {
+                    int delta = (key == InputConstants.KEY_UP || (key == InputConstants.KEY_TAB && event.hasShiftDown())) ? -1 : 1;
+                    if (this.focusedOptionIndex < 0) {
+                        this.focusedOptionIndex = delta > 0 ? 0 : optionItems.size() - 1;
+                    } else {
+                        this.focusedOptionIndex = Math.floorMod(this.focusedOptionIndex + delta, optionItems.size());
                     }
-                    if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_SPACE) {
-                        if (entry.kind() == ControlKind.BOOLEAN || entry.kind() == ControlKind.ENUM_CYCLE) {
-                            entry.toggleOrCycle(this.draft, 1);
-                            playClick(1.04f);
-                            return true;
+                    scrollOptionIntoView(displayItems, this.focusedOptionIndex);
+                    playClick(1.0f);
+                    return true;
+                }
+                if (this.focusedOptionIndex >= 0 && this.focusedOptionIndex < optionItems.size()) {
+                    OptionEntry entry = optionItems.get(this.focusedOptionIndex).option();
+                    if (entry != null) {
+                        OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
+                        if (avail.editable()) {
+                            if (key == InputConstants.KEY_LEFT || key == InputConstants.KEY_RIGHT) {
+                                int dir = key == InputConstants.KEY_RIGHT ? 1 : -1;
+                                if (entry.kind() == ControlKind.BOOLEAN || entry.kind() == ControlKind.ENUM_CYCLE) {
+                                    entry.toggleOrCycle(this.draft, dir);
+                                } else {
+                                    entry.stepValue(this.draft, event.hasShiftDown() ? dir * 5 : dir);
+                                }
+                                syncAutoCollapsedSections();
+                                playClick(dir > 0 ? 1.04f : 0.96f);
+                                return true;
+                            }
+                            if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_SPACE) {
+                                if (entry.kind() == ControlKind.BOOLEAN || entry.kind() == ControlKind.ENUM_CYCLE) {
+                                    entry.toggleOrCycle(this.draft, 1);
+                                    syncAutoCollapsedSections();
+                                    playClick(1.04f);
+                                    return true;
+                                }
+                            }
                         }
                     }
                 }
             }
         }
         return super.keyPressed(event);
+    }
+
+    private void scrollOptionIntoView(List<DisplayItem> items, int targetFlatIdx) {
+        int top = 0;
+        for (DisplayItem item : items) {
+            if (!item.isSectionHeader() && item.flatOptionIndex() == targetFlatIdx) {
+                int viewH = Math.max(40, this.layout.listViewport().h() - this.stickyBodyOffset);
+                if (top < this.listScroll) {
+                    this.listScroll = Mth.clamp(top, 0.0f, this.maxListScroll);
+                } else if (top + item.height() > this.listScroll + viewH) {
+                    this.listScroll = Mth.clamp(top + item.height() - viewH, 0.0f, this.maxListScroll);
+                }
+                return;
+            }
+            top += item.height() + ConfigLayoutSpec.ROW_GAP;
+        }
     }
 }

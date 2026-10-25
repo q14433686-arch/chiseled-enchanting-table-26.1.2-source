@@ -145,7 +145,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         );
 
         ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipFlag, lines) -> {
-            if (!stack.is(Items.ENCHANTED_BOOK) || ModRuntimeConfig.effective().classic103Mode()) {
+            if (!stack.is(Items.ENCHANTED_BOOK)) {
                 return;
             }
             var cfg = SyncedEnchantmentCosts.libraryResonanceConfig();

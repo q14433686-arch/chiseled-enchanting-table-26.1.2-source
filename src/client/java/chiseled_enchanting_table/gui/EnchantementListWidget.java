@@ -637,7 +637,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             }
             // Track 2 (Existing-category upgrade on gear): once an item already carries level >= 1,
             // regular bookshelves unlock upgrades up to maxUnlockedDirectTier (1..MAX at 38 shelves).
-            if (!this.handler.isClassic103Mode()
+            if (this.handler.allowsDirectTierUpgrade()
                 && !enchantable_item.is(Items.ENCHANTED_BOOK)
                 && !enchantable_item.is(Items.BOOK)) {
                 for (var existingEntry : targetEnchantments.entrySet()) {
@@ -686,7 +686,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     && !cost_item_stack.is(Items.ENCHANTED_BOOK)
                     && !cost_item_stack.is(Items.BOOK)
                     && !unlockedDirectSet.contains(new EnchantmentWithLevel(id, targetLevel))) {
-                    if (this.handler.isClassic103Mode() || this.handler.canDirectResearchUpgradeTo(id, targetLevel)) {
+                    if (this.handler.usesClassicShelfBoost() || this.handler.canDirectResearchUpgradeTo(id, targetLevel)) {
                         optionSlots.add(new DisplayOptionSlot(AvailableOption.bookResearchUpgrade(id, targetLevel), false, 0));
                         maxAddedTierById.merge(id, targetLevel, Math::max);
                     } else if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
@@ -703,7 +703,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         // Surface greyed-out shelf-locked direct tiers (with exact bookshelf goal) rather than hiding goals!
-        if (!this.handler.isClassic103Mode()
+        if (!this.handler.usesClassicShelfBoost()
             && !enchantFromBook
             && !cost_item_stack.is(Items.BOOK)
             && !ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
@@ -1332,7 +1332,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             // classic branches), so the "pay difference only" annotation must not
             // be shown there. It was previously displayed unconditionally while the
             // mechanism behind it was already disabled in classic.
-            if (!this.handler.isClassic103Mode()
+            if (this.handler.usesIncrementalCredit()
                 && sameEnchantLevelDiff.isPresent() && existingSameLevel.isPresent() && sameEnchantLevelDiff.getAsInt() > 0) {
                 String existingName = Enchantment.getFullname(this.enchantment, existingSameLevel.getAsInt()).getString();
                 return new EnchantmentRowRenderer.OverrideAnnotation(

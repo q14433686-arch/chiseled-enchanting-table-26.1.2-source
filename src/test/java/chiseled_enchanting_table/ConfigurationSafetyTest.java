@@ -1,11 +1,21 @@
 package chiseled_enchanting_table;
 
+import chiseled_enchanting_table.config.ConfigCatalog;
+import chiseled_enchanting_table.config.ConfigLayoutSpec;
 import chiseled_enchanting_table.config.ModConfigNetworking;
 import chiseled_enchanting_table.config.ModRuntimeConfig;
+import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
+import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConfigurationSafetyTest {
@@ -56,6 +66,7 @@ class ConfigurationSafetyTest {
             draft.enchantedBookStackSize = 1;
             preset.applyTo(draft);
             assertTrue(preset.matches(draft), "Preset must match draft right after applyTo: " + preset);
+            assertEquals(0, preset.countDeviations(draft), "Preset deviations must be 0 right after applyTo: " + preset);
             assertEquals(64, draft.enchantedBookStackSize,
                 "All 4 presets (including 1.0.3 Classic) must set 64 Enchanted Book stack size: " + preset);
             assertTrue(draft.overrideDatapacks, "Presets must preserve overrideDatapacks governance toggle");
@@ -65,89 +76,69 @@ class ConfigurationSafetyTest {
 
         ModRuntimeConfig.Preset.CLASSIC_1_0_3.applyTo(draft);
         var classic = draft.build();
+        assertTrue(classic.isAllClassicAtoms());
         assertTrue(classic.classic103Mode());
-        assertEquals(chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP, classic.tomeConsumptionMode());
+        assertEquals(ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT, classic.countClassic103Atoms());
+        assertEquals(MasterTomeWear.ConsumptionMode.KEEP, classic.tomeConsumptionMode());
         assertFalse(classic.tomeRegenEnabled());
         assertFalse(classic.disenchantEnabled());
-        assertEquals(0.0, classic.epiphanyMaxChance(), 1e-9);
+        assertFalse(classic.epiphanyEnabled());
+        assertFalse(classic.libraryDiscountEnabled());
         assertEquals(2, classic.horizontalScanRadius());
         assertEquals(2, classic.verticalScanRadius());
         assertFalse(classic.requireBreathingRoom());
         assertFalse(classic.requireLineOfSight());
-        assertEquals(0, classic.maxWoodenDiscountPercent());
-        assertEquals(0, classic.maxTotalXpDiscountPercent());
 
-        var original = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
+        var original = ChiseledEnchantingTableData.runtimeFrame();
         try {
-            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+            ChiseledEnchantingTableData.applyRuntimeConfig(
                 classic, ModRuntimeConfig.PackPolicy.NONE, () -> {}
             );
-            var classicFrame = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
+            var classicFrame = ChiseledEnchantingTableData.runtimeFrame();
             assertEquals(2, classicFrame.itemTransformations().size(),
-                "1.0.3 Classic mode must expose only the 2 original item transformations (Golden Apple & Experience Bottle)");
+                "1.0.3 Classic transformation_set must expose only the 2 original item transformations");
         } finally {
-            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+            ChiseledEnchantingTableData.applyRuntimeConfig(
                 original.configuration(), original.policy(), () -> {}
             );
         }
     }
 
     @Test
-    void classic103FlagAloneKeepsValuesAndToggleAppliesProfileOnce() {
-        // Round-3 profile semantics (R2-01): the classic flag alone rewrites
-        // nothing — every value is a live, editable preference and the hard
-        // mechanism gates key on the flag itself. In particular the 64-book
-        // stack is only *suggested* by the profile, so a runtime save that
-        // keeps stack size 1 under classic must build successfully.
-        var draft = ModRuntimeConfig.DEFAULT.toDraft();
-        assertFalse(draft.classic103Mode);
-        draft.classic103Mode = true;
-        draft.enchantedBookStackSize = 7;
-        var flagOnly = draft.build();
-        assertTrue(flagOnly.classic103Mode());
-        assertEquals(7, flagOnly.enchantedBookStackSize(),
-            "build() must not force the startup-only stack size (R2-01)");
-        assertTrue(flagOnly.disenchantEnabled() == ModRuntimeConfig.DEFAULT.disenchantEnabled());
-        assertEquals(ModRuntimeConfig.DEFAULT.epiphanyBaseChance(), flagOnly.epiphanyBaseChance(), 1e-9);
+    void legacyClassic103JsonAndPackPolicyMigrateCleanlyToGranularAtoms() {
+        // Legacy config JSON with monolithic "classic_1_0_3_mode": true must migrate losslessly to all 19 classic atoms.
+        ModRuntimeConfig migrated = ModRuntimeConfig.fromJsonString("""
+            {
+              "classic_1_0_3_mode": true,
+              "enchanted_book_stack_size": 16
+            }
+            """);
+        assertTrue(migrated.isAllClassicAtoms(), "Legacy classic_1_0_3_mode=true must populate all classic rule atoms");
+        assertEquals(16, migrated.enchantedBookStackSize(), "Explicitly saved stack size must survive legacy migration");
+        assertEquals(ModRuntimeConfig.CostTableDataset.CLASSIC_1_0_3, migrated.costTableDataset());
+        assertEquals(ModRuntimeConfig.MaterialSelectionMode.PLAYER_SALTED_SINGLE, migrated.materialSelectionMode());
+        assertEquals(ModRuntimeConfig.TransformationSetMode.CLASSIC_TWO, migrated.transformationSetMode());
 
-        // Flipping the switch on (screen toggle -> normalizeAfterEdit with the
-        // classic key) applies the 1.0.3 profile exactly once.
-        var toggled = ModRuntimeConfig.DEFAULT.toDraft();
-        toggled.classic103Mode = true;
-        toggled.normalizeAfterEdit("classic_1_0_3_mode");
-        var classic = toggled.build();
-        assertEquals(64, classic.enchantedBookStackSize());
-        assertEquals(0.0, classic.epiphanyBaseChance(), 1e-9);
-        assertEquals(0.0, classic.epiphanyMaxChance(), 1e-9);
-        assertFalse(classic.disenchantEnabled());
-        assertFalse(classic.allowCursePurge());
-        assertEquals(
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP,
-            classic.tomeConsumptionMode());
-        assertFalse(classic.tomeRegenEnabled());
-        assertEquals(0, classic.maxWoodenDiscountPercent());
-        assertEquals(0, classic.maxTotalXpDiscountPercent());
-        assertEquals(0.03, classic.bookshelfEnchantedProb(), 1e-9);
-        assertFalse(classic.directGatesEnabled());
-        assertTrue(classic.anvilBlockSameBookMerge());
-        assertEquals(2, classic.horizontalScanRadius());
-        assertEquals(2, classic.verticalScanRadius());
-        assertEquals(1, classic.transformationMaxBatchSize());
-
-        // ...and values edited afterwards (Classic merged page) stay as made.
-        toggled.enchantedBookStackSize = 1;
-        assertEquals(1, toggled.build().enchantedBookStackSize());
+        // Legacy PackPolicy locking "classic_1_0_3_mode" must lock the granular rule atoms.
+        ModRuntimeConfig.PackPolicy legacyPolicy = ModRuntimeConfig.PackPolicy.fromJsonString("""
+            {
+              "lock_in_game_config": false,
+              "enforce_datapack_priority": false,
+              "locked_keys": ["classic_1_0_3_mode"]
+            }
+            """);
+        for (String atomKey : ModRuntimeConfig.GRANULAR_RULE_ATOM_KEYS) {
+            assertTrue(legacyPolicy.isKeyLocked(atomKey), "Legacy classic_1_0_3_mode lock must cover atom: " + atomKey);
+        }
     }
 
     @Test
     void classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers() {
-        // R2-03: 1.0.3 ranged counts resolve by stable per-player hash, not by
-        // the standard engine's deterministic midpoint (which would give 4).
-        var option = new chiseled_enchanting_table.data.ChiseledEnchantingTableData.ItemCostOption(
-            net.minecraft.resources.Identifier.withDefaultNamespace("emerald"),
-            0, 0, 2, 5, 0, 0, 1.0, java.util.List.of());
-        var protection = net.minecraft.resources.Identifier.withDefaultNamespace("protection");
-        java.util.Set<Integer> seen = new java.util.HashSet<>();
+        var option = new ChiseledEnchantingTableData.ItemCostOption(
+            Identifier.withDefaultNamespace("emerald"),
+            0, 0, 2, 5, 0, 0, 1.0, List.of());
+        var protection = Identifier.withDefaultNamespace("protection");
+        Set<Integer> seen = new HashSet<>();
         for (int i = 0; i < 64; i++) {
             String salt = "00000000-0000-0000-0000-%012d".formatted(i);
             int count = option.saltedCount(4, 4, salt, protection);
@@ -160,54 +151,80 @@ class ConfigurationSafetyTest {
     }
 
     @Test
-    void classicFrameUses103CostAndBookUpgradeTables() {
-        // Audit findings 06/07/08 (external report): "full price" in classic must
-        // mean the 1.0.3 prices — XP table, research materials and the golden
-        // apple's ranged emerald cost all come from tag 26.1.2_1.0.3 data.
-        var draft = ModRuntimeConfig.DEFAULT.toDraft();
-        draft.classic103Mode = true;
-        var classic = draft.build();
-        var original = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
+    void granularRuleAtomsOperateOrthogonallyWithoutMonolithicCrossLocking() {
+        var original = ChiseledEnchantingTableData.runtimeFrame();
         try {
-            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
-                classic, ModRuntimeConfig.PackPolicy.NONE, () -> {
-                }
-            );
-            var mending1 = new chiseled_enchanting_table.utils.EnchantmentWithLevel(
-                net.minecraft.resources.Identifier.withDefaultNamespace("mending"), 1);
-            assertEquals(35, chiseled_enchanting_table.data.ChiseledEnchantingTableData.xpCost(mending1, 1),
-                "1.0.3 Mending I override is 35 XP levels");
-            var protection4 = new chiseled_enchanting_table.utils.EnchantmentWithLevel(
-                net.minecraft.resources.Identifier.withDefaultNamespace("protection"), 4);
-            assertEquals(25, chiseled_enchanting_table.data.ChiseledEnchantingTableData.xpCost(protection4, 4),
-                "1.0.3 common max-level cost is 25 XP levels");
-            var sharpness3 = new chiseled_enchanting_table.utils.EnchantmentWithLevel(
-                net.minecraft.resources.Identifier.withDefaultNamespace("sharpness"), 3);
-            // 1.0.3: Sharpness III direct cost = 5 + 0.5 * (25 - 5) = 15 XP;
-            // research charges floor(15 x 0.5) = 7 XP (1.0.3 floors, R2-04;
-            // the themed Flint material itself is asserted from the bundled
-            // JSON in classicBookUpgradeJsonCarries103ResearchMaterials).
-            assertEquals(15, chiseled_enchanting_table.data.ChiseledEnchantingTableData.xpCost(sharpness3, 5));
-            assertEquals(7, chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookResearchXpCost(sharpness3, 5));
-            var transformations = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame().itemTransformations();
-            assertEquals(2, transformations.size(), "Classic keeps exactly the 2 transformations of 1.0.3");
-            var apple = transformations.get(
-                chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple"));
-            assertNotNull(apple);
-            assertEquals(2, apple.additionalCosts().getFirst().minCount());
-            assertEquals(5, apple.additionalCosts().getFirst().maxCount());
+            // Case A: Enable ONLY cost_table = CLASSIC_1_0_3 + research_rounding = FLOOR_DOWN on top of 1.1.0 defaults!
+            var hybridDraft = ModRuntimeConfig.DEFAULT.toDraft();
+            hybridDraft.costTableDataset = ModRuntimeConfig.CostTableDataset.CLASSIC_1_0_3;
+            hybridDraft.researchRoundingMode = ModRuntimeConfig.ResearchRoundingMode.FLOOR_DOWN;
+            var hybridCfg = hybridDraft.build();
+            assertFalse(hybridCfg.isAllClassicAtoms(), "Single-atom hybrid config must not force full classic mode");
+            assertEquals(2, hybridCfg.countClassic103Atoms());
+
+            ChiseledEnchantingTableData.applyRuntimeConfig(hybridCfg, ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            var mending1 = new EnchantmentWithLevel(Identifier.withDefaultNamespace("mending"), 1);
+            var protection4 = new EnchantmentWithLevel(Identifier.withDefaultNamespace("protection"), 4);
+            var sharpness3 = new EnchantmentWithLevel(Identifier.withDefaultNamespace("sharpness"), 3);
+            var smite5 = new EnchantmentWithLevel(Identifier.withDefaultNamespace("smite"), 5);
+            assertEquals(35, ChiseledEnchantingTableData.xpCost(mending1, 1), "1.0.3 Mending I XP cost applies independently");
+            assertEquals(25, ChiseledEnchantingTableData.xpCost(protection4, 4), "1.0.3 Protection IV XP cost applies independently");
+            assertEquals(15, ChiseledEnchantingTableData.xpCost(sharpness3, 5));
+            assertEquals(7, ChiseledEnchantingTableData.bookResearchXpCost(sharpness3, 5), "FLOOR_DOWN rounds 15 * 0.5 -> 7");
+
+            // Smite V in 1.0.3 cost table carries multi-material specialty bundles (primary gem + Rotten Flesh / Bone)
+            var smiteOptions = ChiseledEnchantingTableData.runtimeFrame().costTables().enchantmentCosts().get(Identifier.withDefaultNamespace("smite"));
+            assertNotNull(smiteOptions, "1.0.3 cost table must expose Smite rule");
+            assertFalse(smiteOptions.options().getFirst().additionalCosts().isEmpty(),
+                "1.0.3 Smite rule must preserve specialty additional material costs (Bones / Rotten Flesh)");
+            assertNotNull(smiteOptions);
+            assertNotNull(smite5);
+
+            // Meanwhile, 1.1.0 features stay 100% active in this hybrid profile!
+            assertEquals(6, ChiseledEnchantingTableData.runtimeFrame().itemTransformations().size(),
+                "Full 6 transformations remain active when transformation_set == FULL_SIX");
+            assertTrue(ChiseledEnchantingTableData.disenchantEnabled(), "Cleanse remains active when disenchant_enabled == true");
+            assertTrue(ChiseledEnchantingTableData.treasureEpiphanyMaxChance() > 0.0, "Epiphany remains active when epiphany_enabled == true");
+            assertTrue(ChiseledEnchantingTableData.libraryResonanceConfig().maxTotalXpDiscountPercent() > 0,
+                "Resonance discount remains active when library_discount == true");
+
+            // Case B: Toggle research_rounding back to ROUND_NEAREST -> 15 * 0.5 rounds to 8!
+            hybridDraft.researchRoundingMode = ModRuntimeConfig.ResearchRoundingMode.ROUND_NEAREST;
+            ChiseledEnchantingTableData.applyRuntimeConfig(hybridDraft.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            assertEquals(8, ChiseledEnchantingTableData.bookResearchXpCost(sharpness3, 5), "ROUND_NEAREST rounds 15 * 0.5 -> 8");
+
+            // Case C: Disable library_discount independently -> zeroes all resonance sub-caps while Epiphany stays live!
+            var noDiscDraft = ModRuntimeConfig.DEFAULT.toDraft();
+            noDiscDraft.libraryDiscountEnabled = false;
+            ChiseledEnchantingTableData.applyRuntimeConfig(noDiscDraft.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            var lr = ChiseledEnchantingTableData.runtimeFrame().libraryResonanceConfig();
+            assertEquals(0, lr.maxWoodenDiscountPercent());
+            assertEquals(0, lr.maxTotalXpDiscountPercent());
+            assertEquals(0, lr.maxGlobalMasteryDiscountPercent());
+            assertEquals(0, lr.maxBaseXpDiscountPercent());
+            assertEquals(0, lr.maxSpecificEnchantBonusPercent());
+            assertTrue(ChiseledEnchantingTableData.treasureEpiphanyMaxChance() > 0.0,
+                "Disabling library_discount must NOT disable Treasure Epiphany");
+
+            // Case D: Disable epiphany_enabled independently -> zeroes Epiphany chances while Resonance discount stays live!
+            var noEpiphanyDraft = ModRuntimeConfig.DEFAULT.toDraft();
+            noEpiphanyDraft.epiphanyEnabled = false;
+            ChiseledEnchantingTableData.applyRuntimeConfig(noEpiphanyDraft.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            assertEquals(0.0, ChiseledEnchantingTableData.treasureEpiphanyBaseChance(), 1e-9);
+            assertEquals(0.0, ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance(), 1e-9);
+            assertEquals(0.0, ChiseledEnchantingTableData.treasureEpiphanyPerTomeChance(), 1e-9);
+            assertEquals(0.0, ChiseledEnchantingTableData.treasureEpiphanyMaxChance(), 1e-9);
+            assertTrue(ChiseledEnchantingTableData.libraryResonanceConfig().maxTotalXpDiscountPercent() > 0,
+                "Disabling epiphany_enabled must NOT zero Library Resonance discount");
         } finally {
-            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
-                original.configuration(), original.policy(), () -> {
-                }
+            ChiseledEnchantingTableData.applyRuntimeConfig(
+                original.configuration(), original.policy(), () -> {}
             );
         }
     }
 
     @Test
     void classicBookUpgradeJsonCarries103ResearchMaterials() throws Exception {
-        // The bundled classic table is a byte copy of tag 26.1.2_1.0.3; guard the
-        // two properties the frame wiring relies on (x0.5 materials, themed costs).
         try (var stream = getClass().getResourceAsStream(
             "/data/chiseled_enchanting_table/chiseled_enchanting_table/book_upgrades_classic_1_0_3.json")) {
             assertNotNull(stream);
@@ -222,101 +239,121 @@ class ConfigurationSafetyTest {
     }
 
     @Test
-    void classicModeLocksSubordinateConfigOptionsWithReason() {
+    void parentRuleAtomsGateOnlyTheirNaturalSubordinateSliders() {
+        var admin = ConfigCatalog.SessionMode.DEDICATED_ADMIN;
         var draft = ModRuntimeConfig.DEFAULT.toDraft();
-        draft.classic103Mode = true;
-        var epiphany = chiseled_enchanting_table.config.ConfigCatalog.byKey("epiphany_base_chance");
-        assertTrue(epiphany.isPresent());
-        var availability = epiphany.get().evaluate(draft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN);
-        assertFalse(availability.editable());
-        // Epiphany belongs to the rule-owned group: the classic frame zeroes
-        // its chances outright, even on the Classic merged page.
-        assertEquals(
-            "config.chiseled_enchanting_table.reason.classic_1_0_3_overridden",
-            availability.inactiveReasonKey()
-        );
-        // A live classic preference stays in the ordinary classic-locked
-        // group; the config screen unlocks only this group on its Classic page.
-        var scanRadius = chiseled_enchanting_table.config.ConfigCatalog.byKey("horizontal_scan_radius");
-        assertTrue(scanRadius.isPresent());
-        var scanAvailability = scanRadius.get().evaluate(draft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN);
-        assertFalse(scanAvailability.editable());
-        assertEquals(
-            "config.chiseled_enchanting_table.reason.classic_1_0_3",
-            scanAvailability.inactiveReasonKey()
-        );
-        // Round 5 (#13): tier/early-unlock/discovery keys have no consumer in
-        // the classic branch either, so they share the rule-owned reason.
-        for (String key : java.util.List.of(
-            "tier1_bookshelves", "tier2_bookshelves", "tier3_qualifying_enchantments",
-            "early_unlock_xp_levels", "early_unlock_grit_count", "require_prior_discovery")) {
-            var entry = chiseled_enchanting_table.config.ConfigCatalog.byKey(key);
-            assertTrue(entry.isPresent(), key);
-            var a = entry.get().evaluate(draft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN);
-            assertFalse(a.editable(), key);
-            assertEquals(
-                "config.chiseled_enchanting_table.reason.classic_1_0_3_overridden",
-                a.inactiveReasonKey(), key);
-            assertTrue(chiseled_enchanting_table.config.ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(key), key);
-        }
-        // Classification invariant: rule-owned keys are a subset of the
-        // classic-locked set, and every classic-page row outside that group
-        // is an explicitly reviewed live preference with a consumer under
-        // classic (shelf-gates config, frame fields, mixins, worldgen).
-        var locked = chiseled_enchanting_table.config.ConfigCatalog.CLASSIC_LOCKED_KEYS;
-        var owned = chiseled_enchanting_table.config.ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS;
-        assertTrue(locked.containsAll(owned), "rule-owned keys must be classic-locked");
-        java.util.Set<String> reviewedLivePreferences = java.util.Set.of(
-            "enchanted_book_stack_size", "vanilla_table_mode", "anvil_flat_repair_cost",
-            "anvil_block_same_book_merge", "restrict_villager_infinity_books",
-            "grindstone_depleted_tome", "direct_gates_enabled", "blank_max_tier_mode",
-            "horizontal_scan_radius", "vertical_scan_radius", "require_breathing_room",
-            "require_line_of_sight", "tome_consumption_mode", "tome_regen_enabled",
-            "locked_shelf_breakable", "locked_book_extraction_blocked",
-            "book_combine_enabled", "book_research_enabled", "transformation_max_batch_size",
-            "bookshelf_enchanted_prob", "max_tome_uses", "book_copy_wear_cost",
-            "tome_deplete_behavior", "tome_regen_base_seconds", "tome_regen_tier1_shelves",
-            "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds",
-            "vanilla_chest_books_mode", "bookshelf_pool_enabled");
-        java.util.Set<String> editableUnderClassic = new java.util.TreeSet<>(locked);
-        editableUnderClassic.removeAll(owned);
-        assertEquals(reviewedLivePreferences, editableUnderClassic,
-            "classic-page editable set changed: classify the new key as rule-owned or reviewed-live");
-        var standard = ModRuntimeConfig.DEFAULT.toDraft();
-        assertTrue(epiphany.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());
-        assertTrue(scanRadius.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());
+
+        // 1. shelf_boost_model = CLASSIC_FLOOR_THIRD gates wooden curve sliders, NOT scan geometry!
+        draft.shelfBoostModel = ModRuntimeConfig.ShelfBoostModel.CLASSIC_FLOOR_THIRD;
+        assertFalse(ConfigCatalog.byKey("direct_gates_enabled").orElseThrow().evaluate(draft, admin).editable());
+        assertEquals("config.chiseled_enchanting_table.reason.need_modern_shelf_curve",
+            ConfigCatalog.byKey("direct_gates_enabled").orElseThrow().evaluate(draft, admin).inactiveReasonKey());
+        assertTrue(ConfigCatalog.byKey("horizontal_scan_radius").orElseThrow().evaluate(draft, admin).editable(),
+            "Scan geometry must remain editable regardless of shelf_boost_model");
+
+        // 2. epiphany_enabled = false gates epiphany sliders, NOT library_discount!
+        draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.epiphanyEnabled = false;
+        assertFalse(ConfigCatalog.byKey("epiphany_base_chance").orElseThrow().evaluate(draft, admin).editable());
+        assertEquals("config.chiseled_enchanting_table.reason.need_epiphany",
+            ConfigCatalog.byKey("epiphany_base_chance").orElseThrow().evaluate(draft, admin).inactiveReasonKey());
+        assertTrue(ConfigCatalog.byKey("max_total_xp_discount_percent").orElseThrow().evaluate(draft, admin).editable());
+
+        // 3. tome_locks = false gates shelf-break / extraction lock guards & early-unlock costs!
+        draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.tomeLocksEnabled = false;
+        assertFalse(ConfigCatalog.byKey("locked_shelf_breakable").orElseThrow().evaluate(draft, admin).editable());
+        assertFalse(ConfigCatalog.byKey("early_unlock_xp_levels").orElseThrow().evaluate(draft, admin).editable());
+
+        // 4. transformation_set = CLASSIC_TWO gates require_prior_discovery, while batch size remains editable!
+        draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.transformationSetMode = ModRuntimeConfig.TransformationSetMode.CLASSIC_TWO;
+        assertFalse(ConfigCatalog.byKey("require_prior_discovery").orElseThrow().evaluate(draft, admin).editable());
+        assertTrue(ConfigCatalog.byKey("transformation_max_batch_size").orElseThrow().evaluate(draft, admin).editable());
+
+        // 5. drained_book_result = PLAIN_BOOK gates depleted-tome transmute tier thresholds!
+        draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.drainedBookResult = ModRuntimeConfig.DrainedBookResult.PLAIN_BOOK;
+        assertFalse(ConfigCatalog.byKey("tier1_bookshelves").orElseThrow().evaluate(draft, admin).editable());
+        assertEquals("config.chiseled_enchanting_table.reason.need_depleted_tome",
+            ConfigCatalog.byKey("tier1_bookshelves").orElseThrow().evaluate(draft, admin).inactiveReasonKey());
     }
 
     @Test
-    void classicFrameZeroesResonanceSubCapsAndEpiphanyPerShelfChances() {
-        // Co-resonance discount and Epiphany must be DISABLED (all components 0),
-        // not merely hidden: their JSON sub-caps/per-chances previously survived
-        // applyRuntimeConfig and leaked into floating texts.
+    void ruleTraceCatalogCoversAllTwentyEntriesAndTogglesEveryAtomCleanly() {
+        assertEquals(20, ConfigCatalog.RULE_TRACE_ENTRIES.size(), "Expected 20 Rule Trace entries (19 bound + 1 derived)");
         var draft = ModRuntimeConfig.DEFAULT.toDraft();
-        draft.classic103Mode = true;
-        var classic = draft.build();
-        var original = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
-        try {
-            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
-                classic, ModRuntimeConfig.PackPolicy.NONE, () -> {
+        assertEquals(0, draft.build().countClassic103Atoms());
+
+        int toggledCount = 0;
+        for (var trace : ConfigCatalog.RULE_TRACE_ENTRIES) {
+            assertFalse(trace.isUsingClassic103(draft), "Default 1.1.0 draft must start modern for " + trace.traceId());
+            assertTrue(trace.isUsingModern110(draft), "Default 1.1.0 draft must match modern for " + trace.traceId());
+            if (!trace.derived()) {
+                if ("tome_wear_system".equals(trace.traceId())) {
+                    draft.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+                    draft.tomeRegenEnabled = false;
+                } else {
+                    trace.applyClassic103(draft);
                 }
-            );
-            var frame = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
-            var lr = frame.libraryResonanceConfig();
-            assertEquals(0, lr.maxWoodenDiscountPercent());
-            assertEquals(0, lr.maxTotalXpDiscountPercent());
-            assertEquals(0, lr.maxGlobalMasteryDiscountPercent());
-            assertEquals(0, lr.maxBaseXpDiscountPercent());
-            assertEquals(0, lr.maxSpecificEnchantBonusPercent());
-            assertEquals(0.0, chiseled_enchanting_table.data.ChiseledEnchantingTableData.treasureEpiphanyBaseChance(), 1e-9);
-            assertEquals(0.0, chiseled_enchanting_table.data.ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance(), 1e-9);
-            assertEquals(0.0, chiseled_enchanting_table.data.ChiseledEnchantingTableData.treasureEpiphanyPerTomeChance(), 1e-9);
-            assertEquals(0.0, chiseled_enchanting_table.data.ChiseledEnchantingTableData.treasureEpiphanyMaxChance(), 1e-9);
-        } finally {
-            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
-                original.configuration(), original.policy(), () -> {
-                }
-            );
+                toggledCount++;
+                assertTrue(trace.isUsingClassic103(draft), "applyClassic103 must flip " + trace.traceId());
+            }
+        }
+        assertEquals(19, toggledCount);
+        assertEquals(ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT, draft.build().countClassic103Atoms());
+        assertTrue(draft.build().isAllClassicAtoms(), "Flipping all 19 bound trace entries must derive classic_presentation");
+        assertTrue(ConfigCatalog.RULE_TRACE_ENTRIES.getLast().isUsingClassic103(draft));
+    }
+
+    @Test
+    void configModalLayoutAndLayeredAssetsGuaranteeZeroOverlapAcrossResolutions() throws Exception {
+        // 1. Typography scale floors & safe border inset invariants
+        assertTrue(ConfigLayoutSpec.MODAL_SAFE_INSET >= 14, "Modal safe inset must clear decorative 13px brass/rune border");
+        assertTrue(ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE >= 0.85f, "Primary text floor must be >= 0.85x");
+        assertTrue(ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE >= 0.75f, "Secondary text floor must be >= 0.75x");
+
+        // 2. Verify zero box collision & zero border overflow across compact, standard, and widescreen viewports
+        int[][] viewports = {
+            {320, 240}, {427, 240}, {480, 270}, {540, 320},
+            {640, 360}, {854, 480}, {960, 540}, {1280, 720}
+        };
+        int presetCount = ModRuntimeConfig.Preset.values().length;
+        int railCount = ConfigCatalog.CategoryId.values().length + 1;
+        for (int[] vp : viewports) {
+            var layout = ConfigLayoutSpec.compute(vp[0], vp[1], presetCount, railCount);
+            List<String> violations = ConfigLayoutSpec.verifyInvariants(layout);
+            assertTrue(violations.isEmpty(),
+                "Layout collision/overflow at " + vp[0] + "x" + vp[1] + ": " + violations);
+        }
+
+        // Roomy viewport (854x480) must achieve full 520x340 modal and fit >= 7 visible option rows simultaneously
+        var roomy = ConfigLayoutSpec.compute(854, 480, presetCount, railCount);
+        assertEquals(520, roomy.modal().w());
+        assertEquals(340, roomy.modal().h());
+        int visibleRows = (roomy.listViewport().h() + ConfigLayoutSpec.ROW_GAP)
+            / (ConfigLayoutSpec.OPTION_ROW_H + ConfigLayoutSpec.ROW_GAP);
+        assertTrue(visibleRows >= 7, "Roomy modal must fit at least 7 option rows simultaneously, got: " + visibleRows);
+
+        // 3. Verify all 33 modular 2x HD pixel-art PNG layers exist with valid PNG signatures
+        Path guiCfgDir = Path.of("src/client/resources/assets/chiseled_enchanting_table/gui/config");
+        List<String> expectedAssets = List.of(
+            "modal_frame.png", "frame_gem_pip.png", "backdrop_tile.png", "divider_ornament.png", "emblem_trace_large.png",
+            "icon_domain_system.png", "icon_domain_unlock.png", "icon_domain_pricing.png", "icon_domain_tomes.png",
+            "icon_domain_epiphany.png", "icon_domain_cleanse.png", "icon_domain_world.png", "icon_domain_trace.png",
+            "rail_tab.png", "rail_tab_active.png", "section_plaque.png",
+            "row_plaque.png", "row_plaque_hover.png", "row_plaque_atom.png", "row_plaque_disabled.png",
+            "btn_plaque.png", "btn_plaque_hover.png", "btn_plaque_gold.png", "btn_plaque_disabled.png",
+            "search_box.png", "search_box_focus.png",
+            "toggle_on.png", "toggle_off.png", "toggle_locked.png",
+            "slider_track.png", "slider_fill.png", "slider_knob.png", "slider_knob_hover.png"
+        );
+        for (String name : expectedAssets) {
+            Path p = guiCfgDir.resolve(name);
+            assertTrue(Files.isRegularFile(p), "Missing modular config UI layer: " + name);
+            byte[] header = Files.readAllBytes(p);
+            assertTrue(header.length > 24 && header[0] == (byte) 0x89 && header[1] == 0x50,
+                "Invalid PNG header on " + name);
         }
     }
 }

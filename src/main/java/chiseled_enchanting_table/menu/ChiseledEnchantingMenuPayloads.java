@@ -467,11 +467,11 @@ public final class ChiseledEnchantingMenuPayloads {
         }
 
         public static List<TransformationDisplay> buildTransformationDisplays(@Nullable Player player) {
-            boolean classic103 = (player != null
+            boolean classicTransformations = (player != null
                 ? chiseled_enchanting_table.config.ModRuntimeConfig.forSide(player.level().isClientSide())
                 : chiseled_enchanting_table.config.ModRuntimeConfig.forSide(false)
-            ).classic103Mode();
-            if (classic103) {
+            ).transformationSetMode() == chiseled_enchanting_table.config.ModRuntimeConfig.TransformationSetMode.CLASSIC_TWO;
+            if (classicTransformations) {
                 return List.of(
                     new TransformationDisplay(
                         chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple"),

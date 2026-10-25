@@ -71,10 +71,7 @@ public final class EnchantmentApplication {
                     break;
                 }
             }
-            if (!exist && existingSameLevel >= 1 && !handler.isClassic103Mode()) {
-                // Post-1.0.3 direct-tier upgrade path. In 1.0.3 only the exact
-                // unlocked (shelf-boosted) level could be applied; the widget hid
-                // these rows in classic but the server still accepted the payload.
+            if (!exist && existingSameLevel >= 1 && handler.allowsDirectTierUpgrade()) {
                 exist = handler.canDirectUpgradeExistingEnchantment(enchantment, payload.enchantment_id(), existingSameLevel, enchantment_level);
             }
         }
@@ -163,8 +160,9 @@ public final class EnchantmentApplication {
             payload.enchantment_id(),
             enchantment
         );
-        boolean classic103 = handler.isClassic103Mode();
-        int waitTicks = classic103 ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
+        boolean ritualQueueEnabled = handler.isRitualQueueEnabled();
+        boolean provenanceEnabled = handler.isProvenanceEnabled();
+        int waitTicks = !ritualQueueEnabled ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
             handler.ritualConfig(),
             ritualScan.totalDetectedBookshelves(),
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.medianShelfGate(shelfCfg),
@@ -174,11 +172,7 @@ public final class EnchantmentApplication {
             appFactor
         );
 
-        // Generation fade: a shelf-tome transcription onto a book target produces a
-        // copy one generation below the exact tome this step consumed (snapshot-bound,
-        // same discipline as the Infinity-load binding above). Gear targets and
-        // direct/epiphany inscriptions have no parent tome and keep -1 (no stamp).
-        int inheritedGeneration = (!classic103 && masterTomeUsed && targetWasBook
+        int inheritedGeneration = (provenanceEnabled && masterTomeUsed && targetWasBook
             && resolvedWear.chosenTomeSnapshot() != null
             && !resolvedWear.chosenTomeSnapshot().isEmpty())
             ? chiseled_enchanting_table.mechanics.resonance.TomeWearData.childGeneration(
@@ -242,7 +236,7 @@ public final class EnchantmentApplication {
         // Headless / synthetic non-BE fallback path
         // 1.0.3 Classic: transcription slip («抄错») is a post-1.0.3 ritual mechanic;
         // classic inscriptions always land at the exact paid level.
-        double slipChance = classic103 ? 0.0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
+        double slipChance = !ritualQueueEnabled ? 0.0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
             handler.ritualConfig(),
             ritualScan.maxOverloadedInfinityTomeEnchants(),
             ritualScan.totalDetectedBookshelves()
@@ -280,7 +274,7 @@ public final class EnchantmentApplication {
             }
         });
 
-        if (!classic103) {
+        if (provenanceEnabled) {
             EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, finalLevel);
             EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
             if (inheritedGeneration >= 0 && target.is(Items.ENCHANTED_BOOK)) {
@@ -366,15 +360,14 @@ public final class EnchantmentApplication {
             for (var entry : new_enchanted_book_enchants.keySet()) m.set(entry, new_enchanted_book_enchants.getLevel(entry));
         });
 
-        boolean classic103 = handler.isClassic103Mode();
         ItemStack remainderBook;
         if (EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook).isEmpty()) {
             remainderBook = new ItemStack(
-                classic103 ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
+                handler.returnsPlainDrainedBook() ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
                 1
             );
         } else {
-            if (!classic103) {
+            if (handler.isProvenanceEnabled()) {
                 EnchantmentProvenance.pruneToCurrentEnchantments(
                     updatedSingleBook,
                     EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook)

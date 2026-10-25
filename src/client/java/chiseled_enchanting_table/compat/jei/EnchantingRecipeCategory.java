@@ -82,16 +82,17 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
     ) {
         var font = Minecraft.getInstance().font;
         guiGraphics.text(font, "\u2192", ARROW_X, SLOT_Y + 4, 0xFF404040, false);
-        // 1.0.3 Classic: no 1-3L stored-book mode — show the full XP cost.
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        var runtimeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.effective();
+        boolean classicFullXp = runtimeCfg.xpMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.XpSettlementMode.CLASSIC_FULL_POINTS;
         var lrCfg = chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig();
-        var xpReq = classic103
+        var xpReq = classicFullXp
             ? chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forFullArcaneRitual(lrCfg, recipe.xpLevelCost(), 0)
             : chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
                 lrCfg, recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0);
         Identifier orb = chiseled_enchanting_table.gui.row.RowRenderSupport.orbSprite(xpReq.deductedLevels());
         guiGraphics.blit(orb, SLOT_TARGET_X, 27, SLOT_TARGET_X + 10, 37, 0.0f, 1.0f, 0.0f, 1.0f);
-        Component xpText = classic103
+        Component xpText = classicFullXp
             ? Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_full", xpReq.deductedLevels())
             : Component.translatable(
                 "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
@@ -124,13 +125,15 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
         double mouseX,
         double mouseY
     ) {
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        var runtimeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.effective();
+        boolean classicFullXp = runtimeCfg.xpMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.XpSettlementMode.CLASSIC_FULL_POINTS;
         var lrCfg = chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig();
-        var xpReq = classic103
+        var xpReq = classicFullXp
             ? chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forFullArcaneRitual(lrCfg, recipe.xpLevelCost(), 0)
             : chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
                 lrCfg, recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0);
-        tooltip.add(classic103
+        tooltip.add(classicFullXp
             ? Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_full", xpReq.deductedLevels())
             : Component.translatable(
                 "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
@@ -142,10 +145,10 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
                 ? "jei.chiseled_enchanting_table.tooltip.cost_synced"
                 : "jei.chiseled_enchanting_table.tooltip.cost_hint"
         ));
-        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode()) {
+        if (runtimeCfg.libraryDiscountEnabled()) {
             tooltip.add(Component.translatable(
                 "jei.chiseled_enchanting_table.tooltip.bookshelf",
-                chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().maxTotalXpDiscountPercent()
+                lrCfg.maxTotalXpDiscountPercent()
             ));
         }
         if (!recipe.conflictingEnchantments().isEmpty()) {

@@ -77,16 +77,17 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
         widgets.add(Widgets.createArrow(new Point(x + 80, y + 5)));
         widgets.add(slot(x + 108, y + 5, display.getOutputEntries().getFirst()).markOutput());
 
-        // 1.0.3 Classic: no 1-3L stored-book mode — show the full XP cost.
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        var runtimeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.effective();
+        boolean classicFullXp = runtimeCfg.xpMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.XpSettlementMode.CLASSIC_FULL_POINTS;
         var lrCfg = chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig();
-        var xpReq = classic103
+        var xpReq = classicFullXp
             ? chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forFullArcaneRitual(lrCfg, display.xpLevelCost(), 0)
             : chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
                 lrCfg, display.row().level(), display.row().maxLevel(), display.xpLevelCost(), 0);
         widgets.add(Widgets.createLabel(
                 new Point(x + WIDTH / 2, y + 28),
-                classic103
+                classicFullXp
                     ? Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_full", xpReq.deductedLevels())
                     : Component.translatable(
                         "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
@@ -105,7 +106,7 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
                 ? "jei.chiseled_enchanting_table.tooltip.cost_synced"
                 : "jei.chiseled_enchanting_table.tooltip.cost_hint"
         ));
-        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode()) {
+        if (chiseled_enchanting_table.config.ModRuntimeConfig.effective().libraryDiscountEnabled()) {
             lines.add(Component.translatable(
                 "jei.chiseled_enchanting_table.tooltip.bookshelf",
                 chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().maxTotalXpDiscountPercent()

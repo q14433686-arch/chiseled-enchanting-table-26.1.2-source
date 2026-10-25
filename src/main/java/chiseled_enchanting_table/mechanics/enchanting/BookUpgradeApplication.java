@@ -71,16 +71,13 @@ public final class BookUpgradeApplication {
         }
         merged.set(enchantment, targetLevel);
         writeEnchantments(targetBook, merged);
-        boolean classic103 = handler.isClassic103Mode();
-        if (!classic103) {
+        if (handler.isProvenanceEnabled()) {
             EnchantmentProvenance.recordBookCombine(
                 targetSnapshot,
                 costSnapshot,
                 targetBook,
                 EnchantmentHelper.getEnchantmentsForCrafting(targetBook)
             );
-            // Combine consumes the cost book, so no new generation is minted; the merged
-            // book keeps the more faded lineage of its two parents.
             chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
                 targetBook,
                 chiseled_enchanting_table.mechanics.resonance.TomeWearData.mergedGeneration(
@@ -90,10 +87,8 @@ public final class BookUpgradeApplication {
             EnchantmentProvenance.clearAll(targetBook);
         }
 
-        // Drained source book carries arcane residue and becomes a stackable Depleted Tome requiring Blank Overwrite
-        // (or a plain Book in 1.0.3 Classic mode).
         ItemStack depleted = new ItemStack(
-            classic103 ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
+            handler.returnsPlainDrainedBook() ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
             1
         );
         if (costBook.getCount() <= 1) {
@@ -136,7 +131,7 @@ public final class BookUpgradeApplication {
         ItemEnchantments.Mutable upgraded = new ItemEnchantments.Mutable(current);
         upgraded.set(enchantment, targetLevel);
         writeEnchantments(targetBook, upgraded);
-        if (!handler.isClassic103Mode()) {
+        if (handler.isProvenanceEnabled()) {
             EnchantmentProvenance.recordTablePayment(targetBook, payload.enchantment_id(), sourceLevel, targetLevel);
             EnchantmentProvenance.pruneToCurrentEnchantments(targetBook, EnchantmentHelper.getEnchantmentsForCrafting(targetBook));
         } else {

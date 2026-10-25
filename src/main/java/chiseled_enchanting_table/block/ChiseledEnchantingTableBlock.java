@@ -380,7 +380,8 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public Set<EnchantmentWithLevel> enchantments_unlocked_by_default(Level level) {
         var lookup = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         Set<EnchantmentWithLevel> base = ChiseledEnchantingTableData.defaultEnchantments(lookup);
-        if (!chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).classic103Mode()) {
+        if (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).defaultUnlockFilter()
+            != chiseled_enchanting_table.config.ModRuntimeConfig.DefaultUnlockFilter.CLASSIC_UNFILTERED) {
             return base;
         }
         java.util.HashSet<EnchantmentWithLevel> classic = new java.util.HashSet<>(base);
@@ -399,9 +400,10 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     private Set<EnchantmentWithLevel> getUnlockedEnchantmentsFromPower(Level level, ShelfPower shelfPower) {
         Map<Identifier, Integer> highestLevels = new HashMap<>();
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).classic103Mode();
+        boolean classicShelfBoost = chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).shelfBoostModel()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.ShelfBoostModel.CLASSIC_FLOOR_THIRD;
 
-        if (classic103) {
+        if (classicShelfBoost) {
             // 1.0.3 exact rule: both default enchantments and stored Chiseled Bookshelf books gain +W/3 up to maxLevel.
             for (EnchantmentWithLevel base : this.enchantments_unlocked_by_default(level)) {
                 mergeHighestLevel(highestLevels, withClassic103ShelfBoost(level, base, shelfPower.regularBookshelves()));
@@ -435,11 +437,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         java.util.HashSet<EnchantmentWithLevel> unlocked = new java.util.HashSet<>();
         for (Map.Entry<Identifier, Integer> entry : highestLevels.entrySet()) {
             int top = Math.max(1, entry.getValue());
-            if (classic103) {
-                // 1.0.3 exact: get_unlocked_enchantements returned ONE entry per
-                // enchantment — the shelf-boosted highest level only. The 1..top
-                // expansion below is the post-1.0.3 direct-tier system; keeping it
-                // in classic silently granted every lower tier for free.
+            if (classicShelfBoost) {
                 unlocked.add(new EnchantmentWithLevel(entry.getKey(), top));
                 continue;
             }
