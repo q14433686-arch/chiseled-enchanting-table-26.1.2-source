@@ -454,6 +454,19 @@ def check_bundled_defaults_fresh() -> None:
     else:
         note("BundledDefaults.java matches datapack JSON (single source of truth)")
 
+def check_baseline_mixin_inventory() -> None:
+    """Count AND class identities must agree with the generated baseline documentation."""
+    import subprocess
+    proc = subprocess.run(
+        [sys.executable, os.path.join(REPO, "scripts", "check_baseline_mixins.py"), "--check"],
+        capture_output=True, text=True, cwd=REPO,
+    )
+    if proc.returncode:
+        fail((proc.stdout or proc.stderr).strip())
+    else:
+        note("CURRENT_BASELINE Mixin count and inventory match registered configs")
+
+
 # --------------------------------------------------------------------------- #
 
 def main() -> int:
@@ -462,6 +475,7 @@ def main() -> int:
     args = parser.parse_args()
 
     check_mixin_configs()
+    check_baseline_mixin_inventory()
     check_lang_parity()
     check_no_embedded_json_fallbacks()
     check_markdown_links()

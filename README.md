@@ -74,6 +74,9 @@ Ships with 11 built-in translations: `de_de`, `en_us`, `es_es`, `fr_fr`, `it_it`
 
 ## Building from Source & CI
 
+CI badges above track the **26.3 branch**, not arbitrary working-tree edits. A successful run
+only verifies its recorded source SHA and tested scenarios; it does not certify GUI/IME or multiplayer interaction.
+
 Building locally requires **JDK 25** and network access to `maven.fabricmc.net`:
 
 ```bash

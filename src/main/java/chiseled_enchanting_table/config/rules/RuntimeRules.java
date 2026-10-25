@@ -1,4 +1,5 @@
 package chiseled_enchanting_table.config.rules;
+import chiseled_enchanting_table.data.RuntimeFrame;
 
 import chiseled_enchanting_table.config.ConfigCatalog;
 import chiseled_enchanting_table.config.ModRuntimeConfig;

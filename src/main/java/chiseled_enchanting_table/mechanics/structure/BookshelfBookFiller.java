@@ -2,9 +2,9 @@ package chiseled_enchanting_table.mechanics.structure;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.BookshelfBookPool;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.LootInjection;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.LootInjectionEntry;
+import chiseled_enchanting_table.data.BookshelfBookPool;
+import chiseled_enchanting_table.data.LootInjection;
+import chiseled_enchanting_table.data.LootInjectionEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

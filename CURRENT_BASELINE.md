@@ -61,7 +61,7 @@ alternatives, book upgrades, Blank Overwrite and transformations.
 - Flat anvil prior-work penalty; same-level book merge blocking; stacked-book remainder fix.
 - JSON-driven chest/archaeology loot, depth-based mineshaft Efficiency, weighted structure
   bookshelf replacement/fill with the worldgen-safe NBT pipeline (no live chunk access from workers).
-- Twelve registered mixins (CI fails on any orphan mixin source); `RemoveXpCostScaling` is active and no longer excluded from compilation.
+- The generated Registered Mixin inventory at the end of this document is authoritative; source existence/compilation checks and documentation inventory checks are separate gates.
 
 ## Target-specific contracts (must not regress on future syncs)
 
@@ -131,3 +131,29 @@ Incremental source `aadcecc` verified: full build **39888562095** (including imp
 suite and no-viewers compile) and main/client compile-check **39888562097** are successful.
 The sync now has 11 Python regression tests; all 307 keys in each of 11 locales and 297
 code-referenced translation keys pass the updated gates. Version remains **1.1.1**.
+
+<!-- BEGIN GENERATED MIXIN INVENTORY -->
+## Registered Mixin inventory (generated)
+
+**Registered Mixin declarations: 14.**
+
+Source: `fabric.mod.json` registered configs, including common/client/server sections.
+Regenerate with `python3 scripts/check_baseline_mixins.py --write`.
+
+| Config | Section | Class |
+| --- | --- | --- |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.anvil.RemoveEnchantMerge` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.anvil.RemoveXpCostScaling` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.bookshelf.AddRandomTick` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.bookshelf.BookshelfCreativeExtractionMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.bookshelf.LockedBookContainerMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.enchanting_table.DisableBookEnchanting` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.grindstone.GrindstoneBookDepleteMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.loot.ReloadableServerRegistriesMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.LevelChunkPostProcessMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.StructurePieceAccessor` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.StructurePieceMarkMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.StructurePlaceSettingsMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.StructureTemplatePoolProjectionMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.villager.VillagerInfinitySanitizeMixin` |
+<!-- END GENERATED MIXIN INVENTORY -->

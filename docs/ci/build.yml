@@ -27,13 +27,7 @@ on:
       - 'chiseled-enchanting-table-26.1.2-source'
       - '26.**'
       - 'main'
-    paths-ignore:
-      - 'build-reports/**'
-      - 'docs/**'
-      - '*.md'
   pull_request:
-    paths-ignore:
-      - 'build-reports/**'
   workflow_dispatch:
 
 concurrency:
@@ -55,6 +49,11 @@ jobs:
 
       - name: mixin config integrity + registered-mixin-compiled + lang key parity
         run: python3 scripts/ci_static_checks.py
+
+      - name: documentation and diagnostic contracts
+        run: |
+          python3 scripts/test_baseline_mixins.py
+          python3 scripts/test_ci_diagnostics.py
 
       - name: 26.3 sync regression checks
         run: python3 scripts/test_sync_26_3.py
@@ -130,7 +129,8 @@ jobs:
 
   server-smoke:
     permissions:
-      contents: write
+      contents: read
+      checks: write
     name: 26.3 real server world-load and reload
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -155,22 +155,8 @@ jobs:
             run/logs/latest.log
             run/crash-reports/**
           if-no-files-found: warn
-      - name: return smoke log to development branch
-        if: always() && github.event_name == 'push' && startsWith(github.ref_name, 'arena/')
+      - name: publish API-readable smoke diagnostics
+        if: always() && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 - <<'PYLOG'
-          import base64, json, os, pathlib, subprocess
-          path = pathlib.Path('build-reports/server-smoke.log')
-          if path.exists():
-              endpoint = f"repos/{os.environ['GITHUB_REPOSITORY']}/contents/{path}"
-              branch = os.environ['GITHUB_REF_NAME']
-              old = subprocess.run(['gh', 'api', endpoint + '?ref=' + branch], capture_output=True, text=True)
-              data = {'message': 'ci-log: server smoke for ' + os.environ['GITHUB_SHA'],
-                      'branch': branch, 'content': base64.b64encode(path.read_bytes()[-150000:]).decode()}
-              if old.returncode == 0:
-                  data['sha'] = json.loads(old.stdout)['sha']
-              subprocess.run(['gh', 'api', '-X', 'PUT', endpoint, '--input', '-'],
-                             input=json.dumps(data), text=True, check=True, stdout=subprocess.DEVNULL)
-          PYLOG
+        run: python3 scripts/post_ci_diagnostics.py --publish --name server-smoke-diagnostics --conclusion '${{ job.status }}' build-reports/server-smoke.log

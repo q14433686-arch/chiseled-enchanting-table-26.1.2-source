@@ -311,6 +311,9 @@ def check_transformation_json_matches_java() -> None:
 
     with open(java_path, encoding="utf-8") as fh:
         java_src = fh.read()
+    loader_path = os.path.join(os.path.dirname(java_path), "DataTableLoader.java")
+    with open(loader_path, encoding="utf-8") as fh:
+        java_src += fh.read()
     if "BUILT_IN_JSON" in java_src:
         err("ChiseledEnchantingTableData.java still contains a duplicate BUILT_IN_JSON text block (F8 drift risk)")
     for req_call in ('readBundledJsonObject("item_transformations.json")', 'readBundledJsonObject("disenchanting.json")'):

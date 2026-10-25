@@ -2,8 +2,8 @@ package chiseled_enchanting_table.mechanics.loot;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.LootInjection;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.LootInjectionEntry;
+import chiseled_enchanting_table.data.LootInjection;
+import chiseled_enchanting_table.data.LootInjectionEntry;
 import java.util.List;
 import java.util.Optional;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;

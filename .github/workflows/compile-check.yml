@@ -1,25 +1,8 @@
 name: compile-check
-# Compile-verification loop, ported from TaCZ_Refabricated_Unofficial (.github/workflows/compile-check.yml)
-# via the 26.3 branch of this repository.
-#
-# 依赖下载与编译在 GitHub Actions（外网畅通）执行；arena/** 分支上，编译日志通过
-# GitHub Contents API 写回本分支（build-reports/compile-java.log），供网络受限的沙箱
-# 用 `gh api .../contents/build-reports/compile-java.log` 直接读取 —— 绕开 Actions
-# 日志 blob 域不可达的限制。沙箱里 maven.fabricmc.net / piston-meta.mojang.com 不可达，
-# ./gradlew 连依赖都解析不了，所以这是 26.1.2 这条线上唯一能「编译验证」的通道
-# （26.3 分支同理，本文件与它逐字节对应，只有分支过滤与注释不同）。
-#
-# 沿用姊妹仓的三条教训：
-#   * v2 用 git commit+push 回推，曾因 rebase/push 竞争连续失败 5 次 → 改用 Contents API 单文件写入；
-#   * paths-ignore 'build-reports/**' 防止「日志回推 commit」再次触发本流程造成死循环；
-#   * 只有 arena/** 的 push 才回推日志，主分支不能被 ci-log commit 污染（状态看 Actions 即可）。
-#
-# 与姊妹仓的差别：本仓有 split source sets（main + client），所以编译
-# `compileJava compileClientJava` 两个目标；只编 main 会漏掉全部 GUI / 渲染器代码，
-# 也会漏掉 compat/jei 与 compat/rei 两个可选适配器。
-
+# Logs are ephemeral artifacts; bounded diagnostics are available via the GitHub Checks API.
 permissions:
-  contents: write
+  contents: read
+  checks: write
 
 on:
   push:
@@ -28,11 +11,7 @@ on:
       - 'chiseled-enchanting-table-26.1.2-source'
       - '26.**'
       - 'main'
-    paths-ignore:
-      - 'build-reports/**'
   pull_request:
-    paths-ignore:
-      - 'build-reports/**'
   workflow_dispatch:
 
 concurrency:
@@ -131,35 +110,19 @@ jobs:
           fi
           exit $status
 
-      - name: Push compile log back via contents API
-        # 只在 arena/** 的 push 上回推 —— 主分支与 PR 不产生 ci-log commit
-        if: always() && github.event_name == 'push' && startsWith(github.ref_name, 'arena/')
+      - name: preserve compile diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compile-diagnostics-${{ github.sha }}
+          path: |
+            build-reports/*.log
+            build/test-results/test/*.xml
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: publish API-readable diagnostics (no Git write-back)
+        if: always() && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          BRANCH="${{ github.ref_name }}"
-          # compile-deps.log 只在编译失败时存在；两个文件都走同样的「截断 + 单文件 PUT」流程
-          for LOG in build-reports/compile-java.log build-reports/compile-deps.log; do
-            [ -f "$LOG" ] || continue
-            case "$LOG" in
-              *compile-deps.log) KIND="dependency report" ;;
-              *)                 KIND="compile result (${{ job.status }})" ;;
-            esac
-            # 日志可能很大，只保留头 200 行 + 尾 800 行
-            LINES=$(wc -l < "$LOG")
-            if [ "$LINES" -gt 1000 ]; then
-              { head -n 200 "$LOG"; echo "...[truncated ${LINES} lines total]..."; tail -n 800 "$LOG"; } > /tmp/log-trimmed
-              mv /tmp/log-trimmed "$LOG"
-            fi
-            echo "" >> "$LOG"
-            echo "== job status: ${{ job.status }} ==" >> "$LOG"
-            SHA=$(gh api "repos/${{ github.repository }}/contents/$LOG?ref=$BRANCH" --jq .sha 2>/dev/null || true)
-            # Avoid Linux's per-argument size limit: compiler diagnostics can exceed 128 KiB
-            # even after line trimming. Put base64 in an input FILE, not gh's -f argument.
-            jq -n --arg message "ci-log: ${KIND} for ${{ github.sha }}" \
-              --arg branch "$BRANCH" --arg sha "$SHA" --rawfile log "$LOG" \
-              '{message:$message, branch:$branch, content:($log|@base64)} +
-               (if $sha == "" then {} else {sha:$sha} end)' > /tmp/cet-compile-log-request.json
-            gh api -X PUT "repos/${{ github.repository }}/contents/$LOG" \
-              --input /tmp/cet-compile-log-request.json --jq .commit.sha
-          done
+        run: python3 scripts/post_ci_diagnostics.py --publish --name compile-diagnostics --conclusion '${{ job.status }}' build-reports/compile-java.log build-reports/compile-deps.log

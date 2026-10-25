@@ -52,3 +52,7 @@ __pycache__/
 # scratch patches & scripts
 fix*.patch
 fix*.py
+
+# Ephemeral CI diagnostics and local bytecode (Gradle wrapper remains versioned).
+build-reports/
+*.class
