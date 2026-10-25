@@ -172,12 +172,15 @@ class ConfigurationSafetyTest {
             assertEquals(15, ChiseledEnchantingTableData.xpCost(sharpness3, 5));
             assertEquals(7, ChiseledEnchantingTableData.bookResearchXpCost(sharpness3, 5), "FLOOR_DOWN rounds 15 * 0.5 -> 7");
 
-            // Smite V in 1.0.3 cost table carries multi-material specialty bundles (primary gem + Rotten Flesh / Bone)
-            var smiteOptions = ChiseledEnchantingTableData.runtimeFrame().costTables().enchantmentCosts().get(Identifier.withDefaultNamespace("smite"));
-            assertNotNull(smiteOptions, "1.0.3 cost table must expose Smite rule");
-            assertFalse(smiteOptions.options().getFirst().additionalCosts().isEmpty(),
-                "1.0.3 Smite rule must preserve specialty additional material costs (Bones / Rotten Flesh)");
-            assertNotNull(smiteOptions);
+            // Smite in 1.0.3 cost table carries specialty Bone / Rotten Flesh on base tiers
+            // and multi-material Gem + Bone / Rotten Flesh bundles at max tier (Smite V)!
+            var smiteId = Identifier.withDefaultNamespace("smite");
+            var smite1Opts = ChiseledEnchantingTableData.rawItemCostOptions(smiteId, 1, 5);
+            assertEquals(Identifier.withDefaultNamespace("bone"), smite1Opts.getFirst().itemId());
+            var smite5Opts = ChiseledEnchantingTableData.rawItemCostOptions(smiteId, 5, 5);
+            assertFalse(smite5Opts.isEmpty(), "1.0.3 cost table must expose Smite V options");
+            assertFalse(smite5Opts.getFirst().additionalCosts().isEmpty(),
+                "1.0.3 Smite V rule must preserve specialty additional material costs (Bones / Rotten Flesh)");
             assertNotNull(smite5);
 
             // Meanwhile, 1.1.0 features stay 100% active in this hybrid profile!

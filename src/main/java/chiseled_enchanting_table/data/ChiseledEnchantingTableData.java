@@ -258,6 +258,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return costs.size() <= 1 ? List.of() : List.copyOf(costs.subList(1, costs.size()));
     }
 
+    public static List<ItemCostOption> rawItemCostOptions(Identifier enchantmentId, int level, int maxLevel) {
+        var ct = runtimeFrame().costTables();
+        ItemCostRule rule = ct.itemCosts().getOrDefault(enchantmentId, ct.defaultItemCost());
+        return rule.rawOptionsForLevel(level, maxLevel);
+    }
+
     public static int xpCost(EnchantmentWithLevel enchantmentWithLevel) {
         return xpCost(enchantmentWithLevel, Math.max(1, enchantmentWithLevel.enchantment_level()));
     }
@@ -2064,6 +2070,17 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 options.add(new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 0, 0, 0, 0, 3, 20, 1.3, List.of()));
             }
             return new ItemCostRule(List.copyOf(options), Map.copyOf(levelOverrides), maxLevelOverride, materialFree && options.isEmpty());
+        }
+
+        List<ItemCostOption> rawOptionsForLevel(int level, int maxLevel) {
+            ItemCostRule override = levelOverrides.get(level);
+            if (override != null) {
+                return override.rawOptionsForLevel(level, maxLevel);
+            }
+            if (level >= maxLevel && maxLevelOverride != null) {
+                return maxLevelOverride.rawOptionsForLevel(level, maxLevel);
+            }
+            return options;
         }
 
         List<List<ItemStack>> toBundles(Identifier enchantmentId, int level, int maxLevel) {
