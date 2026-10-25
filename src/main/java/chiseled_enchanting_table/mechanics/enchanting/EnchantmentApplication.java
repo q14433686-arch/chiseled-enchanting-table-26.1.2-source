@@ -408,19 +408,19 @@ public final class EnchantmentApplication {
             }
         });
 
-        if (!classic103) {
+        if (ChiseledEnchantingTableData.disenchantEnabled()) {
             EnchantmentProvenance.recordBookTransfer(sourceBookSnapshot, target, payload.enchantment_id(), enchantment_level);
             EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
-            // Transfers move (never duplicate) an entry, so the result keeps the more
-            // faded parent's generation instead of advancing it: consolidation is not
-            // a fresh copy, but a faded lineage must not be laundered through a fresh book.
-            if (target.is(Items.ENCHANTED_BOOK)) {
-                chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
-                    target,
-                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(sourceBookSnapshot));
-            }
         } else {
             EnchantmentProvenance.clearAll(target);
+        }
+        // Transfers move (never duplicate) an entry, so when template tome wear is active,
+        // the result keeps the more faded parent's generation instead of advancing it.
+        if (target.is(Items.ENCHANTED_BOOK)
+            && ChiseledEnchantingTableData.masterTomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                target,
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(sourceBookSnapshot));
         }
 
         if (conflictRefund > 0) {
