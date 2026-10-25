@@ -1,4 +1,4 @@
-commit: 54da89b83bf69f68f1466b0e10a9842bd0d13a56
+commit: 785e0fe2d71733057d502f89294693d8719cc8fe
 branch: arena/8eb3bb9e-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -77,7 +77,7 @@ ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PAS
 ConfigurationSafetyTest > classicBookUpgradeJsonCarries103ResearchMaterials() PASSED
 
 ConfigurationSafetyTest > classicFrameZeroesResonanceSubCapsAndEpiphanyPerShelfChances() STANDARD_OUT
-    [05:33:43] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+    [05:40:07] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
     java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
     	at java.base/java.nio.file.Files.provider(Files.java:103)
     	at java.base/java.nio.file.Files.exists(Files.java:2289)
@@ -293,7 +293,7 @@ RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
 RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792906410353.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792906793709.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -303,7 +303,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 19s
+BUILD SUCCESSFUL in 21s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
