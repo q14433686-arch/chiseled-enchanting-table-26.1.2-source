@@ -1,4 +1,4 @@
-commit: 275ac005797138f1a1348fb6878da8d6b80af92c
+commit: 5551acb5e6480a560d8cfeaa1b938d316a1492d8
 branch: arena/b99a37c2-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -18,293 +18,668 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:193: error: cannot find symbol
+        warnIfChiseledShelfInTag(blockLookup, CetTags.REGULAR_BOOKSHELVES);
+                                                     ^
+  symbol:   variable REGULAR_BOOKSHELVES
+  location: class CetTags
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1769: error: cannot find symbol
+        return XpCostConversion.totalPointsForLevel(X);
+                               ^
+  symbol:   method totalPointsForLevel(int)
+  location: class XpCostConversion
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:178: error: cannot find symbol
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W1_MULTIPLIER,
+                                                     ^
+  symbol:   variable APPLICABILITY_RARITY_W1_MULTIPLIER
+  location: class BundledDefaults
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:179: error: cannot find symbol
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W2_MULTIPLIER,
+                                                     ^
+  symbol:   variable APPLICABILITY_RARITY_W2_MULTIPLIER
+  location: class BundledDefaults
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:180: error: cannot find symbol
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W5_MULTIPLIER,
+                                                     ^
+  symbol:   variable APPLICABILITY_RARITY_W5_MULTIPLIER
+  location: class BundledDefaults
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:556: error: cannot find symbol
+        buf.writeDouble(ev.rarityMultiplierCommon());
+                          ^
+  symbol:   method rarityMultiplierCommon()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:557: error: cannot find symbol
+        buf.writeDouble(ev.rarityMultiplierUncommon());
+                          ^
+  symbol:   method rarityMultiplierUncommon()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:558: error: cannot find symbol
+        buf.writeDouble(ev.rarityMultiplierRare());
+                          ^
+  symbol:   method rarityMultiplierRare()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:559: error: cannot find symbol
+        buf.writeDouble(ev.rarityMultiplierVeryRare());
+                          ^
+  symbol:   method rarityMultiplierVeryRare()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:561: error: cannot find symbol
+        buf.writeDouble(ev.singleLevelScore());
+                          ^
+  symbol:   method singleLevelScore()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:562: error: cannot find symbol
+        buf.writeDouble(ev.multiLevelFloor());
+                          ^
+  symbol:   method multiLevelFloor()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:563: error: cannot find symbol
+        buf.writeDouble(ev.multiLevelSpan());
+                          ^
+  symbol:   method multiLevelSpan()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:564: error: cannot find symbol
+        buf.writeDouble(ev.multiLevelGamma());
+                          ^
+  symbol:   method multiLevelGamma()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:565: error: cannot find symbol
+        buf.writeVarInt(ev.xpLevelMin());
+                          ^
+  symbol:   method xpLevelMin()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:566: error: cannot find symbol
+        buf.writeVarInt(ev.xpLevelMax());
+                          ^
+  symbol:   method xpLevelMax()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:567: error: cannot find symbol
+        buf.writeDouble(ev.xpLevelSpan());
+                          ^
+  symbol:   method xpLevelSpan()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:568: error: cannot find symbol
+        buf.writeVarInt(ev.conservationMarginPoints());
+                          ^
+  symbol:   method conservationMarginPoints()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:569: error: cannot find symbol
+        buf.writeVarInt(ev.minNonZeroPoints());
+                          ^
+  symbol:   method minNonZeroPoints()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:618: error: cannot find symbol
+        buf.writeDouble(app.keystoneMajorFactor());
+                           ^
+  symbol:   method keystoneMajorFactor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:619: error: cannot find symbol
+        buf.writeDouble(app.keystoneMinorFactor());
+                           ^
+  symbol:   method keystoneMinorFactor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:620: error: cannot find symbol
+        buf.writeDouble(app.broadFactor());
+                           ^
+  symbol:   method broadFactor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:621: error: cannot find symbol
+        buf.writeDouble(app.baseFloor());
+                           ^
+  symbol:   method baseFloor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:622: error: cannot find symbol
+        buf.writeDouble(app.perSupportedItemSlope());
+                           ^
+  symbol:   method perSupportedItemSlope()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:623: error: cannot find symbol
+        buf.writeDouble(app.maxHeuristicFactor());
+                           ^
+  symbol:   method maxHeuristicFactor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:624: error: cannot find symbol
+        buf.writeDouble(app.broadMinItemCount());
+                           ^
+  symbol:   method broadMinItemCount()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:776: error: constructor EssenceValuation in record EssenceValuation cannot be applied to given types;
+        var lrEssence = new LibraryResonance.EssenceValuation(
+                        ^
+  required: double,double,double,double,int
+  found:    double,double,double,double,double,double,double,double,double,int,int,double,int,int
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:794: error: constructor WoodenBookshelves in record WoodenBookshelves cannot be applied to given types;
+            new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2),
+            ^
+  required: int,int,int,double
+  found:    int,int,int
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:795: error: constructor ChiseledMastery in record ChiseledMastery cannot be applied to given types;
+            new LibraryResonance.ChiseledMastery(
+            ^
+  required: MasteryScaling,TomeLifecycle
+  found:    int,int,int,double,int,double,double,double,double,double,ConsumptionMode,int,int,DepleteBehavior,boolean,int,int,int,int,int,double,double,boolean,List<Integer>,ScapegoatPricing,double,int,int,double
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:857: error: constructor ApplicabilityConfig in record ApplicabilityConfig cannot be applied to given types;
+        var appConfig = new InscriptionRitualMechanics.ApplicabilityConfig(
+                        ^
+  required: double,double,double,double,double,double,double,double,double,double
+  found:    double,double,double,double,double,double,double
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostSync.java:136: error: cannot find symbol
+                    player.displayClientMessage(
+                          ^
+  symbol:   method displayClientMessage(MutableComponent,boolean)
+  location: variable player of type ServerPlayer
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
+30 errors
 
-> Task :processResources
-> Task :classes
-
-> Task :compileClientJava
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-
-> Task :processClientResources
-> Task :clientClasses
-> Task :compileTestJava
-> Task :processTestResources NO-SOURCE
-> Task :testClasses
-
-> Task :test
-
-AuditMechanicsTest > wearImmunityCurveDecaysSmoothlyAndGenerationCapStripsImmunity() PASSED
-
-AuditMechanicsTest > tomeLockEtaIncludesCurrentAndRemainingCharges() PASSED
-
-AuditMechanicsTest > perSlotMasteryCapPreventsSingleSuperBookFromMaxingGlobalDiscount() PASSED
-
-AuditMechanicsTest > queueScaledSacrificeSkipAndActiveRitualVictimPriority() PASSED
-
-AuditMechanicsTest > timedTomeLocksExpireExactlyAtTargetWear() PASSED
-
-AuditMechanicsTest > essenceWearStepOnlyBuysBackWhatWasBurned() PASSED
-
-AuditMechanicsTest > remainingChargesRespectFadedCap() PASSED
-
-AuditMechanicsTest > tomeLockTargetsFollowWear() PASSED
-
-AuditMechanicsTest > scapegoatTokensRoundTripAndDefaultToEssence() PASSED
-
-AuditMechanicsTest > cetCustomDataStampsSchemaAndReadsLegacyUnversionedTags() PASSED
-
-AuditMechanicsTest > boundedCountsAcceptInRangeAndRejectOutside() PASSED
-
-AuditMechanicsTest > flatPricingKeepsHistoricalFullReset() PASSED
-
-AuditMechanicsTest > generationFadesCapacityWithFloorOfOne() PASSED
-
-AuditMechanicsTest > essencePricingRestoresProportionally() PASSED
-
-AuditMechanicsTest > lineageAdvancesOnCopyAndMergesToMoreFadedParent() PASSED
-
-AuditMechanicsTest > queuedInscriptionCodecRoundTripsAndMatchesLegacyStringEncoding() PASSED
-
-ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
-
-ConfigurationSafetyTest > classicBookUpgradeJsonCarries103ResearchMaterials() PASSED
-
-ConfigurationSafetyTest > classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers() STANDARD_OUT
-    [20:13:46] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
-    java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
-    	at java.base/java.nio.file.Files.provider(Files.java:103)
-    	at java.base/java.nio.file.Files.exists(Files.java:2289)
-    	at net.fabricmc.loader.impl.FabricLoaderImpl.getConfigDir(FabricLoaderImpl.java:177)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:901)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:907)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:825)
-    	at chiseled_enchanting_table.data.ChiseledEnchantingTableData.<clinit>(ChiseledEnchantingTableData.java:154)
-    	at chiseled_enchanting_table.data.ChiseledEnchantingTableData$ItemCostOption.saltedCount(ChiseledEnchantingTableData.java:2399)
-    	at chiseled_enchanting_table.ConfigurationSafetyTest.classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers(ConfigurationSafetyTest.java:144)
-    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
-    	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
-    	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
-    	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
-    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
-    	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
-    	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
-    	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
-    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
-    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
-    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
-    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
-    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
-    	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
-    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
-    	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
-    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$8(TestMethodTestDescriptor.java:217)
-    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
-    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
-    	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:156)
-    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
-    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
-    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
-    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
-    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
-    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
-    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
-    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
-    	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
-    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:160)
-    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:146)
-    	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:144)
-    	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:143)
-    	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:100)
-    	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
-    	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
-    	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
-    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
-    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
-    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
-    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
-    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
-    	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
-    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
-    	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
-    	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
-    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.processAllTestDefinitions(JUnitPlatformTestDefinitionProcessor.java:179)
-    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.access$000(JUnitPlatformTestDefinitionProcessor.java:122)
-    	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor.stop(JUnitPlatformTestDefinitionProcessor.java:116)
-    	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.stop(SuiteTestDefinitionProcessor.java:63)
-    	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
-    	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
-    	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77)
-    	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28)
-    	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19)
-    	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
-    	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88)
-    	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
-    	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:195)
-    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126)
-    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
-    	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
-    	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
-    	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
-    	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
-    	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
-    	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
-
-ConfigurationSafetyTest > classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers() PASSED
-
-ConfigurationSafetyTest > parentRuleAtomsGateOnlyTheirNaturalSubordinateSliders() PASSED
-
-ConfigurationSafetyTest > legacyClassic103JsonAndPackPolicyMigrateCleanlyToGranularAtoms() PASSED
-
-ConfigurationSafetyTest > configModalLayoutAndLayeredAssetsGuaranteeZeroOverlapAcrossResolutions() PASSED
-
-ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
-
-ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
-
-ConfigurationSafetyTest > lanHostSessionModeResolvesCleanlyWithoutBreakingSingleplayerOrDedicatedModes() PASSED
-
-ConfigurationSafetyTest > booleanControlsScanRadiiDiscountCapsAndExpertPresetTakeEffectCleanly() PASSED
-
-ConfigurationSafetyTest > allFourPresetsRoundTripRestore64BookStackAnd103Semantics() PASSED
-
-ConfigurationSafetyTest > ruleTraceCatalogCoversAllTwentyEntriesAndTogglesEveryAtomCleanly() PASSED
-
-ConfigurationSafetyTest > granularRuleAtomsOperateOrthogonallyWithoutMonolithicCrossLocking() PASSED
-
-ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
-
-EconomyAndConfigVerificationTest > configCatalogCoversAllSevenCategoriesAndRoundTripsJsonLosslessly() PASSED
-
-EconomyAndConfigVerificationTest > bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() PASSED
-
-EconomyAndConfigVerificationTest > openingSnapshotNeverDivergesFromLiveShelfSyncAtTickZero() PASSED
-
-EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
-
-EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
-
-EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
-
-EconomyAndConfigVerificationTest > highMaxLevelShelfCurveDistributesSmoothlyAndCapsScanVolume() PASSED
-
-EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning() PASSED
-
-EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
-
-EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
-
-EconomyAndConfigVerificationTest > deepRitualPersistenceSkipSlipAndInfinityRulesVerified() PASSED
-
-EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
-
-EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
-
-EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
-
-EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
-
-EconomyAndConfigVerificationTest > partBTemplateDurabilityWildPreWearUnbreakingWaiverAndCrosslineInvariants() PASSED
-
-EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
-
-EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
-
-EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
-
-EconomyAndConfigVerificationTest > ritualWaitCurveLoadReferencesAreDatapackConfigurable() PASSED
-
-EconomyAndConfigVerificationTest > queuedRitualStepsRevalidateAgainstActualItem() PASSED
-
-EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
-
-EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
-
-EconomyAndConfigVerificationTest > combineSequentialChargesEveryUpgradeOnce() PASSED
-
-EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
-
-FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
-
-FullPortRuntimeTest > configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() PASSED
-
-FullPortRuntimeTest > ritualWirePreservesMenuSessionQueueAndBlockedState() PASSED
-
-FullPortRuntimeTest > malformedPolicyNeverBecomesAnUnlockedDefault() PASSED
-
-FullPortRuntimeTest > effectiveDomainAndDirectConsumerAgreeAndFailedSaveDoesNotPublish() PASSED
-
-FullPortRuntimeTest > persistedQueueHasFiniteResourceBounds() PASSED
-
-NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
-
-NetworkCompatibilityTest > unknownActionsCannotSilentlyBecomeEnchantment() PASSED
-
-NetworkCompatibilityTest > allActionTokensAndMenuTargetedPacketsRoundTrip() PASSED
-
-NetworkCompatibilityTest > costTableConfigurationAndRowsRoundTrip() PASSED
-
-NetworkCompatibilityTest > runtimeConfigRequestAndAcknowledgementRoundTrip() PASSED
-
-NetworkCompatibilityTest > applyPayloadRejectsOutOfRangeFieldsAtConstruction() PASSED
-
-NetworkCompatibilityTest > liveUpdatesOnlyTargetTheMatchingMenu() PASSED
-
-NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNotUnmoddedPeers() PASSED
-
-NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
-
-NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
-
-NetworkCompatibilityTest > tomeDashboardAndActionPayloadsRoundTrip() PASSED
-
-RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
-
-RuleArchitectureTest > overlapUsesFastestRateIndependentOfProposalOrder() PASSED
-
-RuleArchitectureTest > foreignAndReentrantTransactionsCannotWrite() PASSED
-
-RuleArchitectureTest > acknowledgedReplacementCarriesOnlyItsOwnResidencyForward() PASSED
-
-RuleArchitectureTest > replacementAndConflictingIdentityDoNotInheritProgress() PASSED
-
-RuleArchitectureTest > invalidInputsAndBootstrapOverridesAreRejected() PASSED
-
-RuleArchitectureTest > sessionResetAndDuplicateSettlementAreSafe() PASSED
-
-RuleArchitectureTest > fullyRestoredBooksAreEvictedWithoutOngoingDirtyWrites() PASSED
-
-RuleArchitectureTest > fullLockResolvesEveryDefinedRuntimeKeyNotJustDatapackKeys() PASSED
-
-RuleArchitectureTest > unloadedWindowPausesWithoutCreditingOfflineTimeAndPersistsSnapshots() PASSED
-
-RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
-
-RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
-
-RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792959209612.json
+> Task :compileJava FAILED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792964812860.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:776: error: constructor EssenceValuation in record EssenceValuation cannot be applied to given types;
+          var lrEssence = new LibraryResonance.EssenceValuation(
+                          ^
+    required: double,double,double,double,int
+    found:    double,double,double,double,double,double,double,double,double,int,int,double,int,int
+    reason: actual and formal argument lists differ in length
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:794: error: constructor WoodenBookshelves in record WoodenBookshelves cannot be applied to given types;
+              new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2),
+              ^
+    required: int,int,int,double
+    found:    int,int,int
+    reason: actual and formal argument lists differ in length
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:795: error: constructor ChiseledMastery in record ChiseledMastery cannot be applied to given types;
+              new LibraryResonance.ChiseledMastery(
+              ^
+    required: MasteryScaling,TomeLifecycle
+    found:    int,int,int,double,int,double,double,double,double,double,ConsumptionMode,int,int,DepleteBehavior,boolean,int,int,int,int,int,double,double,boolean,List<Integer>,ScapegoatPricing,double,int,int,double
+    reason: actual and formal argument lists differ in length
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:857: error: constructor ApplicabilityConfig in record ApplicabilityConfig cannot be applied to given types;
+          var appConfig = new InscriptionRitualMechanics.ApplicabilityConfig(
+                          ^
+    required: double,double,double,double,double,double,double,double,double,double
+    found:    double,double,double,double,double,double,double
+    reason: actual and formal argument lists differ in length
+  Note: Recompile with -Xlint:deprecation for details.
+  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:193: error: cannot find symbol
+          warnIfChiseledShelfInTag(blockLookup, CetTags.REGULAR_BOOKSHELVES);
+                                                       ^
+    symbol:   variable REGULAR_BOOKSHELVES
+    location: class CetTags
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:178: error: cannot find symbol
+              chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W1_MULTIPLIER,
+                                                       ^
+    symbol:   variable APPLICABILITY_RARITY_W1_MULTIPLIER
+    location: class BundledDefaults
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:179: error: cannot find symbol
+              chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W2_MULTIPLIER,
+                                                       ^
+    symbol:   variable APPLICABILITY_RARITY_W2_MULTIPLIER
+    location: class BundledDefaults
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:180: error: cannot find symbol
+              chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W5_MULTIPLIER,
+                                                       ^
+    symbol:   variable APPLICABILITY_RARITY_W5_MULTIPLIER
+    location: class BundledDefaults
+  Note: Recompile with -Xlint:unchecked for details.
+  Note: Some input files use or override a deprecated API.
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1769: error: cannot find symbol
+          return XpCostConversion.totalPointsForLevel(X);
+                                 ^
+    symbol:   method totalPointsForLevel(int)
+    location: class XpCostConversion
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:556: error: cannot find symbol
+          buf.writeDouble(ev.rarityMultiplierCommon());
+                            ^
+    symbol:   method rarityMultiplierCommon()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:557: error: cannot find symbol
+          buf.writeDouble(ev.rarityMultiplierUncommon());
+                            ^
+    symbol:   method rarityMultiplierUncommon()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:558: error: cannot find symbol
+          buf.writeDouble(ev.rarityMultiplierRare());
+                            ^
+    symbol:   method rarityMultiplierRare()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:559: error: cannot find symbol
+          buf.writeDouble(ev.rarityMultiplierVeryRare());
+                            ^
+    symbol:   method rarityMultiplierVeryRare()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:561: error: cannot find symbol
+          buf.writeDouble(ev.singleLevelScore());
+                            ^
+    symbol:   method singleLevelScore()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:562: error: cannot find symbol
+          buf.writeDouble(ev.multiLevelFloor());
+                            ^
+    symbol:   method multiLevelFloor()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:563: error: cannot find symbol
+          buf.writeDouble(ev.multiLevelSpan());
+                            ^
+    symbol:   method multiLevelSpan()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:564: error: cannot find symbol
+          buf.writeDouble(ev.multiLevelGamma());
+                            ^
+    symbol:   method multiLevelGamma()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:565: error: cannot find symbol
+          buf.writeVarInt(ev.xpLevelMin());
+                            ^
+    symbol:   method xpLevelMin()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:566: error: cannot find symbol
+          buf.writeVarInt(ev.xpLevelMax());
+                            ^
+    symbol:   method xpLevelMax()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:567: error: cannot find symbol
+          buf.writeDouble(ev.xpLevelSpan());
+                            ^
+    symbol:   method xpLevelSpan()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:568: error: cannot find symbol
+          buf.writeVarInt(ev.conservationMarginPoints());
+                            ^
+    symbol:   method conservationMarginPoints()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:569: error: cannot find symbol
+          buf.writeVarInt(ev.minNonZeroPoints());
+                            ^
+    symbol:   method minNonZeroPoints()
+    location: variable ev of type EssenceValuation
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:618: error: cannot find symbol
+          buf.writeDouble(app.keystoneMajorFactor());
+                             ^
+    symbol:   method keystoneMajorFactor()
+    location: variable app of type ApplicabilityConfig
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:619: error: cannot find symbol
+          buf.writeDouble(app.keystoneMinorFactor());
+                             ^
+    symbol:   method keystoneMinorFactor()
+    location: variable app of type ApplicabilityConfig
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:620: error: cannot find symbol
+          buf.writeDouble(app.broadFactor());
+                             ^
+    symbol:   method broadFactor()
+    location: variable app of type ApplicabilityConfig
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:621: error: cannot find symbol
+          buf.writeDouble(app.baseFloor());
+                             ^
+    symbol:   method baseFloor()
+    location: variable app of type ApplicabilityConfig
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:622: error: cannot find symbol
+          buf.writeDouble(app.perSupportedItemSlope());
+                             ^
+    symbol:   method perSupportedItemSlope()
+    location: variable app of type ApplicabilityConfig
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:623: error: cannot find symbol
+          buf.writeDouble(app.maxHeuristicFactor());
+                             ^
+    symbol:   method maxHeuristicFactor()
+    location: variable app of type ApplicabilityConfig
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:624: error: cannot find symbol
+          buf.writeDouble(app.broadMinItemCount());
+                             ^
+    symbol:   method broadMinItemCount()
+    location: variable app of type ApplicabilityConfig
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostSync.java:136: error: cannot find symbol
+                      player.displayClientMessage(
+                            ^
+    symbol:   method displayClientMessage(MutableComponent,boolean)
+    location: variable player of type ServerPlayer
+  30 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:121)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.DefaultNodeExecutor.executeLocalTaskNode(DefaultNodeExecutor.java:55)
+	at org.gradle.execution.plan.DefaultNodeExecutor.execute(DefaultNodeExecutor.java:34)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:355)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:343)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:339)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:339)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:193: error: cannot find symbol
+        warnIfChiseledShelfInTag(blockLookup, CetTags.REGULAR_BOOKSHELVES);
+                                                     ^
+  symbol:   variable REGULAR_BOOKSHELVES
+  location: class CetTags
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1769: error: cannot find symbol
+        return XpCostConversion.totalPointsForLevel(X);
+                               ^
+  symbol:   method totalPointsForLevel(int)
+  location: class XpCostConversion
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:178: error: cannot find symbol
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W1_MULTIPLIER,
+                                                     ^
+  symbol:   variable APPLICABILITY_RARITY_W1_MULTIPLIER
+  location: class BundledDefaults
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:179: error: cannot find symbol
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W2_MULTIPLIER,
+                                                     ^
+  symbol:   variable APPLICABILITY_RARITY_W2_MULTIPLIER
+  location: class BundledDefaults
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:180: error: cannot find symbol
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W5_MULTIPLIER,
+                                                     ^
+  symbol:   variable APPLICABILITY_RARITY_W5_MULTIPLIER
+  location: class BundledDefaults
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:556: error: cannot find symbol
+        buf.writeDouble(ev.rarityMultiplierCommon());
+                          ^
+  symbol:   method rarityMultiplierCommon()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:557: error: cannot find symbol
+        buf.writeDouble(ev.rarityMultiplierUncommon());
+                          ^
+  symbol:   method rarityMultiplierUncommon()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:558: error: cannot find symbol
+        buf.writeDouble(ev.rarityMultiplierRare());
+                          ^
+  symbol:   method rarityMultiplierRare()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:559: error: cannot find symbol
+        buf.writeDouble(ev.rarityMultiplierVeryRare());
+                          ^
+  symbol:   method rarityMultiplierVeryRare()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:561: error: cannot find symbol
+        buf.writeDouble(ev.singleLevelScore());
+                          ^
+  symbol:   method singleLevelScore()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:562: error: cannot find symbol
+        buf.writeDouble(ev.multiLevelFloor());
+                          ^
+  symbol:   method multiLevelFloor()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:563: error: cannot find symbol
+        buf.writeDouble(ev.multiLevelSpan());
+                          ^
+  symbol:   method multiLevelSpan()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:564: error: cannot find symbol
+        buf.writeDouble(ev.multiLevelGamma());
+                          ^
+  symbol:   method multiLevelGamma()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:565: error: cannot find symbol
+        buf.writeVarInt(ev.xpLevelMin());
+                          ^
+  symbol:   method xpLevelMin()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:566: error: cannot find symbol
+        buf.writeVarInt(ev.xpLevelMax());
+                          ^
+  symbol:   method xpLevelMax()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:567: error: cannot find symbol
+        buf.writeDouble(ev.xpLevelSpan());
+                          ^
+  symbol:   method xpLevelSpan()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:568: error: cannot find symbol
+        buf.writeVarInt(ev.conservationMarginPoints());
+                          ^
+  symbol:   method conservationMarginPoints()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:569: error: cannot find symbol
+        buf.writeVarInt(ev.minNonZeroPoints());
+                          ^
+  symbol:   method minNonZeroPoints()
+  location: variable ev of type EssenceValuation
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:618: error: cannot find symbol
+        buf.writeDouble(app.keystoneMajorFactor());
+                           ^
+  symbol:   method keystoneMajorFactor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:619: error: cannot find symbol
+        buf.writeDouble(app.keystoneMinorFactor());
+                           ^
+  symbol:   method keystoneMinorFactor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:620: error: cannot find symbol
+        buf.writeDouble(app.broadFactor());
+                           ^
+  symbol:   method broadFactor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:621: error: cannot find symbol
+        buf.writeDouble(app.baseFloor());
+                           ^
+  symbol:   method baseFloor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:622: error: cannot find symbol
+        buf.writeDouble(app.perSupportedItemSlope());
+                           ^
+  symbol:   method perSupportedItemSlope()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:623: error: cannot find symbol
+        buf.writeDouble(app.maxHeuristicFactor());
+                           ^
+  symbol:   method maxHeuristicFactor()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:624: error: cannot find symbol
+        buf.writeDouble(app.broadMinItemCount());
+                           ^
+  symbol:   method broadMinItemCount()
+  location: variable app of type ApplicabilityConfig
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:776: error: constructor EssenceValuation in record EssenceValuation cannot be applied to given types;
+        var lrEssence = new LibraryResonance.EssenceValuation(
+                        ^
+  required: double,double,double,double,int
+  found:    double,double,double,double,double,double,double,double,double,int,int,double,int,int
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:794: error: constructor WoodenBookshelves in record WoodenBookshelves cannot be applied to given types;
+            new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2),
+            ^
+  required: int,int,int,double
+  found:    int,int,int
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:795: error: constructor ChiseledMastery in record ChiseledMastery cannot be applied to given types;
+            new LibraryResonance.ChiseledMastery(
+            ^
+  required: MasteryScaling,TomeLifecycle
+  found:    int,int,int,double,int,double,double,double,double,double,ConsumptionMode,int,int,DepleteBehavior,boolean,int,int,int,int,int,double,double,boolean,List<Integer>,ScapegoatPricing,double,int,int,double
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:857: error: constructor ApplicabilityConfig in record ApplicabilityConfig cannot be applied to given types;
+        var appConfig = new InscriptionRitualMechanics.ApplicabilityConfig(
+                        ^
+  required: double,double,double,double,double,double,double,double,double,double
+  found:    double,double,double,double,double,double,double
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostSync.java:136: error: cannot find symbol
+                    player.displayClientMessage(
+                          ^
+  symbol:   method displayClientMessage(MutableComponent,boolean)
+  location: variable player of type ServerPlayer
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+30 errors
+	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
+	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:38)
+	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:38)
+	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:46)
+	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:36)
+	at org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler.execute(DefaultToolchainJavaCompiler.java:57)
+	at org.gradle.api.tasks.compile.JavaCompile.lambda$createToolchainCompiler$3(JavaCompile.java:206)
+	at org.gradle.api.internal.tasks.compile.CleaningJavaCompiler.execute(CleaningJavaCompiler.java:53)
+	at org.gradle.api.internal.tasks.compile.incremental.IncrementalCompilerFactory.lambda$createRebuildAllCompiler$0(IncrementalCompilerFactory.java:55)
+	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:70)
+	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:44)
+	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:66)
+	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:64)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:48)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler.execute(CompileJavaBuildOperationReportingCompiler.java:48)
+	at org.gradle.api.tasks.compile.JavaCompile.performCompilation(JavaCompile.java:224)
+	at org.gradle.api.tasks.compile.JavaCompile.performIncrementalCompilation(JavaCompile.java:165)
+	at org.gradle.api.tasks.compile.JavaCompile.compile(JavaCompile.java:150)
+	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
+	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.doExecute(IncrementalTaskAction.java:45)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
+	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.execute(IncrementalTaskAction.java:26)
+	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:259)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:244)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:227)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:210)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:176)
+	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:167)
+	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:47)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:137)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:134)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:134)
+	at org.gradle.internal.execution.steps.ExecuteStep$Mutable.execute(ExecuteStep.java:80)
+	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:51)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:29)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.executeMutable(RemovePreviousOutputsStep.java:67)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.executeMutable(RemovePreviousOutputsStep.java:39)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:42)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:24)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.executeMutable(ResolveInputChangesStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.executeMutable(ResolveInputChangesStep.java:28)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:76)
+	at org.gradle.internal.Either$Right.fold(Either.java:176)
+	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:74)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:49)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.executeMutable(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.executeMutable(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveMutableCachingStateStep.executeDelegate(ResolveMutableCachingStateStep.java:70)
+	at org.gradle.internal.execution.steps.ResolveMutableCachingStateStep.executeDelegate(ResolveMutableCachingStateStep.java:32)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:69)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:37)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.executeMutable(ResolveChangesStep.java:63)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.executeMutable(ResolveChangesStep.java:34)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.executeDelegate(ValidateStep.java:79)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.executeDelegate(ValidateStep.java:65)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:99)
+	at org.gradle.internal.execution.steps.ValidateStep$Mutable.execute(ValidateStep.java:65)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.executeMutable(CaptureMutableStateBeforeExecutionStep.java:86)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.execute(CaptureMutableStateBeforeExecutionStep.java:65)
+	at org.gradle.internal.execution.steps.CaptureMutableStateBeforeExecutionStep.execute(CaptureMutableStateBeforeExecutionStep.java:45)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeWithNonEmptySources(SkipEmptyMutableWorkStep.java:210)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:90)
+	at org.gradle.internal.execution.steps.SkipEmptyMutableWorkStep.executeMutable(SkipEmptyMutableWorkStep.java:53)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.executeMutable(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.executeMutable(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.executeMutable(HandleStaleOutputsStep.java:77)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.executeMutable(HandleStaleOutputsStep.java:43)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$executeMutable$0(AssignMutableWorkspaceStep.java:34)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:305)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.executeMutable(AssignMutableWorkspaceStep.java:30)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.executeMutable(AssignMutableWorkspaceStep.java:21)
+	at org.gradle.internal.execution.steps.MutableStep.execute(MutableStep.java:26)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:56)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:38)
+	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:68)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
+	... 30 more
+
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 
@@ -312,10 +687,9 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 24s
-6 actionable tasks: 6 executed
-Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
-gradle exit code: 0
+BUILD FAILED in 23s
+1 actionable task: 1 executed
+gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
 --- compileClasspath ---
@@ -443,4 +817,4 @@ net.fabricmc.fabric-api:fabric-transitive-access-wideners-v1:8.1.1+7f80f93d4c
 net.fabricmc:fabric-loader:0.19.3
 net.fabricmc:sponge-mixin:0.17.3+mixin.0.8.7
 
-== job status: success ==
+== job status: failure ==
