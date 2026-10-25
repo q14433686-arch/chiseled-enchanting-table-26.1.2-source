@@ -16,6 +16,7 @@
 | 编号 | 分类/影响 | 复现链路与实际修改 | 可反哺范围 |
 | --- | --- | --- | --- |
 | API-26 | 26.3 专属，编译失败 | 新 `BookshelfBookFiller` 用了 `BlockEntityType.CHISELED_BOOKSHELF`；26.3 常量在 **`BlockEntityTypes`**，两处注册表查键已改。 | 26.3；26.2 须核对自身 API |
+| GUI-26 | 26.3 专属，客户端编译失败 | 新提示调用需要从 `Gui` 转到 `Gui.hud.setOverlayMessage`；新快捷键使用 `InputConstants.Type.KEYBOARD`，不再用源 `KEYSYM`。三处 overlay、两处 key type 已实改，并添加回归合同。 | 26.3；其他线按实际 API |
 | DATA-26 | 26.3 schema，进度条件失效 | 七处 recipe 进度仍使用 `recipe_id`/`recipe`；实际转为 **`recipes` 数组**，包括 crafted/unlocked，不只更新某一个文件。 | 26.3；其他线按原版 schema |
 | RULE-01 | 共性，配置静默失效 | `tome_pages` 六项已被 Codec 读入，但来源提取器没有登记，`rawRuntimeConfig` 也没复制；随后 `withRuntimeOverrides` 覆盖回默认。补齐六键来源与六字段 raw bridge，验证 raw → resolver → configuration → domain/snapshot 一致。 | 26.1.2、26.2 建议同步 |
 | RULE-02 | 共性，数据包失去治理权 | 任意外部包只要 JSON 等于 bundled 就被当作 own，无法用默认值覆盖非默认本地偏好。内容比较现在仅给 `fabric`/`vanilla` 聚合内置来源兜底；明确的 own 来源保留，普通 external 始终参与来源判定。 | 两条其他线建议同步 |
@@ -70,7 +71,7 @@
 
 本地可执行、已通过：
 
-- `python3 scripts/test_sync_26_3.py`：15 项。
+- `python3 scripts/test_sync_26_3.py`：16 项。
 - `python3 scripts/ci_static_checks.py`：8 组，14 Mixin、976 key × 11 语言、资源/生成默认值合同。
 - `python3 scripts/compat_check.py`：PASS；沙箱没有 MC jar，因此本地 registry/tag Tier-2 两项跳过，不能声称查过。
 - `git diff --check`。
@@ -80,6 +81,8 @@
 远程最新源码的编译、JUnit、可选依赖关闭、真实服务端 smoke **正在验证，完成后在本节补证据**。较早源码 `5a1db65`、`07a4c7f` 的真实服务器 world-load/reload 与既有仪式/隔离/输入返还探针已通过，不等同于最终源码全通过。
 
 未人工验证：Iris 实机/F3+T、Creative 与漏斗的玩家交互、GUI/IME/缩放、真实多客户端/LAN、JEI/REI 返回菜单、长时间性能与第三方组合。不得把 headless smoke 或源码断言写成这些项目通过。
+
+CI 诊断同时修复了大日志回写：base64 不再作为单个命令行参数（会触发 Linux 参数长度上限），改用 JSON 请求文件；JUnit XML 数量与失败详情写入可取回日志。
 
 ## 5. 反哺其他两个分支
 

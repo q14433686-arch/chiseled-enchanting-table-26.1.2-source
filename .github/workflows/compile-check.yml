@@ -78,6 +78,7 @@ jobs:
           ./gradlew compileJava compileClientJava test --console=plain --stacktrace --no-daemon \
             >> build-reports/compile-java.log 2>&1 || status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
+          python3 scripts/summarize_test_results.py >> build-reports/compile-java.log 2>&1
           # 把「浮动坐标」这次实际解析成了什么记进日志：jei_version=latest.release 与
           # rei_version=26.3.+ 都会随上游发布漂移，而沙箱读不到 maven，也读不到 Actions 的
           # 日志 blob。没有这一段，「昨天能编、今天不能编」无从追溯，也没法把它们钉成确切版本。
