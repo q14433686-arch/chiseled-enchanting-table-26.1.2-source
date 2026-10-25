@@ -1,3 +1,16 @@
+# Upstream Historical Scratchpad (`TODO.md` Archive)
+
+> **Historical upstream archive.** This document preserves the original `TODO.md` written by
+> [Sacramentix](https://github.com/Sacramentix/chiseled-enchanting-table) prior to this unofficial
+> Minecraft `26.1.2` community port. It is retained solely for historical attribution and does
+> **not** represent the open roadmap of this port (all items below — data-driven configuration,
+> in-game configuration, UI scrollbar click jumping, chest/bookshelf loot rework, 11-locale
+> translations, book-swap level handling, and 29 advancements — are implemented in `1.1.0`).
+> For the active 26.1.2 port backlog, see [`../../NEXT_TASK.md`](../../NEXT_TASK.md).
+
+---
+
+```text
 LIST OF THING! :
 
 - ✅ Create a new Chiseled enchanting table that work with chiseled bookshelf
@@ -47,3 +60,4 @@ setup translation
 handle case book swap enchant level
 
 - Chiseled enchanting table should work with lectern ?
+```

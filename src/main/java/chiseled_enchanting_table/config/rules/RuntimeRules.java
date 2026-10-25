@@ -56,6 +56,13 @@ public final class RuntimeRules {
         var finalDraft = coherent.toDraft();
         for (var option : ConfigCatalog.ALL_OPTIONS) if (!option.key().equals("override_datapacks"))
             normalized.put(option.key(), option.get(finalDraft));
+        // R2-01: startup-only keys (enchanted_book_stack_size) keep their STARTUP
+        // effective value in the rule snapshot. The draft may carry a different
+        // preference (e.g. the classic preset suggests 64); it is persisted in
+        // `coherent` and applies after restart, but must not trip RuleBook's
+        // "Normalization changed actual bootstrap value" validation at runtime.
+        normalized.put("enchanted_book_stack_size",
+            proposal.snapshot().rule("enchanted_book_stack_size").effective());
         return new Prepared(book.withValidatedValues(proposal, normalized), coherent);
     }
     public static synchronized void commit(Prepared prepared, Runnable atomicWriter) {

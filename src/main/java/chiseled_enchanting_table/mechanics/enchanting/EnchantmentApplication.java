@@ -71,7 +71,7 @@ public final class EnchantmentApplication {
                     break;
                 }
             }
-            if (!exist && existingSameLevel >= 1) {
+            if (!exist && existingSameLevel >= 1 && handler.allowsDirectTierUpgrade()) {
                 exist = handler.canDirectUpgradeExistingEnchantment(enchantment, payload.enchantment_id(), existingSameLevel, enchantment_level);
             }
         }
@@ -142,20 +142,27 @@ public final class EnchantmentApplication {
             tablePos,
             shelfCfg
         );
-        // Iron Rule #2: bind Infinity flag AND qualification load L strictly to the exact Master Tome consumed by THIS step!
+        // Iron Rule #2: bind wear-immunity flag AND qualification load L (max of chosen tome load
+        // and library-wide Sigma L across active wear-immune Master Tomes) to this step!
         boolean usedInfinityTome = masterTomeUsed && resolvedWear.usedInfinityTome();
-        double infinityTomeLoad = usedInfinityTome
+        double singleTomeLoad = usedInfinityTome
             ? chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeInfinityTomeQualificationLoad(
                 handler.ritualConfig(),
+                handler.libraryResonanceConfig(),
                 resolvedWear.chosenTomeSnapshot()
             )
             : 0.0;
+        double infinityTomeLoad = usedInfinityTome
+            ? Math.max(singleTomeLoad, ritualScan.totalWearImmuneLoad())
+            : 0.0;
         int maxLvl = Math.max(1, enchantment.value().getMaxLevel());
         double appFactor = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeApplicabilityFactor(
-            payload.enchantment_id(),
+            handler.ritualConfig(),
             enchantment
         );
-        int waitTicks = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
+        boolean ritualQueueEnabled = handler.isRitualQueueEnabled();
+        boolean provenanceEnabled = handler.isProvenanceEnabled();
+        int waitTicks = !ritualQueueEnabled ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
             handler.ritualConfig(),
             ritualScan.totalDetectedBookshelves(),
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.medianShelfGate(shelfCfg),
@@ -165,11 +172,7 @@ public final class EnchantmentApplication {
             appFactor
         );
 
-        // Generation fade: a shelf-tome transcription onto a book target produces a
-        // copy one generation below the exact tome this step consumed (snapshot-bound,
-        // same discipline as the Infinity-load binding above). Gear targets and
-        // direct/epiphany inscriptions have no parent tome and keep -1 (no stamp).
-        int inheritedGeneration = (masterTomeUsed && targetWasBook
+        int inheritedGeneration = (provenanceEnabled && masterTomeUsed && targetWasBook
             && resolvedWear.chosenTomeSnapshot() != null
             && !resolvedWear.chosenTomeSnapshot().isEmpty())
             ? chiseled_enchanting_table.mechanics.resonance.TomeWearData.childGeneration(
@@ -231,7 +234,9 @@ public final class EnchantmentApplication {
         }
 
         // Headless / synthetic non-BE fallback path
-        double slipChance = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
+        // 1.0.3 Classic: transcription slip («抄错») is a post-1.0.3 ritual mechanic;
+        // classic inscriptions always land at the exact paid level.
+        double slipChance = !ritualQueueEnabled ? 0.0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
             handler.ritualConfig(),
             ritualScan.maxOverloadedInfinityTomeEnchants(),
             ritualScan.totalDetectedBookshelves()
@@ -269,10 +274,14 @@ public final class EnchantmentApplication {
             }
         });
 
-        EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, finalLevel);
-        EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
-        if (inheritedGeneration >= 0 && target.is(Items.ENCHANTED_BOOK)) {
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(target, inheritedGeneration);
+        if (provenanceEnabled) {
+            EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, finalLevel);
+            EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+            if (inheritedGeneration >= 0 && target.is(Items.ENCHANTED_BOOK)) {
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(target, inheritedGeneration);
+            }
+        } else {
+            EnchantmentProvenance.clearAll(target);
         }
 
         if (conflictRefund > 0) {
@@ -280,7 +289,9 @@ public final class EnchantmentApplication {
         }
 
         finish(handler);
-        if (masterTomeUsed && MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(payload.enchantment_id())) {
+        if (masterTomeUsed
+            && (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(payload.enchantment_id())
+                || chiseled_enchanting_table.mechanics.resonance.TomeWearData.isWearImmuneEnchantment(enchantment))) {
             Advancement.give(handler.player, "eternal_codex");
         }
         if (consumedEpiphany) {
@@ -351,12 +362,17 @@ public final class EnchantmentApplication {
 
         ItemStack remainderBook;
         if (EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook).isEmpty()) {
-            remainderBook = new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1);
-        } else {
-            EnchantmentProvenance.pruneToCurrentEnchantments(
-                updatedSingleBook,
-                EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook)
+            remainderBook = new ItemStack(
+                handler.returnsPlainDrainedBook() ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
+                1
             );
+        } else {
+            if (handler.isProvenanceEnabled()) {
+                EnchantmentProvenance.pruneToCurrentEnchantments(
+                    updatedSingleBook,
+                    EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook)
+                );
+            }
             remainderBook = updatedSingleBook;
         }
         if (enchanted_book.getCount() <= 1) {
@@ -392,12 +408,17 @@ public final class EnchantmentApplication {
             }
         });
 
-        EnchantmentProvenance.recordBookTransfer(sourceBookSnapshot, target, payload.enchantment_id(), enchantment_level);
-        EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
-        // Transfers move (never duplicate) an entry, so the result keeps the more
-        // faded parent's generation instead of advancing it: consolidation is not
-        // a fresh copy, but a faded lineage must not be laundered through a fresh book.
-        if (target.is(Items.ENCHANTED_BOOK)) {
+        if (ChiseledEnchantingTableData.disenchantEnabled()) {
+            EnchantmentProvenance.recordBookTransfer(sourceBookSnapshot, target, payload.enchantment_id(), enchantment_level);
+            EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+        } else {
+            EnchantmentProvenance.clearAll(target);
+        }
+        // Transfers move (never duplicate) an entry, so when template tome wear is active,
+        // the result keeps the more faded parent's generation instead of advancing it.
+        if (target.is(Items.ENCHANTED_BOOK)
+            && ChiseledEnchantingTableData.libraryResonanceConfig().tomeConsumptionMode()
+                == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
             chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
                 target,
                 chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(sourceBookSnapshot));

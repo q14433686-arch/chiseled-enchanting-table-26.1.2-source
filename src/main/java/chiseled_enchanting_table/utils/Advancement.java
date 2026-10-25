@@ -14,8 +14,8 @@ import net.minecraft.world.level.Level;
 public class Advancement {
     public static final String DISENCHANT_SACRIFICE = "sacrifice_depleted_tomes";
     public static final String HOW_MUCH_LONGER = "how_much_longer";
-    public static final int DISENCHANT_SACRIFICE_REQUIRED = 12;
-    public static final int TOME_PAGE_REQUIRED_SHELVES = 4;
+    public static final int DISENCHANT_SACRIFICE_REQUIRED = chiseled_enchanting_table.BundledDefaults.SACRIFICE_REQUIRED;
+    public static final int TOME_PAGE_REQUIRED_SHELVES = chiseled_enchanting_table.BundledDefaults.TOME_PAGE_REQUIRED_SHELVES;
 
     public static void give(Player player, String name) {
         if (!(player instanceof ServerPlayer serverPlayer)) return;

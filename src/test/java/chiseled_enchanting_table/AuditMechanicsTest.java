@@ -194,4 +194,123 @@ class AuditMechanicsTest {
             buf.release();
         }
     }
+
+    // ---------- 2026-10-25 balance & audit additions ----------
+
+    @Test void wearImmunityCurveDecaysSmoothlyAndGenerationCapStripsImmunity() {
+        var cfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
+        assertEquals(4, cfg.wearImmuneFullWaiverMaxEnchants());
+        assertEquals(0.06, cfg.wearImmuneOverloadWaiverDecay(), 1e-9);
+        assertEquals(2, cfg.wearImmuneMaxGeneration());
+        assertEquals(3.5, cfg.maxMasteryUnitsPerSlot(), 1e-9);
+
+        // N = 1..4 -> 100% waiver; N = 5 -> 94%; N = 10 -> 64%; N = 20 -> clamped at floor 30%
+        for (int n = 1; n <= 4; n++) {
+            assertEquals(1.0, TomeWearData.computeWearImmuneWaiverChance(cfg, n), 1e-9);
+        }
+        assertEquals(0.94, TomeWearData.computeWearImmuneWaiverChance(cfg, 5), 1e-9);
+        assertEquals(0.88, TomeWearData.computeWearImmuneWaiverChance(cfg, 6), 1e-9);
+        assertEquals(0.64, TomeWearData.computeWearImmuneWaiverChance(cfg, 10), 1e-9);
+        assertEquals(0.30, TomeWearData.computeWearImmuneWaiverChance(cfg, 20), 1e-9);
+
+        assertTrue(TomeWearData.hasEffectiveWearImmunity(true, 0, cfg.wearImmuneMaxGeneration()));
+        assertTrue(TomeWearData.hasEffectiveWearImmunity(true, 2, cfg.wearImmuneMaxGeneration()));
+        assertFalse(TomeWearData.hasEffectiveWearImmunity(true, 3, cfg.wearImmuneMaxGeneration()));
+
+        // Bug 1 (gen3_deduct_one): #wear_immune books keep 4/4 max uses across Gen 0..2,
+        // then deduct 1 per generation starting at Gen 3 (Gen 3 -> 3/4, Gen 4 -> 2/4, Gen 5+ -> 1/4).
+        assertEquals(4, TomeWearData.effectiveMaxUses(4, 0, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(4, TomeWearData.effectiveMaxUses(4, 1, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(4, TomeWearData.effectiveMaxUses(4, 2, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(3, TomeWearData.effectiveMaxUses(4, 3, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(2, TomeWearData.effectiveMaxUses(4, 4, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(1, TomeWearData.effectiveMaxUses(4, 5, true, cfg.wearImmuneMaxGeneration()));
+        assertEquals(1, TomeWearData.effectiveMaxUses(4, 12, true, cfg.wearImmuneMaxGeneration()));
+        // Mortal books deduct from Gen 1 as before (4 -> 3 -> 2 -> 1).
+        assertEquals(4, TomeWearData.effectiveMaxUses(4, 0, false, cfg.wearImmuneMaxGeneration()));
+        assertEquals(3, TomeWearData.effectiveMaxUses(4, 1, false, cfg.wearImmuneMaxGeneration()));
+        assertEquals(2, TomeWearData.effectiveMaxUses(4, 2, false, cfg.wearImmuneMaxGeneration()));
+        assertEquals(1, TomeWearData.effectiveMaxUses(4, 3, false, cfg.wearImmuneMaxGeneration()));
+    }
+
+    @Test void cetCustomDataStampsSchemaAndReadsLegacyUnversionedTags() {
+        var legacyTag = new net.minecraft.nbt.CompoundTag();
+        legacyTag.putInt("cet_tome_wear", 2);
+        legacyTag.putInt("cet_generation", 3);
+        assertEquals(0, chiseled_enchanting_table.utils.CetCustomData.readSchemaVersion(legacyTag));
+        assertEquals(2, legacyTag.getIntOr("cet_tome_wear", 0));
+
+        chiseled_enchanting_table.utils.CetCustomData.normalizeSchemaTag(legacyTag);
+        assertEquals(
+            chiseled_enchanting_table.utils.CetCustomData.CURRENT_SCHEMA_VERSION,
+            chiseled_enchanting_table.utils.CetCustomData.readSchemaVersion(legacyTag)
+        );
+
+        legacyTag.remove("cet_tome_wear");
+        legacyTag.remove("cet_generation");
+        chiseled_enchanting_table.utils.CetCustomData.normalizeSchemaTag(legacyTag);
+        assertFalse(legacyTag.contains(chiseled_enchanting_table.utils.CetCustomData.NBT_SCHEMA_KEY));
+    }
+
+    @Test void queuedInscriptionCodecRoundTripsAndMatchesLegacyStringEncoding() {
+        var steps = java.util.List.of(
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
+                net.minecraft.resources.Identifier.withDefaultNamespace("sharpness"), 5, 4, true, false, 12, false
+            ),
+            new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
+                net.minecraft.resources.Identifier.withDefaultNamespace("infinity"), 1, 0, false, true, 30, true
+            )
+        );
+        var listCodec = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription.CODEC.listOf();
+        var encoded = listCodec.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, steps).getOrThrow();
+        var decoded = listCodec.parse(net.minecraft.nbt.NbtOps.INSTANCE, encoded).getOrThrow();
+        assertEquals(steps, decoded);
+        String legacyWire = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.serializeQueue(steps);
+        assertEquals(steps, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.deserializeQueue(legacyWire));
+    }
+
+    @Test void perSlotMasteryCapPreventsSingleSuperBookFromMaxingGlobalDiscount() {
+        var cfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT;
+        // One super-book carrying 16 max-level enchants in a single slot is capped at 3.5 units (+4% instead of +20%)
+        double singleSlotCapped = chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .capSingleSlotMasteryUnits(cfg, 16.0);
+        assertEquals(3.5, singleSlotCapped, 1e-9);
+        assertEquals(4, chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .globalMasteryDiscountPercent(cfg, singleSlotCapped));
+
+        // Spreading max-level enchants across 5 separate slots reaches 17.5 units -> full 20% global mastery discount
+        double fiveSlotsSum = 0.0;
+        for (int i = 0; i < 5; i++) {
+            fiveSlotsSum += chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+                .capSingleSlotMasteryUnits(cfg, 3.5);
+        }
+        assertEquals(20, chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .globalMasteryDiscountPercent(cfg, fiveSlotsSum));
+    }
+
+    @Test void queueScaledSacrificeSkipAndActiveRitualVictimPriority() {
+        var rCfg = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT;
+        // Single step caps at 15 levels; 4 queued steps cap at 15 + 3 * 4 = 27 levels; huge queue caps at 255 levels
+        assertEquals(15, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSacrificeXpLevels(rCfg, 500_000L, 1));
+        assertEquals(27, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSacrificeXpLevels(rCfg, 500_000L, 4));
+        assertEquals(255, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
+            .computeSacrificeXpLevels(rCfg, 10_000_000L, 100));
+
+        // Cheap unrelated scapegoat book (backsActiveRitual = false) must NOT shield the tome backing the active ritual!
+        var unrelatedDecoy = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 0, 1, 0.10, 0.05, false, false
+        );
+        var activeBackingTome = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.TomeCandidate(
+            net.minecraft.core.BlockPos.ZERO, 1, 3, 1.00, 0.80, false, true
+        );
+        assertEquals(
+            activeBackingTome,
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.selectDegradationVictim(
+                java.util.List.of(unrelatedDecoy, activeBackingTome)
+            ),
+            "Active-ritual-backing tome must degrade before an unrelated decoy book"
+        );
+    }
 }

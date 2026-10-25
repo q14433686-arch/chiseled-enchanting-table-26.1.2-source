@@ -23,6 +23,30 @@ import org.jetbrains.annotations.Nullable;
 public final class TomeLockGuards {
     private TomeLockGuards() {}
 
+    /** Clears all tome locks across every slot of {@code shelf} before items leave the block. */
+    public static void unlockAllShelfTomes(ChiseledBookShelfBlockEntity shelf) {
+        if (shelf == null) {
+            return;
+        }
+        boolean changed = false;
+        for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
+            ItemStack slotStack = shelf.getItem(slot);
+            if (!slotStack.isEmpty() && TomeLockData.unlock(slotStack)) {
+                changed = true;
+            }
+        }
+        if (changed) {
+            shelf.setChanged();
+        }
+    }
+
+    /** Clears all tome locks if {@code pos} currently holds a {@link ChiseledBookShelfBlockEntity}. */
+    public static void unlockAllShelfTomesAt(Level level, BlockPos pos) {
+        if (level != null && pos != null && level.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf) {
+            unlockAllShelfTomes(shelf);
+        }
+    }
+
     public static void init() {
         PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
             if (world.isClientSide() || !state.is(Blocks.CHISELED_BOOKSHELF)) {
@@ -32,11 +56,14 @@ public final class TomeLockGuards {
                 return true;
             }
             if (player.getAbilities().instabuild) {
+                unlockAllShelfTomes(shelf);
                 return true;
             }
-            // Configurable (tome_pages.locked_shelf_breakable, default on): shelves with
-            // locked tomes may be broken; the books drop with their locks intact.
-            if (chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().lockedShelfBreakable()) {
+            var lrCfg = LibraryResonance.configForSide(world.isClientSide());
+            if (lrCfg.lockedShelfBreakable()) {
+                // Clear tome locks automatically when books drop from a broken chiseled bookshelf
+                // so dropped books never carry orphaned shelf-lock metadata into inventories.
+                unlockAllShelfTomes(shelf);
                 return true;
             }
             for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
@@ -50,12 +77,13 @@ public final class TomeLockGuards {
                     return false;
                 }
             }
+            unlockAllShelfTomes(shelf);
             return true;
         });
 
-        // Field feedback 2026-10-24 (round 2): the ContainerHelper mixin guards automation,
-        // but a manual right-click on the shelf front bypassed it. Block taking a locked
-        // book out by hand as well, and tell the player how long the lock lasts.
+        // Manual right-click guard on the shelf front: block taking an effectively locked book
+        // out by hand (in non-Creative mode when configured), and strip any stale lock from a
+        // hand-held book before inserting it into an empty shelf slot.
         UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
             if (hand != net.minecraft.world.InteractionHand.MAIN_HAND) {
                 return InteractionResult.PASS;
@@ -63,12 +91,6 @@ public final class TomeLockGuards {
             BlockPos pos = hitResult.getBlockPos();
             BlockState state = world.getBlockState(pos);
             if (!state.is(Blocks.CHISELED_BOOKSHELF)) {
-                return InteractionResult.PASS;
-            }
-            if (player.getAbilities().instabuild) {
-                return InteractionResult.PASS;
-            }
-            if (!chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().lockedBookExtractionBlocked()) {
                 return InteractionResult.PASS;
             }
             if (!(world.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf)) {
@@ -79,8 +101,21 @@ public final class TomeLockGuards {
                 return InteractionResult.PASS;
             }
             ItemStack stack = shelf.getItem(slot);
-            if (stack.isEmpty() || !stack.is(Items.ENCHANTED_BOOK)
-                || !TomeLockData.isEffectivelyLocked(stack)) {
+            if (stack.isEmpty()) {
+                ItemStack held = player.getItemInHand(hand);
+                if (!world.isClientSide() && !held.isEmpty() && TomeLockData.hasLock(held)) {
+                    TomeLockData.unlock(held);
+                }
+                return InteractionResult.PASS;
+            }
+            if (player.getAbilities().instabuild) {
+                return InteractionResult.PASS;
+            }
+            var lrCfg = LibraryResonance.configForSide(world.isClientSide());
+            if (!lrCfg.lockedBookExtractionBlocked()) {
+                return InteractionResult.PASS;
+            }
+            if (!stack.is(Items.ENCHANTED_BOOK) || !TomeLockData.isEffectivelyLocked(stack)) {
                 return InteractionResult.PASS;
             }
             if (!world.isClientSide()
@@ -163,20 +198,14 @@ public final class TomeLockGuards {
         BlockPos best = null;
         double bestDist = Double.MAX_VALUE;
         var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
-        int rx = sgCfg == null ? 3 : Math.max(1, sgCfg.horizontalScanRadius());
-        int ry = sgCfg == null ? 2 : Math.max(0, sgCfg.verticalScanRadius());
-        for (int dx = -rx; dx <= rx; dx++) {
-            for (int dy = -ry; dy <= ry; dy++) {
-                for (int dz = -rx; dz <= rx; dz++) {
-                    BlockPos candidate = shelfPos.offset(dx, dy, dz);
-                    if (!level.hasChunkAt(candidate)) continue;
-                    if (level.getBlockState(candidate).is(BlockRegistry.CHISELED_ENCHANTING_TABLE)) {
-                        double d = dx * dx + dy * dy + dz * dz;
-                        if (d < bestDist) {
-                            bestDist = d;
-                            best = candidate.immutable();
-                        }
-                    }
+        for (BlockPos offset : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(sgCfg)) {
+            BlockPos candidate = shelfPos.offset(offset);
+            if (!level.hasChunkAt(candidate)) continue;
+            if (level.getBlockState(candidate).is(BlockRegistry.CHISELED_ENCHANTING_TABLE)) {
+                double d = offset.distSqr(BlockPos.ZERO);
+                if (d < bestDist) {
+                    bestDist = d;
+                    best = candidate.immutable();
                 }
             }
         }
