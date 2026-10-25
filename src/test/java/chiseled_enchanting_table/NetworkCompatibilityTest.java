@@ -241,7 +241,10 @@ class NetworkCompatibilityTest {
         assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE.id().getPath().endsWith(revision));
         assertEquals("apply_chiseled_enchantment",
             chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_TYPE.id().getPath());
-        assertTrue(chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_PROBES.size() >= 7);
+        assertEquals(chiseled_enchanting_table.menu.EnchantingProtocol.CURRENT_REVISION_NUMBER - 8,
+            chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_PROBES.size());
+        assertEquals(chiseled_enchanting_table.menu.EnchantingProtocol.CURRENT_REVISION_NUMBER,
+            chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_COST_PROBES.size());
         assertTrue(chiseled_enchanting_table.menu.EnchantingProtocol.stackSizeIncompatible(16, 64));
         assertFalse(chiseled_enchanting_table.menu.EnchantingProtocol.stackSizeIncompatible(64, 64));
         roundTrip(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.CODEC,

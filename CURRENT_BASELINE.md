@@ -13,6 +13,14 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
+## Latest synchronization — 2026-10-26 (supersedes historical rounds below)
+
+- Source locked to **`9f0e13bd75e31f7d1d8a569302d0f57abd2ce840`**, compared against previous source **`3e61f5de3ba7679ccbc92b73443dead149c96840`** and target **`1f2dd036ff35ea72712240b312a9c9b7e4e249bf`**.
+- Release remains **1.1.0 / MC 26.3**; wire is **`26_3_revision_11`**, not the source branch's revision_17. Update both ends.
+- Full tome/page/preset/data refactors integrated with 26.3 APIs preserved. Additional fixes cover six silent datapack overrides, external default-pinning packs, isolated loot-build inputs and failed reloads, hard wire-byte bounds, Creative shelf extraction, particle lifecycle and Iris F3+T invalidation.
+- [Seven-path audit, cross-branch feedback and validation boundaries](docs/reports/SYNC_9F0E13B_SEVEN_PATH_AUDIT_2026_10_26.md). Latest remote verification is recorded there; historical run counts below are not evidence for this synchronization.
+- Work is on the current Arena branch; no new PR or merge has been requested/performed for this round.
+
 ## Current integrated baseline — option 3, source 3e61f5d
 
 The **entire** 26.1.2 gameplay/resource delta through **`3e61f5de3ba7679ccbc92b73443dead149c96840`** (PR #17/#18) is integrated on the current development branch, with architecture-first hardening. It is no longer a foundation-only change.

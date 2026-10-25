@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Headless JUnit verification suite for the repository technical, code, localization,
- * and data-driven boundary audit fixes (revision_17).
+ * and data-driven boundary audit fixes (26.3 revision_11).
  */
 class AuditRoundTwoTest {
 
