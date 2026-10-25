@@ -45,27 +45,27 @@ class AuditRoundTwoTest {
 
         assertTrue(buf.insertCodePoint(rocket.codePointAt(0)));
         assertTrue(buf.insertText("A纂" + rareHan));
-        assertEquals(rocket + "A纂" + rareHan, buf.value());
+        assertEquals(rocket + "A纂" + rareHan, buf.text());
         assertEquals(4, buf.codePointLength());
-        assertEquals(6, buf.value().length(), "UTF-16 char length includes 2 surrogate pairs");
+        assertEquals(6, buf.text().length(), "UTF-16 char length includes 2 surrogate pairs");
 
         // Stepping left once from end must step across both UTF-16 surrogates of U+20BB7
-        assertTrue(buf.moveCursorLeft());
-        assertEquals(4, buf.cursorIndex(), "Cursor must land cleanly before high surrogate, never mid-pair");
+        buf.moveByCodePoints(-1, false);
+        assertEquals(4, buf.cursor(), "Cursor must land cleanly before high surrogate, never mid-pair");
         assertTrue(buf.insertCodePoint('!'));
-        assertEquals(rocket + "A纂!" + rareHan, buf.value());
+        assertEquals(rocket + "A纂!" + rareHan, buf.text());
 
         // Forward delete removes the entire trailing supplementary code point U+20BB7
         assertTrue(buf.deleteForward());
-        assertEquals(rocket + "A纂!", buf.value());
+        assertEquals(rocket + "A纂!", buf.text());
 
         // Move to index after rocket and backspace: removes entire U+1F680 surrogate pair
-        buf.moveCursorToStart();
-        assertTrue(buf.moveCursorRight());
-        assertEquals(2, buf.cursorIndex());
+        buf.moveHome(false);
+        buf.moveByCodePoints(1, false);
+        assertEquals(2, buf.cursor());
         assertTrue(buf.deleteBackward());
-        assertEquals("A纂!", buf.value());
-        assertEquals(0, buf.cursorIndex());
+        assertEquals("A纂!", buf.text());
+        assertEquals(0, buf.cursor());
 
         // Code-point cap counts Unicode code points rather than UTF-16 char units
         buf.clear();
@@ -73,7 +73,7 @@ class AuditRoundTwoTest {
             assertTrue(buf.insertCodePoint(rocket.codePointAt(0)));
         }
         assertEquals(6, buf.codePointLength());
-        assertEquals(12, buf.value().length());
+        assertEquals(12, buf.text().length());
         assertFalse(buf.insertCodePoint('X'), "7th code point must be rejected at maxCodePoints=6");
     }
 
