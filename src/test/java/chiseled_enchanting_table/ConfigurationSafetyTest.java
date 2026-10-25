@@ -179,7 +179,7 @@ class ConfigurationSafetyTest {
             assertEquals(Identifier.withDefaultNamespace("bone"), smite1Opts.getFirst().itemId());
             var smite5Opts = ChiseledEnchantingTableData.rawItemCostOptions(smiteId, 5, 5);
             assertFalse(smite5Opts.isEmpty(), "1.0.3 cost table must expose Smite V options");
-            assertFalse(smite5Opts.getFirst().additionalCosts().isEmpty(),
+            assertFalse(smite5Opts.getFirst().extras().isEmpty(),
                 "1.0.3 Smite V rule must preserve specialty additional material costs (Bones / Rotten Flesh)");
             assertNotNull(smite5);
 
