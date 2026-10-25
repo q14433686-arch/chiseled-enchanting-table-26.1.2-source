@@ -80,6 +80,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private Draft draft;
 
     private CategoryId activeCategory = CategoryId.GENERAL;
+    // Pseudo-page (not a seventh catalog category): every option the 1.0.3
+    // Classic profile touches, collected in one place and editable there.
+    private boolean classicPage = false;
     private boolean filterModifiedOnly = false;
     private float scrollOffset = 0.0f;
     private float maxScroll = 0.0f;
@@ -198,7 +201,25 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 .filter(o -> o.isModifiedFromDefault(this.draft))
                 .toList();
         }
+        if (this.classicPage) {
+            return ConfigCatalog.ALL_OPTIONS.stream()
+                .filter(o -> "classic_1_0_3_mode".equals(o.key())
+                    || ConfigCatalog.CLASSIC_LOCKED_KEYS.contains(o.key()))
+                .toList();
+        }
         return ConfigCatalog.optionsInCategory(this.activeCategory);
+    }
+
+    private OptionAvailability availFor(OptionEntry entry) {
+        OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
+        // On the Classic merged page the classic-locked rows are the point of
+        // the page: they stay editable (values are live preferences; the
+        // mechanisms themselves remain gated on the master switch).
+        if (this.classicPage && this.sessionMode.writable()
+            && "config.chiseled_enchanting_table.reason.classic_1_0_3".equals(avail.inactiveReasonKey())) {
+            return new OptionAvailability(true, true, null, avail.effectScope(), avail.modifiedFromDefault());
+        }
+        return avail;
     }
 
     private Draft displayedDraft(OptionEntry entry) {
@@ -351,13 +372,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         CategoryId[] cats = CategoryId.values();
         int catStartY = filterY + filterH + 5;
         int availCatH = Math.max(96, railH - (catStartY - railY) - 4);
-        int catStepY = availCatH / cats.length;
+        int catStepY = availCatH / (cats.length + 1);
         int catBtnH = Math.max(15, Math.min(25, catStepY - 2));
 
         for (int i = 0; i < cats.length; i++) {
             CategoryId cat = cats[i];
             int cy = catStartY + i * catStepY;
-            boolean selected = !this.filterModifiedOnly && this.activeCategory == cat;
+            boolean selected = !this.filterModifiedOnly && !this.classicPage && this.activeCategory == cat;
             boolean over = mouseX >= railX + 3 && mouseX < railX + railW - 3 && mouseY >= cy && mouseY < cy + catBtnH;
             int modInCat = (int) ConfigCatalog.optionsInCategory(cat).stream()
                 .filter(o -> o.isModifiedFromDefault(this.draft))
@@ -376,6 +397,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             final CategoryId chosen = cat;
             this.hitBoxes.add(new HitBox(railX + 3, cy, railW - 6, catBtnH, () -> {
                 this.filterModifiedOnly = false;
+                this.classicPage = false;
                 this.activeCategory = chosen;
                 this.scrollOffset = 0.0f;
                 playClick(1.0f);
@@ -384,6 +406,32 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 pendingTooltip = List.of(
                     Component.translatable(cat.titleKey()).withStyle(ChatFormatting.GOLD),
                     Component.translatable(cat.subtitleKey()).withStyle(ChatFormatting.GRAY)
+                );
+            }
+        }
+
+        {
+            int cy = catStartY + cats.length * catStepY;
+            boolean selected = !this.filterModifiedOnly && this.classicPage;
+            boolean over = mouseX >= railX + 3 && mouseX < railX + railW - 3 && mouseY >= cy && mouseY < cy + catBtnH;
+            ctx.fill(railX + 3, cy, railX + railW - 3, cy + catBtnH, selected ? GOLD_TEXT : 0xFF392B56);
+            ctx.fill(railX + 4, cy + 1, railX + railW - 4, cy + catBtnH - 1, selected ? 0xFF352454 : (over ? 0xFF281D3F : 0xFF1B142B));
+            ctx.fill(railX + 4, cy + 1, railX + 7, cy + catBtnH - 1, 0xFFE6B566);
+            RowRenderSupport.renderCenteredYText(
+                ctx, Minecraft.getInstance(), I18n.get("config.chiseled_enchanting_table.cat.classic_merged"),
+                railX + 10, cy + catBtnH * 0.5f, 0.72f, railW - 16,
+                selected ? GOLD_TEXT : CREAM_TEXT
+            );
+            this.hitBoxes.add(new HitBox(railX + 3, cy, railW - 6, catBtnH, () -> {
+                this.filterModifiedOnly = false;
+                this.classicPage = true;
+                this.scrollOffset = 0.0f;
+                playClick(1.0f);
+            }, null));
+            if (over) {
+                pendingTooltip = List.of(
+                    Component.translatable("config.chiseled_enchanting_table.cat.classic_merged").withStyle(ChatFormatting.GOLD),
+                    Component.translatable("config.chiseled_enchanting_table.cat.classic_merged.sub").withStyle(ChatFormatting.GRAY)
                 );
             }
         }
@@ -453,7 +501,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int resetCatX = this.listX + this.listW - resetCatW;
         String subHeader = this.filterModifiedOnly
             ? I18n.get("config.chiseled_enchanting_table.filter.modified_desc")
-            : I18n.get(this.activeCategory.subtitleKey());
+            : I18n.get(this.classicPage
+                ? "config.chiseled_enchanting_table.cat.classic_merged.sub"
+                : this.activeCategory.subtitleKey());
         RowRenderSupport.renderCenteredYText(
             ctx, Minecraft.getInstance(), subHeader,
             this.listX, subY + 8.0f, 0.70f, Math.max(60, this.listW - resetCatW - 6), 0xFFD9CCFA
@@ -506,7 +556,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                     && mouseX >= this.listX && mouseX < this.listX + innerCardW
                     && mouseY >= ry && mouseY < ry + ROW_H;
 
-                OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
+                OptionAvailability avail = availFor(entry);
                 boolean keyFocused = idx == this.focusedOptionIndex;
                 int cardFill = !avail.parentApplicable()
                     ? CARD_BG_DISABLED
@@ -921,6 +971,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         // or removing a category can never index out of bounds (or silently dead-key).
         CategoryId[] categories = CategoryId.values();
         int categoryIndex = key - InputConstants.KEY_1;
+        if (key == InputConstants.KEY_7) {
+            this.filterModifiedOnly = false;
+            this.classicPage = true;
+            this.scrollOffset = 0.0f;
+            playClick(1.0f);
+            return true;
+        }
         if (categoryIndex >= 0 && categoryIndex < categories.length) {
             this.filterModifiedOnly = false;
             this.activeCategory = categories[categoryIndex];
@@ -950,7 +1007,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             }
             if (this.focusedOptionIndex >= 0 && this.focusedOptionIndex < visible.size()) {
                 OptionEntry entry = visible.get(this.focusedOptionIndex);
-                OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
+                OptionAvailability avail = availFor(entry);
                 if (avail.editable()) {
                     if (key == InputConstants.KEY_LEFT || key == InputConstants.KEY_RIGHT) {
                         int dir = key == InputConstants.KEY_RIGHT ? 1 : -1;

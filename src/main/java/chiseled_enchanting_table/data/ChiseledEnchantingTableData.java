@@ -90,6 +90,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static volatile VanillaChestBooksMode rawVanillaChestBooksMode = BUILT_IN_LOOT_TABLE.mode();
     private static volatile BookshelfBookPool rawBookshelfBookPool = BookshelfBookPool.emptyFallback();
     private static volatile BookUpgradeRules rawBookUpgradeRules = BookUpgradeRules.builtInFallback();
+    // 1.0.3 Classic overlay set: bundled baselines, replaceable per-file by a
+    // datapack carrying the same path (loaded in the reload listener below).
+    private static volatile CostTables classicCostTables = CostTables.fromJson(readBundledJsonObject("enchantment_costs_classic_1_0_3.json"));
+    private static volatile BookUpgradeRules classicBookUpgradeRules = BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades_classic_1_0_3.json"));
+    private static volatile Map<Identifier, ItemTransformation> classicItemTransformations = classic103ItemTransformations();
     private static volatile TreasureEpiphanyRules rawTreasureEpiphanyRules = TreasureEpiphanyRules.builtInFallback();
     private static volatile DisenchantingRules rawDisenchantingRules = DisenchantingRules.builtInFallback();
     private static volatile chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config rawShelfGatesConfig =
@@ -274,7 +279,25 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static int bookResearchXpCost(EnchantmentWithLevel target, int maxLevel) {
-        return (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules()).researchXpCost(target, Math.max(1, maxLevel), (runtimeFrame == null ? costTables : runtimeFrame.costTables()).xpCost(target, Math.max(1, maxLevel)));
+        var rules = (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules());
+        int direct = (runtimeFrame == null ? costTables : runtimeFrame.costTables()).xpCost(target, Math.max(1, maxLevel));
+        // 1.0.3 Classic (R2-04): research XP floors (15 x 0.5 = 7, not 8).
+        return runtimeConfiguration().classic103Mode()
+            ? rules.classicResearchXpCost(target, Math.max(1, maxLevel), direct)
+            : rules.researchXpCost(target, Math.max(1, maxLevel), direct);
+    }
+
+    /** 1.0.3 Classic per-player salted direct material costs (single option). */
+    public static List<ItemStack> classicSaltedItemCosts(EnchantmentWithLevel enchantmentWithLevel, int maxLevel, String salt) {
+        return (runtimeFrame == null ? costTables : runtimeFrame.costTables())
+            .saltedCosts(enchantmentWithLevel, Math.max(1, maxLevel), salt == null ? "" : salt);
+    }
+
+    /** 1.0.3 Classic per-player salted book-research material costs. */
+    public static List<ItemStack> classicSaltedResearchCosts(EnchantmentWithLevel target, int maxLevel, String salt) {
+        String safeSalt = salt == null ? "" : salt;
+        return (runtimeFrame == null ? bookUpgradeRules : runtimeFrame.bookUpgradeRules())
+            .saltedResearchCosts(target, Math.max(1, maxLevel), safeSalt, classicSaltedItemCosts(target, maxLevel, safeSalt));
     }
 
     public static List<List<ItemStack>> bookResearchCostOptions(EnchantmentWithLevel target, int maxLevel) {
@@ -693,6 +716,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         var previous_rawShelfGatesConfig = rawShelfGatesConfig;
         var previous_rawLibraryResonanceConfig = rawLibraryResonanceConfig;
         var previous_rawRitualConfig = rawRitualConfig;
+        var previous_classicCostTables = classicCostTables;
+        var previous_classicBookUpgradeRules = classicBookUpgradeRules;
+        var previous_classicItemTransformations = classicItemTransformations;
         try {
         var candidatePolicy = loadPackPolicy(resourceManager);
         DefaultEnchantmentTable loadedDefaults = loadDefaultEnchantments(resourceManager);
@@ -702,6 +728,13 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         defaultExcludedTags = loadedDefaults.excludedTags();
         costTables = loadCostTables(resourceManager);
         rawItemTransformations = loadItemTransformations(resourceManager);
+        classicCostTables = loadClassicJson(resourceManager,
+            "enchantment_costs_classic_1_0_3.json", CostTables::fromJson, classicCostTables);
+        classicBookUpgradeRules = loadClassicJson(resourceManager,
+            "book_upgrades_classic_1_0_3.json", BookUpgradeRules::fromJson, classicBookUpgradeRules);
+        classicItemTransformations = loadClassicJson(resourceManager,
+            "item_transformations_classic_1_0_3.json",
+            root -> parseItemTransformations(root), classicItemTransformations);
         LootInjectionTable loadedLoot = loadLootInjections(resourceManager);
         rawVanillaChestBooksMode = loadedLoot.mode();
         lootInjections = loadedLoot.entries();
@@ -738,6 +771,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             rawBookUpgradeRules = previous_rawBookUpgradeRules;
             rawTreasureEpiphanyRules = previous_rawTreasureEpiphanyRules;
             rawDisenchantingRules = previous_rawDisenchantingRules;
+            classicCostTables = previous_classicCostTables;
+            classicBookUpgradeRules = previous_classicBookUpgradeRules;
+            classicItemTransformations = previous_classicItemTransformations;
             rawShelfGatesConfig = previous_rawShelfGatesConfig;
             rawLibraryResonanceConfig = previous_rawLibraryResonanceConfig;
             rawRitualConfig = previous_rawRitualConfig;
@@ -922,7 +958,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             // *_classic_1_0_3.json files are byte copies of tag 26.1.2_1.0.3 and
             // parse through the same loaders; cfg XP multipliers are already
             // forced to the classic 1.0 / 0.5 by ModRuntimeConfig.
-            bu = BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades_classic_1_0_3.json"));
+            bu = classicBookUpgradeRules;
         }
         BookUpgradeRules bookUpgradeRules = new BookUpgradeRules(
             cfg.bookCombineEnabled(),
@@ -933,9 +969,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             bu.defaultResearchCost(),
             bu.researchOverrides()
         );
-        CostTables frameCostTables = classic103
-            ? CostTables.fromJson(readBundledJsonObject("enchantment_costs_classic_1_0_3.json"))
-            : costTables;
+        CostTables frameCostTables = classic103 ? classicCostTables : costTables;
 
         var ep = rawTreasureEpiphanyRules;
         double epBase = cfg.epiphanyBaseChance();
@@ -993,7 +1027,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
         Map<Identifier, ItemTransformation> itemTransformations;
         if (cfg.classic103Mode()) {
-            itemTransformations = classic103ItemTransformations();
+            itemTransformations = classicItemTransformations;
         } else if (!cfg.requirePriorDiscovery()) {
             Map<Identifier, ItemTransformation> unlockedMap = new java.util.LinkedHashMap<>();
             for (var entry : rawItemTransformations.entrySet()) {
@@ -1397,6 +1431,30 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     /** The exact two transformations of tag 26.1.2_1.0.3, bundled verbatim. */
+    /**
+     * Classic overlay entry point: a datapack file at
+     * {@code data/chiseled_enchanting_table/chiseled_enchanting_table/<file>}
+     * replaces the bundled 1.0.3 baseline for that table; without one, the
+     * previously loaded (bundled) table is kept.
+     */
+    private static <T> T loadClassicJson(
+        ResourceManager resourceManager,
+        String fileName,
+        java.util.function.Function<JsonObject, T> parser,
+        T fallback
+    ) {
+        Identifier id = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/" + fileName);
+        var resource = resourceManager.getResource(id);
+        if (resource.isEmpty()) {
+            return fallback;
+        }
+        try (Reader reader = resource.get().openAsReader()) {
+            return parser.apply(JsonParser.parseReader(reader).getAsJsonObject());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid classic data table " + id, e);
+        }
+    }
+
     private static Map<Identifier, ItemTransformation> classic103ItemTransformations() {
         return parseItemTransformations(readBundledJsonObject("item_transformations_classic_1_0_3.json"));
     }
@@ -1827,6 +1885,32 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             return Math.max(1, (int)Math.round(directXpCost * researchXpMultiplier));
         }
 
+        /** 1.0.3 Classic: research XP rounds DOWN (floor), e.g. 15 x 0.5 = 7. */
+        int classicResearchXpCost(EnchantmentWithLevel target, int maxLevel, int directXpCost) {
+            return Math.max(1, (int)Math.floor(directXpCost * researchXpMultiplier));
+        }
+
+        /**
+         * 1.0.3 Classic salted research costs: themed rule resolved salted, or
+         * the first direct salted stack discounted by the material multiplier
+         * (floor, matching tag 26.1.2_1.0.3 researchCosts).
+         */
+        List<ItemStack> saltedResearchCosts(EnchantmentWithLevel target, int maxLevel, String salt, List<ItemStack> directSaltedCosts) {
+            ItemCostRule rule = researchOverrides.getOrDefault(target.enchantment_id(), defaultResearchCost);
+            List<ItemStack> themed = rule == null
+                ? List.of()
+                : rule.saltedStacks(target.enchantment_id(), target.enchantment_level(), maxLevel, salt);
+            if (!themed.isEmpty()) {
+                return themed;
+            }
+            if (!directSaltedCosts.isEmpty()) {
+                ItemStack discounted = directSaltedCosts.getFirst().copy();
+                discounted.setCount(Math.max(1, (int)Math.floor(discounted.getCount() * researchMaterialMultiplier)));
+                return List.of(discounted);
+            }
+            return List.of();
+        }
+
         List<List<ItemStack>> researchCostOptions(EnchantmentWithLevel target, int maxLevel, List<List<ItemStack>> directCostOptions) {
             ItemCostRule rule = researchOverrides.getOrDefault(target.enchantment_id(), defaultResearchCost);
             List<List<ItemStack>> themed = rule == null ? List.of() : rule.toBundles(target.enchantment_id(), target.enchantment_level(), maxLevel);
@@ -1878,6 +1962,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
         int xpCost(EnchantmentWithLevel enchantmentWithLevel, int maxLevel) {
             return xpCostRule.cost(enchantmentWithLevel.enchantment_id(), enchantmentWithLevel.enchantment_level(), maxLevel);
+        }
+
+        List<ItemStack> saltedCosts(EnchantmentWithLevel enchantmentWithLevel, int maxLevel, String salt) {
+            ItemCostRule itemCost = itemCosts.getOrDefault(enchantmentWithLevel.enchantment_id(), defaultItemCost);
+            return itemCost.saltedStacks(enchantmentWithLevel.enchantment_id(), enchantmentWithLevel.enchantment_level(), maxLevel, salt);
         }
     }
 
@@ -1990,6 +2079,28 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         List<ItemStack> toStacks(Identifier enchantmentId, int level, int maxLevel, String salt) {
             List<List<ItemStack>> bundles = toBundles(enchantmentId, level, maxLevel);
             return bundles.isEmpty() ? List.of() : bundles.getFirst();
+        }
+
+        /**
+         * 1.0.3 Classic: pick ONE option by stable hash of
+         * (enchantment, level, maxLevel, player salt) and resolve its counts
+         * salted — instead of offering every option at midpoint counts.
+         */
+        List<ItemStack> saltedStacks(Identifier enchantmentId, int level, int maxLevel, String salt) {
+            ItemCostRule override = levelOverrides.get(level);
+            if (override != null) {
+                return override.saltedStacks(enchantmentId, level, maxLevel, salt);
+            }
+            if (level >= maxLevel && maxLevelOverride != null) {
+                return maxLevelOverride.saltedStacks(enchantmentId, level, maxLevel, salt);
+            }
+            if (materialFree || options.isEmpty()) {
+                return List.of();
+            }
+            int index = stablePositiveHash(
+                enchantmentId + ":" + Math.max(1, level) + ":" + Math.max(1, maxLevel) + ":" + salt + ":option"
+            ) % options.size();
+            return options.get(index).saltedStacks(enchantmentId, level, maxLevel, salt);
         }
     }
 
@@ -2229,6 +2340,58 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
                 return ItemStack.EMPTY;
             }
             return new ItemStack(candidates.getFirst(), computeCount(level, maxLevel));
+        }
+
+        /**
+         * 1.0.3 Classic salted count (tag 26.1.2_1.0.3 ItemCostOption#computeCount):
+         * ranged min/max counts resolve per player by stable hash instead of the
+         * current engine's deterministic midpoint. Only used in classic frames.
+         */
+        public int saltedCount(int level, int maxLevel, String salt, Identifier enchantmentId) {
+            if (baseCount > 0) {
+                return computeCount(level, maxLevel);
+            }
+            int computedCount;
+            if (count > 0) {
+                computedCount = count;
+            } else if (minCount > 0 && maxCount >= minCount) {
+                int spread = maxCount - minCount + 1;
+                computedCount = minCount + stablePositiveHash(
+                    enchantmentId + ":" + Math.max(1, level) + ":" + Math.max(1, maxLevel)
+                        + ":" + salt + ":count:" + itemId
+                ) % spread;
+            } else {
+                computedCount = countPerLevel * Math.max(1, level);
+            }
+            if (countPerLevel > 0 && (count > 0 || minCount > 0)) {
+                computedCount += countPerLevel * Math.max(1, level);
+            }
+            return Math.max(1, computedCount);
+        }
+
+        ItemStack toSaltedSingleStack(Identifier enchantmentId, int level, int maxLevel, String salt) {
+            List<Item> candidates = candidateItems();
+            if (candidates.isEmpty()) {
+                return ItemStack.EMPTY;
+            }
+            return new ItemStack(candidates.getFirst(), saltedCount(level, maxLevel, salt, enchantmentId));
+        }
+
+        /** 1.0.3: one option stack plus each extra at its salted count. */
+        List<ItemStack> saltedStacks(Identifier enchantmentId, int level, int maxLevel, String salt) {
+            List<ItemStack> stacks = new ArrayList<>();
+            ItemStack primary = toSaltedSingleStack(enchantmentId, level, maxLevel, salt);
+            if (primary.isEmpty()) {
+                return List.of();
+            }
+            stacks.add(primary);
+            for (ItemCostOption extra : extras) {
+                ItemStack extraStack = extra.toSaltedSingleStack(enchantmentId, level, maxLevel, salt);
+                if (!extraStack.isEmpty()) {
+                    stacks.add(extraStack);
+                }
+            }
+            return List.copyOf(stacks);
         }
     }
 

@@ -223,6 +223,12 @@ def check_lang_parity() -> None:
         for key in sorted(keys & reference_keys):
             if isinstance(data[key], str) and not data[key].strip():
                 fail(f"{name}: lang key '{key}' is empty")
+        for key in sorted(keys):
+            if isinstance(data[key], str) and "\\n" in data[key]:
+                fail(f"{name}: lang key '{key}' contains a literal backslash-n (use a real line break)")
+    for key in sorted(reference_keys):
+        if isinstance(reference[key], str) and "\\n" in reference[key]:
+            fail(f"en_us.json: lang key '{key}' contains a literal backslash-n (use a real line break)")
 
     note(f"lang parity ok ({len(reference_keys)} keys across en_us + {len(others)} language(s))")
 

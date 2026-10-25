@@ -208,6 +208,10 @@ public record EnchantCostTablePayload(
     }
 
     public static EnchantCostTablePayload build(Player player) {
+        // 1.0.3 Classic: cost rows are per-player (salted), so JEI/REI and the
+        // synced client rows show exactly what this player will be charged.
+        boolean classic103 = ChiseledEnchantingTableData.runtimeConfiguration().classic103Mode();
+        String salt = player.getStringUUID();
         List<CostEntry> entries = new ArrayList<>();
         int[] totalStacks = new int[] { 0 };
         int[] estimatedBytes = new int[] { PayloadLimits.ESTIMATED_HEADER_BYTES };
@@ -226,7 +230,9 @@ public record EnchantCostTablePayload(
                     transId,
                     trans.level(),
                     ChiseledEnchantingTableData.transformationXpCost(transId),
-                    ChiseledEnchantingTableData.transformationCostOptions(transId)
+                    classic103
+                        ? List.of(ChiseledEnchantingTableData.classicTransformationCosts(transId, salt))
+                        : ChiseledEnchantingTableData.transformationCostOptions(transId)
                 )) {
                     truncated = true;
                     break;
@@ -258,7 +264,9 @@ public record EnchantCostTablePayload(
                         ChiseledEnchantingTableData.treasureEpiphanyCostOptions(id, level, maxLevel))
                     || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.ENCHANTMENT, id, level,
                         ChiseledEnchantingTableData.xpCost(key, maxLevel),
-                        ChiseledEnchantingTableData.itemCostOptions(key, maxLevel))
+                        classic103
+                            ? List.of(ChiseledEnchantingTableData.classicSaltedItemCosts(key, maxLevel, salt))
+                            : ChiseledEnchantingTableData.itemCostOptions(key, maxLevel))
                     || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.STRIP_SINGLE_ENCHANTMENT, id, level,
                         ChiseledEnchantingTableData.targetedStripXpCost(id, level, maxLevel),
                         ChiseledEnchantingTableData.targetedStripCostOptions(id, level, maxLevel))
@@ -274,7 +282,9 @@ public record EnchantCostTablePayload(
                             List.of())
                         || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.BOOK_RESEARCH_UPGRADE, id, level,
                             ChiseledEnchantingTableData.bookResearchXpCost(key, maxLevel),
-                            ChiseledEnchantingTableData.bookResearchCostOptions(key, maxLevel))) {
+                            classic103
+                                ? List.of(ChiseledEnchantingTableData.classicSaltedResearchCosts(key, maxLevel, salt))
+                                : ChiseledEnchantingTableData.bookResearchCostOptions(key, maxLevel))) {
                         truncated = true;
                         break outer;
                     }

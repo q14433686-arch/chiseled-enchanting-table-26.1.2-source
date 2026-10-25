@@ -365,7 +365,14 @@ public final class ConfigCatalog {
         "epiphany_freeze_duration_seconds", "epiphany_max_freeze_seconds",
         "epiphany_reroll_xp_levels",
         "disenchant_enabled", "allow_curse_purge", "require_prior_discovery",
-        "transformation_max_batch_size", "bookshelf_enchanted_prob"
+        "transformation_max_batch_size", "bookshelf_enchanted_prob",
+        "tier1_bookshelves", "tier2_bookshelves", "tier3_qualifying_enchantments",
+        "early_unlock_xp_levels", "early_unlock_grit_count", "sacrifice_required",
+        "tome_page_required_shelves", "max_tome_uses", "book_copy_wear_cost",
+        "tome_deplete_behavior", "tome_regen_base_seconds", "tome_regen_tier1_shelves",
+        "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds",
+        "xp_refund_scale", "external_xp_refund_scale", "strip_xp_min", "strip_xp_max",
+        "curse_purge_xp_cost"
     );
 
     // ---- Concise builders ----

@@ -242,6 +242,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(ModConfigNetworking.SyncRuntimeConfigPayload.TYPE, (payload, ctx) ->
             ctx.client().execute(() -> {
+                boolean classicBefore = ModRuntimeConfig.effective().classic103Mode();
                 ModRuntimeConfig synced = ModRuntimeConfig.fromJsonString(payload.effectiveJson());
                 ModRuntimeConfig.setRemotePreferences(ModRuntimeConfig.fromJsonString(payload.json()));
                 ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.PackPolicy.fromJsonString(payload.policyJson());
@@ -250,6 +251,14 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 if (!ctx.client().hasSingleplayerServer()) ChiseledEnchantingTableData.applyRuntimeConfig(synced, ModRuntimeConfig.PackPolicy.NONE, () -> {});
                 if (payload.requestId() > 0) ModRuntimeConfig.acknowledgeSave(payload.requestId(), payload.accepted());
                 var player = ctx.client().player;
+                if (player != null && classicBefore != synced.classic103Mode()) {
+                    // JEI/REI register their info pages once per session; recipes
+                    // follow live, but the prose pages need a rejoin to swap.
+                    ctx.client().gui.setOverlayMessage(
+                        net.minecraft.network.chat.Component.translatable(
+                            "config.chiseled_enchanting_table.msg.compat_info_refresh"),
+                        false);
+                }
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                     if (menu.onContentChangedCallback != null) {
                         menu.onContentChangedCallback.run();

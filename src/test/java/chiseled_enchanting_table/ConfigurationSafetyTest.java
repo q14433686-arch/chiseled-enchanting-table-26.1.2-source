@@ -93,15 +93,29 @@ class ConfigurationSafetyTest {
     }
 
     @Test
-    void classic103ModeFlagAloneForcesFullPresetLinkage() {
-        // The standalone classic_1_0_3_mode toggle must be identical to the preset:
-        // forcing happens in the ModRuntimeConfig compact constructor, so flipping
-        // ONLY the flag on an otherwise-Standard draft still yields 1.0.3 semantics.
+    void classic103FlagAloneKeepsValuesAndToggleAppliesProfileOnce() {
+        // Round-3 profile semantics (R2-01): the classic flag alone rewrites
+        // nothing — every value is a live, editable preference and the hard
+        // mechanism gates key on the flag itself. In particular the 64-book
+        // stack is only *suggested* by the profile, so a runtime save that
+        // keeps stack size 1 under classic must build successfully.
         var draft = ModRuntimeConfig.DEFAULT.toDraft();
         assertFalse(draft.classic103Mode);
         draft.classic103Mode = true;
-        var classic = draft.build();
-        assertTrue(classic.classic103Mode());
+        draft.enchantedBookStackSize = 7;
+        var flagOnly = draft.build();
+        assertTrue(flagOnly.classic103Mode());
+        assertEquals(7, flagOnly.enchantedBookStackSize(),
+            "build() must not force the startup-only stack size (R2-01)");
+        assertTrue(flagOnly.disenchantEnabled() == ModRuntimeConfig.DEFAULT.disenchantEnabled());
+        assertEquals(ModRuntimeConfig.DEFAULT.epiphanyBaseChance(), flagOnly.epiphanyBaseChance(), 1e-9);
+
+        // Flipping the switch on (screen toggle -> normalizeAfterEdit with the
+        // classic key) applies the 1.0.3 profile exactly once.
+        var toggled = ModRuntimeConfig.DEFAULT.toDraft();
+        toggled.classic103Mode = true;
+        toggled.normalizeAfterEdit("classic_1_0_3_mode");
+        var classic = toggled.build();
         assertEquals(64, classic.enchantedBookStackSize());
         assertEquals(0.0, classic.epiphanyBaseChance(), 1e-9);
         assertEquals(0.0, classic.epiphanyMaxChance(), 1e-9);
@@ -119,6 +133,30 @@ class ConfigurationSafetyTest {
         assertEquals(2, classic.horizontalScanRadius());
         assertEquals(2, classic.verticalScanRadius());
         assertEquals(1, classic.transformationMaxBatchSize());
+
+        // ...and values edited afterwards (Classic merged page) stay as made.
+        toggled.enchantedBookStackSize = 1;
+        assertEquals(1, toggled.build().enchantedBookStackSize());
+    }
+
+    @Test
+    void classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers() {
+        // R2-03: 1.0.3 ranged counts resolve by stable per-player hash, not by
+        // the standard engine's deterministic midpoint (which would give 4).
+        var option = new chiseled_enchanting_table.data.ChiseledEnchantingTableData.ItemCostOption(
+            net.minecraft.resources.Identifier.withDefaultNamespace("emerald"),
+            0, 0, 2, 5, 0, 0, 1.0, java.util.List.of());
+        var protection = net.minecraft.resources.Identifier.withDefaultNamespace("protection");
+        java.util.Set<Integer> seen = new java.util.HashSet<>();
+        for (int i = 0; i < 64; i++) {
+            String salt = "00000000-0000-0000-0000-%012d".formatted(i);
+            int count = option.saltedCount(4, 4, salt, protection);
+            assertTrue(count >= 2 && count <= 5, "salted count must stay in the 1.0.3 range: " + count);
+            assertEquals(count, option.saltedCount(4, 4, salt, protection),
+                "same player must always see the same count");
+            seen.add(count);
+        }
+        assertTrue(seen.size() > 1, "different players must see different salted counts: " + seen);
     }
 
     @Test
@@ -146,11 +184,11 @@ class ConfigurationSafetyTest {
             var sharpness3 = new chiseled_enchanting_table.utils.EnchantmentWithLevel(
                 net.minecraft.resources.Identifier.withDefaultNamespace("sharpness"), 3);
             // 1.0.3: Sharpness III direct cost = 5 + 0.5 * (25 - 5) = 15 XP;
-            // research charges x0.5 -> 8 XP (registry-free wiring proof; the
-            // themed Flint material itself is asserted from the bundled JSON
-            // in classicBookUpgradeJsonCarries103ResearchMaterials).
+            // research charges floor(15 x 0.5) = 7 XP (1.0.3 floors, R2-04;
+            // the themed Flint material itself is asserted from the bundled
+            // JSON in classicBookUpgradeJsonCarries103ResearchMaterials).
             assertEquals(15, chiseled_enchanting_table.data.ChiseledEnchantingTableData.xpCost(sharpness3, 5));
-            assertEquals(8, chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookResearchXpCost(sharpness3, 5));
+            assertEquals(7, chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookResearchXpCost(sharpness3, 5));
             var transformations = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame().itemTransformations();
             assertEquals(2, transformations.size(), "Classic keeps exactly the 2 transformations of 1.0.3");
             var apple = transformations.get(

@@ -49,3 +49,29 @@ The remaining items were handled as follows:
 loot-injection tables are 1.1.0 content; both only affect newly generated
 structures/chests. The classic enchanted-book probability (0.03) is restored;
 pool weights are datapack territory and are not rewritten by the preset.
+
+## Third round — recheck report `analyze-103-preset-discrepancies (1).zip` (R2-01…R2-12)
+
+The recheck confirmed rounds 1–2 but found residuals. Five mechanism/data
+choices were put to the user (2026-10-25); dispositions follow those decisions.
+Note the deliberate semantics change vs. rounds 1–2: **classic is now a mode
+flag + an editable profile**, not constructor-level forcing. Hard mechanism
+gates (epiphany 0, resonance sub-caps 0, slip NONE, tab/page hiding, salted
+evaluation) key on `classic103Mode` itself; every *value* is a live
+preference that stays editable after the profile is applied once (preset
+button or flipping the switch on). Tests were rewritten to this contract.
+
+| Finding | Disposition |
+|---|---|
+| R2-01 stack vs `startupOnly` | **Fixed (`suggest_restart`).** `Draft.build()`/compact-ctor no longer force `enchanted_book_stack_size=64`; the preset/toggle writes 64 into the draft (scope `RESTART_REQUIRED`), `RuntimeRules.prepare()` keeps the startup effective value in the snapshot so a draft ≠ boot value no longer throws at bootstrap, and runtime saves with stack 1 under classic succeed. Startup-conflict rejections get a dedicated message (`msg.save_failed_startup`). |
+| R2-02 literal `\n` in JEI prose | **Fixed.** `info.station_classic` now carries real line breaks in all 11 locales; `scripts/ci_static_checks.py` fails any lang value containing a literal backslash-n. |
+| R2-03 salted evaluation | **Fixed (`faithful_salted`).** 1.0.3 restored verbatim: single material option picked by `stablePositiveHash(id:level:maxLevel:salt:option) % options`, ranged counts by the `:count:` hash, `countPerLevel` added; salt = viewing player's UUID. Applies to table rows, synced cost payload (per viewing player) and JEI/REI rows alike (also closes R2-05). |
+| R2-04 research rounding | **Fixed.** Classic research XP uses `floor` (Sharpness III: 15 × 0.5 → 7). |
+| R2-05 payload midpoint | **Fixed** by R2-03: `EnchantCostTablePayload.build(player)` emits the same salted rows the table charges. |
+| R2-06 JEI resonance line | **Fixed.** JEI tooltip hides the bookshelf resonance-discount line under classic, mirroring REI. |
+| R2-07 Grimoire coverage | **Fixed.** The classic notice now shows on every non-home chapter (1, 2, 3 all sub-pages, 4–9). |
+| R2-08 JEI info staleness | **Fixed (explicit notice).** JEI/REI info prose registers once per session; when the synced classic flag flips, the client shows `msg.compat_info_refresh` stating the pages refresh after rejoining (recipes follow live). |
+| R2-09 datapack overlay | **Fixed (custom decision).** The three `*_classic_1_0_3.json` tables load through the `ResourceManager` in the reload listener — a datapack file at the same path replaces that classic table (`/reload` effective). The config screen gains a **Classic merged page**: `classic_1_0_3_mode` + every classic-locked key, all editable there (numbers included). |
+| R2-10 naming | **Fixed.** Preset renamed to "1.0.3 Gameplay Rules / 1.0.3 玩法规则" (11 locales); description lists the rules plus the retained differences (XP-point deduction, registered inert items, current recipes, JEI/REI rejoin note). `pricing.classic_1_0_3` neutralized; Wiki rewritten to match (no more "逐项还原/原汁原味"). |
+| R2-11 tome locks | **Fixed (`ignore_locks_classic`).** Under classic, `EnchantmentFinder` and resonance candidate collection ignore lock state (1.0.3 had no locks); the lock flag on the item is untouched and bites again in standard mode. |
+| R2-12 inert-but-unlocked keys | **Fixed.** `tier1/2_bookshelves`, `tier3_qualifying_enchantments`, `early_unlock_xp_levels`, `early_unlock_grit_count`, `sacrifice_required`, `tome_page_required_shelves` plus tome-regen/refund/strip/purge companions added to `CLASSIC_LOCKED_KEYS` (greyed out with reason, editable on the Classic merged page). |

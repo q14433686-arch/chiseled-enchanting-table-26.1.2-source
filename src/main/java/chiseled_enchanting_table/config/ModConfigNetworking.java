@@ -128,7 +128,11 @@ public final class ModConfigNetworking {
             } catch (RuntimeException error) {
                 ChiseledEnchantingTable.LOGGER.warn("Rejected config update from {}", player.getName().getString(), error);
                 sendToPlayer(player, payload.requestId(), false);
-                player.sendSystemMessage(Component.translatable("config.chiseled_enchanting_table.msg.save_failed"));
+                String msg = String.valueOf(error.getMessage());
+                boolean startupConflict = msg.contains("bootstrap") || msg.contains("startup");
+                player.sendSystemMessage(Component.translatable(startupConflict
+                    ? "config.chiseled_enchanting_table.msg.save_failed_startup"
+                    : "config.chiseled_enchanting_table.msg.save_failed"));
             }
         });
 

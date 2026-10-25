@@ -1437,6 +1437,22 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 return List.of(classicBundle);
             }
         }
+        if (isClassic103Mode() && type == OptionType.ENCHANTMENT) {
+            // 1.0.3 Classic (R2-03): materials resolve per player by stable hash
+            // — one option, salted counts — not "all options at midpoint".
+            var salted = ChiseledEnchantingTableData.classicSaltedItemCosts(
+                e, getEnchantmentMaxLevel(e), this.player.getStringUUID());
+            if (!salted.isEmpty()) {
+                return List.of(salted);
+            }
+        }
+        if (isClassic103Mode() && type == OptionType.BOOK_RESEARCH_UPGRADE) {
+            var salted = ChiseledEnchantingTableData.classicSaltedResearchCosts(
+                e, getEnchantmentMaxLevel(e), this.player.getStringUUID());
+            if (!salted.isEmpty()) {
+                return List.of(salted);
+            }
+        }
         var row = syncedRow(e, type);
         if (row != null) {
             return row.costOptions();
