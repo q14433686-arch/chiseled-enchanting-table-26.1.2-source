@@ -122,6 +122,69 @@ class ConfigurationSafetyTest {
     }
 
     @Test
+    void classicFrameUses103CostAndBookUpgradeTables() {
+        // Audit findings 06/07/08 (external report): "full price" in classic must
+        // mean the 1.0.3 prices — XP table, research materials and the golden
+        // apple's ranged emerald cost all come from tag 26.1.2_1.0.3 data.
+        var draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.classic103Mode = true;
+        var classic = draft.build();
+        var original = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
+        try {
+            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+                classic, ModRuntimeConfig.PackPolicy.NONE, () -> {
+                }
+            );
+            var mending1 = new chiseled_enchanting_table.utils.EnchantmentWithLevel(
+                net.minecraft.resources.Identifier.withDefaultNamespace("mending"), 1);
+            assertEquals(35, chiseled_enchanting_table.data.ChiseledEnchantingTableData.xpCost(mending1, 1),
+                "1.0.3 Mending I override is 35 XP levels");
+            var protection4 = new chiseled_enchanting_table.utils.EnchantmentWithLevel(
+                net.minecraft.resources.Identifier.withDefaultNamespace("protection"), 4);
+            assertEquals(25, chiseled_enchanting_table.data.ChiseledEnchantingTableData.xpCost(protection4, 4),
+                "1.0.3 common max-level cost is 25 XP levels");
+            var sharpness3 = new chiseled_enchanting_table.utils.EnchantmentWithLevel(
+                net.minecraft.resources.Identifier.withDefaultNamespace("sharpness"), 3);
+            var research = chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookResearchCostOptions(sharpness3, 5);
+            assertTrue(research.stream().flatMap(java.util.List::stream)
+                    .anyMatch(st -> st.is(net.minecraft.world.item.Items.FLINT)),
+                "1.0.3 Sharpness research uses its themed Flint material");
+            var apple = chiseled_enchanting_table.data.ChiseledEnchantingTableData.itemTransformation(
+                chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple"));
+            assertTrue(apple.isPresent());
+            assertEquals(2, apple.get().additionalCosts().getFirst().minCount());
+            assertEquals(5, apple.get().additionalCosts().getFirst().maxCount());
+            for (String salt : java.util.List.of("00000000-0000-0000-0000-000000000001",
+                    "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003",
+                    "00000000-0000-0000-0000-000000000004", "00000000-0000-0000-0000-000000000005")) {
+                var bundle = chiseled_enchanting_table.data.ChiseledEnchantingTableData.classicTransformationCosts(
+                    apple.get().id(), salt);
+                int emeralds = bundle.stream().filter(st -> st.is(net.minecraft.world.item.Items.EMERALD))
+                    .mapToInt(net.minecraft.world.item.ItemStack::getCount).sum();
+                assertTrue(emeralds >= 2 && emeralds <= 5, "Classic apple emerald cost must stay in 2..5, got " + emeralds);
+            }
+        } finally {
+            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+                original.configuration(), original.policy(), () -> {
+                }
+            );
+        }
+    }
+
+    @Test
+    void classicModeLocksSubordinateConfigOptionsWithReason() {
+        var draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.classic103Mode = true;
+        var epiphany = chiseled_enchanting_table.config.ConfigCatalog.byKey("epiphany_base_chance");
+        assertTrue(epiphany.isPresent());
+        var availability = epiphany.get().evaluate(draft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN);
+        assertFalse(availability.editable());
+        assertEquals("config.chiseled_enchanting_table.reason.classic_1_0_3", availability.inactiveReasonKey());
+        var standard = ModRuntimeConfig.DEFAULT.toDraft();
+        assertTrue(epiphany.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());
+    }
+
+    @Test
     void classicFrameZeroesResonanceSubCapsAndEpiphanyPerShelfChances() {
         // Co-resonance discount and Epiphany must be DISABLED (all components 0),
         // not merely hidden: their JSON sub-caps/per-chances previously survived

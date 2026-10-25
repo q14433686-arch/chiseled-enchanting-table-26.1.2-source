@@ -77,17 +77,22 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
         widgets.add(Widgets.createArrow(new Point(x + 80, y + 5)));
         widgets.add(slot(x + 108, y + 5, display.getOutputEntries().getFirst()).markOutput());
 
-        var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
-            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig(),
-            display.row().level(), display.row().maxLevel(), display.xpLevelCost(), 0
-        );
+        // 1.0.3 Classic: no 1-3L stored-book mode — show the full XP cost.
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        var lrCfg = chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig();
+        var xpReq = classic103
+            ? chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forFullArcaneRitual(lrCfg, display.xpLevelCost(), 0)
+            : chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+                lrCfg, display.row().level(), display.row().maxLevel(), display.xpLevelCost(), 0);
         widgets.add(Widgets.createLabel(
                 new Point(x + WIDTH / 2, y + 28),
-                Component.translatable(
-                    "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
-                    xpReq.requiredLevel(),
-                    xpReq.deductedLevels()
-                )
+                classic103
+                    ? Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_full", xpReq.deductedLevels())
+                    : Component.translatable(
+                        "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+                        xpReq.requiredLevel(),
+                        xpReq.deductedLevels()
+                    )
             )
             .tooltip(tooltipLines(display)));
         return widgets;
@@ -100,10 +105,12 @@ public class ReiEnchantingCategory implements DisplayCategory<ReiEnchantingDispl
                 ? "jei.chiseled_enchanting_table.tooltip.cost_synced"
                 : "jei.chiseled_enchanting_table.tooltip.cost_hint"
         ));
-        lines.add(Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.bookshelf",
-            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().maxTotalXpDiscountPercent()
-        ));
+        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode()) {
+            lines.add(Component.translatable(
+                "jei.chiseled_enchanting_table.tooltip.bookshelf",
+                chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().maxTotalXpDiscountPercent()
+            ));
+        }
         if (!display.conflicts().isEmpty()) {
             lines.add(Component.translatable(
                 "jei.chiseled_enchanting_table.tooltip.conflicts",

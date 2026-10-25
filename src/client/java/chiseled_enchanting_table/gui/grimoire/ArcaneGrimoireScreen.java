@@ -1115,6 +1115,22 @@ public class ArcaneGrimoireScreen extends Screen {
             }
         };
 
+        // 1.0.3 Classic (audit finding 12): chapters describing systems that do
+        // not exist in classic (resonance discounts Ch.4, tome wear/regen Ch.5,
+        // Treasure Epiphany Ch.6, cleanse Ch.8, tome-page locks Ch.9, ritual
+        // wait/slip Ch.3 p.3) must say so instead of teaching standard-mode rules.
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        if (classic103 && (ch == 4 || ch == 5 || ch == 6 || ch == 8 || ch == 9 || (ch == 3 && sub == 3))) {
+            List<PageBlock> withNotice = new ArrayList<>();
+            withNotice.add(PageBlock.callout(
+                Component.translatable("gui.chiseled_enchanting_table.grimoire.classic_notice.title"),
+                Component.translatable("gui.chiseled_enchanting_table.grimoire.classic_notice"),
+                INK_EMERALD
+            ));
+            withNotice.addAll(blocks);
+            blocks = List.copyOf(withNotice);
+        }
+
         return GrimoireTextLayout.renderStructuredColumn(
             ctx,
             this.minecraft,

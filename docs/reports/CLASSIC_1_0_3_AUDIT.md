@@ -25,10 +25,27 @@ Principle: restore 1.0.3 **mechanisms** under the preset; keep genuine post-1.0.
 - Anvil flat repair cost / chest-loot: shipped 1.0.3 `build.gradle` **excluded** `RemoveXpCostScaling`, `structureProcessor/**` and `modifyChestLootTable/**` from compilation, so current `anvilFlatRepairCost=false` + `KEEP_BOTH` are already faithful — the stale source files in the 1.0.3 tree were never active.
 - Worldgen deadlock fix, cost-table sync, JEI/REI integration.
 
+## Second round — external report `analyze-103-preset-discrepancies.zip`
+
+That report audited revision `360551d` (before the fixes above). Findings 01–05
+and 10 were already addressed by the first round (slip NONE, epiphany server
+gates, incremental copy, pricing source, resonance sub-caps, 0.03 pool rate).
+The remaining items were handled as follows:
+
+| Finding | Disposition |
+|---|---|
+| 06 cost table | **Fixed.** `enchantment_costs_classic_1_0_3.json` (byte copy of the tag) ships in the jar; the classic RuntimeFrame parses it instead of the 1.1.0 table (Mending I 35, Protection IV 25, …). |
+| 07 book upgrades | **Fixed.** `book_upgrades_classic_1_0_3.json` likewise supplies classic research material multiplier (0.5), default Lapis 1/level and themed overrides (Sharpness→Flint, …). The multi-enchant combine anti-arbitrage charge is kept (report caveat). |
+| 08 apple emerald | **Fixed.** Classic transformations now parse from `item_transformations_classic_1_0_3.json`; the handler resolves the emerald 2–5 range per player with the original stable-hash formula (`classicTransformationCosts`). |
+| 09 unlock filter | **Fixed.** In classic, `defaultEnchantments(lookup)` applies no treasure/curse/epiphany exclusions, matching the old tag expansion; dual-tagged third-party enchantments unlock as in 1.0.3. |
+| 11 recipes | **Boundary labelled, not switched.** Recipes are static datapack content and cannot follow a runtime toggle; the preset tooltip (`inert_note`, all 11 locales) now says so explicitly, along with the restart timing of the 64-book stack. A future strict-classic resource pack can build on the bundled classic JSONs. |
+| 12 grimoire / JEI / REI | **Fixed.** JEI+REI enchanting categories show full XP cost in classic; JEI station/bookshelf info pages have classic variants; REI hides the "up to 0%" resonance line; Grimoire chapters 3p3/4/5/6/8/9 carry a "not in Classic" notice. |
+| 13 config linkage | **Fixed.** `ConfigCatalog.CLASSIC_LOCKED_KEYS`: every classic-forced or classic-meaningless option is greyed out under classic with reason `reason.classic_1_0_3`; stored preferences survive and re-activate when classic is turned off. Bookshelf enchanted-prob slider step is now 0.01 so 0.03 is selectable outside classic too. |
+| 14 policy truth | **Verified + labelled.** `RuntimeRules.prepare` ends in `Draft.build()`, whose classic normalization re-forces classic fields after any datapack resolution, so a datapack cannot quietly resurrect Epiphany/discounts while classic is on (it can still turn classic itself off — that is governance, not drift). The 64-stack option was already scoped `RESTART_REQUIRED`; the preset tooltip now repeats that timing. |
+
 ## Known remaining datapack-level drift (out of preset scope)
 
-The preset is config-only; datapack JSON still differs from 1.0.3
-(`enchantment_costs.json` level costs, `book_upgrades.json` material multipliers,
-`bookshelf_book_pool.json` `max_level_weight_ratio` 0.15 vs 0.1). Servers wanting
-byte-exact 1.0.3 numbers can override via datapack; the preset does not silently
-rewrite datapack content.
+`bookshelf_book_pool.json` `max_level_weight_ratio` is 0.15 vs 0.1 in 1.0.3 and
+loot-injection tables are 1.1.0 content; both only affect newly generated
+structures/chests. The classic enchanted-book probability (0.03) is restored;
+pool weights are datapack territory and are not rewritten by the preset.

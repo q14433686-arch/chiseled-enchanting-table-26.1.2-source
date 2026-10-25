@@ -173,9 +173,20 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * by hand.
      */
     public static Set<EnchantmentWithLevel> defaultEnchantments(HolderGetter<Enchantment> enchantmentLookup) {
-        Set<Identifier> excluded = new HashSet<>((runtimeFrame == null ? defaultExcludedIds : runtimeFrame.defaultExcludedIds()));
-        excluded.addAll((runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).explicitTreasureIds());
-        for (Identifier exTag : (runtimeFrame == null ? defaultExcludedTags : runtimeFrame.defaultExcludedTags())) {
+        // 1.0.3 Classic: the old default_enchantments.json expanded
+        // #minecraft:in_enchanting_table with NO treasure/curse/epiphany exclusions.
+        // Filtering first and re-adding 7 vanilla IDs afterwards (the previous
+        // approach) still dropped third-party enchantments carrying both tags.
+        boolean classic103 = runtimeConfiguration().classic103Mode();
+        Set<Identifier> excluded = classic103
+            ? new HashSet<>()
+            : new HashSet<>((runtimeFrame == null ? defaultExcludedIds : runtimeFrame.defaultExcludedIds()));
+        if (!classic103) {
+            excluded.addAll((runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).explicitTreasureIds());
+        }
+        for (Identifier exTag : classic103
+            ? List.<Identifier>of()
+            : (runtimeFrame == null ? defaultExcludedTags : runtimeFrame.defaultExcludedTags())) {
             TagKey<Enchantment> tagKey = TagKey.create(Registries.ENCHANTMENT, exTag);
             enchantmentLookup.get(tagKey).ifPresent(named -> named.stream().forEach(holder ->
                 holder.unwrapKey().ifPresent(key -> excluded.add(key.identifier()))
@@ -531,6 +542,46 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return transformation.resolvedBundles();
     }
 
+    /**
+     * 1.0.3 Classic transformation bundle (primary + additional) where ranged
+     * {@code min_count..max_count} options resolve per player via the original
+     * stable-hash formula (tag 26.1.2_1.0.3 ItemCostOption#computeCount), instead
+     * of the current engine's deterministic midpoint. Used for the classic
+     * Enchanted Golden Apple emerald cost of 2-5.
+     */
+    public static List<ItemStack> classicTransformationCosts(Identifier id, String salt) {
+        ItemTransformation transformation = (runtimeFrame == null ? rawItemTransformations : runtimeFrame.itemTransformations()).get(id);
+        if (transformation == null) {
+            return List.of();
+        }
+        String safeSalt = salt == null ? "" : salt;
+        List<ItemStack> out = new ArrayList<>();
+        ItemStack primary = transformation.primaryCostStack(safeSalt);
+        if (!primary.isEmpty()) {
+            out.add(primary);
+        }
+        for (ItemCostOption option : transformation.additionalCosts()) {
+            if (option.minCount() > 0 && option.maxCount() >= option.minCount()) {
+                List<Item> candidates = option.candidateItems();
+                if (candidates.isEmpty()) {
+                    continue;
+                }
+                int spread = option.maxCount() - option.minCount() + 1;
+                int count = option.minCount() + stablePositiveHash(
+                    id + ":" + transformation.level() + ":" + transformation.level()
+                        + ":" + safeSalt + ":count:" + option.itemId()
+                ) % spread;
+                out.add(new ItemStack(candidates.getFirst(), count));
+            } else {
+                ItemStack stack = option.toSingleStack(id, transformation.level(), transformation.level(), safeSalt);
+                if (!stack.isEmpty()) {
+                    out.add(stack);
+                }
+            }
+        }
+        return List.copyOf(out);
+    }
+
     public static ItemStack transformationPrimaryCost(Identifier id, String salt) {
         ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
         return transformation == null ? ItemStack.EMPTY : transformation.primaryCostStack(salt == null ? "" : salt);
@@ -865,6 +916,14 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         );
 
         var bu = rawBookUpgradeRules;
+        if (classic103) {
+            // 1.0.3 Classic data set (audit findings 06/07): "full price" must mean
+            // the 1.0.3 prices, not full price at 1.1.0 rates. The bundled
+            // *_classic_1_0_3.json files are byte copies of tag 26.1.2_1.0.3 and
+            // parse through the same loaders; cfg XP multipliers are already
+            // forced to the classic 1.0 / 0.5 by ModRuntimeConfig.
+            bu = BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades_classic_1_0_3.json"));
+        }
         BookUpgradeRules bookUpgradeRules = new BookUpgradeRules(
             cfg.bookCombineEnabled(),
             cfg.bookCombineXpMultiplier(),
@@ -874,6 +933,9 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             bu.defaultResearchCost(),
             bu.researchOverrides()
         );
+        CostTables frameCostTables = classic103
+            ? CostTables.fromJson(readBundledJsonObject("enchantment_costs_classic_1_0_3.json"))
+            : costTables;
 
         var ep = rawTreasureEpiphanyRules;
         double epBase = cfg.epiphanyBaseChance();
@@ -931,48 +993,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
         Map<Identifier, ItemTransformation> itemTransformations;
         if (cfg.classic103Mode()) {
-            Identifier egaId = ChiseledEnchantingTable.identifier("enchanted_golden_apple");
-            Identifier bottleId = ChiseledEnchantingTable.identifier("experience_bottle");
-            Map<Identifier, ItemTransformation> classicMap = new java.util.LinkedHashMap<>();
-            classicMap.put(
-                egaId,
-                new ItemTransformation(
-                    egaId,
-                    Identifier.withDefaultNamespace("golden_apple"),
-                    false,
-                    Identifier.withDefaultNamespace("enchanted_golden_apple"),
-                    1,
-                    3,
-                    0,
-                    0,
-                    false,
-                    null,
-                    new ItemCostOption(Identifier.withDefaultNamespace("gold_block"), 8, 0, 0, 0, 0, 0, 1.0, List.of()),
-                    List.of(new ItemCostOption(Identifier.withDefaultNamespace("emerald"), 2, 0, 0, 0, 0, 0, 1.0, List.of())),
-                    List.of(),
-                    false
-                )
-            );
-            classicMap.put(
-                bottleId,
-                new ItemTransformation(
-                    bottleId,
-                    Identifier.withDefaultNamespace("glass_bottle"),
-                    false,
-                    Identifier.withDefaultNamespace("experience_bottle"),
-                    1,
-                    1,
-                    0,
-                    0,
-                    false,
-                    null,
-                    new ItemCostOption(Identifier.withDefaultNamespace("lapis_lazuli"), 6, 0, 0, 0, 0, 0, 1.0, List.of()),
-                    List.of(new ItemCostOption(Identifier.withDefaultNamespace("amethyst_shard"), 2, 0, 0, 0, 0, 0, 1.0, List.of())),
-                    List.of(),
-                    false
-                )
-            );
-            itemTransformations = Map.copyOf(classicMap);
+            itemTransformations = classic103ItemTransformations();
         } else if (!cfg.requirePriorDiscovery()) {
             Map<Identifier, ItemTransformation> unlockedMap = new java.util.LinkedHashMap<>();
             for (var entry : rawItemTransformations.entrySet()) {
@@ -1041,7 +1062,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         var activeRitualCfg = rawRitualConfig != null
             ? rawRitualConfig
             : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT;
-        RuntimeFrame next = new RuntimeFrame(itemTransformations, vanillaChestBooksMode, bookshelfBookPool, bookUpgradeRules, treasureEpiphanyRules, disenchantingRules, shelfGatesConfig, libraryResonanceConfig, activeRitualCfg, costTables, defaultEnchantmentValues, defaultEnchantmentTags, defaultExcludedIds, defaultExcludedTags, lootInjections, cfg, policy, prepared.snapshot());
+        RuntimeFrame next = new RuntimeFrame(itemTransformations, vanillaChestBooksMode, bookshelfBookPool, bookUpgradeRules, treasureEpiphanyRules, disenchantingRules, shelfGatesConfig, libraryResonanceConfig, activeRitualCfg, frameCostTables, defaultEnchantmentValues, defaultEnchantmentTags, defaultExcludedIds, defaultExcludedTags, lootInjections, cfg, policy, prepared.snapshot());
         chiseled_enchanting_table.config.rules.RuntimeRules.commit(prepared, persist);
         runtimeFrame = next;
 
@@ -1372,8 +1393,16 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     private static Map<Identifier, ItemTransformation> builtInItemTransformations() {
+        return parseItemTransformations(readBundledJsonObject("item_transformations.json"));
+    }
+
+    /** The exact two transformations of tag 26.1.2_1.0.3, bundled verbatim. */
+    private static Map<Identifier, ItemTransformation> classic103ItemTransformations() {
+        return parseItemTransformations(readBundledJsonObject("item_transformations_classic_1_0_3.json"));
+    }
+
+    private static Map<Identifier, ItemTransformation> parseItemTransformations(JsonObject root) {
         Map<Identifier, ItemTransformation> fallback = new HashMap<>();
-        JsonObject root = readBundledJsonObject("item_transformations.json");
         JsonArray values = root.getAsJsonArray("values");
         if (values != null) {
             for (JsonElement element : values) {

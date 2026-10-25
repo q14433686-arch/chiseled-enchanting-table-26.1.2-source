@@ -121,15 +121,22 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
         String jeiScan = (jeiSg.horizontalScanRadius() * 2 + 1) + "\u00d7"
             + (jeiSg.verticalScanRadius() * 2 + 1) + "\u00d7" + (jeiSg.horizontalScanRadius() * 2 + 1);
         int jeiMaxUses = SyncedEnchantmentCosts.libraryResonanceConfig().maxTomeUses();
+        // 1.0.3 Classic: the standard info text promises Treasure Epiphany, 1-3L
+        // stored-book mode and the Cleanse tab — none of which exist in classic.
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
         registration.addItemStackInfo(
             stations,
-            Component.translatable("jei.chiseled_enchanting_table.info.station",
-                jeiScan, jeiMaxUses, SyncedEnchantmentCosts.epiphanyMinBookshelves())
+            classic103
+                ? Component.translatable("jei.chiseled_enchanting_table.info.station_classic", jeiScan)
+                : Component.translatable("jei.chiseled_enchanting_table.info.station",
+                    jeiScan, jeiMaxUses, SyncedEnchantmentCosts.epiphanyMinBookshelves())
         );
         registration.addItemStackInfo(
             List.of(new ItemStack(Blocks.CHISELED_BOOKSHELF)),
-            Component.translatable("jei.chiseled_enchanting_table.info.bookshelf",
-                jeiScan, jeiMaxUses)
+            classic103
+                ? Component.translatable("jei.chiseled_enchanting_table.info.bookshelf_classic", jeiScan)
+                : Component.translatable("jei.chiseled_enchanting_table.info.bookshelf",
+                    jeiScan, jeiMaxUses)
         );
         registration.addItemStackInfo(
             List.of(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)),

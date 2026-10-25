@@ -1427,11 +1427,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         if (isClassic103Mode()
             && (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id()))) {
-            if (chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple").equals(e.enchantment_id())) {
-                return List.of(List.of(new ItemStack(Items.GOLD_BLOCK, 8), new ItemStack(Items.EMERALD, 2)));
-            }
-            if (chiseled_enchanting_table.ChiseledEnchantingTable.identifier("experience_bottle").equals(e.enchantment_id())) {
-                return List.of(List.of(new ItemStack(Items.LAPIS_LAZULI, 6), new ItemStack(Items.AMETHYST_SHARD, 2)));
+            // 1.0.3 Classic: resolve from the frame's classic transformations,
+            // including the Enchanted Golden Apple's ranged emerald cost (2-5,
+            // per-player salted exactly as in tag 26.1.2_1.0.3). Previously this
+            // hardcoded emerald x2 while every other display read the rule.
+            List<ItemStack> classicBundle = ChiseledEnchantingTableData.classicTransformationCosts(
+                e.enchantment_id(), this.player.getStringUUID());
+            if (!classicBundle.isEmpty()) {
+                return List.of(classicBundle);
             }
         }
         var row = syncedRow(e, type);

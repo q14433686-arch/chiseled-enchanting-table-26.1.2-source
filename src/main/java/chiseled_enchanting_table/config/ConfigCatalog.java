@@ -284,6 +284,19 @@ public final class ConfigCatalog {
         public OptionAvailability evaluate(Draft draft, SessionMode sessionMode) {
             ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.effectivePackPolicy();
             boolean parentOk = activeWhen.test(draft);
+            if (draft.classic103Mode && CLASSIC_LOCKED_KEYS.contains(key)) {
+                // 1.0.3 Classic linkage (audit finding 13): these options are forced
+                // by the master switch in ModRuntimeConfig#build, so editing them
+                // would silently do nothing. Grey them out with the reason instead
+                // of letting the panel pretend they are live preferences.
+                return new OptionAvailability(
+                    false,
+                    false,
+                    "config.chiseled_enchanting_table.reason.classic_1_0_3",
+                    effectScope,
+                    isModifiedFromDefault(draft)
+                );
+            }
             if (!sessionMode.writable()) {
                 String roReason = sessionMode == SessionMode.MODPACK_LOCKED
                     ? "config.chiseled_enchanting_table.reason.pack_locked"
@@ -328,6 +341,32 @@ public final class ConfigCatalog {
             );
         }
     }
+
+    /**
+     * Option keys whose effective values are owned by the 1.0.3 Classic master
+     * switch (forced in {@code ModRuntimeConfig} compact constructor / Draft#build)
+     * or which have no meaning while it is on (Epiphany family). Editing them in
+     * classic would be a no-op, so {@link OptionEntry#evaluate} locks them with
+     * an explicit reason; leaving classic restores editability and the stored
+     * preference values are still in the draft.
+     */
+    public static final java.util.Set<String> CLASSIC_LOCKED_KEYS = java.util.Set.of(
+        "enchanted_book_stack_size", "vanilla_table_mode", "anvil_flat_repair_cost",
+        "anvil_block_same_book_merge", "restrict_villager_infinity_books",
+        "grindstone_depleted_tome", "direct_gates_enabled", "blank_max_tier_mode",
+        "horizontal_scan_radius", "vertical_scan_radius", "require_breathing_room",
+        "require_line_of_sight", "tome_consumption_mode", "tome_regen_enabled",
+        "locked_shelf_breakable", "locked_book_extraction_blocked",
+        "max_wooden_discount_percent", "max_total_xp_discount_percent",
+        "book_combine_enabled", "book_combine_xp_multiplier",
+        "book_research_enabled", "book_research_xp_multiplier",
+        "epiphany_min_bookshelves", "epiphany_base_chance", "epiphany_max_chance",
+        "epiphany_max_slots_cap", "epiphany_cycle_seconds", "epiphany_freeze_xp_levels",
+        "epiphany_freeze_duration_seconds", "epiphany_max_freeze_seconds",
+        "epiphany_reroll_xp_levels",
+        "disenchant_enabled", "allow_curse_purge", "require_prior_discovery",
+        "transformation_max_batch_size", "bookshelf_enchanted_prob"
+    );
 
     // ---- Concise builders ----
 
@@ -857,7 +896,7 @@ public final class ConfigCatalog {
             d -> d.bookshelfPoolEnabled, d -> "config.chiseled_enchanting_table.reason.need_bookshelf_pool"
         ),
         doubleOpt(
-            "bookshelf_enchanted_prob", CategoryId.WORLD_LOOT, EffectScope.NEW_GENERATION, 0.00, 1.00, 0.02,
+            "bookshelf_enchanted_prob", CategoryId.WORLD_LOOT, EffectScope.NEW_GENERATION, 0.00, 1.00, 0.01,
             d -> d.bookshelfEnchantedProb, (d, v) -> d.bookshelfEnchantedProb = v,
             d -> Math.round(d.bookshelfEnchantedProb * 100) + "%",
             d -> d.bookshelfPoolEnabled, d -> "config.chiseled_enchanting_table.reason.need_bookshelf_pool"
