@@ -259,6 +259,28 @@ class ConfigurationSafetyTest {
                 a.inactiveReasonKey(), key);
             assertTrue(chiseled_enchanting_table.config.ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(key), key);
         }
+        // Classification invariant: rule-owned keys are a subset of the
+        // classic-locked set, and every classic-page row outside that group
+        // is an explicitly reviewed live preference with a consumer under
+        // classic (shelf-gates config, frame fields, mixins, worldgen).
+        var locked = chiseled_enchanting_table.config.ConfigCatalog.CLASSIC_LOCKED_KEYS;
+        var owned = chiseled_enchanting_table.config.ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS;
+        assertTrue(locked.containsAll(owned), "rule-owned keys must be classic-locked");
+        java.util.Set<String> reviewedLivePreferences = java.util.Set.of(
+            "enchanted_book_stack_size", "vanilla_table_mode", "anvil_flat_repair_cost",
+            "anvil_block_same_book_merge", "restrict_villager_infinity_books",
+            "grindstone_depleted_tome", "direct_gates_enabled", "blank_max_tier_mode",
+            "horizontal_scan_radius", "vertical_scan_radius", "require_breathing_room",
+            "require_line_of_sight", "tome_consumption_mode", "tome_regen_enabled",
+            "locked_shelf_breakable", "locked_book_extraction_blocked",
+            "book_combine_enabled", "book_research_enabled", "transformation_max_batch_size",
+            "bookshelf_enchanted_prob", "max_tome_uses", "book_copy_wear_cost",
+            "tome_deplete_behavior", "tome_regen_base_seconds", "tome_regen_tier1_shelves",
+            "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds");
+        java.util.Set<String> editableUnderClassic = new java.util.TreeSet<>(locked);
+        editableUnderClassic.removeAll(owned);
+        assertEquals(reviewedLivePreferences, editableUnderClassic,
+            "classic-page editable set changed: classify the new key as rule-owned or reviewed-live");
         var standard = ModRuntimeConfig.DEFAULT.toDraft();
         assertTrue(epiphany.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());
         assertTrue(scanRadius.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());

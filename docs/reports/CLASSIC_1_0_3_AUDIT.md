@@ -97,3 +97,21 @@ recipe switching), and the Classic page uses two groups.
 | 13 six editable-but-inert keys | **Fixed (user decision: merge into rule-owned group).** `tier1/tier2/tier3_bookshelves`, `early_unlock_xp_levels`, `early_unlock_grit_count`, `require_prior_discovery` joined `CLASSIC_OVERRIDDEN_KEYS` (28 keys). Classic page also gains the chosen summary strip (gold-framed card, padlock, editable/rule-owned count badges; style picked by the user from generated pixel-art candidates) so the locked group is visible without scrolling. |
 | 14 option label | **Fixed.** `opt.classic_1_0_3_mode` renamed to the "1.0.3 Gameplay Rules / 玩法规则" wording in all 11 locales; the static-recipe boundary sentence moved to the first line of the preset description. |
 | 15 overlay client preview | **Fixed.** `getEnchantmentItemCostOptions` now consults the synced server row before any local classic computation (incomplete-table fail-closed preserved above the fallback), so a dedicated-server datapack overlay drives preview and deduction identically. Classic transformation XP is read from the active frame table via `classicTransformationXpCost` (overlay-aware) instead of hardcoded 3/1, with the synced row taking precedence. |
+
+## Sixth round — recheck report `analyze-103-preset-discrepancies (4).zip`
+
+This report audited `87e3fc5` (which already contains the round-5 fixes),
+but its #13/#14 texts still describe the round-4 state. Verified against
+the code at that revision and now: the six keys are in
+`CLASSIC_OVERRIDDEN_KEYS` (28 keys), the summary strip exists, and
+`opt.classic_1_0_3_mode` reads "1.0.3 Gameplay Rules / 1.0.3 玩法规则" in
+all 11 locales with the recipe boundary on the first description line.
+No code change was needed for those two items; they are recorded here as
+verified-fixed to close the loop.
+
+Remaining genuine work from this report:
+
+| Item | Disposition |
+|---|---|
+| #13 recommendation 3 (consumer invariant) | **Done.** A classification-invariant test now pins the classic-page editable set to an explicitly reviewed live-preference list (each with a consumer under classic: shelf-gates config, frame fields, mixins, worldgen, or conditional on `tome_consumption_mode`); any future locked key must be classified as rule-owned or reviewed-live or the test fails. `direct_gates_enabled` / `blank_max_tier_mode` were re-checked: both feed `BookshelfProgression` through the shelf-gates config used by the classic unlock path, so they stay editable. |
+| #15 caveat (overlay e2e test) | **Noted, not automated.** A dedicated-server + plain-client end-to-end run cannot execute in the registry-free unit JVM; the overlay path is covered by the synced-row precedence code and the server smoke test in CI. Left as a manual release check (deploy overlay datapack → preview/JEI/REI/deduction agree → remove overlay → bundled table returns). |
