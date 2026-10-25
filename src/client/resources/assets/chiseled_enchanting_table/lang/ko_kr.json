@@ -784,7 +784,7 @@
   "config.chiseled_enchanting_table.preset.standard.desc": "기본 밸런스: 3..45 책장 완만한 할인, 22책장 II레벨 해금, 6일→3일→1일 완만한 회복 곡선과 심층 의식.",
   "config.chiseled_enchanting_table.preset.expert.short": "전문가",
   "config.chiseled_enchanting_table.preset.expert.title": "프리셋: 전문가",
-  "config.chiseled_enchanting_table.preset.expert.desc": "엄격한 도서관 설계: 백지 Lv.I 제한, 42책장 최대 해금, 원본 내구도 3, 여유 공간·시야 확보 및 사전 발견 필수.",
+  "config.chiseled_enchanting_table.preset.expert.desc": "하드코어 대서고 챌린지: 바닐라 마법 부여대 및 사서 마법부여 책 거래 비활성화, 차액 공제 없는 단계별 승급, 플레이어 시드 단일 재료, 백지 I단계 제한, 원본서 내구도 2(소진 시 고갈된 고서화), 최대 할인 -20%, 12칸 호흡 공간 및 시야 확보 강제.",
   "config.chiseled_enchanting_table.preset.note_new_chunks": "월드 생성 및 구조물 전리품 설정은 새로 생성되는 청크와 아직 열지 않은 상자에만 적용됩니다.",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "⚠ 세이브 위험: 겹침 한도를 낮추면 재시작이 필요하며, 이미 겹쳐진 마법 책이 들어 있는 보관함에서 아이템 손실이나 오류가 날 수 있습니다!",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ 마법 책 겹침 축소는 재시작 필요 및 기존 세이브 손실 위험!",

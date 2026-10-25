@@ -274,6 +274,20 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 var player = ctx.client().player;
                 if (player != null && player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                     menu.applyTransformationSnapshot(payload.transformations());
+                    menu.xpDiscountPercent = Math.max(
+                        0,
+                        Math.min(
+                            menu.libraryResonanceConfig().maxTotalXpDiscountPercent(),
+                            chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(
+                                menu.libraryResonanceConfig(),
+                                menu.regularBookshelves,
+                                menu.totalMasteryUnits()
+                            )
+                        )
+                    );
+                    if (menu.onContentChangedCallback != null) {
+                        menu.onContentChangedCallback.run();
+                    }
                 }
             }));
 

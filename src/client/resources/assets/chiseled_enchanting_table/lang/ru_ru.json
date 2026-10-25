@@ -784,7 +784,7 @@
   "config.chiseled_enchanting_table.preset.standard.desc": "Balanced shipped experience: smooth 3..45 wooden discount, 22-shelf Lv.II cap, smooth 6d→3d→1d tome nursing, Cleanse provenance refunds, and Deep Inscription rituals.",
   "config.chiseled_enchanting_table.preset.expert.short": "Эксперт",
   "config.chiseled_enchanting_table.preset.expert.title": "Preset: Expert Archivist",
-  "config.chiseled_enchanting_table.preset.expert.desc": "Strict library engineering: Lv.I blank cap, 42-shelf direct mastery, 3-charge Master Tomes, mandatory breathing room & line-of-sight, and prior-discovery gates.",
+  "config.chiseled_enchanting_table.preset.expert.desc": "Хардкорный Архивариус: отключает ванильный стол и торговлю книгами у библиотекарей, требует пошагового улучшения без зачёта уровней, единый материал по соли игрока, лимит I ур. вслепую, фолианты на 2 заряда, скидку до -20%, 12 свободных блоков и прямую видимость.",
   "config.chiseled_enchanting_table.preset.note_new_chunks": "Worldgen & structure loot settings only affect newly generated chunks / unopened chests.",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "Save Risk: Lowering stack size requires a full client+server restart and can truncate or break loading of containers that already hold stacked Enchanted Books!",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ Lowering book stack size needs restart & risks stacked books in saves!",

@@ -226,6 +226,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     protected void containerTick() {
         super.containerTick();
+        if (this.configOverlay != null) {
+            this.configOverlay.tick();
+        }
         if (this.returningFromExternalScreen
             || (this.scrollContainer != null
                 && isInscribeTab()
@@ -499,7 +502,26 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return mouseX >= x0 && mouseX < x0 + GRIMOIRE_BTN_SIZE && mouseY >= y0 && mouseY < y0 + GRIMOIRE_BTN_SIZE;
     }
 
+    public boolean hasActiveConfigOverlay() {
+        return this.configOverlay != null;
+    }
+
+    public net.minecraft.client.renderer.Rect2i viewerMainGuiBounds() {
+        if (this.grimoireOverlay != null) {
+            return this.grimoireOverlay.fullGuiBounds();
+        }
+        return new net.minecraft.client.renderer.Rect2i(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
+    }
+
     public List<net.minecraft.client.renderer.Rect2i> extraViewerExclusionAreas() {
+        if (this.configOverlay != null) {
+            return List.of(new net.minecraft.client.renderer.Rect2i(
+                0,
+                0,
+                Math.max(1, this.width),
+                Math.max(1, this.height)
+            ));
+        }
         List<net.minecraft.client.renderer.Rect2i> areas = new ArrayList<>(5);
         if (this.menu.hasSecondaryTabs()) {
             areas.add(new net.minecraft.client.renderer.Rect2i(

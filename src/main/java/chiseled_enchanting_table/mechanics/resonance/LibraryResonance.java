@@ -1051,8 +1051,9 @@ public final class LibraryResonance {
 
     public static int baseXpDiscountPercent(Config cfg, int regularBookshelves, double totalMasteryUnits) {
         Config c = cfg != null ? cfg : Config.DEFAULT;
+        int cap = Math.min(c.maxTotalXpDiscountPercent(), c.maxBaseXpDiscountPercent());
         return Math.min(
-            c.maxBaseXpDiscountPercent(),
+            cap,
             woodenBookshelfDiscountPercent(c, regularBookshelves) + globalMasteryDiscountPercent(c, totalMasteryUnits)
         );
     }

@@ -362,6 +362,8 @@ class ConfigurationSafetyTest {
             "rail_tab.png", "rail_tab_active.png", "section_plaque.png",
             "row_plaque.png", "row_plaque_hover.png", "row_plaque_atom.png", "row_plaque_disabled.png",
             "btn_plaque.png", "btn_plaque_hover.png", "btn_plaque_gold.png", "btn_plaque_disabled.png",
+            "micro_btn.png", "micro_btn_hover.png", "micro_btn_disabled.png",
+            "icon_reset.png", "icon_reset_disabled.png",
             "search_box.png", "search_box_focus.png",
             "toggle_on.png", "toggle_off.png", "toggle_locked.png",
             "slider_track.png", "slider_fill.png", "slider_knob.png", "slider_knob_hover.png"
@@ -372,6 +374,98 @@ class ConfigurationSafetyTest {
             byte[] header = Files.readAllBytes(p);
             assertTrue(header.length > 24 && header[0] == (byte) 0x89 && header[1] == 0x50,
                 "Invalid PNG header on " + name);
+        }
+    }
+
+    @Test
+    void booleanControlsScanRadiiDiscountCapsAndExpertPresetTakeEffectCleanly() {
+        var original = ChiseledEnchantingTableData.runtimeFrame();
+        try {
+            // 1. Boolean options return actual Boolean from entry.get(draft) and toggle + track customizedKeys
+            var boolDraft = ModRuntimeConfig.DEFAULT.toDraft();
+            int booleanCount = 0;
+            for (var entry : ConfigCatalog.ALL_OPTIONS) {
+                if (entry.kind() == ConfigCatalog.ControlKind.BOOLEAN) {
+                    booleanCount++;
+                    Object initial = entry.get(boolDraft);
+                    assertInstanceOf(Boolean.class, initial, "Boolean option must return Boolean: " + entry.key());
+                    boolean start = Boolean.TRUE.equals(initial);
+                    assertEquals(
+                        start ? "@config.chiseled_enchanting_table.val.on" : "@config.chiseled_enchanting_table.val.off",
+                        entry.rawOrKeyDisplay(boolDraft)
+                    );
+                    entry.toggleOrCycle(boolDraft, 1);
+                    assertEquals(!start, Boolean.TRUE.equals(entry.get(boolDraft)), "Toggle must invert " + entry.key());
+                    assertTrue(boolDraft.build().customizedKeys().contains(entry.key()));
+                }
+            }
+            assertTrue(booleanCount >= 20);
+
+            // 2. Full slider range of horizontal_scan_radius (1..8) and vertical_scan_radius (0..6) applies without silent clamping
+            var scanDraft = ModRuntimeConfig.DEFAULT.toDraft();
+            ConfigCatalog.byKey("horizontal_scan_radius").setFromNormalizedSlider(scanDraft, 1.0);
+            ConfigCatalog.byKey("vertical_scan_radius").setFromNormalizedSlider(scanDraft, 1.0);
+            ModRuntimeConfig maxScanCfg = scanDraft.build();
+            assertEquals(8, maxScanCfg.horizontalScanRadius());
+            assertEquals(6, maxScanCfg.verticalScanRadius());
+            assertTrue(maxScanCfg.customizedKeys().contains("horizontal_scan_radius"));
+            assertTrue(maxScanCfg.customizedKeys().contains("vertical_scan_radius"));
+            ChiseledEnchantingTableData.applyRuntimeConfig(maxScanCfg, ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            assertEquals(8, ChiseledEnchantingTableData.shelfGatesConfig().horizontalScanRadius());
+            assertEquals(6, ChiseledEnchantingTableData.shelfGatesConfig().verticalScanRadius());
+
+            ConfigCatalog.byKey("horizontal_scan_radius").setFromNormalizedSlider(scanDraft, 0.0);
+            ConfigCatalog.byKey("vertical_scan_radius").setFromNormalizedSlider(scanDraft, 0.0);
+            ChiseledEnchantingTableData.applyRuntimeConfig(scanDraft.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            assertEquals(1, ChiseledEnchantingTableData.shelfGatesConfig().horizontalScanRadius());
+            assertEquals(0, ChiseledEnchantingTableData.shelfGatesConfig().verticalScanRadius());
+
+            // 3. Wooden & total resonance XP discount caps take effect both ABOVE 35%/40% and BELOW 35%
+            ChiseledEnchantingTableData.applyRuntimeConfig(ModRuntimeConfig.DEFAULT, ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            var defLr = ChiseledEnchantingTableData.libraryResonanceConfig();
+            assertEquals(15, defLr.maxWoodenDiscountPercent());
+            assertEquals(20, defLr.maxGlobalMasteryDiscountPercent());
+            assertEquals(35, defLr.maxBaseXpDiscountPercent());
+            assertEquals(15, defLr.maxSpecificEnchantBonusPercent());
+            assertEquals(40, defLr.maxTotalXpDiscountPercent());
+
+            var highDisc = ModRuntimeConfig.DEFAULT.toDraft();
+            highDisc.libraryDiscountEnabled = true;
+            highDisc.maxWoodenDiscountPercent = 55;
+            highDisc.maxTotalXpDiscountPercent = 80;
+            ChiseledEnchantingTableData.applyRuntimeConfig(highDisc.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            var highLr = ChiseledEnchantingTableData.libraryResonanceConfig();
+            assertEquals(55, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.woodenBookshelfDiscountPercent(highLr, 30));
+            assertEquals(55, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(highLr, 30, 0.0));
+            assertEquals(80, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.effectiveXpDiscountPercent(highLr, 30, 30.0, 5, 5));
+
+            var lowDisc = ModRuntimeConfig.DEFAULT.toDraft();
+            lowDisc.libraryDiscountEnabled = true;
+            lowDisc.maxWoodenDiscountPercent = 8;
+            lowDisc.maxTotalXpDiscountPercent = 18;
+            ChiseledEnchantingTableData.applyRuntimeConfig(lowDisc.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
+            var lowLr = ChiseledEnchantingTableData.libraryResonanceConfig();
+            assertEquals(8, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.woodenBookshelfDiscountPercent(lowLr, 30));
+            assertEquals(18, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.baseXpDiscountPercent(lowLr, 30, 30.0));
+            assertEquals(18, chiseled_enchanting_table.mechanics.resonance.LibraryResonance.effectiveXpDiscountPercent(lowLr, 30, 30.0, 5, 5));
+
+            // 4. Expert preset is strictly harder & matches cleanly
+            ModRuntimeConfig std = ModRuntimeConfig.Preset.STANDARD.createConfig(false);
+            ModRuntimeConfig exp = ModRuntimeConfig.Preset.EXPERT.createConfig(false);
+            assertTrue(ModRuntimeConfig.Preset.EXPERT.matches(exp.toDraft()));
+            assertFalse(exp.directTierUpgrade());
+            assertFalse(exp.incrementalCredit());
+            assertEquals(ModRuntimeConfig.MaterialSelectionMode.PLAYER_SALTED_SINGLE, exp.materialSelectionMode());
+            assertEquals(chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.VanillaTableMode.ALL, exp.vanillaTableMode());
+            assertFalse(exp.librarianTomeOffers());
+            assertTrue(exp.maxTomeUses() < std.maxTomeUses());
+            assertTrue(exp.maxWoodenDiscountPercent() < std.maxWoodenDiscountPercent());
+            assertTrue(exp.maxTotalXpDiscountPercent() < std.maxTotalXpDiscountPercent());
+            assertTrue(exp.minOpenAdjacentBlocks() > std.minOpenAdjacentBlocks());
+            assertTrue(exp.xpRefundScale() < std.xpRefundScale());
+            assertTrue(exp.bookResearchXpMultiplier() > std.bookResearchXpMultiplier());
+        } finally {
+            ChiseledEnchantingTableData.applyRuntimeConfig(original.configuration(), original.policy(), () -> {});
         }
     }
 }

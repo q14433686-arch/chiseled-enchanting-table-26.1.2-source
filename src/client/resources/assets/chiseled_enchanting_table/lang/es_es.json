@@ -784,7 +784,7 @@
   "config.chiseled_enchanting_table.preset.standard.desc": "Balanced shipped experience: smooth 3..45 wooden discount, 22-shelf Lv.II cap, smooth 6d→3d→1d tome nursing, Cleanse provenance refunds, and Deep Inscription rituals.",
   "config.chiseled_enchanting_table.preset.expert.short": "Experto",
   "config.chiseled_enchanting_table.preset.expert.title": "Preset: Expert Archivist",
-  "config.chiseled_enchanting_table.preset.expert.desc": "Strict library engineering: Lv.I blank cap, 42-shelf direct mastery, 3-charge Master Tomes, mandatory breathing room & line-of-sight, and prior-discovery gates.",
+  "config.chiseled_enchanting_table.preset.expert.desc": "Desafío Maestro Archivista: desactiva la mesa vanilla y los libros de aldeanos, exige mejoras paso a paso sin crédito previo, material único por jugador, tope Nv.I en blanco, tomos de 2 cargas, descuento máx. -20%, 12 bloques libres y línea de visión estricta.",
   "config.chiseled_enchanting_table.preset.note_new_chunks": "Worldgen & structure loot settings only affect newly generated chunks / unopened chests.",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "Save Risk: Lowering stack size requires a full client+server restart and can truncate or break loading of containers that already hold stacked Enchanted Books!",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ Lowering book stack size needs restart & risks stacked books in saves!",

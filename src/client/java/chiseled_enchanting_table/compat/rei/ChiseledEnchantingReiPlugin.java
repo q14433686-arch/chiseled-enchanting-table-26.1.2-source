@@ -175,6 +175,33 @@ public class ChiseledEnchantingReiPlugin implements REIClientPlugin {
             }
         });
 
+        // 1b. Completely suspend REI overlays (search, bookmarks, wrench) when Config modal is open over the table
+        registry.registerDecider(new DisplayBoundsProvider<ChiseledEnchantingTableScreen>() {
+            @Override
+            public double getPriority() {
+                return 100.0;
+            }
+
+            @Override
+            public <R extends Screen> boolean isHandingScreen(Class<R> screen) {
+                return ChiseledEnchantingTableScreen.class.isAssignableFrom(screen);
+            }
+
+            @Override
+            public <R extends Screen> InteractionResult shouldScreenBeOverlaid(R screen) {
+                if (screen instanceof ChiseledEnchantingTableScreen tableScreen && tableScreen.hasActiveConfigOverlay()) {
+                    return InteractionResult.FAIL;
+                }
+                return InteractionResult.PASS;
+            }
+
+            @Override
+            public Rectangle getScreenBounds(ChiseledEnchantingTableScreen screen) {
+                Rect2i r = screen.viewerMainGuiBounds();
+                return new Rectangle(r.getX(), r.getY(), r.getWidth(), r.getHeight());
+            }
+        });
+
         // 2. Keep REI panels clear of ChiseledEnchantingTableScreen's top tabs & Grimoire button
         registry.exclusionZones().register(
             ChiseledEnchantingTableScreen.class,

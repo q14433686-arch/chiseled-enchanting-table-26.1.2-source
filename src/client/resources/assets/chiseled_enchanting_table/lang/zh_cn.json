@@ -784,7 +784,7 @@
   "config.chiseled_enchanting_table.preset.standard.desc": "模组标准平衡体验：3..45 木书架平滑减免、22 架解锁 II 级满级魔咒、6天→3天→1天平滑温养曲线、溯源退魔返还与深层铭刻仪式。",
   "config.chiseled_enchanting_table.preset.expert.short": "专家",
   "config.chiseled_enchanting_table.preset.expert.title": "预设：专家模式",
-  "config.chiseled_enchanting_table.preset.expert.desc": "硬核馆藏规划：白板仅可直附 I 级、42 架解锁满阶升级、母本基础 3 点耐久、强制要求呼吸空间与无遮挡视线、探索前置解锁。",
+  "config.chiseled_enchanting_table.preset.expert.desc": "严苛宗师挑战：禁用原版附魔台与图书管理员附魔书交易、强制逐级升阶且无差价抵扣、玩家盐值单选耗材、白板仅限 I 级、母本仅 2 点耐久且耗尽化为残卷、最高减免收紧至 -20%、强制宽敞呼吸空间与无遮挡视线。",
   "config.chiseled_enchanting_table.preset.note_new_chunks": "提示：世界生成与结构宝箱战利品选项仅对新探索区块与未开启的箱子生效。",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "⚠ 存档风险：调小附魔书堆叠上限需重启双端；若现有存档容器内已存放堆叠数 >1 的附魔书，调小上限可能导致物品丢失或读取报错！",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ 调小附魔书堆叠需重启，且对已有堆叠附魔书的存档存在风险！",

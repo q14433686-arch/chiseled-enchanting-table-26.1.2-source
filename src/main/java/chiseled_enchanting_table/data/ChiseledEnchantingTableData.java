@@ -915,13 +915,24 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             woodDisc = 0;
             totalDisc = 0;
         }
+        int defaultTotalDisc = Math.max(1, chiseled_enchanting_table.BundledDefaults.MAX_TOTAL_XP_DISCOUNT_PERCENT);
+        double masteryScale = totalDisc > defaultTotalDisc ? (double) totalDisc / (double) defaultTotalDisc : 1.0;
+        int globalDiscCap = resDiscountOff
+            ? 0
+            : Math.min(totalDisc, (int) Math.round(lr.maxGlobalMasteryDiscountPercent() * masteryScale));
+        int specDiscCap = resDiscountOff
+            ? 0
+            : Math.min(totalDisc, (int) Math.round(lr.maxSpecificEnchantBonusPercent() * masteryScale));
+        int baseDiscCap = resDiscountOff
+            ? 0
+            : Math.min(totalDisc, Math.max(woodDisc + globalDiscCap, lr.maxBaseXpDiscountPercent()));
         chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig = new chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config(
             lr.minDiscountBookshelves(),
             Math.max(lr.minDiscountBookshelves() + 1, lr.maxDiscountBookshelves()),
             woodDisc,
-            resDiscountOff ? 0 : lr.maxGlobalMasteryDiscountPercent(),
-            resDiscountOff ? 0 : lr.maxBaseXpDiscountPercent(),
-            resDiscountOff ? 0 : lr.maxSpecificEnchantBonusPercent(),
+            globalDiscCap,
+            baseDiscCap,
+            specDiscCap,
             lr.specificEnchantExponent(),
             totalDisc,
             lr.masteryUnitExponent(),
@@ -1159,10 +1170,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         try (Reader reader = resource.openAsReader()) {
             JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
             String source = resource.sourcePackId();
-            boolean own = source.equals("mod/chiseled_enchanting_table") || source.equals("chiseled_enchanting_table");
-            // Fabric's aggregate built-in pack may not expose a per-mod identity. Compare its
-            // selected content to our bundled resource rather than treating any first layer as ours.
-            if (source.equals("fabric") || source.equals("vanilla")) {
+            boolean own = source.equals("mod/chiseled_enchanting_table")
+                || source.equals("chiseled_enchanting_table")
+                || source.equals("fabric/chiseled_enchanting_table");
+            // Fabric's built-in resource pack ID can vary across loader versions; always treat
+            // content byte-identical to our bundled default table as owned by the mod itself.
+            if (!own) {
                 try (var stream = ChiseledEnchantingTableData.class.getResourceAsStream(
                     "/data/" + tableId.getNamespace() + "/" + tableId.getPath())) {
                     if (stream != null) own = object.equals(JsonParser.parseReader(

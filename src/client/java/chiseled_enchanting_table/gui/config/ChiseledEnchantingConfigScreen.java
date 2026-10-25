@@ -91,6 +91,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private static final Identifier BTN_PLAQUE_GOLD = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_gold.png");
     private static final Identifier BTN_PLAQUE_DISABLED = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_disabled.png");
 
+    private static final Identifier MICRO_BTN = ChiseledEnchantingTable.identifier("gui/config/micro_btn.png");
+    private static final Identifier MICRO_BTN_HOVER = ChiseledEnchantingTable.identifier("gui/config/micro_btn_hover.png");
+    private static final Identifier MICRO_BTN_DISABLED = ChiseledEnchantingTable.identifier("gui/config/micro_btn_disabled.png");
+    private static final Identifier ICON_RESET = ChiseledEnchantingTable.identifier("gui/config/icon_reset.png");
+    private static final Identifier ICON_RESET_DISABLED = ChiseledEnchantingTable.identifier("gui/config/icon_reset_disabled.png");
+
     private static final Identifier SEARCH_BOX = ChiseledEnchantingTable.identifier("gui/config/search_box.png");
     private static final Identifier SEARCH_BOX_FOCUS = ChiseledEnchantingTable.identifier("gui/config/search_box_focus.png");
 
@@ -346,7 +352,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int ornW = Math.min(136, divBox.w() - 16);
         if (ornW >= 48) {
             int ox = Math.round(divBox.centerX() - ornW * 0.5f);
-            ctx.blit(DIVIDER_ORNAMENT, ox, divBox.y() - 2, ox + ornW, divBox.y() + 7, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.blit(DIVIDER_ORNAMENT, ox, cy - 5, ox + ornW, cy + 6, 0.0f, 1.0f, 0.0f, 1.0f);
         }
     }
 
@@ -561,11 +567,14 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
         this.pendingSaveId = ModRuntimeConfig.nextSaveRequestId();
         this.pendingClose = closeAfterSave;
+        // When hosted as an overlay inside ChiseledEnchantingTableScreen (closeOverride != null),
+        // keep the server container open so the table stays open and immediately refreshes its live scan/discounts.
+        boolean closeServerContainer = closeAfterSave && this.closeOverride == null;
         if (ClientPlayNetworking.canSend(ModConfigNetworking.UpdateRuntimeConfigPayload.TYPE)) {
             ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(
                 built.toJsonString(),
                 this.pendingSaveId,
-                closeAfterSave
+                closeServerContainer
             ));
         }
     }
@@ -601,14 +610,16 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         Box modal = this.layout.modal();
 
-        // Layer 0: Full-viewport scrim + tiled arcane backdrop + 9-slice sculpted obsidian/brass frame + gem clasps
+        // Layer 0: Full-viewport scrim + tiled arcane backdrop + 9-slice sculpted obsidian/brass frame + symmetrical clasps
         ctx.fill(0, 0, this.width, this.height, BG_SCRIM);
         blitTiledBackdrop(ctx, this.layout.backdropArea());
         blitNineSliceRect(ctx, MODAL_FRAME, modal.x(), modal.y(), modal.w(), modal.h(), 28, 28, 96, 96);
 
-        int topGemX = Math.round(modal.centerX() - 8.0f);
-        ctx.blit(FRAME_GEM_PIP, topGemX, modal.y() - 2, topGemX + 16, modal.y() + 14, 0.0f, 1.0f, 0.0f, 1.0f);
-        ctx.blit(FRAME_GEM_PIP, topGemX, modal.bottom() - 14, topGemX + 16, modal.bottom() + 2, 0.0f, 1.0f, 0.0f, 1.0f);
+        int claspW = 44;
+        int claspH = 12;
+        int claspX = Math.round(modal.centerX() - claspW * 0.5f);
+        ctx.blit(FRAME_GEM_PIP, claspX, modal.y(), claspX + claspW, modal.y() + claspH, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.blit(FRAME_GEM_PIP, claspX, modal.bottom() - claspH, claspX + claspW, modal.bottom(), 0.0f, 1.0f, 1.0f, 0.0f);
 
         // Layer 1 (L0): Header & Preset/Search Toolbar
         List<Component> l0Tip = renderL0HeaderAndToolbar(ctx, mouseX, mouseY);
@@ -684,28 +695,38 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             );
         }
 
-        // L0-A3: Session Mode Badge
+        // L0-A3: Session Mode Badge (sculpted obsidian/brass plaque with subtle status glow)
         Box modeBox = this.layout.sessionBadgeBox();
-        int modeFill = switch (this.sessionMode) {
-            case SINGLEPLAYER_LIVE -> 0xCC164A35;
-            case DEDICATED_ADMIN -> 0xCC593E14;
-            case OFFLINE_CLIENT -> 0xCC183D54;
-            case DEDICATED_READONLY -> 0xCC571D2A;
-            case MODPACK_LOCKED -> 0xCC3F1E59;
+        boolean overMode = modeBox.contains(mouseX, mouseY);
+        blitNineSliceRect(
+            ctx,
+            this.sessionMode.writable() ? (overMode ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
+            modeBox.x(), modeBox.y(), modeBox.w(), modeBox.h(), 6, 6, 64, 18
+        );
+        int modeTint = switch (this.sessionMode) {
+            case SINGLEPLAYER_LIVE -> 0x3029B87A;
+            case DEDICATED_ADMIN -> 0x30E5A93C;
+            case OFFLINE_CLIENT -> 0x304CA8E0;
+            case DEDICATED_READONLY -> 0x34C94862;
+            case MODPACK_LOCKED -> 0x349B59E0;
         };
-        int modeBorder = this.sessionMode.writable() ? 0xFFA88948 : 0xFF8C4A63;
-        ctx.fill(modeBox.x(), modeBox.y(), modeBox.right(), modeBox.bottom(), modeBorder);
-        ctx.fill(modeBox.x() + 1, modeBox.y() + 1, modeBox.right() - 1, modeBox.bottom() - 1, modeFill);
+        ctx.fill(modeBox.x() + 4, modeBox.y() + 3, modeBox.right() - 4, modeBox.bottom() - 3, modeTint);
+        int modeTextColor = switch (this.sessionMode) {
+            case SINGLEPLAYER_LIVE -> EMERALD_TEXT;
+            case DEDICATED_ADMIN -> GOLD_TEXT;
+            case OFFLINE_CLIENT -> CYAN_TEXT;
+            case DEDICATED_READONLY, MODPACK_LOCKED -> AMBER_TEXT;
+        };
         String modeLabel = (this.sessionMode.writable() ? "\u270e " : "\uD83D\uDD12 ") + I18n.get(this.sessionMode.bannerKey());
         drawClampedCenteredText(
             ctx,
             modeLabel,
-            new Box(modeBox.x() + 4, modeBox.y(), Math.max(16, modeBox.w() - 8), modeBox.h()),
+            new Box(modeBox.x() + 6, modeBox.y(), Math.max(16, modeBox.w() - 12), modeBox.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            CREAM_TEXT
+            modeTextColor
         );
-        if (modeBox.contains(mouseX, mouseY)) {
+        if (overMode) {
             tip = List.of(
                 Component.translatable(this.sessionMode.bannerKey()).withStyle(ChatFormatting.GOLD),
                 Component.translatable(this.sessionMode.writable()
@@ -1220,22 +1241,22 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         // 4. Interactive Control (Boolean Toggle / Enum Plaque / Slider)
         renderOptionControl(ctx, entry, row.controlBox(), editable, inClip, mouseX, mouseY, clipTop, clipBottom);
 
-        // 5. Reset-to-default button
+        // 5. Reset-to-default micro-button + crisp pixel-art reset glyph
         Box rb = row.resetBox();
         boolean canReset = editable && avail.modifiedFromDefault();
         boolean overReset = inClip && canReset && rb.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            canReset ? (overReset ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
-            rb.x(), rb.y(), rb.w(), rb.h(), 4, 4, 64, 18
+            canReset ? (overReset ? MICRO_BTN_HOVER : MICRO_BTN) : MICRO_BTN_DISABLED,
+            rb.x(), rb.y(), rb.w(), rb.h(), 3, 3, 16, 16
         );
-        drawClampedCenteredText(
-            ctx,
-            "\u21ba",
-            rb,
-            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            canReset ? (overReset ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT
+        int iconSz = Math.min(10, Math.min(rb.w() - 4, rb.h() - 4));
+        int iconX = Math.round(rb.centerX() - iconSz * 0.5f);
+        int iconY = Math.round(rb.centerY() - iconSz * 0.5f);
+        ctx.blit(
+            canReset ? ICON_RESET : ICON_RESET_DISABLED,
+            iconX, iconY, iconX + iconSz, iconY + iconSz,
+            0.0f, 1.0f, 0.0f, 1.0f
         );
         if (canReset) {
             int cTop = Math.max(clipTop, rb.y());
@@ -1270,13 +1291,17 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean hitValid = cBot > cTop;
 
         if (entry.kind() == ControlKind.BOOLEAN) {
-            boolean isOn = "true".equals(entry.rawOrKeyDisplay(shown));
+            boolean isOn = Boolean.TRUE.equals(entry.get(shown));
+            boolean overBool = inClip && editable && cb.contains(mouseX, mouseY);
             int swW = 36;
             int swH = 16;
             int swX = cb.right() - swW;
             int swY = Math.round(cb.centerY() - swH * 0.5f);
             Identifier swSprite = !editable ? TOGGLE_LOCKED : (isOn ? TOGGLE_ON : TOGGLE_OFF);
             ctx.blit(swSprite, swX, swY, swX + swW, swY + swH, 0.0f, 1.0f, 0.0f, 1.0f);
+            if (overBool) {
+                ctx.fill(swX + 1, swY + 1, swX + swW - 1, swY + swH - 1, 0x24FFE599);
+            }
 
             Box stateTextBox = new Box(cb.x(), cb.y(), Math.max(20, swX - 4 - cb.x()), cb.h());
             String stateText = I18n.get(isOn
@@ -1288,7 +1313,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 stateTextBox,
                 ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
                 ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-                !editable ? DIM_TEXT : (isOn ? EMERALD_TEXT : MUTED_TEXT)
+                !editable ? DIM_TEXT : (isOn ? EMERALD_TEXT : (overBool ? CREAM_TEXT : MUTED_TEXT))
             );
 
             if (editable && hitValid) {
@@ -1359,17 +1384,17 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overPlus = inClip && editable && plusBox.contains(mouseX, mouseY);
         boolean overTrack = inClip && editable && trackArea.contains(mouseX, mouseY);
 
-        blitNineSliceRect(ctx, !editable ? BTN_PLAQUE_DISABLED : (overMinus ? BTN_PLAQUE_HOVER : BTN_PLAQUE),
-            minusBox.x(), minusBox.y(), minusBox.w(), minusBox.h(), 4, 4, 64, 18);
+        blitNineSliceRect(ctx, !editable ? MICRO_BTN_DISABLED : (overMinus ? MICRO_BTN_HOVER : MICRO_BTN),
+            minusBox.x(), minusBox.y(), minusBox.w(), minusBox.h(), 3, 3, 16, 16);
         drawClampedCenteredText(ctx, "-", minusBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            editable ? CREAM_TEXT : DIM_TEXT);
+            editable ? (overMinus ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT);
 
-        blitNineSliceRect(ctx, !editable ? BTN_PLAQUE_DISABLED : (overPlus ? BTN_PLAQUE_HOVER : BTN_PLAQUE),
-            plusBox.x(), plusBox.y(), plusBox.w(), plusBox.h(), 4, 4, 64, 18);
+        blitNineSliceRect(ctx, !editable ? MICRO_BTN_DISABLED : (overPlus ? MICRO_BTN_HOVER : MICRO_BTN),
+            plusBox.x(), plusBox.y(), plusBox.w(), plusBox.h(), 3, 3, 16, 16);
         drawClampedCenteredText(ctx, "+", plusBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            editable ? CREAM_TEXT : DIM_TEXT);
+            editable ? (overPlus ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT);
 
         int barH = 8;
         int barY = Math.round(trackArea.centerY() - barH * 0.5f);

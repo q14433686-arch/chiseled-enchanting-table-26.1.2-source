@@ -317,6 +317,7 @@ public final class ConfigCatalog {
 
         public void set(Draft d, Object v) {
             setter.accept(d, v);
+            d.markCustomized(key);
             d.normalizeAfterEdit(key);
         }
 
@@ -326,6 +327,7 @@ public final class ConfigCatalog {
                 set(d, !cur);
             } else if (kind == ControlKind.ENUM_CYCLE) {
                 enumCycler.accept(d, direction);
+                d.markCustomized(key);
                 d.normalizeAfterEdit(key);
             }
         }
@@ -337,6 +339,7 @@ public final class ConfigCatalog {
         public void setFromNormalizedSlider(Draft d, double t) {
             double clamped = Math.max(0.0, Math.min(1.0, t));
             sliderNormalizedSetter.accept(d, clamped);
+            d.markCustomized(key);
             d.normalizeAfterEdit(key);
         }
 

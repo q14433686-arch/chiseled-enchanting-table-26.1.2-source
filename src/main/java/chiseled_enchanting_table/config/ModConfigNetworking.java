@@ -108,32 +108,39 @@ public final class ModConfigNetworking {
 
         ServerPlayNetworking.registerGlobalReceiver(UpdateRuntimeConfigPayload.TYPE, (payload, ctx) -> {
             ServerPlayer player = ctx.player();
-            MinecraftServer server = player.level().getServer();
-            if (server == null || !canPlayerManageConfig(server, player)) {
-                sendToPlayer(player, payload.requestId(), false);
+            MinecraftServer server = ctx.server();
+            if (server == null) {
                 return;
             }
-            long nowNano = System.nanoTime();
-            Long prevNano = LAST_CONFIG_UPDATE_NANO.get(player.getUUID());
-            if (prevNano != null && nowNano - prevNano < MIN_CONFIG_UPDATE_INTERVAL_NANOS) {
-                sendToPlayer(player, payload.requestId(), false);
-                return;
-            }
-            LAST_CONFIG_UPDATE_NANO.put(player.getUUID(), nowNano);
-            try {
-                if (payload.requestId() <= 0 || payload.json().isBlank()) throw new IllegalArgumentException("Invalid save request");
-                ModRuntimeConfig parsed = ModRuntimeConfig.fromJsonString(payload.json());
-                applyAndBroadcast(server, parsed, payload.closeContainer() ? null : player);
-                sendToPlayer(player, payload.requestId(), true);
-            } catch (RuntimeException error) {
-                ChiseledEnchantingTable.LOGGER.warn("Rejected config update from {}", player.getName().getString(), error);
-                sendToPlayer(player, payload.requestId(), false);
-                String msg = String.valueOf(error.getMessage());
-                boolean startupConflict = msg.contains("bootstrap") || msg.contains("startup");
-                player.sendSystemMessage(Component.translatable(startupConflict
-                    ? "config.chiseled_enchanting_table.msg.save_failed_startup"
-                    : "config.chiseled_enchanting_table.msg.save_failed"));
-            }
+            server.execute(() -> {
+                if (!canPlayerManageConfig(server, player)) {
+                    sendToPlayer(player, payload.requestId(), false);
+                    return;
+                }
+                long nowNano = System.nanoTime();
+                Long prevNano = LAST_CONFIG_UPDATE_NANO.get(player.getUUID());
+                if (prevNano != null && nowNano - prevNano < MIN_CONFIG_UPDATE_INTERVAL_NANOS) {
+                    sendToPlayer(player, payload.requestId(), false);
+                    return;
+                }
+                LAST_CONFIG_UPDATE_NANO.put(player.getUUID(), nowNano);
+                try {
+                    if (payload.requestId() <= 0 || payload.json().isBlank()) {
+                        throw new IllegalArgumentException("Invalid save request");
+                    }
+                    ModRuntimeConfig parsed = ModRuntimeConfig.fromJsonString(payload.json());
+                    applyAndBroadcast(server, parsed, payload.closeContainer() ? null : player);
+                    sendToPlayer(player, payload.requestId(), true);
+                } catch (RuntimeException error) {
+                    ChiseledEnchantingTable.LOGGER.warn("Rejected config update from {}", player.getName().getString(), error);
+                    sendToPlayer(player, payload.requestId(), false);
+                    String msg = String.valueOf(error.getMessage());
+                    boolean startupConflict = msg.contains("bootstrap") || msg.contains("startup");
+                    player.sendSystemMessage(Component.translatable(startupConflict
+                        ? "config.chiseled_enchanting_table.msg.save_failed_startup"
+                        : "config.chiseled_enchanting_table.msg.save_failed"));
+                }
+            });
         });
 
         CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) -> {

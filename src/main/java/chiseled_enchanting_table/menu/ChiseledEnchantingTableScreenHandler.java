@@ -930,6 +930,10 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public void refreshLiveShelfState() {
+        refreshLiveShelfState(false);
+    }
+
+    public void refreshLiveShelfState(boolean forceSend) {
         if (this.world.isClientSide()) {
             return;
         }
@@ -942,7 +946,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (live == null) {
             return;
         }
-        boolean changed = !live.unlocked_enchantements().equals(this.unlocked_enchantements)
+        boolean changed = forceSend
+            || !live.unlocked_enchantements().equals(this.unlocked_enchantements)
             || live.xp_discount_percent() != this.xpDiscountPercent
             || live.regular_bookshelves() != this.regularBookshelves
             || live.chiseled_bookshelves() != this.chiseledBookshelves
@@ -994,7 +999,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             return;
         }
         applyTransformationSnapshot(AvailableEnchantmentPayload.buildTransformationDisplays(this.player));
-        refreshLiveShelfState();
+        refreshLiveShelfState(true);
         pushRitualStateToViewer();
         slotsChanged(this.inventory);
         broadcastChanges();

@@ -220,9 +220,9 @@ public final class ConfigLayoutSpec {
         int statusW = Math.max(12, closeBtn.x() - 5 - statusX);
         Box footerStatus = new Box(statusX, btnY, statusW, btnH);
 
-        // Body Region (L1 Rail + L2/L3 Content Panel)
-        int bodyTop = topDivider.bottom() + 2;
-        int bodyBottom = bottomDivider.y() - 2;
+        // Body Region (L1 Rail + L2/L3 Content Panel) — leave crisp breathing room clear of divider gems
+        int bodyTop = topDivider.bottom() + 4;
+        int bodyBottom = bottomDivider.y() - 4;
         int bodyH = Math.max(60, bodyBottom - bodyTop);
 
         int railW = compact

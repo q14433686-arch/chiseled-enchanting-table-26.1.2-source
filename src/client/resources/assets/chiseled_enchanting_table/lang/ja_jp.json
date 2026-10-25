@@ -784,7 +784,7 @@
   "config.chiseled_enchanting_table.preset.standard.desc": "標準バランス：3..45本棚の滑らかな割引、22本棚でのLv.II解放、6日→3日→1日の滑らかな回復曲線と深層儀式。",
   "config.chiseled_enchanting_table.preset.expert.short": "エキスパート",
   "config.chiseled_enchanting_table.preset.expert.title": "プリセット：エキスパート",
-  "config.chiseled_enchanting_table.preset.expert.desc": "上級司書向け：未付与品はLv.I上限、最大42本棚要求、原典耐久3、空間余裕・視線判定および事前発見が必須。",
+  "config.chiseled_enchanting_table.preset.expert.desc": "厳格な大書庫チャレンジ：バニラ付与台と司書のエンチャント本取引を無効化し、差額控除なしの段階強化・塩値単一素材・白紙Lv.I上限・母本耐久2（枯渇で残巻化）・最大軽減-20%・周囲12マスの呼吸空間と視線確保を強制します。",
   "config.chiseled_enchanting_table.preset.note_new_chunks": "ワールド生成・構造物チェスト設定は新規生成チャンクと未開封チェストにのみ適用されます。",
   "config.chiseled_enchanting_table.tip.stack_shrink_save_risk": "⚠ セーブ危険：スタック上限を下げると再起動が必要で、既にスタックされたエンチャント本があるワールドで消失・エラーの原因になります！",
   "config.chiseled_enchanting_table.msg.stack_shrink_risk": "⚠ スタック上限の縮小は再起動必須＆既存スタック本に危険あり！",

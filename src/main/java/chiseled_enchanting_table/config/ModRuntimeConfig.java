@@ -403,46 +403,87 @@ public record ModRuntimeConfig(
                     markModifiedRuntimeKeys(fresh);
                 }
                 case EXPERT -> {
-                    fresh.vanillaTableMode = VanillaTableMode.ALIGN_CAPS;
+                    fresh.enchantedBookStackSize = 1;
+                    fresh.vanillaTableMode = VanillaTableMode.ALL;
                     fresh.anvilFlatRepairCost = false;
                     fresh.anvilBlockSameBookMerge = true;
                     fresh.restrictVillagerInfinityBooks = true;
                     fresh.grindstoneDepletedTome = true;
 
+                    fresh.defaultUnlockFilter = DefaultUnlockFilter.EXCLUDE_SPECIAL;
+                    fresh.directTierUpgrade = false;
                     fresh.directGatesEnabled = true;
                     fresh.blankMaxTierMode = BlankMaxTierMode.LEVEL_ONE_ONLY;
-                    fresh.maxDirectBookshelves = 42;
+                    fresh.maxDirectBookshelves = 48;
                     fresh.horizontalScanRadius = 3;
                     fresh.verticalScanRadius = 2;
                     fresh.requireBreathingRoom = true;
-                    fresh.minOpenAdjacentBlocks = 8;
+                    fresh.minOpenAdjacentBlocks = 12;
                     fresh.requireLineOfSight = true;
 
                     fresh.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.WEAR;
-                    fresh.maxTomeUses = 3;
+                    fresh.maxTomeUses = 2;
                     fresh.bookCopyWearCost = 2;
                     fresh.tomeDepleteBehavior = MasterTomeWear.DepleteBehavior.DEPLETED_TOME;
                     fresh.tomeRegenEnabled = true;
+                    fresh.tomeRegenBaseSeconds = 14_400;
+                    fresh.tomeRegenTier1Shelves = 42;
+                    fresh.tomeRegenTier1Seconds = 7_200;
+                    fresh.tomeRegenTier2Shelves = 52;
+                    fresh.tomeRegenTier2Seconds = 3_600;
+                    fresh.tomeLocksEnabled = true;
                     fresh.lockedShelfBreakable = false;
                     fresh.lockedBookExtractionBlocked = true;
-                    fresh.maxWoodenDiscountPercent = 12;
-                    fresh.maxTotalXpDiscountPercent = 30;
+                    fresh.provenanceEnabled = true;
+                    fresh.ritualQueueEnabled = true;
+
+                    fresh.incrementalCredit = false;
+                    fresh.materialSelectionMode = MaterialSelectionMode.PLAYER_SALTED_SINGLE;
+                    fresh.researchRoundingMode = ResearchRoundingMode.ROUND_NEAREST;
+                    fresh.libraryDiscountEnabled = true;
+                    fresh.maxWoodenDiscountPercent = 8;
+                    fresh.maxTotalXpDiscountPercent = 20;
                     fresh.bookCombineEnabled = true;
-                    fresh.bookCombineXpMultiplier = 0.85;
+                    fresh.bookCombineXpMultiplier = 1.35;
                     fresh.bookResearchEnabled = true;
-                    fresh.bookResearchXpMultiplier = 1.75;
+                    fresh.bookResearchXpMultiplier = 2.25;
 
                     fresh.epiphanyEnabled = true;
-                    fresh.epiphanyMinBookshelves = 36;
-                    fresh.epiphanyBaseChance = 0.22;
-                    fresh.epiphanyMaxChance = 0.80;
+                    fresh.epiphanyMinBookshelves = 42;
+                    fresh.epiphanyBaseChance = 0.12;
+                    fresh.epiphanyMaxChance = 0.60;
+                    fresh.epiphanyMaxSlotsCap = 2;
+                    fresh.epiphanyCycleSeconds = 900;
+                    fresh.epiphanyFreezeXpLevels = 8;
+                    fresh.epiphanyFreezeDurationSeconds = 600;
+                    fresh.epiphanyMaxFreezeSeconds = 1_800;
+                    fresh.epiphanyRerollXpLevels = 10;
 
                     fresh.disenchantEnabled = true;
-                    fresh.xpRefundScale = 0.75;
-                    fresh.externalXpRefundScale = 0.15;
+                    fresh.xpRefundScale = 0.50;
+                    fresh.externalXpRefundScale = 0.05;
+                    fresh.stripXpMin = 6;
+                    fresh.stripXpMax = 18;
                     fresh.allowCursePurge = true;
-                    fresh.cursePurgeXpCost = 18;
+                    fresh.cursePurgeXpCost = 28;
                     fresh.requirePriorDiscovery = true;
+                    fresh.drainedBookResult = DrainedBookResult.DEPLETED_TOME;
+                    fresh.tier1Bookshelves = 20;
+                    fresh.tier2Bookshelves = 36;
+                    fresh.tier3QualifyingEnchantments = 10;
+                    fresh.transformationMaxBatchSize = 8;
+                    fresh.tomePageEnabled = true;
+                    fresh.tomePageRequiredShelves = 12;
+                    fresh.sacrificeRequired = 24;
+                    fresh.earlyUnlockXpLevels = 25;
+                    fresh.earlyUnlockGritCount = 12;
+
+                    fresh.vanillaChestBooksMode = VanillaChestBooksMode.STRIP_VANILLA;
+                    fresh.bookshelfPoolEnabled = true;
+                    fresh.bookshelfMinBooks = 1;
+                    fresh.bookshelfMaxBooks = 2;
+                    fresh.bookshelfEnchantedProb = 0.03;
+                    fresh.librarianTomeOffers = false;
                     markModifiedRuntimeKeys(fresh);
                 }
             }

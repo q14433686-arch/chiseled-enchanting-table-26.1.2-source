@@ -42,7 +42,7 @@ public final class BookshelfProgression {
     public static final int DEFAULT_SCAN_VERTICAL_RADIUS = chiseled_enchanting_table.BundledDefaults.SCAN_VERTICAL_RADIUS;
     public static final int MAX_SCAN_HORIZONTAL_RADIUS = 8;
     public static final int MAX_SCAN_VERTICAL_RADIUS = 6;
-    public static final int MAX_SCAN_VOLUME_BLOCKS = 2048;
+    public static final int MAX_SCAN_VOLUME_BLOCKS = 4096;
     public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.MAX_DIRECT_BOOKSHELVES;
     public static final int DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.TWO_LEVEL_MAX_BOOKSHELVES;
     public static final double DIRECT_TIER_CURVE_EXPONENT = chiseled_enchanting_table.BundledDefaults.DIRECT_TIER_GAMMA;

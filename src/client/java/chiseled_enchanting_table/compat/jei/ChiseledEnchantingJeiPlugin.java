@@ -218,6 +218,50 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             };
         });
 
+        // 1b. Completely suspend JEI overlays (ingredient list, bookmarks, wrench) while Config modal is open over the table
+        registration.addGuiScreenHandler(ChiseledEnchantingTableScreen.class, screen -> {
+            if (screen.hasActiveConfigOverlay()) {
+                return null;
+            }
+            Rect2i bounds = screen.viewerMainGuiBounds();
+            return new IGuiProperties() {
+                @Override
+                public Class<? extends Screen> screenClass() {
+                    return ChiseledEnchantingTableScreen.class;
+                }
+
+                @Override
+                public int guiLeft() {
+                    return bounds.getX();
+                }
+
+                @Override
+                public int guiTop() {
+                    return bounds.getY();
+                }
+
+                @Override
+                public int guiXSize() {
+                    return bounds.getWidth();
+                }
+
+                @Override
+                public int guiYSize() {
+                    return bounds.getHeight();
+                }
+
+                @Override
+                public int screenWidth() {
+                    return screen.width;
+                }
+
+                @Override
+                public int screenHeight() {
+                    return screen.height;
+                }
+            };
+        });
+
         // 2. Expose every item icon inside ArcaneGrimoireScreen to JEI's native R / U / A keybinds
         registration.addGlobalGuiHandler(new IGlobalGuiHandler() {
             @Override
