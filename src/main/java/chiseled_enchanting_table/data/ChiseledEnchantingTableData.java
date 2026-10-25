@@ -954,17 +954,18 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         var bu = rawBookUpgradeRules;
         if (classic103) {
             // 1.0.3 Classic data set (audit findings 06/07): "full price" must mean
-            // the 1.0.3 prices, not full price at 1.1.0 rates. The bundled
-            // *_classic_1_0_3.json files are byte copies of tag 26.1.2_1.0.3 and
-            // parse through the same loaders; cfg XP multipliers are already
-            // forced to the classic 1.0 / 0.5 by ModRuntimeConfig.
+            // the 1.0.3 prices, not full price at 1.1.0 rates. The classic
+            // *_classic_1_0_3.json tables (bundled baselines, datapack-overridable
+            // per R2-09) parse through the same loaders and own their XP
+            // multipliers while the mode is on; cfg multipliers are editable
+            // preferences for standard mode and must not leak into classic.
             bu = classicBookUpgradeRules;
         }
         BookUpgradeRules bookUpgradeRules = new BookUpgradeRules(
             cfg.bookCombineEnabled(),
-            cfg.bookCombineXpMultiplier(),
+            classic103 ? bu.combineXpMultiplier() : cfg.bookCombineXpMultiplier(),
             cfg.bookResearchEnabled(),
-            cfg.bookResearchXpMultiplier(),
+            classic103 ? bu.researchXpMultiplier() : cfg.bookResearchXpMultiplier(),
             bu.researchMaterialMultiplier(),
             bu.defaultResearchCost(),
             bu.researchOverrides()
@@ -972,8 +973,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         CostTables frameCostTables = classic103 ? classicCostTables : costTables;
 
         var ep = rawTreasureEpiphanyRules;
-        double epBase = cfg.epiphanyBaseChance();
-        double epMax = Math.max(epBase, cfg.epiphanyMaxChance());
+        double epBase = classic103 ? 0.0 : cfg.epiphanyBaseChance();
+        double epMax = classic103 ? 0.0 : Math.max(epBase, cfg.epiphanyMaxChance());
         int frzTicks = Math.max(200, cfg.epiphanyFreezeDurationSeconds() * 20);
         int maxFrzTicks = Math.max(
             frzTicks,
