@@ -11,10 +11,10 @@ Fabric Loom: 1.16.3
 
 > Task :compileJava
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:420: error: cannot find symbol
-            && ChiseledEnchantingTableData.masterTomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
-                                          ^
-  symbol:   method masterTomeConsumptionMode()
-  location: class ChiseledEnchantingTableData
+            && ChiseledEnchantingTableData.libraryResonanceConfig().consumptionMode()
+                                                                   ^
+  symbol:   method consumptionMode()
+  location: class Config
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
@@ -22,7 +22,7 @@ Note: Recompile with -Xlint:unchecked for details.
 1 error
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792920469932.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792920622716.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -36,10 +36,10 @@ Execution failed for task ':compileJava'.
   Note: Recompile with -Xlint:unchecked for details.
   Note: Some input files use or override a deprecated API.
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:420: error: cannot find symbol
-              && ChiseledEnchantingTableData.masterTomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
-                                            ^
-    symbol:   method masterTomeConsumptionMode()
-    location: class ChiseledEnchantingTableData
+              && ChiseledEnchantingTableData.libraryResonanceConfig().consumptionMode()
+                                                                     ^
+    symbol:   method consumptionMode()
+    location: class Config
   1 error
 
 * Try:
@@ -52,5 +52,5 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 10s
+BUILD FAILED in 13s
 1 actionable task: 1 executed
