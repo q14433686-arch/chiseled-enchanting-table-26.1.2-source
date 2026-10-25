@@ -1,4 +1,4 @@
-commit: 5551acb5e6480a560d8cfeaa1b938d316a1492d8
+commit: 13a5b06d30fd8f7fa4af66ab09231242d0ecb524
 branch: arena/b99a37c2-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -18,342 +18,57 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:193: error: cannot find symbol
-        warnIfChiseledShelfInTag(blockLookup, CetTags.REGULAR_BOOKSHELVES);
-                                                     ^
-  symbol:   variable REGULAR_BOOKSHELVES
-  location: class CetTags
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1769: error: cannot find symbol
-        return XpCostConversion.totalPointsForLevel(X);
-                               ^
-  symbol:   method totalPointsForLevel(int)
-  location: class XpCostConversion
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:178: error: cannot find symbol
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W1_MULTIPLIER,
-                                                     ^
-  symbol:   variable APPLICABILITY_RARITY_W1_MULTIPLIER
-  location: class BundledDefaults
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:179: error: cannot find symbol
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W2_MULTIPLIER,
-                                                     ^
-  symbol:   variable APPLICABILITY_RARITY_W2_MULTIPLIER
-  location: class BundledDefaults
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:180: error: cannot find symbol
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W5_MULTIPLIER,
-                                                     ^
-  symbol:   variable APPLICABILITY_RARITY_W5_MULTIPLIER
-  location: class BundledDefaults
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:556: error: cannot find symbol
-        buf.writeDouble(ev.rarityMultiplierCommon());
-                          ^
-  symbol:   method rarityMultiplierCommon()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:557: error: cannot find symbol
-        buf.writeDouble(ev.rarityMultiplierUncommon());
-                          ^
-  symbol:   method rarityMultiplierUncommon()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:558: error: cannot find symbol
-        buf.writeDouble(ev.rarityMultiplierRare());
-                          ^
-  symbol:   method rarityMultiplierRare()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:559: error: cannot find symbol
-        buf.writeDouble(ev.rarityMultiplierVeryRare());
-                          ^
-  symbol:   method rarityMultiplierVeryRare()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:561: error: cannot find symbol
-        buf.writeDouble(ev.singleLevelScore());
-                          ^
-  symbol:   method singleLevelScore()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:562: error: cannot find symbol
-        buf.writeDouble(ev.multiLevelFloor());
-                          ^
-  symbol:   method multiLevelFloor()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:563: error: cannot find symbol
-        buf.writeDouble(ev.multiLevelSpan());
-                          ^
-  symbol:   method multiLevelSpan()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:564: error: cannot find symbol
-        buf.writeDouble(ev.multiLevelGamma());
-                          ^
-  symbol:   method multiLevelGamma()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:565: error: cannot find symbol
-        buf.writeVarInt(ev.xpLevelMin());
-                          ^
-  symbol:   method xpLevelMin()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:566: error: cannot find symbol
-        buf.writeVarInt(ev.xpLevelMax());
-                          ^
-  symbol:   method xpLevelMax()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:567: error: cannot find symbol
-        buf.writeDouble(ev.xpLevelSpan());
-                          ^
-  symbol:   method xpLevelSpan()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:568: error: cannot find symbol
-        buf.writeVarInt(ev.conservationMarginPoints());
-                          ^
-  symbol:   method conservationMarginPoints()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:569: error: cannot find symbol
-        buf.writeVarInt(ev.minNonZeroPoints());
-                          ^
-  symbol:   method minNonZeroPoints()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:618: error: cannot find symbol
-        buf.writeDouble(app.keystoneMajorFactor());
-                           ^
-  symbol:   method keystoneMajorFactor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:619: error: cannot find symbol
-        buf.writeDouble(app.keystoneMinorFactor());
-                           ^
-  symbol:   method keystoneMinorFactor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:620: error: cannot find symbol
-        buf.writeDouble(app.broadFactor());
-                           ^
-  symbol:   method broadFactor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:621: error: cannot find symbol
-        buf.writeDouble(app.baseFloor());
-                           ^
-  symbol:   method baseFloor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:622: error: cannot find symbol
-        buf.writeDouble(app.perSupportedItemSlope());
-                           ^
-  symbol:   method perSupportedItemSlope()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:623: error: cannot find symbol
-        buf.writeDouble(app.maxHeuristicFactor());
-                           ^
-  symbol:   method maxHeuristicFactor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:624: error: cannot find symbol
-        buf.writeDouble(app.broadMinItemCount());
-                           ^
-  symbol:   method broadMinItemCount()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:776: error: constructor EssenceValuation in record EssenceValuation cannot be applied to given types;
-        var lrEssence = new LibraryResonance.EssenceValuation(
-                        ^
-  required: double,double,double,double,int
-  found:    double,double,double,double,double,double,double,double,double,int,int,double,int,int
-  reason: actual and formal argument lists differ in length
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:794: error: constructor WoodenBookshelves in record WoodenBookshelves cannot be applied to given types;
-            new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2),
-            ^
-  required: int,int,int,double
-  found:    int,int,int
-  reason: actual and formal argument lists differ in length
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:795: error: constructor ChiseledMastery in record ChiseledMastery cannot be applied to given types;
-            new LibraryResonance.ChiseledMastery(
-            ^
-  required: MasteryScaling,TomeLifecycle
-  found:    int,int,int,double,int,double,double,double,double,double,ConsumptionMode,int,int,DepleteBehavior,boolean,int,int,int,int,int,double,double,boolean,List<Integer>,ScapegoatPricing,double,int,int,double
-  reason: actual and formal argument lists differ in length
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:857: error: constructor ApplicabilityConfig in record ApplicabilityConfig cannot be applied to given types;
-        var appConfig = new InscriptionRitualMechanics.ApplicabilityConfig(
-                        ^
-  required: double,double,double,double,double,double,double,double,double,double
-  found:    double,double,double,double,double,double,double
-  reason: actual and formal argument lists differ in length
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostSync.java:136: error: cannot find symbol
-                    player.displayClientMessage(
-                          ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable player of type ServerPlayer
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-30 errors
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792964812860.json
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:853: error: cannot find symbol
+            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.configOverlay != null) {
+                                           ^
+  symbol:   variable InputConstants
+  location: class ChiseledEnchantingTableScreen
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:860: error: cannot find symbol
+            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.grimoireOverlay != null) {
+                                           ^
+  symbol:   variable InputConstants
+  location: class ChiseledEnchantingTableScreen
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+2 errors
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792965044784.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava'.
+Execution failed for task ':compileClientJava'.
 > Compilation failed; see the compiler output below.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:776: error: constructor EssenceValuation in record EssenceValuation cannot be applied to given types;
-          var lrEssence = new LibraryResonance.EssenceValuation(
-                          ^
-    required: double,double,double,double,int
-    found:    double,double,double,double,double,double,double,double,double,int,int,double,int,int
-    reason: actual and formal argument lists differ in length
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:794: error: constructor WoodenBookshelves in record WoodenBookshelves cannot be applied to given types;
-              new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2),
-              ^
-    required: int,int,int,double
-    found:    int,int,int
-    reason: actual and formal argument lists differ in length
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:795: error: constructor ChiseledMastery in record ChiseledMastery cannot be applied to given types;
-              new LibraryResonance.ChiseledMastery(
-              ^
-    required: MasteryScaling,TomeLifecycle
-    found:    int,int,int,double,int,double,double,double,double,double,ConsumptionMode,int,int,DepleteBehavior,boolean,int,int,int,int,int,double,double,boolean,List<Integer>,ScapegoatPricing,double,int,int,double
-    reason: actual and formal argument lists differ in length
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:857: error: constructor ApplicabilityConfig in record ApplicabilityConfig cannot be applied to given types;
-          var appConfig = new InscriptionRitualMechanics.ApplicabilityConfig(
-                          ^
-    required: double,double,double,double,double,double,double,double,double,double
-    found:    double,double,double,double,double,double,double
-    reason: actual and formal argument lists differ in length
   Note: Recompile with -Xlint:deprecation for details.
-  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:193: error: cannot find symbol
-          warnIfChiseledShelfInTag(blockLookup, CetTags.REGULAR_BOOKSHELVES);
-                                                       ^
-    symbol:   variable REGULAR_BOOKSHELVES
-    location: class CetTags
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:178: error: cannot find symbol
-              chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W1_MULTIPLIER,
-                                                       ^
-    symbol:   variable APPLICABILITY_RARITY_W1_MULTIPLIER
-    location: class BundledDefaults
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:179: error: cannot find symbol
-              chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W2_MULTIPLIER,
-                                                       ^
-    symbol:   variable APPLICABILITY_RARITY_W2_MULTIPLIER
-    location: class BundledDefaults
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:180: error: cannot find symbol
-              chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W5_MULTIPLIER,
-                                                       ^
-    symbol:   variable APPLICABILITY_RARITY_W5_MULTIPLIER
-    location: class BundledDefaults
-  Note: Recompile with -Xlint:unchecked for details.
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:853: error: cannot find symbol
+              if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.configOverlay != null) {
+                                             ^
+    symbol:   variable InputConstants
+    location: class ChiseledEnchantingTableScreen
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:860: error: cannot find symbol
+              if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.grimoireOverlay != null) {
+                                             ^
+    symbol:   variable InputConstants
+    location: class ChiseledEnchantingTableScreen
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1769: error: cannot find symbol
-          return XpCostConversion.totalPointsForLevel(X);
-                                 ^
-    symbol:   method totalPointsForLevel(int)
-    location: class XpCostConversion
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:556: error: cannot find symbol
-          buf.writeDouble(ev.rarityMultiplierCommon());
-                            ^
-    symbol:   method rarityMultiplierCommon()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:557: error: cannot find symbol
-          buf.writeDouble(ev.rarityMultiplierUncommon());
-                            ^
-    symbol:   method rarityMultiplierUncommon()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:558: error: cannot find symbol
-          buf.writeDouble(ev.rarityMultiplierRare());
-                            ^
-    symbol:   method rarityMultiplierRare()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:559: error: cannot find symbol
-          buf.writeDouble(ev.rarityMultiplierVeryRare());
-                            ^
-    symbol:   method rarityMultiplierVeryRare()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:561: error: cannot find symbol
-          buf.writeDouble(ev.singleLevelScore());
-                            ^
-    symbol:   method singleLevelScore()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:562: error: cannot find symbol
-          buf.writeDouble(ev.multiLevelFloor());
-                            ^
-    symbol:   method multiLevelFloor()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:563: error: cannot find symbol
-          buf.writeDouble(ev.multiLevelSpan());
-                            ^
-    symbol:   method multiLevelSpan()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:564: error: cannot find symbol
-          buf.writeDouble(ev.multiLevelGamma());
-                            ^
-    symbol:   method multiLevelGamma()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:565: error: cannot find symbol
-          buf.writeVarInt(ev.xpLevelMin());
-                            ^
-    symbol:   method xpLevelMin()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:566: error: cannot find symbol
-          buf.writeVarInt(ev.xpLevelMax());
-                            ^
-    symbol:   method xpLevelMax()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:567: error: cannot find symbol
-          buf.writeDouble(ev.xpLevelSpan());
-                            ^
-    symbol:   method xpLevelSpan()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:568: error: cannot find symbol
-          buf.writeVarInt(ev.conservationMarginPoints());
-                            ^
-    symbol:   method conservationMarginPoints()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:569: error: cannot find symbol
-          buf.writeVarInt(ev.minNonZeroPoints());
-                            ^
-    symbol:   method minNonZeroPoints()
-    location: variable ev of type EssenceValuation
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:618: error: cannot find symbol
-          buf.writeDouble(app.keystoneMajorFactor());
-                             ^
-    symbol:   method keystoneMajorFactor()
-    location: variable app of type ApplicabilityConfig
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:619: error: cannot find symbol
-          buf.writeDouble(app.keystoneMinorFactor());
-                             ^
-    symbol:   method keystoneMinorFactor()
-    location: variable app of type ApplicabilityConfig
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:620: error: cannot find symbol
-          buf.writeDouble(app.broadFactor());
-                             ^
-    symbol:   method broadFactor()
-    location: variable app of type ApplicabilityConfig
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:621: error: cannot find symbol
-          buf.writeDouble(app.baseFloor());
-                             ^
-    symbol:   method baseFloor()
-    location: variable app of type ApplicabilityConfig
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:622: error: cannot find symbol
-          buf.writeDouble(app.perSupportedItemSlope());
-                             ^
-    symbol:   method perSupportedItemSlope()
-    location: variable app of type ApplicabilityConfig
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:623: error: cannot find symbol
-          buf.writeDouble(app.maxHeuristicFactor());
-                             ^
-    symbol:   method maxHeuristicFactor()
-    location: variable app of type ApplicabilityConfig
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:624: error: cannot find symbol
-          buf.writeDouble(app.broadMinItemCount());
-                             ^
-    symbol:   method broadMinItemCount()
-    location: variable app of type ApplicabilityConfig
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostSync.java:136: error: cannot find symbol
-                      player.displayClientMessage(
-                            ^
-    symbol:   method displayClientMessage(MutableComponent,boolean)
-    location: variable player of type ServerPlayer
-  30 errors
+  2 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -388,165 +103,19 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:193: error: cannot find symbol
-        warnIfChiseledShelfInTag(blockLookup, CetTags.REGULAR_BOOKSHELVES);
-                                                     ^
-  symbol:   variable REGULAR_BOOKSHELVES
-  location: class CetTags
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1769: error: cannot find symbol
-        return XpCostConversion.totalPointsForLevel(X);
-                               ^
-  symbol:   method totalPointsForLevel(int)
-  location: class XpCostConversion
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:178: error: cannot find symbol
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W1_MULTIPLIER,
-                                                     ^
-  symbol:   variable APPLICABILITY_RARITY_W1_MULTIPLIER
-  location: class BundledDefaults
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:179: error: cannot find symbol
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W2_MULTIPLIER,
-                                                     ^
-  symbol:   variable APPLICABILITY_RARITY_W2_MULTIPLIER
-  location: class BundledDefaults
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:180: error: cannot find symbol
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W5_MULTIPLIER,
-                                                     ^
-  symbol:   variable APPLICABILITY_RARITY_W5_MULTIPLIER
-  location: class BundledDefaults
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:556: error: cannot find symbol
-        buf.writeDouble(ev.rarityMultiplierCommon());
-                          ^
-  symbol:   method rarityMultiplierCommon()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:557: error: cannot find symbol
-        buf.writeDouble(ev.rarityMultiplierUncommon());
-                          ^
-  symbol:   method rarityMultiplierUncommon()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:558: error: cannot find symbol
-        buf.writeDouble(ev.rarityMultiplierRare());
-                          ^
-  symbol:   method rarityMultiplierRare()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:559: error: cannot find symbol
-        buf.writeDouble(ev.rarityMultiplierVeryRare());
-                          ^
-  symbol:   method rarityMultiplierVeryRare()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:561: error: cannot find symbol
-        buf.writeDouble(ev.singleLevelScore());
-                          ^
-  symbol:   method singleLevelScore()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:562: error: cannot find symbol
-        buf.writeDouble(ev.multiLevelFloor());
-                          ^
-  symbol:   method multiLevelFloor()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:563: error: cannot find symbol
-        buf.writeDouble(ev.multiLevelSpan());
-                          ^
-  symbol:   method multiLevelSpan()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:564: error: cannot find symbol
-        buf.writeDouble(ev.multiLevelGamma());
-                          ^
-  symbol:   method multiLevelGamma()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:565: error: cannot find symbol
-        buf.writeVarInt(ev.xpLevelMin());
-                          ^
-  symbol:   method xpLevelMin()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:566: error: cannot find symbol
-        buf.writeVarInt(ev.xpLevelMax());
-                          ^
-  symbol:   method xpLevelMax()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:567: error: cannot find symbol
-        buf.writeDouble(ev.xpLevelSpan());
-                          ^
-  symbol:   method xpLevelSpan()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:568: error: cannot find symbol
-        buf.writeVarInt(ev.conservationMarginPoints());
-                          ^
-  symbol:   method conservationMarginPoints()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:569: error: cannot find symbol
-        buf.writeVarInt(ev.minNonZeroPoints());
-                          ^
-  symbol:   method minNonZeroPoints()
-  location: variable ev of type EssenceValuation
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:618: error: cannot find symbol
-        buf.writeDouble(app.keystoneMajorFactor());
-                           ^
-  symbol:   method keystoneMajorFactor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:619: error: cannot find symbol
-        buf.writeDouble(app.keystoneMinorFactor());
-                           ^
-  symbol:   method keystoneMinorFactor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:620: error: cannot find symbol
-        buf.writeDouble(app.broadFactor());
-                           ^
-  symbol:   method broadFactor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:621: error: cannot find symbol
-        buf.writeDouble(app.baseFloor());
-                           ^
-  symbol:   method baseFloor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:622: error: cannot find symbol
-        buf.writeDouble(app.perSupportedItemSlope());
-                           ^
-  symbol:   method perSupportedItemSlope()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:623: error: cannot find symbol
-        buf.writeDouble(app.maxHeuristicFactor());
-                           ^
-  symbol:   method maxHeuristicFactor()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:624: error: cannot find symbol
-        buf.writeDouble(app.broadMinItemCount());
-                           ^
-  symbol:   method broadMinItemCount()
-  location: variable app of type ApplicabilityConfig
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:776: error: constructor EssenceValuation in record EssenceValuation cannot be applied to given types;
-        var lrEssence = new LibraryResonance.EssenceValuation(
-                        ^
-  required: double,double,double,double,int
-  found:    double,double,double,double,double,double,double,double,double,int,int,double,int,int
-  reason: actual and formal argument lists differ in length
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:794: error: constructor WoodenBookshelves in record WoodenBookshelves cannot be applied to given types;
-            new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2),
-            ^
-  required: int,int,int,double
-  found:    int,int,int
-  reason: actual and formal argument lists differ in length
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:795: error: constructor ChiseledMastery in record ChiseledMastery cannot be applied to given types;
-            new LibraryResonance.ChiseledMastery(
-            ^
-  required: MasteryScaling,TomeLifecycle
-  found:    int,int,int,double,int,double,double,double,double,double,ConsumptionMode,int,int,DepleteBehavior,boolean,int,int,int,int,int,double,double,boolean,List<Integer>,ScapegoatPricing,double,int,int,double
-  reason: actual and formal argument lists differ in length
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java:857: error: constructor ApplicabilityConfig in record ApplicabilityConfig cannot be applied to given types;
-        var appConfig = new InscriptionRitualMechanics.ApplicabilityConfig(
-                        ^
-  required: double,double,double,double,double,double,double,double,double,double
-  found:    double,double,double,double,double,double,double
-  reason: actual and formal argument lists differ in length
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantCostSync.java:136: error: cannot find symbol
-                    player.displayClientMessage(
-                          ^
-  symbol:   method displayClientMessage(MutableComponent,boolean)
-  location: variable player of type ServerPlayer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:853: error: cannot find symbol
+            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.configOverlay != null) {
+                                           ^
+  symbol:   variable InputConstants
+  location: class ChiseledEnchantingTableScreen
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:860: error: cannot find symbol
+            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.grimoireOverlay != null) {
+                                           ^
+  symbol:   variable InputConstants
+  location: class ChiseledEnchantingTableScreen
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-Note: Recompile with -Xlint:unchecked for details.
-30 errors
+2 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -687,8 +256,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 23s
-1 actionable task: 1 executed
+BUILD FAILED in 20s
+3 actionable tasks: 3 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
