@@ -560,64 +560,25 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return t != null && t.isResolvable();
     }
 
-    public static final Identifier BLANK_OVERWRITE_ID = ChiseledEnchantingTable.identifier("blank_overwrite");
+    public static final Identifier BLANK_OVERWRITE_ID = DataMaterialRules.BLANK_OVERWRITE_ID;
 
     /**
      * Returns true if {@code stack} is a {@code depleted_tome} OR a legacy pre-fix {@code minecraft:book}
      * carrying leftover enchantment/glint components from an earlier merge/strip operation.
      */
     public static boolean isResidualBook(ItemStack stack) {
-        if (stack.isEmpty()) return false;
-        if (stack.is(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME)) return true;
-        if (!stack.is(Items.BOOK)) return false;
-        if (stack.has(net.minecraft.core.component.DataComponents.STORED_ENCHANTMENTS)) return true;
-        if (stack.has(net.minecraft.core.component.DataComponents.ENCHANTMENT_GLINT_OVERRIDE)) return true;
-        var direct = stack.get(net.minecraft.core.component.DataComponents.ENCHANTMENTS);
-        return direct != null && !direct.isEmpty();
+        return DataMaterialRules.isResidualBook(stack);
     }
 
     /** Hard ceiling for one merged cost entry; exceeding it invalidates the bundle (audit R-02). */
-    public static final int MAX_MERGED_COST_COUNT = 4096;
+    public static final int MAX_MERGED_COST_COUNT = DataMaterialRules.MAX_MERGED_COST_COUNT;
 
     /**
      * Merges repeated {@link ItemStack#isSameItemSameComponents} stacks inside one cost bundle so
      * duplicate materials across primary + additional costs never under-check or partially deduct.
      */
     public static List<ItemStack> mergeEquivalentCostBundle(List<ItemStack> rawBundle) {
-        if (rawBundle == null || rawBundle.isEmpty()) {
-            return List.of();
-        }
-        List<ItemStack> merged = new ArrayList<>(rawBundle.size());
-        for (ItemStack stack : rawBundle) {
-            if (stack == null || stack.isEmpty()) {
-                return List.of();
-            }
-            boolean combined = false;
-            for (int i = 0; i < merged.size(); i++) {
-                ItemStack existing = merged.get(i);
-                if (ItemStack.isSameItemSameComponents(existing, stack)) {
-                    long total = (long) existing.getCount() + (long) stack.getCount();
-                    // Audit R-02: an over-ceiling merge used to be silently clamped to 4096,
-                    // discounting the cost. Over-large bundles are invalid datapack data and
-                    // must fail closed instead of undercharging.
-                    if (total > MAX_MERGED_COST_COUNT) {
-                        ChiseledEnchantingTable.LOGGER.warn(
-                            "Rejected merged cost {} x{} exceeding max {}; treating bundle as invalid.",
-                            BuiltInRegistries.ITEM.getKey(stack.getItem()), total, MAX_MERGED_COST_COUNT);
-                        return List.of();
-                    }
-                    ItemStack updated = existing.copy();
-                    updated.setCount((int) total);
-                    merged.set(i, updated);
-                    combined = true;
-                    break;
-                }
-            }
-            if (!combined) {
-                merged.add(stack.copy());
-            }
-        }
-        return List.copyOf(merged);
+        return DataMaterialRules.mergeEquivalentCostBundle(rawBundle);
     }
 
     public static List<List<ItemStack>> transformationCostOptions(Identifier id) {

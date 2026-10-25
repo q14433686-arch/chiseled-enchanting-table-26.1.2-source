@@ -132,9 +132,9 @@ jobs:
     permissions:
       contents: read
       checks: write
-    name: 26.3 real server world-load and reload
+    name: 26.3 real server and SDL client interactions
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     needs: static
     steps:
       - uses: actions/checkout@v4
@@ -146,6 +146,13 @@ jobs:
       - run: chmod +x ./gradlew
       - name: boot fresh world and reload datapacks
         run: python3 scripts/server_smoke.py
+      - name: install virtual display and software graphics
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers
+      - name: real SDL input, config save and menu integration
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          ALSOFT_DRIVERS: 'null'
+        run: xvfb-run -a -s '-screen 0 1280x720x24' python3 scripts/client_smoke.py
       - name: smoke-test logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -153,6 +160,10 @@ jobs:
           name: server-smoke-${{ github.sha }}
           path: |
             build-reports/server-smoke.log
+            build-reports/client-smoke.log
+            run-client-smoke/client-smoke-result.txt
+            run-client-smoke/logs/latest.log
+            run-client-smoke/crash-reports/**
             run/logs/latest.log
             run/crash-reports/**
           if-no-files-found: warn
@@ -160,4 +171,4 @@ jobs:
         if: always() && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/post_ci_diagnostics.py --publish --name server-smoke-diagnostics --conclusion '${{ job.status }}' build-reports/server-smoke.log
+        run: python3 scripts/post_ci_diagnostics.py --publish --name server-smoke-diagnostics --conclusion '${{ job.status }}' build-reports/server-smoke.log build-reports/client-smoke.log

@@ -14,7 +14,7 @@ def output(name, sha, conclusion, paths):
             continue
         lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
         important = [line for line in lines if any(token in line for token in
-                     ('error:', 'FAILED', 'FAILURE', 'JUnit XML totals:', 'SERVER SMOKE PASS', 'BUILD SUCCESSFUL'))]
+                     ('error:', 'FAILED', 'FAILURE', 'JUnit XML totals:', 'SERVER SMOKE PASS', 'CLIENT SMOKE', 'BUILD SUCCESSFUL'))]
         excerpt = important[:100] + ['--- tail ---'] + lines[-100:]
         sections.append(f'### {path.name}\n```text\n' + '\n'.join(excerpt) + '\n```')
     # Checks output has a 65535-byte limit; bound UTF-8 bytes, not Unicode characters.

@@ -37,6 +37,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 
 import static chiseled_enchanting_table.data.DataJson.*;
+import static chiseled_enchanting_table.data.DataMaterialRules.*;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData.*;
 
 /** ItemCostOption domain; independent of reload/publication orchestration. */
