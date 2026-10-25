@@ -1766,7 +1766,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     /** @deprecated Use {@link XpCostConversion#totalPointsForLevel(int)}. */
     @Deprecated
     public int calculateXpCostToLevel(int X) {
-        return XpCostConversion.totalPointsForLevel(X);
+        return XpCostConversion.totalXpForLevel(X);
     }
 
     // ---- Condition / consumption (shared by both mechanics) ----

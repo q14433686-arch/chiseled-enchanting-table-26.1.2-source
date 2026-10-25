@@ -133,7 +133,7 @@ public final class EnchantCostSync {
                 // the next open read freshly reloaded datapack data.
                 if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler) {
                     player.closeContainer();
-                    player.displayClientMessage(
+                    player.sendSystemMessage(
                         Component.translatable("message.chiseled_enchanting_table.reload_closed"),
                         true
                     );

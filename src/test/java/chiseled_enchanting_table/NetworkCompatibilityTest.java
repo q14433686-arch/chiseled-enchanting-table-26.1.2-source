@@ -156,7 +156,7 @@ class NetworkCompatibilityTest {
         var waitCurve = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.WaitCurve(
             0.31, 0.69, 0.29, 0.71, 1.27, 0.88, 137);
         var appCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.ApplicabilityConfig(
-            0.74, 1.38, 1.29, 0.09, 1.34, 1.19);
+            28.0, 0.51, 1.62, 1.37, 1.24, 1.21, 1.15, 1.07, 1.02, 2.45);
         var ritual = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
             270, 12, 14, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve, 6, 225.0, 195.0, appCfg);
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,

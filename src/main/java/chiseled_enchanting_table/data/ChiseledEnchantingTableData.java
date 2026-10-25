@@ -190,7 +190,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             return;
         }
         var blockLookup = blockLookupOpt.get();
-        warnIfChiseledShelfInTag(blockLookup, CetTags.REGULAR_BOOKSHELVES);
+        warnIfChiseledShelfInTag(blockLookup, CetTags.Blocks.REGULAR_BOOKSHELVES);
         warnIfChiseledShelfInTag(blockLookup, net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER);
     }
 

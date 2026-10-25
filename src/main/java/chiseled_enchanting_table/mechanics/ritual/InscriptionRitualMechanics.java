@@ -175,9 +175,9 @@ public final class InscriptionRitualMechanics {
             chiseled_enchanting_table.BundledDefaults.APPLICABILITY_KEYSTONE_MAJOR_MULTIPLIER,
             chiseled_enchanting_table.BundledDefaults.APPLICABILITY_KEYSTONE_MINOR_MULTIPLIER,
             chiseled_enchanting_table.BundledDefaults.APPLICABILITY_BROAD_MULTIPLIER,
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W1_MULTIPLIER,
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W2_MULTIPLIER,
-            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_W5_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_WEIGHT_1_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_WEIGHT_2_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_WEIGHT_5_MULTIPLIER,
             chiseled_enchanting_table.BundledDefaults.APPLICABILITY_MIN_FACTOR,
             chiseled_enchanting_table.BundledDefaults.APPLICABILITY_MAX_FACTOR
         );

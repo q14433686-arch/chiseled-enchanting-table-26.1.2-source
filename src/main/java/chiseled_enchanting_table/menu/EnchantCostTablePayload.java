@@ -553,20 +553,11 @@ public record EnchantCostTablePayload(
         buf.writeVarInt(lr.wearImmuneFullWaiverMaxEnchants());
         buf.writeDouble(lr.wearImmuneOverloadWaiverDecay());
         var ev = lr.essenceValuation();
-        buf.writeDouble(ev.rarityMultiplierCommon());
-        buf.writeDouble(ev.rarityMultiplierUncommon());
-        buf.writeDouble(ev.rarityMultiplierRare());
-        buf.writeDouble(ev.rarityMultiplierVeryRare());
+        buf.writeDouble(ev.rarityMinMultiplier());
+        buf.writeDouble(ev.rarityMaxMultiplier());
+        buf.writeDouble(ev.rarityLogSlope());
         buf.writeDouble(ev.treasureMultiplier());
-        buf.writeDouble(ev.singleLevelScore());
-        buf.writeDouble(ev.multiLevelFloor());
-        buf.writeDouble(ev.multiLevelSpan());
-        buf.writeDouble(ev.multiLevelGamma());
-        buf.writeVarInt(ev.xpLevelMin());
-        buf.writeVarInt(ev.xpLevelMax());
-        buf.writeDouble(ev.xpLevelSpan());
-        buf.writeVarInt(ev.conservationMarginPoints());
-        buf.writeVarInt(ev.minNonZeroPoints());
+        buf.writeVarInt(ev.conservationSafetyMarginPoints());
 
         var rc = ritualConfig == null ? InscriptionRitualMechanics.Config.DEFAULT : ritualConfig;
         buf.writeVarInt(rc.maxSingleWaitSeconds());
@@ -615,13 +606,16 @@ public record EnchantCostTablePayload(
         buf.writeDouble(wc.saturation());
         buf.writeVarInt(wc.minTicks());
         var app = rc.applicability();
-        buf.writeDouble(app.keystoneMajorFactor());
-        buf.writeDouble(app.keystoneMinorFactor());
-        buf.writeDouble(app.broadFactor());
-        buf.writeDouble(app.baseFloor());
-        buf.writeDouble(app.perSupportedItemSlope());
-        buf.writeDouble(app.maxHeuristicFactor());
-        buf.writeDouble(app.broadMinItemCount());
+        buf.writeDouble(app.itemBreadthReference());
+        buf.writeDouble(app.breadthWeight());
+        buf.writeDouble(app.keystoneMajorMultiplier());
+        buf.writeDouble(app.keystoneMinorMultiplier());
+        buf.writeDouble(app.broadMultiplier());
+        buf.writeDouble(app.rarityWeight1Multiplier());
+        buf.writeDouble(app.rarityWeight2Multiplier());
+        buf.writeDouble(app.rarityWeight5Multiplier());
+        buf.writeDouble(app.minFactor());
+        buf.writeDouble(app.maxFactor());
 
         PayloadLimits.writeBoundedCount(buf, costs.size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
         int writtenStacks = 0;
@@ -778,29 +772,25 @@ public record EnchantCostTablePayload(
             buf.readDouble(),
             buf.readDouble(),
             buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readDouble(),
-            buf.readVarInt(),
-            buf.readVarInt(),
-            buf.readDouble(),
-            buf.readVarInt(),
             buf.readVarInt()
         );
 
         var lrConfig = new LibraryResonance.Config(
-            new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2),
+            new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2, lr11),
             new LibraryResonance.ChiseledMastery(
-                lr3, lr4, lr5, lr6, lr7, lr8, lr9, lr10, lr11, lr24,
-                lrMode, lrMtu, lrBcwc, lrDep, lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec,
-                lrUnbPerLvl, lrUnbMax, lrWildEn, lrWildWeights, lrScapegoat, lrMaxMasterySlot,
-                lrWearMaxGen, lrWearFullEnch, lrWearDecay
+                new LibraryResonance.MasteryScaling(
+                    lr8, lr9, lr3, lr4, lr5, lr6, lr7, lr10, lr24,
+                    lrMaxMasterySlot, lrWearMaxGen, lrWearFullEnch, lrWearDecay
+                ),
+                new LibraryResonance.TomeLifecycle(
+                    lrMode, lrMtu, lrBcwc, lrUnbPerLvl, lrUnbMax, lrDep,
+                    lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec, lrScapegoat
+                )
             ),
             new LibraryResonance.EpiphanyAffinity(
                 lr12, lr13, lr14, lr15, lr16, lr17, lr18, lr19, lr20, lr21, lr22, lr23
             ),
+            new LibraryResonance.WildBookWear(lrWildEn, lrWildWeights),
             new LibraryResonance.TomePages(
                 lrShelfBreakable, lrExtractionBlocked, lrEarlyXp, lrEarlyGrit, lrSacrificeReq, lrTomeShelves
             ),
@@ -861,12 +851,16 @@ public record EnchantCostTablePayload(
             buf.readDouble(),
             buf.readDouble(),
             buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
             buf.readDouble()
         );
         var rcConfig = new InscriptionRitualMechanics.Config(
             rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef,
-            csConfig, wcConfig, appConfig,
-            rcExtraSacPerStep, rcSacTau, rcRushTau
+            csConfig, wcConfig,
+            rcExtraSacPerStep, rcSacTau, rcRushTau,
+            appConfig
         );
 
         int rowCount = PayloadLimits.readCount(buf);
