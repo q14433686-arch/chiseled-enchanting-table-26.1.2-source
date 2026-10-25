@@ -24,6 +24,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
@@ -57,10 +58,53 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     private static final int ROW_H = 31;
     private static final int ROW_GAP = 4;
+    private static final int SECTION_H = 17;
+
+    private static final Identifier PANEL_FRAME =
+        chiseled_enchanting_table.ChiseledEnchantingTable.identifier("gui/config/config_panel_frame.png");
+    private static final Identifier CLASSIC_ICON =
+        chiseled_enchanting_table.ChiseledEnchantingTable.identifier("gui/config/category_classic.png");
+
+    private static Identifier categoryIcon(CategoryId category) {
+        return chiseled_enchanting_table.ChiseledEnchantingTable.identifier(
+            "gui/config/category_" + category.id() + ".png");
+    }
+
+    private static void blitNineSlice(
+        GuiGraphicsExtractor ctx, Identifier texture, int x, int y, int w, int h, int corner, int textureSize
+    ) {
+        float c = (float) corner / (float) textureSize;
+        ctx.blit(texture, x, y, x + corner, y + corner, 0.0f, c, 0.0f, c);
+        ctx.blit(texture, x + w - corner, y, x + w, y + corner, 1.0f - c, 1.0f, 0.0f, c);
+        ctx.blit(texture, x, y + h - corner, x + corner, y + h, 0.0f, c, 1.0f - c, 1.0f);
+        ctx.blit(texture, x + w - corner, y + h - corner, x + w, y + h, 1.0f - c, 1.0f, 1.0f - c, 1.0f);
+        ctx.blit(texture, x + corner, y, x + w - corner, y + corner, c, 1.0f - c, 0.0f, c);
+        ctx.blit(texture, x + corner, y + h - corner, x + w - corner, y + h, c, 1.0f - c, 1.0f - c, 1.0f);
+        ctx.blit(texture, x, y + corner, x + corner, y + h - corner, 0.0f, c, c, 1.0f - c);
+        ctx.blit(texture, x + w - corner, y + corner, x + w, y + h - corner, 1.0f - c, 1.0f, c, 1.0f - c);
+    }
 
     private record HitBox(int x, int y, int w, int h, Runnable onClick, @Nullable Runnable onRightClick) {
         boolean contains(double mx, double my) {
             return mx >= x && mx < x + w && my >= y && my < y + h;
+        }
+    }
+
+    private record DisplayRow(@Nullable CategoryId section, int sectionCount, @Nullable OptionEntry entry, int optionIndex) {
+        static DisplayRow section(CategoryId category, int count) {
+            return new DisplayRow(category, count, null, -1);
+        }
+
+        static DisplayRow option(OptionEntry entry, int optionIndex) {
+            return new DisplayRow(null, 0, entry, optionIndex);
+        }
+
+        boolean isSection() {
+            return entry == null;
+        }
+
+        int height() {
+            return isSection() ? SECTION_H : ROW_H;
         }
     }
 
@@ -80,6 +124,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private Draft draft;
 
     private CategoryId activeCategory = CategoryId.GENERAL;
+    private String searchQuery = "";
+    private boolean searchFocused = false;
+    private int searchBoxX;
+    private int searchBoxY;
+    private int searchBoxW;
+    private int searchBoxH;
     // Pseudo-page (not a seventh catalog category): every option the 1.0.3
     // Classic profile touches, collected in one place and editable there.
     private boolean classicPage = false;
@@ -195,7 +245,75 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
     }
 
+    private boolean matchesSearch(OptionEntry entry) {
+        String query = this.searchQuery.trim().toLowerCase(java.util.Locale.ROOT);
+        if (query.isEmpty()) return true;
+        return entry.key().contains(query)
+            || I18n.get(entry.nameKey()).toLowerCase(java.util.Locale.ROOT).contains(query)
+            || I18n.get(entry.descKey()).toLowerCase(java.util.Locale.ROOT).contains(query)
+            || I18n.get(entry.category().titleKey()).toLowerCase(java.util.Locale.ROOT).contains(query);
+    }
+
+    private List<DisplayRow> displayRows(List<OptionEntry> visible) {
+        boolean grouped = this.classicPage || !this.searchQuery.isBlank();
+        List<DisplayRow> rows = new ArrayList<>();
+        if (!grouped) {
+            for (int i = 0; i < visible.size(); i++) {
+                rows.add(DisplayRow.option(visible.get(i), i));
+            }
+            return rows;
+        }
+        // Source-category sections (classic page & global search results):
+        // rows stay under the category a player would find them in normally;
+        // inside a classic section live preferences precede rule-owned rows.
+        for (CategoryId category : CategoryId.values()) {
+            List<Integer> indices = new ArrayList<>();
+            for (int i = 0; i < visible.size(); i++) {
+                if (visible.get(i).category() == category) {
+                    indices.add(i);
+                }
+            }
+            if (indices.isEmpty()) continue;
+            indices.sort(java.util.Comparator.comparing(
+                i -> ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(visible.get(i).key())));
+            rows.add(DisplayRow.section(category, indices.size()));
+            for (int index : indices) {
+                rows.add(DisplayRow.option(visible.get(index), index));
+            }
+        }
+        return rows;
+    }
+
+    private static int displayContentHeight(List<DisplayRow> rows) {
+        if (rows.isEmpty()) return 0;
+        int height = -ROW_GAP;
+        for (DisplayRow row : rows) {
+            height += row.height() + ROW_GAP;
+        }
+        return height;
+    }
+
+    private static float displayRowTop(List<DisplayRow> rows, int optionIndex) {
+        float top = 0.0f;
+        for (DisplayRow row : rows) {
+            if (!row.isSection() && row.optionIndex() == optionIndex) {
+                return top;
+            }
+            top += row.height() + ROW_GAP;
+        }
+        return top;
+    }
+
+    private void setSearchQuery(String query) {
+        this.searchQuery = query;
+        this.focusedOptionIndex = -1;
+        this.scrollOffset = 0.0f;
+    }
+
     private List<OptionEntry> visibleOptions() {
+        if (!this.searchQuery.isBlank()) {
+            return ConfigCatalog.ALL_OPTIONS.stream().filter(this::matchesSearch).toList();
+        }
         if (this.filterModifiedOnly) {
             return ConfigCatalog.ALL_OPTIONS.stream()
                 .filter(o -> o.isModifiedFromDefault(this.draft))
@@ -355,6 +473,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         ctx.fill(0, 0, this.width, this.height, BG_DIM);
         ctx.fill(this.panelX - 1, this.panelY - 1, this.panelX + this.panelW + 1, this.panelY + this.panelH + 1, CHASSIS_OUTER);
         ctx.fill(this.panelX, this.panelY, this.panelX + this.panelW, this.panelY + this.panelH, CHASSIS_INNER);
+        blitNineSlice(ctx, PANEL_FRAME, this.panelX - 2, this.panelY - 2, this.panelW + 4, this.panelH + 4, 12, 48);
 
         // Top Header Bar
         int headerH = 24;
@@ -410,14 +529,51 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             this.filterModifiedOnly ? GOLD_TEXT : CREAM_TEXT, true
         );
         this.hitBoxes.add(new HitBox(railX + 3, filterY, railW - 6, filterH, () -> {
+            this.searchFocused = false;
+            setSearchQuery("");
             this.filterModifiedOnly = !this.filterModifiedOnly;
             this.scrollOffset = 0.0f;
             playClick(1.0f);
         }, null));
 
-        // 6 Category buttons
+        // Global search: label / description / raw key across all 64 options.
+        int searchY = filterY + filterH + 4;
+        int searchH = 16;
+        this.searchBoxX = railX + 3;
+        this.searchBoxY = searchY;
+        this.searchBoxW = railW - 6;
+        this.searchBoxH = searchH;
+        boolean overSearch = mouseX >= this.searchBoxX && mouseX < this.searchBoxX + this.searchBoxW
+            && mouseY >= searchY && mouseY < searchY + searchH;
+        ctx.fill(this.searchBoxX, searchY, this.searchBoxX + this.searchBoxW, searchY + searchH,
+            this.searchFocused ? GOLD_TEXT : (overSearch ? 0xFF876BB8 : 0xFF523E78));
+        ctx.fill(this.searchBoxX + 1, searchY + 1, this.searchBoxX + this.searchBoxW - 1, searchY + searchH - 1, 0xFF181126);
+        String searchShown = this.searchQuery.isEmpty()
+            ? I18n.get("config.chiseled_enchanting_table.search.placeholder")
+            : this.searchQuery + (this.searchFocused && (System.currentTimeMillis() / 500L) % 2L == 0L ? "_" : "");
+        RowRenderSupport.renderCenteredYText(
+            ctx, Minecraft.getInstance(), searchShown,
+            this.searchBoxX + 6, searchY + searchH * 0.5f, 0.72f, this.searchBoxW - 12,
+            this.searchQuery.isEmpty() ? MUTED_TEXT : CREAM_TEXT
+        );
+        this.hitBoxes.add(new HitBox(this.searchBoxX, searchY, this.searchBoxW, searchH, () -> {
+            this.searchFocused = true;
+            playClick(1.0f);
+        }, () -> {
+            setSearchQuery("");
+            this.searchFocused = true;
+            playClick(0.92f);
+        }));
+        if (overSearch) {
+            pendingTooltip = List.of(
+                Component.translatable("config.chiseled_enchanting_table.search.title").withStyle(ChatFormatting.GOLD),
+                Component.translatable("config.chiseled_enchanting_table.search.desc").withStyle(ChatFormatting.GRAY)
+            );
+        }
+
+        // Category buttons (split catalogue domains + Classic pseudo-page)
         CategoryId[] cats = CategoryId.values();
-        int catStartY = filterY + filterH + 5;
+        int catStartY = searchY + searchH + 5;
         int availCatH = Math.max(96, railH - (catStartY - railY) - 4);
         int catStepY = availCatH / (cats.length + 1);
         int catBtnH = Math.max(15, Math.min(25, catStepY - 2));
@@ -434,17 +590,22 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             ctx.fill(railX + 3, cy, railX + railW - 3, cy + catBtnH, selected ? GOLD_TEXT : 0xFF392B56);
             ctx.fill(railX + 4, cy + 1, railX + railW - 4, cy + catBtnH - 1, selected ? 0xFF352454 : (over ? 0xFF281D3F : 0xFF1B142B));
             ctx.fill(railX + 4, cy + 1, railX + 7, cy + catBtnH - 1, cat.accentColor());
+            int iconSize = Math.min(14, Math.max(10, catBtnH - 3));
+            int iconY = cy + (catBtnH - iconSize) / 2;
+            ctx.blit(categoryIcon(cat), railX + 8, iconY, railX + 8 + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
 
             String catTitle = I18n.get(cat.titleKey()) + (modInCat > 0 ? (" \u2605" + modInCat) : "");
             RowRenderSupport.renderCenteredYText(
                 ctx, Minecraft.getInstance(), catTitle,
-                railX + 10, cy + catBtnH * 0.5f, 0.72f, railW - 16,
+                railX + 25, cy + catBtnH * 0.5f, 0.78f, railW - 29,
                 selected ? GOLD_TEXT : CREAM_TEXT
             );
             final CategoryId chosen = cat;
             this.hitBoxes.add(new HitBox(railX + 3, cy, railW - 6, catBtnH, () -> {
                 this.filterModifiedOnly = false;
                 this.classicPage = false;
+                this.searchFocused = false;
+                setSearchQuery("");
                 this.activeCategory = chosen;
                 this.scrollOffset = 0.0f;
                 playClick(1.0f);
@@ -464,14 +625,19 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             ctx.fill(railX + 3, cy, railX + railW - 3, cy + catBtnH, selected ? GOLD_TEXT : 0xFF392B56);
             ctx.fill(railX + 4, cy + 1, railX + railW - 4, cy + catBtnH - 1, selected ? 0xFF352454 : (over ? 0xFF281D3F : 0xFF1B142B));
             ctx.fill(railX + 4, cy + 1, railX + 7, cy + catBtnH - 1, 0xFFE6B566);
+            int classicIconSize = Math.min(14, Math.max(10, catBtnH - 3));
+            int classicIconY = cy + (catBtnH - classicIconSize) / 2;
+            ctx.blit(CLASSIC_ICON, railX + 8, classicIconY, railX + 8 + classicIconSize, classicIconY + classicIconSize, 0.0f, 1.0f, 0.0f, 1.0f);
             RowRenderSupport.renderCenteredYText(
                 ctx, Minecraft.getInstance(), I18n.get("config.chiseled_enchanting_table.cat.classic_merged"),
-                railX + 10, cy + catBtnH * 0.5f, 0.72f, railW - 16,
+                railX + 25, cy + catBtnH * 0.5f, 0.78f, railW - 29,
                 selected ? GOLD_TEXT : CREAM_TEXT
             );
             this.hitBoxes.add(new HitBox(railX + 3, cy, railW - 6, catBtnH, () -> {
                 this.filterModifiedOnly = false;
                 this.classicPage = true;
+                this.searchFocused = false;
+                setSearchQuery("");
                 this.scrollOffset = 0.0f;
                 playClick(1.0f);
             }, null));
@@ -546,17 +712,19 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int subY = presetY + presetH + 3;
         int resetCatW = 68;
         int resetCatX = this.listX + this.listW - resetCatW;
-        String subHeader = this.filterModifiedOnly
-            ? I18n.get("config.chiseled_enchanting_table.filter.modified_desc")
-            : I18n.get(this.classicPage
-                ? "config.chiseled_enchanting_table.cat.classic_merged.sub"
-                : this.activeCategory.subtitleKey());
+        List<OptionEntry> visible = visibleOptions();
+        String subHeader = !this.searchQuery.isBlank()
+            ? I18n.get("config.chiseled_enchanting_table.search.results", visible.size(), ConfigCatalog.ALL_OPTIONS.size())
+            : this.filterModifiedOnly
+                ? I18n.get("config.chiseled_enchanting_table.filter.modified_desc")
+                : I18n.get(this.classicPage
+                    ? "config.chiseled_enchanting_table.cat.classic_merged.sub"
+                    : this.activeCategory.subtitleKey());
         RowRenderSupport.renderCenteredYText(
             ctx, Minecraft.getInstance(), subHeader,
-            this.listX, subY + 8.0f, 0.70f, Math.max(60, this.listW - resetCatW - 6), 0xFFD9CCFA
+            this.listX, subY + 8.0f, 0.75f, Math.max(60, this.listW - resetCatW - 6), 0xFFD9CCFA
         );
 
-        List<OptionEntry> visible = visibleOptions();
         boolean anyModInView = visible.stream().anyMatch(o -> o.isModifiedFromDefault(this.draft));
         boolean canResetPage = this.sessionMode.writable() && anyModInView;
         boolean overResetCat = canResetPage
@@ -582,7 +750,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (this.classicPage) {
             renderClassicSummaryCard(ctx, visible);
         }
-        int contentH = Math.max(0, visible.size() * (ROW_H + ROW_GAP) - ROW_GAP);
+        List<DisplayRow> displayRows = displayRows(visible);
+        int contentH = displayContentHeight(displayRows);
         this.maxScroll = Math.max(0.0f, contentH - rowListHeight());
         this.scrollOffset = Mth.clamp(this.scrollOffset, 0.0f, this.maxScroll);
 
@@ -591,13 +760,34 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         try {
             if (visible.isEmpty()) {
                 GrimoireTextLayout.drawCenteredBox(
-                    ctx, this.font, I18n.get("config.chiseled_enchanting_table.empty_modified"),
+                    ctx, this.font, this.searchQuery.isBlank()
+                        ? I18n.get("config.chiseled_enchanting_table.empty_modified")
+                        : I18n.get("config.chiseled_enchanting_table.search.empty"),
                     this.listX + 8, this.listW - 16, rowListTop() + rowListHeight() * 0.5f, 0.78f, MUTED_TEXT, true
                 );
             }
-            for (int idx = 0; idx < visible.size(); idx++) {
-                OptionEntry entry = visible.get(idx);
-                int ry = Math.round(rowListTop() + idx * (ROW_H + ROW_GAP) - this.scrollOffset);
+            int displayCursor = 0;
+            for (DisplayRow displayRow : displayRows) {
+                int ry = Math.round(rowListTop() + displayCursor - this.scrollOffset);
+                displayCursor += displayRow.height() + ROW_GAP;
+                if (displayRow.isSection()) {
+                    if (ry + SECTION_H < rowListTop() || ry > rowListTop() + rowListHeight()) {
+                        continue;
+                    }
+                    CategoryId section = displayRow.section();
+                    ctx.fill(this.listX, ry, this.listX + innerCardW, ry + SECTION_H, section.accentColor());
+                    ctx.fill(this.listX + 1, ry + 1, this.listX + innerCardW - 1, ry + SECTION_H - 1, 0xFF1B142B);
+                    ctx.blit(categoryIcon(section), this.listX + 4, ry + 2, this.listX + 17, ry + 15, 0.0f, 1.0f, 0.0f, 1.0f);
+                    RowRenderSupport.renderCenteredYText(
+                        ctx, Minecraft.getInstance(),
+                        I18n.get(section.titleKey()) + "  \u00b7  " + displayRow.sectionCount(),
+                        this.listX + 21, ry + SECTION_H * 0.5f, 0.75f, Math.max(40, innerCardW - 25),
+                        CREAM_TEXT
+                    );
+                    continue;
+                }
+                OptionEntry entry = displayRow.entry();
+                int idx = displayRow.optionIndex();
                 if (ry + ROW_H < rowListTop() || ry > rowListTop() + rowListHeight()) {
                     continue;
                 }
@@ -633,7 +823,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 int titleColor = avail.parentApplicable() ? (avail.modifiedFromDefault() ? GOLD_TEXT : CREAM_TEXT) : 0xFF817599;
                 RowRenderSupport.renderCenteredYText(
                     ctx, Minecraft.getInstance(), titlePrefix + I18n.get(entry.nameKey()),
-                    this.listX + 6, ry + 9.5f, 0.76f, textMaxW, titleColor
+                    this.listX + 6, ry + 9.5f, 0.84f, textMaxW, titleColor
                 );
 
                 String subLine;
@@ -642,12 +832,19 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                     subLine = "\u26a0 " + I18n.get(avail.inactiveReasonKey());
                     subColor = 0xFFE6B566;
                 } else {
-                    subLine = "[" + I18n.get(avail.effectScope().badgeKey()) + "] " + I18n.get(entry.descKey());
+                    // Shape + colour dual coding: a scope glyph remains legible
+                    // even when colour perception or a theme makes hues ambiguous.
+                    String scopeGlyph = switch (avail.effectScope()) {
+                        case IMMEDIATE -> "\u25cf";
+                        case NEW_GENERATION -> "\u25c6";
+                        case RESTART_REQUIRED -> "\u25b2";
+                    };
+                    subLine = scopeGlyph + " " + I18n.get(avail.effectScope().badgeKey()) + " \u00b7 " + I18n.get(entry.descKey());
                     subColor = avail.effectScope() == EffectScope.IMMEDIATE ? MUTED_TEXT : avail.effectScope().color();
                 }
                 RowRenderSupport.renderCenteredYText(
                     ctx, Minecraft.getInstance(), subLine,
-                    this.listX + 6, ry + 22.0f, 0.64f, textMaxW, subColor
+                    this.listX + 6, ry + 22.0f, 0.75f, textMaxW, subColor
                 );
 
                 // Control Widget (Boolean / Enum / Slider with - & + step buttons)
@@ -941,6 +1138,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
         double mx = event.x();
         double my = event.y();
+        boolean overSearchBox = mx >= this.searchBoxX && mx < this.searchBoxX + this.searchBoxW
+            && my >= this.searchBoxY && my < this.searchBoxY + this.searchBoxH;
+        if (!overSearchBox) {
+            this.searchFocused = false;
+        }
 
         if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
             for (SliderTrack slider : this.sliderTracks) {
@@ -1013,25 +1215,72 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     }
 
     @Override
+    public boolean charTyped(CharacterEvent event) {
+        if (this.searchFocused) {
+            int codepoint = event.codepoint();
+            if (codepoint >= 32 && codepoint != 127 && this.searchQuery.length() < 40) {
+                setSearchQuery(this.searchQuery + Character.toString(codepoint));
+            }
+            return true;
+        }
+        return super.charTyped(event);
+    }
+
+    @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
+        if (this.searchFocused) {
+            if (key == InputConstants.KEY_ESCAPE) {
+                if (!this.searchQuery.isEmpty()) {
+                    setSearchQuery("");
+                } else {
+                    this.searchFocused = false;
+                }
+                return true;
+            }
+            if (key == InputConstants.KEY_BACKSPACE) {
+                if (!this.searchQuery.isEmpty()) {
+                    setSearchQuery(this.searchQuery.substring(0, this.searchQuery.length() - 1));
+                }
+                return true;
+            }
+            if (key == InputConstants.KEY_DELETE) {
+                setSearchQuery("");
+                return true;
+            }
+            if (key == InputConstants.KEY_RETURN) {
+                this.searchFocused = false;
+                return true;
+            }
+        }
         if (key == InputConstants.KEY_ESCAPE) {
             onClose();
             return true;
         }
-        // Audit GUI-02: bound by the live enum size instead of hardcoding KEY_6, so adding
-        // or removing a category can never index out of bounds (or silently dead-key).
+        if (key == InputConstants.KEY_SLASH || (key == InputConstants.KEY_F && event.hasControlDown())) {
+            this.searchFocused = true;
+            playClick(1.0f);
+            return true;
+        }
+        // Bound by the live enum size so adding/removing a category can never
+        // index out of bounds (or silently dead-key). Seven domains use 1-7;
+        // the Classic pseudo-page takes the next key, 8.
         CategoryId[] categories = CategoryId.values();
         int categoryIndex = key - InputConstants.KEY_1;
-        if (key == InputConstants.KEY_7) {
+        if (key == InputConstants.KEY_8) {
             this.filterModifiedOnly = false;
             this.classicPage = true;
+            this.searchFocused = false;
+            setSearchQuery("");
             this.scrollOffset = 0.0f;
             playClick(1.0f);
             return true;
         }
         if (categoryIndex >= 0 && categoryIndex < categories.length) {
             this.filterModifiedOnly = false;
+            this.classicPage = false;
+            this.searchFocused = false;
+            setSearchQuery("");
             this.activeCategory = categories[categoryIndex];
             this.focusedOptionIndex = -1;
             this.scrollOffset = 0.0f;
@@ -1047,7 +1296,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 } else {
                     this.focusedOptionIndex = Math.floorMod(this.focusedOptionIndex + delta, visible.size());
                 }
-                float rowTop = this.focusedOptionIndex * (ROW_H + ROW_GAP);
+                float rowTop = displayRowTop(displayRows(visible), this.focusedOptionIndex);
                 float rowBottom = rowTop + ROW_H;
                 if (rowTop < this.scrollOffset) {
                     this.scrollOffset = Mth.clamp(rowTop, 0.0f, this.maxScroll);

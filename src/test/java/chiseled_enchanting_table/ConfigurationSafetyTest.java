@@ -276,7 +276,8 @@ class ConfigurationSafetyTest {
             "book_combine_enabled", "book_research_enabled", "transformation_max_batch_size",
             "bookshelf_enchanted_prob", "max_tome_uses", "book_copy_wear_cost",
             "tome_deplete_behavior", "tome_regen_base_seconds", "tome_regen_tier1_shelves",
-            "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds");
+            "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds",
+            "vanilla_chest_books_mode", "bookshelf_pool_enabled");
         java.util.Set<String> editableUnderClassic = new java.util.TreeSet<>(locked);
         editableUnderClassic.removeAll(owned);
         assertEquals(reviewedLivePreferences, editableUnderClassic,

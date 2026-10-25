@@ -115,3 +115,19 @@ Remaining genuine work from this report:
 |---|---|
 | #13 recommendation 3 (consumer invariant) | **Done.** A classification-invariant test now pins the classic-page editable set to an explicitly reviewed live-preference list (each with a consumer under classic: shelf-gates config, frame fields, mixins, worldgen, or conditional on `tome_consumption_mode`); any future locked key must be classified as rule-owned or reviewed-live or the test fails. `direct_gates_enabled` / `blank_max_tier_mode` were re-checked: both feed `BookshelfProgression` through the shelf-gates config used by the classic unlock path, so they stay editable. |
 | #15 caveat (overlay e2e test) | **Noted, not automated.** A dedicated-server + plain-client end-to-end run cannot execute in the registry-free unit JVM; the overlay path is covered by the synced-row precedence code and the server smoke test in CI. Left as a manual release check (deploy overlay datapack → preview/JEI/REI/deduction agree → remove overlay → bundled table returns). |
+
+## Seventh round — `configReview` UI suggestions (from the (4) report bundle)
+
+User decisions: full visual pass, classic page grouped by source category,
+split the 22-row Tomes & Economy category, key assets generated as pixel-art
+candidates first (overall concept picked by the user; icons and the panel
+frame were then hand-finished to that palette — no text baked into textures).
+
+| Item | Disposition |
+|---|---|
+| Category split | **Done.** `TOMES_ECONOMY` split into `TOME_DURABILITY` (13) and `EXPERIENCE_ECONOMY` (9); seven real categories, all non-empty, 64 options total. Lang keys renamed in all 11 locales. |
+| Classic/search grouping | **Done.** Classic page and global search results render source-category section headers (icon + title + count); live preferences precede rule-owned rows inside each section. Display rows are variable-height and drive scrolling, focus and keyboard navigation. |
+| Global search | **Done.** Rail search box (`/`, `Ctrl+F`, click to focus, right-click/Esc clears) matches name/description/category/raw key over all 64 options with an `n / 64` result subtitle and a dedicated empty state. |
+| Readability & dual coding | **Done.** Row title/subtitle and rail text scales raised (0.84/0.75/0.78); effect scope is shape+colour (● immediate / ◆ new chunks / ▲ restart). |
+| Pixel assets | **Done.** Nine-slice gold panel frame + 8 category icons (7 domains + Classic hourglass) under `gui/config/`, drawn to the selected concept's palette (#241838/#392B56, gold #FFDF82/#E6B566, teal toggles); switches/sliders stay procedural in the same palette. |
+| Coverage gap (configReview) | **Done.** `vanilla_chest_books_mode` and `bookshelf_pool_enabled` are written by `applyClassic103Overrides` (KEEP_BOTH / true, matching the preset) and joined the classic page's reviewed live preferences. |

@@ -36,7 +36,8 @@ public final class ConfigCatalog {
     public enum CategoryId {
         GENERAL("general", 0xFF7A52B3),
         BOOKSHELVES("bookshelves", 0xFF287385),
-        TOMES_ECONOMY("tomes_economy", 0xFF8C6220),
+        TOME_DURABILITY("tome_durability", 0xFF8C6220),
+        EXPERIENCE_ECONOMY("experience_economy", 0xFFB7791F),
         EPIPHANY("epiphany", 0xFF6B3FA0),
         CLEANSE_TRANSMUTE("cleanse_transmute", 0xFF237A5B),
         WORLD_LOOT("world_loot", 0xFF87443A);
@@ -375,7 +376,7 @@ public final class ConfigCatalog {
         "tome_deplete_behavior", "tome_regen_base_seconds", "tome_regen_tier1_shelves",
         "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds",
         "xp_refund_scale", "external_xp_refund_scale", "strip_xp_min", "strip_xp_max",
-        "curse_purge_xp_cost"
+        "curse_purge_xp_cost", "vanilla_chest_books_mode", "bookshelf_pool_enabled"
     );
 
     /**
@@ -626,42 +627,42 @@ public final class ConfigCatalog {
             ALWAYS, null
         ),
 
-        // ==================== 3. TOMES & ECONOMY ====================
+        // ==================== 3. TOMES, DURABILITY & EXPERIENCE ECONOMY ====================
         enumOpt(
-            "tome_consumption_mode", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            "tome_consumption_mode", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE,
             MasterTomeWear.ConsumptionMode.values(),
             d -> d.tomeConsumptionMode, (d, v) -> d.tomeConsumptionMode = v, MasterTomeWear.ConsumptionMode::token,
             ALWAYS, null
         ),
         intOpt(
-            "max_tome_uses", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 256, 1,
+            "max_tome_uses", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE, 1, 256, 1,
             d -> d.maxTomeUses, (d, v) -> d.maxTomeUses = v,
             d -> d.maxTomeUses + "",
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR,
             d -> "config.chiseled_enchanting_table.reason.need_wear_mode"
         ),
         intOpt(
-            "book_copy_wear_cost", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 64, 1,
+            "book_copy_wear_cost", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE, 1, 64, 1,
             d -> d.bookCopyWearCost, (d, v) -> d.bookCopyWearCost = v,
             d -> d.bookCopyWearCost + "",
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR,
             d -> "config.chiseled_enchanting_table.reason.need_wear_mode"
         ),
         enumOpt(
-            "tome_deplete_behavior", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            "tome_deplete_behavior", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE,
             MasterTomeWear.DepleteBehavior.values(),
             d -> d.tomeDepleteBehavior, (d, v) -> d.tomeDepleteBehavior = v, MasterTomeWear.DepleteBehavior::token,
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR,
             "config.chiseled_enchanting_table.reason.need_wear_mode"
         ),
         boolOpt(
-            "tome_regen_enabled", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            "tome_regen_enabled", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE,
             d -> d.tomeRegenEnabled, (d, v) -> d.tomeRegenEnabled = v,
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR,
             "config.chiseled_enchanting_table.reason.need_wear_mode"
         ),
         intOpt(
-            "tome_regen_base_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 72_000, 600,
+            "tome_regen_base_seconds", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE, 60, 72_000, 600,
             d -> d.tomeRegenBaseSeconds, (d, v) -> d.tomeRegenBaseSeconds = v,
             d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenBaseSeconds),
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
@@ -670,41 +671,41 @@ public final class ConfigCatalog {
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
         boolOpt(
-            "locked_shelf_breakable", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            "locked_shelf_breakable", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE,
             d -> d.lockedShelfBreakable, (d, v) -> d.lockedShelfBreakable = v,
             ALWAYS, null
         ),
         boolOpt(
-            "locked_book_extraction_blocked", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            "locked_book_extraction_blocked", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE,
             d -> d.lockedBookExtractionBlocked, (d, v) -> d.lockedBookExtractionBlocked = v,
             ALWAYS, null
         ),
         intOpt(
-            "early_unlock_xp_levels", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 512, 1,
+            "early_unlock_xp_levels", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE, 0, 512, 1,
             d -> d.earlyUnlockXpLevels, (d, v) -> d.earlyUnlockXpLevels = v,
             d -> d.earlyUnlockXpLevels + "",
             ALWAYS, null
         ),
         intOpt(
-            "early_unlock_grit_count", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 512, 1,
+            "early_unlock_grit_count", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE, 0, 512, 1,
             d -> d.earlyUnlockGritCount, (d, v) -> d.earlyUnlockGritCount = v,
             d -> d.earlyUnlockGritCount + "",
             ALWAYS, null
         ),
         intOpt(
-            "sacrifice_required", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 1024, 1,
+            "sacrifice_required", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE, 1, 1024, 1,
             d -> d.sacrificeRequired, (d, v) -> d.sacrificeRequired = v,
             d -> d.sacrificeRequired + "",
             ALWAYS, null
         ),
         intOpt(
-            "tome_page_required_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 1, 512, 1,
+            "tome_page_required_shelves", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE, 1, 512, 1,
             d -> d.tomePageRequiredShelves, (d, v) -> d.tomePageRequiredShelves = v,
             d -> d.tomePageRequiredShelves + "",
             ALWAYS, null
         ),
         intOpt(
-            "tome_regen_tier1_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 4, 96, 1,
+            "tome_regen_tier1_shelves", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE, 4, 96, 1,
             d -> d.tomeRegenTier1Shelves, (d, v) -> d.tomeRegenTier1Shelves = v,
             d -> d.tomeRegenTier1Shelves + "",
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
@@ -713,7 +714,7 @@ public final class ConfigCatalog {
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
         intOpt(
-            "tome_regen_tier1_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 48_000, 600,
+            "tome_regen_tier1_seconds", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE, 60, 48_000, 600,
             d -> d.tomeRegenTier1Seconds, (d, v) -> d.tomeRegenTier1Seconds = v,
             d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenTier1Seconds),
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
@@ -722,7 +723,7 @@ public final class ConfigCatalog {
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
         intOpt(
-            "tome_regen_tier2_shelves", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 4, 96, 1,
+            "tome_regen_tier2_shelves", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE, 4, 96, 1,
             d -> d.tomeRegenTier2Shelves, (d, v) -> d.tomeRegenTier2Shelves = v,
             d -> d.tomeRegenTier2Shelves + "",
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
@@ -731,7 +732,7 @@ public final class ConfigCatalog {
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
         intOpt(
-            "tome_regen_tier2_seconds", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 60, 24_000, 300,
+            "tome_regen_tier2_seconds", CategoryId.TOME_DURABILITY, EffectScope.IMMEDIATE, 60, 24_000, 300,
             d -> d.tomeRegenTier2Seconds, (d, v) -> d.tomeRegenTier2Seconds = v,
             d -> chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.formatRegenGameDays(d.tomeRegenTier2Seconds),
             d -> d.tomeConsumptionMode == MasterTomeWear.ConsumptionMode.WEAR && d.tomeRegenEnabled,
@@ -740,35 +741,35 @@ public final class ConfigCatalog {
                 : "config.chiseled_enchanting_table.reason.need_tome_regen"
         ),
         intOpt(
-            "max_wooden_discount_percent", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 90, 1,
+            "max_wooden_discount_percent", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE, 0, 90, 1,
             d -> d.maxWoodenDiscountPercent, (d, v) -> d.maxWoodenDiscountPercent = v,
             d -> "-" + d.maxWoodenDiscountPercent + "%",
             ALWAYS, null
         ),
         intOpt(
-            "max_total_xp_discount_percent", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0, 90, 1,
+            "max_total_xp_discount_percent", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE, 0, 90, 1,
             d -> d.maxTotalXpDiscountPercent, (d, v) -> d.maxTotalXpDiscountPercent = v,
             d -> "-" + d.maxTotalXpDiscountPercent + "%",
             ALWAYS, null
         ),
         boolOpt(
-            "book_combine_enabled", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            "book_combine_enabled", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE,
             d -> d.bookCombineEnabled, (d, v) -> d.bookCombineEnabled = v,
             ALWAYS, null
         ),
         doubleOpt(
-            "book_combine_xp_multiplier", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0.10, 3.00, 0.05,
+            "book_combine_xp_multiplier", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE, 0.10, 3.00, 0.05,
             d -> d.bookCombineXpMultiplier, (d, v) -> d.bookCombineXpMultiplier = v,
             d -> String.format(java.util.Locale.ROOT, "%.2f\u00d7", d.bookCombineXpMultiplier),
             d -> d.bookCombineEnabled, d -> "config.chiseled_enchanting_table.reason.need_book_combine"
         ),
         boolOpt(
-            "book_research_enabled", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE,
+            "book_research_enabled", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE,
             d -> d.bookResearchEnabled, (d, v) -> d.bookResearchEnabled = v,
             ALWAYS, null
         ),
         doubleOpt(
-            "book_research_xp_multiplier", CategoryId.TOMES_ECONOMY, EffectScope.IMMEDIATE, 0.10, 3.00, 0.05,
+            "book_research_xp_multiplier", CategoryId.EXPERIENCE_ECONOMY, EffectScope.IMMEDIATE, 0.10, 3.00, 0.05,
             d -> d.bookResearchXpMultiplier, (d, v) -> d.bookResearchXpMultiplier = v,
             d -> String.format(java.util.Locale.ROOT, "%.2f\u00d7", d.bookResearchXpMultiplier),
             d -> d.bookResearchEnabled, d -> "config.chiseled_enchanting_table.reason.need_book_research"

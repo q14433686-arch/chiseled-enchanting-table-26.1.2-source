@@ -795,9 +795,9 @@ class EconomyAndConfigVerificationTest {
     }
 
     @Test
-    void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
+    void configCatalogCoversAllSevenCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
-        assertEquals(64, all.size(), "Expected 64 curated in-game configurable entries across 6 categories");
+        assertEquals(64, all.size(), "Expected 64 curated in-game configurable entries across 7 categories");
         for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
                 chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),

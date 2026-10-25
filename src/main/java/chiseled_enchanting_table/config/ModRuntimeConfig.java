@@ -1360,6 +1360,8 @@ public record ModRuntimeConfig(
             requirePriorDiscovery = false;
             transformationMaxBatchSize = 1;
             bookshelfEnchantedProb = 0.03;
+            vanillaChestBooksMode = VanillaChestBooksMode.KEEP_BOTH;
+            bookshelfPoolEnabled = true;
         }
 
         public ModRuntimeConfig build() {
