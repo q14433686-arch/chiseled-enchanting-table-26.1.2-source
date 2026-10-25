@@ -281,9 +281,12 @@ class ConfigurationSafetyTest {
         assertFalse(ConfigCatalog.byKey("require_prior_discovery").orElseThrow().evaluate(draft, admin).editable());
         assertTrue(ConfigCatalog.byKey("transformation_max_batch_size").orElseThrow().evaluate(draft, admin).editable());
 
-        // 6. drained_book_result = PLAIN_BOOK gates depleted-tome transmute tier thresholds!
+        // 6. tier1_bookshelves stays active if ritual_queue uses it, and gates off once both drained_book_result=PLAIN_BOOK and ritual_queue=false!
         draft = ModRuntimeConfig.DEFAULT.toDraft();
         draft.drainedBookResult = ModRuntimeConfig.DrainedBookResult.PLAIN_BOOK;
+        assertTrue(ConfigCatalog.byKey("tier1_bookshelves").orElseThrow().evaluate(draft, admin).editable(),
+            "tier1_bookshelves remains active while ritual_queue still uses shelf tier thresholds");
+        draft.ritualQueueEnabled = false;
         assertFalse(ConfigCatalog.byKey("tier1_bookshelves").orElseThrow().evaluate(draft, admin).editable());
         assertEquals("config.chiseled_enchanting_table.reason.need_depleted_tome",
             ConfigCatalog.byKey("tier1_bookshelves").orElseThrow().evaluate(draft, admin).inactiveReasonKey());
