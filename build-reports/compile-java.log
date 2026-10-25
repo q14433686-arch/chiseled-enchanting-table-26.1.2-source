@@ -1,4 +1,4 @@
-commit: 063da718a6b05ff81b33c268d3d219f419b88be6
+commit: c619bf7f475643c3375b9dbd39a6ec7fa6b92d27
 branch: arena/8eb3bb9e-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -76,8 +76,10 @@ ConfigurationSafetyTest > classicModeLocksSubordinateConfigOptionsWithReason() P
 
 ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
 
+ConfigurationSafetyTest > classicBookUpgradeJsonCarries103ResearchMaterials() PASSED
+
 ConfigurationSafetyTest > classicFrameZeroesResonanceSubCapsAndEpiphanyPerShelfChances() STANDARD_OUT
-    [02:06:33] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+    [02:09:12] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
     java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
     	at java.base/java.nio.file.Files.provider(Files.java:103)
     	at java.base/java.nio.file.Files.exists(Files.java:2289)
@@ -86,7 +88,7 @@ ConfigurationSafetyTest > classicFrameZeroesResonanceSubCapsAndEpiphanyPerShelfC
     	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:701)
     	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:608)
     	at chiseled_enchanting_table.data.ChiseledEnchantingTableData.<clinit>(ChiseledEnchantingTableData.java:149)
-    	at chiseled_enchanting_table.ConfigurationSafetyTest.classicFrameZeroesResonanceSubCapsAndEpiphanyPerShelfChances(ConfigurationSafetyTest.java:199)
+    	at chiseled_enchanting_table.ConfigurationSafetyTest.classicFrameZeroesResonanceSubCapsAndEpiphanyPerShelfChances(ConfigurationSafetyTest.java:205)
     	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
     	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
     	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
@@ -176,25 +178,22 @@ ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
 
 ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
 
-WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
-WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/home/runner/.gradle/caches/modules-2/files-2.1/org.joml/joml/1.10.8/fc0a71dad90a2cf41d82a76156a0e700af8e4f8d/joml-1.10.8.jar)
-WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
-WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-
-> Task :test
-
 ConfigurationSafetyTest > classicFrameUses103CostAndBookUpgradeTables() FAILED
-    java.lang.NullPointerException: Components not bound yet
-        at java.base/java.util.Objects.requireNonNull(Objects.java:246)
-        at net.minecraft.core.Holder$Reference.components(Holder.java:278)
-        at net.minecraft.world.item.ItemStack.<init>(ItemStack.java:266)
-        at net.minecraft.world.item.ItemStack.<init>(ItemStack.java:256)
-        at chiseled_enchanting_table.data.ChiseledEnchantingTableData$ItemCostOption.expandBundles(ChiseledEnchantingTableData.java:2150)
-        at chiseled_enchanting_table.data.ChiseledEnchantingTableData$ItemCostOption.expandBundles(ChiseledEnchantingTableData.java:2097)
-        at chiseled_enchanting_table.data.ChiseledEnchantingTableData$ItemCostRule.toBundles(ChiseledEnchantingTableData.java:1985)
-        at chiseled_enchanting_table.data.ChiseledEnchantingTableData$CostTables.itemCostOptions(ChiseledEnchantingTableData.java:1876)
-        at chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookResearchCostOptions(ChiseledEnchantingTableData.java:282)
-        at chiseled_enchanting_table.ConfigurationSafetyTest.classicFrameUses103CostAndBookUpgradeTables(ConfigurationSafetyTest.java:152)
+    java.lang.ExceptionInInitializerError
+        at chiseled_enchanting_table.data.ChiseledEnchantingTableData$ItemTransformation.resolveOutputItem(ChiseledEnchantingTableData.java:1638)
+        at chiseled_enchanting_table.data.ChiseledEnchantingTableData$ItemTransformation.isResolvable(ChiseledEnchantingTableData.java:1642)
+        at java.base/java.util.Optional.filter(Optional.java:218)
+        at chiseled_enchanting_table.data.ChiseledEnchantingTableData.itemTransformation(ChiseledEnchantingTableData.java:438)
+        at chiseled_enchanting_table.ConfigurationSafetyTest.classicFrameUses103CostAndBookUpgradeTables(ConfigurationSafetyTest.java:154)
+
+        Caused by:
+        java.lang.IllegalArgumentException: Not bootstrapped (called from registry minecraft:game_event)
+            at net.minecraft.server.Bootstrap.createBootstrapException(Bootstrap.java:124)
+            at net.minecraft.server.Bootstrap.checkBootstrapCalled(Bootstrap.java:117)
+            at net.minecraft.core.registries.BuiltInRegistries.internalRegister(BuiltInRegistries.java:298)
+            at net.minecraft.core.registries.BuiltInRegistries.registerDefaulted(BuiltInRegistries.java:289)
+            at net.minecraft.core.registries.BuiltInRegistries.<clinit>(BuiltInRegistries.java:180)
+            ... 5 more
 
 ConfigurationSafetyTest > allFourPresetsRoundTripRestore64BookStackAnd103Semantics() PASSED
 
@@ -308,10 +307,10 @@ RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrit
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
 
-79 tests completed, 1 failed
+80 tests completed, 1 failed
 
 > Task :test FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792893973673.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792894133352.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -357,37 +356,6 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':test'.
 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:328)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
-	at org.gradle.execution.plan.DefaultPlanExecutor.process(DefaultPlanExecutor.java:111)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.executeWithServices(DefaultTaskExecutionGraph.java:146)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph.execute(DefaultTaskExecutionGraph.java:131)
-	at org.gradle.execution.SelectedTaskExecutionAction.execute(SelectedTaskExecutionAction.java:35)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:54)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor$ExecuteTasks.call(BuildOperationFiringBuildWorkerExecutor.java:43)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.execution.BuildOperationFiringBuildWorkerExecutor.execute(BuildOperationFiringBuildWorkerExecutor.java:40)
-	at org.gradle.internal.build.DefaultBuildLifecycleController.lambda$executeTasks$11(DefaultBuildLifecycleController.java:323)
-	at org.gradle.internal.model.StateTransitionController.doTransition(StateTransitionController.java:304)
-	at org.gradle.internal.model.StateTransitionController.lambda$tryTransition$9(StateTransitionController.java:215)
-	at org.gradle.internal.work.DefaultSynchronizer.withLock(DefaultSynchronizer.java:45)
-	at org.gradle.internal.model.StateTransitionController.tryTransition(StateTransitionController.java:215)
-	at org.gradle.internal.build.DefaultBuildLifecycleController.executeTasks(DefaultBuildLifecycleController.java:314)
-	at org.gradle.internal.build.DefaultBuildWorkGraphController$DefaultBuildWorkGraph.runWork(DefaultBuildWorkGraphController.java:220)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withLocksAcquired$0(DefaultWorkerLeaseService.java:275)
-	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:43)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:273)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:265)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:128)
-	at org.gradle.composite.internal.DefaultBuildController.doRun(DefaultBuildController.java:182)
-	at org.gradle.composite.internal.DefaultBuildController.access$000(DefaultBuildController.java:50)
-	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.lambda$run$0(DefaultBuildController.java:199)
-	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:84)
-	at org.gradle.composite.internal.DefaultBuildController$BuildOpRunnable.run(DefaultBuildController.java:199)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There were failing tests. See the report at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/tests/test/index.html
@@ -493,7 +461,7 @@ Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There
 	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:38)
 	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:68)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:132)
-	... 61 more
+	... 30 more
 
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
@@ -502,7 +470,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 34s
+BUILD FAILED in 29s
 6 actionable tasks: 6 executed
 gradle exit code: 1
 
