@@ -403,8 +403,8 @@ class ConfigurationSafetyTest {
 
             // 2. Full slider range of horizontal_scan_radius (1..8) and vertical_scan_radius (0..6) applies without silent clamping
             var scanDraft = ModRuntimeConfig.DEFAULT.toDraft();
-            ConfigCatalog.byKey("horizontal_scan_radius").setFromNormalizedSlider(scanDraft, 1.0);
-            ConfigCatalog.byKey("vertical_scan_radius").setFromNormalizedSlider(scanDraft, 1.0);
+            ConfigCatalog.byKey("horizontal_scan_radius").orElseThrow().setFromNormalizedSlider(scanDraft, 1.0);
+            ConfigCatalog.byKey("vertical_scan_radius").orElseThrow().setFromNormalizedSlider(scanDraft, 1.0);
             ModRuntimeConfig maxScanCfg = scanDraft.build();
             assertEquals(8, maxScanCfg.horizontalScanRadius());
             assertEquals(6, maxScanCfg.verticalScanRadius());
@@ -414,8 +414,8 @@ class ConfigurationSafetyTest {
             assertEquals(8, ChiseledEnchantingTableData.shelfGatesConfig().horizontalScanRadius());
             assertEquals(6, ChiseledEnchantingTableData.shelfGatesConfig().verticalScanRadius());
 
-            ConfigCatalog.byKey("horizontal_scan_radius").setFromNormalizedSlider(scanDraft, 0.0);
-            ConfigCatalog.byKey("vertical_scan_radius").setFromNormalizedSlider(scanDraft, 0.0);
+            ConfigCatalog.byKey("horizontal_scan_radius").orElseThrow().setFromNormalizedSlider(scanDraft, 0.0);
+            ConfigCatalog.byKey("vertical_scan_radius").orElseThrow().setFromNormalizedSlider(scanDraft, 0.0);
             ChiseledEnchantingTableData.applyRuntimeConfig(scanDraft.build(), ModRuntimeConfig.PackPolicy.NONE, () -> {});
             assertEquals(1, ChiseledEnchantingTableData.shelfGatesConfig().horizontalScanRadius());
             assertEquals(0, ChiseledEnchantingTableData.shelfGatesConfig().verticalScanRadius());
