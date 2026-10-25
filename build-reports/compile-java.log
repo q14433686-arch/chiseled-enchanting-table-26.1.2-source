@@ -1,4 +1,4 @@
-commit: 13a5b06d30fd8f7fa4af66ab09231242d0ecb524
+commit: 18b518503fbafbbfdb5e98b8bc45c08d49dd5dc5
 branch: arena/b99a37c2-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -26,49 +26,156 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :processResources
 > Task :classes
 
-> Task :compileClientJava FAILED
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:853: error: cannot find symbol
-            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.configOverlay != null) {
-                                           ^
-  symbol:   variable InputConstants
-  location: class ChiseledEnchantingTableScreen
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:860: error: cannot find symbol
-            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.grimoireOverlay != null) {
-                                           ^
-  symbol:   variable InputConstants
-  location: class ChiseledEnchantingTableScreen
+> Task :compileClientJava
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-2 errors
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792965044784.json
+
+> Task :processClientResources
+> Task :clientClasses
+
+> Task :compileTestJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:48: error: cannot find symbol
+        assertEquals(rocket + "A纂" + rareHan, buf.value());
+                                                 ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:50: error: cannot find symbol
+        assertEquals(6, buf.value().length(), "UTF-16 char length includes 2 surrogate pairs");
+                           ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:53: error: cannot find symbol
+        assertTrue(buf.moveCursorLeft());
+                      ^
+  symbol:   method moveCursorLeft()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:54: error: cannot find symbol
+        assertEquals(4, buf.cursorIndex(), "Cursor must land cleanly before high surrogate, never mid-pair");
+                           ^
+  symbol:   method cursorIndex()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:56: error: cannot find symbol
+        assertEquals(rocket + "A纂!" + rareHan, buf.value());
+                                                  ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:60: error: cannot find symbol
+        assertEquals(rocket + "A纂!", buf.value());
+                                        ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:63: error: cannot find symbol
+        buf.moveCursorToStart();
+           ^
+  symbol:   method moveCursorToStart()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:64: error: cannot find symbol
+        assertTrue(buf.moveCursorRight());
+                      ^
+  symbol:   method moveCursorRight()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:65: error: cannot find symbol
+        assertEquals(2, buf.cursorIndex());
+                           ^
+  symbol:   method cursorIndex()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:67: error: cannot find symbol
+        assertEquals("A纂!", buf.value());
+                               ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:68: error: cannot find symbol
+        assertEquals(0, buf.cursorIndex());
+                           ^
+  symbol:   method cursorIndex()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:76: error: cannot find symbol
+        assertEquals(12, buf.value().length());
+                            ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/ConfigurationSafetyTest.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+12 errors
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792965184881.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileClientJava'.
+Execution failed for task ':compileTestJava'.
 > Compilation failed; see the compiler output below.
+  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/ConfigurationSafetyTest.java uses or overrides a deprecated API.
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:853: error: cannot find symbol
-              if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.configOverlay != null) {
-                                             ^
-    symbol:   variable InputConstants
-    location: class ChiseledEnchantingTableScreen
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:860: error: cannot find symbol
-              if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.grimoireOverlay != null) {
-                                             ^
-    symbol:   variable InputConstants
-    location: class ChiseledEnchantingTableScreen
-  Note: Some input files use or override a deprecated API.
-  2 errors
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:48: error: cannot find symbol
+          assertEquals(rocket + "A纂" + rareHan, buf.value());
+                                                   ^
+    symbol:   method value()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:50: error: cannot find symbol
+          assertEquals(6, buf.value().length(), "UTF-16 char length includes 2 surrogate pairs");
+                             ^
+    symbol:   method value()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:53: error: cannot find symbol
+          assertTrue(buf.moveCursorLeft());
+                        ^
+    symbol:   method moveCursorLeft()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:54: error: cannot find symbol
+          assertEquals(4, buf.cursorIndex(), "Cursor must land cleanly before high surrogate, never mid-pair");
+                             ^
+    symbol:   method cursorIndex()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:56: error: cannot find symbol
+          assertEquals(rocket + "A纂!" + rareHan, buf.value());
+                                                    ^
+    symbol:   method value()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:60: error: cannot find symbol
+          assertEquals(rocket + "A纂!", buf.value());
+                                          ^
+    symbol:   method value()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:63: error: cannot find symbol
+          buf.moveCursorToStart();
+             ^
+    symbol:   method moveCursorToStart()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:64: error: cannot find symbol
+          assertTrue(buf.moveCursorRight());
+                        ^
+    symbol:   method moveCursorRight()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:65: error: cannot find symbol
+          assertEquals(2, buf.cursorIndex());
+                             ^
+    symbol:   method cursorIndex()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:67: error: cannot find symbol
+          assertEquals("A纂!", buf.value());
+                                 ^
+    symbol:   method value()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:68: error: cannot find symbol
+          assertEquals(0, buf.cursorIndex());
+                             ^
+    symbol:   method cursorIndex()
+    location: variable buf of type SearchTextBuffer
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:76: error: cannot find symbol
+          assertEquals(12, buf.value().length());
+                              ^
+    symbol:   method value()
+    location: variable buf of type SearchTextBuffer
+  12 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileTestJava'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -103,19 +210,69 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:853: error: cannot find symbol
-            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.configOverlay != null) {
-                                           ^
-  symbol:   variable InputConstants
-  location: class ChiseledEnchantingTableScreen
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:860: error: cannot find symbol
-            if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.grimoireOverlay != null) {
-                                           ^
-  symbol:   variable InputConstants
-  location: class ChiseledEnchantingTableScreen
-Note: Some input files use or override a deprecated API.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:48: error: cannot find symbol
+        assertEquals(rocket + "A纂" + rareHan, buf.value());
+                                                 ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:50: error: cannot find symbol
+        assertEquals(6, buf.value().length(), "UTF-16 char length includes 2 surrogate pairs");
+                           ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:53: error: cannot find symbol
+        assertTrue(buf.moveCursorLeft());
+                      ^
+  symbol:   method moveCursorLeft()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:54: error: cannot find symbol
+        assertEquals(4, buf.cursorIndex(), "Cursor must land cleanly before high surrogate, never mid-pair");
+                           ^
+  symbol:   method cursorIndex()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:56: error: cannot find symbol
+        assertEquals(rocket + "A纂!" + rareHan, buf.value());
+                                                  ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:60: error: cannot find symbol
+        assertEquals(rocket + "A纂!", buf.value());
+                                        ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:63: error: cannot find symbol
+        buf.moveCursorToStart();
+           ^
+  symbol:   method moveCursorToStart()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:64: error: cannot find symbol
+        assertTrue(buf.moveCursorRight());
+                      ^
+  symbol:   method moveCursorRight()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:65: error: cannot find symbol
+        assertEquals(2, buf.cursorIndex());
+                           ^
+  symbol:   method cursorIndex()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:67: error: cannot find symbol
+        assertEquals("A纂!", buf.value());
+                               ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:68: error: cannot find symbol
+        assertEquals(0, buf.cursorIndex());
+                           ^
+  symbol:   method cursorIndex()
+  location: variable buf of type SearchTextBuffer
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/AuditRoundTwoTest.java:76: error: cannot find symbol
+        assertEquals(12, buf.value().length());
+                            ^
+  symbol:   method value()
+  location: variable buf of type SearchTextBuffer
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/ConfigurationSafetyTest.java uses or overrides a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
-2 errors
+12 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -256,8 +413,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 20s
-3 actionable tasks: 3 executed
+BUILD FAILED in 23s
+5 actionable tasks: 5 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
