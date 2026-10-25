@@ -65,8 +65,9 @@ public abstract class GrindstoneBookDepleteMixin extends AbstractContainerMenu {
         }
         Slot delegate = this.slots.get(GrindstoneMenu.RESULT_SLOT);
         Container repairRef = this.repairSlots;
-        // Audit MX-05: derive the backing container + index from the delegate itself
-        // instead of hardcoding the current vanilla layout (container slot 2).
+        // Audit MX-05 / MIXIN-06: derive the backing container + index from the delegate itself
+        // and forward the full public Slot delegation surface so shift-click quick-craft,
+        // stack-limit queries, and active/icon state preserve delegate semantics.
         Slot wrapped = new Slot(delegate.container, delegate.getContainerSlot(), delegate.x, delegate.y) {
             @Override
             public boolean mayPlace(ItemStack stack) {
@@ -76,6 +77,46 @@ public abstract class GrindstoneBookDepleteMixin extends AbstractContainerMenu {
             @Override
             public boolean mayPickup(Player player) {
                 return delegate.mayPickup(player);
+            }
+
+            @Override
+            public void onQuickCraft(ItemStack picked, ItemStack original) {
+                delegate.onQuickCraft(picked, original);
+            }
+
+            @Override
+            public int getMaxStackSize() {
+                return delegate.getMaxStackSize();
+            }
+
+            @Override
+            public int getMaxStackSize(ItemStack stack) {
+                return delegate.getMaxStackSize(stack);
+            }
+
+            @Override
+            public void setChanged() {
+                delegate.setChanged();
+            }
+
+            @Override
+            public boolean isActive() {
+                return delegate.isActive();
+            }
+
+            @Override
+            public boolean isFake() {
+                return delegate.isFake();
+            }
+
+            @Override
+            public boolean allowModification(Player player) {
+                return delegate.allowModification(player);
+            }
+
+            @Override
+            public @Nullable net.minecraft.resources.Identifier getNoItemIcon() {
+                return delegate.getNoItemIcon();
             }
 
             @Override
@@ -109,6 +150,11 @@ public abstract class GrindstoneBookDepleteMixin extends AbstractContainerMenu {
         ItemStack additional,
         CallbackInfoReturnable<ItemStack> cir
     ) {
+        if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(input)
+            || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(additional)) {
+            cir.setReturnValue(ItemStack.EMPTY);
+            return;
+        }
         if (!input.is(Items.ENCHANTED_BOOK) && !additional.is(Items.ENCHANTED_BOOK)) {
             return;
         }

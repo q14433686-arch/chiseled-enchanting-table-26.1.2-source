@@ -144,7 +144,7 @@ class SyncContracts(unittest.TestCase):
     def test_incremental_features_and_live_payload(self):
         for path in ['mechanics/enchanting/DisenchantmentApplication.java',
                      'mechanics/resonance/BookshelfProgression.java',
-                     'config/ModBootstrapConfig.java', 'item/ArcaneGrimoireItem.java']:
+                     'config/ConfigLayoutSpec.java', 'item/ArcaneGrimoireItem.java']:
             self.assertTrue((MAIN / path).exists())
         payload = (MAIN / 'menu/ChiseledEnchantingMenuPayloads.java').read_text()
         for token in ['LiveShelfStatePayload', 'high_tier_chiseled_books', 'ReopenTablePayload',
@@ -212,8 +212,10 @@ class SyncContracts(unittest.TestCase):
 
     def test_new_source_features_keep_port_specific_safeguards(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('26_3_revision_7', protocol)
-        self.assertIn('enchant_cost_table_26_3_revision_6', protocol)
+        self.assertIn('CURRENT_REVISION_NUMBER = 11', protocol)
+        self.assertIn('26_3_revision_', protocol)
+        self.assertIn('IntStream.range(1, CURRENT_REVISION_NUMBER)', protocol)
+        self.assertIn('IntStream.range(9, CURRENT_REVISION_NUMBER)', protocol)
         wear = (MAIN / 'mechanics/resonance/MasterTomeWear.java').read_text()
         self.assertIn('hasClearLineOfSight(level, tablePos, scanPos)', wear)
         processor = (MAIN / 'mechanics/structure/BookshelfReplacerProcessor.java').read_text()

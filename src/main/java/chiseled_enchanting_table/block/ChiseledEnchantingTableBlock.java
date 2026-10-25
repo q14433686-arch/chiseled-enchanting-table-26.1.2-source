@@ -4,15 +4,15 @@ import chiseled_enchanting_table.utils.EnchantmentFinder;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.registry.EntityRegistry;
+import chiseled_enchanting_table.registry.BlockEntityRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
+import com.mojang.serialization.MapCodec;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -38,6 +38,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.ChiseledBookShelfBlock;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
@@ -53,18 +54,19 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
-    // 26.3 removed per-block codecs; do not restore the 26.1.2 codec override.
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
     public static final net.minecraft.tags.TagKey<Block> REGULAR_BOOKSHELVES_TAG =
-        net.minecraft.tags.TagKey.create(
-            Registries.BLOCK,
-            chiseled_enchanting_table.ChiseledEnchantingTable.identifier("regular_bookshelves")
-        );
+        chiseled_enchanting_table.registry.CetTags.Blocks.REGULAR_BOOKSHELVES;
 
     public static boolean isRegularBookshelf(BlockState state) {
-        return !state.is(Blocks.CHISELED_BOOKSHELF)
-            && (state.is(REGULAR_BOOKSHELVES_TAG) || state.is(net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER));
+        if (state == null
+            || state.is(Blocks.CHISELED_BOOKSHELF)
+            || state.getBlock() instanceof ChiseledBookShelfBlock) {
+            return false;
+        }
+        return state.is(REGULAR_BOOKSHELVES_TAG)
+            || state.is(net.minecraft.tags.BlockTags.ENCHANTMENT_POWER_PROVIDER);
     }
 
     private static final java.util.concurrent.ConcurrentHashMap<Long, List<BlockPos>> SCAN_OFFSETS_CACHE =
@@ -74,14 +76,18 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public static List<BlockPos> getScanOffsets(
         chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config cfg
     ) {
-        int rx = cfg == null ? 3 : Math.max(1, Math.min(
-            chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS,
-            cfg.horizontalScanRadius()
-        ));
-        int ry = cfg == null ? 2 : Math.max(0, Math.min(
-            chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS,
-            cfg.verticalScanRadius()
-        ));
+        int rx = cfg == null
+            ? chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DEFAULT_SCAN_HORIZONTAL_RADIUS
+            : Math.max(1, Math.min(
+                chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS,
+                cfg.horizontalScanRadius()
+            ));
+        int ry = cfg == null
+            ? chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DEFAULT_SCAN_VERTICAL_RADIUS
+            : Math.max(0, Math.min(
+                chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS,
+                cfg.verticalScanRadius()
+            ));
         long key = (((long) rx) << 32) | (ry & 0xFFFFFFFFL);
         return SCAN_OFFSETS_CACHE.computeIfAbsent(key, ignored -> {
             int capacity = Math.max(8, (2 * rx + 1) * (2 * rx + 1) * (2 * ry + 1) - 1);
@@ -112,6 +118,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public ChiseledEnchantingTableBlock(BlockBehaviour.Properties settings) {
         super(settings);
     }
+
 
     @Override
     protected boolean useShapeForLightOcclusion(BlockState state) {
@@ -191,7 +198,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return createTickerHelper(
             type,
-            EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE,
+            BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE,
             level.isClientSide()
                 ? ChiseledEnchantingTableBlockEntity::tick
                 : ChiseledEnchantingTableBlockEntity::serverTick
@@ -247,7 +254,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         if (provider != null) {
             player.openMenu(provider);
             if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
-                menu.pushRitualStateToViewer();
+                menu.sendInitialLiveSync();
             }
             return InteractionResult.CONSUME;
         }
@@ -294,14 +301,20 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         }
         Component title = tableBlockEntity.getDisplayName();
         ShelfPower shelfPower = calculateShelfPower(level, pos);
-        Set<EnchantmentWithLevel> unlockedEnchantments = this.get_unlocked_enchantements(state, level, pos);
-        Set<EnchantmentWithLevel> availableEnchantments = Stream.concat(
-            unlockedEnchantments.stream(), this.enchantments_unlocked_by_default(level).stream()
-        ).collect(Collectors.toSet());
+        // Opening snapshot must match computeLiveShelfState identically: under classic 1.0.3
+        // shelf boost, getUnlockedEnchantmentsFromPower intentionally emits only the single
+        // boosted top tier (never re-unioning level 1 on top of boosted tiers).
+        Set<EnchantmentWithLevel> availableEnchantments = this.getUnlockedEnchantmentsFromPower(level, shelfPower);
         int epiphanySeed = tableBlockEntity.getOrInitEpiphanySeed();
 
         return new ExtendedMenuProvider<AvailableEnchantmentPayload>() {
             private AvailableEnchantmentPayload buildPayloadFor(Player targetPlayer) {
+                // Award opening advancements BEFORE building the payload so both createMenu
+                // (which Fabric invokes first on the server) and getScreenOpeningData (client)
+                // observe identical page-unlock and transformation-unlock state on frame zero.
+                if (targetPlayer instanceof ServerPlayer sp) {
+                    awardOpeningAdvancements(level, shelfPower, sp);
+                }
                 return new AvailableEnchantmentPayload(
                     availableEnchantments,
                     shelfPower.xpDiscountPercent(),
@@ -314,25 +327,13 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     shelfPower.chiseledBookshelvesWithBooks(),
                     shelfPower.emptyChiseledBookshelves(),
                     shelfPower.masterTomeCharges(),
+                    shelfPower.totalMasteryUnits(),
                     targetPlayer
-                );
+                ).withTablePos(pos);
             }
 
             @Override
             public AvailableEnchantmentPayload getScreenOpeningData(ServerPlayer player) {
-                if (shelfPower.totalChiseledEnchantedBooks() > 0) {
-                    Advancement.give(player, "unlock_new_enchant");
-                }
-                // Audit: trigger on actually REACHING the configured total cap, not on the
-                // old hardcoded 22%/35% proxies that drifted from datapack-tunable values
-                // (and from the "-40%" the advancement text advertised).
-                int maxTotalDiscount = ChiseledEnchantingTableData.libraryResonanceConfig().maxTotalXpDiscountPercent();
-                if (maxTotalDiscount > 0 && shelfPower.peakEffectiveXpDiscountPercent(level) >= maxTotalDiscount) {
-                    Advancement.give(player, "library_resonance");
-                }
-                if (shelfPower.regularBookshelves() >= ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves()) {
-                    Advancement.give(player, "grand_library");
-                }
                 return buildPayloadFor(player);
             }
 
@@ -354,13 +355,53 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         };
     }
 
+    private static void awardOpeningAdvancements(Level level, ShelfPower shelfPower, ServerPlayer player) {
+        if (shelfPower.totalChiseledEnchantedBooks() > 0) {
+            Advancement.give(player, "unlock_new_enchant");
+        }
+        var lrCfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        int maxTotalDiscount = lrCfg.maxTotalXpDiscountPercent();
+        if (maxTotalDiscount > 0 && shelfPower.peakEffectiveXpDiscountPercent(level) >= maxTotalDiscount) {
+            Advancement.give(player, "library_resonance");
+        }
+        if (shelfPower.regularBookshelves() >= ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves()) {
+            Advancement.give(player, "grand_library");
+        }
+        if (shelfPower.chiseledBookshelvesWithBooks() >= lrCfg.tomePageRequiredShelves()
+            && !Advancement.hasCompleted(player, Advancement.HOW_MUCH_LONGER)) {
+            Advancement.give(player, Advancement.HOW_MUCH_LONGER);
+        }
+    }
+
+    private static final List<Identifier> CLASSIC_103_DEFAULT_TREASURES = List.of(
+        Identifier.withDefaultNamespace("frost_walker"),
+        Identifier.withDefaultNamespace("binding_curse"),
+        Identifier.withDefaultNamespace("soul_speed"),
+        Identifier.withDefaultNamespace("swift_sneak"),
+        Identifier.withDefaultNamespace("mending"),
+        Identifier.withDefaultNamespace("vanishing_curse"),
+        Identifier.withDefaultNamespace("wind_burst")
+    );
+
     /**
      * Default-unlocked enchantments, including any third-party enchantment whose mod tags it with
      * one of the JSON {@code tags} rules (e.g. {@code #minecraft:non_treasure} by default) — see
      * {@link ChiseledEnchantingTableData#defaultEnchantments(net.minecraft.core.HolderGetter)}.
      */
     public Set<EnchantmentWithLevel> enchantments_unlocked_by_default(Level level) {
-        return ChiseledEnchantingTableData.defaultEnchantments(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT));
+        var lookup = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        Set<EnchantmentWithLevel> base = ChiseledEnchantingTableData.defaultEnchantments(lookup);
+        if (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).defaultUnlockFilter()
+            != chiseled_enchanting_table.config.ModRuntimeConfig.DefaultUnlockFilter.CLASSIC_UNFILTERED) {
+            return base;
+        }
+        java.util.HashSet<EnchantmentWithLevel> classic = new java.util.HashSet<>(base);
+        for (Identifier id : CLASSIC_103_DEFAULT_TREASURES) {
+            if (lookup.get(net.minecraft.resources.ResourceKey.create(Registries.ENCHANTMENT, id)).isPresent()) {
+                classic.add(new EnchantmentWithLevel(id, 1));
+            }
+        }
+        return classic;
     }
 
     public Set<EnchantmentWithLevel> get_unlocked_enchantements(BlockState state, Level level, BlockPos pos) {
@@ -370,27 +411,58 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     private Set<EnchantmentWithLevel> getUnlockedEnchantmentsFromPower(Level level, ShelfPower shelfPower) {
         Map<Identifier, Integer> highestLevels = new HashMap<>();
+        boolean classicShelfBoost = chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).shelfBoostModel()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.ShelfBoostModel.CLASSIC_FLOOR_THIRD;
 
-        // Track 1 (Wooden Bookshelves): scale default baseline smoothly along the blank cap curve.
-        for (EnchantmentWithLevel base : this.enchantments_unlocked_by_default(level)) {
-            mergeHighestLevel(highestLevels, withWoodenShelfBoost(level, base, shelfPower.regularBookshelves()));
-        }
+        if (classicShelfBoost) {
+            // 1.0.3 exact rule: both default enchantments and stored Chiseled Bookshelf books gain +W/3 up to maxLevel.
+            for (EnchantmentWithLevel base : this.enchantments_unlocked_by_default(level)) {
+                mergeHighestLevel(highestLevels, withClassic103ShelfBoost(level, base, shelfPower.regularBookshelves()));
+            }
+            for (Map.Entry<Identifier, Integer> entry : shelfPower.storedMasterLevels().entrySet()) {
+                if (entry.getValue() > 0) {
+                    mergeHighestLevel(
+                        highestLevels,
+                        withClassic103ShelfBoost(
+                            level,
+                            new EnchantmentWithLevel(entry.getKey(), entry.getValue()),
+                            shelfPower.regularBookshelves()
+                        )
+                    );
+                }
+            }
+        } else {
+            // Track 1 (Wooden Bookshelves): scale default baseline smoothly along the blank cap curve.
+            for (EnchantmentWithLevel base : this.enchantments_unlocked_by_default(level)) {
+                mergeHighestLevel(highestLevels, withWoodenShelfBoost(level, base, shelfPower.regularBookshelves()));
+            }
 
-        // Track 3 (Chiseled Bookshelves): unlock each stored Master Tome 1:1 from the already-scanned map.
-        for (Map.Entry<Identifier, Integer> entry : shelfPower.storedMasterLevels().entrySet()) {
-            if (entry.getValue() > 0) {
-                mergeHighestLevel(highestLevels, new EnchantmentWithLevel(entry.getKey(), entry.getValue()));
+            // Track 3 (Chiseled Bookshelves): unlock each stored Master Tome 1:1 from the already-scanned map.
+            for (Map.Entry<Identifier, Integer> entry : shelfPower.storedMasterLevels().entrySet()) {
+                if (entry.getValue() > 0) {
+                    mergeHighestLevel(highestLevels, new EnchantmentWithLevel(entry.getKey(), entry.getValue()));
+                }
             }
         }
 
         java.util.HashSet<EnchantmentWithLevel> unlocked = new java.util.HashSet<>();
         for (Map.Entry<Identifier, Integer> entry : highestLevels.entrySet()) {
             int top = Math.max(1, entry.getValue());
+            if (classicShelfBoost) {
+                unlocked.add(new EnchantmentWithLevel(entry.getKey(), top));
+                continue;
+            }
             for (int lvl = 1; lvl <= top; lvl++) {
                 unlocked.add(new EnchantmentWithLevel(entry.getKey(), lvl));
             }
         }
         return unlocked;
+    }
+
+    private static EnchantmentWithLevel withClassic103ShelfBoost(Level level, EnchantmentWithLevel enchantment, int regularBookshelfPower) {
+        int boostedLevel = enchantment.enchantment_level() + Math.max(0, regularBookshelfPower) / 3;
+        int maxLvl = maxLevel(level, enchantment.enchantment_id());
+        return new EnchantmentWithLevel(enchantment.enchantment_id(), Math.max(1, Math.min(maxLvl, boostedLevel)));
     }
 
     public static final int MAX_XP_DISCOUNT_PERCENT =
@@ -406,11 +478,174 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         BlockPos pos,
         int containerId
     ) {
+        return computeLiveShelfState(level, pos, containerId, null);
+    }
+
+    public static chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload computeLiveShelfState(
+        Level level,
+        BlockPos pos,
+        int containerId,
+        @Nullable Player viewer
+    ) {
         BlockState state = level.getBlockState(pos);
         ShelfPower shelfPower = calculateShelfPower(level, pos);
         Set<EnchantmentWithLevel> unlocked = state.getBlock() instanceof ChiseledEnchantingTableBlock cetb
             ? cetb.getUnlockedEnchantmentsFromPower(level, shelfPower)
             : Set.of();
+
+        var lrCfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        int totalLibrary = shelfPower.totalLibraryBookshelves();
+        int regenTier = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.regenTierIndex(lrCfg, totalLibrary);
+        int nextGap = switch (regenTier) {
+            case 0 -> Math.max(0, lrCfg.tomeRegenTier1Shelves() - totalLibrary);
+            case 1 -> Math.max(0, lrCfg.tomeRegenTier2Shelves() - totalLibrary);
+            default -> 0;
+        };
+        boolean regenActive = lrCfg.tomeRegenEnabled()
+            && lrCfg.tomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR;
+        int interval = regenActive
+            ? chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeRegenIntervalTicks(lrCfg, totalLibrary)
+            : -1;
+        if (interval == Integer.MAX_VALUE) interval = -1;
+
+        var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
+        boolean checkLos = sgCfg != null && sgCfg.requireLineOfSight();
+        java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry> tomeBooks =
+            new java.util.ArrayList<>();
+        java.util.Set<BlockPos> qualifyingShelves = new java.util.HashSet<>();
+        for (BlockPos offset : getScanOffsets(sgCfg)) {
+            BlockPos scanPos = pos.offset(offset);
+            if (!level.hasChunkAt(scanPos)) continue;
+            if (checkLos && !hasClearLineOfSight(level, pos, scanPos)) continue;
+            if (!(level.getBlockEntity(scanPos) instanceof ChiseledBookShelfBlockEntity shelf)) continue;
+            boolean qualifies = false;
+            for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
+                ItemStack stack = shelf.getItem(slot);
+                if (!stack.is(net.minecraft.world.item.Items.ENCHANTED_BOOK)) continue;
+                qualifies = true;
+                if (tomeBooks.size() >= chiseled_enchanting_table.menu.PayloadLimits.MAX_TOME_BOOK_ENTRIES) continue;
+                java.util.List<EnchantmentWithLevel> ench = new java.util.ArrayList<>();
+                net.minecraft.world.item.enchantment.EnchantmentHelper.getEnchantmentsForCrafting(stack)
+                    .entrySet()
+                    .stream()
+                    .filter(e -> e.getIntValue() > 0 && e.getKey().unwrapKey().isPresent())
+                    .map(e -> new EnchantmentWithLevel(
+                        e.getKey().unwrapKey().orElseThrow().identifier(), e.getIntValue()))
+                    .sorted(java.util.Comparator.comparing((EnchantmentWithLevel e) -> e.enchantment_id().toString())
+                        .thenComparingInt(EnchantmentWithLevel::enchantment_level))
+                    .forEach(ench::add);
+                int wear = chiseled_enchanting_table.mechanics.resonance.TomeWearData.getWearUsed(stack);
+                boolean immune = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
+                    .hasEffectiveWearImmunity(lrCfg, stack);
+                int nonCurseCount = chiseled_enchanting_table.mechanics.resonance.TomeWearData
+                    .countNonCurseStoredEnchantments(stack);
+                boolean purelyImmune = immune
+                    && wear <= 0
+                    && nonCurseCount <= lrCfg.wearImmuneFullWaiverMaxEnchants();
+                int effectiveMax = chiseled_enchanting_table.mechanics.resonance.TomeWearData
+                    .effectiveMaxUses(stack, lrCfg.maxTomeUses(), lrCfg.wearImmuneMaxGeneration());
+                int remaining = purelyImmune ? effectiveMax
+                    : chiseled_enchanting_table.mechanics.resonance.TomeWearData.remainingCharges(
+                        stack, lrCfg.maxTomeUses(), lrCfg.wearImmuneMaxGeneration());
+                boolean charging = regenActive && wear > 0;
+                long progress = charging
+                    ? chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.regenProgressTicks(level, scanPos, slot)
+                    : -1L;
+                int etaNext = charging
+                    ? chiseled_enchanting_table.mechanics.resonance.TomeLockData.ticksToNextCharge(
+                        wear, Math.max(0L, progress), interval)
+                    : -1;
+                int etaFull = charging
+                    ? chiseled_enchanting_table.mechanics.resonance.TomeLockData.ticksToFullCharge(
+                        wear, Math.max(0L, progress), interval)
+                    : -1;
+                var lock = chiseled_enchanting_table.mechanics.resonance.TomeLockData.getLock(stack);
+                boolean effectivelyLocked = lock != null && !lock.expiredAt(wear);
+                int lockMode = !effectivelyLocked ? -1 : switch (lock.mode()) {
+                    case NEXT_CHARGE -> 0;
+                    case FULL_CHARGE -> 1;
+                    case PERMANENT -> 2;
+                };
+                // Reference enchantment for the exhaustion preview: the one that last
+                // consumed this tome when known (step-down only ever touches that one),
+                // otherwise the book's first listed enchantment.
+                String lastUsedEnchantId =
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getLastUsedEnchant(stack);
+                chiseled_enchanting_table.utils.EnchantmentWithLevel refEnchant = null;
+                if (!lastUsedEnchantId.isEmpty()) {
+                    for (var candidate : ench) {
+                        if (candidate.enchantment_id().toString().equals(lastUsedEnchantId)) {
+                            refEnchant = candidate;
+                            break;
+                        }
+                    }
+                }
+                if (refEnchant == null && !ench.isEmpty()) refEnchant = ench.getFirst();
+                int depleteOutcome = 0;
+                String depleteEnchant = refEnchant == null ? "" : refEnchant.enchantment_id().toString();
+                int depleteLevel = refEnchant == null ? 0 : refEnchant.enchantment_level();
+                if (!immune && refEnchant != null) {
+                    var consumptionMode = lrCfg.tomeConsumptionMode();
+                    if (consumptionMode
+                        == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
+                        boolean losesEnchant = lrCfg.tomeDepleteBehavior()
+                                == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.DEPLETED_TOME
+                            || refEnchant.enchantment_level() <= 1;
+                        depleteOutcome = losesEnchant ? (ench.size() <= 1 ? 2 : 3) : 1;
+                    } else if (consumptionMode
+                        == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.CONSUME) {
+                        depleteOutcome = ench.size() <= 1 ? 5 : 4;
+                    }
+                }
+                tomeBooks.add(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry(
+                    scanPos.immutable(),
+                    slot,
+                    stack.getHoverName().getString(),
+                    ench,
+                    wear,
+                    remaining,
+                    effectiveMax,
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(stack),
+                    charging,
+                    immune,
+                    etaNext,
+                    etaFull,
+                    lockMode,
+                    effectivelyLocked ? lock.owner().toString() : "",
+                    effectivelyLocked ? lock.ownerName() : "",
+                    effectivelyLocked ? lock.targetWear() : -1,
+                    effectivelyLocked && viewer != null && lock.ownedBy(viewer.getUUID()),
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getLastUsedEnchant(stack),
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getLastUsedLevel(stack),
+                    depleteOutcome,
+                    depleteEnchant,
+                    depleteLevel
+                ));
+            }
+            if (qualifies) qualifyingShelves.add(scanPos.immutable());
+        }
+        tomeBooks.sort(java.util.Comparator
+            .comparing((chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry e) -> e.shelf_pos().asLong())
+            .thenComparingInt(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry::slot));
+
+        boolean cleanseUnlocked = false;
+        boolean tomeUnlocked = false;
+        int sacrificeProgress = 0;
+        if (viewer instanceof ServerPlayer serverViewer) {
+            int qualifying = qualifyingShelves.size();
+            if (qualifying >= lrCfg.tomePageRequiredShelves()
+                && !Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER)) {
+                Advancement.give(serverViewer, Advancement.HOW_MUCH_LONGER);
+            }
+            int sacrificeTotal = Advancement.totalCriteria(serverViewer, Advancement.DISENCHANT_SACRIFICE);
+            int sacrificeReq = sacrificeTotal > 0
+                ? Math.min(Math.max(1, lrCfg.sacrificeRequired()), sacrificeTotal)
+                : Math.max(1, lrCfg.sacrificeRequired());
+            sacrificeProgress = Advancement.completedCriteria(serverViewer, Advancement.DISENCHANT_SACRIFICE);
+            cleanseUnlocked = sacrificeProgress >= sacrificeReq;
+            tomeUnlocked = Advancement.hasCompleted(serverViewer, Advancement.HOW_MUCH_LONGER);
+        }
+
         return new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.LiveShelfStatePayload(
             containerId,
             unlocked,
@@ -422,7 +657,19 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             shelfPower.crampedLibrary(),
             shelfPower.chiseledBookshelvesWithBooks(),
             shelfPower.emptyChiseledBookshelves(),
-            shelfPower.masterTomeCharges()
+            shelfPower.masterTomeCharges(),
+            cleanseUnlocked,
+            tomeUnlocked,
+            sacrificeProgress,
+            Math.max(1, lrCfg.sacrificeRequired()),
+            qualifyingShelves.size(),
+            Math.max(1, lrCfg.tomePageRequiredShelves()),
+            totalLibrary,
+            regenTier,
+            nextGap,
+            interval,
+            tomeBooks,
+            shelfPower.totalMasteryUnits()
         );
     }
 
@@ -439,7 +686,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     ) {
         /**
          * Broad-sense bookshelf count ({@code 广义书架}):
-         * {@code 普通书架 + 空的雕纹书架 + 有书的雕纹书架（含普通书、附魔书、秘典及褪魔残卷）}.
+         * {@code 普通书架 + 有书的雕纹书架（含普通书、附魔书、秘典及褪魔残卷）} — empty chiseled bookshelves excluded.
          */
         public int totalLibraryBookshelves() {
             return chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.computeBroadBookshelfCount(
@@ -498,7 +745,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 (int) Math.round(dz * t)
             );
             if (!mid.equals(tablePos) && !mid.equals(shelfPos)
-                && !level.getBlockState(mid).getCollisionShape(level, mid).isEmpty()) {
+                && (!level.hasChunkAt(mid) || !level.getBlockState(mid).getCollisionShape(level, mid).isEmpty())) {
                 return false;
             }
         }
@@ -530,7 +777,10 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         return calculateShelfPower(level, tablePos, true);
     }
     public static ShelfPower calculateShelfPower(Level level, BlockPos tablePos, boolean includeCharges) {
-        var sgCfg = ChiseledEnchantingTableData.shelfGatesConfig();
+        var sgCfg = level.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.shelfGatesConfig()
+            : ChiseledEnchantingTableData.shelfGatesConfig();
+        var lrCfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.configForSide(level.isClientSide());
         int openAdjacent = countOpenAdjacentBlocks(level, tablePos);
         boolean ceilingBlocked = isTableCeilingBlocked(level, tablePos);
         boolean cramped = sgCfg.requireBreathingRoom() && (ceilingBlocked || openAdjacent < sgCfg.minOpenAdjacentBlocks());
@@ -539,8 +789,9 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         int rawOccupiedChiseledBookshelves = 0;
         int rawEmptyChiseledBookshelves = 0;
         int totalChiseledEnchantedBooks = 0;
+        double slotCappedMasteryUnits = 0.0;
         Map<Identifier, Integer> storedMasterLevels = new HashMap<>();
-        for (BlockPos scannedPos : streamLibraryPositions(tablePos).toList()) {
+        for (BlockPos scannedPos : getScanOffsets(sgCfg).stream().map(tablePos::offset).toList()) {
             if (!level.hasChunkAt(scannedPos)) {
                 continue;
             }
@@ -549,36 +800,54 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             }
             BlockState nearbyState = level.getBlockState(scannedPos);
             if (isRegularBookshelf(nearbyState)) {
-                rawRegularBookshelves++;
+                if (chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                    .classifyBookshelf(true, false, false, false).isRegularBookshelf()) {
+                    rawRegularBookshelves++;
+                }
             } else if (nearbyState.is(Blocks.CHISELED_BOOKSHELF)) {
                 BlockEntity be = level.getBlockEntity(scannedPos);
                 if (be instanceof ChiseledBookShelfBlockEntity cbsbe) {
                     boolean anyBookInShelf = false;
+                    boolean anyEnchantedInShelf = false;
                     for (int slot = 0; slot < cbsbe.getContainerSize(); slot++) {
-                        if (!cbsbe.getItem(slot).isEmpty()) {
+                        ItemStack slotBook = cbsbe.getItem(slot);
+                        if (!slotBook.isEmpty()) {
                             anyBookInShelf = true;
-                            break;
+                        }
+                        List<EnchantmentWithLevel> slotEnchants = EnchantmentFinder.extractUnlockedSlotEnchantments(slotBook);
+                        if (!slotEnchants.isEmpty()) {
+                            anyEnchantedInShelf = true;
+                            totalChiseledEnchantedBooks += slotEnchants.size();
+                            Map<Identifier, Integer> slotLevels = new HashMap<>(slotEnchants.size() * 2);
+                            for (EnchantmentWithLevel e : slotEnchants) {
+                                EnchantmentWithLevel clamped = clampToMaxLevel(level, e);
+                                mergeHighestLevel(storedMasterLevels, clamped);
+                                mergeHighestLevel(slotLevels, clamped);
+                            }
+                            slotCappedMasteryUnits += chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+                                .capSingleSlotMasteryUnits(
+                                    lrCfg,
+                                    chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+                                        .totalMasteryUnits(lrCfg, level, slotLevels)
+                                );
                         }
                     }
-                    if (anyBookInShelf) {
-                        // Any stored book — including plain books, written books, grimoires, and Depleted Tomes —
-                        // classifies this block as an occupied Chiseled Bookshelf inside broad bookshelves.
-                        rawOccupiedChiseledBookshelves++;
-                    } else {
+                    var kind = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                        .classifyBookshelf(false, true, anyBookInShelf, anyEnchantedInShelf);
+                    if (kind == chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.ShelfTaxonomyKind.EMPTY_CHISELED_BOOKSHELF) {
                         rawEmptyChiseledBookshelves++;
+                    } else if (kind.isBroadBookshelf()) {
+                        rawOccupiedChiseledBookshelves++;
                     }
-                    List<EnchantmentWithLevel> found = EnchantmentFinder.streamAllEnchantements(cbsbe, level).toList();
-                    if (!found.isEmpty()) {
-                        totalChiseledEnchantedBooks += found.size();
-                        for (EnchantmentWithLevel e : found) {
-                            EnchantmentWithLevel clamped = clampToMaxLevel(level, e);
-                            mergeHighestLevel(storedMasterLevels, clamped);
-                        }
-                    }
-                } else if (hasOccupiedChiseledSlot(nearbyState)) {
-                    rawOccupiedChiseledBookshelves++;
                 } else {
-                    rawEmptyChiseledBookshelves++;
+                    boolean occupied = hasOccupiedChiseledSlot(nearbyState);
+                    var kind = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                        .classifyBookshelf(false, true, occupied, false);
+                    if (kind == chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.ShelfTaxonomyKind.EMPTY_CHISELED_BOOKSHELF) {
+                        rawEmptyChiseledBookshelves++;
+                    } else if (kind.isBroadBookshelf()) {
+                        rawOccupiedChiseledBookshelves++;
+                    }
                 }
             }
         }
@@ -603,13 +872,16 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         Map<Identifier, Integer> immutableStored = Map.copyOf(storedMasterLevels);
         int highTierChiseledBooks = chiseled_enchanting_table.mechanics.resonance.BookshelfProgression
             .countQualifyingStoredMasterEnchantments(level, immutableStored);
-        double totalUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.totalMasteryUnits(level, immutableStored);
+        double dedupMasteryUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .totalMasteryUnits(lrCfg, level, immutableStored);
+        double totalUnits = chiseled_enchanting_table.mechanics.resonance.LibraryResonance
+            .effectiveTotalMasteryUnits(lrCfg, dedupMasteryUnits, slotCappedMasteryUnits);
         Map<EnchantmentWithLevel, Integer> masterTomeCharges = !includeCharges ? Map.of() : chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
             .snapshotLiveMasterCharges(
                 level,
                 tablePos,
                 sgCfg,
-                ChiseledEnchantingTableData.libraryResonanceConfig(),
+                lrCfg,
                 immutableStored
             );
         return new ShelfPower(

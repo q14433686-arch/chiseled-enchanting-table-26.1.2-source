@@ -15,8 +15,8 @@ public final class BundledDefaults {
     private BundledDefaults() {}
 
     // ---- library_resonance.json / wooden_bookshelves ----
-    public static final int MIN_DISCOUNT_BOOKSHELVES = 12;
-    public static final int MAX_DISCOUNT_BOOKSHELVES = 38;
+    public static final int MIN_DISCOUNT_BOOKSHELVES = 3;
+    public static final int MAX_DISCOUNT_BOOKSHELVES = 45;
     public static final int MAX_WOODEN_DISCOUNT_PERCENT = 15;
     public static final double SHELF_UPGRADE_MATERIAL_MULTIPLIER = 0.9;
 
@@ -35,6 +35,10 @@ public final class BundledDefaults {
     public static final int BOOK_COPY_WEAR_COST = 2;
     public static final double UNBREAKING_WAIVER_PER_LEVEL = 0.1;
     public static final double UNBREAKING_WAIVER_MAX_CHANCE = 0.3;
+    public static final double MAX_MASTERY_UNITS_PER_SLOT = 3.5;
+    public static final int WEAR_IMMUNE_MAX_GENERATION = 2;
+    public static final int WEAR_IMMUNE_FULL_WAIVER_MAX_ENCHANTS = 4;
+    public static final double WEAR_IMMUNE_OVERLOAD_WAIVER_DECAY = 0.06;
     public static final String TOME_DEPLETE_BEHAVIOR = "step_down";
     public static final boolean TOME_REGEN_ENABLED = true;
     public static final int TOME_REGEN_BASE_SECONDS = 7200;
@@ -43,6 +47,14 @@ public final class BundledDefaults {
     public static final int TOME_REGEN_TIER2_SHELVES = 42;
     public static final int TOME_REGEN_TIER2_SECONDS = 1200;
     public static final String SCAPEGOAT_PRICING = "essence";
+
+    // ---- library_resonance.json / tome_pages ----
+    public static final boolean LOCKED_SHELF_BREAKABLE = true;
+    public static final boolean LOCKED_BOOK_EXTRACTION_BLOCKED = true;
+    public static final int EARLY_UNLOCK_XP_LEVELS = 1;
+    public static final int EARLY_UNLOCK_GRIT_COUNT = 1;
+    public static final int SACRIFICE_REQUIRED = 12;
+    public static final int TOME_PAGE_REQUIRED_SHELVES = 4;
 
     // ---- library_resonance.json / wild_book_wear ----
     public static final boolean WILD_BOOK_WEAR_ENABLED = true;
@@ -62,13 +74,23 @@ public final class BundledDefaults {
     public static final double EPIPHANY_TIER_PLUS_SCORE_DIVISOR = 110.0;
     public static final double EPIPHANY_TIER_PLUS_MASTERY_BONUS = 0.25;
 
+    // ---- library_resonance.json / essence_valuation ----
+    public static final double ESSENCE_RARITY_MIN_MULTIPLIER = 1.0;
+    public static final double ESSENCE_RARITY_MAX_MULTIPLIER = 1.45;
+    public static final double ESSENCE_RARITY_LOG_SLOPE = 0.18;
+    public static final double ESSENCE_TREASURE_MULTIPLIER = 1.15;
+    public static final int CONSERVATION_SAFETY_MARGIN_POINTS = 5;
+
     // ---- library_resonance.json / ritual ----
     public static final int MAX_SINGLE_WAIT_SECONDS = 300;
     public static final int MIN_TOME_ENCHANTS_FOR_WAIT = 10;
     public static final int MAX_SACRIFICE_XP_LEVELS = 15;
+    public static final int SACRIFICE_EXTRA_XP_PER_QUEUED_STEP = 4;
+    public static final double SACRIFICE_XP_TIME_CONSTANT_SECONDS = 240.0;
     public static final double MAX_RUSH_DEGRADE_NORMAL = 0.5;
     public static final double MAX_RUSH_DEGRADE_INFINITY = 0.7;
-    public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = 0.18;
+    public static final double RUSH_DEGRADE_TIME_CONSTANT_SECONDS = 210.0;
+    public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = 0.25;
     public static final double SHELF_LOAD_REFERENCE = 42.0;
     public static final double TOME_LOAD_REFERENCE = 22.0;
 
@@ -81,10 +103,22 @@ public final class BundledDefaults {
     public static final double WAIT_CURVE_SATURATION = 0.62;
     public static final int WAIT_CURVE_MIN_TICKS = 100;
 
+    // ---- library_resonance.json / ritual.applicability ----
+    public static final double APPLICABILITY_ITEM_BREADTH_REFERENCE = 24.0;
+    public static final double APPLICABILITY_BREADTH_WEIGHT = 0.42;
+    public static final double APPLICABILITY_KEYSTONE_MAJOR_MULTIPLIER = 1.55;
+    public static final double APPLICABILITY_KEYSTONE_MINOR_MULTIPLIER = 1.32;
+    public static final double APPLICABILITY_BROAD_MULTIPLIER = 1.2;
+    public static final double APPLICABILITY_RARITY_WEIGHT_1_MULTIPLIER = 1.18;
+    public static final double APPLICABILITY_RARITY_WEIGHT_2_MULTIPLIER = 1.12;
+    public static final double APPLICABILITY_RARITY_WEIGHT_5_MULTIPLIER = 1.05;
+    public static final double APPLICABILITY_MIN_FACTOR = 1.0;
+    public static final double APPLICABILITY_MAX_FACTOR = 2.35;
+
     // ---- library_resonance.json / crossline_slip ----
     public static final double CROSSLINE_MIN_LOAD_THRESHOLD = 3.0;
     public static final double CROSSLINE_PER_LOAD_SLOPE = 0.035;
-    public static final double CROSSLINE_MAX_SLIP_CHANCE = 0.18;
+    public static final double CROSSLINE_MAX_SLIP_CHANCE = 0.25;
     public static final int CROSSLINE_SHELF_TIER1_COUNT = 32;
     public static final double CROSSLINE_SHELF_TIER1_BONUS = 0.01;
     public static final int CROSSLINE_SHELF_TIER2_COUNT = 38;
@@ -117,6 +151,7 @@ public final class BundledDefaults {
     public static final boolean REQUIRE_LINE_OF_SIGHT = false;
     public static final boolean DIRECT_GATES_ENABLED = true;
     public static final int MAX_DIRECT_BOOKSHELVES = 38;
+    public static final int TWO_LEVEL_MAX_BOOKSHELVES = 22;
     public static final double DIRECT_TIER_GAMMA = 1.25;
     public static final String BLANK_MAX_TIER_MODE = "half_ceil";
     public static final int DEPLETED_TIER1_BOOKSHELVES = 12;

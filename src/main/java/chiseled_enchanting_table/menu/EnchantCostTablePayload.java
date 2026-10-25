@@ -166,6 +166,17 @@ public record EnchantCostTablePayload(
         return List.copyOf(out);
     }
 
+    private static int estimateEntryStackBytes(List<List<ItemStack>> options) {
+        int bytes = 0;
+        for (List<ItemStack> bundle : options) {
+            bytes += 8;
+            for (ItemStack stack : bundle) {
+                bytes += PayloadLimits.estimateStackBytes(stack);
+            }
+        }
+        return bytes;
+    }
+
     private static boolean tryAppendEntry(
         List<CostEntry> entries,
         int[] totalStacks,
@@ -184,9 +195,9 @@ public record EnchantCostTablePayload(
         if (totalStacks[0] + stackDelta > PayloadLimits.MAX_TOTAL_COST_STACKS) {
             return false;
         }
-        // Audit R-01: counts alone don't bound encoded size; enforce a byte budget too.
+        // Audit R-01 / NET-04: account for custom component payloads on datapack cost stacks too.
         int byteDelta = PayloadLimits.ESTIMATED_BYTES_PER_ROW
-            + stackDelta * PayloadLimits.ESTIMATED_BYTES_PER_STACK;
+            + estimateEntryStackBytes(opts);
         if (estimatedBytes[0] + byteDelta > PayloadLimits.MAX_ESTIMATED_PAYLOAD_BYTES) {
             return false;
         }
@@ -197,6 +208,9 @@ public record EnchantCostTablePayload(
     }
 
     public static EnchantCostTablePayload build(Player player) {
+        boolean saltedSingle = ChiseledEnchantingTableData.runtimeConfiguration().materialSelectionMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.MaterialSelectionMode.PLAYER_SALTED_SINGLE;
+        String salt = player.getStringUUID();
         List<CostEntry> entries = new ArrayList<>();
         int[] totalStacks = new int[] { 0 };
         int[] estimatedBytes = new int[] { PayloadLimits.ESTIMATED_HEADER_BYTES };
@@ -215,7 +229,9 @@ public record EnchantCostTablePayload(
                     transId,
                     trans.level(),
                     ChiseledEnchantingTableData.transformationXpCost(transId),
-                    ChiseledEnchantingTableData.transformationCostOptions(transId)
+                    saltedSingle
+                        ? List.of(ChiseledEnchantingTableData.classicTransformationCosts(transId, salt))
+                        : ChiseledEnchantingTableData.transformationCostOptions(transId)
                 )) {
                     truncated = true;
                     break;
@@ -247,7 +263,9 @@ public record EnchantCostTablePayload(
                         ChiseledEnchantingTableData.treasureEpiphanyCostOptions(id, level, maxLevel))
                     || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.ENCHANTMENT, id, level,
                         ChiseledEnchantingTableData.xpCost(key, maxLevel),
-                        ChiseledEnchantingTableData.itemCostOptions(key, maxLevel))
+                        saltedSingle
+                            ? List.of(ChiseledEnchantingTableData.classicSaltedItemCosts(key, maxLevel, salt))
+                            : ChiseledEnchantingTableData.itemCostOptions(key, maxLevel))
                     || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.STRIP_SINGLE_ENCHANTMENT, id, level,
                         ChiseledEnchantingTableData.targetedStripXpCost(id, level, maxLevel),
                         ChiseledEnchantingTableData.targetedStripCostOptions(id, level, maxLevel))
@@ -263,7 +281,9 @@ public record EnchantCostTablePayload(
                             List.of())
                         || !tryAppendEntry(entries, totalStacks, estimatedBytes, OptionType.BOOK_RESEARCH_UPGRADE, id, level,
                             ChiseledEnchantingTableData.bookResearchXpCost(key, maxLevel),
-                            ChiseledEnchantingTableData.bookResearchCostOptions(key, maxLevel))) {
+                            saltedSingle
+                                ? List.of(ChiseledEnchantingTableData.classicSaltedResearchCosts(key, maxLevel, salt))
+                                : ChiseledEnchantingTableData.bookResearchCostOptions(key, maxLevel))) {
                         truncated = true;
                         break outer;
                     }
@@ -287,35 +307,124 @@ public record EnchantCostTablePayload(
             truncated = true;
         }
 
-        return new EnchantCostTablePayload(
-            ChiseledEnchantingTableData.bookCombineEnabled(),
-            ChiseledEnchantingTableData.bookResearchEnabled(),
-            ChiseledEnchantingTableData.disenchantEnabled(),
-            ChiseledEnchantingTableData.disenchantAllowCursePurge(),
-            ChiseledEnchantingTableData.disenchantRefundScale(),
-            ChiseledEnchantingTableData.disenchantExternalRefundScale(),
-            ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves(),
-            ChiseledEnchantingTableData.treasureEpiphanyBaseChance(),
-            ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance(),
-            ChiseledEnchantingTableData.treasureEpiphanyPerTomeChance(),
-            ChiseledEnchantingTableData.treasureEpiphanyMaxChance(),
-            ChiseledEnchantingTableData.treasureEpiphanyMaxSlotsCap(),
-            ChiseledEnchantingTableData.treasureEpiphanyScorePerSlot(),
-            ChiseledEnchantingTableData.treasureEpiphanyCycleTicks(),
-            ChiseledEnchantingTableData.treasureEpiphanyFreezeDurationTicks(),
-            ChiseledEnchantingTableData.treasureEpiphanyMaxFreezeTicks(),
-            ChiseledEnchantingTableData.treasureEpiphanyFreezeXpLevels(),
-            ChiseledEnchantingTableData.treasureEpiphanyFreezeCostOptions(),
-            ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels(),
-            ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions(),
-            ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(registryAccess),
-            ChiseledEnchantingTableData.shelfGatesConfig(),
-            ChiseledEnchantingTableData.libraryResonanceConfig(),
-            ChiseledEnchantingTableData.ritualConfig(),
-            List.copyOf(entries),
-            displays,
-            !truncated
+        return enforceWireByteBudget(
+            new EnchantCostTablePayload(
+                ChiseledEnchantingTableData.bookCombineEnabled(),
+                ChiseledEnchantingTableData.bookResearchEnabled(),
+                ChiseledEnchantingTableData.disenchantEnabled(),
+                ChiseledEnchantingTableData.disenchantAllowCursePurge(),
+                ChiseledEnchantingTableData.disenchantRefundScale(),
+                ChiseledEnchantingTableData.disenchantExternalRefundScale(),
+                ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves(),
+                ChiseledEnchantingTableData.treasureEpiphanyBaseChance(),
+                ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance(),
+                ChiseledEnchantingTableData.treasureEpiphanyPerTomeChance(),
+                ChiseledEnchantingTableData.treasureEpiphanyMaxChance(),
+                ChiseledEnchantingTableData.treasureEpiphanyMaxSlotsCap(),
+                ChiseledEnchantingTableData.treasureEpiphanyScorePerSlot(),
+                ChiseledEnchantingTableData.treasureEpiphanyCycleTicks(),
+                ChiseledEnchantingTableData.treasureEpiphanyFreezeDurationTicks(),
+                ChiseledEnchantingTableData.treasureEpiphanyMaxFreezeTicks(),
+                ChiseledEnchantingTableData.treasureEpiphanyFreezeXpLevels(),
+                ChiseledEnchantingTableData.treasureEpiphanyFreezeCostOptions(),
+                ChiseledEnchantingTableData.treasureEpiphanyRerollXpLevels(),
+                ChiseledEnchantingTableData.treasureEpiphanyRerollCostOptions(),
+                ChiseledEnchantingTableData.treasureEpiphanyExplicitIds(registryAccess),
+                ChiseledEnchantingTableData.shelfGatesConfig(),
+                ChiseledEnchantingTableData.libraryResonanceConfig(),
+                ChiseledEnchantingTableData.ritualConfig(),
+                List.copyOf(entries),
+                displays,
+                !truncated
+            ),
+            registryAccess
         );
+    }
+
+    /**
+     * Measures actual Netty-encoded bytes via {@link io.netty.buffer.Unpooled#buffer()} and trims
+     * tail cost rows if custom DataComponents push the real wire payload beyond
+     * {@link PayloadLimits#MAX_SAFE_ENCODED_PAYLOAD_BYTES}.
+     */
+    public static EnchantCostTablePayload enforceWireByteBudget(
+        EnchantCostTablePayload candidate,
+        net.minecraft.core.RegistryAccess registryAccess
+    ) {
+        return trimToWireBudget(
+            candidate,
+            PayloadLimits.MAX_SAFE_ENCODED_PAYLOAD_BYTES,
+            payload -> measureEncodedBytes(payload, registryAccess)
+        );
+    }
+
+    public static int measureEncodedBytes(
+        EnchantCostTablePayload payload,
+        net.minecraft.core.RegistryAccess registryAccess
+    ) {
+        var raw = io.netty.buffer.Unpooled.buffer();
+        try {
+            var buf = new RegistryFriendlyByteBuf(raw, registryAccess);
+            CODEC.encode(buf, payload);
+            return raw.readableBytes();
+        } finally {
+            raw.release();
+        }
+    }
+
+    public static EnchantCostTablePayload trimToWireBudget(
+        EnchantCostTablePayload candidate,
+        int maxSafeBytes,
+        java.util.function.ToIntFunction<EnchantCostTablePayload> encodedByteMeasurer
+    ) {
+        int actualBytes = encodedByteMeasurer.applyAsInt(candidate);
+        if (actualBytes <= maxSafeBytes || candidate.costs().isEmpty()) {
+            return candidate;
+        }
+        EnchantCostTablePayload cur = candidate;
+        while (actualBytes > maxSafeBytes && !cur.costs().isEmpty()) {
+            int keep = Math.min(
+                cur.costs().size() - 1,
+                Math.max(0, (int) ((long) cur.costs().size() * (long) (maxSafeBytes - 16_384) / Math.max(1L, actualBytes)))
+            );
+            cur = new EnchantCostTablePayload(
+                cur.combineEnabled(),
+                cur.researchEnabled(),
+                cur.disenchantEnabled(),
+                cur.disenchantAllowCursePurge(),
+                cur.disenchantRefundScale(),
+                cur.disenchantExternalRefundScale(),
+                cur.epiphanyMinBookshelves(),
+                cur.epiphanyBaseChance(),
+                cur.epiphanyPerShelfChance(),
+                cur.epiphanyPerTomeChance(),
+                cur.epiphanyMaxChance(),
+                cur.epiphanyMaxSlotsCap(),
+                cur.epiphanyScorePerSlot(),
+                cur.epiphanyCycleTicks(),
+                cur.epiphanyFreezeDurationTicks(),
+                cur.epiphanyMaxFreezeTicks(),
+                cur.epiphanyFreezeXpLevels(),
+                cur.epiphanyFreezeCosts(),
+                cur.epiphanyRerollXpLevels(),
+                cur.epiphanyRerollCosts(),
+                cur.explicitTreasureIds(),
+                cur.shelfGatesConfig(),
+                cur.libraryResonanceConfig(),
+                cur.ritualConfig(),
+                List.copyOf(cur.costs().subList(0, keep)),
+                cur.transformations(),
+                false
+            );
+            actualBytes = encodedByteMeasurer.applyAsInt(cur);
+        }
+        ChiseledEnchantingTable.LOGGER.warn(
+            "Trimmed EnchantCostTablePayload from {} to {} rows ({} actual encoded bytes <= {} budget); costTableComplete=false",
+            candidate.costs().size(),
+            cur.costs().size(),
+            actualBytes,
+            maxSafeBytes
+        );
+        return cur;
     }
 
     private static void writeStacks(RegistryFriendlyByteBuf buf, List<ItemStack> stacks, int maxAllowed) {
@@ -365,6 +474,7 @@ public record EnchantCostTablePayload(
         var sg = shelfGatesConfig == null ? BookshelfProgression.Config.DEFAULT : shelfGatesConfig;
         buf.writeBoolean(sg.directGatesEnabled());
         buf.writeVarInt(sg.maxDirectBookshelves());
+        buf.writeVarInt(sg.twoLevelMaxBookshelves());
         buf.writeDouble(sg.gamma());
         buf.writeUtf(sg.blankMaxTierMode().token());
         buf.writeVarInt(sg.horizontalScanRadius());
@@ -432,6 +542,22 @@ public record EnchantCostTablePayload(
             buf.writeVarInt(Math.max(0, w));
         }
         buf.writeUtf(lr.scapegoatPricing().token());
+        buf.writeBoolean(lr.lockedShelfBreakable());
+        buf.writeBoolean(lr.lockedBookExtractionBlocked());
+        buf.writeVarInt(lr.earlyUnlockXpLevels());
+        buf.writeVarInt(lr.earlyUnlockGritCount());
+        buf.writeVarInt(lr.sacrificeRequired());
+        buf.writeVarInt(lr.tomePageRequiredShelves());
+        buf.writeDouble(lr.maxMasteryUnitsPerSlot());
+        buf.writeVarInt(lr.wearImmuneMaxGeneration());
+        buf.writeVarInt(lr.wearImmuneFullWaiverMaxEnchants());
+        buf.writeDouble(lr.wearImmuneOverloadWaiverDecay());
+        var ev = lr.essenceValuation();
+        buf.writeDouble(ev.rarityMinMultiplier());
+        buf.writeDouble(ev.rarityMaxMultiplier());
+        buf.writeDouble(ev.rarityLogSlope());
+        buf.writeDouble(ev.treasureMultiplier());
+        buf.writeVarInt(ev.conservationSafetyMarginPoints());
 
         var rc = ritualConfig == null ? InscriptionRitualMechanics.Config.DEFAULT : ritualConfig;
         buf.writeVarInt(rc.maxSingleWaitSeconds());
@@ -442,6 +568,9 @@ public record EnchantCostTablePayload(
         buf.writeDouble(rc.maxTranscriptionSlipChance());
         buf.writeDouble(rc.shelfLoadReference());
         buf.writeDouble(rc.tomeLoadReference());
+        buf.writeVarInt(rc.sacrificeExtraXpPerQueuedStep());
+        buf.writeDouble(rc.sacrificeXpTimeConstantSeconds());
+        buf.writeDouble(rc.rushDegradeTimeConstantSeconds());
         var cs = rc.crosslineSlip();
         buf.writeDouble(cs.minLoadThreshold());
         buf.writeDouble(cs.perLoadSlope());
@@ -476,6 +605,17 @@ public record EnchantCostTablePayload(
         buf.writeDouble(wc.levelExponent());
         buf.writeDouble(wc.saturation());
         buf.writeVarInt(wc.minTicks());
+        var app = rc.applicability();
+        buf.writeDouble(app.itemBreadthReference());
+        buf.writeDouble(app.breadthWeight());
+        buf.writeDouble(app.keystoneMajorMultiplier());
+        buf.writeDouble(app.keystoneMinorMultiplier());
+        buf.writeDouble(app.broadMultiplier());
+        buf.writeDouble(app.rarityWeight1Multiplier());
+        buf.writeDouble(app.rarityWeight2Multiplier());
+        buf.writeDouble(app.rarityWeight5Multiplier());
+        buf.writeDouble(app.minFactor());
+        buf.writeDouble(app.maxFactor());
 
         PayloadLimits.writeBoundedCount(buf, costs.size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
         int writtenStacks = 0;
@@ -539,6 +679,7 @@ public record EnchantCostTablePayload(
         }
         boolean sgEnabled = buf.readBoolean();
         int sgMax = buf.readVarInt();
+        int sgTwoLevelMax = buf.readVarInt();
         double sgGamma = buf.readDouble();
         var sgBlankMode = BookshelfProgression.BlankMaxTierMode.fromToken(buf.readUtf());
         int sgHScan = buf.readVarInt();
@@ -567,7 +708,7 @@ public record EnchantCostTablePayload(
         int sgMinOpen = buf.readVarInt();
         boolean sgLos = buf.readBoolean();
         var sgConfig = new BookshelfProgression.Config(
-            sgEnabled, sgMax, sgGamma, sgBlankMode, sgHScan, sgVScan,
+            sgEnabled, sgMax, sgTwoLevelMax, sgGamma, sgBlankMode, sgHScan, sgVScan,
             sgOverrides, sgT1, sgT2, sgMult, sgT3, sgBaseBatch, sgTier3Batch,
             sgVanillaMode, sgBreathing, sgMinOpen, sgLos
         );
@@ -616,12 +757,44 @@ public record EnchantCostTablePayload(
             lrWildWeights.add(Math.max(0, buf.readVarInt()));
         }
         var lrScapegoat = chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.fromToken(buf.readUtf());
+        boolean lrShelfBreakable = buf.readBoolean();
+        boolean lrExtractionBlocked = buf.readBoolean();
+        int lrEarlyXp = buf.readVarInt();
+        int lrEarlyGrit = buf.readVarInt();
+        int lrSacrificeReq = buf.readVarInt();
+        int lrTomeShelves = buf.readVarInt();
+        double lrMaxMasterySlot = buf.readDouble();
+        int lrWearMaxGen = buf.readVarInt();
+        int lrWearFullEnch = buf.readVarInt();
+        double lrWearDecay = buf.readDouble();
+        var lrEssence = new LibraryResonance.EssenceValuation(
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readVarInt()
+        );
 
         var lrConfig = new LibraryResonance.Config(
-            lr0, lr1, lr2, lr3, lr4, lr5, lr6, lr7, lr8, lr9, lr10, lr11, lr12,
-            lr13, lr14, lr15, lr16, lr17, lr18, lr19, lr20, lr21, lr22, lr23, lr24,
-            lrMode, lrMtu, lrBcwc, lrDep, lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec,
-            lrUnbPerLvl, lrUnbMax, lrWildEn, lrWildWeights, lrScapegoat
+            new LibraryResonance.WoodenBookshelves(lr0, lr1, lr2, lr11),
+            new LibraryResonance.ChiseledMastery(
+                new LibraryResonance.MasteryScaling(
+                    lr8, lr9, lr3, lr4, lr5, lr6, lr7, lr10, lr24,
+                    lrMaxMasterySlot, lrWearMaxGen, lrWearFullEnch, lrWearDecay
+                ),
+                new LibraryResonance.TomeLifecycle(
+                    lrMode, lrMtu, lrBcwc, lrUnbPerLvl, lrUnbMax, lrDep,
+                    lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec, lrScapegoat
+                )
+            ),
+            new LibraryResonance.EpiphanyAffinity(
+                lr12, lr13, lr14, lr15, lr16, lr17, lr18, lr19, lr20, lr21, lr22, lr23
+            ),
+            new LibraryResonance.WildBookWear(lrWildEn, lrWildWeights),
+            new LibraryResonance.TomePages(
+                lrShelfBreakable, lrExtractionBlocked, lrEarlyXp, lrEarlyGrit, lrSacrificeReq, lrTomeShelves
+            ),
+            lrEssence
         );
 
         int rcMaxWait = buf.readVarInt();
@@ -632,6 +805,9 @@ public record EnchantCostTablePayload(
         double rcSlipCap = buf.readDouble();
         double rcShelfRef = buf.readDouble();
         double rcTomeRef = buf.readDouble();
+        int rcExtraSacPerStep = buf.readVarInt();
+        double rcSacTau = buf.readDouble();
+        double rcRushTau = buf.readDouble();
         var csConfig = new InscriptionRitualMechanics.CrosslineSlipConfig(
             buf.readDouble(),
             buf.readDouble(),
@@ -668,8 +844,23 @@ public record EnchantCostTablePayload(
             buf.readDouble(),
             buf.readVarInt()
         );
+        var appConfig = new InscriptionRitualMechanics.ApplicabilityConfig(
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble()
+        );
         var rcConfig = new InscriptionRitualMechanics.Config(
-            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef, csConfig, wcConfig
+            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef,
+            csConfig, wcConfig,
+            rcExtraSacPerStep, rcSacTau, rcRushTau,
+            appConfig
         );
 
         int rowCount = PayloadLimits.readCount(buf);

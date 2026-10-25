@@ -25,8 +25,8 @@ public class ApplyWildBookWearFunction extends LootItemConditionalFunction {
         this(Optional.empty());
     }
 
-    public ApplyWildBookWearFunction(Optional<Holder<LootItemCondition>> condition) {
-        super(condition);
+    public ApplyWildBookWearFunction(Optional<Holder<LootItemCondition>> conditions) {
+        super(conditions);
     }
 
     @Override

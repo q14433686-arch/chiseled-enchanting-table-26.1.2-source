@@ -71,22 +71,26 @@ public final class BookUpgradeApplication {
         }
         merged.set(enchantment, targetLevel);
         writeEnchantments(targetBook, merged);
-        EnchantmentProvenance.recordBookCombine(
-            targetSnapshot,
-            costSnapshot,
-            targetBook,
-            EnchantmentHelper.getEnchantmentsForCrafting(targetBook)
-        );
-        // Combine consumes the cost book, so no new generation is minted; the merged
-        // book keeps the more faded lineage of its two parents.
-        chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
-            targetBook,
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.mergedGeneration(
-                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(targetSnapshot),
-                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(costSnapshot)));
+        if (handler.isProvenanceEnabled()) {
+            EnchantmentProvenance.recordBookCombine(
+                targetSnapshot,
+                costSnapshot,
+                targetBook,
+                EnchantmentHelper.getEnchantmentsForCrafting(targetBook)
+            );
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                targetBook,
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.mergedGeneration(
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(targetSnapshot),
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(costSnapshot)));
+        } else {
+            EnchantmentProvenance.clearAll(targetBook);
+        }
 
-        // Drained source book carries arcane residue and becomes a stackable Depleted Tome requiring Blank Overwrite.
-        ItemStack depleted = new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1);
+        ItemStack depleted = new ItemStack(
+            handler.returnsPlainDrainedBook() ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
+            1
+        );
         if (costBook.getCount() <= 1) {
             handler.setCostSlot(depleted);
         } else {
@@ -127,8 +131,12 @@ public final class BookUpgradeApplication {
         ItemEnchantments.Mutable upgraded = new ItemEnchantments.Mutable(current);
         upgraded.set(enchantment, targetLevel);
         writeEnchantments(targetBook, upgraded);
-        EnchantmentProvenance.recordTablePayment(targetBook, payload.enchantment_id(), sourceLevel, targetLevel);
-        EnchantmentProvenance.pruneToCurrentEnchantments(targetBook, EnchantmentHelper.getEnchantmentsForCrafting(targetBook));
+        if (handler.isProvenanceEnabled()) {
+            EnchantmentProvenance.recordTablePayment(targetBook, payload.enchantment_id(), sourceLevel, targetLevel);
+            EnchantmentProvenance.pruneToCurrentEnchantments(targetBook, EnchantmentHelper.getEnchantmentsForCrafting(targetBook));
+        } else {
+            EnchantmentProvenance.clearAll(targetBook);
+        }
         finish(handler);
         Advancement.give(handler.player, "upgrade_enchanted_book");
         Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());

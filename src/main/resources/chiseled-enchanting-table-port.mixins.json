@@ -6,6 +6,7 @@
     "anvil.RemoveEnchantMerge",
     "anvil.RemoveXpCostScaling",
     "bookshelf.AddRandomTick",
+    "bookshelf.LockedBookContainerMixin",
     "enchanting_table.DisableBookEnchanting",
     "grindstone.GrindstoneBookDepleteMixin",
     "loot.ReloadableServerRegistriesMixin",

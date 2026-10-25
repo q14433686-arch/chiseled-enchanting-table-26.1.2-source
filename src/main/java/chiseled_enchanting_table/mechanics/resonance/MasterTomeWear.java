@@ -265,11 +265,20 @@ public final class MasterTomeWear {
     }
 
     /**
-     * Returns {@code true} iff {@code stack} carries {@code minecraft:infinity} at level {@code >= 1},
-     * granting complete Master Tome durability immunity for every enchantment on this book.
+     * Returns {@code true} iff {@code stack} carries an active {@code #wear_immune} enchantment AND
+     * its copy lineage generation does not exceed {@code cfg.wearImmuneMaxGeneration()}.
+     */
+    public static boolean hasEffectiveWearImmunity(LibraryResonance.Config cfg, ItemStack stack) {
+        LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
+        return TomeWearData.hasEffectiveWearImmunity(stack, c.wearImmuneMaxGeneration());
+    }
+
+    /**
+     * Returns {@code true} iff {@code stack} qualifies for effective wear immunity under the active
+     * server resonance configuration.
      */
     public static boolean hasInfinityImmunity(ItemStack stack) {
-        return TomeWearData.hasWearImmunity(stack);
+        return hasEffectiveWearImmunity(LibraryResonance.activeServerConfig(), stack);
     }
 
     /** Wear immunity via {@code #chiseled_enchanting_table:wear_immune} (ships with Infinity). */
@@ -291,7 +300,7 @@ public final class MasterTomeWear {
 
     public static int effectiveMaxUses(ItemStack stack, LibraryResonance.Config cfg) {
         LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
-        return TomeWearData.effectiveMaxUses(stack, c.maxTomeUses());
+        return TomeWearData.effectiveMaxUses(stack, c.maxTomeUses(), c.wearImmuneMaxGeneration());
     }
 
     /**
@@ -312,8 +321,9 @@ public final class MasterTomeWear {
 
     /**
      * Computes exact game ticks ({@code 20 ticks = 1.0s}) required to passively regenerate {@code +1}
-     * Master Tome durability charge at {@code nearbyBookshelves}, featuring two resonance breakthroughs
-     * at {@code tier1Shelves} (default {@code 38 -> 3,600s}) and {@code tier2Shelves} (default {@code 42 -> 1,200s}).
+     * Master Tome durability charge at {@code nearbyBookshelves}, interpolating piecewise-linearly
+     * with zero step cliffs through {@code (0, baseTicks)} -&gt; {@code (tier1Shelves=38, tier1Ticks=3600s)}
+     * -&gt; {@code (tier2Shelves=42, tier2Ticks=1200s)}.
      */
     public static int computeRegenIntervalTicks(LibraryResonance.Config cfg, int nearbyBookshelves) {
         LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
@@ -328,15 +338,13 @@ public final class MasterTomeWear {
         int tier1Ticks = Math.max(20, Math.min(baseTicks, c.tomeRegenTier1Seconds() * 20));
         int tier2Ticks = Math.max(20, Math.min(tier1Ticks, c.tomeRegenTier2Seconds() * 20));
 
-        if (s < s1) {
-            double mid1 = Math.max(tier1Ticks, 0.5 * (baseTicks + tier1Ticks));
-            double raw = baseTicks - ((baseTicks - mid1) * s) / (double) s1;
+        if (s <= s1) {
+            double raw = baseTicks - ((double) (baseTicks - tier1Ticks) * s) / (double) s1;
             return Math.max(tier1Ticks, (int) Math.round(raw));
         }
         if (s < s2) {
-            double mid2 = Math.max(tier2Ticks, 0.5 * (tier1Ticks + tier2Ticks));
             double span = Math.max(1, s2 - s1);
-            double raw = tier1Ticks - ((tier1Ticks - mid2) * (s - s1)) / span;
+            double raw = tier1Ticks - ((double) (tier1Ticks - tier2Ticks) * (s - s1)) / span;
             return Math.max(tier2Ticks, (int) Math.round(raw));
         }
         int excess = s - s2;
@@ -468,7 +476,7 @@ public final class MasterTomeWear {
     /** Remaining charges against the generation-faded cap (never below 1 while the entry exists). */
     public static int remainingCharges(ItemStack stack, LibraryResonance.Config cfg) {
         LibraryResonance.Config c = cfg != null ? cfg : LibraryResonance.Config.DEFAULT;
-        return TomeWearData.remainingCharges(stack, c.maxTomeUses());
+        return TomeWearData.remainingCharges(stack, c.maxTomeUses(), c.wearImmuneMaxGeneration());
     }
 
     public static void setWearUsed(ItemStack stack, int wearUsed) {
@@ -496,6 +504,7 @@ public final class MasterTomeWear {
         Level level,
         BlockPos tablePos,
         BookshelfProgression.Config shelfCfg,
+        LibraryResonance.Config resonanceCfg,
         Holder<Enchantment> targetHolder,
         int requiredLevel
     ) {
@@ -506,6 +515,7 @@ public final class MasterTomeWear {
                 return List.of();
             }
         }
+        LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
         List<CandidateSlot> candidates = new ArrayList<>();
         boolean checkLos = shelfCfg != null && shelfCfg.requireLineOfSight();
         for (BlockPos offset : chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.getScanOffsets(shelfCfg)) {
@@ -520,9 +530,13 @@ public final class MasterTomeWear {
             for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
                 ItemStack slotStack = cbs.getItem(slot);
                 if (!slotStack.is(Items.ENCHANTED_BOOK)) continue;
+                // Player-locked tomes keep regenerating but can never back an enchantment.
+                // 1.0.3 Classic ignores lock state entirely (no locks existed then).
+                if (chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeConfiguration().tomeLocksEnabled()
+                    && TomeLockData.isEffectivelyLocked(slotStack)) continue;
                 int storedLvl = EnchantmentHelper.getEnchantmentsForCrafting(slotStack).getLevel(targetHolder);
                 if (storedLvl >= requiredLevel) {
-                    boolean inf = hasInfinityImmunity(slotStack);
+                    boolean inf = hasEffectiveWearImmunity(cfg, slotStack);
                     candidates.add(new CandidateSlot(
                         cbs,
                         scanPos.immutable(),
@@ -531,7 +545,7 @@ public final class MasterTomeWear {
                         slotStack,
                         targetHolder,
                         storedLvl,
-                        inf ? 0 : getWearUsed(slotStack),
+                        getWearUsed(slotStack),
                         inf
                     ));
                 }
@@ -544,7 +558,7 @@ public final class MasterTomeWear {
     /**
      * Builds the exact per-{@link chiseled_enchanting_table.utils.EnchantmentWithLevel} live Master Tome
      * charge map using the identical candidate order used when applying wear ({@link #IMMORTAL_CHARGES}
-     * when backed by an {@code Infinity} tome, or exact remaining charges {@code 1..maxTomeUses}).
+     * when backed by an unoverloaded {@code #wear_immune} tome within generation bounds, or exact remaining charges).
      */
     public static Map<chiseled_enchanting_table.utils.EnchantmentWithLevel, Integer> snapshotLiveMasterCharges(
         Level level,
@@ -568,16 +582,25 @@ public final class MasterTomeWear {
             } catch (Exception ignored) {
                 continue;
             }
-            List<CandidateSlot> allForId = collectCandidates(level, tablePos, shelfCfg, holder, 1);
+            List<CandidateSlot> allForId = collectCandidates(level, tablePos, shelfCfg, cfg, holder, 1);
             if (allForId.isEmpty()) {
                 continue;
             }
             for (int reqLvl = 1; reqLvl <= topLvl; reqLvl++) {
                 for (CandidateSlot c : allForId) {
                     if (c.storedLevel() >= reqLvl) {
-                        int chargeVal = c.infinite()
+                        boolean fullImmortal = c.infinite()
+                            && c.wearUsed() == 0
+                            && TomeWearData.countNonCurseStoredEnchantments(c.stack()) <= cfg.wearImmuneFullWaiverMaxEnchants();
+                        int chargeVal = fullImmortal
                             ? IMMORTAL_CHARGES
-                            : TomeWearData.remainingCharges(cfg.maxTomeUses(), TomeWearData.getGeneration(c.stack()), c.wearUsed());
+                            : TomeWearData.remainingCharges(
+                                cfg.maxTomeUses(),
+                                TomeWearData.getGeneration(c.stack()),
+                                c.wearUsed(),
+                                TomeWearData.hasWearImmunity(c.stack()),
+                                cfg.wearImmuneMaxGeneration()
+                            );
                         out.put(new chiseled_enchanting_table.utils.EnchantmentWithLevel(id, reqLvl), chargeVal);
                         break;
                     }
@@ -658,24 +681,33 @@ public final class MasterTomeWear {
             return ResolvedTomeUse.NONE;
         }
 
-        List<CandidateSlot> candidates = collectCandidates(level, tablePos, shelfCfg, targetHolder, requiredLevel);
+        List<CandidateSlot> candidates = collectCandidates(level, tablePos, shelfCfg, cfg, targetHolder, requiredLevel);
         if (candidates.isEmpty()) {
             return ResolvedTomeUse.NONE;
         }
 
         CandidateSlot chosen = candidates.getFirst();
         ItemStack chosenSnapshot = chosen.stack().copy();
-        if (chosen.infinite()) {
-            return new ResolvedTomeUse(WearOutcome.IMMORTAL, true, chosenSnapshot);
+        boolean usedWearImmuneTome = chosen.infinite();
+        if (usedWearImmuneTome) {
+            int nonCurseCount = TomeWearData.countNonCurseStoredEnchantments(chosenSnapshot);
+            double immuneWaiver = TomeWearData.computeWearImmuneWaiverChance(cfg, nonCurseCount);
+            double unbreakingWaiver = computeUnbreakingWaiverChance(cfg, getUnbreakingLevel(chosenSnapshot));
+            double effectiveWaiver = Math.max(immuneWaiver, unbreakingWaiver);
+            if (effectiveWaiver >= 1.0 || level.getRandom().nextDouble() < effectiveWaiver) {
+                return new ResolvedTomeUse(WearOutcome.IMMORTAL, true, chosenSnapshot);
+            }
         }
         if (cfg.tomeConsumptionMode() == ConsumptionMode.KEEP) {
-            return new ResolvedTomeUse(WearOutcome.NONE, false, chosenSnapshot);
+            return new ResolvedTomeUse(WearOutcome.NONE, usedWearImmuneTome, chosenSnapshot);
         }
 
-        int unbreakingLvl = getUnbreakingLevel(chosenSnapshot);
-        double waiveChance = computeUnbreakingWaiverChance(cfg, unbreakingLvl);
-        if (waiveChance > 0.0 && level.getRandom().nextDouble() < waiveChance) {
-            return new ResolvedTomeUse(WearOutcome.WAIVED_BY_UNBREAKING, false, chosenSnapshot);
+        if (!usedWearImmuneTome) {
+            int unbreakingLvl = getUnbreakingLevel(chosenSnapshot);
+            double waiveChance = computeUnbreakingWaiverChance(cfg, unbreakingLvl);
+            if (waiveChance > 0.0 && level.getRandom().nextDouble() < waiveChance) {
+                return new ResolvedTomeUse(WearOutcome.WAIVED_BY_UNBREAKING, false, chosenSnapshot);
+            }
         }
 
         // Generation fade + essence-priced scapegoat: price the worn entry against the
@@ -692,7 +724,7 @@ public final class MasterTomeWear {
         WearStepResult step = computeWearStep(
             cfg.tomeConsumptionMode(),
             cfg.tomeDepleteBehavior(),
-            TomeWearData.effectiveMaxUses(chosenSnapshot, cfg.maxTomeUses()),
+            TomeWearData.effectiveMaxUses(chosenSnapshot, cfg.maxTomeUses(), cfg.wearImmuneMaxGeneration()),
             cfg.bookCopyWearCost(),
             chosen.storedLevel(),
             chosen.wearUsed(),
@@ -725,6 +757,12 @@ public final class MasterTomeWear {
             outcome = WearOutcome.DEPLETED;
         } else {
             setWearUsed(mutated, step.nextWearUsed());
+            // Remember which enchantment consumed the charges: the Tome page names it
+            // next to the recharge timers (a tome's durability belongs to one enchantment
+            // at a time, and step-down also only ever touches that one).
+            ItemStack recordedStack = mutated;
+            chosen.holder().unwrapKey().ifPresent(key ->
+                TomeWearData.recordLastUsed(recordedStack, key.identifier(), chosen.storedLevel()));
             chiseled_enchanting_table.mechanics.enchanting.EnchantmentProvenance.pruneToCurrentEnchantments(
                 mutated,
                 EnchantmentHelper.getEnchantmentsForCrafting(mutated)
@@ -734,7 +772,7 @@ public final class MasterTomeWear {
 
         chosen.shelf().setItem(chosen.slot(), mutated);
         chosen.shelf().setChanged();
-        if (outcome == WearOutcome.WORN) {
+        if ((outcome == WearOutcome.WORN || outcome == WearOutcome.STEPPED_DOWN) && step.nextWearUsed() > 0) {
             WorldRegeneration.acknowledgeInPlaceWear(
                 level,
                 chosen.pos(),
@@ -750,6 +788,12 @@ public final class MasterTomeWear {
         if (outcome == WearOutcome.DEPLETED || outcome == WearOutcome.STEPPED_DOWN) {
             level.playSound(null, chosen.pos(), SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 1.0F, 0.72F);
         }
-        return new ResolvedTomeUse(outcome, false, chosenSnapshot);
+        // Round 4 particle cue: full depletion of the consumed enchantment (level
+        // removed or tome reduced to a Depleted Tome) gets teleport particles.
+        boolean fullyDepleted = step.nextEnchantLevel() <= 0 || outcome == WearOutcome.DEPLETED;
+        if (fullyDepleted && cfg.tomeConsumptionMode() != ConsumptionMode.KEEP) {
+            TomeParticleEffects.portalAt(level, chosen.pos(), chosen.slot());
+        }
+        return new ResolvedTomeUse(outcome, usedWearImmuneTome, chosenSnapshot);
     }
 }

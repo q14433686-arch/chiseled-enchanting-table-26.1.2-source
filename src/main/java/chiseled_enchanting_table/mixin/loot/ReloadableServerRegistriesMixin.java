@@ -30,6 +30,13 @@ public abstract class ReloadableServerRegistriesMixin {
         Executor executor,
         CallbackInfoReturnable<CompletableFuture<ReloadableServerRegistries.LoadResult>> cir
     ) {
-        ChiseledEnchantingTableData.preloadForLootRegistries(manager);
+        try {
+            ChiseledEnchantingTableData.preloadForLootRegistries(manager);
+        } catch (RuntimeException error) {
+            chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.error(
+                "Failed to preload loot_injections.json / pack_policy.json before loot registry reload; falling back to bundled defaults",
+                error
+            );
+        }
     }
 }
