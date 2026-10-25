@@ -64,7 +64,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         KEY_GRIMOIRE_RECIPE = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
             new net.minecraft.client.KeyMapping(
                 "key.chiseled_enchanting_table.grimoire_recipe",
-                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYBOARD,
                 com.mojang.blaze3d.platform.InputConstants.KEY_R,
                 KEY_CATEGORY
             )
@@ -72,7 +72,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
         KEY_GRIMOIRE_USES = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
             new net.minecraft.client.KeyMapping(
                 "key.chiseled_enchanting_table.grimoire_uses",
-                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYBOARD,
                 com.mojang.blaze3d.platform.InputConstants.KEY_U,
                 KEY_CATEGORY
             )
@@ -254,7 +254,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 if (player != null && classicBefore != synced.classic103Mode()) {
                     // JEI/REI register their info pages once per session; recipes
                     // follow live, but the prose pages need a rejoin to swap.
-                    ctx.client().gui.setOverlayMessage(
+                    ctx.client().gui.hud.setOverlayMessage(
                         net.minecraft.network.chat.Component.translatable(
                             "config.chiseled_enchanting_table.msg.compat_info_refresh"),
                         false);

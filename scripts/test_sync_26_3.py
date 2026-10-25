@@ -38,6 +38,15 @@ class SyncContracts(unittest.TestCase):
                       'DepthBasedEfficiencyFunction::new']:
             self.assertIn(token, injector)
 
+    def test_new_client_api_paths_are_26_3_native(self):
+        for java in CLIENT.rglob('*.java'):
+            source = java.read_text()
+            self.assertNotIn('.gui.setOverlayMessage(', source, str(java))
+            self.assertNotIn('InputConstants.Type.KEYSYM', source, str(java))
+        client = (CLIENT / 'ChiseledEnchantingTableClient.java').read_text()
+        self.assertIn('InputConstants.Type.KEYBOARD', client)
+        self.assertIn('.gui.hud.setOverlayMessage(', client)
+
     def test_removed_network_helpers_not_reintroduced(self):
         for java in MAIN.rglob('*.java'):
             source = java.read_text()
