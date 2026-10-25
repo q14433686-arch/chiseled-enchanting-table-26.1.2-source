@@ -283,7 +283,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() {
-        return effectiveSessionMode() != SessionMode.LAN_HOST_LIVE;
+        return true;
     }
 
     @Override
