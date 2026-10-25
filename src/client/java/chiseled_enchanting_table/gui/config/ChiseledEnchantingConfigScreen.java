@@ -254,7 +254,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int purpleX = x + w - badgeW - 4;
         ctx.fill(purpleX, y + 3, purpleX + badgeW, y + h - 3, 0xFF4B3378);
         GrimoireTextLayout.drawCenteredBox(ctx, this.font, Long.toString(locked),
-            purpleX, badgeW, y + h * 0.5f, 0xFFD9CCFA, true);
+            purpleX, badgeW, y + h * 0.5f, 0.68f, 0xFFD9CCFA, true);
     }
 
     private OptionAvailability availFor(OptionEntry entry) {
