@@ -1000,4 +1000,4 @@ A web-based, searchable dependency report is available by adding the --scan opti
 
 == job status: failure ==
 
-== job status: cancelled ==
+== job status: success ==
