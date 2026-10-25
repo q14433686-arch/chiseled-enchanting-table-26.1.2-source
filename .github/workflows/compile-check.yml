@@ -153,10 +153,12 @@ jobs:
             echo "" >> "$LOG"
             echo "== job status: ${{ job.status }} ==" >> "$LOG"
             SHA=$(gh api "repos/${{ github.repository }}/contents/$LOG?ref=$BRANCH" --jq .sha 2>/dev/null || true)
-            ARGS=(-X PUT "repos/${{ github.repository }}/contents/$LOG"
-                  -f message="ci-log: ${KIND} for ${{ github.sha }}"
-                  -f branch="$BRANCH"
-                  -f content="$(base64 -w0 "$LOG")")
-            if [ -n "$SHA" ]; then ARGS+=(-f sha="$SHA"); fi
-            gh api "${ARGS[@]}" --jq .commit.sha
+            # Avoid Linux's per-argument size limit: compiler diagnostics can exceed 128 KiB
+            # even after line trimming. Put base64 in an input FILE, not gh's -f argument.
+            jq -n --arg message "ci-log: ${KIND} for ${{ github.sha }}" \
+              --arg branch "$BRANCH" --arg sha "$SHA" --rawfile log "$LOG" \
+              '{message:$message, branch:$branch, content:($log|@base64)} +
+               (if $sha == "" then {} else {sha:$sha} end)' > /tmp/cet-compile-log-request.json
+            gh api -X PUT "repos/${{ github.repository }}/contents/$LOG" \
+              --input /tmp/cet-compile-log-request.json --jq .commit.sha
           done
