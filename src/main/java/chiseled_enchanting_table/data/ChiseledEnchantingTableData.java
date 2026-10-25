@@ -572,6 +572,15 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * of the current engine's deterministic midpoint. Used for the classic
      * Enchanted Golden Apple emerald cost of 2-5.
      */
+    /** XP level cost of a classic transformation from the active frame table
+     *  (datapack overlay included), or -1 when the id is not a transformation. */
+    public static int classicTransformationXpCost(Identifier id) {
+        var frame = runtimeFrame;
+        var table = frame == null ? classicItemTransformations : frame.itemTransformations();
+        var transformation = table.get(id);
+        return transformation == null ? -1 : Math.max(0, transformation.xpCost());
+    }
+
     public static List<ItemStack> classicTransformationCosts(Identifier id, String salt) {
         ItemTransformation transformation = (runtimeFrame == null ? rawItemTransformations : runtimeFrame.itemTransformations()).get(id);
         if (transformation == null) {

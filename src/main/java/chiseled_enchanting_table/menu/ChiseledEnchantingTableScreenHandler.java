@@ -1425,6 +1425,20 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         if (type == OptionType.BOOK_COMBINE_UPGRADE) {
             return List.of();
         }
+        // Server-authoritative row first (audit round 5, #15): on a dedicated
+        // server the synced payload already carries the salted, overlay-aware
+        // result; the local classic tables below are only the fallback.
+        var synced = syncedRow(e, type);
+        if (synced != null) {
+            return synced.costOptions();
+        }
+        if (this.world.isClientSide()
+            && chiseled_enchanting_table.compat.SyncedEnchantmentCosts.hasServerTable()
+            && !chiseled_enchanting_table.compat.SyncedEnchantmentCosts.costTableComplete()) {
+            // Server table truncated: a missing row is "unknown", never
+            // "price it from the client's local tables".
+            return List.of();
+        }
         if (isClassic103Mode()
             && (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id()))) {
             // 1.0.3 Classic: resolve from the frame's classic transformations,
@@ -1453,18 +1467,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
                 return List.of(salted);
             }
         }
-        var row = syncedRow(e, type);
-        if (row != null) {
-            return row.costOptions();
-        }
-        if (this.world.isClientSide()
-            && chiseled_enchanting_table.compat.SyncedEnchantmentCosts.hasServerTable()
-            && !chiseled_enchanting_table.compat.SyncedEnchantmentCosts.costTableComplete()) {
-            // Audit R-01: the server truncated its cost table; a missing row is "unknown",
-            // not "price it from the client's datapacks". Empty options fail closed in
-            // findMatchingAffordableCostBundle for every non-whitelisted operation.
-            return List.of();
-        }
+        // (synced-row and incomplete-table handling moved above the classic
+        // local fallback; see audit round 5, #15.)
         if (type == OptionType.TREASURE_EPIPHANY) {
             return ChiseledEnchantingTableData.treasureEpiphanyCostOptions(
                 e.enchantment_id(),
@@ -1526,18 +1530,18 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public int getBaseEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) {
-        if (isClassic103Mode()
-            && (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id()))) {
-            if (chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple").equals(e.enchantment_id())) {
-                return 3;
-            }
-            if (chiseled_enchanting_table.ChiseledEnchantingTable.identifier("experience_bottle").equals(e.enchantment_id())) {
-                return 1;
-            }
-        }
         var serverRow = syncedRow(e, type);
         if (serverRow != null) {
             return serverRow.xpLevelCost();
+        }
+        if (isClassic103Mode()
+            && (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id()))) {
+            // XP comes from the active (possibly datapack-overlaid) classic
+            // transformation table — never hardcoded 3/1 (round 5, #15).
+            int xp = ChiseledEnchantingTableData.classicTransformationXpCost(e.enchantment_id());
+            if (xp >= 0) {
+                return xp;
+            }
         }
         if (type == OptionType.TREASURE_EPIPHANY) {
             return ChiseledEnchantingTableData.treasureEpiphanyXpCost(

@@ -396,7 +396,9 @@ public final class ConfigCatalog {
         "epiphany_reroll_xp_levels",
         "disenchant_enabled", "allow_curse_purge",
         "xp_refund_scale", "external_xp_refund_scale", "strip_xp_min", "strip_xp_max",
-        "curse_purge_xp_cost", "sacrifice_required", "tome_page_required_shelves"
+        "curse_purge_xp_cost", "sacrifice_required", "tome_page_required_shelves",
+        "tier1_bookshelves", "tier2_bookshelves", "tier3_qualifying_enchantments",
+        "early_unlock_xp_levels", "early_unlock_grit_count", "require_prior_discovery"
     );
 
     // ---- Concise builders ----

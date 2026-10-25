@@ -214,6 +214,49 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return ConfigCatalog.optionsInCategory(this.activeCategory);
     }
 
+    private int rowListTop() {
+        return this.listY + (this.classicPage ? 19 : 0);
+    }
+
+    private int rowListHeight() {
+        return this.listH - (this.classicPage ? 19 : 0);
+    }
+
+    // Classic page summary strip (chosen style: gold-framed dark-purple card,
+    // gold padlock, editable/locked count badges) — audit round 5, #13.
+    private void renderClassicSummaryCard(net.minecraft.client.gui.GuiGraphicsExtractor ctx, List<OptionEntry> visible) {
+        long locked = visible.stream()
+            .filter(o -> ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(o.key()))
+            .count();
+        long editable = visible.size() - locked;
+        int x = this.listX;
+        int y = this.listY;
+        int w = this.listW;
+        int h = 16;
+        ctx.fill(x, y, x + w, y + h, GOLD_TEXT);
+        ctx.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFF241A38);
+        // padlock glyph drawn from fills (body + shackle + keyhole)
+        ctx.fill(x + 5, y + 7, x + 12, y + 13, GOLD_TEXT);
+        ctx.fill(x + 6, y + 4, x + 11, y + 7, GOLD_TEXT);
+        ctx.fill(x + 7, y + 5, x + 10, y + 7, 0xFF241A38);
+        ctx.fill(x + 8, y + 9, x + 9, y + 11, 0xFF241A38);
+        String summary = I18n.get(
+            "config.chiseled_enchanting_table.classic_page.summary", editable, locked);
+        RowRenderSupport.renderCenteredYText(
+            ctx, Minecraft.getInstance(), summary,
+            x + 16, y + h * 0.5f, 0.70f, Math.max(40, w - 16 - 56), CREAM_TEXT);
+        // count badges: teal = editable, purple = rule-owned
+        int badgeW = 24;
+        int tealX = x + w - badgeW * 2 - 7;
+        ctx.fill(tealX, y + 3, tealX + badgeW, y + h - 3, 0xFF1A523B);
+        GrimoireTextLayout.drawCenteredBox(ctx, this.font, Long.toString(editable),
+            tealX, badgeW, y + h * 0.5f, 0.68f, 0xFF5CE1A6, true);
+        int purpleX = x + w - badgeW - 4;
+        ctx.fill(purpleX, y + 3, purpleX + badgeW, y + h - 3, 0xFF4B3378);
+        GrimoireTextLayout.drawCenteredBox(ctx, this.font, Long.toString(locked),
+            purpleX, badgeW, y + h * 0.5f, 0xFFD9CCFA, true);
+    }
+
     private OptionAvailability availFor(OptionEntry entry) {
         OptionAvailability avail = entry.evaluate(this.draft, this.sessionMode);
         // On the Classic merged page the classic-locked rows are the point of
@@ -536,26 +579,29 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
 
         // Scrollable Option Cards Area
+        if (this.classicPage) {
+            renderClassicSummaryCard(ctx, visible);
+        }
         int contentH = Math.max(0, visible.size() * (ROW_H + ROW_GAP) - ROW_GAP);
-        this.maxScroll = Math.max(0.0f, contentH - this.listH);
+        this.maxScroll = Math.max(0.0f, contentH - rowListHeight());
         this.scrollOffset = Mth.clamp(this.scrollOffset, 0.0f, this.maxScroll);
 
         int innerCardW = this.maxScroll > 0.5f ? (this.listW - 7) : this.listW;
-        ctx.enableScissor(this.listX, this.listY, this.listX + this.listW, this.listY + this.listH);
+        ctx.enableScissor(this.listX, rowListTop(), this.listX + this.listW, rowListTop() + rowListHeight());
         try {
             if (visible.isEmpty()) {
                 GrimoireTextLayout.drawCenteredBox(
                     ctx, this.font, I18n.get("config.chiseled_enchanting_table.empty_modified"),
-                    this.listX + 8, this.listW - 16, this.listY + this.listH * 0.5f, 0.78f, MUTED_TEXT, true
+                    this.listX + 8, this.listW - 16, rowListTop() + rowListHeight() * 0.5f, 0.78f, MUTED_TEXT, true
                 );
             }
             for (int idx = 0; idx < visible.size(); idx++) {
                 OptionEntry entry = visible.get(idx);
-                int ry = Math.round(this.listY + idx * (ROW_H + ROW_GAP) - this.scrollOffset);
-                if (ry + ROW_H < this.listY || ry > this.listY + this.listH) {
+                int ry = Math.round(rowListTop() + idx * (ROW_H + ROW_GAP) - this.scrollOffset);
+                if (ry + ROW_H < rowListTop() || ry > rowListTop() + rowListHeight()) {
                     continue;
                 }
-                boolean inClipMouse = mouseY >= this.listY && mouseY < this.listY + this.listH;
+                boolean inClipMouse = mouseY >= rowListTop() && mouseY < rowListTop() + rowListHeight();
                 boolean rowHover = inClipMouse
                     && mouseX >= this.listX && mouseX < this.listX + innerCardW
                     && mouseY >= ry && mouseY < ry + ROW_H;
@@ -636,9 +682,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         // Scrollbar
         if (this.maxScroll > 0.5f) {
             int sbX = this.listX + this.listW - 4;
-            ctx.fill(sbX, this.listY, sbX + 4, this.listY + this.listH, 0xFF120D1C);
-            int thumbH = Math.max(18, Math.round((float) this.listH * this.listH / (this.listH + this.maxScroll)));
-            int thumbY = this.listY + Math.round((this.scrollOffset / this.maxScroll) * (this.listH - thumbH));
+            ctx.fill(sbX, rowListTop(), sbX + 4, rowListTop() + rowListHeight(), 0xFF120D1C);
+            int thumbH = Math.max(18, Math.round((float) rowListHeight() * rowListHeight() / (rowListHeight() + this.maxScroll)));
+            int thumbY = rowListTop() + Math.round((this.scrollOffset / this.maxScroll) * (rowListHeight() - thumbH));
             ctx.fill(sbX, thumbY, sbX + 4, thumbY + thumbH, this.draggingScrollbar ? GOLD_TEXT : 0xFF8C72BD);
         }
 
@@ -908,7 +954,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             }
             if (this.maxScroll > 0.5f
                 && mx >= this.listX + this.listW - 6 && mx <= this.listX + this.listW
-                && my >= this.listY && my < this.listY + this.listH) {
+                && my >= rowListTop() && my < rowListTop() + rowListHeight()) {
                 this.draggingScrollbar = true;
                 updateScrollFromMouse(my);
                 return true;
@@ -951,7 +997,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     }
 
     private void updateScrollFromMouse(double my) {
-        float ratio = Mth.clamp((float) ((my - this.listY) / Math.max(1.0, this.listH)), 0.0f, 1.0f);
+        float ratio = Mth.clamp((float) ((my - rowListTop()) / Math.max(1.0, rowListHeight())), 0.0f, 1.0f);
         this.scrollOffset = ratio * this.maxScroll;
     }
 
@@ -959,7 +1005,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (this.maxScroll > 0.5f
             && mouseX >= this.listX && mouseX < this.listX + this.listW
-            && mouseY >= this.listY && mouseY < this.listY + this.listH) {
+            && mouseY >= rowListTop() && mouseY < rowListTop() + rowListHeight()) {
             this.scrollOffset = Mth.clamp(this.scrollOffset - (float) (scrollY * 18.0), 0.0f, this.maxScroll);
             return true;
         }
@@ -1005,8 +1051,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 float rowBottom = rowTop + ROW_H;
                 if (rowTop < this.scrollOffset) {
                     this.scrollOffset = Mth.clamp(rowTop, 0.0f, this.maxScroll);
-                } else if (rowBottom > this.scrollOffset + this.listH) {
-                    this.scrollOffset = Mth.clamp(rowBottom - this.listH, 0.0f, this.maxScroll);
+                } else if (rowBottom > this.scrollOffset + rowListHeight()) {
+                    this.scrollOffset = Mth.clamp(rowBottom - rowListHeight(), 0.0f, this.maxScroll);
                 }
                 playClick(1.0f);
                 return true;

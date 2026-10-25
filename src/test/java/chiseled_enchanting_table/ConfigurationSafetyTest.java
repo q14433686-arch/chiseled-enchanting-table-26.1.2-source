@@ -245,6 +245,20 @@ class ConfigurationSafetyTest {
             "config.chiseled_enchanting_table.reason.classic_1_0_3",
             scanAvailability.inactiveReasonKey()
         );
+        // Round 5 (#13): tier/early-unlock/discovery keys have no consumer in
+        // the classic branch either, so they share the rule-owned reason.
+        for (String key : java.util.List.of(
+            "tier1_bookshelves", "tier2_bookshelves", "tier3_qualifying_enchantments",
+            "early_unlock_xp_levels", "early_unlock_grit_count", "require_prior_discovery")) {
+            var entry = chiseled_enchanting_table.config.ConfigCatalog.byKey(key);
+            assertTrue(entry.isPresent(), key);
+            var a = entry.get().evaluate(draft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN);
+            assertFalse(a.editable(), key);
+            assertEquals(
+                "config.chiseled_enchanting_table.reason.classic_1_0_3_overridden",
+                a.inactiveReasonKey(), key);
+            assertTrue(chiseled_enchanting_table.config.ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(key), key);
+        }
         var standard = ModRuntimeConfig.DEFAULT.toDraft();
         assertTrue(epiphany.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());
         assertTrue(scanRadius.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());
