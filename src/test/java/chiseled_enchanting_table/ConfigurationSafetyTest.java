@@ -229,9 +229,25 @@ class ConfigurationSafetyTest {
         assertTrue(epiphany.isPresent());
         var availability = epiphany.get().evaluate(draft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN);
         assertFalse(availability.editable());
-        assertEquals("config.chiseled_enchanting_table.reason.classic_1_0_3", availability.inactiveReasonKey());
+        // Epiphany belongs to the rule-owned group: the classic frame zeroes
+        // its chances outright, even on the Classic merged page.
+        assertEquals(
+            "config.chiseled_enchanting_table.reason.classic_1_0_3_overridden",
+            availability.inactiveReasonKey()
+        );
+        // A live classic preference stays in the ordinary classic-locked
+        // group; the config screen unlocks only this group on its Classic page.
+        var scanRadius = chiseled_enchanting_table.config.ConfigCatalog.byKey("horizontal_scan_radius");
+        assertTrue(scanRadius.isPresent());
+        var scanAvailability = scanRadius.get().evaluate(draft, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN);
+        assertFalse(scanAvailability.editable());
+        assertEquals(
+            "config.chiseled_enchanting_table.reason.classic_1_0_3",
+            scanAvailability.inactiveReasonKey()
+        );
         var standard = ModRuntimeConfig.DEFAULT.toDraft();
         assertTrue(epiphany.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());
+        assertTrue(scanRadius.get().evaluate(standard, chiseled_enchanting_table.config.ConfigCatalog.SessionMode.DEDICATED_ADMIN).editable());
     }
 
     @Test
