@@ -189,11 +189,56 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.sacrificeRequired = Math.max(1, payload.sacrifice_required());
         this.tomeRequiredShelves = Math.max(1, payload.tome_page_required_shelves());
         this.syncedEffectiveMasteryUnits = payload.effective_mastery_units();
+        this.qualifyingEnchantedBookshelves = this.chiseledBookshelves;
+        this.liveTotalLibraryBookshelves = totalLibraryBookshelves();
+        var initLrCfg = this.libraryResonanceConfig();
+        this.liveRegenTier = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.regenTierIndex(
+            initLrCfg,
+            this.liveTotalLibraryBookshelves
+        );
+        this.nextRegenTierGap = switch (this.liveRegenTier) {
+            case 0 -> Math.max(0, initLrCfg.tomeRegenTier1Shelves() - this.liveTotalLibraryBookshelves);
+            case 1 -> Math.max(0, initLrCfg.tomeRegenTier2Shelves() - this.liveTotalLibraryBookshelves);
+            default -> 0;
+        };
+        boolean initRegenActive = initLrCfg.tomeRegenEnabled()
+            && initLrCfg.tomeConsumptionMode() == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR;
+        int initInterval = initRegenActive
+            ? chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.computeRegenIntervalTicks(
+                initLrCfg,
+                this.liveTotalLibraryBookshelves
+            )
+            : -1;
+        this.regenIntervalTicks = initInterval == Integer.MAX_VALUE ? -1 : initInterval;
+        this.syncedHasAnyMasterTome = this.chiseledBookCount > 0 || !this.storedMasterLevels.isEmpty();
+
         this.epiphanySeed = payload.epiphany_seed();
-        long cycleTicks = Math.max(1L, this.epiphanyCycleTicks());
-        this.syncedCycleIndex = (int) ((this.world.getGameTime() / cycleTicks) & 0xFFFFL);
-        this.syncedCountdownSeconds = (int) Math.max(1L, cycleTicks / 20L);
+        int cycleTicksInt = Math.max(200, this.epiphanyCycleTicks());
+        long cycleTicks = cycleTicksInt;
+        long nowGameTime = this.world.getGameTime();
+        this.syncedCycleIndex = (int) ((nowGameTime / cycleTicks) & 0xFFFFL);
+        this.syncedCountdownSeconds = (int) (((cycleTicks - Math.floorMod(nowGameTime, cycleTicks)) + 19L) / 20L);
         this.syncedFrozen = false;
+        chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity initialTableBe = backingHolder[0];
+        if (initialTableBe == null
+            && this.syncedTablePos != null
+            && this.world.hasChunkAt(this.syncedTablePos)
+            && this.world.getBlockEntity(this.syncedTablePos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity clientBe) {
+            initialTableBe = clientBe;
+        }
+        if (initialTableBe != null) {
+            this.syncedFrozen = initialTableBe.isEpiphanyFrozen(nowGameTime);
+            this.syncedCycleIndex = initialTableBe.activeCycleIndex(nowGameTime, cycleTicksInt);
+            if (this.syncedFrozen) {
+                this.syncedCountdownSeconds = (int) ((initialTableBe.remainingFreezeTicks(nowGameTime) + 19L) / 20L);
+            }
+            this.syncedRitualRemainingTicks = (int) Math.min(Integer.MAX_VALUE, Math.max(0L, initialTableBe.ritualRemainingTicks()));
+            this.syncedRitualTotalTicks = (int) Math.min(Integer.MAX_VALUE, Math.max(0L, initialTableBe.ritualTotalTicks()));
+            this.syncedRitualSession = initialTableBe.ritualSession();
+            this.syncedQueuedSteps = List.copyOf(initialTableBe.queuedEnchantmentSummary());
+            this.syncedUsedInfinityTome = initialTableBe.anyQueuedStepUsedInfinityTome();
+            this.syncedRitualBlocked = initialTableBe.isRitualBlocked();
+        }
         java.util.Map<Identifier, TransformationDisplay> displays = new java.util.HashMap<>();
         for (TransformationDisplay display : payload.transformations()) {
             displays.put(display.id(), display);
@@ -546,7 +591,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean allowsDirectTierUpgrade() {
-        return activeRuntimeConfig().directTierUpgrade();
+        return !usesClassicShelfBoost() && activeRuntimeConfig().directTierUpgrade();
     }
 
     public boolean usesIncrementalCredit() {
@@ -976,11 +1021,31 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
     }
 
+    private boolean initialLiveSyncSent = false;
+
+    /**
+     * Immediately pushes full live shelf state ({@code tomeBooks}, regen tier/ETAs, sacrifice
+     * progress) and ritual queue state at menu-open time so the client never waits up to 20 ticks
+     * for {@code world.getGameTime() % 20L == 0L}.
+     */
+    public void sendInitialLiveSync() {
+        if (this.world.isClientSide()) {
+            return;
+        }
+        this.initialLiveSyncSent = true;
+        refreshLiveShelfState(true);
+        pushRitualStateToViewer();
+    }
+
     @Override
     public void broadcastChanges() {
-        if (!this.world.isClientSide() && (this.world.getGameTime() % 20L == 0L)) {
-            refreshLiveShelfState();
-            pushRitualStateToViewer();
+        if (!this.world.isClientSide()) {
+            if (!this.initialLiveSyncSent) {
+                sendInitialLiveSync();
+            } else if (this.world.getGameTime() % 20L == 0L) {
+                refreshLiveShelfState();
+                pushRitualStateToViewer();
+            }
         }
         super.broadcastChanges();
     }

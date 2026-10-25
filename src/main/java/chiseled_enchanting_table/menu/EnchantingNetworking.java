@@ -137,7 +137,7 @@ public final class EnchantingNetworking {
                         return;
                     }
                     openMenu.sendAllDataToRemote();
-                    openMenu.refreshLiveShelfState();
+                    openMenu.refreshLiveShelfState(true);
                     openMenu.pushRitualStateToViewer();
                     return;
                 }
@@ -160,7 +160,7 @@ public final class EnchantingNetworking {
                 if (provider != null) {
                     player.openMenu(provider);
                     if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler reopenedMenu) {
-                        reopenedMenu.pushRitualStateToViewer();
+                        reopenedMenu.sendInitialLiveSync();
                         reopenedMenu.sendAllDataToRemote();
                     }
                 }

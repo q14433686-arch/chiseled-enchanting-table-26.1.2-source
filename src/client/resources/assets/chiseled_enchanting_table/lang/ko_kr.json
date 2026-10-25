@@ -957,5 +957,7 @@
   "config.chiseled_enchanting_table.trace.classic_presentation.title": "Derived Classic Presentation",
   "config.chiseled_enchanting_table.trace.classic_presentation.v103": "Classic particles & prose",
   "config.chiseled_enchanting_table.trace.classic_presentation.v110": "Adaptive HUD & modern prose",
-  "config.chiseled_enchanting_table.trace.classic_presentation.impact": "Automatically adapts table HUD badges, ambient particles, and Grimoire/JEI guide notes to match active rules."
+  "config.chiseled_enchanting_table.trace.classic_presentation.impact": "Automatically adapts table HUD badges, ambient particles, and Grimoire/JEI guide notes to match active rules.",
+  "config.chiseled_enchanting_table.session.lan_host": "● LAN 호스트 · 실시간 동기화",
+  "config.chiseled_enchanting_table.mode.lan_host_desc": "저장 즉시 호스트에 적용되며 연결된 모든 LAN 플레이어에게 실시간 동기화됩니다."
 }

@@ -246,8 +246,11 @@ class ConfigurationSafetyTest {
         var admin = ConfigCatalog.SessionMode.DEDICATED_ADMIN;
         var draft = ModRuntimeConfig.DEFAULT.toDraft();
 
-        // 1. shelf_boost_model = CLASSIC_FLOOR_THIRD gates wooden curve sliders, NOT scan geometry!
+        // 1. shelf_boost_model = CLASSIC_FLOOR_THIRD gates wooden curve sliders AND direct_tier_upgrade, NOT scan geometry!
         draft.shelfBoostModel = ModRuntimeConfig.ShelfBoostModel.CLASSIC_FLOOR_THIRD;
+        assertFalse(ConfigCatalog.byKey("direct_tier_upgrade").orElseThrow().evaluate(draft, admin).editable());
+        assertEquals("config.chiseled_enchanting_table.reason.need_modern_shelf_curve",
+            ConfigCatalog.byKey("direct_tier_upgrade").orElseThrow().evaluate(draft, admin).inactiveReasonKey());
         assertFalse(ConfigCatalog.byKey("direct_gates_enabled").orElseThrow().evaluate(draft, admin).editable());
         assertEquals("config.chiseled_enchanting_table.reason.need_modern_shelf_curve",
             ConfigCatalog.byKey("direct_gates_enabled").orElseThrow().evaluate(draft, admin).inactiveReasonKey());
@@ -468,5 +471,38 @@ class ConfigurationSafetyTest {
         } finally {
             ChiseledEnchantingTableData.applyRuntimeConfig(original.configuration(), original.policy(), () -> {});
         }
+    }
+
+    @Test
+    void lanHostSessionModeResolvesCleanlyWithoutBreakingSingleplayerOrDedicatedModes() {
+        assertEquals(
+            ConfigCatalog.SessionMode.OFFLINE_CLIENT,
+            ConfigCatalog.SessionMode.resolve(false, false, false, false, false)
+        );
+        assertEquals(
+            ConfigCatalog.SessionMode.SINGLEPLAYER_LIVE,
+            ConfigCatalog.SessionMode.resolve(false, true, true, false, false)
+        );
+        assertEquals(
+            ConfigCatalog.SessionMode.LAN_HOST_LIVE,
+            ConfigCatalog.SessionMode.resolve(false, true, true, true, false)
+        );
+        assertTrue(ConfigCatalog.SessionMode.LAN_HOST_LIVE.writable());
+        assertEquals(
+            "config.chiseled_enchanting_table.session.lan_host",
+            ConfigCatalog.SessionMode.LAN_HOST_LIVE.bannerKey()
+        );
+        assertEquals(
+            ConfigCatalog.SessionMode.DEDICATED_READONLY,
+            ConfigCatalog.SessionMode.resolve(false, true, false, false, false)
+        );
+        assertEquals(
+            ConfigCatalog.SessionMode.DEDICATED_ADMIN,
+            ConfigCatalog.SessionMode.resolve(false, true, false, false, true)
+        );
+        assertEquals(
+            ConfigCatalog.SessionMode.MODPACK_LOCKED,
+            ConfigCatalog.SessionMode.resolve(true, true, true, true, true)
+        );
     }
 }

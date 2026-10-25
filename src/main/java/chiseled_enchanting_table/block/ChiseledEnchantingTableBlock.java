@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -254,7 +253,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         if (provider != null) {
             player.openMenu(provider);
             if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
-                menu.pushRitualStateToViewer();
+                menu.sendInitialLiveSync();
             }
             return InteractionResult.CONSUME;
         }
@@ -301,14 +300,20 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         }
         Component title = tableBlockEntity.getDisplayName();
         ShelfPower shelfPower = calculateShelfPower(level, pos);
-        Set<EnchantmentWithLevel> unlockedEnchantments = this.getUnlockedEnchantmentsFromPower(level, shelfPower);
-        Set<EnchantmentWithLevel> availableEnchantments = Stream.concat(
-            unlockedEnchantments.stream(), this.enchantments_unlocked_by_default(level).stream()
-        ).collect(Collectors.toSet());
+        // Opening snapshot must match computeLiveShelfState identically: under classic 1.0.3
+        // shelf boost, getUnlockedEnchantmentsFromPower intentionally emits only the single
+        // boosted top tier (never re-unioning level 1 on top of boosted tiers).
+        Set<EnchantmentWithLevel> availableEnchantments = this.getUnlockedEnchantmentsFromPower(level, shelfPower);
         int epiphanySeed = tableBlockEntity.getOrInitEpiphanySeed();
 
         return new ExtendedMenuProvider<AvailableEnchantmentPayload>() {
             private AvailableEnchantmentPayload buildPayloadFor(Player targetPlayer) {
+                // Award opening advancements BEFORE building the payload so both createMenu
+                // (which Fabric invokes first on the server) and getScreenOpeningData (client)
+                // observe identical page-unlock and transformation-unlock state on frame zero.
+                if (targetPlayer instanceof ServerPlayer sp) {
+                    awardOpeningAdvancements(level, shelfPower, sp);
+                }
                 return new AvailableEnchantmentPayload(
                     availableEnchantments,
                     shelfPower.xpDiscountPercent(),
@@ -328,19 +333,6 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
             @Override
             public AvailableEnchantmentPayload getScreenOpeningData(ServerPlayer player) {
-                if (shelfPower.totalChiseledEnchantedBooks() > 0) {
-                    Advancement.give(player, "unlock_new_enchant");
-                }
-                // Audit: trigger on actually REACHING the configured total cap, not on the
-                // old hardcoded 22%/35% proxies that drifted from datapack-tunable values
-                // (and from the "-40%" the advancement text advertised).
-                int maxTotalDiscount = ChiseledEnchantingTableData.libraryResonanceConfig().maxTotalXpDiscountPercent();
-                if (maxTotalDiscount > 0 && shelfPower.peakEffectiveXpDiscountPercent(level) >= maxTotalDiscount) {
-                    Advancement.give(player, "library_resonance");
-                }
-                if (shelfPower.regularBookshelves() >= ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves()) {
-                    Advancement.give(player, "grand_library");
-                }
                 return buildPayloadFor(player);
             }
 
@@ -360,6 +352,24 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 );
             }
         };
+    }
+
+    private static void awardOpeningAdvancements(Level level, ShelfPower shelfPower, ServerPlayer player) {
+        if (shelfPower.totalChiseledEnchantedBooks() > 0) {
+            Advancement.give(player, "unlock_new_enchant");
+        }
+        var lrCfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        int maxTotalDiscount = lrCfg.maxTotalXpDiscountPercent();
+        if (maxTotalDiscount > 0 && shelfPower.peakEffectiveXpDiscountPercent(level) >= maxTotalDiscount) {
+            Advancement.give(player, "library_resonance");
+        }
+        if (shelfPower.regularBookshelves() >= ChiseledEnchantingTableData.treasureEpiphanyMinBookshelves()) {
+            Advancement.give(player, "grand_library");
+        }
+        if (shelfPower.chiseledBookshelvesWithBooks() >= lrCfg.tomePageRequiredShelves()
+            && !Advancement.hasCompleted(player, Advancement.HOW_MUCH_LONGER)) {
+            Advancement.give(player, Advancement.HOW_MUCH_LONGER);
+        }
     }
 
     private static final List<Identifier> CLASSIC_103_DEFAULT_TREASURES = List.of(

@@ -216,20 +216,27 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return new Rect2i(m.x(), m.y(), m.w(), m.h());
     }
 
+    private static boolean isPublishedLanHost() {
+        var integratedServer = Minecraft.getInstance().getSingleplayerServer();
+        return integratedServer != null && integratedServer.isPublished();
+    }
+
     private static SessionMode detectSessionMode() {
-        if (ModRuntimeConfig.effectivePackPolicy().lockInGameConfig()) {
-            return SessionMode.MODPACK_LOCKED;
-        }
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null) {
-            return SessionMode.OFFLINE_CLIENT;
+        return SessionMode.resolve(
+            ModRuntimeConfig.effectivePackPolicy().lockInGameConfig(),
+            mc.level != null,
+            mc.hasSingleplayerServer(),
+            isPublishedLanHost(),
+            ModRuntimeConfig.clientCanEditServerConfig()
+        );
+    }
+
+    private SessionMode effectiveSessionMode() {
+        if (this.sessionMode == SessionMode.SINGLEPLAYER_LIVE && isPublishedLanHost()) {
+            return SessionMode.LAN_HOST_LIVE;
         }
-        if (mc.hasSingleplayerServer()) {
-            return SessionMode.SINGLEPLAYER_LIVE;
-        }
-        return ModRuntimeConfig.clientCanEditServerConfig()
-            ? SessionMode.DEDICATED_ADMIN
-            : SessionMode.DEDICATED_READONLY;
+        return this.sessionMode;
     }
 
     @Override
@@ -276,7 +283,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() {
-        return true;
+        return effectiveSessionMode() != SessionMode.LAN_HOST_LIVE;
     }
 
     @Override
@@ -696,28 +703,31 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
 
         // L0-A3: Session Mode Badge (sculpted obsidian/brass plaque with subtle status glow)
+        SessionMode shownMode = effectiveSessionMode();
         Box modeBox = this.layout.sessionBadgeBox();
         boolean overMode = modeBox.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            this.sessionMode.writable() ? (overMode ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
+            shownMode.writable() ? (overMode ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
             modeBox.x(), modeBox.y(), modeBox.w(), modeBox.h(), 6, 6, 64, 18
         );
-        int modeTint = switch (this.sessionMode) {
+        int modeTint = switch (shownMode) {
             case SINGLEPLAYER_LIVE -> 0x3029B87A;
+            case LAN_HOST_LIVE -> 0x3036C2B4;
             case DEDICATED_ADMIN -> 0x30E5A93C;
             case OFFLINE_CLIENT -> 0x304CA8E0;
             case DEDICATED_READONLY -> 0x34C94862;
             case MODPACK_LOCKED -> 0x349B59E0;
         };
         ctx.fill(modeBox.x() + 4, modeBox.y() + 3, modeBox.right() - 4, modeBox.bottom() - 3, modeTint);
-        int modeTextColor = switch (this.sessionMode) {
+        int modeTextColor = switch (shownMode) {
             case SINGLEPLAYER_LIVE -> EMERALD_TEXT;
+            case LAN_HOST_LIVE -> CYAN_TEXT;
             case DEDICATED_ADMIN -> GOLD_TEXT;
             case OFFLINE_CLIENT -> CYAN_TEXT;
             case DEDICATED_READONLY, MODPACK_LOCKED -> AMBER_TEXT;
         };
-        String modeLabel = (this.sessionMode.writable() ? "\u270e " : "\uD83D\uDD12 ") + I18n.get(this.sessionMode.bannerKey());
+        String modeLabel = (shownMode.writable() ? "\u270e " : "\uD83D\uDD12 ") + I18n.get(shownMode.bannerKey());
         drawClampedCenteredText(
             ctx,
             modeLabel,
@@ -727,11 +737,14 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             modeTextColor
         );
         if (overMode) {
-            tip = List.of(
-                Component.translatable(this.sessionMode.bannerKey()).withStyle(ChatFormatting.GOLD),
-                Component.translatable(this.sessionMode.writable()
+            String descKey = shownMode == SessionMode.LAN_HOST_LIVE
+                ? "config.chiseled_enchanting_table.mode.lan_host_desc"
+                : (shownMode.writable()
                     ? "config.chiseled_enchanting_table.mode.writable_desc"
-                    : "config.chiseled_enchanting_table.mode.readonly_desc").withStyle(ChatFormatting.GRAY)
+                    : "config.chiseled_enchanting_table.mode.readonly_desc");
+            tip = List.of(
+                Component.translatable(shownMode.bannerKey()).withStyle(ChatFormatting.GOLD),
+                Component.translatable(descKey).withStyle(ChatFormatting.GRAY)
             );
         }
 

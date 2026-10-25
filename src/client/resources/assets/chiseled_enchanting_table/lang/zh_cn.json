@@ -957,5 +957,7 @@
   "config.chiseled_enchanting_table.trace.classic_presentation.title": "派生经典界面与粒子表现",
   "config.chiseled_enchanting_table.trace.classic_presentation.v103": "经典粒子与经典图鉴提示",
   "config.chiseled_enchanting_table.trace.classic_presentation.v110": "动态书架徽标与现行说明",
-  "config.chiseled_enchanting_table.trace.classic_presentation.impact": "根据当前生效的原子规则自动适配顶栏书架徽标、粒子特效与魔导书/JEI 说明文案。"
+  "config.chiseled_enchanting_table.trace.classic_presentation.impact": "根据当前生效的原子规则自动适配顶栏书架徽标、粒子特效与魔导书/JEI 说明文案。",
+  "config.chiseled_enchanting_table.session.lan_host": "● 局域网主机 · 实时同步",
+  "config.chiseled_enchanting_table.mode.lan_host_desc": "保存后在主机立即生效，并实时同步给所有局域网联机玩家。"
 }

@@ -964,7 +964,8 @@ class EconomyAndConfigVerificationTest {
             "config.chiseled_enchanting_table.reason.need_book_research",
             "config.chiseled_enchanting_table.reason.need_disenchant",
             "config.chiseled_enchanting_table.reason.need_curse_purge",
-            "config.chiseled_enchanting_table.reason.need_bookshelf_pool"
+            "config.chiseled_enchanting_table.reason.need_bookshelf_pool",
+            "config.chiseled_enchanting_table.mode.lan_host_desc"
         ));
         for (var mode : chiseled_enchanting_table.config.ConfigCatalog.SessionMode.values()) {
             requiredKeys.add(mode.bannerKey());
@@ -1873,6 +1874,48 @@ class EconomyAndConfigVerificationTest {
         int customWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .computeSingleEnchantWaitTicks(custom, 42, 30, 22, 5, 5, 1.0);
         assertTrue(customWait < defaultWait, "Doubling load references must shorten the wait");
+    }
+
+    @Test
+    void openingSnapshotNeverDivergesFromLiveShelfSyncAtTickZero() throws Exception {
+        String blockSrc = java.nio.file.Files.readString(
+            java.nio.file.Path.of("src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java")
+        );
+        // 1. Regression guard: opening payload must NEVER union enchantments_unlocked_by_default
+        // onto getUnlockedEnchantmentsFromPower (which injected [1, top] -> "I-XX" under 1.0.3).
+        assertFalse(
+            blockSrc.contains("Stream.concat(\n            unlockedEnchantments.stream()")
+                || blockSrc.contains("Stream.concat(unlockedEnchantments.stream()"),
+            "Menu opening snapshot must match computeLiveShelfState without re-injecting level-1 defaults"
+        );
+        assertTrue(
+            blockSrc.contains("awardOpeningAdvancements(level, shelfPower, sp)"),
+            "Opening advancements (including HOW_MUCH_LONGER) must be awarded before building opening payloads"
+        );
+        assertTrue(
+            blockSrc.contains("menu.sendInitialLiveSync()"),
+            "Opening the table must immediately push LiveShelfStatePayload & SyncRitualStatePayload on tick 0"
+        );
+
+        String handlerSrc = java.nio.file.Files.readString(
+            java.nio.file.Path.of("src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java")
+        );
+        assertTrue(
+            handlerSrc.contains("return !usesClassicShelfBoost() && activeRuntimeConfig().directTierUpgrade();"),
+            "Track-2 modern shelf upgrade curve must not leak intermediate tiers under CLASSIC_FLOOR_THIRD"
+        );
+        assertTrue(
+            handlerSrc.contains("if (!this.initialLiveSyncSent)"),
+            "broadcastChanges() must sync live shelf & ritual state on tick 0 instead of waiting up to 20 ticks"
+        );
+
+        String payloadSrc = java.nio.file.Files.readString(
+            java.nio.file.Path.of("src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java")
+        );
+        assertTrue(
+            payloadSrc.contains("effectiveSacrificeRequiredFor(player)"),
+            "AvailableEnchantmentPayload must cap sacrifice_required identically to computeLiveShelfState"
+        );
     }
 
 }

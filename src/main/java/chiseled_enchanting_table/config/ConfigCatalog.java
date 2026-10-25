@@ -102,6 +102,7 @@ public final class ConfigCatalog {
     public enum SessionMode {
         OFFLINE_CLIENT("config.chiseled_enchanting_table.session.offline", true),
         SINGLEPLAYER_LIVE("config.chiseled_enchanting_table.session.singleplayer", true),
+        LAN_HOST_LIVE("config.chiseled_enchanting_table.session.lan_host", true),
         DEDICATED_ADMIN("config.chiseled_enchanting_table.session.dedicated_admin", true),
         DEDICATED_READONLY("config.chiseled_enchanting_table.session.dedicated_readonly", false),
         MODPACK_LOCKED("config.chiseled_enchanting_table.session.modpack_locked", false);
@@ -120,6 +121,25 @@ public final class ConfigCatalog {
 
         public boolean writable() {
             return writable;
+        }
+
+        public static SessionMode resolve(
+            boolean modpackLocked,
+            boolean inWorld,
+            boolean hasSingleplayerServer,
+            boolean lanPublished,
+            boolean canEditDedicatedServer
+        ) {
+            if (modpackLocked) {
+                return MODPACK_LOCKED;
+            }
+            if (!inWorld) {
+                return OFFLINE_CLIENT;
+            }
+            if (hasSingleplayerServer) {
+                return lanPublished ? LAN_HOST_LIVE : SINGLEPLAYER_LIVE;
+            }
+            return canEditDedicatedServer ? DEDICATED_ADMIN : DEDICATED_READONLY;
         }
     }
 
@@ -577,7 +597,8 @@ public final class ConfigCatalog {
         boolOpt(
             "direct_tier_upgrade", CategoryId.BOOKSHELVES, "unlock_core", true, EffectScope.IMMEDIATE,
             d -> d.directTierUpgrade, (d, v) -> d.directTierUpgrade = v,
-            ALWAYS, null
+            d -> d.shelfBoostModel == ShelfBoostModel.MODERN_CURVE,
+            d -> "config.chiseled_enchanting_table.reason.need_modern_shelf_curve"
         ),
         boolOpt(
             "direct_gates_enabled", CategoryId.BOOKSHELVES, "shelf_curve", false, EffectScope.IMMEDIATE,

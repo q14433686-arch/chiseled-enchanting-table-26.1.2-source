@@ -398,8 +398,7 @@ public final class ChiseledEnchantingMenuPayloads {
                     ? chiseled_enchanting_table.utils.Advancement.completedCriteria(
                         serverPlayer3, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)
                     : 0,
-                Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
-                    .libraryResonanceConfig().sacrificeRequired()),
+                effectiveSacrificeRequiredFor(player),
                 Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
                     .libraryResonanceConfig().tomePageRequiredShelves()),
                 -1.0
@@ -442,22 +441,28 @@ public final class ChiseledEnchantingMenuPayloads {
                     ? chiseled_enchanting_table.utils.Advancement.completedCriteria(
                         serverPlayer3, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE)
                     : 0,
-                Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
-                    .libraryResonanceConfig().sacrificeRequired()),
+                effectiveSacrificeRequiredFor(player),
                 Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
                     .libraryResonanceConfig().tomePageRequiredShelves()),
                 effective_mastery_units
             );
         }
 
+        private static int effectiveSacrificeRequiredFor(@Nullable Player player) {
+            int configured = Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
+                .libraryResonanceConfig().sacrificeRequired());
+            if (!(player instanceof net.minecraft.server.level.ServerPlayer sp)) {
+                return configured;
+            }
+            int total = chiseled_enchanting_table.utils.Advancement.totalCriteria(
+                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
+            return total > 0 ? Math.min(configured, total) : configured;
+        }
+
         /** Page unlock at the configured sacrifice count (capped by the criteria list). */
         private static boolean cleanseUnlockedFor(@Nullable Player player) {
             if (!(player instanceof net.minecraft.server.level.ServerPlayer sp)) return false;
-            int configured = Math.max(1, chiseled_enchanting_table.data.ChiseledEnchantingTableData
-                .libraryResonanceConfig().sacrificeRequired());
-            int total = chiseled_enchanting_table.utils.Advancement.totalCriteria(
-                sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE);
-            int required = total > 0 ? Math.min(configured, total) : configured;
+            int required = effectiveSacrificeRequiredFor(sp);
             return chiseled_enchanting_table.utils.Advancement.completedCriteria(
                 sp, chiseled_enchanting_table.utils.Advancement.DISENCHANT_SACRIFICE) >= required;
         }

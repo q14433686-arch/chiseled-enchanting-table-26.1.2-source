@@ -957,5 +957,7 @@
   "config.chiseled_enchanting_table.trace.classic_presentation.title": "Derived Classic Presentation",
   "config.chiseled_enchanting_table.trace.classic_presentation.v103": "Classic particles & prose",
   "config.chiseled_enchanting_table.trace.classic_presentation.v110": "Adaptive HUD & modern prose",
-  "config.chiseled_enchanting_table.trace.classic_presentation.impact": "Automatically adapts table HUD badges, ambient particles, and Grimoire/JEI guide notes to match active rules."
+  "config.chiseled_enchanting_table.trace.classic_presentation.impact": "Automatically adapts table HUD badges, ambient particles, and Grimoire/JEI guide notes to match active rules.",
+  "config.chiseled_enchanting_table.session.lan_host": "● Anfitrión LAN · Sinc. en vivo",
+  "config.chiseled_enchanting_table.mode.lan_host_desc": "Se aplica al instante en el anfitrión y se sincroniza en vivo con todos los jugadores LAN."
 }
