@@ -79,7 +79,7 @@
 
 新增真实 Java 回归：外部包 pin 默认值、聚合内置来源、六项 tome page 的解析→来源→resolver→frame、preload 不污染 live/chest cache、无效 loot/policy 不发布半份候选、Classic 三表添加→移除回到 bundled、实编码成本行裁剪与空行后 header 仍超预算拒绝。已有本轮移植测试还覆盖 Codec 往返、80 项目录/20 原子、四预设、Unicode 搜索、锁时长与持久队列。
 
-最终游戏/测试源码 **`23ef23be8a11b797977b92e50083a54170692c19`** 已通过：
+首次审计收尾源码 **`23ef23be8a11b797977b92e50083a54170692c19`** 已通过（后续用户回报修复以第 6 节为准）：
 
 - [compile-check 40241535541](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40241535541)：`compileJava compileClientJava test` 成功；JUnit XML **96 tests / 0 failures / 0 errors / 0 skipped**。
 - [build 40241535552](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40241535552)：**四个 job 全成功**（静态检查、完整构建及 jar artifact、关闭 JEI/REI 的双源集编译、真实 26.3 服务端 smoke）。
@@ -98,3 +98,20 @@ CI 诊断同时修复了大日志回写：base64 不再作为单个命令行参�
 建议 26.1.2/26.2 优先吸收 RULE-01/02、RELOAD-01/02/03、NET-01/02、LIFE-01，并核对 Creative 取书与底层守卫冲突。最小重构单元是“来源提取 + raw bridge + resolver/frame 一致性回归”和“registry-build 候选与 live generation 分离”，不要只 cherry-pick 文案或 Codec。
 
 26.3 的 BlockEntityTypes、四参 reload、input/render/loot schema 与 Iris workaround 是版本专属，不能照搬到其他线。本会话只修改当前 Arena 分支，没有代改或推送其他两个分支，也没有本轮 PR/合并授权。
+
+
+## 6. 用户回报后的配置交互修复
+
+用户实测发现搜索框不能输入、褪魔洗练总开关不可修改、部分预设不生效。此前 headless 通过并未覆盖 SDL 输入启停与真实 Fabric 元数据身份，这两处确为审计遗漏。
+
+- **SDL 文本输入生命周期**：26.3 原版 `EditBox#setFocused` 会调用 `Minecraft.onTextInputFocusChange`；手绘搜索栏仅改变私有 boolean，不会启用 SDL_StartTextInput，故没有字符事件。所有聚焦/失焦路径统一通知原版 TextInputManager，渲染时设置输入法候选区域，关闭、removed、父附魔台移除时释放自己的输入所有权，避免残留或关闭别的输入控件。
+- **模组身份不等于资源命名空间**：实际 `fabric.mod.json.id` 是 **`chiseled-enchanting-table`**，而资源命名空间是 `chiseled_enchanting_table`。Fabric ModNioPackResources 以 metadata id 标识 bundled pack。此前 own-source 白名单只覆盖下划线形式，导致默认 `disenchanting.json` 等被识别成外部覆盖，灰掉开关、覆盖预设。新增明确的 `FABRIC_MOD_ID`，识别它及 mod/fabric 包装形式，并保留旧来源别名。真正的外部包及管理员锁仍保持约束，不通过全局解除数据包优先级来掩盖问题。
+- **回归**：来源测试读取实际 fabric.mod.json，而非凭空写一个 source id；真实 ResourceManager loader 加载自带褪魔/图书馆数据，断言无外部治理键，再检查褪魔关闭到达已发布玩法表、四个预设对应的开关/扫描半径/消耗模式到达生效配置；已有外部包 pin 默认值测试仍通过。新增搜索 SDL 路径静态合同，不冒充窗口输入实测。
+
+修复源码 **`aa898aa6b57f06d77efaf58e96dcb72976c29044`**：
+
+- [compile-check 40243203302](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40243203302)：main/client 编译、**97 JUnit / 0 failures / 0 errors / 0 skipped**。
+- [build 40243203274](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40243203274)：静态、完整 jar、关闭 JEI/REI 编译、真实服务端启动/重载四项均成功。
+- 本地移植回归 **17 项**、静态检查 8 组通过。实际 SDL 窗口、中文输入法候选显示和玩家点击仍需实机复测，不能用 headless CI 宣称已人工验证。
+
+安装该构建后重启客户端/服务端（或单人重新进入世界）以重新加载此前错误识别的来源策略；无需删除已有配置。预设仍需通过“保存”提交，真正的数据包/服务器管理员锁不会被绕过。
