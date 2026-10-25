@@ -262,19 +262,26 @@ class ConfigurationSafetyTest {
             ConfigCatalog.byKey("epiphany_base_chance").orElseThrow().evaluate(draft, admin).inactiveReasonKey());
         assertTrue(ConfigCatalog.byKey("max_total_xp_discount_percent").orElseThrow().evaluate(draft, admin).editable());
 
-        // 3. tome_locks = false gates shelf-break / extraction lock guards & early-unlock costs!
+        // 3. tome_locks = false gates shelf-break & extraction lock guards, NOT tome-page early unlock!
         draft = ModRuntimeConfig.DEFAULT.toDraft();
         draft.tomeLocksEnabled = false;
         assertFalse(ConfigCatalog.byKey("locked_shelf_breakable").orElseThrow().evaluate(draft, admin).editable());
-        assertFalse(ConfigCatalog.byKey("early_unlock_xp_levels").orElseThrow().evaluate(draft, admin).editable());
+        assertFalse(ConfigCatalog.byKey("locked_book_extraction_blocked").orElseThrow().evaluate(draft, admin).editable());
+        assertTrue(ConfigCatalog.byKey("early_unlock_xp_levels").orElseThrow().evaluate(draft, admin).editable());
 
-        // 4. transformation_set = CLASSIC_TWO gates require_prior_discovery, while batch size remains editable!
+        // 4. tome_page_enabled = false gates tome-page early unlock costs!
+        draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.tomePageEnabled = false;
+        assertFalse(ConfigCatalog.byKey("early_unlock_xp_levels").orElseThrow().evaluate(draft, admin).editable());
+        assertFalse(ConfigCatalog.byKey("early_unlock_grit_count").orElseThrow().evaluate(draft, admin).editable());
+
+        // 5. transformation_set = CLASSIC_TWO gates require_prior_discovery, while batch size remains editable!
         draft = ModRuntimeConfig.DEFAULT.toDraft();
         draft.transformationSetMode = ModRuntimeConfig.TransformationSetMode.CLASSIC_TWO;
         assertFalse(ConfigCatalog.byKey("require_prior_discovery").orElseThrow().evaluate(draft, admin).editable());
         assertTrue(ConfigCatalog.byKey("transformation_max_batch_size").orElseThrow().evaluate(draft, admin).editable());
 
-        // 5. drained_book_result = PLAIN_BOOK gates depleted-tome transmute tier thresholds!
+        // 6. drained_book_result = PLAIN_BOOK gates depleted-tome transmute tier thresholds!
         draft = ModRuntimeConfig.DEFAULT.toDraft();
         draft.drainedBookResult = ModRuntimeConfig.DrainedBookResult.PLAIN_BOOK;
         assertFalse(ConfigCatalog.byKey("tier1_bookshelves").orElseThrow().evaluate(draft, admin).editable());
@@ -288,10 +295,15 @@ class ConfigurationSafetyTest {
         var draft = ModRuntimeConfig.DEFAULT.toDraft();
         assertEquals(0, draft.build().countClassic103Atoms());
 
-        int toggledCount = 0;
+        // Pass 1: every single entry (all 19 bound atoms + derived classic_presentation) starts modern on 1.1.0 default
         for (var trace : ConfigCatalog.RULE_TRACE_ENTRIES) {
             assertFalse(trace.isUsingClassic103(draft), "Default 1.1.0 draft must start modern for " + trace.traceId());
             assertTrue(trace.isUsingModern110(draft), "Default 1.1.0 draft must match modern for " + trace.traceId());
+        }
+
+        // Pass 2: toggle all 19 bound entries to 1.0.3 and verify derived classic_presentation flips automatically
+        int toggledCount = 0;
+        for (var trace : ConfigCatalog.RULE_TRACE_ENTRIES) {
             if (!trace.derived()) {
                 if ("tome_wear_system".equals(trace.traceId())) {
                     draft.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;

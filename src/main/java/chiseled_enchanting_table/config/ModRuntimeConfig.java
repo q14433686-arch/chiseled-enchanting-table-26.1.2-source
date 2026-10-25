@@ -1101,7 +1101,11 @@ public record ModRuntimeConfig(
 
         // One-time migration for pre-atom configs carrying `classic_1_0_3_mode: true`:
         // expand all 19 classic rule atoms first, then overlay any explicit fields present in JSON.
-        boolean legacyClassicFlag = boolOr(general, "classic_1_0_3_mode", false);
+        boolean legacyClassicFlag = boolOr(
+            general,
+            "classic_1_0_3_mode",
+            boolOr(root, "classic_1_0_3_mode", false)
+        );
         boolean hasGranularSchema = shelves.has("shelf_boost_model")
             || tomes.has("cost_table")
             || epiphany.has("epiphany_enabled")
