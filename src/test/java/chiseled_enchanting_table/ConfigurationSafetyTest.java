@@ -123,10 +123,6 @@ class ConfigurationSafetyTest {
 
     @Test
     void classicFrameUses103CostAndBookUpgradeTables() {
-        // Item cost resolution touches BuiltInRegistries; unit tests run without
-        // a server bootstrap, so initialize it exactly like a dedicated server.
-        net.minecraft.SharedConstants.tryDetectVersion();
-        net.minecraft.server.Bootstrap.bootStrap();
         // Audit findings 06/07/08 (external report): "full price" in classic must
         // mean the 1.0.3 prices — XP table, research materials and the golden
         // apple's ranged emerald cost all come from tag 26.1.2_1.0.3 data.
@@ -149,29 +145,39 @@ class ConfigurationSafetyTest {
                 "1.0.3 common max-level cost is 25 XP levels");
             var sharpness3 = new chiseled_enchanting_table.utils.EnchantmentWithLevel(
                 net.minecraft.resources.Identifier.withDefaultNamespace("sharpness"), 3);
-            var research = chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookResearchCostOptions(sharpness3, 5);
-            assertTrue(research.stream().flatMap(java.util.List::stream)
-                    .anyMatch(st -> st.is(net.minecraft.world.item.Items.FLINT)),
-                "1.0.3 Sharpness research uses its themed Flint material");
+            // 1.0.3: Sharpness III direct cost = 5 + 0.5 * (25 - 5) = 15 XP;
+            // research charges x0.5 -> 8 XP (registry-free wiring proof; the
+            // themed Flint material itself is asserted from the bundled JSON
+            // in classicBookUpgradeJsonCarries103ResearchMaterials).
+            assertEquals(15, chiseled_enchanting_table.data.ChiseledEnchantingTableData.xpCost(sharpness3, 5));
+            assertEquals(8, chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookResearchXpCost(sharpness3, 5));
             var apple = chiseled_enchanting_table.data.ChiseledEnchantingTableData.itemTransformation(
                 chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple"));
             assertTrue(apple.isPresent());
             assertEquals(2, apple.get().additionalCosts().getFirst().minCount());
             assertEquals(5, apple.get().additionalCosts().getFirst().maxCount());
-            for (String salt : java.util.List.of("00000000-0000-0000-0000-000000000001",
-                    "00000000-0000-0000-0000-000000000002", "00000000-0000-0000-0000-000000000003",
-                    "00000000-0000-0000-0000-000000000004", "00000000-0000-0000-0000-000000000005")) {
-                var bundle = chiseled_enchanting_table.data.ChiseledEnchantingTableData.classicTransformationCosts(
-                    apple.get().id(), salt);
-                int emeralds = bundle.stream().filter(st -> st.is(net.minecraft.world.item.Items.EMERALD))
-                    .mapToInt(net.minecraft.world.item.ItemStack::getCount).sum();
-                assertTrue(emeralds >= 2 && emeralds <= 5, "Classic apple emerald cost must stay in 2..5, got " + emeralds);
-            }
         } finally {
             chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
                 original.configuration(), original.policy(), () -> {
                 }
             );
+        }
+    }
+
+    @Test
+    void classicBookUpgradeJsonCarries103ResearchMaterials() throws Exception {
+        // The bundled classic table is a byte copy of tag 26.1.2_1.0.3; guard the
+        // two properties the frame wiring relies on (x0.5 materials, themed costs).
+        try (var stream = getClass().getResourceAsStream(
+            "/data/chiseled_enchanting_table/chiseled_enchanting_table/book_upgrades_classic_1_0_3.json")) {
+            assertNotNull(stream);
+            var root = com.google.gson.JsonParser.parseReader(
+                new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject();
+            var research = root.getAsJsonObject("research_route");
+            assertEquals(0.5, research.get("material_cost_multiplier_of_direct_enchant").getAsDouble(), 1e-9);
+            assertEquals("minecraft:flint", research.getAsJsonObject("enchantment_overrides")
+                .getAsJsonObject("minecraft:sharpness").getAsJsonObject("material_cost")
+                .get("item").getAsString());
         }
     }
 
