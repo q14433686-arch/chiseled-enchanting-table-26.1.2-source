@@ -141,7 +141,7 @@ public final class BookshelfBookFiller {
         }
         try {
             var key = net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE
-                .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
+                .getKey(net.minecraft.world.level.block.entity.BlockEntityTypes.CHISELED_BOOKSHELF);
             if (key != null) {
                 String resolved = key.toString();
                 resolvedBookshelfBlockEntityId = resolved;
@@ -159,7 +159,7 @@ public final class BookshelfBookFiller {
      */
     public static void verifyVanillaKeys() {
         var key = net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE
-            .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
+            .getKey(net.minecraft.world.level.block.entity.BlockEntityTypes.CHISELED_BOOKSHELF);
         if (key == null) {
             ChiseledEnchantingTable.LOGGER.error(
                 "BlockEntityType.CHISELED_BOOKSHELF has no registered key in BuiltInRegistries.BLOCK_ENTITY_TYPE; "

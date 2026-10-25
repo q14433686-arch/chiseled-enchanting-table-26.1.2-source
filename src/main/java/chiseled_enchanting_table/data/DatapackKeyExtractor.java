@@ -35,9 +35,9 @@ final class DatapackKeyExtractor {
             boolean own = source.equals("mod/chiseled_enchanting_table")
                 || source.equals("chiseled_enchanting_table")
                 || source.equals("fabric/chiseled_enchanting_table");
-            // Fabric's built-in resource pack ID can vary across loader versions; always treat
-            // content byte-identical to our bundled default table as owned by the mod itself.
-            if (!own) {
+            // Only ambiguous aggregate built-in packs may use content comparison. An external
+            // pack can intentionally pin the bundled defaults against different local preferences.
+            if (!own && (source.equals("fabric") || source.equals("vanilla"))) {
                 try (var stream = ChiseledEnchantingTableData.class.getResourceAsStream(
                     "/data/" + tableId.getNamespace() + "/" + tableId.getPath())) {
                     if (stream != null) own = object.equals(JsonParser.parseReader(

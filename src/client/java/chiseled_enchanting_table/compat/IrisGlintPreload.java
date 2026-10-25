@@ -38,10 +38,17 @@ public final class IrisGlintPreload {
         if (!mcVersionId.startsWith("26.3")) {
             return;
         }
+        // F3+T can reload textures on the SAME TextureManager instance.
+        net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+            .registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener() {
+                @Override public Identifier getFabricId() {
+                    return ChiseledEnchantingTable.identifier("iris_glint_preload_reset");
+                }
+                @Override public void onResourceManagerReload(net.minecraft.server.packs.resources.ResourceManager manager) {
+                    lastPreloadedManager = null;
+                }
+            });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.level == null) {
-                return;
-            }
             TextureManager textures = client.getTextureManager();
             if (textures == null || textures == lastPreloadedManager) {
                 return;

@@ -118,8 +118,18 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static volatile Map<Identifier, ItemTransformation> itemTransformations = rawItemTransformations;
     private static volatile VanillaChestBooksMode vanillaChestBooksMode = rawVanillaChestBooksMode;
     private static volatile List<LootInjection> lootInjections = BUILT_IN_LOOT_TABLE.entries();
-    private static volatile List<LootInjection> preloadedLootInjections = null;
-    private static volatile VanillaChestBooksMode preloadedVanillaChestBooksMode = null;
+    /** Registry preparation is NOT a live gameplay generation; failed reloads must not leak it. */
+    public record LootRegistryBuildRules(List<LootInjection> entries, VanillaChestBooksMode mode,
+        chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns) {
+        public LootRegistryBuildRules { entries = List.copyOf(entries); }
+    }
+    private static volatile LootRegistryBuildRules pendingLootRegistryBuild;
+    public static void clearLootRegistryBuildRules() { pendingLootRegistryBuild = null; }
+    public static LootRegistryBuildRules lootRegistryBuildRules() {
+        var pending = pendingLootRegistryBuild;
+        return pending != null ? pending : new LootRegistryBuildRules(lootInjections(), vanillaChestBooksMode(),
+            chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.activeChestSpawnConfig());
+    }
     private static volatile BookshelfBookPool bookshelfBookPool = rawBookshelfBookPool;
     private static volatile BookUpgradeRules bookUpgradeRules = rawBookUpgradeRules;
     private static volatile TreasureEpiphanyRules treasureEpiphanyRules = rawTreasureEpiphanyRules;
@@ -164,10 +174,14 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(PackType.SERVER_DATA)
             .registerReloadListener(new ChiseledEnchantingTableData());
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(
-            server -> validateBookshelfTagDisjointness(server.registryAccess())
+            server -> {
+                clearLootRegistryBuildRules();
+                validateBookshelfTagDisjointness(server.registryAccess());
+            }
         );
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.END_DATA_PACK_RELOAD.register(
             (server, resourceManager, success) -> {
+                clearLootRegistryBuildRules();
                 if (success) {
                     validateBookshelfTagDisjointness(server.registryAccess());
                 }
@@ -711,17 +725,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * world boot and {@code /reload}.
      */
     public static void preloadForLootRegistries(ResourceManager resourceManager) {
-        try {
-            LootInjectionTable loaded = loadLootInjections(resourceManager);
-            var policy = loadPackPolicy(resourceManager);
-            var cfg = chiseled_enchanting_table.config.ModRuntimeConfig.get();
-            VanillaChestBooksMode effectiveMode = resolveEffectiveChestBooksMode(loaded.mode(), cfg, policy);
-            preloadedLootInjections = loaded.entries();
-            preloadedVanillaChestBooksMode = effectiveMode;
-            chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.updateChestSpawnConfig(loaded.chestSpawns());
-        } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.warn("Failed to preload loot_injections.json before loot registry build: {}", e.getMessage());
-        }
+        LootInjectionTable loaded = loadLootInjections(resourceManager);
+        var policy = loadPackPolicy(resourceManager);
+        var cfg = chiseled_enchanting_table.config.ModRuntimeConfig.get();
+        VanillaChestBooksMode effectiveMode = resolveEffectiveChestBooksMode(loaded.mode(), cfg, policy);
+        // Publish all registry-build inputs together, only after parsing/validation succeeds.
+        pendingLootRegistryBuild = new LootRegistryBuildRules(loaded.entries(), effectiveMode, loaded.chestSpawns());
     }
 
     private static VanillaChestBooksMode resolveEffectiveChestBooksMode(
@@ -741,18 +750,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static List<LootInjection> lootInjections() {
-        List<LootInjection> preloaded = preloadedLootInjections;
-        if (preloaded != null) {
-            return preloaded;
-        }
         return (runtimeFrame == null ? lootInjections : runtimeFrame.lootInjections());
     }
 
     public static VanillaChestBooksMode vanillaChestBooksMode() {
-        VanillaChestBooksMode preloaded = preloadedVanillaChestBooksMode;
-        if (preloaded != null) {
-            return preloaded;
-        }
         return (runtimeFrame == null ? vanillaChestBooksMode : runtimeFrame.vanillaChestBooksMode());
     }
 
@@ -820,8 +821,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         rawLibraryResonanceConfig = loadedResonance.resonance();
         rawRitualConfig = loadedResonance.ritual();
         applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get(), candidatePolicy, () -> {});
-        preloadedLootInjections = null;
-        preloadedVanillaChestBooksMode = null;
+        clearLootRegistryBuildRules();
         chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(candidatePolicy);
         ChiseledEnchantingTable.LOGGER.info(
             "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformation rules, {} loot injections",
@@ -851,8 +851,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             rawLibraryResonanceConfig = previous_rawLibraryResonanceConfig;
             rawRitualConfig = previous_rawRitualConfig;
             chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.updateChestSpawnConfig(previous_chestSpawns);
-            preloadedLootInjections = null;
-            preloadedVanillaChestBooksMode = null;
+            clearLootRegistryBuildRules();
             throw failure;
         }
         }
