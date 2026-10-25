@@ -38,6 +38,17 @@ class SyncContracts(unittest.TestCase):
                       'DepthBasedEfficiencyFunction::new']:
             self.assertIn(token, injector)
 
+    def test_config_search_starts_and_releases_sdl_text_input(self):
+        screen = (CLIENT / 'gui/config/ChiseledEnchantingConfigScreen.java').read_text()
+        self.assertIn('this.minecraft.onTextInputFocusChange(this, focused)', screen)
+        self.assertIn('this.minecraft.textInputManager().setTextInputArea(', screen)
+        self.assertEqual(screen.count('this.searchFocused = '), 1,
+                         'Every focus change must notify the SDL input owner')
+        self.assertIn('public void removed() {\n        setSearchFocused(false);', screen)
+        self.assertIn('public void onClose() {\n        setSearchFocused(false);', screen)
+        table = (CLIENT / 'gui/ChiseledEnchantingTableScreen.java').read_text()
+        self.assertIn('this.configOverlay.removed()', table)
+
     def test_new_client_api_paths_are_26_3_native(self):
         for java in CLIENT.rglob('*.java'):
             source = java.read_text()

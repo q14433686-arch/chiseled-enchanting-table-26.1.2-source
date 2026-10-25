@@ -173,6 +173,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public void removed() {
+        if (this.configOverlay != null) this.configOverlay.removed();
         if (this.scrollContainer != null) {
             this.savedScrollAmount = this.scrollContainer.scrollAmount();
             this.savedTabMode = this.scrollContainer.tabMode();

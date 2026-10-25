@@ -310,8 +310,28 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return true;
     }
 
+    /** 26.3 uses SDL text input; a private boolean alone never starts character events. */
+    private void setSearchFocused(boolean focused) {
+        this.searchFocused = focused;
+        if (this.minecraft != null) {
+            this.minecraft.onTextInputFocusChange(this, focused);
+        }
+    }
+
+    @Override
+    public boolean capturesInput() {
+        return this.searchFocused;
+    }
+
+    @Override
+    public void removed() {
+        setSearchFocused(false);
+        super.removed();
+    }
+
     @Override
     public void onClose() {
+        setSearchFocused(false);
         if (this.closeOverride != null) {
             this.closeOverride.run();
         } else if (this.minecraft != null) {
@@ -821,6 +841,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         // L0-B2: Global Search Box
         Box sb = this.layout.searchBox();
+        if (this.searchFocused && this.minecraft != null) {
+            this.minecraft.textInputManager().setTextInputArea(sb.x() + 6, sb.y(), sb.right() - 6, sb.bottom());
+        }
         boolean overSearch = sb.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
@@ -861,11 +884,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
 
         this.hitBoxes.add(new HitBox(new Box(sb.x(), sb.y(), sb.w() - clearW, sb.h()), () -> {
-            this.searchFocused = true;
+            setSearchFocused(true);
             playClick(1.0f);
         }, () -> {
             setSearchQuery("");
-            this.searchFocused = true;
+            setSearchFocused(true);
             playClick(0.95f);
         }));
         if (overSearch && tip == null) {
@@ -997,7 +1020,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                             this.ruleTracePage = true;
                             this.filterModifiedOnly = false;
                             setSearchQuery("");
-                            this.searchFocused = false;
+                            setSearchFocused(false);
                             this.listScroll = 0.0f;
                             playClick(1.02f);
                         }, null));
@@ -1008,7 +1031,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                             this.filterModifiedOnly = false;
                             this.activeCategory = targetCat;
                             setSearchQuery("");
-                            this.searchFocused = false;
+                            setSearchFocused(false);
                             this.focusedOptionIndex = -1;
                             this.listScroll = 0.0f;
                             playClick(1.0f);
@@ -2023,7 +2046,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         double my = event.y();
 
         if (!this.layout.searchBox().contains(mx, my)) {
-            this.searchFocused = false;
+            setSearchFocused(false);
         }
 
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
@@ -2124,12 +2147,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 } else if (!this.searchBuffer.isEmpty()) {
                     setSearchQuery("");
                 } else {
-                    this.searchFocused = false;
+                    setSearchFocused(false);
                 }
                 return true;
             }
             if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
-                this.searchFocused = false;
+                setSearchFocused(false);
                 return true;
             }
             if (key == InputConstants.KEY_BACKSPACE) {
@@ -2199,7 +2222,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             return true;
         }
         if (key == InputConstants.KEY_SLASH || (key == InputConstants.KEY_F && event.hasControlDown())) {
-            this.searchFocused = true;
+            setSearchFocused(true);
             playClick(1.0f);
             return true;
         }

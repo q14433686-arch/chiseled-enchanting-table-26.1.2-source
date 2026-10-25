@@ -32,7 +32,10 @@ final class DatapackKeyExtractor {
         try (Reader reader = resource.openAsReader()) {
             JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
             String source = resource.sourcePackId();
-            boolean own = source.equals("mod/chiseled_enchanting_table")
+            String loaderId = chiseled_enchanting_table.ChiseledEnchantingTable.FABRIC_MOD_ID;
+            boolean own = source.equals(loaderId) || source.equals("mod/" + loaderId)
+                || source.equals("fabric/" + loaderId)
+                || source.equals("mod/chiseled_enchanting_table")
                 || source.equals("chiseled_enchanting_table")
                 || source.equals("fabric/chiseled_enchanting_table");
             // Only ambiguous aggregate built-in packs may use content comparison. An external

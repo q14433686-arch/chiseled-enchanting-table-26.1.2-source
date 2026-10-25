@@ -52,9 +52,48 @@ class LatestPortAuditTest {
         var keys = extract(external);
         assertTrue(keys.contains("locked_shelf_breakable"));
         assertTrue(keys.contains("tome_page_required_shelves"));
-        for (String builtInSource : List.of("chiseled_enchanting_table", "fabric", "vanilla")) {
+        String loaderId = com.google.gson.JsonParser.parseString(Files.readString(Path.of("src/main/resources/fabric.mod.json")))
+            .getAsJsonObject().get("id").getAsString();
+        assertEquals(loaderId, chiseled_enchanting_table.ChiseledEnchantingTable.FABRIC_MOD_ID);
+        for (String builtInSource : List.of(loaderId, "mod/" + loaderId, "fabric/" + loaderId,
+            "chiseled_enchanting_table", "fabric", "vanilla")) {
             assertTrue(extract(manager(Map.of(DataIds.LIBRARY_RESONANCE_ID,
                 resource(builtInSource, bundled)))).isEmpty(), builtInSource);
+        }
+    }
+
+    @Test void actualFabricBundledPackDoesNotLockCleanseOrOverridePresets() throws Exception {
+        var previous = ChiseledEnchantingTableData.runtimeFrame();
+        var previousPolicy = chiseled_enchanting_table.config.ModRuntimeConfig.serverPackPolicy();
+        var resources = new java.util.HashMap<Identifier, Resource>();
+        String loaderId = com.google.gson.JsonParser.parseString(Files.readString(Path.of("src/main/resources/fabric.mod.json")))
+            .getAsJsonObject().get("id").getAsString();
+        for (var entry : Map.of(DataIds.DISENCHANTING_ID, "disenchanting", DataIds.LIBRARY_RESONANCE_ID, "library_resonance").entrySet()) {
+            resources.put(entry.getKey(), resource(loaderId, Files.readString(Path.of(
+                "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/" + entry.getValue() + ".json"))));
+        }
+        var loader = new ChiseledEnchantingTableData();
+        try {
+            loader.onResourceManagerReload(manager(resources));
+            var policy = chiseled_enchanting_table.config.ModRuntimeConfig.serverPackPolicy();
+            assertTrue(policy.datapackOverriddenKeys().isEmpty(), "Bundled resources are defaults, not external policy");
+            var draft = chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT.toDraft();
+            chiseled_enchanting_table.config.ConfigCatalog.byKey("disenchant_enabled").orElseThrow().set(draft, false);
+            ChiseledEnchantingTableData.applyRuntimeConfig(draft.build(), policy, () -> {});
+            assertFalse(ChiseledEnchantingTableData.runtimeConfiguration().disenchantEnabled());
+            assertFalse(ChiseledEnchantingTableData.runtimeFrame().disenchantingRules().enabled());
+            for (var preset : chiseled_enchanting_table.config.ModRuntimeConfig.Preset.values()) {
+                preset.applyTo(draft);
+                ChiseledEnchantingTableData.applyRuntimeConfig(draft.build(), policy, () -> {});
+                var effective = ChiseledEnchantingTableData.runtimeConfiguration();
+                assertEquals(draft.disenchantEnabled, effective.disenchantEnabled(), preset.toString());
+                assertEquals(draft.horizontalScanRadius, effective.horizontalScanRadius(), preset.toString());
+                assertEquals(draft.tomeConsumptionMode, effective.tomeConsumptionMode(), preset.toString());
+            }
+        } finally {
+            loader.onResourceManagerReload(manager(Map.of()));
+            ChiseledEnchantingTableData.applyRuntimeConfig(previous.configuration(), previous.policy(), () -> {});
+            chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(previousPolicy);
         }
     }
 
