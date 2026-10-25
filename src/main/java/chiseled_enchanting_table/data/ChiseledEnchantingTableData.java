@@ -887,6 +887,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         d.tomeRegenTier1Seconds = rawLibraryResonanceConfig.tomeRegenTier1Seconds();
         d.tomeRegenTier2Shelves = rawLibraryResonanceConfig.tomeRegenTier2Shelves();
         d.tomeRegenTier2Seconds = rawLibraryResonanceConfig.tomeRegenTier2Seconds();
+        d.lockedShelfBreakable = rawLibraryResonanceConfig.lockedShelfBreakable();
+        d.lockedBookExtractionBlocked = rawLibraryResonanceConfig.lockedBookExtractionBlocked();
+        d.earlyUnlockXpLevels = rawLibraryResonanceConfig.earlyUnlockXpLevels();
+        d.earlyUnlockGritCount = rawLibraryResonanceConfig.earlyUnlockGritCount();
+        d.sacrificeRequired = rawLibraryResonanceConfig.sacrificeRequired();
+        d.tomePageRequiredShelves = rawLibraryResonanceConfig.tomePageRequiredShelves();
         d.maxWoodenDiscountPercent = rawLibraryResonanceConfig.maxWoodenDiscountPercent();
         d.maxTotalXpDiscountPercent = rawLibraryResonanceConfig.maxTotalXpDiscountPercent();
         d.bookCombineEnabled = rawBookUpgradeRules.combineEnabled();

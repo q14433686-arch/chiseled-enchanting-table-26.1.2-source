@@ -1,4 +1,4 @@
-package chiseled_enchanting_table;
+package chiseled_enchanting_table.data;
 
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.data.DataIds;
@@ -40,15 +40,51 @@ class LatestPortAuditTest {
             });
     }
 
+    private static java.util.Set<String> extract(ResourceManager manager) {
+        var keys = new java.util.LinkedHashSet<String>();
+        DatapackKeyExtractor.collectExternalDatapackKeys(manager, DataIds.LIBRARY_RESONANCE_ID, "library_resonance", keys);
+        return keys;
+    }
+
     @Test void externalPackCanPinEvenByteIdenticalBundledDefaults() throws Exception {
         String bundled = Files.readString(Path.of("src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table/library_resonance.json"));
         var external = manager(Map.of(DataIds.LIBRARY_RESONANCE_ID, resource("file/pinned_defaults", bundled)));
-        var keys = DatapackKeyExtractor.extract(external);
-        assertTrue(keys.contains("tome_locks_enabled"));
-        assertTrue(keys.contains("tome_page_enabled"));
+        var keys = extract(external);
+        assertTrue(keys.contains("locked_shelf_breakable"));
+        assertTrue(keys.contains("tome_page_required_shelves"));
         for (String builtInSource : List.of("chiseled_enchanting_table", "fabric", "vanilla")) {
-            assertTrue(DatapackKeyExtractor.extract(manager(Map.of(DataIds.LIBRARY_RESONANCE_ID,
+            assertTrue(extract(manager(Map.of(DataIds.LIBRARY_RESONANCE_ID,
                 resource(builtInSource, bundled)))).isEmpty(), builtInSource);
+        }
+    }
+
+    @Test void tomePageDatapackRulesReachTheResolverAndPublishedDomain() throws Exception {
+        String json = "{\"tome_pages\":{\"locked_shelf_breakable\":false,\"locked_book_extraction_blocked\":false,"
+            + "\"early_unlock_xp_levels\":23,\"early_unlock_grit_count\":7,\"sacrifice_required\":29,\"tome_page_required_shelves\":13}}";
+        var raw = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.fromJson(
+            com.google.gson.JsonParser.parseString(json).getAsJsonObject());
+        var field = ChiseledEnchantingTableData.class.getDeclaredField("rawLibraryResonanceConfig");
+        field.setAccessible(true);
+        var previousRaw = field.get(null);
+        var previousFrame = ChiseledEnchantingTableData.runtimeFrame();
+        try {
+            field.set(null, raw);
+            var keys = extract(manager(Map.of(DataIds.LIBRARY_RESONANCE_ID, resource("file/pages", json))));
+            assertEquals(6, keys.size());
+            var policy = new chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy(true, false, java.util.Set.of(), keys);
+            ChiseledEnchantingTableData.applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT, policy, () -> {});
+            var frame = ChiseledEnchantingTableData.runtimeFrame();
+            assertFalse(frame.configuration().lockedShelfBreakable());
+            assertFalse(frame.configuration().lockedBookExtractionBlocked());
+            assertEquals(23, frame.configuration().earlyUnlockXpLevels());
+            assertEquals(7, frame.configuration().earlyUnlockGritCount());
+            assertEquals(29, frame.configuration().sacrificeRequired());
+            assertEquals(13, frame.configuration().tomePageRequiredShelves());
+            assertEquals(raw.tomePages(), frame.libraryResonanceConfig().tomePages());
+            assertEquals(23, frame.rules().rule("early_unlock_xp_levels").effective());
+        } finally {
+            field.set(null, previousRaw);
+            ChiseledEnchantingTableData.applyRuntimeConfig(previousFrame.configuration(), previousFrame.policy(), () -> {});
         }
     }
 

@@ -111,6 +111,12 @@ final class DatapackKeyExtractor {
                 for (String k : masteryKeys) {
                     if (hasAny(root, mastery, k)) keys.add(k);
                 }
+                JsonObject pages = root.has("tome_pages") && root.get("tome_pages").isJsonObject()
+                    ? root.getAsJsonObject("tome_pages") : null;
+                for (String key : new String[] { "locked_shelf_breakable", "locked_book_extraction_blocked",
+                    "early_unlock_xp_levels", "early_unlock_grit_count", "sacrifice_required", "tome_page_required_shelves" }) {
+                    if (hasAny(root, pages, key)) keys.add(key);
+                }
             }
             case "book_upgrades" -> {
                 JsonObject comb = root.has("combine_route") && root.get("combine_route").isJsonObject()
