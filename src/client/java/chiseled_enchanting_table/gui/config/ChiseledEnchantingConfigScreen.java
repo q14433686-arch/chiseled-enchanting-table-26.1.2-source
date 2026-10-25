@@ -202,9 +202,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 .toList();
         }
         if (this.classicPage) {
+            // Two groups (audit round 4, #16): live preferences first, then the
+            // rule-owned keys the classic frame overrides (rendered locked).
             return ConfigCatalog.ALL_OPTIONS.stream()
                 .filter(o -> "classic_1_0_3_mode".equals(o.key())
                     || ConfigCatalog.CLASSIC_LOCKED_KEYS.contains(o.key()))
+                .sorted(java.util.Comparator.comparing(
+                    o -> ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS.contains(o.key())))
                 .toList();
         }
         return ConfigCatalog.optionsInCategory(this.activeCategory);
@@ -844,7 +848,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.restart_hint");
             statusCol = 0xFFFFC46B;
         } else if (currentPreview.classic103Mode()) {
-            statusText = I18n.get("config.chiseled_enchanting_table.msg.classic_1_0_3_active");
+            statusText = I18n.get(ModRuntimeConfig.Preset.CLASSIC_1_0_3.matches(this.draft)
+                ? "config.chiseled_enchanting_table.msg.classic_1_0_3_active"
+                : "config.chiseled_enchanting_table.msg.classic_1_0_3_custom");
             statusCol = 0xFFFFD87A;
         } else if (hasUnsaved) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.unsaved");

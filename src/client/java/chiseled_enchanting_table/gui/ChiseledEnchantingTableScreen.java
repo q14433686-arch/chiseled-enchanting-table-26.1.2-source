@@ -1241,7 +1241,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             if (isOverInscribeTab(mouseX, mouseY)) {
                 List<Component> tip = List.of(
                     Component.translatable("gui.chiseled_enchanting_table.tab.inscribe.title").withStyle(ChatFormatting.GOLD),
-                    Component.translatable("gui.chiseled_enchanting_table.tab.inscribe.desc").withStyle(ChatFormatting.GRAY)
+                    Component.translatable(this.menu.isClassic103Mode()
+                        ? "gui.chiseled_enchanting_table.tab.inscribe.desc_classic"
+                        : "gui.chiseled_enchanting_table.tab.inscribe.desc").withStyle(ChatFormatting.GRAY)
                 );
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;

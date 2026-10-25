@@ -23,7 +23,7 @@ public class EnchantmentFinder {
      * unlocked Master Tome stack, returning an empty list when empty or effectively locked.
      */
     public static List<EnchantmentWithLevel> extractUnlockedSlotEnchantments(ItemStack stack) {
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.get().classic103Mode();
+        boolean classic103 = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeConfiguration().classic103Mode();
         if (stack == null || stack.isEmpty() || (!classic103 && TomeLockData.isEffectivelyLocked(stack))) {
             return List.of();
         }

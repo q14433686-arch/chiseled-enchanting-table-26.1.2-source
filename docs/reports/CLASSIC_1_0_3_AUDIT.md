@@ -75,3 +75,17 @@ button or flipping the switch on). Tests were rewritten to this contract.
 | R2-10 naming | **Fixed.** Preset renamed to "1.0.3 Gameplay Rules / 1.0.3 玩法规则" (11 locales); description lists the rules plus the retained differences (XP-point deduction, registered inert items, current recipes, JEI/REI rejoin note). `pricing.classic_1_0_3` neutralized; Wiki rewritten to match (no more "逐项还原/原汁原味"). |
 | R2-11 tome locks | **Fixed (`ignore_locks_classic`).** Under classic, `EnchantmentFinder` and resonance candidate collection ignore lock state (1.0.3 had no locks); the lock flag on the item is untouched and bites again in standard mode. |
 | R2-12 inert-but-unlocked keys | **Fixed.** `tier1/2_bookshelves`, `tier3_qualifying_enchantments`, `early_unlock_xp_levels`, `early_unlock_grit_count`, `sacrifice_required`, `tome_page_required_shelves` plus tome-regen/refund/strip/purge companions added to `CLASSIC_LOCKED_KEYS` (greyed out with reason, editable on the Classic merged page). |
+
+## Fourth round — recheck report `analyze-103-preset-discrepancies (2).zip`
+
+Most round-3 work was confirmed fixed. Residuals, with two user decisions
+(2026-10-25): recipes stay a labelled static boundary (no content-level
+recipe switching), and the Classic page uses two groups.
+
+| Finding | Disposition |
+|---|---|
+| 03 tab summary | **Fixed.** `tab.inscribe.desc` gains a classic variant (`tab.inscribe.desc_classic`, 11 locales): full target-level cost, no difference credit; the tooltip branches on `isClassic103Mode()`. |
+| 11 recipes | **Kept as labelled boundary (user decision).** Static recipe JSON cannot follow a runtime toggle; the preset `inert_note` already says so. No recipe changes. |
+| 14 naming / status | **Fixed.** `preset.classic_1_0_3.short`, `applied_notice` and `msg.classic_1_0_3_active` renamed to the "1.0.3 (Gameplay) Rules" wording in all 11 locales (no more 原味/原汁原味）. The config status bar now distinguishes `classic103Mode && matches()` ("1.0.3 gameplay rules active") from edited classic values (`msg.classic_1_0_3_custom`: custom rules based on 1.0.3). |
+| 15 lock bypass read local file | **Fixed.** `EnchantmentFinder` and `MasterTomeWear` candidate collection now read `ChiseledEnchantingTableData.runtimeConfiguration()` (the resolved server frame) instead of `ModRuntimeConfig.get()` (local disk), matching every other classic gate. |
+| 16 rules vs preferences list | **Fixed (two groups, user decision).** New `ConfigCatalog.CLASSIC_OVERRIDDEN_KEYS`: values the classic frame zeroes or takes from the classic tables (Epiphany family, discount caps, combine/research XP multipliers, disenchant/cleanse & tome-page-sacrifice companions). On the Classic merged page they sort last and stay greyed out with `reason.classic_1_0_3_overridden` ("owned by the 1.0.3 rules — no effect"); live preferences stay editable. The page subtitle says so. |

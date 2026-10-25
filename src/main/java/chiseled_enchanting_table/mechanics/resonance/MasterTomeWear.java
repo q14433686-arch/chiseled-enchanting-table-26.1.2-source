@@ -532,7 +532,7 @@ public final class MasterTomeWear {
                 if (!slotStack.is(Items.ENCHANTED_BOOK)) continue;
                 // Player-locked tomes keep regenerating but can never back an enchantment.
                 // 1.0.3 Classic ignores lock state entirely (no locks existed then).
-                if (!chiseled_enchanting_table.config.ModRuntimeConfig.get().classic103Mode()
+                if (!chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeConfiguration().classic103Mode()
                     && TomeLockData.isEffectivelyLocked(slotStack)) continue;
                 int storedLvl = EnchantmentHelper.getEnchantmentsForCrafting(slotStack).getLevel(targetHolder);
                 if (storedLvl >= requiredLevel) {

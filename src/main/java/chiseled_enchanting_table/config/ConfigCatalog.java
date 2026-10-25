@@ -285,14 +285,17 @@ public final class ConfigCatalog {
             ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.effectivePackPolicy();
             boolean parentOk = activeWhen.test(draft);
             if (draft.classic103Mode && CLASSIC_LOCKED_KEYS.contains(key)) {
-                // 1.0.3 Classic linkage (audit finding 13): these options are forced
-                // by the master switch in ModRuntimeConfig#build, so editing them
-                // would silently do nothing. Grey them out with the reason instead
-                // of letting the panel pretend they are live preferences.
+                // 1.0.3 Classic linkage: rule-owned values (CLASSIC_OVERRIDDEN_KEYS)
+                // are ignored by the classic frame, so they stay locked even on
+                // the Classic merged page; the rest are live preferences that the
+                // merged page unlocks (reason.classic_1_0_3).
+                boolean ruleOwned = CLASSIC_OVERRIDDEN_KEYS.contains(key);
                 return new OptionAvailability(
                     false,
                     false,
-                    "config.chiseled_enchanting_table.reason.classic_1_0_3",
+                    ruleOwned
+                        ? "config.chiseled_enchanting_table.reason.classic_1_0_3_overridden"
+                        : "config.chiseled_enchanting_table.reason.classic_1_0_3",
                     effectScope,
                     isModifiedFromDefault(draft)
                 );
@@ -373,6 +376,27 @@ public final class ConfigCatalog {
         "tome_regen_tier1_seconds", "tome_regen_tier2_shelves", "tome_regen_tier2_seconds",
         "xp_refund_scale", "external_xp_refund_scale", "strip_xp_min", "strip_xp_max",
         "curse_purge_xp_cost"
+    );
+
+    /**
+     * Subset of {@link #CLASSIC_LOCKED_KEYS} whose stored value has NO effect
+     * while classic is on: the runtime frame zeroes them (Epiphany chances,
+     * resonance discount caps) or takes the price from the classic tables
+     * (combine/research XP multipliers), and the disenchant/cleanse and
+     * tome-page-sacrifice mechanisms are hard-off. The Classic merged page
+     * shows these greyed out with {@code reason.classic_1_0_3_overridden}
+     * instead of pretending they are live preferences (audit round 4, #16).
+     */
+    public static final java.util.Set<String> CLASSIC_OVERRIDDEN_KEYS = java.util.Set.of(
+        "max_wooden_discount_percent", "max_total_xp_discount_percent",
+        "book_combine_xp_multiplier", "book_research_xp_multiplier",
+        "epiphany_min_bookshelves", "epiphany_base_chance", "epiphany_max_chance",
+        "epiphany_max_slots_cap", "epiphany_cycle_seconds", "epiphany_freeze_xp_levels",
+        "epiphany_freeze_duration_seconds", "epiphany_max_freeze_seconds",
+        "epiphany_reroll_xp_levels",
+        "disenchant_enabled", "allow_curse_purge",
+        "xp_refund_scale", "external_xp_refund_scale", "strip_xp_min", "strip_xp_max",
+        "curse_purge_xp_cost", "sacrifice_required", "tome_page_required_shelves"
     );
 
     // ---- Concise builders ----
