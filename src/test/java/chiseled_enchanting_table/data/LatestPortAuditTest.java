@@ -63,6 +63,8 @@ class LatestPortAuditTest {
             + "\"early_unlock_xp_levels\":23,\"early_unlock_grit_count\":7,\"sacrifice_required\":29,\"tome_page_required_shelves\":13}}";
         var raw = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.fromJson(
             com.google.gson.JsonParser.parseString(json).getAsJsonObject());
+        assertFalse(raw.lockedShelfBreakable());
+        assertEquals(23, raw.earlyUnlockXpLevels());
         var field = ChiseledEnchantingTableData.class.getDeclaredField("rawLibraryResonanceConfig");
         field.setAccessible(true);
         var previousRaw = field.get(null);
@@ -71,7 +73,7 @@ class LatestPortAuditTest {
             field.set(null, raw);
             var keys = extract(manager(Map.of(DataIds.LIBRARY_RESONANCE_ID, resource("file/pages", json))));
             assertEquals(6, keys.size());
-            var policy = new chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy(true, false, java.util.Set.of(), keys);
+            var policy = new chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy(true, false, keys, keys);
             ChiseledEnchantingTableData.applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.DEFAULT, policy, () -> {});
             var frame = ChiseledEnchantingTableData.runtimeFrame();
             assertFalse(frame.configuration().lockedShelfBreakable());
