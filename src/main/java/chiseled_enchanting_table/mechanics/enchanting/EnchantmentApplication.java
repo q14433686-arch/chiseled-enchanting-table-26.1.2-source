@@ -417,7 +417,7 @@ public final class EnchantmentApplication {
         // Transfers move (never duplicate) an entry, so when template tome wear is active,
         // the result keeps the more faded parent's generation instead of advancing it.
         if (target.is(Items.ENCHANTED_BOOK)
-            && ChiseledEnchantingTableData.libraryResonanceConfig().consumptionMode()
+            && ChiseledEnchantingTableData.libraryResonanceConfig().tomeConsumptionMode()
                 == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
             chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
                 target,
