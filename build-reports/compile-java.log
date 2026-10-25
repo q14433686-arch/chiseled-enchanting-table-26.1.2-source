@@ -1,4 +1,4 @@
-commit: 4bafe68c08458ba485718ca9a7c05e6e22c56764
+commit: 9b263ff03135dd314db0a719660f52b5e00922b0
 branch: arena/089dab6b-chiseled-enchanting-table-26-1
 minecraft: 26.3
 fabric-api: 0.162.0+26.3
@@ -32,10 +32,10 @@ Fabric Loom: 1.17.21
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:53: warning: [deprecation] SimpleSynchronousResourceReloadListener in net.fabricmc.fabric.api.resource has been deprecated
 public final class ChiseledEnchantingTableData implements SimpleSynchronousResourceReloadListener {
                                                           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:164: warning: [deprecation] ResourceManagerHelper in net.fabricmc.fabric.api.resource has been deprecated
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:174: warning: [deprecation] ResourceManagerHelper in net.fabricmc.fabric.api.resource has been deprecated
         net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(PackType.SERVER_DATA)
                                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:165: warning: [deprecation] registerReloadListener(IdentifiableResourceReloadListener) in ResourceManagerHelper has been deprecated
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:175: warning: [deprecation] registerReloadListener(IdentifiableResourceReloadListener) in ResourceManagerHelper has been deprecated
             .registerReloadListener(new ChiseledEnchantingTableData());
             ^
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/transformation/ItemTransformationApplication.java:42: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
@@ -64,16 +64,6 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1823: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
             if (!level.hasChunkAt(p)) {
                       ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:144: error: cannot find symbol
-                .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
-                                                                              ^
-  symbol:   variable CHISELED_BOOKSHELF
-  location: class BlockEntityType
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:162: error: cannot find symbol
-            .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
-                                                                          ^
-  symbol:   variable CHISELED_BOOKSHELF
-  location: class BlockEntityType
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:37: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
         ItemStack targetBook = handler.get_enchantable_item();
                                       ^
@@ -170,169 +160,286 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:795: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
             if (!level.hasChunkAt(scannedPos)) {
                       ^
-2 errors
 43 warnings
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792967037160.json
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:5: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
+                                    ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:120: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+    private EnchantementListWidget scrollContainer;
+            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:155: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                this.scrollContainer.updateEntry(handler.getEffectiveEnchantableItem(), handler.get_cost_item());
+                                                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:209: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+            this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:248: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                   ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:257: error: cannot find symbol
+            mc.gui.setOverlayMessage(
+                  ^
+  symbol:   method setOverlayMessage(MutableComponent,boolean)
+  location: variable gui of type Gui
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:289: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+        ItemStack current = this.menu.get_enchantable_item();
+                                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:301: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+        ItemStack target = this.menu.get_enchantable_item();
+                                    ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:309: error: cannot find symbol
+                mc.gui.setOverlayMessage(
+                      ^
+  symbol:   method setOverlayMessage(MutableComponent,boolean)
+  location: variable gui of type Gui
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:316: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                   ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:488: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                   ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:630: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+            && DisenchantmentApplication.countNonCurseEnchantments(this.menu.get_enchantable_item()) > 0;
+                                                                            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:673: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                if (this.scrollContainer != null) this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                                                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:968: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+            int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(this.menu.get_enchantable_item()).size();
+                                                                                   ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1144: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                ItemStack target = this.menu.get_enchantable_item();
+                                            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1357: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, this.menu.player)).withStyle(ChatFormatting.GOLD));
+                                          ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1359: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    .filter(e -> EnchantementListWidget.isWearImmuneEnchantmentId(e.enchantment_id(), this.menu.player))
+                                 ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1366: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    EnchantementListWidget.findEnchantment(immuneId, this.menu.player).ifPresent(h -> {
+                    ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1387: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                        : EnchantementListWidget.findEnchantment(lastId, this.menu.player)
+                          ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1396: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                        : EnchantementListWidget.findEnchantment(depId, this.menu.player)
+                          ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1417: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                        tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_lock_remaining", EnchantementListWidget.formatTomeEta(lockEta)).withStyle(ChatFormatting.GOLD));
+                                                                                                                 ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1421: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_next", EnchantementListWidget.formatTomeEta(hoveredTome.eta_next_ticks())).withStyle(ChatFormatting.GREEN));
+                                                                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1422: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", EnchantementListWidget.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
+                                                                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1494: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                    ItemStack slotCatalyst = this.menu.get_cost_item();
+                                                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1780: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                boolean fromBook = this.menu.get_cost_item().is(net.minecraft.world.item.Items.ENCHANTED_BOOK)
+                                            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1912: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                    this.menu.get_enchantable_item(),
+                             ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1925: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                    } else if (requiresDisenchantAllConfirm(this.menu.get_enchantable_item())) {
+                                                                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2016: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    if (sel != null) tip.add(Component.literal(EnchantementListWidget.tomeTitle(sel, this.menu.player)).withStyle(ChatFormatting.GOLD));
+                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2021: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                    ItemStack target = this.menu.get_enchantable_item();
+                                                ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2094: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+        double affinityUnits = this.menu.affinityMasteryUnits(this.menu.get_enchantable_item());
+                                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2338: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                String interval = this.menu.regenIntervalTicks > 0 ? EnchantementListWidget.formatTomeEta(this.menu.regenIntervalTicks) : "--:--";
+                                                                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2345: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                ItemStack target = this.menu.get_enchantable_item();
+                                            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:67: error: cannot find symbol
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                                                               ^
+  symbol:   variable KEYSYM
+  location: class Type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:75: error: cannot find symbol
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                                                               ^
+  symbol:   variable KEYSYM
+  location: class Type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:117: warning: [deprecation] BlockEntityRendererRegistry in net.fabricmc.fabric.api.client.rendering.v1 has been deprecated
+        BlockEntityRendererRegistry.register(BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
+        ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:257: error: cannot find symbol
+                    ctx.client().gui.setOverlayMessage(
+                                    ^
+  symbol:   method setOverlayMessage(MutableComponent,boolean)
+  location: variable gui of type Gui
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:43: warning: [deprecation] SimpleSynchronousResourceReloadListener in net.fabricmc.fabric.api.resource has been deprecated
+            .registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener() {
+                                                                        ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:42: warning: [deprecation] ResourceManagerHelper in net.fabricmc.fabric.api.resource has been deprecated
+        net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+                                        ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:43: warning: [deprecation] registerReloadListener(IdentifiableResourceReloadListener) in ResourceManagerHelper has been deprecated
+            .registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener() {
+            ^
+5 errors
+34 warnings
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792967771527.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+Execution failed for task ':compileClientJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
 > Compilation failed; see the compiler output below.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:53: warning: [deprecation] SimpleSynchronousResourceReloadListener in net.fabricmc.fabric.api.resource has been deprecated
-  public final class ChiseledEnchantingTableData implements SimpleSynchronousResourceReloadListener {
-                                                            ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:164: warning: [deprecation] ResourceManagerHelper in net.fabricmc.fabric.api.resource has been deprecated
-          net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(PackType.SERVER_DATA)
-                                          ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:165: warning: [deprecation] registerReloadListener(IdentifiableResourceReloadListener) in ResourceManagerHelper has been deprecated
-              .registerReloadListener(new ChiseledEnchantingTableData());
-              ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/transformation/ItemTransformationApplication.java:42: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          ItemStack input = handler.get_enchantable_item();
-                                   ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/transformation/ItemTransformationApplication.java:55: warning: [deprecation] applyEnchantementCondition(ApplyEnchantmentPayload) in ChiseledEnchantingTableScreenHandler has been deprecated
-          if (!handler.applyEnchantementCondition(canonical)) {
-                      ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:225: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              && this.world.hasChunkAt(this.syncedTablePos)
-                           ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/MasterTomeWear.java:523: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(scanPos)) continue;
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1658: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(p)) {
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1756: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(p)) {
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1823: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(p)) {
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:37: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          ItemStack targetBook = handler.get_enchantable_item();
-                                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:38: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          ItemStack costBook = handler.get_cost_item();
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:5: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+  import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
                                       ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:102: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());
-                                                                                  ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:108: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          ItemStack targetBook = handler.get_enchantable_item();
-                                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:142: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());
-                                                                                  ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/DisenchantmentApplication.java:475: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          ItemStack target = menu.get_enchantable_item();
-                                 ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:36: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          ItemStack enchantable_item = handler.get_enchantable_item();
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:120: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+      private EnchantementListWidget scrollContainer;
+              ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:155: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                  this.scrollContainer.updateEntry(handler.getEffectiveEnchantableItem(), handler.get_cost_item());
+                                                                                                 ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:209: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+              this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                 ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:248: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                  this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                     ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:289: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+          ItemStack current = this.menu.get_enchantable_item();
+                                       ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:301: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+          ItemStack target = this.menu.get_enchantable_item();
+                                      ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:316: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                  this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                     ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:488: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                  this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                     ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:630: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+              && DisenchantmentApplication.countNonCurseEnchantments(this.menu.get_enchantable_item()) > 0;
+                                                                              ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:673: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                  if (this.scrollContainer != null) this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                                                       ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:968: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+              int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(this.menu.get_enchantable_item()).size();
+                                                                                     ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1144: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                  ItemStack target = this.menu.get_enchantable_item();
                                               ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:91: warning: [deprecation] applyEnchantementConditionWithReceipt(ApplyEnchantmentPayload) in ChiseledEnchantingTableScreenHandler has been deprecated
-          var receipt = handler.applyEnchantementConditionWithReceipt(payload);
-                               ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:265: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-              enchantable_item = handler.get_enchantable_item();
-                                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:310: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          ItemStack enchanted_book = handler.get_cost_item();
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1357: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                  tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, this.menu.player)).withStyle(ChatFormatting.GOLD));
                                             ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:314: warning: [deprecation] EnchantmentToIdentifier(Holder<Enchantment>) in ChiseledEnchantingTableScreenHandler has been deprecated
-              if (ChiseledEnchantingTableScreenHandler.EnchantmentToIdentifier(entry.getKey()).equals(payload.enchantment_id())
-                                                      ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:324: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-          ItemStack enchantable_item = handler.get_enchantable_item();
-                                              ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:352: warning: [deprecation] EnchantmentToIdentifier(Holder<Enchantment>) in ChiseledEnchantingTableScreenHandler has been deprecated
-              if (!ChiseledEnchantingTableScreenHandler.EnchantmentToIdentifier(entry.getKey()).equals(payload.enchantment_id())) {
-                                                       ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:399: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-              enchantable_item = handler.get_enchantable_item();
-                                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/TomeLockGuards.java:203: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(candidate)) continue;
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:151: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                  && world.hasChunkAt(slot.position())
-                          ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:174: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                      || !world.hasChunkAt(slot.position())
-                               ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:231: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-          if (!world.hasChunkAt(slot.position())) {
-                    ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:356: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!world.hasChunkAt(pos) || (shelves != null && shelves.requireLineOfSight()
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:866: warning: [deprecation] getSeed(int,int,int) in Mth has been deprecated
-              int init = (int) Mth.getSeed(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
-                                  ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:1078: warning: [deprecation] removeComponentsFromTag(ValueOutput) in BlockEntity has been deprecated
-      public void removeComponentsFromTag(ValueOutput output) {
-                  ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuTomePageActions.java:42: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-          if (!h.world().hasChunkAt(shelfPos)) return false;
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuTomePageActions.java:67: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (h.world().hasChunkAt(pos)
-                           ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantingNetworking.java:78: warning: [deprecation] applyEnchantement(ApplyEnchantmentPayload) in ChiseledEnchantingTableScreenHandler has been deprecated
-                      menu.applyEnchantement(payload);
-                          ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantingNetworking.java:128: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                  if (pos == null || player.isSpectator() || !player.level().hasChunkAt(pos)) {
-                                                                            ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledBookshelfTick.java:28: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(candidate)) continue;
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:157: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(shelfPos)) {
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:518: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(scanPos)) continue;
-                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:748: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                  && (!level.hasChunkAt(mid) || !level.getBlockState(mid).getCollisionShape(level, mid).isEmpty())) {
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1359: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                      .filter(e -> EnchantementListWidget.isWearImmuneEnchantmentId(e.enchantment_id(), this.menu.player))
+                                   ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1366: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                      EnchantementListWidget.findEnchantment(immuneId, this.menu.player).ifPresent(h -> {
+                      ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1387: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                          : EnchantementListWidget.findEnchantment(lastId, this.menu.player)
                             ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:762: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                      if (level.hasChunkAt(adj) && level.getBlockState(adj).getCollisionShape(level, adj).isEmpty()) {
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1396: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                          : EnchantementListWidget.findEnchantment(depId, this.menu.player)
+                            ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1417: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                          tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_lock_remaining", EnchantementListWidget.formatTomeEta(lockEta)).withStyle(ChatFormatting.GOLD));
+                                                                                                                   ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1421: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                      tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_next", EnchantementListWidget.formatTomeEta(hoveredTome.eta_next_ticks())).withStyle(ChatFormatting.GREEN));
+                                                                                                         ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1422: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                      tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", EnchantementListWidget.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
+                                                                                                         ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1494: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                      ItemStack slotCatalyst = this.menu.get_cost_item();
+                                                        ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1780: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                  boolean fromBook = this.menu.get_cost_item().is(net.minecraft.world.item.Items.ENCHANTED_BOOK)
+                                              ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1912: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                      this.menu.get_enchantable_item(),
                                ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:773: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-          return !level.hasChunkAt(abovePos) || !level.getBlockState(abovePos).getCollisionShape(level, abovePos).isEmpty();
-                       ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:795: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-              if (!level.hasChunkAt(scannedPos)) {
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1925: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                      } else if (requiresDisenchantAllConfirm(this.menu.get_enchantable_item())) {
+                                                                       ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2016: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                      if (sel != null) tip.add(Component.literal(EnchantementListWidget.tomeTitle(sel, this.menu.player)).withStyle(ChatFormatting.GOLD));
+                                                                 ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2021: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                      ItemStack target = this.menu.get_enchantable_item();
+                                                  ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2094: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+          double affinityUnits = this.menu.affinityMasteryUnits(this.menu.get_enchantable_item());
+                                                                         ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2338: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                  String interval = this.menu.regenIntervalTicks > 0 ? EnchantementListWidget.formatTomeEta(this.menu.regenIntervalTicks) : "--:--";
+                                                                       ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2345: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                  ItemStack target = this.menu.get_enchantable_item();
+                                              ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:117: warning: [deprecation] BlockEntityRendererRegistry in net.fabricmc.fabric.api.client.rendering.v1 has been deprecated
+          BlockEntityRendererRegistry.register(BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
+          ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:43: warning: [deprecation] SimpleSynchronousResourceReloadListener in net.fabricmc.fabric.api.resource has been deprecated
+              .registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener() {
+                                                                          ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:42: warning: [deprecation] ResourceManagerHelper in net.fabricmc.fabric.api.resource has been deprecated
+          net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+                                          ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:43: warning: [deprecation] registerReloadListener(IdentifiableResourceReloadListener) in ResourceManagerHelper has been deprecated
+              .registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener() {
+              ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:67: error: cannot find symbol
+                  com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                                                                 ^
+    symbol:   variable KEYSYM
+    location: class Type
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:75: error: cannot find symbol
+                  com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                                                                 ^
+    symbol:   variable KEYSYM
+    location: class Type
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:257: error: cannot find symbol
+              mc.gui.setOverlayMessage(
+                    ^
+    symbol:   method setOverlayMessage(MutableComponent,boolean)
+    location: variable gui of type Gui
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:309: error: cannot find symbol
+                  mc.gui.setOverlayMessage(
                         ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:144: error: cannot find symbol
-                  .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
-                                                                                ^
-    symbol:   variable CHISELED_BOOKSHELF
-    location: class BlockEntityType
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:162: error: cannot find symbol
-              .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
-                                                                            ^
-    symbol:   variable CHISELED_BOOKSHELF
-    location: class BlockEntityType
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:842: warning: [unchecked] unchecked conversion
-          List<EnchantmentWithLevel>[] out = new List[] { List.of() };
-                                             ^
-    required: List<EnchantmentWithLevel>[]
-    found:    List[]
-  2 errors
-  43 warnings
+    symbol:   method setOverlayMessage(MutableComponent,boolean)
+    location: variable gui of type Gui
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:257: error: cannot find symbol
+                      ctx.client().gui.setOverlayMessage(
+                                      ^
+    symbol:   method setOverlayMessage(MutableComponent,boolean)
+    location: variable gui of type Gui
+  5 errors
+  34 warnings
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compileClientJava' (registered by plugin class 'org.gradle.api.plugins.JavaBasePlugin').
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:135)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:288)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:133)
@@ -367,149 +474,135 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:53: warning: [deprecation] SimpleSynchronousResourceReloadListener in net.fabricmc.fabric.api.resource has been deprecated
-public final class ChiseledEnchantingTableData implements SimpleSynchronousResourceReloadListener {
-                                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:164: warning: [deprecation] ResourceManagerHelper in net.fabricmc.fabric.api.resource has been deprecated
-        net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(PackType.SERVER_DATA)
-                                        ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:165: warning: [deprecation] registerReloadListener(IdentifiableResourceReloadListener) in ResourceManagerHelper has been deprecated
-            .registerReloadListener(new ChiseledEnchantingTableData());
-            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/transformation/ItemTransformationApplication.java:42: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        ItemStack input = handler.get_enchantable_item();
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/transformation/ItemTransformationApplication.java:55: warning: [deprecation] applyEnchantementCondition(ApplyEnchantmentPayload) in ChiseledEnchantingTableScreenHandler has been deprecated
-        if (!handler.applyEnchantementCondition(canonical)) {
-                    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:225: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            && this.world.hasChunkAt(this.syncedTablePos)
-                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:842: warning: [unchecked] unchecked conversion
-        List<EnchantmentWithLevel>[] out = new List[] { List.of() };
-                                           ^
-  required: List<EnchantmentWithLevel>[]
-  found:    List[]
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/MasterTomeWear.java:523: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(scanPos)) continue;
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1658: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(p)) {
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1756: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(p)) {
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/ritual/InscriptionRitualMechanics.java:1823: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(p)) {
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:144: error: cannot find symbol
-                .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
-                                                                              ^
-  symbol:   variable CHISELED_BOOKSHELF
-  location: class BlockEntityType
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/structure/BookshelfBookFiller.java:162: error: cannot find symbol
-            .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
-                                                                          ^
-  symbol:   variable CHISELED_BOOKSHELF
-  location: class BlockEntityType
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:37: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        ItemStack targetBook = handler.get_enchantable_item();
-                                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:38: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        ItemStack costBook = handler.get_cost_item();
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:5: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
                                     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:102: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());
-                                                                                ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:108: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        ItemStack targetBook = handler.get_enchantable_item();
-                                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/BookUpgradeApplication.java:142: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());
-                                                                                ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/DisenchantmentApplication.java:475: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        ItemStack target = menu.get_enchantable_item();
-                               ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:36: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        ItemStack enchantable_item = handler.get_enchantable_item();
-                                            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:91: warning: [deprecation] applyEnchantementConditionWithReceipt(ApplyEnchantmentPayload) in ChiseledEnchantingTableScreenHandler has been deprecated
-        var receipt = handler.applyEnchantementConditionWithReceipt(payload);
-                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:265: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-            enchantable_item = handler.get_enchantable_item();
-                                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:310: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        ItemStack enchanted_book = handler.get_cost_item();
-                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:314: warning: [deprecation] EnchantmentToIdentifier(Holder<Enchantment>) in ChiseledEnchantingTableScreenHandler has been deprecated
-            if (ChiseledEnchantingTableScreenHandler.EnchantmentToIdentifier(entry.getKey()).equals(payload.enchantment_id())
-                                                    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:324: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-        ItemStack enchantable_item = handler.get_enchantable_item();
-                                            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:352: warning: [deprecation] EnchantmentToIdentifier(Holder<Enchantment>) in ChiseledEnchantingTableScreenHandler has been deprecated
-            if (!ChiseledEnchantingTableScreenHandler.EnchantmentToIdentifier(entry.getKey()).equals(payload.enchantment_id())) {
-                                                     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/enchanting/EnchantmentApplication.java:399: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
-            enchantable_item = handler.get_enchantable_item();
-                                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/TomeLockGuards.java:203: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(candidate)) continue;
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:151: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                && world.hasChunkAt(slot.position())
-                        ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:174: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                    || !world.hasChunkAt(slot.position())
-                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:231: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-        if (!world.hasChunkAt(slot.position())) {
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:120: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+    private EnchantementListWidget scrollContainer;
+            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:155: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                this.scrollContainer.updateEntry(handler.getEffectiveEnchantableItem(), handler.get_cost_item());
+                                                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:209: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+            this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:248: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                   ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:257: error: cannot find symbol
+            mc.gui.setOverlayMessage(
                   ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/WorldRegeneration.java:356: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!world.hasChunkAt(pos) || (shelves != null && shelves.requireLineOfSight()
+  symbol:   method setOverlayMessage(MutableComponent,boolean)
+  location: variable gui of type Gui
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:289: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+        ItemStack current = this.menu.get_enchantable_item();
+                                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:301: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+        ItemStack target = this.menu.get_enchantable_item();
+                                    ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:309: error: cannot find symbol
+                mc.gui.setOverlayMessage(
                       ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:866: warning: [deprecation] getSeed(int,int,int) in Mth has been deprecated
-            int init = (int) Mth.getSeed(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ());
-                                ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlockEntity.java:1078: warning: [deprecation] removeComponentsFromTag(ValueOutput) in BlockEntity has been deprecated
-    public void removeComponentsFromTag(ValueOutput output) {
-                ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuTomePageActions.java:42: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-        if (!h.world().hasChunkAt(shelfPos)) return false;
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuTomePageActions.java:67: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (h.world().hasChunkAt(pos)
-                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantingNetworking.java:78: warning: [deprecation] applyEnchantement(ApplyEnchantmentPayload) in ChiseledEnchantingTableScreenHandler has been deprecated
-                    menu.applyEnchantement(payload);
-                        ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/EnchantingNetworking.java:128: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                if (pos == null || player.isSpectator() || !player.level().hasChunkAt(pos)) {
-                                                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledBookshelfTick.java:28: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(candidate)) continue;
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:157: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(shelfPos)) {
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:518: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(scanPos)) continue;
-                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:748: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                && (!level.hasChunkAt(mid) || !level.getBlockState(mid).getCollisionShape(level, mid).isEmpty())) {
+  symbol:   method setOverlayMessage(MutableComponent,boolean)
+  location: variable gui of type Gui
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:316: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                   ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:488: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                   ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:630: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+            && DisenchantmentApplication.countNonCurseEnchantments(this.menu.get_enchantable_item()) > 0;
+                                                                            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:673: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                if (this.scrollContainer != null) this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
+                                                                                                                                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:968: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+            int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(this.menu.get_enchantable_item()).size();
+                                                                                   ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1144: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                ItemStack target = this.menu.get_enchantable_item();
+                                            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1357: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, this.menu.player)).withStyle(ChatFormatting.GOLD));
+                                          ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1359: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    .filter(e -> EnchantementListWidget.isWearImmuneEnchantmentId(e.enchantment_id(), this.menu.player))
+                                 ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1366: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    EnchantementListWidget.findEnchantment(immuneId, this.menu.player).ifPresent(h -> {
+                    ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1387: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                        : EnchantementListWidget.findEnchantment(lastId, this.menu.player)
                           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:762: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-                    if (level.hasChunkAt(adj) && level.getBlockState(adj).getCollisionShape(level, adj).isEmpty()) {
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1396: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                        : EnchantementListWidget.findEnchantment(depId, this.menu.player)
+                          ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1417: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                        tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_lock_remaining", EnchantementListWidget.formatTomeEta(lockEta)).withStyle(ChatFormatting.GOLD));
+                                                                                                                 ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1421: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_next", EnchantementListWidget.formatTomeEta(hoveredTome.eta_next_ticks())).withStyle(ChatFormatting.GREEN));
+                                                                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1422: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", EnchantementListWidget.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
+                                                                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1494: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                    ItemStack slotCatalyst = this.menu.get_cost_item();
+                                                      ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1780: warning: [deprecation] get_cost_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                boolean fromBook = this.menu.get_cost_item().is(net.minecraft.world.item.Items.ENCHANTED_BOOK)
+                                            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1912: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                    this.menu.get_enchantable_item(),
                              ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:773: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-        return !level.hasChunkAt(abovePos) || !level.getBlockState(abovePos).getCollisionShape(level, abovePos).isEmpty();
-                     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java:795: warning: [deprecation] hasChunkAt(BlockPos) in LevelReader has been deprecated
-            if (!level.hasChunkAt(scannedPos)) {
-                      ^
-2 errors
-43 warnings
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1925: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                    } else if (requiresDisenchantAllConfirm(this.menu.get_enchantable_item())) {
+                                                                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2016: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                    if (sel != null) tip.add(Component.literal(EnchantementListWidget.tomeTitle(sel, this.menu.player)).withStyle(ChatFormatting.GOLD));
+                                                               ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2021: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                    ItemStack target = this.menu.get_enchantable_item();
+                                                ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2094: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+        double affinityUnits = this.menu.affinityMasteryUnits(this.menu.get_enchantable_item());
+                                                                       ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2338: warning: [deprecation] EnchantementListWidget in chiseled_enchanting_table.gui has been deprecated
+                String interval = this.menu.regenIntervalTicks > 0 ? EnchantementListWidget.formatTomeEta(this.menu.regenIntervalTicks) : "--:--";
+                                                                     ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2345: warning: [deprecation] get_enchantable_item() in ChiseledEnchantingTableScreenHandler has been deprecated
+                ItemStack target = this.menu.get_enchantable_item();
+                                            ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:67: error: cannot find symbol
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                                                               ^
+  symbol:   variable KEYSYM
+  location: class Type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:75: error: cannot find symbol
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM,
+                                                               ^
+  symbol:   variable KEYSYM
+  location: class Type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:117: warning: [deprecation] BlockEntityRendererRegistry in net.fabricmc.fabric.api.client.rendering.v1 has been deprecated
+        BlockEntityRendererRegistry.register(BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, ChiseledEnchantingTableBlockEntityRenderer::new);
+        ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java:257: error: cannot find symbol
+                    ctx.client().gui.setOverlayMessage(
+                                    ^
+  symbol:   method setOverlayMessage(MutableComponent,boolean)
+  location: variable gui of type Gui
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:43: warning: [deprecation] SimpleSynchronousResourceReloadListener in net.fabricmc.fabric.api.resource has been deprecated
+            .registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener() {
+                                                                        ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:42: warning: [deprecation] ResourceManagerHelper in net.fabricmc.fabric.api.resource has been deprecated
+        net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+                                        ^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/compat/IrisGlintPreload.java:43: warning: [deprecation] registerReloadListener(IdentifiableResourceReloadListener) in ResourceManagerHelper has been deprecated
+            .registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener() {
+            ^
+5 errors
+34 warnings
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -650,8 +743,8 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 38s
-1 actionable task: 1 executed
+BUILD FAILED in 46s
+3 actionable tasks: 3 executed
 gradle exit code: 1
 
 === resolved coordinates (compileClasspath / clientCompileClasspath) ===
