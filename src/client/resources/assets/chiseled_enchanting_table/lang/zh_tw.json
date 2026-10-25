@@ -312,6 +312,8 @@
   "gui.chiseled_enchanting_table.discovery_locked.tip_title": "🔒 探索前置未解鎖：%s",
   "gui.chiseled_enchanting_table.discovery_locked.tip_desc": "先在冒險中取得過「%s」，即可在此永久解鎖煉金量產",
   "gui.chiseled_enchanting_table.pricing.book_transfer": "✦ 計價來源：附魔書直接轉移（0 經驗 · 副書化為褪魔殘卷）",
+  "gui.chiseled_enchanting_table.pricing.classic_1_0_3": "存書銘刻計價（1.0.3 經典：全額經驗費用）",
+  "gui.chiseled_enchanting_table.pricing.book_transfer_classic": "附魔書轉移：附魔書提供免費等級；來源書返還為普通書。",
   "gui.chiseled_enchanting_table.pricing.master_tome": "✦ 计价来源：雕紋模板書共鸣（原版 1–3 級量产模式）",
   "gui.chiseled_enchanting_table.pricing.incremental": "✦ 計價來源：逐級補差升級（已自動抵扣低級材料與經驗）",
   "gui.chiseled_enchanting_table.pricing.full_ritual": "✦ 计价来源：無模板書完整銘刻（按經驗點精确结算）",

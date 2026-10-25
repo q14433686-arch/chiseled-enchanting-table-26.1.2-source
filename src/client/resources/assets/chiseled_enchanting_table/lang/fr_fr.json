@@ -312,6 +312,8 @@
   "gui.chiseled_enchanting_table.discovery_locked.tip_title": "🔒 Découverte requise : %s",
   "gui.chiseled_enchanting_table.discovery_locked.tip_desc": "Obtenez d'abord %s en survie pour débloquer cette transmutation",
   "gui.chiseled_enchanting_table.pricing.book_transfer": "✦ Tarif : Transfert direct de livre (0 XP · Livre → Tome épuisé)",
+  "gui.chiseled_enchanting_table.pricing.classic_1_0_3": "Inscription par livre (Classique 1.0.3 : coût XP complet)",
+  "gui.chiseled_enchanting_table.pricing.book_transfer_classic": "Transfert de livre : le livre donne un niveau gratuit ; il revient comme livre normal.",
   "gui.chiseled_enchanting_table.pricing.master_tome": "✦ Tarif : Tome Maître stocké (Mode 1–3L)",
   "gui.chiseled_enchanting_table.pricing.incremental": "✦ Tarif : Amélioration par palier (acquis déduits)",
   "gui.chiseled_enchanting_table.pricing.full_ritual": "✦ Tarif : Inscription arcanique complète (points exacts)",

@@ -1327,7 +1327,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (enchantAlreadyExist()) {
                 return new EnchantmentRowRenderer.OverrideAnnotation("\u2714 " + enchantmentName, RowRenderSupport.CYAN);
             }
-            if (sameEnchantLevelDiff.isPresent() && existingSameLevel.isPresent() && sameEnchantLevelDiff.getAsInt() > 0) {
+            // 1.0.3 Classic charges the FULL target-level cost (no incremental
+            // credit — see handler#getEffectiveItemCostOptions / resolveXpRequirement
+            // classic branches), so the "pay difference only" annotation must not
+            // be shown there. It was previously displayed unconditionally while the
+            // mechanism behind it was already disabled in classic.
+            if (!this.handler.isClassic103Mode()
+                && sameEnchantLevelDiff.isPresent() && existingSameLevel.isPresent() && sameEnchantLevelDiff.getAsInt() > 0) {
                 String existingName = Enchantment.getFullname(this.enchantment, existingSameLevel.getAsInt()).getString();
                 return new EnchantmentRowRenderer.OverrideAnnotation(
                     I18n.get("gui.chiseled_enchanting_table.upgrade_from", existingName),

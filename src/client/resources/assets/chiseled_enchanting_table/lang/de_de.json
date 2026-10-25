@@ -312,6 +312,8 @@
   "gui.chiseled_enchanting_table.discovery_locked.tip_title": "🔒 Entdeckung erforderlich: %s",
   "gui.chiseled_enchanting_table.discovery_locked.tip_desc": "Erhalte zuerst %s im Überlebensmodus, um diese Transmutation freizuschalten",
   "gui.chiseled_enchanting_table.pricing.book_transfer": "✦ Preisgrund: Direkter Buchtransfer (0 EP · Buch → Erschöpfter Foliant)",
+  "gui.chiseled_enchanting_table.pricing.classic_1_0_3": "Buchübertragung (Klassik 1.0.3: volle XP-Kosten)",
+  "gui.chiseled_enchanting_table.pricing.book_transfer_classic": "Buchübertragung: Buch gewährt Gratis-Level; Buch kommt als normales Buch zurück.",
   "gui.chiseled_enchanting_table.pricing.master_tome": "✦ Preisgrund: Gelagerter Meisterfoliant (1–3L Modus)",
   "gui.chiseled_enchanting_table.pricing.incremental": "✦ Preisgrund: Stufen-Upgrade (Vorleistung angerechnet)",
   "gui.chiseled_enchanting_table.pricing.full_ritual": "✦ Preisgrund: Volle Arkane Inschrift (Exakte EP-Punkte)",

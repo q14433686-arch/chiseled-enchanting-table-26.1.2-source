@@ -312,6 +312,8 @@
   "gui.chiseled_enchanting_table.discovery_locked.tip_title": "🔒 Не открыто исследованием: %s",
   "gui.chiseled_enchanting_table.discovery_locked.tip_desc": "Сначала добудьте «%s» в выживании, чтобы открыть трансмутацию",
   "gui.chiseled_enchanting_table.pricing.book_transfer": "✦ Расчёт: Прямой перенос с книги (0 XP · Книга → Истощённый фолиант)",
+  "gui.chiseled_enchanting_table.pricing.classic_1_0_3": "Нанесение с книги (1.0.3 Classic: Полная стоимость XP)",
+  "gui.chiseled_enchanting_table.pricing.book_transfer_classic": "Перенос книги: даёт бесплатный уровень; книга возвращается как обычная книга.",
   "gui.chiseled_enchanting_table.pricing.master_tome": "✦ Расчёт: Мастер-фолиант на полке (Режим 1–3L)",
   "gui.chiseled_enchanting_table.pricing.incremental": "✦ Расчёт: Пошаговое улучшение (прошлые затраты зачтены)",
   "gui.chiseled_enchanting_table.pricing.full_ritual": "✦ Расчёт: Полный ритуал начертания (точные очки опыта)",

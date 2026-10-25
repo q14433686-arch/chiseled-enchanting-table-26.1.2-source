@@ -312,6 +312,8 @@
   "gui.chiseled_enchanting_table.discovery_locked.tip_title": "🔒 Exploration Locked: %s",
   "gui.chiseled_enchanting_table.discovery_locked.tip_desc": "Obtain %s first in survival to unlock arcane transmutation here",
   "gui.chiseled_enchanting_table.pricing.book_transfer": "✦ Source: Direct Book Transfer (0 XP · Book → Depleted Tome)",
+  "gui.chiseled_enchanting_table.pricing.classic_1_0_3": "Stored Book Inscription (1.0.3 Classic: Full XP Cost)",
+  "gui.chiseled_enchanting_table.pricing.book_transfer_classic": "Book inscription: book provides XP-free level; source book returns as a plain Book.",
   "gui.chiseled_enchanting_table.pricing.master_tome": "✦ Source: Stored Template Book (Vanilla 1–3L Mode)",
   "gui.chiseled_enchanting_table.pricing.incremental": "✦ Source: Step Upgrade (Prior Materials & XP Credited)",
   "gui.chiseled_enchanting_table.pricing.full_ritual": "✦ Source: Full Arcane Inscription (Exact Point Mode)",

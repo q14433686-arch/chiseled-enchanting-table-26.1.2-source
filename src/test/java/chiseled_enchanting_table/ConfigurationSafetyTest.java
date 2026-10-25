@@ -91,4 +91,66 @@ class ConfigurationSafetyTest {
             );
         }
     }
+
+    @Test
+    void classic103ModeFlagAloneForcesFullPresetLinkage() {
+        // The standalone classic_1_0_3_mode toggle must be identical to the preset:
+        // forcing happens in the ModRuntimeConfig compact constructor, so flipping
+        // ONLY the flag on an otherwise-Standard draft still yields 1.0.3 semantics.
+        var draft = ModRuntimeConfig.DEFAULT.toDraft();
+        assertFalse(draft.classic103Mode);
+        draft.classic103Mode = true;
+        var classic = draft.build();
+        assertTrue(classic.classic103Mode());
+        assertEquals(64, classic.enchantedBookStackSize());
+        assertEquals(0.0, classic.epiphanyBaseChance(), 1e-9);
+        assertEquals(0.0, classic.epiphanyMaxChance(), 1e-9);
+        assertFalse(classic.disenchantEnabled());
+        assertFalse(classic.allowCursePurge());
+        assertEquals(
+            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP,
+            classic.tomeConsumptionMode());
+        assertFalse(classic.tomeRegenEnabled());
+        assertEquals(0, classic.maxWoodenDiscountPercent());
+        assertEquals(0, classic.maxTotalXpDiscountPercent());
+        assertEquals(0.03, classic.bookshelfEnchantedProb(), 1e-9);
+        assertFalse(classic.directGatesEnabled());
+        assertTrue(classic.anvilBlockSameBookMerge());
+        assertEquals(2, classic.horizontalScanRadius());
+        assertEquals(2, classic.verticalScanRadius());
+        assertEquals(1, classic.transformationMaxBatchSize());
+    }
+
+    @Test
+    void classicFrameZeroesResonanceSubCapsAndEpiphanyPerShelfChances() {
+        // Co-resonance discount and Epiphany must be DISABLED (all components 0),
+        // not merely hidden: their JSON sub-caps/per-chances previously survived
+        // applyRuntimeConfig and leaked into floating texts.
+        var draft = ModRuntimeConfig.DEFAULT.toDraft();
+        draft.classic103Mode = true;
+        var classic = draft.build();
+        var original = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
+        try {
+            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+                classic, ModRuntimeConfig.PackPolicy.NONE, () -> {
+                }
+            );
+            var frame = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame();
+            var lr = frame.libraryResonanceConfig();
+            assertEquals(0, lr.maxWoodenDiscountPercent());
+            assertEquals(0, lr.maxTotalXpDiscountPercent());
+            assertEquals(0, lr.maxGlobalMasteryDiscountPercent());
+            assertEquals(0, lr.maxBaseXpDiscountPercent());
+            assertEquals(0, lr.maxSpecificEnchantBonusPercent());
+            assertEquals(0.0, chiseled_enchanting_table.data.ChiseledEnchantingTableData.treasureEpiphanyBaseChance(), 1e-9);
+            assertEquals(0.0, chiseled_enchanting_table.data.ChiseledEnchantingTableData.treasureEpiphanyPerShelfChance(), 1e-9);
+            assertEquals(0.0, chiseled_enchanting_table.data.ChiseledEnchantingTableData.treasureEpiphanyPerTomeChance(), 1e-9);
+            assertEquals(0.0, chiseled_enchanting_table.data.ChiseledEnchantingTableData.treasureEpiphanyMaxChance(), 1e-9);
+        } finally {
+            chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
+                original.configuration(), original.policy(), () -> {
+                }
+            );
+        }
+    }
 }

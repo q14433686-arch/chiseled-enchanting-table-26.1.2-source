@@ -312,6 +312,8 @@
   "gui.chiseled_enchanting_table.discovery_locked.tip_title": "🔒 探索前置未解锁：%s",
   "gui.chiseled_enchanting_table.discovery_locked.tip_desc": "先在冒险中获得过「%s」，即可在此永久解锁炼金量产",
   "gui.chiseled_enchanting_table.pricing.book_transfer": "✦ 计价来源：附魔书直接转移（0 经验 · 副书化为褪魔残卷）",
+  "gui.chiseled_enchanting_table.pricing.classic_1_0_3": "存书铭刻计价（1.0.3 经典：全额经验费用）",
+  "gui.chiseled_enchanting_table.pricing.book_transfer_classic": "附魔书转移：附魔书提供免费等级；源书返还为普通书。",
   "gui.chiseled_enchanting_table.pricing.master_tome": "✦ 计价来源：雕纹模板书共鸣（原版 1–3 级量产模式）",
   "gui.chiseled_enchanting_table.pricing.incremental": "✦ 计价来源：逐级补差升级（已自动抵扣低级材料与经验）",
   "gui.chiseled_enchanting_table.pricing.full_ritual": "✦ 计价来源：无模板书完整铭刻（按经验点精确结算）",

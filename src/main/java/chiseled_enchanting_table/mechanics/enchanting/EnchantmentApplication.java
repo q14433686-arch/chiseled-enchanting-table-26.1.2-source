@@ -71,7 +71,10 @@ public final class EnchantmentApplication {
                     break;
                 }
             }
-            if (!exist && existingSameLevel >= 1) {
+            if (!exist && existingSameLevel >= 1 && !handler.isClassic103Mode()) {
+                // Post-1.0.3 direct-tier upgrade path. In 1.0.3 only the exact
+                // unlocked (shelf-boosted) level could be applied; the widget hid
+                // these rows in classic but the server still accepted the payload.
                 exist = handler.canDirectUpgradeExistingEnchantment(enchantment, payload.enchantment_id(), existingSameLevel, enchantment_level);
             }
         }
@@ -237,7 +240,9 @@ public final class EnchantmentApplication {
         }
 
         // Headless / synthetic non-BE fallback path
-        double slipChance = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
+        // 1.0.3 Classic: transcription slip («抄错») is a post-1.0.3 ritual mechanic;
+        // classic inscriptions always land at the exact paid level.
+        double slipChance = classic103 ? 0.0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
             handler.ritualConfig(),
             ritualScan.maxOverloadedInfinityTomeEnchants(),
             ritualScan.totalDetectedBookshelves()

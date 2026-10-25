@@ -1440,7 +1440,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     int storedLvl = this.menu.storedMasterLevel(hoveredEnchId);
                     int specBonus = this.menu.specificEnchantDiscountBonus(hoveredEnchId);
                     int totalDisc = this.menu.effectiveXpDiscountPercent(hoveredEnchId, hoveredOptType);
-                    if (storedLvl > 0 && specBonus > 0) {
+                    // 1.0.3 Classic: resonance discount is disabled at the source
+                    // (all sub-caps zeroed), so this floating text must not appear —
+                    // it previously read "extra -15% (total -0%)" in classic.
+                    if (!this.menu.isClassic103Mode() && storedLvl > 0 && specBonus > 0) {
                         int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(
                             this.minecraft.level,
                             hoveredEnchId
@@ -1523,7 +1526,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                             req.rawRequiredLevel()
                         ).withStyle(ChatFormatting.AQUA));
                     }
-                    if (hoveredXpEntry.option_type == OptionType.ENCHANTMENT) {
+                    // 1.0.3 Classic: storing the book unlocks the level but does NOT
+                    // switch to 1-3 level mode, so the hint would contradict the
+                    // "Full XP Level Cost" title directly above it.
+                    if (hoveredXpEntry.option_type == OptionType.ENCHANTMENT && !this.menu.isClassic103Mode()) {
                         xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.full.master_hint")
                             .withStyle(ChatFormatting.DARK_GRAY));
                     }
@@ -1665,8 +1671,26 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 boolean fromBook = this.menu.get_cost_item().is(net.minecraft.world.item.Items.ENCHANTED_BOOK)
                     && hoveredRow.option_type == OptionType.ENCHANTMENT;
                 var lrCfg = this.menu.libraryResonanceConfig();
+                boolean classic103 = this.menu.isClassic103Mode();
                 if (fromBook) {
-                    rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.book_transfer")
+                    // 1.0.3 Classic: the drained source book becomes a plain Book,
+                    // not a Depleted Tome — the standard line names the wrong item.
+                    rowTip.add(Component.translatable(classic103
+                        ? "gui.chiseled_enchanting_table.pricing.book_transfer_classic"
+                        : "gui.chiseled_enchanting_table.pricing.book_transfer")
+                        .withStyle(ChatFormatting.GREEN));
+                } else if (classic103 && !hoveredRow.is_transformation
+                    && hoveredRow.option_type != OptionType.TREASURE_EPIPHANY
+                    && hoveredRow.option_type != OptionType.DISENCHANT_ALL
+                    && hoveredRow.option_type != OptionType.DOWNGRADE_ENCHANTMENT
+                    && hoveredRow.option_type != OptionType.STRIP_SINGLE_ENCHANTMENT
+                    && hoveredRow.option_type != OptionType.PURGE_CURSE) {
+                    // 1.0.3 Classic pricing source: full target-level XP points +
+                    // full materials, whether or not a stored book unlocked the
+                    // level. Previously this branch said "Stored Template Book
+                    // (Vanilla 1-3L Mode)" / "Step Upgrade (difference only)",
+                    // contradicting the XP badge's "Full XP Level Cost" rule.
+                    rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.classic_1_0_3")
                         .withStyle(ChatFormatting.GREEN));
                 } else if (hoveredRow.is_transformation) {
                     rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.transformation")

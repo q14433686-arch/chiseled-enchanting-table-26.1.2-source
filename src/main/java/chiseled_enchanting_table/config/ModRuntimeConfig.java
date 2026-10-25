@@ -227,6 +227,7 @@ public record ModRuntimeConfig(
 
                     fresh.vanillaChestBooksMode = VanillaChestBooksMode.KEEP_BOTH;
                     fresh.bookshelfPoolEnabled = true;
+                    fresh.bookshelfEnchantedProb = 0.03;
                     markModifiedRuntimeKeys(fresh);
                 }
                 case CASUAL -> {
@@ -452,6 +453,50 @@ public record ModRuntimeConfig(
     }
 
     public ModRuntimeConfig {
+        // 1.0.3 Classic linkage (audit vs tag 26.1.2_1.0.3, which had NO config system at all):
+        // classic_1_0_3_mode is a master switch, not a cosmetic flag. Every post-1.0.3
+        // subsystem it claims to restore must be forced here, at the single construction
+        // choke point, so the preset button, the standalone toggle, a hand-edited JSON
+        // file and a datapack-resolved RuntimeRules merge all yield the SAME classic
+        // semantics. Without this, toggling only classic_1_0_3_mode left Epiphany chances,
+        // resonance discounts, cleanse, tome wear/regen and batch transformations running
+        // at Standard values behind a hidden panel (mechanism still live, text hidden).
+        // Fields not listed are either inert under the forced values (e.g. strip costs
+        // while disenchantEnabled=false) or deliberately kept as post-1.0.3 FIXES
+        // (see docs/reports/CLASSIC_1_0_3_AUDIT.md: excluded-at-build legacy mixins in
+        // 1.0.3, worldgen deadlock fix, cost-sync — none of those are gameplay rules).
+        if (classic103Mode) {
+            enchantedBookStackSize = 64;
+            vanillaTableMode = VanillaTableMode.BOOKS;
+            anvilFlatRepairCost = false;
+            anvilBlockSameBookMerge = true;
+            restrictVillagerInfinityBooks = false;
+            grindstoneDepletedTome = false;
+            directGatesEnabled = false;
+            blankMaxTierMode = BlankMaxTierMode.FULL_CURVE;
+            horizontalScanRadius = 2;
+            verticalScanRadius = 2;
+            requireBreathingRoom = false;
+            requireLineOfSight = false;
+            tomeConsumptionMode = MasterTomeWear.ConsumptionMode.KEEP;
+            tomeRegenEnabled = false;
+            lockedShelfBreakable = true;
+            lockedBookExtractionBlocked = false;
+            maxWoodenDiscountPercent = 0;
+            maxTotalXpDiscountPercent = 0;
+            bookCombineEnabled = true;
+            bookCombineXpMultiplier = 1.00;
+            bookResearchEnabled = true;
+            bookResearchXpMultiplier = 0.50;
+            epiphanyBaseChance = 0.0;
+            epiphanyMaxChance = 0.0;
+            disenchantEnabled = false;
+            allowCursePurge = false;
+            requirePriorDiscovery = false;
+            transformationMaxBatchSize = 1;
+            // 1.0.3 bookshelf_book_pool.json: enchanted_book_probability 0.03 (now 0.12).
+            bookshelfEnchantedProb = 0.03;
+        }
         enchantedBookStackSize = clampInt(enchantedBookStackSize, 1, 64);
         vanillaTableMode = vanillaTableMode != null ? vanillaTableMode : VanillaTableMode.BOOKS;
         blankMaxTierMode = blankMaxTierMode != null ? blankMaxTierMode : BlankMaxTierMode.HALF_CEIL;

@@ -435,6 +435,14 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         java.util.HashSet<EnchantmentWithLevel> unlocked = new java.util.HashSet<>();
         for (Map.Entry<Identifier, Integer> entry : highestLevels.entrySet()) {
             int top = Math.max(1, entry.getValue());
+            if (classic103) {
+                // 1.0.3 exact: get_unlocked_enchantements returned ONE entry per
+                // enchantment — the shelf-boosted highest level only. The 1..top
+                // expansion below is the post-1.0.3 direct-tier system; keeping it
+                // in classic silently granted every lower tier for free.
+                unlocked.add(new EnchantmentWithLevel(entry.getKey(), top));
+                continue;
+            }
             for (int lvl = 1; lvl <= top; lvl++) {
                 unlocked.add(new EnchantmentWithLevel(entry.getKey(), lvl));
             }

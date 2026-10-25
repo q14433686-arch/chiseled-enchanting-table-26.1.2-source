@@ -348,6 +348,14 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
         List<QueuedInscription> finishing = List.copyOf(this.ritualQueue);
 
+        // 1.0.3 Classic: inscriptions are instant and exact (tag 26.1.2_1.0.3
+        // EnchantmentApplication had no queue, no slip, no cross-line pollution).
+        // Classic steps are enqueued with a 1-tick completion only as an internal
+        // transport, so the completion path must not roll post-1.0.3 ritual outcomes
+        // for them — previously a wear-immune tome could still «抄错» in classic.
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig
+            .forSide(level != null && level.isClientSide()).classic103Mode();
+
         var ritualCfg = ChiseledEnchantingTableData.ritualConfig();
         var scan = InscriptionRitualMechanics.scanLibraryRitualContext(
             level,
@@ -413,7 +421,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
             // Iron Rule #2: ONLY steps actually copied from an overloaded wear-immune Master Tome roll slip/cross-line,
             // evaluated against max(step's queue-time load, live library-wide Sigma L across active wear-immune tomes)!
-            double stepSlipProb = (step.masterTomeUsed() && step.usedInfinityTome())
+            double stepSlipProb = (!classic103 && step.masterTomeUsed() && step.usedInfinityTome())
                 ? InscriptionRitualMechanics.computeLoadSlipProbability(
                     ritualCfg,
                     Math.max(step.infinityTomeLoad(), scan.totalWearImmuneLoad()),
@@ -563,8 +571,6 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 m.set(key, working.getLevel(key));
             }
         });
-        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig
-            .forSide(level != null && level.isClientSide()).classic103Mode();
         if (!classic103) {
             EnchantmentProvenance.pruneToCurrentEnchantments(
                 currentTarget,

@@ -312,6 +312,8 @@
   "gui.chiseled_enchanting_table.discovery_locked.tip_title": "🔒 探索未解放：%s",
   "gui.chiseled_enchanting_table.discovery_locked.tip_desc": "サバイバルで一度「%s」を入手すると、ここでの錬成が解放されます",
   "gui.chiseled_enchanting_table.pricing.book_transfer": "✦ 価格理由：本から直接転写（0 XP・本は古文書へ変化）",
+  "gui.chiseled_enchanting_table.pricing.classic_1_0_3": "本による銘刻（1.0.3 Classic：XP全額請求）",
+  "gui.chiseled_enchanting_table.pricing.book_transfer_classic": "本の転写：本で無料レベルのみ提供；素材となった本は通常の本として返却。",
   "gui.chiseled_enchanting_table.pricing.master_tome": "✦ 価格理由：模様入り本棚の原典（1〜3L 量産モード）",
   "gui.chiseled_enchanting_table.pricing.incremental": "✦ 価格理由：段階アップグレード（支払い済みコスト控除）",
   "gui.chiseled_enchanting_table.pricing.full_ritual": "✦ 価格理由：直接秘術刻印（正確ポイント消費）",

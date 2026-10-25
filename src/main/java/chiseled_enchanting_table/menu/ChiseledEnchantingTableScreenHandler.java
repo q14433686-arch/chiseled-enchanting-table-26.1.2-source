@@ -650,6 +650,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     /** Server-authoritative handler for every Tome-page button. */
     public void handleTomePageAction(ChiseledEnchantingMenuPayloads.TomePageActionPayload payload) {
         if (this.world.isClientSide() || !(this.player instanceof net.minecraft.server.level.ServerPlayer sp)) return;
+        // 1.0.3 Classic: the Tome page (locks, regen, depleted-tome sacrifice/early
+        // unlock) did not exist. The UI hides the tab, but the server must reject the
+        // payload too — SACRIFICE_DEPLETED was previously handled BEFORE the unlock
+        // check, so it stayed live in classic behind a hidden button.
+        if (isClassic103Mode()) return;
         refreshLiveShelfState();
         net.minecraft.core.BlockPos tablePos = tableBlockPos();
         if (tablePos == null) return;
@@ -2459,6 +2464,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public boolean canAffordFreezeEpiphany() {
+        if (isClassic103Mode()) return false;
         if (this.regularBookshelves < epiphanyMinBookshelves()) return false;
         int maxSec = Math.max(10, epiphanyMaxFreezeTicks() / 20);
         if (isEpiphanyFrozen() && countdownSeconds() >= maxSec - 2) return false;

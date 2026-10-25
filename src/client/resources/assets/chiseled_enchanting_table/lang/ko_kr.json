@@ -312,6 +312,8 @@
   "gui.chiseled_enchanting_table.discovery_locked.tip_title": "🔒 탐험 미해금: %s",
   "gui.chiseled_enchanting_table.discovery_locked.tip_desc": "야생에서 '%s' 아이템을 먼저 획득하면 연성 제작이 해금됩니다",
   "gui.chiseled_enchanting_table.pricing.book_transfer": "✦ 비용 근거: 마법 책 직접 전수 (0 XP · 책 → 소진된 고서)",
+  "gui.chiseled_enchanting_table.pricing.classic_1_0_3": "보관된 책铭刻(1.0.3 Classic： 전체 XP 비용)",
+  "gui.chiseled_enchanting_table.pricing.book_transfer_classic": "책 전이: 무료 레벨만 제공; 소스 책은 일반 책으로 반환.",
   "gui.chiseled_enchanting_table.pricing.master_tome": "✦ 비용 근거: 보관된 마스터 고서 (바닐라 1–3L 모드)",
   "gui.chiseled_enchanting_table.pricing.incremental": "✦ 비용 근거: 단계 업그레이드 (기존 재료·XP 차감)",
   "gui.chiseled_enchanting_table.pricing.full_ritual": "✦ 비용 근거: 직접 비전 각인 (정밀 경험치 포인트)",

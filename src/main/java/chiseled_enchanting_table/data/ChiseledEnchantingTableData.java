@@ -799,13 +799,25 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             woodDisc,
             cfg.maxTotalXpDiscountPercent()
         );
+        // 1.0.3 Classic: resonance discount must be DISABLED, not merely capped at the
+        // total. Previously only maxTotal was 0, while the JSON sub-caps (global 20 /
+        // base 35 / specific 15) survived in this Config, so ShelfPower.baseXpDiscount,
+        // globalMasteryDiscountPercent and specificEnchantmentDiscountBonus still
+        // produced non-zero values that leaked into tooltips ("额外 -15% (共 -0%)")
+        // even though the charged XP correctly used 0. Zero every sub-cap at the
+        // source so mechanism, payload sync and every floating text agree: -0%.
+        boolean classic103 = cfg.classic103Mode();
+        if (classic103) {
+            woodDisc = 0;
+            totalDisc = 0;
+        }
         chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig = new chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config(
             lr.minDiscountBookshelves(),
             Math.max(lr.minDiscountBookshelves() + 1, lr.maxDiscountBookshelves()),
             woodDisc,
-            lr.maxGlobalMasteryDiscountPercent(),
-            lr.maxBaseXpDiscountPercent(),
-            lr.maxSpecificEnchantBonusPercent(),
+            classic103 ? 0 : lr.maxGlobalMasteryDiscountPercent(),
+            classic103 ? 0 : lr.maxBaseXpDiscountPercent(),
+            classic103 ? 0 : lr.maxSpecificEnchantBonusPercent(),
             lr.specificEnchantExponent(),
             totalDisc,
             lr.masteryUnitExponent(),
@@ -874,8 +886,11 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         TreasureEpiphanyRules treasureEpiphanyRules = new TreasureEpiphanyRules(
             cfg.epiphanyMinBookshelves(),
             epBase,
-            ep.chancePerExtraBookshelf(),
-            ep.chancePerMasterTome(),
+            // 1.0.3 had no Epiphany at all: per-shelf/per-tome chances come from the
+            // datapack JSON, not from cfg, so zeroing only cfg base/max was not enough
+            // to sever the "shelves/mastery -> treasure refresh" relation.
+            classic103 ? 0.0 : ep.chancePerExtraBookshelf(),
+            classic103 ? 0.0 : ep.chancePerMasterTome(),
             epMax,
             cfg.epiphanyMaxSlotsCap(),
             ep.scorePerExtraSlot(),
