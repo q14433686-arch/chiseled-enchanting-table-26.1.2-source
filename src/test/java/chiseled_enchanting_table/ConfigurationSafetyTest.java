@@ -151,11 +151,13 @@ class ConfigurationSafetyTest {
             // in classicBookUpgradeJsonCarries103ResearchMaterials).
             assertEquals(15, chiseled_enchanting_table.data.ChiseledEnchantingTableData.xpCost(sharpness3, 5));
             assertEquals(8, chiseled_enchanting_table.data.ChiseledEnchantingTableData.bookResearchXpCost(sharpness3, 5));
-            var apple = chiseled_enchanting_table.data.ChiseledEnchantingTableData.itemTransformation(
+            var transformations = chiseled_enchanting_table.data.ChiseledEnchantingTableData.runtimeFrame().itemTransformations();
+            assertEquals(2, transformations.size(), "Classic keeps exactly the 2 transformations of 1.0.3");
+            var apple = transformations.get(
                 chiseled_enchanting_table.ChiseledEnchantingTable.identifier("enchanted_golden_apple"));
-            assertTrue(apple.isPresent());
-            assertEquals(2, apple.get().additionalCosts().getFirst().minCount());
-            assertEquals(5, apple.get().additionalCosts().getFirst().maxCount());
+            assertNotNull(apple);
+            assertEquals(2, apple.additionalCosts().getFirst().minCount());
+            assertEquals(5, apple.additionalCosts().getFirst().maxCount());
         } finally {
             chiseled_enchanting_table.data.ChiseledEnchantingTableData.applyRuntimeConfig(
                 original.configuration(), original.policy(), () -> {
