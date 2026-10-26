@@ -1,5 +1,7 @@
 package chiseled_enchanting_table.gui;
 
+import chiseled_enchanting_table.gui.row.RowRenderSupport;
+
 import chiseled_enchanting_table.catalog.TomeCatalog;
 import java.util.*;
 import net.minecraft.client.gui.Font;

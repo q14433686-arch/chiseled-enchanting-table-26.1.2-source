@@ -10,6 +10,7 @@ public final class UiPresentationProbe {
         if (!pass) throw new AssertionError("UI presentation: " + message);
     }
     public static void verify(Minecraft client, ChiseledEnchantingTableScreenHandler menu) {
+        TomeDirectoryProbe.verify(client);
         check(TableSkin.TAB_Y_OFFSET + TableSkin.TAB_H <= -2, "tabs overlap the header");
         check(TableSkin.SHELF_HUD_X >= 120 && TableSkin.SHELF_HUD_X + TableSkin.SHELF_HUD_W <= 326,
             "bookshelf text crosses title/gold corner safe areas");

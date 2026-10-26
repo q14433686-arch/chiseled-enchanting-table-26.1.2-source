@@ -1328,6 +1328,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
     private final TableListRead tableRead = new TableListRead() {
         public boolean hasEntries() { return !children().isEmpty(); }
+        public List<ChiseledEnchantingMenuPayloads.TomeBookEntry> selectedTomes() { return EnchantementListWidget.this.selectedTomes(); }
         public ChiseledEnchantingMenuPayloads.TomeBookEntry selectedTomeEntry() { return EnchantementListWidget.this.selectedTomeEntry(); }
         public ChiseledEnchantingMenuPayloads.TomeBookEntry hoveredTomeEntry(double x, double y) { return EnchantementListWidget.this.hoveredTomeEntry(x, y); }
         public Identifier hoveredEnchantmentId(double x, double y) { return EnchantementListWidget.this.hoveredEnchantmentId(x, y); }
