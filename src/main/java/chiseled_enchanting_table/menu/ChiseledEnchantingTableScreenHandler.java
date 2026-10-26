@@ -1436,30 +1436,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return Math.max(1, Math.max(sg.baseBatchSize(), sg.tier3BatchSize()));
     }
 
-    public int countAvailableInInventory(ItemStack required) {
-        if (required == null || required.isEmpty() || this.player == null) {
-            return 0;
-        }
-        int found = 0;
-        for (int slot = 0; slot < this.player.getInventory().getContainerSize(); slot++) {
-            ItemStack candidate = this.player.getInventory().getItem(slot);
-            if (!candidate.isEmpty() && ItemStack.isSameItemSameComponents(candidate, required)) {
-                found += candidate.getCount();
-            }
-        }
-        return found;
-    }
+    public int countAvailableInInventory(ItemStack required) { return MenuPaymentService.countAvailableInInventory(this.paymentAccess, required); }
 
-    public int countAvailableIncludingCostSlot(ItemStack required) {
-        if (required == null || required.isEmpty()) {
-            return 0;
-        }
-        ItemStack costSlot = getCostItem();
-        int fromSlot = (!costSlot.isEmpty() && ItemStack.isSameItemSameComponents(costSlot, required))
-            ? costSlot.getCount()
-            : 0;
-        return fromSlot + countAvailableInInventory(required);
-    }
+    public int countAvailableIncludingCostSlot(ItemStack required) { return MenuPaymentService.countAvailableIncludingCostSlot(this.paymentAccess, required); }
 
     public int resolveTransformationBatchCount(Identifier transformationId) {
         return MenuPricing.resolveTransformationBatchCount(this, transformationId);
@@ -1930,4 +1909,37 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         public boolean materialFree(EnchantmentWithLevel enchantment, OptionType type) { return isMaterialFreeOperation(enchantment, type); }
         public XpCostConversion.XpRequirement xpRequirement(EnchantmentWithLevel enchantment, OptionType type) { return resolveXpRequirement(enchantment, type); }
     };
+
+    private final MenuPricingAccess pricingAccess = new MenuPricingAccess() {
+        public net.minecraft.world.level.Level world() { return ChiseledEnchantingTableScreenHandler.this.world(); }
+        public net.minecraft.world.item.ItemStack getEnchantableItem() { return ChiseledEnchantingTableScreenHandler.this.getEnchantableItem(); }
+        public net.minecraft.world.item.ItemStack getCostItem() { return ChiseledEnchantingTableScreenHandler.this.getCostItem(); }
+        public int regularBookshelves() { return ChiseledEnchantingTableScreenHandler.this.regularBookshelves; }
+        public int xpDiscountPercent() { return ChiseledEnchantingTableScreenHandler.this.xpDiscountPercent; }
+        public String playerUuid() { return ChiseledEnchantingTableScreenHandler.this.player.getStringUUID(); }
+        public boolean creative() { return ChiseledEnchantingTableScreenHandler.this.player != null && ChiseledEnchantingTableScreenHandler.this.player.getAbilities().instabuild; }
+        public int playerLevel() { return ChiseledEnchantingTableScreenHandler.this.player != null ? ChiseledEnchantingTableScreenHandler.this.player.experienceLevel : 0; }
+        public int resolveEnchantmentMaxLevel(EnchantmentWithLevel e) { return ChiseledEnchantingTableScreenHandler.this.resolveEnchantmentMaxLevel(e); }
+        public boolean usesSaltedSingleMaterial() { return ChiseledEnchantingTableScreenHandler.this.usesSaltedSingleMaterial(); }
+        public boolean usesClassicTransformations() { return ChiseledEnchantingTableScreenHandler.this.usesClassicTransformations(); }
+        public boolean usesIncrementalCredit() { return ChiseledEnchantingTableScreenHandler.this.usesIncrementalCredit(); }
+        public boolean usesClassicFullPointXp() { return ChiseledEnchantingTableScreenHandler.this.usesClassicFullPointXp(); }
+        public BookshelfProgression.Config shelfGatesConfig() { return ChiseledEnchantingTableScreenHandler.this.shelfGatesConfig(); }
+        public LibraryResonance.Config libraryResonanceConfig() { return ChiseledEnchantingTableScreenHandler.this.libraryResonanceConfig(); }
+        public BookshelfProgression.DepletedTomeTier depletedTomeTier() { return ChiseledEnchantingTableScreenHandler.this.depletedTomeTier(); }
+        public int depletedTomeMaxBatchSize() { return ChiseledEnchantingTableScreenHandler.this.depletedTomeMaxBatchSize(); }
+        public int transformationMaxBatchSize() { return ChiseledEnchantingTableScreenHandler.this.transformationMaxBatchSize(); }
+        public int currentTargetEnchantLevel(Identifier id) { return ChiseledEnchantingTableScreenHandler.this.currentTargetEnchantLevel(id); }
+        public int storedMasterLevel(Identifier id) { return ChiseledEnchantingTableScreenHandler.this.storedMasterLevel(id); }
+        public int countAvailableIncludingCostSlot(ItemStack stack) { return ChiseledEnchantingTableScreenHandler.this.countAvailableIncludingCostSlot(stack); }
+        public int countAvailableInInventory(ItemStack stack) { return ChiseledEnchantingTableScreenHandler.this.countAvailableInInventory(stack); }
+        public int syncedTransformationLevel(Identifier id) { return ChiseledEnchantingTableScreenHandler.this.syncedTransformationLevel(id); }
+        public int syncedTransformationMinPlayerLevel(Identifier id) { return ChiseledEnchantingTableScreenHandler.this.syncedTransformationMinPlayerLevel(id); }
+        public int syncedTransformationDeductedLevels(Identifier id) { return ChiseledEnchantingTableScreenHandler.this.syncedTransformationDeductedLevels(id); }
+        public int effectiveXpDiscountPercent(Identifier id, OptionType type) { return ChiseledEnchantingTableScreenHandler.this.effectiveXpDiscountPercent(id, type); }
+        public double disenchantRefundScale() { return ChiseledEnchantingTableScreenHandler.this.disenchantRefundScale(); }
+        public double disenchantExternalRefundScale() { return ChiseledEnchantingTableScreenHandler.this.disenchantExternalRefundScale(); }
+        public boolean isMasterTomeBacked(EnchantmentWithLevel e, OptionType type) { return ChiseledEnchantingTableScreenHandler.this.isMasterTomeBacked(e, type); }
+    };
+    MenuPricingAccess pricingAccess() { return this.pricingAccess; }
 }

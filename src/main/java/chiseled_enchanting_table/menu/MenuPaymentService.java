@@ -134,4 +134,27 @@ final class MenuPaymentService {
         }
         return new PaymentReceipt(true, 0, List.of());
     }
+    static int countAvailableInInventory(Access access, ItemStack required) {
+        if (required == null || required.isEmpty() || access.player() == null) {
+            return 0;
+        }
+        int found = 0;
+        for (int slot = 0; slot < access.player().getInventory().getContainerSize(); slot++) {
+            ItemStack candidate = access.player().getInventory().getItem(slot);
+            if (!candidate.isEmpty() && ItemStack.isSameItemSameComponents(candidate, required)) {
+                found += candidate.getCount();
+            }
+        }
+        return found;
+    }
+    static int countAvailableIncludingCostSlot(Access access, ItemStack required) {
+        if (required == null || required.isEmpty()) {
+            return 0;
+        }
+        ItemStack costSlot = access.costSlot();
+        int fromSlot = (!costSlot.isEmpty() && ItemStack.isSameItemSameComponents(costSlot, required))
+            ? costSlot.getCount()
+            : 0;
+        return fromSlot + countAvailableInInventory(access, required);
+    }
 }
