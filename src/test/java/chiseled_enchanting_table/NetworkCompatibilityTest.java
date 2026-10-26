@@ -124,6 +124,23 @@ class NetworkCompatibilityTest {
         roundTrip(EnchantCostTablePayload.CODEC, table(List.of()));
     }
 
+    @Test void actualWireBudgetTrimsRowsButRejectsOversizedHeader() {
+        var candidate = table(List.of());
+        int encoded = EnchantCostTablePayload.measureEncodedBytes(candidate, net.minecraft.core.RegistryAccess.EMPTY);
+        var trimmed = EnchantCostTablePayload.enforceWireByteBudget(candidate, net.minecraft.core.RegistryAccess.EMPTY);
+        assertSame(candidate, trimmed);
+        trimmed = EnchantCostTablePayload.trimToWireBudget(candidate, encoded - 1,
+            p -> EnchantCostTablePayload.measureEncodedBytes(p, net.minecraft.core.RegistryAccess.EMPTY));
+        assertTrue(trimmed.costs().isEmpty());
+        assertFalse(trimmed.costTableComplete());
+        assertTrue(EnchantCostTablePayload.measureEncodedBytes(trimmed, net.minecraft.core.RegistryAccess.EMPTY) < encoded);
+        assertThrows(IllegalArgumentException.class, () -> EnchantCostTablePayload.trimToWireBudget(candidate, 1,
+            p -> EnchantCostTablePayload.measureEncodedBytes(p, net.minecraft.core.RegistryAccess.EMPTY)));
+        var noCosts = trimmed;
+        assertThrows(IllegalArgumentException.class, () -> EnchantCostTablePayload.trimToWireBudget(noCosts, 1,
+            p -> EnchantCostTablePayload.measureEncodedBytes(p, net.minecraft.core.RegistryAccess.EMPTY)));
+    }
+
     private static EnchantCostTablePayload table(List<TransformationDisplay> displays) {
         var gates = new BookshelfProgression.Config(false, 47, 1.37,
             BookshelfProgression.BlankMaxTierMode.FULL_CURVE, 4, 3,

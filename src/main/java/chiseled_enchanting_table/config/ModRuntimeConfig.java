@@ -993,14 +993,23 @@ public record ModRuntimeConfig(
 
     /** Exposed path overload allows failure/atomic-replacement tests without Fabric bootstrap. */
     public static void writeAtomically(Path path, ModRuntimeConfig cfg) throws java.io.IOException {
+        writeAtomically(path, GSON.toJson(cfg.toJson()) + "\n", Files::move);
+    }
+
+    @FunctionalInterface
+    interface MoveOperation {
+        void move(Path source, Path target, java.nio.file.CopyOption... options) throws java.io.IOException;
+    }
+
+    /** Package-local fault-injection seam; production always uses the real filesystem move. */
+    static void writeAtomically(Path path, String json, MoveOperation move) throws java.io.IOException {
         Path parent = path.toAbsolutePath().getParent();
         Files.createDirectories(parent);
-        String json = GSON.toJson(cfg.toJson()) + "\n";
         Path temporary = Files.createTempFile(parent, ".cet-config-", ".tmp");
         try {
             Files.writeString(temporary, json, StandardCharsets.UTF_8);
             try {
-                Files.move(temporary, path, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                move.move(temporary, path, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 return;
             } catch (java.io.IOException atomicFailure) {
@@ -1008,25 +1017,17 @@ public record ModRuntimeConfig(
                 java.io.IOException lastFailure = atomicFailure;
                 for (int attempt = 0; attempt < 3; attempt++) {
                     try {
-                        Files.move(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        move.move(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                         return;
                     } catch (java.io.IOException moveFailure) {
                         lastFailure = moveFailure;
                         pauseBeforeRetry(attempt);
                     }
                 }
-                try {
-                    Files.copy(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                    return;
-                } catch (java.io.IOException copyFailure) {
-                    lastFailure = copyFailure;
-                }
-                try {
-                    Files.writeString(path, json, StandardCharsets.UTF_8);
-                } catch (java.io.IOException directFailure) {
-                    directFailure.addSuppressed(lastFailure);
-                    throw directFailure;
-                }
+                // Never "recover" by copying over or truncating the live file: an interrupted
+                // copy/direct write would destroy the last good configuration. Report failure
+                // and retain the caller's draft so the save can be retried unchanged.
+                throw lastFailure;
             }
         } finally {
             Files.deleteIfExists(temporary);

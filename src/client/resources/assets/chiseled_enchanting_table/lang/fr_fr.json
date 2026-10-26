@@ -973,5 +973,6 @@
   "config.chiseled_enchanting_table.trace.prefix_modern": "Moderne :",
   "gui.chiseled_enchanting_table.transformation.batch_tip_survival": "Lot : %s / %s objets (Survie : limité par l'XP et le catalyseur)",
   "gui.chiseled_enchanting_table.transformation.batch_tip_creative": "Lot : %s / %s objets (Créatif : XP et catalyseur ignorés)",
-  "message.chiseled_enchanting_table.reload_closed": "Table d'enchantement ciselée fermée afin d'actualiser les règles du datapack rechargé."
+  "message.chiseled_enchanting_table.reload_closed": "Table d'enchantement ciselée fermée afin d'actualiser les règles du datapack rechargé.",
+  "message.chiseled_enchanting_table.cost_sync_failed": "Impossible de synchroniser les règles d’enchantement. Demandez à l’administrateur de vérifier les coûts et les transformations des packs de données."
 }

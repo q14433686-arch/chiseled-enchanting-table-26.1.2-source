@@ -80,12 +80,17 @@ public final class TomeParticleEffects {
     }
 
     public static void init() {
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server ->
+            ACTIVE.removeIf(burst -> burst.level.getServer() == server));
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (ACTIVE.isEmpty()) return;
             Iterator<Burst> it = ACTIVE.iterator();
             while (it.hasNext()) {
                 Burst b = it.next();
-                if (b.level.getServer() != server) continue;
+                if (b.level.getServer() != server || server.getLevel(b.level.dimension()) != b.level) {
+                    it.remove();
+                    continue;
+                }
                 RandomSource rnd = b.level.getRandom();
                 b.level.sendParticles(b.type,
                     b.x + (rnd.nextDouble() - 0.5) * 0.35,

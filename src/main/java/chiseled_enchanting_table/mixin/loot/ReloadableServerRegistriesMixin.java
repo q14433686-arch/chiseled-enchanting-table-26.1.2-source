@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(ReloadableServerRegistries.class)
 public abstract class ReloadableServerRegistriesMixin {
-    @Inject(method = "reload", at = @At("HEAD"))
+    @Inject(method = "reload", at = @At("HEAD"), cancellable = true, require = 1)
     private static void cet$preloadLootInjectionRules(
         LayeredRegistryAccess<RegistryLayer> context,
         List<Registry.PendingTags<?>> updatedContextTags,
@@ -34,9 +34,11 @@ public abstract class ReloadableServerRegistriesMixin {
             ChiseledEnchantingTableData.preloadForLootRegistries(manager);
         } catch (RuntimeException error) {
             chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.error(
-                "Failed to preload loot_injections.json / pack_policy.json before loot registry reload; falling back to bundled defaults",
+                "Rejected invalid loot_injections.json / pack_policy.json before loot registry reload; keeping previous rules",
                 error
             );
+            ChiseledEnchantingTableData.clearLootRegistryBuildRules();
+            cir.setReturnValue(CompletableFuture.failedFuture(error));
         }
     }
 }

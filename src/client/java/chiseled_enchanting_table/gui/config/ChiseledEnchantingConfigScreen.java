@@ -204,6 +204,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private boolean draggingScrollbar = false;
 
     private long pendingSaveId = 0L;
+    private long pendingSaveSinceMs = 0L;
     private boolean pendingClose = false;
     private boolean lastSaveFailed = false;
     private long statusToastUntilMs = 0L;
@@ -603,21 +604,44 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             }
             return;
         }
-        this.pendingSaveId = ModRuntimeConfig.nextSaveRequestId();
-        this.pendingClose = closeAfterSave;
         // When hosted as an overlay inside ChiseledEnchantingTableScreen (closeOverride != null),
         // keep the server container open so the table stays open and immediately refreshes its live scan/discounts.
         boolean closeServerContainer = closeAfterSave && this.closeOverride == null;
-        if (ClientPlayNetworking.canSend(ModConfigNetworking.UpdateRuntimeConfigPayload.TYPE)) {
+        if (!ClientPlayNetworking.canSend(ModConfigNetworking.UpdateRuntimeConfigPayload.TYPE)) {
+            // Never create a dangling pending request: with no channel there will never be an
+            // acknowledgement, and pendingSaveId != 0 would block every later save attempt.
+            this.lastSaveFailed = true;
+            this.statusToastUntilMs = System.currentTimeMillis() + 5000L;
+            return;
+        }
+        this.pendingSaveId = ModRuntimeConfig.nextSaveRequestId();
+        this.pendingSaveSinceMs = System.currentTimeMillis();
+        this.pendingClose = closeAfterSave;
+        try {
             ClientPlayNetworking.send(new ModConfigNetworking.UpdateRuntimeConfigPayload(
                 built.toJsonString(),
                 this.pendingSaveId,
                 closeServerContainer
             ));
+        } catch (RuntimeException sendFailure) {
+            this.pendingSaveId = 0L;
+            this.lastSaveFailed = true;
+            this.statusToastUntilMs = System.currentTimeMillis() + 5000L;
         }
     }
 
     private void reconcileSaveAcknowledgement() {
+        if (this.pendingSaveId != 0
+            && System.currentTimeMillis() - this.pendingSaveSinceMs >= 15_000L
+            && ModRuntimeConfig.acknowledgedSaveId() != this.pendingSaveId) {
+            // No timely acknowledgement: release the pending slot so the user can retry. This
+            // does not assert the server never saved — only that this request went unconfirmed.
+            // A late ack for the expired id is then ignored (pendingSaveId no longer matches).
+            this.pendingSaveId = 0L;
+            this.lastSaveFailed = true;
+            this.statusToastUntilMs = System.currentTimeMillis() + 5000L;
+            return;
+        }
         if (this.pendingSaveId == 0 || ModRuntimeConfig.acknowledgedSaveId() != this.pendingSaveId) return;
         this.pendingSaveId = 0;
         this.lastSaveFailed = !ModRuntimeConfig.acknowledgedSaveAccepted();

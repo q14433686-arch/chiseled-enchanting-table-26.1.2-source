@@ -30,6 +30,9 @@ import org.slf4j.LoggerFactory;
 
 public class ChiseledEnchantingTable implements ModInitializer {
     public static final String MOD_ID = "chiseled_enchanting_table";
+    /** Fabric metadata id ({@code fabric.mod.json:id}) differs from the resource namespace;
+     *  it — not {@link #MOD_ID} — identifies this mod's bundled pack in {@code sourcePackId()}. */
+    public static final String FABRIC_MOD_ID = "chiseled-enchanting-table";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     private static volatile int bootEnchantedBookStackSize = 1;
 

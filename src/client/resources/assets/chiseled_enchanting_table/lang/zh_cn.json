@@ -973,5 +973,6 @@
   "config.chiseled_enchanting_table.trace.prefix_modern": "现行：",
   "gui.chiseled_enchanting_table.transformation.batch_tip_survival": "单次批量：%s / %s 个（生存模式：受经验与催化材料上限约束）",
   "gui.chiseled_enchanting_table.transformation.batch_tip_creative": "单次批量：%s / %s 个（创造模式：免除经验与催化材料限制）",
-  "message.chiseled_enchanting_table.reload_closed": "数据包已重载，纂刻附魔台已自动关闭以刷新规则。"
+  "message.chiseled_enchanting_table.reload_closed": "数据包已重载，纂刻附魔台已自动关闭以刷新规则。",
+  "message.chiseled_enchanting_table.cost_sync_failed": "无法同步附魔规则，请联系服务器管理员检查数据包中的成本与转化配置。"
 }

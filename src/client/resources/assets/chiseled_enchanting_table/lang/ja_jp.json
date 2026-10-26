@@ -973,5 +973,6 @@
   "config.chiseled_enchanting_table.trace.prefix_modern": "現行：",
   "gui.chiseled_enchanting_table.transformation.batch_tip_survival": "一括変換：%s / %s 個（サバイバル：XPと触媒数で上限）",
   "gui.chiseled_enchanting_table.transformation.batch_tip_creative": "一括変換：%s / %s 個（クリエイティブ：XPと触媒制限なし）",
-  "message.chiseled_enchanting_table.reload_closed": "データパックが再読み込みされたため、ルール更新のため彫刻されたエンチャントテーブルを閉じました。"
+  "message.chiseled_enchanting_table.reload_closed": "データパックが再読み込みされたため、ルール更新のため彫刻されたエンチャントテーブルを閉じました。",
+  "message.chiseled_enchanting_table.cost_sync_failed": "エンチャントルールを同期できません。サーバー管理者にデータパックのコストと変換設定の確認を依頼してください。"
 }

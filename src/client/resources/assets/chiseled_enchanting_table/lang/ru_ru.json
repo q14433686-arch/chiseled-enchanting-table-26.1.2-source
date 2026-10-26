@@ -973,5 +973,6 @@
   "config.chiseled_enchanting_table.trace.prefix_modern": "Соврем.:",
   "gui.chiseled_enchanting_table.transformation.batch_tip_survival": "Партия: %s / %s шт. (Выживание: ограничено опытом и катализатором)",
   "gui.chiseled_enchanting_table.transformation.batch_tip_creative": "Партия: %s / %s шт. (Творческий: без ограничений опыта и катализатора)",
-  "message.chiseled_enchanting_table.reload_closed": "Резной стол зачарования закрыт для обновления перезагруженных правил датапака."
+  "message.chiseled_enchanting_table.reload_closed": "Резной стол зачарования закрыт для обновления перезагруженных правил датапака.",
+  "message.chiseled_enchanting_table.cost_sync_failed": "Не удалось синхронизировать правила зачарования. Попросите администратора проверить стоимость и преобразования в наборах данных."
 }
