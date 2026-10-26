@@ -12,12 +12,12 @@ import net.minecraft.resources.Identifier;
 
 /**
  * Capability channel, independent of the unchanged release version. Bump
- * {@link #CURRENT_REVISION_NUMBER} whenever any menu/cost payload wire layout changes, and record
+ * {@link #CURRENT_REVISION_NUMBER} whenever any menu/cost payload wire layout or registered block-state schema changes, and record
  * the wire change in {@code docs/PROTOCOL_HISTORY.md}. Registration in both directions advertises
  * compatibility; no probe needs to be sent before the first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final int CURRENT_REVISION_NUMBER = 11;
+    public static final int CURRENT_REVISION_NUMBER = 12;
     public static final String REVISION = "26_3_revision_" + CURRENT_REVISION_NUMBER;
 
     // Query only. Never register a decoder on legacy channels: an old server may send its

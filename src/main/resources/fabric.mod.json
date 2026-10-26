@@ -47,6 +47,6 @@
     "modmenu": "*"
   },
   "custom": {
-    "chiseled_enchanting_table:port_notes": "Unofficial Minecraft 26.3 port, version 1.1.0. Fully synchronized through 26.1.2 source 9f0e13bd (2026-10-26): tome pages/locks, live shelf snapshots, rule presets, Classic data tables and data-driven tags/loot. Uses independent 26_3_revision_11 protocol, 26.3 structure/render/loot/input APIs and recipes-list advancement schema. Audited runtime rule provenance, staged loot reloads, bounded cost payloads, Creative extraction and Iris texture reload lifecycle. See docs/reports/SYNC_9F0E13B_SEVEN_PATH_AUDIT_2026_10_26.md."
+    "chiseled_enchanting_table:port_notes": "Unofficial Minecraft 26.3 port, version 1.1.0. Fully synchronized through 26.1.2 source 9f0e13bd (2026-10-26): tome pages/locks, live shelf snapshots, rule presets, Classic data tables and data-driven tags/loot. Uses independent 26_3_revision_12 protocol (rainbow_cloth block-state compatibility gate), 26.3 structure/render/loot/input APIs and recipes-list advancement schema. Audited runtime rule provenance, staged loot reloads, bounded cost payloads, Creative extraction and Iris texture reload lifecycle. See docs/reports/SYNC_9F0E13B_SEVEN_PATH_AUDIT_2026_10_26.md."
   }
 }

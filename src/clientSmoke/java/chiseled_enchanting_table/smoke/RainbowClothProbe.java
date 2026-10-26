@@ -36,12 +36,26 @@ final class RainbowClothProbe {
             check(state.getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"sneaking callback did not enable");
             check(tag.getCount()==1,"cosmetic key consumed");
             var be=(ChiseledEnchantingTableBlockEntity)level.getBlockEntity(pos);
+            be.color=0x123456; be.pendingFreezeTicks=1200;
             var dropped=Block.getDrops(state,level,pos,be).stream().filter(s->s.is(state.getBlock().asItem())).findFirst().orElseThrow();
             check(dropped.get(DataComponents.CUSTOM_DATA).copyTag().getBooleanOr(RainbowCloth.ITEM_FLAG,false),"actual loot lost rainbow flag");
-            // Dyed underlying colour and frozen metadata must coexist with the flag.
-            be.color=0x123456;
-            check(be.collectComponents().get(DataComponents.DYED_COLOR).rgb()==0x123456,"base dye lost");
-            System.out.println("RAINBOW CLOTH PASS: real sneaking callback + exact key/name guards + reusable tag + actual loot custom-data flag + underlying dye preserved");
+            check(dropped.get(DataComponents.DYED_COLOR).rgb()==0x123456,"base dye lost");
+            check(dropped.get(DataComponents.CUSTOM_DATA).copyTag().getLongOr("pendingFreezeTicks",0)==1200,"freeze metadata lost");
+            var placed=state.getBlock().getStateForPlacement(new net.minecraft.world.item.context.BlockPlaceContext(player,InteractionHand.MAIN_HAND,dropped,hit));
+            check(placed.getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"placement lost rainbow flag");
+            var clone=new ChiseledEnchantingTableBlockEntity(pos,placed);
+            clone.applyComponentsFromItemStack(dropped);
+            check(clone.color==0x123456 && clone.pendingFreezeTicks==1200,"replacement item component restore failed");
+            player.setShiftKeyDown(false);
+            var dye=new ItemStack(Items.RED_DYE,2);
+            state.useItemOn(dye,level,player,InteractionHand.MAIN_HAND,hit);
+            check(!level.getBlockState(pos).getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"dye did not exit rainbow mode");
+            check(dye.getCount()==1,"normal dye consumption changed");
+            player.setShiftKeyDown(true);
+            UseBlockCallback.EVENT.invoker().interact(player,level,InteractionHand.MAIN_HAND,hit);
+            check(level.getBlockState(pos).getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"reactivation failed");
+            be.pendingFreezeTicks=0;
+            System.out.println("RAINBOW CLOTH PASS: real sneaking callback + exact key/name guards + reusable tag + actual loot/placement flag + dye/freeze components + dye exit/consumption + reactivation");
         } finally { player.setItemInHand(InteractionHand.MAIN_HAND,saved);player.setShiftKeyDown(sneaking); }
     }
 }
