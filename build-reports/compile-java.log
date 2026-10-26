@@ -1,4 +1,4 @@
-commit: c6dd5079f9430d09a95323f6cd0af31dcebaabf3
+commit: 8664834fd9ff6813e0a6455a1d79f31f77ad2512
 branch: arena/4313f0c3-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -75,33 +75,33 @@ AuditMechanicsTest > lineageAdvancesOnCopyAndMergesToMoreFadedParent() PASSED
 AuditMechanicsTest > queuedInscriptionCodecRoundTripsAndMatchesLegacyStringEncoding() PASSED
 
 AuditRoundTwoTest > bookshelfOverrideLadderValidatesMonotonicityAndDirectTierNeverRegresses() STANDARD_OUT
-    [05:42:26] [Test worker/WARN]: shelf_gates.json direct_upgrade_gates.overrides 'minecraft:sharpness' must be monotonically non-decreasing within [0, 38] (got [0, 24, 12, 30, 38]); falling back to default curve
+    [05:49:09] [Test worker/WARN]: shelf_gates.json direct_upgrade_gates.overrides 'minecraft:sharpness' must be monotonically non-decreasing within [0, 38] (got [0, 24, 12, 30, 38]); falling back to default curve
 
 AuditRoundTwoTest > bookshelfOverrideLadderValidatesMonotonicityAndDirectTierNeverRegresses() PASSED
 
 AuditRoundTwoTest > nestedLibraryResonanceCodecRoundTripsAndClampsWoodenDiscountAgainstTotalCeiling() STANDARD_OUT
-    [05:42:26] [Test worker/WARN]: library_resonance.json chiseled_mastery sub-cap(s) (20/35/15) exceed max_total_xp_discount_percent (30); clamping to total ceiling
-    [05:42:26] [Test worker/WARN]: library_resonance.json max_wooden_discount_percent (65) exceeds max_total_xp_discount_percent (30); clamping wooden sub-cap to 30
+    [05:49:10] [Test worker/WARN]: library_resonance.json chiseled_mastery sub-cap(s) (20/35/15) exceed max_total_xp_discount_percent (30); clamping to total ceiling
+    [05:49:10] [Test worker/WARN]: library_resonance.json max_wooden_discount_percent (65) exceeds max_total_xp_discount_percent (30); clamping wooden sub-cap to 30
 
 AuditRoundTwoTest > nestedLibraryResonanceCodecRoundTripsAndClampsWoodenDiscountAgainstTotalCeiling() PASSED
 
 AuditRoundTwoTest > deVersionedConfigEnumsPreserveLegacyAliasesAndFailClosedOnTypos() STANDARD_OUT
-    [05:42:26] [Test worker/WARN]: Config field 'cost_table' uses deprecated legacy token 'modern_1_1_0' (alias for 'modern'); legacy aliases will be removed in 2.0
-    [05:42:26] [Test worker/WARN]: Config field 'cost_table' uses deprecated legacy token 'classic_1_0_3' (alias for 'classic'); legacy aliases will be removed in 2.0
-    [05:42:26] [Test worker/WARN]: Config field 'preset' uses deprecated legacy token 'classic_1_0_3' (alias for 'classic'); legacy aliases will be removed in 2.0
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'modern_typo' for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
-    [05:42:26] [Test worker/WARN]: Empty config token for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
-    [05:42:26] [Test worker/WARN]: Empty config token for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'modern_typo' for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'material_selection'; expected one of [all_options_midpoint, player_salted_single] — failing closed to default 'all_options_midpoint'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'xp_mode'; expected one of [dual_stored_discount, classic_full_points] — failing closed to default 'dual_stored_discount'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'shelf_boost_model'; expected one of [modern_curve, classic_floor_third] — failing closed to default 'modern_curve'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'default_unlock_filter'; expected one of [exclude_special, classic_unfiltered] — failing closed to default 'exclude_special'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'transformation_set'; expected one of [full_six, classic_two] — failing closed to default 'full_six'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'drained_book_result'; expected one of [depleted_tome, plain_book] — failing closed to default 'depleted_tome'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'research_rounding'; expected one of [round_nearest, floor_down] — failing closed to default 'round_nearest'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'preset'; expected one of [classic, casual, standard, expert] — failing closed to default 'standard'
-    [05:42:26] [Test worker/WARN]: Unrecognized config token 'bogus' for 'preset'; expected one of [classic, casual, standard, expert] — failing closed to default 'standard'
+    [05:49:10] [Test worker/WARN]: Config field 'cost_table' uses deprecated legacy token 'modern_1_1_0' (alias for 'modern'); legacy aliases will be removed in 2.0
+    [05:49:10] [Test worker/WARN]: Config field 'cost_table' uses deprecated legacy token 'classic_1_0_3' (alias for 'classic'); legacy aliases will be removed in 2.0
+    [05:49:10] [Test worker/WARN]: Config field 'preset' uses deprecated legacy token 'classic_1_0_3' (alias for 'classic'); legacy aliases will be removed in 2.0
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'modern_typo' for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
+    [05:49:10] [Test worker/WARN]: Empty config token for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
+    [05:49:10] [Test worker/WARN]: Empty config token for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'modern_typo' for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'material_selection'; expected one of [all_options_midpoint, player_salted_single] — failing closed to default 'all_options_midpoint'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'xp_mode'; expected one of [dual_stored_discount, classic_full_points] — failing closed to default 'dual_stored_discount'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'shelf_boost_model'; expected one of [modern_curve, classic_floor_third] — failing closed to default 'modern_curve'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'default_unlock_filter'; expected one of [exclude_special, classic_unfiltered] — failing closed to default 'exclude_special'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'transformation_set'; expected one of [full_six, classic_two] — failing closed to default 'full_six'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'drained_book_result'; expected one of [depleted_tome, plain_book] — failing closed to default 'depleted_tome'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'research_rounding'; expected one of [round_nearest, floor_down] — failing closed to default 'round_nearest'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'preset'; expected one of [classic, casual, standard, expert] — failing closed to default 'standard'
+    [05:49:10] [Test worker/WARN]: Unrecognized config token 'bogus' for 'preset'; expected one of [classic, casual, standard, expert] — failing closed to default 'standard'
 
 AuditRoundTwoTest > deVersionedConfigEnumsPreserveLegacyAliasesAndFailClosedOnTypos() PASSED
 
@@ -128,7 +128,7 @@ ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporary
 ConfigurationSafetyTest > lanHostSessionModeResolvesCleanlyWithoutBreakingSingleplayerOrDedicatedModes() PASSED
 
 ConfigurationSafetyTest > booleanControlsScanRadiiDiscountCapsAndExpertPresetTakeEffectCleanly() STANDARD_OUT
-    [05:42:26] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+    [05:49:10] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
     java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
     	at java.base/java.nio.file.Files.provider(Files.java:103)
     	at java.base/java.nio.file.Files.exists(Files.java:2289)
@@ -314,7 +314,7 @@ NetworkCompatibilityTest > protocolCapabilityRejectsOlderSameVersionBuildsButNot
 NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
 
 NetworkCompatibilityTest > oversizedWireHeaderFailsInsteadOfEmittingPacket() STANDARD_OUT
-    [05:42:30] [Test worker/WARN]: Trimmed EnchantCostTablePayload from 1 to 0 rows (50 actual encoded bytes <= 100 budget); costTableComplete=false
+    [05:49:12] [Test worker/WARN]: Trimmed EnchantCostTablePayload from 1 to 0 rows (50 actual encoded bytes <= 100 budget); costTableComplete=false
 
 NetworkCompatibilityTest > oversizedWireHeaderFailsInsteadOfEmittingPacket() PASSED
 
@@ -425,7 +425,7 @@ TooltipBudgetTest > summaryKeepsTitleAndLateFailureBeforeOptionalMechanics() PAS
 TooltipBudgetTest > emptyAndZeroBudgetsAreSafe() PASSED
 
 RuntimeFrameSnapshotTest > callerOwnedCollectionsCannotMutatePublishedFrame() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792993325773.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792993737203.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -435,7 +435,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 31s
+BUILD SUCCESSFUL in 20s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0
