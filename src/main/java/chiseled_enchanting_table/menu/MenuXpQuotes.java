@@ -81,7 +81,7 @@ final class MenuXpQuotes {
             return XpCostConversion.XpRequirement.refund(totalRefund);
         }
         if (type == OptionType.DOWNGRADE_ENCHANTMENT) {
-            var optHolder = ChiseledEnchantingTableScreenHandler.findEnchantment(e.enchantment_id(), h.world());
+            var optHolder = MenuEnchantmentLookup.findEnchantment(e.enchantment_id(), h.world());
             if (optHolder.isEmpty()) {
                 return XpCostConversion.XpRequirement.FREE;
             }
@@ -101,7 +101,7 @@ final class MenuXpQuotes {
             ItemStack target = h.getEnchantableItem();
             var curMap = EnchantmentHelper.getEnchantmentsForCrafting(target);
             if (curMap.size() <= 1) {
-                var optHolder = ChiseledEnchantingTableScreenHandler.findEnchantment(e.enchantment_id(), h.world());
+                var optHolder = MenuEnchantmentLookup.findEnchantment(e.enchantment_id(), h.world());
                 if (optHolder.isEmpty()) {
                     return XpCostConversion.XpRequirement.FREE;
                 }

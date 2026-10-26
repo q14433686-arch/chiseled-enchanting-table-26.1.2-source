@@ -1713,14 +1713,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return MenuEpiphanyController.rerollEpiphany(this);
     }
 
-    public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Level world) {
-        if (id == null || world == null) {
-            return java.util.Optional.empty();
-        }
-        return world.registryAccess()
-            .lookup(Registries.ENCHANTMENT)
-            .flatMap(reg -> reg.get(ResourceKey.create(Registries.ENCHANTMENT, id)));
-    }
+    public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Level world) { return MenuEnchantmentLookup.findEnchantment(id, world); }
 
     public static Holder<Enchantment> identifierToEnchantment(Identifier id, Level world) {
         return findEnchantment(id, world)

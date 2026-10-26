@@ -481,12 +481,22 @@ public final class RowRenderSupport {
         float y,
         float scale,
         int color
+    ) { renderScaledTextFloat(drawContext, client.font, text, x, y, scale, color); }
+
+    private static void renderScaledTextFloat(
+        GuiGraphicsExtractor drawContext,
+        net.minecraft.client.gui.Font font,
+        String text,
+        float x,
+        float y,
+        float scale,
+        int color
     ) {
         var matrixStack = drawContext.pose();
         matrixStack.pushMatrix();
         matrixStack.translate(x, y);
         matrixStack.scale(scale, scale);
-        drawContext.text(client.font, text, 0, 0, color, true);
+        drawContext.text(font, text, 0, 0, color, true);
         matrixStack.popMatrix();
     }
 
