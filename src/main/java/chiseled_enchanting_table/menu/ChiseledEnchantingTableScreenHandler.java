@@ -1,5 +1,8 @@
 package chiseled_enchanting_table.menu;
 
+import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
+import chiseled_enchanting_table.mechanics.resonance.LibraryResonance;
+
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.mechanics.enchanting.EnchantmentApplication;
 import chiseled_enchanting_table.mechanics.enchanting.BookUpgradeApplication;

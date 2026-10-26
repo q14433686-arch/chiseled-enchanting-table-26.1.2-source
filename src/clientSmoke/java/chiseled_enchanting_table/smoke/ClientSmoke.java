@@ -143,6 +143,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         menu.clicked(2, 0, ContainerInput.QUICK_MOVE, player); // Hotbar 0 -> target slot.
                         require(menu.get_enchantable_item().is(Items.DIAMOND_SWORD), "quick-move missed target slot");
                         require(player.getInventory().getItem(0).isEmpty(), "quick-move duplicated source stack");
+                        MenuBoundaryProbe.verify(menu);
                         menu.broadcastChanges();
                         menuPrepared = true;
                     } catch (Throwable error) { serverFailure = error; }
@@ -152,6 +153,7 @@ public final class ClientSmoke implements ClientModInitializer {
             case 6 -> {
                 if (!menuPrepared || !(client.gui.screen() instanceof ChiseledEnchantingTableScreen table)) return;
                 if (!((ChiseledEnchantingTableScreenHandler) client.player.containerMenu).get_enchantable_item().is(Items.DIAMOND_SWORD)) return;
+                chiseled_enchanting_table.gui.ListModelProbe.verify(client.player);
                 click(table, (int) field(table, "leftPos") + 300, (int) field(table, "topPos") - 8, InputConstants.MOUSE_BUTTON_LEFT);
                 require(table.hasActiveConfigOverlay(), "table config button did not open overlay");
                 editor = (ChiseledEnchantingConfigScreen) field(table, "configOverlay");

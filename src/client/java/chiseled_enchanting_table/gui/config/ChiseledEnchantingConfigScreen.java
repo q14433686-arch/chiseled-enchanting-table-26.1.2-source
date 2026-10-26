@@ -139,7 +139,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private final List<HitBox> hitBoxes = new ArrayList<>();
     private final List<SliderTrack> sliderTracks = new ArrayList<>();
     @Nullable
-    private SliderTrack activeDraggingSlider = null;
+    private final chiseled_enchanting_table.config.ConfigSliderDragSession sliderDrag = new chiseled_enchanting_table.config.ConfigSliderDragSession();
     private boolean draggingScrollbar = false;
 
     private final chiseled_enchanting_table.config.ConfigSaveSession saves = new chiseled_enchanting_table.config.ConfigSaveSession();
@@ -1323,9 +1323,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             for (SliderTrack slider : this.sliderTracks) {
                 if (slider.contains(mx, my)) {
-                    this.activeDraggingSlider = slider;
-                    double t = (mx - slider.box().x()) / (double) Math.max(1, slider.box().w());
-                    slider.entry().setFromNormalizedSlider(this.editSession.draft(), t);
+                    this.sliderDrag.begin(slider.entry(), slider.box(), this.editSession.draft(), mx);
                     syncAutoCollapsedSections();
                     playClick(1.02f);
                     return true;
@@ -1356,10 +1354,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-        if (this.activeDraggingSlider != null && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            Box sb = this.activeDraggingSlider.box();
-            double t = (event.x() - sb.x()) / (double) Math.max(1, sb.w());
-            this.activeDraggingSlider.entry().setFromNormalizedSlider(this.editSession.draft(), t);
+        if (this.sliderDrag.active() && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+            this.sliderDrag.drag(this.editSession.draft(), event.x());
             syncAutoCollapsedSections();
             return true;
         }
@@ -1372,7 +1368,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        this.activeDraggingSlider = null;
+        this.sliderDrag.release();
         this.draggingScrollbar = false;
         return super.mouseReleased(event);
     }

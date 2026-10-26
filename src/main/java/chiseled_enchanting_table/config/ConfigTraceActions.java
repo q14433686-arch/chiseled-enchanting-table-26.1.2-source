@@ -5,7 +5,6 @@ import chiseled_enchanting_table.config.ModRuntimeConfig.Draft;
 public final class ConfigTraceActions {
     private ConfigTraceActions() {}
     public static void toggle(Draft draft, RuleTraceEntry trace) {
-
         if (trace.derived() || trace.optionKey() == null) return;
         boolean currentlyClassic = trace.isUsingClassic103(draft);
         if ("tome_consumption_mode".equals(trace.optionKey())) {
@@ -20,6 +19,5 @@ public final class ConfigTraceActions {
         } else {
             trace.applyClassic103(draft);
         }
-
-        }
+    }
 }

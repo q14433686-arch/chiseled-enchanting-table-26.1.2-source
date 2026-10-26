@@ -14,4 +14,5 @@ final class ConfigInteractions {
         boolean contains(double mx, double my) {
             return box.contains(mx, my);
         }
-    }}
+    }
+}
