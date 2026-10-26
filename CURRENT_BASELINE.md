@@ -13,7 +13,15 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Research foundation in progress — 2026-10-26
+## Research roadmap and live workspace — 2026-10-27
+
+- [Authoritative gameplay and architecture plan](docs/research/MASTER_PLAN.md): four loops, player stages, additions/removals, old-save migration, R0–R6 acceptance. Research remains the prerequisite, not advanced enchantment effects.
+- Source **`6bb5276`** adds real authorized table-menu scanning, loaded-only offsets, distinct enchantment breadth and best quality. No wear/generation/lock filtering or book mutation. No tick scanner.
+- [compile-check 40364870519](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40364870519): **186 JUnit, zero failures/errors/skips**. [build 40364870525](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40364870525): static/build/no-viewer jobs succeeded; new native workspace probe still pending at documentation time.
+- Previous foundation native run **40302066671** is now confirmed successful, including `RESEARCH FOUNDATION PASS`; this does not validate the new workspace probe.
+- Next: complete R1 native verification, implement R2 bounded research view/actions, then R3 one usable trial/evidence/conclusion/reward loop. No production research topic/UI or old-maintenance migration yet. **1.1.0 / MC26.3 / revision12** unchanged.
+
+## Previous research foundation — 2026-10-26
 
 Source **`2278fc053c6e2bf32d6a06214ccafbd3afd00ffa`** adds the prerequisite research core, not advanced enchantment content. **1.1.0 / MC26.3 / revision12** unchanged; no payload, shared registry state or Mixin added.
 

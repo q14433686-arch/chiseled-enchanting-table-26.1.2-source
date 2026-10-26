@@ -8,6 +8,8 @@
 
 ## Active research work
 
+[Research master plan](research/MASTER_PLAN.md) — gameplay loops, architecture, mechanism replacement and phased acceptance.
+
 [Research foundation](research/FOUNDATION.md) — agreed direction, implemented state machine, save format, extension contracts and explicitly unfinished player-facing integration.
 
 ## Read these first

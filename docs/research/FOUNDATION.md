@@ -1,5 +1,7 @@
 # Research foundation — implementation boundary (2026-10-26)
 
+[Gameplay loops, mechanism removals and implementation roadmap](MASTER_PLAN.md) are the authoritative plan.
+
 ## Direction, not a new enchantment-effect patch
 
 The research system is the prerequisite architecture. Sharpness, Protection, maximum-durability
@@ -64,7 +66,7 @@ implemented by this foundation. One topic completes through one alternative; ind
 outcomes should be separate topics, not alternatives that must all be collected.
 
 - `setLibraryAccess`: a server table adapter must authorize the player/menu/table/range/dimension,
-  scan loaded positions only and return an immutable library snapshot. Default is deny-all.
+  scan loaded positions only and return an immutable library snapshot. The production default is `ResearchWorkspace.resolve`, which denies absent/invalid menus and scans the authorized workspace on demand.
 - `registerEvidence`: a trusted server event adapter must verify the actual event/context. A string
   from a client is **not** evidence. The gateway has no completion/grant packet or command.
 - `observe`: invoked by that event adapter, not a generic client request. Replay is harmless.
@@ -91,7 +93,7 @@ This is ordinary save-cycle durability, **not** crash-proof per-action journalin
 
 This is a registered and tested **foundation**, not a playable full research release:
 - no production topics, research tab, client synchronization or study-book distribution;
-- no live table library adapter or real gameplay evidence providers (default gateway is deny-all);
+- the live table library adapter is now implemented; real gameplay evidence providers are still absent;
 - no experimental-ability issuance, revocation or result feedback yet;
 - no application of research unlocks to existing production or loot;
 - no removal/migration of existing tome wear, generations, regeneration or economic locks;
@@ -104,7 +106,7 @@ registered shared state actually change; release remains 1.1.0 / MC 26.3 / revis
 
 ## Next dependency order
 
-1. Bind an authorized, loaded-chunk-only table workspace and scan distinct books/quality.
+1. Implemented: bind an authorized, loaded-chunk-only table workspace and scan distinct books/quality; finish native verification.
 2. Add read-only research views and server-authoritative selection/conclusion actions, with explicit
    protocol revision and bounded synchronization when those payloads are introduced.
 3. Implement an end-to-end introductory **research** task: hypothesis, bounded experimental capability,
@@ -127,6 +129,18 @@ not the quality/completion of a gameplay research task.
 Functional source `2278fc053c6e2bf32d6a06214ccafbd3afd00ffa`:
 - compile-check 40302066798: success, **181 tests / 0 failures / 0 errors / 0 skipped** (26 new research tests).
 - build 40302066671: static, Gradle build and no-viewer compile succeeded.
-- At documentation time the native job is still installing virtual-display dependencies. The
-  research probe has not yet been confirmed executed; do not claim native success from JUnit.
+- Native build 40302066671 subsequently succeeded; diagnostics contain `RESEARCH FOUNDATION PASS` and `CLIENT SMOKE PASS`. This closes the previous pending result, not the new workspace probe.
 - Local static9, architecture7, sync17, UI11, Mixin4, diagnostics3, release12 and diff checks passed.
+
+### R1 live workspace adapter
+
+`ResearchWorkspace` authorizes the current table menu/world/range, spectator/build and vanilla
+interaction checks, then uses configured loaded-only scan offsets, breathing room and optional LOS.
+Normal and chiseled bookshelf blocks each count as one shelf. Stored enchanted books contribute
+independent namespaced enchantment ids at their highest quality, not stack sizes or sums.
+No wear/generation/lock filter removes knowledge; no item is modified. `ResearchKnowledge` is the
+pure bounded aggregator. This adapter does not claim universal third-party territory compatibility.
+
+Source `6bb5276`: compile-check 40364870519 succeeded with **186 tests, zero failures/errors/skips**;
+build 40364870525 has passed static, full build and no-viewer compile. Native workspace verification
+is still pending at documentation time. No production topic/UI/unlock enforcement has been added.
