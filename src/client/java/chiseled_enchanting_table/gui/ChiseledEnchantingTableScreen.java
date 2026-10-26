@@ -59,30 +59,23 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final Identifier BTN_CONFIG = ChiseledEnchantingTable.identifier("gui/btn_config.png");
 
     private static final int CONFIG_BTN_X = 293;
-    private static final int CONFIG_BTN_Y_OFFSET = -15;
+    private static final int CONFIG_BTN_Y_OFFSET = -20;
     private static final int CONFIG_BTN_SIZE = 15;
     private static final int GRIMOIRE_BTN_X = 311;
-    private static final int GRIMOIRE_BTN_Y_OFFSET = -15;
+    private static final int GRIMOIRE_BTN_Y_OFFSET = -20;
     private static final int GRIMOIRE_BTN_SIZE = 15;
 
     private static final Identifier TAB_INSCRIBE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_active.png");
     private static final Identifier TAB_INSCRIBE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_inactive.png");
     private static final Identifier TAB_CLEANSE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_active.png");
     private static final Identifier TAB_CLEANSE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_inactive.png");
-    private static final Identifier[] TOME_BUTTONS = {
-        ChiseledEnchantingTable.identifier("gui/tome_button_0.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_1.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_2.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_3.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_4.png")
-    };
     private static final Identifier TAB_TOME_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_active.png");
     private static final Identifier TAB_TOME_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_inactive.png");
 
     // Top mode switcher tabs aligned pixel-for-pixel with the purple header cloth [x = 14 .. 167].
     private static final int TAB_W = 75;
     private static final int TAB_H = 18;
-    private static final int TAB_Y_OFFSET = -15;
+    private static final int TAB_Y_OFFSET = -21;
     private static final int TAB_INSCRIBE_X = 14;
     private static final int TAB_CLEANSE_X = 92;
     private static final int TAB_TOMES_X = 170;
@@ -96,10 +89,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final int PANEL_H = 61;
 
     // Compact persistent W / S bookshelf HUD badge in the stitched header bar directly above PANEL_X.
-    private static final int SHELF_HUD_X = PANEL_X;
-    private static final int SHELF_HUD_Y = 2;
-    private static final int SHELF_HUD_W = 118;
-    private static final int SHELF_HUD_H = 12;
+    // Text-only bookshelf status inside the header safe area; no frame over the gold corner or tabs.
+    private static final int SHELF_HUD_X = 124;
+    private static final int SHELF_HUD_Y = 3;
+    private static final int SHELF_HUD_W = 200;
+    private static final int SHELF_HUD_H = 9;
     private static final long DISENCHANT_CONFIRM_WINDOW_MS = 5_000L;
 
     private static final int BTN_SIZE = 14;
@@ -354,28 +348,6 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return mouseX >= x0 && mouseX < x0 + SHELF_HUD_W && mouseY >= y0 && mouseY < y0 + SHELF_HUD_H;
     }
 
-    private int computeNextShelfMilestoneTarget() {
-        var sg = this.menu.shelfGatesConfig();
-        var lr = this.menu.libraryResonanceConfig();
-        int broad = this.menu.totalLibraryBookshelves();
-        int[] milestones = {
-            Math.max(1, lr.minDiscountBookshelves()),
-            Math.max(1, sg.tier1Bookshelves()),
-            Math.max(1, this.menu.epiphanyMinBookshelves()),
-            Math.max(1, sg.tier2Bookshelves()),
-            Math.max(1, sg.maxDirectBookshelves()),
-            Math.max(1, lr.tomeRegenTier1Shelves()),
-            Math.max(1, lr.tomeRegenTier2Shelves())
-        };
-        java.util.Arrays.sort(milestones);
-        for (int m : milestones) {
-            if (broad < m) {
-                return m;
-            }
-        }
-        return milestones[milestones.length - 1];
-    }
-
     private boolean isCleanseTab() {
         return this.scrollContainer != null && this.scrollContainer.tabMode() == UiTabMode.CLEANSE;
     }
@@ -439,16 +411,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private int[] tomeButtonRect(int index) {
-        // Panel inner decorative frame (measured on cleanse_panel.png): lines at
-        // x 5-7 / 111-113 and y 5-7 / 53-55 in panel-relative GUI pixels. Both button
-        // rows must end at x <= 109 and y <= 51 to keep a dark pixel clear of them.
-        return switch (index) {
-            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 35, 32, 8};
-            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 35, 32, 8};
-            case 2 -> new int[] {PANEL_X + 78, PANEL_Y + 35, 31, 8};
-            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 44, 48, 8};
-            default -> new int[] {PANEL_X + 59, PANEL_Y + 44, 50, 8};
-        };
+        var r = chiseled_enchanting_table.gui.TomeDirectoryLayout.lockButton(index);
+        return new int[] {r.x(), r.y(), r.width(), r.height()};
     }
 
     private int hoveredTomeButton(double mouseX, double mouseY) {
@@ -1070,7 +1034,6 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
         renderModeTabs(ctx, i, j, mouseX, mouseY);
         if (shouldShowShelfHudBadge()) {
-            renderHeaderShelfHudBadge(ctx, i, j, mouseX, mouseY);
         }
 
         int px = i + PANEL_X;
@@ -1136,14 +1099,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             var selected = this.scrollContainer.selectedTomeEntry();
             var targets = this.scrollContainer.selectedTomes();
             if (targets.isEmpty() && selected != null) targets = List.of(selected);
-            String[] labels = {
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_next").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_full").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_permanent").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_unlock").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.catalog.batch_full").getString()
-            };
-            for (int b = 0; b < labels.length; b++) {
+            String[] icons = {"lock_next", "lock_full", "lock_permanent", "unlock", "batch_full"};
+            for (int b = 0; b < icons.length; b++) {
                 int[] r = tomeButtonRect(b);
                 int bx = i + r[0];
                 int by = j + r[1];
@@ -1154,14 +1111,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     : !book.locked() && (button == 2 || book.wear_used() > 0));
                 if (b != 3 && !this.menu.isTomeLocksEnabled()) enabled = false;
                 boolean hovered = hoveredTomeButton(mouseX, mouseY) == b;
-                ctx.blit(TOME_BUTTONS[b], bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);
-                if (!enabled) {
-                    ctx.fill(bx, by, bx + r[2], by + r[3], 0xB0191522);
-                } else if (hovered) {
-                    ctx.fill(bx, by, bx + r[2], by + r[3], 0x332AD4EE);
-                }
-                RowRenderSupport.renderCenteredBoxText(ctx, this.minecraft, labels[b], bx + 1, r[2] - 2, by + r[3] * 0.5f, 0.58f,
-                    enabled ? 0xFFDFF7FF : 0xFF7D748D);
+                CatalogueSkin.icon(ctx, icons[b], bx, by, r[2], r[3], hovered, enabled);
             }
             if (this.scrollContainer.children().isEmpty()) {
                 int lx = i + 12;
@@ -1334,7 +1284,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     Component.translatable("config.chiseled_enchanting_table.open_tip.title").withStyle(ChatFormatting.GOLD),
                     Component.translatable("config.chiseled_enchanting_table.open_tip.sub").withStyle(ChatFormatting.GRAY)
                 );
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverGrimoireButton(mouseX, mouseY)) {
@@ -1342,18 +1292,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     Component.translatable("gui.chiseled_enchanting_table.grimoire.open_btn.title").withStyle(ChatFormatting.GOLD),
                     Component.translatable("gui.chiseled_enchanting_table.grimoire.open_btn.desc").withStyle(ChatFormatting.GRAY)
                 );
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverShelfHudBadge(mouseX, mouseY)) {
-                ctx.setTooltipForNextFrame(
-                    this.font,
-                    buildResonanceBreakdownTooltip(),
-                    Optional.empty(),
-                    mouseX,
-                    mouseY,
-                    (Identifier) null
-                );
+                TooltipPresentation.show(ctx, this.font, buildResonanceBreakdownTooltip(), Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverInscribeTab(mouseX, mouseY)) {
@@ -1363,18 +1306,18 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         ? "gui.chiseled_enchanting_table.tab.inscribe.desc_classic"
                         : "gui.chiseled_enchanting_table.tab.inscribe.desc").withStyle(ChatFormatting.GRAY)
                 );
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverCleanseTab(mouseX, mouseY) && !this.menu.isCleansePageUnlocked()) {
-                ctx.setTooltipForNextFrame(this.font, List.of(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(ChatFormatting.RED)), Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, List.of(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(ChatFormatting.RED)), Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverTomeTab(mouseX, mouseY)) {
                 List<Component> tip = this.menu.isTomePageUnlocked()
                     ? List.of(Component.translatable("gui.chiseled_enchanting_table.tab.tomes.title").withStyle(ChatFormatting.AQUA), Component.translatable("gui.chiseled_enchanting_table.tab.tomes.desc").withStyle(ChatFormatting.GRAY))
                     : List.of(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(ChatFormatting.RED));
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverSacrificeButton(mouseX, mouseY)) {
@@ -1382,7 +1325,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_title").withStyle(ChatFormatting.GOLD),
                     Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_desc", this.menu.sacrificeProgress, this.menu.sacrificeRequired).withStyle(ChatFormatting.GRAY)
                 );
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             int tomeBtn = hoveredTomeButton(mouseX, mouseY);
@@ -1411,7 +1354,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 buttonLines.add(Component.translatable(titleKey).withStyle(ChatFormatting.AQUA));
                 buttonLines.add(tipText.withStyle(ChatFormatting.GRAY));
                 if (tomeBtn != 4) buttonLines.add(Component.translatable("gui.chiseled_enchanting_table.catalog.batch_help").withStyle(ChatFormatting.GOLD));
-                ctx.setTooltipForNextFrame(this.font, buttonLines, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, buttonLines, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             var hoveredTome = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
@@ -1490,7 +1433,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 }
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.select_hint").withStyle(ChatFormatting.DARK_GRAY));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.catalog.shift_details").withStyle(ChatFormatting.DARK_GRAY));
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverSacrificeSkipButton(mouseX, mouseY)) {
@@ -1507,7 +1450,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     .withStyle(ChatFormatting.AQUA));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_currency")
                     .withStyle(ChatFormatting.DARK_GRAY));
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverRushSkipButton(mouseX, mouseY)) {
@@ -1536,7 +1479,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
                         .withStyle(ChatFormatting.RED));
                 }
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverCleanseTab(mouseX, mouseY)) {
@@ -1544,7 +1487,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.title").withStyle(ChatFormatting.AQUA),
                     Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.desc").withStyle(ChatFormatting.GRAY)
                 );
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
 
@@ -1634,14 +1577,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         ).withStyle(ChatFormatting.AQUA));
                     }
                 }
-                ctx.setTooltipForNextFrame(
-                    this.font,
-                    lines,
-                    hoveredCost.getTooltipImage(),
-                    mouseX,
-                    mouseY,
-                    hoveredCost.get(DataComponents.TOOLTIP_STYLE)
-                );
+                TooltipPresentation.show(ctx, this.font, lines, hoveredCost.getTooltipImage(), mouseX, mouseY, hoveredCost.get(DataComponents.TOOLTIP_STYLE));
                 return;
             }
             var hoveredXpEntry = this.scrollContainer.hoveredXpBadgeEntry(mouseX, mouseY);
@@ -1711,7 +1647,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                             .withStyle(ChatFormatting.DARK_GRAY));
                     }
                 }
-                ctx.setTooltipForNextFrame(this.font, xpTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, xpTip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             var specialEntry = this.scrollContainer.hoveredSpecialRowEntry(mouseX, mouseY);
@@ -1727,7 +1663,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         "gui.chiseled_enchanting_table.discovery_locked.tip_desc",
                         lockedOut
                     ).withStyle(ChatFormatting.YELLOW));
-                    ctx.setTooltipForNextFrame(this.font, discTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    TooltipPresentation.show(ctx, this.font, discTip, Optional.empty(), mouseX, mouseY, null);
                     return;
                 }
                 if (specialEntry.shelf_locked && specialEntry.enchantment != null) {
@@ -1753,7 +1689,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     lockTip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.shelf_locked.tip_bypass"
                     ).withStyle(ChatFormatting.GRAY));
-                    ctx.setTooltipForNextFrame(this.font, lockTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    TooltipPresentation.show(ctx, this.font, lockTip, Optional.empty(), mouseX, mouseY, null);
                     return;
                 }
                 if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(specialEntry.enchantment_id)) {
@@ -1783,7 +1719,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     ).withStyle(dtTier == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.TIER_3_FREE
                         ? ChatFormatting.LIGHT_PURPLE
                         : ChatFormatting.GRAY));
-                    ctx.setTooltipForNextFrame(this.font, dtTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    TooltipPresentation.show(ctx, this.font, dtTip, Optional.empty(), mouseX, mouseY, null);
                     return;
                 }
                 if (specialEntry.is_category_header && !specialEntry.cleanse_theme) {
@@ -1832,7 +1768,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     }
                     catTip.add(Component.translatable("gui.chiseled_enchanting_table.category.tip_master")
                         .withStyle(ChatFormatting.DARK_GRAY));
-                    ctx.setTooltipForNextFrame(this.font, catTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    TooltipPresentation.show(ctx, this.font, catTip, Optional.empty(), mouseX, mouseY, null);
                     return;
                 }
             }
@@ -1971,7 +1907,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         rowDisc
                     ).withStyle(ChatFormatting.DARK_AQUA));
                 }
-                ctx.setTooltipForNextFrame(this.font, rowTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, rowTip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverCleanseAllButton(mouseX, mouseY)) {
@@ -2000,7 +1936,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 }
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_all_hint")
                     .withStyle(ChatFormatting.GRAY));
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverFreezeButton(mouseX, mouseY)) {
@@ -2036,7 +1972,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 }
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.freeze_hint")
                     .withStyle(ChatFormatting.DARK_GRAY));
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverRerollButton(mouseX, mouseY)) {
@@ -2071,7 +2007,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     "gui.chiseled_enchanting_table.epiphany.auto_hint",
                     Math.max(1, Math.round(this.menu.epiphanyCycleTicks() / 1200.0f))
                 ).withStyle(ChatFormatting.DARK_GRAY));
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                 return;
             }
             if (isOverSanctumPanel(mouseX, mouseY)) {
@@ -2082,7 +2018,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.unlock_progress", this.menu.qualifyingEnchantedBookshelves, this.menu.tomeRequiredShelves).withStyle(this.menu.isTomePageUnlocked() ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
                     var sel = this.scrollContainer.selectedTomeEntry();
                     if (sel != null) tip.add(Component.literal(EnchantementListWidget.tomeTitle(sel, this.menu.player)).withStyle(ChatFormatting.GOLD));
-                    ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                     return;
                 }
                 if (isCleanseTab()) {
@@ -2114,222 +2050,36 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         "gui.chiseled_enchanting_table.cleanse.panel_resonance",
                         this.menu.libraryResonanceConfig().maxSpecificEnchantBonusPercent()
                     ).withStyle(ChatFormatting.DARK_GRAY));
-                    ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                    TooltipPresentation.show(ctx, this.font, tip, Optional.empty(), mouseX, mouseY, null);
                     return;
                 }
-                ctx.setTooltipForNextFrame(
-                    this.font,
-                    buildResonanceBreakdownTooltip(),
-                    Optional.empty(),
-                    mouseX,
-                    mouseY,
-                    (Identifier) null
-                );
+                TooltipPresentation.show(ctx, this.font, buildResonanceBreakdownTooltip(), Optional.empty(), mouseX, mouseY, null);
             }
-        }
-    }
-
-    private void renderHeaderShelfHudBadge(GuiGraphicsExtractor ctx, int left, int top, int mouseX, int mouseY) {
-        int bx = left + SHELF_HUD_X;
-        int by = top + SHELF_HUD_Y;
-        boolean hovered = isOverShelfHudBadge(mouseX, mouseY);
-        int border = this.menu.crampedLibrary ? 0xFFB83A4B : (hovered ? 0xFFE5C46B : 0xFF563D78);
-        ctx.fill(bx, by, bx + SHELF_HUD_W, by + SHELF_HUD_H, border);
-        ctx.fill(bx + 1, by + 1, bx + SHELF_HUD_W - 1, by + SHELF_HUD_H - 1, 0xD0160F24);
-        if (hovered) {
-            ctx.fill(bx + 1, by + 1, bx + SHELF_HUD_W - 1, by + SHELF_HUD_H - 3, 0x22FFE082);
-        }
-        int broad = this.menu.totalLibraryBookshelves();
-        int target = computeNextShelfMilestoneTarget();
-        float ratio = target <= 0 ? 1.0f : Mth.clamp((float) broad / (float) target, 0.0f, 1.0f);
-        int barX = bx + 2;
-        int barY = by + SHELF_HUD_H - 3;
-        int barW = SHELF_HUD_W - 4;
-        ctx.fill(barX, barY, barX + barW, barY + 2, 0xFF0B0714);
-        int fillW = Math.round(barW * ratio);
-        if (fillW > 0) {
-            int barColor = this.menu.crampedLibrary
-                ? 0xFFE05263
-                : (broad >= target ? 0xFFFFD369 : 0xFF49E2B4);
-            ctx.fill(barX, barY, barX + fillW, barY + 2, barColor);
         }
     }
 
     private List<Component> buildResonanceBreakdownTooltip() {
-        int woodenBonus = this.menu.woodenXpDiscountPercent();
-        int chiseledBonus = this.menu.globalMasteryDiscountPercent();
-        double totalUnits = this.menu.totalMasteryUnits();
-        double affinityUnits = this.menu.affinityMasteryUnits(this.menu.get_enchantable_item());
-        int minShelves = this.menu.epiphanyMinBookshelves();
-        var sg = this.menu.shelfGatesConfig();
-        List<Component> tip = new ArrayList<>();
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.title",
-            this.menu.xpDiscountPercent,
-            this.menu.libraryResonanceConfig().maxTotalXpDiscountPercent()
-        ).withStyle(ChatFormatting.GOLD));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.broad_breakdown",
-            this.menu.totalLibraryBookshelves(),
-            this.menu.regularBookshelves,
-            this.menu.emptyChiseledBookshelves,
-            this.menu.chiseledBookshelves
-        ).withStyle(ChatFormatting.YELLOW));
-        if (this.menu.crampedLibrary) {
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.cramped")
-                .withStyle(ChatFormatting.RED));
-        }
-        int minDiscShelves = this.menu.libraryResonanceConfig().minDiscountBookshelves();
-        if (this.menu.regularBookshelves < minDiscShelves) {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.wooden_locked",
-                this.menu.regularBookshelves,
-                minDiscShelves,
-                minDiscShelves
-            ).withStyle(ChatFormatting.GRAY));
-        } else {
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.wooden", this.menu.regularBookshelves, woodenBonus)
-                .withStyle(ChatFormatting.GRAY));
-        }
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.chiseled_mastery",
-            String.format(java.util.Locale.ROOT, "%.1f", totalUnits),
-            chiseledBonus
-        ).withStyle(ChatFormatting.AQUA));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.slot_cap_hint",
-            String.format(java.util.Locale.ROOT, "%.1f", this.menu.libraryResonanceConfig().maxMasteryUnitsPerSlot())
-        ).withStyle(ChatFormatting.DARK_AQUA));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.high_tier_books",
-            this.menu.qualifyingChiseledEnchantments(),
-            sg.tier3QualifyingEnchantments()
-        ).withStyle(this.menu.qualifyingChiseledEnchantments() >= sg.tier3QualifyingEnchantments()
-            ? ChatFormatting.GREEN
-            : ChatFormatting.GRAY));
-        var lrPanelCfg = this.menu.libraryResonanceConfig();
-        if (lrPanelCfg.tomeRegenEnabled()
-            && lrPanelCfg.tomeConsumptionMode() != chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP) {
-            int nearShelves = this.menu.totalLibraryBookshelves();
-            double regenSec = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
-                .computeRegenSeconds(lrPanelCfg, nearShelves);
-            int regenTier = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
-                .regenTierIndex(lrPanelCfg, nearShelves);
-            Component tierBadge = switch (regenTier) {
-                case 2 -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier2",
-                    lrPanelCfg.tomeRegenTier2Shelves()
-                );
-                case 1 -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier1",
-                    lrPanelCfg.tomeRegenTier1Shelves()
-                );
-                default -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier0",
-                    lrPanelCfg.tomeRegenTier1Shelves()
-                );
-            };
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.pricing.tome_regen_rate",
-                String.format(java.util.Locale.ROOT, "%.1f", regenSec / 1200.0),
-                nearShelves,
-                tierBadge
-            ).withStyle(regenTier >= 2
-                ? ChatFormatting.GOLD
-                : (regenTier == 1 ? ChatFormatting.GREEN : ChatFormatting.GRAY)));
-        }
-        if (affinityUnits > 0.005) {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.affinity_line",
-                String.format(java.util.Locale.ROOT, "%.1f", affinityUnits)
-            ).withStyle(ChatFormatting.GREEN));
-        }
-        if (this.menu.regularBookshelves >= minShelves) {
-            int pct = (int) Math.round(this.menu.epiphanyChance() * 100.0);
-            int maxSlots = Math.max(1, this.menu.epiphanyMaxSlots());
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.active", pct)
-                .withStyle(ChatFormatting.LIGHT_PURPLE));
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.slots_line", maxSlots)
-                .withStyle(ChatFormatting.GOLD));
-            if (this.menu.isEpiphanyFrozen()) {
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.epiphany.frozen_remaining",
-                    formatClock(this.menu.countdownSeconds()),
-                    Math.max(1, this.menu.epiphanyMaxFreezeTicks() / 1200)
-                ).withStyle(ChatFormatting.AQUA));
-            } else {
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.epiphany.cycle_remaining",
-                    formatClock(this.menu.countdownSeconds())
-                ).withStyle(ChatFormatting.GRAY));
-            }
-        } else {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.epiphany.progress",
-                this.menu.regularBookshelves,
-                minShelves
-            ).withStyle(ChatFormatting.DARK_PURPLE));
-        }
-        tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.treasure_rule")
-            .withStyle(ChatFormatting.DARK_GRAY));
-        BlockPos scanPos = effectiveTablePos();
-        if (this.minecraft != null && this.minecraft.level != null && scanPos != null) {
-            var ritScan = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .scanLibraryRitualContext(this.minecraft.level, scanPos, sg);
-            var rCfg = this.menu.ritualConfig();
-            double sigmaL = ritScan.totalWearImmuneLoad();
-            double slipPct = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .computeLoadSlipProbability(rCfg, sigmaL, ritScan.totalDetectedBookshelves()) * 100.0;
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.overload_sigma_line",
-                String.format(java.util.Locale.ROOT, "%.1f", sigmaL),
-                String.format(java.util.Locale.ROOT, "%.1f", slipPct),
-                String.format(java.util.Locale.ROOT, "%.1f", rCfg.crosslineSlip().minLoadThreshold())
-            ).withStyle(slipPct > 0.005 ? ChatFormatting.GOLD : ChatFormatting.GRAY));
-        }
-        tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.scapegoat_order_line")
-            .withStyle(ChatFormatting.DARK_GRAY));
-        return tip;
+        BlockPos pos = effectiveTablePos();
+        // The technical appendix (incl. its live world scan) is only built on explicit Shift expansion.
+        var scan = TooltipPresentation.detailsRequested() && this.minecraft != null && this.minecraft.level != null && pos != null
+            ? chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.scanLibraryRitualContext(
+                this.minecraft.level, pos, this.menu.shelfGatesConfig()) : null;
+        return ResonanceTooltip.build(this.menu, scan);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         // Purple stitched header cloth spans y = [1.0 .. 15.0] (center = 8.0); place visual ink center at 7.6f!
-        RowRenderSupport.renderCenteredYText(context, this.minecraft, this.title.getString(), 18, 7.6f, 0.94f, 190, 0xFFFFF0C8);
+        RowRenderSupport.renderCenteredYText(context, this.minecraft, this.title.getString(), 18, 7.6f, 0.94f, 102, 0xFFFFF0C8);
 
         if (shouldShowShelfHudBadge()) {
-            int broadShelves = this.menu.totalLibraryBookshelves();
-            int nextTarget = computeNextShelfMilestoneTarget();
-            int gap = Math.max(0, nextTarget - broadShelves);
-            String hudText = this.menu.crampedLibrary
-                ? Component.translatable(
-                    "gui.chiseled_enchanting_table.header.shelf_hud_cramped",
-                    this.menu.regularBookshelves,
-                    broadShelves
-                ).getString()
-                : (gap > 0
-                    ? Component.translatable(
-                        "gui.chiseled_enchanting_table.header.shelf_hud_gap",
-                        this.menu.regularBookshelves,
-                        broadShelves,
-                        gap
-                    ).getString()
-                    : Component.translatable(
-                        "gui.chiseled_enchanting_table.header.shelf_hud_max",
-                        this.menu.regularBookshelves,
-                        broadShelves
-                    ).getString());
-            int hudTextColor = this.menu.crampedLibrary ? 0xFFFF8A96 : (gap == 0 ? 0xFFFFE58F : 0xFFC8F7EA);
-            RowRenderSupport.renderCenteredBoxText(
-                context,
-                this.minecraft,
-                hudText,
-                SHELF_HUD_X + 3,
-                SHELF_HUD_W - 6,
-                SHELF_HUD_Y + 4.8f,
-                0.58f,
-                hudTextColor
-            );
+            String status = Component.translatable(this.menu.crampedLibrary
+                ? "gui.chiseled_enchanting_table.header.shelf_hud_cramped"
+                : "gui.chiseled_enchanting_table.header.shelf_hud_max",
+                this.menu.regularBookshelves, this.menu.totalLibraryBookshelves()).getString();
+            RowRenderSupport.renderCenteredBoxText(context, this.font, status,
+                SHELF_HUD_X, SHELF_HUD_W, SHELF_HUD_Y + 4.0f, 0.68f,
+                this.menu.crampedLibrary ? 0xFFFF8A96 : 0xFFC8F7EA);
         }
 
         if (!shouldShowSanctumPanel()) {

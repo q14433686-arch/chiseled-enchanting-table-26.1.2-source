@@ -32,6 +32,6 @@ final class TomeEnchantmentDetails {
         }
         lines.add(Component.translatable("gui.chiseled_enchanting_table.catalog.location",book.shelf_pos().getX(),book.shelf_pos().getY(),book.shelf_pos().getZ(),book.slot()+1));
         if (pages>1) lines.add(Component.translatable("gui.chiseled_enchanting_table.catalog.page",page+1,pages));
-        ctx.setTooltipForNextFrame(font,lines,Optional.empty(),x,y,(net.minecraft.resources.Identifier) null);
+        TooltipPresentation.show(ctx,font,lines,Optional.empty(),x,y,null);
     }
 }

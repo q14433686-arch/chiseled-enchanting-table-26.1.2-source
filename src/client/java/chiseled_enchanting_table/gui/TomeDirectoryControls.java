@@ -91,9 +91,9 @@ final class TomeDirectoryControls {
                     CatalogueSkin.frame(ctx,bx,by,b.width(),b.height(),over,true);
                     CatalogueSkin.text(ctx,font,labels[i],bx,by,b.width(),b.height(),TomeDirectoryLayout.BUTTON_INSET,0xFFE0EBDD);
                 } else CatalogueSkin.icon(ctx,icons[i-5],bx,by,b.width(),b.height(),over,enabled);
-                if (over && open < 0) ctx.setTooltipForNextFrame(font,i<5
+                if (over && open < 0) TooltipPresentation.show(ctx,font,i<5
                     ? List.of(Component.literal(labels[i]),Component.translatable(PREFIX+"help"))
-                    : List.of(Component.literal(labels[i])),Optional.empty(),mx,my,(net.minecraft.resources.Identifier) null);
+                    : List.of(Component.literal(labels[i])),Optional.empty(),mx,my,null);
             }
             var b=TomeDirectoryLayout.selection();
             CatalogueSkin.text(ctx,font,text("selection",model.selected().size(),model.visible().size()),

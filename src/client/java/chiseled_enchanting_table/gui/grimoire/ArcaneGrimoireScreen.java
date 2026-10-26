@@ -1,4 +1,5 @@
 package chiseled_enchanting_table.gui.grimoire;
+import chiseled_enchanting_table.gui.TooltipPresentation;
 
 import static chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout.*;
 
@@ -337,16 +338,9 @@ public class ArcaneGrimoireScreen extends Screen {
                 itemLines.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.viewer_hint")
                     .withStyle(ChatFormatting.DARK_GRAY));
             }
-            ctx.setTooltipForNextFrame(
-                this.font,
-                itemLines,
-                st.getTooltipImage(),
-                mouseX,
-                mouseY,
-                st.get(DataComponents.TOOLTIP_STYLE)
-            );
+            TooltipPresentation.show(ctx, this.font, itemLines, st.getTooltipImage(), mouseX, mouseY, st.get(DataComponents.TOOLTIP_STYLE));
         } else if (!hoveredTabTip.isEmpty()) {
-            ctx.setTooltipForNextFrame(this.font, hoveredTabTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            TooltipPresentation.show(ctx, this.font, hoveredTabTip, Optional.empty(), mouseX, mouseY, null);
         }
     }
 
