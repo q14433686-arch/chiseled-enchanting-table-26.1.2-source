@@ -159,7 +159,11 @@ class SyncContracts26_1_2(unittest.TestCase):
 
     def test_config_authority_and_persistence_guards(self):
         cfg = (MAIN / 'config/ModRuntimeConfig.java').read_text()
-        self.assertIn('StandardCopyOption.ATOMIC_MOVE', cfg)
+        # Atomic config writes live in ConfigFileStore after the 26.3 split port;
+        # the guard's intent (atomic move present in the config layer) is unchanged.
+        store = (MAIN / 'config/ConfigFileStore.java').read_text()
+        self.assertIn('StandardCopyOption.ATOMIC_MOVE', store)
+        self.assertIn('ConfigFileStore.writeAtomically', cfg)
         self.assertIn('saveToDisk(normalized);', cfg)
         net = (MAIN / 'config/ModConfigNetworking.java').read_text()
         self.assertIn('server.isSingleplayerOwner(player.nameAndId())', net)
