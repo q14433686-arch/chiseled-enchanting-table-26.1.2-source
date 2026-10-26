@@ -1208,6 +1208,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 // (Shift-scroll pages it); the plain tooltip resumes when Shift is released.
                 TomeEnchantmentDetails.render(ctx, this.font, hoveredTome, this.menu.player, mouseX, mouseY);
             } else if (hoveredTome != null) {
+                ctx.setTooltipForNextFrame(this.font, TablePanelTooltips.tomeEntryTip(this.menu, hoveredTome), Optional.empty(), mouseX, mouseY, (Identifier) null);
+                return;
+            }
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, this.menu.player)).withStyle(ChatFormatting.GOLD));
                 var wearImmuneEntry = hoveredTome.enchantments().stream()
@@ -1280,58 +1283,16 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
-            if (isOverSacrificeSkipButton(mouseX, mouseY)) {
-                int lvls = this.menu.currentSacrificeSkipLevels();
-                List<Component> tip = new ArrayList<>();
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_title")
-                    .withStyle(ChatFormatting.GOLD));
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.ritual.tip_sacrifice_cost",
-                    lvls,
-                    this.menu.player.experienceLevel
-                ).withStyle(this.menu.player.experienceLevel >= lvls ? ChatFormatting.GREEN : ChatFormatting.RED));
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_safe")
-                    .withStyle(ChatFormatting.AQUA));
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_currency")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            if ((isOverSacrificeSkipButton(mouseX, mouseY))) {
+                ctx.setTooltipForNextFrame(this.font, TableNavigationTooltips.sacrificeSkipTip(this.menu), Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
-            if (isOverRushSkipButton(mouseX, mouseY)) {
-                double riskPct = this.menu.currentRushSkipDegradeChance() * 100.0;
-                var rCfg = this.menu.ritualConfig();
-                int capPct = (int) Math.round(100.0 * (this.menu.ritualUsedInfinityTome()
-                    ? rCfg.maxRushDegradeInfinity()
-                    : rCfg.maxRushDegradeNormal()));
-                int infCapPct = (int) Math.round(100.0 * rCfg.maxRushDegradeInfinity());
-                boolean hasTome = this.menu.hasAnyMasterTomeInRange();
-                List<Component> tip = new ArrayList<>();
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_rush_title")
-                    .withStyle(ChatFormatting.RED));
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.ritual.tip_rush_risk",
-                    String.format(java.util.Locale.ROOT, "%.1f", riskPct),
-                    capPct
-                ).withStyle(ChatFormatting.GOLD));
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_rush_priority")
-                    .withStyle(ChatFormatting.GRAY));
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.ritual.tip_rush_currency",
-                    infCapPct
-                ).withStyle(ChatFormatting.DARK_GRAY));
-                if (!hasTome) {
-                    tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
-                        .withStyle(ChatFormatting.RED));
-                }
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            if ((isOverRushSkipButton(mouseX, mouseY))) {
+                ctx.setTooltipForNextFrame(this.font, TableNavigationTooltips.rushSkipTip(this.menu), Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
-            if (isOverCleanseTab(mouseX, mouseY)) {
-                List<Component> tip = List.of(
-                    Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.title").withStyle(ChatFormatting.AQUA),
-                    Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.desc").withStyle(ChatFormatting.GRAY)
-                );
-                ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            if ((isOverCleanseTab(mouseX, mouseY))) {
+                ctx.setTooltipForNextFrame(this.font, TableNavigationTooltips.cleanseTabTip(this.menu), Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
 
