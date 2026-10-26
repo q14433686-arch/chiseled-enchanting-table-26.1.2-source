@@ -22,9 +22,9 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :configureLaunch
 
 > Task :runServer
-[21:56:05] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.1.2 with Fabric Loader 0.19.3
-[21:56:05] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[21:56:05] [main/INFO] (FabricLoader) Loading 43 mods:
+[04:27:23] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.1.2 with Fabric Loader 0.19.3
+[04:27:23] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[04:27:23] [main/INFO] (FabricLoader) Loading 43 mods:
 	- chiseled-enchanting-table 1.1.0
 	- fabric-api 0.151.0+26.1.2
 	   |-- fabric-key-mapping-api-v1 2.0.4+e2bdee784c
@@ -75,85 +75,95 @@ Note: Recompile with -Xlint:unchecked for details.
 	- java 25
 	- minecraft 26.1.2
 	- mixinextras 0.5.4
-[21:56:05] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[21:56:05] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[21:56:06] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[21:56:13] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
-[21:56:13] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[21:56:14] [Worker-Main-2/INFO] (Minecraft) No existing world data, creating new world
-[21:56:15] [main/INFO] (Minecraft) Loaded 1522 recipes
-[21:56:15] [main/INFO] (Minecraft) Loaded 1650 advancements
-[21:56:15] [main/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
-[21:56:16] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 1.478 ms
-[21:56:16] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.1.2
-[21:56:16] [Server thread/INFO] (Minecraft) Loading properties
-[21:56:16] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[21:56:16] [Server thread/INFO] (Minecraft) Generating keypair
-[21:56:16] [Server thread/INFO] (Minecraft) Starting Minecraft server on 127.0.0.1:0
-[21:56:16] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
-[21:56:16] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
-[21:56:16] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
-[21:56:16] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
-[21:56:16] [Server thread/INFO] (Minecraft) Preparing level "audit-world"
-[21:56:16] [Server thread/INFO] (Minecraft) Selecting global world spawn...
-[21:56:16] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[21:56:16] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[21:56:16] [Server thread/INFO] (Minecraft) Time elapsed: 490 ms
-[21:56:16] [Server thread/INFO] (Minecraft) Done (0.650s)! For help, type "help"
-[21:56:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
-[21:56:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
-[21:56:16] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
-[21:56:17] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[21:56:17] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[21:56:17] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[21:56:17] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-[21:56:17] [Server thread/INFO] (Minecraft) Reloading!
-[21:56:17] [Server thread/INFO] (Minecraft) Loaded 1522 recipes
-[21:56:17] [Server thread/INFO] (Minecraft) Loaded 1650 advancements
-[21:56:17] [Server thread/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
-[21:56:17] [Server thread/INFO] (Minecraft) Marked chunk [0, 0] in minecraft:overworld to be force loaded
-[21:56:17] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:spawn_table' in 20 tick(s) at gametime 21
-[21:56:18] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
-[21:56:18] [Server thread/INFO] (Minecraft) item.chiseled_enchanting_table.chiseled_enchanting_table has the following entity data: {Motion: [0.0574610250697444d, -0.04658045733376002d, -0.08747586289976791d], Health: 5s, Invulnerable: 0b, fall_distance: 0.05521585373207927d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [314.926f, 0.0f], Item: {components: {"minecraft:lore": [{with: ["01:00"], color: "aqua", italic: 0b, translate: "item.chiseled_enchanting_table.frozen_lore"}], "minecraft:custom_name": "Audit Table", "minecraft:custom_data": {pendingFreezeTicks: 1200L, epiphanySeed: 123456, frozenCycleIndex: 17}, "minecraft:dyed_color": 1122867}, count: 1, id: "chiseled_enchanting_table:chiseled_enchanting_table"}, Pos: [0.8702472077661861d, 67.32902286668799d, -0.06364629670747471d], PickupDelay: 4s, Fire: 0s, UUID: [I; -1205151776, -426622044, -1241162853, -339706502], Age: 6s}
-[21:56:18] [Server thread/INFO] (Minecraft) Killed item.chiseled_enchanting_table.chiseled_enchanting_table
-[21:56:18] [Server thread/INFO] (Minecraft) Dropped 1 [Enchanted Book]
-[21:56:18] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:inspect' in 10 tick(s) at gametime 45
-[21:56:19] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
-[21:56:19] [Server thread/INFO] (Minecraft) Enchanted Book has the following entity data: {Motion: [0.038282217086586225d, -0.26501187673283194d, -0.026232169461564484d], Health: 5s, Invulnerable: 0b, fall_distance: 1.133644889574498d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [351.4877f, 0.0f], Item: {count: 1, id: "minecraft:enchanted_book"}, Pos: [1.0251270800420529d, 66.2505938366416d, 0.1401665420431882d], PickupDelay: 0s, Fire: 0s, UUID: [I; -1173992322, -1362738526, -1172339212, -535782343], Age: 12s}
-[21:56:19] [Server thread/INFO] (Minecraft) Killed Enchanted Book
-[21:56:19] [Server thread/INFO] (Minecraft) Dropped 1 [Enchanted Book]
-[21:56:19] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:inspect' in 10 tick(s) at gametime 59
-[21:56:19] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
-[21:56:20] [Server thread/INFO] (Minecraft) Enchanted Book has the following entity data: {Motion: [-0.03744382464993192d, -0.26501187673283194d, 0.03954780756725637d], Health: 5s, Invulnerable: 0b, fall_distance: 1.133644889574498d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [267.0922f, 0.0f], Item: {count: 1, id: "minecraft:enchanted_book"}, Pos: [-0.013626633994379161d, 66.2505938366416d, 1.0424875122275805d], PickupDelay: 0s, Fire: 0s, UUID: [I; 2006060505, -197506647, -1432476384, 983742972], Age: 12s}
-[21:56:20] [Server thread/INFO] (Minecraft) Running function cet_audit_smoke:ritual
-[21:56:20] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_PENDING
-[21:56:20] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, ritualQueueData: [{id: "minecraft:sharpness", target_level: 1, previous_level: 0}], color: -1, pendingFreezeTicks: 0L, ritualBlocked: 0b, ritualSession: 123L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 68L, ritualTotalTicks: 80L, ritualOwnerUuid: "00000000-0000-0000-0000-000000000001", epiphanySeed: 0, ritualQueue: "minecraft:sharpness|1|0|0|0|0|0|0.0000|0||-1", x: 1, ritualTarget: {count: 1, id: "minecraft:diamond_sword"}, y: 65, Items: [{count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
-[21:56:20] [Server thread/INFO] (Minecraft) Saving the game (this may take a moment!)
-[21:56:20] [Server thread/INFO] (Minecraft) Saved the game
-[21:56:20] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:ritual_finished' in 100 tick(s) at gametime 177
-[21:56:25] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_FINISHED
-[21:56:25] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, color: -1, pendingFreezeTicks: 0L, ritualBlocked: 0b, ritualSession: 123L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 0L, ritualTotalTicks: 0L, ritualOwnerUuid: "", epiphanySeed: 0, ritualQueue: "", x: 1, y: 65, Items: [{components: {"minecraft:enchantments": {"minecraft:sharpness": 1}, "minecraft:custom_data": {cet_provenance: {"minecraft:sharpness": [B; 1b]}, cet_schema: 1}}, count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
-[21:56:26] [Server thread/INFO] (Minecraft) Running function cet_audit_smoke:ritual_invalid
-[21:56:26] [Server thread/WARN] (chiseled_enchanting_table) Quarantined invalid ritual at BlockPos{x=1, y=65, z=0}
-[21:56:26] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_QUARANTINED
-[21:56:26] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, ritualQueueData: [{id: "cet_audit_smoke:removed_enchantment", target_level: 1, previous_level: 0}], color: -1, pendingFreezeTicks: 0L, ritualBlocked: 1b, ritualSession: 456L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 0L, ritualTotalTicks: 1L, ritualOwnerUuid: "00000000-0000-0000-0000-000000000001", epiphanySeed: 0, ritualQueue: "cet_audit_smoke:removed_enchantment|1|0|0|0|0|0|0.0000|0||-1", x: 1, ritualTarget: {count: 1, id: "minecraft:diamond_sword"}, y: 65, Items: [{count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
-[21:56:26] [Server thread/INFO] (Minecraft) Killed Enchanted Book
-[21:56:26] [Server thread/INFO] (Minecraft) Changed the block at 1, 65, 0
-[21:56:26] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:ritual_broken' in 10 tick(s) at gametime 205
-[21:56:27] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_BROKEN
-[21:56:27] [Server thread/INFO] (Minecraft) Diamond Sword has the following entity data: {Motion: [-0.013918011052539803d, -0.24809193665096888d, -0.004814208857175111d], Health: 5s, Invulnerable: 0b, fall_distance: 0.9974471107125282d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [254.88248f, 0.0f], Item: {count: 1, id: "minecraft:diamond_sword"}, Pos: [1.3879401442918595d, 64.65223323045927d, 0.5874148247194361d], PickupDelay: 0s, Fire: 0s, UUID: [I; 1083661739, -1862972269, -1365649443, -1824616137], Age: 12s}
-[21:56:27] [Server thread/INFO] (Minecraft) Stopping the server
-[21:56:27] [Server thread/INFO] (Minecraft) Stopping server
-[21:56:27] [Server thread/INFO] (Minecraft) Saving players
-[21:56:27] [Server thread/INFO] (Minecraft) Saving worlds
-[21:56:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
-[21:56:28] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
-[21:56:28] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
-[21:56:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[21:56:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[21:56:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[21:56:28] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792965346060.json
+[04:27:24] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[04:27:24] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[04:27:24] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[04:27:29] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
+[04:27:30] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[04:27:31] [Worker-Main-3/INFO] (Minecraft) No existing world data, creating new world
+[04:27:31] [Worker-Main-3/ERROR] (FabricLoader/Mixin) Mixin apply for mod chiseled-enchanting-table failed chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table -> net.minecraft.server.ReloadableServerRegistries: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException Invalid descriptor on chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table->@Inject::cet$preloadLootRules(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V! Expected (Lnet/minecraft/core/LayeredRegistryAccess;Ljava/util/List;Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/concurrent/Executor;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V but found (Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V [INJECT_APPLY Applicator Phase -> chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table -> Apply Injections ->  -> Inject -> chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table->@Inject::cet$preloadLootRules(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V]
+
+org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table->@Inject::cet$preloadLootRules(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V! Expected (Lnet/minecraft/core/LayeredRegistryAccess;Ljava/util/List;Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/concurrent/Executor;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V but found (Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V [INJECT_APPLY Applicator Phase -> chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table -> Apply Injections ->  -> Inject -> chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table->@Inject::cet$preloadLootRules(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V]
+	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:563)
+	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:493)
+	at org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284)
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.inject(InjectionInfo.java:508)
+	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.applyInjections(MixinTargetContext.java:1470)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyInjections(MixinApplicatorStandard.java:832)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$7(MixinApplicatorStandard.java:362)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:360)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:490)
+	at knot//net.minecraft.server.ReloadableServerResources.loadResources(ReloadableServerResources.java:83)
+	at knot//net.minecraft.server.WorldLoader.lambda$load$2(WorldLoader.java:51)
+	at java.base/java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1171)
+	at java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:504)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+[04:27:31] [main/WARN] (Minecraft) Failed to load datapacks, can't proceed with server load. You can either fix your datapacks or reset to vanilla with --safeMode
+
+java.util.concurrent.ExecutionException: java.lang.RuntimeException: Mixin transformation of net.minecraft.server.ReloadableServerRegistries failed
+	at java.base/java.util.concurrent.CompletableFuture.wrapInExecutionException(CompletableFuture.java:345)
+	at java.base/java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:440)
+	at java.base/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2094)
+	at knot//net.minecraft.server.Main.main(Main.java:193)
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:514)
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72)
+	at net.fabricmc.loader.impl.launch.knot.KnotServer.main(KnotServer.java:23)
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+Caused by: java.lang.RuntimeException: Mixin transformation of net.minecraft.server.ReloadableServerRegistries failed
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:440)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.tryLoadClass(KnotClassDelegate.java:336)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:231)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:490)
+	at knot//net.minecraft.server.ReloadableServerResources.loadResources(ReloadableServerResources.java:83)
+	at knot//net.minecraft.server.WorldLoader.lambda$load$2(WorldLoader.java:51)
+	at java.base/java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1171)
+	at java.base/java.util.concurrent.CompletableFuture$Completion.exec(CompletableFuture.java:504)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+Caused by: org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError: An unexpected critical error was encountered
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:380)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClass(MixinTransformer.java:237)
+	at org.spongepowered.asm.mixin.transformer.MixinTransformer.transformClassBytes(MixinTransformer.java:202)
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.getPostMixinClassByteArray(KnotClassDelegate.java:435)
+	... 12 more
+Caused by: org.spongepowered.asm.mixin.throwables.MixinApplyError: Mixin [chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table] from phase [DEFAULT] in config [chiseled-enchanting-table-port.mixins.json] FAILED during APPLY
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinError(MixinProcessor.java:685)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.handleMixinApplyError(MixinProcessor.java:636)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:367)
+	... 15 more
+Caused by: org.spongepowered.asm.mixin.injection.throwables.InvalidInjectionException: Invalid descriptor on chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table->@Inject::cet$preloadLootRules(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V! Expected (Lnet/minecraft/core/LayeredRegistryAccess;Ljava/util/List;Lnet/minecraft/server/packs/resources/ResourceManager;Ljava/util/concurrent/Executor;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V but found (Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V [INJECT_APPLY Applicator Phase -> chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table -> Apply Injections ->  -> Inject -> chiseled-enchanting-table-port.mixins.json:loot.ReloadableServerRegistriesMixin from mod chiseled-enchanting-table->@Inject::cet$preloadLootRules(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/server/packs/resources/PreparableReloadListener$PreparationBarrier;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V]
+	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:563)
+	at org.spongepowered.asm.mixin.injection.callback.CallbackInjector.inject(CallbackInjector.java:493)
+	at org.spongepowered.asm.mixin.injection.code.Injector.inject(Injector.java:284)
+	at org.spongepowered.asm.mixin.injection.struct.InjectionInfo.inject(InjectionInfo.java:508)
+	at org.spongepowered.asm.mixin.transformer.MixinTargetContext.applyInjections(MixinTargetContext.java:1470)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.applyInjections(MixinApplicatorStandard.java:832)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.lambda$runApplicatorPass$7(MixinApplicatorStandard.java:362)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.processMixins(MixinApplicatorStandard.java:381)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.runApplicatorPass(MixinApplicatorStandard.java:360)
+	at org.spongepowered.asm.mixin.transformer.MixinApplicatorStandard.apply(MixinApplicatorStandard.java:240)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.apply(TargetClassContext.java:437)
+	at org.spongepowered.asm.mixin.transformer.TargetClassContext.applyMixins(TargetClassContext.java:418)
+	at org.spongepowered.asm.mixin.transformer.MixinProcessor.applyMixins(MixinProcessor.java:351)
+	... 15 more
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792988830454.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -163,6 +173,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 49s
+BUILD SUCCESSFUL in 27s
 5 actionable tasks: 5 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
