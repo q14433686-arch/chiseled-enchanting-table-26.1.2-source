@@ -53,3 +53,9 @@ __pycache__/
 fix*.patch
 fix*.py
 
+
+# Ephemeral CI diagnostics and local bytecode (Gradle wrapper remains versioned).
+build-reports/
+*.class
+
+run-client-smoke/

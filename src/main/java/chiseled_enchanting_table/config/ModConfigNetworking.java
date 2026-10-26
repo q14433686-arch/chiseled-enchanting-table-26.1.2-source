@@ -27,6 +27,9 @@ public final class ModConfigNetworking {
 
     public static final Identifier CONFIG_MANAGE_PERMISSION =
         ChiseledEnchantingTable.identifier("config/manage");
+    /** Per-player game-time throttle for UpdateRuntimeConfigPayload (NET-03). */
+    private static final java.util.Map<java.util.UUID, Long> LAST_CONFIG_UPDATE_NANO = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long MIN_CONFIG_UPDATE_INTERVAL_NANOS = 250_000_000L; // 250ms max 4 saves/s per admin
 
     public record SyncRuntimeConfigPayload(String json, String policyJson, String effectiveJson, boolean canEdit, long requestId, boolean accepted) implements CustomPacketPayload {
         public SyncRuntimeConfigPayload(String json, boolean edit, long request, boolean accepted) {
@@ -53,13 +56,21 @@ public final class ModConfigNetworking {
         }
     }
 
-    public record UpdateRuntimeConfigPayload(String json, long requestId) implements CustomPacketPayload {
+    public record UpdateRuntimeConfigPayload(String json, long requestId, boolean closeContainer) implements CustomPacketPayload {
+        public UpdateRuntimeConfigPayload(String json, long requestId) {
+            this(json, requestId, true);
+        }
+
         public static final CustomPacketPayload.Type<UpdateRuntimeConfigPayload> TYPE =
             new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("update_runtime_config_" + chiseled_enchanting_table.menu.EnchantingProtocol.REVISION));
 
         public static final StreamCodec<FriendlyByteBuf, UpdateRuntimeConfigPayload> CODEC = StreamCodec.of(
-            (buf, payload) -> { buf.writeUtf(payload.json(), 262_144); buf.writeLong(payload.requestId()); },
-            buf -> new UpdateRuntimeConfigPayload(buf.readUtf(262_144), buf.readLong())
+            (buf, payload) -> {
+                buf.writeUtf(payload.json(), 262_144);
+                buf.writeLong(payload.requestId());
+                buf.writeBoolean(payload.closeContainer());
+            },
+            buf -> new UpdateRuntimeConfigPayload(buf.readUtf(262_144), buf.readLong(), buf.readBoolean())
         );
 
         @Override
@@ -88,23 +99,48 @@ public final class ModConfigNetworking {
             UpdateRuntimeConfigPayload.CODEC
         );
 
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register(
+            (listener, srv) -> LAST_CONFIG_UPDATE_NANO.remove(listener.player.getUUID())
+        );
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(
+            srv -> LAST_CONFIG_UPDATE_NANO.clear()
+        );
+
         ServerPlayNetworking.registerGlobalReceiver(UpdateRuntimeConfigPayload.TYPE, (payload, ctx) -> {
             ServerPlayer player = ctx.player();
-            MinecraftServer server = player.level().getServer();
-            if (server == null || !canPlayerManageConfig(server, player)) {
-                sendToPlayer(player, payload.requestId(), false);
+            MinecraftServer server = ctx.server();
+            if (server == null) {
                 return;
             }
-            try {
-                if (payload.requestId() <= 0 || payload.json().isBlank()) throw new IllegalArgumentException("Invalid save request");
-                ModRuntimeConfig parsed = ModRuntimeConfig.fromJsonString(payload.json());
-                applyAndBroadcast(server, parsed);
-                sendToPlayer(player, payload.requestId(), true);
-            } catch (RuntimeException error) {
-                ChiseledEnchantingTable.LOGGER.warn("Rejected config update from {}", player.getName().getString(), error);
-                sendToPlayer(player, payload.requestId(), false);
-                player.sendSystemMessage(Component.translatable("config.chiseled_enchanting_table.msg.save_failed"));
-            }
+            server.execute(() -> {
+                if (!canPlayerManageConfig(server, player)) {
+                    sendToPlayer(player, payload.requestId(), false);
+                    return;
+                }
+                long nowNano = System.nanoTime();
+                Long prevNano = LAST_CONFIG_UPDATE_NANO.get(player.getUUID());
+                if (prevNano != null && nowNano - prevNano < MIN_CONFIG_UPDATE_INTERVAL_NANOS) {
+                    sendToPlayer(player, payload.requestId(), false);
+                    return;
+                }
+                LAST_CONFIG_UPDATE_NANO.put(player.getUUID(), nowNano);
+                try {
+                    if (payload.requestId() <= 0 || payload.json().isBlank()) {
+                        throw new IllegalArgumentException("Invalid save request");
+                    }
+                    ModRuntimeConfig parsed = ModRuntimeConfig.fromJsonString(payload.json());
+                    applyAndBroadcast(server, parsed, payload.closeContainer() ? null : player);
+                    sendToPlayer(player, payload.requestId(), true);
+                } catch (RuntimeException error) {
+                    ChiseledEnchantingTable.LOGGER.warn("Rejected config update from {}", player.getName().getString(), error);
+                    sendToPlayer(player, payload.requestId(), false);
+                    String msg = String.valueOf(error.getMessage());
+                    boolean startupConflict = msg.contains("bootstrap") || msg.contains("startup");
+                    player.sendSystemMessage(Component.translatable(startupConflict
+                        ? "config.chiseled_enchanting_table.msg.save_failed_startup"
+                        : "config.chiseled_enchanting_table.msg.save_failed"));
+                }
+            });
         });
 
         CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) -> {
@@ -157,12 +193,32 @@ public final class ModConfigNetworking {
     }
 
     public static void applyAndBroadcast(MinecraftServer server, ModRuntimeConfig updated) {
+        applyAndBroadcast(server, updated, null);
+    }
+
+    public static void applyAndBroadcast(
+        MinecraftServer server,
+        ModRuntimeConfig updated,
+        @org.jetbrains.annotations.Nullable ServerPlayer keepOpenCaller
+    ) {
         ModRuntimeConfig sanitized = updated.withEnforcedPolicy(ModRuntimeConfig.serverPackPolicy());
         ChiseledEnchantingTableData.applyRuntimeConfig(sanitized, ModRuntimeConfig.serverPackPolicy(),
             () -> ModRuntimeConfig.setLocalAndSave(sanitized));
+        ModRuntimeConfig.refreshSameJvmRemoteIfPresent(
+            ChiseledEnchantingTableData.runtimeConfiguration(),
+            ModRuntimeConfig.serverPackPolicy()
+        );
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             // Rule changes can invalidate opening-time unlock/scan snapshots. Vanilla returns inputs.
-            if (p.containerMenu instanceof ChiseledEnchantingTableScreenHandler) p.closeContainer();
+            if (p.containerMenu instanceof ChiseledEnchantingTableScreenHandler openMenu) {
+                if (keepOpenCaller != null && p == keepOpenCaller) {
+                    sendToPlayer(p);
+                    EnchantCostSync.sendTo(p);
+                    openMenu.refreshAfterRuntimeConfigChange();
+                    continue;
+                }
+                p.closeContainer();
+            }
             sendToPlayer(p);
             EnchantCostSync.sendTo(p);
         }

@@ -1,15 +1,14 @@
 package chiseled_enchanting_table.mechanics.enchanting;
 
+import chiseled_enchanting_table.utils.CetCustomData;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
@@ -75,17 +74,12 @@ public final class EnchantmentProvenance {
         if (stack == null || stack.isEmpty() || enchantmentId == null) {
             return new BitSet();
         }
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null || customData.isEmpty()) {
-            return new BitSet();
-        }
-        CompoundTag root = customData.copyTag();
-        if (!root.contains(NBT_PROVENANCE_KEY)) {
-            return new BitSet();
-        }
-        CompoundTag prov = root.getCompoundOrEmpty(NBT_PROVENANCE_KEY);
-        return prov.getByteArray(enchantmentId.toString())
-            .map(BitSet::valueOf)
+        return CetCustomData.read(stack)
+            .filter(root -> root.contains(NBT_PROVENANCE_KEY))
+            .map(root -> root.getCompoundOrEmpty(NBT_PROVENANCE_KEY)
+                .getByteArray(enchantmentId.toString())
+                .map(BitSet::valueOf)
+                .orElseGet(BitSet::new))
             .orElseGet(BitSet::new);
     }
 
@@ -93,17 +87,18 @@ public final class EnchantmentProvenance {
         if (stack == null || stack.isEmpty() || enchantmentId == null) {
             return;
         }
-        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
-        CompoundTag root = existing != null ? existing.copyTag() : new CompoundTag();
-        CompoundTag prov = root.getCompoundOrEmpty(NBT_PROVENANCE_KEY);
-
-        if (slices == null || slices.isEmpty()) {
-            prov.remove(enchantmentId.toString());
-        } else {
-            prov.putByteArray(enchantmentId.toString(), slices.toByteArray());
+        if ((slices == null || slices.isEmpty()) && CetCustomData.read(stack).isEmpty()) {
+            return;
         }
-
-        writeCanonicalProvenance(stack, root, prov);
+        CetCustomData.update(stack, root -> {
+            CompoundTag prov = root.getCompoundOrEmpty(NBT_PROVENANCE_KEY);
+            if (slices == null || slices.isEmpty()) {
+                prov.remove(enchantmentId.toString());
+            } else {
+                prov.putByteArray(enchantmentId.toString(), slices.toByteArray());
+            }
+            applyCanonicalProvenance(root, prov);
+        });
     }
 
     public static void recordTablePayment(
@@ -157,45 +152,45 @@ public final class EnchantmentProvenance {
     }
 
     public static void pruneToCurrentEnchantments(ItemStack stack, ItemEnchantments remaining) {
-        if (stack == null || stack.isEmpty()) {
+        if (stack == null || stack.isEmpty() || CetCustomData.read(stack).filter(r -> r.contains(NBT_PROVENANCE_KEY)).isEmpty()) {
             return;
         }
-        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
-        if (existing == null || existing.isEmpty()) {
-            return;
-        }
-        CompoundTag root = existing.copyTag();
-        if (!root.contains(NBT_PROVENANCE_KEY)) {
-            return;
-        }
-        CompoundTag oldProv = root.getCompoundOrEmpty(NBT_PROVENANCE_KEY);
-        CompoundTag nextProv = new CompoundTag();
-        if (remaining != null && !remaining.isEmpty()) {
-            for (var entry : remaining.entrySet()) {
-                int lvl = entry.getIntValue();
-                if (lvl <= 0) continue;
-                entry.getKey().unwrapKey().map(k -> k.identifier()).ifPresent(enchId -> {
-                    String key = enchId.toString();
-                    oldProv.getByteArray(key).ifPresent(bytes -> {
-                        BitSet truncated = truncateToLevel(BitSet.valueOf(bytes), lvl);
-                        if (!truncated.isEmpty()) {
-                            nextProv.putByteArray(key, truncated.toByteArray());
-                        }
-                    });
-                });
+        CetCustomData.update(stack, root -> {
+            if (!root.contains(NBT_PROVENANCE_KEY)) {
+                return;
             }
-        }
-        writeCanonicalProvenance(stack, root, nextProv);
+            CompoundTag oldProv = root.getCompoundOrEmpty(NBT_PROVENANCE_KEY);
+            CompoundTag nextProv = new CompoundTag();
+            if (remaining != null && !remaining.isEmpty()) {
+                for (var entry : remaining.entrySet()) {
+                    int lvl = entry.getIntValue();
+                    if (lvl <= 0) continue;
+                    entry.getKey().unwrapKey().map(k -> k.identifier()).ifPresent(enchId -> {
+                        String key = enchId.toString();
+                        oldProv.getByteArray(key).ifPresent(bytes -> {
+                            BitSet truncated = truncateToLevel(BitSet.valueOf(bytes), lvl);
+                            if (!truncated.isEmpty()) {
+                                nextProv.putByteArray(key, truncated.toByteArray());
+                            }
+                        });
+                    });
+                }
+            }
+            applyCanonicalProvenance(root, nextProv);
+        });
     }
 
-    private static void writeCanonicalProvenance(ItemStack stack, CompoundTag root, CompoundTag unsortedProv) {
+    /** Clears all table-provenance metadata from {@code stack} (e.g. in 1.0.3 Classic Purist mode). */
+    public static void clearAll(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !CetCustomData.read(stack).map(r -> r.contains(NBT_PROVENANCE_KEY)).orElse(false)) {
+            return;
+        }
+        CetCustomData.update(stack, root -> root.remove(NBT_PROVENANCE_KEY));
+    }
+
+    private static void applyCanonicalProvenance(CompoundTag root, CompoundTag unsortedProv) {
         if (unsortedProv == null || unsortedProv.isEmpty()) {
             root.remove(NBT_PROVENANCE_KEY);
-            if (root.isEmpty()) {
-                stack.remove(DataComponents.CUSTOM_DATA);
-            } else {
-                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
-            }
             return;
         }
         List<String> sortedKeys = new ArrayList<>(unsortedProv.keySet());
@@ -212,11 +207,6 @@ public final class EnchantmentProvenance {
             root.remove(NBT_PROVENANCE_KEY);
         } else {
             root.put(NBT_PROVENANCE_KEY, canonical);
-        }
-        if (root.isEmpty()) {
-            stack.remove(DataComponents.CUSTOM_DATA);
-        } else {
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
         }
     }
 }

@@ -6,7 +6,7 @@ Why this exists
 ---------------
 P15 shipped a bug where the block dropped nothing when mined, because the block loot
 table lived at the *old plural* path ``data/<ns>/loot_tables/blocks/...`` and had empty
-pools. Minecraft 26.2 expects the *singular* path ``data/<ns>/loot_table/blocks/...``
+pools. Minecraft 26.1.2 expects the *singular* path ``data/<ns>/loot_table/blocks/...``
 (same singularisation as ``recipe`` and ``advancement``), so the file was silently never
 loaded. This script encodes that whole class of "silently wrong data-pack layout / empty
 content" mistakes so it can be caught in CI instead of in a live client.
@@ -26,8 +26,20 @@ Tier 1 (offline, deterministic, FAILS the build):
     ``docs/COMPATIBILITY.md``): any third-party enchantment mod that tags its enchantments
     with one of these tags (e.g. the vanilla ``#minecraft:non_treasure`` default) is picked
     up automatically, so this check only has to guard against typos in the tag id itself.
+  * Loot tables use the **26.1.2** schema: plural ``conditions[]`` / ``functions[]`` arrays
+    dispatched on the ``condition`` / ``function`` string keys. Minecraft 26.3 collapsed this
+    to a singular ``condition`` / ``modifier`` dispatched on ``type``, so a 26.3 data file
+    copied into this branch fails *silently* (unknown keys are ignored, the drop just loses
+    its condition/function). This is deliberately the inverse of the 26.3 branch's guard.
+  * Advancements use the **26.1.2** schema: only the six keys ``Advancement.CODEC`` reads,
+    ``show_toast`` / ``announce_to_chat`` inside ``display`` (they are ``DisplayInfo`` fields,
+    top-level copies are ignored), ``display.background`` on roots only, and
+    ``minecraft:recipe_crafted`` conditions keyed on ``recipe_id`` (26.3 renamed it to a
+    required ``recipes`` list — see ``docs/reports/PORTING_26_3_REPORT.md`` §5.2 on that
+    branch, and ``docs/reports/SYNC_FROM_26_3_REPORT.md`` here for why this branch keeps
+    ``recipe_id``).
 
-Tier 2 (best-effort, needs the MC 26.2 jar and/or extra mod jars; WARNS only):
+Tier 2 (best-effort, needs the MC 26.1.2 jar and/or extra mod jars; WARNS only):
   * Item / enchantment ids referenced by recipe + transformations + costs exist either
     in this mod's own registry namespace, somewhere in the vanilla data jar, or in one of
     the ``--extra-jar`` paths (e.g. a third-party enchantment mod's jar, for ids like
@@ -105,7 +117,7 @@ def check_datapack_dir_naming() -> None:
             if os.path.isdir(legacy_path):
                 singular = next(s for s, p in SINGULAR_DIRS.items() if p == legacy)
                 err(
-                    f"legacy data-pack dir '{ns}/{legacy}/' found; MC 26.2 expects "
+                    f"legacy data-pack dir '{ns}/{legacy}/' found; MC 26.1.2 expects "
                     f"'{ns}/{singular}/' (singular). Files here are silently ignored."
                 )
         # tags: tags/block not tags/blocks, tags/item not tags/items
@@ -158,42 +170,81 @@ def iter_data_json(kind: str):
                 continue
 
 
-def check_loot_tables_use_26_2_schema() -> None:
-    """26.2 loot schema: pools/entries carry `conditions[]` / `functions[]` arrays dispatched on
-    `condition` / `function` (as opposed to the 26.3 singular `condition` / `modifier` dispatched
-    on `type`). Guard against accidentally backporting the 26.3 schema onto the 26.2 branch.
+def check_loot_tables_use_26_1_2_schema() -> None:
+    """26.1.2 loot schema: plural ``conditions[]`` / ``functions[]`` arrays, each element
+    dispatched on the ``condition`` / ``function`` **string** key.
+
+    Why this gate exists on *this* branch: the 26.3 line migrated the same files to the
+    collapsed schema (singular ``condition`` / ``modifier`` dispatched on ``type``). Copying a
+    26.3 data file here — or copying a 26.1.2 file there — parses as JSON, loads without an
+    error, and silently drops the condition/function, which is exactly the failure mode that
+    produced the P15 "block drops nothing" bug this script was written for. Each branch therefore
+    guards its own direction; this is the 26.1.2 one.
+
+    Evidence for the 26.1.2 form: this repository's own block loot table shipped and live-tested
+    as ``conditions: [{"condition": "minecraft:survives_explosion"}]`` +
+    ``functions: [{"function": "minecraft:copy_components", ...}]`` (1.0.2 baseline, see
+    ``CURRENT_BASELINE.md``); the 26.3 branch's ``PORTING_26_3_REPORT.md`` §5.1 documents the
+    rename as a 26.3 change.
     """
 
-    def walk_pool_or_entry(node, rel: str, where: str) -> None:
+    def walk(node, rel: str, where: str) -> None:
+        if isinstance(node, list):
+            for index, item in enumerate(node):
+                walk(item, rel, f"{where}[{index}]")
+            return
         if not isinstance(node, dict):
             return
 
-        if "modifier" in node:
+        for singular, plural, dispatch in (
+            ("condition", "conditions", "condition"),
+            ("modifier", "functions", "function"),
+        ):
+            if singular not in node:
+                continue
+            value = node[singular]
+            # A *string* "condition" is the 26.1.2 dispatch key of one element inside a
+            # "conditions" array ({"condition": "minecraft:survives_explosion"}), which is exactly
+            # what this branch must keep. Anything else — an object/list under "condition", or any
+            # "modifier" key at all — is the collapsed MC 26.3 form.
+            is_26_1_2_dispatch = singular == "condition" and isinstance(value, str) and value
+            if is_26_1_2_dispatch:
+                continue
             err(
-                f"{rel}: {where} uses the 26.3 'modifier' field; MC 26.2 expects the 'functions' "
-                f"array (dispatched on 'function')"
-            )
-        if "condition" in node and not isinstance(node["condition"], str):
-            err(
-                f"{rel}: {where} uses the 26.3 singular 'condition' object/list; MC 26.2 expects "
-                f"the 'conditions' array"
+                f"{rel}: {where} uses the MC 26.3 singular '{singular}' field; 26.1.2 reads the "
+                f"plural '{plural}' array, whose elements dispatch on a '{dispatch}' **string** "
+                f"(e.g. {{\"{dispatch}\": \"minecraft:...\"}}) — the 26.3 form is silently ignored here"
             )
 
-        for index, cond in enumerate(node.get("conditions") or []):
-            if isinstance(cond, dict) and "condition" not in cond:
-                err(f"{rel}: {where}.conditions[{index}] is missing its 'condition' dispatch key")
+        for plural, dispatch in (("conditions", "condition"), ("functions", "function")):
+            if plural not in node:
+                continue
+            value = node[plural]
+            if not isinstance(value, list):
+                err(f"{rel}: {where}['{plural}'] must be an array in 26.1.2, found {type(value).__name__}")
+                continue
+            for index, element in enumerate(value):
+                if not isinstance(element, dict):
+                    err(f"{rel}: {where}['{plural}'][{index}] must be an object")
+                    continue
+                key = element.get(dispatch)
+                if not isinstance(key, str) or not key:
+                    err(
+                        f"{rel}: {where}['{plural}'][{index}] is missing its '{dispatch}' string "
+                        f"dispatch key (26.1.2 form, e.g. {{\"{dispatch}\": \"minecraft:...\"}})"
+                    )
 
-        for index, func in enumerate(node.get("functions") or []):
-            if isinstance(func, dict) and "function" not in func:
-                err(f"{rel}: {where}.functions[{index}] is missing its 'function' dispatch key")
-
-        for index, entry in enumerate(node.get("entries") or []):
-            walk_pool_or_entry(entry, rel, f"{where}.entries[{index}]")
+        for key, value in node.items():
+            if isinstance(value, list):
+                for index, item in enumerate(value):
+                    walk(item, rel, f"{where}.{key}[{index}]")
+            else:
+                walk(value, rel, f"{where}.{key}")
 
     for _ns, path, data in iter_data_json("loot_table"):
         rel = os.path.relpath(path, REPO)
         for index, pool in enumerate(data.get("pools") or []):
-            walk_pool_or_entry(pool, rel, f"pools[{index}]")
+            walk(pool, rel, f"pools[{index}]")
 
 
 ADVANCEMENT_TOP_KEYS = {
@@ -204,40 +255,21 @@ DISPLAY_KEYS = {
 }
 
 
-def check_loot_function_codecs_keep_conditions() -> None:
-    """Every `LootItemConditionalFunction` subclass must build its MapCodec via `commonFields`.
+def check_advancements_use_26_1_2_schema() -> None:
+    """26.1.2 advancement schema checks (synced from the 26.3 branch, version-adjusted).
 
-    A `MapCodec.unit(...)` codec ignores the `conditions` array, so a data pack's
-    always-false condition is silently dropped and the function runs anyway. The CI
-    server smoke test caught exactly that on 2026-10-23 (an always-false
-    `minecraft:random_chance` on `remove_enchanted_books` still ate the book), and the
-    26.3 line fixed it by routing the codec through `commonFields`.
-    """
-    loot_dir = os.path.join(REPO, "src", "main", "java", "chiseled_enchanting_table",
-                            "mechanics", "loot")
-    for path in sorted(glob.glob(os.path.join(loot_dir, "*.java"))):
-        rel = os.path.relpath(path, REPO)
-        with open(path, encoding="utf-8") as fh:
-            source = fh.read()
-        if "extends LootItemConditionalFunction" not in source:
-            continue
-        if "MapCodec.unit(" in source:
-            err(f"{rel}: MapCodec.unit(...) drops the loot-function 'conditions' array; "
-                f"build the codec with RecordCodecBuilder.mapCodec(i -> commonFields(i)...)")
-        if "commonFields(" not in source:
-            err(f"{rel}: loot function codec never calls commonFields(...), "
-                f"so per-function conditions cannot be parsed")
-
-
-def check_advancements_use_26_2_schema() -> None:
-    """26.2 advancement schema checks.
-
-    * `minecraft:recipe_crafted` in 26.2 takes `recipe_id` (a single recipe id string), not the
-      26.3 `recipes` list.
-    * `show_toast` / `announce_to_chat` are DisplayInfo fields; Advancement.CODEC only knows
-      parent / display / rewards / criteria / requirements / sends_telemetry_event.
-    * `display.background` is root-only (child advancements must not carry `display.background`,
-      and visible roots must carry one).
+    * ``Advancement.CODEC`` only reads ``parent`` / ``display`` / ``rewards`` / ``criteria`` /
+      ``requirements`` / ``sends_telemetry_event``. ``show_toast`` and ``announce_to_chat`` are
+      ``DisplayInfo`` fields: at the top level they are ignored, i.e. the intended
+      "no toast, no chat" silently does not happen. This was true on the 26.3 line and it is
+      true here, so the guard is identical.
+    * ``display.background`` belongs to roots only. 26.1.2 ignores it on a child; **26.3 rejects
+      it outright** ("Only advancement roots can have background"), which fails the whole
+      ``minecraft:advancement`` registry and makes the world refuse to open. Keeping the key out
+      here means this branch's data files stay forward-compatible with the 26.3 line.
+    * ``minecraft:recipe_crafted`` takes ``recipe_id`` on this Minecraft line. 26.3 replaced it
+      with a required ``recipes`` list; the inverse guard below catches a blind copy of a 26.3
+      advancement file, which would fail to load the advancement here.
     """
     for _ns, path, data in iter_data_json("advancement"):
         rel = os.path.relpath(path, REPO)
@@ -255,13 +287,14 @@ def check_advancements_use_26_2_schema() -> None:
             if is_root and "background" not in display:
                 err(
                     f"{rel}: visible advancement root has no 'display.background' "
-                    f"('Visible advancement roots must have background')"
+                    f"(the tab would have no background; 26.3 rejects this outright: "
+                    f"'Visible advancement roots must have background')"
                 )
             elif not is_root and "background" in display:
                 err(
                     f"{rel}: non-root advancement carries 'display.background' "
-                    f"('Only advancement roots can have background'); delete the key, the "
-                    f"parent owns the tab background"
+                    f"(ignored by 26.1.2, a hard load error in 26.3: 'Only advancement roots can "
+                    f"have background'); delete the key, the parent owns the tab background"
                 )
 
         for name, criterion in (data.get("criteria") or {}).items():
@@ -272,11 +305,14 @@ def check_advancements_use_26_2_schema() -> None:
             conditions = criterion.get("conditions") or {}
             if "recipes" in conditions:
                 err(
-                    f"{rel}: criteria '{name}' uses the 26.3 'recipes' list; MC 26.2 expects "
-                    f"'recipe_id' (a single recipe id string)"
+                    f"{rel}: criteria '{name}' uses the MC 26.3 'recipes' list; 26.1.2 reads "
+                    f"'recipe_id' (a single recipe id string) — the 26.3 form makes this "
+                    f"advancement fail to load here"
                 )
-            elif "recipe_id" not in conditions or not isinstance(conditions["recipe_id"], str):
-                err(f"{rel}: criteria '{name}' (recipe_crafted) is missing the required 'recipe_id' string")
+            elif "recipe_id" not in conditions:
+                err(f"{rel}: criteria '{name}' (recipe_crafted) is missing 'recipe_id'")
+            elif not isinstance(conditions["recipe_id"], str):
+                err(f"{rel}: criteria '{name}' 'recipe_id' must be a single recipe id string")
 
 
 def check_transformation_json_matches_java() -> None:
@@ -307,6 +343,9 @@ def check_transformation_json_matches_java() -> None:
 
     with open(java_path, encoding="utf-8") as fh:
         java_src = fh.read()
+    loader_path = os.path.join(os.path.dirname(java_path), "DataTableLoader.java")
+    with open(loader_path, encoding="utf-8") as fh:
+        java_src += fh.read()
     if "BUILT_IN_JSON" in java_src:
         err("ChiseledEnchantingTableData.java still contains a duplicate BUILT_IN_JSON text block (F8 drift risk)")
     for req_call in ('readBundledJsonObject("item_transformations.json")', 'readBundledJsonObject("disenchanting.json")'):
@@ -481,273 +520,6 @@ def check_bookshelf_book_pool_well_formed() -> None:
                     err(f"bookshelf_book_pool.json: enchant_sets[{i}][{j}].weight must be a positive integer, got {weight!r}")
 
 
-def _check_cost_options(rel: str, options, where: str) -> None:
-    """Validate one ``options`` list of cost specs (shared by enchantment_costs.json,
-    book_upgrades.json, treasure_epiphany.json and item_transformations.json).
-
-    A spec is ``{item, ...count strategy...}`` where the count strategy is exactly one of
-
-    * ``count``                    — flat count;
-    * ``count_per_level``          — flat × level;
-    * ``min_count`` + ``max_count`` — uniform-random inside the deterministic per-player seed;
-    * ``base_count`` + ``max_level_count`` (+ optional ``level_exponent``) — smooth relative-tier
-      curve, auto-adapting to any ``maxLevel`` (the 26.1.2-side "yield-aware" rework; this is the
-      form the bundled data uses today).
-
-    ``extra`` / ``extras`` recursively add secondary items on top of the primary one.
-    """
-    if not isinstance(options, list) or not options:
-        err(f"{rel}: {where}.options must be a non-empty list")
-        return
-    for i, spec in enumerate(options):
-        if not isinstance(spec, dict):
-            err(f"{rel}: {where}.options[{i}] must be an object")
-            continue
-        item = spec.get("item")
-        if not isinstance(item, str) or not _RESOURCE_LOCATION_RE.match(item):
-            err(f"{rel}: {where}.options[{i}].item is not a valid item id: {item!r}")
-        strategies = [k for k in ("count", "count_per_level", "base_count") if k in spec]
-        if not strategies and not ("min_count" in spec and "max_count" in spec):
-            err(
-                f"{rel}: {where}.options[{i}] declares no count strategy "
-                "(count / count_per_level / min_count+max_count / base_count+max_level_count)"
-            )
-        for key in ("count", "count_per_level", "min_count", "max_count", "base_count", "max_level_count"):
-            value = spec.get(key)
-            if value is not None:
-                if not isinstance(value, int) or value < 0:
-                    err(f"{rel}: {where}.options[{i}].{key} must be a non-negative integer, got {value!r}")
-        exponent = spec.get("level_exponent")
-        if exponent is not None and not (isinstance(exponent, (int, float)) and float(exponent) > 0.0):
-            err(f"{rel}: {where}.options[{i}].level_exponent must be a positive number, got {exponent!r}")
-        if "base_count" in spec and "max_level_count" not in spec:
-            err(f"{rel}: {where}.options[{i}] uses base_count without max_level_count")
-        # `extras` is a nested spec list (each element is a full cost spec); `additional_costs`
-        # is a flat list of secondary add-ons consumed from the player inventory.
-        extras = spec.get("extras")
-        if extras is not None:
-            _check_cost_options(rel, extras, f"{where}.options[{i}].extras")
-        additional_costs = spec.get("additional_costs")
-        if additional_costs is not None:
-            if not isinstance(additional_costs, list):
-                err(f"{rel}: {where}.options[{i}].additional_costs must be a list")
-            else:
-                for j, additional in enumerate(additional_costs):
-                    if not isinstance(additional, dict):
-                        err(f"{rel}: {where}.options[{i}].additional_costs[{j}] must be an object")
-                        continue
-                    extra_item = additional.get("item")
-                    if not isinstance(extra_item, str) or not _RESOURCE_LOCATION_RE.match(extra_item):
-                        err(
-                            f"{rel}: {where}.options[{i}].additional_costs[{j}].item is not a valid "
-                            f"item id: {extra_item!r}"
-                        )
-
-
-def check_book_upgrades_well_formed() -> None:
-    """Validate ``book_upgrades.json`` (Tier 1). Structure:
-       { combine_route:  { enabled: bool, xp_cost_multiplier_of_vanilla_like: number },
-         research_route: { enabled: bool,
-                           xp_cost_multiplier_of_direct_enchant: number,
-                           material_cost_multiplier_of_direct_enchant: number,
-                           default_material_cost: { options: [...] },
-                           enchantment_overrides: { <enchantment id>: { material_cost: { options: [...] } } } } }.
-    """
-    rel = "book_upgrades.json"
-    path = os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, rel)
-    if not os.path.isfile(path):
-        return
-    try:
-        with open(path, encoding="utf-8") as fh:
-            data = json.load(fh)
-    except Exception:
-        return  # already reported by check_json_parses
-    if not isinstance(data, dict):
-        err(f"{rel}: top level must be an object")
-        return
-
-    combine = data.get("combine_route")
-    if combine is not None:
-        if not isinstance(combine, dict):
-            err(f"{rel}: 'combine_route' must be an object")
-        else:
-            if "enabled" in combine and not isinstance(combine["enabled"], bool):
-                err(f"{rel}: combine_route.enabled must be a boolean, got {combine['enabled']!r}")
-            mult = combine.get("xp_cost_multiplier_of_vanilla_like")
-            if mult is not None and not (isinstance(mult, (int, float)) and float(mult) > 0.0):
-                err(f"{rel}: combine_route.xp_cost_multiplier_of_vanilla_like must be positive, got {mult!r}")
-
-    research = data.get("research_route")
-    if research is None:
-        return
-    if not isinstance(research, dict):
-        err(f"{rel}: 'research_route' must be an object")
-        return
-    if "enabled" in research and not isinstance(research["enabled"], bool):
-        err(f"{rel}: research_route.enabled must be a boolean, got {research['enabled']!r}")
-    for key in ("xp_cost_multiplier_of_direct_enchant", "material_cost_multiplier_of_direct_enchant"):
-        value = research.get(key)
-        if value is not None and not (isinstance(value, (int, float)) and float(value) > 0.0):
-            err(f"{rel}: research_route.{key} must be positive, got {value!r}")
-    default_cost = research.get("default_material_cost")
-    if isinstance(default_cost, dict):
-        _check_cost_options(rel, default_cost.get("options"), "research_route.default_material_cost")
-    elif default_cost is not None:
-        err(f"{rel}: research_route.default_material_cost must be an object")
-
-    overrides = research.get("enchantment_overrides")
-    if overrides is None:
-        return
-    if not isinstance(overrides, dict):
-        err(f"{rel}: research_route.enchantment_overrides must be an object")
-        return
-    for enchant, entry in overrides.items():
-        if not _RESOURCE_LOCATION_RE.match(enchant):
-            err(f"{rel}: research_route.enchantment_overrides key is not a valid enchantment id: {enchant!r}")
-            continue
-        if not isinstance(entry, dict):
-            err(f"{rel}: research_route.enchantment_overrides['{enchant}'] must be an object")
-            continue
-        material_cost = entry.get("material_cost")
-        if material_cost is not None:
-            if not isinstance(material_cost, dict):
-                err(f"{rel}: research_route.enchantment_overrides['{enchant}'].material_cost must be an object")
-            else:
-                _check_cost_options(
-                    rel,
-                    material_cost.get("options"),
-                    f"research_route.enchantment_overrides['{enchant}'].material_cost",
-                )
-        xp_levels = entry.get("xp_levels")
-        if xp_levels is not None and (not isinstance(xp_levels, int) or xp_levels < 0):
-            err(f"{rel}: research_route.enchantment_overrides['{enchant}'].xp_levels must be a non-negative integer")
-
-
-def check_treasure_epiphany_well_formed() -> None:
-    """Validate ``treasure_epiphany.json`` (Tier 1) — the Grand-Library Treasure Epiphany +
-    cryo-stasis freeze/reroll table.
-
-    Structure (all keys optional except the cost tables):
-      { min_regular_bookshelves: int>=0, base_chance: 0..1, chance_per_extra_bookshelf: >=0,
-        chance_per_master_tome: >=0, max_chance: 0..1, max_slots_cap: int in [1, 6],
-        score_per_extra_slot: int>=0, cycle_ticks: int>0, freeze_duration_ticks: int>0,
-        max_freeze_ticks: int>=freeze_duration_ticks, freeze_xp_levels: int>=0,
-        freeze_cost_options: [{item, count}], reroll_xp_levels: int>=0,
-        reroll_cost_options: [{item, count}], treasure_enchantments: [id],
-        treasure_tags: ["#id"], exclude_tags: ["#id"], default_xp_levels: int>=0,
-        default_material_cost: {options: [...]},
-        treasure_costs: {<enchantment id>: {xp_levels: int>=0, material_cost: {options: [...]}}} }
-    """
-    rel = "treasure_epiphany.json"
-    path = os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, rel)
-    if not os.path.isfile(path):
-        return
-    try:
-        with open(path, encoding="utf-8") as fh:
-            data = json.load(fh)
-    except Exception:
-        return  # already reported by check_json_parses
-    if not isinstance(data, dict):
-        err(f"{rel}: top level must be an object")
-        return
-
-    for key in ("min_regular_bookshelves", "score_per_extra_slot", "freeze_xp_levels",
-                "reroll_xp_levels", "default_xp_levels"):
-        value = data.get(key)
-        if value is not None and (not isinstance(value, int) or value < 0):
-            err(f"{rel}: {key} must be a non-negative integer, got {value!r}")
-    for key in ("cycle_ticks", "freeze_duration_ticks", "max_freeze_ticks"):
-        value = data.get(key)
-        if value is not None and (not isinstance(value, int) or value <= 0):
-            err(f"{rel}: {key} must be a positive integer, got {value!r}")
-    freeze_ticks = data.get("freeze_duration_ticks")
-    max_freeze = data.get("max_freeze_ticks")
-    if isinstance(freeze_ticks, int) and isinstance(max_freeze, int) and max_freeze < freeze_ticks:
-        err(f"{rel}: max_freeze_ticks ({max_freeze}) must be >= freeze_duration_ticks ({freeze_ticks})")
-
-    for key in ("base_chance", "chance_per_extra_bookshelf", "chance_per_master_tome", "max_chance"):
-        value = data.get(key)
-        if value is not None and not (isinstance(value, (int, float)) and 0.0 <= float(value) <= 1.0):
-            err(f"{rel}: {key} must be a number in [0.0, 1.0], got {value!r}")
-    base_chance = data.get("base_chance")
-    max_chance = data.get("max_chance")
-    if isinstance(base_chance, (int, float)) and isinstance(max_chance, (int, float)) and max_chance < base_chance:
-        err(f"{rel}: max_chance ({max_chance}) must be >= base_chance ({base_chance})")
-
-    cap = data.get("max_slots_cap")
-    if cap is not None and (not isinstance(cap, int) or not 1 <= cap <= 6):
-        err(f"{rel}: max_slots_cap must be an integer in [1, 6], got {cap!r}")
-
-    # Freeze / reroll costs are *single-material* picks, i.e. flat {item, count} pairs.
-    for key in ("freeze_cost_options", "reroll_cost_options"):
-        options = data.get(key)
-        if options is None:
-            continue
-        if not isinstance(options, list) or not options:
-            err(f"{rel}: {key} must be a non-empty list")
-            continue
-        for i, option in enumerate(options):
-            if not isinstance(option, dict):
-                err(f"{rel}: {key}[{i}] must be an object")
-                continue
-            item = option.get("item")
-            if not isinstance(item, str) or not _RESOURCE_LOCATION_RE.match(item):
-                err(f"{rel}: {key}[{i}].item is not a valid item id: {item!r}")
-            count = option.get("count")
-            if not isinstance(count, int) or count <= 0:
-                err(f"{rel}: {key}[{i}].count must be a positive integer, got {count!r}")
-
-    enchantments = data.get("treasure_enchantments")
-    if enchantments is not None:
-        if not isinstance(enchantments, list):
-            err(f"{rel}: treasure_enchantments must be a list")
-        else:
-            for i, enchant in enumerate(enchantments):
-                if not isinstance(enchant, str) or not _RESOURCE_LOCATION_RE.match(enchant):
-                    err(f"{rel}: treasure_enchantments[{i}] is not a valid enchantment id: {enchant!r}")
-    for key in ("treasure_tags", "exclude_tags"):
-        tags = data.get(key)
-        if tags is None:
-            continue
-        if not isinstance(tags, list):
-            err(f"{rel}: {key} must be a list")
-            continue
-        for i, tag in enumerate(tags):
-            if isinstance(tag, str) and not tag.startswith("#"):
-                warn(f"{rel}: {key}[{i}] should be written as '#{tag}' (tags are prefixed with '#')")
-            tag_id = tag[1:] if isinstance(tag, str) and tag.startswith("#") else tag
-            if not isinstance(tag_id, str) or not _RESOURCE_LOCATION_RE.match(tag_id):
-                err(f"{rel}: {key}[{i}] is not a valid tag id: {tag!r}")
-
-    default_cost = data.get("default_material_cost")
-    if isinstance(default_cost, dict):
-        _check_cost_options(rel, default_cost.get("options"), "default_material_cost")
-    elif default_cost is not None:
-        err(f"{rel}: default_material_cost must be an object")
-
-    costs = data.get("treasure_costs")
-    if costs is None:
-        return
-    if not isinstance(costs, dict):
-        err(f"{rel}: treasure_costs must be an object")
-        return
-    for enchant, entry in costs.items():
-        if not _RESOURCE_LOCATION_RE.match(enchant):
-            err(f"{rel}: treasure_costs key is not a valid enchantment id: {enchant!r}")
-            continue
-        if not isinstance(entry, dict):
-            err(f"{rel}: treasure_costs['{enchant}'] must be an object")
-            continue
-        xp_levels = entry.get("xp_levels")
-        if xp_levels is not None and (not isinstance(xp_levels, int) or xp_levels < 0):
-            err(f"{rel}: treasure_costs['{enchant}'].xp_levels must be a non-negative integer")
-        material_cost = entry.get("material_cost")
-        if isinstance(material_cost, dict):
-            _check_cost_options(rel, material_cost.get("options"), f"treasure_costs['{enchant}'].material_cost")
-        elif material_cost is not None:
-            err(f"{rel}: treasure_costs['{enchant}'].material_cost must be an object")
-
-
 def check_default_enchantment_tags_well_formed() -> None:
     """Validate the `tags` extension in default_enchantments.json (the cross-mod compatibility
     hook: any enchantment mod that tags its enchantments with one of these is auto-included)."""
@@ -799,9 +571,6 @@ def collect_referenced_ids() -> set[str]:
         # U1: enchantment ids referenced by the new loot injection + bookshelf book pool JSONs.
         os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "loot_injections.json"),
         os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "bookshelf_book_pool.json"),
-        # The 26.1.2-side progression rework added these two item/enchantment-heavy tables.
-        os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "book_upgrades.json"),
-        os.path.join(DATA_ROOT, NAMESPACE, NAMESPACE, "treasure_epiphany.json"),
     ]
     for path in targets:
         if os.path.isfile(path):
@@ -907,8 +676,8 @@ def find_mc_jar(explicit: str | None) -> str | None:
         return explicit
     home = os.path.expanduser("~")
     for cand in (
-        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.2", "minecraft-extracted_server.jar"),
-        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.2", "minecraft-common.jar"),
+        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.1.2", "minecraft-extracted_server.jar"),
+        os.path.join(home, ".gradle", "caches", "fabric-loom", "26.1.2", "minecraft-common.jar"),
     ):
         if os.path.isfile(cand):
             return cand
@@ -939,7 +708,7 @@ def check_ids_exist(mc_jar: str | None, extra_jars: list[str]) -> None:
     if mc_jar:
         known |= collect_vanilla_ids(mc_jar)
     else:
-        warn("MC 26.2 jar not found; skipping vanilla id existence check (Tier 2)")
+        warn("MC 26.1.2 jar not found; skipping vanilla id existence check (Tier 2)")
     for extra_jar in extra_jars:
         known |= collect_jar_ids(extra_jar)
 
@@ -1020,8 +789,12 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         os.path.join(REPO, "src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java"),
         encoding="utf-8",
     ).read()
-    if "resolveEffectiveXpRequirement(ewl, OptionType.BOOK_COMBINE_UPGRADE)" not in bua_java:
-        errors.append("BookUpgradeApplication.applyCombine must use resolveEffectiveXpRequirement + deductXp (R2-1)")
+    # H-01 (supersedes the R2-1 single-entry contract): one combine click merges every
+    # enchantment, so applyCombine must charge the whole-book sequential price.
+    if "handler.bookCombineXpRequirement()" not in bua_java or "deductXp(handler.player, xpReq)" not in bua_java:
+        errors.append("BookUpgradeApplication.applyCombine must use handler.bookCombineXpRequirement() + deductXp (H-01)")
+    if "combineSequential" not in sh_java:
+        errors.append("ScreenHandler.bookCombineXpRequirement must combine per-entry prices via XpCostConversion.combineSequential (H-01)")
     if "type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE" not in sh_java:
         errors.append("ScreenHandler must apply min(rawCost, deltaRaw) to BOOK_COMBINE_UPGRADE so 0.6x multiplier takes effect (R2-1)")
     if "/ 12000L" in sh_java:
@@ -1164,11 +937,12 @@ def check_disenchanting_and_anti_arbitrage() -> None:
         "0.85×",
         "Lv.4~10",
         "涤魔碎砂",
+        "38 - 12",
     ):
         if stale_fragment in wiki_text:
             errors.append(f"docs/WIKI.md still contains stale formula/filename '{stale_fragment}' (R2-5)")
     for required_fragment in (
-        "38 - 12",
+        "45 - 3",
         "r(e)^{1.25}",
         "blank_book_affinity_weight = 0.50",
         "giveExperienceLevels",
@@ -1398,8 +1172,16 @@ def check_grimoire_recipes_sounds_and_textures() -> None:
     data_dir = Path(REPO) / "src/main/resources/data/chiseled_enchanting_table/chiseled_enchanting_table"
     lr_json = json.loads((data_dir / "library_resonance.json").read_text(encoding="utf-8"))
     cm = lr_json.get("chiseled_mastery", {})
-    if cm.get("tome_consumption_mode") != "wear" or cm.get("max_tome_uses") != 16 or cm.get("book_copy_wear_cost") != 4:
-        errors.append("library_resonance.json chiseled_mastery tome wear fields must default to wear / 16 / 4 (D1)")
+    if cm.get("tome_consumption_mode") != "wear" or cm.get("max_tome_uses") != 4 or cm.get("book_copy_wear_cost") != 2:
+        errors.append("library_resonance.json chiseled_mastery tome wear fields must default to wear / 4 / 2 (D1 / Part B)")
+    if cm.get("unbreaking_waiver_max_chance", 1.0) > 0.30 + 1e-9:
+        errors.append("library_resonance.json unbreaking_waiver_max_chance must be <= 0.30")
+    cs = lr_json.get("crossline_slip", {})
+    rit = lr_json.get("ritual", {})
+    if cs.get("max_slip_chance") != 0.25 or cs.get("tier_drop_share") != 0.70 or cs.get("junk_crossline_share") != 0.25 or cs.get("curse_crossline_share") != 0.05:
+        errors.append("library_resonance.json crossline_slip must default to 0.25 cap and 0.70 / 0.25 / 0.05 outcome split")
+    if rit.get("max_transcription_slip_chance") != cs.get("max_slip_chance"):
+        errors.append("library_resonance.json ritual.max_transcription_slip_chance must match crossline_slip.max_slip_chance")
 
     sg_json = json.loads((data_dir / "shelf_gates.json").read_text(encoding="utf-8"))
     dtg = sg_json.get("depleted_tome_gradients", {})
@@ -1431,7 +1213,7 @@ def check_grimoire_recipes_sounds_and_textures() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mc-jar", help="path to the MC 26.2 extracted jar for Tier 2 checks")
+    parser.add_argument("--mc-jar", help="path to the MC 26.1.2 extracted jar for Tier 2 checks")
     parser.add_argument(
         "--extra-jar",
         action="append",
@@ -1444,15 +1226,12 @@ def main() -> int:
     check_json_parses()
     check_datapack_dir_naming()
     check_block_loot_tables_drop_something()
-    check_loot_tables_use_26_2_schema()
-    check_loot_function_codecs_keep_conditions()
-    check_advancements_use_26_2_schema()
+    check_loot_tables_use_26_1_2_schema()
+    check_advancements_use_26_1_2_schema()
     check_transformation_json_matches_java()
     check_default_enchantment_tags_well_formed()
     check_loot_injections_well_formed()
     check_bookshelf_book_pool_well_formed()
-    check_book_upgrades_well_formed()
-    check_treasure_epiphany_well_formed()
     check_disenchanting_and_anti_arbitrage()
     check_grimoire_recipes_sounds_and_textures()
     mc_jar = find_mc_jar(args.mc_jar)

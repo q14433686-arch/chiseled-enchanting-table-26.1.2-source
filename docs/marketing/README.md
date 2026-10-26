@@ -36,7 +36,7 @@ All three platforms need a square icon. Use the staged copies under
 | `cover-banner.png` | 660 845 B PNG | Optional gallery banner / first screenshot on Modrinth and CurseForge; MC百科 「封面图」(240×150 会被自动拉伸) 也可裁剪后使用 |
 
 The same `cover-icon-256.png` bytes are already embedded inside
-`chiseled-enchanting-table-1.0.2.jar` at `assets/chiseled-enchanting-table/icon.png`, so the
+`chiseled-enchanting-table-1.0.2.jar` at `assets/chiseled_enchanting_table/icon.png`, so the
 in-game mods-list entry matches the platform listings.
 
 ### Platform-specific icon notes

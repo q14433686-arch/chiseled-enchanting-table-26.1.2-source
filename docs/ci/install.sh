@@ -56,7 +56,7 @@ fi
 echo ""
 echo "Next:"
 echo "  git add .github/workflows"
-echo "  git commit -m \"ci: install the 26.2 CI triad\""
+echo "  git commit -m \"ci: install the 26.1.2 CI triad\""
 echo "  git push        # requires a token with the 'workflows' permission"
 echo ""
 git --no-pager diff --stat -- .github/workflows || true

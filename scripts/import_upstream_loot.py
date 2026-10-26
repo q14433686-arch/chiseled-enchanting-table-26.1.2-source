@@ -76,13 +76,25 @@ def parse_block(body: str):
     return entries
 
 
+existing_doc = {}
+if os.path.exists(DEST):
+    try:
+        with open(DEST, encoding="utf-8") as prev_fh:
+            existing_doc = json.load(prev_fh)
+    except Exception:
+        existing_doc = {}
+
 out = {
-    "_comment": "Enchanted-book injections into vanilla chest / archaeology loot tables. Auto-derived from "
-                "upstream ReworkEnchantedBookChestLoot.java by scripts/import_upstream_loot.py; do not "
-                "hand-edit specific entries here — edit the derivation script or add new entries manually.",
-    "_schema_version": 1,
-    "entries": [],
+    "_comment": existing_doc.get(
+        "_comment",
+        "Enchanted-book & Depleted Tome injections into vanilla/modded chest and archaeology loot tables.",
+    ),
+    "_schema_version": existing_doc.get("_schema_version", 2),
+    "vanilla_chest_books": existing_doc.get("vanilla_chest_books", "keep_both"),
 }
+if "depleted_tome_chest_spawns" in existing_doc:
+    out["depleted_tome_chest_spawns"] = existing_doc["depleted_tome_chest_spawns"]
+out["entries"] = []
 
 if arch_block:
     entries = parse_block(arch_block.group(2))
@@ -95,7 +107,7 @@ if arch_block:
 
 # Upstream still uses the pre-1.17 flat path "chests/village_armorer"; 1.17+ moved every villager
 # workstation to the "village/village_<job>" sub-path. Normalise here so the exported JSON hits
-# the actual 26.2 loot table ids.
+# the actual 26.1.2 loot table ids.
 UPSTREAM_ID_FIXES = {
     "village_armorer": "village/village_armorer",
 }

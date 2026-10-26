@@ -1,0 +1,1391 @@
+{
+  "xp": {
+    "level_one_cost": 5,
+    "common_max_cost": 25,
+    "rare_single_level_cost": 35,
+    "overrides": {
+      "minecraft:mending": {
+        "1": 35
+      },
+      "minecraft:infinity": {
+        "1": 35
+      },
+      "minecraft:silk_touch": {
+        "1": 35
+      },
+      "minecraft:channeling": {
+        "1": 35
+      },
+      "minecraft:flame": {
+        "1": 30
+      },
+      "minecraft:aqua_affinity": {
+        "1": 25
+      }
+    }
+  },
+  "default_item_cost": {
+    "options": [
+      {
+        "item": "minecraft:lapis_lazuli",
+        "count_per_level": 2
+      },
+      {
+        "item": "minecraft:amethyst_shard",
+        "count_per_level": 1
+      }
+    ]
+  },
+  "item_costs": {
+    "minecraft:protection": {
+      "options": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:lapis_lazuli",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:iron_ingot",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 1,
+            "max_count": 3,
+            "extra": {
+              "item": "minecraft:iron_ingot",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:fire_protection": {
+      "options": [
+        {
+          "item": "minecraft:blaze_powder",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:magma_cream",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:blaze_powder",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 1,
+            "max_count": 3,
+            "extra": {
+              "item": "minecraft:blaze_powder",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:blast_protection": {
+      "options": [
+        {
+          "item": "minecraft:gunpowder",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:obsidian",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:gunpowder",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 1,
+            "max_count": 3,
+            "extra": {
+              "item": "minecraft:gunpowder",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:projectile_protection": {
+      "options": [
+        {
+          "item": "minecraft:arrow",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:bone",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:arrow",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 1,
+            "max_count": 3,
+            "extra": {
+              "item": "minecraft:arrow",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:feather_falling": {
+      "options": [
+        {
+          "item": "minecraft:feather",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:phantom_membrane",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:feather",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 1,
+            "max_count": 3,
+            "extra": {
+              "item": "minecraft:feather",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:respiration": {
+      "options": [
+        {
+          "item": "minecraft:pufferfish",
+          "count_per_level": 1
+        },
+        {
+          "item": "minecraft:prismarine_crystals",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:pufferfish",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:prismarine_crystals",
+            "count": 8
+          }
+        ]
+      }
+    },
+    "minecraft:aqua_affinity": {
+      "options": [
+        {
+          "item": "minecraft:cod",
+          "count": 6
+        },
+        {
+          "item": "minecraft:prismarine_shard",
+          "count": 4
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:prismarine_crystals",
+            "count": 6
+          },
+          {
+            "item": "minecraft:emerald",
+            "min_count": 2,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:prismarine_shard",
+              "count": 8
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:thorns": {
+      "options": [
+        {
+          "item": "minecraft:cactus",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:pointed_dripstone",
+          "count_per_level": 2
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:cactus",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 2,
+            "max_count": 4,
+            "extra": {
+              "item": "minecraft:cactus",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:depth_strider": {
+      "options": [
+        {
+          "item": "minecraft:prismarine_shard",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:kelp",
+          "count_per_level": 6
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:prismarine_shard",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:turtle_scute",
+            "count": 3
+          }
+        ]
+      }
+    },
+    "minecraft:frost_walker": {
+      "options": [
+        {
+          "item": "minecraft:packed_ice",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:blue_ice",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:blue_ice",
+            "count": 6
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 2,
+            "max_count": 4,
+            "extra": {
+              "item": "minecraft:blue_ice",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:sharpness": {
+      "options": [
+        {
+          "item": "minecraft:flint",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:iron_ingot",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 5,
+            "max_count": 8,
+            "extra": {
+              "item": "minecraft:flint",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:flint",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:smite": {
+      "options": [
+        {
+          "item": "minecraft:bone",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:rotten_flesh",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 5,
+            "max_count": 8,
+            "extra": {
+              "item": "minecraft:bone",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:bone",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:bane_of_arthropods": {
+      "options": [
+        {
+          "item": "minecraft:spider_eye",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:fermented_spider_eye",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 5,
+            "max_count": 8,
+            "extra": {
+              "item": "minecraft:spider_eye",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:spider_eye",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:efficiency": {
+      "options": [
+        {
+          "item": "minecraft:redstone",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:lapis_lazuli",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 5,
+            "max_count": 8,
+            "extra": {
+              "item": "minecraft:redstone",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:redstone",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:power": {
+      "options": [
+        {
+          "item": "minecraft:arrow",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:firework_rocket",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 5,
+            "max_count": 8,
+            "extra": {
+              "item": "minecraft:arrow",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:arrow",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:knockback": {
+      "options": [
+        {
+          "item": "minecraft:slime_ball",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:piston",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:slime_ball",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:fire_aspect": {
+      "options": [
+        {
+          "item": "minecraft:blaze_powder",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:fire_charge",
+          "count_per_level": 2
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:blaze_powder",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 2,
+            "max_count": 4,
+            "extra": {
+              "item": "minecraft:blaze_powder",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:looting": {
+      "options": [
+        {
+          "item": "minecraft:rabbit_foot",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:gold_ingot",
+          "count_per_level": 2
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 5,
+            "max_count": 8,
+            "extra": {
+              "item": "minecraft:rabbit_foot",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 2,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:rabbit_foot",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:sweeping_edge": {
+      "options": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:amethyst_shard",
+          "count_per_level": 2
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:iron_ingot",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:silk_touch": {
+      "options": [
+        {
+          "item": "minecraft:amethyst_shard",
+          "count": 8
+        },
+        {
+          "item": "minecraft:slime_ball",
+          "count": 6
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 6,
+            "max_count": 9,
+            "extra": {
+              "item": "minecraft:amethyst_shard",
+              "count": 8
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:amethyst_shard",
+              "count": 8
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:unbreaking": {
+      "options": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:obsidian",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:obsidian",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 2,
+            "max_count": 4,
+            "extra": {
+              "item": "minecraft:obsidian",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:fortune": {
+      "options": [
+        {
+          "item": "minecraft:gold_ingot",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:lapis_lazuli",
+          "count_per_level": 3
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 6,
+            "max_count": 9,
+            "extra": {
+              "item": "minecraft:gold_ingot",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:gold_ingot",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:punch": {
+      "options": [
+        {
+          "item": "minecraft:slime_ball",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:piston",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:slime_ball",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:flame": {
+      "options": [
+        {
+          "item": "minecraft:blaze_powder",
+          "count": 6
+        },
+        {
+          "item": "minecraft:fire_charge",
+          "count": 4
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:blaze_powder",
+              "count": 8
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:infinity": {
+      "options": [
+        {
+          "item": "minecraft:spectral_arrow",
+          "count": 12
+        },
+        {
+          "item": "minecraft:ender_pearl",
+          "count": 3
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 7,
+            "max_count": 10,
+            "extra": {
+              "item": "minecraft:spectral_arrow",
+              "count": 8
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:spectral_arrow",
+              "count": 8
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:luck_of_the_sea": {
+      "options": [
+        {
+          "item": "minecraft:nautilus_shell",
+          "count_per_level": 1
+        },
+        {
+          "item": "minecraft:prismarine_crystals",
+          "count_per_level": 2
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:nautilus_shell",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:lure": {
+      "options": [
+        {
+          "item": "minecraft:wheat_seeds",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:tropical_fish",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:tropical_fish",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:loyalty": {
+      "options": [
+        {
+          "item": "minecraft:prismarine_shard",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:nautilus_shell",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:nautilus_shell",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:impaling": {
+      "options": [
+        {
+          "item": "minecraft:prismarine_shard",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:pufferfish",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:prismarine_shard",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:emerald",
+            "min_count": 5,
+            "max_count": 8,
+            "extra": {
+              "item": "minecraft:prismarine_shard",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:riptide": {
+      "options": [
+        {
+          "item": "minecraft:prismarine_crystals",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:nautilus_shell",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:heart_of_the_sea",
+            "count": 1
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:prismarine_crystals",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:channeling": {
+      "options": [
+        {
+          "item": "minecraft:lightning_rod",
+          "count": 3
+        },
+        {
+          "item": "minecraft:prismarine_crystals",
+          "count": 6
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:heart_of_the_sea",
+            "count": 1
+          },
+          {
+            "item": "minecraft:emerald",
+            "min_count": 6,
+            "max_count": 9,
+            "extra": {
+              "item": "minecraft:lightning_rod",
+              "count": 8
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:multishot": {
+      "options": [
+        {
+          "item": "minecraft:arrow",
+          "count": 24
+        },
+        {
+          "item": "minecraft:firework_rocket",
+          "count": 8
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:firework_rocket",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:quick_charge": {
+      "options": [
+        {
+          "item": "minecraft:redstone",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:gunpowder",
+          "count_per_level": 2
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:redstone",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:piercing": {
+      "options": [
+        {
+          "item": "minecraft:flint",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:arrow",
+          "count_per_level": 6
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:diamond",
+            "min_count": 2,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:flint",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:flint",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:density": {
+      "options": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count_per_level": 3
+        },
+        {
+          "item": "minecraft:amethyst_shard",
+          "count_per_level": 2
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:heavy_core",
+            "count": 1
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:iron_ingot",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:breach": {
+      "options": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count_per_level": 2
+        },
+        {
+          "item": "minecraft:obsidian",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:heavy_core",
+            "count": 1
+          },
+          {
+            "item": "minecraft:netherite_scrap",
+            "count": 2
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 5,
+            "max_count": 8,
+            "extra": {
+              "item": "minecraft:obsidian",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:wind_burst": {
+      "options": [
+        {
+          "item": "minecraft:breeze_rod",
+          "count_per_level": 1
+        },
+        {
+          "item": "minecraft:wind_charge",
+          "count_per_level": 4
+        }
+      ],
+      "level_overrides": {
+        "1": {
+          "options": [
+            {
+              "item": "minecraft:breeze_rod",
+              "count": 1
+            },
+            {
+              "item": "minecraft:wind_charge",
+              "count": 6
+            }
+          ]
+        },
+        "2": {
+          "options": [
+            {
+              "item": "minecraft:breeze_rod",
+              "count": 3
+            },
+            {
+              "item": "minecraft:wind_charge",
+              "count": 14
+            }
+          ]
+        },
+        "3": {
+          "options": [
+            {
+              "item": "minecraft:breeze_rod",
+              "count": 5
+            },
+            {
+              "item": "minecraft:wind_charge",
+              "count": 24
+            },
+            {
+              "item": "minecraft:diamond",
+              "min_count": 5,
+              "max_count": 8,
+              "extra": {
+                "item": "minecraft:wind_charge",
+                "count_per_level": 2
+              }
+            }
+          ]
+        }
+      }
+    },
+    "minecraft:lunge": {
+      "options": [
+        {
+          "item": "minecraft:breeze_rod",
+          "count_per_level": 1
+        },
+        {
+          "item": "minecraft:wind_charge",
+          "count_per_level": 3
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:breeze_rod",
+            "count": 5
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 6,
+            "extra": {
+              "item": "minecraft:breeze_rod",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:mending": {
+      "options": [
+        {
+          "item": "minecraft:experience_bottle",
+          "count": 24
+        },
+        {
+          "item": "minecraft:emerald",
+          "min_count": 6,
+          "max_count": 9,
+          "extra": {
+            "item": "minecraft:experience_bottle",
+            "count": 8
+          }
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 8,
+            "max_count": 10,
+            "extra": {
+              "item": "minecraft:experience_bottle",
+              "count": 8
+            }
+          },
+          {
+            "item": "minecraft:netherite_scrap",
+            "count": 2
+          }
+        ]
+      }
+    },
+    "minecraft:binding_curse": {
+      "options": [
+        {
+          "item": "minecraft:cobweb",
+          "count": 6
+        },
+        {
+          "item": "minecraft:echo_shard",
+          "count": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:echo_shard",
+            "count": 2
+          },
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:cobweb",
+              "count": 8
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:vanishing_curse": {
+      "options": [
+        {
+          "item": "minecraft:fermented_spider_eye",
+          "count": 6
+        },
+        {
+          "item": "minecraft:echo_shard",
+          "count": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:echo_shard",
+            "count": 2
+          },
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:fermented_spider_eye",
+              "count": 8
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:soul_speed": {
+      "options": [
+        {
+          "item": "minecraft:soul_sand",
+          "count_per_level": 4
+        },
+        {
+          "item": "minecraft:gold_ingot",
+          "count_per_level": 2
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:emerald",
+            "min_count": 4,
+            "max_count": 7,
+            "extra": {
+              "item": "minecraft:soul_sand",
+              "count_per_level": 2
+            }
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 2,
+            "max_count": 4,
+            "extra": {
+              "item": "minecraft:soul_sand",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    },
+    "minecraft:swift_sneak": {
+      "options": [
+        {
+          "item": "minecraft:sculk",
+          "count_per_level": 5
+        },
+        {
+          "item": "minecraft:echo_shard",
+          "count_per_level": 1
+        }
+      ],
+      "max_level": {
+        "options": [
+          {
+            "item": "minecraft:echo_shard",
+            "count": 4
+          },
+          {
+            "item": "minecraft:diamond",
+            "min_count": 3,
+            "max_count": 5,
+            "extra": {
+              "item": "minecraft:echo_shard",
+              "count_per_level": 2
+            }
+          }
+        ]
+      }
+    }
+  }
+}

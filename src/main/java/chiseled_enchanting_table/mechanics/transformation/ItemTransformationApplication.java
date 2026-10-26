@@ -1,7 +1,7 @@
 package chiseled_enchanting_table.mechanics.transformation;
 
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.ItemTransformation;
+import chiseled_enchanting_table.data.ItemTransformation;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
@@ -47,6 +47,7 @@ public final class ItemTransformationApplication {
         int batchCount = Math.max(1, Math.min(input.getCount(), handler.resolveTransformationBatchCount(rule.id())));
 
         ApplyEnchantmentPayload canonical = new ApplyEnchantmentPayload(
+            handler.containerId,
             OptionType.TRANSFORMATION,
             rule.id(),
             rule.level()
@@ -58,9 +59,13 @@ public final class ItemTransformationApplication {
         int totalProduced = batchCount * Math.max(1, rule.level());
         ItemStack unitSample = rule.outputStack(1);
         int outMaxStack = Math.max(1, unitSample.getMaxStackSize());
+        int targetSlotCap = Math.min(
+            outMaxStack,
+            Math.max(1, handler.getSlot(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT).getMaxStackSize(unitSample))
+        );
 
         if (input.getCount() <= batchCount) {
-            int inSlot = Math.min(totalProduced, outMaxStack);
+            int inSlot = Math.min(totalProduced, targetSlotCap);
             handler.setEnchantableSlot(rule.outputStack(inSlot));
             int rem = totalProduced - inSlot;
             if (rem > 0) {

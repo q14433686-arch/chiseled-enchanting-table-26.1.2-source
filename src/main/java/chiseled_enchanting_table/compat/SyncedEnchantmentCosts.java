@@ -61,6 +61,22 @@ public final class SyncedEnchantmentCosts {
         notifyListeners();
     }
 
+    /** True once any server cost table has been received this session. */
+    public static boolean hasServerTable() {
+        return syncedPayload != null;
+    }
+
+    /**
+     * Audit R-01: false when the server had to truncate the table to fit wire budgets.
+     * A missing row then means "not synced", not "price it locally" — the menu layer
+     * fails closed for material-requiring rows instead of previewing local datapack data
+     * the server may not share.
+     */
+    public static boolean costTableComplete() {
+        EnchantCostTablePayload p = syncedPayload;
+        return p == null || p.costTableComplete();
+    }
+
     public static Optional<Cost> find(Identifier enchantmentId, int level) {
         return find(OptionType.ENCHANTMENT, enchantmentId, level);
     }
@@ -214,10 +230,57 @@ public final class SyncedEnchantmentCosts {
             : ChiseledEnchantingTableData.libraryResonanceConfig();
     }
 
+    public static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig() {
+        EnchantCostTablePayload p = syncedPayload;
+        return (p != null && p.ritualConfig() != null)
+            ? p.ritualConfig()
+            : ChiseledEnchantingTableData.ritualConfig();
+    }
+
     /** Empty server rule lists are authoritative, not a request for jar-default fallback. */
     public static java.util.Optional<java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay>> transformationDisplays() {
         var payload = syncedPayload;
         return payload == null ? java.util.Optional.empty() : java.util.Optional.of(payload.transformations());
+    }
+
+    /** Applies a lightweight delta update to the cached transformation unlock list. */
+    public static void updateTransformations(
+        java.util.List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay> transformations
+    ) {
+        EnchantCostTablePayload p = syncedPayload;
+        if (p == null || transformations == null) {
+            return;
+        }
+        syncedPayload = new EnchantCostTablePayload(
+            p.combineEnabled(),
+            p.researchEnabled(),
+            p.disenchantEnabled(),
+            p.disenchantAllowCursePurge(),
+            p.disenchantRefundScale(),
+            p.disenchantExternalRefundScale(),
+            p.epiphanyMinBookshelves(),
+            p.epiphanyBaseChance(),
+            p.epiphanyPerShelfChance(),
+            p.epiphanyPerTomeChance(),
+            p.epiphanyMaxChance(),
+            p.epiphanyMaxSlotsCap(),
+            p.epiphanyScorePerSlot(),
+            p.epiphanyCycleTicks(),
+            p.epiphanyFreezeDurationTicks(),
+            p.epiphanyMaxFreezeTicks(),
+            p.epiphanyFreezeXpLevels(),
+            p.epiphanyFreezeCosts(),
+            p.epiphanyRerollXpLevels(),
+            p.epiphanyRerollCosts(),
+            p.explicitTreasureIds(),
+            p.shelfGatesConfig(),
+            p.libraryResonanceConfig(),
+            p.ritualConfig(),
+            p.costs(),
+            java.util.List.copyOf(transformations),
+            p.costTableComplete()
+        );
+        notifyListeners();
     }
 
     public static boolean hasServerData() {

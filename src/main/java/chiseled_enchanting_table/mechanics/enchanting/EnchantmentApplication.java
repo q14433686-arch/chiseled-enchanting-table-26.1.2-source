@@ -8,6 +8,8 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.HashSet;
+import chiseled_enchanting_table.compat.CetFormatting;
+import net.minecraft.network.chat.Style;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -33,12 +35,23 @@ public final class EnchantmentApplication {
     public static boolean apply(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
         Level world = handler.world();
         ItemStack enchantable_item = handler.get_enchantable_item();
-        ItemStack planningStack = handler.getEffectiveEnchantableItem();
-        if (ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+        if (enchantable_item.isEmpty()
+            || enchantable_item.getCount() != 1
+            || ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
             return false;
         }
+        ItemStack planningStack = handler.getEffectiveEnchantableItem();
         int enchantment_level = payload.enchantment_level();
-        Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
+        var optEnchantment = ChiseledEnchantingTableScreenHandler.findEnchantment(payload.enchantment_id(), world);
+        if (optEnchantment.isEmpty()) {
+            return false;
+        }
+        Holder<Enchantment> enchantment = optEnchantment.get();
+        // Audit H-06: validate the requested level against the live definition maximum
+        // BEFORE any pricing, receipt or wear side effect can run.
+        if (enchantment_level < 1 || enchantment_level > Math.max(1, enchantment.value().getMaxLevel())) {
+            return false;
+        }
         if (!(planningStack.is(Items.BOOK) || planningStack.is(Items.ENCHANTED_BOOK) || enchantment.value().canEnchant(planningStack))) {
             return false;
         }
@@ -59,7 +72,7 @@ public final class EnchantmentApplication {
                     break;
                 }
             }
-            if (!exist && existingSameLevel >= 1) {
+            if (!exist && existingSameLevel >= 1 && handler.allowsDirectTierUpgrade()) {
                 exist = handler.canDirectUpgradeExistingEnchantment(enchantment, payload.enchantment_id(), existingSameLevel, enchantment_level);
             }
         }
@@ -75,13 +88,15 @@ public final class EnchantmentApplication {
         var admissionPos = handler.tableBlockPos();
         if (admissionPos == null || !(world.getBlockEntity(admissionPos) instanceof
             chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity admissionTable)
-            || !admissionTable.canQueue(handler.player.getUUID(), conflictRefund) || enchantment_level < 1 || enchantment_level > 255 || payload.enchantment_id().toString().length() > 512) return false;
-        if (!handler.applyEnchantementCondition(payload)) {
+            || !admissionTable.canQueue(handler.player.getUUID(), conflictRefund)) return false;
+        var receipt = handler.applyEnchantementConditionWithReceipt(payload);
+        if (!receipt.accepted()) {
             return false;
         }
 
+        MasterTomeWear.ResolvedTomeUse resolvedWear = MasterTomeWear.ResolvedTomeUse.NONE;
         if (masterTomeUsed) {
-            var outcome = MasterTomeWear.applyShelfWear(
+            resolvedWear = MasterTomeWear.applyShelfWearDetailed(
                 world,
                 handler.tableBlockPos(),
                 handler.shelfGatesConfig(),
@@ -90,6 +105,7 @@ public final class EnchantmentApplication {
                 enchantment_level,
                 targetWasBook
             );
+            var outcome = resolvedWear.outcome();
             if (handler.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                 if (outcome == MasterTomeWear.WearOutcome.STEPPED_DOWN) {
                     serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
@@ -97,14 +113,21 @@ public final class EnchantmentApplication {
                             "gui.chiseled_enchanting_table.tome_wear.stepped_down",
                             enchantment.value().description(),
                             Math.max(1, enchantment_level - 1)
-                        ).withStyle(style -> style.withColor(0xFFFFAA00))
+                        ).withStyle(CetFormatting.GOLD)
                     ));
                 } else if (outcome == MasterTomeWear.WearOutcome.DEPLETED) {
                     serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
                         Component.translatable(
                             "gui.chiseled_enchanting_table.tome_wear.depleted",
                             enchantment.value().description()
-                        ).withStyle(style -> style.withColor(0xFFFFFF55))
+                        ).withStyle(CetFormatting.YELLOW)
+                    ));
+                } else if (outcome == MasterTomeWear.WearOutcome.WAIVED_BY_UNBREAKING) {
+                    serverPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
+                        Component.translatable(
+                            "gui.chiseled_enchanting_table.tome_wear.unbreaking_saved",
+                            enchantment.value().description()
+                        ).withStyle(CetFormatting.AQUA)
                     ));
                 }
             }
@@ -120,20 +143,28 @@ public final class EnchantmentApplication {
             tablePos,
             shelfCfg
         );
-        boolean usedInfinityTome = masterTomeUsed
-            && chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.doesMatchingMasterTomeHaveInfinity(
-                world,
-                tablePos,
-                shelfCfg,
-                payload.enchantment_id(),
-                enchantment_level
-            );
+        // Iron Rule #2: bind wear-immunity flag AND qualification load L (max of chosen tome load
+        // and library-wide Sigma L across active wear-immune Master Tomes) to this step!
+        boolean usedInfinityTome = masterTomeUsed && resolvedWear.usedInfinityTome();
+        double singleTomeLoad = usedInfinityTome
+            ? chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeInfinityTomeQualificationLoad(
+                handler.ritualConfig(),
+                handler.libraryResonanceConfig(),
+                resolvedWear.chosenTomeSnapshot()
+            )
+            : 0.0;
+        double infinityTomeLoad = usedInfinityTome
+            ? Math.max(singleTomeLoad, ritualScan.totalWearImmuneLoad())
+            : 0.0;
         int maxLvl = Math.max(1, enchantment.value().getMaxLevel());
         double appFactor = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeApplicabilityFactor(
-            payload.enchantment_id(),
+            handler.ritualConfig(),
             enchantment
         );
-        int waitTicks = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
+        boolean ritualQueueEnabled = handler.isRitualQueueEnabled();
+        boolean provenanceEnabled = handler.isProvenanceEnabled();
+        int waitTicks = !ritualQueueEnabled ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
+            handler.ritualConfig(),
             ritualScan.totalDetectedBookshelves(),
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.medianShelfGate(shelfCfg),
             ritualScan.totalMasterTomeEnchantments(),
@@ -142,6 +173,12 @@ public final class EnchantmentApplication {
             appFactor
         );
 
+        int inheritedGeneration = (provenanceEnabled && masterTomeUsed && targetWasBook
+            && resolvedWear.chosenTomeSnapshot() != null
+            && !resolvedWear.chosenTomeSnapshot().isEmpty())
+            ? chiseled_enchanting_table.mechanics.resonance.TomeWearData.childGeneration(
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(resolvedWear.chosenTomeSnapshot()))
+            : -1;
         var queuedStep = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription(
             payload.enchantment_id(),
             enchantment_level,
@@ -149,7 +186,13 @@ public final class EnchantmentApplication {
             masterTomeUsed,
             usedInfinityTome,
             conflictRefund,
-            consumedEpiphany
+            consumedEpiphany,
+            infinityTomeLoad,
+            receipt.paidXpPoints(),
+            chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription.fromStacks(
+                receipt.paidMaterials()
+            ),
+            inheritedGeneration
         );
 
         if (tablePos != null
@@ -192,7 +235,10 @@ public final class EnchantmentApplication {
         }
 
         // Headless / synthetic non-BE fallback path
-        double slipChance = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
+        // 1.0.3 Classic: transcription slip («抄错») is a post-1.0.3 ritual mechanic;
+        // classic inscriptions always land at the exact paid level.
+        double slipChance = !ritualQueueEnabled ? 0.0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeTranscriptionSlipChance(
+            handler.ritualConfig(),
             ritualScan.maxOverloadedInfinityTomeEnchants(),
             ritualScan.totalDetectedBookshelves()
         );
@@ -216,12 +262,7 @@ public final class EnchantmentApplication {
         newEnchantmentsComponent.set(enchantment, finalLevel);
 
         if (enchantable_item.is(Items.BOOK)) {
-            ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            var customName = enchantable_item.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
-            if (customName != null) {
-                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
-            }
-            handler.setEnchantableSlot(stack);
+            handler.setEnchantableSlot(BookConversion.toEnchantedBook(enchantable_item));
             enchantable_item = handler.get_enchantable_item();
         }
 
@@ -234,15 +275,24 @@ public final class EnchantmentApplication {
             }
         });
 
-        EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, finalLevel);
-        EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+        if (provenanceEnabled) {
+            EnchantmentProvenance.recordTablePayment(target, payload.enchantment_id(), existingSameLevel, finalLevel);
+            EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+            if (inheritedGeneration >= 0 && target.is(Items.ENCHANTED_BOOK)) {
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(target, inheritedGeneration);
+            }
+        } else {
+            EnchantmentProvenance.clearAll(target);
+        }
 
         if (conflictRefund > 0) {
             DisenchantmentApplication.awardRefundOrbs(handler, conflictRefund);
         }
 
         finish(handler);
-        if (masterTomeUsed && MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(payload.enchantment_id())) {
+        if (masterTomeUsed
+            && (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(payload.enchantment_id())
+                || chiseled_enchanting_table.mechanics.resonance.TomeWearData.isWearImmuneEnchantment(enchantment))) {
             Advancement.give(handler.player, "eternal_codex");
         }
         if (consumedEpiphany) {
@@ -273,18 +323,29 @@ public final class EnchantmentApplication {
         }
 
         ItemStack enchantable_item = handler.get_enchantable_item();
-        if (ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
+        if (enchantable_item.isEmpty()
+            || enchantable_item.getCount() != 1
+            || ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
             return false;
         }
         int enchantment_level = payload.enchantment_level();
-        Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), world);
+        var optEnchantment = ChiseledEnchantingTableScreenHandler.findEnchantment(payload.enchantment_id(), world);
+        if (optEnchantment.isEmpty()) {
+            return false;
+        }
+        Holder<Enchantment> enchantment = optEnchantment.get();
         boolean targetWasBook = enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK);
         if (!(targetWasBook || enchantment.value().canEnchant(enchantable_item))) {
             return false;
         }
 
-        ItemStack sourceBookSnapshot = enchanted_book.copy();
+        ItemStack sourceBookSnapshot = enchanted_book.copyWithCount(1);
         ItemEnchantments preTargetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
+        // Audit M-03: transferring a same-or-lower level must not consume the source book
+        // entry for zero gain. Reject before any slot mutation.
+        if (preTargetEnchantments.getLevel(enchantment) >= enchantment_level) {
+            return false;
+        }
         int conflictRefund = computeConflictOverwriteRefund(handler, enchantable_item, preTargetEnchantments, enchantment);
 
         ItemEnchantments.Mutable new_enchanted_book_enchants = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
@@ -293,19 +354,34 @@ public final class EnchantmentApplication {
                 new_enchanted_book_enchants.set(entry.getKey(), entry.getIntValue());
             }
         }
-        EnchantmentHelper.updateEnchantments(enchanted_book, m -> {
+        ItemStack updatedSingleBook = sourceBookSnapshot.copy();
+        EnchantmentHelper.updateEnchantments(updatedSingleBook, m -> {
             var keys = new HashSet<>(m.keySet());
             for (var k : keys) m.set(k, 0);
             for (var entry : new_enchanted_book_enchants.keySet()) m.set(entry, new_enchanted_book_enchants.getLevel(entry));
         });
 
-        if (EnchantmentHelper.getEnchantmentsForCrafting(enchanted_book).isEmpty()) {
-            handler.setCostSlot(new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1));
-        } else {
-            EnchantmentProvenance.pruneToCurrentEnchantments(
-                enchanted_book,
-                EnchantmentHelper.getEnchantmentsForCrafting(enchanted_book)
+        ItemStack remainderBook;
+        if (EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook).isEmpty()) {
+            remainderBook = new ItemStack(
+                handler.returnsPlainDrainedBook() ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
+                1
             );
+        } else {
+            if (handler.isProvenanceEnabled()) {
+                EnchantmentProvenance.pruneToCurrentEnchantments(
+                    updatedSingleBook,
+                    EnchantmentHelper.getEnchantmentsForCrafting(updatedSingleBook)
+                );
+            }
+            remainderBook = updatedSingleBook;
+        }
+        if (enchanted_book.getCount() <= 1) {
+            handler.setCostSlot(remainderBook);
+        } else {
+            ItemStack reduced = enchanted_book.copyWithCount(enchanted_book.getCount() - 1);
+            handler.setCostSlot(reduced);
+            chiseled_enchanting_table.utils.InventoryUtils.insertItem(handler.player, remainderBook, java.util.Optional.empty());
         }
 
         ItemEnchantments.Mutable newEnchantmentsComponent = new ItemEnchantments.Mutable(preTargetEnchantments);
@@ -320,12 +396,7 @@ public final class EnchantmentApplication {
         newEnchantmentsComponent.set(enchantment, enchantment_level);
 
         if (enchantable_item.is(Items.BOOK)) {
-            ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            var customName = enchantable_item.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
-            if (customName != null) {
-                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, customName);
-            }
-            handler.setEnchantableSlot(stack);
+            handler.setEnchantableSlot(BookConversion.toEnchantedBook(enchantable_item));
             enchantable_item = handler.get_enchantable_item();
         }
 
@@ -338,8 +409,21 @@ public final class EnchantmentApplication {
             }
         });
 
-        EnchantmentProvenance.recordBookTransfer(sourceBookSnapshot, target, payload.enchantment_id(), enchantment_level);
-        EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+        if (ChiseledEnchantingTableData.disenchantEnabled()) {
+            EnchantmentProvenance.recordBookTransfer(sourceBookSnapshot, target, payload.enchantment_id(), enchantment_level);
+            EnchantmentProvenance.pruneToCurrentEnchantments(target, EnchantmentHelper.getEnchantmentsForCrafting(target));
+        } else {
+            EnchantmentProvenance.clearAll(target);
+        }
+        // Transfers move (never duplicate) an entry, so when template tome wear is active,
+        // the result keeps the more faded parent's generation instead of advancing it.
+        if (target.is(Items.ENCHANTED_BOOK)
+            && ChiseledEnchantingTableData.libraryResonanceConfig().tomeConsumptionMode()
+                == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR) {
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                target,
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(sourceBookSnapshot));
+        }
 
         if (conflictRefund > 0) {
             DisenchantmentApplication.awardRefundOrbs(handler, conflictRefund);

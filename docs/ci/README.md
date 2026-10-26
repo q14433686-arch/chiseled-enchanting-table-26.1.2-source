@@ -1,88 +1,64 @@
-# CI triad — 26.2 line
+# CI workflows and diagnostic evidence — 26.1.2 line
 
-Synced from the `26.3` and `26.1.2` branches of this repository (which adapted it from
-[`q14433686-arch/TaCZ_Refabricated_Unofficial`](https://github.com/q14433686-arch/TaCZ_Refabricated_Unofficial/tree/26.3/.github/workflows)),
-then adapted to Minecraft **26.2** / mod **1.1.0**.
-
-The files in this directory are **byte-identical reference copies** of `.github/workflows/`, kept for
-two reasons:
-
-1. A GitHub App installation token without `workflows: write` cannot create or update workflow
-   files. The current sandbox token *does* have the `workflows` permission, so all four workflow
-   files are installed directly into `.github/workflows/` and verified via
-   `bash docs/ci/install.sh --check`.
-2. `scripts/check_release_consistency.sh` reads both `.github/workflows/publish.yml` and
-   `docs/ci/publish.yml` to verify five-place version agreement.
-
-## Status on this branch (2026-10-22; CI extended 2026-10-23)
-
-Green on commit `61b2431` of `arena/dd589d1c-chiseled-enchanting-table-26-1`:
-
-| Workflow | Check Run | Result |
-| --- | --- | --- |
-| `compile-check.yml` | `119488382287` | success — `compileJava` + `compileClientJava`, `BUILD SUCCESSFUL in 52s`, 2 warnings (JEI `addItemStack` deprecated-for-removal); resolved `jei-26.2-fabric:30.47.0.239` and `RoughlyEnoughItems-api-fabric:26.2.821`, with `fabric-api:0.155.2+26.2` unchanged |
-| `build.yml` · static checks | `119488381220` | success — all three offline gates (`ci_static_checks.py`, `compat_check.py`, `check_release_consistency.sh --strict`) |
-| `build.yml` · gradle build | `119488433821` | success — `remapJar` + sources jar uploaded as an Actions artifact |
-| `build.yml` · no-viewers | `119488433668` | success — `-Penable_jei=false -Penable_rei=false` |
-| `consistency.yml` | `119488380920` | success — `12 passed, 0 warned, 0 failed` + `docs/ci and .github/workflows agree` |
-
-## Drift check and re-apply
+The four workflow reference copies here must remain byte-identical to `.github/workflows/`.
+Workflow edits were previously blocked by the sandbox GitHub App permissions; as of the
+2026-10-26 sessions, workflow pushes and the diagnostic Checks API have both been exercised
+successfully. Do not retain the historical permission limitation as a current assertion.
 
 ```bash
-bash docs/ci/install.sh --check   # MISSING / DRIFT per file; exit 1 without writing anything
-bash docs/ci/install.sh           # copy the four files into .github/workflows/ and show the diff
+bash docs/ci/install.sh --check
 ```
 
-| reference copy | target | status |
-|---|---|---|
-| `docs/ci/compile-check.yml` | `.github/workflows/compile-check.yml` | installed (`ok`) |
-| `docs/ci/build.yml` | `.github/workflows/build.yml` | installed (`ok`) |
-| `docs/ci/consistency.yml` | `.github/workflows/consistency.yml` | installed (`ok`) |
-| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed (`ok`, `26.2` / `1.1.0`) |
+## Workflows
 
-## What each workflow does
+- `compile-check.yml`: compile main/client/test sources and execute JUnit; preserve full logs,
+  dependency information and JUnit XML as 14-day artifacts.
+- `build.yml`: offline validation (incl. the architecture-boundary ratchet:
+  coordinator line budgets + capability rules), full jar build, optional-viewer-disabled
+  compilation, real dedicated-server loading/reload/ritual probes, and the disposable
+  real-client integration probe (`src/clientSmoke`, compiled with `-Pclient_smoke=true`,
+  executed under xvfb via `scripts/client_smoke.py`; 26.1.2 has no SDL layer, so committed
+  text is delivered through the real `Screen#charTyped` callbacks).
+- `consistency.yml`: version/metadata/README/release-workflow consistency.
+- `publish.yml`: manual publishing, not activated by this refactor.
 
-* **`compile-check.yml`** — compiles **both** source sets and runs the JUnit suites
-  (`compileJava compileClientJava test`, ported from the 26.3 branch), records
-  the resolved coordinates for `mezz.jei`, `me.shedaniel`, `dev.architectury`, `net.fabricmc`, and
-  `com.mojang` across `compileClasspath` and `clientCompileClasspath`, and pushes
-  `build-reports/compile-java.log` (plus `build-reports/compile-deps.log` on failure) back to
-  `arena/**` branches through the GitHub Contents API. Uses `status=0` + `./gradlew ... || status=$?`
-  so `bash -e` does not abort before recording the exit code and failure diagnostics.
-* **`build.yml`** — three offline static gates (`ci_static_checks.py`, `compat_check.py`,
-  `check_release_consistency.sh --strict`) in a fast `static` job, then a `gradle build` job that
-  uploads the jar as a 14-day artifact, a `no-viewers` job (`-Penable_jei=false -Penable_rei=false`)
-  verifying the optional-dependency escape hatch, and a `server-smoke` job (ported from the 26.3
-  branch) that boots a **fresh disposable flat world** with `runServer`, issues `reload`, spawns
-  named/dyed/frozen table loot plus two always-false conditional loot-function fixtures, asserts the
-  inspected NBT, and shuts down cleanly — the only check that covers world load, datapack reload and
-  loot functions actually executing. It needs `build.gradle`'s `runServer { standardInput = System.in }`
-  (the script drives the server through stdin) and writes `build-reports/server-smoke.log` back to
-  `arena/**` the same way `compile-check.yml` does.
-* **`consistency.yml`** — the five-place version gate and `docs/ci/install.sh --check` drift check on
-  its own trigger set, because `build.yml` `paths-ignore`s `*.md`.
-* **`publish.yml`** — manual (`workflow_dispatch`) release workflow targeting Minecraft `26.2` /
-  mod version `1.1.0`.
+Every success is evidence for its **exact source SHA and exercised scenarios**, not for future
+HEADs, every graphics driver, every input method, or concurrent multiplayer races.
 
-## Reading CI results from the sandbox
+## No generated diagnostics in Git
+
+`build-reports/`, bytecode and disposable run directories are ignored. CI never calls the
+Contents API to commit logs, needs no `contents: write`, and no longer needs log-commit trigger
+exclusions. Markdown-only edits run the inventory gate as well.
+
+Full logs: open/download the run's artifacts. The sandbox cannot reliably reach the Actions log
+blob host, so **bounded diagnostic Check runs** carry source SHA, compiler errors, test totals
+and log tails directly through `api.github.com`, on both success and failure:
 
 ```bash
-# 1. the compile log the workflow commits back (primary — full javac/Gradle output + resolved coords)
-gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>" \
-    --jq '.content' | base64 -d | tail -80
-
-# 2. step-level results
-gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/<run id>/jobs" \
-    --jq '.jobs[] | "\(.name): \(.conclusion)"'
+REPO=q14433686-arch/chiseled-enchanting-table-26.1.2-source
+SHA=<exact-source-sha>
+gh api "repos/$REPO/commits/$SHA/check-runs" \
+  --jq '.check_runs[] | select(.name=="compile-diagnostics" or .name=="server-smoke-diagnostics" or .name=="client-smoke-diagnostics") | .output.summary'
 ```
 
-## The static gates run anywhere
+Push/manual runs publish diagnostics with `checks: write`. Pull requests skip this supplemental
+publisher (including forks with read-only tokens) but retain workflow step results and artifacts.
+Diagnostic publication is a separate final step: it cannot turn a failed build into success;
+publication failures are visible rather than silently discarded. Diagnostics are summarized to
+fit Checks' UTF-8 byte limit; they are not a replacement for the full artifact.
 
-No Gradle, no network:
+## Local verification
 
 ```bash
 python3 scripts/ci_static_checks.py
+python3 scripts/test_baseline_mixins.py
+python3 scripts/test_ci_diagnostics.py
+python3 scripts/test_sync_26_1_2.py
+python3 scripts/test_ui_readability.py
+python3 scripts/check_repository_hygiene.py
 python3 scripts/compat_check.py
 bash scripts/check_release_consistency.sh --strict
-bash docs/ci/install.sh --check
 ```
+
+Keep `gradlew` executable (`100755`). No CI output should ever be committed back to the branch.

@@ -1,0 +1,26 @@
+{
+  "values": [
+    {
+      "id": "chiseled_enchanting_table:enchanted_golden_apple",
+      "input": "minecraft:golden_apple",
+      "output": "minecraft:enchanted_golden_apple",
+      "level": 1,
+      "xp_cost": 3,
+      "primary_cost": { "item": "minecraft:gold_block", "count": 8 },
+      "additional_costs": [
+        { "item": "minecraft:emerald", "min_count": 2, "max_count": 5 }
+      ]
+    },
+    {
+      "id": "chiseled_enchanting_table:experience_bottle",
+      "input": "minecraft:glass_bottle",
+      "output": "minecraft:experience_bottle",
+      "level": 1,
+      "xp_cost": 1,
+      "primary_cost": { "item": "minecraft:lapis_lazuli", "count": 6 },
+      "additional_costs": [
+        { "item": "minecraft:amethyst_shard", "count": 2 }
+      ]
+    }
+  ]
+}

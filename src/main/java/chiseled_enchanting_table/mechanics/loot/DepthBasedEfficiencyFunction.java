@@ -23,13 +23,11 @@ import net.minecraft.world.phys.Vec3;
  * (near {@code level.getMinY()}), preserving upstream's {@code DepthBasedEfficiency} formula.
  */
 public class DepthBasedEfficiencyFunction extends LootItemConditionalFunction {
-    // Same story as RemoveEnchantedBooksFunction: `MapCodec.unit` dropped the `conditions` array,
-    // so a datapack's always-false condition was ignored and the depth scaling ran regardless.
     public static final MapCodec<DepthBasedEfficiencyFunction> MAP_CODEC =
         RecordCodecBuilder.mapCodec(i -> commonFields(i).apply(i, DepthBasedEfficiencyFunction::new));
 
     private static final ResourceKey<Enchantment> EFFICIENCY_KEY =
-        ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("efficiency"));
+        net.minecraft.world.item.enchantment.Enchantments.EFFICIENCY;
 
     public DepthBasedEfficiencyFunction() {
         this(List.of());
@@ -49,8 +47,8 @@ public class DepthBasedEfficiencyFunction extends LootItemConditionalFunction {
         if (!stack.is(Items.ENCHANTED_BOOK)) return stack;
         ServerLevel level = context.getLevel();
         Holder<Enchantment> efficiency = level.registryAccess()
-            .lookupOrThrow(Registries.ENCHANTMENT)
-            .get(EFFICIENCY_KEY)
+            .lookup(Registries.ENCHANTMENT)
+            .flatMap(reg -> reg.get(EFFICIENCY_KEY))
             .orElse(null);
         if (efficiency == null) return stack;
 

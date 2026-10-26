@@ -6,6 +6,8 @@ import java.util.function.Function;
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.block.ChiseledEnchantingTableBlock;
 import chiseled_enchanting_table.item.ArcaneGrimoireItem;
+import chiseled_enchanting_table.compat.CetFormatting;
+import net.minecraft.network.chat.Style;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -57,7 +59,7 @@ public class BlockRegistry {
                     DataComponents.LORE,
                     new ItemLore(List.of(
                         Component.translatable("item.chiseled_enchanting_table.depleted_tome.lore")
-                            .withStyle(style -> style.withItalic(false).withColor(0xFFFF55FF))
+                            .withStyle(style -> style.withItalic(false).withColor(CetFormatting.LIGHT_PURPLE_ARGB))
                     ))
                 )
         )
@@ -72,7 +74,7 @@ public class BlockRegistry {
                     DataComponents.LORE,
                     new ItemLore(List.of(
                         Component.translatable("item.chiseled_enchanting_table.cleansing_grit.lore")
-                            .withStyle(style -> style.withItalic(false).withColor(0xFF55FFFF))
+                            .withStyle(style -> style.withItalic(false).withColor(CetFormatting.AQUA_ARGB))
                     ))
                 )
         )
@@ -88,7 +90,7 @@ public class BlockRegistry {
                     DataComponents.LORE,
                     new ItemLore(List.of(
                         Component.translatable("item.chiseled_enchanting_table.arcane_grimoire.lore")
-                            .withStyle(style -> style.withItalic(false).withColor(0xFFFFAA00))
+                            .withStyle(style -> style.withItalic(false).withColor(CetFormatting.GOLD_ARGB))
                     ))
                 )
         )
