@@ -807,19 +807,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.ritualCorruptQueue = "";
         this.ritualBlocked = input.getBooleanOr("ritualBlocked", false);
         try {
-            if (structuredQueue.isPresent()
-                && (rawQueue.isBlank() || InscriptionRitualMechanics.serializeQueue(structuredQueue.get()).equals(rawQueue))) {
-                long refund = 0L;
-                for (QueuedInscription step : structuredQueue.get()) {
-                    refund += step.conflictRefundPoints();
-                    if (refund > Integer.MAX_VALUE) {
-                        throw new IllegalArgumentException("Ritual refund exceeds budget");
-                    }
-                }
-                this.ritualQueue = new ArrayList<>(structuredQueue.get());
-            } else {
-                this.ritualQueue = InscriptionRitualMechanics.deserializeQueue(rawQueue);
-            }
+            this.ritualQueue = InscriptionRitualMechanics.recoverQueue(structuredQueue, rawQueue);
         } catch (IllegalArgumentException malformed) {
             this.ritualQueue = new ArrayList<>();
             this.ritualCorruptQueue = rawQueue.substring(0, Math.min(rawQueue.length(), MAX_RITUAL_CHARACTERS));
