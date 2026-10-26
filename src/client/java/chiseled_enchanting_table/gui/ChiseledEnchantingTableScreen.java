@@ -27,7 +27,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -768,7 +767,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 return true;
             }
             var hoveredTome = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
-            if (hoveredTome != null && Screen.hasShiftDown()
+            if (hoveredTome != null && TooltipPresentation.detailsRequested()
                 && isOverEnchantList(mouseX, mouseY)) {
                 TomeEnchantmentDetails.scroll(hoveredTome, scrollY);
                 return true;
@@ -1505,7 +1504,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 return;
             }
             var hoveredTome = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
-            if (hoveredTome != null && Screen.hasShiftDown()) {
+            if (hoveredTome != null && TooltipPresentation.detailsRequested()) {
                 // Catalogue details mode: Shift-hover shows the full paged enchantment list
                 // (Shift-scroll pages it); the plain tooltip resumes when Shift is released.
                 TomeEnchantmentDetails.render(ctx, this.font, hoveredTome, this.menu.player, mouseX, mouseY);
