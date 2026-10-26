@@ -709,89 +709,10 @@ public final class InscriptionRitualMechanics {
             return List.copyOf(out);
         }
 
-        public String encode() {
-            StringBuilder itemsEnc = new StringBuilder();
-            for (int i = 0; i < paidItems.size(); i++) {
-                if (i > 0) itemsEnc.append(',');
-                PaidItemEntry e = paidItems.get(i);
-                itemsEnc.append(e.itemId()).append('*').append(e.count());
-            }
-            return enchantmentId.toString()
-                + "|" + targetLevel
-                + "|" + previousLevel
-                + "|" + (masterTomeUsed ? 1 : 0)
-                + "|" + (usedInfinityTome ? 1 : 0)
-                + "|" + conflictRefundPoints
-                + "|" + (consumedEpiphany ? 1 : 0)
-                + "|" + String.format(Locale.ROOT, "%.4f", infinityTomeLoad)
-                + "|" + paidXpPoints
-                + "|" + itemsEnc
-                + "|" + inheritedGeneration;
-        }
+        public String encode() { return RitualQueuePersistence.encode(this); }
 
         @Nullable
-        public static QueuedInscription decode(String token) {
-            if (token == null || token.isBlank()) {
-                return null;
-            }
-            String[] parts = token.split("\\|", -1);
-            if ((parts.length != 7 && parts.length != 10 && parts.length != 11) || token.length() > 2048) {
-                return null;
-            }
-            try {
-                Identifier id = Identifier.parse(parts[0].trim());
-                int rawTarget = Integer.parseInt(parts[1].trim());
-                int rawPrev = Integer.parseInt(parts[2].trim());
-                int rawRefund = Integer.parseInt(parts[5].trim());
-                if (rawTarget < 1 || rawTarget > 255 || rawPrev < 0 || rawPrev > 255 || rawRefund < 0
-                    || !Set.of("0", "1").contains(parts[3].trim())
-                    || !Set.of("0", "1").contains(parts[4].trim())
-                    || !Set.of("0", "1").contains(parts[6].trim())) {
-                    return null;
-                }
-                boolean tomeUsed = "1".equals(parts[3].trim());
-                boolean infTome = "1".equals(parts[4].trim());
-                boolean epip = "1".equals(parts[6].trim());
-                if (parts.length == 7) {
-                    return new QueuedInscription(id, rawTarget, rawPrev, tomeUsed, infTome, rawRefund, epip);
-                }
-                double load = Double.parseDouble(parts[7].trim());
-                int paidXp = Integer.parseInt(parts[8].trim());
-                if (!Double.isFinite(load) || load < 0.0 || load > 256.0 || paidXp < 0 || paidXp > 1_000_000) {
-                    return null;
-                }
-                int inheritedGen = -1;
-                if (parts.length == 11) {
-                    inheritedGen = Integer.parseInt(parts[10].trim());
-                    if (inheritedGen < -1 || inheritedGen > 255) {
-                        return null;
-                    }
-                }
-                List<PaidItemEntry> items = new ArrayList<>();
-                String rawItems = parts[9].trim();
-                if (!rawItems.isEmpty()) {
-                    String[] entries = rawItems.split(",", -1);
-                    if (entries.length > 16) {
-                        return null;
-                    }
-                    for (String itemToken : entries) {
-                        int star = itemToken.indexOf('*');
-                        if (star <= 0 || star >= itemToken.length() - 1) {
-                            return null;
-                        }
-                        Identifier itemId = Identifier.parse(itemToken.substring(0, star).trim());
-                        int cnt = Integer.parseInt(itemToken.substring(star + 1).trim());
-                        if (cnt < 1 || cnt > 1024) {
-                            return null;
-                        }
-                        items.add(new PaidItemEntry(itemId, cnt));
-                    }
-                }
-                return new QueuedInscription(id, rawTarget, rawPrev, tomeUsed, infTome, rawRefund, epip, load, paidXp, items, inheritedGen);
-            } catch (RuntimeException ignored) {
-                return null;
-            }
-        }
+        public static QueuedInscription decode(String token) { return RitualQueuePersistence.decode(token); }
     }
 
     /** Structured list codec for persisted ritual steps (CODEC-02), paired with legacy ';'-string fallback. */
@@ -813,34 +734,12 @@ public final class InscriptionRitualMechanics {
             )
         );
 
-    public static String serializeQueue(List<QueuedInscription> queue) {
-        if (queue == null || queue.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < queue.size(); i++) {
-            if (i > 0) sb.append(';');
-            sb.append(queue.get(i).encode());
-        }
-        return sb.toString();
-    }
+    public static String serializeQueue(List<QueuedInscription> queue) { return RitualQueuePersistence.serializeQueue(queue); }
 
-    public static List<QueuedInscription> deserializeQueue(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return new ArrayList<>();
-        }
-        if (raw.length() > MAX_QUEUE_CHARACTERS) throw new IllegalArgumentException("Oversized persisted ritual");
-        List<QueuedInscription> out = new ArrayList<>();
-        long refund = 0;
-        for (String part : raw.split(";", -1)) {
-            if (out.size() >= MAX_QUEUE_STEPS) throw new IllegalArgumentException("Too many ritual steps");
-            QueuedInscription parsed = QueuedInscription.decode(part);
-            if (parsed == null) throw new IllegalArgumentException("Malformed ritual step");
-            refund += parsed.conflictRefundPoints();
-            if (refund > Integer.MAX_VALUE) throw new IllegalArgumentException("Ritual refund exceeds budget");
-            out.add(parsed);
-        }
-        return out;
+    public static List<QueuedInscription> deserializeQueue(String raw) { return RitualQueuePersistence.deserializeQueue(raw); }
+
+    public static List<QueuedInscription> recoverQueue(java.util.Optional<List<QueuedInscription>> structuredQueue, String rawQueue) {
+        return RitualQueuePersistence.recoverQueue(structuredQueue, rawQueue);
     }
 
     /** Snapshot of surrounding bookshelves &amp; Chiseled Bookshelf Master Tomes within scan range. */
@@ -1631,104 +1530,16 @@ public final class InscriptionRitualMechanics {
         BlockPos tablePos,
         BookshelfProgression.Config cfg
     ) {
-        if (level == null || tablePos == null) {
-            return new LibraryRitualScan(0, false, 0, 0, 0.0);
-        }
-        BookshelfProgression.Config safeCfg = cfg != null ? cfg : BookshelfProgression.Config.DEFAULT;
-        boolean ceilingBlocked = ChiseledEnchantingTableBlock.isTableCeilingBlocked(level, tablePos);
-        int openAdj = ChiseledEnchantingTableBlock.countOpenAdjacentBlocks(level, tablePos);
-        if (safeCfg.requireBreathingRoom()
-            && BookshelfProgression.effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, safeCfg) <= 0) {
-            return new LibraryRitualScan(0, false, 0, 0, 0.0);
-        }
-
-        var lrCfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.configForSide(level.isClientSide());
-        var ritCfg = level.isClientSide()
-            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.ritualConfig()
-            : chiseled_enchanting_table.data.ChiseledEnchantingTableData.ritualConfig();
-
-        int rawShelves = 0;
-        boolean anyTome = false;
-        int rawTomeEnchants = 0;
-        int maxOverloadedInf = 0;
-        double totalWearImmuneLoad = 0.0;
-        boolean checkLos = safeCfg.requireLineOfSight();
-
-        for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
-            BlockPos p = tablePos.offset(offset);
-            if (!level.hasChunkAt(p)) {
-                continue;
-            }
-            if (checkLos && !ChiseledEnchantingTableBlock.hasClearLineOfSight(level, tablePos, p)) {
-                continue;
-            }
-            BlockState state = level.getBlockState(p);
-            if (ChiseledEnchantingTableBlock.isRegularBookshelf(state)) {
-                if (chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
-                    .classifyBookshelf(true, false, false, false).isBroadBookshelf()) {
-                    rawShelves++;
-                }
-                continue;
-            }
-            if (!state.is(Blocks.CHISELED_BOOKSHELF)) {
-                continue;
-            }
-            if (!(level.getBlockEntity(p) instanceof ChiseledBookShelfBlockEntity shelfBe)) {
-                boolean occupiedProp = false;
-                for (var prop : ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES) {
-                    if (state.hasProperty(prop) && state.getValue(prop)) {
-                        occupiedProp = true;
-                        break;
-                    }
-                }
-                if (chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
-                    .classifyBookshelf(false, true, occupiedProp, false).isBroadBookshelf()) {
-                    rawShelves++;
-                }
-                continue;
-            }
-            boolean anyBookInShelf = false;
-            boolean anyEnchantedInShelf = false;
-            for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
-                ItemStack book = shelfBe.getItem(slot);
-                if (book.isEmpty()) continue;
-                anyBookInShelf = true;
-                ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
-                int count = enchants.size();
-                if (count <= 0) continue;
-                anyEnchantedInShelf = true;
-                if (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
-                    && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book)) {
-                    continue;
-                }
-                anyTome = true;
-                rawTomeEnchants += count;
-                boolean hasInf = MasterTomeWear.hasEffectiveWearImmunity(lrCfg, book);
-                if (hasInf) {
-                    totalWearImmuneLoad += computeInfinityTomeQualificationLoad(ritCfg, lrCfg, book);
-                    if ((count - 1) > 3 && count > maxOverloadedInf) {
-                        maxOverloadedInf = count;
-                    }
-                }
-            }
-            if (chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
-                .classifyBookshelf(false, true, anyBookInShelf, anyEnchantedInShelf).isBroadBookshelf()) {
-                rawShelves++;
-            }
-        }
-        int effectiveShelves = BookshelfProgression.effectiveShelvesAfterBreathingRoom(
-            rawShelves,
-            ceilingBlocked,
-            openAdj,
-            safeCfg
-        );
-        int effectiveTomeEnchants = BookshelfProgression.effectiveShelvesAfterBreathingRoom(
-            rawTomeEnchants,
-            ceilingBlocked,
-            openAdj,
-            safeCfg
-        );
-        return new LibraryRitualScan(effectiveShelves, anyTome, effectiveTomeEnchants, maxOverloadedInf, totalWearImmuneLoad);
+        return RitualWorldAccess.scanLibraryRitualContext(level, tablePos, cfg);
+    }
+    public static boolean doesMatchingMasterTomeHaveInfinity(
+        Level level,
+        BlockPos tablePos,
+        BookshelfProgression.Config cfg,
+        Identifier enchantmentId,
+        int minLevel
+    ) {
+        return RitualWorldAccess.doesMatchingMasterTomeHaveInfinity(level, tablePos, cfg, enchantmentId, minLevel);
     }
 
 
@@ -1743,7 +1554,7 @@ public final class InscriptionRitualMechanics {
         BlockPos tablePos,
         BookshelfProgression.Config cfg
     ) {
-        return degradeLowestPriorityMasterTomeInWorld(level, tablePos, cfg, Set.of());
+        return RitualWorldAccess.degradeLowestPriorityMasterTomeInWorld(level, tablePos, cfg);
     }
 
     @Nullable
@@ -1753,96 +1564,7 @@ public final class InscriptionRitualMechanics {
         BookshelfProgression.Config cfg,
         @Nullable Set<Identifier> activeRitualEnchantments
     ) {
-        if (level == null || tablePos == null) {
-            return null;
-        }
-        BookshelfProgression.Config safeCfg = cfg != null ? cfg : BookshelfProgression.Config.DEFAULT;
-        if (safeCfg.requireBreathingRoom()) {
-            boolean ceilingBlocked = ChiseledEnchantingTableBlock.isTableCeilingBlocked(level, tablePos);
-            int openAdj = ChiseledEnchantingTableBlock.countOpenAdjacentBlocks(level, tablePos);
-            if (BookshelfProgression.effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, safeCfg) <= 0) {
-                return null;
-            }
-        }
-        var lrCfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.configForSide(level.isClientSide());
-        Set<Identifier> activeIds = activeRitualEnchantments != null ? activeRitualEnchantments : Set.of();
-        boolean checkLos = safeCfg.requireLineOfSight();
-        List<TomeCandidate> candidates = new ArrayList<>();
-        for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
-            BlockPos p = tablePos.offset(offset);
-            if (!level.hasChunkAt(p)) {
-                continue;
-            }
-            if (checkLos && !ChiseledEnchantingTableBlock.hasClearLineOfSight(level, tablePos, p)) {
-                continue;
-            }
-            if (!(level.getBlockEntity(p) instanceof ChiseledBookShelfBlockEntity shelfBe)) {
-                continue;
-            }
-            for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
-                ItemStack book = shelfBe.getItem(slot);
-                if (book.isEmpty()
-                    || (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
-                        && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book))) continue;
-                ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
-                if (enchants.isEmpty()) continue;
-                int count = enchants.size();
-                double relSum = 0.0;
-                double raritySum = 0.0;
-                boolean backsActive = false;
-                for (var entry : enchants.entrySet()) {
-                    if (entry.getIntValue() > 0) {
-                        var keyOpt = entry.getKey().unwrapKey();
-                        if (keyOpt.isPresent() && activeIds.contains(keyOpt.get().identifier())) {
-                            backsActive = true;
-                        }
-                    }
-                    int maxLvl = Math.max(1, entry.getKey().value().getMaxLevel());
-                    relSum += Mth.clamp((double) entry.getIntValue() / maxLvl, 0.05, 1.0);
-                    int w = Math.max(1, entry.getKey().value().definition().weight());
-                    raritySum += 1.0 / Math.min(16.0, w);
-                }
-                candidates.add(new TomeCandidate(
-                    p.immutable(),
-                    slot,
-                    count,
-                    relSum / count,
-                    raritySum / count,
-                    MasterTomeWear.hasEffectiveWearImmunity(lrCfg, book),
-                    backsActive
-                ));
-            }
-        }
-        TomeCandidate victim = selectDegradationVictim(candidates);
-        if (victim == null) {
-            return null;
-        }
-        if (!(level.getBlockEntity(victim.shelfPos()) instanceof ChiseledBookShelfBlockEntity targetShelf)) {
-            return null;
-        }
-        ItemStack destroyedCopy = targetShelf.getItem(victim.slot()).copy();
-        targetShelf.setItem(victim.slot(), new ItemStack(BlockRegistry.DEPLETED_TOME, 1));
-        targetShelf.setChanged();
-        BlockState shelfState = level.getBlockState(victim.shelfPos());
-        if (shelfState.is(Blocks.CHISELED_BOOKSHELF)
-            && victim.slot() >= 0
-            && victim.slot() < ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES.size()) {
-            var occProp = ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES.get(victim.slot());
-            if (shelfState.hasProperty(occProp) && !shelfState.getValue(occProp)) {
-                level.setBlock(victim.shelfPos(), shelfState.setValue(occProp, true), Block.UPDATE_ALL);
-            } else {
-                level.sendBlockUpdated(victim.shelfPos(), shelfState, shelfState, Block.UPDATE_ALL);
-            }
-        }
-        level.playSound(
-            null,
-            victim.shelfPos(),
-            SoundEvents.AMETHYST_CLUSTER_BREAK,
-            SoundSource.BLOCKS,
-            1.0F,
-            0.75F
-        );
-        return destroyedCopy;
+        return RitualWorldAccess.degradeLowestPriorityMasterTomeInWorld(level, tablePos, cfg, activeRitualEnchantments);
     }
 
     /** Formats seconds cleanly as game days ({@code 10.0d}) or minutes/seconds. */
