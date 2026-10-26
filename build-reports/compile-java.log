@@ -1,4 +1,4 @@
-commit: 1b411995c00634348ff705251b1c2dbf8f3b12fb
+commit: 0e39ce4653c0b421c3c4bf89e57e4ea5de133f6d
 branch: arena/4313f0c3-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -26,7 +26,41 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :processResources
 > Task :classes
 
-> Task :compileClientJava
+> Task :compileClientJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:767: error: method scroll in class TomeDirectoryControls cannot be applied to given types;
+            if (this.tomeControls.scroll(mouseX, mouseY, this.leftPos + 7, this.topPos + 17, scrollY)) {
+                                 ^
+  required: double
+  found:    double,double,int,int,double
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:771: error: cannot find symbol
+            if (hoveredTome != null && Screen.hasShiftDown()
+                                             ^
+  symbol:   method hasShiftDown()
+  location: class Screen
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:851: error: method click in class TomeDirectoryControls cannot be applied to given types;
+            && this.tomeControls.click(event.x(), event.y(), this.leftPos + 7, this.topPos + 17, this.tomeCatalog)) {
+                                ^
+  required: double,double,int,int,TomeCatalog,Player,Runnable
+  found:    double,double,int,int,TomeCatalog
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1429: error: method render in class TomeDirectoryControls cannot be applied to given types;
+            this.tomeControls.render(ctx, this.leftPos + 7, this.topPos + 17,
+                             ^
+  required: GuiGraphicsExtractor,Font,int,int,int,int,TomeCatalog,Player
+  found:    GuiGraphicsExtractor,int,int,int,int,Font,TomeCatalog
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1508: error: cannot find symbol
+            if (hoveredTome != null && Screen.hasShiftDown()) {
+                                             ^
+  symbol:   method hasShiftDown()
+  location: class Screen
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1511: error: method render in class TomeEnchantmentDetails cannot be applied to given types;
+                var detailed = TomeEnchantmentDetails.render(hoveredTome, this.menu.player);
+                                                     ^
+  required: GuiGraphicsExtractor,Font,TomeBookEntry,Player,int,int
+  found:    TomeBookEntry,Player
+  reason: actual and formal argument lists differ in length
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/CatalogueSkin.java:26: error: incompatible types: Font cannot be converted to Minecraft
             RowRenderSupport.renderCenteredBoxText(ctx,font,label,ix,iw,iy+ih*.5f,
                                                        ^
@@ -55,10 +89,8 @@ Note: Recompile with -Xlint:unchecked for details.
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-5 errors
-
-> Task :compileClientJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792989940336.json
+11 errors
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792990078459.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -67,6 +99,30 @@ FAILURE: Build failed with an exception.
 * What went wrong:
 Execution failed for task ':compileClientJava'.
 > Compilation failed; see the compiler output below.
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:767: error: method scroll in class TomeDirectoryControls cannot be applied to given types;
+              if (this.tomeControls.scroll(mouseX, mouseY, this.leftPos + 7, this.topPos + 17, scrollY)) {
+                                   ^
+    required: double
+    found:    double,double,int,int,double
+    reason: actual and formal argument lists differ in length
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:851: error: method click in class TomeDirectoryControls cannot be applied to given types;
+              && this.tomeControls.click(event.x(), event.y(), this.leftPos + 7, this.topPos + 17, this.tomeCatalog)) {
+                                  ^
+    required: double,double,int,int,TomeCatalog,Player,Runnable
+    found:    double,double,int,int,TomeCatalog
+    reason: actual and formal argument lists differ in length
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1429: error: method render in class TomeDirectoryControls cannot be applied to given types;
+              this.tomeControls.render(ctx, this.leftPos + 7, this.topPos + 17,
+                               ^
+    required: GuiGraphicsExtractor,Font,int,int,int,int,TomeCatalog,Player
+    found:    GuiGraphicsExtractor,int,int,int,int,Font,TomeCatalog
+    reason: actual and formal argument lists differ in length
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1511: error: method render in class TomeEnchantmentDetails cannot be applied to given types;
+                  var detailed = TomeEnchantmentDetails.render(hoveredTome, this.menu.player);
+                                                       ^
+    required: GuiGraphicsExtractor,Font,TomeBookEntry,Player,int,int
+    found:    TomeBookEntry,Player
+    reason: actual and formal argument lists differ in length
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/TooltipPresentation.java:21: error: method isKeyDown in class InputConstants cannot be applied to given types;
           return InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT);
                                ^
@@ -95,7 +151,17 @@ Execution failed for task ':compileClientJava'.
     location: class TextColor
   Note: Some input files use or override a deprecated API.
   Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-  5 errors
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:771: error: cannot find symbol
+              if (hoveredTome != null && Screen.hasShiftDown()
+                                               ^
+    symbol:   method hasShiftDown()
+    location: class Screen
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1508: error: cannot find symbol
+              if (hoveredTome != null && Screen.hasShiftDown()) {
+                                               ^
+    symbol:   method hasShiftDown()
+    location: class Screen
+  11 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -137,6 +203,40 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:767: error: method scroll in class TomeDirectoryControls cannot be applied to given types;
+            if (this.tomeControls.scroll(mouseX, mouseY, this.leftPos + 7, this.topPos + 17, scrollY)) {
+                                 ^
+  required: double
+  found:    double,double,int,int,double
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:771: error: cannot find symbol
+            if (hoveredTome != null && Screen.hasShiftDown()
+                                             ^
+  symbol:   method hasShiftDown()
+  location: class Screen
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:851: error: method click in class TomeDirectoryControls cannot be applied to given types;
+            && this.tomeControls.click(event.x(), event.y(), this.leftPos + 7, this.topPos + 17, this.tomeCatalog)) {
+                                ^
+  required: double,double,int,int,TomeCatalog,Player,Runnable
+  found:    double,double,int,int,TomeCatalog
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1429: error: method render in class TomeDirectoryControls cannot be applied to given types;
+            this.tomeControls.render(ctx, this.leftPos + 7, this.topPos + 17,
+                             ^
+  required: GuiGraphicsExtractor,Font,int,int,int,int,TomeCatalog,Player
+  found:    GuiGraphicsExtractor,int,int,int,int,Font,TomeCatalog
+  reason: actual and formal argument lists differ in length
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1508: error: cannot find symbol
+            if (hoveredTome != null && Screen.hasShiftDown()) {
+                                             ^
+  symbol:   method hasShiftDown()
+  location: class Screen
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1511: error: method render in class TomeEnchantmentDetails cannot be applied to given types;
+                var detailed = TomeEnchantmentDetails.render(hoveredTome, this.menu.player);
+                                                     ^
+  required: GuiGraphicsExtractor,Font,TomeBookEntry,Player,int,int
+  found:    TomeBookEntry,Player
+  reason: actual and formal argument lists differ in length
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/CatalogueSkin.java:26: error: incompatible types: Font cannot be converted to Minecraft
             RowRenderSupport.renderCenteredBoxText(ctx,font,label,ix,iw,iy+ih*.5f,
                                                        ^
@@ -165,7 +265,7 @@ Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Com
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-5 errors
+11 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -306,7 +406,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 21s
+BUILD FAILED in 22s
 3 actionable tasks: 3 executed
 gradle exit code: 1
 
