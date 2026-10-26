@@ -302,7 +302,7 @@ final class TablePanelBackground {
                 TAB_W - 20,
                 tabVisualMidY,
                 0.76f,
-                !state.tooltips().menu().isCleansePageUnlocked() ? 0xFF8E829E : (cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC))
+                !state.tooltips().menu().isCleansePageUnlocked() ? 0xFF8E829E : (cleanse ? 0xFF9EFFDB : 0xFFA2C4BC)
             );
         }
 
