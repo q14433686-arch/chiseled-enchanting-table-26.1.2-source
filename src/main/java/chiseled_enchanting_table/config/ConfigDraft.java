@@ -1,33 +1,13 @@
 package chiseled_enchanting_table.config;
 
-import chiseled_enchanting_table.ChiseledEnchantingTable;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData.VanillaChestBooksMode;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.BlankMaxTierMode;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.VanillaTableMode;
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.Nullable;
-
 import static chiseled_enchanting_table.config.ModRuntimeConfig.*;
 
 /** Mutable editor values and cross-field normalization, independent of disk/network state. */

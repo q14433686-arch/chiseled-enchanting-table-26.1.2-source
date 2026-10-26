@@ -1,95 +1,67 @@
-# CI triad — installed; these are the reference copies
+# CI workflows and diagnostic evidence
 
-**Status (2026-10-14): all four workflows are live in `.github/workflows/`.** `bash
-docs/ci/install.sh --check` reports `ok` for every one of them.
-
-The files in this directory are **byte-identical reference copies**, kept for two reasons:
-
-1. The development sandbox still cannot write workflow files — its GitHub App installation token has
-   no `workflows: write`, so any push touching `.github/workflows/` is rejected:
-
-   ```
-   ! [remote rejected] (refusing to allow a GitHub App to create or update workflow
-     `.github/workflows/build.yml` without `workflows` permission)
-   ```
-
-   A `PUT` through the Contents API fails the same way (`403 Resource not accessible by
-   integration`). Only a maintainer can change CI, so the intended state has to be reviewable and
-   re-appliable from somewhere that is not `.github/workflows/`.
-2. `scripts/check_release_consistency.sh` reads `docs/ci/publish.yml` as the version source of truth
-   when the live copy cannot be updated, so the two must be able to agree.
-
-## Drift check and re-apply
+The four workflow reference copies here must remain byte-identical to `.github/workflows/`.
+Workflow edits were previously blocked by the sandbox GitHub App permissions; as of this
+2026-10-26 session, workflow pushes and the new diagnostic Checks API have both been exercised
+successfully. Do not retain the historical permission limitation as a current assertion.
 
 ```bash
-bash docs/ci/install.sh --check   # MISSING / DRIFT per file; exit 1 without writing anything
-bash docs/ci/install.sh           # copy the four files into .github/workflows/ and show the diff
+bash docs/ci/install.sh --check
 ```
 
-| reference copy | target | status |
-|---|---|---|
-| `docs/ci/compile-check.yml` | `.github/workflows/compile-check.yml` | installed, identical |
-| `docs/ci/build.yml` | `.github/workflows/build.yml` | installed, identical |
-| `docs/ci/consistency.yml` | `.github/workflows/consistency.yml` | installed, identical |
-| `docs/ci/publish.yml` | `.github/workflows/publish.yml` | installed, identical (`26.3` / `1.1.0`) |
+## Workflows
 
-**After changing CI, edit the copy here first, then have a maintainer apply it** — otherwise
-`--check` will report drift on the next run and the sandbox has no way to reconcile it.
+- `compile-check.yml`: compile main/client/test sources and execute JUnit; preserve full logs,
+  dependency information and JUnit XML as 14-day artifacts.
+- `build.yml`: offline validation, full jar build, optional-viewer-disabled compilation, real
+  dedicated-server loading/reload/ritual probes, then real SDL-window config/menu interaction
+  probes under Xvfb and software graphics. The last probe uses a separate development-only mod
+  (`src/clientSmoke`), excluded from release jars and normal builds.
+- `consistency.yml`: version/metadata/README/release-workflow consistency.
+- `publish.yml`: manual publishing, not activated by this refactor.
 
-## What each workflow does
+Every success is evidence for its **exact source SHA and exercised scenarios**, not for future
+HEADs, every graphics driver, every input method, or concurrent multiplayer races.
 
-Design, comments and lessons are ported from the sister repository
-[`q14433686-arch/TaCZ_Refabricated_Unofficial`](https://github.com/q14433686-arch/TaCZ_Refabricated_Unofficial/tree/26.3/.github/workflows).
+## No generated diagnostics in Git
 
-* **`compile-check.yml`** — compiles **both** source sets (`compileJava compileClientJava`; this
-  repo splits `main` and `client`, so compiling only `main` silently skips the entire GUI/renderer
-  half) and pushes the log back to `arena/**` branches as `build-reports/compile-java.log` through
-  the Contents API. That is the point: Actions has network access to
-  `maven.fabricmc.net`/Mojang's maven, the development sandbox does not, and Actions *log blobs*
-  are not reachable from the sandbox either — so the log has to be committed back to the branch to
-  be readable. Also inherited from TACZR: `paths-ignore: build-reports/**` (stops the log commit
-  re-triggering the workflow) and "only `arena/**` gets log commits" (main branches stay clean).
-* **`build.yml`** — three offline static gates (`ci_static_checks.py`, `compat_check.py`,
-  `check_release_consistency.sh --strict`) in a fast `static` job, then a `gradle build` job that
-  uploads the jar as a 14-day artifact.
-* **`consistency.yml`** — the version gate on its own trigger set, because `build.yml`
-  `paths-ignore`s `*.md` and would never see a README-only version drift.
-* **`publish.yml`** — unchanged apart from the version bump; still manual (`workflow_dispatch`).
+`build-reports/`, bytecode and disposable run directories are ignored. CI never calls the
+Contents API to commit logs, needs no `contents: write`, and no longer needs log-commit trigger
+exclusions. Markdown-only edits run the inventory gate as well.
 
-## Reading CI results from the sandbox
-
-The Actions **log blob** domain (`results-receiver.actions.githubusercontent.com`) is unreachable
-from the sandbox — `gh run view --log-failed` and `gh api .../runs/{id}/logs` both die with `EOF`.
-Two channels do work:
+Full logs: open/download the run's artifacts. The sandbox cannot reliably reach the Actions log
+blob host, so **bounded diagnostic Check runs** carry source SHA, compiler errors, test totals
+and log tails directly through `api.github.com`, on both success and failure:
 
 ```bash
-# 1. the compile log the workflow commits back (primary — full javac/Gradle output)
-gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>" \
-    --jq '.content' | base64 -d | tail -60
-
-# 2. step-level results, for "which step failed and how long did it take"
-gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/<run id>/jobs" \
-    --jq '.jobs[0].steps[] | "\(.name): \(.conclusion)"'
+REPO=q14433686-arch/chiseled-enchanting-table-26.1.2-source
+SHA=<exact-source-sha>
+gh api "repos/$REPO/commits/$SHA/check-runs" \
+  --jq '.check_runs[] | select(.name=="compile-diagnostics" or .name=="server-smoke-diagnostics") | .output.summary'
 ```
 
-The checks/annotations API is a third option, but it only carries what a problem matcher or an
-explicit `::error` produced. A temporary `gradlew` bridge used to emit those (it is what surfaced
-the two 26.3 `:compileJava` breaks); it was **removed** once this workflow's log write-back proved
-itself, so `gradlew` is plain again.
+Push/manual runs publish diagnostics with `checks: write`. Pull requests skip this supplemental
+publisher (including forks with read-only tokens) but retain workflow step results and artifacts.
+Diagnostic publication is a separate final step: it cannot turn a failed build into success;
+publication failures are visible rather than silently discarded. Diagnostics are summarized to
+fit Checks' UTF-8 byte limit; they are not a replacement for the full artifact.
 
-### `./gradlew: Permission denied`
-
-`compile-check.yml` invokes `./gradlew` directly, without the `chmod +x` step that `build.yml` has.
-`gradlew` is therefore committed executable (`100755`) — it had been `100644` since the 26.2
-baseline, which only ever worked because `build.yml` chmods first. If that error comes back, check
-`git ls-files -s gradlew` before suspecting the workflow.
-
-## The static gates run anywhere
-
-No Gradle, no network:
+## Local verification
 
 ```bash
 python3 scripts/ci_static_checks.py
+python3 scripts/test_baseline_mixins.py
+python3 scripts/test_ci_diagnostics.py
+python3 scripts/test_sync_26_3.py
+python3 scripts/check_repository_hygiene.py
 python3 scripts/compat_check.py
 bash scripts/check_release_consistency.sh --strict
 ```
+
+The native client probe requires Java 25, Mojang/Fabric dependency access, SDL graphics and an
+isolated checkout; it refuses existing run worlds. Run `scripts/server_smoke.py` first, then
+`xvfb-run -a python3 scripts/client_smoke.py`. It exercises synthetic committed Unicode text
+through the **real SDL event queue**, not a human-operated platform IME candidate window.
+Never run these destructive fixtures against a user's save.
+
+Keep `gradlew` executable (`100755`). No CI output should ever be committed back to the branch.

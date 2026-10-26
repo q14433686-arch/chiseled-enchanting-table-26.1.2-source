@@ -57,7 +57,8 @@ public final class ClientSmoke implements ClientModInitializer {
         return (ConfigLayoutSpec.ModalLayout) field(editor, "layout");
     }
     private static void click(Screen screen, double x, double y, int button) {
-        require(screen.mouseClicked(new MouseButtonEvent(x, y, new MouseButtonInfo(button, 0)), false), "click not handled");
+        require(screen.mouseClicked(new MouseButtonEvent(x, y, new MouseButtonInfo(button, 0)), false),
+            "click not handled at " + x + "," + y + " on " + screen.getClass().getSimpleName());
     }
     private void clickBox(ConfigLayoutSpec.Box box, int button) {
         click(editor, box.x() + Math.min(4, box.w() / 2), box.y() + box.h() / 2.0, button);
@@ -88,7 +89,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 next(1);
             }
             case 1 -> {
-                if (layout() == null) return; // Must have completed a real render/extraction pass.
+                if (layout() == null || ((java.util.List<?>) field(editor, "hitBoxes")).isEmpty()) return;
+                // Layout exists after init(), before the first render. Wait for real hit regions.
                 clickBox(layout().searchBox(), 0);
                 require(editor.capturesInput(), "search did not take focus");
                 require(SDLKeyboard.SDL_TextInputActive(handle), "native SDL text input never started");
@@ -154,7 +156,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 next(7);
             }
             case 7 -> {
-                if (layout() == null) return;
+                if (layout() == null || ((java.util.List<?>) field(editor, "hitBoxes")).isEmpty()) return;
                 var box = layout().searchBox();
                 // Dispatch through the parent menu screen, exercising overlay forwarding.
                 click(client.gui.screen(), box.x() + 4, box.y() + box.h() / 2.0, 0);

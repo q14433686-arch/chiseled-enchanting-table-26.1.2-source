@@ -95,7 +95,7 @@ bash docs/ci/install.sh --check                     # workflow reference mirror 
 
 | Workflow | Purpose | Trigger |
 |---|---|---|
-| [`compile-check.yml`](.github/workflows/compile-check.yml) | Compiles main + client + test sources, runs JUnit verification suites, and commits `build-reports/` logs back to `arena/**` branches | Push / PR |
+| [`compile-check.yml`](.github/workflows/compile-check.yml) | Compiles main + client + test sources, runs JUnit verification suites, and publishes full logs as artifacts plus bounded API-readable Checks diagnostics | Push / PR |
 | [`build.yml`](.github/workflows/build.yml) | Static checks → full `./gradlew build` + artifact upload → `no-viewers` compile gate → headless Minecraft `26.3` server smoke test | Push / PR |
 | [`consistency.yml`](.github/workflows/consistency.yml) | Cross-checks version strings across `gradle.properties`, `README.md`, `fabric.mod.json`, and `publish.yml` | Version/doc edits |
 | [`publish.yml`](.github/workflows/publish.yml) | Manual release pipeline (`MINECRAFT_VERSION: 26.3`, `VERSION: 1.1.0`) | `workflow_dispatch` |

@@ -1,5 +1,7 @@
 package chiseled_enchanting_table.gui.config;
 
+import static chiseled_enchanting_table.gui.config.ConfigPanelPainter.*;
+
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.config.ConfigCatalog;
 import chiseled_enchanting_table.config.ConfigCatalog.CategoryId;
@@ -58,7 +60,6 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     // ---- Color Palette (Obsidian / Crying Amethyst / Gilded Brass) ----
     private static final int BG_SCRIM = 0xD206040D;
-    private static final int BACKDROP_WASH = 0x6E0B0715;
     private static final int GOLD_TEXT = 0xFFFFE599;
     private static final int CREAM_TEXT = 0xFFF5EEFF;
     private static final int MUTED_TEXT = 0xFF9F91B8;
@@ -68,13 +69,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private static final int AMBER_TEXT = 0xFFFFC978;
     private static final int CORAL_TEXT = 0xFFFF8585;
 
-    private static final float GLYPH_INK_H = 8.0f;
 
     // ---- Modular 2x HD Pixel-Art Layers (assets/chiseled_enchanting_table/gui/config/) ----
     private static final Identifier MODAL_FRAME = ChiseledEnchantingTable.identifier("gui/config/modal_frame.png");
     private static final Identifier FRAME_GEM_PIP = ChiseledEnchantingTable.identifier("gui/config/frame_gem_pip.png");
-    private static final Identifier BACKDROP_TILE = ChiseledEnchantingTable.identifier("gui/config/backdrop_tile.png");
-    private static final Identifier DIVIDER_ORNAMENT = ChiseledEnchantingTable.identifier("gui/config/divider_ornament.png");
     private static final Identifier EMBLEM_TRACE_LARGE = ChiseledEnchantingTable.identifier("gui/config/emblem_trace_large.png");
 
     private static final Identifier RAIL_TAB = ChiseledEnchantingTable.identifier("gui/config/rail_tab.png");
@@ -333,140 +331,6 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
     }
 
-    // ---- Nine-Slice & Tiled Layer Primitives ----
-
-    private static void blitNineSliceRect(
-        GuiGraphicsExtractor ctx,
-        Identifier texture,
-        int x,
-        int y,
-        int w,
-        int h,
-        int cornerX,
-        int cornerY,
-        int texW,
-        int texH
-    ) {
-        if (w <= 0 || h <= 0) return;
-        int cx = Math.min(cornerX, w / 2);
-        int cy = Math.min(cornerY, h / 2);
-        float u0 = (float) cx / (float) texW;
-        float u1 = 1.0f - u0;
-        float v0 = (float) cy / (float) texH;
-        float v1 = 1.0f - v0;
-
-        // 4 corners
-        ctx.blit(texture, x, y, x + cx, y + cy, 0.0f, u0, 0.0f, v0);
-        ctx.blit(texture, x + w - cx, y, x + w, y + cy, u1, 1.0f, 0.0f, v0);
-        ctx.blit(texture, x, y + h - cy, x + cx, y + h, 0.0f, u0, v1, 1.0f);
-        ctx.blit(texture, x + w - cx, y + h - cy, x + w, y + h, u1, 1.0f, v1, 1.0f);
-
-        // Top & bottom edges
-        if (w > cx * 2) {
-            ctx.blit(texture, x + cx, y, x + w - cx, y + cy, u0, u1, 0.0f, v0);
-            ctx.blit(texture, x + cx, y + h - cy, x + w - cx, y + h, u0, u1, v1, 1.0f);
-        }
-        // Left & right edges
-        if (h > cy * 2) {
-            ctx.blit(texture, x, y + cy, x + cx, y + h - cy, 0.0f, u0, v0, v1);
-            ctx.blit(texture, x + w - cx, y + cy, x + w, y + h - cy, u1, 1.0f, v0, v1);
-        }
-        // Center fill
-        if (w > cx * 2 && h > cy * 2) {
-            ctx.blit(texture, x + cx, y + cy, x + w - cx, y + h - cy, u0, u1, v0, v1);
-        }
-    }
-
-    private static void blitTiledBackdrop(GuiGraphicsExtractor ctx, Box area) {
-        int tileSize = 64;
-        for (int ty = area.y(); ty < area.bottom(); ty += tileSize) {
-            int drawH = Math.min(tileSize, area.bottom() - ty);
-            float vMax = (float) drawH / (float) tileSize;
-            for (int tx = area.x(); tx < area.right(); tx += tileSize) {
-                int drawW = Math.min(tileSize, area.right() - tx);
-                float uMax = (float) drawW / (float) tileSize;
-                ctx.blit(BACKDROP_TILE, tx, ty, tx + drawW, ty + drawH, 0.0f, uMax, 0.0f, vMax);
-            }
-        }
-        ctx.fill(area.x(), area.y(), area.right(), area.bottom(), BACKDROP_WASH);
-    }
-
-    private static void blitOrnamentDivider(GuiGraphicsExtractor ctx, Box divBox) {
-        int cy = Math.round(divBox.centerY());
-        ctx.fill(divBox.x(), cy, divBox.right(), cy + 1, 0x665E4788);
-        int ornW = Math.min(136, divBox.w() - 16);
-        if (ornW >= 48) {
-            int ox = Math.round(divBox.centerX() - ornW * 0.5f);
-            ctx.blit(DIVIDER_ORNAMENT, ox, cy - 5, ox + ornW, cy + 6, 0.0f, 1.0f, 0.0f, 1.0f);
-        }
-    }
-
-    // ---- Typography Helpers Enforcing >= 0.85x Primary & >= 0.75x Secondary Floors ----
-
-    private String fitTextAtScale(String text, float scale, int maxWidthPx) {
-        if (text == null || text.isEmpty() || maxWidthPx <= 4) return "";
-        int maxRaw = Math.max(4, (int) Math.floor(maxWidthPx / scale));
-        if (this.font.width(text) <= maxRaw) {
-            return text;
-        }
-        String ellipsis = "\u2026";
-        int ellW = this.font.width(ellipsis);
-        int subW = Math.max(2, maxRaw - ellW);
-        return this.font.plainSubstrByWidth(text, subW) + ellipsis;
-    }
-
-    private float chooseClampedScale(String text, float preferredScale, float minScale, int maxWidthPx) {
-        if (text == null || text.isEmpty() || maxWidthPx <= 4) return preferredScale;
-        int rawW = Math.max(1, this.font.width(text));
-        if (rawW * preferredScale <= maxWidthPx) {
-            return preferredScale;
-        }
-        return Math.max(minScale, Math.min(preferredScale, (float) maxWidthPx / (float) rawW));
-    }
-
-    private void drawClampedLeftText(
-        GuiGraphicsExtractor ctx,
-        String text,
-        Box box,
-        float preferredScale,
-        float minScale,
-        int argbColor
-    ) {
-        if (text == null || text.isEmpty() || box.w() <= 4) return;
-        float scale = chooseClampedScale(text, preferredScale, minScale, box.w());
-        String fitted = fitTextAtScale(text, scale, box.w());
-        if (fitted.isEmpty()) return;
-        float drawY = box.centerY() - (GLYPH_INK_H * scale) * 0.5f;
-        drawScaledString(ctx, fitted, box.x(), drawY, scale, argbColor);
-    }
-
-    private void drawClampedCenteredText(
-        GuiGraphicsExtractor ctx,
-        String text,
-        Box box,
-        float preferredScale,
-        float minScale,
-        int argbColor
-    ) {
-        if (text == null || text.isEmpty() || box.w() <= 4) return;
-        float scale = chooseClampedScale(text, preferredScale, minScale, box.w());
-        String fitted = fitTextAtScale(text, scale, box.w());
-        if (fitted.isEmpty()) return;
-        float renderedW = this.font.width(fitted) * scale;
-        float drawX = box.x() + (box.w() - renderedW) * 0.5f;
-        float drawY = box.centerY() - (GLYPH_INK_H * scale) * 0.5f;
-        drawScaledString(ctx, fitted, drawX, drawY, scale, argbColor);
-    }
-
-    private void drawScaledString(GuiGraphicsExtractor ctx, String text, float x, float y, float scale, int color) {
-        var pose = ctx.pose();
-        pose.pushMatrix();
-        pose.translate(x, y);
-        pose.scale(scale, scale);
-        ctx.text(this.font, text, 0, 0, color, true);
-        pose.popMatrix();
-    }
-
     // ---- Search, Filtering & Section Building ----
 
     private boolean isSearchMode() {
@@ -700,7 +564,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         List<Component> tip = null;
 
         // L0-A1: Title
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.title"),
             this.layout.headerTitleBox(),
@@ -720,7 +584,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             : (overMod ? BTN_PLAQUE_HOVER : BTN_PLAQUE);
         blitNineSliceRect(ctx, modSprite, modBtn.x(), modBtn.y(), modBtn.w(), modBtn.h(), 6, 6, 64, 18);
         String modLabel = "\u2605 " + modCount;
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             modLabel,
             new Box(modBtn.x() + 4, modBtn.y(), Math.max(12, modBtn.w() - 8), modBtn.h()),
@@ -771,7 +635,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             case DEDICATED_READONLY, MODPACK_LOCKED -> AMBER_TEXT;
         };
         String modeLabel = (shownMode.writable() ? "\u270e " : "\u2298 ") + I18n.get(shownMode.bannerKey());
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             modeLabel,
             new Box(modeBox.x() + 6, modeBox.y(), Math.max(16, modeBox.w() - 12), modeBox.h()),
@@ -810,7 +674,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 title = I18n.get("config.chiseled_enchanting_table.preset." + preset.id() + ".title");
             }
             String label = active ? ("\u25cf " + title) : title;
-            drawClampedCenteredText(
+            drawClampedCenteredText(this.font,
                 ctx,
                 label,
                 new Box(pb.x() + 4, pb.y(), Math.max(12, pb.w() - 8), pb.h()),
@@ -849,7 +713,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         String displaySearch = hasQuery
             ? this.searchBuffer.renderWithCaret(this.searchInput.focused())
             : (this.searchInput.focused() ? "|" : "/ " + I18n.get("config.chiseled_enchanting_table.search.placeholder"));
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             displaySearch,
             searchTextBox,
@@ -861,7 +725,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (hasQuery) {
             Box clearBox = new Box(sb.right() - 16, sb.y() + 1, 15, sb.h() - 2);
             boolean overClear = clearBox.contains(mouseX, mouseY);
-            drawClampedCenteredText(
+            drawClampedCenteredText(this.font,
                 ctx,
                 "\u00d7",
                 clearBox,
@@ -982,7 +846,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                     ? I18n.get("config.chiseled_enchanting_table.trace.tab_title")
                     : I18n.get(cat.titleKey());
 
-                drawClampedLeftText(
+                drawClampedLeftText(this.font,
                     ctx,
                     title,
                     labelBox,
@@ -993,7 +857,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
                 if (badgeW > 0) {
                     Box bBox = new Box(tb.right() - 7 - badgeW, tb.y(), badgeW, tb.h());
-                    drawClampedCenteredText(
+                    drawClampedCenteredText(this.font,
                         ctx,
                         badgeStr,
                         bBox,
@@ -1071,7 +935,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 String emptyMsg = I18n.get(this.filterModifiedOnly
                     ? "config.chiseled_enchanting_table.empty.modified"
                     : "config.chiseled_enchanting_table.empty.search");
-                drawClampedCenteredText(
+                drawClampedCenteredText(this.font,
                     ctx,
                     emptyMsg,
                     new Box(vp.x() + 10, ey + embSize + 6, Math.max(40, vp.w() - 20), 16),
@@ -1183,7 +1047,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         Box rightBox = new Box(x + w - 9 - rightW, y, rightW, box.h());
         Box titleBox = new Box(x + 20, y, Math.max(36, rightBox.x() - 4 - (x + 20)), box.h());
 
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             sec.sectionTitle() == null ? "" : sec.sectionTitle(),
             titleBox,
@@ -1191,7 +1055,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
             allGated ? MUTED_TEXT : GOLD_TEXT
         );
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             rightTag,
             rightBox,
@@ -1269,7 +1133,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int nameColor = !editable
             ? MUTED_TEXT
             : (entry.isCoreRuleAtom() ? GOLD_TEXT : CREAM_TEXT);
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             name,
             row.labelBox(),
@@ -1288,7 +1152,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         };
         if (!editable) scopeColor = MUTED_TEXT;
         ctx.fill(sb.x(), sb.y(), sb.right(), sb.bottom(), 0x88140D22);
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             scopeGlyph,
             sb,
@@ -1366,7 +1230,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             String stateText = I18n.get(isOn
                 ? "config.chiseled_enchanting_table.val.on"
                 : "config.chiseled_enchanting_table.val.off");
-            drawClampedCenteredText(
+            drawClampedCenteredText(this.font,
                 ctx,
                 stateText,
                 stateTextBox,
@@ -1397,7 +1261,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             blitNineSliceRect(ctx, sprite, cb.x(), cb.y(), cb.w(), cb.h(), 6, 6, 64, 18);
 
             String decorated = "\u25c2 " + valText + " \u25b8";
-            drawClampedCenteredText(
+            drawClampedCenteredText(this.font,
                 ctx,
                 decorated,
                 new Box(cb.x() + 4, cb.y(), Math.max(16, cb.w() - 8), cb.h()),
@@ -1430,7 +1294,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         // Dedicated left value readout pill (never overlaps sliding knob)
         ctx.fill(valuePill.x(), valuePill.y(), valuePill.right(), valuePill.bottom(), 0xCC110B1F);
         ctx.fill(valuePill.x(), valuePill.bottom() - 1, valuePill.right(), valuePill.bottom(), 0x667A5C38);
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             valText,
             new Box(valuePill.x() + 2, valuePill.y(), Math.max(12, valuePill.w() - 4), valuePill.h()),
@@ -1445,13 +1309,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         blitNineSliceRect(ctx, !editable ? MICRO_BTN_DISABLED : (overMinus ? MICRO_BTN_HOVER : MICRO_BTN),
             minusBox.x(), minusBox.y(), minusBox.w(), minusBox.h(), 3, 3, 16, 16);
-        drawClampedCenteredText(ctx, "-", minusBox,
+        drawClampedCenteredText(this.font, ctx, "-", minusBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             editable ? (overMinus ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT);
 
         blitNineSliceRect(ctx, !editable ? MICRO_BTN_DISABLED : (overPlus ? MICRO_BTN_HOVER : MICRO_BTN),
             plusBox.x(), plusBox.y(), plusBox.w(), plusBox.h(), 3, 3, 16, 16);
-        drawClampedCenteredText(ctx, "+", plusBox,
+        drawClampedCenteredText(this.font, ctx, "+", plusBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             editable ? (overPlus ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT);
 
@@ -1617,7 +1481,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         Box subBox = new Box(textLeft, y + 22, textW, 15);
 
         int activeClassic = this.editSession.draft().build().countClassic103Atoms();
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.trace.banner_title"),
             titleBox,
@@ -1625,7 +1489,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
             GOLD_TEXT
         );
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.trace.banner_ratio",
                 activeClassic, ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT),
@@ -1642,7 +1506,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overClassic = inClip && writable && btnClassic.contains(mouseX, mouseY);
         blitNineSliceRect(ctx, !writable ? BTN_PLAQUE_DISABLED : (overClassic ? BTN_PLAQUE_HOVER : BTN_PLAQUE_GOLD),
             btnClassic.x(), btnClassic.y(), btnClassic.w(), btnClassic.h(), 4, 4, 64, 18);
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.trace.btn_all_103"),
             new Box(btnClassic.x() + 3, btnClassic.y(), Math.max(12, btnClassic.w() - 6), btnClassic.h()),
@@ -1655,7 +1519,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overModern = inClip && writable && btnModern.contains(mouseX, mouseY);
         blitNineSliceRect(ctx, !writable ? BTN_PLAQUE_DISABLED : (overModern ? BTN_PLAQUE_HOVER : BTN_PLAQUE),
             btnModern.x(), btnModern.y(), btnModern.w(), btnModern.h(), 4, 4, 64, 18);
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.trace.btn_all_110"),
             new Box(btnModern.x() + 3, btnModern.y(), Math.max(12, btnModern.w() - 6), btnModern.h()),
@@ -1734,7 +1598,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         // Top-left: #NN + Atom Name
         String title = String.format(Locale.ROOT, "#%02d ", ordinal) + I18n.get(trace.titleKey());
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             title,
             tc.titleBox(),
@@ -1748,7 +1612,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overJump = inClip && jb.contains(mouseX, mouseY);
         ctx.fill(jb.x(), jb.y(), jb.right(), jb.bottom(), overJump ? 0xCC4B3475 : 0x88241838);
         String jumpText = "\u2197 " + I18n.get(trace.domain().titleKey());
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             jumpText,
             new Box(jb.x() + 2, jb.y(), Math.max(12, jb.w() - 4), jb.h()),
@@ -1786,7 +1650,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             : I18n.get(isClassic
                 ? "config.chiseled_enchanting_table.trace.toggle_classic"
                 : "config.chiseled_enchanting_table.trace.toggle_modern");
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             tLabel,
             new Box(tb.x() + 3, tb.y(), Math.max(12, tb.w() - 6), tb.h()),
@@ -1815,7 +1679,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         String modernPrefix = I18n.get("config.chiseled_enchanting_table.trace.prefix_modern");
         String cText = (isClassic ? "\u25cf " : "") + classicPrefix + " " + I18n.get(trace.classicSummaryKey());
         String mText = (!isClassic ? "\u25cf " : "") + modernPrefix + " " + I18n.get(trace.modernSummaryKey());
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             cText,
             new Box(cPill.x() + 3, cPill.y(), Math.max(16, cPill.w() - 6), cPill.h()),
@@ -1823,7 +1687,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             isClassic ? GOLD_TEXT : 0xFFB8AAD2
         );
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             mText,
             new Box(mPill.x() + 3, mPill.y(), Math.max(16, mPill.w() - 6), mPill.h()),
@@ -1886,7 +1750,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             canResetPage ? (overResetPage ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
             resetPageBtn.x(), resetPageBtn.y(), resetPageBtn.w(), resetPageBtn.h(), 10, 5, 64, 18
         );
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.btn.reset_page"),
             new Box(resetPageBtn.x() + 5, resetPageBtn.y(), Math.max(16, resetPageBtn.w() - 10), resetPageBtn.h()),
@@ -1916,7 +1780,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             canResetAll ? (overReset ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
             resetBtn.x(), resetBtn.y(), resetBtn.w(), resetBtn.h(), 10, 5, 64, 18
         );
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.btn.reset_all"),
             new Box(resetBtn.x() + 4, resetBtn.y(), Math.max(16, resetBtn.w() - 8), resetBtn.h()),
@@ -1966,7 +1830,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 : I18n.get("config.chiseled_enchanting_table.msg.synced");
             statusColor = classicAtoms > 0 ? CYAN_TEXT : MUTED_TEXT;
         }
-        drawClampedLeftText(
+        drawClampedLeftText(this.font,
             ctx,
             statusText,
             this.layout.footerStatusBox(),
@@ -1986,7 +1850,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             overClose ? BTN_PLAQUE_HOVER : BTN_PLAQUE,
             closeBtn.x(), closeBtn.y(), closeBtn.w(), closeBtn.h(), 6, 6, 64, 18
         );
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.btn.close"),
             new Box(closeBtn.x() + 4, closeBtn.y(), Math.max(16, closeBtn.w() - 8), closeBtn.h()),
@@ -2008,7 +1872,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             !canSave ? BTN_PLAQUE_DISABLED : (overSave ? BTN_PLAQUE_HOVER : BTN_PLAQUE_GOLD),
             saveBtn.x(), saveBtn.y(), saveBtn.w(), saveBtn.h(), 6, 6, 64, 18
         );
-        drawClampedCenteredText(
+        drawClampedCenteredText(this.font,
             ctx,
             I18n.get("config.chiseled_enchanting_table.btn.save"),
             new Box(saveBtn.x() + 4, saveBtn.y(), Math.max(16, saveBtn.w() - 8), saveBtn.h()),

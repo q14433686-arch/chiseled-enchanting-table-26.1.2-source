@@ -58,9 +58,7 @@ jobs:
             >> build-reports/compile-java.log 2>&1 || status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
           python3 scripts/summarize_test_results.py >> build-reports/compile-java.log 2>&1
-          # 把「浮动坐标」这次实际解析成了什么记进日志：jei_version=latest.release 与
-          # rei_version=26.3.+ 都会随上游发布漂移，而沙箱读不到 maven，也读不到 Actions 的
-          # 日志 blob。没有这一段，「昨天能编、今天不能编」无从追溯，也没法把它们钉成确切版本。
+          # Record the exact resolved viewer/toolchain coordinates alongside the pinned inputs.
           {
             echo ""
             echo "=== resolved coordinates (compileClasspath / clientCompileClasspath) ==="
@@ -73,12 +71,7 @@ jobs:
               >> build-reports/compile-java.log || true
           done
           if [ "$status" -ne 0 ]; then
-            # 失败时再回写一份依赖图。沙箱读不到 Actions 的日志 blob 域，build-reports/ 下的
-            # 文件是唯一的排障通道，所以「为什么失败」也必须落盘，而不是只留在 run 页面里。
-            # 经验教训（1.0.3 第一次 compile-check）：错误可能根本不在源码里 ——
-            # 可选依赖（JEI / REI / architectury）的 POM 会把 fabric-api / loader / minecraft
-            # 的版本顶掉，而 Loom 的 injected_interfaces 是按 fabric-api 的内容改写 Minecraft
-            # 类的，于是 main 源集会报 "cannot access EntityFluidExtension"。
+            # Preserve failure dependency diagnostics in the artifact, never in Git history.
             DEPS=build-reports/compile-deps.log
             {
               echo "commit: ${{ github.sha }}"

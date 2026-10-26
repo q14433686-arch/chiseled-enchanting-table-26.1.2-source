@@ -1,46 +1,13 @@
 package chiseled_enchanting_table.menu;
 
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.mechanics.enchanting.EnchantmentApplication;
-import chiseled_enchanting_table.mechanics.enchanting.BookUpgradeApplication;
-import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
-import chiseled_enchanting_table.mechanics.transformation.ItemTransformationApplication;
-import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
-import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload;
-import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
-import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TransformationDisplay;
 import chiseled_enchanting_table.registry.BlockRegistry;
-import chiseled_enchanting_table.registry.ScreenHandlerRegistry;
-import chiseled_enchanting_table.utils.EnchantmentWithLevel;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.Container;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Items;
-
 import static chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.COST_SLOT;
 import static chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT;
 
