@@ -41,6 +41,13 @@ All static gates, headless JUnit suites, and CI compile/test workflows validate 
 4. **Mixin & Villager Edge Cases**:
    - Walk through [`docs/MIXIN_UPGRADE_CHECKLIST.md`](docs/MIXIN_UPGRADE_CHECKLIST.md) §3 (grindstone Shift-click Depleted Tome output, locked shelf hopper/break protection, facing-aware bookshelf particles, and `restrict_villager_infinity_books` `Infinity -> Power I` repricing at `5..8` emeralds).
 
+### A2. 26.3 回移植后续（2026-10-26 彻查轮遗留，见 docs/reports/BACKPORT_FROM_26_3_2026_10_26.md）
+
+- **实机冒烟**：母本目录（过滤/排序/多选/批量锁队列二次确认、Shift 全附魔分页）在专用服务器 + 客户端各跑一轮；创造模式书架精确抽取（`BookshelfCreativeExtractionMixin`）手测；坏数据包 `/reload` 应被拒绝而非静默半发布。
+- **Rainbow Cloth（未移植，需独立立项）**：涉及方块状态 `RAINBOW_CLOTH` schema 变更——必须按 `docs/PROTOCOL_HISTORY.md` §3 升协议号、评估旧档迁移，并先在 26.1.2 上验证 `ColorLerper`/`submitCustomGeometry`/`colorOrDefault` 等价 API；BER 保持本分支 `mulPose`+10 参 `submitModel`。
+- **UI 可读性包（未移植）**：`TooltipPresentation`/`TooltipBudget` 与 `ui.*` 键的整体策略移植需单独适配本分支 6 参提示与 `event.hasShiftDown()` 输入模型。
+- **保留键清理（可选）**：`tomes.btn_lock_all`/`tip_lock_all` 已无代码引用（服务端 `LOCK_ALL_FULL` 处理为线兼容保留）；下一次大版本可与 `LOCK_ALL_FULL` 服务端处理一并评估移除。
+
 ### B. Dedicated Multi-Slot Auxiliary Cost Panel (Future UI Enhancement)
 
 Currently the container exposes `ENCHANTABLE_SLOT` + `COST_SLOT`, while `additional_costs` (from `enchantment_costs.json`, `disenchanting.json`, and `item_transformations.json`) are displayed in row/slot tooltips andJEI/REI and consumed automatically from the player's inventory. Adding physical auxiliary input slots to `ChiseledEnchantingTableScreenHandler` remains an optional future UX expansion.

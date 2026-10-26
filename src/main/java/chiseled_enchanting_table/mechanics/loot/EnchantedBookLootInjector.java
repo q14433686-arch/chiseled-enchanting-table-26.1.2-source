@@ -2,8 +2,8 @@ package chiseled_enchanting_table.mechanics.loot;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.LootInjection;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.LootInjectionEntry;
+import chiseled_enchanting_table.data.LootInjection;
+import chiseled_enchanting_table.data.LootInjectionEntry;
 import java.util.List;
 import java.util.Optional;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
@@ -67,7 +67,8 @@ public final class EnchantedBookLootInjector {
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
             if (!source.isBuiltin()) return;
 
-            var chestMode = ChiseledEnchantingTableData.vanillaChestBooksMode();
+            var buildRules = ChiseledEnchantingTableData.lootRegistryBuildRules();
+            var chestMode = buildRules.mode();
             if (chestMode == ChiseledEnchantingTableData.VanillaChestBooksMode.DISABLED) {
                 return;
             }
@@ -79,7 +80,7 @@ public final class EnchantedBookLootInjector {
                 || tablePath.startsWith("pots/")
                 || tablePath.startsWith("spawners/");
 
-            List<LootInjection> injections = ChiseledEnchantingTableData.lootInjections();
+            List<LootInjection> injections = buildRules.entries();
             boolean matchedAny = false;
             if (!injections.isEmpty()) {
                 HolderGetter<Enchantment> enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT);

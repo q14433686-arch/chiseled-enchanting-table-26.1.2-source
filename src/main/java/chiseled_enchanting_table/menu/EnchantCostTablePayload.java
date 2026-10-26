@@ -377,7 +377,7 @@ public record EnchantCostTablePayload(
         java.util.function.ToIntFunction<EnchantCostTablePayload> encodedByteMeasurer
     ) {
         int actualBytes = encodedByteMeasurer.applyAsInt(candidate);
-        if (actualBytes <= maxSafeBytes || candidate.costs().isEmpty()) {
+        if (actualBytes <= maxSafeBytes) {
             return candidate;
         }
         EnchantCostTablePayload cur = candidate;
@@ -416,6 +416,12 @@ public record EnchantCostTablePayload(
                 false
             );
             actualBytes = encodedByteMeasurer.applyAsInt(cur);
+        }
+        if (actualBytes > maxSafeBytes) {
+            // Header/config/transformation data cannot be discarded without lying about rules.
+            // Never emit an oversized packet, even when there are zero cost rows left to trim.
+            throw new IllegalArgumentException("Enchanting configuration/header exceeds wire budget: "
+                + actualBytes + " > " + maxSafeBytes);
         }
         ChiseledEnchantingTable.LOGGER.warn(
             "Trimmed EnchantCostTablePayload from {} to {} rows ({} actual encoded bytes <= {} budget); costTableComplete=false",

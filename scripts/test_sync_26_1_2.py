@@ -85,7 +85,7 @@ class SyncContracts26_1_2(unittest.TestCase):
         self.assertTrue((MAIN / 'config/rules/RuntimeRules.java').exists())
         data_src = (MAIN / 'data/ChiseledEnchantingTableData.java').read_text()
         key_extractor_src = (MAIN / 'data/DatapackKeyExtractor.java').read_text()
-        self.assertIn('public record RuntimeFrame(', data_src)
+        self.assertIn('public record RuntimeFrame(', (MAIN / 'data/RuntimeFrame.java').read_text())
         self.assertIn('RuntimeRules.commit(prepared, persist)', data_src)
         self.assertIn('resource.sourcePackId()', data_src + key_extractor_src)
 
@@ -128,7 +128,7 @@ class SyncContracts26_1_2(unittest.TestCase):
 
     def test_audit_guards_authoritative_sync_and_input(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('CURRENT_REVISION_NUMBER = 17', protocol)
+        self.assertIn('CURRENT_REVISION_NUMBER = 18', protocol)
         self.assertIn('REVISION = "26_1_2_revision_" + CURRENT_REVISION_NUMBER', protocol)
         self.assertIn('IntStream.range(1, CURRENT_REVISION_NUMBER)', protocol)
         self.assertIn('IntStream.range(9, CURRENT_REVISION_NUMBER)', protocol)
@@ -157,9 +157,62 @@ class SyncContracts26_1_2(unittest.TestCase):
         self.assertIn('registry.registerDisplayGenerator(', rei)
         self.assertIn('EntryStacks.equalsFuzzy(entry, focus)', rei)
 
+    def test_backport_26_3_seven_path_fixes(self):
+        """2026-10-26 backport of the 26.3 seven-path audit fixes, 26.1.2-adapted."""
+        main_mod = (MAIN / 'ChiseledEnchantingTable.java').read_text()
+        self.assertIn('FABRIC_MOD_ID = "chiseled-enchanting-table"', main_mod)
+
+        extractor = (MAIN / 'data/DatapackKeyExtractor.java').read_text()
+        self.assertIn('FABRIC_MOD_ID', extractor)
+        self.assertIn('source.equals("fabric") || source.equals("vanilla")', extractor)
+        for key in ['locked_shelf_breakable', 'locked_book_extraction_blocked',
+                    'early_unlock_xp_levels', 'early_unlock_grit_count',
+                    'sacrifice_required', 'tome_page_required_shelves']:
+            self.assertIn(key, extractor)
+
+        data = (MAIN / 'data/ChiseledEnchantingTableData.java').read_text()
+        self.assertIn('record LootRegistryBuildRules(', data)
+        self.assertIn('BUILT_IN_CLASSIC_COSTS', data)
+        self.assertIn('d.tomePageRequiredShelves = rawLibraryResonanceConfig.tomePageRequiredShelves()', data)
+        self.assertNotIn('preloadedLootInjections', data)
+        self.assertNotIn('preloadedVanillaChestBooksMode', data)
+
+        mixin = (MAIN / 'mixin/loot/ReloadableServerRegistriesMixin.java').read_text()
+        self.assertIn('cancellable = true, require = 1', mixin)
+        self.assertIn('CompletableFuture.failedFuture(error)', mixin)
+        self.assertNotIn('falling back to bundled defaults', mixin)
+
+        payload = (MAIN / 'menu/EnchantCostTablePayload.java').read_text()
+        self.assertIn('configuration/header exceeds wire budget', payload)
+        self.assertNotIn('actualBytes <= maxSafeBytes || candidate.costs().isEmpty()', payload)
+
+        sync = (MAIN / 'menu/EnchantCostSync.java').read_text()
+        self.assertIn('cost_sync_failed', sync)
+        self.assertIn('LAST_DISPLAYS.remove(player.getUUID())', sync)
+
+        particles = (MAIN / 'mechanics/resonance/TomeParticleEffects.java').read_text()
+        self.assertIn('SERVER_STOPPED', particles)
+        self.assertIn('server.getLevel(b.level.dimension()) != b.level', particles)
+
+        creative = MAIN / 'mixin/bookshelf/BookshelfCreativeExtractionMixin.java'
+        self.assertTrue(creative.exists())
+        self.assertIn('method = "removeBook"', creative.read_text())
+        mixins = json.loads((ROOT / 'src/main/resources/chiseled-enchanting-table-port.mixins.json').read_text())
+        self.assertIn('bookshelf.BookshelfCreativeExtractionMixin', mixins['mixins'])
+        self.assertEqual(14, len(mixins['mixins']))
+
+        cfg = (MAIN / 'config/ModRuntimeConfig.java').read_text()
+        self.assertNotIn('Files.copy(temporary, path', cfg)
+        self.assertNotIn('Files.writeString(path, json', cfg)
+
+        screen = (CLIENT / 'gui/config/ChiseledEnchantingConfigScreen.java').read_text()
+        self.assertIn('ConfigSaveSession', screen)
+        self.assertIn('saves.expire(', screen)
+        self.assertIn('must not leave an editor permanently stuck in pending', screen)
+
     def test_config_authority_and_persistence_guards(self):
         cfg = (MAIN / 'config/ModRuntimeConfig.java').read_text()
-        self.assertIn('StandardCopyOption.ATOMIC_MOVE', cfg)
+        self.assertIn('StandardCopyOption.ATOMIC_MOVE', (MAIN / 'config/ConfigFileStore.java').read_text())
         self.assertIn('saveToDisk(normalized);', cfg)
         net = (MAIN / 'config/ModConfigNetworking.java').read_text()
         self.assertIn('server.isSingleplayerOwner(player.nameAndId())', net)

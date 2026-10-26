@@ -16,6 +16,15 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > what was deliberately *not* taken because it is 26.3-only — is in
 > [`docs/reports/SYNC_FROM_26_3_REPORT.md`](docs/reports/SYNC_FROM_26_3_REPORT.md).
 
+## [Unreleased] - 2026-10-26 (26.3 Backport Audit Round; wire stays `26_1_2_revision_17`)
+
+- **Tome Catalogue (new)**：母本页新增目录控件——按附魔/剩余/容量/锁状态过滤、五种排序、全选可见、Shift 多选；锁按钮作用于所选母本并经每 3 tick 一条的节流队列发送，多本操作需 5 秒内二次点击确认（服务端逐本复核权限/花费）；悬停按住 Shift 显示全附魔分页详情（Shift+滚轮翻页）；第 5 个锁按钮由「暗中锁全库」改为「补满所选」。
+- **数据包可靠性修复**：6 个母本页配置键现在真正生效（支持 `tome_pages` 嵌套）；本模数据包（含连字符 Fabric id）识别修正，且「同内容优先」不再误吞其他包的覆盖。
+- **重载原子性修复**：战利品规则改为先暂存后整体发布，解析失败时 `/reload` 会被拒绝而非静默使用半成品规则；经典模式缺省回退改为不可变内置表。
+- **同步安全修复**：成本表过大且不可裁剪时不再发送空表绕过校验；成本同步失败时客户端清除旧价并断开（新增本地化提示）；粒子突发队列在服务器停机后不再残留。
+- **手柄/界面修复**：创造模式可从凿制书架精确抽取指定书（新 mixin）；配置写入任何路径下都不再截断正在使用的配置文件；配置界面在通道不可用时保存不再死锁。
+- 详见 [`docs/reports/BACKPORT_FROM_26_3_2026_10_26.md`](docs/reports/BACKPORT_FROM_26_3_2026_10_26.md)。
+
 ## [1.1.0] - 2026-10-25 (Code Audit Round 2, Curve Smoothing, JEI/REI Fix & 1.0.3 Preset)
 
 - **Bug Fixes (`wear_immune` Lineage Cap & JEI/REI Seamless Return)**:

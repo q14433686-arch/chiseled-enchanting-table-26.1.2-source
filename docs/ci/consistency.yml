@@ -10,6 +10,7 @@ on:
     branches:
       - 'arena/**'
       - 'chiseled-enchanting-table-26.1.2-source'
+      - '26.**'
       - 'main'
     paths:
       - 'gradle.properties'

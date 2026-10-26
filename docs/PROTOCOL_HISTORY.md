@@ -1,36 +1,27 @@
-# Network Protocol & Wire Revision History
+# 26.1.2 线协议修订史（enchanting wire revisions）
 
-> **Current wire revision:** `26_1_2_revision_17` (`EnchantingProtocol.WIRE_REVISION`)
-> **Owner classes:** `chiseled_enchanting_table.menu.EnchantingProtocol`, `PayloadLimits`,
-> `EnchantCostSync`, `EnchantCostTablePayload`, `AvailableEnchantmentsPayload`, `ConfigSyncNetworking`.
+> **单一事实源**：`menu/EnchantingProtocol.java`（`CURRENT_REVISION_NUMBER`）。
+> 每次 bump 都会改变通道标识（`…_26_1_2_revision_N`），新旧修订对端在加入时被友好断开
+> 而非解码崩溃。历史修订通道以 **query-only 探针** 保留（cost 表自 revision_1、
+> apply 通道自 revision_9），服务端仅据此判定对端版本并给出升级提示，绝不消费旧负载。
+> 本文件由代码注释与发布报告汇总；早期修订语义以当时的线格式变更点为准。
 
-## 1. Design Principles
+| 修订 | 变更要点（线/blockstate schema） |
+|---|---|
+| 1–8 | 早期线协议（附魔成本表 S2C 同步基线；无 apply 修订体系） |
+| 9 | 引入修订化 apply 通道 + 负载边界校验（batch 3：wire revision_9） |
+| 10 | 1.1.0 前基线（成本/规则同步完整化） |
+| 11 | Tome 页锁定（tome page locks）线字段 |
+| 12 | XP 标尺与分级 grit 成本字段（十项实机反馈修复） |
+| 13 | 附魔风味（ench flavor）同步字段 |
+| 14 | 自定义成本选项 + 世代（generation）字段 |
+| 15 | 书架品质（shelf qualities）字段 |
+| 16 | TomeState 完整状态同步 |
+| 17 | 书架能量（shelf power）服务器权威同步 |
+| 18 | **`rainbow_cloth` 方块状态属性加入已同步 blockstate schema**（26.3 彩虹布全量回移植）；无其他线格式变化，仍须按门禁策略 bump |
 
-1. **Revision-suffixed channels + explicit capability handshake**: Every S2C/C2S gameplay channel embeds a protocol revision suffix or validates `EnchantingProtocol.WIRE_REVISION` during configuration/play join so mismatched client/server jars disconnect cleanly with a human-readable diagnostic rather than throwing `DecoderException` mid-session.
-2. **Centralized `PayloadLimits` bounds**: All collection headers and byte budgets are checked against `chiseled_enchanting_table.menu.PayloadLimits` before allocation:
-   - `MAX_SYNC_OPTIONS = 64` (per-menu option/epiphany slice cap)
-   - `MAX_SYNC_ENTRIES = 1_024` (cost-table / transformation / upgrade map cap)
-   - `MAX_PAYLOAD_WIRE_BYTES = 980_000` (pre-flight `Unpooled.buffer()` wire budget comfortably inside Fabric/vanilla's `1,048,576`-byte custom payload ceiling)
-3. **Datapack `/reload` safety**: Because `EnchantCostTablePayload` replaces the active `RuleBook` / `RuntimeFrame`, `ChiseledEnchantingTableData` closes any open `ChiseledEnchantingTableScreenHandler` containers on `END_DATA_PACK_RELOAD` and sends `message.chiseled_enchanting_table.reload_closed` so no player clicks a stale pre-reload option index.
-4. **Per-UUID player-salted cost cache**: `EnchantCostSync` caches serialized `EnchantCostTablePayload` frames per `UUID` when `MaterialSelectionMode.SALTED_SINGLE` is active (and shares a single global frame in `MULTI_CHOICE` mode), preventing cross-player cache thrashing on populated servers.
+## Bump 策略
 
-## 2. Revision Ledger (`26.1.2` Line)
-
-| Wire Revision | Summary of Wire Contract Changes |
-| :--- | :--- |
-| `26_1_2_revision_1` – `revision_5` | Initial 26.1.2 S2C cost synchronization (`EnchantCostTablePayload`) and typed `AvailableOption` menu list sync (`AvailableEnchantmentsPayload`) for direct enchants, book upgrades, and item transformations. |
-| `26_1_2_revision_6` | Backport of `RuleBook` / `RuntimeFrame` architecture, ritual queue status sync, and explicit client/server capability probe. |
-| `26_1_2_revision_7` – `revision_9` | Added `shelf_gates.json`, `disenchanting.json`, `treasure_epiphany.json`, and `library_resonance.json` rule sync fields for client tooltips and JEI/REI parity. |
-| `26_1_2_revision_10` | Added copy-generation fading (`cet_generation`), `scapegoat_pricing`, and `ritual.wait_curve` 6-coefficient synchronization. |
-| `26_1_2_revision_11` | Added Tome management page (`OptionType` / lock state sync), page-unlock advancement state, container/session routing guards, and payload integrity tail marker. |
-| `26_1_2_revision_12` – `revision_15` | Added server-authoritative `ModRuntimeConfig` sync (`ConfigSyncNetworking`), `pack_policy.json` lock state, LAN publish permission bit (`IntegratedServer.isPublished()`), and 20 orthogonal Classic/Modern rule atoms. |
-| `26_1_2_revision_16` | Eliminated `t=0` vs `20-tick` opening sync skew across container `DataSlot` / initial `AvailableEnchantmentsPayload` push. |
-| **`26_1_2_revision_17`** *(current)* | Added data-driven `DisenchantmentApplication.EssenceValuation` (`essence_valuation`) and `InscriptionRitualMechanics.ApplicabilityConfig` (`ritual.applicability`) to `EnchantCostTablePayload`; enforced centralized `PayloadLimits` (`64` / `1,024` / `980,000` bytes via `Unpooled.buffer()` measurement); switched `EnchantCostSync` to a `UUID`-keyed cache; de-versioned canonical `CostTableDataset` (`modern`/`classic`) and `Preset` (`classic`) wire tokens while retaining read aliases for `classic_1_0_3` / `modern_1_1_0`. |
-
-## 3. Checklist When Bumping `WIRE_REVISION`
-
-Whenever any `FriendlyByteBuf` encoder/decoder changes:
-1. Increment `EnchantingProtocol.WIRE_REVISION` (and keep `PROBE_COMPATIBLE_REVISIONS` strictly for handshake rejection notices, never silent partial decoding).
-2. Keep writer and reader field order byte-for-byte symmetrical in `EnchantCostTablePayload`, `AvailableEnchantmentsPayload`, and `ConfigSyncNetworking`.
-3. Bound every `readVarInt()` collection length with `PayloadLimits.MAX_SYNC_OPTIONS` or `PayloadLimits.MAX_SYNC_ENTRIES`.
-4. Add or update round-trip and cap-enforcement assertions in `src/test/java/chiseled_enchanting_table/NetworkCompatibilityTest.java`.
+- 任何 wire 字段或**已同步 blockstate 属性**的增删/重排都必须 bump，并保留全部历史探针。
+- 仅服务端内部逻辑、仅客户端展示、仅语言/纹理的变更**不** bump。
+- 姐妹线协议独立编号：26.2 = `26_2_revision_6`，26.3 = `26_3_revision_12`（三方通道互斥）。

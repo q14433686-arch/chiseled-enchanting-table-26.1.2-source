@@ -260,6 +260,55 @@ Previous (1.0.2) staging, under `release_output/chiseled_enchanting_table_1_0_2/
 The `1_0_2` directory above is the last committed staging set; older internal porting-round
 artefact directories are not part of any current release output.
 
+## Verified This Session (2026-10-26, the 26.3 backport audit round)
+
+Full file-by-file diff audit against sister branch `26.3` (to `b3cb3c9`, 248 changed files) along
+seven paths (源码 API / 数据编解码 / 网络同步 / GUI 输入 / Mixin 注入 / 死代码 / 耦合风险); only
+version-independent fixes and features were taken, each rewritten to 26.1.2 APIs/schemas. Report:
+[`docs/reports/BACKPORT_FROM_26_3_2026_10_26.md`](docs/reports/BACKPORT_FROM_26_3_2026_10_26.md).
+
+- `6587e9f` — 10 fixes: 26.3 `RULE-01/02`, `RELOAD-01/02/03`, `NET-01/02`, `LIFE-01`, `MIXIN-01`
+  (new 14th mixin `bookshelf.BookshelfCreativeExtractionMixin`) + 2 bugs unique to this line
+  (config write fallback could truncate the live config file; config-screen save could deadlock on
+  a dangling pending state when the channel was unavailable).
+- `1946b53` — Tome Catalogue feature (filter/sort/multi-select + paced, confirmation-gated batch
+  lock queue + Shift paged enchantment details), `catalog.*` 32 keys × 11 locales (1008 total).
+- Those two rounds kept the wire protocol at `26_1_2_revision_17` (no schema change yet).
+
+### 2026-10-26 full backport (26.3 @ `b3cb3c9`, all five phases)
+
+Per an explicit full-port directive, everything deferred above was then ported in five
+CI-gated phases — see
+[`docs/reports/FULL_BACKPORT_FROM_26_3_2026_10_26.md`](docs/reports/FULL_BACKPORT_FROM_26_3_2026_10_26.md):
+
+1. **Rainbow Cloth** (`bb770ee`): `jeb_` sneak + name-tag toggle, `rainbow_cloth` blockstate
+   property, item badge/animated tint (Fabric model-wrapper API on 26.1.2), completion ring,
+   11 lang keys × 11 (**1019 keys**). **Wire bumped to `26_1_2_revision_18`** (blockstate schema;
+   see [`docs/PROTOCOL_HISTORY.md`](docs/PROTOCOL_HISTORY.md)).
+2. **UI readability** (`5ebd328`): `TooltipBudget`/`TooltipPresentation`/`ResonanceTooltip`
+   primary + Shift-details routing everywhere, text-only shelf HUD, icon-only lock buttons,
+   🔒 tome badges; header badge sprite atlas.
+3. **CI diagnostics rework** (`10bcadd`): no repository write-back; bounded GitHub Checks
+   diagnostics (`compile-diagnostics`, `server-smoke-diagnostics`, `client-smoke-diagnostics`),
+   `docs/ci/` single source of truth, repository-hygiene + baseline-mixin-inventory gates.
+4. **Engineering splits** (`0b67c1d`..`2df3f20`, `e58c503`): data layer, runtime config
+   (Draft/FileStore/Json/Presets), menu economics (quick-move/quotes/payment/pricing/lookup),
+   ritual persistence/world-access, table + config GUI skins/presenters/sessions, architecture
+   size/boundary ratchet gate. Behavior preserved by method-body equivalence checks + tests
+   (`ConfigInteractionTest`, `EngineeringSplitTest`, `LatestPortAuditTest`).
+5. **clientSmoke** (`af7fa7e`): disposable real-client integration probe (8 PASS markers:
+   config search/save, list models, UI presentation, catalogue lock round-trip, overlay input,
+   rainbow world/item/reload, tome world), compiled and executed in CI via xvfb.
+
+- Documented 26.1.2 adaptations (behavior-preserving): `Minecraft.setScreen`/`screen` field
+  (no `gui.setScreen`), Shift state from key events / `options.keyShift` (no `Screen.hasShiftDown`,
+  no `InputConstants.isKeyDown`), rainbow item model via Fabric `ItemModelWrapper` API (no vanilla
+  `BakedItemModelWrapper` exposure / `submitCustomGeometry` substitute: atlas-quad facing), SDL
+  text-input manager absent (search focus is session-owned; `Screen.capturesInput` does not exist),
+  `TextColor.RED/DARK_RED` constants absent (used `fromLegacyFormat`), plural loot/advancement
+  JSON arrays, block `CODEC`/`codec()`, 2-arg `player.drop`, and the tome panel single-book
+  fallback retained read-only (panel detail + click target only; explicit multi-selection unchanged).
+
 ## Verified This Session (2026-10-21, the 1.0.3 sync round)
 
 The sandbox for this round has **no JDK and no maven access** (`java` is not installed;
@@ -359,3 +408,29 @@ live world. The full list is kept in `docs/reports/CURRENT_AGENT_BRIEF.md`.
 
 - Book combine upgrade now explicitly replaces the cost-slot enchanted book with a plain book after the upgrade, matching the expected visible consumption behavior.
 - Validation: `compileJava compileClientJava`, `compat_check.py`, and `build --rerun-tasks` all passed.
+
+<!-- BEGIN GENERATED MIXIN INVENTORY -->
+## Registered Mixin inventory (generated)
+
+**Registered Mixin declarations: 14.**
+
+Source: `fabric.mod.json` registered configs, including common/client/server sections.
+Regenerate with `python3 scripts/check_baseline_mixins.py --write`.
+
+| Config | Section | Class |
+| --- | --- | --- |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.anvil.RemoveEnchantMerge` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.anvil.RemoveXpCostScaling` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.bookshelf.AddRandomTick` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.bookshelf.BookshelfCreativeExtractionMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.bookshelf.LockedBookContainerMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.enchanting_table.DisableBookEnchanting` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.grindstone.GrindstoneBookDepleteMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.loot.ReloadableServerRegistriesMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.LevelChunkPostProcessMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.StructurePieceAccessor` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.StructurePieceMarkMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.StructurePlaceSettingsMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.structure.StructureTemplatePoolProjectionMixin` |
+| `chiseled-enchanting-table-port.mixins.json` | `mixins` | `chiseled_enchanting_table.mixin.villager.VillagerInfinitySanitizeMixin` |
+<!-- END GENERATED MIXIN INVENTORY -->

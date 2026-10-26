@@ -158,8 +158,11 @@ public final class EnchantCostSync {
                 menu.applyTransformationSnapshot(payload.transformations());
             }
         } catch (RuntimeException e) {
-            // Never let a display-only sync break a join or a reload.
+            // This is authoritative cost/rule data, not merely a cosmetic display. Continuing
+            // with a previous/local catalog can make the quoted price differ from payment.
+            LAST_DISPLAYS.remove(player.getUUID());
             ChiseledEnchantingTable.LOGGER.warn("Failed to send the enchanting cost table to {}", player.getName().getString(), e);
+            player.connection.disconnect(Component.translatable("message.chiseled_enchanting_table.cost_sync_failed"));
         }
     }
 }

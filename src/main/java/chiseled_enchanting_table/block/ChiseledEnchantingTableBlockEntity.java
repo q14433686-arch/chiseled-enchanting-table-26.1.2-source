@@ -807,19 +807,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.ritualCorruptQueue = "";
         this.ritualBlocked = input.getBooleanOr("ritualBlocked", false);
         try {
-            if (structuredQueue.isPresent()
-                && (rawQueue.isBlank() || InscriptionRitualMechanics.serializeQueue(structuredQueue.get()).equals(rawQueue))) {
-                long refund = 0L;
-                for (QueuedInscription step : structuredQueue.get()) {
-                    refund += step.conflictRefundPoints();
-                    if (refund > Integer.MAX_VALUE) {
-                        throw new IllegalArgumentException("Ritual refund exceeds budget");
-                    }
-                }
-                this.ritualQueue = new ArrayList<>(structuredQueue.get());
-            } else {
-                this.ritualQueue = InscriptionRitualMechanics.deserializeQueue(rawQueue);
-            }
+            this.ritualQueue = InscriptionRitualMechanics.recoverQueue(structuredQueue, rawQueue);
         } catch (IllegalArgumentException malformed) {
             this.ritualQueue = new ArrayList<>();
             this.ritualCorruptQueue = rawQueue.substring(0, Math.min(rawQueue.length(), MAX_RITUAL_CHARACTERS));
@@ -1054,8 +1042,10 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         long rem = this.pendingFreezeTicks > 0L
             ? this.pendingFreezeTicks
             : (this.level != null ? remainingFreezeTicks(this.level.getGameTime()) : 0L);
+        CompoundTag tag = new CompoundTag();
+        if (getBlockState().getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH))
+            tag.putBoolean(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, true);
         if (rem > 0L) {
-            CompoundTag tag = new CompoundTag();
             if (this.epiphanySeed != 0) {
                 tag.putInt("epiphanySeed", this.epiphanySeed);
             }
@@ -1070,8 +1060,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                         .withStyle(style -> style.withItalic(false).withColor(ChatFormatting.AQUA))
                 ))
             );
-            componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         }
+        if (!tag.isEmpty()) componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
     @Override

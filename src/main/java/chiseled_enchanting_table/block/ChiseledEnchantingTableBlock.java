@@ -54,6 +54,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
+    public static final net.minecraft.world.level.block.state.properties.BooleanProperty RAINBOW_CLOTH =
+        net.minecraft.world.level.block.state.properties.BooleanProperty.create("rainbow_cloth");
     public static final MapCodec<ChiseledEnchantingTableBlock> CODEC = simpleCodec(ChiseledEnchantingTableBlock::new);
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
@@ -118,6 +120,19 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     public ChiseledEnchantingTableBlock(BlockBehaviour.Properties settings) {
         super(settings);
+        registerDefaultState(this.stateDefinition.any().setValue(RAINBOW_CLOTH, false));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(RAINBOW_CLOTH);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext context) {
+        var data = context.getItemInHand().get(DataComponents.CUSTOM_DATA);
+        boolean rainbow = data != null && data.copyTag().getBooleanOr(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, false);
+        return defaultBlockState().setValue(RAINBOW_CLOTH, rainbow);
     }
 
     @Override
@@ -231,7 +246,11 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     stack.shrink(1);
                 }
                 tableBlockEntity.setChanged();
-                level.sendBlockUpdated(pos, state, state, Block.UPDATE_ALL | Block.UPDATE_IMMEDIATE);
+                // Dyeing exits rainbow mode and mixes into the stored base colour only;
+                // a transient gradient frame is never baked into the permanent colour.
+                BlockState dyedState = state.setValue(RAINBOW_CLOTH, false);
+                level.setBlock(pos, dyedState, Block.UPDATE_ALL);
+                level.sendBlockUpdated(pos, state, dyedState, Block.UPDATE_ALL | Block.UPDATE_IMMEDIATE);
                 Advancement.give(player, "color_table");
             }
             return InteractionResult.SUCCESS;

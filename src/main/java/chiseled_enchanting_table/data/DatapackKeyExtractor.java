@@ -32,12 +32,20 @@ final class DatapackKeyExtractor {
         try (Reader reader = resource.openAsReader()) {
             JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
             String source = resource.sourcePackId();
-            boolean own = source.equals("mod/chiseled_enchanting_table")
+            // The bundled pack is identified by the Fabric metadata id
+            // ("chiseled-enchanting-table"), not the resource namespace. Missing the hyphenated
+            // forms misclassified this mod's own defaults as an external datapack, which then
+            // greyed out config toggles and masked presets as datapack-governed.
+            String loaderId = chiseled_enchanting_table.ChiseledEnchantingTable.FABRIC_MOD_ID;
+            boolean own = source.equals(loaderId) || source.equals("mod/" + loaderId)
+                || source.equals("fabric/" + loaderId)
+                || source.equals("mod/chiseled_enchanting_table")
                 || source.equals("chiseled_enchanting_table")
                 || source.equals("fabric/chiseled_enchanting_table");
-            // Fabric's built-in resource pack ID can vary across loader versions; always treat
-            // content byte-identical to our bundled default table as owned by the mod itself.
-            if (!own) {
+            // Only ambiguous aggregate built-in packs may fall back to content comparison. A
+            // genuine external pack must be able to pin even byte-identical bundled defaults
+            // against different local preferences, so it always governs its keys.
+            if (!own && (source.equals("fabric") || source.equals("vanilla"))) {
                 try (var stream = ChiseledEnchantingTableData.class.getResourceAsStream(
                     "/data/" + tableId.getNamespace() + "/" + tableId.getPath())) {
                     if (stream != null) own = object.equals(JsonParser.parseReader(
@@ -110,6 +118,12 @@ final class DatapackKeyExtractor {
                 };
                 for (String k : masteryKeys) {
                     if (hasAny(root, mastery, k)) keys.add(k);
+                }
+                JsonObject pages = root.has("tome_pages") && root.get("tome_pages").isJsonObject()
+                    ? root.getAsJsonObject("tome_pages") : null;
+                for (String key : new String[] { "locked_shelf_breakable", "locked_book_extraction_blocked",
+                    "early_unlock_xp_levels", "early_unlock_grit_count", "sacrifice_required", "tome_page_required_shelves" }) {
+                    if (hasAny(root, pages, key)) keys.add(key);
                 }
             }
             case "book_upgrades" -> {
