@@ -68,7 +68,7 @@ final class MenuPaymentService {
         }
         for (List<ItemStack> bundle : options) {
             List<ItemStack> merged = ChiseledEnchantingTableData.mergeEquivalentCostBundle(bundle);
-            if (!merged.isEmpty() && isBundleAffordableWithOverflow(merged)) {
+            if (!merged.isEmpty() && isBundleAffordableWithOverflow(access, merged)) {
                 return merged;
             }
         }
@@ -117,12 +117,12 @@ final class MenuPaymentService {
             return new PaymentReceipt(false, 0, List.of());
         }
 
-        List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(ewl, effectiveType);
-        if (!player.getAbilities().instabuild && matchedBundle == null) {
+        List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(access, ewl, effectiveType);
+        if (!access.player().getAbilities().instabuild && matchedBundle == null) {
             return new PaymentReceipt(false, 0, List.of());
         }
 
-        if (!player.getAbilities().instabuild) {
+        if (!access.player().getAbilities().instabuild) {
             int xpBefore = XpCostConversion.totalPlayerXpPoints(access.player());
             XpCostConversion.deductXp(access.player(), xpReq);
             int xpAfter = XpCostConversion.totalPlayerXpPoints(access.player());
@@ -130,7 +130,7 @@ final class MenuPaymentService {
             List<ItemStack> paidCopies = matchedBundle == null
                 ? List.of()
                 : matchedBundle.stream().map(ItemStack::copy).toList();
-            deductMatchedBundle(matchedBundle);
+            deductMatchedBundle(access, matchedBundle);
             return new PaymentReceipt(true, paidXpPoints, paidCopies);
         }
         return new PaymentReceipt(true, 0, List.of());
