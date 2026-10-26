@@ -1,4 +1,4 @@
-# Current state — engineering boundaries verified (2026-10-26)
+# Current state — all six engineering splits verified (2026-10-26)
 
 Current session branch: `arena/089dab6b-chiseled-enchanting-table-26-1`.
 Keep all work on the session's actual Arena branch; historical reports naming other branches are not instructions to switch.
@@ -9,17 +9,24 @@ port scripts or restore older source/GUI/input conventions from historical repor
 
 ## Verified implementation
 
-Source **`178747b663bd21dca2b38fefd9cd625ef9ee8cdc`**:
+Source **`3a3b0076bf56abf70ef9a29b2eb3ab173505d87f`**:
 
-- compile-check **40247733529**, **107 JUnit / zero failures, errors or skips**.
-- build **40247733513**, all four jobs successful, including real dedicated-server probes and a
+- compile-check **40250562480**, **117 JUnit / zero failures, errors or skips**.
+- build **40250562244**, all four jobs successful, including real dedicated-server probes and a
   real SDL window with an integrated server/player.
 - Automated client: committed CJK search text through SDL, preset clicks, server save/ack and reopen,
   actual menu quick-move, config-overlay forwarding/focus release, persistent target after close.
 - Docs inventory, log hygiene, architecture ratchets and deterministic editor boundaries are CI gates.
 - Full logs are artifacts; sandbox-readable diagnostics are Check runs, not committed `build-reports/` files.
 
-[Current report and cross-branch migration notes](docs/reports/ENGINEERING_BOUNDARIES_2026_10_26.md).
+All six requested responsibility groups are complete, not deferred to another architecture round:
+quotes/payment, actual table panels/tooltips, config option/trace/drag controls, immutable candidate
+models and read-only list presentation, config/policy schema/presets, queue serialization/recovery.
+Original public DTO/codec identities and legacy spelling delegates are preserved. Read-only list
+queries expose detached row data rather than Widget instances. Native economic/candidate probes
+passed; current-source Check diagnostics include both boundary PASS markers.
+
+[Current report and cross-branch migration notes](docs/reports/ENGINEERING_SPLIT_COMPLETION_2026_10_26.md).
 The user delegated architecture decisions; do not restart an architecture-choice questionnaire.
 No PR or merge is authorized for this round. Only open/merge one if subsequently requested.
 
@@ -51,6 +58,7 @@ python3 scripts/ci_static_checks.py
 python3 scripts/test_sync_26_3.py
 python3 scripts/test_baseline_mixins.py
 python3 scripts/test_ci_diagnostics.py
+python3 scripts/test_architecture_boundaries.py
 python3 scripts/check_repository_hygiene.py
 python3 scripts/check_architecture_boundaries.py
 python3 scripts/compat_check.py

@@ -13,18 +13,19 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Current engineering validation — 2026-10-26
+## Current engineering validation — six-area split, 2026-10-26
 
-Verified implementation SHA: **`178747b663bd21dca2b38fefd9cd625ef9ee8cdc`**.
+Verified implementation SHA: **`3a3b0076bf56abf70ef9a29b2eb3ab173505d87f`**.
 Release **1.1.0**, MC **26.3**, wire **`26_3_revision_11`**.
 
-- [compile-check 40247733529](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40247733529): **107 JUnit tests, 0 failures/errors/skips**.
-- [build 40247733513](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40247733513): all four jobs successful, including full jar, optional-viewer-disabled compilation, real dedicated server and real SDL-window/integrated-client interactions.
-- Actual client coverage: committed CJK text through SDL's native event queue, real search/preset clicks, server save/ack/reopen, menu quick-move, overlay forwarding/native-focus release, target persistence after closing the menu.
-- CI logs are artifacts plus bounded API-readable diagnostic Check runs, **never Git write-back**. Both successful and failed diagnostic API retrieval have been exercised.
-- Mixin inventory below is generated from registration; coordinator growth and side-effect boundaries are gated.
-- [Engineering decisions, migrated responsibilities, Java-type migration caveat, cross-branch feedback and exact limitations](docs/reports/ENGINEERING_BOUNDARIES_2026_10_26.md).
-- This is automated Linux/Xvfb evidence, **not** human platform-IME candidate-window or multiplayer concurrency validation. Documentation-only evidence follow-ups do not change the verified code SHA.
+- [compile-check 40250562480](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40250562480): **117 JUnit tests, 0 failures/errors/skips**, including ten new engineering split contracts.
+- [build 40250562244](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40250562244): all four business jobs and both diagnostics successful; full jar, optional-viewer-disabled compilation, real dedicated server and real SDL-window/integrated-client interactions.
+- All six requested responsibility splits are implemented: economic quotes/payment, table panels/tooltips, config controls/trace views/drag state, inscription/cleanse candidate models, config/policy JSON and presets, queue encoding/recovery.
+- Real-client coverage retains SDL committed CJK text, preset/save-ACK/reopen, quick-move, overlay/focus and persistent target. Added real inventory/XP/receipt and registry-backed candidate tests; their **ECONOMIC BOUNDARY PASS** and **CANDIDATE BOUNDARY PASS** markers have been read from Checks diagnostics.
+- Helpers consume explicit capabilities or detached row data, not entire Screen/Widget instances. New owners as well as coordinators have growth/dependency gates; six positive/negative architecture tests are in CI.
+- CI logs remain artifacts plus bounded API-readable diagnostic Checks, **never Git write-back**. Mixin inventory below remains generated from registered configs.
+- [Six-area completion, exact ownership/API decisions, final CI evidence and cross-branch feedback](docs/reports/ENGINEERING_SPLIT_COMPLETION_2026_10_26.md). [Previous engineering round (historical 107-test evidence)](docs/reports/ENGINEERING_BOUNDARIES_2026_10_26.md).
+- This is automated Linux/Xvfb evidence, **not** human platform-IME candidate-window or multiplayer concurrency validation. Documentation-only follow-ups do not change the verified code SHA. No PR/merge was authorized or performed in this round.
 
 ## Latest synchronization — 2026-10-26 (supersedes historical rounds below)
 
