@@ -109,91 +109,91 @@ import static chiseled_enchanting_table.config.ModRuntimeConfig.*;
         public ConfigDraft() {}
 
         public ConfigDraft(ModRuntimeConfig src) {
-            this.overrideDatapacks = src.overrideDatapacks;
-            this.enchantedBookStackSize = src.enchantedBookStackSize;
-            this.vanillaTableMode = src.vanillaTableMode;
-            this.anvilFlatRepairCost = src.anvilFlatRepairCost;
-            this.anvilBlockSameBookMerge = src.anvilBlockSameBookMerge;
-            this.restrictVillagerInfinityBooks = src.restrictVillagerInfinityBooks;
-            this.grindstoneDepletedTome = src.grindstoneDepletedTome;
+            this.overrideDatapacks() = src.overrideDatapacks();
+            this.enchantedBookStackSize() = src.enchantedBookStackSize();
+            this.vanillaTableMode() = src.vanillaTableMode();
+            this.anvilFlatRepairCost() = src.anvilFlatRepairCost();
+            this.anvilBlockSameBookMerge() = src.anvilBlockSameBookMerge();
+            this.restrictVillagerInfinityBooks() = src.restrictVillagerInfinityBooks();
+            this.grindstoneDepletedTome() = src.grindstoneDepletedTome();
 
-            this.shelfBoostModel = src.shelfBoostModel;
-            this.defaultUnlockFilter = src.defaultUnlockFilter;
-            this.directTierUpgrade = src.directTierUpgrade;
-            this.directGatesEnabled = src.directGatesEnabled;
-            this.blankMaxTierMode = src.blankMaxTierMode;
-            this.maxDirectBookshelves = src.maxDirectBookshelves;
-            this.horizontalScanRadius = src.horizontalScanRadius;
-            this.verticalScanRadius = src.verticalScanRadius;
-            this.requireBreathingRoom = src.requireBreathingRoom;
-            this.minOpenAdjacentBlocks = src.minOpenAdjacentBlocks;
-            this.requireLineOfSight = src.requireLineOfSight;
+            this.shelfBoostModel() = src.shelfBoostModel();
+            this.defaultUnlockFilter() = src.defaultUnlockFilter();
+            this.directTierUpgrade() = src.directTierUpgrade();
+            this.directGatesEnabled() = src.directGatesEnabled();
+            this.blankMaxTierMode() = src.blankMaxTierMode();
+            this.maxDirectBookshelves() = src.maxDirectBookshelves();
+            this.horizontalScanRadius() = src.horizontalScanRadius();
+            this.verticalScanRadius() = src.verticalScanRadius();
+            this.requireBreathingRoom() = src.requireBreathingRoom();
+            this.minOpenAdjacentBlocks() = src.minOpenAdjacentBlocks();
+            this.requireLineOfSight() = src.requireLineOfSight();
 
-            this.tomeConsumptionMode = src.tomeConsumptionMode;
-            this.maxTomeUses = src.maxTomeUses;
-            this.bookCopyWearCost = src.bookCopyWearCost;
-            this.tomeDepleteBehavior = src.tomeDepleteBehavior;
-            this.tomeRegenEnabled = src.tomeRegenEnabled;
-            this.tomeRegenBaseSeconds = src.tomeRegenBaseSeconds;
-            this.tomeRegenTier1Shelves = src.tomeRegenTier1Shelves;
-            this.tomeRegenTier1Seconds = src.tomeRegenTier1Seconds;
-            this.tomeRegenTier2Shelves = src.tomeRegenTier2Shelves;
-            this.tomeRegenTier2Seconds = src.tomeRegenTier2Seconds;
-            this.tomeLocksEnabled = src.tomeLocksEnabled;
-            this.lockedShelfBreakable = src.lockedShelfBreakable;
-            this.lockedBookExtractionBlocked = src.lockedBookExtractionBlocked;
-            this.provenanceEnabled = src.provenanceEnabled;
-            this.ritualQueueEnabled = src.ritualQueueEnabled;
-            this.earlyUnlockXpLevels = src.earlyUnlockXpLevels;
-            this.earlyUnlockGritCount = src.earlyUnlockGritCount;
-            this.sacrificeRequired = src.sacrificeRequired;
-            this.tomePageRequiredShelves = src.tomePageRequiredShelves;
-            this.incrementalCredit = src.incrementalCredit;
-            this.xpMode = src.xpMode;
-            this.costTableDataset = src.costTableDataset;
-            this.materialSelectionMode = src.materialSelectionMode;
-            this.researchRoundingMode = src.researchRoundingMode;
-            this.libraryDiscountEnabled = src.libraryDiscountEnabled;
-            this.maxWoodenDiscountPercent = src.maxWoodenDiscountPercent;
-            this.maxTotalXpDiscountPercent = src.maxTotalXpDiscountPercent;
-            this.bookCombineEnabled = src.bookCombineEnabled;
-            this.bookCombineXpMultiplier = src.bookCombineXpMultiplier;
-            this.bookResearchEnabled = src.bookResearchEnabled;
-            this.bookResearchXpMultiplier = src.bookResearchXpMultiplier;
+            this.tomeConsumptionMode() = src.tomeConsumptionMode();
+            this.maxTomeUses() = src.maxTomeUses();
+            this.bookCopyWearCost() = src.bookCopyWearCost();
+            this.tomeDepleteBehavior() = src.tomeDepleteBehavior();
+            this.tomeRegenEnabled() = src.tomeRegenEnabled();
+            this.tomeRegenBaseSeconds() = src.tomeRegenBaseSeconds();
+            this.tomeRegenTier1Shelves() = src.tomeRegenTier1Shelves();
+            this.tomeRegenTier1Seconds() = src.tomeRegenTier1Seconds();
+            this.tomeRegenTier2Shelves() = src.tomeRegenTier2Shelves();
+            this.tomeRegenTier2Seconds() = src.tomeRegenTier2Seconds();
+            this.tomeLocksEnabled() = src.tomeLocksEnabled();
+            this.lockedShelfBreakable() = src.lockedShelfBreakable();
+            this.lockedBookExtractionBlocked() = src.lockedBookExtractionBlocked();
+            this.provenanceEnabled() = src.provenanceEnabled();
+            this.ritualQueueEnabled() = src.ritualQueueEnabled();
+            this.earlyUnlockXpLevels() = src.earlyUnlockXpLevels();
+            this.earlyUnlockGritCount() = src.earlyUnlockGritCount();
+            this.sacrificeRequired() = src.sacrificeRequired();
+            this.tomePageRequiredShelves() = src.tomePageRequiredShelves();
+            this.incrementalCredit() = src.incrementalCredit();
+            this.xpMode() = src.xpMode();
+            this.costTableDataset() = src.costTableDataset();
+            this.materialSelectionMode() = src.materialSelectionMode();
+            this.researchRoundingMode() = src.researchRoundingMode();
+            this.libraryDiscountEnabled() = src.libraryDiscountEnabled();
+            this.maxWoodenDiscountPercent() = src.maxWoodenDiscountPercent();
+            this.maxTotalXpDiscountPercent() = src.maxTotalXpDiscountPercent();
+            this.bookCombineEnabled() = src.bookCombineEnabled();
+            this.bookCombineXpMultiplier() = src.bookCombineXpMultiplier();
+            this.bookResearchEnabled() = src.bookResearchEnabled();
+            this.bookResearchXpMultiplier() = src.bookResearchXpMultiplier();
 
-            this.epiphanyEnabled = src.epiphanyEnabled;
-            this.epiphanyMinBookshelves = src.epiphanyMinBookshelves;
-            this.epiphanyBaseChance = src.epiphanyBaseChance;
-            this.epiphanyMaxChance = src.epiphanyMaxChance;
-            this.epiphanyMaxSlotsCap = src.epiphanyMaxSlotsCap;
-            this.epiphanyCycleSeconds = src.epiphanyCycleSeconds;
-            this.epiphanyFreezeXpLevels = src.epiphanyFreezeXpLevels;
-            this.epiphanyFreezeDurationSeconds = src.epiphanyFreezeDurationSeconds;
-            this.epiphanyMaxFreezeSeconds = src.epiphanyMaxFreezeSeconds;
-            this.epiphanyRerollXpLevels = src.epiphanyRerollXpLevels;
+            this.epiphanyEnabled() = src.epiphanyEnabled();
+            this.epiphanyMinBookshelves() = src.epiphanyMinBookshelves();
+            this.epiphanyBaseChance() = src.epiphanyBaseChance();
+            this.epiphanyMaxChance() = src.epiphanyMaxChance();
+            this.epiphanyMaxSlotsCap() = src.epiphanyMaxSlotsCap();
+            this.epiphanyCycleSeconds() = src.epiphanyCycleSeconds();
+            this.epiphanyFreezeXpLevels() = src.epiphanyFreezeXpLevels();
+            this.epiphanyFreezeDurationSeconds() = src.epiphanyFreezeDurationSeconds();
+            this.epiphanyMaxFreezeSeconds() = src.epiphanyMaxFreezeSeconds();
+            this.epiphanyRerollXpLevels() = src.epiphanyRerollXpLevels();
 
-            this.disenchantEnabled = src.disenchantEnabled;
-            this.xpRefundScale = src.xpRefundScale;
-            this.externalXpRefundScale = src.externalXpRefundScale;
-            this.stripXpMin = src.stripXpMin;
-            this.stripXpMax = src.stripXpMax;
-            this.allowCursePurge = src.allowCursePurge;
-            this.cursePurgeXpCost = src.cursePurgeXpCost;
-            this.transformationSetMode = src.transformationSetMode;
-            this.requirePriorDiscovery = src.requirePriorDiscovery;
-            this.drainedBookResult = src.drainedBookResult;
-            this.tomePageEnabled = src.tomePageEnabled;
-            this.tier1Bookshelves = src.tier1Bookshelves;
-            this.tier2Bookshelves = src.tier2Bookshelves;
-            this.tier3QualifyingEnchantments = src.tier3QualifyingEnchantments;
-            this.transformationMaxBatchSize = src.transformationMaxBatchSize;
+            this.disenchantEnabled() = src.disenchantEnabled();
+            this.xpRefundScale() = src.xpRefundScale();
+            this.externalXpRefundScale() = src.externalXpRefundScale();
+            this.stripXpMin() = src.stripXpMin();
+            this.stripXpMax() = src.stripXpMax();
+            this.allowCursePurge() = src.allowCursePurge();
+            this.cursePurgeXpCost() = src.cursePurgeXpCost();
+            this.transformationSetMode() = src.transformationSetMode();
+            this.requirePriorDiscovery() = src.requirePriorDiscovery();
+            this.drainedBookResult() = src.drainedBookResult();
+            this.tomePageEnabled() = src.tomePageEnabled();
+            this.tier1Bookshelves() = src.tier1Bookshelves();
+            this.tier2Bookshelves() = src.tier2Bookshelves();
+            this.tier3QualifyingEnchantments() = src.tier3QualifyingEnchantments();
+            this.transformationMaxBatchSize() = src.transformationMaxBatchSize();
 
-            this.vanillaChestBooksMode = src.vanillaChestBooksMode;
-            this.bookshelfPoolEnabled = src.bookshelfPoolEnabled;
-            this.bookshelfMinBooks = src.bookshelfMinBooks;
-            this.bookshelfMaxBooks = src.bookshelfMaxBooks;
-            this.bookshelfEnchantedProb = src.bookshelfEnchantedProb;
-            this.librarianTomeOffers = src.librarianTomeOffers;
+            this.vanillaChestBooksMode() = src.vanillaChestBooksMode();
+            this.bookshelfPoolEnabled() = src.bookshelfPoolEnabled();
+            this.bookshelfMinBooks() = src.bookshelfMinBooks();
+            this.bookshelfMaxBooks() = src.bookshelfMaxBooks();
+            this.bookshelfEnchantedProb() = src.bookshelfEnchantedProb();
+            this.librarianTomeOffers() = src.librarianTomeOffers();
             this.customizedKeys.addAll(src.customizedKeys);
         }
 
@@ -206,197 +206,197 @@ import static chiseled_enchanting_table.config.ModRuntimeConfig.*;
                 // Align default combine/research XP multipliers with the selected table unless
                 // the player has explicitly customized those sliders.
                 if (!this.customizedKeys.contains("book_combine_xp_multiplier")) {
-                    this.bookCombineXpMultiplier = this.costTableDataset == CostTableDataset.CLASSIC ? 1.00 : 0.60;
+                    this.bookCombineXpMultiplier() = this.costTableDataset() == CostTableDataset.CLASSIC ? 1.00 : 0.60;
                 }
                 if (!this.customizedKeys.contains("book_research_xp_multiplier")) {
-                    this.bookResearchXpMultiplier = this.costTableDataset == CostTableDataset.CLASSIC ? 0.50 : 1.40;
+                    this.bookResearchXpMultiplier() = this.costTableDataset() == CostTableDataset.CLASSIC ? 0.50 : 1.40;
                 }
             }
 
-            this.horizontalScanRadius = RuntimeConfigJson.clampInt(this.horizontalScanRadius, 1, BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS);
-            this.verticalScanRadius = RuntimeConfigJson.clampInt(this.verticalScanRadius, 0, BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS);
+            this.horizontalScanRadius() = RuntimeConfigJson.clampInt(this.horizontalScanRadius(), 1, BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS);
+            this.verticalScanRadius() = RuntimeConfigJson.clampInt(this.verticalScanRadius(), 0, BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS);
             if ("vertical_scan_radius".equals(editedKey)) {
-                while (this.horizontalScanRadius > 1
-                    && BookshelfProgression.scanVolumeBlocks(this.horizontalScanRadius, this.verticalScanRadius)
+                while (this.horizontalScanRadius() > 1
+                    && BookshelfProgression.scanVolumeBlocks(this.horizontalScanRadius(), this.verticalScanRadius())
                         > BookshelfProgression.MAX_SCAN_VOLUME_BLOCKS) {
-                    this.horizontalScanRadius--;
+                    this.horizontalScanRadius()--;
                 }
             }
-            while (this.verticalScanRadius > 0
-                && BookshelfProgression.scanVolumeBlocks(this.horizontalScanRadius, this.verticalScanRadius)
+            while (this.verticalScanRadius() > 0
+                && BookshelfProgression.scanVolumeBlocks(this.horizontalScanRadius(), this.verticalScanRadius())
                     > BookshelfProgression.MAX_SCAN_VOLUME_BLOCKS) {
-                this.verticalScanRadius--;
+                this.verticalScanRadius()--;
             }
 
-            if ("max_tome_uses".equals(editedKey) && this.bookCopyWearCost > this.maxTomeUses) {
-                this.bookCopyWearCost = this.maxTomeUses;
-            } else if ("book_copy_wear_cost".equals(editedKey) && this.bookCopyWearCost > this.maxTomeUses) {
-                this.maxTomeUses = this.bookCopyWearCost;
+            if ("max_tome_uses".equals(editedKey) && this.bookCopyWearCost() > this.maxTomeUses()) {
+                this.bookCopyWearCost() = this.maxTomeUses();
+            } else if ("book_copy_wear_cost".equals(editedKey) && this.bookCopyWearCost() > this.maxTomeUses()) {
+                this.maxTomeUses() = this.bookCopyWearCost();
             }
 
-            if ("max_wooden_discount_percent".equals(editedKey) && this.maxWoodenDiscountPercent > this.maxTotalXpDiscountPercent) {
-                this.maxTotalXpDiscountPercent = this.maxWoodenDiscountPercent;
-            } else if ("max_total_xp_discount_percent".equals(editedKey) && this.maxTotalXpDiscountPercent < this.maxWoodenDiscountPercent) {
-                this.maxWoodenDiscountPercent = this.maxTotalXpDiscountPercent;
+            if ("max_wooden_discount_percent".equals(editedKey) && this.maxWoodenDiscountPercent() > this.maxTotalXpDiscountPercent()) {
+                this.maxTotalXpDiscountPercent() = this.maxWoodenDiscountPercent();
+            } else if ("max_total_xp_discount_percent".equals(editedKey) && this.maxTotalXpDiscountPercent() < this.maxWoodenDiscountPercent()) {
+                this.maxWoodenDiscountPercent() = this.maxTotalXpDiscountPercent();
             }
 
-            if ("epiphany_base_chance".equals(editedKey) && this.epiphanyBaseChance > this.epiphanyMaxChance) {
-                this.epiphanyMaxChance = this.epiphanyBaseChance;
-            } else if ("epiphany_max_chance".equals(editedKey) && this.epiphanyMaxChance < this.epiphanyBaseChance) {
-                this.epiphanyBaseChance = this.epiphanyMaxChance;
+            if ("epiphany_base_chance".equals(editedKey) && this.epiphanyBaseChance() > this.epiphanyMaxChance()) {
+                this.epiphanyMaxChance() = this.epiphanyBaseChance();
+            } else if ("epiphany_max_chance".equals(editedKey) && this.epiphanyMaxChance() < this.epiphanyBaseChance()) {
+                this.epiphanyBaseChance() = this.epiphanyMaxChance();
             }
 
             if ("epiphany_freeze_duration_seconds".equals(editedKey)
-                && this.epiphanyFreezeDurationSeconds > this.epiphanyMaxFreezeSeconds) {
-                this.epiphanyMaxFreezeSeconds = this.epiphanyFreezeDurationSeconds;
+                && this.epiphanyFreezeDurationSeconds() > this.epiphanyMaxFreezeSeconds()) {
+                this.epiphanyMaxFreezeSeconds() = this.epiphanyFreezeDurationSeconds();
             } else if ("epiphany_max_freeze_seconds".equals(editedKey)
-                && this.epiphanyMaxFreezeSeconds < this.epiphanyFreezeDurationSeconds) {
-                this.epiphanyFreezeDurationSeconds = this.epiphanyMaxFreezeSeconds;
+                && this.epiphanyMaxFreezeSeconds() < this.epiphanyFreezeDurationSeconds()) {
+                this.epiphanyFreezeDurationSeconds() = this.epiphanyMaxFreezeSeconds();
             }
 
-            if ("xp_refund_scale".equals(editedKey) && this.externalXpRefundScale > this.xpRefundScale) {
-                this.externalXpRefundScale = this.xpRefundScale;
-            } else if ("external_xp_refund_scale".equals(editedKey) && this.externalXpRefundScale > this.xpRefundScale) {
-                this.xpRefundScale = this.externalXpRefundScale;
+            if ("xp_refund_scale".equals(editedKey) && this.externalXpRefundScale() > this.xpRefundScale()) {
+                this.externalXpRefundScale() = this.xpRefundScale();
+            } else if ("external_xp_refund_scale".equals(editedKey) && this.externalXpRefundScale() > this.xpRefundScale()) {
+                this.xpRefundScale() = this.externalXpRefundScale();
             }
 
-            if ("strip_xp_min".equals(editedKey) && this.stripXpMin > this.stripXpMax) {
-                this.stripXpMax = this.stripXpMin;
-            } else if ("strip_xp_max".equals(editedKey) && this.stripXpMax < this.stripXpMin) {
-                this.stripXpMin = this.stripXpMax;
+            if ("strip_xp_min".equals(editedKey) && this.stripXpMin() > this.stripXpMax()) {
+                this.stripXpMax() = this.stripXpMin();
+            } else if ("strip_xp_max".equals(editedKey) && this.stripXpMax() < this.stripXpMin()) {
+                this.stripXpMin() = this.stripXpMax();
             }
 
             if ("tier1_bookshelves".equals(editedKey)) {
-                if (this.tier2Bookshelves < this.tier1Bookshelves) this.tier2Bookshelves = this.tier1Bookshelves;
-                if (this.maxDirectBookshelves < this.tier2Bookshelves) this.maxDirectBookshelves = Math.max(4, this.tier2Bookshelves);
+                if (this.tier2Bookshelves() < this.tier1Bookshelves()) this.tier2Bookshelves() = this.tier1Bookshelves();
+                if (this.maxDirectBookshelves() < this.tier2Bookshelves()) this.maxDirectBookshelves() = Math.max(4, this.tier2Bookshelves());
             } else if ("tier2_bookshelves".equals(editedKey)) {
-                if (this.tier1Bookshelves > this.tier2Bookshelves) this.tier1Bookshelves = this.tier2Bookshelves;
-                if (this.maxDirectBookshelves < this.tier2Bookshelves) this.maxDirectBookshelves = Math.max(4, this.tier2Bookshelves);
+                if (this.tier1Bookshelves() > this.tier2Bookshelves()) this.tier1Bookshelves() = this.tier2Bookshelves();
+                if (this.maxDirectBookshelves() < this.tier2Bookshelves()) this.maxDirectBookshelves() = Math.max(4, this.tier2Bookshelves());
             } else if ("max_direct_bookshelves".equals(editedKey)) {
-                if (this.tier2Bookshelves > this.maxDirectBookshelves) this.tier2Bookshelves = this.maxDirectBookshelves;
-                if (this.tier1Bookshelves > this.tier2Bookshelves) this.tier1Bookshelves = this.tier2Bookshelves;
+                if (this.tier2Bookshelves() > this.maxDirectBookshelves()) this.tier2Bookshelves() = this.maxDirectBookshelves();
+                if (this.tier1Bookshelves() > this.tier2Bookshelves()) this.tier1Bookshelves() = this.tier2Bookshelves();
             }
 
-            if ("bookshelf_min_books".equals(editedKey) && this.bookshelfMinBooks > this.bookshelfMaxBooks) {
-                this.bookshelfMaxBooks = this.bookshelfMinBooks;
-            } else if ("bookshelf_max_books".equals(editedKey) && this.bookshelfMaxBooks < this.bookshelfMinBooks) {
-                this.bookshelfMinBooks = this.bookshelfMaxBooks;
+            if ("bookshelf_min_books".equals(editedKey) && this.bookshelfMinBooks() > this.bookshelfMaxBooks()) {
+                this.bookshelfMaxBooks() = this.bookshelfMinBooks();
+            } else if ("bookshelf_max_books".equals(editedKey) && this.bookshelfMaxBooks() < this.bookshelfMinBooks()) {
+                this.bookshelfMinBooks() = this.bookshelfMaxBooks();
             }
 
-            if ("tome_regen_tier1_shelves".equals(editedKey) && this.tomeRegenTier1Shelves > this.tomeRegenTier2Shelves) {
-                this.tomeRegenTier2Shelves = this.tomeRegenTier1Shelves;
-            } else if ("tome_regen_tier2_shelves".equals(editedKey) && this.tomeRegenTier2Shelves < this.tomeRegenTier1Shelves) {
-                this.tomeRegenTier1Shelves = this.tomeRegenTier2Shelves;
+            if ("tome_regen_tier1_shelves".equals(editedKey) && this.tomeRegenTier1Shelves() > this.tomeRegenTier2Shelves()) {
+                this.tomeRegenTier2Shelves() = this.tomeRegenTier1Shelves();
+            } else if ("tome_regen_tier2_shelves".equals(editedKey) && this.tomeRegenTier2Shelves() < this.tomeRegenTier1Shelves()) {
+                this.tomeRegenTier1Shelves() = this.tomeRegenTier2Shelves();
             }
 
             if ("tome_regen_base_seconds".equals(editedKey)) {
-                if (this.tomeRegenTier1Seconds > this.tomeRegenBaseSeconds) this.tomeRegenTier1Seconds = this.tomeRegenBaseSeconds;
-                if (this.tomeRegenTier2Seconds > this.tomeRegenTier1Seconds) this.tomeRegenTier2Seconds = this.tomeRegenTier1Seconds;
+                if (this.tomeRegenTier1Seconds() > this.tomeRegenBaseSeconds()) this.tomeRegenTier1Seconds() = this.tomeRegenBaseSeconds();
+                if (this.tomeRegenTier2Seconds() > this.tomeRegenTier1Seconds()) this.tomeRegenTier2Seconds() = this.tomeRegenTier1Seconds();
             } else if ("tome_regen_tier1_seconds".equals(editedKey)) {
-                if (this.tomeRegenBaseSeconds < this.tomeRegenTier1Seconds) this.tomeRegenBaseSeconds = this.tomeRegenTier1Seconds;
-                if (this.tomeRegenTier2Seconds > this.tomeRegenTier1Seconds) this.tomeRegenTier2Seconds = this.tomeRegenTier1Seconds;
+                if (this.tomeRegenBaseSeconds() < this.tomeRegenTier1Seconds()) this.tomeRegenBaseSeconds() = this.tomeRegenTier1Seconds();
+                if (this.tomeRegenTier2Seconds() > this.tomeRegenTier1Seconds()) this.tomeRegenTier2Seconds() = this.tomeRegenTier1Seconds();
             } else if ("tome_regen_tier2_seconds".equals(editedKey)) {
-                if (this.tomeRegenTier1Seconds < this.tomeRegenTier2Seconds) this.tomeRegenTier2Seconds = this.tomeRegenTier2Seconds;
-                if (this.tomeRegenBaseSeconds < this.tomeRegenTier1Seconds) this.tomeRegenBaseSeconds = this.tomeRegenTier1Seconds;
+                if (this.tomeRegenTier1Seconds() < this.tomeRegenTier2Seconds()) this.tomeRegenTier2Seconds() = this.tomeRegenTier2Seconds();
+                if (this.tomeRegenBaseSeconds() < this.tomeRegenTier1Seconds()) this.tomeRegenBaseSeconds() = this.tomeRegenTier1Seconds();
             }
 
-            this.bookCombineXpMultiplier = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookCombineXpMultiplier, 0.10, 3.00));
-            this.bookResearchXpMultiplier = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookResearchXpMultiplier, 0.10, 3.00));
-            this.epiphanyBaseChance = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.epiphanyBaseChance, 0.0, 1.0));
-            this.epiphanyMaxChance = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.epiphanyMaxChance, this.epiphanyBaseChance, 1.0));
-            this.xpRefundScale = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.xpRefundScale, 0.0, 1.0));
-            this.externalXpRefundScale = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.externalXpRefundScale, 0.0, this.xpRefundScale));
-            this.bookshelfEnchantedProb = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookshelfEnchantedProb, 0.0, 1.0));
+            this.bookCombineXpMultiplier() = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookCombineXpMultiplier(), 0.10, 3.00));
+            this.bookResearchXpMultiplier() = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookResearchXpMultiplier(), 0.10, 3.00));
+            this.epiphanyBaseChance() = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.epiphanyBaseChance(), 0.0, 1.0));
+            this.epiphanyMaxChance() = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.epiphanyMaxChance(), this.epiphanyBaseChance(), 1.0));
+            this.xpRefundScale() = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.xpRefundScale(), 0.0, 1.0));
+            this.externalXpRefundScale() = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.externalXpRefundScale(), 0.0, this.xpRefundScale()));
+            this.bookshelfEnchantedProb() = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookshelfEnchantedProb(), 0.0, 1.0));
         }
 
         public void copyFrom(ConfigDraft other) {
             if (other == null || other == this) return;
             ModRuntimeConfig snap = other.build();
-            this.overrideDatapacks = snap.overrideDatapacks;
-            this.enchantedBookStackSize = snap.enchantedBookStackSize;
-            this.vanillaTableMode = snap.vanillaTableMode;
-            this.anvilFlatRepairCost = snap.anvilFlatRepairCost;
-            this.anvilBlockSameBookMerge = snap.anvilBlockSameBookMerge;
-            this.restrictVillagerInfinityBooks = snap.restrictVillagerInfinityBooks;
-            this.grindstoneDepletedTome = snap.grindstoneDepletedTome;
+            this.overrideDatapacks() = snap.overrideDatapacks();
+            this.enchantedBookStackSize() = snap.enchantedBookStackSize();
+            this.vanillaTableMode() = snap.vanillaTableMode();
+            this.anvilFlatRepairCost() = snap.anvilFlatRepairCost();
+            this.anvilBlockSameBookMerge() = snap.anvilBlockSameBookMerge();
+            this.restrictVillagerInfinityBooks() = snap.restrictVillagerInfinityBooks();
+            this.grindstoneDepletedTome() = snap.grindstoneDepletedTome();
 
-            this.shelfBoostModel = snap.shelfBoostModel;
-            this.defaultUnlockFilter = snap.defaultUnlockFilter;
-            this.directTierUpgrade = snap.directTierUpgrade;
-            this.directGatesEnabled = snap.directGatesEnabled;
-            this.blankMaxTierMode = snap.blankMaxTierMode;
-            this.maxDirectBookshelves = snap.maxDirectBookshelves;
-            this.horizontalScanRadius = snap.horizontalScanRadius;
-            this.verticalScanRadius = snap.verticalScanRadius;
-            this.requireBreathingRoom = snap.requireBreathingRoom;
-            this.minOpenAdjacentBlocks = snap.minOpenAdjacentBlocks;
-            this.requireLineOfSight = snap.requireLineOfSight;
+            this.shelfBoostModel() = snap.shelfBoostModel();
+            this.defaultUnlockFilter() = snap.defaultUnlockFilter();
+            this.directTierUpgrade() = snap.directTierUpgrade();
+            this.directGatesEnabled() = snap.directGatesEnabled();
+            this.blankMaxTierMode() = snap.blankMaxTierMode();
+            this.maxDirectBookshelves() = snap.maxDirectBookshelves();
+            this.horizontalScanRadius() = snap.horizontalScanRadius();
+            this.verticalScanRadius() = snap.verticalScanRadius();
+            this.requireBreathingRoom() = snap.requireBreathingRoom();
+            this.minOpenAdjacentBlocks() = snap.minOpenAdjacentBlocks();
+            this.requireLineOfSight() = snap.requireLineOfSight();
 
-            this.tomeConsumptionMode = snap.tomeConsumptionMode;
-            this.maxTomeUses = snap.maxTomeUses;
-            this.bookCopyWearCost = snap.bookCopyWearCost;
-            this.tomeDepleteBehavior = snap.tomeDepleteBehavior;
-            this.tomeRegenEnabled = snap.tomeRegenEnabled;
-            this.tomeRegenBaseSeconds = snap.tomeRegenBaseSeconds;
-            this.tomeRegenTier1Shelves = snap.tomeRegenTier1Shelves;
-            this.tomeRegenTier1Seconds = snap.tomeRegenTier1Seconds;
-            this.tomeRegenTier2Shelves = snap.tomeRegenTier2Shelves;
-            this.tomeRegenTier2Seconds = snap.tomeRegenTier2Seconds;
-            this.tomeLocksEnabled = snap.tomeLocksEnabled;
-            this.lockedShelfBreakable = snap.lockedShelfBreakable;
-            this.lockedBookExtractionBlocked = snap.lockedBookExtractionBlocked;
-            this.provenanceEnabled = snap.provenanceEnabled;
-            this.ritualQueueEnabled = snap.ritualQueueEnabled;
-            this.earlyUnlockXpLevels = snap.earlyUnlockXpLevels;
-            this.earlyUnlockGritCount = snap.earlyUnlockGritCount;
-            this.sacrificeRequired = snap.sacrificeRequired;
-            this.tomePageRequiredShelves = snap.tomePageRequiredShelves;
-            this.incrementalCredit = snap.incrementalCredit;
-            this.xpMode = snap.xpMode;
-            this.costTableDataset = snap.costTableDataset;
-            this.materialSelectionMode = snap.materialSelectionMode;
-            this.researchRoundingMode = snap.researchRoundingMode;
-            this.libraryDiscountEnabled = snap.libraryDiscountEnabled;
-            this.maxWoodenDiscountPercent = snap.maxWoodenDiscountPercent;
-            this.maxTotalXpDiscountPercent = snap.maxTotalXpDiscountPercent;
-            this.bookCombineEnabled = snap.bookCombineEnabled;
-            this.bookCombineXpMultiplier = snap.bookCombineXpMultiplier;
-            this.bookResearchEnabled = snap.bookResearchEnabled;
-            this.bookResearchXpMultiplier = snap.bookResearchXpMultiplier;
+            this.tomeConsumptionMode() = snap.tomeConsumptionMode();
+            this.maxTomeUses() = snap.maxTomeUses();
+            this.bookCopyWearCost() = snap.bookCopyWearCost();
+            this.tomeDepleteBehavior() = snap.tomeDepleteBehavior();
+            this.tomeRegenEnabled() = snap.tomeRegenEnabled();
+            this.tomeRegenBaseSeconds() = snap.tomeRegenBaseSeconds();
+            this.tomeRegenTier1Shelves() = snap.tomeRegenTier1Shelves();
+            this.tomeRegenTier1Seconds() = snap.tomeRegenTier1Seconds();
+            this.tomeRegenTier2Shelves() = snap.tomeRegenTier2Shelves();
+            this.tomeRegenTier2Seconds() = snap.tomeRegenTier2Seconds();
+            this.tomeLocksEnabled() = snap.tomeLocksEnabled();
+            this.lockedShelfBreakable() = snap.lockedShelfBreakable();
+            this.lockedBookExtractionBlocked() = snap.lockedBookExtractionBlocked();
+            this.provenanceEnabled() = snap.provenanceEnabled();
+            this.ritualQueueEnabled() = snap.ritualQueueEnabled();
+            this.earlyUnlockXpLevels() = snap.earlyUnlockXpLevels();
+            this.earlyUnlockGritCount() = snap.earlyUnlockGritCount();
+            this.sacrificeRequired() = snap.sacrificeRequired();
+            this.tomePageRequiredShelves() = snap.tomePageRequiredShelves();
+            this.incrementalCredit() = snap.incrementalCredit();
+            this.xpMode() = snap.xpMode();
+            this.costTableDataset() = snap.costTableDataset();
+            this.materialSelectionMode() = snap.materialSelectionMode();
+            this.researchRoundingMode() = snap.researchRoundingMode();
+            this.libraryDiscountEnabled() = snap.libraryDiscountEnabled();
+            this.maxWoodenDiscountPercent() = snap.maxWoodenDiscountPercent();
+            this.maxTotalXpDiscountPercent() = snap.maxTotalXpDiscountPercent();
+            this.bookCombineEnabled() = snap.bookCombineEnabled();
+            this.bookCombineXpMultiplier() = snap.bookCombineXpMultiplier();
+            this.bookResearchEnabled() = snap.bookResearchEnabled();
+            this.bookResearchXpMultiplier() = snap.bookResearchXpMultiplier();
 
-            this.epiphanyEnabled = snap.epiphanyEnabled;
-            this.epiphanyMinBookshelves = snap.epiphanyMinBookshelves;
-            this.epiphanyBaseChance = snap.epiphanyBaseChance;
-            this.epiphanyMaxChance = snap.epiphanyMaxChance;
-            this.epiphanyMaxSlotsCap = snap.epiphanyMaxSlotsCap;
-            this.epiphanyCycleSeconds = snap.epiphanyCycleSeconds;
-            this.epiphanyFreezeXpLevels = snap.epiphanyFreezeXpLevels;
-            this.epiphanyFreezeDurationSeconds = snap.epiphanyFreezeDurationSeconds;
-            this.epiphanyMaxFreezeSeconds = snap.epiphanyMaxFreezeSeconds;
-            this.epiphanyRerollXpLevels = snap.epiphanyRerollXpLevels;
+            this.epiphanyEnabled() = snap.epiphanyEnabled();
+            this.epiphanyMinBookshelves() = snap.epiphanyMinBookshelves();
+            this.epiphanyBaseChance() = snap.epiphanyBaseChance();
+            this.epiphanyMaxChance() = snap.epiphanyMaxChance();
+            this.epiphanyMaxSlotsCap() = snap.epiphanyMaxSlotsCap();
+            this.epiphanyCycleSeconds() = snap.epiphanyCycleSeconds();
+            this.epiphanyFreezeXpLevels() = snap.epiphanyFreezeXpLevels();
+            this.epiphanyFreezeDurationSeconds() = snap.epiphanyFreezeDurationSeconds();
+            this.epiphanyMaxFreezeSeconds() = snap.epiphanyMaxFreezeSeconds();
+            this.epiphanyRerollXpLevels() = snap.epiphanyRerollXpLevels();
 
-            this.disenchantEnabled = snap.disenchantEnabled;
-            this.xpRefundScale = snap.xpRefundScale;
-            this.externalXpRefundScale = snap.externalXpRefundScale;
-            this.stripXpMin = snap.stripXpMin;
-            this.stripXpMax = snap.stripXpMax;
-            this.allowCursePurge = snap.allowCursePurge;
-            this.cursePurgeXpCost = snap.cursePurgeXpCost;
-            this.transformationSetMode = snap.transformationSetMode;
-            this.requirePriorDiscovery = snap.requirePriorDiscovery;
-            this.drainedBookResult = snap.drainedBookResult;
-            this.tomePageEnabled = snap.tomePageEnabled;
-            this.tier1Bookshelves = snap.tier1Bookshelves;
-            this.tier2Bookshelves = snap.tier2Bookshelves;
-            this.tier3QualifyingEnchantments = snap.tier3QualifyingEnchantments;
-            this.transformationMaxBatchSize = snap.transformationMaxBatchSize;
+            this.disenchantEnabled() = snap.disenchantEnabled();
+            this.xpRefundScale() = snap.xpRefundScale();
+            this.externalXpRefundScale() = snap.externalXpRefundScale();
+            this.stripXpMin() = snap.stripXpMin();
+            this.stripXpMax() = snap.stripXpMax();
+            this.allowCursePurge() = snap.allowCursePurge();
+            this.cursePurgeXpCost() = snap.cursePurgeXpCost();
+            this.transformationSetMode() = snap.transformationSetMode();
+            this.requirePriorDiscovery() = snap.requirePriorDiscovery();
+            this.drainedBookResult() = snap.drainedBookResult();
+            this.tomePageEnabled() = snap.tomePageEnabled();
+            this.tier1Bookshelves() = snap.tier1Bookshelves();
+            this.tier2Bookshelves() = snap.tier2Bookshelves();
+            this.tier3QualifyingEnchantments() = snap.tier3QualifyingEnchantments();
+            this.transformationMaxBatchSize() = snap.transformationMaxBatchSize();
 
-            this.vanillaChestBooksMode = snap.vanillaChestBooksMode;
-            this.bookshelfPoolEnabled = snap.bookshelfPoolEnabled;
-            this.bookshelfMinBooks = snap.bookshelfMinBooks;
-            this.bookshelfMaxBooks = snap.bookshelfMaxBooks;
-            this.bookshelfEnchantedProb = snap.bookshelfEnchantedProb;
-            this.librarianTomeOffers = snap.librarianTomeOffers;
+            this.vanillaChestBooksMode() = snap.vanillaChestBooksMode();
+            this.bookshelfPoolEnabled() = snap.bookshelfPoolEnabled();
+            this.bookshelfMinBooks() = snap.bookshelfMinBooks();
+            this.bookshelfMaxBooks() = snap.bookshelfMaxBooks();
+            this.bookshelfEnchantedProb() = snap.bookshelfEnchantedProb();
+            this.librarianTomeOffers() = snap.librarianTomeOffers();
             this.customizedKeys.clear();
             this.customizedKeys.addAll(snap.customizedKeys);
         }
