@@ -1,4 +1,4 @@
-commit: 90b80682fcfc7d949d2e9ef9759ec04e82f0fccc
+commit: ae2f356e91ef2e82ac8cc0046f5cc048191bc59d
 branch: arena/4313f0c3-chiseled-enchanting-table-26-1
 gradle exit code: 1
 
@@ -198,7 +198,13 @@ net.fabricmc.fabric-api:fabric-block-api-v1:3.0.2+ec56b6014c
     |--------------------------------|----------|--------------|
     | org.gradle.status              | release  |              |
     | org.gradle.category            | library  | library      |
-...[truncated 1003 lines total]...
+...[truncated 2364 lines total]...
+    | org.gradle.jvm.version         |          | 25           |
+
+net.fabricmc.fabric-api:fabric-model-loading-api-v1:8.0.7+c80601bb4c
+\--- net.fabricmc.fabric-api:fabric-api:0.151.0+26.1.2
+     \--- clientCompileClasspath
+
 net.fabricmc.fabric-api:fabric-networking-api-v1:6.3.1+554860db4c
   Variant compile:
     | Attribute Name                 | Provided | Requested    |
@@ -995,9 +1001,3 @@ clientCompileClasspath - Compile classpath for source set 'client'.
 A web-based, searchable dependency report is available by adding the --scan option.
 
 == job status: failure ==
-
-== job status: success ==
-
-== job status: success ==
-
-== job status: success ==
