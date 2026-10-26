@@ -981,5 +981,6 @@
   "gui.chiseled_enchanting_table.ui.total_shelves": "书架总数：%s 个",
   "gui.chiseled_enchanting_table.ui.regen_gap": "恢复提速还需：%s 个书架",
   "gui.chiseled_enchanting_table.ui.level_cap": "可用附魔等级：%s / %s",
-  "gui.chiseled_enchanting_table.ui.regen_complete": "恢复速度已达最高档"
+  "gui.chiseled_enchanting_table.ui.regen_complete": "恢复速度已达最高档",
+  "gui.chiseled_enchanting_table.ui.shelf_hint": "普通书架解锁升级；雕纹书架里的附魔书提供模板。"
 }

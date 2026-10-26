@@ -20,7 +20,7 @@ public final class UiPresentationProbe {
         check(!header.contains("木 0"), "ambiguous one-character status remains");
         check(!TooltipPresentation.detailsRequested(), "default hover unexpectedly expands details");
         var hover = ResonanceTooltip.build(menu, null);
-        check(hover.size() <= 6, "default bookshelf hover became a mechanics wall");
+        check(hover.size() <= 7, "default bookshelf hover became a mechanics wall");
         check(hover.stream().noneMatch(line -> line.getString().contains("ΣL")), "technical appendix leaked into default hover");
         for (String state : new String[] { "active", "inactive" }) {
             for (String tab : new String[] { "inscribe", "cleanse", "tome" }) {

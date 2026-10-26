@@ -981,5 +981,6 @@
   "gui.chiseled_enchanting_table.ui.total_shelves": "Total des bibliothèques : %s",
   "gui.chiseled_enchanting_table.ui.regen_gap": "Récupération accélérée : encore %s bibliothèques",
   "gui.chiseled_enchanting_table.ui.level_cap": "Niveau disponible : %s / %s",
-  "gui.chiseled_enchanting_table.ui.regen_complete": "Vitesse de récupération maximale atteinte"
+  "gui.chiseled_enchanting_table.ui.regen_complete": "Vitesse de récupération maximale atteinte",
+  "gui.chiseled_enchanting_table.ui.shelf_hint": "Les bibliothèques débloquent les améliorations ; les livres des bibliothèques sculptées servent de modèles."
 }

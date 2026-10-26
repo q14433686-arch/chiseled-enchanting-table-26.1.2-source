@@ -981,5 +981,6 @@
   "gui.chiseled_enchanting_table.ui.total_shelves": "書櫃總數：%s 個",
   "gui.chiseled_enchanting_table.ui.regen_gap": "恢復加速還需：%s 個書櫃",
   "gui.chiseled_enchanting_table.ui.level_cap": "可用附魔等級：%s / %s",
-  "gui.chiseled_enchanting_table.ui.regen_complete": "恢復速度已達最高檔"
+  "gui.chiseled_enchanting_table.ui.regen_complete": "恢復速度已達最高檔",
+  "gui.chiseled_enchanting_table.ui.shelf_hint": "普通書櫃解鎖升級；浮雕書櫃裡的附魔書提供範本。"
 }

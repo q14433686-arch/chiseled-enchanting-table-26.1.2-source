@@ -25,6 +25,7 @@ final class ResonanceTooltip {
         var lr = menu.libraryResonanceConfig();
         int ordinary = menu.regularBookshelves;
         int next = java.util.stream.IntStream.of(menu.isLibraryDiscountEnabled() ? lr.minDiscountBookshelves() : 0,
+            menu.isLibraryDiscountEnabled() ? lr.maxDiscountBookshelves() : 0,
             menu.allowsDirectTierUpgrade() ? sg.tier1Bookshelves() : 0,
             menu.isEpiphanyEnabled() ? menu.epiphanyMinBookshelves() : 0, menu.allowsDirectTierUpgrade() ? sg.tier2Bookshelves() : 0, menu.allowsDirectTierUpgrade() ? sg.maxDirectBookshelves() : 0)
             .filter(n -> n > ordinary).min().orElse(ordinary);
@@ -40,6 +41,8 @@ final class ResonanceTooltip {
                 ? Component.translatable("gui.chiseled_enchanting_table.ui.regen_gap", regenNext - total)
                 : Component.translatable("gui.chiseled_enchanting_table.ui.regen_complete")).withStyle(ChatFormatting.GREEN));
         }
+        if (menu.allowsDirectTierUpgrade()) tip.add(Component.translatable("gui.chiseled_enchanting_table.ui.shelf_hint")
+            .withStyle(ChatFormatting.GRAY));
         if (menu.crampedLibrary) tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.cramped").withStyle(ChatFormatting.RED));
         if (TooltipPresentation.detailsRequested()) tip.addAll(ResonanceDetailsTooltip.build(menu, ignored));
         else tip.add(Component.translatable("gui.chiseled_enchanting_table.ui.details").withStyle(ChatFormatting.DARK_GRAY));

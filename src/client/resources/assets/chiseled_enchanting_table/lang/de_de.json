@@ -981,5 +981,6 @@
   "gui.chiseled_enchanting_table.ui.total_shelves": "Regale insgesamt: %s",
   "gui.chiseled_enchanting_table.ui.regen_gap": "Schnellere Erholung: noch %s Regale",
   "gui.chiseled_enchanting_table.ui.level_cap": "Verfügbare Stufe: %s / %s",
-  "gui.chiseled_enchanting_table.ui.regen_complete": "Höchste Erholungsstufe erreicht"
+  "gui.chiseled_enchanting_table.ui.regen_complete": "Höchste Erholungsstufe erreicht",
+  "gui.chiseled_enchanting_table.ui.shelf_hint": "Bücherregale schalten Aufwertungen frei; Bücher in verzierten Regalen dienen als Vorlagen."
 }

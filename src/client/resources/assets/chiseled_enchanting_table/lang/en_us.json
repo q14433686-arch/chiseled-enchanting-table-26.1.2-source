@@ -981,5 +981,6 @@
   "gui.chiseled_enchanting_table.ui.total_shelves": "Total bookshelves: %s",
   "gui.chiseled_enchanting_table.ui.regen_gap": "Next recovery speed: %s more bookshelves",
   "gui.chiseled_enchanting_table.ui.level_cap": "Available level: %s / %s",
-  "gui.chiseled_enchanting_table.ui.regen_complete": "Recovery speed is at its highest tier"
+  "gui.chiseled_enchanting_table.ui.regen_complete": "Recovery speed is at its highest tier",
+  "gui.chiseled_enchanting_table.ui.shelf_hint": "Bookshelves unlock upgrades; books in chiseled shelves provide templates."
 }

@@ -292,7 +292,6 @@ final class TablePanelBackground {
             } else if (!cleanse && state.tooltips().hovered(TableTooltipContext.Region.isOverCleanseTab)) {
                 ctx.fill(cleanseX + 2, tabY + 2, cleanseX + TAB_W - 2, tabY + TAB_H - 3, 0x247CFFA6);
             }
-            int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(state.tooltips().menu().get_enchantable_item()).size();
             String baseLabel = Component.translatable("gui.chiseled_enchanting_table.tab.cleanse").getString();
             String tab2Text = baseLabel;
             RowRenderSupport.renderCenteredBoxText(

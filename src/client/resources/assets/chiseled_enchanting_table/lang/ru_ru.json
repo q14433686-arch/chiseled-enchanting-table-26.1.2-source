@@ -981,5 +981,6 @@
   "gui.chiseled_enchanting_table.ui.total_shelves": "Всего книжных полок: %s",
   "gui.chiseled_enchanting_table.ui.regen_gap": "Для ускорения восстановления нужно ещё %s полок",
   "gui.chiseled_enchanting_table.ui.level_cap": "Доступный уровень: %s / %s",
-  "gui.chiseled_enchanting_table.ui.regen_complete": "Достигнута максимальная скорость восстановления"
+  "gui.chiseled_enchanting_table.ui.regen_complete": "Достигнута максимальная скорость восстановления",
+  "gui.chiseled_enchanting_table.ui.shelf_hint": "Книжные полки открывают улучшения; книги в резных полках служат образцами."
 }
