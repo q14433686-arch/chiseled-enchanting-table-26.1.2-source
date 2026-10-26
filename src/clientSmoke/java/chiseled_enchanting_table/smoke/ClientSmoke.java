@@ -65,7 +65,15 @@ public final class ClientSmoke implements ClientModInitializer {
     private void clickBox(ConfigLayoutSpec.Box box, int button) {
         click(editor, box.x() + Math.min(4, box.w() / 2), box.y() + box.h() / 2.0, button);
     }
+    private long textDeadlineNanos;
+    private boolean awaitText(SearchInputSession input, String context) {
+        String actual = input.buffer().text();
+        if (actual.equals("洗练 abc")) return true;
+        require(System.nanoTime() < textDeadlineNanos, context + ": expected committed CJK text, actual=" + actual);
+        return false;
+    }
     private void pushText(Minecraft client) {
+        textDeadlineNanos = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(15);
         // Keep the UTF-8 allocation alive until the native queue has actually been consumed.
         text = MemoryUtil.memUTF8("洗练 abc");
         try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -101,7 +109,7 @@ public final class ClientSmoke implements ClientModInitializer {
             }
             case 2 -> {
                 var input = (SearchInputSession) field(editor, "searchInput");
-                require(input.buffer().text().equals("洗练 abc"), "native text did not reach config search");
+                if (!awaitText(input, "native config search")) return;
                 MemoryUtil.memFree(text); text = null;
                 clickBox(layout().presetButtons().get(1), InputConstants.MOUSE_BUTTON_LEFT);
                 require(!SDLKeyboard.SDL_TextInputActive(handle), "clicking preset did not release native focus");
@@ -172,7 +180,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 next(8);
             }
             case 8 -> {
-                require(((SearchInputSession) field(editor, "searchInput")).buffer().text().equals("洗练 abc"), "overlay swallowed native text");
+                if (!awaitText((SearchInputSession) field(editor, "searchInput"), "overlay native search")) return;
                 MemoryUtil.memFree(text); text = null;
                 editor.onClose();
                 require(!SDLKeyboard.SDL_TextInputActive(handle), "closing overlay leaked native focus");
