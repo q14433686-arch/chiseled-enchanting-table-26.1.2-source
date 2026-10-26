@@ -273,13 +273,41 @@ version-independent fixes and features were taken, each rewritten to 26.1.2 APIs
   a dangling pending state when the channel was unavailable).
 - `1946b53` — Tome Catalogue feature (filter/sort/multi-select + paced, confirmation-gated batch
   lock queue + Shift paged enchantment details), `catalog.*` 32 keys × 11 locales (1008 total).
-- **Wire protocol stays `26_1_2_revision_17`** (no wire/blockstate schema change; historical
-  probes retained). Deliberately not taken: 26.3 wholesale class splits, Rainbow Cloth
-  (blockstate schema — needs a protocol-bump round), global `TooltipPresentation` rollout.
-- Gates: `ci_static_checks.py`, `compat_check.py`, `gen_bundled_defaults --check`,
-  `test_sync_26_1_2.py` (9 tests incl. new seven-path contract) all pass locally; GitHub Actions
-  `compile-check` + `build` (incl. server smoke) green for `6587e9f` (100 JUnit tests).
-  Catalogue commit CI status: see the branch's latest Actions run.
+- Those two rounds kept the wire protocol at `26_1_2_revision_17` (no schema change yet).
+
+### 2026-10-26 full backport (26.3 @ `b3cb3c9`, all five phases)
+
+Per an explicit full-port directive, everything deferred above was then ported in five
+CI-gated phases — see
+[`docs/reports/FULL_BACKPORT_FROM_26_3_2026_10_26.md`](docs/reports/FULL_BACKPORT_FROM_26_3_2026_10_26.md):
+
+1. **Rainbow Cloth** (`bb770ee`): `jeb_` sneak + name-tag toggle, `rainbow_cloth` blockstate
+   property, item badge/animated tint (Fabric model-wrapper API on 26.1.2), completion ring,
+   11 lang keys × 11 (**1019 keys**). **Wire bumped to `26_1_2_revision_18`** (blockstate schema;
+   see [`docs/PROTOCOL_HISTORY.md`](docs/PROTOCOL_HISTORY.md)).
+2. **UI readability** (`5ebd328`): `TooltipBudget`/`TooltipPresentation`/`ResonanceTooltip`
+   primary + Shift-details routing everywhere, text-only shelf HUD, icon-only lock buttons,
+   🔒 tome badges; header badge sprite atlas.
+3. **CI diagnostics rework** (`10bcadd`): no repository write-back; bounded GitHub Checks
+   diagnostics (`compile-diagnostics`, `server-smoke-diagnostics`, `client-smoke-diagnostics`),
+   `docs/ci/` single source of truth, repository-hygiene + baseline-mixin-inventory gates.
+4. **Engineering splits** (`0b67c1d`..`2df3f20`, `e58c503`): data layer, runtime config
+   (Draft/FileStore/Json/Presets), menu economics (quick-move/quotes/payment/pricing/lookup),
+   ritual persistence/world-access, table + config GUI skins/presenters/sessions, architecture
+   size/boundary ratchet gate. Behavior preserved by method-body equivalence checks + tests
+   (`ConfigInteractionTest`, `EngineeringSplitTest`, `LatestPortAuditTest`).
+5. **clientSmoke** (`af7fa7e`): disposable real-client integration probe (8 PASS markers:
+   config search/save, list models, UI presentation, catalogue lock round-trip, overlay input,
+   rainbow world/item/reload, tome world), compiled and executed in CI via xvfb.
+
+- Documented 26.1.2 adaptations (behavior-preserving): `Minecraft.setScreen`/`screen` field
+  (no `gui.setScreen`), Shift state from key events / `options.keyShift` (no `Screen.hasShiftDown`,
+  no `InputConstants.isKeyDown`), rainbow item model via Fabric `ItemModelWrapper` API (no vanilla
+  `BakedItemModelWrapper` exposure / `submitCustomGeometry` substitute: atlas-quad facing), SDL
+  text-input manager absent (search focus is session-owned; `Screen.capturesInput` does not exist),
+  `TextColor.RED/DARK_RED` constants absent (used `fromLegacyFormat`), plural loot/advancement
+  JSON arrays, block `CODEC`/`codec()`, 2-arg `player.drop`, and the tome panel single-book
+  fallback retained read-only (panel detail + click target only; explicit multi-selection unchanged).
 
 ## Verified This Session (2026-10-21, the 1.0.3 sync round)
 

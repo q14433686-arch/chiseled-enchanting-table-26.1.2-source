@@ -151,7 +151,7 @@ jobs:
       - name: boot fresh world and reload datapacks
         run: python3 scripts/server_smoke.py
       - name: compile disposable client integration probe
-        run: ./gradlew compileClientSmokeJava -Pclient_smoke=true --console=plain
+        run: mkdir -p build-reports && ./gradlew compileClientSmokeJava -Pclient_smoke=true --console=plain 2>&1 | tee build-reports/client-smoke.log
       - name: real client input, config save and menu integration
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'

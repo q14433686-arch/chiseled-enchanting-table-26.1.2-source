@@ -196,7 +196,7 @@
   - **副本世代褪色（2026-10-24 设计审计包）**：复制出的新书世代 = 母本 +1，有效使用上限为 `max(1, max_tome_uses − 世代)`，图书馆温养只回磨损不回世代上限；旧存档书籍无 `cet_generation` 组件时按世代 0 读取，旧仪式队列文本（7/10 段）解码为「无继承世代」；
   - **精华替罪定价（默认开）**：溢出恢复量 ∝ `烧掉词条精华 / 书内最高精华` 且至少恢复 1 次，可用数据包 `scapegoat_pricing: essence|flat` 切换；**等待曲线数据化**：仪式 WAIT 六系数与最小 100 tick 改由 `library_resonance.json -> ritual.wait_curve` 提供并随成本表同步；
   - **磨损豁免与核心价值标签**：`#chiseled_enchanting_table:wear_immune`（默认含 `minecraft:infinity`）、`#chiseled_enchanting_table:keystone_major`（如经验修补、无限）、`#chiseled_enchanting_table:keystone_minor`（如精准采集、时运、抢夺、耐久、风爆、致密、破甲）与 `#chiseled_enchanting_table:broad_applicability` 均已全面数据化驱动；外围新装默认关（`anvil_flat_repair_cost`、`restrict_villager_infinity_books` 仅对全新安装默认为 OFF，既有配置文件读盘优先），核心三项（原版台禁书、同级合并禁、砂轮返枯竭典籍 `grindstone_depleted_tome`）保持 ON；
-  - 网络协议升级为 **`26_1_2_revision_17`**（含单包集合上限 `PayloadLimits` 校验、容器/会话路由、精华估值与普适度曲线全同步、字节预算完整性尾标及数据包 `/reload` 安全关窗提示），多人游戏请保持客户端与服务端同为最新 `1.1.0` 构建；旧修订对端会在加入时被友好断开而非解码崩溃。
+  - 网络协议升级为 **`26_1_2_revision_18`**（含单包集合上限 `PayloadLimits` 校验、容器/会话路由、精华估值与普适度曲线全同步、字节预算完整性尾标及数据包 `/reload` 安全关窗提示），多人游戏请保持客户端与服务端同为最新 `1.1.0` 构建；旧修订对端会在加入时被友好断开而非解码崩溃。
 
 ---
 
