@@ -85,7 +85,7 @@ class SyncContracts26_1_2(unittest.TestCase):
         self.assertTrue((MAIN / 'config/rules/RuntimeRules.java').exists())
         data_src = (MAIN / 'data/ChiseledEnchantingTableData.java').read_text()
         key_extractor_src = (MAIN / 'data/DatapackKeyExtractor.java').read_text()
-        self.assertIn('public record RuntimeFrame(', data_src)
+        self.assertIn('public record RuntimeFrame(', (MAIN / 'data/RuntimeFrame.java').read_text())
         self.assertIn('RuntimeRules.commit(prepared, persist)', data_src)
         self.assertIn('resource.sourcePackId()', data_src + key_extractor_src)
 
