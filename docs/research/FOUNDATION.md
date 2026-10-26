@@ -68,7 +68,7 @@ outcomes should be separate topics, not alternatives that must all be collected.
 - `setLibraryAccess`: a server table adapter must authorize the player/menu/table/range/dimension,
   scan loaded positions only and return an immutable library snapshot. The production default is `ResearchWorkspace.resolve`, which denies absent/invalid menus and scans the authorized workspace on demand.
 - `registerEvidence`: a trusted server event adapter must verify the actual event/context. A string
-  from a client is **not** evidence. The gateway has no completion/grant packet or command.
+  from a client is **not** evidence. The production gateway has no free grant packet/command. The later opt-in prototype exposes validated analysis/conclusion commands only, not a way to manufacture evidence.
 - `observe`: invoked by that event adapter, not a generic client request. Replay is harmless.
 - `conclude`: invoked at the workspace after observations; does not consume items or grant effects.
 - Downstream unlock checks must consume completed conclusions, not repeat the research logic.
@@ -161,3 +161,11 @@ verification must be read from the new run, not inferred from pure tests.
 The patched workspace/outcome source976aae1 subsequently passed the full native run40372748679,
 including `RESEARCH WORKSPACE PASS`. Source46836b9 adds the target-first model and passes207JUnit
 in compile40374462742; its full native run40374462984 remains pending at documentation time.
+
+### Playtest bridge delivered
+
+See [PLAYTEST.md](PLAYTEST.md). Source5acfa35 passed compile40380390484 (207 tests) and full
+build40380390375, with explicit `RESEARCH PROTOTYPE PASS`. Default-off prototype content/commands
+use an opt-in file or JVM flag; regular gameplay is unchanged. The development-only smoke run
+enables it and executes actual player commands. Closed-menu commands use a bound, revalidated
+table address, never remote completion. Final UI, physical job trial and production output remain unfinished.

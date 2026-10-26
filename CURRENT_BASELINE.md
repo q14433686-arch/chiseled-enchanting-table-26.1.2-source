@@ -13,7 +13,18 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Human-reviewed learning routes and outcomes — 2026-10-27
+## First in-game research playtest — 2026-10-27
+
+Source **`5acfa3570370f3af0f4b4100a812b66cc6c6e1a0`** adds an opt-in, default-off chat-command bridge for a real sample-analysis loop. This is **not** the final research tab or a completed Efficiency job trial.
+
+- [Playable setup and exact commands](docs/research/PLAYTEST.md). Enable with `config/cet-research-prototype.enabled` and restart; bind a nearby table, start from Efficiency I, analyze an actual II sample, conclude and inspect learned manufacturing limit. No free items or fake fieldwork grants.
+- Every action checks a live authorized workspace, including when chat is used after closing the table menu; binding does not bypass range, dimension or permissions. Completed knowledge persists; bindings are session-only.
+- [compile40380390484](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40380390484): **207 tests, zero failures/errors/skips**. [build40380390375](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40380390375): all jobs successful, including actual player command-dispatcher/native client checks.
+- Final diagnostics explicitly contain **RESEARCH WORKSPACE PASS** and **RESEARCH PROTOTYPE PASS**, plus actual `Conclude: COMPLETE` and learned limit2. This is automated native validation, not a claim of human playtesting or engaging trial design.
+- [Installable playtest artifact](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40380390375/artifacts/12677927811); [native evidence](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40380390375/artifacts/12677987110).
+- Still missing: job selection/trial effect/meaningful field evidence, final research UI and actual production output/cost migration. Do not call this a full gameplay loop. Next meaningful playtest must include an ability and usable outcome, not just more models.
+
+## Previous human-reviewed learning routes and outcomes — 2026-10-27
 
 - [Concrete review decisions](docs/research/reviews/TARGET_FIRST_REVIEW_2026_10_27.md): low-level learning, derivation/analysis alternatives, branch-specific caps, simple ordinary costs, Efficiency I→II with chosen-job trial plus sample analysis, and a target-first independent research tab. Gameplay/UI/art decisions require granular review; architecture authorization is not blanket creative approval.
 - Source **`46836b9`**: validated conclusion→manufacturing limits, sample-analysis rule/runtime service, and immutable target-first page model with explicit next actions. **Not** GUI widgets, networking, production enforcement or trial effects yet.

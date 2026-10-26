@@ -8,6 +8,9 @@
 
 ## Active research work
 
+[First in-game playtest](research/PLAYTEST.md) — verified download, opt-in setup, exact commands, expected results and explicit unimplemented gameplay.
+
+
 [Concrete human review](research/reviews/TARGET_FIRST_REVIEW_2026_10_27.md) — agreed learning routes, first topic and page structure; unresolved gameplay/UI details remain explicit.
 
 
