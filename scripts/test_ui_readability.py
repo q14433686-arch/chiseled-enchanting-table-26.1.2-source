@@ -12,7 +12,7 @@ ASSETS = ROOT / 'src/client/resources/assets/chiseled_enchanting_table'
 class UiReadabilityTests(unittest.TestCase):
     def test_chinese_uses_enchantment_not_parallel_jargon(self):
         text = (ASSETS / 'lang/zh_cn.json').read_text()
-        for token in ('魔咒', '木书架', '嬗变', '温养', '⊘'):
+        for token in ('魔咒', '木书架', '嬗变', '温养', '⊘', '普通普通', '模板书书', '移除附魔洗练'):
             self.assertNotIn(token, text)
 
     def test_full_bookshelf_labels_replace_ambiguous_abbreviations(self):
