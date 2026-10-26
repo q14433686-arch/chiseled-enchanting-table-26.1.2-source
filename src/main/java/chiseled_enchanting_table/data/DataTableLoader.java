@@ -32,6 +32,30 @@ final class DataTableLoader {
 
     static chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy loadPackPolicy(
         ResourceManager resourceManager
+    ) {
+        Set<String> externalKeys = new java.util.LinkedHashSet<>();
+        collectExternalDatapackKeys(resourceManager, SHELF_GATES_ID, "shelf_gates", externalKeys);
+        collectExternalDatapackKeys(resourceManager, LIBRARY_RESONANCE_ID, "library_resonance", externalKeys);
+        collectExternalDatapackKeys(resourceManager, BOOK_UPGRADES_ID, "book_upgrades", externalKeys);
+        collectExternalDatapackKeys(resourceManager, TREASURE_EPIPHANY_ID, "treasure_epiphany", externalKeys);
+        collectExternalDatapackKeys(resourceManager, DISENCHANTING_ID, "disenchanting", externalKeys);
+        collectExternalDatapackKeys(resourceManager, ITEM_TRANSFORMATIONS_ID, "item_transformations", externalKeys);
+        collectExternalDatapackKeys(resourceManager, LOOT_INJECTIONS_ID, "loot_injections", externalKeys);
+        collectExternalDatapackKeys(resourceManager, BOOKSHELF_BOOK_POOL_ID, "bookshelf_book_pool", externalKeys);
+
+        JsonObject policyRoot = null;
+        try {
+            var resOpt = resourceManager.getResource(PACK_POLICY_ID);
+            if (resOpt.isPresent()) {
+                try (Reader reader = resOpt.get().openAsReader()) {
+                    policyRoot = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid pack policy: " + PACK_POLICY_ID, e);
+        }
+        return chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy.fromJson(policyRoot, externalKeys);
+    }
 
     static DefaultEnchantmentTable loadDefaultEnchantments(ResourceManager resourceManager) {
         Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(DEFAULT_ENCHANTMENTS_ID);
@@ -150,6 +174,21 @@ final class DataTableLoader {
 
     static <T> T loadClassicJson(
         ResourceManager resourceManager,
+        String fileName,
+        java.util.function.Function<JsonObject, T> parser,
+        T fallback
+    ) {
+        Identifier id = ChiseledEnchantingTable.identifier("chiseled_enchanting_table/" + fileName);
+        var resource = resourceManager.getResource(id);
+        if (resource.isEmpty()) {
+            return fallback;
+        }
+        try (Reader reader = resource.get().openAsReader()) {
+            return parser.apply(JsonParser.parseReader(reader).getAsJsonObject());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid classic data table " + id, e);
+        }
+    }
 
     static Map<Identifier, ItemTransformation> parseItemTransformations(JsonObject root) {
         Map<Identifier, ItemTransformation> fallback = new HashMap<>();
@@ -286,9 +325,39 @@ final class DataTableLoader {
 
     static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config loadShelfGatesConfig(
         ResourceManager resourceManager
+    ) {
+        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(SHELF_GATES_ID);
+        if (resource.isEmpty()) {
+            return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.DEFAULT;
+        }
+        try (Reader reader = resource.get().openAsReader()) {
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+            return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config.fromJson(root);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid data table " + SHELF_GATES_ID, e);
+        }
+    }
 
     static LibraryResonanceAndRitual loadLibraryResonanceAndRitual(
         ResourceManager resourceManager
+    ) {
+        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(LIBRARY_RESONANCE_ID);
+        if (resource.isEmpty()) {
+            return new LibraryResonanceAndRitual(
+                chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT,
+                chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT
+            );
+        }
+        try (Reader reader = resource.get().openAsReader()) {
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+            return new LibraryResonanceAndRitual(
+                chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.fromJson(root),
+                chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(root)
+            );
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid data table " + LIBRARY_RESONANCE_ID, e);
+        }
+    }
 
     static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config builtInRitualConfig() {
         return chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(
@@ -320,11 +389,20 @@ final class DataTableLoader {
 
     record DefaultEnchantmentTable(
         Set<EnchantmentWithLevel> values,
+        List<DefaultEnchantmentTagRule> tags,
+        Set<Identifier> excludedIds,
+        List<Identifier> excludedTags
+    ) {}
 
     record LootInjectionTable(
         VanillaChestBooksMode mode,
+        List<LootInjection> entries,
+        chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns
+    ) {}
 
     record LibraryResonanceAndRitual(
         chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config resonance,
+        chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritual
+    ) {}
 
 }
