@@ -134,7 +134,7 @@ class ConfigurationSafetyTest {
 
     @Test
     void classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers() {
-        var option = new ChiseledEnchantingTableData.ItemCostOption(
+        var option = new ItemCostOption(
             Identifier.withDefaultNamespace("emerald"),
             0, 0, 2, 5, 0, 0, 1.0, List.of());
         var protection = Identifier.withDefaultNamespace("protection");

@@ -1,7 +1,7 @@
 package chiseled_enchanting_table.data;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.ItemCostOption;
+import chiseled_enchanting_table.data.ItemCostOption;
 import chiseled_enchanting_table.mechanics.enchanting.EnchantmentProvenance;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
