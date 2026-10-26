@@ -61,12 +61,9 @@ loom {
 sourceSets {
     main {
         java {
-            // Active & restored mixins compiled in `main` (NOT excluded):
-            //   * mixin/enchanting_table/DisableBookEnchanting, AnvilMenuMixin, AnvilScreenMixin,
-            //     RemoveXpCostScaling — blocks vanilla enchanting-table book rolls, routes same-level
-            //     book combines to the table, and flattens anvil prior-work XP scaling.
-            //   * block/ChiseledBookshelfTick & mixin/structure/* — chiseled-bookshelf ambient rune
-            //     particles/sound and structure bookshelf population.
+            // Single source of truth for active mixins is
+            // `src/main/resources/chiseled-enchanting-table-port.mixins.json`
+            // (enforced by `scripts/ci_static_checks.py` Tiers A & B).
             // Legacy upstream directories (mixin/structureProcessor/*, structureProcessor/*,
             // modifyChestLootTable/*, integration/*, utils/ChiseledBookshelfLootTable.java)
             // were removed in the 2026-10-24 sync (source c1ec2f7): the live replacements are

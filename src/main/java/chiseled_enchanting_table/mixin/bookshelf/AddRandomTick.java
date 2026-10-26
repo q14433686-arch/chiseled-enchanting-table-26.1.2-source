@@ -35,4 +35,17 @@ public abstract class AddRandomTick extends BaseEntityBlock {
         super.randomTick(state, level, pos, random);
         ChiseledBookshelfTick.triggerParticleAndSoundIfEnchantedBook(state, level, pos, random);
     }
+
+    @Override
+    public void affectNeighborsAfterRemoval(
+        BlockState state,
+        ServerLevel level,
+        BlockPos pos,
+        boolean moved
+    ) {
+        if (!state.is(level.getBlockState(pos).getBlock())) {
+            chiseled_enchanting_table.mechanics.resonance.TomeLockGuards.unlockAllShelfTomesAt(level, pos);
+        }
+        super.affectNeighborsAfterRemoval(state, level, pos, moved);
+    }
 }

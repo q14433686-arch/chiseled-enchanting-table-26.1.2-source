@@ -223,6 +223,12 @@ def check_lang_parity() -> None:
         for key in sorted(keys & reference_keys):
             if isinstance(data[key], str) and not data[key].strip():
                 fail(f"{name}: lang key '{key}' is empty")
+        for key in sorted(keys):
+            if isinstance(data[key], str) and "\\n" in data[key]:
+                fail(f"{name}: lang key '{key}' contains a literal backslash-n (use a real line break)")
+    for key in sorted(reference_keys):
+        if isinstance(reference[key], str) and "\\n" in reference[key]:
+            fail(f"en_us.json: lang key '{key}' contains a literal backslash-n (use a real line break)")
 
     note(f"lang parity ok ({len(reference_keys)} keys across en_us + {len(others)} language(s))")
 
@@ -254,20 +260,77 @@ def check_lang_parity() -> None:
     missing_from_lang = sorted(referenced_keys - reference_keys)
     for key in missing_from_lang:
         fail(f"code/data references translation key '{key}' which is MISSING from lang/*.json!")
+
+    # Verify dynamic enum/preset translation keys constructed in ConfigCatalog / Preset / ConfigScreen
+    for ds_token in ("modern", "classic", "modern_1_1_0", "classic_1_0_3"):
+        ek = f"config.chiseled_enchanting_table.enum.cost_table.{ds_token}"
+        if ek not in reference_keys:
+            fail(f"dynamic enum translation key '{ek}' is missing from en_us.json")
+    for preset_id in ("classic", "classic_1_0_3", "casual", "standard", "expert"):
+        suffixes = ("short", "title", "desc", "inert_note", "applied_notice") if preset_id.startswith("classic") else ("short", "title", "desc")
+        for suffix in suffixes:
+            pk = f"config.chiseled_enchanting_table.preset.{preset_id}.{suffix}"
+            if pk not in reference_keys:
+                fail(f"dynamic preset translation key '{pk}' is missing from en_us.json")
+
+    mc_fmt_re = re.compile(r"%(?:(\d+)\$)?([A-Za-z%])")
+
+    def format_arg_slots(text: str) -> set[int]:
+        slots: set[int] = set()
+        seq = 0
+        for match in mc_fmt_re.finditer(text):
+            idx, conv = match.group(1), match.group(2)
+            if conv == "%":
+                continue
+            if idx is not None:
+                slots.add(int(idx))
+            else:
+                seq += 1
+                slots.add(seq)
+        return slots
+
+    symbol_only_keys = {
+        "gui.chiseled_enchanting_table.cleanse.downgrade_row",
+        "gui.chiseled_enchanting_table.tomes.btn_next",
+        "gui.chiseled_enchanting_table.tomes.lock_mode_short.0",
+        "gui.chiseled_enchanting_table.tomes.sacrifice_short",
+    }
+
     for lname in ["en_us.json"] + others:
         lmap = read_json(os.path.join(LANG_DIR, lname))
+        same_as_en = 0
         for key, val in lmap.items():
-            if isinstance(val, str) and (val.strip() == key or "gui.chiseled_enchanting_table." in val):
+            if not isinstance(val, str):
+                continue
+            if val.strip() == key or "gui.chiseled_enchanting_table." in val:
                 fail(f"{lname}: key '{key}' contains raw untranslated key text '{val}'")
-            if isinstance(val, str) and key in reference and isinstance(reference[key], str):
-                ref_slots = len(re.findall(r"(?<!%)%s", reference[key]))
-                cur_slots = len(re.findall(r"(?<!%)%s", val))
+            if any(ord(ch) > 0xFFFF for ch in val):
+                fail(
+                    f"{lname}: key '{key}' contains supplementary-plane (> U+FFFF) glyph(s); "
+                    f"use BMP symbols so Minecraft's default font never renders tofu boxes"
+                )
+            if key in reference and isinstance(reference[key], str):
+                ref_slots = format_arg_slots(reference[key])
+                cur_slots = format_arg_slots(val)
                 if cur_slots != ref_slots:
                     fail(
-                        f"{lname}: key '{key}' has {cur_slots} '%s' placeholder(s), "
-                        f"expected {ref_slots} matching en_us.json"
+                        f"{lname}: key '{key}' has format argument slots {sorted(cur_slots)}, "
+                        f"expected {sorted(ref_slots)} matching en_us.json"
                     )
-    note(f"code-to-lang coverage ok ({len(referenced_keys)} referenced keys verified in all {1 + len(others)} locales)")
+                if lname != "en_us.json" and key not in symbol_only_keys and val == reference[key]:
+                    same_as_en += 1
+        # Guard against bulk English fallback regression (genuine Romance/Germanic cognates <= 20)
+        if lname != "en_us.json":
+            cap = 0 if lname in {"zh_cn.json", "zh_tw.json", "ja_jp.json", "ko_kr.json", "ru_ru.json"} else 20
+            if same_as_en > cap:
+                fail(
+                    f"{lname}: {same_as_en} value(s) are identical to en_us.json "
+                    f"(exceeds cognate allowance {cap}; translate missing locale strings)"
+                )
+    note(
+        f"code-to-lang, placeholder-slot, BMP-glyph, and translation coverage ok "
+        f"({len(referenced_keys)} referenced keys verified across all {1 + len(others)} locales)"
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -322,9 +385,34 @@ def check_markdown_links() -> None:
                 resolved = os.path.normpath(os.path.join(os.path.dirname(path), clean))
                 if not os.path.exists(resolved):
                     dangling += 1
-                    warn(f"{rel_path}: dangling link '{target}' -> {os.path.relpath(resolved, REPO)} does not exist")
+                    msg = f"{rel_path}: dangling link '{target}' -> {os.path.relpath(resolved, REPO)} does not exist"
+                    if rel_path in {"README.md", os.path.join("docs", "DOCUMENTATION_INDEX.md"), os.path.join("docs", "WIKI.md")}:
+                        fail(msg)
+                    else:
+                        warn(msg)
     if dangling == 0:
         note(f"markdown links ok ({scanned} file(s) scanned)")
+
+
+def check_bmp_safe_java_literals() -> None:
+    """GUI-06: Java sources must not embed supplementary-plane emojis or UTF-16
+    surrogate escapes (\\uD800..\\uDFFF) outside SearchTextBuffer tests."""
+    surrogate_esc = re.compile(r"\\u[Dd][89ABab][0-9A-Fa-f]{2}")
+    offenders: list[str] = []
+    for sub in ("main", "client"):
+        root_dir = os.path.join(REPO, "src", sub, "java")
+        for root, _dirs, files in os.walk(root_dir):
+            for name in files:
+                if not name.endswith(".java"):
+                    continue
+                path = os.path.join(root, name)
+                text = open(path, encoding="utf-8").read()
+                if any(ord(ch) > 0xFFFF for ch in text) or surrogate_esc.search(text):
+                    offenders.append(os.path.relpath(path, REPO))
+    for off in offenders:
+        fail(f"non-BMP glyph or surrogate escape in production Java source: {off}")
+    if not offenders:
+        note("all production Java sources use BMP-safe glyphs")
 
 
 
@@ -377,6 +465,7 @@ def main() -> int:
     check_lang_parity()
     check_no_embedded_json_fallbacks()
     check_markdown_links()
+    check_bmp_safe_java_literals()
     check_locale_safe_formatting()
     check_bundled_defaults_fresh()
 

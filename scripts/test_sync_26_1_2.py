@@ -84,9 +84,10 @@ class SyncContracts26_1_2(unittest.TestCase):
         self.assertTrue((MAIN / 'config/rules/RuleBook.java').exists())
         self.assertTrue((MAIN / 'config/rules/RuntimeRules.java').exists())
         data_src = (MAIN / 'data/ChiseledEnchantingTableData.java').read_text()
+        key_extractor_src = (MAIN / 'data/DatapackKeyExtractor.java').read_text()
         self.assertIn('public record RuntimeFrame(', data_src)
         self.assertIn('RuntimeRules.commit(prepared, persist)', data_src)
-        self.assertIn('resource.sourcePackId()', data_src)
+        self.assertIn('resource.sourcePackId()', data_src + key_extractor_src)
 
     def test_world_regeneration_and_ritual_escrow_safeguards(self):
         self.assertTrue((MAIN / 'mechanics/resonance/RegenerationScheduler.java').exists())
@@ -127,11 +128,10 @@ class SyncContracts26_1_2(unittest.TestCase):
 
     def test_audit_guards_authoritative_sync_and_input(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('REVISION = "26_1_2_revision_14"', protocol)
-        self.assertIn('26_1_2_revision_13', protocol)  # shipped revision stays query-only probe
-        self.assertIn('26_1_2_revision_12', protocol)  # shipped revision stays query-only probe
-        self.assertIn('26_1_2_revision_11', protocol)  # shipped revision stays query-only probe
-        self.assertIn('26_1_2_revision_10', protocol)  # shipped revision stays query-only probe
+        self.assertIn('CURRENT_REVISION_NUMBER = 17', protocol)
+        self.assertIn('REVISION = "26_1_2_revision_" + CURRENT_REVISION_NUMBER', protocol)
+        self.assertIn('IntStream.range(1, CURRENT_REVISION_NUMBER)', protocol)
+        self.assertIn('IntStream.range(9, CURRENT_REVISION_NUMBER)', protocol)
         self.assertNotIn('Minecraft 26.3', protocol)
 
         sync = (MAIN / 'menu/EnchantCostSync.java').read_text()

@@ -1,5 +1,5 @@
-commit: 55c1e01fd1ceabfe2ce33fbd37c8d6fac992673a
-branch: arena/2d61e52c-chiseled-enchanting-table-26-1
+commit: 8b09122febcebaf7bbce235699ffc1ff22f33771
+branch: arena/b99a37c2-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
 loader: 0.19.3
@@ -27,18 +27,28 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :classes
 
 > Task :compileClientJava
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 
 > Task :processClientResources
 > Task :clientClasses
+
 > Task :compileTestJava
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/ConfigurationSafetyTest.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
 > Task :processTestResources NO-SOURCE
 > Task :testClasses
 
 > Task :test
 
+AuditMechanicsTest > wearImmunityCurveDecaysSmoothlyAndGenerationCapStripsImmunity() PASSED
+
 AuditMechanicsTest > tomeLockEtaIncludesCurrentAndRemainingCharges() PASSED
+
+AuditMechanicsTest > perSlotMasteryCapPreventsSingleSuperBookFromMaxingGlobalDiscount() PASSED
+
+AuditMechanicsTest > queueScaledSacrificeSkipAndActiveRitualVictimPriority() PASSED
 
 AuditMechanicsTest > timedTomeLocksExpireExactlyAtTargetWear() PASSED
 
@@ -50,6 +60,8 @@ AuditMechanicsTest > tomeLockTargetsFollowWear() PASSED
 
 AuditMechanicsTest > scapegoatTokensRoundTripAndDefaultToEssence() PASSED
 
+AuditMechanicsTest > cetCustomDataStampsSchemaAndReadsLegacyUnversionedTags() PASSED
+
 AuditMechanicsTest > boundedCountsAcceptInRangeAndRejectOutside() PASSED
 
 AuditMechanicsTest > flatPricingKeepsHistoricalFullReset() PASSED
@@ -60,71 +72,59 @@ AuditMechanicsTest > essencePricingRestoresProportionally() PASSED
 
 AuditMechanicsTest > lineageAdvancesOnCopyAndMergesToMoreFadedParent() PASSED
 
+AuditMechanicsTest > queuedInscriptionCodecRoundTripsAndMatchesLegacyStringEncoding() PASSED
+
+AuditRoundTwoTest > bookshelfOverrideLadderValidatesMonotonicityAndDirectTierNeverRegresses() STANDARD_OUT
+    [22:14:56] [Test worker/WARN]: shelf_gates.json direct_upgrade_gates.overrides 'minecraft:sharpness' must be monotonically non-decreasing within [0, 38] (got [0, 24, 12, 30, 38]); falling back to default curve
+
+AuditRoundTwoTest > bookshelfOverrideLadderValidatesMonotonicityAndDirectTierNeverRegresses() PASSED
+
+AuditRoundTwoTest > nestedLibraryResonanceCodecRoundTripsAndClampsWoodenDiscountAgainstTotalCeiling() STANDARD_OUT
+    [22:14:56] [Test worker/WARN]: library_resonance.json chiseled_mastery sub-cap(s) (20/35/15) exceed max_total_xp_discount_percent (30); clamping to total ceiling
+    [22:14:56] [Test worker/WARN]: library_resonance.json max_wooden_discount_percent (65) exceeds max_total_xp_discount_percent (30); clamping wooden sub-cap to 30
+
+AuditRoundTwoTest > nestedLibraryResonanceCodecRoundTripsAndClampsWoodenDiscountAgainstTotalCeiling() PASSED
+
+AuditRoundTwoTest > deVersionedConfigEnumsPreserveLegacyAliasesAndFailClosedOnTypos() STANDARD_OUT
+    [22:14:56] [Test worker/WARN]: Config field 'cost_table' uses deprecated legacy token 'modern_1_1_0' (alias for 'modern'); legacy aliases will be removed in 2.0
+    [22:14:56] [Test worker/WARN]: Config field 'cost_table' uses deprecated legacy token 'classic_1_0_3' (alias for 'classic'); legacy aliases will be removed in 2.0
+    [22:14:56] [Test worker/WARN]: Config field 'preset' uses deprecated legacy token 'classic_1_0_3' (alias for 'classic'); legacy aliases will be removed in 2.0
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'modern_typo' for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
+    [22:14:56] [Test worker/WARN]: Empty config token for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
+    [22:14:56] [Test worker/WARN]: Empty config token for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'modern_typo' for 'cost_table'; expected one of [modern, classic] — failing closed to default 'modern'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'material_selection'; expected one of [all_options_midpoint, player_salted_single] — failing closed to default 'all_options_midpoint'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'xp_mode'; expected one of [dual_stored_discount, classic_full_points] — failing closed to default 'dual_stored_discount'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'shelf_boost_model'; expected one of [modern_curve, classic_floor_third] — failing closed to default 'modern_curve'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'default_unlock_filter'; expected one of [exclude_special, classic_unfiltered] — failing closed to default 'exclude_special'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'transformation_set'; expected one of [full_six, classic_two] — failing closed to default 'full_six'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'drained_book_result'; expected one of [depleted_tome, plain_book] — failing closed to default 'depleted_tome'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'research_rounding'; expected one of [round_nearest, floor_down] — failing closed to default 'round_nearest'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'preset'; expected one of [classic, casual, standard, expert] — failing closed to default 'standard'
+    [22:14:56] [Test worker/WARN]: Unrecognized config token 'bogus' for 'preset'; expected one of [classic, casual, standard, expert] — failing closed to default 'standard'
+
+AuditRoundTwoTest > deVersionedConfigEnumsPreserveLegacyAliasesAndFailClosedOnTypos() PASSED
+
+AuditRoundTwoTest > datapackDrivenDepletedTomeChestSpawnsAndTagFilesStayAligned() PASSED
+
+AuditRoundTwoTest > searchTextBufferHandlesSurrogatePairsWithoutCorruptingUtf16Boundaries() PASSED
+
 ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
 
-ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
+ConfigurationSafetyTest > classicBookUpgradeJsonCarries103ResearchMaterials() PASSED
 
-ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
-
-ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
-
-EconomyAndConfigVerificationTest > bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() PASSED
-
-EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
-
-EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
-
-EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
-
-EconomyAndConfigVerificationTest > highMaxLevelShelfCurveDistributesSmoothlyAndCapsScanVolume() PASSED
-
-EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning() PASSED
-
-EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
-
-EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
-
-EconomyAndConfigVerificationTest > deepRitualPersistenceSkipSlipAndInfinityRulesVerified() PASSED
-
-EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
-
-EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
-
-EconomyAndConfigVerificationTest > configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() PASSED
-
-EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
-
-EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
-
-EconomyAndConfigVerificationTest > partBTemplateDurabilityWildPreWearUnbreakingWaiverAndCrosslineInvariants() PASSED
-
-EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
-
-EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
-
-EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
-
-EconomyAndConfigVerificationTest > ritualWaitCurveLoadReferencesAreDatapackConfigurable() PASSED
-
-EconomyAndConfigVerificationTest > queuedRitualStepsRevalidateAgainstActualItem() PASSED
-
-EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
-
-EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
-
-EconomyAndConfigVerificationTest > combineSequentialChargesEveryUpgradeOnce() PASSED
-
-EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() STANDARD_OUT
-    [17:51:30] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
+ConfigurationSafetyTest > classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers() STANDARD_OUT
+    [22:14:56] [Test worker/WARN]: Failed to read chiseled_enchanting_table.json; using built-in defaults
     java.lang.NullPointerException: Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null
     	at java.base/java.nio.file.Files.provider(Files.java:103)
     	at java.base/java.nio.file.Files.exists(Files.java:2289)
     	at net.fabricmc.loader.impl.FabricLoaderImpl.getConfigDir(FabricLoaderImpl.java:177)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:387)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:393)
-    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:335)
-    	at chiseled_enchanting_table.data.ChiseledEnchantingTableData.<clinit>(ChiseledEnchantingTableData.java:149)
-    	at chiseled_enchanting_table.EconomyAndConfigVerificationTest.datapackPriorityDefaultAndPackPolicyAntiTamperGovernance(EconomyAndConfigVerificationTest.java:1131)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.configFilePath(ModRuntimeConfig.java:970)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.loadFromDiskOrWriteDefault(ModRuntimeConfig.java:976)
+    	at chiseled_enchanting_table.config.ModRuntimeConfig.get(ModRuntimeConfig.java:894)
+    	at chiseled_enchanting_table.data.ChiseledEnchantingTableData.<clinit>(ChiseledEnchantingTableData.java:160)
+    	at chiseled_enchanting_table.data.ChiseledEnchantingTableData$ItemCostOption.saltedCount(ChiseledEnchantingTableData.java:1967)
+    	at chiseled_enchanting_table.ConfigurationSafetyTest.classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers(ConfigurationSafetyTest.java:144)
     	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
     	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
     	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:767)
@@ -208,6 +208,78 @@ EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTampe
     	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
     	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
 
+ConfigurationSafetyTest > classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers() PASSED
+
+ConfigurationSafetyTest > parentRuleAtomsGateOnlyTheirNaturalSubordinateSliders() PASSED
+
+ConfigurationSafetyTest > legacyClassic103JsonAndPackPolicyMigrateCleanlyToGranularAtoms() PASSED
+
+ConfigurationSafetyTest > configModalLayoutAndLayeredAssetsGuaranteeZeroOverlapAcrossResolutions() PASSED
+
+ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
+
+ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
+
+ConfigurationSafetyTest > lanHostSessionModeResolvesCleanlyWithoutBreakingSingleplayerOrDedicatedModes() PASSED
+
+ConfigurationSafetyTest > booleanControlsScanRadiiDiscountCapsAndExpertPresetTakeEffectCleanly() PASSED
+
+ConfigurationSafetyTest > allFourPresetsRoundTripRestore64BookStackAnd103Semantics() PASSED
+
+ConfigurationSafetyTest > ruleTraceCatalogCoversAllTwentyEntriesAndTogglesEveryAtomCleanly() PASSED
+
+ConfigurationSafetyTest > granularRuleAtomsOperateOrthogonallyWithoutMonolithicCrossLocking() PASSED
+
+ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogCoversAllSevenCategoriesAndRoundTripsJsonLosslessly() PASSED
+
+EconomyAndConfigVerificationTest > bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() PASSED
+
+EconomyAndConfigVerificationTest > openingSnapshotNeverDivergesFromLiveShelfSyncAtTickZero() PASSED
+
+EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
+
+EconomyAndConfigVerificationTest > exhaustiveConservationAcrossAllMaxLevelsOneTo255() PASSED
+
+EconomyAndConfigVerificationTest > bundledDataSchemasAndReopenPayloadRoundTrip() PASSED
+
+EconomyAndConfigVerificationTest > highMaxLevelShelfCurveDistributesSmoothlyAndCapsScanVolume() PASSED
+
+EconomyAndConfigVerificationTest > transformationZeroValuesKeepCanonicalMeaning() PASSED
+
+EconomyAndConfigVerificationTest > everyCodeAndDataTranslationKeyExistsAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > itemTransformationsMatchMassProductionTableAndPreserveConservation() PASSED
+
+EconomyAndConfigVerificationTest > deepRitualPersistenceSkipSlipAndInfinityRulesVerified() PASSED
+
+EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresholdAndZeroArbitrage() PASSED
+
+EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
+
+EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
+
+EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
+
+EconomyAndConfigVerificationTest > partBTemplateDurabilityWildPreWearUnbreakingWaiverAndCrosslineInvariants() PASSED
+
+EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
+
+EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAreCompleteAcrossAllElevenLocales() PASSED
+
+EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
+
+EconomyAndConfigVerificationTest > ritualWaitCurveLoadReferencesAreDatapackConfigurable() PASSED
+
+EconomyAndConfigVerificationTest > queuedRitualStepsRevalidateAgainstActualItem() PASSED
+
+EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
+
+EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
+
+EconomyAndConfigVerificationTest > combineSequentialChargesEveryUpgradeOnce() PASSED
+
 EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
 
 FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
@@ -269,7 +341,7 @@ RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
 RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792864269597.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792966475901.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -279,7 +351,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 26s
+BUILD SUCCESSFUL in 31s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0

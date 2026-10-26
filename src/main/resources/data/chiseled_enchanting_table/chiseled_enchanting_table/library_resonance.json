@@ -1,8 +1,8 @@
 {
-  "_comment": "Full data-driven configuration for Library & Master Tome Resonance, Wild Book Wear, Unbreaking Waivers, and Overloaded Infinity Cross-Line Slips. Every key below is read directly by LibraryResonance.Config.fromJson / InscriptionRitualMechanics.Config.fromJson and synced to clients in EnchantCostTablePayload.",
+  "_comment": "Full data-driven configuration for Library & Master Tome Resonance, Wild Book Wear, Unbreaking Waivers, Essence Valuation, Applicability Scaling, and Overloaded Infinity Cross-Line Slips. Every key below is read directly by LibraryResonance.Config.fromJson / InscriptionRitualMechanics.Config.fromJson and synced to clients in EnchantCostTablePayload.",
   "wooden_bookshelves": {
-    "min_discount_bookshelves": 12,
-    "max_discount_bookshelves": 38,
+    "min_discount_bookshelves": 3,
+    "max_discount_bookshelves": 45,
     "max_wooden_discount_percent": 15,
     "shelf_upgrade_material_multiplier": 0.9
   },
@@ -21,6 +21,10 @@
     "book_copy_wear_cost": 2,
     "unbreaking_waiver_per_level": 0.1,
     "unbreaking_waiver_max_chance": 0.3,
+    "max_mastery_units_per_slot": 3.5,
+    "wear_immune_max_generation": 2,
+    "wear_immune_full_waiver_max_enchants": 4,
+    "wear_immune_overload_waiver_decay": 0.06,
     "tome_deplete_behavior": "step_down",
     "tome_regen_enabled": true,
     "tome_regen_base_seconds": 7200,
@@ -47,20 +51,32 @@
     "epiphany_global_mastery_score_factor": 2.2,
     "epiphany_affinity_mastery_score_factor": 3.5,
     "epiphany_tier2_max_prob": 0.65,
+    "_epiphany_tier2_max_prob_note": "probability ceiling for upgrading a rolled Treasure Epiphany from tier I to tier II",
     "epiphany_tier2_score_divisor": 80.0,
     "epiphany_tier2_mastery_bonus": 0.2,
     "epiphany_tier_plus_max_prob": 0.5,
+    "_epiphany_tier_plus_max_prob_note": "conditional probability ceiling for rolling an extra tier (II -> III+) after tier2 succeeds; intentionally <= tier2_max_prob because it chains sequentially",
     "epiphany_tier_plus_score_divisor": 110.0,
     "_epiphany_tier_plus_score_divisor_note": "score divisor for tier+ epiphany rolls",
     "epiphany_tier_plus_mastery_bonus": 0.25
+  },
+  "essence_valuation": {
+    "rarity_min_multiplier": 1.0,
+    "rarity_max_multiplier": 1.45,
+    "rarity_log_slope": 0.18,
+    "treasure_multiplier": 1.15,
+    "conservation_safety_margin_points": 5
   },
   "ritual": {
     "max_single_wait_seconds": 300,
     "min_tome_enchants_for_wait": 10,
     "max_sacrifice_xp_levels": 15,
+    "sacrifice_extra_xp_per_queued_step": 4,
+    "sacrifice_xp_time_constant_seconds": 240.0,
     "max_rush_degrade_normal": 0.5,
     "max_rush_degrade_infinity": 0.7,
-    "max_transcription_slip_chance": 0.18,
+    "rush_degrade_time_constant_seconds": 210.0,
+    "max_transcription_slip_chance": 0.25,
     "shelf_load_reference": 42.0,
     "tome_load_reference": 22.0,
     "wait_curve": {
@@ -71,12 +87,24 @@
       "level_exponent": 1.15,
       "saturation": 0.62,
       "min_ticks": 100
+    },
+    "applicability": {
+      "item_breadth_reference": 24.0,
+      "breadth_weight": 0.42,
+      "keystone_major_multiplier": 1.55,
+      "keystone_minor_multiplier": 1.32,
+      "broad_multiplier": 1.2,
+      "rarity_weight_1_multiplier": 1.18,
+      "rarity_weight_2_multiplier": 1.12,
+      "rarity_weight_5_multiplier": 1.05,
+      "min_factor": 1.0,
+      "max_factor": 2.35
     }
   },
   "crossline_slip": {
     "min_load_threshold": 3.0,
     "per_load_slope": 0.035,
-    "max_slip_chance": 0.18,
+    "max_slip_chance": 0.25,
     "shelf_tier1_count": 32,
     "shelf_tier1_bonus": 0.01,
     "shelf_tier2_count": 38,

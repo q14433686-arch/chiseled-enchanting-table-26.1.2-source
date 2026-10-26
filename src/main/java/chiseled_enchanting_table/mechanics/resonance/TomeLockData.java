@@ -1,11 +1,10 @@
 package chiseled_enchanting_table.mechanics.resonance;
 
+import chiseled_enchanting_table.utils.CetCustomData;
 import java.util.Locale;
 import java.util.UUID;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -170,42 +169,35 @@ public final class TomeLockData {
         if (safeMode.timed() && isExpired(safeMode, target, wear)) {
             return false;
         }
-        CompoundTag tag = mutableTag(stack);
-        tag.putString(NBT_LOCK_OWNER_KEY, owner.toString());
-        tag.putString(NBT_LOCK_OWNER_NAME_KEY, ownerName == null ? "" : ownerName);
-        tag.putString(NBT_LOCK_MODE_KEY, safeMode.token());
-        if (safeMode.timed()) {
-            tag.putInt(NBT_LOCK_TARGET_WEAR_KEY, target);
-        } else {
-            tag.remove(NBT_LOCK_TARGET_WEAR_KEY);
-        }
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        CetCustomData.update(stack, tag -> {
+            tag.putString(NBT_LOCK_OWNER_KEY, owner.toString());
+            tag.putString(NBT_LOCK_OWNER_NAME_KEY, ownerName == null ? "" : ownerName);
+            tag.putString(NBT_LOCK_MODE_KEY, safeMode.token());
+            if (safeMode.timed()) {
+                tag.putInt(NBT_LOCK_TARGET_WEAR_KEY, target);
+            } else {
+                tag.remove(NBT_LOCK_TARGET_WEAR_KEY);
+            }
+        });
         return true;
     }
 
     /** Removes every lock key; returns whether a lock record was present. */
     public static boolean unlock(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
+        CompoundTag probe = CetCustomData.read(stack).orElse(null);
+        if (probe == null) {
             return false;
         }
-        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
-        if (existing == null || existing.isEmpty()) {
-            return false;
-        }
-        CompoundTag tag = existing.copyTag();
-        boolean had = tag.contains(NBT_LOCK_OWNER_KEY) || tag.contains(NBT_LOCK_MODE_KEY);
+        boolean had = probe.contains(NBT_LOCK_OWNER_KEY) || probe.contains(NBT_LOCK_MODE_KEY);
         if (!had) {
             return false;
         }
-        tag.remove(NBT_LOCK_OWNER_KEY);
-        tag.remove(NBT_LOCK_OWNER_NAME_KEY);
-        tag.remove(NBT_LOCK_MODE_KEY);
-        tag.remove(NBT_LOCK_TARGET_WEAR_KEY);
-        if (tag.isEmpty()) {
-            stack.remove(DataComponents.CUSTOM_DATA);
-        } else {
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-        }
+        CetCustomData.update(stack, tag -> {
+            tag.remove(NBT_LOCK_OWNER_KEY);
+            tag.remove(NBT_LOCK_OWNER_NAME_KEY);
+            tag.remove(NBT_LOCK_MODE_KEY);
+            tag.remove(NBT_LOCK_TARGET_WEAR_KEY);
+        });
         return true;
     }
 
@@ -225,18 +217,6 @@ public final class TomeLockData {
 
     @Nullable
     private static CompoundTag tagOf(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return null;
-        }
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null || customData.isEmpty()) {
-            return null;
-        }
-        return customData.copyTag();
-    }
-
-    private static CompoundTag mutableTag(ItemStack stack) {
-        CustomData existing = stack.get(DataComponents.CUSTOM_DATA);
-        return existing != null ? existing.copyTag() : new CompoundTag();
+        return CetCustomData.read(stack).orElse(null);
     }
 }

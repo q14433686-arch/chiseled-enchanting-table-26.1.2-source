@@ -131,18 +131,103 @@ public final class InscriptionRitualMechanics {
     public static final int MAX_SINGLE_WAIT_TICKS = 20 * chiseled_enchanting_table.BundledDefaults.MAX_SINGLE_WAIT_SECONDS;
     /** Minimum surrounding Master Tome enchantments that activate ritual waiting below the shelf threshold. */
     public static final int MIN_TOME_ENCHANTS_FOR_WAIT = chiseled_enchanting_table.BundledDefaults.MIN_TOME_ENCHANTS_FOR_WAIT;
-    /** Maximum direct XP levels sacrificed when skipping an active ritual via XP sacrifice. */
+    /** Maximum direct XP levels sacrificed when skipping a 1-step ritual via XP sacrifice. */
     public static final int MAX_SACRIFICE_XP_LEVELS = chiseled_enchanting_table.BundledDefaults.MAX_SACRIFICE_XP_LEVELS;
+    public static final int DEFAULT_SACRIFICE_EXTRA_XP_PER_QUEUED_STEP = chiseled_enchanting_table.BundledDefaults.SACRIFICE_EXTRA_XP_PER_QUEUED_STEP;
+    public static final double DEFAULT_SACRIFICE_XP_TIME_CONSTANT_SECONDS = chiseled_enchanting_table.BundledDefaults.SACRIFICE_XP_TIME_CONSTANT_SECONDS;
     /** Hard cap on non-sacrifice rush degradation chance normally (50%) vs with Infinity tome (70%). */
     public static final double MAX_RUSH_DEGRADE_NORMAL = chiseled_enchanting_table.BundledDefaults.MAX_RUSH_DEGRADE_NORMAL;
     public static final double MAX_RUSH_DEGRADE_INFINITY = chiseled_enchanting_table.BundledDefaults.MAX_RUSH_DEGRADE_INFINITY;
-    /** Hard cap on overloaded Infinity Master Tome merged slip («抄错 / 抄串行») chance (18%). */
-    public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = chiseled_enchanting_table.BundledDefaults.MAX_TRANSCRIPTION_SLIP_CHANCE;
+    public static final double DEFAULT_RUSH_DEGRADE_TIME_CONSTANT_SECONDS = chiseled_enchanting_table.BundledDefaults.RUSH_DEGRADE_TIME_CONSTANT_SECONDS;
+    /** Hard cap on overloaded wear-immune Master Tome merged slip («抄错 / 抄串行») chance (25%). */
+    public static final double MAX_TRANSCRIPTION_SLIP_CHANCE = chiseled_enchanting_table.BundledDefaults.CROSSLINE_MAX_SLIP_CHANCE;
 
     public static final TagKey<Enchantment> EPIPHANY_EXCLUSIVE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, ChiseledEnchantingTable.identifier("epiphany_exclusive"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.EPIPHANY_EXCLUSIVE;
     public static final TagKey<Enchantment> CROSSLINE_EXCLUDED_TAG =
-        TagKey.create(Registries.ENCHANTMENT, ChiseledEnchantingTable.identifier("crossline_excluded"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.CROSSLINE_EXCLUDED;
+    public static final TagKey<Enchantment> BROAD_APPLICABILITY_TAG =
+        chiseled_enchanting_table.registry.CetTags.Enchantments.BROAD_APPLICABILITY;
+    public static final TagKey<Enchantment> KEYSTONE_MAJOR_TAG =
+        chiseled_enchanting_table.registry.CetTags.Enchantments.KEYSTONE_MAJOR;
+    public static final TagKey<Enchantment> KEYSTONE_MINOR_TAG =
+        chiseled_enchanting_table.registry.CetTags.Enchantments.KEYSTONE_MINOR;
+
+    /**
+     * Data-driven universality &amp; keystone applicability multipliers loaded from
+     * {@code library_resonance.json -> ritual.applicability} (Audit COUP-01 / BAL-02 / BAL-03).
+     */
+    public record ApplicabilityConfig(
+        double itemBreadthReference,
+        double breadthWeight,
+        double keystoneMajorMultiplier,
+        double keystoneMinorMultiplier,
+        double broadMultiplier,
+        double rarityWeight1Multiplier,
+        double rarityWeight2Multiplier,
+        double rarityWeight5Multiplier,
+        double minFactor,
+        double maxFactor
+    ) {
+        public static final ApplicabilityConfig DEFAULT = new ApplicabilityConfig(
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_ITEM_BREADTH_REFERENCE,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_BREADTH_WEIGHT,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_KEYSTONE_MAJOR_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_KEYSTONE_MINOR_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_BROAD_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_WEIGHT_1_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_WEIGHT_2_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_RARITY_WEIGHT_5_MULTIPLIER,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_MIN_FACTOR,
+            chiseled_enchanting_table.BundledDefaults.APPLICABILITY_MAX_FACTOR
+        );
+
+        public ApplicabilityConfig {
+            itemBreadthReference = Double.isFinite(itemBreadthReference) && itemBreadthReference >= 1.0
+                ? Mth.clamp(itemBreadthReference, 1.0, 1024.0)
+                : DEFAULT.itemBreadthReference;
+            breadthWeight = Double.isFinite(breadthWeight) ? Mth.clamp(breadthWeight, 0.0, 4.0) : DEFAULT.breadthWeight;
+            keystoneMajorMultiplier = Double.isFinite(keystoneMajorMultiplier)
+                ? Mth.clamp(keystoneMajorMultiplier, 1.0, 5.0)
+                : DEFAULT.keystoneMajorMultiplier;
+            keystoneMinorMultiplier = Double.isFinite(keystoneMinorMultiplier)
+                ? Mth.clamp(keystoneMinorMultiplier, 1.0, 5.0)
+                : DEFAULT.keystoneMinorMultiplier;
+            broadMultiplier = Double.isFinite(broadMultiplier)
+                ? Mth.clamp(broadMultiplier, 1.0, 5.0)
+                : DEFAULT.broadMultiplier;
+            rarityWeight1Multiplier = Double.isFinite(rarityWeight1Multiplier)
+                ? Mth.clamp(rarityWeight1Multiplier, 1.0, 5.0)
+                : DEFAULT.rarityWeight1Multiplier;
+            rarityWeight2Multiplier = Double.isFinite(rarityWeight2Multiplier)
+                ? Mth.clamp(rarityWeight2Multiplier, 1.0, 5.0)
+                : DEFAULT.rarityWeight2Multiplier;
+            rarityWeight5Multiplier = Double.isFinite(rarityWeight5Multiplier)
+                ? Mth.clamp(rarityWeight5Multiplier, 1.0, 5.0)
+                : DEFAULT.rarityWeight5Multiplier;
+            minFactor = Double.isFinite(minFactor) ? Mth.clamp(minFactor, 0.5, 5.0) : DEFAULT.minFactor;
+            maxFactor = Double.isFinite(maxFactor) ? Mth.clamp(maxFactor, minFactor, 10.0) : Math.max(minFactor, DEFAULT.maxFactor);
+        }
+
+        static ApplicabilityConfig fromJson(@Nullable com.google.gson.JsonObject ritual) {
+            if (ritual == null || !ritual.has("applicability") || !ritual.get("applicability").isJsonObject()) {
+                return DEFAULT;
+            }
+            com.google.gson.JsonObject a = ritual.getAsJsonObject("applicability");
+            return new ApplicabilityConfig(
+                Config.doubleOr(a, "item_breadth_reference", DEFAULT.itemBreadthReference),
+                Config.doubleOr(a, "breadth_weight", DEFAULT.breadthWeight),
+                Config.doubleOr(a, "keystone_major_multiplier", DEFAULT.keystoneMajorMultiplier),
+                Config.doubleOr(a, "keystone_minor_multiplier", DEFAULT.keystoneMinorMultiplier),
+                Config.doubleOr(a, "broad_multiplier", DEFAULT.broadMultiplier),
+                Config.doubleOr(a, "rarity_weight_1_multiplier", DEFAULT.rarityWeight1Multiplier),
+                Config.doubleOr(a, "rarity_weight_2_multiplier", DEFAULT.rarityWeight2Multiplier),
+                Config.doubleOr(a, "rarity_weight_5_multiplier", DEFAULT.rarityWeight5Multiplier),
+                Config.doubleOr(a, "min_factor", DEFAULT.minFactor),
+                Config.doubleOr(a, "max_factor", DEFAULT.maxFactor)
+            );
+        }
+    }
 
     /**
      * Data-driven qualification load, probability curve, 3-branch outcome split ({@code 70% / 25% / 5%}),
@@ -297,7 +382,11 @@ public final class InscriptionRitualMechanics {
         double shelfLoadReference,
         double tomeLoadReference,
         CrosslineSlipConfig crosslineSlip,
-        WaitCurve waitCurve
+        WaitCurve waitCurve,
+        int sacrificeExtraXpPerQueuedStep,
+        double sacrificeXpTimeConstantSeconds,
+        double rushDegradeTimeConstantSeconds,
+        ApplicabilityConfig applicability
     ) {
         public static final Config DEFAULT = new Config(
             MAX_SINGLE_WAIT_TICKS / 20,
@@ -309,8 +398,74 @@ public final class InscriptionRitualMechanics {
             DEFAULT_SHELF_LOAD_REFERENCE,
             DEFAULT_TOME_LOAD_REFERENCE,
             CrosslineSlipConfig.DEFAULT,
-            WaitCurve.DEFAULT
+            WaitCurve.DEFAULT,
+            DEFAULT_SACRIFICE_EXTRA_XP_PER_QUEUED_STEP,
+            DEFAULT_SACRIFICE_XP_TIME_CONSTANT_SECONDS,
+            DEFAULT_RUSH_DEGRADE_TIME_CONSTANT_SECONDS,
+            ApplicabilityConfig.DEFAULT
         );
+
+        public Config(
+            int maxSingleWaitSeconds,
+            int minTomeEnchantsForWait,
+            int maxSacrificeXpLevels,
+            double maxRushDegradeNormal,
+            double maxRushDegradeInfinity,
+            double maxTranscriptionSlipChance,
+            double shelfLoadReference,
+            double tomeLoadReference,
+            CrosslineSlipConfig crosslineSlip,
+            WaitCurve waitCurve,
+            int sacrificeExtraXpPerQueuedStep,
+            double sacrificeXpTimeConstantSeconds,
+            double rushDegradeTimeConstantSeconds
+        ) {
+            this(
+                maxSingleWaitSeconds,
+                minTomeEnchantsForWait,
+                maxSacrificeXpLevels,
+                maxRushDegradeNormal,
+                maxRushDegradeInfinity,
+                maxTranscriptionSlipChance,
+                shelfLoadReference,
+                tomeLoadReference,
+                crosslineSlip,
+                waitCurve,
+                sacrificeExtraXpPerQueuedStep,
+                sacrificeXpTimeConstantSeconds,
+                rushDegradeTimeConstantSeconds,
+                ApplicabilityConfig.DEFAULT
+            );
+        }
+
+        public Config(
+            int maxSingleWaitSeconds,
+            int minTomeEnchantsForWait,
+            int maxSacrificeXpLevels,
+            double maxRushDegradeNormal,
+            double maxRushDegradeInfinity,
+            double maxTranscriptionSlipChance,
+            double shelfLoadReference,
+            double tomeLoadReference,
+            CrosslineSlipConfig crosslineSlip,
+            WaitCurve waitCurve
+        ) {
+            this(
+                maxSingleWaitSeconds,
+                minTomeEnchantsForWait,
+                maxSacrificeXpLevels,
+                maxRushDegradeNormal,
+                maxRushDegradeInfinity,
+                maxTranscriptionSlipChance,
+                shelfLoadReference,
+                tomeLoadReference,
+                crosslineSlip,
+                waitCurve,
+                DEFAULT_SACRIFICE_EXTRA_XP_PER_QUEUED_STEP,
+                DEFAULT_SACRIFICE_XP_TIME_CONSTANT_SECONDS,
+                DEFAULT_RUSH_DEGRADE_TIME_CONSTANT_SECONDS
+            );
+        }
 
         public Config(
             int maxSingleWaitSeconds,
@@ -376,6 +531,14 @@ public final class InscriptionRitualMechanics {
                 : DEFAULT_TOME_LOAD_REFERENCE;
             crosslineSlip = crosslineSlip != null ? crosslineSlip : CrosslineSlipConfig.fromJson(null, maxTranscriptionSlipChance);
             waitCurve = waitCurve != null ? waitCurve : WaitCurve.DEFAULT;
+            sacrificeExtraXpPerQueuedStep = Mth.clamp(sacrificeExtraXpPerQueuedStep, 0, 64);
+            sacrificeXpTimeConstantSeconds = Double.isFinite(sacrificeXpTimeConstantSeconds) && sacrificeXpTimeConstantSeconds > 0.0
+                ? Mth.clamp(sacrificeXpTimeConstantSeconds, 5.0, 3_600.0)
+                : DEFAULT_SACRIFICE_XP_TIME_CONSTANT_SECONDS;
+            rushDegradeTimeConstantSeconds = Double.isFinite(rushDegradeTimeConstantSeconds) && rushDegradeTimeConstantSeconds > 0.0
+                ? Mth.clamp(rushDegradeTimeConstantSeconds, 5.0, 3_600.0)
+                : DEFAULT_RUSH_DEGRADE_TIME_CONSTANT_SECONDS;
+            applicability = applicability != null ? applicability : ApplicabilityConfig.DEFAULT;
         }
 
         public int maxSingleWaitTicks() {
@@ -389,16 +552,52 @@ public final class InscriptionRitualMechanics {
             com.google.gson.JsonObject r = root.has("ritual") && root.get("ritual").isJsonObject()
                 ? root.getAsJsonObject("ritual")
                 : null;
+            com.google.gson.JsonObject csObj = root.has("crossline_slip") && root.get("crossline_slip").isJsonObject()
+                ? root.getAsJsonObject("crossline_slip")
+                : null;
             int maxWaitSec = r != null ? intOr(r, "max_single_wait_seconds", DEFAULT.maxSingleWaitSeconds) : DEFAULT.maxSingleWaitSeconds;
             int minTomeEnch = r != null ? intOr(r, "min_tome_enchants_for_wait", DEFAULT.minTomeEnchantsForWait) : DEFAULT.minTomeEnchantsForWait;
             int maxSacXp = r != null ? intOr(r, "max_sacrifice_xp_levels", DEFAULT.maxSacrificeXpLevels) : DEFAULT.maxSacrificeXpLevels;
+            int extraSacPerStep = r != null ? intOr(r, "sacrifice_extra_xp_per_queued_step", DEFAULT.sacrificeExtraXpPerQueuedStep) : DEFAULT.sacrificeExtraXpPerQueuedStep;
+            double sacTau = r != null ? doubleOr(r, "sacrifice_xp_time_constant_seconds", DEFAULT.sacrificeXpTimeConstantSeconds) : DEFAULT.sacrificeXpTimeConstantSeconds;
             double rushNorm = r != null ? doubleOr(r, "max_rush_degrade_normal", DEFAULT.maxRushDegradeNormal) : DEFAULT.maxRushDegradeNormal;
             double rushInf = r != null ? doubleOr(r, "max_rush_degrade_infinity", DEFAULT.maxRushDegradeInfinity) : DEFAULT.maxRushDegradeInfinity;
-            double slipCap = r != null ? doubleOr(r, "max_transcription_slip_chance", DEFAULT.maxTranscriptionSlipChance) : DEFAULT.maxTranscriptionSlipChance;
+            double rushTau = r != null ? doubleOr(r, "rush_degrade_time_constant_seconds", DEFAULT.rushDegradeTimeConstantSeconds) : DEFAULT.rushDegradeTimeConstantSeconds;
+
+            boolean hasRitualCap = r != null && r.has("max_transcription_slip_chance");
+            boolean hasCrosslineCap = csObj != null && csObj.has("max_slip_chance");
+            double ritualSlipCap = hasRitualCap ? doubleOr(r, "max_transcription_slip_chance", DEFAULT.maxTranscriptionSlipChance) : DEFAULT.maxTranscriptionSlipChance;
+            if (hasRitualCap && hasCrosslineCap) {
+                double csCap = doubleOr(csObj, "max_slip_chance", ritualSlipCap);
+                if (Math.abs(ritualSlipCap - csCap) > 1e-6) {
+                    ChiseledEnchantingTable.LOGGER.warn(
+                        "library_resonance.json declares conflicting ritual.max_transcription_slip_chance ({}) and "
+                            + "crossline_slip.max_slip_chance ({}); using canonical crossline_slip.max_slip_chance={}",
+                        ritualSlipCap,
+                        csCap,
+                        csCap
+                    );
+                }
+            }
             double shelfRef = r != null ? doubleOr(r, "shelf_load_reference", DEFAULT.shelfLoadReference) : DEFAULT.shelfLoadReference;
             double tomeRef = r != null ? doubleOr(r, "tome_load_reference", DEFAULT.tomeLoadReference) : DEFAULT.tomeLoadReference;
-            CrosslineSlipConfig crossline = CrosslineSlipConfig.fromJson(root, slipCap);
-            return new Config(maxWaitSec, minTomeEnch, maxSacXp, rushNorm, rushInf, crossline.maxSlipChance(), shelfRef, tomeRef, crossline, WaitCurve.fromJson(r));
+            CrosslineSlipConfig crossline = CrosslineSlipConfig.fromJson(root, ritualSlipCap);
+            return new Config(
+                maxWaitSec,
+                minTomeEnch,
+                maxSacXp,
+                rushNorm,
+                rushInf,
+                crossline.maxSlipChance(),
+                shelfRef,
+                tomeRef,
+                crossline,
+                WaitCurve.fromJson(r),
+                extraSacPerStep,
+                sacTau,
+                rushTau,
+                ApplicabilityConfig.fromJson(r)
+            );
         }
 
         static int intOr(com.google.gson.JsonObject obj, String key, int fallback) {
@@ -418,23 +617,17 @@ public final class InscriptionRitualMechanics {
 
     public static final Identifier MENDING_ID = Identifier.withDefaultNamespace("mending");
     public static final Identifier UNBREAKING_ID = Identifier.withDefaultNamespace("unbreaking");
-    private static final Set<Identifier> HIGH_APPLICABILITY_IDS = Set.of(
-        Identifier.withDefaultNamespace("protection"),
-        Identifier.withDefaultNamespace("sharpness"),
-        Identifier.withDefaultNamespace("efficiency"),
-        Identifier.withDefaultNamespace("fortune"),
-        Identifier.withDefaultNamespace("looting"),
-        Identifier.withDefaultNamespace("power"),
-        Identifier.withDefaultNamespace("silk_touch"),
-        Identifier.withDefaultNamespace("wind_burst"),
-        Identifier.withDefaultNamespace("breach"),
-        Identifier.withDefaultNamespace("density")
-    );
 
     private InscriptionRitualMechanics() {}
 
     /** Compact persisted material cost entry for 50% cross-line pollution compensation. */
     public record PaidItemEntry(Identifier itemId, int count) {
+        public static final com.mojang.serialization.Codec<PaidItemEntry> CODEC =
+            com.mojang.serialization.codecs.RecordCodecBuilder.create(instance -> instance.group(
+                Identifier.CODEC.fieldOf("item").forGetter(PaidItemEntry::itemId),
+                com.mojang.serialization.Codec.intRange(1, 1024).fieldOf("count").forGetter(PaidItemEntry::count)
+            ).apply(instance, PaidItemEntry::new));
+
         public PaidItemEntry {
             count = Mth.clamp(count, 1, 1024);
         }
@@ -454,6 +647,20 @@ public final class InscriptionRitualMechanics {
         List<PaidItemEntry> paidItems,
         int inheritedGeneration
     ) {
+        public static final com.mojang.serialization.Codec<QueuedInscription> CODEC =
+            com.mojang.serialization.codecs.RecordCodecBuilder.create(instance -> instance.group(
+                Identifier.CODEC.fieldOf("id").forGetter(QueuedInscription::enchantmentId),
+                com.mojang.serialization.Codec.intRange(1, 255).fieldOf("target_level").forGetter(QueuedInscription::targetLevel),
+                com.mojang.serialization.Codec.intRange(0, 255).fieldOf("previous_level").forGetter(QueuedInscription::previousLevel),
+                com.mojang.serialization.Codec.BOOL.optionalFieldOf("master_tome_used", false).forGetter(QueuedInscription::masterTomeUsed),
+                com.mojang.serialization.Codec.BOOL.optionalFieldOf("used_infinity_tome", false).forGetter(QueuedInscription::usedInfinityTome),
+                com.mojang.serialization.Codec.intRange(0, Integer.MAX_VALUE).optionalFieldOf("conflict_refund", 0).forGetter(QueuedInscription::conflictRefundPoints),
+                com.mojang.serialization.Codec.BOOL.optionalFieldOf("consumed_epiphany", false).forGetter(QueuedInscription::consumedEpiphany),
+                com.mojang.serialization.Codec.doubleRange(0.0, 256.0).optionalFieldOf("infinity_load", 0.0).forGetter(QueuedInscription::infinityTomeLoad),
+                com.mojang.serialization.Codec.intRange(0, 1_000_000).optionalFieldOf("paid_xp", 0).forGetter(QueuedInscription::paidXpPoints),
+                PaidItemEntry.CODEC.sizeLimitedListOf(64).optionalFieldOf("paid_items", List.of()).forGetter(QueuedInscription::paidItems),
+                com.mojang.serialization.Codec.intRange(-1, 255).optionalFieldOf("inherited_gen", -1).forGetter(QueuedInscription::inheritedGeneration)
+            ).apply(instance, QueuedInscription::new));
         public QueuedInscription {
             infinityTomeLoad = Double.isFinite(infinityTomeLoad) ? Math.max(0.0, Math.min(256.0, infinityTomeLoad)) : 0.0;
             paidXpPoints = Math.max(0, Math.min(1_000_000, paidXpPoints));
@@ -587,6 +794,25 @@ public final class InscriptionRitualMechanics {
         }
     }
 
+    /** Structured list codec for persisted ritual steps (CODEC-02), paired with legacy ';'-string fallback. */
+    public static final com.mojang.serialization.Codec<List<QueuedInscription>> STRUCTURED_QUEUE_CODEC =
+        QueuedInscription.CODEC.sizeLimitedListOf(MAX_QUEUE_STEPS);
+
+    public static final com.mojang.serialization.Codec<List<QueuedInscription>> QUEUE_CODEC =
+        com.mojang.serialization.Codec.withAlternative(
+            STRUCTURED_QUEUE_CODEC,
+            com.mojang.serialization.Codec.STRING.comapFlatMap(
+                raw -> {
+                    try {
+                        return com.mojang.serialization.DataResult.success(List.copyOf(deserializeQueue(raw)));
+                    } catch (IllegalArgumentException e) {
+                        return com.mojang.serialization.DataResult.error(e::getMessage);
+                    }
+                },
+                InscriptionRitualMechanics::serializeQueue
+            )
+        );
+
     public static String serializeQueue(List<QueuedInscription> queue) {
         if (queue == null || queue.isEmpty()) {
             return "";
@@ -622,8 +848,24 @@ public final class InscriptionRitualMechanics {
         int totalDetectedBookshelves,
         boolean hasAnyMasterTome,
         int totalMasterTomeEnchantments,
-        int maxOverloadedInfinityTomeEnchants
-    ) {}
+        int maxOverloadedInfinityTomeEnchants,
+        double totalWearImmuneLoad
+    ) {
+        public LibraryRitualScan(
+            int totalDetectedBookshelves,
+            boolean hasAnyMasterTome,
+            int totalMasterTomeEnchantments,
+            int maxOverloadedInfinityTomeEnchants
+        ) {
+            this(
+                totalDetectedBookshelves,
+                hasAnyMasterTome,
+                totalMasterTomeEnchantments,
+                maxOverloadedInfinityTomeEnchants,
+                0.0
+            );
+        }
+    }
 
     /** Metadata for one candidate Master Tome when resolving non-sacrifice skip degradation. */
     public record TomeCandidate(
@@ -632,8 +874,20 @@ public final class InscriptionRitualMechanics {
         int enchantCount,
         double averageRelativeLevel,
         double averageRarityScore,
-        boolean hasInfinity
+        boolean hasInfinity,
+        boolean backsActiveRitual
     ) {
+        public TomeCandidate(
+            BlockPos shelfPos,
+            int slot,
+            int enchantCount,
+            double averageRelativeLevel,
+            double averageRarityScore,
+            boolean hasInfinity
+        ) {
+            this(shelfPos, slot, enchantCount, averageRelativeLevel, averageRarityScore, hasInfinity, false);
+        }
+
         /**
          * Lower score = more expendable = degraded FIRST («相对低等级、低附魔数、低稀有度最优先»).
          */
@@ -678,25 +932,57 @@ public final class InscriptionRitualMechanics {
             || Math.max(0, totalMasterTomeEnchantments) >= c.minTomeEnchantsForWait();
     }
 
-    /** Applicability factor reflecting enchantment universality &amp; keystone impact ({@code >= 1.0}). */
-    public static double computeApplicabilityFactor(Identifier enchantmentId, int supportedItemCount, int anvilWeight) {
-        double itemBreadth = 1.0 + 0.42 * Mth.clamp((supportedItemCount - 1) / 24.0, 0.0, 1.0);
-        double rarityBoost = anvilWeight <= 1 ? 1.18 : (anvilWeight <= 2 ? 1.12 : (anvilWeight <= 5 ? 1.05 : 1.0));
-        double keystone = 1.0;
-        if (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(enchantmentId) || MENDING_ID.equals(enchantmentId)) {
-            keystone = 1.55;
-        } else if (UNBREAKING_ID.equals(enchantmentId)) {
-            keystone = 1.32;
-        } else if (HIGH_APPLICABILITY_IDS.contains(enchantmentId)) {
-            keystone = 1.20;
-        }
-        return Mth.clamp(itemBreadth * rarityBoost * keystone, 1.0, 2.35);
+    /**
+     * Pure tag- and config-driven applicability factor reflecting enchantment universality &amp;
+     * keystone impact (Audit COUP-01 / DEAD-03 / BAL-02 / BAL-03).
+     *
+     * <p>Replaces the legacy hardcoded {@code HIGH_APPLICABILITY_IDS} list and 3-arg bypass overload
+     * with datapack-modifiable tags ({@code #keystone_major}, {@code #keystone_minor},
+     * {@code #broad_applicability}) and {@code ritual.applicability} curve parameters.
+     */
+    public static double computeApplicabilityFactorFromTags(
+        @Nullable ApplicabilityConfig appCfg,
+        int supportedItemCount,
+        int anvilWeight,
+        boolean keystoneMajor,
+        boolean keystoneMinor,
+        boolean broadApplicability
+    ) {
+        ApplicabilityConfig a = appCfg != null ? appCfg : ApplicabilityConfig.DEFAULT;
+        double itemBreadth = 1.0 + a.breadthWeight()
+            * Mth.clamp((supportedItemCount - 1) / a.itemBreadthReference(), 0.0, 1.0);
+        double rarityBoost = anvilWeight <= 1
+            ? a.rarityWeight1Multiplier()
+            : (anvilWeight <= 2
+                ? a.rarityWeight2Multiplier()
+                : (anvilWeight <= 5 ? a.rarityWeight5Multiplier() : 1.0));
+        double keystone = keystoneMajor
+            ? a.keystoneMajorMultiplier()
+            : (keystoneMinor
+                ? a.keystoneMinorMultiplier()
+                : (broadApplicability ? a.broadMultiplier() : 1.0));
+        return Mth.clamp(itemBreadth * rarityBoost * keystone, a.minFactor(), a.maxFactor());
+    }
+
+    public static double computeApplicabilityFactor(
+        @Nullable Config ritualCfg,
+        Holder<Enchantment> holder
+    ) {
+        Config c = ritualCfg != null ? ritualCfg : Config.DEFAULT;
+        int supportedCount = holder.value().definition().supportedItems().size();
+        int weight = holder.value().definition().weight();
+        return computeApplicabilityFactorFromTags(
+            c.applicability(),
+            supportedCount,
+            weight,
+            holder.is(KEYSTONE_MAJOR_TAG),
+            holder.is(KEYSTONE_MINOR_TAG),
+            holder.is(BROAD_APPLICABILITY_TAG)
+        );
     }
 
     public static double computeApplicabilityFactor(Identifier enchantmentId, Holder<Enchantment> holder) {
-        int supportedCount = holder.value().definition().supportedItems().size();
-        int weight = holder.value().definition().weight();
-        return computeApplicabilityFactor(enchantmentId, supportedCount, weight);
+        return computeApplicabilityFactor(Config.DEFAULT, holder);
     }
 
     /**
@@ -772,13 +1058,23 @@ public final class InscriptionRitualMechanics {
      */
 
     public static int computeSacrificeXpLevels(@Nullable Config ritualCfg, long remainingTicks) {
+        return computeSacrificeXpLevels(ritualCfg, remainingTicks, 1);
+    }
+
+    /**
+     * Direct XP level sacrifice cost derived smoothly from live remaining ticks and queued step count,
+     * scaling the sacrifice ceiling with queued step count so multi-step mega-queues cannot be skipped cheaply.
+     */
+    public static int computeSacrificeXpLevels(@Nullable Config ritualCfg, long remainingTicks, int queuedStepCount) {
         if (remainingTicks <= 0L) {
             return 0;
         }
         Config c = ritualCfg != null ? ritualCfg : Config.DEFAULT;
-        int cap = c.maxSacrificeXpLevels();
+        int extraSteps = Math.max(0, Math.max(1, queuedStepCount) - 1);
+        int cap = Math.min(255, c.maxSacrificeXpLevels() + extraSteps * c.sacrificeExtraXpPerQueuedStep());
+        double tau = Math.max(1.0, c.sacrificeXpTimeConstantSeconds() * (1.0 + 0.35 * extraSteps));
         double remSeconds = remainingTicks / 20.0;
-        int raw = (int) Math.ceil(cap * (1.0 - Math.exp(-remSeconds / 240.0)));
+        int raw = (int) Math.ceil(cap * (1.0 - Math.exp(-remSeconds / tau)));
         return Mth.clamp(raw, 1, cap);
     }
 
@@ -802,8 +1098,9 @@ public final class InscriptionRitualMechanics {
         if (cap <= 0.0) {
             return 0.0;
         }
+        double tau = Math.max(1.0, c.rushDegradeTimeConstantSeconds());
         double remSeconds = remainingTicks / 20.0;
-        double raw = cap * (1.0 - Math.exp(-remSeconds / 210.0));
+        double raw = cap * (1.0 - Math.exp(-remSeconds / tau));
         return Mth.clamp(raw, cap * 0.02, cap);
     }
 
@@ -917,12 +1214,40 @@ public final class InscriptionRitualMechanics {
         return total;
     }
 
-    /** Live-stack overload computing qualification load {@code L} directly on a chosen Master Tome stack. */
+    /** Pure library-wide wear-immune overload sum {@code Sigma L} across all active wear-immune Master Tomes. */
+    public static double computeLibraryWearImmuneLoad(
+        @Nullable CrosslineSlipConfig slipCfg,
+        List<List<TraitLoadInput>> activeWearImmuneTomes
+    ) {
+        if (activeWearImmuneTomes == null || activeWearImmuneTomes.isEmpty()) {
+            return 0.0;
+        }
+        CrosslineSlipConfig c = slipCfg != null ? slipCfg : CrosslineSlipConfig.DEFAULT;
+        double sum = 0.0;
+        for (List<TraitLoadInput> traits : activeWearImmuneTomes) {
+            sum += computeInfinityTomeQualificationLoad(c, traits);
+        }
+        return sum;
+    }
+
+    /** Live-stack overload computing qualification load {@code L} directly on a chosen wear-immune Master Tome stack. */
     public static double computeInfinityTomeQualificationLoad(
         @Nullable Config ritualCfg,
         ItemStack tomeStack
     ) {
-        if (tomeStack == null || tomeStack.isEmpty() || !MasterTomeWear.hasInfinityImmunity(tomeStack)) {
+        return computeInfinityTomeQualificationLoad(
+            ritualCfg,
+            chiseled_enchanting_table.mechanics.resonance.LibraryResonance.activeServerConfig(),
+            tomeStack
+        );
+    }
+
+    public static double computeInfinityTomeQualificationLoad(
+        @Nullable Config ritualCfg,
+        @Nullable chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config resonanceCfg,
+        ItemStack tomeStack
+    ) {
+        if (tomeStack == null || tomeStack.isEmpty() || !MasterTomeWear.hasEffectiveWearImmunity(resonanceCfg, tomeStack)) {
             return 0.0;
         }
         CrosslineSlipConfig c = ritualCfg != null ? ritualCfg.crosslineSlip() : CrosslineSlipConfig.DEFAULT;
@@ -936,7 +1261,7 @@ public final class InscriptionRitualMechanics {
             if (lv <= 0) continue;
             Holder<Enchantment> h = entry.getKey();
             Identifier id = h.unwrapKey().map(k -> k.identifier()).orElse(null);
-            boolean isInf = MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(id);
+            boolean isInf = chiseled_enchanting_table.mechanics.resonance.TomeWearData.isWearImmuneEnchantment(h);
             boolean isCurse = h.is(EnchantmentTags.CURSE);
             boolean isTreasure = !isCurse && h.is(EnchantmentTags.TREASURE);
             boolean isUnb = UNBREAKING_ID.equals(id);
@@ -1273,8 +1598,13 @@ public final class InscriptionRitualMechanics {
     }
 
     /**
-     * Selects the highest-priority degradation victim: non-{@code Infinity} Master Tomes are ALWAYS
-     * chosen before {@code Infinity}-blessed Master Tomes, then broken by minimum preservation score.
+     * Selects the highest-priority degradation victim:
+     * <ol>
+     *   <li>Master Tomes backing an enchantment active in the current ritual queue ALWAYS degrade
+     *       before unrelated books (eliminating junk-book scapegoat shielding);</li>
+     *   <li>Within that group, mortal Master Tomes degrade before wear-immune Master Tomes;</li>
+     *   <li>Ties break by minimum preservation score (lowest level, fewest enchants, lowest rarity).</li>
+     * </ol>
      */
     @Nullable
     public static TomeCandidate selectDegradationVictim(List<TomeCandidate> candidates) {
@@ -1283,7 +1613,8 @@ public final class InscriptionRitualMechanics {
         }
         return candidates.stream()
             .min(Comparator
-                .comparing(TomeCandidate::hasInfinity)
+                .comparing((TomeCandidate c) -> !c.backsActiveRitual())
+                .thenComparing(TomeCandidate::hasInfinity)
                 .thenComparingDouble(TomeCandidate::preservationScore)
                 .thenComparingInt(TomeCandidate::enchantCount)
                 .thenComparingDouble(TomeCandidate::averageRelativeLevel)
@@ -1300,20 +1631,26 @@ public final class InscriptionRitualMechanics {
         BookshelfProgression.Config cfg
     ) {
         if (level == null || tablePos == null) {
-            return new LibraryRitualScan(0, false, 0, 0);
+            return new LibraryRitualScan(0, false, 0, 0, 0.0);
         }
         BookshelfProgression.Config safeCfg = cfg != null ? cfg : BookshelfProgression.Config.DEFAULT;
         boolean ceilingBlocked = ChiseledEnchantingTableBlock.isTableCeilingBlocked(level, tablePos);
         int openAdj = ChiseledEnchantingTableBlock.countOpenAdjacentBlocks(level, tablePos);
         if (safeCfg.requireBreathingRoom()
             && BookshelfProgression.effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, safeCfg) <= 0) {
-            return new LibraryRitualScan(0, false, 0, 0);
+            return new LibraryRitualScan(0, false, 0, 0, 0.0);
         }
+
+        var lrCfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.configForSide(level.isClientSide());
+        var ritCfg = level.isClientSide()
+            ? chiseled_enchanting_table.compat.SyncedEnchantmentCosts.ritualConfig()
+            : chiseled_enchanting_table.data.ChiseledEnchantingTableData.ritualConfig();
 
         int rawShelves = 0;
         boolean anyTome = false;
         int rawTomeEnchants = 0;
         int maxOverloadedInf = 0;
+        double totalWearImmuneLoad = 0.0;
         boolean checkLos = safeCfg.requireLineOfSight();
 
         for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
@@ -1326,32 +1663,56 @@ public final class InscriptionRitualMechanics {
             }
             BlockState state = level.getBlockState(p);
             if (ChiseledEnchantingTableBlock.isRegularBookshelf(state)) {
-                rawShelves++;
+                if (chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                    .classifyBookshelf(true, false, false, false).isBroadBookshelf()) {
+                    rawShelves++;
+                }
                 continue;
             }
             if (!state.is(Blocks.CHISELED_BOOKSHELF)) {
                 continue;
             }
-            // Broad bookshelves (广义书架) include regular bookshelves, empty chiseled bookshelves,
-            // AND book-holding chiseled bookshelves (including Depleted Tomes); only slots holding
-            // Enchanted Books count toward Master Tome resonance below.
-            rawShelves++;
             if (!(level.getBlockEntity(p) instanceof ChiseledBookShelfBlockEntity shelfBe)) {
+                boolean occupiedProp = false;
+                for (var prop : ChiseledBookShelfBlock.SLOT_OCCUPIED_PROPERTIES) {
+                    if (state.hasProperty(prop) && state.getValue(prop)) {
+                        occupiedProp = true;
+                        break;
+                    }
+                }
+                if (chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                    .classifyBookshelf(false, true, occupiedProp, false).isBroadBookshelf()) {
+                    rawShelves++;
+                }
                 continue;
             }
+            boolean anyBookInShelf = false;
+            boolean anyEnchantedInShelf = false;
             for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
                 ItemStack book = shelfBe.getItem(slot);
                 if (book.isEmpty()) continue;
+                anyBookInShelf = true;
                 ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
                 int count = enchants.size();
                 if (count <= 0) continue;
+                anyEnchantedInShelf = true;
+                if (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
+                    && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book)) {
+                    continue;
+                }
                 anyTome = true;
                 rawTomeEnchants += count;
-                boolean hasInf = MasterTomeWear.hasInfinityImmunity(book);
-                // Strictly: possesses Infinity (1) AND strictly more than 3 OTHER enchantments (> 3 => count - 1 > 3 => count >= 5).
-                if (hasInf && (count - 1) > 3 && count > maxOverloadedInf) {
-                    maxOverloadedInf = count;
+                boolean hasInf = MasterTomeWear.hasEffectiveWearImmunity(lrCfg, book);
+                if (hasInf) {
+                    totalWearImmuneLoad += computeInfinityTomeQualificationLoad(ritCfg, lrCfg, book);
+                    if ((count - 1) > 3 && count > maxOverloadedInf) {
+                        maxOverloadedInf = count;
+                    }
                 }
+            }
+            if (chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
+                .classifyBookshelf(false, true, anyBookInShelf, anyEnchantedInShelf).isBroadBookshelf()) {
+                rawShelves++;
             }
         }
         int effectiveShelves = BookshelfProgression.effectiveShelvesAfterBreathingRoom(
@@ -1366,10 +1727,10 @@ public final class InscriptionRitualMechanics {
             openAdj,
             safeCfg
         );
-        return new LibraryRitualScan(effectiveShelves, anyTome, effectiveTomeEnchants, maxOverloadedInf);
+        return new LibraryRitualScan(effectiveShelves, anyTome, effectiveTomeEnchants, maxOverloadedInf, totalWearImmuneLoad);
     }
 
-    /** Returns {@code true} if any nearby Master Tome providing {@code enchantmentId >= minLevel} carries {@code minecraft:infinity}. */
+    /** Returns {@code true} if any nearby Master Tome providing {@code enchantmentId >= minLevel} has effective wear immunity. */
     public static boolean doesMatchingMasterTomeHaveInfinity(
         Level level,
         BlockPos tablePos,
@@ -1377,9 +1738,6 @@ public final class InscriptionRitualMechanics {
         Identifier enchantmentId,
         int minLevel
     ) {
-        if (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(enchantmentId)) {
-            return true;
-        }
         if (level == null || tablePos == null || enchantmentId == null) {
             return false;
         }
@@ -1391,6 +1749,7 @@ public final class InscriptionRitualMechanics {
                 return false;
             }
         }
+        var lrCfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.configForSide(level.isClientSide());
         boolean checkLos = safeCfg.requireLineOfSight();
         for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
             BlockPos p = tablePos.offset(offset);
@@ -1405,7 +1764,10 @@ public final class InscriptionRitualMechanics {
             }
             for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
                 ItemStack book = shelfBe.getItem(slot);
-                if (book.isEmpty() || !MasterTomeWear.hasInfinityImmunity(book)) continue;
+                if (book.isEmpty()
+                    || (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
+                        && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book))
+                    || !MasterTomeWear.hasEffectiveWearImmunity(lrCfg, book)) continue;
                 ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
                 for (var entry : enchants.entrySet()) {
                     var keyOpt = entry.getKey().unwrapKey();
@@ -1431,6 +1793,16 @@ public final class InscriptionRitualMechanics {
         BlockPos tablePos,
         BookshelfProgression.Config cfg
     ) {
+        return degradeLowestPriorityMasterTomeInWorld(level, tablePos, cfg, Set.of());
+    }
+
+    @Nullable
+    public static ItemStack degradeLowestPriorityMasterTomeInWorld(
+        Level level,
+        BlockPos tablePos,
+        BookshelfProgression.Config cfg,
+        @Nullable Set<Identifier> activeRitualEnchantments
+    ) {
         if (level == null || tablePos == null) {
             return null;
         }
@@ -1442,6 +1814,8 @@ public final class InscriptionRitualMechanics {
                 return null;
             }
         }
+        var lrCfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.configForSide(level.isClientSide());
+        Set<Identifier> activeIds = activeRitualEnchantments != null ? activeRitualEnchantments : Set.of();
         boolean checkLos = safeCfg.requireLineOfSight();
         List<TomeCandidate> candidates = new ArrayList<>();
         for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
@@ -1457,13 +1831,22 @@ public final class InscriptionRitualMechanics {
             }
             for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
                 ItemStack book = shelfBe.getItem(slot);
-                if (book.isEmpty()) continue;
+                if (book.isEmpty()
+                    || (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
+                        && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book))) continue;
                 ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
                 if (enchants.isEmpty()) continue;
                 int count = enchants.size();
                 double relSum = 0.0;
                 double raritySum = 0.0;
+                boolean backsActive = false;
                 for (var entry : enchants.entrySet()) {
+                    if (entry.getIntValue() > 0) {
+                        var keyOpt = entry.getKey().unwrapKey();
+                        if (keyOpt.isPresent() && activeIds.contains(keyOpt.get().identifier())) {
+                            backsActive = true;
+                        }
+                    }
                     int maxLvl = Math.max(1, entry.getKey().value().getMaxLevel());
                     relSum += Mth.clamp((double) entry.getIntValue() / maxLvl, 0.05, 1.0);
                     int w = Math.max(1, entry.getKey().value().definition().weight());
@@ -1475,7 +1858,8 @@ public final class InscriptionRitualMechanics {
                     count,
                     relSum / count,
                     raritySum / count,
-                    MasterTomeWear.hasInfinityImmunity(book)
+                    MasterTomeWear.hasEffectiveWearImmunity(lrCfg, book),
+                    backsActive
                 ));
             }
         }

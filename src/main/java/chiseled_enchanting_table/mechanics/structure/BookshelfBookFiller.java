@@ -130,22 +130,42 @@ import org.jetbrains.annotations.Nullable;
  * still in the template, not in the world, so scoring there would see an empty room.</p>
  */
 public final class BookshelfBookFiller {
-    /** Block-entity id written into the structure-tag path, matching vanilla template NBT. */
+    /** Fallback block-entity id used only before registry bootstrap; runtime derives from {@code BuiltInRegistries}. */
     public static final String BOOKSHELF_BLOCK_ENTITY_ID = "minecraft:chiseled_bookshelf";
+    private static volatile @Nullable String resolvedBookshelfBlockEntityId;
+
+    public static String bookshelfBlockEntityId() {
+        String cached = resolvedBookshelfBlockEntityId;
+        if (cached != null) {
+            return cached;
+        }
+        try {
+            var key = net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE
+                .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
+            if (key != null) {
+                String resolved = key.toString();
+                resolvedBookshelfBlockEntityId = resolved;
+                return resolved;
+            }
+        } catch (Throwable ignored) {
+            // Unbootstrapped unit-test environment
+        }
+        return BOOKSHELF_BLOCK_ENTITY_ID;
+    }
 
     /**
-     * Startup assertion for the one vanilla key this class must hardcode (audit: the id
-     * has to match Mojang's template NBT byte for byte). If a future Minecraft version
-     * renames it, fail loudly in the log at boot instead of silently writing unloadable
-     * block-entity tags into generated structures.
+     * Startup assertion verifying {@link BlockEntityType#CHISELED_BOOKSHELF} resolves cleanly
+     * in {@link net.minecraft.core.registries.BuiltInRegistries#BLOCK_ENTITY_TYPE}.
      */
     public static void verifyVanillaKeys() {
-        var id = net.minecraft.resources.Identifier.parse(BOOKSHELF_BLOCK_ENTITY_ID);
-        if (net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE.getValue(id) == null) {
+        var key = net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE
+            .getKey(net.minecraft.world.level.block.entity.BlockEntityType.CHISELED_BOOKSHELF);
+        if (key == null) {
             ChiseledEnchantingTable.LOGGER.error(
-                "Vanilla block-entity id {} is not registered - it may have been renamed upstream; "
-                    + "structure bookshelf filling would write unloadable NBT",
-                BOOKSHELF_BLOCK_ENTITY_ID);
+                "BlockEntityType.CHISELED_BOOKSHELF has no registered key in BuiltInRegistries.BLOCK_ENTITY_TYPE; "
+                    + "structure bookshelf filling would write unloadable NBT");
+        } else {
+            resolvedBookshelfBlockEntityId = key.toString();
         }
     }
 
@@ -256,7 +276,7 @@ public final class BookshelfBookFiller {
         CompoundTag tag = output.buildResult();
         // Vanilla template NBT carries the block-entity id; loadWithComponents ignores it, but
         // keeping it makes the generated tag indistinguishable from a hand-built structure file.
-        tag.putString("id", BOOKSHELF_BLOCK_ENTITY_ID);
+        tag.putString("id", bookshelfBlockEntityId());
         return tag;
     }
 
