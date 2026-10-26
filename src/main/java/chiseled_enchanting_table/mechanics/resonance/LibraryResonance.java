@@ -1498,7 +1498,7 @@ public final class LibraryResonance {
         buf.writeDouble(cfg.unbreakingWaiverPerLevel());
         buf.writeDouble(cfg.unbreakingWaiverMaxChance());
         buf.writeBoolean(cfg.wildBookWearEnabled());
-        PayloadLimits.writeBoundedCount(buf, cfg.wildBookRemainingWeights().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
+        chiseled_enchanting_table.menu.PayloadLimits.writeBoundedCount(buf, cfg.wildBookRemainingWeights().size(), chiseled_enchanting_table.menu.PayloadLimits.MAX_COLLECTION_ENTRIES);
         for (int w : cfg.wildBookRemainingWeights()) {
             buf.writeVarInt(Math.max(0, w));
     }

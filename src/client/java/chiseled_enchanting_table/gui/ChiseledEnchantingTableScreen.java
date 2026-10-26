@@ -100,7 +100,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private static final int SHELF_HUD_Y = 2;
     private static final int SHELF_HUD_W = 118;
     private static final int SHELF_HUD_H = 12;
-    private static final long DISENCHANT_CONFIRM_WINDOW_MS = 5_000L;
+    private static final long DISENCHANT_CONFIRM_WINDOW_MS = 2_000L;
 
     private static final int BTN_SIZE = 14;
     private static final int FREEZE_BTN_X = PANEL_X + 79;

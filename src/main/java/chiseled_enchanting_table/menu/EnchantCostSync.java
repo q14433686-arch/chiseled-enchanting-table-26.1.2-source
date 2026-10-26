@@ -97,7 +97,9 @@ public final class EnchantCostSync {
         });
 
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTickCount() % 20 != 0) return;
+            // Audit N-03: change-detected resend only; the periodic sweep is a low-frequency
+            // fallback (100 ticks), not a per-second rebuild for every online player.
+            if (server.getTickCount() % 100 != 0) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (!ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) continue;
                 UUID playerId = player.getUUID();

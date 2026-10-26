@@ -799,10 +799,10 @@ public final class BookshelfProgression {
         buf.writeUtf(cfg.blankMaxTierMode().token());
         buf.writeVarInt(cfg.horizontalScanRadius());
         buf.writeVarInt(cfg.verticalScanRadius());
-        PayloadLimits.writeBoundedCount(buf, cfg.overrides().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
+        chiseled_enchanting_table.menu.PayloadLimits.writeBoundedCount(buf, cfg.overrides().size(), chiseled_enchanting_table.menu.PayloadLimits.MAX_COLLECTION_ENTRIES);
         for (var ov : cfg.overrides().entrySet()) {
             buf.writeIdentifier(ov.getKey());
-            PayloadLimits.writeBoundedCount(buf, ov.getValue().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
+            chiseled_enchanting_table.menu.PayloadLimits.writeBoundedCount(buf, ov.getValue().size(), chiseled_enchanting_table.menu.PayloadLimits.MAX_COLLECTION_ENTRIES);
             for (int v : ov.getValue()) {
                 buf.writeVarInt(Math.max(0, v));
             }
