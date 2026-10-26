@@ -98,7 +98,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         return new chiseled_enchanting_table.catalog.TomeCatalog.Key(book.shelf_pos().asLong(), book.slot());
     }
     public boolean isTomeSelected(ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
-        return entry != null && catalogue.selected().contains(tomeKey(entry));
+        return entry != null && catalogue.isSelected(tomeKey(entry));
     }
     public void selectTome(@Nullable ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
         if (entry == null) catalogue.clearSelection(); else catalogue.select(tomeKey(entry), false);
@@ -436,7 +436,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
         catalogue.update(this.handler.tomeBooks.stream().map(book -> new chiseled_enchanting_table.catalog.TomeCatalog.Row(
             tomeKey(book), book.enchantments().stream().map(e -> e.enchantment_id().toString()).toList(),
-            tomeTitle(book, this.player), book.remaining_charges(), book.effective_max_uses(), book.locked(), book.locked_by_viewer())).toList());
+            book.enchantments().stream().map(e -> EnchantmentDisplayNames.findEnchantment(e.enchantment_id(), this.player)
+                .map(h -> h.value().description().getString()).orElse(e.enchantment_id().toString()))
+                .sorted().collect(java.util.stream.Collectors.joining(" / ")),
+            book.remaining_charges(), book.effective_max_uses(), book.locked(), book.locked_by_viewer())).toList());
         var books = new java.util.HashMap<chiseled_enchanting_table.catalog.TomeCatalog.Key, ChiseledEnchantingMenuPayloads.TomeBookEntry>();
         for (var book : this.handler.tomeBooks) books.put(tomeKey(book), book);
         for (var row : catalogue.visible()) this.addEntry(EnchantUiEntry.tomeEntry(minecraft, this.handler, books.get(row.key()), this));

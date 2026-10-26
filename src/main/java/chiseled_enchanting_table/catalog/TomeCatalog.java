@@ -21,6 +21,7 @@ public final class TomeCatalog {
     public List<Row> source() { return source; }
     public List<Row> visible() { return visible; }
     public Set<Key> selected() { return Set.copyOf(selected); }
+    public boolean isSelected(Key key) { return selected.contains(key); }
     public void update(List<Row> rows) { source = List.copyOf(rows); refresh(); }
     public void reset() { enchantment = null; remaining = total = null; lock = Lock.ALL; sort = Sort.LOCATION; descending = false; refresh(); }
     public void refresh() {
