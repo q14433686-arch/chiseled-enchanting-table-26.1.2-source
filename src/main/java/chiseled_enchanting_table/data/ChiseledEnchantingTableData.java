@@ -92,7 +92,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     private static volatile Map<Identifier, ItemTransformation> rawItemTransformations = builtInItemTransformations();
-    private static final LootInjectionTable BUILT_IN_LOOT_TABLE = builtInLootInjections();
+    private static final DataTableLoader.LootInjectionTable BUILT_IN_LOOT_TABLE = builtInLootInjections();
     private static volatile VanillaChestBooksMode rawVanillaChestBooksMode = BUILT_IN_LOOT_TABLE.mode();
     private static volatile BookshelfBookPool rawBookshelfBookPool = BookshelfBookPool.emptyFallback();
     private static volatile BookUpgradeRules rawBookUpgradeRules = builtInBookUpgradeRules();
@@ -144,8 +144,6 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static volatile chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig =
         rawRitualConfig;
 
-    public record RuntimeFrame(Map<Identifier, ItemTransformation> itemTransformations,
-        VanillaChestBooksMode vanillaChestBooksMode,
         BookshelfBookPool bookshelfBookPool,
         BookUpgradeRules bookUpgradeRules,
         TreasureEpiphanyRules treasureEpiphanyRules,
@@ -652,7 +650,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * world boot and {@code /reload}.
      */
     public static void preloadForLootRegistries(ResourceManager resourceManager) {
-        LootInjectionTable loaded = loadLootInjections(resourceManager);
+        DataTableLoader.LootInjectionTable loaded = loadLootInjections(resourceManager);
         var policy = loadPackPolicy(resourceManager);
         var cfg = chiseled_enchanting_table.config.ModRuntimeConfig.get();
         VanillaChestBooksMode effectiveMode = resolveEffectiveChestBooksMode(loaded.mode(), cfg, policy);
@@ -722,7 +720,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         var previous_chestSpawns = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.activeChestSpawnConfig();
         try {
         var candidatePolicy = loadPackPolicy(resourceManager);
-        DefaultEnchantmentTable loadedDefaults = loadDefaultEnchantments(resourceManager);
+        DataTableLoader.DefaultEnchantmentTable loadedDefaults = loadDefaultEnchantments(resourceManager);
         defaultEnchantmentValues = loadedDefaults.values();
         defaultEnchantmentTags = loadedDefaults.tags();
         defaultExcludedIds = loadedDefaults.excludedIds();
@@ -736,7 +734,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         classicItemTransformations = loadClassicJson(resourceManager,
             "item_transformations_classic_1_0_3.json",
             root -> parseItemTransformations(root), BUILT_IN_CLASSIC_TRANSFORMATIONS);
-        LootInjectionTable loadedLoot = loadLootInjections(resourceManager);
+        DataTableLoader.LootInjectionTable loadedLoot = loadLootInjections(resourceManager);
         rawVanillaChestBooksMode = loadedLoot.mode();
         lootInjections = loadedLoot.entries();
         chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.updateChestSpawnConfig(loadedLoot.chestSpawns());
@@ -745,7 +743,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         rawTreasureEpiphanyRules = loadTreasureEpiphanyRules(resourceManager);
         rawDisenchantingRules = loadDisenchantingRules(resourceManager);
         rawShelfGatesConfig = loadShelfGatesConfig(resourceManager);
-        LibraryResonanceAndRitual loadedResonance = loadLibraryResonanceAndRitual(resourceManager);
+        DataTableLoader.LibraryResonanceAndRitual loadedResonance = loadLibraryResonanceAndRitual(resourceManager);
         rawLibraryResonanceConfig = loadedResonance.resonance();
         rawRitualConfig = loadedResonance.ritual();
         applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get(), candidatePolicy, () -> {});
@@ -1041,6 +1039,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
     private static chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy loadPackPolicy(
         ResourceManager resourceManager
+    ) { return DataTableLoader.loadPackPolicy(resourceManager); }
     ) {
         Set<String> externalKeys = new java.util.LinkedHashSet<>();
         collectExternalDatapackKeys(resourceManager, SHELF_GATES_ID, "shelf_gates", externalKeys);
@@ -1097,126 +1096,21 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      *       maintain.</li>
      * </ul>
      */
-    private static DefaultEnchantmentTable loadDefaultEnchantments(ResourceManager resourceManager) {
-        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(DEFAULT_ENCHANTMENTS_ID);
-        if (resource.isEmpty()) {
-            ChiseledEnchantingTable.LOGGER.warn("Missing {}; using built-in fallback defaults", DEFAULT_ENCHANTMENTS_ID);
-            return builtInDefaultEnchantmentTable();
-        }
-
-        try (Reader reader = resource.get().openAsReader()) {
-            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonArray values = root.getAsJsonArray("values");
-            Set<EnchantmentWithLevel> loadedValues = new HashSet<>();
-            if (values != null) {
-                for (JsonElement element : values) {
-                    JsonObject entry = element.getAsJsonObject();
-                    Identifier enchantmentId = parseIdentifier(entry.get("enchantment").getAsString());
-                    int level = Math.max(1, entry.get("level").getAsInt());
-                    loadedValues.add(new EnchantmentWithLevel(enchantmentId, level));
-                }
-            }
-
-            List<DefaultEnchantmentTagRule> loadedTags = new ArrayList<>();
-            JsonArray tags = root.getAsJsonArray("tags");
-            if (tags != null) {
-                for (JsonElement element : tags) {
-                    JsonObject entry = element.getAsJsonObject();
-                    Identifier tagId = parseIdentifier(stripTagPrefix(entry.get("tag").getAsString()));
-                    int level = Math.max(1, intOr(entry, "level", 1));
-                    loadedTags.add(new DefaultEnchantmentTagRule(tagId, level));
-                }
-            }
-
-            Set<Identifier> excludedIds = new HashSet<>();
-            JsonArray excludeArr = root.getAsJsonArray("exclude");
-            if (excludeArr != null) {
-                for (JsonElement element : excludeArr) {
-                    excludedIds.add(parseIdentifier(element.getAsString()));
-                }
-            }
-
-            List<Identifier> excludedTags = new ArrayList<>();
-            JsonArray excludeTagArr = root.getAsJsonArray("exclude_tags");
-            if (excludeTagArr != null) {
-                for (JsonElement element : excludeTagArr) {
-                    excludedTags.add(parseIdentifier(stripTagPrefix(element.getAsString())));
-                }
-            }
-
-            if (loadedValues.isEmpty() && loadedTags.isEmpty()) {
-                return builtInDefaultEnchantmentTable();
-            }
-            return new DefaultEnchantmentTable(
-                loadedValues,
-                List.copyOf(loadedTags),
-                Set.copyOf(excludedIds),
-                List.copyOf(excludedTags)
-            );
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data table " + DEFAULT_ENCHANTMENTS_ID, e);
-        }
-    }
+    private static DataTableLoader.DefaultEnchantmentTable loadDefaultEnchantments(ResourceManager resourceManager) { return DataTableLoader.loadDefaultEnchantments(resourceManager); }
 
     /** Accepts both {@code "#namespace:path"} (data-pack tag convention) and a bare id. */
     private static String stripTagPrefix(String value) {
         return value.startsWith("#") ? value.substring(1) : value;
     }
 
-    private static CostTables loadCostTables(ResourceManager resourceManager) {
-        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(ENCHANTMENT_COSTS_ID);
-        if (resource.isEmpty()) {
-            ChiseledEnchantingTable.LOGGER.warn("Missing {}; using built-in fallback costs", ENCHANTMENT_COSTS_ID);
-            return builtInCostTables();
-        }
-
-        try (Reader reader = resource.get().openAsReader()) {
-            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            return CostTables.fromJson(root);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data table " + ENCHANTMENT_COSTS_ID, e);
-        }
-    }
+    private static CostTables loadCostTables(ResourceManager resourceManager) { return DataTableLoader.loadCostTables(resourceManager); }
 
 
-    private static Map<Identifier, ItemTransformation> loadItemTransformations(ResourceManager resourceManager) {
-        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(ITEM_TRANSFORMATIONS_ID);
-        if (resource.isEmpty()) {
-            return builtInItemTransformations();
-        }
-        try (Reader reader = resource.get().openAsReader()) {
-            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            JsonArray values = root.getAsJsonArray("values");
-            Map<Identifier, ItemTransformation> loaded = new HashMap<>();
-            if (values != null) {
-                for (JsonElement element : values) {
-                    ItemTransformation transformation = ItemTransformation.fromJson(element.getAsJsonObject());
-                    loaded.put(transformation.id(), transformation);
-                }
-            }
-            return Map.copyOf(loaded);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data table " + ITEM_TRANSFORMATIONS_ID, e);
-        }
-    }
+    private static Map<Identifier, ItemTransformation> loadItemTransformations(ResourceManager resourceManager) { return DataTableLoader.loadItemTransformations(resourceManager); }
 
-    private static JsonObject readBundledJsonObject(String fileName) {
-        String resourcePath = "/data/chiseled_enchanting_table/chiseled_enchanting_table/" + fileName;
-        try (var stream = ChiseledEnchantingTableData.class.getResourceAsStream(resourcePath)) {
-            if (stream != null) {
-                try (Reader reader = new java.io.InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8)) {
-                    return JsonParser.parseReader(reader).getAsJsonObject();
-                }
-            }
-        } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.error("Failed to read bundled default resource {}", resourcePath, e);
-        }
-        return new JsonObject();
-    }
+    private static JsonObject readBundledJsonObject(String fileName) { return DataTableLoader.readBundledJsonObject(fileName); }
 
-    private static Map<Identifier, ItemTransformation> builtInItemTransformations() {
-        return parseItemTransformations(readBundledJsonObject("item_transformations.json"));
-    }
+    private static Map<Identifier, ItemTransformation> builtInItemTransformations() { return DataTableLoader.builtInItemTransformations(); }
 
     /** The exact two transformations of tag 26.1.2_1.0.3, bundled verbatim. */
     /**
@@ -1227,6 +1121,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      */
     private static <T> T loadClassicJson(
         ResourceManager resourceManager,
+        String fileName,
+        java.util.function.Function<JsonObject, T> parser,
+        T fallback
+    ) { return DataTableLoader.loadClassicJson(resourceManager, fileName, parser, fallback); }
         String fileName,
         java.util.function.Function<JsonObject, T> parser,
         T fallback
@@ -1247,54 +1145,22 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return parseItemTransformations(readBundledJsonObject("item_transformations_classic_1_0_3.json"));
     }
 
-    private static Map<Identifier, ItemTransformation> parseItemTransformations(JsonObject root) {
-        Map<Identifier, ItemTransformation> fallback = new HashMap<>();
-        JsonArray values = root.getAsJsonArray("values");
-        if (values != null) {
-            for (JsonElement element : values) {
-                ItemTransformation transformation = ItemTransformation.fromJson(element.getAsJsonObject());
-                fallback.put(transformation.id(), transformation);
-            }
-        }
-        return Map.copyOf(fallback);
-    }
+    private static Map<Identifier, ItemTransformation> parseItemTransformations(JsonObject root) { return DataTableLoader.parseItemTransformations(root); }
 
     private static Identifier parseIdentifier(String value) {
         return value.indexOf(':') >= 0 ? Identifier.parse(value) : Identifier.withDefaultNamespace(value);
     }
 
-    private static Set<EnchantmentWithLevel> builtInDefaultEnchantments() {
-        return Set.of();
-    }
+    private static Set<EnchantmentWithLevel> builtInDefaultEnchantments() { return DataTableLoader.builtInDefaultEnchantments(); }
 
-    private static List<DefaultEnchantmentTagRule> builtInDefaultEnchantmentTags() {
-        return List.of(new DefaultEnchantmentTagRule(Identifier.withDefaultNamespace("in_enchanting_table"), 1));
-    }
+    private static List<DefaultEnchantmentTagRule> builtInDefaultEnchantmentTags() { return DataTableLoader.builtInDefaultEnchantmentTags(); }
 
-    private static Set<Identifier> builtInExcludedTreasureIds() {
-        return Set.of();
-    }
+    private static Set<Identifier> builtInExcludedTreasureIds() { return DataTableLoader.builtInExcludedTreasureIds(); }
 
-    private static List<Identifier> builtInExcludedTags() {
-        return List.of(
-            Identifier.withDefaultNamespace("treasure"),
-            Identifier.withDefaultNamespace("curse"),
-            ChiseledEnchantingTable.identifier("epiphany_exclusive")
-        );
-    }
+    private static List<Identifier> builtInExcludedTags() { return DataTableLoader.builtInExcludedTags(); }
 
-    private static DefaultEnchantmentTable builtInDefaultEnchantmentTable() {
-        return new DefaultEnchantmentTable(
-            builtInDefaultEnchantments(),
-            builtInDefaultEnchantmentTags(),
-            builtInExcludedTreasureIds(),
-            builtInExcludedTags()
-        );
-    }
 
     /** Parsed {@code default_enchantments.json} contents: explicit values plus tag-expansion & treasure-exclusion rules. */
-    private record DefaultEnchantmentTable(
-        Set<EnchantmentWithLevel> values,
         List<DefaultEnchantmentTagRule> tags,
         Set<Identifier> excludedIds,
         List<Identifier> excludedTags
@@ -1306,108 +1172,31 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
 
 
-    private static CostTables builtInCostTables() {
-        return CostTables.fromJson(readBundledJsonObject("enchantment_costs.json"));
-    }
+    private static CostTables builtInCostTables() { return DataTableLoader.builtInCostTables(); }
 
-    private static BookUpgradeRules builtInBookUpgradeRules() {
-        return BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades.json"));
-    }
+    private static BookUpgradeRules builtInBookUpgradeRules() { return DataTableLoader.builtInBookUpgradeRules(); }
 
 
 
     // ---------- U1: loot injections + bookshelf book pool ----------
 
-    private record LootInjectionTable(
-        VanillaChestBooksMode mode,
         List<LootInjection> entries,
         chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns
     ) {}
 
-    private static LootInjectionTable parseLootInjectionRoot(JsonObject root) {
-        if (root == null) {
-            return new LootInjectionTable(
-                VanillaChestBooksMode.KEEP_BOTH,
-                List.of(),
-                chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig.EMPTY
-            );
-        }
-        VanillaChestBooksMode mode = root.has("vanilla_chest_books") && root.get("vanilla_chest_books").isJsonPrimitive()
-            ? VanillaChestBooksMode.fromToken(root.get("vanilla_chest_books").getAsString())
-            : VanillaChestBooksMode.KEEP_BOTH;
-        JsonArray entries = root.getAsJsonArray("entries");
-        List<LootInjection> loaded = new ArrayList<>();
-        if (entries != null) {
-            for (JsonElement element : entries) {
-                LootInjection injection = LootInjection.fromJson(element.getAsJsonObject());
-                if (injection != null) {
-                    loaded.add(injection);
-                }
-            }
-        }
-        var chestSpawns = chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics
-            .DepletedTomeChestSpawnConfig.fromLootInjectionsJson(root);
-        return new LootInjectionTable(mode, List.copyOf(loaded), chestSpawns);
-    }
 
-    private static LootInjectionTable builtInLootInjections() {
-        return parseLootInjectionRoot(readBundledJsonObject("loot_injections.json"));
-    }
+    private static DataTableLoader.LootInjectionTable builtInLootInjections() { return DataTableLoader.builtInLootInjections(); }
 
-    private static LootInjectionTable loadLootInjections(ResourceManager resourceManager) {
-        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(LOOT_INJECTIONS_ID);
-        if (resource.isEmpty()) {
-            return builtInLootInjections();
-        }
-        try (Reader reader = resource.get().openAsReader()) {
-            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            return parseLootInjectionRoot(root);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data table " + LOOT_INJECTIONS_ID, e);
-        }
-    }
+    private static DataTableLoader.LootInjectionTable loadLootInjections(ResourceManager resourceManager) { return DataTableLoader.loadLootInjections(resourceManager); }
 
 
-    private static BookUpgradeRules loadBookUpgradeRules(ResourceManager resourceManager) {
-        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(BOOK_UPGRADES_ID);
-        if (resource.isEmpty()) {
-            return builtInBookUpgradeRules();
-        }
-        try (Reader reader = resource.get().openAsReader()) {
-            return BookUpgradeRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data table " + BOOK_UPGRADES_ID, e);
-        }
-    }
+    private static BookUpgradeRules loadBookUpgradeRules(ResourceManager resourceManager) { return DataTableLoader.loadBookUpgradeRules(resourceManager); }
 
-    private static TreasureEpiphanyRules builtInTreasureEpiphanyRules() {
-        return TreasureEpiphanyRules.fromJson(readBundledJsonObject("treasure_epiphany.json"), builtInExcludedTreasureIds());
-    }
+    private static TreasureEpiphanyRules builtInTreasureEpiphanyRules() { return DataTableLoader.builtInTreasureEpiphanyRules(); }
 
-    private static TreasureEpiphanyRules loadTreasureEpiphanyRules(ResourceManager resourceManager) {
-        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(TREASURE_EPIPHANY_ID);
-        if (resource.isEmpty()) {
-            return builtInTreasureEpiphanyRules();
-        }
-        try (Reader reader = resource.get().openAsReader()) {
-            return TreasureEpiphanyRules.fromJson(JsonParser.parseReader(reader).getAsJsonObject(), builtInExcludedTreasureIds());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data table " + TREASURE_EPIPHANY_ID, e);
-        }
-    }
+    private static TreasureEpiphanyRules loadTreasureEpiphanyRules(ResourceManager resourceManager) { return DataTableLoader.loadTreasureEpiphanyRules(resourceManager); }
 
-    private static BookshelfBookPool loadBookshelfBookPool(ResourceManager resourceManager) {
-        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(BOOKSHELF_BOOK_POOL_ID);
-        if (resource.isEmpty()) {
-            return BookshelfBookPool.emptyFallback();
-        }
-        try (Reader reader = resource.get().openAsReader()) {
-            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            return BookshelfBookPool.fromJson(root);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data table " + BOOKSHELF_BOOK_POOL_ID, e);
-        }
-    }
+    private static BookshelfBookPool loadBookshelfBookPool(ResourceManager resourceManager) { return DataTableLoader.loadBookshelfBookPool(resourceManager); }
 
     /**
      * One entry in {@code loot_injections.json}: append a new pool to the given loot table (or, if
@@ -1498,19 +1287,13 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return (runtimeFrame == null ? ritualConfig : runtimeFrame.ritualConfig());
     }
 
-    private static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config builtInRitualConfig() {
-        return chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(
-            readBundledJsonObject("library_resonance.json")
-        );
-    }
 
-    private record LibraryResonanceAndRitual(
-        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config resonance,
         chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritual
     ) {}
 
     private static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config loadShelfGatesConfig(
         ResourceManager resourceManager
+    ) { return DataTableLoader.loadShelfGatesConfig(resourceManager); }
     ) {
         Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(SHELF_GATES_ID);
         if (resource.isEmpty()) {
@@ -1524,19 +1307,20 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
     }
 
-    private static LibraryResonanceAndRitual loadLibraryResonanceAndRitual(
+    private static DataTableLoader.LibraryResonanceAndRitual loadLibraryResonanceAndRitual(
         ResourceManager resourceManager
+    ) { return DataTableLoader.loadLibraryResonanceAndRitual(resourceManager); }
     ) {
         Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(LIBRARY_RESONANCE_ID);
         if (resource.isEmpty()) {
-            return new LibraryResonanceAndRitual(
+            return new DataTableLoader.LibraryResonanceAndRitual(
                 chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.DEFAULT,
                 chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.DEFAULT
             );
         }
         try (Reader reader = resource.get().openAsReader()) {
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            return new LibraryResonanceAndRitual(
+            return new DataTableLoader.LibraryResonanceAndRitual(
                 chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config.fromJson(root),
                 chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config.fromJson(root)
             );
@@ -1545,25 +1329,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         }
     }
 
-    private static DisenchantingRules builtInDisenchantingRules() {
-        return DisenchantingRules.fromJson(
-            readBundledJsonObject("disenchanting.json"),
-            () -> readBundledJsonObject("disenchanting.json")
-        );
-    }
+    private static DisenchantingRules builtInDisenchantingRules() { return DataTableLoader.builtInDisenchantingRules(); }
 
-    private static DisenchantingRules loadDisenchantingRules(ResourceManager resourceManager) {
-        Optional<net.minecraft.server.packs.resources.Resource> resource = resourceManager.getResource(DISENCHANTING_ID);
-        if (resource.isEmpty()) {
-            return builtInDisenchantingRules();
-        }
-        try (Reader reader = resource.get().openAsReader()) {
-            return DisenchantingRules.fromJson(
-                JsonParser.parseReader(reader).getAsJsonObject(),
-                () -> readBundledJsonObject("disenchanting.json")
-            );
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data table " + DISENCHANTING_ID, e);
-        }
-    }
+    private static DisenchantingRules loadDisenchantingRules(ResourceManager resourceManager) { return DataTableLoader.loadDisenchantingRules(resourceManager); }
 }
