@@ -173,6 +173,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public void removed() {
+        this.shiftHeld = false;
         if (this.scrollContainer != null) {
             this.savedScrollAmount = this.scrollContainer.scrollAmount();
             this.savedTabMode = this.scrollContainer.tabMode();
@@ -461,6 +462,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return -1;
     }
 
+    // 26.1.2 removed Screen.hasShiftDown(); modifier state is tracked from key/mouse events
+    // (both event types expose hasShiftDown()) for render-time Shift-detail queries.
+    private boolean shiftHeld;
     private final TomeDirectoryControls tomeDirectory = new TomeDirectoryControls();
     private final chiseled_enchanting_table.catalog.TomeActionQueue tomeActions = new chiseled_enchanting_table.catalog.TomeActionQueue();
     private void layoutDirectory() {
@@ -660,7 +664,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             return this.grimoireOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
         if (isTomeTab() && tomeDirectory.scroll(scrollY)) return true;
-        if (isTomeTab() && net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (isTomeTab() && this.shiftHeld) {
             var book = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
             if (book != null) { TomeEnchantmentDetails.scroll(book, scrollY); return true; }
         }
@@ -672,6 +676,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        this.shiftHeld = event.hasShiftDown();
         if (this.configOverlay != null) {
             this.configOverlay.mouseClicked(event, isDoubleClick);
             return true;
@@ -874,6 +879,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     // the parent screen enforces closing via overlay.onClose() so no future overlay can soft-lock.
     @Override
     public boolean keyPressed(KeyEvent event) {
+        this.shiftHeld = event.hasShiftDown();
         if (this.configOverlay != null) {
             boolean handled = this.configOverlay.keyPressed(event);
             if (!handled && event.key() == InputConstants.KEY_ESCAPE && this.configOverlay != null) {
@@ -912,6 +918,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     @Override
     public boolean keyReleased(KeyEvent event) {
+        this.shiftHeld = event.hasShiftDown();
         if (this.configOverlay != null) {
             return this.configOverlay.keyReleased(event);
         }
@@ -1408,7 +1415,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 return;
             }
             var hoveredTome = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
-            if (hoveredTome != null && net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+            if (hoveredTome != null && this.shiftHeld) {
                 TomeEnchantmentDetails.render(ctx, this.font, hoveredTome, this.menu.player, mouseX, mouseY);
                 return;
             }

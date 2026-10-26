@@ -260,6 +260,27 @@ Previous (1.0.2) staging, under `release_output/chiseled_enchanting_table_1_0_2/
 The `1_0_2` directory above is the last committed staging set; older internal porting-round
 artefact directories are not part of any current release output.
 
+## Verified This Session (2026-10-26, the 26.3 backport audit round)
+
+Full file-by-file diff audit against sister branch `26.3` (to `b3cb3c9`, 248 changed files) along
+seven paths (源码 API / 数据编解码 / 网络同步 / GUI 输入 / Mixin 注入 / 死代码 / 耦合风险); only
+version-independent fixes and features were taken, each rewritten to 26.1.2 APIs/schemas. Report:
+[`docs/reports/BACKPORT_FROM_26_3_2026_10_26.md`](docs/reports/BACKPORT_FROM_26_3_2026_10_26.md).
+
+- `6587e9f` — 10 fixes: 26.3 `RULE-01/02`, `RELOAD-01/02/03`, `NET-01/02`, `LIFE-01`, `MIXIN-01`
+  (new 14th mixin `bookshelf.BookshelfCreativeExtractionMixin`) + 2 bugs unique to this line
+  (config write fallback could truncate the live config file; config-screen save could deadlock on
+  a dangling pending state when the channel was unavailable).
+- `1946b53` — Tome Catalogue feature (filter/sort/multi-select + paced, confirmation-gated batch
+  lock queue + Shift paged enchantment details), `catalog.*` 32 keys × 11 locales (1008 total).
+- **Wire protocol stays `26_1_2_revision_17`** (no wire/blockstate schema change; historical
+  probes retained). Deliberately not taken: 26.3 wholesale class splits, Rainbow Cloth
+  (blockstate schema — needs a protocol-bump round), global `TooltipPresentation` rollout.
+- Gates: `ci_static_checks.py`, `compat_check.py`, `gen_bundled_defaults --check`,
+  `test_sync_26_1_2.py` (9 tests incl. new seven-path contract) all pass locally; GitHub Actions
+  `compile-check` + `build` (incl. server smoke) green for `6587e9f` (100 JUnit tests).
+  Catalogue commit CI status: see the branch's latest Actions run.
+
 ## Verified This Session (2026-10-21, the 1.0.3 sync round)
 
 The sandbox for this round has **no JDK and no maven access** (`java` is not installed;

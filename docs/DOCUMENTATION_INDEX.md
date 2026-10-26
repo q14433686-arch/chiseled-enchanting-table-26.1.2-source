@@ -45,6 +45,7 @@ Used when publishing an updated release; keeps every platform aligned.
 
 ## Architecture & sync reports
 
+- [**26.3 → 26.1.2 回移植彻查报告 (2026-10-26)** — 七条审计路径逐文件差分分类、10 项缺陷回移植（含 2 项 26.1.2 独有）、母本目录功能移植与有意未移植清单](reports/BACKPORT_FROM_26_3_2026_10_26.md)
 - [**Cross-branch porting & sync guide (`26.1.2` `revision_17` → `26.2` & `26.3`, 2026-10-26)** — Wave A–D delta breakdown, drop-in manifest, 3-version API/JSON difference matrix, and CI acceptance checklist](reports/SYNC_TO_26_2_AND_26_3_2026_10_26.md)
 - [Sync from the 26.3 branch (1.1.0 runtime & architecture hardening)](reports/SYNC_FROM_26_3_ARCHITECTURE_BACKPORT.md)
 - [Sync instruction from the 26.3 branch (2026-10-24)](reports/SYNC_TO_26_1_2_2026_10_24.md)
