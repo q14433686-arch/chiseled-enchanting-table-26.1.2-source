@@ -194,7 +194,7 @@ import static chiseled_enchanting_table.config.ModRuntimeConfig.*;
             this.bookshelfMaxBooks = src.bookshelfMaxBooks();
             this.bookshelfEnchantedProb = src.bookshelfEnchantedProb();
             this.librarianTomeOffers = src.librarianTomeOffers();
-            this.customizedKeys.addAll(src.customizedKeys);
+            this.customizedKeys.addAll(src.customizedKeys());
         }
 
         /** Enforces live inter-option ordering and volume bounds after editing {@code editedKey}. */
@@ -398,7 +398,7 @@ import static chiseled_enchanting_table.config.ModRuntimeConfig.*;
             this.bookshelfEnchantedProb = snap.bookshelfEnchantedProb();
             this.librarianTomeOffers = snap.librarianTomeOffers();
             this.customizedKeys.clear();
-            this.customizedKeys.addAll(snap.customizedKeys);
+            this.customizedKeys.addAll(snap.customizedKeys());
         }
 
         /** Sets all 19 core mechanism rule atoms to their classic {@code 1.0.3} values. */
