@@ -1144,6 +1144,36 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public Level world() {
         return this.world;
     }
+    /** Narrow read-only pricing view of this menu (26.3 MenuPricingAccess split). */
+    public MenuPricingAccess pricingAccess() {
+        return this;
+    }
+
+    @Override
+    public int regularBookshelves() {
+        return this.regularBookshelves;
+    }
+
+    @Override
+    public int xpDiscountPercent() {
+        return this.xpDiscountPercent;
+    }
+
+    @Override
+    public String playerUuid() {
+        return this.player == null ? "" : this.player.getStringUUID();
+    }
+
+    @Override
+    public boolean creative() {
+        return this.player != null && this.player.getAbilities().instabuild;
+    }
+
+    @Override
+    public int playerLevel() {
+        return this.player == null ? 0 : this.player.experienceLevel;
+    }
+
 
     public Set<EnchantmentWithLevel> unlockedEnchantments() {
         return this.unlocked_enchantements;
@@ -1725,12 +1755,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Level world) {
-        if (id == null || world == null) {
-            return java.util.Optional.empty();
-        }
-        return world.registryAccess()
-            .lookup(Registries.ENCHANTMENT)
-            .flatMap(reg -> reg.get(ResourceKey.create(Registries.ENCHANTMENT, id)));
+        return MenuEnchantmentLookup.findEnchantment(id, world);
     }
 
     public static Holder<Enchantment> identifierToEnchantment(Identifier id, Level world) {
