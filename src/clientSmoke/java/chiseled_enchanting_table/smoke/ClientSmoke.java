@@ -162,6 +162,8 @@ public final class ClientSmoke implements ClientModInitializer {
             case 6 -> {
                 if (!menuPrepared || !(client.gui.screen() instanceof ChiseledEnchantingTableScreen table)) return;
                 if (!((ChiseledEnchantingTableScreenHandler) client.player.containerMenu).get_enchantable_item().is(Items.DIAMOND_SWORD)) return;
+                var syncedMenu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
+                if (!syncedMenu.isTomePageUnlocked() || syncedMenu.tomeBooks.size()<2) return;
                 chiseled_enchanting_table.gui.ListModelProbe.verify(client.player);
                 chiseled_enchanting_table.gui.UiPresentationProbe.verify(client, (ChiseledEnchantingTableScreenHandler) client.player.containerMenu);
                 net.minecraft.client.Screenshot.grab(client.gameDirectory, "table-ui-zh_cn.png",
