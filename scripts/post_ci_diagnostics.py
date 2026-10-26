@@ -16,7 +16,7 @@ def output(name, sha, conclusion, paths):
         selected = set()
         for index, line in enumerate(lines):
             if any(token in line for token in ('error:', 'FAILED', 'FAILURE', 'Caused by:',
-                    'JUnit XML totals:', 'SERVER SMOKE PASS', 'CLIENT SMOKE', 'BUILD SUCCESSFUL')):
+                    'JUnit XML totals:', 'BOUNDARY PASS:', 'SERVER SMOKE PASS', 'CLIENT SMOKE', 'BUILD SUCCESSFUL')):
                 # javac's symbol and location are on following lines, not the error's first line.
                 selected.update(range(index, min(index + 5, len(lines))))
         important = [lines[index] for index in sorted(selected)[:160]]

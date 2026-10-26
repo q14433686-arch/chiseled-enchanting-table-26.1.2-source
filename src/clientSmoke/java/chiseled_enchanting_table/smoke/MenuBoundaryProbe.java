@@ -34,6 +34,9 @@ final class MenuBoundaryProbe {
                 new ItemStack(Items.LAPIS_LAZULI, 2), new ItemStack(Items.AMETHYST_SHARD));
             check(menu.isBundleAffordableWithOverflow(duplicateBundle), "overflow/duplicate quote rejected");
             check(menu.getCostItem().getCount() == 1 && inventory.getItem(0).getCount() == 5, "quote mutated inventory");
+            menu.setCostSlot(new ItemStack(Items.AMETHYST_SHARD));
+            check(!menu.isBundleAffordableWithOverflow(duplicateBundle), "wrong primary slot was accepted despite inventory overflow");
+            menu.setCostSlot(new ItemStack(Items.LAPIS_LAZULI, 1));
             menu.deductMatchedBundle(duplicateBundle);
             check(menu.getCostItem().isEmpty(), "primary slot not consumed first");
             check(inventory.getItem(0).getCount() == 1 && inventory.getItem(1).getCount() == 1, "duplicate/overflow debit is not conserved");
@@ -41,8 +44,11 @@ final class MenuBoundaryProbe {
             player.experienceLevel = 100;
             player.totalExperience = XpCostConversion.totalXpForLevel(100);
             player.experienceProgress = 0;
+            var missingId = Identifier.parse("chiseled_enchanting_table:missing_boundary_price");
+            var missingRef = new EnchantmentWithLevel(missingId, 1);
+            check(menu.getEffectiveItemCostOptions(missingRef, OptionType.TRANSFORMATION).isEmpty(), "missing-price fixture unexpectedly has a quote");
             var missing = menu.applyEnchantmentConditionWithReceipt(new ApplyEnchantmentPayload(
-                Identifier.parse("chiseled_enchanting_table:missing_boundary_price"), 1));
+                OptionType.TRANSFORMATION, missingId, 1));
             check(!missing.accepted() && missing.paidXpPoints() == 0 && missing.paidMaterials().isEmpty(), "missing price did not fail closed");
             check(player.experienceLevel == 100 && inventory.getItem(0).getCount() == 1, "rejected payment mutated state");
 
@@ -53,6 +59,16 @@ final class MenuBoundaryProbe {
             for (int i = 0; i < inventory.getContainerSize(); i++) inventory.setItem(i, ItemStack.EMPTY);
             menu.setCostSlot(bundle.isEmpty() ? ItemStack.EMPTY : bundle.getFirst().copy());
             for (int i = 1; i < bundle.size(); i++) inventory.setItem(i - 1, bundle.get(i).copy());
+            player.experienceLevel = 0;
+            player.totalExperience = 0;
+            player.experienceProgress = 0;
+            check(!menu.resolveXpRequirement(enchantment, OptionType.ENCHANTMENT).isMetBy(player), "XP-denial fixture must actually be unaffordable");
+            var denied = menu.applyEnchantmentConditionWithReceipt(new ApplyEnchantmentPayload(enchantment.enchantment_id(), 1));
+            check(!denied.accepted() && denied.paidXpPoints() == 0 && denied.paidMaterials().isEmpty(), "insufficient XP was not rejected");
+            check(bundle.isEmpty() || menu.getCostItem().getCount() == bundle.getFirst().getCount(), "XP denial consumed primary material");
+            for (int i = 1; i < bundle.size(); i++) check(inventory.getItem(i - 1).getCount() == bundle.get(i).getCount(), "XP denial consumed additional material");
+            player.experienceLevel = 100;
+            player.totalExperience = XpCostConversion.totalXpForLevel(100);
             int before = XpCostConversion.totalPlayerXpPoints(player);
             var receipt = menu.applyEnchantmentConditionWithReceipt(new ApplyEnchantmentPayload(enchantment.enchantment_id(), 1));
             check(receipt.accepted(), "funded real payment rejected");
@@ -64,7 +80,7 @@ final class MenuBoundaryProbe {
             }
             check(menu.getCostItem().isEmpty(), "payment did not debit the cost slot");
             for (int i = 0; i < inventory.getContainerSize(); i++) check(inventory.getItem(i).isEmpty(), "payment left a required additional material");
-            System.out.println("ECONOMIC BOUNDARY PASS: duplicate bundles + slot overflow + read-only quote + missing-price rejection + actual XP/material debit + receipt copies");
+            System.out.println("ECONOMIC BOUNDARY PASS: duplicate bundles + slot overflow + read-only quote + wrong-primary denial + genuinely missing-price rejection + insufficient-XP denial + actual XP/material debit + receipt copies");
         } finally {
             player.getAbilities().instabuild = oldCreative;
             player.experienceLevel = oldLevel;

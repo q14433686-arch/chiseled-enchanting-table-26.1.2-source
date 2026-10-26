@@ -13,6 +13,14 @@ class DiagnosticsTests(unittest.TestCase):
             self.assertEqual('test-sha', result['head_sha'])
             self.assertLessEqual(len(result['output']['summary'].encode()), 58000)
             self.assertIn('actual compiler error', result['output']['summary'])
+    def test_successful_native_boundary_markers_are_not_lost_in_large_logs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            log = Path(directory) / 'native.log'
+            log.write_text('ECONOMIC BOUNDARY PASS: real inventory debit\nCANDIDATE BOUNDARY PASS: real registry\n' + 'ordinary log\n' * 10000)
+            summary = output('native', 'sha', 'success', [log])['output']['summary']
+            self.assertIn('ECONOMIC BOUNDARY PASS:', summary)
+            self.assertIn('CANDIDATE BOUNDARY PASS:', summary)
+
     def test_missing_log_does_not_masquerade_as_success(self):
         result = output('compile', 'sha', 'failure', [Path('does-not-exist.log')])
         self.assertEqual('failure', result['conclusion'])
