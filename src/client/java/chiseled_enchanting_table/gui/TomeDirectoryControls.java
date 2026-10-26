@@ -22,7 +22,7 @@ final class TomeDirectoryControls {
     void close() { open = -1; }
     private static String enchantName(String id, net.minecraft.world.entity.player.Player player) {
         var identifier = net.minecraft.resources.Identifier.tryParse(id);
-        return identifier == null ? id : EnchantementListWidget.findEnchantment(identifier, player)
+        return identifier == null ? id : EnchantmentDisplayNames.findEnchantment(identifier, player)
             .map(h -> h.value().description().getString()).orElse(id);
     }
     private List<Choice> choices(int button, TomeCatalog model, net.minecraft.world.entity.player.Player player) {

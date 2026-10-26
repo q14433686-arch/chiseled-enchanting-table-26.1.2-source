@@ -1,9 +1,4 @@
-"""UI intent contracts for the user's terminology, lock and progressive-disclosure decisions.
-
-26.1.2 adaptation of the 26.3 suite: assertions that referenced 26.3's split presenter
-classes (TablePanelBackground/TableSkin/TableOptionTooltips) point at this branch's
-current owners until the matching split lands; the user-visible contracts are identical.
-"""
+"""UI intent contracts for the user's terminology, lock and progressive-disclosure decisions."""
 import json
 from pathlib import Path
 import struct
@@ -30,7 +25,7 @@ class UiReadabilityTests(unittest.TestCase):
     def test_locked_badge_is_lock_and_level_not_unexplained_parenthesis(self):
         source = (GUI / 'EnchantementListWidget.java').read_text()
         self.assertIn('badgeText = "🔒 " + romanNumeral(curLvl + 1);', source)
-        self.assertNotIn('\\\\u2298', source)
+        self.assertNotIn('\\u2298', source)
         self.assertNotIn('" (" + nextReq', source)
 
     def test_all_six_tab_images_share_exact_png_geometry(self):
@@ -48,6 +43,7 @@ class UiReadabilityTests(unittest.TestCase):
         source = (GUI / 'ResonanceTooltip.java').read_text()
         self.assertIn('if (TooltipPresentation.detailsRequested())', source)
         self.assertNotIn('computeNextShelfMilestoneTarget', (GUI / 'ChiseledEnchantingTableScreen.java').read_text())
+        self.assertIn('reqShelves - shelves', (GUI / 'TableOptionTooltips.java').read_text())
 
     def test_lock_exception_does_not_remove_general_glyph_gate(self):
         source = (ROOT / 'scripts/ci_static_checks.py').read_text()
@@ -59,9 +55,9 @@ class UiReadabilityTests(unittest.TestCase):
         self.assertIn('CatalogueSkin.icon(', source)
         self.assertNotIn('"↓"', source)
         self.assertNotIn('"↑"', source)
-        screen = (GUI / 'ChiseledEnchantingTableScreen.java').read_text()
-        self.assertIn('CatalogueSkin.icon(ctx, icons[b]', screen)
-        self.assertNotIn('ctx.blit(TOME_BUTTONS[b]', screen)
+        panel = (GUI / 'TablePanelBackground.java').read_text()
+        self.assertIn('CatalogueSkin.icon(ctx,icons[b]', panel)
+        self.assertNotIn('ctx.blit(TOME_BUTTONS[b]', panel)
 
     def test_shared_material_has_explicit_inner_clip_and_corner_preservation(self):
         source = (GUI / 'CatalogueSkin.java').read_text()
@@ -79,6 +75,9 @@ class UiReadabilityTests(unittest.TestCase):
         screen = (GUI / 'ChiseledEnchantingTableScreen.java').read_text()
         self.assertIn('TomeDirectoryLayout.listOffset()', screen)
         self.assertIn('TomeDirectoryLayout.lockButton(index)', screen)
+        skin = (GUI / 'TableSkin.java').read_text()
+        for name in ('PANEL_X', 'PANEL_Y', 'PANEL_W', 'PANEL_H'):
+            self.assertIn(f'{name} = TomeDirectoryLayout.{name}', skin)
 
     def test_catalogue_material_and_icon_texture_dimensions(self):
         for name in ('frame', 'frame_hover', 'frame_disabled'):

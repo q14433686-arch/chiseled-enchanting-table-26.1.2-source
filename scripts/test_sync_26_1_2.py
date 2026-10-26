@@ -206,8 +206,9 @@ class SyncContracts26_1_2(unittest.TestCase):
         self.assertNotIn('Files.writeString(path, json', cfg)
 
         screen = (CLIENT / 'gui/config/ChiseledEnchantingConfigScreen.java').read_text()
-        self.assertIn('pendingSaveSinceMs', screen)
-        self.assertIn('Never create a dangling pending request', screen)
+        self.assertIn('ConfigSaveSession', screen)
+        self.assertIn('saves.expire(', screen)
+        self.assertIn('must not leave an editor permanently stuck in pending', screen)
 
     def test_config_authority_and_persistence_guards(self):
         cfg = (MAIN / 'config/ModRuntimeConfig.java').read_text()

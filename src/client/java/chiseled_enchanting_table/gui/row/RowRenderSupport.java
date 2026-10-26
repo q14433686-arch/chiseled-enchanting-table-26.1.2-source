@@ -4,7 +4,6 @@ import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import java.util.List;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -317,9 +316,20 @@ public final class RowRenderSupport {
         float maxScale,
         int maxWidth,
         int color
+    ) { renderCenteredYText(ctx, client.font, text, x, visualCenterY, maxScale, maxWidth, color); }
+
+    public static void renderCenteredYText(
+        GuiGraphicsExtractor ctx,
+        net.minecraft.client.gui.Font font,
+        String text,
+        int x,
+        float visualCenterY,
+        float maxScale,
+        int maxWidth,
+        int color
     ) {
         if (text == null || text.isEmpty() || maxWidth <= 4) return;
-        int rawW = client.font.width(text);
+        int rawW = font.width(text);
         if (rawW <= 0) return;
 
         float minScale = 0.46f;
@@ -331,12 +341,12 @@ public final class RowRenderSupport {
                 scale = needed;
             } else {
                 scale = minScale;
-                int maxRawPx = Math.max(8, Math.round(maxWidth / scale) - client.font.width("\u2026"));
-                finalStr = client.font.plainSubstrByWidth(text, maxRawPx) + "\u2026";
+                int maxRawPx = Math.max(8, Math.round(maxWidth / scale) - font.width("\u2026"));
+                finalStr = font.plainSubstrByWidth(text, maxRawPx) + "\u2026";
             }
         }
         float drawY = visualCenterY - (GLYPH_INK_HEIGHT * scale) * 0.5f;
-        renderScaledTextFloat(ctx, client, finalStr, x, drawY, scale, color);
+        renderScaledTextFloat(ctx, font, finalStr, x, drawY, scale, color);
     }
 
     /**
@@ -351,34 +361,11 @@ public final class RowRenderSupport {
         float visualCenterY,
         float maxScale,
         int color
-    ) {
-        if (text == null || text.isEmpty() || boxWidth <= 4) return;
-        int rawW = client.font.width(text);
-        if (rawW <= 0) return;
+    ) { renderCenteredBoxText(ctx, client.font, text, boxX, boxWidth, visualCenterY, maxScale, color); }
 
-        float minScale = 0.46f;
-        float scale = maxScale;
-        String finalStr = text;
-        if (rawW * scale > boxWidth) {
-            float needed = (float) boxWidth / (float) rawW;
-            if (needed >= minScale) {
-                scale = needed;
-            } else {
-                scale = minScale;
-                int maxRawPx = Math.max(8, Math.round(boxWidth / scale) - client.font.width("\u2026"));
-                finalStr = client.font.plainSubstrByWidth(text, maxRawPx) + "\u2026";
-            }
-        }
-        float renderedW = client.font.width(finalStr) * scale;
-        float drawX = boxX + (boxWidth - renderedW) * 0.5f;
-        float drawY = visualCenterY - (GLYPH_INK_HEIGHT * scale) * 0.5f;
-        renderScaledTextFloat(ctx, client, finalStr, drawX, drawY, scale, color);
-    }
-
-    /** Font-only overload for detached painters (e.g. the tome catalogue controls) that must not hold a Minecraft reference. */
     public static void renderCenteredBoxText(
         GuiGraphicsExtractor ctx,
-        Font font,
+        net.minecraft.client.gui.Font font,
         String text,
         int boxX,
         int boxWidth,
@@ -406,12 +393,7 @@ public final class RowRenderSupport {
         float renderedW = font.width(finalStr) * scale;
         float drawX = boxX + (boxWidth - renderedW) * 0.5f;
         float drawY = visualCenterY - (GLYPH_INK_HEIGHT * scale) * 0.5f;
-        var matrixStack = ctx.pose();
-        matrixStack.pushMatrix();
-        matrixStack.translate(drawX, drawY);
-        matrixStack.scale(scale, scale);
-        ctx.text(font, finalStr, 0, 0, color, true);
-        matrixStack.popMatrix();
+        renderScaledTextFloat(ctx, font, finalStr, drawX, drawY, scale, color);
     }
 
     /**
@@ -467,9 +449,20 @@ public final class RowRenderSupport {
         float maxScale,
         int maxWidth,
         int color
+    ) { renderBoundedText(ctx, client.font, text, x, y, maxScale, maxWidth, color); }
+
+    public static void renderBoundedText(
+        GuiGraphicsExtractor ctx,
+        net.minecraft.client.gui.Font font,
+        String text,
+        int x,
+        int y,
+        float maxScale,
+        int maxWidth,
+        int color
     ) {
         float approxCenterY = y + (GLYPH_INK_HEIGHT * maxScale) * 0.5f;
-        renderCenteredYText(ctx, client, text, x, approxCenterY, maxScale, maxWidth, color);
+        renderCenteredYText(ctx, font, text, x, approxCenterY, maxScale, maxWidth, color);
     }
 
     private static void drawFocusBorder(GuiGraphicsExtractor ctx, int x, int y, int width, int height) {
@@ -488,12 +481,22 @@ public final class RowRenderSupport {
         float y,
         float scale,
         int color
+    ) { renderScaledTextFloat(drawContext, client.font, text, x, y, scale, color); }
+
+    private static void renderScaledTextFloat(
+        GuiGraphicsExtractor drawContext,
+        net.minecraft.client.gui.Font font,
+        String text,
+        float x,
+        float y,
+        float scale,
+        int color
     ) {
         var matrixStack = drawContext.pose();
         matrixStack.pushMatrix();
         matrixStack.translate(x, y);
         matrixStack.scale(scale, scale);
-        drawContext.text(client.font, text, 0, 0, color, true);
+        drawContext.text(font, text, 0, 0, color, true);
         matrixStack.popMatrix();
     }
 

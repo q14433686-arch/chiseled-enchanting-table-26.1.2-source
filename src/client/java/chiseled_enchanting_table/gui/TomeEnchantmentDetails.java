@@ -26,7 +26,7 @@ final class TomeEnchantmentDetails {
         lines.add(Component.literal(TomeDisplayNames.tomeTitle(book,player)));
         lines.add(Component.translatable("gui.chiseled_enchanting_table.catalog.enchantments"));
         for (var e:book.enchantments().subList(page*size,Math.min(book.enchantments().size(),(page+1)*size))) {
-            lines.add(EnchantementListWidget.findEnchantment(e.enchantment_id(),player)
+            lines.add(EnchantmentDisplayNames.findEnchantment(e.enchantment_id(),player)
                 .map(h -> net.minecraft.world.item.enchantment.Enchantment.getFullname(h,e.enchantment_level()))
                 .orElse(Component.literal(e.enchantment_id()+" "+e.enchantment_level())));
         }

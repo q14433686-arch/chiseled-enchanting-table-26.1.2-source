@@ -13,7 +13,7 @@ final class TomeDisplayNames {
         if (!custom.isEmpty() && !custom.equals(defaultName)) return custom;
         if (book.enchantments().isEmpty()) return custom.isEmpty() ? defaultName : custom;
         var first = book.enchantments().getFirst();
-        var holder = EnchantementListWidget.findEnchantment(first.enchantment_id(), player);
+        var holder = EnchantmentDisplayNames.findEnchantment(first.enchantment_id(), player);
         String title = holder.map(h -> Enchantment.getFullname(h, first.enchantment_level()).getString())
             .orElse(first.enchantment_id().toString());
         return book.enchantments().size() > 1 ? title + " · " + net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.catalog.more", book.enchantments().size() - 1).getString() : title;
