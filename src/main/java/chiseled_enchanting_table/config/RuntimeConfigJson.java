@@ -4,6 +4,7 @@ import chiseled_enchanting_table.data.ChiseledEnchantingTableData.VanillaChestBo
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.BlankMaxTierMode;
 import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.VanillaTableMode;
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.util.Locale;
 import java.util.Set;
@@ -171,10 +172,10 @@ final class RuntimeConfigJson {
         d.grindstoneDepletedTome = boolOr(general, "grindstone_depleted_tome", d.grindstoneDepletedTome);
 
         if (shelves.has("shelf_boost_model")) {
-            d.shelfBoostModel = ShelfBoostModel.fromToken(shelves.get("shelf_boost_model").getAsString());
+            d.shelfBoostModel = ModRuntimeConfig.ShelfBoostModel.fromToken(shelves.get("shelf_boost_model").getAsString());
         }
         if (shelves.has("default_unlock_filter")) {
-            d.defaultUnlockFilter = DefaultUnlockFilter.fromToken(shelves.get("default_unlock_filter").getAsString());
+            d.defaultUnlockFilter = ModRuntimeConfig.DefaultUnlockFilter.fromToken(shelves.get("default_unlock_filter").getAsString());
         }
         d.directTierUpgrade = boolOr(shelves, "direct_tier_upgrade", d.directTierUpgrade);
         d.directGatesEnabled = boolOr(shelves, "direct_gates_enabled", d.directGatesEnabled);
@@ -217,16 +218,16 @@ final class RuntimeConfigJson {
         d.tomePageRequiredShelves = intOr(tomes, "tome_page_required_shelves", d.tomePageRequiredShelves);
         d.incrementalCredit = boolOr(tomes, "incremental_credit", d.incrementalCredit);
         if (tomes.has("xp_mode")) {
-            d.xpMode = XpSettlementMode.fromToken(tomes.get("xp_mode").getAsString());
+            d.xpMode = ModRuntimeConfig.XpSettlementMode.fromToken(tomes.get("xp_mode").getAsString());
         }
         if (tomes.has("cost_table")) {
-            d.costTableDataset = CostTableDataset.fromToken(tomes.get("cost_table").getAsString());
+            d.costTableDataset = ModRuntimeConfig.CostTableDataset.fromToken(tomes.get("cost_table").getAsString());
         }
         if (tomes.has("material_selection")) {
-            d.materialSelectionMode = MaterialSelectionMode.fromToken(tomes.get("material_selection").getAsString());
+            d.materialSelectionMode = ModRuntimeConfig.MaterialSelectionMode.fromToken(tomes.get("material_selection").getAsString());
         }
         if (tomes.has("research_rounding")) {
-            d.researchRoundingMode = ResearchRoundingMode.fromToken(tomes.get("research_rounding").getAsString());
+            d.researchRoundingMode = ModRuntimeConfig.ResearchRoundingMode.fromToken(tomes.get("research_rounding").getAsString());
         }
         d.libraryDiscountEnabled = boolOr(tomes, "library_discount", d.libraryDiscountEnabled);
         d.maxWoodenDiscountPercent = intOr(tomes, "max_wooden_discount_percent", d.maxWoodenDiscountPercent);
@@ -255,11 +256,11 @@ final class RuntimeConfigJson {
         d.allowCursePurge = boolOr(cleanse, "allow_curse_purge", d.allowCursePurge);
         d.cursePurgeXpCost = intOr(cleanse, "curse_purge_xp_cost", d.cursePurgeXpCost);
         if (cleanse.has("transformation_set")) {
-            d.transformationSetMode = TransformationSetMode.fromToken(cleanse.get("transformation_set").getAsString());
+            d.transformationSetMode = ModRuntimeConfig.TransformationSetMode.fromToken(cleanse.get("transformation_set").getAsString());
         }
         d.requirePriorDiscovery = boolOr(cleanse, "require_prior_discovery", d.requirePriorDiscovery);
         if (cleanse.has("drained_book_result")) {
-            d.drainedBookResult = DrainedBookResult.fromToken(cleanse.get("drained_book_result").getAsString());
+            d.drainedBookResult = ModRuntimeConfig.DrainedBookResult.fromToken(cleanse.get("drained_book_result").getAsString());
         }
         d.tomePageEnabled = boolOr(cleanse, "tome_page_enabled", d.tomePageEnabled);
         d.tier1Bookshelves = intOr(cleanse, "tier1_bookshelves", d.tier1Bookshelves);
