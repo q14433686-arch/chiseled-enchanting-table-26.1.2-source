@@ -18,9 +18,10 @@ are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CHANGELOG_HISTORY.md).
 ## [1.1.0 development] — Rainbow cloth, 2026-10-26
 
 - Add the optional `jeb_` name-tag/sneak-use rainbow tablecloth, using the vanilla sheep colour lerper; no per-frame colour packets or chunk rebuilds.
+- Rainbow inventory/held-item icons now animate with GUI-cache invalidation; localized tooltip badges preserve player names, dye and frozen-cycle data. Normal dyed icons stay static; actual resource reload is tested.
 - Preserve normal dye mixing and static models. Dyeing exits the mode; loot/placement retain the flag without overwriting frozen-cycle metadata.
 - Advance compatibility to **26_3_revision_12** for the new registered block state, with the release still **1.1.0 / MC 26.3**. Update both ends. [Protocol notes](docs/PROTOCOL_HISTORY.md).
-- Verified source `871b696`: **155 JUnit**, complete build, no-viewer compile and real server/client smoke. [Exact evidence and limits](docs/reports/RAINBOW_CLOTH_2026_10_26.md).
+- Verified source `0a43bd3`: **155 JUnit**, complete build, no-viewer compile and real server/client smoke including live baked item tints and actual resource reload. [Exact evidence and limits](docs/reports/RAINBOW_CLOTH_2026_10_26.md).
 
 ## [Unreleased] — 2026-10-24 设计审计包
 

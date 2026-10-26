@@ -1,13 +1,13 @@
 # `jeb_` 彩虹桌布彩蛋 — 2026-10-26
 
-源码：`871b696532df3882559057670dcb5ed0a255570e`。保持 **1.1.0 / MC 26.3**，兼容性通道升至 **26_3_revision_12**。
+当前源码：`0a43bd3a7e4284beef49a21dbffa34bdc5e513f7`；下方原始放置桌布验证对应 `871b696532df3882559057670dcb5ed0a255570e`。保持 **1.1.0 / MC 26.3**，兼容性通道升至 **26_3_revision_12**。
 
 ## 玩家行为
 
 - 使用原版彩虹羊的准确名称 **`jeb_`**，小写、下划线在末尾；`_JEB`、`Jeb_` 不触发。
 - 手持已命名的命名牌，蹲下对篆刻附魔台右键，开启循环渐变桌布。命名牌不消耗；不修改附魔台自定义名称。重复触发保持开启，不开菜单或反复开关。
 - 正常使用染料会退出彩虹模式，并按原有规则与保存的底色混色、扣除一个染料；不把某一帧的随机渐变色混进永久底色。
-- 打掉后通过现有 `minecraft:custom_data` 保存开关，放回恢复。原有染色、冻结倒计时/世代周期数据可以与彩蛋标志共存。物品栏图标仍使用原静态染色模型，不做物品动画。
+- 打掉后通过现有 `minecraft:custom_data` 保存开关，放回恢复。原有染色、冻结倒计时/世代周期数据可以与彩蛋标志共存。追加的客户端表现使彩虹物品栏/手持图标实时渐变，普通染色物品不动画；不改变持久化格式。
 - 保留旁观者/建造权限、原版 `mayInteract` 和 `mayUseItemAt` 检查。未承诺通用第三方领地保护兼容，需在相应整合包另测。
 
 ## 为什么这样实现
@@ -16,12 +16,23 @@
 2. **不能逐帧重烘焙区块**：静态 tint 会缓存于区块网格。增加默认关闭的 `rainbow_cloth` 方块状态，只在该状态下用不带静态桌布的模型变体，再由现有 BER 绘制五个桌布面。
 3. **不重复造调色算法**：26.3 原版羊使用 `ColorLerper.Type.SHEEP`，含羊毛亮度与 sRGB 插值，本实现直接复用。每种颜色25 tick、16色循环，约20秒一轮；保留 partial tick。先取模限制时间精度，避免老世界长时间运行后 float 丢失渐变细节。
 4. **不逐帧同步颜色**：服务端只切换持久化方块状态；客户端按世界时间计算颜色。不新增颜色包、随机序列或每帧区块更新。绘制提交只捕获颜色/光照数值，不在提交阶段访问可变世界数据；固定面坐标、UV和纹理标识预先缓存。
-5. **普通模式不回归**：原方块模型、物品模型和 tint 路径不改；仅彩虹状态走额外动态路径。纹理仍使用现有桌布 overlay，不染书本或台座。
+5. **普通模式不回归**：普通台仍走原方块模型与物品 Dye tint 路径；仅彩虹状态走额外动态路径。纹理仍使用现有桌布 overlay，不染书本或台座。
 6. **新旧端不能静默混用**：新增注册方块状态属于客户端/服务端共同 schema。虽不改经济菜单载荷字段，仍将现有兼容性能力通道和带后缀业务通道升到 revision12；revision11 自动保留为旧探测项，不注册旧解码器。协议测试明确更新预期版本，并保留其余载荷与边界断言。[协议说明](../PROTOCOL_HISTORY.md)。
 
-## 验证
+## 追加：背包辨识与实时物品图标
 
-最终 CI 已确认：
+Verified source **`0a43bd3a7e4284beef49a21dbffa34bdc5e513f7`**; **1.1.0 / MC 26.3 / `26_3_revision_12`** unchanged. This client presentation extension adds no component, registered state, payload or Mixin.
+
+- Rainbow items show a purple localized **〔彩虹〕 / [Rainbow]** suffix in their tooltip header and two short explanatory lines. Player custom names and stored name/lore/data components are not rewritten; hotbar hover-name text remains the original name.
+- Fabric's item-model before-bake hook replaces only the table's primary dye tint. Rainbow GUI/held models use the same vanilla sheep clock as placed cloth, with an explicit animated flag to prevent GUI atlas freezing. Ordinary tables still delegate to the original Dye source. Non-cuboid/no-primary-Dye resource-pack models are preserved with a warning, not forcibly replaced.
+- [compile-check 40267243846](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40267243846): **155 JUnit, zero failures/errors/skips**. [build 40267243828](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40267243828): all jobs successful, including no-viewer compilation and real server/SDL client smoke.
+- Diagnostics include **RAINBOW ITEM PASS** and **RAINBOW ITEM RELOAD PASS**: actual server loot, baked GUI colour changes across live frames, animated-cache flag, held colour parity, static ordinary dye control, actual tooltip callback/custom-name safety, unchanged custom data, and actual resource reload. Existing **RAINBOW CLOTH PASS**, **CATALOGUE WORLD PASS**, **CLIENT SMOKE PASS** remain passing.
+- [Installable build including item animation](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40267243828/artifacts/12626602664); [native evidence including rainbow-items-a.png and rainbow-items-b.png](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40267243828/artifacts/12626638940). These are two captured frames, not a manually reviewed animation recording or a claim of all shader/resource-pack compatibility.
+- [Implementation and limits](RAINBOW_CLOTH_2026_10_26.md). No PR/merge authorized or performed.
+
+## 原始放置桌布验证（871b696）
+
+该阶段 CI 已确认（旧构建不含后续物品动画）：
 
 - [compile-check 40263622160](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40263622160)：**155 JUnit，零失败、错误或跳过**，含7项新测试。
 - [build 40263622260](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40263622260)：四个业务 job、compile/server-smoke diagnostics 全部 success，含关闭 JEI/REI 的编译和真实服务端/中文 SDL 客户端。

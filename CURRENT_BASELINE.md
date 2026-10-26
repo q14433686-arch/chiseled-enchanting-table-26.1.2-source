@@ -13,7 +13,18 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Latest rainbow-cloth validation — 2026-10-26
+## Latest rainbow-item validation — 2026-10-26
+
+Verified source **`0a43bd3a7e4284beef49a21dbffa34bdc5e513f7`**; **1.1.0 / MC 26.3 / `26_3_revision_12`** unchanged. This client presentation extension adds no component, registered state, payload or Mixin.
+
+- Rainbow items show a purple localized **〔彩虹〕 / [Rainbow]** suffix in their tooltip header and two short explanatory lines. Player custom names and stored name/lore/data components are not rewritten; hotbar hover-name text remains the original name.
+- Fabric's item-model before-bake hook replaces only the table's primary dye tint. Rainbow GUI/held models use the same vanilla sheep clock as placed cloth, with an explicit animated flag to prevent GUI atlas freezing. Ordinary tables still delegate to the original Dye source. Non-cuboid/no-primary-Dye resource-pack models are preserved with a warning, not forcibly replaced.
+- [compile-check 40267243846](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40267243846): **155 JUnit, zero failures/errors/skips**. [build 40267243828](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40267243828): all jobs successful, including no-viewer compilation and real server/SDL client smoke.
+- Diagnostics include **RAINBOW ITEM PASS** and **RAINBOW ITEM RELOAD PASS**: actual server loot, baked GUI colour changes across live frames, animated-cache flag, held colour parity, static ordinary dye control, actual tooltip callback/custom-name safety, unchanged custom data, and actual resource reload. Existing **RAINBOW CLOTH PASS**, **CATALOGUE WORLD PASS**, **CLIENT SMOKE PASS** remain passing.
+- [Installable build including item animation](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40267243828/artifacts/12626602664); [native evidence including rainbow-items-a.png and rainbow-items-b.png](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40267243828/artifacts/12626638940). These are two captured frames, not a manually reviewed animation recording or a claim of all shader/resource-pack compatibility.
+- [Implementation and limits](docs/reports/RAINBOW_CLOTH_2026_10_26.md). No PR/merge authorized or performed.
+
+## Previous placed rainbow-cloth validation — 2026-10-26
 
 Verified source **`871b696532df3882559057670dcb5ed0a255570e`**; release **1.1.0 / MC 26.3**, compatibility channel **`26_3_revision_12`**. Update client and server together: the new `rainbow_cloth` registered block state is not compatible with prior revision11 builds, even though business payload layouts and release label are unchanged.
 

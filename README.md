@@ -24,7 +24,7 @@ Targeted, deterministic enchanting for Fabric **26.3** — choose exact enchantm
 <details>
 <summary>Optional cosmetic easter egg (spoiler)</summary>
 
-Sneak-right-click the table with a name tag named exactly `jeb_` to enable a smooth vanilla-sheep rainbow tablecloth. The tag is reusable. Ordinary dyeing restores static colour mode; dropped tables retain the rainbow flag when placed again. Inventory icons remain static. [Implementation and validation limits](docs/reports/RAINBOW_CLOTH_2026_10_26.md).
+Sneak-right-click the table with a name tag named exactly `jeb_` to enable a smooth vanilla-sheep rainbow tablecloth. The tag is reusable. Ordinary dyeing restores static colour mode; dropped tables retain the rainbow flag when placed again. Rainbow inventory and held-item icons animate smoothly too; a localized purple [Rainbow] tooltip badge identifies them without overwriting custom names. Ordinary dyed tables stay static. [Implementation and validation limits](docs/reports/RAINBOW_CLOTH_2026_10_26.md).
 
 </details>
 
