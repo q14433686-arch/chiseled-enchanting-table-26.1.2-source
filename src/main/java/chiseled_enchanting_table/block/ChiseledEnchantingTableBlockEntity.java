@@ -1054,8 +1054,10 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         long rem = this.pendingFreezeTicks > 0L
             ? this.pendingFreezeTicks
             : (this.level != null ? remainingFreezeTicks(this.level.getGameTime()) : 0L);
+        CompoundTag tag = new CompoundTag();
+        if (getBlockState().getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH))
+            tag.putBoolean(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, true);
         if (rem > 0L) {
-            CompoundTag tag = new CompoundTag();
             if (this.epiphanySeed != 0) {
                 tag.putInt("epiphanySeed", this.epiphanySeed);
             }
@@ -1070,8 +1072,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                         .withStyle(style -> style.withItalic(false).withColor(ChatFormatting.AQUA))
                 ))
             );
-            componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         }
+        if (!tag.isEmpty()) componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
     @Override
