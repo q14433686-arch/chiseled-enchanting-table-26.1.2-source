@@ -10,91 +10,152 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java:802: error: cannot find symbol
-        PayloadLimits.writeBoundedCount(buf, cfg.overrides().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-                                                                     ^
-  symbol:   variable PayloadLimits
-  location: class BookshelfProgression
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java:802: error: cannot find symbol
-        PayloadLimits.writeBoundedCount(buf, cfg.overrides().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-        ^
-  symbol:   variable PayloadLimits
-  location: class BookshelfProgression
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java:805: error: cannot find symbol
-            PayloadLimits.writeBoundedCount(buf, ov.getValue().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-                                                                       ^
-  symbol:   variable PayloadLimits
-  location: class BookshelfProgression
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java:805: error: cannot find symbol
-            PayloadLimits.writeBoundedCount(buf, ov.getValue().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-            ^
-  symbol:   variable PayloadLimits
-  location: class BookshelfProgression
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/LibraryResonance.java:1501: error: cannot find symbol
-        PayloadLimits.writeBoundedCount(buf, cfg.wildBookRemainingWeights().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-                                                                                    ^
-  symbol:   variable PayloadLimits
-  location: class LibraryResonance
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/LibraryResonance.java:1501: error: cannot find symbol
-        PayloadLimits.writeBoundedCount(buf, cfg.wildBookRemainingWeights().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-        ^
-  symbol:   variable PayloadLimits
-  location: class LibraryResonance
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-6 errors
 
-> Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792989045351.json
+> Task :processResources
+> Task :classes
+> Task :generateLog4jConfig
+> Task :generateDLIConfig
+> Task :configureLaunch
+
+> Task :runServer
+[04:32:21] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.1.2 with Fabric Loader 0.19.3
+[04:32:21] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[04:32:21] [main/INFO] (FabricLoader) Loading 43 mods:
+	- chiseled-enchanting-table 1.1.0
+	- fabric-api 0.151.0+26.1.2
+	   |-- fabric-key-mapping-api-v1 2.0.4+e2bdee784c
+	   |-- fabric-model-loading-api-v1 8.0.7+c80601bb4c
+	   |-- fabric-renderer-api-v1 13.0.4+c80601bb4c
+	   |-- fabric-renderer-indigo 8.1.1+1403e82c4c
+	   |-- fabric-rendering-v1 23.1.1+1403e82c4c
+	   |-- fabric-screen-api-v1 5.0.1+d871b99e4c
+	   \-- fabric-sound-api-v1 2.0.4+11a26f314c
+	- fabric-api-base 2.0.3+ece063234c
+	- fabric-api-lookup-api-v1 2.0.11+d5a053b64c
+	- fabric-biome-api-v1 18.0.5+2fa62b4e4c
+	- fabric-block-api-v1 3.0.2+ec56b6014c
+	- fabric-block-getter-api-v2 2.0.6+ec56b6014c
+	- fabric-command-api-v2 3.0.5+e2bdee784c
+	- fabric-content-registries-v0 11.2.0+76b0b6bb4c
+	- fabric-convention-tags-v2 4.6.1+4f11f7994c
+	- fabric-crash-report-info-v1 1.0.3+9f78a5a84c
+	- fabric-creative-tab-api-v1 5.0.11+d871b99e4c
+	- fabric-data-attachment-api-v1 2.2.8+44a0bd1d4c
+	- fabric-data-generation-api-v1 24.3.0+83dd0ba34c
+	- fabric-debug-api-v1 1.0.1+c792624d4c
+	- fabric-dimensions-v1 5.1.5+9cbf5da54c
+	- fabric-entity-events-v1 5.0.2+e2bdee784c
+	- fabric-events-interaction-v0 5.2.2+07b380be4c
+	- fabric-game-rule-api-v1 4.0.5+d871b99e4c
+	- fabric-gametest-api-v1 4.0.17+867b87624c
+	- fabric-item-api-v1 14.1.2+73d134684c
+	- fabric-lifecycle-events-v1 4.1.0+6d50a0854c
+	- fabric-loot-api-v3 3.0.12+00a1fba64c
+	- fabric-menu-api-v1 2.0.14+d871b99e4c
+	- fabric-message-api-v1 7.0.5+dae8ce3e4c
+	- fabric-networking-api-v1 6.3.1+554860db4c
+	- fabric-object-builder-api-v1 23.0.17+b95dd56e4c
+	- fabric-particles-v1 5.0.15+b61fef434c
+	- fabric-permission-api-v1 1.0.1+c3369b134c
+	- fabric-recipe-api-v1 9.0.15+be4b75ae4c
+	- fabric-registry-sync-v0 7.1.0+2fa62b4e4c
+	- fabric-rendering-fluids-v1 6.0.1+d871b99e4c
+	- fabric-resource-conditions-api-v1 6.1.0+83dd0ba34c
+	- fabric-resource-loader-v0 3.3.17+4fc5413f4c
+	- fabric-resource-loader-v1 2.0.10+7c44c7324c
+	- fabric-serialization-api-v1 2.0.3+11a26f314c
+	- fabric-tag-api-v1 2.1.1+371cf5db4c
+	- fabric-transfer-api-v1 8.0.5+357ea7334c
+	- fabric-transitive-access-wideners-v1 8.1.1+7f80f93d4c
+	- fabricloader 0.19.3
+	- java 25
+	- minecraft 26.1.2
+	- mixinextras 0.5.4
+[04:32:21] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[04:32:21] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[04:32:22] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[04:32:29] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
+[04:32:29] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[04:32:31] [Worker-Main-3/INFO] (Minecraft) No existing world data, creating new world
+[04:32:32] [main/INFO] (Minecraft) Loaded 1522 recipes
+[04:32:32] [main/INFO] (Minecraft) Loaded 1650 advancements
+[04:32:32] [main/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
+[04:32:32] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 2.369 ms
+[04:32:32] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.1.2
+[04:32:32] [Server thread/INFO] (Minecraft) Loading properties
+[04:32:32] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[04:32:32] [Server thread/INFO] (Minecraft) Generating keypair
+[04:32:32] [Server thread/INFO] (Minecraft) Starting Minecraft server on 127.0.0.1:0
+[04:32:32] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[04:32:32] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
+[04:32:32] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[04:32:32] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
+[04:32:32] [Server thread/INFO] (Minecraft) Preparing level "audit-world"
+[04:32:33] [Server thread/INFO] (Minecraft) Selecting global world spawn...
+[04:32:33] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[04:32:33] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[04:32:33] [Server thread/INFO] (Minecraft) Time elapsed: 548 ms
+[04:32:33] [Server thread/INFO] (Minecraft) Done (0.699s)! For help, type "help"
+[04:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
+[04:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
+[04:32:33] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
+[04:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[04:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[04:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[04:32:33] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[04:32:33] [Server thread/INFO] (Minecraft) Reloading!
+[04:32:34] [Server thread/INFO] (Minecraft) Loaded 1522 recipes
+[04:32:34] [Server thread/INFO] (Minecraft) Loaded 1650 advancements
+[04:32:34] [Server thread/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
+[04:32:34] [Server thread/INFO] (Minecraft) Marked chunk [0, 0] in minecraft:overworld to be force loaded
+[04:32:34] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:spawn_table' in 20 tick(s) at gametime 21
+[04:32:35] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
+[04:32:35] [Server thread/INFO] (Minecraft) item.chiseled_enchanting_table.chiseled_enchanting_table has the following entity data: {Motion: [-0.009323329642144993d, -0.23042028238044074d, -0.01940394583907292d], Health: 5s, Invulnerable: 0b, fall_distance: 0.8632246064953506d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [20.977686f, 0.0f], Item: {components: {"minecraft:lore": [{with: ["01:00"], color: "aqua", italic: 0b, translate: "item.chiseled_enchanting_table.frozen_lore"}], "minecraft:custom_name": "Audit Table", "minecraft:custom_data": {pendingFreezeTicks: 1200L, epiphanySeed: 123456, frozenCycleIndex: 17}, "minecraft:dyed_color": 1122867}, count: 1, id: "chiseled_enchanting_table:chiseled_enchanting_table"}, Pos: [0.3839906119378763d, 66.52101411902204d, 0.2585583724717954d], PickupDelay: 0s, Fire: 0s, UUID: [I; -915935773, -1182775041, -1092875116, -984736789], Age: 11s}
+[04:32:35] [Server thread/INFO] (Minecraft) Killed item.chiseled_enchanting_table.chiseled_enchanting_table
+[04:32:35] [Server thread/INFO] (Minecraft) Dropped 1 [Enchanted Book]
+[04:32:35] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:inspect' in 10 tick(s) at gametime 45
+[04:32:35] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
+[04:32:35] [Server thread/INFO] (Minecraft) Enchanted Book has the following entity data: {Motion: [-0.05713369017409571d, -0.12235187122334311d, -0.059736862142309576d], Health: 5s, Invulnerable: 0b, fall_distance: 0.2666451591067016d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [313.5186f, 0.0f], Item: {count: 1, id: "minecraft:enchanted_book"}, Pos: [-0.0011065502174290517d, 67.11759356116714d, -0.023938377124450787d], PickupDelay: 2s, Fire: 0s, UUID: [I; -1097147262, 651905289, -1355703688, 1740457326], Age: 8s}
+[04:32:36] [Server thread/INFO] (Minecraft) Killed Enchanted Book
+[04:32:36] [Server thread/INFO] (Minecraft) Dropped 1 [Enchanted Book]
+[04:32:36] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:inspect' in 10 tick(s) at gametime 59
+[04:32:36] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
+[04:32:36] [Server thread/INFO] (Minecraft) Enchanted Book has the following entity data: {Motion: [-0.08267335050296909d, -0.04658045733376002d, -0.022039757228045957d], Health: 5s, Invulnerable: 0b, fall_distance: 0.05521585373207927d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [10.750036f, 0.0f], Item: {count: 1, id: "minecraft:enchanted_book"}, Pos: [-0.032701551064336004d, 67.32902286668799d, 0.3579879394141665d], PickupDelay: 4s, Fire: 0s, UUID: [I; -347650249, 609635231, -1936704160, -917395450], Age: 6s}
+[04:32:36] [Server thread/INFO] (Minecraft) Running function cet_audit_smoke:ritual
+[04:32:37] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_PENDING
+[04:32:37] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, ritualQueueData: [{id: "minecraft:sharpness", target_level: 1, previous_level: 0}], color: -1, pendingFreezeTicks: 0L, ritualBlocked: 0b, ritualSession: 123L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 68L, ritualTotalTicks: 80L, ritualOwnerUuid: "00000000-0000-0000-0000-000000000001", epiphanySeed: 0, ritualQueue: "minecraft:sharpness|1|0|0|0|0|0|0.0000|0||-1", x: 1, ritualTarget: {count: 1, id: "minecraft:diamond_sword"}, y: 65, Items: [{count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
+[04:32:37] [Server thread/INFO] (Minecraft) Saving the game (this may take a moment!)
+[04:32:37] [Server thread/INFO] (Minecraft) Saved the game
+[04:32:37] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:ritual_finished' in 100 tick(s) at gametime 177
+[04:32:42] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_FINISHED
+[04:32:42] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, color: -1, pendingFreezeTicks: 0L, ritualBlocked: 0b, ritualSession: 123L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 0L, ritualTotalTicks: 0L, ritualOwnerUuid: "", epiphanySeed: 0, ritualQueue: "", x: 1, y: 65, Items: [{components: {"minecraft:enchantments": {"minecraft:sharpness": 1}, "minecraft:custom_data": {cet_provenance: {"minecraft:sharpness": [B; 1b]}, cet_schema: 1}}, count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
+[04:32:42] [Server thread/INFO] (Minecraft) Running function cet_audit_smoke:ritual_invalid
+[04:32:42] [Server thread/WARN] (chiseled_enchanting_table) Quarantined invalid ritual at BlockPos{x=1, y=65, z=0}
+[04:32:43] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_QUARANTINED
+[04:32:43] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, ritualQueueData: [{id: "cet_audit_smoke:removed_enchantment", target_level: 1, previous_level: 0}], color: -1, pendingFreezeTicks: 0L, ritualBlocked: 1b, ritualSession: 456L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 0L, ritualTotalTicks: 1L, ritualOwnerUuid: "00000000-0000-0000-0000-000000000001", epiphanySeed: 0, ritualQueue: "cet_audit_smoke:removed_enchantment|1|0|0|0|0|0|0.0000|0||-1", x: 1, ritualTarget: {count: 1, id: "minecraft:diamond_sword"}, y: 65, Items: [{count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
+[04:32:43] [Server thread/INFO] (Minecraft) Killed Enchanted Book
+[04:32:43] [Server thread/INFO] (Minecraft) Changed the block at 1, 65, 0
+[04:32:43] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:ritual_broken' in 10 tick(s) at gametime 205
+[04:32:43] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_BROKEN
+[04:32:43] [Server thread/INFO] (Minecraft) Diamond Sword has the following entity data: {Motion: [0.013672771978739857d, -0.06237256177464607d, -0.040252754443027d], Health: 5s, Invulnerable: 0b, fall_distance: 0.08777350559830666d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [130.65411f, 0.0f], Item: {count: 1, id: "minecraft:diamond_sword"}, Pos: [1.8317466870349106d, 65.90369481542713d, -0.019921100046535828d], PickupDelay: 0s, Fire: 0s, UUID: [I; 1902710709, -1788132369, -1744863028, 782898823], Age: 6s}
+[04:32:44] [Server thread/INFO] (Minecraft) Stopping the server
+[04:32:44] [Server thread/INFO] (Minecraft) Stopping server
+[04:32:44] [Server thread/INFO] (Minecraft) Saving players
+[04:32:44] [Server thread/INFO] (Minecraft) Saving worlds
+[04:32:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
+[04:32:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
+[04:32:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
+[04:32:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[04:32:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[04:32:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[04:32:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792989127982.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':compileJava'.
-> Compilation failed; see the compiler output below.
-  Note: Recompile with -Xlint:deprecation for details.
-  Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java:802: error: cannot find symbol
-          PayloadLimits.writeBoundedCount(buf, cfg.overrides().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-                                                                       ^
-    symbol:   variable PayloadLimits
-    location: class BookshelfProgression
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java:802: error: cannot find symbol
-          PayloadLimits.writeBoundedCount(buf, cfg.overrides().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-          ^
-    symbol:   variable PayloadLimits
-    location: class BookshelfProgression
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java:805: error: cannot find symbol
-              PayloadLimits.writeBoundedCount(buf, ov.getValue().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-                                                                         ^
-    symbol:   variable PayloadLimits
-    location: class BookshelfProgression
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/BookshelfProgression.java:805: error: cannot find symbol
-              PayloadLimits.writeBoundedCount(buf, ov.getValue().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-              ^
-    symbol:   variable PayloadLimits
-    location: class BookshelfProgression
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/LibraryResonance.java:1501: error: cannot find symbol
-          PayloadLimits.writeBoundedCount(buf, cfg.wildBookRemainingWeights().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-                                                                                      ^
-    symbol:   variable PayloadLimits
-    location: class LibraryResonance
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/mechanics/resonance/LibraryResonance.java:1501: error: cannot find symbol
-          PayloadLimits.writeBoundedCount(buf, cfg.wildBookRemainingWeights().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
-          ^
-    symbol:   variable PayloadLimits
-    location: class LibraryResonance
-  Note: Recompile with -Xlint:unchecked for details.
-  Note: Some input files use or override a deprecated API.
-  6 errors
-
-* Try:
-> Check your code and dependencies to fix the compilation error(s)
-> Run with --scan to get full insights from a Build Scan (powered by Develocity).
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 
@@ -102,5 +163,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 17s
-1 actionable task: 1 executed
+BUILD SUCCESSFUL in 41s
+5 actionable tasks: 5 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
