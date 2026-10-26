@@ -85,7 +85,18 @@ final class TableNavigationTooltips {
                     lrCfg.earlyUnlockXpLevels(),
                     lrCfg.earlyUnlockGritCount())
                 : Component.translatable(key);
-            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), List.of(tipText.withStyle(ChatFormatting.GRAY), Component.translatable("gui.chiseled_enchanting_table.catalog.batch_help").withStyle(ChatFormatting.GOLD)), Optional.empty(), mouseX, mouseY, (Identifier) null);
+            String titleKey = switch(tomeBtn) {
+                case 0 -> "gui.chiseled_enchanting_table.tomes.btn_next";
+                case 1 -> "gui.chiseled_enchanting_table.tomes.btn_full";
+                case 2 -> "gui.chiseled_enchanting_table.tomes.btn_permanent";
+                case 3 -> "gui.chiseled_enchanting_table.tomes.btn_unlock";
+                default -> "gui.chiseled_enchanting_table.catalog.batch_full";
+            };
+            var lines = new ArrayList<Component>();
+            lines.add(Component.translatable(titleKey).withStyle(ChatFormatting.AQUA));
+            lines.add(tipText.withStyle(ChatFormatting.GRAY));
+            if(tomeBtn!=4) lines.add(Component.translatable("gui.chiseled_enchanting_table.catalog.batch_help").withStyle(ChatFormatting.GOLD));
+            TooltipPresentation.show(ctx,state.font(),lines,Optional.empty(),mouseX,mouseY,null);
             return true;
         }
         var hoveredTome = state.list().hoveredTomeEntry(mouseX, mouseY);

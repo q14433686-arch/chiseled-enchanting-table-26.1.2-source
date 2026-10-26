@@ -50,6 +50,40 @@ class UiReadabilityTests(unittest.TestCase):
         self.assertIn('ord(ch) > 0xFFFF and ch != "🔒"', source)
         self.assertIn('surrogate_esc.search(text)', source)
 
+    def test_catalogue_actions_are_sprites_not_text_or_unicode_glyphs(self):
+        source = (GUI / 'TomeDirectoryControls.java').read_text()
+        self.assertIn('CatalogueSkin.icon(', source)
+        self.assertNotIn('"↓"', source)
+        self.assertNotIn('"↑"', source)
+        panel = (GUI / 'TablePanelBackground.java').read_text()
+        self.assertIn('CatalogueSkin.icon(ctx,icons[b]', panel)
+        self.assertNotIn('ctx.blit(TOME_BUTTONS[b]', panel)
+
+    def test_shared_material_has_explicit_inner_clip_and_corner_preservation(self):
+        source = (GUI / 'CatalogueSkin.java').read_text()
+        self.assertIn('enableScissor', source)
+        self.assertIn('finally { ctx.disableScissor(); }', source)
+        self.assertIn('float[] uv={0,.25f,.75f,1}', source)
+        self.assertIn('frame_hover', source)
+        self.assertIn('frame_disabled', source)
+
+    def test_catalogue_layout_is_shared_by_hit_tests_paint_and_list_geometry(self):
+        source = (GUI / 'TomeDirectoryControls.java').read_text()
+        for call in ('TomeDirectoryLayout.button(i)', 'TomeDirectoryLayout.popupRow(', 'TomeDirectoryLayout.FRAME'):
+            self.assertIn(call, source)
+        self.assertNotIn('ctx.fill(bx,by,bx+b[2]', source)
+        screen = (GUI / 'ChiseledEnchantingTableScreen.java').read_text()
+        self.assertIn('TomeDirectoryLayout.listOffset()', screen)
+        self.assertIn('TomeDirectoryLayout.lockButton(index)', screen)
+
+    def test_catalogue_material_and_icon_texture_dimensions(self):
+        for name in ('frame', 'frame_hover', 'frame_disabled'):
+            data = (ASSETS / f'gui/catalogue_{name}.png').read_bytes()
+            self.assertEqual((32, 32), struct.unpack('>II', data[16:24]))
+        for path in (ASSETS / 'gui').glob('catalogue_icon_*.png'):
+            self.assertEqual((7, 7), struct.unpack('>II', path.read_bytes()[16:24]))
+        self.assertEqual(10, len(list((ASSETS / 'gui').glob('catalogue_icon_*.png'))))
+
 
 if __name__ == '__main__':
     unittest.main()

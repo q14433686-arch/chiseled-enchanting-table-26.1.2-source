@@ -1,6 +1,5 @@
 package chiseled_enchanting_table.gui;
 
-import chiseled_enchanting_table.gui.row.RowRenderSupport;
 
 import chiseled_enchanting_table.catalog.TomeCatalog;
 import java.util.*;
@@ -15,18 +14,9 @@ final class TomeDirectoryControls {
     private record Choice(String label, Runnable apply) {}
     private List<Choice> choices = List.of();
     static String text(String key, Object... args) { return Component.translatable(PREFIX + key, args).getString(); }
-    private static int[] box(int i) {
-        return switch (i) {
-            case 0 -> new int[]{0,0,99,10}; case 1 -> new int[]{100,0,51,10};
-            case 2 -> new int[]{0,11,75,10}; case 3 -> new int[]{76,11,75,10};
-            case 4 -> new int[]{0,22,99,10}; case 5 -> new int[]{100,22,24,10};
-            case 6 -> new int[]{125,22,26,10}; case 7 -> new int[]{0,33,99,10};
-            default -> new int[]{100,33,51,10};
-        };
-    }
     boolean scroll(double amount) {
         if (open < 0) return false;
-        offset = Math.max(0, Math.min(Math.max(0, choices.size()-7), offset - (int)Math.signum(amount)));
+        offset = Math.max(0, Math.min(Math.max(0, choices.size()-TomeDirectoryLayout.POPUP_LIMIT), offset - (int)Math.signum(amount)));
         return true;
     }
     void close() { open = -1; }
@@ -56,15 +46,16 @@ final class TomeDirectoryControls {
     boolean click(double mx, double my, int x, int y, TomeCatalog model,
                   net.minecraft.world.entity.player.Player player, Runnable refresh) {
         if (open >= 0) {
-            int row = (int)((my-y-44)/11);
-            if (mx >= x && mx < x+151 && my >= y+44 && row >= 0 && row < Math.min(7, choices.size()-offset)) {
+            int count = Math.min(TomeDirectoryLayout.POPUP_LIMIT, choices.size()-offset);
+            for(int row=0;row<count;row++) {
+                if(!TomeDirectoryLayout.popupRow(row).contains(mx-x,my-y)) continue;
                 choices.get(offset+row).apply().run(); model.refresh(); refresh.run();
+                break;
             }
             close(); return true;
         }
         for (int i=0;i<9;i++) {
-            int[] b = box(i);
-            if (mx < x+b[0] || mx >= x+b[0]+b[2] || my < y+b[1] || my >= y+b[1]+b[3]) continue;
+            if (!TomeDirectoryLayout.button(i).contains(mx-x,my-y)) continue;
             switch (i) {
                 case 5 -> { model.descending = !model.descending; model.refresh(); refresh.run(); }
                 case 6 -> { model.reset(); refresh.run(); }
@@ -78,34 +69,44 @@ final class TomeDirectoryControls {
     }
     boolean render(GuiGraphicsExtractor ctx, Font font, int x, int y, int mx, int my,
                    TomeCatalog model, net.minecraft.world.entity.player.Player player) {
-        var texture = chiseled_enchanting_table.ChiseledEnchantingTable.identifier("gui/tome_directory.png");
-        ctx.blit(texture, x-1,y-1,x+152,y+44,0,1,0,1);
+        CatalogueSkin.frame(ctx,x,y,TomeDirectoryLayout.WIDTH,TomeDirectoryLayout.HEIGHT,false,true);
         String[] labels = {
             model.enchantment == null ? text("all_enchantments") : enchantName(model.enchantment, player),
             text("lock."+model.lock.name().toLowerCase(Locale.ROOT)),
             text("remaining", model.remaining == null ? text("any") : model.remaining),
             text("total", model.total == null ? text("any") : model.total),
             text("sort_by", text("sort."+model.sort.name().toLowerCase(Locale.ROOT))),
-            model.descending ? "↓" : "↑", text("reset"),
-            text("selection",model.selected().size(),model.visible().size()), text("clear")
+            text(model.descending ? "descending" : "ascending"),text("reset"),text("select_visible"),text("clear")
         };
         boolean hovered = false;
-        for (int i=0;i<labels.length;i++) {
-            int[] b=box(i); int bx=x+b[0], by=y+b[1];
-            boolean over=mx>=bx && mx<bx+b[2] && my>=by && my<by+b[3]; hovered |= over;
-            ctx.fill(bx,by,bx+b[2],by+b[3],over ? 0xFF345E59 : 0xDC142A2A);
-            RowRenderSupport.renderCenteredBoxText(ctx,font,labels[i],bx+1,b[2]-2,by+5,0.60f,0xFFE0EBDD);
-            if (over && open < 0) TooltipPresentation.show(ctx,font,List.of(Component.literal(labels[i]),
-                Component.translatable(PREFIX+"help")),Optional.empty(),mx,my,null);
-        }
+        String[] icons={model.descending ? "descending" : "ascending","reset","select_visible","clear"};
+        ctx.enableScissor(x+TomeDirectoryLayout.FRAME,y+TomeDirectoryLayout.FRAME,
+            x+TomeDirectoryLayout.WIDTH-TomeDirectoryLayout.FRAME,y+TomeDirectoryLayout.HEIGHT-TomeDirectoryLayout.FRAME);
+        try {
+            for (int i=0;i<labels.length;i++) {
+                var b=TomeDirectoryLayout.button(i); int bx=x+b.x(), by=y+b.y();
+                boolean over=b.contains(mx-x,my-y); hovered |= over;
+                boolean enabled=i!=7 || !model.visible().isEmpty();
+                if(i<5) {
+                    CatalogueSkin.frame(ctx,bx,by,b.width(),b.height(),over,true);
+                    CatalogueSkin.text(ctx,font,labels[i],bx,by,b.width(),b.height(),TomeDirectoryLayout.BUTTON_INSET,0xFFE0EBDD);
+                } else CatalogueSkin.icon(ctx,icons[i-5],bx,by,b.width(),b.height(),over,enabled);
+                if (over && open < 0) TooltipPresentation.show(ctx,font,i<5
+                    ? List.of(Component.literal(labels[i]),Component.translatable(PREFIX+"help"))
+                    : List.of(Component.literal(labels[i])),Optional.empty(),mx,my,null);
+            }
+            var b=TomeDirectoryLayout.selection();
+            CatalogueSkin.text(ctx,font,text("selection",model.selected().size(),model.visible().size()),
+                x+b.x(),y+b.y(),b.width(),b.height(),1,0xFFD0E8E1);
+        } finally { ctx.disableScissor(); }
         if (open >= 0) {
-            int count=Math.min(7,choices.size()-offset);
-            ctx.fill(x-1,y+43,x+152,y+45+count*11,0xFFF1CD7A);
+            int count=Math.min(TomeDirectoryLayout.POPUP_LIMIT,choices.size()-offset);
+            var outer=TomeDirectoryLayout.popup(count);
+            CatalogueSkin.frame(ctx,x+outer.x(),y+outer.y(),outer.width(),outer.height(),false,true);
             for (int j=0;j<count;j++) {
-                int by=y+44+j*11;
-                boolean over=mx>=x && mx<x+151 && my>=by && my<by+11;
-                ctx.fill(x,by,x+151,by+11,over?0xFF32675F:0xFF142222);
-                RowRenderSupport.renderCenteredBoxText(ctx,font,choices.get(offset+j).label(),x+2,147,by+5.5f,0.70f,0xFFE0EBDD);
+                var b=TomeDirectoryLayout.popupRow(j); int bx=x+b.x(),by=y+b.y();
+                if(b.contains(mx-x,my-y)) ctx.fill(bx+1,by+1,bx+b.width()-1,by+b.height()-1,0xFF284B43);
+                CatalogueSkin.text(ctx,font,choices.get(offset+j).label(),bx,by,b.width(),b.height(),2,0xFFE0EBDD);
             }
             return true;
         }

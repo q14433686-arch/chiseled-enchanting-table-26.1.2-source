@@ -1005,11 +1005,14 @@
   "gui.chiseled_enchanting_table.catalog.reset": "Redefinir",
   "gui.chiseled_enchanting_table.catalog.clear": "Desmarcar",
   "gui.chiseled_enchanting_table.catalog.selection": "Marcados %s / visíveis %s",
-  "gui.chiseled_enchanting_table.catalog.help": "Abra os filtros e role as opções. O contador seleciona os visíveis; Shift-clique alterna cada livro.",
+  "gui.chiseled_enchanting_table.catalog.help": "Abra os filtros e role as opções. O ícone de seleção marca os livros visíveis; Shift-clique alterna cada livro.",
   "gui.chiseled_enchanting_table.catalog.confirm": "Clique de novo em 5 s: %s livros",
   "gui.chiseled_enchanting_table.catalog.pending": "%s na fila · Desmarcar interrompe",
   "gui.chiseled_enchanting_table.catalog.batch_help": "Confirme a seleção múltipla com outro clique. Custo e permissão verificados por livro; pode haver conclusão parcial.",
   "gui.chiseled_enchanting_table.catalog.batch_full": "Encher seleção",
   "gui.chiseled_enchanting_table.catalog.page": "Página %s / %s · Shift-rolagem",
-  "gui.chiseled_enchanting_table.catalog.empty": "Nenhum livro encontrado; redefina os filtros"
+  "gui.chiseled_enchanting_table.catalog.empty": "Nenhum livro encontrado; redefina os filtros",
+  "gui.chiseled_enchanting_table.catalog.ascending": "Ordem crescente",
+  "gui.chiseled_enchanting_table.catalog.descending": "Ordem decrescente",
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Selecionar todos os livros visíveis"
 }

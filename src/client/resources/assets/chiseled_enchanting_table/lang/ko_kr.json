@@ -1005,11 +1005,14 @@
   "gui.chiseled_enchanting_table.catalog.reset": "초기화",
   "gui.chiseled_enchanting_table.catalog.clear": "선택 해제",
   "gui.chiseled_enchanting_table.catalog.selection": "선택 %s / 표시 %s",
-  "gui.chiseled_enchanting_table.catalog.help": "필터를 누르고 휠로 항목을 찾으세요. 개수를 누르면 표시된 책을 선택하며 Shift 클릭으로 개별 선택을 전환합니다.",
+  "gui.chiseled_enchanting_table.catalog.help": "필터를 열고 휠로 항목을 찾으세요. 전체 선택 아이콘은 표시된 책을 선택하고 Shift 클릭은 개별 선택을 전환합니다.",
   "gui.chiseled_enchanting_table.catalog.confirm": "5초 안에 다시 클릭: %s권",
   "gui.chiseled_enchanting_table.catalog.pending": "대기 %s권 · 선택 해제로 중지",
   "gui.chiseled_enchanting_table.catalog.batch_help": "여러 권은 다시 클릭해 확정합니다. 비용과 권한은 책마다 확인하며 일부만 성공할 수 있습니다.",
   "gui.chiseled_enchanting_table.catalog.batch_full": "선택한 책 완충",
   "gui.chiseled_enchanting_table.catalog.page": "%s / %s쪽 · Shift 휠",
-  "gui.chiseled_enchanting_table.catalog.empty": "일치하는 책이 없습니다. 필터를 초기화하세요"
+  "gui.chiseled_enchanting_table.catalog.empty": "일치하는 책이 없습니다. 필터를 초기화하세요",
+  "gui.chiseled_enchanting_table.catalog.ascending": "오름차순",
+  "gui.chiseled_enchanting_table.catalog.descending": "내림차순",
+  "gui.chiseled_enchanting_table.catalog.select_visible": "표시된 책 모두 선택"
 }

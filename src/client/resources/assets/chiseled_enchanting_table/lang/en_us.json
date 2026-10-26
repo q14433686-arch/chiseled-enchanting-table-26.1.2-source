@@ -1005,11 +1005,14 @@
   "gui.chiseled_enchanting_table.catalog.reset": "Reset",
   "gui.chiseled_enchanting_table.catalog.clear": "Clear",
   "gui.chiseled_enchanting_table.catalog.selection": "Selected %s / visible %s",
-  "gui.chiseled_enchanting_table.catalog.help": "Click filters; scroll the choices. Click the count to select visible books; Shift-click toggles selection.",
+  "gui.chiseled_enchanting_table.catalog.help": "Click filters; scroll the choices. Use the select-all icon for visible books; Shift-click toggles individual selection.",
   "gui.chiseled_enchanting_table.catalog.confirm": "Click again within 5s: %s books",
   "gui.chiseled_enchanting_table.catalog.pending": "%s queued · Clear to stop",
   "gui.chiseled_enchanting_table.catalog.batch_help": "Multi-selection requires a second click. Unlock costs apply per book; permissions and funds are checked individually. Partial completion is possible.",
   "gui.chiseled_enchanting_table.catalog.batch_full": "Fill selected",
   "gui.chiseled_enchanting_table.catalog.page": "Page %s / %s · Shift-scroll",
-  "gui.chiseled_enchanting_table.catalog.empty": "No matching books; reset filters"
+  "gui.chiseled_enchanting_table.catalog.empty": "No matching books; reset filters",
+  "gui.chiseled_enchanting_table.catalog.ascending": "Ascending",
+  "gui.chiseled_enchanting_table.catalog.descending": "Descending",
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Select all visible books"
 }

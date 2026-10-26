@@ -1005,11 +1005,14 @@
   "gui.chiseled_enchanting_table.catalog.reset": "重置",
   "gui.chiseled_enchanting_table.catalog.clear": "取消选择",
   "gui.chiseled_enchanting_table.catalog.selection": "已选 %s / 可见 %s",
-  "gui.chiseled_enchanting_table.catalog.help": "点击展开筛选；滚轮浏览选项。点击计数选择可见项，Shift＋左键逐本多选。",
+  "gui.chiseled_enchanting_table.catalog.help": "点击筛选并滚轮浏览选项。全选图标选择可见母版；Shift＋左键逐本多选。",
   "gui.chiseled_enchanting_table.catalog.confirm": "再次点击确认 %s 本（5秒内）",
   "gui.chiseled_enchanting_table.catalog.pending": "待提交 %s 本 · 取消选择可停止",
   "gui.chiseled_enchanting_table.catalog.batch_help": "多选后再次点击确认。解锁费用逐本结算；权限或费用不满足的跳过，不保证整批成功。",
   "gui.chiseled_enchanting_table.catalog.batch_full": "选中领至满",
   "gui.chiseled_enchanting_table.catalog.page": "第 %s / %s 页 · Shift＋滚轮翻页",
-  "gui.chiseled_enchanting_table.catalog.empty": "没有匹配的母版；可重置筛选"
+  "gui.chiseled_enchanting_table.catalog.empty": "没有匹配的母版；可重置筛选",
+  "gui.chiseled_enchanting_table.catalog.ascending": "升序排列",
+  "gui.chiseled_enchanting_table.catalog.descending": "降序排列",
+  "gui.chiseled_enchanting_table.catalog.select_visible": "全选可见母版"
 }

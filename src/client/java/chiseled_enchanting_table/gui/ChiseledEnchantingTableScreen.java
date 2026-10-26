@@ -333,16 +333,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private int[] tomeButtonRect(int index) {
-        // Panel inner decorative frame (measured on cleanse_panel.png): lines at
-        // x 5-7 / 111-113 and y 5-7 / 53-55 in panel-relative GUI pixels. Both button
-        // rows must end at x <= 109 and y <= 51 to keep a dark pixel clear of them.
-        return switch (index) {
-            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 35, 32, 8};
-            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 35, 32, 8};
-            case 2 -> new int[] {PANEL_X + 78, PANEL_Y + 35, 31, 8};
-            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 44, 48, 8};
-            default -> new int[] {PANEL_X + 59, PANEL_Y + 44, 50, 8};
-        };
+        var r=TomeDirectoryLayout.lockButton(index);
+        return new int[]{r.x(),r.y(),r.width(),r.height()};
     }
 
     private int hoveredTomeButton(double mouseX, double mouseY) {
@@ -359,8 +351,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private final TomeDirectoryControls tomeDirectory = new TomeDirectoryControls();
     private final chiseled_enchanting_table.catalog.TomeActionQueue tomeActions = new chiseled_enchanting_table.catalog.TomeActionQueue();
     private void layoutDirectory() {
-        if (this.scrollContainer != null) this.scrollContainer.updateSizeAndPosition(151, isTomeTab() ? 96 : 141,
-            this.leftPos + 7, this.topPos + (isTomeTab() ? 62 : 17));
+        int offset=isTomeTab() ? TomeDirectoryLayout.listOffset() : 0;
+        if (this.scrollContainer != null) this.scrollContainer.updateSizeAndPosition(TomeDirectoryLayout.WIDTH, 141-offset,
+            this.leftPos + 7, this.topPos + 17+offset);
     }
 
     private void sendTomeAction(

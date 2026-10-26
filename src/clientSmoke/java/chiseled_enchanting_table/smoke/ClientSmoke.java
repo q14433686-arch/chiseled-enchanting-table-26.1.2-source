@@ -178,10 +178,12 @@ public final class ClientSmoke implements ClientModInitializer {
                 var list=(chiseled_enchanting_table.gui.EnchantementListWidget)field(table,"scrollContainer");
                 require(list.tabMode()==chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode.TOMES,"tome tab click did not switch catalogue");
                 int left=(int)field(table,"leftPos"), top=(int)field(table,"topPos");
-                click(table,left+9,top+51,InputConstants.MOUSE_BUTTON_LEFT);
+                var select=chiseled_enchanting_table.gui.TomeDirectoryLayout.button(7);
+                click(table,left+7+select.x()+select.width()/2.0,top+17+select.y()+select.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
                 require(list.selectedTomes().size()==menu.tomeBooks.size(),"visible-selection control did not select real shelf books");
-                click(table,left+294,top+56,InputConstants.MOUSE_BUTTON_LEFT);
-                click(table,left+294,top+56,InputConstants.MOUSE_BUTTON_LEFT);
+                var lock=chiseled_enchanting_table.gui.TomeDirectoryLayout.lockButton(2);
+                click(table,left+lock.x()+lock.width()/2.0,top+lock.y()+lock.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
+                click(table,left+lock.x()+lock.width()/2.0,top+lock.y()+lock.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
                 next(21);
             }
             case 21 -> {

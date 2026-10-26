@@ -1005,11 +1005,14 @@
   "gui.chiseled_enchanting_table.catalog.reset": "Сброс",
   "gui.chiseled_enchanting_table.catalog.clear": "Снять выбор",
   "gui.chiseled_enchanting_table.catalog.selection": "Выбрано %s / видно %s",
-  "gui.chiseled_enchanting_table.catalog.help": "Нажмите фильтр; прокручивайте варианты колёсиком. Счётчик выбирает видимые книги; Shift-клик переключает выбор книги.",
+  "gui.chiseled_enchanting_table.catalog.help": "Нажмите фильтр, прокручивайте варианты колёсиком. Значок выбора отмечает видимые книги; Shift-клик переключает выбор одной книги.",
   "gui.chiseled_enchanting_table.catalog.confirm": "Нажмите снова за 5 с: %s книг",
   "gui.chiseled_enchanting_table.catalog.pending": "В очереди %s · Снятие выбора остановит",
   "gui.chiseled_enchanting_table.catalog.batch_help": "Подтвердите массовое действие вторым нажатием. Цена и права проверяются для каждой книги; возможен частичный результат.",
   "gui.chiseled_enchanting_table.catalog.batch_full": "Заполнить выбранные",
   "gui.chiseled_enchanting_table.catalog.page": "Страница %s / %s · Shift-колесо",
-  "gui.chiseled_enchanting_table.catalog.empty": "Нет подходящих книг; сбросьте фильтры"
+  "gui.chiseled_enchanting_table.catalog.empty": "Нет подходящих книг; сбросьте фильтры",
+  "gui.chiseled_enchanting_table.catalog.ascending": "По возрастанию",
+  "gui.chiseled_enchanting_table.catalog.descending": "По убыванию",
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Выбрать все видимые книги"
 }

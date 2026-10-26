@@ -1005,11 +1005,14 @@
   "gui.chiseled_enchanting_table.catalog.reset": "Réinitialiser",
   "gui.chiseled_enchanting_table.catalog.clear": "Désélectionner",
   "gui.chiseled_enchanting_table.catalog.selection": "Choisis %s / visibles %s",
-  "gui.chiseled_enchanting_table.catalog.help": "Cliquer les filtres et parcourir les choix avec la molette. Le compteur sélectionne les visibles ; Maj-clic bascule un livre.",
+  "gui.chiseled_enchanting_table.catalog.help": "Cliquer les filtres, parcourir avec la molette. L’icône de sélection choisit les livres visibles ; Maj-clic bascule un livre.",
   "gui.chiseled_enchanting_table.catalog.confirm": "Recliquer sous 5 s : %s livres",
   "gui.chiseled_enchanting_table.catalog.pending": "%s en attente · Désélectionner arrête",
   "gui.chiseled_enchanting_table.catalog.batch_help": "Confirmer la sélection multiple par un second clic. Coût et droits vérifiés par livre ; résultat partiel possible.",
   "gui.chiseled_enchanting_table.catalog.batch_full": "Remplir la sélection",
   "gui.chiseled_enchanting_table.catalog.page": "Page %s / %s · Maj-molette",
-  "gui.chiseled_enchanting_table.catalog.empty": "Aucun livre correspondant ; réinitialiser les filtres"
+  "gui.chiseled_enchanting_table.catalog.empty": "Aucun livre correspondant ; réinitialiser les filtres",
+  "gui.chiseled_enchanting_table.catalog.ascending": "Ordre croissant",
+  "gui.chiseled_enchanting_table.catalog.descending": "Ordre décroissant",
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Sélectionner tous les livres visibles"
 }
