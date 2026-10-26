@@ -23,7 +23,7 @@ public final class ResearchRuntime implements SimpleSynchronousResourceReloadLis
     private static volatile ResearchCatalog pendingCatalog;
     private static final Map<MinecraftServer,ResearchStore> STORES = new IdentityHashMap<>();
     private static final Map<String,Predicate<ServerPlayer>> VERIFIERS = new HashMap<>();
-    private static Function<ServerPlayer,Optional<ResearchCatalog.Library>> libraryAccess = player -> Optional.empty();
+    private static Function<ServerPlayer,Optional<ResearchCatalog.Library>> libraryAccess = ResearchWorkspace::resolve;
     private ResearchRuntime() {}
     public static void init() {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ResearchRuntime());

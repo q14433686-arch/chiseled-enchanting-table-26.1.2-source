@@ -34,6 +34,6 @@ final class ResearchFoundationProbe {
             ResearchRuntime.cancel(player,"smoke:research");
             check(ResearchRuntime.journal(player).conclusions().contains("smoke:understanding"),"cancel lost understanding");
             System.out.println("RESEARCH FOUNDATION PASS: real datapack listener + UUID journal + workspace gate + unknown/false evidence denial + field observation + replay denial + conclusion recheck + permanent understanding");
-        } finally { ResearchRuntime.setLibraryAccess(p -> Optional.empty()); }
+        } finally { ResearchRuntime.setLibraryAccess(ResearchWorkspace::resolve); }
     }
 }
