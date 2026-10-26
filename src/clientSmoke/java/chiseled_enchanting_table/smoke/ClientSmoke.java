@@ -8,7 +8,6 @@ import chiseled_enchanting_table.gui.config.ChiseledEnchantingConfigScreen;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.registry.BlockRegistry;
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import net.fabricmc.api.ClientModInitializer;
@@ -21,15 +20,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import org.lwjgl.sdl.*;
-import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
+import net.minecraft.client.input.CharacterEvent;
 
-/** Runs against a real SDL window and integrated server, not mocks or source-text assertions. */
+/** Runs against a real client window and integrated server, not mocks or source-text assertions.
+ * 26.1.2 adaptation: there is no SDL text-input layer on this line (GLFW), so committed text is
+ * delivered as the same CharacterEvent callbacks the window handler dispatches to the open screen. */
 public final class ClientSmoke implements ClientModInitializer {
     private int phase, ticks, delay;
     private ChiseledEnchantingConfigScreen editor;
-    private ByteBuffer text;
     private volatile boolean menuPrepared, menuClosed;
     private volatile Throwable serverFailure;
     private BlockPos tablePos;
@@ -75,13 +73,10 @@ public final class ClientSmoke implements ClientModInitializer {
     }
     private void pushText(Minecraft client) {
         textDeadlineNanos = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(15);
-        // Keep the UTF-8 allocation alive until the native queue has actually been consumed.
-        text = MemoryUtil.memUTF8("洗练 abc");
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            SDL_Event event = SDL_Event.calloc(stack);
-            event.text().type(SDLEvents.SDL_EVENT_TEXT_INPUT)
-                .windowID(SDLVideo.SDL_GetWindowID(client.getWindow().handle())).text(text);
-            require(SDLEvents.SDL_PushEvent(event), "SDL rejected text event");
+        // 26.1.2: deliver committed text through the real Screen#charTyped path, one code point
+        // at a time, exactly as the GLFW window handler dispatches typed text to the open screen.
+        for (int codePoint : "洗练 abc".codePoints().toArray()) {
+            require(client.screen.charTyped(new CharacterEvent(codePoint)), "screen rejected typed code point " + codePoint);
         }
     }
     private void next(int phase) { this.phase = phase; delay = 6; }
@@ -89,7 +84,6 @@ public final class ClientSmoke implements ClientModInitializer {
         if (++ticks > 6000) throw new AssertionError("client probe timed out at phase " + phase);
         if (serverFailure != null) throw new AssertionError("server probe failed", serverFailure);
         if (delay-- > 0) return;
-        long handle = client.getWindow().handle();
         switch (phase) {
             case 0 -> {
                 if (client.player == null || client.getSingleplayerServer() == null || client.getOverlay() != null) return;
@@ -103,17 +97,15 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (layout() == null || ((java.util.List<?>) field(editor, "hitBoxes")).isEmpty()) return;
                 // Layout exists after init(), before the first render. Wait for real hit regions.
                 clickBox(layout().searchBox(), InputConstants.MOUSE_BUTTON_LEFT);
-                require(editor.capturesInput(), "search did not take focus");
-                require(SDLKeyboard.SDL_TextInputActive(handle), "native SDL text input never started");
+                require(((SearchInputSession) field(editor, "searchInput")).focused(), "search did not take focus");
                 pushText(client);
                 next(2);
             }
             case 2 -> {
                 var input = (SearchInputSession) field(editor, "searchInput");
                 if (!awaitText(input, "native config search")) return;
-                MemoryUtil.memFree(text); text = null;
                 clickBox(layout().presetButtons().get(1), InputConstants.MOUSE_BUTTON_LEFT);
-                require(!SDLKeyboard.SDL_TextInputActive(handle), "clicking preset did not release native focus");
+                require(!((SearchInputSession) field(editor, "searchInput")).focused(), "clicking preset did not release search focus");
                 var edit = (ConfigEditSession) field(editor, "editSession");
                 require(ModRuntimeConfig.Preset.CASUAL.matches(edit.draft()), "preset click did not update actual draft");
                 next(3);
@@ -219,15 +211,14 @@ public final class ClientSmoke implements ClientModInitializer {
                 var box = layout().searchBox();
                 // Dispatch through the parent menu screen, exercising overlay forwarding.
                 click(client.screen, box.x() + 4, box.y() + box.h() / 2.0, InputConstants.MOUSE_BUTTON_LEFT);
-                require(SDLKeyboard.SDL_TextInputActive(handle), "overlay did not start SDL input");
+                require(((SearchInputSession) field(editor, "searchInput")).focused(), "overlay search did not take focus");
                 pushText(client);
                 next(8);
             }
             case 8 -> {
                 if (!awaitText((SearchInputSession) field(editor, "searchInput"), "overlay native search")) return;
-                MemoryUtil.memFree(text); text = null;
                 editor.onClose();
-                require(!SDLKeyboard.SDL_TextInputActive(handle), "closing overlay leaked native focus");
+                require(!((SearchInputSession) field(editor, "searchInput")).focused(), "closing overlay leaked search focus");
                 require(client.screen instanceof ChiseledEnchantingTableScreen table && !table.hasActiveConfigOverlay(), "overlay close lost parent table");
                 var server = client.getSingleplayerServer();
                 server.execute(() -> {
@@ -250,7 +241,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if(!itemReload.isDone() || client.getOverlay()!=null) return;
                 itemReload.join();
                 chiseled_enchanting_table.render.RainbowItemProbe.afterReload(client);
-                finish(client, "CLIENT SMOKE PASS: real SDL committed CJK text + preset click + server save/ack + reopen + real menu quick-move + overlay forwarding/focus release + persistent target after close");
+                finish(client, "CLIENT SMOKE PASS: committed CJK text via real screen char events + preset click + server save/ack + reopen + real menu quick-move + overlay forwarding/focus release + persistent target after close");
             }
             default -> throw new AssertionError("bad phase " + phase);
         }
@@ -260,7 +251,6 @@ public final class ClientSmoke implements ClientModInitializer {
         System.out.println(message);
         try { Files.writeString(Path.of("client-smoke-result.txt"), message + "\n"); }
         catch (Exception error) { error.printStackTrace(); }
-        if (text != null) { MemoryUtil.memFree(text); text = null; }
         client.stop();
     }
 }

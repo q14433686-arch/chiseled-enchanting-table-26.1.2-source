@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CI-only real SDL client probe. Requires server_smoke.py's disposable saved world first."""
+"""CI-only real client probe. Requires server_smoke.py's disposable saved world first."""
 from pathlib import Path
 import os
 import shutil
