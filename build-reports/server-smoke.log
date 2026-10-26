@@ -22,9 +22,9 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :configureLaunch
 
 > Task :runServer
-[04:46:16] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.1.2 with Fabric Loader 0.19.3
-[04:46:16] [main/INFO] (FabricLoader/Mappings) Mappings not present!
-[04:46:16] [main/INFO] (FabricLoader) Loading 43 mods:
+[04:51:32] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 26.1.2 with Fabric Loader 0.19.3
+[04:51:32] [main/INFO] (FabricLoader/Mappings) Mappings not present!
+[04:51:32] [main/INFO] (FabricLoader) Loading 43 mods:
 	- chiseled-enchanting-table 1.1.0
 	- fabric-api 0.151.0+26.1.2
 	   |-- fabric-key-mapping-api-v1 2.0.4+e2bdee784c
@@ -75,85 +75,85 @@ Note: Recompile with -Xlint:unchecked for details.
 	- java 25
 	- minecraft 26.1.2
 	- mixinextras 0.5.4
-[04:46:16] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
-[04:46:16] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
-[04:46:17] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
-[04:46:23] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
-[04:46:24] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[04:46:25] [Worker-Main-2/INFO] (Minecraft) No existing world data, creating new world
-[04:46:26] [main/INFO] (Minecraft) Loaded 1522 recipes
-[04:46:26] [main/INFO] (Minecraft) Loaded 1650 advancements
-[04:46:26] [main/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
-[04:46:26] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 1.230 ms
-[04:46:27] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.1.2
-[04:46:27] [Server thread/INFO] (Minecraft) Loading properties
-[04:46:27] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
-[04:46:27] [Server thread/INFO] (Minecraft) Generating keypair
-[04:46:27] [Server thread/INFO] (Minecraft) Starting Minecraft server on 127.0.0.1:0
-[04:46:27] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
-[04:46:27] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
-[04:46:27] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
-[04:46:27] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
-[04:46:27] [Server thread/INFO] (Minecraft) Preparing level "audit-world"
-[04:46:27] [Server thread/INFO] (Minecraft) Selecting global world spawn...
-[04:46:27] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
-[04:46:27] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
-[04:46:27] [Server thread/INFO] (Minecraft) Time elapsed: 486 ms
-[04:46:27] [Server thread/INFO] (Minecraft) Done (0.624s)! For help, type "help"
-[04:46:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
-[04:46:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
-[04:46:27] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
-[04:46:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[04:46:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[04:46:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[04:46:27] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-[04:46:27] [Server thread/INFO] (Minecraft) Reloading!
-[04:46:28] [Server thread/INFO] (Minecraft) Loaded 1522 recipes
-[04:46:28] [Server thread/INFO] (Minecraft) Loaded 1650 advancements
-[04:46:28] [Server thread/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
-[04:46:28] [Server thread/INFO] (Minecraft) Marked chunk [0, 0] in minecraft:overworld to be force loaded
-[04:46:28] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:spawn_table' in 20 tick(s) at gametime 21
-[04:46:29] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
-[04:46:29] [Server thread/INFO] (Minecraft) item.chiseled_enchanting_table.chiseled_enchanting_table has the following entity data: {Motion: [0.03560528672722947d, -0.12235187122334311d, -0.0601463229179648d], Health: 5s, Invulnerable: 0b, fall_distance: 0.2666451591067016d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [308.70154f, 0.0f], Item: {components: {"minecraft:lore": [{with: ["01:00"], color: "aqua", italic: 0b, translate: "item.chiseled_enchanting_table.frozen_lore"}], "minecraft:custom_name": "Audit Table", "minecraft:custom_data": {pendingFreezeTicks: 1200L, epiphanySeed: 123456, frozenCycleIndex: 17}, "minecraft:dyed_color": 1122867}, count: 1, id: "chiseled_enchanting_table:chiseled_enchanting_table"}, Pos: [0.8122858395285996d, 67.11759356116714d, -0.027529664088634498d], PickupDelay: 2s, Fire: 0s, UUID: [I; 199518342, 90458590, -1593951369, -1352086902], Age: 8s}
-[04:46:29] [Server thread/INFO] (Minecraft) Killed item.chiseled_enchanting_table.chiseled_enchanting_table
-[04:46:29] [Server thread/INFO] (Minecraft) Dropped 1 [Enchanted Book]
-[04:46:29] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:inspect' in 10 tick(s) at gametime 44
-[04:46:30] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
-[04:46:30] [Server thread/INFO] (Minecraft) Enchanted Book has the following entity data: {Motion: [0.02884899330115164d, -0.26501187673283194d, -0.020384537740151004d], Health: 5s, Invulnerable: 0b, fall_distance: 1.133644889574498d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [307.67407f, 0.0f], Item: {count: 1, id: "minecraft:enchanted_book"}, Pos: [0.8957291078550079d, 66.2505938366416d, 0.2203800198593178d], PickupDelay: 0s, Fire: 0s, UUID: [I; -1958742264, 2116437234, -2063157846, -952643160], Age: 12s}
-[04:46:30] [Server thread/INFO] (Minecraft) Killed Enchanted Book
-[04:46:30] [Server thread/INFO] (Minecraft) Dropped 1 [Enchanted Book]
-[04:46:30] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:inspect' in 10 tick(s) at gametime 58
-[04:46:30] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
-[04:46:30] [Server thread/INFO] (Minecraft) Enchanted Book has the following entity data: {Motion: [0.026681684592653115d, -0.26501187673283194d, -0.0022374738425619566d], Health: 5s, Invulnerable: 0b, fall_distance: 1.133644889574498d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [78.85892f, 0.0f], Item: {count: 1, id: "minecraft:enchanted_book"}, Pos: [0.865999573354188d, 66.2505938366416d, 0.4693079921949785d], PickupDelay: 0s, Fire: 0s, UUID: [I; 269464622, -2006695700, -1086777472, -1934310016], Age: 12s}
-[04:46:30] [Server thread/INFO] (Minecraft) Running function cet_audit_smoke:ritual
-[04:46:31] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_PENDING
-[04:46:31] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, ritualQueueData: [{id: "minecraft:sharpness", target_level: 1, previous_level: 0}], color: -1, pendingFreezeTicks: 0L, ritualBlocked: 0b, ritualSession: 123L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 68L, ritualTotalTicks: 80L, ritualOwnerUuid: "00000000-0000-0000-0000-000000000001", epiphanySeed: 0, ritualQueue: "minecraft:sharpness|1|0|0|0|0|0|0.0000|0||-1", x: 1, ritualTarget: {count: 1, id: "minecraft:diamond_sword"}, y: 65, Items: [{count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
-[04:46:31] [Server thread/INFO] (Minecraft) Saving the game (this may take a moment!)
-[04:46:31] [Server thread/INFO] (Minecraft) Saved the game
-[04:46:31] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:ritual_finished' in 100 tick(s) at gametime 176
-[04:46:36] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_FINISHED
-[04:46:36] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, color: -1, pendingFreezeTicks: 0L, ritualBlocked: 0b, ritualSession: 123L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 0L, ritualTotalTicks: 0L, ritualOwnerUuid: "", epiphanySeed: 0, ritualQueue: "", x: 1, y: 65, Items: [{components: {"minecraft:enchantments": {"minecraft:sharpness": 1}, "minecraft:custom_data": {cet_provenance: {"minecraft:sharpness": [B; 1b]}, cet_schema: 1}}, count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
-[04:46:36] [Server thread/INFO] (Minecraft) Running function cet_audit_smoke:ritual_invalid
-[04:46:36] [Server thread/WARN] (chiseled_enchanting_table) Quarantined invalid ritual at BlockPos{x=1, y=65, z=0}
-[04:46:37] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_QUARANTINED
-[04:46:37] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, ritualQueueData: [{id: "cet_audit_smoke:removed_enchantment", target_level: 1, previous_level: 0}], color: -1, pendingFreezeTicks: 0L, ritualBlocked: 1b, ritualSession: 456L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 0L, ritualTotalTicks: 1L, ritualOwnerUuid: "00000000-0000-0000-0000-000000000001", epiphanySeed: 0, ritualQueue: "cet_audit_smoke:removed_enchantment|1|0|0|0|0|0|0.0000|0||-1", x: 1, ritualTarget: {count: 1, id: "minecraft:diamond_sword"}, y: 65, Items: [{count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
-[04:46:37] [Server thread/INFO] (Minecraft) Killed Enchanted Book
-[04:46:37] [Server thread/INFO] (Minecraft) Changed the block at 1, 65, 0
-[04:46:37] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:ritual_broken' in 10 tick(s) at gametime 204
-[04:46:38] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_BROKEN
-[04:46:38] [Server thread/INFO] (Minecraft) Diamond Sword has the following entity data: {Motion: [0.06390557880819572d, -0.08315434117923383d, -0.043460206378417826d], Health: 5s, Invulnerable: 0b, fall_distance: 0.1365024633705616d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [218.0598f, 0.0f], Item: {count: 1, id: "minecraft:diamond_sword"}, Pos: [2.2583817979670915d, 65.70948567387923d, -0.01747288048911199d], PickupDelay: 0s, Fire: 0s, UUID: [I; -410137886, 584663285, -1654787838, -1020296553], Age: 6s}
-[04:46:38] [Server thread/INFO] (Minecraft) Stopping the server
-[04:46:38] [Server thread/INFO] (Minecraft) Stopping server
-[04:46:38] [Server thread/INFO] (Minecraft) Saving players
-[04:46:38] [Server thread/INFO] (Minecraft) Saving worlds
-[04:46:38] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
-[04:46:39] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
-[04:46:39] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
-[04:46:39] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
-[04:46:39] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[04:46:39] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[04:46:39] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792989962739.json
+[04:51:32] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.3+mixin.0.8.7/41c4a3984a80f4679e759fb9f495587acc5cdac7/sponge-mixin-0.17.3+mixin.0.8.7.jar Service=Knot/Fabric Env=SERVER
+[04:51:32] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_25
+[04:51:33] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.4).
+[04:51:38] [main/INFO] (chiseled_enchanting_table) Chiseling the enchant system!
+[04:51:38] [main/INFO] (Minecraft) Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[04:51:39] [Worker-Main-1/INFO] (Minecraft) No existing world data, creating new world
+[04:51:40] [main/INFO] (Minecraft) Loaded 1522 recipes
+[04:51:40] [main/INFO] (Minecraft) Loaded 1650 advancements
+[04:51:40] [main/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
+[04:51:40] [main/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 65 new biomes in 1.010 ms
+[04:51:40] [Server thread/INFO] (Minecraft) Starting minecraft server version 26.1.2
+[04:51:40] [Server thread/INFO] (Minecraft) Loading properties
+[04:51:40] [Server thread/INFO] (Minecraft) Default game type: SURVIVAL
+[04:51:40] [Server thread/INFO] (Minecraft) Generating keypair
+[04:51:40] [Server thread/INFO] (Minecraft) Starting Minecraft server on 127.0.0.1:0
+[04:51:40] [Server thread/WARN] (Minecraft) **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[04:51:40] [Server thread/WARN] (Minecraft) The server will make no attempt to authenticate usernames. Beware.
+[04:51:40] [Server thread/WARN] (Minecraft) While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[04:51:40] [Server thread/WARN] (Minecraft) To change this, set "online-mode" to "true" in the server.properties file.
+[04:51:40] [Server thread/INFO] (Minecraft) Preparing level "audit-world"
+[04:51:40] [Server thread/INFO] (Minecraft) Selecting global world spawn...
+[04:51:41] [Server thread/INFO] (Minecraft) Loading 0 persistent chunks...
+[04:51:41] [Server thread/INFO] (Minecraft) Preparing spawn area: 100%
+[04:51:41] [Server thread/INFO] (Minecraft) Time elapsed: 324 ms
+[04:51:41] [Server thread/INFO] (Minecraft) Done (0.452s)! For help, type "help"
+[04:51:41] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
+[04:51:41] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
+[04:51:41] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
+[04:51:41] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[04:51:41] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[04:51:41] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[04:51:41] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+[04:51:41] [Server thread/INFO] (Minecraft) Reloading!
+[04:51:41] [Server thread/INFO] (Minecraft) Loaded 1522 recipes
+[04:51:41] [Server thread/INFO] (Minecraft) Loaded 1650 advancements
+[04:51:41] [Server thread/INFO] (chiseled_enchanting_table) Loaded chiseled enchanting data: 0 default enchantments, 1 default-unlock tag rules, 11 item cost overrides, 6 transformation rules, 41 loot injections
+[04:51:41] [Server thread/INFO] (Minecraft) Marked chunk [0, 0] in minecraft:overworld to be force loaded
+[04:51:41] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:spawn_table' in 20 tick(s) at gametime 21
+[04:51:42] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
+[04:51:42] [Server thread/INFO] (Minecraft) item.chiseled_enchanting_table.chiseled_enchanting_table has the following entity data: {Motion: [-0.029697328538047223d, -0.29891163919817526d, 0.03995730107467109d], Health: 5s, Invulnerable: 0b, fall_distance: 1.4386567580513656d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [139.27858f, 0.0f], Item: {components: {"minecraft:lore": [{with: ["01:00"], color: "aqua", italic: 0b, translate: "item.chiseled_enchanting_table.frozen_lore"}], "minecraft:custom_name": "Audit Table", "minecraft:custom_data": {pendingFreezeTicks: 1200L, epiphanySeed: 123456, frozenCycleIndex: 17}, "minecraft:dyed_color": 1122867}, count: 1, id: "chiseled_enchanting_table:chiseled_enchanting_table"}, Pos: [0.05401707969530516d, 65.94558195990876d, 1.1000631941672796d], PickupDelay: 0s, Fire: 0s, UUID: [I; -1764592205, -928955661, -1488766717, 2077565331], Age: 13s}
+[04:51:43] [Server thread/INFO] (Minecraft) Killed item.chiseled_enchanting_table.chiseled_enchanting_table
+[04:51:43] [Server thread/INFO] (Minecraft) Dropped 1 [Enchanted Book]
+[04:51:43] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:inspect' in 10 tick(s) at gametime 45
+[04:51:43] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
+[04:51:43] [Server thread/INFO] (Minecraft) Enchanted Book has the following entity data: {Motion: [-0.0025766967028238597d, -0.26501187673283194d, -0.029875521815053135d], Health: 5s, Invulnerable: 0b, fall_distance: 1.133644889574498d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [103.11487f, 0.0f], Item: {count: 1, id: "minecraft:enchanted_book"}, Pos: [0.4646547844225566d, 66.2505938366416d, 0.09018973483203492d], PickupDelay: 0s, Fire: 0s, UUID: [I; -414504292, 866470308, -1509336002, 2071712341], Age: 12s}
+[04:51:43] [Server thread/INFO] (Minecraft) Killed Enchanted Book
+[04:51:43] [Server thread/INFO] (Minecraft) Dropped 1 [Enchanted Book]
+[04:51:43] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:inspect' in 10 tick(s) at gametime 59
+[04:51:44] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_INSPECT_READY
+[04:51:44] [Server thread/INFO] (Minecraft) Enchanted Book has the following entity data: {Motion: [2.495780986838022E-4d, -0.26501187673283194d, 0.042140153486714876d], Health: 5s, Invulnerable: 0b, fall_distance: 1.133644889574498d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [81.21843f, 0.0f], Item: {count: 1, id: "minecraft:enchanted_book"}, Pos: [0.5034235273758529d, 66.2505938366416d, 1.0780473921599572d], PickupDelay: 0s, Fire: 0s, UUID: [I; 1553072176, -1038661169, -1845107307, -1833108756], Age: 12s}
+[04:51:44] [Server thread/INFO] (Minecraft) Running function cet_audit_smoke:ritual
+[04:51:44] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_PENDING
+[04:51:45] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, ritualQueueData: [{id: "minecraft:sharpness", target_level: 1, previous_level: 0}], color: -1, pendingFreezeTicks: 0L, ritualBlocked: 0b, ritualSession: 123L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 68L, ritualTotalTicks: 80L, ritualOwnerUuid: "00000000-0000-0000-0000-000000000001", epiphanySeed: 0, ritualQueue: "minecraft:sharpness|1|0|0|0|0|0|0.0000|0||-1", x: 1, ritualTarget: {count: 1, id: "minecraft:diamond_sword"}, y: 65, Items: [{count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
+[04:51:45] [Server thread/INFO] (Minecraft) Saving the game (this may take a moment!)
+[04:51:45] [Server thread/INFO] (Minecraft) Saved the game
+[04:51:45] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:ritual_finished' in 100 tick(s) at gametime 177
+[04:51:50] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_FINISHED
+[04:51:50] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, color: -1, pendingFreezeTicks: 0L, ritualBlocked: 0b, ritualSession: 123L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 0L, ritualTotalTicks: 0L, ritualOwnerUuid: "", epiphanySeed: 0, ritualQueue: "", x: 1, y: 65, Items: [{components: {"minecraft:enchantments": {"minecraft:sharpness": 1}, "minecraft:custom_data": {cet_provenance: {"minecraft:sharpness": [B; 1b]}, cet_schema: 1}}, count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
+[04:51:50] [Server thread/INFO] (Minecraft) Running function cet_audit_smoke:ritual_invalid
+[04:51:50] [Server thread/WARN] (chiseled_enchanting_table) Quarantined invalid ritual at BlockPos{x=1, y=65, z=0}
+[04:51:50] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_QUARANTINED
+[04:51:50] [Server thread/INFO] (Minecraft) 1, 65, 0 has the following block data: {components: {}, ritualQueueData: [{id: "cet_audit_smoke:removed_enchantment", target_level: 1, previous_level: 0}], color: -1, pendingFreezeTicks: 0L, ritualBlocked: 1b, ritualSession: 456L, frozenCycleIndex: 0, epiphanyFreezeUntil: 0L, ritualRemainingTicks: 0L, ritualTotalTicks: 1L, ritualOwnerUuid: "00000000-0000-0000-0000-000000000001", epiphanySeed: 0, ritualQueue: "cet_audit_smoke:removed_enchantment|1|0|0|0|0|0|0.0000|0||-1", x: 1, ritualTarget: {count: 1, id: "minecraft:diamond_sword"}, y: 65, Items: [{count: 1, Slot: 0b, id: "minecraft:diamond_sword"}], z: 0, id: "chiseled_enchanting_table:chiseled_enchanting_table"}
+[04:51:51] [Server thread/INFO] (Minecraft) Killed Enchanted Book
+[04:51:51] [Server thread/INFO] (Minecraft) Changed the block at 1, 65, 0
+[04:51:51] [Server thread/INFO] (Minecraft) Scheduled function 'cet_audit_smoke:ritual_broken' in 10 tick(s) at gametime 205
+[04:51:51] [Server thread/INFO] (Minecraft) [Not Secure] [Server] CET_AUDIT_RITUAL_BROKEN
+[04:51:51] [Server thread/INFO] (Minecraft) Diamond Sword has the following entity data: {Motion: [0.051484577562d, -0.288185571461503d, 0.009148777185982135d], Health: 5s, Invulnerable: 0b, fall_distance: 1.3368960842490196d, Air: 300s, OnGround: 0b, PortalCooldown: 0, Rotation: [140.07831f, 0.0f], Item: {count: 1, id: "minecraft:diamond_sword"}, Pos: [1.8409781267332344d, 64.22055096722721d, 0.962193933722984d], PickupDelay: 0s, Fire: 0s, UUID: [I; -444082634, 1361856350, -1764385806, -1875794925], Age: 12s}
+[04:51:51] [Server thread/INFO] (Minecraft) Stopping the server
+[04:51:51] [Server thread/INFO] (Minecraft) Stopping server
+[04:51:51] [Server thread/INFO] (Minecraft) Saving players
+[04:51:51] [Server thread/INFO] (Minecraft) Saving worlds
+[04:51:52] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:overworld
+[04:51:54] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_end
+[04:51:54] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[audit-world]'/minecraft:the_nether
+[04:51:54] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (world): All chunks are saved
+[04:51:54] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[04:51:54] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[04:51:54] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1792990283316.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -163,6 +163,6 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 41s
+BUILD SUCCESSFUL in 34s
 5 actionable tasks: 5 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
