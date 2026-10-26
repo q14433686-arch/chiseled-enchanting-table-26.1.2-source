@@ -13,7 +13,18 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Current engineering validation — six-area split, 2026-10-26
+## Current UI validation — 2026-10-26 (latest)
+
+Verified source **`805cd2fce042a6958a739b2d7e2242b273e08d42`**, release **1.1.0 / MC 26.3 / revision 11**.
+
+- [compile-check 40254410646](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40254410646): **123 JUnit, zero failures/errors/skips**.
+- [build 40254410608](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40254410608): all four business jobs and both diagnostics successful, including real server and Chinese SDL client.
+- Natural enchantment terminology; user-requested lock emoji; explicit ordinary/total bookshelf labels and separate milestone counters; disjoint header/tab geometry; all six tab textures unified.
+- Every owned tooltip uses one bounded, wrapped summary/Shift-details policy; compact bookshelf summary replaces the default mechanics wall. Python UI contracts **7/7**, new tooltip JUnit contracts **6/6**.
+- Final Checks contain **UI BOUNDARY PASS**, **CLIENT SMOKE PASS**, economic and candidate boundary PASS markers; screenshot `run-client-smoke/screenshots/table-ui-zh_cn.png` saved in [smoke artifact](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40254410608/artifacts/12621464381). Actual game screenshot not manually inspected: sandbox artifact download is network-restricted. Automated Linux evidence is not a full human visual/platform-IME matrix.
+- [UI implementation, verification and cross-branch notes](docs/reports/UI_READABILITY_2026_10_26.md). Prior six-area split below remains implemented; its 117-test evidence is historical, not the latest UI result. No PR/merge authorized or performed.
+
+## Previous engineering validation — six-area split, 2026-10-26
 
 Verified implementation SHA: **`3a3b0076bf56abf70ef9a29b2eb3ab173505d87f`**.
 Release **1.1.0**, MC **26.3**, wire **`26_3_revision_11`**.
