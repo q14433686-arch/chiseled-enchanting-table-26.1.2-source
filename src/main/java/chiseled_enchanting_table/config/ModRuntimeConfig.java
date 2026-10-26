@@ -689,16 +689,7 @@ public record ModRuntimeConfig(
         }
 
         public JsonObject toJson() {
-            JsonObject obj = new JsonObject();
-            obj.addProperty("enforce_datapack_priority", enforceDatapackPriority);
-            obj.addProperty("lock_in_game_config", lockInGameConfig);
-            com.google.gson.JsonArray dpArr = new com.google.gson.JsonArray();
-            for (String k : datapackOverriddenKeys) dpArr.add(k);
-            obj.add("datapack_overridden_keys", dpArr);
-            com.google.gson.JsonArray lockArr = new com.google.gson.JsonArray();
-            for (String k : lockedKeys) lockArr.add(k);
-            obj.add("locked_keys", lockArr);
-            return obj;
+            return RuntimePolicyJson.toJson(this);
         }
 
         public String toJsonString() {
@@ -706,58 +697,7 @@ public record ModRuntimeConfig(
         }
 
         public static PackPolicy fromJson(JsonObject root, Set<String> externalDatapackKeys) {
-            if (root != null) {
-                for (String key : Set.of("enforce_datapack_priority", "lock_in_game_config")) {
-                    if (root.has(key) && (!root.get(key).isJsonPrimitive()
-                        || !root.getAsJsonPrimitive(key).isBoolean()))
-                        throw new IllegalArgumentException("Policy flag must be boolean: " + key);
-                }
-                for (String key : Set.of("locked_keys", "datapack_overridden_keys")) {
-                    if (!root.has(key)) continue;
-                    if (!root.get(key).isJsonArray()) throw new IllegalArgumentException("Policy keys must be array: " + key);
-                    for (var element : root.getAsJsonArray(key)) {
-                        if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isString())
-                            throw new IllegalArgumentException("Policy key must be a string");
-                        String k = element.getAsString();
-                        if (!"classic_1_0_3_mode".equals(k)
-                            && ConfigCatalog.ALL_OPTIONS.stream().noneMatch(option -> option.key().equals(k))) {
-                            throw new IllegalArgumentException("Unknown policy key: " + k);
-                        }
-                    }
-                }
-            }
-            boolean enforceDp = root != null && boolOr(root, "enforce_datapack_priority", false);
-            boolean lockAll = root != null && boolOr(root, "lock_in_game_config", false);
-            Set<String> dpKeys = new LinkedHashSet<>();
-            if (externalDatapackKeys != null) {
-                dpKeys.addAll(externalDatapackKeys);
-            }
-            if (root != null && root.has("datapack_overridden_keys") && root.get("datapack_overridden_keys").isJsonArray()) {
-                for (JsonElement el : root.getAsJsonArray("datapack_overridden_keys")) {
-                    if (el.isJsonPrimitive()) {
-                        String k = el.getAsString();
-                        if ("classic_1_0_3_mode".equals(k)) {
-                            dpKeys.addAll(GRANULAR_RULE_ATOM_KEYS);
-                        } else {
-                            dpKeys.add(k);
-                        }
-                    }
-                }
-            }
-            Set<String> locked = new LinkedHashSet<>();
-            if (root != null && root.has("locked_keys") && root.get("locked_keys").isJsonArray()) {
-                for (JsonElement el : root.getAsJsonArray("locked_keys")) {
-                    if (el.isJsonPrimitive()) {
-                        String k = el.getAsString();
-                        if ("classic_1_0_3_mode".equals(k)) {
-                            locked.addAll(GRANULAR_RULE_ATOM_KEYS);
-                        } else {
-                            locked.add(k);
-                        }
-                    }
-                }
-            }
-            return new PackPolicy(enforceDp, lockAll, dpKeys, locked);
+            return RuntimePolicyJson.fromJson(root, externalDatapackKeys);
         }
 
         public static PackPolicy fromJsonString(String raw) {
@@ -769,15 +709,15 @@ public record ModRuntimeConfig(
     }
 
     public ModRuntimeConfig {
-        enchantedBookStackSize = clampInt(enchantedBookStackSize, 1, 64);
+        enchantedBookStackSize = RuntimeConfigJson.clampInt(enchantedBookStackSize, 1, 64);
         vanillaTableMode = vanillaTableMode != null ? vanillaTableMode : VanillaTableMode.BOOKS;
 
         shelfBoostModel = shelfBoostModel != null ? shelfBoostModel : ShelfBoostModel.MODERN_CURVE;
         defaultUnlockFilter = defaultUnlockFilter != null ? defaultUnlockFilter : DefaultUnlockFilter.EXCLUDE_SPECIAL;
         blankMaxTierMode = blankMaxTierMode != null ? blankMaxTierMode : BlankMaxTierMode.HALF_CEIL;
-        maxDirectBookshelves = clampInt(maxDirectBookshelves, 4, 64);
-        horizontalScanRadius = clampInt(horizontalScanRadius, 1, BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS);
-        verticalScanRadius = clampInt(verticalScanRadius, 0, BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS);
+        maxDirectBookshelves = RuntimeConfigJson.clampInt(maxDirectBookshelves, 4, 64);
+        horizontalScanRadius = RuntimeConfigJson.clampInt(horizontalScanRadius, 1, BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS);
+        verticalScanRadius = RuntimeConfigJson.clampInt(verticalScanRadius, 0, BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS);
         while (verticalScanRadius > 0
             && BookshelfProgression.scanVolumeBlocks(horizontalScanRadius, verticalScanRadius)
                 > BookshelfProgression.MAX_SCAN_VOLUME_BLOCKS) {
@@ -788,57 +728,57 @@ public record ModRuntimeConfig(
                 > BookshelfProgression.MAX_SCAN_VOLUME_BLOCKS) {
             horizontalScanRadius--;
         }
-        minOpenAdjacentBlocks = clampInt(minOpenAdjacentBlocks, 1, 17);
+        minOpenAdjacentBlocks = RuntimeConfigJson.clampInt(minOpenAdjacentBlocks, 1, 17);
 
         tomeConsumptionMode = tomeConsumptionMode != null ? tomeConsumptionMode : MasterTomeWear.ConsumptionMode.WEAR;
-        maxTomeUses = clampInt(maxTomeUses, 1, 256);
-        bookCopyWearCost = clampInt(bookCopyWearCost, 1, maxTomeUses);
+        maxTomeUses = RuntimeConfigJson.clampInt(maxTomeUses, 1, 256);
+        bookCopyWearCost = RuntimeConfigJson.clampInt(bookCopyWearCost, 1, maxTomeUses);
         tomeDepleteBehavior = tomeDepleteBehavior != null ? tomeDepleteBehavior : MasterTomeWear.DepleteBehavior.STEP_DOWN;
-        tomeRegenBaseSeconds = clampInt(tomeRegenBaseSeconds, 1, 86_400);
-        tomeRegenTier1Shelves = clampInt(tomeRegenTier1Shelves, 1, 128);
-        tomeRegenTier1Seconds = clampInt(tomeRegenTier1Seconds, 1, tomeRegenBaseSeconds);
-        tomeRegenTier2Shelves = clampInt(tomeRegenTier2Shelves, tomeRegenTier1Shelves, 128);
-        tomeRegenTier2Seconds = clampInt(tomeRegenTier2Seconds, 1, tomeRegenTier1Seconds);
-        earlyUnlockXpLevels = clampInt(earlyUnlockXpLevels, 0, 512);
-        earlyUnlockGritCount = clampInt(earlyUnlockGritCount, 0, 512);
-        sacrificeRequired = clampInt(sacrificeRequired, 1, 1024);
-        tomePageRequiredShelves = clampInt(tomePageRequiredShelves, 1, 512);
+        tomeRegenBaseSeconds = RuntimeConfigJson.clampInt(tomeRegenBaseSeconds, 1, 86_400);
+        tomeRegenTier1Shelves = RuntimeConfigJson.clampInt(tomeRegenTier1Shelves, 1, 128);
+        tomeRegenTier1Seconds = RuntimeConfigJson.clampInt(tomeRegenTier1Seconds, 1, tomeRegenBaseSeconds);
+        tomeRegenTier2Shelves = RuntimeConfigJson.clampInt(tomeRegenTier2Shelves, tomeRegenTier1Shelves, 128);
+        tomeRegenTier2Seconds = RuntimeConfigJson.clampInt(tomeRegenTier2Seconds, 1, tomeRegenTier1Seconds);
+        earlyUnlockXpLevels = RuntimeConfigJson.clampInt(earlyUnlockXpLevels, 0, 512);
+        earlyUnlockGritCount = RuntimeConfigJson.clampInt(earlyUnlockGritCount, 0, 512);
+        sacrificeRequired = RuntimeConfigJson.clampInt(sacrificeRequired, 1, 1024);
+        tomePageRequiredShelves = RuntimeConfigJson.clampInt(tomePageRequiredShelves, 1, 512);
 
         xpMode = xpMode != null ? xpMode : XpSettlementMode.DUAL_STORED_DISCOUNT;
         costTableDataset = costTableDataset != null ? costTableDataset : CostTableDataset.MODERN;
         materialSelectionMode = materialSelectionMode != null ? materialSelectionMode : MaterialSelectionMode.ALL_OPTIONS_MIDPOINT;
         researchRoundingMode = researchRoundingMode != null ? researchRoundingMode : ResearchRoundingMode.ROUND_NEAREST;
-        maxTotalXpDiscountPercent = clampInt(maxTotalXpDiscountPercent, 0, 90);
-        maxWoodenDiscountPercent = clampInt(maxWoodenDiscountPercent, 0, maxTotalXpDiscountPercent);
-        bookCombineXpMultiplier = round2(clampDouble(bookCombineXpMultiplier, 0.10, 3.00));
-        bookResearchXpMultiplier = round2(clampDouble(bookResearchXpMultiplier, 0.10, 3.00));
+        maxTotalXpDiscountPercent = RuntimeConfigJson.clampInt(maxTotalXpDiscountPercent, 0, 90);
+        maxWoodenDiscountPercent = RuntimeConfigJson.clampInt(maxWoodenDiscountPercent, 0, maxTotalXpDiscountPercent);
+        bookCombineXpMultiplier = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(bookCombineXpMultiplier, 0.10, 3.00));
+        bookResearchXpMultiplier = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(bookResearchXpMultiplier, 0.10, 3.00));
 
-        epiphanyMinBookshelves = clampInt(epiphanyMinBookshelves, 0, 64);
-        epiphanyBaseChance = round2(clampDouble(epiphanyBaseChance, 0.0, 1.0));
-        epiphanyMaxChance = round2(clampDouble(epiphanyMaxChance, epiphanyBaseChance, 1.0));
-        epiphanyMaxSlotsCap = clampInt(epiphanyMaxSlotsCap, 1, 8);
-        epiphanyCycleSeconds = clampInt(epiphanyCycleSeconds, 10, 3600);
-        epiphanyFreezeXpLevels = clampInt(epiphanyFreezeXpLevels, 0, 30);
-        epiphanyFreezeDurationSeconds = clampInt(epiphanyFreezeDurationSeconds, 10, 3600);
-        epiphanyMaxFreezeSeconds = clampInt(epiphanyMaxFreezeSeconds, epiphanyFreezeDurationSeconds, 7200);
-        epiphanyRerollXpLevels = clampInt(epiphanyRerollXpLevels, 0, 30);
+        epiphanyMinBookshelves = RuntimeConfigJson.clampInt(epiphanyMinBookshelves, 0, 64);
+        epiphanyBaseChance = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(epiphanyBaseChance, 0.0, 1.0));
+        epiphanyMaxChance = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(epiphanyMaxChance, epiphanyBaseChance, 1.0));
+        epiphanyMaxSlotsCap = RuntimeConfigJson.clampInt(epiphanyMaxSlotsCap, 1, 8);
+        epiphanyCycleSeconds = RuntimeConfigJson.clampInt(epiphanyCycleSeconds, 10, 3600);
+        epiphanyFreezeXpLevels = RuntimeConfigJson.clampInt(epiphanyFreezeXpLevels, 0, 30);
+        epiphanyFreezeDurationSeconds = RuntimeConfigJson.clampInt(epiphanyFreezeDurationSeconds, 10, 3600);
+        epiphanyMaxFreezeSeconds = RuntimeConfigJson.clampInt(epiphanyMaxFreezeSeconds, epiphanyFreezeDurationSeconds, 7200);
+        epiphanyRerollXpLevels = RuntimeConfigJson.clampInt(epiphanyRerollXpLevels, 0, 30);
 
-        xpRefundScale = round2(clampDouble(xpRefundScale, 0.0, 1.0));
-        externalXpRefundScale = round2(clampDouble(externalXpRefundScale, 0.0, xpRefundScale));
-        stripXpMin = clampInt(stripXpMin, 1, 30);
-        stripXpMax = clampInt(stripXpMax, stripXpMin, 50);
-        cursePurgeXpCost = clampInt(cursePurgeXpCost, 1, 50);
+        xpRefundScale = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(xpRefundScale, 0.0, 1.0));
+        externalXpRefundScale = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(externalXpRefundScale, 0.0, xpRefundScale));
+        stripXpMin = RuntimeConfigJson.clampInt(stripXpMin, 1, 30);
+        stripXpMax = RuntimeConfigJson.clampInt(stripXpMax, stripXpMin, 50);
+        cursePurgeXpCost = RuntimeConfigJson.clampInt(cursePurgeXpCost, 1, 50);
         transformationSetMode = transformationSetMode != null ? transformationSetMode : TransformationSetMode.FULL_SIX;
         drainedBookResult = drainedBookResult != null ? drainedBookResult : DrainedBookResult.DEPLETED_TOME;
-        tier2Bookshelves = clampInt(tier2Bookshelves, 0, maxDirectBookshelves);
-        tier1Bookshelves = clampInt(tier1Bookshelves, 0, tier2Bookshelves);
-        tier3QualifyingEnchantments = clampInt(tier3QualifyingEnchantments, 1, 30);
-        transformationMaxBatchSize = clampInt(transformationMaxBatchSize, 1, 64);
+        tier2Bookshelves = RuntimeConfigJson.clampInt(tier2Bookshelves, 0, maxDirectBookshelves);
+        tier1Bookshelves = RuntimeConfigJson.clampInt(tier1Bookshelves, 0, tier2Bookshelves);
+        tier3QualifyingEnchantments = RuntimeConfigJson.clampInt(tier3QualifyingEnchantments, 1, 30);
+        transformationMaxBatchSize = RuntimeConfigJson.clampInt(transformationMaxBatchSize, 1, 64);
 
         vanillaChestBooksMode = vanillaChestBooksMode != null ? vanillaChestBooksMode : VanillaChestBooksMode.KEEP_BOTH;
-        bookshelfMinBooks = clampInt(bookshelfMinBooks, 0, 6);
-        bookshelfMaxBooks = clampInt(bookshelfMaxBooks, bookshelfMinBooks, 6);
-        bookshelfEnchantedProb = round2(clampDouble(bookshelfEnchantedProb, 0.0, 1.0));
+        bookshelfMinBooks = RuntimeConfigJson.clampInt(bookshelfMinBooks, 0, 6);
+        bookshelfMaxBooks = RuntimeConfigJson.clampInt(bookshelfMaxBooks, bookshelfMinBooks, 6);
+        bookshelfEnchantedProb = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(bookshelfEnchantedProb, 0.0, 1.0));
 
         customizedKeys = customizedKeys == null
             ? Set.of()
@@ -993,62 +933,10 @@ public record ModRuntimeConfig(
 
     /** Exposed path overload allows failure/atomic-replacement tests without Fabric bootstrap. */
     public static void writeAtomically(Path path, ModRuntimeConfig cfg) throws java.io.IOException {
-        Path parent = path.toAbsolutePath().getParent();
-        Files.createDirectories(parent);
-        String json = GSON.toJson(cfg.toJson()) + "\n";
-        Path temporary = Files.createTempFile(parent, ".cet-config-", ".tmp");
-        try {
-            Files.writeString(temporary, json, StandardCharsets.UTF_8);
-            try {
-                Files.move(temporary, path, java.nio.file.StandardCopyOption.ATOMIC_MOVE,
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                return;
-            } catch (java.io.IOException atomicFailure) {
-                clearWindowsReadOnly(path);
-                java.io.IOException lastFailure = atomicFailure;
-                for (int attempt = 0; attempt < 3; attempt++) {
-                    try {
-                        Files.move(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        return;
-                    } catch (java.io.IOException moveFailure) {
-                        lastFailure = moveFailure;
-                        pauseBeforeRetry(attempt);
-                    }
-                }
-                try {
-                    Files.copy(temporary, path, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                    return;
-                } catch (java.io.IOException copyFailure) {
-                    lastFailure = copyFailure;
-                }
-                try {
-                    Files.writeString(path, json, StandardCharsets.UTF_8);
-                } catch (java.io.IOException directFailure) {
-                    directFailure.addSuppressed(lastFailure);
-                    throw directFailure;
-                }
-            }
-        } finally {
-            Files.deleteIfExists(temporary);
-        }
+        ConfigFileStore.writeAtomically(path, GSON.toJson(cfg.toJson()) + "\n");
     }
 
-    private static void clearWindowsReadOnly(Path path) {
-        try {
-            if (Files.isRegularFile(path)) {
-                Files.setAttribute(path, "dos:readonly", false);
-            }
-        } catch (Exception ignored) {
-        }
-    }
 
-    private static void pauseBeforeRetry(int attempt) {
-        try {
-            Thread.sleep(25L * (attempt + 1));
-        } catch (InterruptedException interrupted) {
-            Thread.currentThread().interrupt();
-        }
-    }
 
     public static void saveToDisk(ModRuntimeConfig cfg) {
         try {
@@ -1081,284 +969,11 @@ public record ModRuntimeConfig(
     }
 
     public JsonObject toJson() {
-        JsonObject root = new JsonObject();
-        root.addProperty(
-            "_comment",
-            "Chiseled Enchanting Table unified granular configuration. Editable directly in-game via the Config button, Arcane Grimoire, /cet, or Mod Menu."
-        );
-        root.addProperty("enchanted_book_stack_size", enchantedBookStackSize);
-
-        JsonObject general = new JsonObject();
-        general.addProperty("override_datapacks", overrideDatapacks);
-        general.addProperty("enchanted_book_stack_size", enchantedBookStackSize);
-        general.addProperty("vanilla_table_mode", vanillaTableMode.token());
-        general.addProperty("anvil_flat_repair_cost", anvilFlatRepairCost);
-        general.addProperty("anvil_block_same_book_merge", anvilBlockSameBookMerge);
-        general.addProperty("restrict_villager_infinity_books", restrictVillagerInfinityBooks);
-        general.addProperty("grindstone_depleted_tome", grindstoneDepletedTome);
-        // Derived legacy mirror kept so external tools inspecting JSON can see full-1.0.3 state.
-        general.addProperty("classic_1_0_3_mode", isAllClassicAtoms());
-        root.add("general", general);
-
-        JsonObject bookshelves = new JsonObject();
-        bookshelves.addProperty("shelf_boost_model", shelfBoostModel.token());
-        bookshelves.addProperty("default_unlock_filter", defaultUnlockFilter.token());
-        bookshelves.addProperty("direct_tier_upgrade", directTierUpgrade);
-        bookshelves.addProperty("direct_gates_enabled", directGatesEnabled);
-        bookshelves.addProperty("blank_max_tier_mode", blankMaxTierMode.token());
-        bookshelves.addProperty("max_direct_bookshelves", maxDirectBookshelves);
-        bookshelves.addProperty("horizontal_scan_radius", horizontalScanRadius);
-        bookshelves.addProperty("vertical_scan_radius", verticalScanRadius);
-        bookshelves.addProperty("require_breathing_room", requireBreathingRoom);
-        bookshelves.addProperty("min_open_adjacent_blocks", minOpenAdjacentBlocks);
-        bookshelves.addProperty("require_line_of_sight", requireLineOfSight);
-        root.add("bookshelves", bookshelves);
-
-        JsonObject tomes = new JsonObject();
-        tomes.addProperty("tome_consumption_mode", tomeConsumptionMode.token());
-        tomes.addProperty("max_tome_uses", maxTomeUses);
-        tomes.addProperty("book_copy_wear_cost", bookCopyWearCost);
-        tomes.addProperty("tome_deplete_behavior", tomeDepleteBehavior.token());
-        tomes.addProperty("tome_regen_enabled", tomeRegenEnabled);
-        tomes.addProperty("tome_regen_base_seconds", tomeRegenBaseSeconds);
-        tomes.addProperty("tome_regen_tier1_shelves", tomeRegenTier1Shelves);
-        tomes.addProperty("tome_regen_tier1_seconds", tomeRegenTier1Seconds);
-        tomes.addProperty("tome_regen_tier2_shelves", tomeRegenTier2Shelves);
-        tomes.addProperty("tome_regen_tier2_seconds", tomeRegenTier2Seconds);
-        tomes.addProperty("tome_locks", tomeLocksEnabled);
-        tomes.addProperty("locked_shelf_breakable", lockedShelfBreakable);
-        tomes.addProperty("locked_book_extraction_blocked", lockedBookExtractionBlocked);
-        tomes.addProperty("provenance", provenanceEnabled);
-        tomes.addProperty("ritual_queue", ritualQueueEnabled);
-        tomes.addProperty("early_unlock_xp_levels", earlyUnlockXpLevels);
-        tomes.addProperty("early_unlock_grit_count", earlyUnlockGritCount);
-        tomes.addProperty("sacrifice_required", sacrificeRequired);
-        tomes.addProperty("tome_page_required_shelves", tomePageRequiredShelves);
-        tomes.addProperty("incremental_credit", incrementalCredit);
-        tomes.addProperty("xp_mode", xpMode.token());
-        tomes.addProperty("cost_table", costTableDataset.token());
-        tomes.addProperty("material_selection", materialSelectionMode.token());
-        tomes.addProperty("research_rounding", researchRoundingMode.token());
-        tomes.addProperty("library_discount", libraryDiscountEnabled);
-        tomes.addProperty("max_wooden_discount_percent", maxWoodenDiscountPercent);
-        tomes.addProperty("max_total_xp_discount_percent", maxTotalXpDiscountPercent);
-        tomes.addProperty("book_combine_enabled", bookCombineEnabled);
-        tomes.addProperty("book_combine_xp_multiplier", bookCombineXpMultiplier);
-        tomes.addProperty("book_research_enabled", bookResearchEnabled);
-        tomes.addProperty("book_research_xp_multiplier", bookResearchXpMultiplier);
-        root.add("tomes_and_economy", tomes);
-
-        JsonObject epiphany = new JsonObject();
-        epiphany.addProperty("epiphany_enabled", epiphanyEnabled);
-        epiphany.addProperty("epiphany_min_bookshelves", epiphanyMinBookshelves);
-        epiphany.addProperty("epiphany_base_chance", epiphanyBaseChance);
-        epiphany.addProperty("epiphany_max_chance", epiphanyMaxChance);
-        epiphany.addProperty("epiphany_max_slots_cap", epiphanyMaxSlotsCap);
-        epiphany.addProperty("epiphany_cycle_seconds", epiphanyCycleSeconds);
-        epiphany.addProperty("epiphany_freeze_xp_levels", epiphanyFreezeXpLevels);
-        epiphany.addProperty("epiphany_freeze_duration_seconds", epiphanyFreezeDurationSeconds);
-        epiphany.addProperty("epiphany_max_freeze_seconds", epiphanyMaxFreezeSeconds);
-        epiphany.addProperty("epiphany_reroll_xp_levels", epiphanyRerollXpLevels);
-        root.add("treasure_epiphany", epiphany);
-
-        JsonObject cleanse = new JsonObject();
-        cleanse.addProperty("disenchant_enabled", disenchantEnabled);
-        cleanse.addProperty("xp_refund_scale", xpRefundScale);
-        cleanse.addProperty("external_xp_refund_scale", externalXpRefundScale);
-        cleanse.addProperty("strip_xp_min", stripXpMin);
-        cleanse.addProperty("strip_xp_max", stripXpMax);
-        cleanse.addProperty("allow_curse_purge", allowCursePurge);
-        cleanse.addProperty("curse_purge_xp_cost", cursePurgeXpCost);
-        cleanse.addProperty("transformation_set", transformationSetMode.token());
-        cleanse.addProperty("require_prior_discovery", requirePriorDiscovery);
-        cleanse.addProperty("drained_book_result", drainedBookResult.token());
-        cleanse.addProperty("tome_page_enabled", tomePageEnabled);
-        cleanse.addProperty("tier1_bookshelves", tier1Bookshelves);
-        cleanse.addProperty("tier2_bookshelves", tier2Bookshelves);
-        cleanse.addProperty("tier3_qualifying_enchantments", tier3QualifyingEnchantments);
-        cleanse.addProperty("transformation_max_batch_size", transformationMaxBatchSize);
-        root.add("cleanse_and_transformations", cleanse);
-
-        JsonObject world = new JsonObject();
-        world.addProperty("vanilla_chest_books_mode", vanillaChestBooksMode.token());
-        world.addProperty("bookshelf_pool_enabled", bookshelfPoolEnabled);
-        world.addProperty("bookshelf_min_books", bookshelfMinBooks);
-        world.addProperty("bookshelf_max_books", bookshelfMaxBooks);
-        world.addProperty("bookshelf_enchanted_prob", bookshelfEnchantedProb);
-        world.addProperty("librarian_tome_offers", librarianTomeOffers);
-        root.add("world_and_loot", world);
-
-        com.google.gson.JsonArray customized = new com.google.gson.JsonArray();
-        for (String key : customizedKeys) {
-            customized.add(key);
-        }
-        root.add("customized_keys", customized);
-        return root;
+        return RuntimeConfigJson.toJson(this);
     }
 
     public static ModRuntimeConfig fromJson(JsonObject root) {
-        if (root == null) {
-            return DEFAULT;
-        }
-        Draft d = new Draft();
-        JsonObject general = objOrEmpty(root, "general");
-        JsonObject shelves = objOrEmpty(root, "bookshelves");
-        JsonObject tomes = objOrEmpty(root, "tomes_and_economy");
-        JsonObject epiphany = objOrEmpty(root, "treasure_epiphany");
-        JsonObject cleanse = objOrEmpty(root, "cleanse_and_transformations");
-        JsonObject world = objOrEmpty(root, "world_and_loot");
-
-        // One-time migration for pre-atom configs carrying `classic_1_0_3_mode: true`:
-        // expand all 19 classic rule atoms first, then overlay any explicit fields present in JSON.
-        boolean legacyClassicFlag = boolOr(
-            general,
-            "classic_1_0_3_mode",
-            boolOr(root, "classic_1_0_3_mode", false)
-        );
-        boolean hasGranularSchema = shelves.has("shelf_boost_model")
-            || tomes.has("cost_table")
-            || epiphany.has("epiphany_enabled")
-            || cleanse.has("transformation_set");
-        if (legacyClassicFlag && !hasGranularSchema) {
-            d.applyClassic103Atoms();
-            d.customizedKeys.addAll(GRANULAR_RULE_ATOM_KEYS);
-        }
-
-        d.overrideDatapacks = boolOr(general, "override_datapacks", d.overrideDatapacks);
-        d.enchantedBookStackSize = intOr(
-            general,
-            "enchanted_book_stack_size",
-            intOr(root, "enchanted_book_stack_size", d.enchantedBookStackSize)
-        );
-        if (general.has("vanilla_table_mode")) {
-            d.vanillaTableMode = VanillaTableMode.fromToken(general.get("vanilla_table_mode").getAsString());
-        }
-        d.anvilFlatRepairCost = boolOr(general, "anvil_flat_repair_cost", d.anvilFlatRepairCost);
-        d.anvilBlockSameBookMerge = boolOr(general, "anvil_block_same_book_merge", d.anvilBlockSameBookMerge);
-        d.restrictVillagerInfinityBooks = boolOr(general, "restrict_villager_infinity_books", d.restrictVillagerInfinityBooks);
-        d.grindstoneDepletedTome = boolOr(general, "grindstone_depleted_tome", d.grindstoneDepletedTome);
-
-        if (shelves.has("shelf_boost_model")) {
-            d.shelfBoostModel = ShelfBoostModel.fromToken(shelves.get("shelf_boost_model").getAsString());
-        }
-        if (shelves.has("default_unlock_filter")) {
-            d.defaultUnlockFilter = DefaultUnlockFilter.fromToken(shelves.get("default_unlock_filter").getAsString());
-        }
-        d.directTierUpgrade = boolOr(shelves, "direct_tier_upgrade", d.directTierUpgrade);
-        d.directGatesEnabled = boolOr(shelves, "direct_gates_enabled", d.directGatesEnabled);
-        if (shelves.has("blank_max_tier_mode")) {
-            d.blankMaxTierMode = BlankMaxTierMode.fromToken(shelves.get("blank_max_tier_mode").getAsString());
-        }
-        d.maxDirectBookshelves = intOr(shelves, "max_direct_bookshelves", d.maxDirectBookshelves);
-        d.horizontalScanRadius = intOr(shelves, "horizontal_scan_radius", d.horizontalScanRadius);
-        d.verticalScanRadius = intOr(shelves, "vertical_scan_radius", d.verticalScanRadius);
-        d.requireBreathingRoom = boolOr(shelves, "require_breathing_room", d.requireBreathingRoom);
-        d.minOpenAdjacentBlocks = intOr(shelves, "min_open_adjacent_blocks", d.minOpenAdjacentBlocks);
-        d.requireLineOfSight = boolOr(shelves, "require_line_of_sight", d.requireLineOfSight);
-
-        if (tomes.has("tome_consumption_mode")) {
-            d.tomeConsumptionMode = MasterTomeWear.ConsumptionMode.fromToken(
-                tomes.get("tome_consumption_mode").getAsString()
-            );
-        }
-        d.maxTomeUses = intOr(tomes, "max_tome_uses", d.maxTomeUses);
-        d.bookCopyWearCost = intOr(tomes, "book_copy_wear_cost", d.bookCopyWearCost);
-        if (tomes.has("tome_deplete_behavior")) {
-            d.tomeDepleteBehavior = MasterTomeWear.DepleteBehavior.fromToken(
-                tomes.get("tome_deplete_behavior").getAsString()
-            );
-        }
-        d.tomeRegenEnabled = boolOr(tomes, "tome_regen_enabled", d.tomeRegenEnabled);
-        d.tomeRegenBaseSeconds = intOr(tomes, "tome_regen_base_seconds", d.tomeRegenBaseSeconds);
-        d.tomeRegenTier1Shelves = intOr(tomes, "tome_regen_tier1_shelves", d.tomeRegenTier1Shelves);
-        d.tomeRegenTier1Seconds = intOr(tomes, "tome_regen_tier1_seconds", d.tomeRegenTier1Seconds);
-        d.tomeRegenTier2Shelves = intOr(tomes, "tome_regen_tier2_shelves", d.tomeRegenTier2Shelves);
-        d.tomeRegenTier2Seconds = intOr(tomes, "tome_regen_tier2_seconds", d.tomeRegenTier2Seconds);
-        d.tomeLocksEnabled = boolOr(tomes, "tome_locks", d.tomeLocksEnabled);
-        d.lockedShelfBreakable = boolOr(tomes, "locked_shelf_breakable", d.lockedShelfBreakable);
-        d.lockedBookExtractionBlocked = boolOr(tomes, "locked_book_extraction_blocked", d.lockedBookExtractionBlocked);
-        d.provenanceEnabled = boolOr(tomes, "provenance", d.provenanceEnabled);
-        d.ritualQueueEnabled = boolOr(tomes, "ritual_queue", d.ritualQueueEnabled);
-        d.earlyUnlockXpLevels = intOr(tomes, "early_unlock_xp_levels", d.earlyUnlockXpLevels);
-        d.earlyUnlockGritCount = intOr(tomes, "early_unlock_grit_count", d.earlyUnlockGritCount);
-        d.sacrificeRequired = intOr(tomes, "sacrifice_required", d.sacrificeRequired);
-        d.tomePageRequiredShelves = intOr(tomes, "tome_page_required_shelves", d.tomePageRequiredShelves);
-        d.incrementalCredit = boolOr(tomes, "incremental_credit", d.incrementalCredit);
-        if (tomes.has("xp_mode")) {
-            d.xpMode = XpSettlementMode.fromToken(tomes.get("xp_mode").getAsString());
-        }
-        if (tomes.has("cost_table")) {
-            d.costTableDataset = CostTableDataset.fromToken(tomes.get("cost_table").getAsString());
-        }
-        if (tomes.has("material_selection")) {
-            d.materialSelectionMode = MaterialSelectionMode.fromToken(tomes.get("material_selection").getAsString());
-        }
-        if (tomes.has("research_rounding")) {
-            d.researchRoundingMode = ResearchRoundingMode.fromToken(tomes.get("research_rounding").getAsString());
-        }
-        d.libraryDiscountEnabled = boolOr(tomes, "library_discount", d.libraryDiscountEnabled);
-        d.maxWoodenDiscountPercent = intOr(tomes, "max_wooden_discount_percent", d.maxWoodenDiscountPercent);
-        d.maxTotalXpDiscountPercent = intOr(tomes, "max_total_xp_discount_percent", d.maxTotalXpDiscountPercent);
-        d.bookCombineEnabled = boolOr(tomes, "book_combine_enabled", d.bookCombineEnabled);
-        d.bookCombineXpMultiplier = doubleOr(tomes, "book_combine_xp_multiplier", d.bookCombineXpMultiplier);
-        d.bookResearchEnabled = boolOr(tomes, "book_research_enabled", d.bookResearchEnabled);
-        d.bookResearchXpMultiplier = doubleOr(tomes, "book_research_xp_multiplier", d.bookResearchXpMultiplier);
-
-        d.epiphanyEnabled = boolOr(epiphany, "epiphany_enabled", d.epiphanyEnabled);
-        d.epiphanyMinBookshelves = intOr(epiphany, "epiphany_min_bookshelves", d.epiphanyMinBookshelves);
-        d.epiphanyBaseChance = doubleOr(epiphany, "epiphany_base_chance", d.epiphanyBaseChance);
-        d.epiphanyMaxChance = doubleOr(epiphany, "epiphany_max_chance", d.epiphanyMaxChance);
-        d.epiphanyMaxSlotsCap = intOr(epiphany, "epiphany_max_slots_cap", d.epiphanyMaxSlotsCap);
-        d.epiphanyCycleSeconds = intOr(epiphany, "epiphany_cycle_seconds", d.epiphanyCycleSeconds);
-        d.epiphanyFreezeXpLevels = intOr(epiphany, "epiphany_freeze_xp_levels", d.epiphanyFreezeXpLevels);
-        d.epiphanyFreezeDurationSeconds = intOr(epiphany, "epiphany_freeze_duration_seconds", d.epiphanyFreezeDurationSeconds);
-        d.epiphanyMaxFreezeSeconds = intOr(epiphany, "epiphany_max_freeze_seconds", d.epiphanyMaxFreezeSeconds);
-        d.epiphanyRerollXpLevels = intOr(epiphany, "epiphany_reroll_xp_levels", d.epiphanyRerollXpLevels);
-
-        d.disenchantEnabled = boolOr(cleanse, "disenchant_enabled", d.disenchantEnabled);
-        d.xpRefundScale = doubleOr(cleanse, "xp_refund_scale", d.xpRefundScale);
-        d.externalXpRefundScale = doubleOr(cleanse, "external_xp_refund_scale", d.externalXpRefundScale);
-        d.stripXpMin = intOr(cleanse, "strip_xp_min", d.stripXpMin);
-        d.stripXpMax = intOr(cleanse, "strip_xp_max", d.stripXpMax);
-        d.allowCursePurge = boolOr(cleanse, "allow_curse_purge", d.allowCursePurge);
-        d.cursePurgeXpCost = intOr(cleanse, "curse_purge_xp_cost", d.cursePurgeXpCost);
-        if (cleanse.has("transformation_set")) {
-            d.transformationSetMode = TransformationSetMode.fromToken(cleanse.get("transformation_set").getAsString());
-        }
-        d.requirePriorDiscovery = boolOr(cleanse, "require_prior_discovery", d.requirePriorDiscovery);
-        if (cleanse.has("drained_book_result")) {
-            d.drainedBookResult = DrainedBookResult.fromToken(cleanse.get("drained_book_result").getAsString());
-        }
-        d.tomePageEnabled = boolOr(cleanse, "tome_page_enabled", d.tomePageEnabled);
-        d.tier1Bookshelves = intOr(cleanse, "tier1_bookshelves", d.tier1Bookshelves);
-        d.tier2Bookshelves = intOr(cleanse, "tier2_bookshelves", d.tier2Bookshelves);
-        d.tier3QualifyingEnchantments = intOr(cleanse, "tier3_qualifying_enchantments", d.tier3QualifyingEnchantments);
-        d.transformationMaxBatchSize = intOr(cleanse, "transformation_max_batch_size", d.transformationMaxBatchSize);
-
-        if (world.has("vanilla_chest_books_mode")) {
-            d.vanillaChestBooksMode = VanillaChestBooksMode.fromToken(
-                world.get("vanilla_chest_books_mode").getAsString()
-            );
-        }
-        d.bookshelfPoolEnabled = boolOr(world, "bookshelf_pool_enabled", d.bookshelfPoolEnabled);
-        d.bookshelfMinBooks = intOr(world, "bookshelf_min_books", d.bookshelfMinBooks);
-        d.bookshelfMaxBooks = intOr(world, "bookshelf_max_books", d.bookshelfMaxBooks);
-        d.bookshelfEnchantedProb = doubleOr(world, "bookshelf_enchanted_prob", d.bookshelfEnchantedProb);
-        d.librarianTomeOffers = boolOr(world, "librarian_tome_offers", d.librarianTomeOffers);
-
-        if (root.has("customized_keys") && root.get("customized_keys").isJsonArray()) {
-            for (JsonElement el : root.getAsJsonArray("customized_keys")) {
-                if (el.isJsonPrimitive()) {
-                    String k = el.getAsString();
-                    if ("classic_1_0_3_mode".equals(k)) {
-                        d.customizedKeys.addAll(GRANULAR_RULE_ATOM_KEYS);
-                    } else {
-                        d.customizedKeys.add(k);
-                    }
-                }
-            }
-        }
-        return d.build();
+        return RuntimeConfigJson.fromJson(root);
     }
 
     /** Mutable editor buffer enforcing live cross-field coherence as users drag sliders or click toggles. */
@@ -1564,8 +1179,8 @@ public record ModRuntimeConfig(
                 }
             }
 
-            this.horizontalScanRadius = clampInt(this.horizontalScanRadius, 1, BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS);
-            this.verticalScanRadius = clampInt(this.verticalScanRadius, 0, BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS);
+            this.horizontalScanRadius = RuntimeConfigJson.clampInt(this.horizontalScanRadius, 1, BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS);
+            this.verticalScanRadius = RuntimeConfigJson.clampInt(this.verticalScanRadius, 0, BookshelfProgression.MAX_SCAN_VERTICAL_RADIUS);
             if ("vertical_scan_radius".equals(editedKey)) {
                 while (this.horizontalScanRadius > 1
                     && BookshelfProgression.scanVolumeBlocks(this.horizontalScanRadius, this.verticalScanRadius)
@@ -1651,13 +1266,13 @@ public record ModRuntimeConfig(
                 if (this.tomeRegenBaseSeconds < this.tomeRegenTier1Seconds) this.tomeRegenBaseSeconds = this.tomeRegenTier1Seconds;
             }
 
-            this.bookCombineXpMultiplier = round2(clampDouble(this.bookCombineXpMultiplier, 0.10, 3.00));
-            this.bookResearchXpMultiplier = round2(clampDouble(this.bookResearchXpMultiplier, 0.10, 3.00));
-            this.epiphanyBaseChance = round2(clampDouble(this.epiphanyBaseChance, 0.0, 1.0));
-            this.epiphanyMaxChance = round2(clampDouble(this.epiphanyMaxChance, this.epiphanyBaseChance, 1.0));
-            this.xpRefundScale = round2(clampDouble(this.xpRefundScale, 0.0, 1.0));
-            this.externalXpRefundScale = round2(clampDouble(this.externalXpRefundScale, 0.0, this.xpRefundScale));
-            this.bookshelfEnchantedProb = round2(clampDouble(this.bookshelfEnchantedProb, 0.0, 1.0));
+            this.bookCombineXpMultiplier = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookCombineXpMultiplier, 0.10, 3.00));
+            this.bookResearchXpMultiplier = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookResearchXpMultiplier, 0.10, 3.00));
+            this.epiphanyBaseChance = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.epiphanyBaseChance, 0.0, 1.0));
+            this.epiphanyMaxChance = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.epiphanyMaxChance, this.epiphanyBaseChance, 1.0));
+            this.xpRefundScale = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.xpRefundScale, 0.0, 1.0));
+            this.externalXpRefundScale = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.externalXpRefundScale, 0.0, this.xpRefundScale));
+            this.bookshelfEnchantedProb = RuntimeConfigJson.round2(RuntimeConfigJson.clampDouble(this.bookshelfEnchantedProb, 0.0, 1.0));
         }
 
         public void copyFrom(Draft other) {
@@ -1923,34 +1538,10 @@ public record ModRuntimeConfig(
         }
     }
 
-    private static JsonObject objOrEmpty(JsonObject parent, String key) {
-        return parent != null && parent.has(key) && parent.get(key).isJsonObject()
-            ? parent.getAsJsonObject(key)
-            : new JsonObject();
-    }
 
-    private static boolean boolOr(JsonObject obj, String key, boolean fallback) {
-        return obj.has(key) && obj.get(key).isJsonPrimitive() ? obj.get(key).getAsBoolean() : fallback;
-    }
 
-    private static int intOr(JsonObject obj, String key, int fallback) {
-        return obj.has(key) && obj.get(key).isJsonPrimitive() ? obj.get(key).getAsInt() : fallback;
-    }
 
-    private static double doubleOr(JsonObject obj, String key, double fallback) {
-        return obj.has(key) && obj.get(key).isJsonPrimitive() ? obj.get(key).getAsDouble() : fallback;
-    }
 
-    private static int clampInt(int v, int min, int max) {
-        return Math.max(min, Math.min(max, v));
-    }
 
-    private static double clampDouble(double v, double min, double max) {
-        if (Double.isNaN(v)) return min;
-        return Math.max(min, Math.min(max, v));
-    }
 
-    private static double round2(double v) {
-        return Math.round(v * 100.0) / 100.0;
-    }
 }
