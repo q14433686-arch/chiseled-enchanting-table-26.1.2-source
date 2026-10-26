@@ -112,7 +112,7 @@ final class TablePanelBackground {
                 int lx = i + 12;
                 int ly = j + 74;
                 String hint = Component.translatable(state.tooltips().menu().isTomePageUnlocked()
-                    ? "gui.chiseled_enchanting_table.tomes.empty"
+                    ? (state.tooltips().menu().tomeBooks.isEmpty() ? "gui.chiseled_enchanting_table.tomes.empty" : "gui.chiseled_enchanting_table.catalog.empty")
                     : "gui.chiseled_enchanting_table.tab.locked_tooltip").getString();
                 RowRenderSupport.renderBoundedText(ctx, state.tooltips().font(), hint, lx, ly, 0.68f, 140, 0xFFAEEADF);
             }

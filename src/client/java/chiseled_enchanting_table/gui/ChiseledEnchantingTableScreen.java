@@ -357,7 +357,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private final TomeDirectoryControls tomeDirectory = new TomeDirectoryControls();
-    private final TomeActionQueue tomeActions = new TomeActionQueue();
+    private final chiseled_enchanting_table.catalog.TomeActionQueue tomeActions = new chiseled_enchanting_table.catalog.TomeActionQueue();
     private void layoutDirectory() {
         if (this.scrollContainer != null) this.scrollContainer.updateSizeAndPosition(151, isTomeTab() ? 96 : 141,
             this.leftPos + 7, this.topPos + (isTomeTab() ? 62 : 17));
@@ -830,9 +830,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         layoutDirectory();
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
         if (isTomeTab()) {
-            String status = tomeActions.status();
-            if (status != null) RowRenderSupport.renderCenteredBoxText(ctx, this.font, status,
-                this.leftPos+169, 154, this.topPos+77, 0.58f, 0xFFFFD280);
+            var status = tomeActions.status();
+            if (status != null) {
+                ctx.fill(this.leftPos+PANEL_X+9, this.topPos+PANEL_Y+8, this.leftPos+PANEL_X+110, this.topPos+PANEL_Y+16, 0xFF102722);
+                RowRenderSupport.renderCenteredBoxText(ctx, this.font, TomeDirectoryControls.text(status.key(), status.count()),
+                    this.leftPos+PANEL_X+10, 99, this.topPos+PANEL_Y+12, 0.58f, 0xFFFFD280);
+            }
             if (tomeDirectory.render(ctx, this.font, this.leftPos+7, this.topPos+17, mouseX, mouseY,
                 this.scrollContainer.catalogue, this.menu.player)) return;
         }
