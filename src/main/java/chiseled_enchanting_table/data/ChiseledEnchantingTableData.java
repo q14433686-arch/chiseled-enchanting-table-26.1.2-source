@@ -144,22 +144,6 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static volatile chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig =
         rawRitualConfig;
 
-        BookshelfBookPool bookshelfBookPool,
-        BookUpgradeRules bookUpgradeRules,
-        TreasureEpiphanyRules treasureEpiphanyRules,
-        DisenchantingRules disenchantingRules,
-        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig,
-        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig,
-        chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig,
-        CostTables costTables,
-        Set<EnchantmentWithLevel> defaultEnchantmentValues,
-        List<DefaultEnchantmentTagRule> defaultEnchantmentTags,
-        Set<Identifier> defaultExcludedIds,
-        List<Identifier> defaultExcludedTags,
-        List<LootInjection> lootInjections,
-        chiseled_enchanting_table.config.ModRuntimeConfig configuration,
-        chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy policy,
-        chiseled_enchanting_table.config.rules.RuleBook.Snapshot rules) {}
     private static volatile RuntimeFrame runtimeFrame;
     public static RuntimeFrame runtimeFrame() { return runtimeFrame; }
     public static chiseled_enchanting_table.config.ModRuntimeConfig runtimeConfiguration() {
