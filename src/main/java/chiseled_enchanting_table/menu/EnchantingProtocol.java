@@ -42,16 +42,19 @@ public final class EnchantingProtocol {
         ).toList();
 
     /**
-     * Bare (pre-revision_9) apply channel, query-only like the cost probes above.
+     * Bare (pre-revision) apply channel, query-only like the cost probes above. On the 26.2 line the
+     * apply channel shipped unversioned through revision 6; versioned apply channels begin at
+     * CURRENT_REVISION_NUMBER (7). 26.2 uses range(1,N) for all historical probes (SYNC guide §2);
+     * the 26.3 line's range(9,N) apply scheme never applied here.
      */
     public static final CustomPacketPayload.Type<ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload> LEGACY_APPLY_TYPE =
         new CustomPacketPayload.Type<>(ChiseledEnchantingTable.identifier("apply_chiseled_enchantment"));
 
-    /** Authoritative list of all historical serverbound apply probes (`apply_chiseled_enchantment` + `revision_9..N-1`). */
+    /** Authoritative list of all historical serverbound apply probes (bare + `revision_1..N-1`). */
     public static final List<CustomPacketPayload.Type<ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload>> LEGACY_APPLY_PROBES =
         Stream.concat(
             Stream.of(LEGACY_APPLY_TYPE),
-            IntStream.range(9, CURRENT_REVISION_NUMBER)
+            IntStream.range(1, CURRENT_REVISION_NUMBER)
                 .mapToObj(rev -> new CustomPacketPayload.Type<ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload>(
                     ChiseledEnchantingTable.identifier("apply_chiseled_enchantment_26_2_revision_" + rev)
                 ))
