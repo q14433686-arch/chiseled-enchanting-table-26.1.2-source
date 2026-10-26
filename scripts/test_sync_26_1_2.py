@@ -211,7 +211,7 @@ class SyncContracts26_1_2(unittest.TestCase):
 
     def test_config_authority_and_persistence_guards(self):
         cfg = (MAIN / 'config/ModRuntimeConfig.java').read_text()
-        self.assertIn('StandardCopyOption.ATOMIC_MOVE', cfg)
+        self.assertIn('StandardCopyOption.ATOMIC_MOVE', (MAIN / 'config/ConfigFileStore.java').read_text())
         self.assertIn('saveToDisk(normalized);', cfg)
         net = (MAIN / 'config/ModConfigNetworking.java').read_text()
         self.assertIn('server.isSingleplayerOwner(player.nameAndId())', net)
