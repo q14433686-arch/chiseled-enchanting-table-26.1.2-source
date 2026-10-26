@@ -144,3 +144,20 @@ pure bounded aggregator. This adapter does not claim universal third-party terri
 Source `6bb5276`: compile-check 40364870519 succeeded with **186 tests, zero failures/errors/skips**;
 build 40364870525 has passed static, full build and no-viewer compile. Native workspace verification
 is still pending at documentation time. No production topic/UI/unlock enforcement has been added.
+
+### Outcomes and human review (2026-10-27)
+
+[Concrete human-reviewed decisions](reviews/TARGET_FIRST_REVIEW_2026_10_27.md) now constrain content.
+Optional root `outcomes` entries contain `conclusion`, `enchantment`, `branch`, `max_level`;
+`sample_analyses` entries contain `topic`, `hypothesis`, `evidence`, `enchantment`, `minimum_level`.
+Validation rejects unknown conclusions, duplicate grants/routes and fabricated evidence mappings.
+Manufacturing maxima are separate from registry maxima and pricing. No existing production gate
+is switched yet. `ResearchGoalView` resolves target-first routes and next actions, not GUI widgets.
+
+Correction: workspace run40364870525 failed at the wooden-shelf assertion. This turn adds explicit
+vanilla bookshelf recognition and same-height fixture placement with diagnostics; final native
+verification must be read from the new run, not inferred from pure tests.
+
+The patched workspace/outcome source976aae1 subsequently passed the full native run40372748679,
+including `RESEARCH WORKSPACE PASS`. Source46836b9 adds the target-first model and passes207JUnit
+in compile40374462742; its full native run40374462984 remains pending at documentation time.

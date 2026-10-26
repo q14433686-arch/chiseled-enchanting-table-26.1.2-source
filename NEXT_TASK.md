@@ -7,7 +7,16 @@ The full source synchronization through `9f0e13bd75e31f7d1d8a569302d0f57abd2ce84
 cleanup are implemented. Version remains **1.1.0 / MC 26.3**; the current compatibility gate is **wire revision 12**. Do not re-run one-shot
 port scripts or restore older source/GUI/input conventions from historical reports.
 
-## Research roadmap and live workspace — 2026-10-27
+## Human-reviewed learning routes and outcomes — 2026-10-27
+
+- [Concrete review decisions](docs/research/reviews/TARGET_FIRST_REVIEW_2026_10_27.md): low-level learning, derivation/analysis alternatives, branch-specific caps, simple ordinary costs, Efficiency I→II with chosen-job trial plus sample analysis, and a target-first independent research tab. Gameplay/UI/art decisions require granular review; architecture authorization is not blanket creative approval.
+- Source **`46836b9`**: validated conclusion→manufacturing limits, sample-analysis rule/runtime service, and immutable target-first page model with explicit next actions. **Not** GUI widgets, networking, production enforcement or trial effects yet.
+- [compile-check 40374462742](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40374462742): **207 tests, zero failures/errors/skips**. [build 40374462984](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40374462984): static/build/no-viewer successful; latest native run still installing dependencies at documentation time.
+- Important correction: prior workspace run40364870525 **failed**, not passed. Patched source **976aae1** subsequently passed the entire [build40372748679](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40372748679), including `RESEARCH WORKSPACE PASS` and the outcome-aware foundation probe. New page-model commit still needs its own final native result.
+- [Wireframe for review](docs/research/reviews/target-first-wireframe.svg) is not an implemented page or final texture. Trial binding, meaningful feedback, actual layout/texture and Efficiency II production costs remain to review. No production research catalog or mandatory gating is enabled.
+- Existing wear/wait/cost migration remains outstanding. No registered enchantment cap or pricing change, payload or protocol change; **1.1.0 / MC26.3 / revision12** unchanged.
+
+## Previous research roadmap and live workspace — 2026-10-27
 
 - [Authoritative gameplay and architecture plan](docs/research/MASTER_PLAN.md): four loops, player stages, additions/removals, old-save migration, R0–R6 acceptance. Research remains the prerequisite, not advanced enchantment effects.
 - Source **`6bb5276`** adds real authorized table-menu scanning, loaded-only offsets, distinct enchantment breadth and best quality. No wear/generation/lock filtering or book mutation. No tick scanner.

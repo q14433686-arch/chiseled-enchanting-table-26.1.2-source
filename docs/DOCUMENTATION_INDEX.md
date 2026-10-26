@@ -8,6 +8,9 @@
 
 ## Active research work
 
+[Concrete human review](research/reviews/TARGET_FIRST_REVIEW_2026_10_27.md) — agreed learning routes, first topic and page structure; unresolved gameplay/UI details remain explicit.
+
+
 [Research master plan](research/MASTER_PLAN.md) — gameplay loops, architecture, mechanism replacement and phased acceptance.
 
 [Research foundation](research/FOUNDATION.md) — agreed direction, implemented state machine, save format, extension contracts and explicitly unfinished player-facing integration.
