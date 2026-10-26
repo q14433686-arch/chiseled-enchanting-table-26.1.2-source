@@ -52,7 +52,7 @@ final class RainbowClothProbe {
             clone.applyComponentsFromItemStack(dropped);
             check(clone.color==0x123456 && clone.pendingFreezeTicks==1200,"replacement item component restore failed");
             player.setShiftKeyDown(false);
-            var dye=new ItemStack(Items.DYE.red(),2);
+            var dye=new ItemStack(Items.RED_DYE,2);
             state.useItemOn(dye,level,player,InteractionHand.MAIN_HAND,hit);
             check(!level.getBlockState(pos).getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"dye did not exit rainbow mode");
             check(dye.getCount()==1,"normal dye consumption changed");

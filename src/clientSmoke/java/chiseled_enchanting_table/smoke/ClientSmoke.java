@@ -166,7 +166,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 chiseled_enchanting_table.gui.ListModelProbe.verify(client.player);
                 chiseled_enchanting_table.gui.UiPresentationProbe.verify(client, (ChiseledEnchantingTableScreenHandler) client.player.containerMenu);
                 net.minecraft.client.Screenshot.grab(client.gameDirectory, "table-ui-zh_cn.png",
-                    client.gameRenderer.mainRenderTarget(), 1, message -> System.out.println("UI screenshot: " + message.getString()));
+                    client.getMainRenderTarget(), message -> System.out.println("UI screenshot: " + message.getString()));
                 click(table, (int) field(table, "leftPos") + 172, (int) field(table, "topPos") - 12, InputConstants.MOUSE_BUTTON_LEFT);
                 next(20);
             }
@@ -181,7 +181,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 click(table,left+7+select.x()+select.width()/2.0,top+17+select.y()+select.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
                 require(list.selectedTomes().size()==menu.tomeBooks.size(),"visible-selection control did not select real shelf books");
                 net.minecraft.client.Screenshot.grab(client.gameDirectory,"rainbow-items-a.png",
-                    client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Rainbow items screenshot A: "+message.getString()));
+                    client.getMainRenderTarget(), message->System.out.println("Rainbow items screenshot A: "+message.getString()));
                 var lock=chiseled_enchanting_table.gui.TomeDirectoryLayout.lockButton(2);
                 click(table,left+lock.x()+lock.width()/2.0,top+lock.y()+lock.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
                 click(table,left+lock.x()+lock.width()/2.0,top+lock.y()+lock.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
@@ -197,10 +197,10 @@ public final class ClientSmoke implements ClientModInitializer {
             case 22 -> {
                 if(!chiseled_enchanting_table.render.RainbowItemProbe.laterFrame(client)) return;
                 net.minecraft.client.Screenshot.grab(client.gameDirectory,"rainbow-items-b.png",
-                    client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Rainbow items screenshot B: "+message.getString()));
+                    client.getMainRenderTarget(), message->System.out.println("Rainbow items screenshot B: "+message.getString()));
                 var table=(ChiseledEnchantingTableScreen)client.screen;
                 net.minecraft.client.Screenshot.grab(client.gameDirectory,"tome-catalogue-zh_cn.png",
-                    client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Catalogue screenshot: "+message.getString()));
+                    client.getMainRenderTarget(), message->System.out.println("Catalogue screenshot: "+message.getString()));
                 click(table, (int) field(table, "leftPos") + 300, (int) field(table, "topPos") - 8, InputConstants.MOUSE_BUTTON_LEFT);
                 require(table.hasActiveConfigOverlay(), "table config button did not open overlay");
                 editor = (ChiseledEnchantingConfigScreen) field(table, "configOverlay");
