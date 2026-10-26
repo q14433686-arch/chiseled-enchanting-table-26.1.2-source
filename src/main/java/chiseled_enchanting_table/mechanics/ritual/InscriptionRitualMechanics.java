@@ -734,6 +734,11 @@ public final class InscriptionRitualMechanics {
             )
         );
 
+    /** Pure persisted-queue reconciliation; the caller owns world quarantine and inventory recovery. */
+    public static List<QueuedInscription> recoverQueue(java.util.Optional<List<QueuedInscription>> structuredQueue, String rawQueue) {
+        return RitualQueuePersistence.recoverQueue(structuredQueue, rawQueue);
+    }
+
     public static String serializeQueue(List<QueuedInscription> queue) { return RitualQueuePersistence.serializeQueue(queue); }
 
     public static List<QueuedInscription> deserializeQueue(String raw) { return RitualQueuePersistence.deserializeQueue(raw); }

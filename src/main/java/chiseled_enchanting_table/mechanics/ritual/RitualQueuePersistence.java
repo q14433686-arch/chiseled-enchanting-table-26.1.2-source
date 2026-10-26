@@ -125,4 +125,17 @@ final class RitualQueuePersistence {
             return null;
         }
     }
+
+    static List<QueuedInscription> recoverQueue(java.util.Optional<List<QueuedInscription>> structuredQueue, String rawQueue) {
+        if (structuredQueue.isPresent() && (rawQueue.isBlank() || serializeQueue(structuredQueue.get()).equals(rawQueue))) {
+            if (structuredQueue.get().size() > MAX_QUEUE_STEPS) throw new IllegalArgumentException("Too many ritual steps");
+            long refund = 0L;
+            for (QueuedInscription step : structuredQueue.get()) {
+                refund += step.conflictRefundPoints();
+                if (refund > Integer.MAX_VALUE) throw new IllegalArgumentException("Ritual refund exceeds budget");
+            }
+            return new ArrayList<>(structuredQueue.get());
+        }
+        return deserializeQueue(rawQueue);
+    }
 }

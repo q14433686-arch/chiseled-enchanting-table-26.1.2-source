@@ -1,6 +1,5 @@
 package chiseled_enchanting_table.config;
 
-import static chiseled_enchanting_table.config.RuntimeConfigJson.*;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
@@ -11,7 +10,6 @@ import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Vanill
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.Reader;
@@ -534,77 +532,13 @@ public record ModRuntimeConfig(
             return lockedKeys.contains(key);
         }
 
-        public JsonObject toJson() {
-            JsonObject obj = new JsonObject();
-            obj.addProperty("enforce_datapack_priority", enforceDatapackPriority);
-            obj.addProperty("lock_in_game_config", lockInGameConfig);
-            com.google.gson.JsonArray dpArr = new com.google.gson.JsonArray();
-            for (String k : datapackOverriddenKeys) dpArr.add(k);
-            obj.add("datapack_overridden_keys", dpArr);
-            com.google.gson.JsonArray lockArr = new com.google.gson.JsonArray();
-            for (String k : lockedKeys) lockArr.add(k);
-            obj.add("locked_keys", lockArr);
-            return obj;
-        }
+        public JsonObject toJson() { return RuntimePolicyJson.toJson(this); }
 
         public String toJsonString() {
             return GSON.toJson(toJson());
         }
 
-        public static PackPolicy fromJson(JsonObject root, Set<String> externalDatapackKeys) {
-            if (root != null) {
-                for (String key : Set.of("enforce_datapack_priority", "lock_in_game_config")) {
-                    if (root.has(key) && (!root.get(key).isJsonPrimitive()
-                        || !root.getAsJsonPrimitive(key).isBoolean()))
-                        throw new IllegalArgumentException("Policy flag must be boolean: " + key);
-                }
-                for (String key : Set.of("locked_keys", "datapack_overridden_keys")) {
-                    if (!root.has(key)) continue;
-                    if (!root.get(key).isJsonArray()) throw new IllegalArgumentException("Policy keys must be array: " + key);
-                    for (var element : root.getAsJsonArray(key)) {
-                        if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isString())
-                            throw new IllegalArgumentException("Policy key must be a string");
-                        String k = element.getAsString();
-                        if (!"classic_1_0_3_mode".equals(k)
-                            && ConfigCatalog.ALL_OPTIONS.stream().noneMatch(option -> option.key().equals(k))) {
-                            throw new IllegalArgumentException("Unknown policy key: " + k);
-                        }
-                    }
-                }
-            }
-            boolean enforceDp = root != null && boolOr(root, "enforce_datapack_priority", false);
-            boolean lockAll = root != null && boolOr(root, "lock_in_game_config", false);
-            Set<String> dpKeys = new LinkedHashSet<>();
-            if (externalDatapackKeys != null) {
-                dpKeys.addAll(externalDatapackKeys);
-            }
-            if (root != null && root.has("datapack_overridden_keys") && root.get("datapack_overridden_keys").isJsonArray()) {
-                for (JsonElement el : root.getAsJsonArray("datapack_overridden_keys")) {
-                    if (el.isJsonPrimitive()) {
-                        String k = el.getAsString();
-                        if ("classic_1_0_3_mode".equals(k)) {
-                            dpKeys.addAll(GRANULAR_RULE_ATOM_KEYS);
-                        } else {
-                            dpKeys.add(k);
-                        }
-                    }
-                }
-            }
-            Set<String> locked = new LinkedHashSet<>();
-            if (root != null && root.has("locked_keys") && root.get("locked_keys").isJsonArray()) {
-                for (JsonElement el : root.getAsJsonArray("locked_keys")) {
-                    if (el.isJsonPrimitive()) {
-                        String k = el.getAsString();
-                        if ("classic_1_0_3_mode".equals(k)) {
-                            locked.addAll(GRANULAR_RULE_ATOM_KEYS);
-                        } else {
-                            locked.add(k);
-                        }
-                    }
-                }
-            }
-            return new PackPolicy(enforceDp, lockAll, dpKeys, locked);
-        }
+        public static PackPolicy fromJson(JsonObject root, Set<String> externalDatapackKeys) { return RuntimePolicyJson.fromJson(root, externalDatapackKeys); }
 
         public static PackPolicy fromJsonString(String raw) {
             if (raw == null || raw.isBlank()) {
