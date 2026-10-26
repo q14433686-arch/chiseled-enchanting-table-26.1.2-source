@@ -13,7 +13,20 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Current UI validation — 2026-10-26 (latest)
+## Latest tome catalogue validation — 2026-10-26
+
+Verified source **`ba1cb429f63d38904a2844a88402cfc83b757082`**; **1.1.0 / MC 26.3 / revision 11** unchanged.
+
+- [compile-check 40257006923](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40257006923): **138 JUnit, zero failures/errors/skips**, including 15 new catalogue/queue contracts.
+- [build 40257006935](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40257006935): all four business jobs successful; compile/server diagnostics successful. Real server and Chinese SDL client pass.
+- Shift shows all enchantments with bounded Shift-wheel pages and shelf/slot identity. Intersecting enchantment/remaining/total/lock filters, scrollable choices and bidirectional sorting; stable selection, Shift multi-select, select visible and clear.
+- Confirmed, paced multi-book lock/unlock reuses the authoritative per-book protocol. Hidden/removed selections are pruned; observable replacements are skipped. Costs/permissions remain per book, with partial completion possible; not an atomic transaction or new persistent item-identity system.
+- Read final **CATALOGUE BOUNDARY PASS**, **CATALOGUE WORLD PASS** and **CLIENT SMOKE PASS** markers: actual shelf books, table-tab/selection/button clicks, paced permanent locks and owner/live-state sync.
+- User selected first of two AI toolbar candidates; selected texture is integrated. Eleven locales contain **1013 keys**. Previous UI and six-area engineering splits remain in place.
+- [Build artifact](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40257006935/artifacts/12623425899); [smoke artifact with `run-client-smoke/screenshots/tome-catalogue-zh_cn.png`](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40257006935/artifacts/12622388969). Actual game screenshot not manually inspected; network-restricted artifact download and broader human visual/multiplayer matrices remain evidence limits.
+- [Catalogue design, ownership, CI and limitations](docs/reports/TOME_CATALOGUE_2026_10_26.md). No PR/merge authorized or performed.
+
+## Previous UI validation — 2026-10-26
 
 Verified source **`805cd2fce042a6958a739b2d7e2242b273e08d42`**, release **1.1.0 / MC 26.3 / revision 11**.
 
