@@ -66,6 +66,20 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     public Player player;
     public ChiseledEnchantingTableScreenHandler handler;
     private UiTabMode tabMode = UiTabMode.INSCRIBE;
+    // Tome catalogue (26.3 port): when non-null, TOMES rows come from the catalogue's
+    // filtered/sorted view instead of the raw synced book list.
+    @Nullable
+    private java.util.List<ChiseledEnchantingMenuPayloads.TomeBookEntry> catalogueBooks;
+    @Nullable
+    private chiseled_enchanting_table.catalog.TomeCatalog tomeCatalog;
+
+    public void setCatalogueBooks(
+        @Nullable java.util.List<ChiseledEnchantingMenuPayloads.TomeBookEntry> books,
+        @Nullable chiseled_enchanting_table.catalog.TomeCatalog catalog
+    ) {
+        this.catalogueBooks = books;
+        this.tomeCatalog = catalog;
+    }
     @Nullable
     private net.minecraft.core.BlockPos selectedTomeShelf;
     private int selectedTomeSlot = -1;
@@ -493,23 +507,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
         var selected = selectedTomeEntry();
         selectTome(selected);
-        for (var book : this.handler.tomeBooks) {
+        for (var book : this.catalogueBooks != null ? this.catalogueBooks : this.handler.tomeBooks) {
             this.addEntry(EnchantUiEntry.tomeEntry(minecraft, this.handler, book, this));
         }
         this.setScrollAmount(Math.min(previousScroll, this.maxScrollAmount()));
     }
 
     static String tomeTitle(ChiseledEnchantingMenuPayloads.TomeBookEntry book, Player player) {
-        String custom = book.custom_name() == null ? "" : book.custom_name().trim();
-        String defaultName = new ItemStack(Items.ENCHANTED_BOOK).getHoverName().getString();
-        if (!custom.isEmpty() && !custom.equals(defaultName)) return custom;
-        if (book.enchantments().isEmpty()) return custom.isEmpty() ? defaultName : custom;
-        var first = book.enchantments().getFirst();
-        var holder = findEnchantment(first.enchantment_id(), player);
-        String title = holder.map(h -> Enchantment.getFullname(h, first.enchantment_level()).getString())
-            .orElse(first.enchantment_id().toString());
-        return book.enchantments().size() > 1 ? title + " +" + (book.enchantments().size() - 1) : title;
+        return TomeDisplayNames.tomeTitle(book, player);
     }
+
 
     static String formatTomeEta(int ticks) {
         if (ticks < 0) return "--:--";
@@ -1270,6 +1277,12 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         public boolean serverSendApplyEnchant(boolean shiftBypass) {
             if (is_tome_entry) {
+                if (parent.tomeCatalog != null && this.tome_book != null) {
+                    parent.tomeCatalog.select(
+                        new chiseled_enchanting_table.catalog.TomeCatalog.Key(
+                            this.tome_book.shelf_pos().asLong(), this.tome_book.slot()),
+                        shiftBypass);
+                }
                 parent.selectTome(this.tome_book);
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 return true;
@@ -1408,6 +1421,11 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 boolean selected = parent.isTomeSelected(this.tome_book);
                 RowRenderSupport.drawPlaque(ctx, dx, dy, dw, dh,
                     RowRenderSupport.RowVisualStyle.STANDARD, true, hovered, isFocused || selected);
+                if (parent.tomeCatalog != null && parent.tomeCatalog.isSelected(
+                    new chiseled_enchanting_table.catalog.TomeCatalog.Key(
+                        this.tome_book.shelf_pos().asLong(), this.tome_book.slot()))) {
+                    ctx.fill(dx + 1, dy + 2, dx + 3, dy + dh - 2, 0xFF7CFFA6);
+                }
                 RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
                 try {
                     String title = tomeTitle(this.tome_book, this.player);
