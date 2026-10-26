@@ -13,7 +13,18 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Latest framed-icon UI validation — 2026-10-26
+## Latest rainbow-cloth validation — 2026-10-26
+
+Verified source **`871b696532df3882559057670dcb5ed0a255570e`**; release **1.1.0 / MC 26.3**, compatibility channel **`26_3_revision_12`**. Update client and server together: the new `rainbow_cloth` registered block state is not compatible with prior revision11 builds, even though business payload layouts and release label are unchanged.
+
+- Sneak-use an exactly named **`jeb_`** name tag on the table to enable a reusable cosmetic key. No tag consumption or table rename. Dyeing exits the mode and retains ordinary colour mixing/consumption; drops/placement preserve the flag alongside dye and freeze metadata.
+- Early Fabric use-block callback handles vanilla's sneaking bypass; spectator/build/vanilla interaction guards retained. No new Mixin or colour payload. Normal static block/item model unchanged; only rainbow states render five dynamic cloth faces, using vanilla 26.3 sheep `ColorLerper` and a bounded world-time/partial-tick phase, not per-frame chunk rebuilds.
+- [compile-check 40263622160](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40263622160): **155 JUnit, zero failures/errors/skips**. [build 40263622260](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40263622260): all four business jobs and both diagnostics successful; real server/Chinese SDL client and no-viewer compile pass.
+- Final diagnostics contain **RAINBOW CLOTH PASS**, **CATALOGUE WORLD PASS**, **CLIENT SMOKE PASS**. Server callback, real loot/component/placement-state restoration, ordinary dye exit/consumption and reactivation tested; not a claim of human input, full right-click network-path testing or all shader/resource-pack geometry combinations.
+- [Installable build](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40263622260/artifacts/12625302256); [native logs/menu screenshots](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40263622260/artifacts/12625970306). Dedicated animated visual recording not produced/manually inspected. Only 26.3 has been validated; other versions require renderer/API adaptation.
+- [Implementation, persistence and cross-version limits](docs/reports/RAINBOW_CLOTH_2026_10_26.md); [protocol transition](docs/PROTOCOL_HISTORY.md). Prior UI/engineering work remains implemented. No PR/merge authorized or performed.
+
+## Previous framed-icon UI validation — 2026-10-26
 
 Verified source **`3bd875ccfe0ce0b8001e404b33f193aa09953f9d`**; **1.1.0 / MC 26.3 / revision 11** unchanged.
 
