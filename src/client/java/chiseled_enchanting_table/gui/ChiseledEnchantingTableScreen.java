@@ -267,28 +267,6 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return mouseX >= x0 && mouseX < x0 + SHELF_HUD_W && mouseY >= y0 && mouseY < y0 + SHELF_HUD_H;
     }
 
-    private int computeNextShelfMilestoneTarget() {
-        var sg = this.menu.shelfGatesConfig();
-        var lr = this.menu.libraryResonanceConfig();
-        int broad = this.menu.totalLibraryBookshelves();
-        int[] milestones = {
-            Math.max(1, lr.minDiscountBookshelves()),
-            Math.max(1, sg.tier1Bookshelves()),
-            Math.max(1, this.menu.epiphanyMinBookshelves()),
-            Math.max(1, sg.tier2Bookshelves()),
-            Math.max(1, sg.maxDirectBookshelves()),
-            Math.max(1, lr.tomeRegenTier1Shelves()),
-            Math.max(1, lr.tomeRegenTier2Shelves())
-        };
-        java.util.Arrays.sort(milestones);
-        for (int m : milestones) {
-            if (broad < m) {
-                return m;
-            }
-        }
-        return milestones[milestones.length - 1];
-    }
-
     private boolean isCleanseTab() {
         return this.scrollContainer != null && this.scrollContainer.tabMode() == UiTabMode.CLEANSE;
     }
@@ -851,7 +829,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private List<Component> buildResonanceBreakdownTooltip() {
         BlockPos pos = effectiveTablePos();
-        var scan = this.minecraft != null && this.minecraft.level != null && pos != null
+        var scan = TooltipPresentation.detailsRequested() && this.minecraft != null && this.minecraft.level != null && pos != null
             ? chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.scanLibraryRitualContext(
                 this.minecraft.level, pos, this.menu.shelfGatesConfig()) : null;
         return ResonanceTooltip.build(this.menu, scan);
@@ -885,7 +863,7 @@ return new TableTooltipContext(this.menu, this.scrollContainer == null ? null : 
 
     private TablePanelContext panelInputs(int mouseX, int mouseY) {
         return new TablePanelContext(tooltipInputs(mouseX, mouseY), this.leftPos, this.topPos, this.title.getString(),
-            shouldShowSanctumPanel(), shouldShowShelfHudBadge(), isInscribeTab(), computeNextShelfMilestoneTarget(),
+            shouldShowSanctumPanel(), shouldShowShelfHudBadge(), isInscribeTab(),
             this::tomeButtonRect);
     }
 }

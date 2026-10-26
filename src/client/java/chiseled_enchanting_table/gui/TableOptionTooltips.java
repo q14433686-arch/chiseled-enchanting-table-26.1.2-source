@@ -28,7 +28,7 @@ final class TableOptionTooltips {
                     "gui.chiseled_enchanting_table.discovery_locked.tip_desc",
                     lockedOut
                 ).withStyle(ChatFormatting.YELLOW));
-                ctx.setTooltipForNextFrame(state.font(), discTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), discTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
             if (specialEntry.shelf_locked() && specialEntry.enchantment() != null) {
@@ -54,7 +54,7 @@ final class TableOptionTooltips {
                 lockTip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.shelf_locked.tip_bypass"
                 ).withStyle(ChatFormatting.GRAY));
-                ctx.setTooltipForNextFrame(state.font(), lockTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), lockTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
             if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(specialEntry.enchantment_id())) {
@@ -84,7 +84,7 @@ final class TableOptionTooltips {
                 ).withStyle(dtTier == chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.DepletedTomeTier.TIER_3_FREE
                     ? ChatFormatting.LIGHT_PURPLE
                     : ChatFormatting.GRAY));
-                ctx.setTooltipForNextFrame(state.font(), dtTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), dtTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
             if (specialEntry.is_category_header() && !specialEntry.cleanse_theme()) {
@@ -102,7 +102,7 @@ final class TableOptionTooltips {
                     : state.menu().maxBlankWoodenTier(specialEntry.enchantment_id(), maxLvl);
                 int effectiveCap = Math.min(maxLvl, Math.max(storedLvl, baseCap));
                 List<Component> catTip = new ArrayList<>();
-                catTip.add(Component.literal(specialEntry.category_title() + "  " + specialEntry.category_badge())
+                catTip.add(Component.literal(specialEntry.category_title())
                     .withStyle(ChatFormatting.GOLD));
                 catTip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.category.tip_cap",
@@ -133,7 +133,7 @@ final class TableOptionTooltips {
                 }
                 catTip.add(Component.translatable("gui.chiseled_enchanting_table.category.tip_master")
                     .withStyle(ChatFormatting.DARK_GRAY));
-                ctx.setTooltipForNextFrame(state.font(), catTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), catTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
         }
@@ -272,7 +272,7 @@ final class TableOptionTooltips {
                     rowDisc
                 ).withStyle(ChatFormatting.DARK_AQUA));
             }
-            ctx.setTooltipForNextFrame(state.font(), rowTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), rowTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         return false;

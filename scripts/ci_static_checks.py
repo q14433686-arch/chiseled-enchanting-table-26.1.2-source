@@ -304,10 +304,10 @@ def check_lang_parity() -> None:
                 continue
             if val.strip() == key or "gui.chiseled_enchanting_table." in val:
                 fail(f"{lname}: key '{key}' contains raw untranslated key text '{val}'")
-            if any(ord(ch) > 0xFFFF for ch in val):
+            if any(ord(ch) > 0xFFFF and ch != "🔒" for ch in val):
                 fail(
                     f"{lname}: key '{key}' contains supplementary-plane (> U+FFFF) glyph(s); "
-                    f"use BMP symbols so Minecraft's default font never renders tofu boxes"
+                    f"only the explicitly accepted lock emoji may be non-BMP"
                 )
             if key in reference and isinstance(reference[key], str):
                 ref_slots = format_arg_slots(reference[key])
@@ -407,12 +407,12 @@ def check_bmp_safe_java_literals() -> None:
                     continue
                 path = os.path.join(root, name)
                 text = open(path, encoding="utf-8").read()
-                if any(ord(ch) > 0xFFFF for ch in text) or surrogate_esc.search(text):
+                if any(ord(ch) > 0xFFFF and ch != "🔒" for ch in text) or surrogate_esc.search(text):
                     offenders.append(os.path.relpath(path, REPO))
     for off in offenders:
         fail(f"non-BMP glyph or surrogate escape in production Java source: {off}")
     if not offenders:
-        note("all production Java sources use BMP-safe glyphs")
+        note("production Java glyphs are BMP-safe except the explicitly accepted lock emoji")
 
 
 

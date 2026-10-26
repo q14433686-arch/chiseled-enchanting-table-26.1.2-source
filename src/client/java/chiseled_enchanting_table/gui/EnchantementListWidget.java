@@ -577,13 +577,8 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     : ("\u2B06 " + romanNumeral(curLvl) + "\u2192" + romanNumeral(maxUnlockedTier));
                 badgeColor = RowRenderSupport.LIGHT_GREEN;
             } else if (curLvl > 0 && maxTier > curLvl && maxUnlockedTier <= curLvl) {
-                int nextReq = children.stream()
-                    .filter(s -> s.shelfLocked() && s.option().level() > curLvl)
-                    .mapToInt(DisplayOptionSlot::requiredBookshelves)
-                    .findFirst()
-                    .orElse(0);
-                badgeText = "\u2298 " + romanNumeral(curLvl + 1) + " (" + nextReq + ")";
-                badgeColor = RowRenderSupport.EPIPHANY_GOLD;
+                badgeText = "🔒 " + romanNumeral(curLvl + 1);
+                badgeColor = RowRenderSupport.LIGHT_RED;
             } else if (curLvl > 0 && maxUnlockedTier == curLvl) {
                 badgeText = "\u2714 " + romanNumeral(curLvl);
                 badgeColor = RowRenderSupport.CYAN;

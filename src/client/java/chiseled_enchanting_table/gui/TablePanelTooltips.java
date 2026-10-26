@@ -43,7 +43,7 @@ final class TablePanelTooltips {
             }
             tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_all_hint")
                 .withStyle(ChatFormatting.GRAY));
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverFreezeButton)) {
@@ -79,7 +79,7 @@ final class TablePanelTooltips {
             }
             tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.freeze_hint")
                 .withStyle(ChatFormatting.DARK_GRAY));
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverRerollButton)) {
@@ -114,7 +114,7 @@ final class TablePanelTooltips {
                 "gui.chiseled_enchanting_table.epiphany.auto_hint",
                 Math.max(1, Math.round(state.menu().epiphanyCycleTicks() / 1200.0f))
             ).withStyle(ChatFormatting.DARK_GRAY));
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverSanctumPanel)) {
@@ -125,7 +125,7 @@ final class TablePanelTooltips {
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.unlock_progress", state.menu().qualifyingEnchantedBookshelves, state.menu().tomeRequiredShelves).withStyle(state.menu().isTomePageUnlocked() ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
                 var sel = state.list().selectedTomeEntry();
                 if (sel != null) tip.add(Component.literal(TomeDisplayNames.tomeTitle(sel, state.menu().player)).withStyle(ChatFormatting.GOLD));
-                ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
             if (state.isCleanseTab()) {
@@ -157,10 +157,10 @@ final class TablePanelTooltips {
                     "gui.chiseled_enchanting_table.cleanse.panel_resonance",
                     state.menu().libraryResonanceConfig().maxSpecificEnchantBonusPercent()
                 ).withStyle(ChatFormatting.DARK_GRAY));
-                ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
-            ctx.setTooltipForNextFrame(
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx,
                 state.font(),
                 state.resonance().get(),
                 Optional.empty(),

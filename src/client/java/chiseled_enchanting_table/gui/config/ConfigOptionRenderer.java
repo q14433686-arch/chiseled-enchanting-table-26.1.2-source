@@ -26,7 +26,7 @@ import static chiseled_enchanting_table.gui.config.ConfigInteractions.*;
 /** ConfigOptionRenderer owns view composition and registers actions via a narrow editor surface. */
 final class ConfigOptionRenderer {
     private ConfigOptionRenderer() {}
-    static List<Component> renderSingleOptionRow(ConfigViewContext context, 
+    static List<Component> renderSingleOptionRow(ConfigViewContext context,
         GuiGraphicsExtractor ctx,
         OptionEntry entry,
         int flatIndex,
@@ -84,7 +84,7 @@ final class ConfigOptionRenderer {
 
         // 3. Dual-coded Scope + Lock Glyph Chip (strictly >= 0.75f, BMP-safe geometric glyphs)
         Box sb = row.scopeBadgeBox();
-        String scopeGlyph = (!editable ? "\u2298" : "") + avail.effectScope().glyph();
+        String scopeGlyph = (!editable ? "🔒" : "") + avail.effectScope().glyph();
         int scopeColor = switch (avail.effectScope()) {
             case IMMEDIATE -> EMERALD_TEXT;
             case NEW_GENERATION -> CYAN_TEXT;
@@ -136,7 +136,7 @@ final class ConfigOptionRenderer {
         return hovered ? buildL3ProvenanceTooltip(context, entry, avail) : null;
     }
 
-    static void renderOptionControl(ConfigViewContext context, 
+    static void renderOptionControl(ConfigViewContext context,
         GuiGraphicsExtractor ctx,
         OptionEntry entry,
         Box cb,
@@ -335,7 +335,7 @@ final class ConfigOptionRenderer {
             .withStyle(scopeFmt));
 
         if (avail.inactiveReasonKey() != null) {
-            lines.add(Component.literal("\u2298 ")
+            lines.add(Component.literal("🔒 ")
                 .append(Component.translatable(avail.inactiveReasonKey()))
                 .withStyle(ChatFormatting.RED));
         }

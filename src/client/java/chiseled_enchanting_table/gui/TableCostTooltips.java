@@ -103,7 +103,7 @@ final class TableCostTooltips {
                     ).withStyle(ChatFormatting.AQUA));
                 }
             }
-            ctx.setTooltipForNextFrame(
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx,
                 state.font(),
                 lines,
                 hoveredCost.getTooltipImage(),
@@ -180,7 +180,7 @@ final class TableCostTooltips {
                         .withStyle(ChatFormatting.DARK_GRAY));
                 }
             }
-            ctx.setTooltipForNextFrame(state.font(), xpTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), xpTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         return false;

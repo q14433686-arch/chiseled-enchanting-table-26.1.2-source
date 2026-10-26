@@ -14,41 +14,16 @@ final class TablePanelLabels {
     private TablePanelLabels() {}
     static void extractLabels(TablePanelContext state, GuiGraphicsExtractor context, int mouseX, int mouseY) {
         // Purple stitched header cloth spans y = [1.0 .. 15.0] (center = 8.0); place visual ink center at 7.6f!
-        RowRenderSupport.renderCenteredYText(context, state.tooltips().font(), state.title(), 18, 7.6f, 0.94f, 190, 0xFFFFF0C8);
+        RowRenderSupport.renderCenteredYText(context, state.tooltips().font(), state.title(), 18, 7.6f, 0.94f, 102, 0xFFFFF0C8);
 
         if (state.showShelfBadge()) {
-            int broadShelves = state.tooltips().menu().totalLibraryBookshelves();
-            int nextTarget = state.nextShelf();
-            int gap = Math.max(0, nextTarget - broadShelves);
-            String hudText = state.tooltips().menu().crampedLibrary
-                ? Component.translatable(
-                    "gui.chiseled_enchanting_table.header.shelf_hud_cramped",
-                    state.tooltips().menu().regularBookshelves,
-                    broadShelves
-                ).getString()
-                : (gap > 0
-                    ? Component.translatable(
-                        "gui.chiseled_enchanting_table.header.shelf_hud_gap",
-                        state.tooltips().menu().regularBookshelves,
-                        broadShelves,
-                        gap
-                    ).getString()
-                    : Component.translatable(
-                        "gui.chiseled_enchanting_table.header.shelf_hud_max",
-                        state.tooltips().menu().regularBookshelves,
-                        broadShelves
-                    ).getString());
-            int hudTextColor = state.tooltips().menu().crampedLibrary ? 0xFFFF8A96 : (gap == 0 ? 0xFFFFE58F : 0xFFC8F7EA);
-            RowRenderSupport.renderCenteredBoxText(
-                context,
-                state.tooltips().font(),
-                hudText,
-                SHELF_HUD_X + 3,
-                SHELF_HUD_W - 6,
-                SHELF_HUD_Y + 4.8f,
-                0.58f,
-                hudTextColor
-            );
+            String status = Component.translatable(state.tooltips().menu().crampedLibrary
+                ? "gui.chiseled_enchanting_table.header.shelf_hud_cramped"
+                : "gui.chiseled_enchanting_table.header.shelf_hud_max",
+                state.tooltips().menu().regularBookshelves, state.tooltips().menu().totalLibraryBookshelves()).getString();
+            RowRenderSupport.renderCenteredBoxText(context, state.tooltips().font(), status,
+                SHELF_HUD_X, SHELF_HUD_W, SHELF_HUD_Y + 4.0f, 0.68f,
+                state.tooltips().menu().crampedLibrary ? 0xFFFF8A96 : 0xFFC8F7EA);
         }
 
         if (!state.showSanctum()) {
@@ -197,7 +172,7 @@ final class TablePanelLabels {
         }
     }
 
-    static void drawAutoScaledText(TablePanelContext state, 
+    static void drawAutoScaledText(TablePanelContext state,
         GuiGraphicsExtractor ctx,
         Component text,
         int x,

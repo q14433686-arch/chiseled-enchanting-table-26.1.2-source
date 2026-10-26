@@ -493,7 +493,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (footTip != null && pendingTooltip == null) pendingTooltip = footTip;
 
         if (pendingTooltip != null && !pendingTooltip.isEmpty()) {
-            ctx.setTooltipForNextFrame(this.font, pendingTooltip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, this.font, pendingTooltip, Optional.empty(), mouseX, mouseY, (Identifier) null);
         }
     }
 
@@ -571,7 +571,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             case OFFLINE_CLIENT -> CYAN_TEXT;
             case DEDICATED_READONLY, MODPACK_LOCKED -> AMBER_TEXT;
         };
-        String modeLabel = (shownMode.writable() ? "\u270e " : "\u2298 ") + I18n.get(shownMode.bannerKey());
+        String modeLabel = (shownMode.writable() ? "\u270e " : "🔒 ") + I18n.get(shownMode.bannerKey());
         drawClampedCenteredText(this.font,
             ctx,
             modeLabel,
@@ -978,7 +978,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         boolean allGated = sec.sectionActiveCount() == 0 && sec.sectionTotalCount() > 0;
         String rightTag = allGated
-            ? ("\u2298 " + sec.sectionTotalCount())
+            ? ("🔒 " + sec.sectionTotalCount())
             : Integer.toString(sec.sectionTotalCount());
         int rightW = Math.max(20, Math.round(this.font.width(rightTag) * ConfigLayoutSpec.SECONDARY_TEXT_SCALE) + 8);
         Box rightBox = new Box(x + w - 9 - rightW, y, rightW, box.h());

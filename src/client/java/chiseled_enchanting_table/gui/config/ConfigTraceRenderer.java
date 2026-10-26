@@ -23,7 +23,7 @@ import static chiseled_enchanting_table.gui.config.ConfigInteractions.*;
 /** ConfigTraceRenderer owns view composition and registers actions via a narrow editor surface. */
 final class ConfigTraceRenderer {
     private ConfigTraceRenderer() {}
-    static List<Component> renderTraceBanner(ConfigViewContext context, 
+    static List<Component> renderTraceBanner(ConfigViewContext context,
         GuiGraphicsExtractor ctx,
         int x,
         int y,
@@ -128,7 +128,7 @@ final class ConfigTraceRenderer {
 
     static void toggleTraceAtom(ConfigViewContext context, RuleTraceEntry trace) { chiseled_enchanting_table.config.ConfigTraceActions.toggle(context.draft(), trace); context.changed(); }
 
-    static List<Component> renderSingleTraceCard(ConfigViewContext context, 
+    static List<Component> renderSingleTraceCard(ConfigViewContext context,
         GuiGraphicsExtractor ctx,
         int ordinal,
         RuleTraceEntry trace,

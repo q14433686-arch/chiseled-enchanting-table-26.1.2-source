@@ -20,9 +20,6 @@ final class TablePanelBackground {
         // Draw inactive tab under main frame, main frame, then active tab flush on top so its open bottom blends seamlessly!
         ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
         renderModeTabs(state, ctx, i, j, mouseX, mouseY);
-        if (state.showShelfBadge()) {
-            renderHeaderShelfHudBadge(state, ctx, i, j, mouseX, mouseY);
-        }
 
         int px = i + PANEL_X;
         int py = j + PANEL_Y;
@@ -297,7 +294,7 @@ final class TablePanelBackground {
             }
             int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(state.tooltips().menu().get_enchantable_item()).size();
             String baseLabel = Component.translatable("gui.chiseled_enchanting_table.tab.cleanse").getString();
-            String tab2Text = traitCount > 0 ? (baseLabel + " (" + traitCount + ")") : baseLabel;
+            String tab2Text = baseLabel;
             RowRenderSupport.renderCenteredBoxText(
                 ctx,
                 state.tooltips().font(),
@@ -355,29 +352,4 @@ final class TablePanelBackground {
         }
     }
 
-    static void renderHeaderShelfHudBadge(TablePanelContext state, GuiGraphicsExtractor ctx, int left, int top, int mouseX, int mouseY) {
-        int bx = left + SHELF_HUD_X;
-        int by = top + SHELF_HUD_Y;
-        boolean hovered = state.tooltips().hovered(TableTooltipContext.Region.isOverShelfHudBadge);
-        int border = state.tooltips().menu().crampedLibrary ? 0xFFB83A4B : (hovered ? 0xFFE5C46B : 0xFF563D78);
-        ctx.fill(bx, by, bx + SHELF_HUD_W, by + SHELF_HUD_H, border);
-        ctx.fill(bx + 1, by + 1, bx + SHELF_HUD_W - 1, by + SHELF_HUD_H - 1, 0xD0160F24);
-        if (hovered) {
-            ctx.fill(bx + 1, by + 1, bx + SHELF_HUD_W - 1, by + SHELF_HUD_H - 3, 0x22FFE082);
-        }
-        int broad = state.tooltips().menu().totalLibraryBookshelves();
-        int target = state.nextShelf();
-        float ratio = target <= 0 ? 1.0f : Mth.clamp((float) broad / (float) target, 0.0f, 1.0f);
-        int barX = bx + 2;
-        int barY = by + SHELF_HUD_H - 3;
-        int barW = SHELF_HUD_W - 4;
-        ctx.fill(barX, barY, barX + barW, barY + 2, 0xFF0B0714);
-        int fillW = Math.round(barW * ratio);
-        if (fillW > 0) {
-            int barColor = state.tooltips().menu().crampedLibrary
-                ? 0xFFE05263
-                : (broad >= target ? 0xFFFFD369 : 0xFF49E2B4);
-            ctx.fill(barX, barY, barX + fillW, barY + 2, barColor);
-        }
-    }
 }

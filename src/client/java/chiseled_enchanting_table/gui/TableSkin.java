@@ -38,7 +38,7 @@ final class TableSkin {
     // Top mode switcher tabs aligned pixel-for-pixel with the purple header cloth [x = 14 .. 167].
     static final int TAB_W = 75;
     static final int TAB_H = 18;
-    static final int TAB_Y_OFFSET = -15;
+    static final int TAB_Y_OFFSET = -21;
     static final int TAB_INSCRIBE_X = 14;
     static final int TAB_CLEANSE_X = 92;
     static final int TAB_TOMES_X = 170;
@@ -51,11 +51,11 @@ final class TableSkin {
     static final int PANEL_W = 119;
     static final int PANEL_H = 61;
 
-    // Compact persistent W / S bookshelf HUD badge in the stitched header bar directly above PANEL_X.
-    static final int SHELF_HUD_X = PANEL_X;
-    static final int SHELF_HUD_Y = 2;
-    static final int SHELF_HUD_W = 118;
-    static final int SHELF_HUD_H = 12;
+    // Text-only bookshelf status inside the header safe area; no frame over the gold corner or tabs.
+    static final int SHELF_HUD_X = 124;
+    static final int SHELF_HUD_Y = 3;
+    static final int SHELF_HUD_W = 200;
+    static final int SHELF_HUD_H = 9;
     static final long DISENCHANT_CONFIRM_WINDOW_MS = 5_000L;
 
     static final int BTN_SIZE = 14;

@@ -337,7 +337,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 itemLines.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.viewer_hint")
                     .withStyle(ChatFormatting.DARK_GRAY));
             }
-            ctx.setTooltipForNextFrame(
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx,
                 this.font,
                 itemLines,
                 st.getTooltipImage(),
@@ -346,7 +346,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 st.get(DataComponents.TOOLTIP_STYLE)
             );
         } else if (!hoveredTabTip.isEmpty()) {
-            ctx.setTooltipForNextFrame(this.font, hoveredTabTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, this.font, hoveredTabTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
         }
     }
 

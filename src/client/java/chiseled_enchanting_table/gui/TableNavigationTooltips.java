@@ -19,7 +19,7 @@ final class TableNavigationTooltips {
                 Component.translatable("config.chiseled_enchanting_table.open_tip.title").withStyle(ChatFormatting.GOLD),
                 Component.translatable("config.chiseled_enchanting_table.open_tip.sub").withStyle(ChatFormatting.GRAY)
             );
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverGrimoireButton)) {
@@ -27,11 +27,11 @@ final class TableNavigationTooltips {
                 Component.translatable("gui.chiseled_enchanting_table.grimoire.open_btn.title").withStyle(ChatFormatting.GOLD),
                 Component.translatable("gui.chiseled_enchanting_table.grimoire.open_btn.desc").withStyle(ChatFormatting.GRAY)
             );
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverShelfHudBadge)) {
-            ctx.setTooltipForNextFrame(
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx,
                 state.font(),
                 state.resonance().get(),
                 Optional.empty(),
@@ -48,18 +48,18 @@ final class TableNavigationTooltips {
                     ? "gui.chiseled_enchanting_table.tab.inscribe.desc_classic"
                     : "gui.chiseled_enchanting_table.tab.inscribe.desc").withStyle(ChatFormatting.GRAY)
             );
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverCleanseTab) && !state.menu().isCleansePageUnlocked()) {
-            ctx.setTooltipForNextFrame(state.font(), List.of(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(ChatFormatting.RED)), Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), List.of(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(ChatFormatting.RED)), Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverTomeTab)) {
             List<Component> tip = state.menu().isTomePageUnlocked()
                 ? List.of(Component.translatable("gui.chiseled_enchanting_table.tab.tomes.title").withStyle(ChatFormatting.AQUA), Component.translatable("gui.chiseled_enchanting_table.tab.tomes.desc").withStyle(ChatFormatting.GRAY))
                 : List.of(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(ChatFormatting.RED));
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverSacrificeButton)) {
@@ -67,7 +67,7 @@ final class TableNavigationTooltips {
                 Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_title").withStyle(ChatFormatting.GOLD),
                 Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_desc", state.menu().sacrificeProgress, state.menu().sacrificeRequired).withStyle(ChatFormatting.GRAY)
             );
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         int tomeBtn = state.tomeButton();
@@ -85,7 +85,7 @@ final class TableNavigationTooltips {
                     lrCfg.earlyUnlockXpLevels(),
                     lrCfg.earlyUnlockGritCount())
                 : Component.translatable(key);
-            ctx.setTooltipForNextFrame(state.font(), List.of(tipText.withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), List.of(tipText.withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         var hoveredTome = state.list().hoveredTomeEntry(mouseX, mouseY);
@@ -159,7 +159,7 @@ final class TableNavigationTooltips {
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", TomeDisplayNames.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
             }
             tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.select_hint").withStyle(ChatFormatting.DARK_GRAY));
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverSacrificeSkipButton)) {
@@ -176,7 +176,7 @@ final class TableNavigationTooltips {
                 .withStyle(ChatFormatting.AQUA));
             tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_currency")
                 .withStyle(ChatFormatting.DARK_GRAY));
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverRushSkipButton)) {
@@ -205,7 +205,7 @@ final class TableNavigationTooltips {
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
                     .withStyle(ChatFormatting.RED));
             }
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         if (state.hovered(Region.isOverCleanseTab)) {
@@ -213,7 +213,7 @@ final class TableNavigationTooltips {
                 Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.title").withStyle(ChatFormatting.AQUA),
                 Component.translatable("gui.chiseled_enchanting_table.tab.cleanse.desc").withStyle(ChatFormatting.GRAY)
             );
-            ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
 
