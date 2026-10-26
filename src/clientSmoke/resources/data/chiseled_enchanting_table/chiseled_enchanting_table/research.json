@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "topics": [{
+    "id": "smoke:research", "revision": 1,
+    "title": "smoke:research_title", "question": "smoke:research_question",
+    "prerequisites": [], "breadth": 1, "shelves": 1,
+    "depth": {"smoke:knowledge": 1},
+    "hypotheses": [{"id": "smoke:hypothesis", "evidence": ["smoke:observation"], "conclusion": "smoke:understanding"}]
+  }]
+}

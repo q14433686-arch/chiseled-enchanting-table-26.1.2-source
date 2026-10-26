@@ -14,7 +14,10 @@ public final class ResearchStore {
     public ResearchJournal get(UUID player) { return players.getOrDefault(player,ResearchJournal.empty()); }
     public void put(UUID player, ResearchJournal journal) {
         Objects.requireNonNull(player); Objects.requireNonNull(journal);
-        if (!get(player).equals(journal)) { players.put(player,journal); dirty = true; }
+        if (!get(player).equals(journal)) {
+            if (!players.containsKey(player) && players.size() >= 16384) throw new IllegalStateException("Too many research players");
+            players.put(player,journal); dirty = true;
+        }
     }
     public boolean dirty() { return dirty; }
     public static ResearchStore load(Path path) throws IOException {
@@ -26,7 +29,10 @@ public final class ResearchStore {
             if (root.get("schema").getAsBigDecimal().intValueExact() != 1) throw new IllegalArgumentException("Unsupported store schema");
             JsonObject values = root.getAsJsonObject("players");
             if (values.size() > 16384) throw new IllegalArgumentException("Too many players");
-            for (var e : values.entrySet()) store.players.put(UUID.fromString(e.getKey()),ResearchJson.journal(e.getValue().getAsJsonObject()));
+            for (var e : values.entrySet()) {
+                if (store.players.putIfAbsent(UUID.fromString(e.getKey()),ResearchJson.journal(e.getValue().getAsJsonObject())) != null)
+                    throw new IllegalArgumentException("Duplicate player identity");
+            }
             return store;
         } catch (RuntimeException e) { throw new IOException("Invalid research save; not overwritten: " + path,e); }
     }

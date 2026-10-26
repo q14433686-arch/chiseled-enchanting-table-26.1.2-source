@@ -82,6 +82,15 @@ class ResearchEngineTest {
         assertEquals(2,new ResearchCatalog(List.of(topic,next)).topics().size());
         assertEquals(Status.AVAILABLE,preview(next,completed(),library).status());
     }
+    @Test void contraryObservationSurvivesChangingHypothesis() {
+        var alternative = new Hypothesis("test:alternative",Set.of("test:contrary"),"test:alternative_conclusion");
+        var t = new Topic(topic.id(),1,topic.title(),topic.question(),Set.of(),1,1,topic.depth(),
+            Map.of("test:hypothesis",topic.hypotheses().get("test:hypothesis"),"test:alternative",alternative));
+        var j = observe(t,begun(),"test:contrary").journal();
+        assertEquals(Status.EVIDENCE,conclude(t,j,library).status());
+        j = begin(t,j,library,"test:alternative").journal();
+        assertEquals(Status.COMPLETE,conclude(t,j,library).status());
+    }
     @Test void journalRoundTripKeepsPartialAndRemovedContent() {
         var j = new ResearchJournal(Set.of("removed:understood"),begun().attempts());
         assertEquals(j,ResearchJson.journal(ResearchJson.journal(j)));

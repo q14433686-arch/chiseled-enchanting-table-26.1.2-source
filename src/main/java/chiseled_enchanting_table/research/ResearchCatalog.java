@@ -22,6 +22,8 @@ public final class ResearchCatalog {
                 throw new IllegalArgumentException("Invalid topic bounds: " + id);
             depth.forEach((k,v) -> { key(k); if (v < 1 || v > 255) throw new IllegalArgumentException("Invalid depth"); });
             hypotheses.forEach((k,v) -> { if (!k.equals(v.id())) throw new IllegalArgumentException("Hypothesis key mismatch"); });
+            Set<String> allEvidence = new HashSet<>(); hypotheses.values().forEach(h -> allEvidence.addAll(h.evidence()));
+            if (allEvidence.size() > 128) throw new IllegalArgumentException("Too many evidence types in topic");
         }
     }
     /** Trusted server scan result: distinct knowledge ids and best quality, never raw book counts. */

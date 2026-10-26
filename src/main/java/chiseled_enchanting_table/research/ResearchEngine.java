@@ -33,7 +33,8 @@ public final class ResearchEngine {
         if (old != null && old.revision() == t.revision() && old.hypothesis().equals(hypothesis))
             return new Transition(Status.AVAILABLE,j); // retries cannot erase observations
         var attempts = new HashMap<>(j.attempts());
-        attempts.put(t.id(),new ResearchJournal.Attempt(t.revision(),hypothesis,Set.of()));
+        attempts.put(t.id(),new ResearchJournal.Attempt(t.revision(),hypothesis,
+            old != null && old.revision() == t.revision() ? old.observations() : Set.of()));
         return new Transition(Status.AVAILABLE,new ResearchJournal(j.conclusions(),attempts));
     }
     /** Call only after an evidence provider has verified actual server-side context. */
@@ -42,8 +43,9 @@ public final class ResearchEngine {
         var a = j.attempts().get(t.id());
         if (a == null) return new Transition(Status.NO_ATTEMPT,j);
         if (a.revision() != t.revision() || !t.hypotheses().containsKey(a.hypothesis())) return new Transition(Status.STALE,j);
-        var h = t.hypotheses().get(a.hypothesis());
-        if (!h.evidence().contains(evidence)) return new Transition(Status.IRRELEVANT,j);
+        // A result contradicting the chosen hypothesis is still a useful observation.
+        if (t.hypotheses().values().stream().noneMatch(h -> h.evidence().contains(evidence)))
+            return new Transition(Status.IRRELEVANT,j);
         if (a.observations().contains(evidence)) return new Transition(Status.DUPLICATE,j);
         var observations = new HashSet<>(a.observations()); observations.add(evidence);
         var attempts = new HashMap<>(j.attempts());

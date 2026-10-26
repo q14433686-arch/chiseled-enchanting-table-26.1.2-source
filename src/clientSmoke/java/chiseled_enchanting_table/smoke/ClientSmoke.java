@@ -154,6 +154,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         require(player.getInventory().getItem(0).isEmpty(), "quick-move duplicated source stack");
                         MenuBoundaryProbe.verify(menu);
                         RainbowClothProbe.verify(player, tablePos);
+                        ResearchFoundationProbe.verify(player, tablePos);
                         TomeWorldProbe.prepare(menu, player, tablePos);
                         menu.broadcastChanges();
                         menuPrepared = true;
