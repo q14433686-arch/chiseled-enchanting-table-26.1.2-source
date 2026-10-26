@@ -276,8 +276,8 @@ final class TablePanelBackground {
             ctx,
             state.tooltips().font(),
             tab1Text,
-            inscribeX + 5,
-            TAB_W - 10,
+            inscribeX + 10,
+            TAB_W - 20,
             tabVisualMidY,
             0.76f,
             inscribe ? 0xFFFFF0C8 : 0xFFC2B2DC
@@ -299,8 +299,8 @@ final class TablePanelBackground {
                 ctx,
                 state.tooltips().font(),
                 tab2Text,
-                cleanseX + 5,
-                TAB_W - 10,
+                cleanseX + 10,
+                TAB_W - 20,
                 tabVisualMidY,
                 0.76f,
                 !state.tooltips().menu().isCleansePageUnlocked() ? 0xFF8E829E : (cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC))
@@ -321,8 +321,8 @@ final class TablePanelBackground {
                 ctx,
                 state.tooltips().font(),
                 tomeText,
-                tomeX + 5,
-                TAB_W - 10,
+                tomeX + 10,
+                TAB_W - 20,
                 tabVisualMidY,
                 0.76f,
                 !state.tooltips().menu().isTomePageUnlocked() ? 0xFF8E829E : (tome ? 0xFFB9F6FF : 0xFFA8CBD8)
