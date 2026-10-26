@@ -979,5 +979,7 @@
   "gui.chiseled_enchanting_table.ui.guide": "Veja as regras completas no guia",
   "gui.chiseled_enchanting_table.ui.ordinary_progress": "Estantes: %s / %s (faltam %s)",
   "gui.chiseled_enchanting_table.ui.total_shelves": "Total de estantes: %s",
-  "gui.chiseled_enchanting_table.ui.regen_gap": "Recuperação mais rápida: faltam %s estantes"
+  "gui.chiseled_enchanting_table.ui.regen_gap": "Recuperação mais rápida: faltam %s estantes",
+  "gui.chiseled_enchanting_table.ui.level_cap": "Nível disponível: %s / %s",
+  "gui.chiseled_enchanting_table.ui.regen_complete": "Velocidade máxima de recuperação atingida"
 }

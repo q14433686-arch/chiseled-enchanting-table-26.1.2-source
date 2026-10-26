@@ -979,5 +979,7 @@
   "gui.chiseled_enchanting_table.ui.guide": "Alle Regeln stehen im Handbuch",
   "gui.chiseled_enchanting_table.ui.ordinary_progress": "Bücherregale: %s / %s (noch %s)",
   "gui.chiseled_enchanting_table.ui.total_shelves": "Regale insgesamt: %s",
-  "gui.chiseled_enchanting_table.ui.regen_gap": "Schnellere Erholung: noch %s Regale"
+  "gui.chiseled_enchanting_table.ui.regen_gap": "Schnellere Erholung: noch %s Regale",
+  "gui.chiseled_enchanting_table.ui.level_cap": "Verfügbare Stufe: %s / %s",
+  "gui.chiseled_enchanting_table.ui.regen_complete": "Höchste Erholungsstufe erreicht"
 }

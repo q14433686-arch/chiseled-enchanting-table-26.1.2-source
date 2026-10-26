@@ -42,9 +42,10 @@ final class TableOptionTooltips {
                 ).withStyle(ChatFormatting.GOLD));
                 if (state.menu().regularBookshelves < specialEntry.required_bookshelves()) {
                     lockTip.add(Component.translatable(
-                        "gui.chiseled_enchanting_table.shelf_locked.tip_req",
+                        "gui.chiseled_enchanting_table.ui.ordinary_progress",
                         state.menu().regularBookshelves,
-                        specialEntry.required_bookshelves()
+                        specialEntry.required_bookshelves(),
+                        Math.max(0, specialEntry.required_bookshelves() - state.menu().regularBookshelves)
                     ).withStyle(ChatFormatting.RED));
                 } else {
                     lockTip.add(Component.translatable(
@@ -105,11 +106,9 @@ final class TableOptionTooltips {
                 catTip.add(Component.literal(specialEntry.category_title())
                     .withStyle(ChatFormatting.GOLD));
                 catTip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.category.tip_cap",
+                    "gui.chiseled_enchanting_table.ui.level_cap",
                     effectiveCap,
-                    maxLvl,
-                    shelves,
-                    sg.maxDirectBookshelves()
+                    maxLvl
                 ).withStyle(effectiveCap >= maxLvl ? ChatFormatting.GREEN : ChatFormatting.AQUA));
                 if (effectiveCap < maxLvl) {
                     int nextTier = effectiveCap + 1;
@@ -120,10 +119,10 @@ final class TableOptionTooltips {
                     );
                     if (shelves < reqShelves) {
                         catTip.add(Component.translatable(
-                            "gui.chiseled_enchanting_table.category.tip_next",
-                            nextTier,
+                            "gui.chiseled_enchanting_table.ui.ordinary_progress",
+                            shelves,
                             reqShelves,
-                            sg.maxDirectBookshelves()
+                            Math.max(0, reqShelves - shelves)
                         ).withStyle(ChatFormatting.YELLOW));
                     } else {
                         catTip.add(Component.translatable(

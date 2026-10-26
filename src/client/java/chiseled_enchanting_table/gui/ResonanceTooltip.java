@@ -24,19 +24,21 @@ final class ResonanceTooltip {
         var sg = menu.shelfGatesConfig();
         var lr = menu.libraryResonanceConfig();
         int ordinary = menu.regularBookshelves;
-        int next = java.util.stream.IntStream.of(lr.minDiscountBookshelves(), sg.tier1Bookshelves(),
-            menu.isEpiphanyEnabled() ? menu.epiphanyMinBookshelves() : 0, sg.tier2Bookshelves(), sg.maxDirectBookshelves())
+        int next = java.util.stream.IntStream.of(menu.isLibraryDiscountEnabled() ? lr.minDiscountBookshelves() : 0,
+            menu.allowsDirectTierUpgrade() ? sg.tier1Bookshelves() : 0,
+            menu.isEpiphanyEnabled() ? menu.epiphanyMinBookshelves() : 0, menu.allowsDirectTierUpgrade() ? sg.tier2Bookshelves() : 0, menu.allowsDirectTierUpgrade() ? sg.maxDirectBookshelves() : 0)
             .filter(n -> n > ordinary).min().orElse(ordinary);
         tip.add(Component.translatable("gui.chiseled_enchanting_table.ui.ordinary_progress", ordinary, next,
             Math.max(0, next - ordinary)).withStyle(next > ordinary ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
         tip.add(Component.translatable("gui.chiseled_enchanting_table.ui.total_shelves", menu.totalLibraryBookshelves())
             .withStyle(ChatFormatting.AQUA));
-        if (lr.tomeRegenEnabled()) {
+        if (lr.tomeRegenEnabled() && lr.tomeConsumptionMode() != chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP) {
             int total = menu.totalLibraryBookshelves();
             int regenNext = java.util.stream.IntStream.of(lr.tomeRegenTier1Shelves(), lr.tomeRegenTier2Shelves())
                 .filter(n -> n > total).min().orElse(total);
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.ui.regen_gap", Math.max(0, regenNext - total))
-                .withStyle(ChatFormatting.GREEN));
+            tip.add((regenNext > total
+                ? Component.translatable("gui.chiseled_enchanting_table.ui.regen_gap", regenNext - total)
+                : Component.translatable("gui.chiseled_enchanting_table.ui.regen_complete")).withStyle(ChatFormatting.GREEN));
         }
         if (menu.crampedLibrary) tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.cramped").withStyle(ChatFormatting.RED));
         if (TooltipPresentation.detailsRequested()) tip.addAll(ResonanceDetailsTooltip.build(menu, ignored));

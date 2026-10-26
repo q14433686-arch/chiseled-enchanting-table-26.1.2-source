@@ -979,5 +979,7 @@
   "gui.chiseled_enchanting_table.ui.guide": "Consulta la guía para todas las reglas",
   "gui.chiseled_enchanting_table.ui.ordinary_progress": "Librerías: %s / %s (faltan %s)",
   "gui.chiseled_enchanting_table.ui.total_shelves": "Total de librerías: %s",
-  "gui.chiseled_enchanting_table.ui.regen_gap": "Recuperación más rápida: faltan %s librerías"
+  "gui.chiseled_enchanting_table.ui.regen_gap": "Recuperación más rápida: faltan %s librerías",
+  "gui.chiseled_enchanting_table.ui.level_cap": "Nivel disponible: %s / %s",
+  "gui.chiseled_enchanting_table.ui.regen_complete": "Velocidad de recuperación máxima alcanzada"
 }

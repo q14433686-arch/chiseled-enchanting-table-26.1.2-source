@@ -979,5 +979,7 @@
   "gui.chiseled_enchanting_table.ui.guide": "完整機制請查看指南",
   "gui.chiseled_enchanting_table.ui.ordinary_progress": "普通書櫃：%s / %s（還需 %s 個）",
   "gui.chiseled_enchanting_table.ui.total_shelves": "書櫃總數：%s 個",
-  "gui.chiseled_enchanting_table.ui.regen_gap": "恢復加速還需：%s 個書櫃"
+  "gui.chiseled_enchanting_table.ui.regen_gap": "恢復加速還需：%s 個書櫃",
+  "gui.chiseled_enchanting_table.ui.level_cap": "可用附魔等級：%s / %s",
+  "gui.chiseled_enchanting_table.ui.regen_complete": "恢復速度已達最高檔"
 }

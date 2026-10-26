@@ -154,8 +154,8 @@
   "gui.chiseled_enchanting_table.category.tip_master": "也可用书架中的模板书或合并附魔书升级。",
   "gui.chiseled_enchanting_table.resonance.high_tier_books": "雕纹合格附魔总数（MAX / MAX-1）：%s / %s 条",
   "gui.chiseled_enchanting_table.cleanse.panel_resonance": "• 雕纹书架里放着同一条附魔的书时，移除它还能再便宜（最多 -%s%%）",
-  "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 需 %s 普通书架（当前 %s）",
-  "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 还不能附到 %s 级",
+  "gui.chiseled_enchanting_table.shelf_locked.row_sub": "🔒 普通书架：需要 %s，当前 %s",
+  "gui.chiseled_enchanting_table.shelf_locked.tip_title": "🔒 尚未解锁：%s",
   "gui.chiseled_enchanting_table.shelf_locked.tip_req": "普通书架进度：%s / %s 个",
   "gui.chiseled_enchanting_table.shelf_locked.tip_bypass": "补足普通书架即可解锁；放入雕纹模板书或双书合并可无视此限制",
   "gui.chiseled_enchanting_table.shelf_locked.tip_blank_cap": "雕纹书架里没有这条附魔的书时，白板物品默认只能附到一半等级。两条出路：先附低级再用普通书架一级级升满，或者把这条附魔的书放进雕纹书架。",
@@ -979,5 +979,7 @@
   "gui.chiseled_enchanting_table.ui.guide": "完整机制请查看指南",
   "gui.chiseled_enchanting_table.ui.ordinary_progress": "普通书架：%s / %s（还需 %s 个）",
   "gui.chiseled_enchanting_table.ui.total_shelves": "书架总数：%s 个",
-  "gui.chiseled_enchanting_table.ui.regen_gap": "恢复提速还需：%s 个书架"
+  "gui.chiseled_enchanting_table.ui.regen_gap": "恢复提速还需：%s 个书架",
+  "gui.chiseled_enchanting_table.ui.level_cap": "可用附魔等级：%s / %s",
+  "gui.chiseled_enchanting_table.ui.regen_complete": "恢复速度已达最高档"
 }

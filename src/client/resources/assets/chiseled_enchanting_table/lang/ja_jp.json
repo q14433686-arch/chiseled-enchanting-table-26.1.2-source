@@ -979,5 +979,7 @@
   "gui.chiseled_enchanting_table.ui.guide": "詳しい仕組みはガイドを参照",
   "gui.chiseled_enchanting_table.ui.ordinary_progress": "本棚：%s / %s（あと %s 個）",
   "gui.chiseled_enchanting_table.ui.total_shelves": "本棚の合計：%s",
-  "gui.chiseled_enchanting_table.ui.regen_gap": "回復速度上昇まで本棚あと %s 個"
+  "gui.chiseled_enchanting_table.ui.regen_gap": "回復速度上昇まで本棚あと %s 個",
+  "gui.chiseled_enchanting_table.ui.level_cap": "利用可能なレベル：%s / %s",
+  "gui.chiseled_enchanting_table.ui.regen_complete": "回復速度は最高段階です"
 }

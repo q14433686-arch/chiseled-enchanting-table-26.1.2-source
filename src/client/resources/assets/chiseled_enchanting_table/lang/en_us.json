@@ -979,5 +979,7 @@
   "gui.chiseled_enchanting_table.ui.guide": "Full mechanics: see the guide",
   "gui.chiseled_enchanting_table.ui.ordinary_progress": "Bookshelves: %s / %s (need %s more)",
   "gui.chiseled_enchanting_table.ui.total_shelves": "Total bookshelves: %s",
-  "gui.chiseled_enchanting_table.ui.regen_gap": "Next recovery speed: %s more bookshelves"
+  "gui.chiseled_enchanting_table.ui.regen_gap": "Next recovery speed: %s more bookshelves",
+  "gui.chiseled_enchanting_table.ui.level_cap": "Available level: %s / %s",
+  "gui.chiseled_enchanting_table.ui.regen_complete": "Recovery speed is at its highest tier"
 }

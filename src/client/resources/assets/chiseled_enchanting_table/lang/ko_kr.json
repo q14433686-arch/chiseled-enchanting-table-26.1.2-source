@@ -979,5 +979,7 @@
   "gui.chiseled_enchanting_table.ui.guide": "전체 작동 방식은 안내서 참고",
   "gui.chiseled_enchanting_table.ui.ordinary_progress": "책장: %s / %s (추가 %s개 필요)",
   "gui.chiseled_enchanting_table.ui.total_shelves": "전체 책장: %s개",
-  "gui.chiseled_enchanting_table.ui.regen_gap": "회복 가속까지 책장 %s개 필요"
+  "gui.chiseled_enchanting_table.ui.regen_gap": "회복 가속까지 책장 %s개 필요",
+  "gui.chiseled_enchanting_table.ui.level_cap": "사용 가능한 레벨: %s / %s",
+  "gui.chiseled_enchanting_table.ui.regen_complete": "회복 속도가 최고 단계입니다"
 }
