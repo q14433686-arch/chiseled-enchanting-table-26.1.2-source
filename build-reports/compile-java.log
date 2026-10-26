@@ -1,4 +1,4 @@
-commit: 377644f80757f63e588e4fd1df0ea2d0199cc4d5
+commit: 683dbe3574424f93fbf6b97f761566952f6f076d
 branch: arena/4313f0c3-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -27,14 +27,20 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :classes
 
 > Task :compileClientJava FAILED
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2110: error: class, interface, enum, or record expected
+}
+^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1: error: compact source file should not have package declaration
+package chiseled_enchanting_table.gui;
+^
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/config/ChiseledEnchantingConfigScreen.java:61: error: ';' expected
     private static Identifier ConfigSkin.domainIcon(CategoryId category) {
                                         ^
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/config/ChiseledEnchantingConfigScreen.java:61: error: invalid method declaration; return type required
     private static Identifier ConfigSkin.domainIcon(CategoryId category) {
                                          ^
-2 errors
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792994730367.json
+4 errors
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792994819724.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -43,13 +49,19 @@ FAILURE: Build failed with an exception.
 * What went wrong:
 Execution failed for task ':compileClientJava'.
 > Compilation failed; see the compiler output below.
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1: error: compact source file should not have package declaration
+  package chiseled_enchanting_table.gui;
+  ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2110: error: class, interface, enum, or record expected
+  }
+  ^
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/config/ChiseledEnchantingConfigScreen.java:61: error: invalid method declaration; return type required
       private static Identifier ConfigSkin.domainIcon(CategoryId category) {
                                            ^
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/config/ChiseledEnchantingConfigScreen.java:61: error: ';' expected
       private static Identifier ConfigSkin.domainIcon(CategoryId category) {
                                           ^
-  2 errors
+  4 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -91,13 +103,19 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:2110: error: class, interface, enum, or record expected
+}
+^
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/ChiseledEnchantingTableScreen.java:1: error: compact source file should not have package declaration
+package chiseled_enchanting_table.gui;
+^
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/config/ChiseledEnchantingConfigScreen.java:61: error: ';' expected
     private static Identifier ConfigSkin.domainIcon(CategoryId category) {
                                         ^
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/gui/config/ChiseledEnchantingConfigScreen.java:61: error: invalid method declaration; return type required
     private static Identifier ConfigSkin.domainIcon(CategoryId category) {
                                          ^
-2 errors
+4 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
