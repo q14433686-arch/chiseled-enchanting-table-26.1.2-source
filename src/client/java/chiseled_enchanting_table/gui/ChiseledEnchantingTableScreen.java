@@ -1,5 +1,7 @@
 package chiseled_enchanting_table.gui;
 
+import static chiseled_enchanting_table.gui.ResonanceTooltip.formatClock;
+
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode;
@@ -885,12 +887,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return super.keyReleased(event);
     }
 
-    private static String formatClock(int totalSeconds) {
-        int clamped = Math.max(0, totalSeconds);
-        int mins = clamped / 60;
-        int secs = clamped % 60;
-        return String.format(java.util.Locale.ROOT, "%02d:%02d", mins, secs);
-    }
+
 
     private void drawAutoScaledText(
         GuiGraphicsExtractor ctx,
@@ -2076,140 +2073,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private List<Component> buildResonanceBreakdownTooltip() {
-        int woodenBonus = this.menu.woodenXpDiscountPercent();
-        int chiseledBonus = this.menu.globalMasteryDiscountPercent();
-        double totalUnits = this.menu.totalMasteryUnits();
-        double affinityUnits = this.menu.affinityMasteryUnits(this.menu.get_enchantable_item());
-        int minShelves = this.menu.epiphanyMinBookshelves();
-        var sg = this.menu.shelfGatesConfig();
-        List<Component> tip = new ArrayList<>();
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.title",
-            this.menu.xpDiscountPercent,
-            this.menu.libraryResonanceConfig().maxTotalXpDiscountPercent()
-        ).withStyle(ChatFormatting.GOLD));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.broad_breakdown",
-            this.menu.totalLibraryBookshelves(),
-            this.menu.regularBookshelves,
-            this.menu.emptyChiseledBookshelves,
-            this.menu.chiseledBookshelves
-        ).withStyle(ChatFormatting.YELLOW));
-        if (this.menu.crampedLibrary) {
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.cramped")
-                .withStyle(ChatFormatting.RED));
-        }
-        int minDiscShelves = this.menu.libraryResonanceConfig().minDiscountBookshelves();
-        if (this.menu.regularBookshelves < minDiscShelves) {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.wooden_locked",
-                this.menu.regularBookshelves,
-                minDiscShelves,
-                minDiscShelves
-            ).withStyle(ChatFormatting.GRAY));
-        } else {
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.wooden", this.menu.regularBookshelves, woodenBonus)
-                .withStyle(ChatFormatting.GRAY));
-        }
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.chiseled_mastery",
-            String.format(java.util.Locale.ROOT, "%.1f", totalUnits),
-            chiseledBonus
-        ).withStyle(ChatFormatting.AQUA));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.slot_cap_hint",
-            String.format(java.util.Locale.ROOT, "%.1f", this.menu.libraryResonanceConfig().maxMasteryUnitsPerSlot())
-        ).withStyle(ChatFormatting.DARK_AQUA));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.high_tier_books",
-            this.menu.qualifyingChiseledEnchantments(),
-            sg.tier3QualifyingEnchantments()
-        ).withStyle(this.menu.qualifyingChiseledEnchantments() >= sg.tier3QualifyingEnchantments()
-            ? ChatFormatting.GREEN
-            : ChatFormatting.GRAY));
-        var lrPanelCfg = this.menu.libraryResonanceConfig();
-        if (lrPanelCfg.tomeRegenEnabled()
-            && lrPanelCfg.tomeConsumptionMode() != chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP) {
-            int nearShelves = this.menu.totalLibraryBookshelves();
-            double regenSec = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
-                .computeRegenSeconds(lrPanelCfg, nearShelves);
-            int regenTier = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
-                .regenTierIndex(lrPanelCfg, nearShelves);
-            Component tierBadge = switch (regenTier) {
-                case 2 -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier2",
-                    lrPanelCfg.tomeRegenTier2Shelves()
-                );
-                case 1 -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier1",
-                    lrPanelCfg.tomeRegenTier1Shelves()
-                );
-                default -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier0",
-                    lrPanelCfg.tomeRegenTier1Shelves()
-                );
-            };
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.pricing.tome_regen_rate",
-                String.format(java.util.Locale.ROOT, "%.1f", regenSec / 1200.0),
-                nearShelves,
-                tierBadge
-            ).withStyle(regenTier >= 2
-                ? ChatFormatting.GOLD
-                : (regenTier == 1 ? ChatFormatting.GREEN : ChatFormatting.GRAY)));
-        }
-        if (affinityUnits > 0.005) {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.affinity_line",
-                String.format(java.util.Locale.ROOT, "%.1f", affinityUnits)
-            ).withStyle(ChatFormatting.GREEN));
-        }
-        if (this.menu.regularBookshelves >= minShelves) {
-            int pct = (int) Math.round(this.menu.epiphanyChance() * 100.0);
-            int maxSlots = Math.max(1, this.menu.epiphanyMaxSlots());
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.active", pct)
-                .withStyle(ChatFormatting.LIGHT_PURPLE));
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.slots_line", maxSlots)
-                .withStyle(ChatFormatting.GOLD));
-            if (this.menu.isEpiphanyFrozen()) {
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.epiphany.frozen_remaining",
-                    formatClock(this.menu.countdownSeconds()),
-                    Math.max(1, this.menu.epiphanyMaxFreezeTicks() / 1200)
-                ).withStyle(ChatFormatting.AQUA));
-            } else {
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.epiphany.cycle_remaining",
-                    formatClock(this.menu.countdownSeconds())
-                ).withStyle(ChatFormatting.GRAY));
-            }
-        } else {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.epiphany.progress",
-                this.menu.regularBookshelves,
-                minShelves
-            ).withStyle(ChatFormatting.DARK_PURPLE));
-        }
-        tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.treasure_rule")
-            .withStyle(ChatFormatting.DARK_GRAY));
-        BlockPos scanPos = effectiveTablePos();
-        if (this.minecraft != null && this.minecraft.level != null && scanPos != null) {
-            var ritScan = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .scanLibraryRitualContext(this.minecraft.level, scanPos, sg);
-            var rCfg = this.menu.ritualConfig();
-            double sigmaL = ritScan.totalWearImmuneLoad();
-            double slipPct = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .computeLoadSlipProbability(rCfg, sigmaL, ritScan.totalDetectedBookshelves()) * 100.0;
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.overload_sigma_line",
-                String.format(java.util.Locale.ROOT, "%.1f", sigmaL),
-                String.format(java.util.Locale.ROOT, "%.1f", slipPct),
-                String.format(java.util.Locale.ROOT, "%.1f", rCfg.crosslineSlip().minLoadThreshold())
-            ).withStyle(slipPct > 0.005 ? ChatFormatting.GOLD : ChatFormatting.GRAY));
-        }
-        tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.scapegoat_order_line")
-            .withStyle(ChatFormatting.DARK_GRAY));
-        return tip;
+        BlockPos pos = effectiveTablePos();
+        var scan = this.minecraft != null && this.minecraft.level != null && pos != null
+            ? chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.scanLibraryRitualContext(
+                this.minecraft.level, pos, this.menu.shelfGatesConfig()) : null;
+        return ResonanceTooltip.build(this.menu, scan);
     }
 
     @Override

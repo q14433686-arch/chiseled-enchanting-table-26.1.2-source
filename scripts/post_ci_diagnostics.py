@@ -13,9 +13,15 @@ def output(name, sha, conclusion, paths):
         if not path.exists():
             continue
         lines = path.read_text(encoding='utf-8', errors='replace').splitlines()
-        important = [line for line in lines if any(token in line for token in
-                     ('error:', 'FAILED', 'FAILURE', 'JUnit XML totals:', 'SERVER SMOKE PASS', 'CLIENT SMOKE', 'BUILD SUCCESSFUL'))]
-        excerpt = important[:100] + ['--- tail ---'] + lines[-100:]
+        selected = set()
+        for index, line in enumerate(lines):
+            if any(token in line for token in ('error:', 'FAILED', 'FAILURE', 'Caused by:',
+                    'JUnit XML totals:', 'SERVER SMOKE PASS', 'CLIENT SMOKE', 'BUILD SUCCESSFUL')):
+                # javac's symbol and location are on following lines, not the error's first line.
+                selected.update(range(index, min(index + 5, len(lines))))
+        important = [lines[index] for index in sorted(selected)[:160]]
+        excerpt = important + ['--- tail ---'] + lines[-100:]
+        excerpt = [line[:1000] for line in excerpt]
         sections.append(f'### {path.name}\n```text\n' + '\n'.join(excerpt) + '\n```')
     # Checks output has a 65535-byte limit; bound UTF-8 bytes, not Unicode characters.
     summary = '\n\n'.join(sections).encode('utf-8')[:58000].decode('utf-8', errors='ignore')

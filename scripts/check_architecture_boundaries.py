@@ -12,17 +12,19 @@ base = 'src/main/java/chiseled_enchanting_table/'
 client = 'src/client/java/chiseled_enchanting_table/'
 budgets = {
     base + 'data/ChiseledEnchantingTableData.java': 1150,
-    base + 'data/DataTableLoader.java': 550,
-    base + 'config/ModRuntimeConfig.java': 1420,
+    base + 'data/DataTableLoader.java': 450,
+    base + 'config/ModRuntimeConfig.java': 1360,
     base + 'config/ConfigDraft.java': 600,
+    base + 'config/ConfigFileStore.java': 100,
     base + 'mechanics/ritual/InscriptionRitualMechanics.java': 1700,
     base + 'mechanics/ritual/RitualWorldAccess.java': 300,
     base + 'menu/ChiseledEnchantingTableScreenHandler.java': 2050,
     base + 'menu/MenuQuickMove.java': 180,
-    client + 'gui/ChiseledEnchantingTableScreen.java': 2450,
+    client + 'gui/ChiseledEnchantingTableScreen.java': 2310,
     client + 'gui/config/ChiseledEnchantingConfigScreen.java': 2180,
     client + 'gui/EnchantementListWidget.java': 1610,
     client + 'gui/config/ConfigPanelPainter.java': 180,
+    client + 'gui/ResonanceTooltip.java': 170,
 }
 errors = []
 for name, limit in budgets.items():

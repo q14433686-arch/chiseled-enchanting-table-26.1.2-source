@@ -54,6 +54,7 @@ python3 scripts/test_baseline_mixins.py
 python3 scripts/test_ci_diagnostics.py
 python3 scripts/test_sync_26_3.py
 python3 scripts/check_repository_hygiene.py
+python3 scripts/check_architecture_boundaries.py
 python3 scripts/compat_check.py
 bash scripts/check_release_consistency.sh --strict
 ```

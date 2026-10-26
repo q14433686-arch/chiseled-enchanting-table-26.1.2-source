@@ -1,5 +1,7 @@
 package chiseled_enchanting_table.smoke;
 
+import com.mojang.blaze3d.platform.InputConstants;
+
 import chiseled_enchanting_table.config.*;
 import chiseled_enchanting_table.gui.ChiseledEnchantingTableScreen;
 import chiseled_enchanting_table.gui.config.ChiseledEnchantingConfigScreen;
@@ -91,7 +93,7 @@ public final class ClientSmoke implements ClientModInitializer {
             case 1 -> {
                 if (layout() == null || ((java.util.List<?>) field(editor, "hitBoxes")).isEmpty()) return;
                 // Layout exists after init(), before the first render. Wait for real hit regions.
-                clickBox(layout().searchBox(), 0);
+                clickBox(layout().searchBox(), InputConstants.MOUSE_BUTTON_LEFT);
                 require(editor.capturesInput(), "search did not take focus");
                 require(SDLKeyboard.SDL_TextInputActive(handle), "native SDL text input never started");
                 pushText(client);
@@ -101,14 +103,14 @@ public final class ClientSmoke implements ClientModInitializer {
                 var input = (SearchInputSession) field(editor, "searchInput");
                 require(input.buffer().text().equals("洗练 abc"), "native text did not reach config search");
                 MemoryUtil.memFree(text); text = null;
-                clickBox(layout().presetButtons().get(1), 0);
+                clickBox(layout().presetButtons().get(1), InputConstants.MOUSE_BUTTON_LEFT);
                 require(!SDLKeyboard.SDL_TextInputActive(handle), "clicking preset did not release native focus");
                 var edit = (ConfigEditSession) field(editor, "editSession");
                 require(ModRuntimeConfig.Preset.CASUAL.matches(edit.draft()), "preset click did not update actual draft");
                 next(3);
             }
             case 3 -> {
-                clickBox(layout().saveBtn(), 1); // Save without closing, through actual screen + networking.
+                clickBox(layout().saveBtn(), InputConstants.MOUSE_BUTTON_RIGHT); // Save without closing, through actual screen + networking.
                 next(4);
             }
             case 4 -> {
@@ -150,7 +152,7 @@ public final class ClientSmoke implements ClientModInitializer {
             case 6 -> {
                 if (!menuPrepared || !(client.gui.screen() instanceof ChiseledEnchantingTableScreen table)) return;
                 if (!((ChiseledEnchantingTableScreenHandler) client.player.containerMenu).get_enchantable_item().is(Items.DIAMOND_SWORD)) return;
-                click(table, (int) field(table, "leftPos") + 300, (int) field(table, "topPos") - 8, 0);
+                click(table, (int) field(table, "leftPos") + 300, (int) field(table, "topPos") - 8, InputConstants.MOUSE_BUTTON_LEFT);
                 require(table.hasActiveConfigOverlay(), "table config button did not open overlay");
                 editor = (ChiseledEnchantingConfigScreen) field(table, "configOverlay");
                 next(7);
@@ -159,7 +161,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (layout() == null || ((java.util.List<?>) field(editor, "hitBoxes")).isEmpty()) return;
                 var box = layout().searchBox();
                 // Dispatch through the parent menu screen, exercising overlay forwarding.
-                click(client.gui.screen(), box.x() + 4, box.y() + box.h() / 2.0, 0);
+                click(client.gui.screen(), box.x() + 4, box.y() + box.h() / 2.0, InputConstants.MOUSE_BUTTON_LEFT);
                 require(SDLKeyboard.SDL_TextInputActive(handle), "overlay did not start SDL input");
                 pushText(client);
                 next(8);
