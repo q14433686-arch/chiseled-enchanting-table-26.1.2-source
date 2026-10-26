@@ -118,4 +118,29 @@ class EngineeringSplitTest {
             "minecraft:sharpness|1|0|0|0|2147483647|0;" + valid));
         assertTrue(InscriptionRitualMechanics.deserializeQueue("").isEmpty());
     }
+
+    @Test void structuredRecoveryReconcilesLegacyMirrorsAndReturnsOwnedMutableQueue() {
+        var modern = QueuedInscription.decode("minecraft:sharpness|2|1|1|0|0|0");
+        var legacy = QueuedInscription.decode("minecraft:sharpness|1|0|1|0|0|0");
+        var recovered = InscriptionRitualMechanics.recoverQueue(java.util.Optional.of(List.of(modern)), "");
+        assertEquals(List.of(modern), recovered);
+        recovered.clear();
+        assertEquals(List.of(legacy), InscriptionRitualMechanics.recoverQueue(
+            java.util.Optional.of(List.of(modern)), legacy.encode()));
+        var huge = QueuedInscription.decode("minecraft:sharpness|1|0|0|0|2147483647|0");
+        var one = QueuedInscription.decode("minecraft:sharpness|1|0|0|0|1|0");
+        assertThrows(IllegalArgumentException.class, () -> InscriptionRitualMechanics.recoverQueue(
+            java.util.Optional.of(List.of(huge, one)), ""));
+        assertThrows(IllegalArgumentException.class, () -> InscriptionRitualMechanics.recoverQueue(
+            java.util.Optional.of(java.util.Collections.nCopies(257, one)), ""));
+    }
+
+    @Test void policySchemaMigratesLegacyAtomKeysWithoutPublishingPolicy() {
+        var policy = ModRuntimeConfig.PackPolicy.fromJsonString("{\"locked_keys\":[\"classic_1_0_3_mode\"],\"enforce_datapack_priority\":true}");
+        assertEquals(ModRuntimeConfig.GRANULAR_RULE_ATOM_KEYS, policy.lockedKeys());
+        assertTrue(policy.enforceDatapackPriority());
+        assertEquals(policy, ModRuntimeConfig.PackPolicy.fromJsonString(policy.toJsonString()));
+        assertThrows(IllegalArgumentException.class, () -> ModRuntimeConfig.PackPolicy.fromJsonString(
+            "{\"enforce_datapack_priority\":\"true\"}"));
+    }
 }

@@ -33,7 +33,7 @@ final class TablePanelTooltips {
                 if (state.isDisenchantAllConfirmPending()) {
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.confirm_prompt")
                         .withStyle(ChatFormatting.GOLD));
-                } else if (ChiseledEnchantingTableScreen.requiresDisenchantAllConfirm(state.menu().get_enchantable_item())) {
+                } else if (TableCleansePresentation.requiresDisenchantAllConfirm(state.menu().get_enchantable_item())) {
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.confirm_hint_shift")
                         .withStyle(ChatFormatting.YELLOW));
                 }
