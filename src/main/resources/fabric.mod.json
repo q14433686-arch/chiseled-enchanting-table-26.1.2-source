@@ -13,7 +13,7 @@
 		"homepage": "https://github.com/Sacramentix/chiseled-enchanting-table"
 	},
 	"license": "MIT",
-	"icon": "assets/chiseled-enchanting-table/icon.png",
+	"icon": "assets/chiseled_enchanting_table/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
