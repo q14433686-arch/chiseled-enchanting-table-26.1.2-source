@@ -84,7 +84,7 @@ JUnit：11 项经济/配置测试 + 8 项网络测试，共 19 项。网络测�
 
 条件探针的早期测试还遇到过测试时序问题：生成实体后同一 tick 立即用 `@e` 查询，实体可能尚未进入可查询集合。探针现使用游戏 `schedule function`，等强制加载及后续 game ticks 后再依次检查实体；也不再假设直接 `/loot loot` 的反馈必然带 table ID。这些未完成运行不计作成功证据。
 
-日志：[实际服务器日志](../../build-reports/server-smoke.log)。
+日志：实际服务器日志 (historical log; current diagnostics are in Actions artifacts/Checks)。
 
 ## 尚需客户端/多人验收的明确清单
 

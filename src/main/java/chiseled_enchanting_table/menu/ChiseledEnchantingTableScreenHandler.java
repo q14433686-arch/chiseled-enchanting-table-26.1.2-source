@@ -1771,30 +1771,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     // ---- Condition / consumption (shared by both mechanics) ----
 
-    private void consumeAdditionalCosts(List<ItemStack> costs) {
-        for (int i = 1; i < costs.size(); i++) {
-            ItemStack required = costs.get(i).copy();
-            for (int slot = 0; slot < this.player.getInventory().getContainerSize() && !required.isEmpty(); slot++) {
-                ItemStack candidate = this.player.getInventory().getItem(slot);
-                if (ItemStack.isSameItemSameComponents(candidate, required)) {
-                    int consumed = Math.min(candidate.getCount(), required.getCount());
-                    candidate.shrink(consumed);
-                    required.shrink(consumed);
-                    this.player.getInventory().setChanged();
-                }
-            }
-        }
-    }
 
-    public boolean isBundleAffordableWithOverflow(List<ItemStack> bundle) {
-        if (bundle == null || bundle.isEmpty()) {
-            return true;
-        }
-        if (this.player.getAbilities().instabuild) {
-            return true;
-        }
-        return MenuPricing.maxBundleUnitsAvailable(this, bundle) >= 1;
-    }
+
+    public boolean isBundleAffordableWithOverflow(List<ItemStack> bundle) { return MenuPaymentService.isBundleAffordableWithOverflow(this.paymentAccess, bundle); }
 
     @org.jetbrains.annotations.Nullable
     /**
@@ -1816,61 +1795,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         };
     }
 
-    public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
-        List<List<ItemStack>> options = getEffectiveItemCostOptions(ewl, type);
-        if (options.isEmpty()) {
-            // Fail closed (audit H-02): "no pricing data" is only free for whitelisted
-            // material-free operations; datapacks declare XP-only costs explicitly via
-            // "material_free": true, which produces one empty bundle instead.
-            return isMaterialFreeOperation(ewl, type) ? List.of() : null;
-        }
-        for (List<ItemStack> bundle : options) {
-            if (bundle.isEmpty()) {
-                return List.of();
-            }
-        }
-        if (this.player.getAbilities().instabuild) {
-            return ChiseledEnchantingTableData.mergeEquivalentCostBundle(options.getFirst());
-        }
-        for (List<ItemStack> bundle : options) {
-            List<ItemStack> merged = ChiseledEnchantingTableData.mergeEquivalentCostBundle(bundle);
-            if (!merged.isEmpty() && isBundleAffordableWithOverflow(merged)) {
-                return merged;
-            }
-        }
-        return null;
-    }
+    public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) { return MenuPaymentService.findMatchingAffordableCostBundle(this.paymentAccess, ewl, type); }
 
-    public void deductMatchedBundle(List<ItemStack> matchedBundle) {
-        if (this.player.getAbilities().instabuild || matchedBundle == null || matchedBundle.isEmpty()) {
-            return;
-        }
-        List<ItemStack> merged = ChiseledEnchantingTableData.mergeEquivalentCostBundle(matchedBundle);
-        if (merged.isEmpty()) {
-            return;
-        }
-        ItemStack primary = merged.getFirst();
-        if (!primary.isEmpty()) {
-            int remainingPrimary = primary.getCount();
-            ItemStack costSlot = this.get_cost_item();
-            if (!costSlot.isEmpty() && ItemStack.isSameItemSameComponents(costSlot, primary)) {
-                int takeSlot = Math.min(remainingPrimary, costSlot.getCount());
-                costSlot.shrink(takeSlot);
-                remainingPrimary -= takeSlot;
-            }
-            for (int slot = 0; slot < this.player.getInventory().getContainerSize() && remainingPrimary > 0; slot++) {
-                ItemStack candidate = this.player.getInventory().getItem(slot);
-                if (!candidate.isEmpty() && ItemStack.isSameItemSameComponents(candidate, primary)) {
-                    int takeInv = Math.min(remainingPrimary, candidate.getCount());
-                    candidate.shrink(takeInv);
-                    remainingPrimary -= takeInv;
-                }
-            }
-            this.inventory.setChanged();
-            this.player.getInventory().setChanged();
-        }
-        consumeAdditionalCosts(merged);
-    }
+    public void deductMatchedBundle(List<ItemStack> matchedBundle) { MenuPaymentService.deductMatchedBundle(this.paymentAccess, matchedBundle); }
 
     /** Exact survival payment receipt used for 50% cross-line pollution compensation. */
     public record PaymentReceipt(boolean accepted, int paidXpPoints, List<ItemStack> paidMaterials) {}
@@ -1891,35 +1818,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return applyEnchantmentConditionWithReceipt(payload);
     }
 
-    public PaymentReceipt applyEnchantmentConditionWithReceipt(ApplyEnchantmentPayload payload) {
-        EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), payload.enchantment_level());
-        OptionType effectiveType = payload.option_type();
-        if (effectiveType == OptionType.ENCHANTMENT && ChiseledEnchantingTableData.isTransformation(payload.enchantment_id())) {
-            effectiveType = OptionType.TRANSFORMATION;
-        }
-        var xpReq = resolveXpRequirement(ewl, effectiveType);
-        if (!xpReq.isMetBy(this.player)) {
-            return new PaymentReceipt(false, 0, List.of());
-        }
-
-        List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(ewl, effectiveType);
-        if (!player.getAbilities().instabuild && matchedBundle == null) {
-            return new PaymentReceipt(false, 0, List.of());
-        }
-
-        if (!player.getAbilities().instabuild) {
-            int xpBefore = XpCostConversion.totalPlayerXpPoints(this.player);
-            XpCostConversion.deductXp(this.player, xpReq);
-            int xpAfter = XpCostConversion.totalPlayerXpPoints(this.player);
-            int paidXpPoints = Math.max(0, xpBefore - xpAfter);
-            List<ItemStack> paidCopies = matchedBundle == null
-                ? List.of()
-                : matchedBundle.stream().map(ItemStack::copy).toList();
-            deductMatchedBundle(matchedBundle);
-            return new PaymentReceipt(true, paidXpPoints, paidCopies);
-        }
-        return new PaymentReceipt(true, 0, List.of());
-    }
+    public PaymentReceipt applyEnchantmentConditionWithReceipt(ApplyEnchantmentPayload payload) { return MenuPaymentService.applyEnchantmentConditionWithReceipt(this.paymentAccess, payload); }
 
     // ---- Dispatch ----
 
@@ -2021,4 +1920,14 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public boolean stillValid(Player player) {
         return stillValid(this.access, player, BlockRegistry.CHISELED_ENCHANTING_TABLE);
     }
+
+    private final MenuPaymentService.Access paymentAccess = new MenuPaymentService.Access() {
+        public Player player() { return ChiseledEnchantingTableScreenHandler.this.player; }
+        public ItemStack costSlot() { return getCostItem(); }
+        public void tableChanged() { markInventoryChanged(); }
+        public int availableUnits(List<ItemStack> bundle) { return MenuPricing.maxBundleUnitsAvailable(ChiseledEnchantingTableScreenHandler.this, bundle); }
+        public List<List<ItemStack>> costOptions(EnchantmentWithLevel enchantment, OptionType type) { return getEffectiveItemCostOptions(enchantment, type); }
+        public boolean materialFree(EnchantmentWithLevel enchantment, OptionType type) { return isMaterialFreeOperation(enchantment, type); }
+        public XpCostConversion.XpRequirement xpRequirement(EnchantmentWithLevel enchantment, OptionType type) { return resolveXpRequirement(enchantment, type); }
+    };
 }

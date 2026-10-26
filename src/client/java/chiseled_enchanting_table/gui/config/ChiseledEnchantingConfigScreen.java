@@ -1,5 +1,8 @@
 package chiseled_enchanting_table.gui.config;
 
+import static chiseled_enchanting_table.gui.config.ConfigSkin.*;
+import static chiseled_enchanting_table.gui.config.ConfigInteractions.*;
+
 import static chiseled_enchanting_table.gui.config.ConfigPanelPainter.*;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
@@ -58,73 +61,10 @@ import org.jetbrains.annotations.Nullable;
 @Environment(EnvType.CLIENT)
 public class ChiseledEnchantingConfigScreen extends Screen {
 
-    // ---- Color Palette (Obsidian / Crying Amethyst / Gilded Brass) ----
-    private static final int BG_SCRIM = 0xD206040D;
-    private static final int GOLD_TEXT = 0xFFFFE599;
-    private static final int CREAM_TEXT = 0xFFF5EEFF;
-    private static final int MUTED_TEXT = 0xFF9F91B8;
-    private static final int DIM_TEXT = 0xFF75688C;
-    private static final int EMERALD_TEXT = 0xFF7CFFA8;
-    private static final int CYAN_TEXT = 0xFF82EEFF;
-    private static final int AMBER_TEXT = 0xFFFFC978;
-    private static final int CORAL_TEXT = 0xFFFF8585;
-
-
-    // ---- Modular 2x HD Pixel-Art Layers (assets/chiseled_enchanting_table/gui/config/) ----
-    private static final Identifier MODAL_FRAME = ChiseledEnchantingTable.identifier("gui/config/modal_frame.png");
-    private static final Identifier FRAME_GEM_PIP = ChiseledEnchantingTable.identifier("gui/config/frame_gem_pip.png");
-    private static final Identifier EMBLEM_TRACE_LARGE = ChiseledEnchantingTable.identifier("gui/config/emblem_trace_large.png");
-
-    private static final Identifier RAIL_TAB = ChiseledEnchantingTable.identifier("gui/config/rail_tab.png");
-    private static final Identifier RAIL_TAB_ACTIVE = ChiseledEnchantingTable.identifier("gui/config/rail_tab_active.png");
-
-    private static final Identifier SECTION_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/section_plaque.png");
-    private static final Identifier ROW_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/row_plaque.png");
-    private static final Identifier ROW_PLAQUE_HOVER = ChiseledEnchantingTable.identifier("gui/config/row_plaque_hover.png");
-    private static final Identifier ROW_PLAQUE_ATOM = ChiseledEnchantingTable.identifier("gui/config/row_plaque_atom.png");
-    private static final Identifier ROW_PLAQUE_DISABLED = ChiseledEnchantingTable.identifier("gui/config/row_plaque_disabled.png");
-
-    private static final Identifier BTN_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/btn_plaque.png");
-    private static final Identifier BTN_PLAQUE_HOVER = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_hover.png");
-    private static final Identifier BTN_PLAQUE_GOLD = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_gold.png");
-    private static final Identifier BTN_PLAQUE_DISABLED = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_disabled.png");
-
-    private static final Identifier MICRO_BTN = ChiseledEnchantingTable.identifier("gui/config/micro_btn.png");
-    private static final Identifier MICRO_BTN_HOVER = ChiseledEnchantingTable.identifier("gui/config/micro_btn_hover.png");
-    private static final Identifier MICRO_BTN_DISABLED = ChiseledEnchantingTable.identifier("gui/config/micro_btn_disabled.png");
-    private static final Identifier ICON_RESET = ChiseledEnchantingTable.identifier("gui/config/icon_reset.png");
-    private static final Identifier ICON_RESET_DISABLED = ChiseledEnchantingTable.identifier("gui/config/icon_reset_disabled.png");
-
-    private static final Identifier SEARCH_BOX = ChiseledEnchantingTable.identifier("gui/config/search_box.png");
-    private static final Identifier SEARCH_BOX_FOCUS = ChiseledEnchantingTable.identifier("gui/config/search_box_focus.png");
-
-    private static final Identifier TOGGLE_ON = ChiseledEnchantingTable.identifier("gui/config/toggle_on.png");
-    private static final Identifier TOGGLE_OFF = ChiseledEnchantingTable.identifier("gui/config/toggle_off.png");
-    private static final Identifier TOGGLE_LOCKED = ChiseledEnchantingTable.identifier("gui/config/toggle_locked.png");
-
-    private static final Identifier SLIDER_TRACK = ChiseledEnchantingTable.identifier("gui/config/slider_track.png");
-    private static final Identifier SLIDER_FILL = ChiseledEnchantingTable.identifier("gui/config/slider_fill.png");
-    private static final Identifier SLIDER_KNOB = ChiseledEnchantingTable.identifier("gui/config/slider_knob.png");
-    private static final Identifier SLIDER_KNOB_HOVER = ChiseledEnchantingTable.identifier("gui/config/slider_knob_hover.png");
-
-    private static final Identifier ICON_TRACE = ChiseledEnchantingTable.identifier("gui/config/icon_domain_trace.png");
-
-    private static Identifier domainIcon(CategoryId category) {
-        return ChiseledEnchantingTable.identifier("gui/config/" + category.iconFile());
-    }
-
     // ---- Interactive Hit Regions ----
-    private record HitBox(Box box, Runnable onLeftClick, @Nullable Runnable onRightClick) {
-        boolean contains(double mx, double my) {
-            return box.contains(mx, my);
-        }
-    }
 
-    private record SliderTrack(OptionEntry entry, Box box) {
-        boolean contains(double mx, double my) {
-            return box.contains(mx, my);
-        }
-    }
+
+
 
     private record DisplayItem(
         boolean isSectionHeader,
@@ -432,10 +372,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return governed ? ModRuntimeConfig.effective().toDraft() : this.editSession.draft();
     }
 
-    private String formatValueFrom(OptionEntry entry, Draft source) {
-        String raw = entry.rawOrKeyDisplay(source);
-        return raw.startsWith("@") ? I18n.get(raw.substring(1)) : raw;
-    }
+
 
     private void onDraftMutated(@Nullable String editedKey) {
         this.editSession.draft().normalizeAfterEdit(editedKey);
@@ -1097,104 +1034,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int mouseY,
         int clipTop,
         int clipBottom
-    ) {
-        OptionRowLayout row = ConfigLayoutSpec.computeOptionRow(x, y, w);
-        OptionAvailability avail = entry.evaluate(this.editSession.draft(), this.sessionMode);
-        boolean editable = avail.editable();
-        boolean inClip = mouseY >= clipTop && mouseY < clipBottom;
-        boolean hovered = inClip && row.plaque().contains(mouseX, mouseY);
-        boolean focused = (flatIndex == this.focusedOptionIndex);
-
-        Identifier plaqueSprite = !editable
-            ? ROW_PLAQUE_DISABLED
-            : (hovered ? ROW_PLAQUE_HOVER : (entry.isCoreRuleAtom() ? ROW_PLAQUE_ATOM : ROW_PLAQUE));
-        blitNineSliceRect(ctx, plaqueSprite, x, y, w, row.plaque().h(), 16, 6, 96, 24);
-
-        if (focused) {
-            ctx.fill(x + 1, y + 1, x + w - 1, y + 2, GOLD_TEXT);
-            ctx.fill(x + 1, y + row.plaque().h() - 2, x + w - 1, y + row.plaque().h() - 1, GOLD_TEXT);
-        }
-
-        // 1. Modified indicator pip
-        if (avail.modifiedFromDefault()) {
-            Box pip = row.modifiedPip();
-            int cx = Math.round(pip.centerX());
-            int cy = Math.round(pip.centerY());
-            ctx.fill(cx - 2, cy - 2, cx + 2, cy + 2, GOLD_TEXT);
-        } else if (entry.isCoreRuleAtom()) {
-            Box pip = row.modifiedPip();
-            int cx = Math.round(pip.centerX());
-            int cy = Math.round(pip.centerY());
-            ctx.fill(cx - 1, cy - 1, cx + 2, cy + 2, editable ? 0xFFB995FF : DIM_TEXT);
-        }
-
-        // 2. Option Title (strictly >= 0.85f)
-        String name = I18n.get(entry.nameKey());
-        int nameColor = !editable
-            ? MUTED_TEXT
-            : (entry.isCoreRuleAtom() ? GOLD_TEXT : CREAM_TEXT);
-        drawClampedLeftText(this.font,
-            ctx,
-            name,
-            row.labelBox(),
-            ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
-            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-            nameColor
-        );
-
-        // 3. Dual-coded Scope + Lock Glyph Chip (strictly >= 0.75f, BMP-safe geometric glyphs)
-        Box sb = row.scopeBadgeBox();
-        String scopeGlyph = (!editable ? "\u2298" : "") + avail.effectScope().glyph();
-        int scopeColor = switch (avail.effectScope()) {
-            case IMMEDIATE -> EMERALD_TEXT;
-            case NEW_GENERATION -> CYAN_TEXT;
-            case RESTART_REQUIRED -> AMBER_TEXT;
-        };
-        if (!editable) scopeColor = MUTED_TEXT;
-        ctx.fill(sb.x(), sb.y(), sb.right(), sb.bottom(), 0x88140D22);
-        drawClampedCenteredText(this.font,
-            ctx,
-            scopeGlyph,
-            sb,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            scopeColor
-        );
-
-        // 4. Interactive Control (Boolean Toggle / Enum Plaque / Slider)
-        renderOptionControl(ctx, entry, row.controlBox(), editable, inClip, mouseX, mouseY, clipTop, clipBottom);
-
-        // 5. Reset-to-default micro-button + crisp pixel-art reset glyph
-        Box rb = row.resetBox();
-        boolean canReset = editable && avail.modifiedFromDefault();
-        boolean overReset = inClip && canReset && rb.contains(mouseX, mouseY);
-        blitNineSliceRect(
-            ctx,
-            canReset ? (overReset ? MICRO_BTN_HOVER : MICRO_BTN) : MICRO_BTN_DISABLED,
-            rb.x(), rb.y(), rb.w(), rb.h(), 3, 3, 16, 16
-        );
-        int iconSz = Math.min(10, Math.min(rb.w() - 4, rb.h() - 4));
-        int iconX = Math.round(rb.centerX() - iconSz * 0.5f);
-        int iconY = Math.round(rb.centerY() - iconSz * 0.5f);
-        ctx.blit(
-            canReset ? ICON_RESET : ICON_RESET_DISABLED,
-            iconX, iconY, iconX + iconSz, iconY + iconSz,
-            0.0f, 1.0f, 0.0f, 1.0f
-        );
-        if (canReset) {
-            int cTop = Math.max(clipTop, rb.y());
-            int cBot = Math.min(clipBottom, rb.bottom());
-            if (cBot > cTop) {
-                this.hitBoxes.add(new HitBox(new Box(rb.x(), cTop, rb.w(), cBot - cTop), () -> {
-                    entry.resetToDefault(this.editSession.draft());
-                    syncAutoCollapsedSections();
-                    playClick(0.92f);
-                }, null));
-            }
-        }
-
-        return hovered ? buildL3ProvenanceTooltip(entry, avail) : null;
-    }
+    ) { return ConfigOptionRenderer.renderSingleOptionRow(this.viewContext, ctx, entry, flatIndex, x, y, w, mouseX, mouseY, clipTop, clipBottom); }
 
     private void renderOptionControl(
         GuiGraphicsExtractor ctx,
@@ -1206,206 +1046,14 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int mouseY,
         int clipTop,
         int clipBottom
-    ) {
-        Draft shown = displayedDraft(entry);
-        String valText = formatValueFrom(entry, shown);
-        int cTop = Math.max(clipTop, cb.y());
-        int cBot = Math.min(clipBottom, cb.bottom());
-        boolean hitValid = cBot > cTop;
-
-        if (entry.kind() == ControlKind.BOOLEAN) {
-            boolean isOn = Boolean.TRUE.equals(entry.get(shown));
-            boolean overBool = inClip && editable && cb.contains(mouseX, mouseY);
-            int swW = 36;
-            int swH = 16;
-            int swX = cb.right() - swW;
-            int swY = Math.round(cb.centerY() - swH * 0.5f);
-            Identifier swSprite = !editable ? TOGGLE_LOCKED : (isOn ? TOGGLE_ON : TOGGLE_OFF);
-            ctx.blit(swSprite, swX, swY, swX + swW, swY + swH, 0.0f, 1.0f, 0.0f, 1.0f);
-            if (overBool) {
-                ctx.fill(swX + 1, swY + 1, swX + swW - 1, swY + swH - 1, 0x24FFE599);
-            }
-
-            Box stateTextBox = new Box(cb.x(), cb.y(), Math.max(20, swX - 4 - cb.x()), cb.h());
-            String stateText = I18n.get(isOn
-                ? "config.chiseled_enchanting_table.val.on"
-                : "config.chiseled_enchanting_table.val.off");
-            drawClampedCenteredText(this.font,
-                ctx,
-                stateText,
-                stateTextBox,
-                ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
-                ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-                !editable ? DIM_TEXT : (isOn ? EMERALD_TEXT : (overBool ? CREAM_TEXT : MUTED_TEXT))
-            );
-
-            if (editable && hitValid) {
-                this.hitBoxes.add(new HitBox(new Box(cb.x(), cTop, cb.w(), cBot - cTop), () -> {
-                    entry.toggleOrCycle(this.editSession.draft(), 1);
-                    syncAutoCollapsedSections();
-                    playClick(1.04f);
-                }, () -> {
-                    entry.toggleOrCycle(this.editSession.draft(), -1);
-                    syncAutoCollapsedSections();
-                    playClick(0.96f);
-                }));
-            }
-            return;
-        }
-
-        if (entry.kind() == ControlKind.ENUM_CYCLE) {
-            boolean over = inClip && editable && cb.contains(mouseX, mouseY);
-            Identifier sprite = !editable
-                ? BTN_PLAQUE_DISABLED
-                : (over ? BTN_PLAQUE_HOVER : (entry.isCoreRuleAtom() ? BTN_PLAQUE_GOLD : BTN_PLAQUE));
-            blitNineSliceRect(ctx, sprite, cb.x(), cb.y(), cb.w(), cb.h(), 6, 6, 64, 18);
-
-            String decorated = "\u25c2 " + valText + " \u25b8";
-            drawClampedCenteredText(this.font,
-                ctx,
-                decorated,
-                new Box(cb.x() + 4, cb.y(), Math.max(16, cb.w() - 8), cb.h()),
-                ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
-                ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-                !editable ? DIM_TEXT : CREAM_TEXT
-            );
-
-            if (editable && hitValid) {
-                this.hitBoxes.add(new HitBox(new Box(cb.x(), cTop, cb.w(), cBot - cTop), () -> {
-                    entry.toggleOrCycle(this.editSession.draft(), 1);
-                    syncAutoCollapsedSections();
-                    playClick(1.04f);
-                }, () -> {
-                    entry.toggleOrCycle(this.editSession.draft(), -1);
-                    syncAutoCollapsedSections();
-                    playClick(0.96f);
-                }));
-            }
-            return;
-        }
-
-        // Numeric Slider: [valuePill] [-] [=== unobstructed track + knob ===] [+]
-        SliderControlLayout sc = ConfigLayoutSpec.computeSliderControl(cb);
-        Box valuePill = sc.valuePill();
-        Box minusBox = sc.minusBtn();
-        Box trackArea = sc.trackArea();
-        Box plusBox = sc.plusBtn();
-
-        // Dedicated left value readout pill (never overlaps sliding knob)
-        ctx.fill(valuePill.x(), valuePill.y(), valuePill.right(), valuePill.bottom(), 0xCC110B1F);
-        ctx.fill(valuePill.x(), valuePill.bottom() - 1, valuePill.right(), valuePill.bottom(), 0x667A5C38);
-        drawClampedCenteredText(this.font,
-            ctx,
-            valText,
-            new Box(valuePill.x() + 2, valuePill.y(), Math.max(12, valuePill.w() - 4), valuePill.h()),
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            editable ? GOLD_TEXT : DIM_TEXT
-        );
-
-        boolean overMinus = inClip && editable && minusBox.contains(mouseX, mouseY);
-        boolean overPlus = inClip && editable && plusBox.contains(mouseX, mouseY);
-        boolean overTrack = inClip && editable && trackArea.contains(mouseX, mouseY);
-
-        blitNineSliceRect(ctx, !editable ? MICRO_BTN_DISABLED : (overMinus ? MICRO_BTN_HOVER : MICRO_BTN),
-            minusBox.x(), minusBox.y(), minusBox.w(), minusBox.h(), 3, 3, 16, 16);
-        drawClampedCenteredText(this.font, ctx, "-", minusBox,
-            ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            editable ? (overMinus ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT);
-
-        blitNineSliceRect(ctx, !editable ? MICRO_BTN_DISABLED : (overPlus ? MICRO_BTN_HOVER : MICRO_BTN),
-            plusBox.x(), plusBox.y(), plusBox.w(), plusBox.h(), 3, 3, 16, 16);
-        drawClampedCenteredText(this.font, ctx, "+", plusBox,
-            ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            editable ? (overPlus ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT);
-
-        int barH = 8;
-        int barY = Math.round(trackArea.centerY() - barH * 0.5f);
-        blitNineSliceRect(ctx, SLIDER_TRACK, trackArea.x(), barY, trackArea.w(), barH, 4, 3, 64, 8);
-
-        double norm = entry.normalizedSliderValue(shown);
-        int fillW = Math.round((float) (trackArea.w() * norm));
-        if (fillW > 2) {
-            blitNineSliceRect(ctx, SLIDER_FILL, trackArea.x(), barY, fillW, barH, 4, 3, 64, 8);
-        }
-
-        int knobW = 10;
-        int knobH = 14;
-        int knobX = trackArea.x() + Mth.clamp(fillW - knobW / 2, 0, Math.max(0, trackArea.w() - knobW));
-        int knobY = Math.round(trackArea.centerY() - knobH * 0.5f);
-        ctx.blit(overTrack ? SLIDER_KNOB_HOVER : SLIDER_KNOB, knobX, knobY, knobX + knobW, knobY + knobH, 0.0f, 1.0f, 0.0f, 1.0f);
-
-        if (editable && hitValid) {
-            this.hitBoxes.add(new HitBox(new Box(minusBox.x(), cTop, minusBox.w(), cBot - cTop), () -> {
-                entry.stepValue(this.editSession.draft(), -1);
-                syncAutoCollapsedSections();
-                playClick(0.96f);
-            }, () -> {
-                entry.stepValue(this.editSession.draft(), -5);
-                syncAutoCollapsedSections();
-                playClick(0.90f);
-            }));
-            this.hitBoxes.add(new HitBox(new Box(plusBox.x(), cTop, plusBox.w(), cBot - cTop), () -> {
-                entry.stepValue(this.editSession.draft(), 1);
-                syncAutoCollapsedSections();
-                playClick(1.04f);
-            }, () -> {
-                entry.stepValue(this.editSession.draft(), 5);
-                syncAutoCollapsedSections();
-                playClick(1.10f);
-            }));
-            this.sliderTracks.add(new SliderTrack(entry, new Box(trackArea.x(), cTop, trackArea.w(), cBot - cTop)));
-        }
-    }
+    ) { ConfigOptionRenderer.renderOptionControl(this.viewContext, ctx, entry, cb, editable, inClip, mouseX, mouseY, clipTop, clipBottom); }
 
     /**
      * Builds the L3 3-Value Provenance Tooltip:
      * Pending Draft value vs Live Effective value vs 1.1.0 Default (+ 1.0.3 Classic reference),
      * dual-coded effect scope explanation, and parent-atom / governance lock reason.
      */
-    private List<Component> buildL3ProvenanceTooltip(OptionEntry entry, OptionAvailability avail) {
-        List<Component> lines = new ArrayList<>();
-        String titlePrefix = entry.isCoreRuleAtom() ? "\u2726 " : "";
-        lines.add(Component.literal(titlePrefix).append(Component.translatable(entry.nameKey())).withStyle(ChatFormatting.GOLD));
-        if (entry.isCoreRuleAtom()) {
-            lines.add(Component.translatable("config.chiseled_enchanting_table.tip.core_atom_badge")
-                .withStyle(ChatFormatting.LIGHT_PURPLE));
-        }
-        lines.add(Component.translatable(entry.descKey()).withStyle(ChatFormatting.GRAY));
-
-        String draftVal = formatValueFrom(entry, this.editSession.draft());
-        String effectiveVal = formatValueFrom(entry, ModRuntimeConfig.effective().toDraft());
-        String defaultVal = formatValueFrom(entry, this.defaultReferenceDraft);
-        String classicVal = formatValueFrom(entry, this.classicReferenceDraft);
-
-        lines.add(Component.translatable("config.chiseled_enchanting_table.tip.prov_draft", draftVal)
-            .withStyle(avail.modifiedFromDefault() ? ChatFormatting.YELLOW : ChatFormatting.GREEN));
-        lines.add(Component.translatable("config.chiseled_enchanting_table.tip.prov_effective", effectiveVal)
-            .withStyle(draftVal.equals(effectiveVal) ? ChatFormatting.AQUA : ChatFormatting.GOLD));
-        lines.add(Component.translatable("config.chiseled_enchanting_table.tip.prov_defaults", defaultVal, classicVal)
-            .withStyle(ChatFormatting.DARK_AQUA));
-
-        if ("enchanted_book_stack_size".equals(entry.key())) {
-            lines.add(Component.translatable("config.chiseled_enchanting_table.tip.stack_shrink_save_risk")
-                .withStyle(ChatFormatting.RED));
-        }
-
-        ChatFormatting scopeFmt = switch (avail.effectScope()) {
-            case IMMEDIATE -> ChatFormatting.GREEN;
-            case NEW_GENERATION -> ChatFormatting.AQUA;
-            case RESTART_REQUIRED -> ChatFormatting.GOLD;
-        };
-        lines.add(Component.literal(avail.effectScope().glyph() + " ")
-            .append(Component.translatable(avail.effectScope().badgeKey() + ".detail"))
-            .withStyle(scopeFmt));
-
-        if (avail.inactiveReasonKey() != null) {
-            lines.add(Component.literal("\u2298 ")
-                .append(Component.translatable(avail.inactiveReasonKey()))
-                .withStyle(ChatFormatting.RED));
-        }
-        return lines;
-    }
+    private List<Component> buildL3ProvenanceTooltip(OptionEntry entry, OptionAvailability avail) { return ConfigOptionRenderer.buildL3ProvenanceTooltip(this.viewContext, entry, avail); }
 
     // ---- Rule Trace (1.0.3 <-> 1.1.0) Comparison & Interactive Atom Matrix ----
 
@@ -1461,117 +1109,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int mouseY,
         int clipTop,
         int clipBottom
-    ) {
-        Box banner = new Box(x, y, w, ConfigLayoutSpec.TRACE_BANNER_H);
-        blitNineSliceRect(ctx, ROW_PLAQUE_ATOM, x, y, w, banner.h(), 16, 6, 96, 24);
+    ) { return ConfigTraceRenderer.renderTraceBanner(this.viewContext, ctx, x, y, w, mouseX, mouseY, clipTop, clipBottom); }
 
-        int embSize = 32;
-        int embX = x + 10;
-        int embY = Math.round(banner.centerY() - embSize * 0.5f);
-        ctx.blit(EMBLEM_TRACE_LARGE, embX, embY, embX + embSize, embY + embSize, 0.0f, 1.0f, 0.0f, 1.0f);
+    private boolean isAtomInClassicState(RuleTraceEntry trace) { return ConfigTraceRenderer.isAtomInClassicState(this.viewContext, trace); }
 
-        int btnW = Math.min(76, Math.max(54, w * 21 / 100));
-        int btnH = 16;
-        Box btnClassic = new Box(x + w - 10 - btnW, y + 5, btnW, btnH);
-        Box btnModern = new Box(x + w - 10 - btnW, y + banner.h() - 5 - btnH, btnW, btnH);
-
-        int textLeft = embX + embSize + 6;
-        int textW = Math.max(40, btnClassic.x() - 6 - textLeft);
-        Box titleBox = new Box(textLeft, y + 5, textW, 15);
-        Box subBox = new Box(textLeft, y + 22, textW, 15);
-
-        int activeClassic = this.editSession.draft().build().countClassic103Atoms();
-        drawClampedLeftText(this.font,
-            ctx,
-            I18n.get("config.chiseled_enchanting_table.trace.banner_title"),
-            titleBox,
-            ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
-            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-            GOLD_TEXT
-        );
-        drawClampedLeftText(this.font,
-            ctx,
-            I18n.get("config.chiseled_enchanting_table.trace.banner_ratio",
-                activeClassic, ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT),
-            subBox,
-            ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            activeClassic == ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT ? GOLD_TEXT : CYAN_TEXT
-        );
-
-        boolean writable = this.sessionMode.writable();
-        boolean inClip = mouseY >= clipTop && mouseY < clipBottom;
-
-        // Quick-apply all 19 classic atoms
-        boolean overClassic = inClip && writable && btnClassic.contains(mouseX, mouseY);
-        blitNineSliceRect(ctx, !writable ? BTN_PLAQUE_DISABLED : (overClassic ? BTN_PLAQUE_HOVER : BTN_PLAQUE_GOLD),
-            btnClassic.x(), btnClassic.y(), btnClassic.w(), btnClassic.h(), 4, 4, 64, 18);
-        drawClampedCenteredText(this.font,
-            ctx,
-            I18n.get("config.chiseled_enchanting_table.trace.btn_all_103"),
-            new Box(btnClassic.x() + 3, btnClassic.y(), Math.max(12, btnClassic.w() - 6), btnClassic.h()),
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            writable ? GOLD_TEXT : DIM_TEXT
-        );
-
-        // Quick-restore all 19 modern 1.1.0 atoms
-        boolean overModern = inClip && writable && btnModern.contains(mouseX, mouseY);
-        blitNineSliceRect(ctx, !writable ? BTN_PLAQUE_DISABLED : (overModern ? BTN_PLAQUE_HOVER : BTN_PLAQUE),
-            btnModern.x(), btnModern.y(), btnModern.w(), btnModern.h(), 4, 4, 64, 18);
-        drawClampedCenteredText(this.font,
-            ctx,
-            I18n.get("config.chiseled_enchanting_table.trace.btn_all_110"),
-            new Box(btnModern.x() + 3, btnModern.y(), Math.max(12, btnModern.w() - 6), btnModern.h()),
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            writable ? EMERALD_TEXT : DIM_TEXT
-        );
-
-        if (writable) {
-            int cTop1 = Math.max(clipTop, btnClassic.y());
-            int cBot1 = Math.min(clipBottom, btnClassic.bottom());
-            if (cBot1 > cTop1) {
-                this.hitBoxes.add(new HitBox(new Box(btnClassic.x(), cTop1, btnClassic.w(), cBot1 - cTop1), () -> {
-                    ModRuntimeConfig.Preset.CLASSIC.applyTo(this.editSession.draft());
-                    syncAutoCollapsedSections();
-                    playClick(1.06f);
-                }, null));
-            }
-            int cTop2 = Math.max(clipTop, btnModern.y());
-            int cBot2 = Math.min(clipBottom, btnModern.bottom());
-            if (cBot2 > cTop2) {
-                this.hitBoxes.add(new HitBox(new Box(btnModern.x(), cTop2, btnModern.w(), cBot2 - cTop2), () -> {
-                    ModRuntimeConfig.Preset.STANDARD.applyTo(this.editSession.draft());
-                    syncAutoCollapsedSections();
-                    playClick(1.04f);
-                }, null));
-            }
-        }
-        return null;
-    }
-
-    private boolean isAtomInClassicState(RuleTraceEntry trace) {
-        return trace.isUsingClassic103(this.editSession.draft());
-    }
-
-    private void toggleTraceAtom(RuleTraceEntry trace) {
-        if (trace.derived() || trace.optionKey() == null) return;
-        boolean currentlyClassic = trace.isUsingClassic103(this.editSession.draft());
-        if ("tome_consumption_mode".equals(trace.optionKey())) {
-            this.editSession.draft().tomeConsumptionMode = currentlyClassic
-                ? chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR
-                : chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP;
-            this.editSession.draft().tomeRegenEnabled = currentlyClassic;
-            this.editSession.draft().markCustomized("tome_consumption_mode");
-            this.editSession.draft().markCustomized("tome_regen_enabled");
-        } else if (currentlyClassic) {
-            trace.applyModern110(this.editSession.draft());
-        } else {
-            trace.applyClassic103(this.editSession.draft());
-        }
-        syncAutoCollapsedSections();
-    }
+    private void toggleTraceAtom(RuleTraceEntry trace) { ConfigTraceRenderer.toggleTraceAtom(this.viewContext, trace); }
 
     private List<Component> renderSingleTraceCard(
         GuiGraphicsExtractor ctx,
@@ -1584,134 +1126,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int mouseY,
         int clipTop,
         int clipBottom
-    ) {
-        TraceCardLayout tc = ConfigLayoutSpec.computeTraceCard(x, y, w);
-        boolean inClip = mouseY >= clipTop && mouseY < clipBottom;
-        boolean hovered = inClip && tc.card().contains(mouseX, mouseY);
-        boolean isClassic = isAtomInClassicState(trace);
-
-        blitNineSliceRect(
-            ctx,
-            hovered ? ROW_PLAQUE_HOVER : (isClassic ? ROW_PLAQUE_ATOM : ROW_PLAQUE),
-            x, y, w, tc.card().h(), 16, 6, 96, 24
-        );
-
-        // Top-left: #NN + Atom Name
-        String title = String.format(Locale.ROOT, "#%02d ", ordinal) + I18n.get(trace.titleKey());
-        drawClampedLeftText(this.font,
-            ctx,
-            title,
-            tc.titleBox(),
-            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-            isClassic ? GOLD_TEXT : CREAM_TEXT
-        );
-
-        // Top-middle: Domain Jump Chip ("[↗ Pricing]")
-        Box jb = tc.domainJumpBox();
-        boolean overJump = inClip && jb.contains(mouseX, mouseY);
-        ctx.fill(jb.x(), jb.y(), jb.right(), jb.bottom(), overJump ? 0xCC4B3475 : 0x88241838);
-        String jumpText = "\u2197 " + I18n.get(trace.domain().titleKey());
-        drawClampedCenteredText(this.font,
-            ctx,
-            jumpText,
-            new Box(jb.x() + 2, jb.y(), Math.max(12, jb.w() - 4), jb.h()),
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            overJump ? GOLD_TEXT : CYAN_TEXT
-        );
-        int jTop = Math.max(clipTop, jb.y());
-        int jBot = Math.min(clipBottom, jb.bottom());
-        if (jBot > jTop) {
-            this.hitBoxes.add(new HitBox(new Box(jb.x(), jTop, jb.w(), jBot - jTop), () -> {
-                this.ruleTracePage = false;
-                this.filterModifiedOnly = false;
-                this.activeCategory = trace.domain();
-                setSearchQuery("");
-                this.listScroll = 0.0f;
-                playClick(1.0f);
-            }, null));
-        }
-
-        // Top-right: Direct Atom Toggle or [Derived] badge
-        Box tb = tc.toggleActionBox();
-        boolean canToggle = !trace.derived()
-            && trace.optionKey() != null
-            && ConfigCatalog.byKey(trace.optionKey())
-                .map(o -> o.evaluate(this.editSession.draft(), this.sessionMode).editable())
-                .orElse(false);
-        boolean overToggle = inClip && canToggle && tb.contains(mouseX, mouseY);
-        Identifier tSprite = trace.derived()
-            ? BTN_PLAQUE_DISABLED
-            : (!canToggle ? BTN_PLAQUE_DISABLED : (overToggle ? BTN_PLAQUE_HOVER : (isClassic ? BTN_PLAQUE_GOLD : BTN_PLAQUE)));
-        blitNineSliceRect(ctx, tSprite, tb.x(), tb.y(), tb.w(), tb.h(), 4, 4, 64, 18);
-        String tLabel = trace.derived()
-            ? I18n.get("config.chiseled_enchanting_table.trace.derived_badge")
-            : I18n.get(isClassic
-                ? "config.chiseled_enchanting_table.trace.toggle_classic"
-                : "config.chiseled_enchanting_table.trace.toggle_modern");
-        drawClampedCenteredText(this.font,
-            ctx,
-            tLabel,
-            new Box(tb.x() + 3, tb.y(), Math.max(12, tb.w() - 6), tb.h()),
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            trace.derived() ? MUTED_TEXT : (isClassic ? GOLD_TEXT : EMERALD_TEXT)
-        );
-        if (canToggle) {
-            int tTop = Math.max(clipTop, tb.y());
-            int tBot = Math.min(clipBottom, tb.bottom());
-            if (tBot > tTop) {
-                this.hitBoxes.add(new HitBox(new Box(tb.x(), tTop, tb.w(), tBot - tTop), () -> {
-                    toggleTraceAtom(trace);
-                    playClick(1.04f);
-                }, null));
-            }
-        }
-
-        // Bottom comparison pills: localized Classic vs Modern prefixes
-        Box cPill = tc.classicPillBox();
-        Box mPill = tc.modernPillBox();
-        ctx.fill(cPill.x(), cPill.y(), cPill.right(), cPill.bottom(), isClassic ? 0xCC4A3316 : 0xAA120C20);
-        ctx.fill(mPill.x(), mPill.y(), mPill.right(), mPill.bottom(), !isClassic ? 0xCC163D2E : 0xAA120C20);
-
-        String classicPrefix = I18n.get("config.chiseled_enchanting_table.trace.prefix_classic");
-        String modernPrefix = I18n.get("config.chiseled_enchanting_table.trace.prefix_modern");
-        String cText = (isClassic ? "\u25cf " : "") + classicPrefix + " " + I18n.get(trace.classicSummaryKey());
-        String mText = (!isClassic ? "\u25cf " : "") + modernPrefix + " " + I18n.get(trace.modernSummaryKey());
-        drawClampedLeftText(this.font,
-            ctx,
-            cText,
-            new Box(cPill.x() + 3, cPill.y(), Math.max(16, cPill.w() - 6), cPill.h()),
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            isClassic ? GOLD_TEXT : 0xFFB8AAD2
-        );
-        drawClampedLeftText(this.font,
-            ctx,
-            mText,
-            new Box(mPill.x() + 3, mPill.y(), Math.max(16, mPill.w() - 6), mPill.h()),
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            !isClassic ? EMERALD_TEXT : 0xFFB8AAD2
-        );
-
-        if (hovered) {
-            List<Component> cardTip = new ArrayList<>();
-            cardTip.add(Component.translatable(trace.titleKey()).withStyle(ChatFormatting.GOLD));
-            cardTip.add(Component.translatable("config.chiseled_enchanting_table.trace.prefix_classic")
-                .append(Component.literal(" "))
-                .append(Component.translatable(trace.classicSummaryKey()))
-                .withStyle(isClassic ? ChatFormatting.YELLOW : ChatFormatting.GRAY));
-            cardTip.add(Component.translatable("config.chiseled_enchanting_table.trace.prefix_modern")
-                .append(Component.literal(" "))
-                .append(Component.translatable(trace.modernSummaryKey()))
-                .withStyle(!isClassic ? ChatFormatting.GREEN : ChatFormatting.GRAY));
-            cardTip.add(Component.translatable(trace.impactKey()).withStyle(ChatFormatting.AQUA));
-            return cardTip;
-        }
-        return null;
-    }
+    ) { return ConfigTraceRenderer.renderSingleTraceCard(this.viewContext, ctx, ordinal, trace, x, y, w, mouseX, mouseY, clipTop, clipBottom); }
 
     private void renderListScrollbar(GuiGraphicsExtractor ctx, int totalContentH, int mouseX, int mouseY) {
         if (this.maxListScroll <= 0.5f) return;
@@ -2167,4 +1582,25 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             top += item.height() + ConfigLayoutSpec.ROW_GAP;
         }
     }
+
+    private final ConfigViewContext viewContext = new ConfigViewContext() {
+        public net.minecraft.client.gui.Font font() { return ChiseledEnchantingConfigScreen.this.font; }
+        public Draft draft() { return editSession.draft(); }
+        public Draft defaults() { return defaultReferenceDraft; }
+        public Draft classicReference() { return classicReferenceDraft; }
+        public Draft displayed(OptionEntry entry) { return displayedDraft(entry); }
+        public SessionMode mode() { return sessionMode; }
+        public int focusedIndex() { return focusedOptionIndex; }
+        public void registerHit(HitBox hit) { hitBoxes.add(hit); }
+        public void registerSlider(SliderTrack slider) { sliderTracks.add(slider); }
+        public void changed() { syncAutoCollapsedSections(); }
+        public void sound(float pitch) { playClick(pitch); }
+        public void navigate(CategoryId category) {
+            ruleTracePage = false;
+            filterModifiedOnly = false;
+            activeCategory = category;
+            setSearchQuery("");
+            listScroll = 0.0f;
+        }
+    };
 }

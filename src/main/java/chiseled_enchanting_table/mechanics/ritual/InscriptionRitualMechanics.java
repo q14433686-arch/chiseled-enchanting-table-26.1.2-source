@@ -709,89 +709,10 @@ public final class InscriptionRitualMechanics {
             return List.copyOf(out);
         }
 
-        public String encode() {
-            StringBuilder itemsEnc = new StringBuilder();
-            for (int i = 0; i < paidItems.size(); i++) {
-                if (i > 0) itemsEnc.append(',');
-                PaidItemEntry e = paidItems.get(i);
-                itemsEnc.append(e.itemId()).append('*').append(e.count());
-            }
-            return enchantmentId.toString()
-                + "|" + targetLevel
-                + "|" + previousLevel
-                + "|" + (masterTomeUsed ? 1 : 0)
-                + "|" + (usedInfinityTome ? 1 : 0)
-                + "|" + conflictRefundPoints
-                + "|" + (consumedEpiphany ? 1 : 0)
-                + "|" + String.format(Locale.ROOT, "%.4f", infinityTomeLoad)
-                + "|" + paidXpPoints
-                + "|" + itemsEnc
-                + "|" + inheritedGeneration;
-        }
+        public String encode() { return RitualQueuePersistence.encode(this); }
 
         @Nullable
-        public static QueuedInscription decode(String token) {
-            if (token == null || token.isBlank()) {
-                return null;
-            }
-            String[] parts = token.split("\\|", -1);
-            if ((parts.length != 7 && parts.length != 10 && parts.length != 11) || token.length() > 2048) {
-                return null;
-            }
-            try {
-                Identifier id = Identifier.parse(parts[0].trim());
-                int rawTarget = Integer.parseInt(parts[1].trim());
-                int rawPrev = Integer.parseInt(parts[2].trim());
-                int rawRefund = Integer.parseInt(parts[5].trim());
-                if (rawTarget < 1 || rawTarget > 255 || rawPrev < 0 || rawPrev > 255 || rawRefund < 0
-                    || !Set.of("0", "1").contains(parts[3].trim())
-                    || !Set.of("0", "1").contains(parts[4].trim())
-                    || !Set.of("0", "1").contains(parts[6].trim())) {
-                    return null;
-                }
-                boolean tomeUsed = "1".equals(parts[3].trim());
-                boolean infTome = "1".equals(parts[4].trim());
-                boolean epip = "1".equals(parts[6].trim());
-                if (parts.length == 7) {
-                    return new QueuedInscription(id, rawTarget, rawPrev, tomeUsed, infTome, rawRefund, epip);
-                }
-                double load = Double.parseDouble(parts[7].trim());
-                int paidXp = Integer.parseInt(parts[8].trim());
-                if (!Double.isFinite(load) || load < 0.0 || load > 256.0 || paidXp < 0 || paidXp > 1_000_000) {
-                    return null;
-                }
-                int inheritedGen = -1;
-                if (parts.length == 11) {
-                    inheritedGen = Integer.parseInt(parts[10].trim());
-                    if (inheritedGen < -1 || inheritedGen > 255) {
-                        return null;
-                    }
-                }
-                List<PaidItemEntry> items = new ArrayList<>();
-                String rawItems = parts[9].trim();
-                if (!rawItems.isEmpty()) {
-                    String[] entries = rawItems.split(",", -1);
-                    if (entries.length > 16) {
-                        return null;
-                    }
-                    for (String itemToken : entries) {
-                        int star = itemToken.indexOf('*');
-                        if (star <= 0 || star >= itemToken.length() - 1) {
-                            return null;
-                        }
-                        Identifier itemId = Identifier.parse(itemToken.substring(0, star).trim());
-                        int cnt = Integer.parseInt(itemToken.substring(star + 1).trim());
-                        if (cnt < 1 || cnt > 1024) {
-                            return null;
-                        }
-                        items.add(new PaidItemEntry(itemId, cnt));
-                    }
-                }
-                return new QueuedInscription(id, rawTarget, rawPrev, tomeUsed, infTome, rawRefund, epip, load, paidXp, items, inheritedGen);
-            } catch (RuntimeException ignored) {
-                return null;
-            }
-        }
+        public static QueuedInscription decode(String token) { return RitualQueuePersistence.decode(token); }
     }
 
     /** Structured list codec for persisted ritual steps (CODEC-02), paired with legacy ';'-string fallback. */
@@ -813,35 +734,9 @@ public final class InscriptionRitualMechanics {
             )
         );
 
-    public static String serializeQueue(List<QueuedInscription> queue) {
-        if (queue == null || queue.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < queue.size(); i++) {
-            if (i > 0) sb.append(';');
-            sb.append(queue.get(i).encode());
-        }
-        return sb.toString();
-    }
+    public static String serializeQueue(List<QueuedInscription> queue) { return RitualQueuePersistence.serializeQueue(queue); }
 
-    public static List<QueuedInscription> deserializeQueue(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return new ArrayList<>();
-        }
-        if (raw.length() > MAX_QUEUE_CHARACTERS) throw new IllegalArgumentException("Oversized persisted ritual");
-        List<QueuedInscription> out = new ArrayList<>();
-        long refund = 0;
-        for (String part : raw.split(";", -1)) {
-            if (out.size() >= MAX_QUEUE_STEPS) throw new IllegalArgumentException("Too many ritual steps");
-            QueuedInscription parsed = QueuedInscription.decode(part);
-            if (parsed == null) throw new IllegalArgumentException("Malformed ritual step");
-            refund += parsed.conflictRefundPoints();
-            if (refund > Integer.MAX_VALUE) throw new IllegalArgumentException("Ritual refund exceeds budget");
-            out.add(parsed);
-        }
-        return out;
-    }
+    public static List<QueuedInscription> deserializeQueue(String raw) { return RitualQueuePersistence.deserializeQueue(raw); }
 
     /** Snapshot of surrounding bookshelves &amp; Chiseled Bookshelf Master Tomes within scan range. */
     public record LibraryRitualScan(

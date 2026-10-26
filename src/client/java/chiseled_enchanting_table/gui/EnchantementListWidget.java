@@ -1,5 +1,7 @@
 package chiseled_enchanting_table.gui;
 
+import chiseled_enchanting_table.gui.InscribeOptionModel.DisplayOptionSlot;
+
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.row.CategoryRowRenderer;
@@ -150,32 +152,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         return super.addEntry(entry);
     }
 
-    public static boolean isWearImmuneEnchantmentId(Identifier id, @Nullable Player player) {
-        if (id == null) {
-            return false;
-        }
-        return findEnchantment(id, player)
-            .map(chiseled_enchanting_table.mechanics.resonance.TomeWearData::isWearImmuneEnchantment)
-            .orElseGet(() -> chiseled_enchanting_table.mechanics.resonance.TomeWearData.INFINITY_ENCHANTMENT_ID.equals(id));
-    }
+    public static boolean isWearImmuneEnchantmentId(Identifier id, @Nullable Player player) { return EnchantmentDisplayNames.isWearImmuneEnchantmentId(id, player); }
 
-    public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Player player) {
-        if (id == null || player == null) {
-            return java.util.Optional.empty();
-        }
-        return player.level().registryAccess()
-            .lookup(Registries.ENCHANTMENT)
-            .flatMap(reg -> reg.get(ResourceKey.create(Registries.ENCHANTMENT, id)));
-    }
+    public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Player player) { return EnchantmentDisplayNames.findEnchantment(id, player); }
 
-    public static Holder<Enchantment> identifierToEnchantment(Identifier id, Player player) {
-        return findEnchantment(id, player)
-            .orElseThrow(() -> new IllegalArgumentException("Unknown enchantment: " + id));
-    }
+    public static Holder<Enchantment> identifierToEnchantment(Identifier id, Player player) { return EnchantmentDisplayNames.identifierToEnchantment(id, player); }
 
-    public static Identifier enchantmentToIdentifier(Holder<Enchantment> enchant) {
-        return enchant.unwrapKey().orElseThrow().identifier();
-    }
+    public static Identifier enchantmentToIdentifier(Holder<Enchantment> enchant) { return EnchantmentDisplayNames.enchantmentToIdentifier(enchant); }
 
     /** @deprecated Prefer {@link #identifierToEnchantment(Identifier, Player)}. */
     @Deprecated(forRemoval = false)
@@ -189,46 +172,11 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         return enchantmentToIdentifier(enchant);
     }
 
-    public static String baseEnchantmentName(Holder<Enchantment> ench) {
-        return ench.value().description().getString();
-    }
+    public static String baseEnchantmentName(Holder<Enchantment> ench) { return EnchantmentDisplayNames.baseEnchantmentName(ench); }
 
-    private static String romanNumeral(int level) {
-        if (level >= 1 && level <= 10) {
-            return Component.translatable("enchantment.level." + level).getString();
-        }
-        return String.valueOf(level);
-    }
+    private static String romanNumeral(int level) { return EnchantmentDisplayNames.romanNumeral(level); }
 
-    public String displayName(AvailableOption option) {
-        if (option.isDisenchantAll()) {
-            return I18n.get("gui.chiseled_enchanting_table.cleanse.all_row");
-        }
-        if (option.isTransformation()) {
-            String out = this.handler.syncedTransformationOutputName(option.id());
-            if (option.id().equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)) {
-                return I18n.get("gui.chiseled_enchanting_table.blank_overwrite", out);
-            }
-            return out;
-        }
-        Holder<Enchantment> ench = identifierToEnchantment(option.id(), this.player);
-        String name = Enchantment.getFullname(ench, option.level()).getString();
-        if (option.isDowngrade()) {
-            int curLvl = this.handler.currentTargetEnchantLevel(option.id());
-            String curName = Enchantment.getFullname(ench, Math.max(option.level() + 1, curLvl)).getString();
-            return I18n.get("gui.chiseled_enchanting_table.cleanse.downgrade_row", curName, name);
-        }
-        if (option.isStripSingle()) {
-            return I18n.get("gui.chiseled_enchanting_table.cleanse.strip_row", name);
-        }
-        if (option.isPurgeCurse()) {
-            return I18n.get("gui.chiseled_enchanting_table.cleanse.curse_row", name);
-        }
-        if (option.isTreasureEpiphany()) return I18n.get("gui.chiseled_enchanting_table.treasure_epiphany", name);
-        if (option.isBookCombineUpgrade()) return I18n.get("gui.chiseled_enchanting_table.book_upgrade.combine", name);
-        if (option.isBookResearchUpgrade()) return I18n.get("gui.chiseled_enchanting_table.book_upgrade.research", name);
-        return name;
-    }
+    public String displayName(AvailableOption option) { return EnchantmentDisplayNames.displayName(this.handler, this.player, option); }
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
@@ -555,41 +503,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return;
         }
 
-        // 1. Standalone top-pinned Cleanse rows: Full Disenchant + any Curse Purge items
-        int nonCurseCount = DisenchantmentApplication.countNonCurseEnchantments(this.enchantable_item);
-        if (nonCurseCount >= 1) {
-            addActionEntry(AvailableOption.disenchantAll(DisenchantmentApplication.DISENCHANT_ALL_ID), false, false);
-        }
-
-        List<Holder<Enchantment>> sortedKeys = new ArrayList<>(current.keySet());
-        sortedKeys.sort((a, b) -> baseEnchantmentName(a).compareTo(baseEnchantmentName(b)));
-
-        int totalTraits = current.size();
-        Map<Identifier, List<AvailableOption>> groupedCleanse = new LinkedHashMap<>();
-        Map<Identifier, Holder<Enchantment>> holdersById = new LinkedHashMap<>();
-
-        for (Holder<Enchantment> holder : sortedKeys) {
-            int curLvl = current.getLevel(holder);
-            if (curLvl <= 0) continue;
-            Identifier id = enchantmentToIdentifier(holder);
-            if (DisenchantmentApplication.isCurse(holder)) {
-                if (this.handler.disenchantAllowCursePurge()) {
-                    addActionEntry(AvailableOption.purgeCurse(id, curLvl), false, false);
-                }
-            } else {
-                List<AvailableOption> subRows = new ArrayList<>();
-                for (int nextLvl = curLvl - 1; nextLvl >= 1; nextLvl--) {
-                    subRows.add(AvailableOption.downgradeEnchantment(id, nextLvl));
-                }
-                if (totalTraits >= 2) {
-                    subRows.add(AvailableOption.stripSingleEnchantment(id, curLvl));
-                }
-                if (!subRows.isEmpty()) {
-                    groupedCleanse.put(id, subRows);
-                    holdersById.put(id, holder);
-                }
-            }
-        }
+        var model = CleanseOptionModel.build(this.enchantable_item, this.handler.disenchantAllowCursePurge());
+        for (var option : model.pinned()) addActionEntry(option, false, false);
+        var groupedCleanse = model.groups();
+        var holdersById = model.holders();
 
         // Auto-expand when there is only 1 collapsible trait on a newly placed item
         if (targetChanged && groupedCleanse.size() == 1) {
@@ -636,192 +553,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
     }
 
-    private boolean isDirectWoodenShelfEligible(Holder<Enchantment> holder, Identifier id) {
-        if (DisenchantmentApplication.isCurse(holder) || DisenchantmentApplication.isTreasure(holder)) {
-            return false;
-        }
-        return !SyncedEnchantmentCosts.explicitTreasureIds().contains(id);
-    }
 
-    private record DisplayOptionSlot(AvailableOption option, boolean shelfLocked, int requiredBookshelves) {}
+
+
 
     private void populateInscribeEntries(int navigationIndex, boolean targetChanged, double previousScroll) {
-        var enchantFromBook = cost_item_stack.is(Items.ENCHANTED_BOOK);
         ItemEnchantments targetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
-
-        List<DisplayOptionSlot> optionSlots = new ArrayList<>();
-        Set<EnchantmentWithLevel> unlockedDirectSet = new HashSet<>();
-        Map<Identifier, Integer> maxAddedTierById = new LinkedHashMap<>();
-
-        if (enchantFromBook) {
-            ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(cost_item_stack);
-            for (var entry : enchantments.entrySet()) {
-                int existingLvl = targetEnchantments.getLevel(entry.getKey());
-                if (entry.getIntValue() > existingLvl) {
-                    Identifier id = enchantmentToIdentifier(entry.getKey());
-                    optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(id, entry.getIntValue()), false, 0));
-                }
-            }
-        } else if (!cost_item_stack.is(Items.BOOK)) {
-            if (unlocked_enchantements != null) {
-                for (EnchantmentWithLevel e : unlocked_enchantements) {
-                    var optH = findEnchantment(e.enchantment_id(), this.player);
-                    if (optH.isEmpty()) continue;
-                    Holder<Enchantment> h = optH.get();
-                    int existingLvl = targetEnchantments.getLevel(h);
-                    // Audit M-04: strictly-greater only — the server rejects same-level and
-                    // downgrade applies, so listing them as candidates was a dead click.
-                    if (e.enchantment_level() > existingLvl) {
-                        optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(e), false, 0));
-                        unlockedDirectSet.add(e);
-                        maxAddedTierById.merge(e.enchantment_id(), e.enchantment_level(), Math::max);
-                    }
-                }
-            }
-            // Track 2 (Existing-category upgrade on gear): once an item already carries level >= 1,
-            // regular bookshelves unlock upgrades up to maxUnlockedDirectTier (1..MAX at 38 shelves).
-            if (this.handler.allowsDirectTierUpgrade()
-                && !enchantable_item.is(Items.ENCHANTED_BOOK)
-                && !enchantable_item.is(Items.BOOK)) {
-                for (var existingEntry : targetEnchantments.entrySet()) {
-                    int existingLvl = existingEntry.getIntValue();
-                    int maxLvl = Math.max(1, existingEntry.getKey().value().getMaxLevel());
-                    if (existingLvl < 1 || existingLvl >= maxLvl) continue;
-                    Identifier id = enchantmentToIdentifier(existingEntry.getKey());
-                    for (int lvl = existingLvl + 1; lvl <= maxLvl; lvl++) {
-                        EnchantmentWithLevel candidate = new EnchantmentWithLevel(id, lvl);
-                        if (!unlockedDirectSet.contains(candidate)
-                            && this.handler.canDirectUpgradeExistingEnchantment(existingEntry.getKey(), id, existingLvl, lvl)) {
-                            optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(candidate), false, 0));
-                            unlockedDirectSet.add(candidate);
-                            maxAddedTierById.merge(id, lvl, Math::max);
-                        }
-                    }
-                }
-            }
-            for (EnchantmentWithLevel epiphany : this.handler.computeActiveTreasureEpiphanies(enchantable_item)) {
-                var optH = findEnchantment(epiphany.enchantment_id(), this.player);
-                if (optH.isEmpty()) continue;
-                Holder<Enchantment> h = optH.get();
-                if (epiphany.enchantment_level() > targetEnchantments.getLevel(h)) {
-                    optionSlots.add(new DisplayOptionSlot(
-                        AvailableOption.treasureEpiphany(epiphany.enchantment_id(), epiphany.enchantment_level()),
-                        false,
-                        0
-                    ));
-                }
-            }
-        }
-        if (enchantable_item.is(Items.ENCHANTED_BOOK)) {
-            ItemEnchantments costEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(cost_item_stack);
-            boolean combineEnabled = SyncedEnchantmentCosts.combineEnabled();
-            boolean researchEnabled = SyncedEnchantmentCosts.researchEnabled();
-            for (var entry : targetEnchantments.entrySet()) {
-                int level = entry.getIntValue();
-                int maxLevel = entry.getKey().value().getMaxLevel();
-                if (level >= maxLevel) continue;
-                Identifier id = enchantmentToIdentifier(entry.getKey());
-                int targetLevel = level + 1;
-                if (combineEnabled && cost_item_stack.is(Items.ENCHANTED_BOOK) && costEnchantments.getLevel(entry.getKey()) == level) {
-                    optionSlots.add(new DisplayOptionSlot(AvailableOption.bookCombineUpgrade(id, targetLevel), false, 0));
-                    maxAddedTierById.merge(id, targetLevel, Math::max);
-                } else if (researchEnabled
-                    && !cost_item_stack.is(Items.ENCHANTED_BOOK)
-                    && !cost_item_stack.is(Items.BOOK)
-                    && !unlockedDirectSet.contains(new EnchantmentWithLevel(id, targetLevel))) {
-                    if (this.handler.usesClassicShelfBoost() || this.handler.canDirectResearchUpgradeTo(id, targetLevel)) {
-                        optionSlots.add(new DisplayOptionSlot(AvailableOption.bookResearchUpgrade(id, targetLevel), false, 0));
-                        maxAddedTierById.merge(id, targetLevel, Math::max);
-                    } else if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
-                        int reqShelves = this.handler.requiredBookshelvesForDirectTier(id, targetLevel, maxLevel);
-                        optionSlots.add(new DisplayOptionSlot(
-                            AvailableOption.bookResearchUpgrade(id, targetLevel),
-                            true,
-                            reqShelves
-                        ));
-                        maxAddedTierById.merge(id, targetLevel, Math::max);
-                    }
-                }
-            }
-        }
-
-        // Surface greyed-out shelf-locked direct tiers (with exact bookshelf goal) rather than hiding goals!
-        if (!this.handler.usesClassicShelfBoost()
-            && !enchantFromBook
-            && !cost_item_stack.is(Items.BOOK)
-            && !ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
-            Set<Identifier> candidateDirectIds = new LinkedHashSet<>(maxAddedTierById.keySet());
-            for (var entry : targetEnchantments.entrySet()) {
-                Identifier id = enchantmentToIdentifier(entry.getKey());
-                if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
-                    candidateDirectIds.add(id);
-                }
-            }
-            for (Identifier enchId : candidateDirectIds) {
-                Holder<Enchantment> holder = identifierToEnchantment(enchId, this.player);
-                if (!isDirectWoodenShelfEligible(holder, enchId)) continue;
-                int maxLevel = Math.max(1, holder.value().getMaxLevel());
-                int existingLvl = targetEnchantments.getLevel(holder);
-                int unlockedTop = maxAddedTierById.getOrDefault(enchId, 0);
-                int startLocked = Math.max(unlockedTop + 1, Math.max(2, existingLvl + 1));
-                for (int lvl = startLocked; lvl <= maxLevel; lvl++) {
-                    int reqShelves = this.handler.requiredBookshelvesForDirectTier(enchId, lvl, maxLevel);
-                    optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(enchId, lvl), true, reqShelves));
-                }
-            }
-        }
-
-        for (EnchantmentWithLevel t : this.handler.syncedTransformationsFor(enchantable_item)) {
-            optionSlots.add(new DisplayOptionSlot(AvailableOption.transformation(t.enchantment_id(), t.enchantment_level()), false, 0));
-        }
-
-        List<DisplayOptionSlot> filtered = optionSlots.stream().filter(slot -> {
-            AvailableOption option = slot.option();
-            if (option.isTransformation()) {
-                return this.handler.syncedTransformationMatches(option.id(), enchantable_item);
-            }
-            if (ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
-                return false;
-            }
-            var optEnchant = findEnchantment(option.id(), this.player);
-            if (optEnchant.isEmpty()) {
-                return false;
-            }
-            Holder<Enchantment> enchant = optEnchant.get();
-            return enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchant.value().canEnchant(enchantable_item);
-        }).toList();
-
-        // 1. Standalone top-pinned rows: ALL Treasure Epiphanies + Item Transformations (never collapsed!)
-        List<DisplayOptionSlot> pinnedTop = new ArrayList<>();
-        Map<Identifier, List<DisplayOptionSlot>> groupedEnchants = new LinkedHashMap<>();
-
-        filtered.stream()
-            .filter(s -> s.option().isTreasureEpiphany() || s.option().isTransformation())
-            .sorted((s1, s2) -> {
-                AvailableOption o1 = s1.option();
-                AvailableOption o2 = s2.option();
-                int p1 = o1.isTreasureEpiphany() ? 0 : 1;
-                int p2 = o2.isTreasureEpiphany() ? 0 : 1;
-                if (p1 != p2) return Integer.compare(p1, p2);
-                int c = displayName(o1).compareTo(displayName(o2));
-                return c != 0 ? c : Integer.compare(o1.level(), o2.level());
-            })
-            .forEach(pinnedTop::add);
-
-        filtered.stream()
-            .filter(s -> !s.option().isTreasureEpiphany() && !s.option().isTransformation())
-            .sorted((s1, s2) -> {
-                AvailableOption o1 = s1.option();
-                AvailableOption o2 = s2.option();
-                String n1 = baseEnchantmentName(identifierToEnchantment(o1.id(), this.player));
-                String n2 = baseEnchantmentName(identifierToEnchantment(o2.id(), this.player));
-                int c = n1.compareTo(n2);
-                if (c != 0) return c;
-                int lvlCmp = Integer.compare(o1.level(), o2.level());
-                if (lvlCmp != 0) return lvlCmp;
-                return Integer.compare(o1.type().ordinal(), o2.type().ordinal());
-            })
-            .forEach(slot -> groupedEnchants.computeIfAbsent(slot.option().id(), ignored -> new ArrayList<>()).add(slot));
+        var model = InscribeOptionModel.build(this.optionCatalog, this.player, enchantable_item, cost_item_stack,
+            unlocked_enchantements, this::displayName);
+        var pinnedTop = model.pinned();
+        var groupedEnchants = model.groups();
 
         for (DisplayOptionSlot pinned : pinnedTop) {
             addActionEntry(pinned.option(), false, false, pinned.shelfLocked(), pinned.requiredBookshelves());
@@ -1594,4 +1335,15 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             }
         }
     }
+
+    private final InscribeOptionModel.Catalog optionCatalog = new InscribeOptionModel.Catalog() {
+        public boolean allowsDirectTierUpgrade() { return handler.allowsDirectTierUpgrade(); }
+        public boolean usesClassicShelfBoost() { return handler.usesClassicShelfBoost(); }
+        public boolean canDirectUpgradeExistingEnchantment(Holder<Enchantment> holder, Identifier id, int existing, int target) { return handler.canDirectUpgradeExistingEnchantment(holder, id, existing, target); }
+        public boolean canDirectResearchUpgradeTo(Identifier id, int target) { return handler.canDirectResearchUpgradeTo(id, target); }
+        public List<EnchantmentWithLevel> computeActiveTreasureEpiphanies(ItemStack target) { return handler.computeActiveTreasureEpiphanies(target); }
+        public int requiredBookshelvesForDirectTier(Identifier id, int target, int max) { return handler.requiredBookshelvesForDirectTier(id, target, max); }
+        public Set<EnchantmentWithLevel> syncedTransformationsFor(ItemStack target) { return handler.syncedTransformationsFor(target); }
+        public boolean syncedTransformationMatches(Identifier id, ItemStack target) { return handler.syncedTransformationMatches(id, target); }
+    };
 }
