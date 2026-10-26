@@ -736,7 +736,6 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
             .effectiveShelvesAfterBreathingRoom(rawRegularBookshelves, ceilingBlocked, openAdjacentBlocks, cfg);
     }
 
-    public static boolean hasShelfLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) { return hasClearLineOfSight(level, tablePos, shelfPos); }
     public static boolean hasClearLineOfSight(Level level, BlockPos tablePos, BlockPos shelfPos) {
         int dx = shelfPos.getX() - tablePos.getX();
         int dy = shelfPos.getY() - tablePos.getY();

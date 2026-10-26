@@ -671,9 +671,6 @@ public final class BookshelfProgression {
         return DepletedTomeTier.BASELINE;
     }
 
-    public static XpRequirement applyDepletedTomeXpTier(XpRequirement baseXp, DepletedTomeTier tier) {
-        return applyDepletedTomeXpTierWithBatch(baseXp, tier, 1);
-    }
 
     public static XpRequirement applyDepletedTomeXpTierWithBatch(
         XpRequirement baseXp,
@@ -790,5 +787,73 @@ public final class BookshelfProgression {
             return 0;
         }
         return (int) Math.floor((double) rawShelves * (double) openAdjacentBlocks / (double) minOpen);
+    }
+    // Audit C-01: this configuration owns its wire layout. EnchantCostTablePayload delegates
+    // here so field order lives next to the record definition instead of as anonymous
+    // positional locals in the payload; the byte order itself is unchanged (no revision bump).
+    public static void writeWire(net.minecraft.network.RegistryFriendlyByteBuf buf, Config cfg) {
+        buf.writeBoolean(cfg.directGatesEnabled());
+        buf.writeVarInt(cfg.maxDirectBookshelves());
+        buf.writeVarInt(cfg.twoLevelMaxBookshelves());
+        buf.writeDouble(cfg.gamma());
+        buf.writeUtf(cfg.blankMaxTierMode().token());
+        buf.writeVarInt(cfg.horizontalScanRadius());
+        buf.writeVarInt(cfg.verticalScanRadius());
+        PayloadLimits.writeBoundedCount(buf, cfg.overrides().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
+        for (var ov : cfg.overrides().entrySet()) {
+            buf.writeIdentifier(ov.getKey());
+            PayloadLimits.writeBoundedCount(buf, ov.getValue().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
+            for (int v : ov.getValue()) {
+                buf.writeVarInt(Math.max(0, v));
+            }
+    }
+    buf.writeVarInt(cfg.tier1Bookshelves());
+    buf.writeVarInt(cfg.tier2Bookshelves());
+    buf.writeDouble(cfg.tier2MaterialMultiplier());
+    buf.writeVarInt(cfg.tier3QualifyingEnchantments());
+    buf.writeVarInt(cfg.baseBatchSize());
+    buf.writeVarInt(cfg.tier3BatchSize());
+    buf.writeUtf(cfg.vanillaTableMode().token());
+    buf.writeBoolean(cfg.requireBreathingRoom());
+    buf.writeVarInt(cfg.minOpenAdjacentBlocks());
+    buf.writeBoolean(cfg.requireLineOfSight());
+    }
+
+    public static Config readWire(net.minecraft.network.RegistryFriendlyByteBuf buf) {
+        boolean sgEnabled = buf.readBoolean();
+        int sgMax = buf.readVarInt();
+        int sgTwoLevelMax = buf.readVarInt();
+        double sgGamma = buf.readDouble();
+        var sgBlankMode = BlankMaxTierMode.fromToken(buf.readUtf());
+        int sgHScan = buf.readVarInt();
+        int sgVScan = buf.readVarInt();
+        int ovCount = chiseled_enchanting_table.menu.PayloadLimits.readCount(buf);
+        java.util.Map<Identifier, List<Integer>> sgOverrides = new java.util.HashMap<>();
+        for (int i = 0; i < ovCount; i++) {
+            Identifier ovId = buf.readIdentifier();
+            int len = chiseled_enchanting_table.menu.PayloadLimits.readCount(buf);
+            List<Integer> ladder = new ArrayList<>(len);
+            for (int j = 0; j < len; j++) {
+                ladder.add(Math.max(0, buf.readVarInt()));
+            }
+            if (!ladder.isEmpty()) {
+                sgOverrides.put(ovId, List.copyOf(ladder));
+            }
+    }
+    int sgT1 = buf.readVarInt();
+    int sgT2 = buf.readVarInt();
+    double sgMult = buf.readDouble();
+    int sgT3 = buf.readVarInt();
+    int sgBaseBatch = buf.readVarInt();
+    int sgTier3Batch = buf.readVarInt();
+    var sgVanillaMode = VanillaTableMode.fromToken(buf.readUtf());
+    boolean sgBreathing = buf.readBoolean();
+    int sgMinOpen = buf.readVarInt();
+    boolean sgLos = buf.readBoolean();
+    return new Config(
+        sgEnabled, sgMax, sgTwoLevelMax, sgGamma, sgBlankMode, sgHScan, sgVScan,
+        sgOverrides, sgT1, sgT2, sgMult, sgT3, sgBaseBatch, sgTier3Batch,
+        sgVanillaMode, sgBreathing, sgMinOpen, sgLos
+    );
     }
 }

@@ -120,11 +120,11 @@ public final class BundledDefaults {
     public static final double CROSSLINE_PER_LOAD_SLOPE = 0.035;
     public static final double CROSSLINE_MAX_SLIP_CHANCE = 0.25;
     public static final int CROSSLINE_SHELF_TIER1_COUNT = 32;
-    public static final double CROSSLINE_SHELF_TIER1_BONUS = 0.01;
+    public static final double CROSSLINE_SHELF_TIER1_BONUS = 0.02;
     public static final int CROSSLINE_SHELF_TIER2_COUNT = 38;
-    public static final double CROSSLINE_SHELF_TIER2_BONUS = 0.02;
+    public static final double CROSSLINE_SHELF_TIER2_BONUS = 0.04;
     public static final int CROSSLINE_SHELF_TIER3_COUNT = 42;
-    public static final double CROSSLINE_SHELF_TIER3_BONUS = 0.03;
+    public static final double CROSSLINE_SHELF_TIER3_BONUS = 0.06;
     public static final double CROSSLINE_TREASURE_SCORE = 1.0;
     public static final double CROSSLINE_SINGLE_TREASURE_MIN_LOAD = 3.0;
     public static final int CROSSLINE_HIGH_RARITY_MAX_WEIGHT = 2;

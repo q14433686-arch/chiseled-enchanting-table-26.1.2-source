@@ -1775,24 +1775,24 @@ class EconomyAndConfigVerificationTest {
                 .computeLoadSlipProbability(ritual, 2.5, s), 1e-9);
         }
         assertEquals(0.000, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 20), 1e-9);
-        assertEquals(0.010, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 32), 1e-9);
-        assertEquals(0.020, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 38), 1e-9);
-        assertEquals(0.030, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 42), 1e-9);
+        assertEquals(0.020, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 32), 1e-9);
+        assertEquals(0.040, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 38), 1e-9);
+        assertEquals(0.060, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 3.0, 42), 1e-9);
 
         assertEquals(0.070, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 20), 1e-9);
-        assertEquals(0.080, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 32), 1e-9);
-        assertEquals(0.090, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 38), 1e-9);
-        assertEquals(0.100, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 42), 1e-9);
+        assertEquals(0.090, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 32), 1e-9);
+        assertEquals(0.110, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 38), 1e-9);
+        assertEquals(0.130, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 5.0, 42), 1e-9);
 
         assertEquals(0.140, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 20), 1e-9);
-        assertEquals(0.150, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 32), 1e-9);
-        assertEquals(0.160, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 38), 1e-9);
-        assertEquals(0.170, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 42), 1e-9);
+        assertEquals(0.160, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 32), 1e-9);
+        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 38), 1e-9);
+        assertEquals(0.200, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 42), 1e-9);
 
         assertEquals(0.175, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 20), 1e-9);
-        assertEquals(0.185, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 32), 1e-9);
-        assertEquals(0.195, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 38), 1e-9);
-        assertEquals(0.205, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 42), 1e-9);
+        assertEquals(0.195, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 32), 1e-9);
+        assertEquals(0.215, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 38), 1e-9);
+        assertEquals(0.235, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 42), 1e-9);
         assertEquals(0.250, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 12.0, 64), 1e-9);
 
         // 5. Single-roll 3-outcome split: 70% TIER_DROP / 25% JUNK_CROSSLINE / 5% CURSE_CROSSLINE

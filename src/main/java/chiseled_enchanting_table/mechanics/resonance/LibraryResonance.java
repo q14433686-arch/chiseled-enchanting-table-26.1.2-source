@@ -1076,9 +1076,6 @@ public final class LibraryResonance {
         return cfg != null ? cfg : Config.DEFAULT;
     }
 
-    public static Config activeConfig() {
-        return activeServerConfig();
-    }
 
     public static double relativeMastery(int storedLevel, int maxLevel) {
         if (storedLevel <= 0) {
@@ -1458,5 +1455,155 @@ public final class LibraryResonance {
         z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
         z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
         return z ^ (z >>> 31);
+    }
+    // Audit C-01: this configuration owns its wire layout. EnchantCostTablePayload delegates
+    // here so field order lives next to the record definition instead of as anonymous
+    // positional locals in the payload; the byte order itself is unchanged (no revision bump).
+    public static void writeWire(net.minecraft.network.RegistryFriendlyByteBuf buf, Config cfg) {
+        buf.writeVarInt(cfg.minDiscountBookshelves());
+        buf.writeVarInt(cfg.maxDiscountBookshelves());
+        buf.writeVarInt(cfg.maxWoodenDiscountPercent());
+        buf.writeVarInt(cfg.maxGlobalMasteryDiscountPercent());
+        buf.writeVarInt(cfg.maxBaseXpDiscountPercent());
+        buf.writeVarInt(cfg.maxSpecificEnchantBonusPercent());
+        buf.writeDouble(cfg.specificEnchantExponent());
+        buf.writeVarInt(cfg.maxTotalXpDiscountPercent());
+        buf.writeDouble(cfg.masteryUnitExponent());
+        buf.writeDouble(cfg.globalMasteryMultiplier());
+        buf.writeDouble(cfg.masterTomeUpgradeMaterialMultiplier());
+        buf.writeDouble(cfg.shelfUpgradeMaterialMultiplier());
+        buf.writeDouble(cfg.epiphanyProbabilityGlobalWeight());
+        buf.writeDouble(cfg.epiphanyProbabilityAffinityWeight());
+        buf.writeDouble(cfg.blankBookAffinityWeight());
+        buf.writeDouble(cfg.epiphanyShelfScoreFactor());
+        buf.writeDouble(cfg.epiphanyGlobalMasteryScoreFactor());
+        buf.writeDouble(cfg.epiphanyAffinityMasteryScoreFactor());
+        buf.writeDouble(cfg.epiphanyTier2MaxProb());
+        buf.writeDouble(cfg.epiphanyTier2ScoreDivisor());
+        buf.writeDouble(cfg.epiphanyTier2MasteryBonus());
+        buf.writeDouble(cfg.epiphanyTierPlusMaxProb());
+        buf.writeDouble(cfg.epiphanyTierPlusScoreDivisor());
+        buf.writeDouble(cfg.epiphanyTierPlusMasteryBonus());
+        buf.writeDouble(cfg.incrementalStepCreditFactor());
+        buf.writeUtf(cfg.tomeConsumptionMode().token());
+        buf.writeVarInt(cfg.maxTomeUses());
+        buf.writeVarInt(cfg.bookCopyWearCost());
+        buf.writeUtf(cfg.tomeDepleteBehavior().token());
+        buf.writeBoolean(cfg.tomeRegenEnabled());
+        buf.writeVarInt(cfg.tomeRegenBaseSeconds());
+        buf.writeVarInt(cfg.tomeRegenTier1Shelves());
+        buf.writeVarInt(cfg.tomeRegenTier1Seconds());
+        buf.writeVarInt(cfg.tomeRegenTier2Shelves());
+        buf.writeVarInt(cfg.tomeRegenTier2Seconds());
+        buf.writeDouble(cfg.unbreakingWaiverPerLevel());
+        buf.writeDouble(cfg.unbreakingWaiverMaxChance());
+        buf.writeBoolean(cfg.wildBookWearEnabled());
+        PayloadLimits.writeBoundedCount(buf, cfg.wildBookRemainingWeights().size(), PayloadLimits.MAX_COLLECTION_ENTRIES);
+        for (int w : cfg.wildBookRemainingWeights()) {
+            buf.writeVarInt(Math.max(0, w));
+    }
+    buf.writeUtf(cfg.scapegoatPricing().token());
+    buf.writeBoolean(cfg.lockedShelfBreakable());
+    buf.writeBoolean(cfg.lockedBookExtractionBlocked());
+    buf.writeVarInt(cfg.earlyUnlockXpLevels());
+    buf.writeVarInt(cfg.earlyUnlockGritCount());
+    buf.writeVarInt(cfg.sacrificeRequired());
+    buf.writeVarInt(cfg.tomePageRequiredShelves());
+    buf.writeDouble(cfg.maxMasteryUnitsPerSlot());
+    buf.writeVarInt(cfg.wearImmuneMaxGeneration());
+    buf.writeVarInt(cfg.wearImmuneFullWaiverMaxEnchants());
+    buf.writeDouble(cfg.wearImmuneOverloadWaiverDecay());
+    var ev = cfg.essenceValuation();
+    buf.writeDouble(ev.rarityMinMultiplier());
+    buf.writeDouble(ev.rarityMaxMultiplier());
+    buf.writeDouble(ev.rarityLogSlope());
+    buf.writeDouble(ev.treasureMultiplier());
+    buf.writeVarInt(ev.conservationSafetyMarginPoints());
+    }
+
+    public static Config readWire(net.minecraft.network.RegistryFriendlyByteBuf buf) {
+        int lr0 = buf.readVarInt();
+        int lr1 = buf.readVarInt();
+        int lr2 = buf.readVarInt();
+        int lr3 = buf.readVarInt();
+        int lr4 = buf.readVarInt();
+        int lr5 = buf.readVarInt();
+        double lr6 = buf.readDouble();
+        int lr7 = buf.readVarInt();
+        double lr8 = buf.readDouble();
+        double lr9 = buf.readDouble();
+        double lr10 = buf.readDouble();
+        double lr11 = buf.readDouble();
+        double lr12 = buf.readDouble();
+        double lr13 = buf.readDouble();
+        double lr14 = buf.readDouble();
+        double lr15 = buf.readDouble();
+        double lr16 = buf.readDouble();
+        double lr17 = buf.readDouble();
+        double lr18 = buf.readDouble();
+        double lr19 = buf.readDouble();
+        double lr20 = buf.readDouble();
+        double lr21 = buf.readDouble();
+        double lr22 = buf.readDouble();
+        double lr23 = buf.readDouble();
+        double lr24 = buf.readDouble();
+        var lrMode = MasterTomeWear.ConsumptionMode.fromToken(buf.readUtf());
+        int lrMtu = buf.readVarInt();
+        int lrBcwc = buf.readVarInt();
+        var lrDep = MasterTomeWear.DepleteBehavior.fromToken(buf.readUtf());
+        boolean lrRegenEn = buf.readBoolean();
+        int lrRegenBase = buf.readVarInt();
+        int lrRegenT1S = buf.readVarInt();
+        int lrRegenT1Sec = buf.readVarInt();
+        int lrRegenT2S = buf.readVarInt();
+        int lrRegenT2Sec = buf.readVarInt();
+        double lrUnbPerLvl = buf.readDouble();
+        double lrUnbMax = buf.readDouble();
+        boolean lrWildEn = buf.readBoolean();
+        int wildWeightLen = chiseled_enchanting_table.menu.PayloadLimits.readBoundedCount(buf, 256);
+        List<Integer> lrWildWeights = new ArrayList<>(wildWeightLen);
+        for (int i = 0; i < wildWeightLen; i++) {
+            lrWildWeights.add(Math.max(0, buf.readVarInt()));
+    }
+    var lrScapegoat = TomeWearData.ScapegoatPricing.fromToken(buf.readUtf());
+    boolean lrShelfBreakable = buf.readBoolean();
+    boolean lrExtractionBlocked = buf.readBoolean();
+    int lrEarlyXp = buf.readVarInt();
+    int lrEarlyGrit = buf.readVarInt();
+    int lrSacrificeReq = buf.readVarInt();
+    int lrTomeShelves = buf.readVarInt();
+    double lrMaxMasterySlot = buf.readDouble();
+    int lrWearMaxGen = buf.readVarInt();
+    int lrWearFullEnch = buf.readVarInt();
+    double lrWearDecay = buf.readDouble();
+    var lrEssence = new EssenceValuation(
+        buf.readDouble(),
+        buf.readDouble(),
+        buf.readDouble(),
+        buf.readDouble(),
+        buf.readVarInt()
+    );
+
+    return new Config(
+        new WoodenBookshelves(lr0, lr1, lr2, lr11),
+        new ChiseledMastery(
+            new MasteryScaling(
+                lr8, lr9, lr3, lr4, lr5, lr6, lr7, lr10, lr24,
+                lrMaxMasterySlot, lrWearMaxGen, lrWearFullEnch, lrWearDecay
+            ),
+            new TomeLifecycle(
+                lrMode, lrMtu, lrBcwc, lrUnbPerLvl, lrUnbMax, lrDep,
+                lrRegenEn, lrRegenBase, lrRegenT1S, lrRegenT1Sec, lrRegenT2S, lrRegenT2Sec, lrScapegoat
+            )
+        ),
+        new EpiphanyAffinity(
+            lr12, lr13, lr14, lr15, lr16, lr17, lr18, lr19, lr20, lr21, lr22, lr23
+        ),
+        new WildBookWear(lrWildEn, lrWildWeights),
+        new TomePages(
+            lrShelfBreakable, lrExtractionBlocked, lrEarlyXp, lrEarlyGrit, lrSacrificeReq, lrTomeShelves
+        ),
+        lrEssence
+    );
     }
 }

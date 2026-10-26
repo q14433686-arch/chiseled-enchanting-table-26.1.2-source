@@ -223,17 +223,4 @@ public final class TomeLockGuards {
             : String.format(java.util.Locale.ROOT, "%02d:%02d", mins, secs);
     }
 
-    /** True when any slot in {@code shelf} holds a non-expired locked enchanted book. */
-    public static boolean shelfHasLockedBook(Level level, BlockPos pos) {
-        if (!(level.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf)) {
-            return false;
-        }
-        for (int slot = 0; slot < ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE; slot++) {
-            var stack = shelf.getItem(slot);
-            if (stack.is(Items.ENCHANTED_BOOK) && TomeLockData.isEffectivelyLocked(stack)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

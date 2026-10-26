@@ -285,11 +285,11 @@ public final class InscriptionRitualMechanics {
             perLoadSlope = clampFinite(perLoadSlope, 0.0, 1.0, 0.035);
             maxSlipChance = clampFinite(maxSlipChance, 0.0, 1.0, MAX_TRANSCRIPTION_SLIP_CHANCE);
             shelfTier1Count = Mth.clamp(shelfTier1Count, 1, 256);
-            shelfTier1Bonus = clampFinite(shelfTier1Bonus, 0.0, 1.0, 0.01);
+            shelfTier1Bonus = clampFinite(shelfTier1Bonus, 0.0, 1.0, 0.02);
             shelfTier2Count = Mth.clamp(shelfTier2Count, shelfTier1Count, 256);
-            shelfTier2Bonus = clampFinite(shelfTier2Bonus, 0.0, 1.0, 0.02);
+            shelfTier2Bonus = clampFinite(shelfTier2Bonus, 0.0, 1.0, 0.04);
             shelfTier3Count = Mth.clamp(shelfTier3Count, shelfTier2Count, 256);
-            shelfTier3Bonus = clampFinite(shelfTier3Bonus, 0.0, 1.0, 0.03);
+            shelfTier3Bonus = clampFinite(shelfTier3Bonus, 0.0, 1.0, 0.06);
             treasureScore = clampFinite(treasureScore, 0.0, 16.0, 1.0);
             singleTreasureMinLoad = clampFinite(singleTreasureMinLoad, 0.0, 64.0, 3.0);
             highRarityMaxWeight = Mth.clamp(highRarityMaxWeight, 1, 32);
@@ -1275,7 +1275,8 @@ public final class InscriptionRitualMechanics {
 
     /**
      * Exact single-roll slip probability:
-     * {@code P = min(18%, 0.035 * (L - 3) + shelfBonus)} when {@code L >= 3}, and {@code 0%} when {@code L < 3}.
+     * {@code P = min(maxSlipChance, 0.035 * (L - 3) + shelfBonus)} when {@code L >= 3}, and {@code 0%} when
+     * {@code L < 3}; the cap and shelf bonuses come from {@code crossline_slip} (bundled cap 25%, bonuses +2/+4/+6%).
      */
     public static double computeLoadSlipProbability(
         @Nullable Config ritualCfg,
@@ -1730,57 +1731,6 @@ public final class InscriptionRitualMechanics {
         return new LibraryRitualScan(effectiveShelves, anyTome, effectiveTomeEnchants, maxOverloadedInf, totalWearImmuneLoad);
     }
 
-    /** Returns {@code true} if any nearby Master Tome providing {@code enchantmentId >= minLevel} has effective wear immunity. */
-    public static boolean doesMatchingMasterTomeHaveInfinity(
-        Level level,
-        BlockPos tablePos,
-        BookshelfProgression.Config cfg,
-        Identifier enchantmentId,
-        int minLevel
-    ) {
-        if (level == null || tablePos == null || enchantmentId == null) {
-            return false;
-        }
-        BookshelfProgression.Config safeCfg = cfg != null ? cfg : BookshelfProgression.Config.DEFAULT;
-        if (safeCfg.requireBreathingRoom()) {
-            boolean ceilingBlocked = ChiseledEnchantingTableBlock.isTableCeilingBlocked(level, tablePos);
-            int openAdj = ChiseledEnchantingTableBlock.countOpenAdjacentBlocks(level, tablePos);
-            if (BookshelfProgression.effectiveShelvesAfterBreathingRoom(1, ceilingBlocked, openAdj, safeCfg) <= 0) {
-                return false;
-            }
-        }
-        var lrCfg = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.configForSide(level.isClientSide());
-        boolean checkLos = safeCfg.requireLineOfSight();
-        for (BlockPos offset : ChiseledEnchantingTableBlock.getScanOffsets(safeCfg)) {
-            BlockPos p = tablePos.offset(offset);
-            if (!level.hasChunkAt(p)) {
-                continue;
-            }
-            if (checkLos && !ChiseledEnchantingTableBlock.hasClearLineOfSight(level, tablePos, p)) {
-                continue;
-            }
-            if (!(level.getBlockEntity(p) instanceof ChiseledBookShelfBlockEntity shelfBe)) {
-                continue;
-            }
-            for (int slot = 0; slot < shelfBe.getContainerSize(); slot++) {
-                ItemStack book = shelfBe.getItem(slot);
-                if (book.isEmpty()
-                    || (chiseled_enchanting_table.config.ModRuntimeConfig.forSide(level.isClientSide()).tomeLocksEnabled()
-                        && chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(book))
-                    || !MasterTomeWear.hasEffectiveWearImmunity(lrCfg, book)) continue;
-                ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(book);
-                for (var entry : enchants.entrySet()) {
-                    var keyOpt = entry.getKey().unwrapKey();
-                    if (keyOpt.isPresent()
-                        && enchantmentId.equals(keyOpt.get().identifier())
-                        && entry.getIntValue() >= minLevel) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
 
     /**
      * Degrades the lowest-priority Master Tome in scan range directly inside its Chiseled Bookshelf
@@ -1902,5 +1852,134 @@ public final class InscriptionRitualMechanics {
             return Math.round(days) + "d (" + seconds + "s)";
         }
         return String.format(java.util.Locale.ROOT, "%.1fd (%ds)", days, seconds);
+    }
+    // Audit C-01: this configuration owns its wire layout. EnchantCostTablePayload delegates
+    // here so field order lives next to the record definition instead of as anonymous
+    // positional locals in the payload; the byte order itself is unchanged (no revision bump).
+    public static void writeWire(net.minecraft.network.RegistryFriendlyByteBuf buf, Config cfg) {
+        buf.writeVarInt(cfg.maxSingleWaitSeconds());
+        buf.writeVarInt(cfg.minTomeEnchantsForWait());
+        buf.writeVarInt(cfg.maxSacrificeXpLevels());
+        buf.writeDouble(cfg.maxRushDegradeNormal());
+        buf.writeDouble(cfg.maxRushDegradeInfinity());
+        buf.writeDouble(cfg.maxTranscriptionSlipChance());
+        buf.writeDouble(cfg.shelfLoadReference());
+        buf.writeDouble(cfg.tomeLoadReference());
+        buf.writeVarInt(cfg.sacrificeExtraXpPerQueuedStep());
+        buf.writeDouble(cfg.sacrificeXpTimeConstantSeconds());
+        buf.writeDouble(cfg.rushDegradeTimeConstantSeconds());
+        var cs = cfg.crosslineSlip();
+        buf.writeDouble(cs.minLoadThreshold());
+        buf.writeDouble(cs.perLoadSlope());
+        buf.writeDouble(cs.maxSlipChance());
+        buf.writeVarInt(cs.shelfTier1Count());
+        buf.writeDouble(cs.shelfTier1Bonus());
+        buf.writeVarInt(cs.shelfTier2Count());
+        buf.writeDouble(cs.shelfTier2Bonus());
+        buf.writeVarInt(cs.shelfTier3Count());
+        buf.writeDouble(cs.shelfTier3Bonus());
+        buf.writeDouble(cs.treasureScore());
+        buf.writeDouble(cs.singleTreasureMinLoad());
+        buf.writeVarInt(cs.highRarityMaxWeight());
+        buf.writeDouble(cs.highRarityScore());
+        buf.writeVarInt(cs.midRarityMaxWeight());
+        buf.writeDouble(cs.midRarityScore());
+        buf.writeVarInt(cs.broadApplicabilityMinItems());
+        buf.writeDouble(cs.broadApplicabilityScore());
+        buf.writeDouble(cs.relativeLevelMinRatio());
+        buf.writeDouble(cs.relativeLevelScore());
+        buf.writeVarInt(cs.unbreakingHighMinLevel());
+        buf.writeDouble(cs.unbreakingHighScore());
+        buf.writeDouble(cs.tierDropShare());
+        buf.writeDouble(cs.junkCrosslineShare());
+        buf.writeDouble(cs.curseCrosslineShare());
+        buf.writeDouble(cs.pollutionRefundRatio());
+        var wc = cfg.waitCurve();
+        buf.writeDouble(wc.shelfWeight());
+        buf.writeDouble(wc.tomeWeight());
+        buf.writeDouble(wc.levelFloor());
+        buf.writeDouble(wc.levelSpan());
+        buf.writeDouble(wc.levelExponent());
+        buf.writeDouble(wc.saturation());
+        buf.writeVarInt(wc.minTicks());
+        var app = cfg.applicability();
+        buf.writeDouble(app.itemBreadthReference());
+        buf.writeDouble(app.breadthWeight());
+        buf.writeDouble(app.keystoneMajorMultiplier());
+        buf.writeDouble(app.keystoneMinorMultiplier());
+        buf.writeDouble(app.broadMultiplier());
+        buf.writeDouble(app.rarityWeight1Multiplier());
+        buf.writeDouble(app.rarityWeight2Multiplier());
+        buf.writeDouble(app.rarityWeight5Multiplier());
+        buf.writeDouble(app.minFactor());
+        buf.writeDouble(app.maxFactor());
+    }
+
+    public static Config readWire(net.minecraft.network.RegistryFriendlyByteBuf buf) {
+        int rcMaxWait = buf.readVarInt();
+        int rcMinTome = buf.readVarInt();
+        int rcMaxSac = buf.readVarInt();
+        double rcRushNorm = buf.readDouble();
+        double rcRushInf = buf.readDouble();
+        double rcSlipCap = buf.readDouble();
+        double rcShelfRef = buf.readDouble();
+        double rcTomeRef = buf.readDouble();
+        int rcExtraSacPerStep = buf.readVarInt();
+        double rcSacTau = buf.readDouble();
+        double rcRushTau = buf.readDouble();
+        var csConfig = new CrosslineSlipConfig(
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readVarInt(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble()
+        );
+        var wcConfig = new WaitCurve(
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readVarInt()
+        );
+        var appConfig = new ApplicabilityConfig(
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble(),
+            buf.readDouble()
+        );
+        return new Config(
+            rcMaxWait, rcMinTome, rcMaxSac, rcRushNorm, rcRushInf, rcSlipCap, rcShelfRef, rcTomeRef,
+            csConfig, wcConfig,
+            rcExtraSacPerStep, rcSacTau, rcRushTau,
+            appConfig
+        );
     }
 }

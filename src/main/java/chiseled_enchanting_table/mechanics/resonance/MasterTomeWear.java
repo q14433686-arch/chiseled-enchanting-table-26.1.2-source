@@ -628,29 +628,6 @@ public final class MasterTomeWear {
         return false; // settlement happens once at END_WORLD_TICK, never per-table here
     }
 
-    /**
-     * Applies Master Tome wear (or zero wear if blessed with {@code minecraft:infinity}) inside
-     * surrounding Chiseled Bookshelves when a Master-Tome-backed enchantment action succeeds.
-     */
-    public static WearOutcome applyShelfWear(
-        Level level,
-        BlockPos tablePos,
-        BookshelfProgression.Config shelfCfg,
-        LibraryResonance.Config resonanceCfg,
-        Identifier enchantmentId,
-        int requiredLevel,
-        boolean targetIsBook
-    ) {
-        return applyShelfWearDetailed(
-            level,
-            tablePos,
-            shelfCfg,
-            resonanceCfg,
-            enchantmentId,
-            requiredLevel,
-            targetIsBook
-        ).outcome();
-    }
 
     /**
      * Resolves the exact Master Tome backing {@code (enchantmentId, requiredLevel)} and applies wear

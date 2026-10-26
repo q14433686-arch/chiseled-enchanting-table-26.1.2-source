@@ -150,10 +150,6 @@ public final class TomeLockData {
         return lock != null && !lock.expiredAt(TomeWearData.getWearUsed(stack));
     }
 
-    public static boolean isOwnedBy(ItemStack stack, @Nullable UUID playerId) {
-        Lock lock = getLock(stack);
-        return lock != null && lock.ownedBy(playerId);
-    }
 
     /**
      * Applies a lock. Returns {@code false} for timed modes whose target has already

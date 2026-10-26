@@ -210,29 +210,7 @@ public final class EnchantQueryIndex {
         return Collections.unmodifiableList(entries);
     }
 
-    /** Rows whose enchantment can be applied to {@code stack} ("item → books"). */
-    public static List<Entry> forItem(List<Entry> all, ItemStack stack) {
-        List<Entry> out = new ArrayList<>();
-        for (Entry entry : all) {
-            if (entry.supports(stack)) out.add(entry);
-        }
-        return out;
-    }
 
-    /** The row matching this enchanted book, if the index knows it ("book → items"). */
-    public static Optional<Entry> forBook(List<Entry> all, ItemStack book) {
-        if (book.isEmpty()) return Optional.empty();
-        var stored = book.get(DataComponents.STORED_ENCHANTMENTS);
-        if (stored == null || stored.isEmpty()) return Optional.empty();
-        var single = stored.entrySet().iterator().next();
-        Identifier id = single.getKey().unwrapKey().map(key -> key.identifier()).orElse(null);
-        if (id == null) return Optional.empty();
-        int level = single.getIntValue();
-        for (Entry entry : all) {
-            if (entry.enchantmentId().equals(id) && entry.level() == level) return Optional.of(entry);
-        }
-        return Optional.empty();
-    }
 
     /** Resolves a holder by id, for adapters that need the live {@link Holder} to build books. */
     public static Optional<Holder.Reference<Enchantment>> holder(

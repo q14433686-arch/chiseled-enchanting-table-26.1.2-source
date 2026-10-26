@@ -323,10 +323,6 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return options.isEmpty() ? List.of() : options.getFirst();
     }
 
-    public static List<ItemStack> additionalItemCosts(EnchantmentWithLevel enchantmentWithLevel, String salt, int maxLevel) {
-        List<ItemStack> costs = itemCosts(enchantmentWithLevel, salt, maxLevel);
-        return costs.size() <= 1 ? List.of() : List.copyOf(costs.subList(1, costs.size()));
-    }
 
     public static List<ItemCostOption> rawItemCostOptions(Identifier enchantmentId, int level, int maxLevel) {
         var ct = runtimeFrame().costTables();
@@ -388,15 +384,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return options.isEmpty() ? List.of() : options.getFirst();
     }
 
-    public static ItemStack bookResearchPrimaryCost(EnchantmentWithLevel target, String salt, int maxLevel) {
-        List<ItemStack> costs = bookResearchCosts(target, salt, maxLevel);
-        return costs.isEmpty() ? ItemStack.EMPTY : costs.getFirst();
-    }
 
-    public static List<ItemStack> bookResearchAdditionalCosts(EnchantmentWithLevel target, String salt, int maxLevel) {
-        List<ItemStack> costs = bookResearchCosts(target, salt, maxLevel);
-        return costs.size() <= 1 ? List.of() : List.copyOf(costs.subList(1, costs.size()));
-    }
 
     public static int treasureEpiphanyMinBookshelves() {
         return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).minRegularBookshelves();
@@ -469,13 +457,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return Set.copyOf(resolved);
     }
 
-    public static double treasureEpiphanyChance(int regularBookshelves, int chiseledBooks) {
-        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).chanceFor(regularBookshelves, chiseledBooks);
-    }
 
-    public static int treasureEpiphanyMaxSlots(int regularBookshelves, int chiseledBooks) {
-        return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).maxSlotsFor(regularBookshelves, chiseledBooks);
-    }
 
     public static int treasureEpiphanyRerollXpLevels() {
         return (runtimeFrame == null ? treasureEpiphanyRules : runtimeFrame.treasureEpiphanyRules()).rerollXpLevels();
@@ -512,15 +494,6 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         boolean unlocked
     ) {}
 
-    public static Set<EnchantmentWithLevel> transformationEnchantmentsFor(ItemStack input) {
-        Set<EnchantmentWithLevel> result = new HashSet<>();
-        for (ItemTransformation transformation : (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).values()) {
-            if (transformation.isResolvable() && transformation.matchesInput(input)) {
-                result.add(new EnchantmentWithLevel(transformation.id(), transformation.level()));
-            }
-        }
-        return result;
-    }
 
     public static boolean hasTransformationForInput(ItemStack input) {
         if (input == null || input.isEmpty()) {
@@ -692,15 +665,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         return List.copyOf(out);
     }
 
-    public static ItemStack transformationPrimaryCost(Identifier id, String salt) {
-        ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
-        return transformation == null ? ItemStack.EMPTY : transformation.primaryCostStack(salt == null ? "" : salt);
-    }
 
-    public static List<ItemStack> transformationAdditionalCosts(Identifier id, String salt) {
-        ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
-        return transformation == null ? List.of() : transformation.additionalCostStacks(salt == null ? "" : salt);
-    }
 
     public static int transformationXpCost(Identifier id) {
         ItemTransformation transformation = (runtimeFrame == null ? itemTransformations : runtimeFrame.itemTransformations()).get(id);
@@ -1638,9 +1603,6 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             return List.copyOf(bundles);
         }
 
-        public List<List<ItemStack>> alternativeBundles() {
-            return resolvedBundles();
-        }
 
         public ItemStack outputStack(int count) {
             Optional<Item> resolved = resolveOutputItem();

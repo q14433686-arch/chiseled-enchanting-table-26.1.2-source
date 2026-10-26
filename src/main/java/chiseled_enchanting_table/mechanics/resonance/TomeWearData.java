@@ -76,29 +76,6 @@ public final class TomeWearData {
     // Wear immunity
     // ------------------------------------------------------------------
 
-    /**
-     * Returns {@code true} iff {@code stack} carries a wear-immune enchantment
-     * ({@code #chiseled_enchanting_table:wear_immune}, shipping with
-     * {@code minecraft:infinity}; the bare Infinity id is also accepted so a datapack
-     * that empties the tag can never accidentally make Infinity tomes mortal).
-     */
-    /** True only for the concrete {@code minecraft:infinity} id (pure id check). */
-    public static boolean hasInfinityEnchantment(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return false;
-        }
-        ItemEnchantments enchants = EnchantmentHelper.getEnchantmentsForCrafting(stack);
-        for (var entry : enchants.entrySet()) {
-            if (entry.getIntValue() <= 0) {
-                continue;
-            }
-            var keyOpt = entry.getKey().unwrapKey();
-            if (keyOpt.isPresent() && INFINITY_ENCHANTMENT_ID.equals(keyOpt.get().identifier())) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public static boolean isWearImmuneEnchantment(net.minecraft.core.Holder<Enchantment> holder) {
         if (holder == null) {

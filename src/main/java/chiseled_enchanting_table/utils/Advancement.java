@@ -100,7 +100,4 @@ public class Advancement {
         }
     }
 
-    public static void checkAllEnchantBook(Player player, Level level, ItemStack enchantableItem) {
-        checkBookMilestones(player, level, enchantableItem);
-    }
 }

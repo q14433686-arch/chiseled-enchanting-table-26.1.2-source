@@ -73,17 +73,7 @@ public final class DisenchantmentApplication {
         return holder != null && holder.is(TREASURE_TAG);
     }
 
-    public static double rarityMultiplier(Holder<Enchantment> holder) {
-        return rarityMultiplier(LibraryResonance.activeServerConfig(), holder);
-    }
 
-    public static double rarityMultiplier(LibraryResonance.Config resonanceCfg, Holder<Enchantment> holder) {
-        return rarityMultiplierFromParams(
-            resonanceCfg,
-            Math.max(1, holder.value().getAnvilCost()),
-            isTreasure(holder)
-        );
-    }
 
     public static double rarityMultiplierFromParams(
         LibraryResonance.Config resonanceCfg,

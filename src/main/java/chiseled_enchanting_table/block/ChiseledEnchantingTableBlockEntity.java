@@ -174,9 +174,6 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         return Math.max(0L, this.ritualTotalTicks);
     }
 
-    public List<QueuedInscription> queuedInscriptions() {
-        return List.copyOf(this.ritualQueue);
-    }
 
     public List<EnchantmentWithLevel> queuedEnchantmentSummary() {
         List<EnchantmentWithLevel> out = new ArrayList<>(this.ritualQueue.size());

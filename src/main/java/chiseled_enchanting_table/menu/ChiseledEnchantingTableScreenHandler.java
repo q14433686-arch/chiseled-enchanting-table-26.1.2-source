@@ -1183,10 +1183,6 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     // ---- Transformation display helpers (synced data, with local fallback) ----
 
-    /** Whether the given id is a transformation, preferring server-synced data over local data. */
-    public boolean isSyncedTransformation(Identifier id) {
-        return this.transformationDisplays.containsKey(id);
-    }
 
     /** Transformation options whose input matches the given stack, from server-synced data. */
     public Set<EnchantmentWithLevel> syncedTransformationsFor(ItemStack input) {
@@ -1465,9 +1461,6 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return MenuPricing.resolveTransformationBatchCount(this, transformationId);
     }
 
-    public int resolveDepletedTomeBatchCount() {
-        return resolveTransformationBatchCount(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID);
-    }
 
     public int requiredBookshelvesForDirectTier(Identifier enchantmentId, int targetLevel, int maxLevel) {
         return chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.requiredBookshelvesForDirectTier(
@@ -1763,11 +1756,6 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return enchantmentToIdentifier(enchant);
     }
 
-    /** @deprecated Use {@link XpCostConversion#totalPointsForLevel(int)}. */
-    @Deprecated
-    public int calculateXpCostToLevel(int X) {
-        return XpCostConversion.totalXpForLevel(X);
-    }
 
     // ---- Condition / consumption (shared by both mechanics) ----
 
