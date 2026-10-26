@@ -32,7 +32,7 @@ for directory, limits in (
     (base + 'config/', {'RuntimeConfigJson': 330, 'RuntimePolicyJson': 110, 'RuntimeConfigPresets': 190, 'ConfigTraceActions': 40, 'ConfigSliderDragSession': 45}),
     (base + 'menu/', {'MenuPaymentService': 180, 'MenuPricing': 240, 'MenuPricingAccess': 65, 'MenuMaterialQuotes': 220, 'MenuXpQuotes': 230}),
     (base + 'mechanics/ritual/', {'RitualQueuePersistence': 160}),
-    (base + 'research/', {'ResearchCatalog': 130, 'ResearchJournal': 65, 'ResearchEngine': 140, 'ResearchJson': 130, 'ResearchStore': 120, 'ResearchRuntime': 180, 'ResearchWorkspace': 150, 'ResearchKnowledge': 65, 'ResearchOutcomes': 100, 'ResearchSampleAnalysis': 100}),
+    (base + 'research/', {'ResearchCatalog': 130, 'ResearchJournal': 65, 'ResearchEngine': 140, 'ResearchJson': 130, 'ResearchStore': 120, 'ResearchRuntime': 180, 'ResearchWorkspace': 150, 'ResearchKnowledge': 65, 'ResearchOutcomes': 100, 'ResearchSampleAnalysis': 100, 'ResearchGoalView': 130}),
     (client + 'gui/', {'InscribeOptionModel': 240, 'CleanseOptionModel': 100, 'EnchantmentDisplayNames': 150,
         'TablePanelBackground': 400, 'TablePanelLabels': 230, 'TableNavigationTooltips': 240,
         'TableCostTooltips': 210, 'TableOptionTooltips': 300, 'TablePanelTooltips': 200,
@@ -48,9 +48,9 @@ def split_violations(name, source):
     rules = []
     if name in ('RuntimeConfigJson', 'RuntimePolicyJson', 'RuntimeConfigPresets'):
         rules += ['java.nio.file', 'ClientPlayNetworking', 'setServerPackPolicy(', 'applyRuntimeConfig(', 'runtimeFrame(']
-    if name in ('ResearchCatalog', 'ResearchJournal', 'ResearchEngine', 'ResearchJson', 'ResearchStore', 'ResearchKnowledge', 'ResearchOutcomes', 'ResearchSampleAnalysis'):
+    if name in ('ResearchCatalog', 'ResearchJournal', 'ResearchEngine', 'ResearchJson', 'ResearchStore', 'ResearchKnowledge', 'ResearchOutcomes', 'ResearchSampleAnalysis', 'ResearchGoalView'):
         rules += ['net.minecraft', 'net.fabricmc', 'ChiseledEnchantingTableScreenHandler', 'ClientPlayNetworking']
-    if name in ('ResearchCatalog', 'ResearchJournal', 'ResearchEngine', 'ResearchKnowledge', 'ResearchOutcomes', 'ResearchSampleAnalysis'):
+    if name in ('ResearchCatalog', 'ResearchJournal', 'ResearchEngine', 'ResearchKnowledge', 'ResearchOutcomes', 'ResearchSampleAnalysis', 'ResearchGoalView'):
         rules += ['java.nio.file', 'System.currentTimeMillis', 'System.nanoTime', 'ItemStack', 'ResearchRuntime']
     if name == 'RitualQueuePersistence':
         rules += ['net.minecraft.world.level', 'ChiseledEnchantingTableBlockEntity', 'ChiseledEnchantingTableScreenHandler', 'System.currentTimeMillis']
