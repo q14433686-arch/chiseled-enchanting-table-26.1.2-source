@@ -35,7 +35,11 @@ public final class ResearchCatalog {
         }
     }
     private final Map<String, Topic> topics;
-    public ResearchCatalog(Collection<Topic> definitions) {
+    private final ResearchOutcomes outcomes;
+    private final ResearchSampleAnalysis analyses;
+    public ResearchCatalog(Collection<Topic> definitions) { this(definitions,List.of(),List.of()); }
+    public ResearchCatalog(Collection<Topic> definitions, Collection<ResearchOutcomes.Grant> grants,
+                           Collection<ResearchSampleAnalysis.Rule> analysisRules) {
         if (definitions.size() > MAX_TOPICS) throw new IllegalArgumentException("Too many topics");
         Map<String, Topic> next = new TreeMap<>();
         for (Topic t : definitions) if (next.putIfAbsent(t.id(), t) != null) throw new IllegalArgumentException("Duplicate topic " + t.id());
@@ -49,6 +53,8 @@ public final class ResearchCatalog {
         Set<String> done = new HashSet<>(), visiting = new HashSet<>();
         for (String id : next.keySet()) visit(id, next, owners, done, visiting);
         topics = Map.copyOf(next);
+        outcomes = new ResearchOutcomes(grants,owners.keySet());
+        analyses = new ResearchSampleAnalysis(analysisRules,this);
     }
     private static void visit(String id, Map<String, Topic> topics, Map<String,String> owners, Set<String> done, Set<String> visiting) {
         if (done.contains(id)) return;
@@ -56,6 +62,8 @@ public final class ResearchCatalog {
         for (String p : topics.get(id).prerequisites()) visit(owners.get(p), topics, owners, done, visiting);
         visiting.remove(id); done.add(id);
     }
+    public ResearchOutcomes outcomes() { return outcomes; }
+    public ResearchSampleAnalysis analyses() { return analyses; }
     public Map<String, Topic> topics() { return topics; }
     public Topic topic(String id) {
         Topic t = topics.get(id);

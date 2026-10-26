@@ -47,7 +47,7 @@ public final class ResearchWorkspace {
             if (!level.hasChunkAt(pos)) continue;
             if (cfg.requireLineOfSight() && !ChiseledEnchantingTableBlock.hasClearLineOfSight(level,table,pos)) continue;
             var state = level.getBlockState(pos);
-            if (ChiseledEnchantingTableBlock.isRegularBookshelf(state)) shelves++;
+            if (state.is(Blocks.BOOKSHELF) || ChiseledEnchantingTableBlock.isRegularBookshelf(state)) shelves++;
             else if (state.is(Blocks.CHISELED_BOOKSHELF)) {
                 shelves++;
                 if (!(level.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf)) continue;

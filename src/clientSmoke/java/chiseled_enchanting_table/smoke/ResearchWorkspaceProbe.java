@@ -25,7 +25,7 @@ final class ResearchWorkspaceProbe {
         boolean oldBuild = player.getAbilities().mayBuild;
         double x = player.getX(), y = player.getY(), z = player.getZ();
         BlockPos wood = ChiseledEnchantingTableBlock.getScanOffsets(cfg).stream()
-            .filter(p -> Math.abs(p.getX())+Math.abs(p.getY())+Math.abs(p.getZ()) >= 2)
+            .filter(p -> p.getY() == 0 && Math.abs(p.getX())+Math.abs(p.getZ()) >= 2)
             .map(table::offset).filter(p -> level.hasChunkAt(p) && level.getBlockState(p).isAir())
             .findFirst().orElseThrow();
         var woodState = level.getBlockState(wood);
@@ -41,8 +41,8 @@ final class ResearchWorkspaceProbe {
             var upgraded = ResearchWorkspace.resolve(player).orElseThrow();
             check(upgraded.knowledge().get("minecraft:sharpness") == 5,"highest quality not selected");
             check(upgraded.knowledge().size() == baseline.knowledge().size(),"quality upgrade inflated breadth");
-            level.setBlockAndUpdate(wood,Blocks.BOOKSHELF.defaultBlockState());
-            check(ResearchWorkspace.resolve(player).orElseThrow().shelves() == upgraded.shelves()+1,"wood shelf not counted");
+            check(level.setBlockAndUpdate(wood,Blocks.BOOKSHELF.defaultBlockState()),"wood fixture placement rejected");
+            check(ResearchWorkspace.resolve(player).orElseThrow().shelves() == upgraded.shelves()+1,"wood shelf not counted: before="+upgraded.shelves()+" after="+ResearchWorkspace.resolve(player).orElseThrow().shelves()+" pos="+wood+" state="+level.getBlockState(wood));
             player.getAbilities().mayBuild = false;
             check(ResearchWorkspace.resolve(player).isEmpty(),"build permission bypass");
             player.getAbilities().mayBuild = oldBuild;

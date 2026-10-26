@@ -77,6 +77,15 @@ public final class ResearchRuntime implements SimpleSynchronousResourceReloadLis
         var result = ResearchEngine.conclude(catalog.topic(topic),store.get(player.getUUID()),library);
         store.put(player.getUUID(),result.journal()); return result;
     }
+    public static ResearchEngine.Transition analyzeSample(ServerPlayer player, String topic) {
+        var store = store(player);
+        var library = libraryAccess.apply(player).orElseThrow(() -> new IllegalStateException("No authorized research workspace"));
+        var result = catalog.analyses().analyze(catalog.topic(topic),store.get(player.getUUID()),library);
+        store.put(player.getUUID(),result.journal()); return result;
+    }
+    public static int manufacturingLimit(ServerPlayer player, String enchantment, String branch) {
+        return catalog.outcomes().manufacturingLimit(journal(player),enchantment,branch);
+    }
     public static void cancel(ServerPlayer player, String topic) {
         var store = store(player); store.put(player.getUUID(),ResearchEngine.cancel(store.get(player.getUUID()),topic));
     }

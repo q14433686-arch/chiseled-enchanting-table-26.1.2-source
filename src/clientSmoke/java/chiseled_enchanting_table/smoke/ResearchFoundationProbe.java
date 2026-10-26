@@ -31,6 +31,8 @@ final class ResearchFoundationProbe {
             check(denied,"conclusion bypassed workspace authorization");
             authorized[0] = true;
             check(ResearchRuntime.conclude(player,"smoke:research").status() == ResearchEngine.Status.COMPLETE,"verified conclusion failed");
+            check(ResearchRuntime.manufacturingLimit(player,"minecraft:efficiency","smoke:general") == 2,"conclusion did not grant manufacturing limit");
+            check(ResearchRuntime.manufacturingLimit(player,"minecraft:efficiency","smoke:other") == 0,"limit leaked across branches");
             ResearchRuntime.cancel(player,"smoke:research");
             check(ResearchRuntime.journal(player).conclusions().contains("smoke:understanding"),"cancel lost understanding");
             System.out.println("RESEARCH FOUNDATION PASS: real datapack listener + UUID journal + workspace gate + unknown/false evidence denial + field observation + replay denial + conclusion recheck + permanent understanding");

@@ -26,7 +26,19 @@ public final class ResearchJson {
                 t.get("question").getAsString(),strings(t.getAsJsonArray("prerequisites")),integer(t.get("breadth")),
                 integer(t.get("shelves")),depth,hypotheses));
         }
-        return new ResearchCatalog(definitions);
+        var grants = new ArrayList<ResearchOutcomes.Grant>();
+        if (root.has("outcomes")) for (JsonElement value : root.getAsJsonArray("outcomes")) {
+            JsonObject g = value.getAsJsonObject();
+            grants.add(new ResearchOutcomes.Grant(g.get("conclusion").getAsString(),g.get("enchantment").getAsString(),
+                g.get("branch").getAsString(),integer(g.get("max_level"))));
+        }
+        var analyses = new ArrayList<ResearchSampleAnalysis.Rule>();
+        if (root.has("sample_analyses")) for (JsonElement value : root.getAsJsonArray("sample_analyses")) {
+            JsonObject a = value.getAsJsonObject();
+            analyses.add(new ResearchSampleAnalysis.Rule(a.get("topic").getAsString(),a.get("hypothesis").getAsString(),
+                a.get("evidence").getAsString(),a.get("enchantment").getAsString(),integer(a.get("minimum_level"))));
+        }
+        return new ResearchCatalog(definitions,grants,analyses);
     }
     public static JsonObject journal(ResearchJournal journal) {
         JsonObject root = new JsonObject(); root.addProperty("schema",1);
