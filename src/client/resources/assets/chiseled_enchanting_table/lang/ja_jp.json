@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "一致する本がありません。条件をリセットできます",
   "gui.chiseled_enchanting_table.catalog.ascending": "昇順",
   "gui.chiseled_enchanting_table.catalog.descending": "降順",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "表示中の本をすべて選択"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "表示中の本をすべて選択",
+  "item.chiseled_enchanting_table.rainbow_badge": "〔虹色〕",
+  "item.chiseled_enchanting_table.rainbow_cloth": "虹色のテーブルクロス · jeb_ の隠し要素",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "染料を使うと通常の単色に戻せます。"
 }

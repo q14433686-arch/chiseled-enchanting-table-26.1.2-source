@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "Keine passenden Bücher; Filter zurücksetzen",
   "gui.chiseled_enchanting_table.catalog.ascending": "Aufsteigend",
   "gui.chiseled_enchanting_table.catalog.descending": "Absteigend",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "Alle sichtbaren Bücher auswählen"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Alle sichtbaren Bücher auswählen",
+  "item.chiseled_enchanting_table.rainbow_badge": "[Regenbogen]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "Regenbogen-Tischdecke · jeb_-Easter-Egg",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "Mit Farbstoff wird die Tischdecke wieder einfarbig."
 }

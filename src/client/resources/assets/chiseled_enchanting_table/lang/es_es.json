@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "Sin coincidencias; restablece los filtros",
   "gui.chiseled_enchanting_table.catalog.ascending": "Ascendente",
   "gui.chiseled_enchanting_table.catalog.descending": "Descendente",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "Seleccionar todos los libros visibles"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Seleccionar todos los libros visibles",
+  "item.chiseled_enchanting_table.rainbow_badge": "[Arcoíris]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "Mantel arcoíris · secreto jeb_",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "Aplica tinte para recuperar un mantel de color fijo."
 }

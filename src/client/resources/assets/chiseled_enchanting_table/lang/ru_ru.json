@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "Нет подходящих книг; сбросьте фильтры",
   "gui.chiseled_enchanting_table.catalog.ascending": "По возрастанию",
   "gui.chiseled_enchanting_table.catalog.descending": "По убыванию",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "Выбрать все видимые книги"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Выбрать все видимые книги",
+  "item.chiseled_enchanting_table.rainbow_badge": "[Радуга]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "Радужная скатерть · пасхалка jeb_",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "Краситель возвращает скатерти постоянный цвет."
 }

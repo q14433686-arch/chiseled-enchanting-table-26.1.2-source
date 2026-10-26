@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "没有匹配的母版；可重置篩選",
   "gui.chiseled_enchanting_table.catalog.ascending": "升序排列",
   "gui.chiseled_enchanting_table.catalog.descending": "降序排列",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "全選可見母版"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "全選可見母版",
+  "item.chiseled_enchanting_table.rainbow_badge": "〔彩虹〕",
+  "item.chiseled_enchanting_table.rainbow_cloth": "彩虹桌布 · jeb_ 彩蛋",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "使用染料可恢復普通桌布。"
 }

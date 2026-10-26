@@ -41,3 +41,8 @@ print('UI BOUNDARY PASS: actual Chinese menu screenshot saved to artifacts')
 if not (run / 'screenshots/tome-catalogue-zh_cn.png').is_file():
     raise SystemExit('Missing actual Chinese tome catalogue screenshot')
 print('CATALOGUE WORLD PASS: Chinese catalogue screenshot saved to artifacts')
+
+for filename in ('rainbow-items-a.png', 'rainbow-items-b.png'):
+    if not (run / 'screenshots' / filename).is_file():
+        raise SystemExit('Missing rainbow item animation screenshot: ' + filename)
+print('RAINBOW ITEM PASS: two live-frame inventory screenshots saved to artifacts')

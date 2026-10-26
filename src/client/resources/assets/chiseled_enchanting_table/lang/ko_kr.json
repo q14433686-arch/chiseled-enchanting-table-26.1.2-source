@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "일치하는 책이 없습니다. 필터를 초기화하세요",
   "gui.chiseled_enchanting_table.catalog.ascending": "오름차순",
   "gui.chiseled_enchanting_table.catalog.descending": "내림차순",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "표시된 책 모두 선택"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "표시된 책 모두 선택",
+  "item.chiseled_enchanting_table.rainbow_badge": "[무지개]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "무지개 식탁보 · jeb_ 이스터 에그",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "염료를 사용하면 일반 단색 식탁보로 돌아갑니다."
 }

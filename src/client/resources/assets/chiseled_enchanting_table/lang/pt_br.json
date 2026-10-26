@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "Nenhum livro encontrado; redefina os filtros",
   "gui.chiseled_enchanting_table.catalog.ascending": "Ordem crescente",
   "gui.chiseled_enchanting_table.catalog.descending": "Ordem decrescente",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "Selecionar todos os livros visíveis"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Selecionar todos os livros visíveis",
+  "item.chiseled_enchanting_table.rainbow_badge": "[Arco-íris]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "Toalha arco-íris · segredo jeb_",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "Aplique corante para voltar a uma cor fixa."
 }

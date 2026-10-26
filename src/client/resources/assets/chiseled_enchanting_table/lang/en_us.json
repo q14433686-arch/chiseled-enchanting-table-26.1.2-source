@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "No matching books; reset filters",
   "gui.chiseled_enchanting_table.catalog.ascending": "Ascending",
   "gui.chiseled_enchanting_table.catalog.descending": "Descending",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "Select all visible books"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Select all visible books",
+  "item.chiseled_enchanting_table.rainbow_badge": "[Rainbow]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "Rainbow tablecloth · jeb_ easter egg",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "Apply dye to restore a static tablecloth."
 }

@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "Nessun libro corrispondente; ripristina i filtri",
   "gui.chiseled_enchanting_table.catalog.ascending": "Ordine crescente",
   "gui.chiseled_enchanting_table.catalog.descending": "Ordine decrescente",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "Seleziona tutti i libri visibili"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Seleziona tutti i libri visibili",
+  "item.chiseled_enchanting_table.rainbow_badge": "[Arcobaleno]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "Tovaglia arcobaleno · sorpresa jeb_",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "Usa un colorante per ripristinare un colore fisso."
 }

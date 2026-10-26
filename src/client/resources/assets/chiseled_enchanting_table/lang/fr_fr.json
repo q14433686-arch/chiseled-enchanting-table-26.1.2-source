@@ -1014,5 +1014,8 @@
   "gui.chiseled_enchanting_table.catalog.empty": "Aucun livre correspondant ; réinitialiser les filtres",
   "gui.chiseled_enchanting_table.catalog.ascending": "Ordre croissant",
   "gui.chiseled_enchanting_table.catalog.descending": "Ordre décroissant",
-  "gui.chiseled_enchanting_table.catalog.select_visible": "Sélectionner tous les livres visibles"
+  "gui.chiseled_enchanting_table.catalog.select_visible": "Sélectionner tous les livres visibles",
+  "item.chiseled_enchanting_table.rainbow_badge": "[Arc-en-ciel]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "Nappe arc-en-ciel · clin d’œil jeb_",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "Appliquer une teinture pour retrouver une couleur fixe."
 }

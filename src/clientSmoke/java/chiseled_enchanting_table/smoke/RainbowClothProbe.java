@@ -59,6 +59,12 @@ final class RainbowClothProbe {
             player.setShiftKeyDown(true);
             UseBlockCallback.EVENT.invoker().interact(player,level,InteractionHand.MAIN_HAND,hit);
             check(level.getBlockState(pos).getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"reactivation failed");
+            player.getInventory().setItem(8,dropped.copy());
+            var normal=dropped.copy();
+            var normalData=normal.get(DataComponents.CUSTOM_DATA).copyTag();
+            normalData.remove(RainbowCloth.ITEM_FLAG);
+            normal.set(DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(normalData));
+            player.getInventory().setItem(7,normal);
             be.pendingFreezeTicks=0;
             System.out.println("RAINBOW CLOTH PASS: real sneaking callback + exact key/name guards + reusable tag + actual loot/placement flag + dye/freeze components + dye exit/consumption + reactivation");
         } finally { player.setItemInHand(InteractionHand.MAIN_HAND,saved);player.setShiftKeyDown(sneaking);player.getAbilities().mayBuild=mayBuild; }

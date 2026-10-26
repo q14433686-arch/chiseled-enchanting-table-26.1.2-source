@@ -34,6 +34,7 @@ public final class ClientSmoke implements ClientModInitializer {
     private volatile Throwable serverFailure;
     private BlockPos tablePos;
     private boolean finished;
+    private java.util.concurrent.CompletableFuture<Void> itemReload;
 
     @Override public void onInitializeClient() {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -165,6 +166,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (!((ChiseledEnchantingTableScreenHandler) client.player.containerMenu).get_enchantable_item().is(Items.DIAMOND_SWORD)) return;
                 var syncedMenu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
                 if (!syncedMenu.isTomePageUnlocked() || syncedMenu.tomeBooks.size()<2) return;
+                if(!chiseled_enchanting_table.render.RainbowTableItemVisuals.isRainbow(client.player.getInventory().getItem(8))) return;
+                chiseled_enchanting_table.render.RainbowItemProbe.begin(client);
                 client.player.setYRot(-90); client.player.setXRot(40);
                 require(chiseled_enchanting_table.render.ChiseledEnchantingTableBlockEntityRenderer.clothColor(0,0)
                     != chiseled_enchanting_table.render.ChiseledEnchantingTableBlockEntityRenderer.clothColor(12,.5f),"rainbow colour did not interpolate");
@@ -185,6 +188,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 var select=chiseled_enchanting_table.gui.TomeDirectoryLayout.button(7);
                 click(table,left+7+select.x()+select.width()/2.0,top+17+select.y()+select.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
                 require(list.selectedTomes().size()==menu.tomeBooks.size(),"visible-selection control did not select real shelf books");
+                net.minecraft.client.Screenshot.grab(client.gameDirectory,"rainbow-items-a.png",
+                    client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Rainbow items screenshot A: "+message.getString()));
                 var lock=chiseled_enchanting_table.gui.TomeDirectoryLayout.lockButton(2);
                 click(table,left+lock.x()+lock.width()/2.0,top+lock.y()+lock.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
                 click(table,left+lock.x()+lock.width()/2.0,top+lock.y()+lock.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
@@ -198,6 +203,9 @@ public final class ClientSmoke implements ClientModInitializer {
                 next(22);
             }
             case 22 -> {
+                if(!chiseled_enchanting_table.render.RainbowItemProbe.laterFrame(client)) return;
+                net.minecraft.client.Screenshot.grab(client.gameDirectory,"rainbow-items-b.png",
+                    client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Rainbow items screenshot B: "+message.getString()));
                 var table=(ChiseledEnchantingTableScreen)client.gui.screen();
                 net.minecraft.client.Screenshot.grab(client.gameDirectory,"tome-catalogue-zh_cn.png",
                     client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Catalogue screenshot: "+message.getString()));
@@ -235,6 +243,13 @@ public final class ClientSmoke implements ClientModInitializer {
             }
             case 9 -> {
                 if (!menuClosed) return;
+                itemReload=client.reloadResourcePacks();
+                next(30);
+            }
+            case 30 -> {
+                if(!itemReload.isDone() || client.gui.overlay()!=null) return;
+                itemReload.join();
+                chiseled_enchanting_table.render.RainbowItemProbe.afterReload(client);
                 finish(client, "CLIENT SMOKE PASS: real SDL committed CJK text + preset click + server save/ack + reopen + real menu quick-move + overlay forwarding/focus release + persistent target after close");
             }
             default -> throw new AssertionError("bad phase " + phase);

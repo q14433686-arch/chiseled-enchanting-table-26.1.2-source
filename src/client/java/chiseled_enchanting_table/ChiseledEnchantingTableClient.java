@@ -61,6 +61,7 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        chiseled_enchanting_table.render.RainbowTableItemVisuals.register();
         KEY_GRIMOIRE_RECIPE = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
             new net.minecraft.client.KeyMapping(
                 "key.chiseled_enchanting_table.grimoire_recipe",
