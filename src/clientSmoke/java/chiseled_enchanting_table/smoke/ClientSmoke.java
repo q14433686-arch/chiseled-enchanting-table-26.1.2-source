@@ -152,6 +152,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         require(menu.get_enchantable_item().is(Items.DIAMOND_SWORD), "quick-move missed target slot");
                         require(player.getInventory().getItem(0).isEmpty(), "quick-move duplicated source stack");
                         MenuBoundaryProbe.verify(menu);
+                        TomeWorldProbe.prepare(menu, player, tablePos);
                         menu.broadcastChanges();
                         menuPrepared = true;
                     } catch (Throwable error) { serverFailure = error; }
@@ -165,6 +166,33 @@ public final class ClientSmoke implements ClientModInitializer {
                 chiseled_enchanting_table.gui.UiPresentationProbe.verify(client, (ChiseledEnchantingTableScreenHandler) client.player.containerMenu);
                 net.minecraft.client.Screenshot.grab(client.gameDirectory, "table-ui-zh_cn.png",
                     client.gameRenderer.mainRenderTarget(), 1, message -> System.out.println("UI screenshot: " + message.getString()));
+                click(table, (int) field(table, "leftPos") + 172, (int) field(table, "topPos") - 12, InputConstants.MOUSE_BUTTON_LEFT);
+                next(20);
+            }
+            case 20 -> {
+                var table=(ChiseledEnchantingTableScreen)client.gui.screen();
+                var menu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
+                if (!menu.isTomePageUnlocked() || menu.tomeBooks.size()<2) return;
+                var list=(chiseled_enchanting_table.gui.EnchantementListWidget)field(table,"scrollContainer");
+                require(list.tabMode()==chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode.TOMES,"tome tab click did not switch catalogue");
+                int left=(int)field(table,"leftPos"), top=(int)field(table,"topPos");
+                click(table,left+9,top+51,InputConstants.MOUSE_BUTTON_LEFT);
+                require(list.selectedTomes().size()==menu.tomeBooks.size(),"visible-selection control did not select real shelf books");
+                click(table,left+294,top+56,InputConstants.MOUSE_BUTTON_LEFT);
+                click(table,left+294,top+56,InputConstants.MOUSE_BUTTON_LEFT);
+                next(21);
+            }
+            case 21 -> {
+                var menu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
+                if (menu.tomeBooks.stream().anyMatch(b->!b.locked())) return;
+                require(menu.tomeBooks.size()>=2 && menu.tomeBooks.stream().allMatch(b->b.locked_by_viewer()),"batch lock owner/live sync mismatch");
+                System.out.println("CATALOGUE WORLD PASS: real bookshelf multi-enchantment books + actual tome-tab/visible-selection/button clicks + confirmed paced permanent locks + server-authoritative owner sync");
+                next(22);
+            }
+            case 22 -> {
+                var table=(ChiseledEnchantingTableScreen)client.gui.screen();
+                net.minecraft.client.Screenshot.grab(client.gameDirectory,"tome-catalogue-zh_cn.png",
+                    client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Catalogue screenshot: "+message.getString()));
                 click(table, (int) field(table, "leftPos") + 300, (int) field(table, "topPos") - 8, InputConstants.MOUSE_BUTTON_LEFT);
                 require(table.hasActiveConfigOverlay(), "table config button did not open overlay");
                 editor = (ChiseledEnchantingConfigScreen) field(table, "configOverlay");

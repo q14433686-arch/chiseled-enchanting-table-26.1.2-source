@@ -37,3 +37,7 @@ print(result.read_text())
 if not (run / 'screenshots/table-ui-zh_cn.png').is_file():
     raise SystemExit('Missing actual Chinese UI screenshot')
 print('UI BOUNDARY PASS: actual Chinese menu screenshot saved to artifacts')
+
+if not (run / 'screenshots/tome-catalogue-zh_cn.png').is_file():
+    raise SystemExit('Missing actual Chinese tome catalogue screenshot')
+print('CATALOGUE WORLD PASS: Chinese catalogue screenshot saved to artifacts')
