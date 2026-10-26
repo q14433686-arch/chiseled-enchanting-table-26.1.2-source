@@ -20,19 +20,27 @@ import net.minecraft.world.level.storage.LevelResource;
 /** Server-thread gateway. No client completion packet, debug grant, material payment or timer. */
 public final class ResearchRuntime implements SimpleSynchronousResourceReloadListener {
     private static volatile ResearchCatalog catalog = new ResearchCatalog(List.of());
+    private static volatile ResearchCatalog pendingCatalog;
     private static final Map<MinecraftServer,ResearchStore> STORES = new IdentityHashMap<>();
     private static final Map<String,Predicate<ServerPlayer>> VERIFIERS = new HashMap<>();
     private static Function<ServerPlayer,Optional<ResearchCatalog.Library>> libraryAccess = player -> Optional.empty();
     private ResearchRuntime() {}
     public static void init() {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new ResearchRuntime());
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server,resources,success) -> {
+            if (success && pendingCatalog != null) catalog = pendingCatalog;
+            pendingCatalog = null;
+        });
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            if (pendingCatalog != null) { catalog = pendingCatalog; pendingCatalog = null; }
             try { STORES.put(server,ResearchStore.load(path(server))); }
             catch (Exception e) { ChiseledEnchantingTable.LOGGER.error("Research disabled: cannot safely read journal; original save preserved",e); }
         });
         ServerLifecycleEvents.AFTER_SAVE.register((server,flush,force) -> save(server));
         ServerLifecycleEvents.SERVER_STOPPING.register(ResearchRuntime::save);
-        ServerLifecycleEvents.SERVER_STOPPED.register(STORES::remove);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            STORES.remove(server); catalog = new ResearchCatalog(List.of()); pendingCatalog = null;
+        });
     }
     public static ResearchCatalog catalog() { return catalog; }
     /** Installed by the table adapter, which must verify menu, range, dimension and permissions. */
@@ -94,6 +102,6 @@ public final class ResearchRuntime implements SimpleSynchronousResourceReloadLis
         else try (Reader reader = resource.get().openAsReader()) {
             next = ResearchJson.catalog(JsonParser.parseReader(reader).getAsJsonObject());
         } catch (Exception e) { throw new IllegalArgumentException("Invalid research catalog; previous snapshot retained",e); }
-        catalog = next; // publish only after complete graph validation
+        pendingCatalog = next; // commit only on successful overall reload or initial server startup
     }
 }

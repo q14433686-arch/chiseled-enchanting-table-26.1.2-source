@@ -6,6 +6,12 @@ class SplitArchitectureTests(unittest.TestCase):
     def test_actual_repository_satisfies_all_owner_and_growth_rules(self):
         self.assertEqual([], check())
 
+    def test_research_domain_does_not_acquire_world_time_or_gameplay_effects(self):
+        for owner in ('ResearchCatalog', 'ResearchJournal', 'ResearchEngine'):
+            for forbidden in ('net.minecraft.world.level.Level', 'ResearchRuntime', 'java.nio.file.Path', 'System.nanoTime()'):
+                self.assertTrue(split_violations(owner, forbidden))
+        self.assertTrue(split_violations('ResearchStore', 'net.minecraft.server.MinecraftServer'))
+
     def test_receipt_compatibility_path_does_not_grant_handler_capability(self):
         self.assertEqual([], split_violations('MenuPaymentService',
             'import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler.PaymentReceipt;'))
