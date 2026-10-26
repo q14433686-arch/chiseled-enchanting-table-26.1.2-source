@@ -1,4 +1,4 @@
-commit: aef39d9296dbd2a3e499157cd9e51551601a33c3
+commit: ede09277719e768d66720b7d0d7151503966d1de
 branch: arena/4313f0c3-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -138,7 +138,7 @@ Fabric Loom: 1.16.3
 39 errors
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792992415078.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792992498929.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -564,7 +564,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 15s
+BUILD FAILED in 13s
 1 actionable task: 1 executed
 gradle exit code: 1
 
