@@ -1,7 +1,7 @@
 package chiseled_enchanting_table.mechanics.transformation;
 
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.ItemTransformation;
+import chiseled_enchanting_table.data.ItemTransformation;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;

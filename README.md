@@ -19,9 +19,18 @@ Targeted, deterministic enchanting for Fabric **26.3** — choose exact enchantm
 **Current version:** `1.1.0` *(unofficial-port SemVer; see `CURRENT_BASELINE.md` for details)*  
 **Target:** Minecraft `26.3`, Fabric Loader `>=0.19.5`, Fabric API `0.162.0+26.3`, Java `>=25`
 
+**Current compatibility:** `26_3_revision_12` — update both client and server to this build; older `1.1.0` jars lack the new cosmetic block state. [Compatibility history](docs/PROTOCOL_HISTORY.md).
+
+<details>
+<summary>Optional cosmetic easter egg (spoiler)</summary>
+
+Sneak-right-click the table with a name tag named exactly `jeb_` to enable a smooth vanilla-sheep rainbow tablecloth. The tag is reusable. Ordinary dyeing restores static colour mode; dropped tables retain the rainbow flag when placed again. Rainbow inventory and held-item icons animate smoothly too; a localized purple [Rainbow] tooltip badge identifies them without overwriting custom names. Ordinary dyed tables stay static. [Implementation and validation limits](docs/reports/RAINBOW_CLOTH_2026_10_26.md).
+
+</details>
+
 📖 **Full Gameplay Wiki & Upstream Comparison (中文机制详解与上游差异完整对照): [`docs/WIKI.md`](docs/WIKI.md)** · **Release History: [`CHANGELOG.md`](CHANGELOG.md)**
 
-> ⚠️ **Upgrading existing worlds to `1.1.0` (network protocol v8):** Back up your world and update **both client and server** together.
+> ⚠️ **Upgrading existing worlds to `1.1.0` (network protocol `26_3_revision_12`):** Back up your world and update **both client and server** together.
 > - **Template Book durability, `Unbreaking` ward & wild pre-wear:** Non-`Infinity` Enchanted Books in Chiseled Bookshelves hold **`4`** durability per tier (enchanting gear spends **`1`**, copying onto a book spends **`2`**; `Unbreaking` grants up to **`30%`** wear waiver; wild loot/bookshelf books spawn pre-worn with most at **`1–2`** charges left; `Infinity` books never wear out) and passively recharge in the shelf over **6 / 3 / 1 game days** (`0 / 38 / 42` total nearby shelves).
 > - **Overloaded `Infinity` Tome slip & cross-line (`<= 18%`):** Copying from a heavily loaded `Infinity` Template Book (`L >= 3`) risks a single-roll miscopy (`70%` `-1` tier / `25%` useless low-rarity enchant / `5%` curse); cross-line pollution never deletes your existing enchantments, refunds **`50%`** XP & materials, and leaves an Ink Stain washed off by Cleanse.
 > - **External disenchant refund:** Enchantments not inscribed at this table refund XP at `25%` by default to prevent mob-loot XP farming.
@@ -74,6 +83,9 @@ Ships with 11 built-in translations: `de_de`, `en_us`, `es_es`, `fr_fr`, `it_it`
 
 ## Building from Source & CI
 
+CI badges above track the **26.3 branch**, not arbitrary working-tree edits. A successful run
+only verifies its recorded source SHA and tested scenarios; it does not certify GUI/IME or multiplayer interaction.
+
 Building locally requires **JDK 25** and network access to `maven.fabricmc.net`:
 
 ```bash
@@ -92,7 +104,7 @@ bash docs/ci/install.sh --check                     # workflow reference mirror 
 
 | Workflow | Purpose | Trigger |
 |---|---|---|
-| [`compile-check.yml`](.github/workflows/compile-check.yml) | Compiles main + client + test sources, runs JUnit verification suites, and commits `build-reports/` logs back to `arena/**` branches | Push / PR |
+| [`compile-check.yml`](.github/workflows/compile-check.yml) | Compiles main + client + test sources, runs JUnit verification suites, and publishes full logs as artifacts plus bounded API-readable Checks diagnostics | Push / PR |
 | [`build.yml`](.github/workflows/build.yml) | Static checks → full `./gradlew build` + artifact upload → `no-viewers` compile gate → headless Minecraft `26.3` server smoke test | Push / PR |
 | [`consistency.yml`](.github/workflows/consistency.yml) | Cross-checks version strings across `gradle.properties`, `README.md`, `fabric.mod.json`, and `publish.yml` | Version/doc edits |
 | [`publish.yml`](.github/workflows/publish.yml) | Manual release pipeline (`MINECRAFT_VERSION: 26.3`, `VERSION: 1.1.0`) | `workflow_dispatch` |

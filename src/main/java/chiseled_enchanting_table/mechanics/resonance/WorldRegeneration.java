@@ -31,6 +31,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -175,8 +178,13 @@ public final class WorldRegeneration {
                 }
                 ItemStack updated = context.identity().copy();
                 MasterTomeWear.setWearUsed(updated, recovery.remainingWear());
+                TomeLockData.Lock expiredLock = TomeLockData.clearExpired(updated);
+                TomeParticleEffects.onRegenSettled(world, slot.position(), slot.slot(), context.identity(), updated);
                 context.shelf().setItem(slot.slot(), updated);
                 context.shelf().setChanged();
+                if (expiredLock != null) {
+                    notifyLockExpired(world, expiredLock);
+                }
                 if (recovery.remainingWear() > 0) {
                     window.scheduler.acknowledgeReplacement(slot, recovery.expectedIdentity(), updated, recovery.remainingWear());
                     window.signatures.put(slot, BookSignature.of(updated));
@@ -230,7 +238,7 @@ public final class WorldRegeneration {
             return false;
         }
         ItemStack current = shelf.getItem(slot.slot());
-        if (!current.is(Items.ENCHANTED_BOOK) || MasterTomeWear.hasInfinityImmunity(current)) {
+        if (!current.is(Items.ENCHANTED_BOOK)) {
             return false;
         }
         int currentWear = MasterTomeWear.getWearUsed(current);
@@ -257,7 +265,9 @@ public final class WorldRegeneration {
         BlockPos shelfPos,
         BookshelfProgression.Config sgCfg
     ) {
-        int rx = sgCfg == null ? 3 : Math.max(1, sgCfg.horizontalScanRadius());
+        int rx = sgCfg == null
+            ? BookshelfProgression.DEFAULT_SCAN_HORIZONTAL_RADIUS
+            : Math.max(1, Math.min(BookshelfProgression.MAX_SCAN_HORIZONTAL_RADIUS, sgCfg.horizontalScanRadius()));
         int minCx = (shelfPos.getX() - rx) >> 4;
         int maxCx = (shelfPos.getX() + rx) >> 4;
         int minCz = (shelfPos.getZ() - rx) >> 4;
@@ -270,6 +280,38 @@ public final class WorldRegeneration {
             }
         }
         return false;
+    }
+
+    /** Elapsed ticks toward the next +1 charge for a shelf slot, or {@code -1} if untracked. */
+    public static long regenProgressTicks(Level level, BlockPos shelfPos, int slotIndex) {
+        if (!(level instanceof ServerLevel world) || shelfPos == null) return -1L;
+        Window window = WORLDS.get(world);
+        if (window == null) return -1L;
+        return window.scheduler.progressTicks(new Slot(shelfPos.immutable(), slotIndex));
+    }
+
+    /** Current per-charge interval for a shelf slot, or {@code -1} if untracked. */
+    public static int regenIntervalTicks(Level level, BlockPos shelfPos, int slotIndex) {
+        if (!(level instanceof ServerLevel world) || shelfPos == null) return -1;
+        Window window = WORLDS.get(world);
+        if (window == null) return -1;
+        return window.scheduler.intervalTicks(new Slot(shelfPos.immutable(), slotIndex));
+    }
+
+    private static void notifyLockExpired(ServerLevel world, TomeLockData.Lock lock) {
+        if (lock == null || world.getServer() == null) return;
+        ServerPlayer owner = world.getServer().getPlayerList().getPlayer(lock.owner());
+        if (owner == null) return;
+        owner.sendSystemMessage(
+            Component.translatable("message.chiseled_enchanting_table.tome_lock.expired"), true);
+        world.playSound(
+            null,
+            owner.blockPosition(),
+            SoundEvents.EXPERIENCE_ORB_PICKUP,
+            SoundSource.PLAYERS,
+            0.8F,
+            1.25F
+        );
     }
 
     public static void acknowledgeInPlaceWear(
@@ -316,7 +358,7 @@ public final class WorldRegeneration {
             if (!(world.getBlockEntity(pos) instanceof ChiseledBookShelfBlockEntity shelf)) continue;
             for (int i = 0; i < 6; i++) {
                 ItemStack book = shelf.getItem(i);
-                if (!book.is(Items.ENCHANTED_BOOK) || MasterTomeWear.hasInfinityImmunity(book)) continue;
+                if (!book.is(Items.ENCHANTED_BOOK)) continue;
                 int wear = MasterTomeWear.getWearUsed(book);
                 if (wear <= 0) continue;
                 BookSignature sig = BookSignature.of(book);

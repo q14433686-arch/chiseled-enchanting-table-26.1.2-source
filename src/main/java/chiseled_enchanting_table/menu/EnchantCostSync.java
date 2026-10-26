@@ -1,10 +1,15 @@
 package chiseled_enchanting_table.menu;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -24,7 +29,10 @@ import net.minecraft.server.level.ServerPlayer;
  */
 public final class EnchantCostSync {
     private EnchantCostSync() {}
-    private static final java.util.Map<ServerPlayer, java.util.List<ChiseledEnchantingMenuPayloads.TransformationDisplay>> LAST_DISPLAYS = new java.util.WeakHashMap<>();
+
+    /** Keyed by immutable player {@link UUID} (never live {@link ServerPlayer} instances across respawns). */
+    private static final Map<UUID, List<ChiseledEnchantingMenuPayloads.TransformationDisplay>> LAST_DISPLAYS =
+        new ConcurrentHashMap<>();
 
     /**
      * "Peer has some build of this mod" signal for the JOIN handshake: the current cost
@@ -32,20 +40,31 @@ public final class EnchantCostSync {
      * {@link EnchantingProtocol}).
      */
     private static boolean peerHasAnyCostChannel(ServerPlayer player) {
-        return ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.LEGACY_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.PREVIOUS_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_5_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_6_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_7_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_8_COST_TYPE)
-            || ServerPlayNetworking.canSend(player, EnchantingProtocol.REVISION_9_COST_TYPE);
+        if (ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)) {
+            return true;
+        }
+        for (var probe : EnchantingProtocol.LEGACY_COST_PROBES) {
+            if (ServerPlayNetworking.canSend(player, probe)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void init() {
         PayloadTypeRegistry.clientboundPlay().register(EnchantingProtocol.Capability.TYPE, EnchantingProtocol.Capability.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(EnchantingProtocol.Capability.TYPE, EnchantingProtocol.Capability.CODEC);
-        ServerPlayNetworking.registerGlobalReceiver(EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {});
+        ServerPlayNetworking.registerGlobalReceiver(EnchantingProtocol.Capability.TYPE, (payload, ctx) -> {
+            var player = ctx.player();
+            ctx.server().execute(() -> {
+                int serverStack = ChiseledEnchantingTable.bootEnchantedBookStackSize();
+                if (EnchantingProtocol.stackSizeIncompatible(serverStack, payload.enchantedBookStackSize())) {
+                    player.connection.disconnect(
+                        EnchantingProtocol.stackSizeMismatchComponent(serverStack, payload.enchantedBookStackSize())
+                    );
+                }
+            });
+        });
         PayloadTypeRegistry.clientboundPlay().register(EnchantCostTablePayload.TYPE, EnchantCostTablePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(
             ChiseledEnchantingMenuPayloads.LiveShelfStatePayload.TYPE,
@@ -55,6 +74,10 @@ public final class EnchantCostSync {
             ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.TYPE,
             ChiseledEnchantingMenuPayloads.SyncRitualStatePayload.CODEC
         );
+        PayloadTypeRegistry.clientboundPlay().register(
+            ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE,
+            ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.CODEC
+        );
 
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
             ServerPlayer player = listener.player;
@@ -62,8 +85,11 @@ public final class EnchantCostSync {
                 if (EnchantingProtocol.incompatible(
                     peerHasAnyCostChannel(player),
                     ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE))) {
-                    player.connection.disconnect(net.minecraft.network.chat.Component.literal(EnchantingProtocol.MISMATCH_MESSAGE));
+                    player.connection.disconnect(EnchantingProtocol.protocolMismatchComponent());
                     return;
+                }
+                if (ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) {
+                    ServerPlayNetworking.send(player, new EnchantingProtocol.Capability());
                 }
                 chiseled_enchanting_table.config.ModConfigNetworking.sendToPlayer(player);
                 sendTo(player);
@@ -74,21 +100,43 @@ public final class EnchantCostSync {
             if (server.getTickCount() % 20 != 0) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (!ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) continue;
+                UUID playerId = player.getUUID();
                 var displays = ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays(player);
-                if (!displays.equals(LAST_DISPLAYS.get(player))) sendTo(player);
+                if (!displays.equals(LAST_DISPLAYS.get(playerId))) {
+                    LAST_DISPLAYS.put(playerId, displays);
+                    int activeContainerId = player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
+                        ? menu.containerId
+                        : PayloadLimits.NO_CONTAINER;
+                    if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                        menu.applyTransformationSnapshot(displays);
+                    }
+                    if (ServerPlayNetworking.canSend(player, ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE)) {
+                        ServerPlayNetworking.send(
+                            player,
+                            new ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload(activeContainerId, displays)
+                        );
+                    }
+                }
             }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_DISPLAYS.clear());
-        ServerPlayConnectionEvents.DISCONNECT.register((listener, server) -> LAST_DISPLAYS.remove(listener.player));
+        ServerPlayConnectionEvents.DISCONNECT.register(
+            (listener, server) -> LAST_DISPLAYS.remove(listener.player.getUUID())
+        );
 
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
             if (!success) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 // An open menu caches transformation IDs/inputs/thresholds from its opening
                 // packet. Reloading only the cost table leaves that snapshot stale. Close just
-                // our menu (vanilla returns its input stacks), then the next open gets fresh data.
+                // our menu (vanilla returns its input stacks), notify the player cleanly, and let
+                // the next open read freshly reloaded datapack data.
                 if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler) {
                     player.closeContainer();
+                    player.sendSystemMessage(
+                        Component.translatable("message.chiseled_enchanting_table.reload_closed"),
+                        true
+                    );
                 }
                 chiseled_enchanting_table.config.ModConfigNetworking.sendToPlayer(player);
                 sendTo(player);
@@ -105,13 +153,16 @@ public final class EnchantCostSync {
         try {
             var payload = EnchantCostTablePayload.build(player);
             ServerPlayNetworking.send(player, payload);
-            LAST_DISPLAYS.put(player, payload.transformations());
+            LAST_DISPLAYS.put(player.getUUID(), payload.transformations());
             if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
                 menu.applyTransformationSnapshot(payload.transformations());
             }
         } catch (RuntimeException e) {
-            // Never let a display-only sync break a join or a reload.
+            // This is authoritative cost/rule data, not merely a cosmetic display. Continuing
+            // with a previous/local catalog can make the quoted price differ from payment.
+            LAST_DISPLAYS.remove(player.getUUID());
             ChiseledEnchantingTable.LOGGER.warn("Failed to send the enchanting cost table to {}", player.getName().getString(), e);
+            player.connection.disconnect(Component.translatable("message.chiseled_enchanting_table.cost_sync_failed"));
         }
     }
 }

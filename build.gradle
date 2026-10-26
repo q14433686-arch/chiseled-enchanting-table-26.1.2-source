@@ -194,3 +194,29 @@ tasks.register('genBundledDefaults', Exec) {
     workingDir = rootProject.projectDir
     commandLine 'python3', 'scripts/gen_bundled_defaults.py'
 }
+
+// Opt-in, separate development-only mod: never packaged in the released main/client jar.
+if (providers.gradleProperty('client_smoke').orNull == 'true') {
+    sourceSets {
+        clientSmoke {
+            compileClasspath += sourceSets.main.output + sourceSets.client.output + sourceSets.client.compileClasspath
+            runtimeClasspath += sourceSets.main.output + sourceSets.client.runtimeClasspath
+        }
+    }
+    loom.mods {
+        'cet-client-smoke' { sourceSet sourceSets.clientSmoke }
+    }
+    loom.runs {
+        clientSmoke {
+            client()
+            source sourceSets.clientSmoke
+            runDir 'run-client-smoke'
+            programArg '--quickPlaySingleplayer'
+            programArg 'audit-world'
+            programArg '--width'
+            programArg '960'
+            programArg '--height'
+            programArg '640'
+        }
+    }
+}

@@ -1,5 +1,7 @@
 package chiseled_enchanting_table.gui;
 
+import chiseled_enchanting_table.gui.InscribeOptionModel.DisplayOptionSlot;
+
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.row.CategoryRowRenderer;
@@ -11,6 +13,7 @@ import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.menu.AvailableOption;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ApplyEnchantmentPayload;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
+import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
@@ -45,10 +48,18 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Legacy spelling preserved as a binary/source compatibility bridge; prefer
+ * {@link EnchantmentListWidget} in new code.
+ *
+ * @deprecated Prefer {@link EnchantmentListWidget}.
+ */
+@Deprecated(forRemoval = false)
 public class EnchantementListWidget extends AbstractSelectionList<EnchantementListWidget.EnchantUiEntry> {
     public enum UiTabMode {
         INSCRIBE,
-        CLEANSE
+        CLEANSE,
+        TOMES
     }
 
     public Set<EnchantmentWithLevel> unlocked_enchantements = null;
@@ -57,6 +68,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     public Player player;
     public ChiseledEnchantingTableScreenHandler handler;
     private UiTabMode tabMode = UiTabMode.INSCRIBE;
+    final chiseled_enchanting_table.catalog.TomeCatalog catalogue = new chiseled_enchanting_table.catalog.TomeCatalog();
     private final Set<Identifier> expandedInscribeCategories = new HashSet<>();
     private final Set<Identifier> expandedCleanseCategories = new HashSet<>();
     private ItemStack lastTargetSnapshot = ItemStack.EMPTY;
@@ -80,6 +92,27 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
     public UiTabMode tabMode() {
         return this.tabMode;
+    }
+
+    private static chiseled_enchanting_table.catalog.TomeCatalog.Key tomeKey(ChiseledEnchantingMenuPayloads.TomeBookEntry book) {
+        return new chiseled_enchanting_table.catalog.TomeCatalog.Key(book.shelf_pos().asLong(), book.slot());
+    }
+    public boolean isTomeSelected(ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
+        return entry != null && catalogue.isSelected(tomeKey(entry));
+    }
+    public void selectTome(@Nullable ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
+        if (entry == null) catalogue.clearSelection(); else catalogue.select(tomeKey(entry), false);
+    }
+    public java.util.List<ChiseledEnchantingMenuPayloads.TomeBookEntry> selectedTomes() {
+        return this.handler.tomeBooks.stream().filter(this::isTomeSelected).toList();
+    }
+    @Nullable
+    public ChiseledEnchantingMenuPayloads.TomeBookEntry selectedTomeEntry() {
+        return selectedTomes().stream().findFirst().orElse(null);
+    }
+    void refreshDirectory() {
+        updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
+        setScrollAmount(0);
     }
 
     public void setTabMode(UiTabMode nextMode) {
@@ -108,64 +141,37 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         this.setScrollAmount(Math.min(savedScroll, this.maxScrollAmount()));
     }
 
-    public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Player player) {
-        if (id == null || player == null) {
-            return java.util.Optional.empty();
-        }
-        return player.level().registryAccess()
-            .lookup(Registries.ENCHANTMENT)
-            .flatMap(reg -> reg.get(ResourceKey.create(Registries.ENCHANTMENT, id)));
+    @Override
+    protected int addEntry(EnchantUiEntry entry) {
+        entry.cachedRowIndex = this.children().size();
+        return super.addEntry(entry);
     }
 
+    public static boolean isWearImmuneEnchantmentId(Identifier id, @Nullable Player player) { return EnchantmentDisplayNames.isWearImmuneEnchantmentId(id, player); }
+
+    public static java.util.Optional<Holder.Reference<Enchantment>> findEnchantment(Identifier id, Player player) { return EnchantmentDisplayNames.findEnchantment(id, player); }
+
+    public static Holder<Enchantment> identifierToEnchantment(Identifier id, Player player) { return EnchantmentDisplayNames.identifierToEnchantment(id, player); }
+
+    public static Identifier enchantmentToIdentifier(Holder<Enchantment> enchant) { return EnchantmentDisplayNames.enchantmentToIdentifier(enchant); }
+
+    /** @deprecated Prefer {@link #identifierToEnchantment(Identifier, Player)}. */
+    @Deprecated(forRemoval = false)
     public static Holder<Enchantment> IdentifierToEnchantment(Identifier id, Player player) {
-        return findEnchantment(id, player)
-            .orElseThrow(() -> new IllegalArgumentException("Unknown enchantment: " + id));
+        return identifierToEnchantment(id, player);
     }
 
+    /** @deprecated Prefer {@link #enchantmentToIdentifier(Holder)}. */
+    @Deprecated(forRemoval = false)
     public static Identifier EnchantmentToIdentifier(Holder<Enchantment> enchant, Player player) {
-        return enchant.unwrapKey().get().identifier();
+        return enchantmentToIdentifier(enchant);
     }
 
-    public static String baseEnchantmentName(Holder<Enchantment> ench) {
-        return ench.value().description().getString();
-    }
+    public static String baseEnchantmentName(Holder<Enchantment> ench) { return EnchantmentDisplayNames.baseEnchantmentName(ench); }
 
-    private static String romanNumeral(int level) {
-        if (level >= 1 && level <= 10) {
-            return Component.translatable("enchantment.level." + level).getString();
-        }
-        return String.valueOf(level);
-    }
+    private static String romanNumeral(int level) { return EnchantmentDisplayNames.romanNumeral(level); }
 
-    public String displayName(AvailableOption option) {
-        if (option.isDisenchantAll()) {
-            return I18n.get("gui.chiseled_enchanting_table.cleanse.all_row");
-        }
-        if (option.isTransformation()) {
-            String out = this.handler.syncedTransformationOutputName(option.id());
-            if (option.id().equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)) {
-                return I18n.get("gui.chiseled_enchanting_table.blank_overwrite", out);
-            }
-            return out;
-        }
-        Holder<Enchantment> ench = IdentifierToEnchantment(option.id(), this.player);
-        String name = Enchantment.getFullname(ench, option.level()).getString();
-        if (option.isDowngrade()) {
-            int curLvl = this.handler.currentTargetEnchantLevel(option.id());
-            String curName = Enchantment.getFullname(ench, Math.max(option.level() + 1, curLvl)).getString();
-            return I18n.get("gui.chiseled_enchanting_table.cleanse.downgrade_row", curName, name);
-        }
-        if (option.isStripSingle()) {
-            return I18n.get("gui.chiseled_enchanting_table.cleanse.strip_row", name);
-        }
-        if (option.isPurgeCurse()) {
-            return I18n.get("gui.chiseled_enchanting_table.cleanse.curse_row", name);
-        }
-        if (option.isTreasureEpiphany()) return I18n.get("gui.chiseled_enchanting_table.treasure_epiphany", name);
-        if (option.isBookCombineUpgrade()) return I18n.get("gui.chiseled_enchanting_table.book_upgrade.combine", name);
-        if (option.isBookResearchUpgrade()) return I18n.get("gui.chiseled_enchanting_table.book_upgrade.research", name);
-        return name;
-    }
+    public String displayName(AvailableOption option) { return EnchantmentDisplayNames.displayName(this.handler, this.player, option); }
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
@@ -205,6 +211,30 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    /**
+     * Jumps proportionally along the scrollbar track when the player clicks outside the current
+     * scroller thumb, while preserving smooth thumb-anchored dragging when clicking inside the thumb.
+     */
+    public void jumpScrollbarToMouseY(double mouseY) {
+        int maxScroll = this.maxScrollAmount();
+        if (maxScroll <= 0) {
+            return;
+        }
+        int totalContentH = this.height + maxScroll;
+        int scrollerH = Math.clamp(
+            (int) ((float) (this.height * this.height) / (float) Math.max(1, totalContentH)),
+            32,
+            Math.max(32, this.height - 8)
+        );
+        int travel = Math.max(1, this.height - scrollerH);
+        double thumbTop = this.getY() + (this.scrollAmount() / (double) maxScroll) * travel;
+        double thumbBottom = thumbTop + scrollerH;
+        if (mouseY < thumbTop || mouseY > thumbBottom) {
+            double centeredRatio = Math.clamp((mouseY - this.getY() - scrollerH * 0.5) / (double) travel, 0.0, 1.0);
+            this.setScrollAmount(centeredRatio * maxScroll);
+        }
     }
 
     @Override
@@ -310,12 +340,21 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
+    public ChiseledEnchantingMenuPayloads.TomeBookEntry hoveredTomeEntry(double mouseX, double mouseY) {
+        if (this.tabMode != UiTabMode.TOMES) return null;
+        for (EnchantUiEntry entry : this.children()) {
+            if (entry.is_tome_entry && entry.tome_book != null && entry.isMouseOver(mouseX, mouseY)) return entry.tome_book;
+        }
+        return null;
+    }
+
+    @Nullable
     public EnchantUiEntry hoveredActionRowEntry(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;
         }
         for (EnchantUiEntry entry : this.children()) {
-            if (entry.is_category_header) continue;
+            if (entry.is_category_header || entry.is_tome_entry) continue;
             int dx = entry.effectiveDx();
             int dy = entry.getY();
             int dw = entry.effectiveDw();
@@ -379,12 +418,37 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         this.enchantable_item = enchantable_item;
         this.cost_item_stack = cost_item_stack;
 
+        if (this.tabMode == UiTabMode.TOMES) {
+            populateTomeEntries(previousScroll);
+            return;
+        }
         if (this.tabMode == UiTabMode.CLEANSE) {
             populateCleanseEntries(navigationIndex, targetChanged, previousScroll);
             return;
         }
         populateInscribeEntries(navigationIndex, targetChanged, previousScroll);
     }
+
+    private void populateTomeEntries(double previousScroll) {
+        if (!this.handler.isTomePageUnlocked()) {
+            selectTome(null);
+            return;
+        }
+        catalogue.update(this.handler.tomeBooks.stream().map(book -> new chiseled_enchanting_table.catalog.TomeCatalog.Row(
+            tomeKey(book), book.enchantments().stream().map(e -> e.enchantment_id().toString()).toList(),
+            book.enchantments().stream().map(e -> EnchantmentDisplayNames.findEnchantment(e.enchantment_id(), this.player)
+                .map(h -> h.value().description().getString()).orElse(e.enchantment_id().toString()))
+                .sorted().collect(java.util.stream.Collectors.joining(" / ")),
+            book.remaining_charges(), book.effective_max_uses(), book.locked(), book.locked_by_viewer())).toList());
+        var books = new java.util.HashMap<chiseled_enchanting_table.catalog.TomeCatalog.Key, ChiseledEnchantingMenuPayloads.TomeBookEntry>();
+        for (var book : this.handler.tomeBooks) books.put(tomeKey(book), book);
+        for (var row : catalogue.visible()) this.addEntry(EnchantUiEntry.tomeEntry(minecraft, this.handler, books.get(row.key()), this));
+        this.setScrollAmount(Math.min(previousScroll, this.maxScrollAmount()));
+    }
+
+    static String tomeTitle(ChiseledEnchantingMenuPayloads.TomeBookEntry book, Player player) { return TomeDisplayNames.tomeTitle(book, player); }
+
+    static String formatTomeEta(int ticks) { return TomeDisplayNames.formatTomeEta(ticks); }
 
     private void addActionEntry(AvailableOption opt, boolean nested, boolean lastChild) {
         addActionEntry(opt, nested, lastChild, false, 0);
@@ -419,41 +483,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return;
         }
 
-        // 1. Standalone top-pinned Cleanse rows: Full Disenchant + any Curse Purge items
-        int nonCurseCount = DisenchantmentApplication.countNonCurseEnchantments(this.enchantable_item);
-        if (nonCurseCount >= 1) {
-            addActionEntry(AvailableOption.disenchantAll(DisenchantmentApplication.DISENCHANT_ALL_ID), false, false);
-        }
-
-        List<Holder<Enchantment>> sortedKeys = new ArrayList<>(current.keySet());
-        sortedKeys.sort((a, b) -> baseEnchantmentName(a).compareTo(baseEnchantmentName(b)));
-
-        int totalTraits = current.size();
-        Map<Identifier, List<AvailableOption>> groupedCleanse = new LinkedHashMap<>();
-        Map<Identifier, Holder<Enchantment>> holdersById = new LinkedHashMap<>();
-
-        for (Holder<Enchantment> holder : sortedKeys) {
-            int curLvl = current.getLevel(holder);
-            if (curLvl <= 0) continue;
-            Identifier id = EnchantmentToIdentifier(holder, this.player);
-            if (DisenchantmentApplication.isCurse(holder)) {
-                if (this.handler.disenchantAllowCursePurge()) {
-                    addActionEntry(AvailableOption.purgeCurse(id, curLvl), false, false);
-                }
-            } else {
-                List<AvailableOption> subRows = new ArrayList<>();
-                for (int nextLvl = curLvl - 1; nextLvl >= 1; nextLvl--) {
-                    subRows.add(AvailableOption.downgradeEnchantment(id, nextLvl));
-                }
-                if (totalTraits >= 2) {
-                    subRows.add(AvailableOption.stripSingleEnchantment(id, curLvl));
-                }
-                if (!subRows.isEmpty()) {
-                    groupedCleanse.put(id, subRows);
-                    holdersById.put(id, holder);
-                }
-            }
-        }
+        var model = CleanseOptionModel.build(this.enchantable_item, this.handler.disenchantAllowCursePurge());
+        for (var option : model.pinned()) addActionEntry(option, false, false);
+        var groupedCleanse = model.groups();
+        var holdersById = model.holders();
 
         // Auto-expand when there is only 1 collapsible trait on a newly placed item
         if (targetChanged && groupedCleanse.size() == 1) {
@@ -500,187 +533,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
     }
 
-    private boolean isDirectWoodenShelfEligible(Holder<Enchantment> holder, Identifier id) {
-        if (DisenchantmentApplication.isCurse(holder) || DisenchantmentApplication.isTreasure(holder)) {
-            return false;
-        }
-        return !SyncedEnchantmentCosts.explicitTreasureIds().contains(id);
-    }
 
-    private record DisplayOptionSlot(AvailableOption option, boolean shelfLocked, int requiredBookshelves) {}
+
+
 
     private void populateInscribeEntries(int navigationIndex, boolean targetChanged, double previousScroll) {
-        var enchantFromBook = cost_item_stack.is(Items.ENCHANTED_BOOK);
         ItemEnchantments targetEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(enchantable_item);
-
-        List<DisplayOptionSlot> optionSlots = new ArrayList<>();
-        Set<EnchantmentWithLevel> unlockedDirectSet = new HashSet<>();
-        Map<Identifier, Integer> maxAddedTierById = new LinkedHashMap<>();
-
-        if (enchantFromBook) {
-            ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(cost_item_stack);
-            for (var entry : enchantments.entrySet()) {
-                int existingLvl = targetEnchantments.getLevel(entry.getKey());
-                if (entry.getIntValue() > existingLvl) {
-                    Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
-                    optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(id, entry.getIntValue()), false, 0));
-                }
-            }
-        } else if (!cost_item_stack.is(Items.BOOK)) {
-            if (unlocked_enchantements != null) {
-                for (EnchantmentWithLevel e : unlocked_enchantements) {
-                    var optH = findEnchantment(e.enchantment_id(), this.player);
-                    if (optH.isEmpty()) continue;
-                    Holder<Enchantment> h = optH.get();
-                    int existingLvl = targetEnchantments.getLevel(h);
-                    // Audit M-04: strictly-greater only — the server rejects same-level and
-                    // downgrade applies, so listing them as candidates was a dead click.
-                    if (e.enchantment_level() > existingLvl) {
-                        optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(e), false, 0));
-                        unlockedDirectSet.add(e);
-                        maxAddedTierById.merge(e.enchantment_id(), e.enchantment_level(), Math::max);
-                    }
-                }
-            }
-            // Track 2 (Existing-category upgrade on gear): once an item already carries level >= 1,
-            // regular bookshelves unlock upgrades up to maxUnlockedDirectTier (1..MAX at 38 shelves).
-            if (!enchantable_item.is(Items.ENCHANTED_BOOK) && !enchantable_item.is(Items.BOOK)) {
-                for (var existingEntry : targetEnchantments.entrySet()) {
-                    int existingLvl = existingEntry.getIntValue();
-                    int maxLvl = Math.max(1, existingEntry.getKey().value().getMaxLevel());
-                    if (existingLvl < 1 || existingLvl >= maxLvl) continue;
-                    Identifier id = EnchantmentToIdentifier(existingEntry.getKey(), this.player);
-                    for (int lvl = existingLvl + 1; lvl <= maxLvl; lvl++) {
-                        EnchantmentWithLevel candidate = new EnchantmentWithLevel(id, lvl);
-                        if (!unlockedDirectSet.contains(candidate)
-                            && this.handler.canDirectUpgradeExistingEnchantment(existingEntry.getKey(), id, existingLvl, lvl)) {
-                            optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(candidate), false, 0));
-                            unlockedDirectSet.add(candidate);
-                            maxAddedTierById.merge(id, lvl, Math::max);
-                        }
-                    }
-                }
-            }
-            for (EnchantmentWithLevel epiphany : this.handler.computeActiveTreasureEpiphanies(enchantable_item)) {
-                var optH = findEnchantment(epiphany.enchantment_id(), this.player);
-                if (optH.isEmpty()) continue;
-                Holder<Enchantment> h = optH.get();
-                if (epiphany.enchantment_level() > targetEnchantments.getLevel(h)) {
-                    optionSlots.add(new DisplayOptionSlot(
-                        AvailableOption.treasureEpiphany(epiphany.enchantment_id(), epiphany.enchantment_level()),
-                        false,
-                        0
-                    ));
-                }
-            }
-        }
-        if (enchantable_item.is(Items.ENCHANTED_BOOK)) {
-            ItemEnchantments costEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(cost_item_stack);
-            boolean combineEnabled = SyncedEnchantmentCosts.combineEnabled();
-            boolean researchEnabled = SyncedEnchantmentCosts.researchEnabled();
-            for (var entry : targetEnchantments.entrySet()) {
-                int level = entry.getIntValue();
-                int maxLevel = entry.getKey().value().getMaxLevel();
-                if (level >= maxLevel) continue;
-                Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
-                int targetLevel = level + 1;
-                if (combineEnabled && cost_item_stack.is(Items.ENCHANTED_BOOK) && costEnchantments.getLevel(entry.getKey()) == level) {
-                    optionSlots.add(new DisplayOptionSlot(AvailableOption.bookCombineUpgrade(id, targetLevel), false, 0));
-                    maxAddedTierById.merge(id, targetLevel, Math::max);
-                } else if (researchEnabled
-                    && !cost_item_stack.is(Items.ENCHANTED_BOOK)
-                    && !cost_item_stack.is(Items.BOOK)
-                    && !unlockedDirectSet.contains(new EnchantmentWithLevel(id, targetLevel))) {
-                    if (this.handler.canDirectResearchUpgradeTo(id, targetLevel)) {
-                        optionSlots.add(new DisplayOptionSlot(AvailableOption.bookResearchUpgrade(id, targetLevel), false, 0));
-                        maxAddedTierById.merge(id, targetLevel, Math::max);
-                    } else if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
-                        int reqShelves = this.handler.requiredBookshelvesForDirectTier(id, targetLevel, maxLevel);
-                        optionSlots.add(new DisplayOptionSlot(
-                            AvailableOption.bookResearchUpgrade(id, targetLevel),
-                            true,
-                            reqShelves
-                        ));
-                        maxAddedTierById.merge(id, targetLevel, Math::max);
-                    }
-                }
-            }
-        }
-
-        // Surface greyed-out shelf-locked direct tiers (with exact bookshelf goal) rather than hiding goals!
-        if (!enchantFromBook && !cost_item_stack.is(Items.BOOK) && !ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
-            Set<Identifier> candidateDirectIds = new LinkedHashSet<>(maxAddedTierById.keySet());
-            for (var entry : targetEnchantments.entrySet()) {
-                Identifier id = EnchantmentToIdentifier(entry.getKey(), this.player);
-                if (isDirectWoodenShelfEligible(entry.getKey(), id)) {
-                    candidateDirectIds.add(id);
-                }
-            }
-            for (Identifier enchId : candidateDirectIds) {
-                Holder<Enchantment> holder = IdentifierToEnchantment(enchId, this.player);
-                if (!isDirectWoodenShelfEligible(holder, enchId)) continue;
-                int maxLevel = Math.max(1, holder.value().getMaxLevel());
-                int existingLvl = targetEnchantments.getLevel(holder);
-                int unlockedTop = maxAddedTierById.getOrDefault(enchId, 0);
-                int startLocked = Math.max(unlockedTop + 1, Math.max(2, existingLvl + 1));
-                for (int lvl = startLocked; lvl <= maxLevel; lvl++) {
-                    int reqShelves = this.handler.requiredBookshelvesForDirectTier(enchId, lvl, maxLevel);
-                    optionSlots.add(new DisplayOptionSlot(AvailableOption.enchantment(enchId, lvl), true, reqShelves));
-                }
-            }
-        }
-
-        for (EnchantmentWithLevel t : this.handler.syncedTransformationsFor(enchantable_item)) {
-            optionSlots.add(new DisplayOptionSlot(AvailableOption.transformation(t.enchantment_id(), t.enchantment_level()), false, 0));
-        }
-
-        List<DisplayOptionSlot> filtered = optionSlots.stream().filter(slot -> {
-            AvailableOption option = slot.option();
-            if (option.isTransformation()) {
-                return this.handler.syncedTransformationMatches(option.id(), enchantable_item);
-            }
-            if (ChiseledEnchantingTableData.isResidualBook(enchantable_item)) {
-                return false;
-            }
-            var optEnchant = findEnchantment(option.id(), this.player);
-            if (optEnchant.isEmpty()) {
-                return false;
-            }
-            Holder<Enchantment> enchant = optEnchant.get();
-            return enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK) || enchant.value().canEnchant(enchantable_item);
-        }).toList();
-
-        // 1. Standalone top-pinned rows: ALL Treasure Epiphanies + Item Transformations (never collapsed!)
-        List<DisplayOptionSlot> pinnedTop = new ArrayList<>();
-        Map<Identifier, List<DisplayOptionSlot>> groupedEnchants = new LinkedHashMap<>();
-
-        filtered.stream()
-            .filter(s -> s.option().isTreasureEpiphany() || s.option().isTransformation())
-            .sorted((s1, s2) -> {
-                AvailableOption o1 = s1.option();
-                AvailableOption o2 = s2.option();
-                int p1 = o1.isTreasureEpiphany() ? 0 : 1;
-                int p2 = o2.isTreasureEpiphany() ? 0 : 1;
-                if (p1 != p2) return Integer.compare(p1, p2);
-                int c = displayName(o1).compareTo(displayName(o2));
-                return c != 0 ? c : Integer.compare(o1.level(), o2.level());
-            })
-            .forEach(pinnedTop::add);
-
-        filtered.stream()
-            .filter(s -> !s.option().isTreasureEpiphany() && !s.option().isTransformation())
-            .sorted((s1, s2) -> {
-                AvailableOption o1 = s1.option();
-                AvailableOption o2 = s2.option();
-                String n1 = baseEnchantmentName(IdentifierToEnchantment(o1.id(), this.player));
-                String n2 = baseEnchantmentName(IdentifierToEnchantment(o2.id(), this.player));
-                int c = n1.compareTo(n2);
-                if (c != 0) return c;
-                int lvlCmp = Integer.compare(o1.level(), o2.level());
-                if (lvlCmp != 0) return lvlCmp;
-                return Integer.compare(o1.type().ordinal(), o2.type().ordinal());
-            })
-            .forEach(slot -> groupedEnchants.computeIfAbsent(slot.option().id(), ignored -> new ArrayList<>()).add(slot));
+        var model = InscribeOptionModel.build(this.optionCatalog, this.player, enchantable_item, cost_item_stack,
+            unlocked_enchantements, this::displayName);
+        var pinnedTop = model.pinned();
+        var groupedEnchants = model.groups();
 
         for (DisplayOptionSlot pinned : pinnedTop) {
             addActionEntry(pinned.option(), false, false, pinned.shelfLocked(), pinned.requiredBookshelves());
@@ -695,7 +557,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         for (var groupEntry : groupedEnchants.entrySet()) {
             Identifier enchId = groupEntry.getKey();
             List<DisplayOptionSlot> children = groupEntry.getValue();
-            Holder<Enchantment> holder = IdentifierToEnchantment(enchId, this.player);
+            Holder<Enchantment> holder = identifierToEnchantment(enchId, this.player);
             String categoryName = baseEnchantmentName(holder);
             int curLvl = targetEnchantments.getLevel(holder);
             int minTier = children.getFirst().option().level();
@@ -714,13 +576,8 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     : ("\u2B06 " + romanNumeral(curLvl) + "\u2192" + romanNumeral(maxUnlockedTier));
                 badgeColor = RowRenderSupport.LIGHT_GREEN;
             } else if (curLvl > 0 && maxTier > curLvl && maxUnlockedTier <= curLvl) {
-                int nextReq = children.stream()
-                    .filter(s -> s.shelfLocked() && s.option().level() > curLvl)
-                    .mapToInt(DisplayOptionSlot::requiredBookshelves)
-                    .findFirst()
-                    .orElse(0);
-                badgeText = "\uD83D\uDD12 " + romanNumeral(curLvl + 1) + " (" + nextReq + ")";
-                badgeColor = RowRenderSupport.EPIPHANY_GOLD;
+                badgeText = "🔒 " + romanNumeral(curLvl + 1);
+                badgeColor = RowRenderSupport.LIGHT_RED;
             } else if (curLvl > 0 && maxUnlockedTier == curLvl) {
                 badgeText = "\u2714 " + romanNumeral(curLvl);
                 badgeColor = RowRenderSupport.CYAN;
@@ -792,6 +649,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public OptionalInt sameEnchantLevelDiff = OptionalInt.empty();
         public ChiseledEnchantingTableScreenHandler handler;
         public EnchantementListWidget parent;
+        public boolean is_tome_entry;
+        public int cachedRowIndex = -1;
+        @Nullable
+        public ChiseledEnchantingMenuPayloads.TomeBookEntry tome_book;
 
         public static EnchantUiEntry categoryEntry(
             Minecraft client,
@@ -818,6 +679,28 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             entry.category_badge = badgeText;
             entry.category_badge_color = badgeColor;
             entry.category_refund_points = refundPreviewPoints;
+            entry.option_type = OptionType.ENCHANTMENT;
+            entry.cost_options = List.of();
+            entry.xp_requirement = XpCostConversion.XpRequirement.FREE;
+            entry.overridenEnchant = new ArrayList<>();
+            return entry;
+        }
+
+        public static EnchantUiEntry tomeEntry(
+            Minecraft client,
+            ChiseledEnchantingTableScreenHandler handler,
+            ChiseledEnchantingMenuPayloads.TomeBookEntry book,
+            EnchantementListWidget parent
+        ) {
+            EnchantUiEntry entry = new EnchantUiEntry();
+            entry.client = client;
+            entry.handler = handler;
+            entry.parent = parent;
+            entry.enchantable_item = handler.getEffectiveEnchantableItem();
+            entry.cost_item_stack = handler.get_cost_item();
+            entry.player = handler.player;
+            entry.is_tome_entry = true;
+            entry.tome_book = book;
             entry.option_type = OptionType.ENCHANTMENT;
             entry.cost_options = List.of();
             entry.xp_requirement = XpCostConversion.XpRequirement.FREE;
@@ -873,7 +756,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             this.xp_level_cost = xp_requirement.requiredLevel();
             this.enchantment = (this.is_transformation || option.isDisenchantAll())
                 ? null
-                : IdentifierToEnchantment(option.id(), this.player);
+                : identifierToEnchantment(option.id(), this.player);
             this.discovery_locked = this.is_transformation && !handler.isTransformationUnlocked(this.enchantment_id);
 
             this.overridenEnchant = new ArrayList<>();
@@ -888,7 +771,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 boolean targetIsBook = enchantable_item.is(Items.BOOK) || enchantable_item.is(Items.ENCHANTED_BOOK);
                 if (!targetIsBook) {
                     for (var entry : currentEnchants.entrySet()) {
-                        Identifier existingId = EnchantmentToIdentifier(entry.getKey(), this.player);
+                        Identifier existingId = enchantmentToIdentifier(entry.getKey());
                         if (!existingId.equals(this.enchantment_id) && !Enchantment.areCompatible(entry.getKey(), this.enchantment)) {
                             this.overridenEnchant.add(new EnchantmentWithLevel(existingId, entry.getIntValue()));
                         }
@@ -957,6 +840,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean canEnchant() {
+            if (is_tome_entry) return false;
             if (is_category_header) return true;
             if (shelf_locked || discovery_locked || handler.isRitualBlocked()) return false;
             if (handler.isRitualActive()) {
@@ -1029,7 +913,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         @Nullable
         public ItemStack hoveredCostItem(double mouseX, double mouseY) {
-            if (is_category_header) return null;
+            if (is_category_header || is_tome_entry) return null;
             int dx = effectiveDx();
             int dy = this.getY();
             int dw = effectiveDw();
@@ -1063,7 +947,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         @Nullable
         public List<List<ItemStack>> hoveredCostOptions(double mouseX, double mouseY) {
-            if (is_category_header) return null;
+            if (is_category_header || is_tome_entry) return null;
             int dx = effectiveDx();
             int dy = this.getY();
             int dw = effectiveDw();
@@ -1085,7 +969,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean isOverXpBadge(double mouseX, double mouseY) {
-            if (is_category_header) return false;
+            if (is_category_header || is_tome_entry) return false;
             int dx = effectiveDx();
             int dy = this.getY();
             int dw = effectiveDw();
@@ -1097,6 +981,15 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
 
         public boolean serverSendApplyEnchant() {
+            return serverSendApplyEnchant(false);
+        }
+
+        public boolean serverSendApplyEnchant(boolean shiftBypass) {
+            if (is_tome_entry) {
+                parent.catalogue.select(tomeKey(this.tome_book), shiftBypass);
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                return true;
+            }
             if (is_category_header) {
                 Minecraft.getInstance().getSoundManager().play(
                     SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, parent.isCategoryExpanded(enchantment_id) ? 0.92F : 1.08F)
@@ -1105,8 +998,15 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 return true;
             }
             if (!this.canEnchant()) return false;
+            if (option_type == OptionType.DISENCHANT_ALL
+                && Minecraft.getInstance().gui.screen() instanceof ChiseledEnchantingTableScreen tableScreen) {
+                tableScreen.requestDisenchantAll(shiftBypass);
+                return true;
+            }
             if (ClientPlayNetworking.canSend(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID)) {
                 ClientPlayNetworking.send(new ApplyEnchantmentPayload(handler.containerId, option_type, enchantment_id, enchant_level));
+            } else {
+                ChiseledEnchantingTableScreen.notifyChannelUnavailableClient();
             }
             return true;
         }
@@ -1119,12 +1019,20 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
                 return false;
             }
-            return serverSendApplyEnchant();
+            return serverSendApplyEnchant(event.hasShiftDown());
         }
 
         @Override
         public boolean isMouseOver(double mouseX, double mouseY) {
-            int index = parent.children().indexOf(this);
+            int index = this.cachedRowIndex;
+            var rows = parent.children();
+            if (index < 0 || index >= rows.size() || rows.get(index) != this) {
+                index = rows.indexOf(this);
+                this.cachedRowIndex = index;
+            }
+            if (index < 0) {
+                return false;
+            }
             int top = parent.getRowTop(index);
             int bottom = parent.getRowBottom(index);
             int left = parent.getRowLeft();
@@ -1144,6 +1052,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 );
             }
             if (option_type == OptionType.DISENCHANT_ALL) {
+                if (Minecraft.getInstance().gui.screen() instanceof ChiseledEnchantingTableScreen tableScreen
+                    && tableScreen.isDisenchantAllConfirmPending()) {
+                    return new EnchantmentRowRenderer.OverrideAnnotation(
+                        I18n.get("gui.chiseled_enchanting_table.cleanse.confirm_row_sub"),
+                        RowRenderSupport.EPIPHANY_GOLD
+                    );
+                }
                 String sub = enchantable_item.is(Items.ENCHANTED_BOOK)
                     ? I18n.get("gui.chiseled_enchanting_table.cleanse.all_sub_book")
                     : I18n.get("gui.chiseled_enchanting_table.cleanse.all_sub_item");
@@ -1171,7 +1086,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (enchantAlreadyExist()) {
                 return new EnchantmentRowRenderer.OverrideAnnotation("\u2714 " + enchantmentName, RowRenderSupport.CYAN);
             }
-            if (sameEnchantLevelDiff.isPresent() && existingSameLevel.isPresent() && sameEnchantLevelDiff.getAsInt() > 0) {
+            // 1.0.3 Classic charges the FULL target-level cost (no incremental
+            // credit — see handler#getEffectiveItemCostOptions / resolveXpRequirement
+            // classic branches), so the "pay difference only" annotation must not
+            // be shown there. It was previously displayed unconditionally while the
+            // mechanism behind it was already disabled in classic.
+            if (this.handler.usesIncrementalCredit()
+                && sameEnchantLevelDiff.isPresent() && existingSameLevel.isPresent() && sameEnchantLevelDiff.getAsInt() > 0) {
                 String existingName = Enchantment.getFullname(this.enchantment, existingSameLevel.getAsInt()).getString();
                 return new EnchantmentRowRenderer.OverrideAnnotation(
                     I18n.get("gui.chiseled_enchanting_table.upgrade_from", existingName),
@@ -1181,7 +1102,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             var firstOverridenEnchant = this.overridenEnchant.stream().findFirst();
             if (firstOverridenEnchant.isPresent() && !enchantable_item.is(Items.ENCHANTED_BOOK)) {
                 var enchant = firstOverridenEnchant.get();
-                var name = Enchantment.getFullname(IdentifierToEnchantment(enchant.enchantment_id(), this.player), enchant.enchantment_level()).getString();
+                var name = Enchantment.getFullname(identifierToEnchantment(enchant.enchantment_id(), this.player), enchant.enchantment_level()).getString();
                 String conflictText = this.conflict_refund_points > 0
                     ? ("\u2716 " + name + " (+" + this.conflict_refund_points + " XP)")
                     : ("\u2716 " + name);
@@ -1196,6 +1117,68 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             int dy = this.getY();
             int dh = this.getHeight();
             boolean isFocused = parent.getFocused() == this;
+
+            if (is_tome_entry && this.tome_book != null) {
+                int dx = effectiveDx();
+                int dw = effectiveDw();
+                boolean selected = parent.isTomeSelected(this.tome_book);
+                RowRenderSupport.drawPlaque(ctx, dx, dy, dw, dh,
+                    RowRenderSupport.RowVisualStyle.STANDARD, true, hovered, isFocused || selected);
+                RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
+                try {
+                    String title = tomeTitle(this.tome_book, this.player);
+                    RowRenderSupport.renderBoundedText(ctx, client, title, dx + 7, dy + 5, 0.62f, dw - 14,
+                        this.tome_book.locked() ? 0xFFFFC46B : 0xFFF7F2EA);
+                    boolean hasWearImmuneTag = this.tome_book.enchantments().stream()
+                        .anyMatch(e -> isWearImmuneEnchantmentId(e.enchantment_id(), this.player));
+                    boolean purelyImmune = this.tome_book.wear_immune()
+                        && this.tome_book.wear_used() <= 0
+                        && this.tome_book.remaining_charges() >= this.tome_book.effective_max_uses();
+                    String charge = (hasWearImmuneTag && purelyImmune)
+                        ? I18n.get("item.chiseled_enchanting_table.master_tome_infinite")
+                        : (this.tome_book.wear_immune() && purelyImmune)
+                            ? I18n.get("gui.chiseled_enchanting_table.tomes.immune")
+                            : I18n.get("gui.chiseled_enchanting_table.tomes.charges",
+                                this.tome_book.remaining_charges(), this.tome_book.effective_max_uses());
+                    int chargeColor = this.tome_book.wear_immune() ? 0xFFFF55FF : 0xFF9ED8FF;
+                    if (this.tome_book.generation() > 0) {
+                        charge += "  " + I18n.get("gui.chiseled_enchanting_table.tomes.generation", this.tome_book.generation());
+                    }
+                    RowRenderSupport.renderBoundedText(ctx, client, charge, dx + 7, dy + 11, 0.52f, dw - 14, chargeColor);
+                    String status;
+                    int statusColor;
+                    if (this.tome_book.locked()) {
+                        String modeShort = I18n.get(
+                            "gui.chiseled_enchanting_table.tomes.lock_mode_short." + this.tome_book.lock_mode());
+                        StringBuilder lockedLine = new StringBuilder(
+                            I18n.get("gui.chiseled_enchanting_table.tomes.locked_short", modeShort));
+                        int lockEta = this.tome_book.lock_mode() == 0 ? this.tome_book.eta_next_ticks()
+                            : this.tome_book.lock_mode() == 1 ? this.tome_book.eta_full_ticks() : -1;
+                        if (lockEta >= 0) {
+                            lockedLine.append(" · ").append(formatTomeEta(lockEta));
+                        }
+                        if (!this.tome_book.lock_owner_name().isBlank()) {
+                            lockedLine.append(" · ").append(this.tome_book.lock_owner_name());
+                        }
+                        status = lockedLine.toString();
+                        statusColor = 0xFFFF9E7A;
+                    } else if (this.tome_book.charging()) {
+                        status = I18n.get("gui.chiseled_enchanting_table.tomes.eta",
+                            formatTomeEta(this.tome_book.eta_next_ticks()), formatTomeEta(this.tome_book.eta_full_ticks()));
+                        statusColor = 0xFFA8FFC4;
+                    } else if (this.tome_book.wear_used() <= 0) {
+                        status = I18n.get("gui.chiseled_enchanting_table.tomes.full");
+                        statusColor = 0xFFA8FFC4;
+                    } else {
+                        status = I18n.get("gui.chiseled_enchanting_table.tomes.not_charging");
+                        statusColor = 0xFFC9BFD8;
+                    }
+                    RowRenderSupport.renderBoundedText(ctx, client, status, dx + 7, dy + 16, 0.5f, dw - 14, statusColor);
+                } finally {
+                    RowRenderSupport.endRowContentClip(ctx);
+                }
+                return;
+            }
 
             if (is_category_header) {
                 CategoryRowRenderer.render(
@@ -1327,4 +1310,44 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             }
         }
     }
+
+    private final InscribeOptionModel.Catalog optionCatalog = new InscribeOptionModel.Catalog() {
+        public boolean allowsDirectTierUpgrade() { return handler.allowsDirectTierUpgrade(); }
+        public boolean usesClassicShelfBoost() { return handler.usesClassicShelfBoost(); }
+        public boolean canDirectUpgradeExistingEnchantment(Holder<Enchantment> holder, Identifier id, int existing, int target) { return handler.canDirectUpgradeExistingEnchantment(holder, id, existing, target); }
+        public boolean canDirectResearchUpgradeTo(Identifier id, int target) { return handler.canDirectResearchUpgradeTo(id, target); }
+        public List<EnchantmentWithLevel> computeActiveTreasureEpiphanies(ItemStack target) { return handler.computeActiveTreasureEpiphanies(target); }
+        public int requiredBookshelvesForDirectTier(Identifier id, int target, int max) { return handler.requiredBookshelvesForDirectTier(id, target, max); }
+        public Set<EnchantmentWithLevel> syncedTransformationsFor(ItemStack target) { return handler.syncedTransformationsFor(target); }
+        public boolean syncedTransformationMatches(Identifier id, ItemStack target) { return handler.syncedTransformationMatches(id, target); }
+    };
+
+    private static TableRowView rowView(EnchantUiEntry row) {
+        return row == null ? null : new TableRowView(row.discovery_locked, row.enchantment_id, row.shelf_locked,
+            row.enchantment, row.enchant_level, row.required_bookshelves, row.is_category_header, row.cleanse_theme,
+            row.category_title, row.category_badge, row.option_type, row.is_transformation, row.enchantable_item,
+            row.existingSameLevel, row.conflict_refund_points, row.xp_requirement, row.xpConditionMet());
+    }
+
+    private final TableListRead tableRead = new TableListRead() {
+        public boolean hasEntries() { return !children().isEmpty(); }
+        public List<ChiseledEnchantingMenuPayloads.TomeBookEntry> selectedTomes() { return EnchantementListWidget.this.selectedTomes(); }
+        public ChiseledEnchantingMenuPayloads.TomeBookEntry selectedTomeEntry() { return EnchantementListWidget.this.selectedTomeEntry(); }
+        public ChiseledEnchantingMenuPayloads.TomeBookEntry hoveredTomeEntry(double x, double y) { return EnchantementListWidget.this.hoveredTomeEntry(x, y); }
+        public Identifier hoveredEnchantmentId(double x, double y) { return EnchantementListWidget.this.hoveredEnchantmentId(x, y); }
+        public OptionType hoveredOptionType(double x, double y) { return EnchantementListWidget.this.hoveredOptionType(x, y); }
+        public TableRowView hoveredXpBadgeEntry(double x, double y) { return rowView(EnchantementListWidget.this.hoveredXpBadgeEntry(x, y)); }
+        public TableRowView hoveredSpecialRowEntry(double x, double y) { return rowView(EnchantementListWidget.this.hoveredSpecialRowEntry(x, y)); }
+        public TableRowView hoveredActionRowEntry(double x, double y) { return rowView(EnchantementListWidget.this.hoveredActionRowEntry(x, y)); }
+        public ItemStack hoveredCostItem(double x, double y) {
+            var item = EnchantementListWidget.this.hoveredCostItem(x, y);
+            return item == null ? null : item.copy();
+        }
+        public List<List<ItemStack>> hoveredCostOptions(double x, double y) {
+            var options = EnchantementListWidget.this.hoveredCostOptions(x, y);
+            return options == null ? null : options.stream().map(bundle -> bundle.stream().map(ItemStack::copy).toList()).toList();
+        }
+        public String displayName(AvailableOption option) { return EnchantementListWidget.this.displayName(option); }
+    };
+    TableListRead tableRead() { return this.tableRead; }
 }

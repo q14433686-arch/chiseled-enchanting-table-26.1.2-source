@@ -5,21 +5,17 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.Identifier;
 
 /**
- * Workaround for an Iris / MC 26.3 hand-render crash: Iris resolves the enchantment
- * glint sampler lazily from inside an active render pass, and the first frame that
- * renders a glinting held item (this mod ships one such item, the Arcane Catalyst,
- * but any enchanted item does it) makes the texture manager try to upload the glint
- * texture mid-pass, which the new render backend rejects with
- * "Close the existing render pass before performing additional commands" and the
- * game exits on world entry. Preloading both vanilla glint textures at the end of
- * the client tick - on the render thread but outside any render pass - turns Iris's
- * later lookup into a cache hit. Active only when Iris is installed; after the
- * first upload each call is a plain map lookup, and F3+T reloads are covered
- * because the check runs every tick while in a world.
+ * Guarded compatibility preload for an Iris / MC 26.3 hand-render crash where Iris resolves
+ * enchantment glint samplers lazily inside an active render pass.
+ *
+ * <p>Audit DEAD-01: gated on both {@code iris} being loaded AND Minecraft 26.3+ (so 26.1.2
+ * clients incur zero per-tick work), and caches the active {@link TextureManager} identity so
+ * preloading runs once per resource manager lifecycle instead of every tick.</p>
  */
 @Environment(EnvType.CLIENT)
 public final class IrisGlintPreload {
@@ -28,7 +24,8 @@ public final class IrisGlintPreload {
     private static final Identifier ARMOR_GLINT =
         Identifier.withDefaultNamespace("textures/misc/enchanted_glint_armor.png");
 
-    private static boolean warned;
+    private static volatile boolean warned;
+    private static volatile TextureManager lastPreloadedManager;
 
     private IrisGlintPreload() {
     }
@@ -37,15 +34,35 @@ public final class IrisGlintPreload {
         if (!FabricLoader.getInstance().isModLoaded("iris")) {
             return;
         }
+        String mcVersionId = resolveMinecraftVersionId();
+        if (!mcVersionId.startsWith("26.3")) {
+            return;
+        }
+        // F3+T can reload textures on the SAME TextureManager instance.
+        net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+            .registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener() {
+                @Override public Identifier getFabricId() {
+                    return ChiseledEnchantingTable.identifier("iris_glint_preload_reset");
+                }
+                @Override public void onResourceManagerReload(net.minecraft.server.packs.resources.ResourceManager manager) {
+                    lastPreloadedManager = null;
+                }
+            });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (client.level == null) {
+            TextureManager textures = client.getTextureManager();
+            if (textures == null || textures == lastPreloadedManager) {
                 return;
             }
             try {
-                TextureManager textures = client.getTextureManager();
-                textures.getTexture(ITEM_GLINT);
-                textures.getTexture(ARMOR_GLINT);
+                if (client.getResourceManager().getResource(ITEM_GLINT).isPresent()) {
+                    textures.getTexture(ITEM_GLINT);
+                }
+                if (client.getResourceManager().getResource(ARMOR_GLINT).isPresent()) {
+                    textures.getTexture(ARMOR_GLINT);
+                }
+                lastPreloadedManager = textures;
             } catch (RuntimeException error) {
+                lastPreloadedManager = textures;
                 if (!warned) {
                     warned = true;
                     ChiseledEnchantingTable.LOGGER.warn(
@@ -53,5 +70,13 @@ public final class IrisGlintPreload {
                 }
             }
         });
+    }
+
+    private static String resolveMinecraftVersionId() {
+        try {
+            return SharedConstants.getCurrentVersion().id();
+        } catch (RuntimeException ignored) {
+            return "";
+        }
     }
 }

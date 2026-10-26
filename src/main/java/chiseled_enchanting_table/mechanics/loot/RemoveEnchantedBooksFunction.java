@@ -3,8 +3,8 @@ package chiseled_enchanting_table.mechanics.loot;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.Optional;
-import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.Holder;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -20,11 +20,9 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
  * alongside ours (user decision "keep_both"). This function exists purely as a codec-registered
  * utility so a data pack or integration mod can opt-in per loot table by writing:
  * <pre>{
- *   "type": "chiseled_enchanting_table:remove_enchanted_books"
+ *   "function": "chiseled_enchanting_table:remove_enchanted_books"
  * }</pre>
- * inside a vanilla-loot-table override, without needing our Java code to strip anything. Note the
- * 26.3 loot schema: functions are dispatched on {@code "type"} and live in the singular
- * {@code "modifier"} field of a pool/entry, not in a {@code "functions"} array.</p>
+ * inside a vanilla-loot-table override, without needing our Java code to strip anything.</p>
  *
  * <p>Registered in {@link chiseled_enchanting_table.registry.LootRegistry} alongside the injector.</p>
  */
@@ -36,9 +34,8 @@ public class RemoveEnchantedBooksFunction extends LootItemConditionalFunction {
         this(Optional.empty());
     }
 
-    // 26.3: LootItemConditionalFunction takes a single optional condition holder instead of a list.
-    public RemoveEnchantedBooksFunction(Optional<Holder<LootItemCondition>> condition) {
-        super(condition);
+    public RemoveEnchantedBooksFunction(Optional<Holder<LootItemCondition>> conditions) {
+        super(conditions);
     }
 
     @Override

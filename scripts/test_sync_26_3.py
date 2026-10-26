@@ -38,6 +38,25 @@ class SyncContracts(unittest.TestCase):
                       'DepthBasedEfficiencyFunction::new']:
             self.assertIn(token, injector)
 
+    def test_config_search_starts_and_releases_sdl_text_input(self):
+        screen = (CLIENT / 'gui/config/ChiseledEnchantingConfigScreen.java').read_text()
+        self.assertIn('this.minecraft.onTextInputFocusChange(this, focused)', screen)
+        self.assertIn('this.minecraft.textInputManager().setTextInputArea(', screen)
+        self.assertIn('this.searchInput.setFocused(focused)', screen)
+        self.assertIn('public void removed() {\n        setSearchFocused(false);', screen)
+        self.assertIn('public void onClose() {\n        setSearchFocused(false);', screen)
+        table = (CLIENT / 'gui/ChiseledEnchantingTableScreen.java').read_text()
+        self.assertIn('this.configOverlay.removed()', table)
+
+    def test_new_client_api_paths_are_26_3_native(self):
+        for java in CLIENT.rglob('*.java'):
+            source = java.read_text()
+            self.assertNotIn('.gui.setOverlayMessage(', source, str(java))
+            self.assertNotIn('InputConstants.Type.KEYSYM', source, str(java))
+        client = (CLIENT / 'ChiseledEnchantingTableClient.java').read_text()
+        self.assertIn('InputConstants.Type.KEYBOARD', client)
+        self.assertIn('.gui.hud.setOverlayMessage(', client)
+
     def test_removed_network_helpers_not_reintroduced(self):
         for java in MAIN.rglob('*.java'):
             source = java.read_text()
@@ -144,7 +163,7 @@ class SyncContracts(unittest.TestCase):
     def test_incremental_features_and_live_payload(self):
         for path in ['mechanics/enchanting/DisenchantmentApplication.java',
                      'mechanics/resonance/BookshelfProgression.java',
-                     'config/ModBootstrapConfig.java', 'item/ArcaneGrimoireItem.java']:
+                     'config/ConfigLayoutSpec.java', 'item/ArcaneGrimoireItem.java']:
             self.assertTrue((MAIN / path).exists())
         payload = (MAIN / 'menu/ChiseledEnchantingMenuPayloads.java').read_text()
         for token in ['LiveShelfStatePayload', 'high_tier_chiseled_books', 'ReopenTablePayload',
@@ -198,7 +217,10 @@ class SyncContracts(unittest.TestCase):
 
     def test_config_authority_and_persistence_guards(self):
         cfg = (MAIN / 'config/ModRuntimeConfig.java').read_text()
-        self.assertIn('StandardCopyOption.ATOMIC_MOVE', cfg)
+        self.assertIn('ConfigFileStore.writeAtomically(', cfg)
+        store = (MAIN / 'config/ConfigFileStore.java').read_text()
+        self.assertIn('StandardCopyOption.ATOMIC_MOVE', store)
+        self.assertNotIn('Files.writeString(path,', store)
         self.assertIn('saveToDisk(normalized);', cfg)
         net = (MAIN / 'config/ModConfigNetworking.java').read_text()
         self.assertIn('server.isSingleplayerOwner(player.nameAndId())', net)
@@ -212,8 +234,10 @@ class SyncContracts(unittest.TestCase):
 
     def test_new_source_features_keep_port_specific_safeguards(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('26_3_revision_7', protocol)
-        self.assertIn('enchant_cost_table_26_3_revision_6', protocol)
+        self.assertIn('CURRENT_REVISION_NUMBER = 12', protocol)
+        self.assertIn('26_3_revision_', protocol)
+        self.assertIn('IntStream.range(1, CURRENT_REVISION_NUMBER)', protocol)
+        self.assertIn('IntStream.range(9, CURRENT_REVISION_NUMBER)', protocol)
         wear = (MAIN / 'mechanics/resonance/MasterTomeWear.java').read_text()
         self.assertIn('hasClearLineOfSight(level, tablePos, scanPos)', wear)
         processor = (MAIN / 'mechanics/structure/BookshelfReplacerProcessor.java').read_text()

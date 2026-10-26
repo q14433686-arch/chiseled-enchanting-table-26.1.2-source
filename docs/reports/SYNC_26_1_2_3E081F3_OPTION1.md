@@ -75,7 +75,7 @@
 - `compat_check.py` Tier 1 通过；本地缺少 MC jar，Tier 2 ID/标签存在性检查仍跳过，保留 2 个 WARN，未把它们记作通过。
 - 专服真实完成新世界 → datapack reload → 命名/染色/冻结掉落组件精确检查 → 两个 always-false loot 条件探针 → 正常停服，日志零游戏 `/ERROR]`。
 
-日志：[Java 编译及 29 项测试](../../build-reports/compile-java.log)、[真实专服](../../build-reports/server-smoke.log)。
+日志：Java 编译及 29 项测试 (historical log; current diagnostics are in Actions artifacts/Checks)、真实专服 (historical log; current diagnostics are in Actions artifacts/Checks)。
 
 首轮编译曾发现确认后替换 `final Draft` 的问题，已修复编辑缓冲区声明并重跑；上面列出的才是最终成功构建，不把失败轮次计为成功证据。
 

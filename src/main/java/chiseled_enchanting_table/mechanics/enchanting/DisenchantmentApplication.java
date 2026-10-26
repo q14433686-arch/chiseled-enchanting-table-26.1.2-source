@@ -39,12 +39,13 @@ public final class DisenchantmentApplication {
     public static final Identifier DISENCHANT_ALL_ID = ChiseledEnchantingTable.identifier("disenchant_all");
     public static final Identifier STRIP_SINGLE_ID = ChiseledEnchantingTable.identifier("strip_single");
     public static final Identifier PURGE_CURSE_ID = ChiseledEnchantingTable.identifier("purge_curse");
-    public static final int CONSERVATION_SAFETY_MARGIN_POINTS = 5;
+    public static final int CONSERVATION_SAFETY_MARGIN_POINTS =
+        chiseled_enchanting_table.BundledDefaults.CONSERVATION_SAFETY_MARGIN_POINTS;
 
     private static final TagKey<Enchantment> CURSE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.CURSE;
     private static final TagKey<Enchantment> TREASURE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("treasure"));
+        chiseled_enchanting_table.registry.CetTags.Enchantments.TREASURE;
 
     private record PotentialCacheKey(
         int maxLevel,
@@ -52,7 +53,8 @@ public final class DisenchantmentApplication {
         boolean treasure,
         long scaleBits,
         int maxDiscount,
-        long creditBits
+        long creditBits,
+        LibraryResonance.EssenceValuation essenceValuation
     ) {}
 
     private static final ConcurrentHashMap<PotentialCacheKey, int[]> POTENTIAL_CACHE = new ConcurrentHashMap<>();
@@ -72,10 +74,31 @@ public final class DisenchantmentApplication {
     }
 
     public static double rarityMultiplier(Holder<Enchantment> holder) {
-        int anvilCost = Math.max(1, holder.value().getAnvilCost());
-        double base = Math.min(1.45, Math.max(1.00, 1.0 + 0.18 * Math.log(anvilCost)));
-        if (isTreasure(holder)) {
-            base *= 1.15;
+        return rarityMultiplier(LibraryResonance.activeServerConfig(), holder);
+    }
+
+    public static double rarityMultiplier(LibraryResonance.Config resonanceCfg, Holder<Enchantment> holder) {
+        return rarityMultiplierFromParams(
+            resonanceCfg,
+            Math.max(1, holder.value().getAnvilCost()),
+            isTreasure(holder)
+        );
+    }
+
+    public static double rarityMultiplierFromParams(
+        LibraryResonance.Config resonanceCfg,
+        int anvilCost,
+        boolean treasure
+    ) {
+        LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
+        LibraryResonance.EssenceValuation ev = cfg.essenceValuation();
+        int safeAnvil = Math.max(1, anvilCost);
+        double base = Math.min(
+            ev.rarityMaxMultiplier(),
+            Math.max(ev.rarityMinMultiplier(), 1.0 + ev.rarityLogSlope() * Math.log(safeAnvil))
+        );
+        if (treasure) {
+            base *= ev.treasureMultiplier();
         }
         return base;
     }
@@ -218,21 +241,23 @@ public final class DisenchantmentApplication {
         }
         int safeAnvil = Math.max(1, anvilCost);
         int maxDiscount = cfg.maxTotalXpDiscountPercent();
+        LibraryResonance.EssenceValuation ev = cfg.essenceValuation();
+        int safetyMargin = ev.conservationSafetyMarginPoints();
         var key = new PotentialCacheKey(
             cappedMax,
             safeAnvil,
             treasure,
             Double.doubleToLongBits(clampedScale),
             maxDiscount,
-            Double.doubleToLongBits(cfg.incrementalStepCreditFactor())
+            Double.doubleToLongBits(cfg.incrementalStepCreditFactor()),
+            ev
         );
         int[] cached = POTENTIAL_CACHE.get(key);
         if (cached != null) {
             return cached;
         }
 
-        double rarity = Math.min(1.45, Math.max(1.00, 1.0 + 0.18 * Math.log(safeAnvil)))
-            * (treasure ? 1.15 : 1.0);
+        double rarity = rarityMultiplierFromParams(cfg, safeAnvil, treasure);
         double baseMax = cappedMax == 1 ? 34.0 : 48.0;
 
         int[] v = new int[cappedMax + 1];
@@ -242,12 +267,12 @@ public final class DisenchantmentApplication {
             int fullMin = XpCostConversion.minPointsRequired(
                 XpCostConversion.forMasterTomeEnchant(cfg, k, cappedMax, 0, maxDiscount)
             );
-            int cap = Math.max(0, fullMin - CONSERVATION_SAFETY_MARGIN_POINTS);
+            int cap = Math.max(0, fullMin - safetyMargin);
             for (int a = 1; a < k; a++) {
                 int stepMin = XpCostConversion.minPointsRequired(
                     XpCostConversion.forIncrementalMasterTomeEnchant(cfg, a, k, cappedMax, 0, maxDiscount)
                 );
-                int stepCap = Math.max(0, v[a] + stepMin - CONSERVATION_SAFETY_MARGIN_POINTS);
+                int stepCap = Math.max(0, v[a] + stepMin - safetyMargin);
                 if (stepCap < cap) {
                     cap = stepCap;
                 }
@@ -262,19 +287,33 @@ public final class DisenchantmentApplication {
         return v;
     }
 
-    public static void verifyRuntimeConservation(double refundScale) {
-        verifyRuntimeConservation(LibraryResonance.activeServerConfig(), refundScale);
+    private static final int[] CONSERVATION_PROBE_MAX_LEVELS = buildConservationProbeMaxLevels();
+
+    private static int[] buildConservationProbeMaxLevels() {
+        int[] extra = {80, 100, 127, 150, 200, 255};
+        int[] out = new int[64 + extra.length];
+        for (int m = 1; m <= 64; m++) {
+            out[m - 1] = m;
+        }
+        System.arraycopy(extra, 0, out, 64, extra.length);
+        return out;
     }
 
-    public static void verifyRuntimeConservation(LibraryResonance.Config resonanceCfg, double refundScale) {
+    public static boolean verifyRuntimeConservation(double refundScale) {
+        return verifyRuntimeConservation(LibraryResonance.activeServerConfig(), refundScale);
+    }
+
+    public static boolean verifyRuntimeConservation(LibraryResonance.Config resonanceCfg, double refundScale) {
         try {
             assertRuntimeConservationStrict(resonanceCfg, refundScale);
+            return true;
         } catch (IllegalStateException ex) {
             ChiseledEnchantingTable.LOGGER.error(
-                "Disenchant XP conservation invariant triggered during datapack reload; continuing safely: {}",
+                "Disenchant XP conservation invariant triggered during datapack reload; activating zero-refund fail-safe: {}",
                 ex.getMessage(),
                 ex
             );
+            return false;
         }
     }
 
@@ -282,25 +321,32 @@ public final class DisenchantmentApplication {
         clearPotentialCache();
         LibraryResonance.Config cfg = resonanceCfg != null ? resonanceCfg : LibraryResonance.Config.DEFAULT;
         int maxDiscount = cfg.maxTotalXpDiscountPercent();
-        int[] probeMaxLevels = {1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 64, 100, 127, 150, 255};
         int[] probeAnvilCosts = {1, 2, 4, 8, 25, 100};
-        for (int m : probeMaxLevels) {
+        for (int m : CONSERVATION_PROBE_MAX_LEVELS) {
+            int[] fullMins = new int[m + 1];
+            int[][] stepMins = new int[m + 1][m + 1];
+            for (int k = 1; k <= m; k++) {
+                fullMins[k] = XpCostConversion.minPointsRequired(
+                    XpCostConversion.forMasterTomeEnchant(cfg, k, m, 0, maxDiscount)
+                );
+                for (int a = 1; a < k; a++) {
+                    stepMins[a][k] = XpCostConversion.minPointsRequired(
+                        XpCostConversion.forIncrementalMasterTomeEnchant(cfg, a, k, m, 0, maxDiscount)
+                    );
+                }
+            }
             for (int anvil : probeAnvilCosts) {
                 for (boolean treas : new boolean[] {false, true}) {
                     int[] v = buildPotentialTable(cfg, m, anvil, treas, refundScale);
                     for (int k = 1; k <= m; k++) {
-                        int fullMin = XpCostConversion.minPointsRequired(
-                            XpCostConversion.forMasterTomeEnchant(cfg, k, m, 0, maxDiscount)
-                        );
+                        int fullMin = fullMins[k];
                         if (v[k] < v[k - 1] || v[k] > fullMin) {
                             throw new IllegalStateException(
                                 "Disenchant XP conservation violated at M=" + m + ", k=" + k + ": V=" + v[k] + ", minFull=" + fullMin
                             );
                         }
                         for (int a = 1; a < k; a++) {
-                            int stepMin = XpCostConversion.minPointsRequired(
-                                XpCostConversion.forIncrementalMasterTomeEnchant(cfg, a, k, m, 0, maxDiscount)
-                            );
+                            int stepMin = stepMins[a][k];
                             if (v[k] - v[a] > stepMin) {
                                 throw new IllegalStateException(
                                     "Disenchant step conservation violated at M=" + m + ", " + a + "->" + k

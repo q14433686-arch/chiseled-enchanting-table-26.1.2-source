@@ -376,6 +376,14 @@ class EconomyAndConfigVerificationTest {
         assertEquals(12, sg.tier1Bookshelves());
         assertEquals(32, sg.tier2Bookshelves());
         assertEquals(38, sg.maxDirectBookshelves());
+        assertEquals(22, sg.twoLevelMaxBookshelves(), "BAL-01: Max-level-2 enchantments unlock II at 22 wooden shelves");
+        assertEquals(22, BookshelfProgression.requiredBookshelvesForDirectTier(sg, null, 2, 2));
+        assertEquals(38, BookshelfProgression.requiredBookshelvesForDirectTier(sg, null, 3, 3));
+        assertEquals(3, wearCfg.minDiscountBookshelves(), "BAL-03: Wooden discount starts smoothly at 3 shelves");
+        assertEquals(45, wearCfg.maxDiscountBookshelves(), "BAL-03: Wooden discount reaches 15% smoothly at 45 shelves");
+        assertEquals(0, LibraryResonance.woodenBookshelfDiscountPercent(wearCfg, 2));
+        assertEquals(1, LibraryResonance.woodenBookshelfDiscountPercent(wearCfg, 3));
+        assertEquals(15, LibraryResonance.woodenBookshelfDiscountPercent(wearCfg, 45));
         assertTrue(sg.requireBreathingRoom());
         assertEquals(6, sg.minOpenAdjacentBlocks());
 
@@ -787,9 +795,9 @@ class EconomyAndConfigVerificationTest {
     }
 
     @Test
-    void configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() {
+    void configCatalogCoversAllSevenCategoriesAndRoundTripsJsonLosslessly() {
         var all = chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS;
-        assertEquals(57, all.size(), "Expected 57 curated in-game configurable entries across 6 categories");
+        assertEquals(80, all.size(), "Expected 80 curated in-game configurable entries (including granular 1.0.3/1.1.0 rule atoms) across 7 categories");
         for (var cat : chiseled_enchanting_table.config.ConfigCatalog.CategoryId.values()) {
             assertFalse(
                 chiseled_enchanting_table.config.ConfigCatalog.optionsInCategory(cat).isEmpty(),
@@ -956,7 +964,8 @@ class EconomyAndConfigVerificationTest {
             "config.chiseled_enchanting_table.reason.need_book_research",
             "config.chiseled_enchanting_table.reason.need_disenchant",
             "config.chiseled_enchanting_table.reason.need_curse_purge",
-            "config.chiseled_enchanting_table.reason.need_bookshelf_pool"
+            "config.chiseled_enchanting_table.reason.need_bookshelf_pool",
+            "config.chiseled_enchanting_table.mode.lan_host_desc"
         ));
         for (var mode : chiseled_enchanting_table.config.ConfigCatalog.SessionMode.values()) {
             requiredKeys.add(mode.bannerKey());
@@ -973,6 +982,7 @@ class EconomyAndConfigVerificationTest {
         for (var opt : chiseled_enchanting_table.config.ConfigCatalog.ALL_OPTIONS) {
             requiredKeys.add(opt.nameKey());
             requiredKeys.add(opt.descKey());
+            requiredKeys.add(opt.sectionTitleKey());
             if (opt.kind() == chiseled_enchanting_table.config.ConfigCatalog.ControlKind.ENUM_CYCLE) {
                 for (int i = 0; i < 8; i++) {
                     String formatted = opt.rawOrKeyDisplay(probe);
@@ -980,6 +990,12 @@ class EconomyAndConfigVerificationTest {
                     opt.toggleOrCycle(probe, 1);
                 }
             }
+        }
+        for (var trace : chiseled_enchanting_table.config.ConfigCatalog.RULE_TRACE_ENTRIES) {
+            requiredKeys.add(trace.titleKey());
+            requiredKeys.add(trace.impactKey());
+            requiredKeys.add(trace.classicSummaryKey());
+            requiredKeys.add(trace.modernSummaryKey());
         }
 
         for (Path lf : langFiles) {
@@ -1046,15 +1062,18 @@ class EconomyAndConfigVerificationTest {
         assertEquals(1_200.0, MasterTomeWear.computeRegenSeconds(def, 42), 1e-6);
         assertEquals(24_000, MasterTomeWear.computeRegenIntervalTicks(def, 42));
 
-        // Dramatic two-tier breakthroughs at 37 -> 38 and 41 -> 42 AND strict non-increasing monotonicity for S in [0, 100].
+        // BAL-02: Smooth piecewise-linear interpolation across (0 -> 7200s) -> (38 -> 3600s) -> (42 -> 1200s)
+        // with zero artificial step cliffs at 37->38 or 41->42, plus strict non-increasing monotonicity on [0, 100].
+        assertEquals(5_400.0, MasterTomeWear.computeRegenSeconds(def, 19), 1e-6,
+            "Midpoint S=19 in [0, 38] must interpolate linearly to 5,400s (4.5 game days)");
         assertTrue(
-            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) >= 1_000.0,
-            "Reaching Tier 1 (38 bookshelves -> 3 game days) must deliver a substantial regeneration breakthrough"
+            MasterTomeWear.computeRegenSeconds(def, 37) - MasterTomeWear.computeRegenSeconds(def, 38) < 120.0,
+            "BAL-02: Transition 37 -> 38 must be smooth (~94.7s/shelf) without an artificial cliff"
         );
-        assertTrue(
-            MasterTomeWear.computeRegenSeconds(def, 41) - MasterTomeWear.computeRegenSeconds(def, 42) >= 800.0,
-            "Reaching Tier 2 (42 bookshelves -> 1 game day) must deliver a dramatic Grand Sanctum regeneration breakthrough"
-        );
+        assertEquals(2_400.0, MasterTomeWear.computeRegenSeconds(def, 40), 1e-6,
+            "Midpoint S=40 in [38, 42] must interpolate linearly to 2,400s (2.0 game days)");
+        assertEquals(1_800.0, MasterTomeWear.computeRegenSeconds(def, 41), 1e-6,
+            "S=41 in [38, 42] must interpolate linearly to 1,800s (1.5 game days)");
         for (int s = 0; s < 100; s++) {
             int curTicks = MasterTomeWear.computeRegenIntervalTicks(def, s);
             int nextTicks = MasterTomeWear.computeRegenIntervalTicks(def, s + 1);
@@ -1252,15 +1271,15 @@ class EconomyAndConfigVerificationTest {
         for (int totalEnch = 5; totalEnch <= 9; totalEnch++) {
             double c = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeTranscriptionSlipChance(totalEnch, 35);
-            assertTrue(c >= prevE && c > 0.0 && c <= 0.18 + 1e-9);
+            assertTrue(c >= prevE && c > 0.0 && c <= 0.25 + 1e-9);
             prevE = c;
         }
         assertEquals(
-            0.18,
+            0.25,
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
                 .computeTranscriptionSlipChance(12, 100),
             1e-9,
-            "Maximum transcription slip probability must never exceed 18%"
+            "Maximum transcription slip probability must never exceed 25%"
         );
         int slipped = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .resolveTranscribedLevel(5, 6, 0.15, 0.05, 0.80);
@@ -1451,7 +1470,8 @@ class EconomyAndConfigVerificationTest {
 
         assertFalse(nonShelf.isBroadBookshelf());
         assertTrue(regularShelf.isBroadBookshelf() && regularShelf.isRegularBookshelf() && !regularShelf.providesMasterTomeResonance());
-        assertTrue(emptyChiseled.isBroadBookshelf() && !emptyChiseled.isRegularBookshelf() && !emptyChiseled.providesMasterTomeResonance());
+        assertFalse(emptyChiseled.isBroadBookshelf(), "Empty chiseled bookshelf (0 books) must NOT count toward broad bookshelves");
+        assertTrue(!emptyChiseled.isRegularBookshelf() && !emptyChiseled.providesMasterTomeResonance());
         // Chiseled bookshelf holding a Depleted Tome (or plain book) MUST be treated as a Broad Bookshelf (not a Master Tome)
         assertTrue(depletedOrPlainChiseled.isBroadBookshelf());
         assertFalse(depletedOrPlainChiseled.isRegularBookshelf());
@@ -1459,7 +1479,7 @@ class EconomyAndConfigVerificationTest {
         assertTrue(masterTomeChiseled.isBroadBookshelf() && masterTomeChiseled.providesMasterTomeResonance());
 
         assertEquals(
-            40,
+            38,
             chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.computeBroadBookshelfCount(32, 2, 6)
         );
 
@@ -1715,10 +1735,10 @@ class EconomyAndConfigVerificationTest {
         assertEquals(0.170, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 7.0, 42), 1e-9);
 
         assertEquals(0.175, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 20), 1e-9);
-        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 32), 1e-9);
-        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 38), 1e-9);
-        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 42), 1e-9);
-        assertEquals(0.180, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 12.0, 64), 1e-9);
+        assertEquals(0.185, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 32), 1e-9);
+        assertEquals(0.195, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 38), 1e-9);
+        assertEquals(0.205, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 8.0, 42), 1e-9);
+        assertEquals(0.250, chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeLoadSlipProbability(ritual, 12.0, 64), 1e-9);
 
         // 5. Single-roll 3-outcome split: 70% TIER_DROP / 25% JUNK_CROSSLINE / 5% CURSE_CROSSLINE
         assertEquals(
@@ -1854,6 +1874,48 @@ class EconomyAndConfigVerificationTest {
         int customWait = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
             .computeSingleEnchantWaitTicks(custom, 42, 30, 22, 5, 5, 1.0);
         assertTrue(customWait < defaultWait, "Doubling load references must shorten the wait");
+    }
+
+    @Test
+    void openingSnapshotNeverDivergesFromLiveShelfSyncAtTickZero() throws Exception {
+        String blockSrc = java.nio.file.Files.readString(
+            java.nio.file.Path.of("src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java")
+        );
+        // 1. Regression guard: opening payload must NEVER union enchantments_unlocked_by_default
+        // onto getUnlockedEnchantmentsFromPower (which injected [1, top] -> "I-XX" under 1.0.3).
+        assertFalse(
+            blockSrc.contains("Stream.concat(\n            unlockedEnchantments.stream()")
+                || blockSrc.contains("Stream.concat(unlockedEnchantments.stream()"),
+            "Menu opening snapshot must match computeLiveShelfState without re-injecting level-1 defaults"
+        );
+        assertTrue(
+            blockSrc.contains("awardOpeningAdvancements(level, shelfPower, sp)"),
+            "Opening advancements (including HOW_MUCH_LONGER) must be awarded before building opening payloads"
+        );
+        assertTrue(
+            blockSrc.contains("menu.sendInitialLiveSync()"),
+            "Opening the table must immediately push LiveShelfStatePayload & SyncRitualStatePayload on tick 0"
+        );
+
+        String handlerSrc = java.nio.file.Files.readString(
+            java.nio.file.Path.of("src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java")
+        );
+        assertTrue(
+            handlerSrc.contains("return !usesClassicShelfBoost() && activeRuntimeConfig().directTierUpgrade();"),
+            "Track-2 modern shelf upgrade curve must not leak intermediate tiers under CLASSIC_FLOOR_THIRD"
+        );
+        assertTrue(
+            handlerSrc.contains("if (!this.initialLiveSyncSent)"),
+            "broadcastChanges() must sync live shelf & ritual state on tick 0 instead of waiting up to 20 ticks"
+        );
+
+        String payloadSrc = java.nio.file.Files.readString(
+            java.nio.file.Path.of("src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingMenuPayloads.java")
+        );
+        assertTrue(
+            payloadSrc.contains("effectiveSacrificeRequiredFor(player)"),
+            "AvailableEnchantmentPayload must cap sacrifice_required identically to computeLiveShelfState"
+        );
     }
 
 }

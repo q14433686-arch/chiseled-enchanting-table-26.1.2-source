@@ -47,6 +47,6 @@
     "modmenu": "*"
   },
   "custom": {
-    "chiseled_enchanting_table:port_notes": "Unofficial 26.3 port, release label 1.1.0; retains the previous world-load hotfix (recipe_unlocked recipes list and single loot predicate). Gameplay synced from 1.1.0: full 26.1.2 progression and UX sync (library resonance, Treasure Epiphany and persistent freeze, dual-mode XP, multi-material costs, Arcane Condensate, Depleted Tome and Blank Overwrite, painted GUI, dye tint, flat anvil penalty, depth-based Efficiency loot, bidirectional JEI/REI transformations, 11 locales). Retains 26.3 structure processor interface/codec registration, rotate/rotateDegrees and separate crumbling overlay, ContextIntProviders/UniformContainerBase, optional condition holders, explicit payload collection codecs, Prediction drops, condition/modifier loot schema and recipe_crafted recipes lists. See docs/reports/SYNC_FROM_26_1_2_REPORT.md."
+    "chiseled_enchanting_table:port_notes": "Unofficial Minecraft 26.3 port, version 1.1.0. Fully synchronized through 26.1.2 source 9f0e13bd (2026-10-26): tome pages/locks, live shelf snapshots, rule presets, Classic data tables and data-driven tags/loot. Uses independent 26_3_revision_12 protocol (rainbow_cloth block-state compatibility gate), 26.3 structure/render/loot/input APIs and recipes-list advancement schema. Audited runtime rule provenance, staged loot reloads, bounded cost payloads, Creative extraction and Iris texture reload lifecycle. See docs/reports/SYNC_9F0E13B_SEVEN_PATH_AUDIT_2026_10_26.md."
   }
 }

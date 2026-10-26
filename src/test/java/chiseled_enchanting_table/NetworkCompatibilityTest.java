@@ -35,10 +35,64 @@ class NetworkCompatibilityTest {
         var display = new TransformationDisplay(id("rule"), id("input_tag"), true, id("out"), 2, 30, 3, true);
         roundTrip(AvailableEnchantmentPayload.AVAILABLE_CHISELED_ENCHANTMENT_CODEC,
             new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789, masters, true));
+        // Round 2: persistent page state (unlock flags + sacrifice progress) rides the
+        // opening payload and must survive the codec bit-exactly.
+        var openingState = new AvailableEnchantmentPayload(unlocked, List.of(display), 37, 38, 123, 17, -123456789,
+            masters, true, 9, 2, Map.of(new EnchantmentWithLevel(id("one"), 1), 3), true, false, 7, 12, 4)
+            .withTablePos(new net.minecraft.core.BlockPos(12, 70, -34));
+        roundTrip(AvailableEnchantmentPayload.AVAILABLE_CHISELED_ENCHANTMENT_CODEC, openingState);
+        assertTrue(openingState.cleanse_unlocked());
+        assertFalse(openingState.tome_page_unlocked());
+        assertEquals(7, openingState.sacrifice_progress());
+        assertEquals(12, openingState.sacrifice_required());
+        assertEquals(4, openingState.tome_page_required_shelves());
+        assertEquals(java.util.Optional.of(new net.minecraft.core.BlockPos(12, 70, -34)), openingState.table_pos());
+        assertThrows(NullPointerException.class, () -> new EnchantmentWithLevel(null, 1));
+        for (int badLevel : new int[] {0, -1, 256}) {
+            RegistryFriendlyByteBuf outBuf = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
+            try {
+                assertThrows(IllegalArgumentException.class, () ->
+                    EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.encode(outBuf, new EnchantmentWithLevel(id("bad"), badLevel)));
+            } finally { outBuf.release(); }
+            RegistryFriendlyByteBuf inBuf = new RegistryFriendlyByteBuf(Unpooled.buffer(), null);
+            try {
+                Identifier.STREAM_CODEC.encode(inBuf, id("bad"));
+                net.minecraft.network.codec.ByteBufCodecs.VAR_INT.encode(inBuf, badLevel);
+                assertThrows(IllegalArgumentException.class, () ->
+                    EnchantmentWithLevel.ENCHANTMENT_WITH_LEVEL_CODEC.decode(inBuf));
+            } finally { inBuf.release(); }
+        }
         roundTrip(LiveShelfStatePayload.CODEC,
             new LiveShelfStatePayload(27, unlocked, 37, 38, 123, 17, masters, true));
         roundTrip(LiveShelfStatePayload.CODEC,
             new LiveShelfStatePayload(3, Set.of(), 0, 0, 0, 0, Map.of(), false));
+    }
+
+    @Test void tomeDashboardAndActionPayloadsRoundTrip() {
+        var entry = new TomeBookEntry(new net.minecraft.core.BlockPos(1, 64, -3), 5, "Archivist",
+            List.of(new EnchantmentWithLevel(id("mending"), 1)), 2, 3, 5, 1,
+            true, false, 100, 500, 1, "owner-id", "Owner", 0, true,
+            "minecraft:mending", 1, 2, "minecraft:mending", 1);
+        var live = new LiveShelfStatePayload(27, Set.of(), 1, 2, 3, 4, Map.of(), false,
+            5, 6, Map.of(), true, true, 7, 12, 4, 4, 42, 1, 4, 72000, List.of(entry));
+        roundTrip(LiveShelfStatePayload.CODEC, live);
+        assertTrue(live.cleanse_unlocked());
+        assertTrue(live.tome_page_unlocked());
+        assertEquals(7, live.sacrifice_progress());
+        assertEquals(entry, live.tome_books().getFirst());
+        assertEquals("minecraft:mending", entry.last_used_enchant());
+        assertEquals(2, entry.deplete_outcome());
+        assertEquals(1, entry.deplete_level());
+        for (TomePageActionPayload.Action action : TomePageActionPayload.Action.values()) {
+            var payload = new TomePageActionPayload(42, action, entry.shelf_pos(), entry.slot());
+            roundTrip(TomePageActionPayload.CODEC, payload);
+            assertTrue(payload.targets(42));
+            assertFalse(payload.targets(43));
+        }
+        assertThrows(IllegalArgumentException.class,
+            () -> new TomePageActionPayload(42, TomePageActionPayload.Action.UNLOCK, entry.shelf_pos(), 6));
+        assertThrows(IllegalArgumentException.class,
+            () -> new TomePageActionPayload(-2, TomePageActionPayload.Action.UNLOCK, entry.shelf_pos(), 0));
     }
 
     @Test void liveUpdatesOnlyTargetTheMatchingMenu() {
@@ -70,20 +124,46 @@ class NetworkCompatibilityTest {
         roundTrip(EnchantCostTablePayload.CODEC, table(List.of()));
     }
 
+    @Test void actualWireBudgetTrimsRowsButRejectsOversizedHeader() {
+        var candidate = table(List.of());
+        int encoded = EnchantCostTablePayload.measureEncodedBytes(candidate, net.minecraft.core.RegistryAccess.EMPTY);
+        var trimmed = EnchantCostTablePayload.enforceWireByteBudget(candidate, net.minecraft.core.RegistryAccess.EMPTY);
+        assertSame(candidate, trimmed);
+        trimmed = EnchantCostTablePayload.trimToWireBudget(candidate, encoded - 1,
+            p -> EnchantCostTablePayload.measureEncodedBytes(p, net.minecraft.core.RegistryAccess.EMPTY));
+        assertTrue(trimmed.costs().isEmpty());
+        assertFalse(trimmed.costTableComplete());
+        assertTrue(EnchantCostTablePayload.measureEncodedBytes(trimmed, net.minecraft.core.RegistryAccess.EMPTY) < encoded);
+        assertThrows(IllegalArgumentException.class, () -> EnchantCostTablePayload.trimToWireBudget(candidate, 1,
+            p -> EnchantCostTablePayload.measureEncodedBytes(p, net.minecraft.core.RegistryAccess.EMPTY)));
+        var noCosts = trimmed;
+        assertThrows(IllegalArgumentException.class, () -> EnchantCostTablePayload.trimToWireBudget(noCosts, 1,
+            p -> EnchantCostTablePayload.measureEncodedBytes(p, net.minecraft.core.RegistryAccess.EMPTY)));
+    }
+
     private static EnchantCostTablePayload table(List<TransformationDisplay> displays) {
         var gates = new BookshelfProgression.Config(false, 47, 1.37,
             BookshelfProgression.BlankMaxTierMode.FULL_CURVE, 4, 3,
             Map.of(id("override"), List.of(0, 3, 11, 23, 47)), 2, 19, 0.41, 9, 7, 61,
             BookshelfProgression.VanillaTableMode.BOOKS, true, 6, false);
-        // Distinct values catch field swaps hidden by equal default config values.
-        var resonance = new LibraryResonance.Config(13, 39, 21, 8, 29, 12, 1.13, 41,
-            1.21, 1.31, 0.73, 0.83, 0.43, 0.53, 0.63, 1.03, 2.13, 3.23,
-            0.67, 81.0, 0.17, 0.57, 111.0, 0.27, 0.87,
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR, 6, 3,
-            chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN,
-            true, 5400, 34, 2400, 44, 900,
-            0.09, 0.27, true, List.of(50, 30, 12, 8),
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT);
+        // Distinct values catch field swaps hidden by equal default config values (all 50 fields).
+        var resonance = new LibraryResonance.Config(
+            new LibraryResonance.WoodenBookshelves(13, 39, 21, 0.83),
+            new LibraryResonance.ChiseledMastery(
+                new LibraryResonance.MasteryScaling(1.21, 1.31, 8, 29, 12, 1.13, 41, 0.73, 0.87, 4.5, 3, 5, 0.07),
+                new LibraryResonance.TomeLifecycle(
+                    chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.WEAR,
+                    6, 3, 0.09, 0.27,
+                    chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.DepleteBehavior.STEP_DOWN,
+                    true, 5400, 34, 2400, 44, 900,
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.ScapegoatPricing.FLAT
+                )
+            ),
+            new LibraryResonance.EpiphanyAffinity(0.43, 0.53, 0.63, 1.03, 2.13, 3.23, 0.67, 81.0, 0.17, 0.57, 111.0, 0.27),
+            new LibraryResonance.WildBookWear(true, List.of(50, 30, 12, 8)),
+            new LibraryResonance.TomePages(false, false, 7, 3, 17, 9),
+            new LibraryResonance.EssenceValuation(0.91, 1.63, 0.19, 1.41, 7)
+        );
         var slipCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.CrosslineSlipConfig(
             3.2, 0.037, 0.17,
             31, 0.011, 37, 0.021, 43, 0.031,
@@ -92,8 +172,10 @@ class NetworkCompatibilityTest {
         );
         var waitCurve = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.WaitCurve(
             0.31, 0.69, 0.29, 0.71, 1.27, 0.88, 137);
+        var appCfg = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.ApplicabilityConfig(
+            28.0, 0.51, 1.62, 1.37, 1.24, 1.21, 1.15, 1.07, 1.02, 2.45);
         var ritual = new chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config(
-            270, 12, 14, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve);
+            270, 12, 14, 0.48, 0.68, 0.17, 51.0, 27.0, slipCfg, waitCurve, 6, 225.0, 195.0, appCfg);
         return new EnchantCostTablePayload(true, false, true, false, 0.5, 0.25,
             33, 0.13, 0.02, 0.03, 0.9, 4, 12, 1234, 500, 1200, 7, List.of(),
             11, List.of(), Set.of(id("treasure")), gates, resonance, ritual,
@@ -156,10 +238,21 @@ class NetworkCompatibilityTest {
         assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.RerollEpiphanyPayload.TYPE.id().getPath().endsWith(revision));
         assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.FreezeEpiphanyPayload.TYPE.id().getPath().endsWith(revision));
         assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.ReopenTablePayload.TYPE.id().getPath().endsWith(revision));
+        assertTrue(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE.id().getPath().endsWith(revision));
         assertEquals("apply_chiseled_enchantment",
             chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_TYPE.id().getPath());
+        assertEquals(chiseled_enchanting_table.menu.EnchantingProtocol.CURRENT_REVISION_NUMBER - 8,
+            chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_APPLY_PROBES.size());
+        assertEquals(chiseled_enchanting_table.menu.EnchantingProtocol.CURRENT_REVISION_NUMBER,
+            chiseled_enchanting_table.menu.EnchantingProtocol.LEGACY_COST_PROBES.size());
+        assertTrue(chiseled_enchanting_table.menu.EnchantingProtocol.stackSizeIncompatible(16, 64));
+        assertFalse(chiseled_enchanting_table.menu.EnchantingProtocol.stackSizeIncompatible(64, 64));
         roundTrip(chiseled_enchanting_table.menu.EnchantingProtocol.Capability.CODEC,
-            new chiseled_enchanting_table.menu.EnchantingProtocol.Capability());
+            new chiseled_enchanting_table.menu.EnchantingProtocol.Capability(32));
+        var display = new TransformationDisplay(id("delta_rule"), id("input_tag"), true, id("out"), 2, 15, 2, false);
+        var txPayload = new SyncTransformationStatePayload(42, List.of(display));
+        roundTrip(SyncTransformationStatePayload.CODEC, txPayload);
+        assertTrue(txPayload.targets(42) && !txPayload.targets(43));
     }
 
     @Test void runtimeConfigRequestAndAcknowledgementRoundTrip() {

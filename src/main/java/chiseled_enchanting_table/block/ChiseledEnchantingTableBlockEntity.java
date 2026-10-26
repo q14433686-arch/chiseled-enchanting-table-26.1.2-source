@@ -7,7 +7,7 @@ import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics;
 import chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
-import chiseled_enchanting_table.registry.EntityRegistry;
+import chiseled_enchanting_table.registry.BlockEntityRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
@@ -97,7 +97,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     public float tRot;
 
     public ChiseledEnchantingTableBlockEntity(BlockPos pos, BlockState state) {
-        super(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, pos, state);
+        super(BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, pos, state);
     }
 
     // ---- Persistent Container implementation (Chest-style persistence) ----
@@ -348,6 +348,16 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
         List<QueuedInscription> finishing = List.copyOf(this.ritualQueue);
 
+        // 1.0.3 Classic: inscriptions are instant and exact (tag 26.1.2_1.0.3
+        // EnchantmentApplication had no queue, no slip, no cross-line pollution).
+        // Classic steps are enqueued with a 1-tick completion only as an internal
+        // transport, so the completion path must not roll post-1.0.3 ritual outcomes
+        // for them — previously a wear-immune tome could still «抄错» in classic.
+        var activeCfg = chiseled_enchanting_table.config.ModRuntimeConfig
+            .forSide(level != null && level.isClientSide());
+        boolean ritualQueueEnabled = activeCfg.ritualQueueEnabled();
+        boolean provenanceEnabled = activeCfg.provenanceEnabled();
+
         var ritualCfg = ChiseledEnchantingTableData.ritualConfig();
         var scan = InscriptionRitualMechanics.scanLibraryRitualContext(
             level,
@@ -411,11 +421,12 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 continue;
             }
 
-            // Iron Rule #2: ONLY steps actually copied from an overloaded Infinity Master Tome roll slip/cross-line!
-            double stepSlipProb = (step.masterTomeUsed() && step.usedInfinityTome())
+            // Iron Rule #2: ONLY steps actually copied from an overloaded wear-immune Master Tome roll slip/cross-line,
+            // evaluated against max(step's queue-time load, live library-wide Sigma L across active wear-immune tomes)!
+            double stepSlipProb = (ritualQueueEnabled && step.masterTomeUsed() && step.usedInfinityTome())
                 ? InscriptionRitualMechanics.computeLoadSlipProbability(
                     ritualCfg,
-                    step.infinityTomeLoad(),
+                    Math.max(step.infinityTomeLoad(), scan.totalWearImmuneLoad()),
                     scan.totalDetectedBookshelves()
                 )
                 : 0.0;
@@ -546,7 +557,9 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             if (step.consumedEpiphany()) {
                 anyEpiphanyConsumed = true;
             }
-            if (step.masterTomeUsed() && MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(step.enchantmentId())) {
+            if (step.masterTomeUsed()
+                && (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(step.enchantmentId())
+                    || chiseled_enchanting_table.mechanics.resonance.TomeWearData.isWearImmuneEnchantment(holder))) {
                 replicatedInfinityFromTome = true;
             }
             EnchantmentProvenance.recordTablePayment(currentTarget, step.enchantmentId(), step.previousLevel(), finalLevel);
@@ -560,16 +573,23 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 m.set(key, working.getLevel(key));
             }
         });
-        EnchantmentProvenance.pruneToCurrentEnchantments(
-            currentTarget,
-            EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
-        );
-        if (maxInheritedGeneration >= 0 && currentTarget.is(Items.ENCHANTED_BOOK)) {
-            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
-                currentTarget, maxInheritedGeneration);
-        }
-        if (anyCrosslinePollution) {
-            chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
+        if (provenanceEnabled) {
+            EnchantmentProvenance.pruneToCurrentEnchantments(
+                currentTarget,
+                EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
+            );
+            if (maxInheritedGeneration >= 0 && currentTarget.is(Items.ENCHANTED_BOOK)) {
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                    currentTarget, maxInheritedGeneration);
+            }
+            if (anyCrosslinePollution) {
+                chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
+            }
+        } else {
+            EnchantmentProvenance.clearAll(currentTarget);
+            if (anyCrosslinePollution && ritualQueueEnabled) {
+                chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
+            }
         }
 
         this.items.set(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT, currentTarget);
@@ -757,6 +777,9 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         ContainerHelper.saveAllItems(output, this.items);
         output.putLong("ritualSession", this.ritualSession);
         if (!this.ritualTarget.isEmpty()) output.store("ritualTarget", ItemStack.CODEC, this.ritualTarget);
+        if (!this.ritualQueue.isEmpty() && this.ritualCorruptQueue.isEmpty()) {
+            output.store("ritualQueueData", InscriptionRitualMechanics.STRUCTURED_QUEUE_CODEC, this.ritualQueue);
+        }
         output.putString("ritualQueue", this.ritualCorruptQueue.isEmpty()
             ? InscriptionRitualMechanics.serializeQueue(this.ritualQueue) : this.ritualCorruptQueue);
         output.putBoolean("ritualBlocked", this.ritualBlocked);
@@ -779,10 +802,12 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.ritualSession = input.getLongOr("ritualSession", 0L);
         this.ritualTarget = input.read("ritualTarget", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         String rawQueue = input.getStringOr("ritualQueue", "");
+        java.util.Optional<List<QueuedInscription>> structuredQueue =
+            input.read("ritualQueueData", InscriptionRitualMechanics.STRUCTURED_QUEUE_CODEC);
         this.ritualCorruptQueue = "";
         this.ritualBlocked = input.getBooleanOr("ritualBlocked", false);
         try {
-            this.ritualQueue = InscriptionRitualMechanics.deserializeQueue(rawQueue);
+            this.ritualQueue = InscriptionRitualMechanics.recoverQueue(structuredQueue, rawQueue);
         } catch (IllegalArgumentException malformed) {
             this.ritualQueue = new ArrayList<>();
             this.ritualCorruptQueue = rawQueue.substring(0, Math.min(rawQueue.length(), MAX_RITUAL_CHARACTERS));
@@ -1017,8 +1042,10 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         long rem = this.pendingFreezeTicks > 0L
             ? this.pendingFreezeTicks
             : (this.level != null ? remainingFreezeTicks(this.level.getGameTime()) : 0L);
+        CompoundTag tag = new CompoundTag();
+        if (getBlockState().getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH))
+            tag.putBoolean(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG,true);
         if (rem > 0L) {
-            CompoundTag tag = new CompoundTag();
             if (this.epiphanySeed != 0) {
                 tag.putInt("epiphanySeed", this.epiphanySeed);
             }
@@ -1033,8 +1060,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                         .withStyle(style -> style.withItalic(false).withColor(ChatFormatting.AQUA))
                 ))
             );
-            componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         }
+        if (!tag.isEmpty()) componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
     @Override

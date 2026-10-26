@@ -159,7 +159,7 @@ long 计时不代表无限队列安全。应同时限制步骤数、序列化大
 - 同一真实 ticker 遇到已移除的附魔 ID 时输出预期 WARN，将 `ritualBlocked` 持久为 true，保留输入/订单；随后破坏附魔台，探针找到 count=1 的输入钻石剑。此 WARN 是故意构造的隔离路径，不是隐藏的启动错误。
 - 后续仅回写 CI 日志、更新报告和修正“无限队列”说明文案；以上编译证据对应明确的游戏源码提交。没有把一次 `/save-all` 描述为已经执行关服重启。
 
-当前 [Java 日志](../../build-reports/compile-java.log)、[专服日志](../../build-reports/server-smoke.log) 由 CI 回写；以 Java 日志首行 commit 和对应 run 为准，不以报告更新 commit 作为编译来源。
+当前 Java 日志 (historical log; current diagnostics are in Actions artifacts/Checks)、专服日志 (historical log; current diagnostics are in Actions artifacts/Checks) 由 CI 回写；以 Java 日志首行 commit 和对应 run 为准，不以报告更新 commit 作为编译来源。
 
 本地：15 Python 同步测试、静态五组（621 键/11 locale）、版本一致性 12 项、workflow 镜像、diff 检查通过。由于本地没有 MC jar，compat Tier 2 两项跳过，**不算已通过**。真实 Java 25 编译/运行只引用 GitHub CI。
 

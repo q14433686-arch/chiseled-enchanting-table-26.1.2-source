@@ -42,8 +42,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * depends on {@code onlyRenaming} alone: a non-empty right slot that contributes no enchantment
  * cost can still make vanilla report {@code onlyRenaming == true} while its {@code onTake}
  * empties the left slot, which used to lose the stacked remainder.</p>
+ *
+ * <p>Audit MIXIN-02 / MIXIN-03: {@code priority = 1100} nests strictly inside
+ * {@link RemoveXpCostScaling} ({@code priority = 900}), ensuring deterministic wrapper order.
+ * Instead of mutating the live {@link ItemStack} in-place, slot 0 temporarily holds a
+ * single-item {@code copyWithCount(1)} view and restores the untouched {@code originalLeft}
+ * reference in {@code finally} if slot 0 still holds that temporary view.</p>
  */
-@Mixin(AnvilMenu.class)
+@Mixin(value = AnvilMenu.class, priority = 1100)
 public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
     @Shadow
     @Final
@@ -70,21 +76,18 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
 
     @WrapMethod(method = "createResult")
     private void cet$wrapCreateResult(Operation<Void> original) {
-        ItemStack left = this.inputSlots.getItem(0);
+        ItemStack originalLeft = this.inputSlots.getItem(0);
         ItemStack right = this.inputSlots.getItem(1);
-        int savedLeftCount = 0;
-        if (!right.isEmpty() && left.is(Items.ENCHANTED_BOOK) && left.getCount() > 1) {
-            savedLeftCount = left.getCount();
-            left.setCount(1);
+        ItemStack singleLeftView = null;
+        if (!right.isEmpty() && originalLeft.is(Items.ENCHANTED_BOOK) && originalLeft.getCount() > 1) {
+            singleLeftView = originalLeft.copyWithCount(1);
+            this.inputSlots.setItem(0, singleLeftView);
         }
         try {
             original.call();
         } finally {
-            if (savedLeftCount > 1) {
-                ItemStack current = this.inputSlots.getItem(0);
-                if (current == left && current.is(Items.ENCHANTED_BOOK)) {
-                    current.setCount(savedLeftCount);
-                }
+            if (singleLeftView != null && this.inputSlots.getItem(0) == singleLeftView) {
+                this.inputSlots.setItem(0, originalLeft);
             }
         }
         cet$filterSameLevelMerge();
@@ -92,7 +95,18 @@ public abstract class RemoveEnchantMerge extends ItemCombinerMenu {
 
     @Unique
     private void cet$filterSameLevelMerge() {
-        if (!chiseled_enchanting_table.config.ModRuntimeConfig.effective().anvilBlockSameBookMerge()) {
+        ItemStack lockedLeft = this.inputSlots.getItem(0);
+        ItemStack lockedRight = this.inputSlots.getItem(1);
+        if (chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(lockedLeft)
+            || chiseled_enchanting_table.mechanics.resonance.TomeLockData.isEffectivelyLocked(lockedRight)) {
+            this.resultSlots.setItem(0, ItemStack.EMPTY);
+            this.cost.set(0);
+            this.broadcastChanges();
+            return;
+        }
+        boolean clientSide = this.player != null && this.player.level() != null && this.player.level().isClientSide();
+        var runtimeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.forAnvilSide(clientSide);
+        if (runtimeCfg == null || !runtimeCfg.anvilBlockSameBookMerge()) {
             return;
         }
         ItemStack left = this.inputSlots.getItem(0);

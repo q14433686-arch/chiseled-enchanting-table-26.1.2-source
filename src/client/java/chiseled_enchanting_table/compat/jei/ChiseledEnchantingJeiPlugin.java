@@ -116,13 +116,27 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
             new ItemStack(BlockRegistry.CHISELED_ENCHANTING_TABLE),
             new ItemStack(Blocks.CHISELED_BOOKSHELF)
         );
+        // Numbers in JEI prose come from the live synced configs, never hardcoded copies.
+        var jeiSg = SyncedEnchantmentCosts.shelfGatesConfig();
+        String jeiScan = (jeiSg.horizontalScanRadius() * 2 + 1) + "\u00d7"
+            + (jeiSg.verticalScanRadius() * 2 + 1) + "\u00d7" + (jeiSg.horizontalScanRadius() * 2 + 1);
+        int jeiMaxUses = SyncedEnchantmentCosts.libraryResonanceConfig().maxTomeUses();
+        // 1.0.3 Classic: the standard info text promises Treasure Epiphany, 1-3L
+        // stored-book mode and the Cleanse tab — none of which exist in classic.
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
         registration.addItemStackInfo(
             stations,
-            Component.translatable("jei.chiseled_enchanting_table.info.station")
+            classic103
+                ? Component.translatable("jei.chiseled_enchanting_table.info.station_classic", jeiScan)
+                : Component.translatable("jei.chiseled_enchanting_table.info.station",
+                    jeiScan, jeiMaxUses, SyncedEnchantmentCosts.epiphanyMinBookshelves())
         );
         registration.addItemStackInfo(
             List.of(new ItemStack(Blocks.CHISELED_BOOKSHELF)),
-            Component.translatable("jei.chiseled_enchanting_table.info.bookshelf")
+            classic103
+                ? Component.translatable("jei.chiseled_enchanting_table.info.bookshelf_classic", jeiScan)
+                : Component.translatable("jei.chiseled_enchanting_table.info.bookshelf",
+                    jeiScan, jeiMaxUses)
         );
         registration.addItemStackInfo(
             List.of(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK)),
@@ -170,6 +184,50 @@ public class ChiseledEnchantingJeiPlugin implements IModPlugin {
                 @Override
                 public Class<? extends Screen> screenClass() {
                     return ArcaneGrimoireScreen.class;
+                }
+
+                @Override
+                public int guiLeft() {
+                    return bounds.getX();
+                }
+
+                @Override
+                public int guiTop() {
+                    return bounds.getY();
+                }
+
+                @Override
+                public int guiXSize() {
+                    return bounds.getWidth();
+                }
+
+                @Override
+                public int guiYSize() {
+                    return bounds.getHeight();
+                }
+
+                @Override
+                public int screenWidth() {
+                    return screen.width;
+                }
+
+                @Override
+                public int screenHeight() {
+                    return screen.height;
+                }
+            };
+        });
+
+        // 1b. Completely suspend JEI overlays (ingredient list, bookmarks, wrench) while Config modal is open over the table
+        registration.addGuiScreenHandler(ChiseledEnchantingTableScreen.class, screen -> {
+            if (screen.hasActiveConfigOverlay()) {
+                return null;
+            }
+            Rect2i bounds = screen.viewerMainGuiBounds();
+            return new IGuiProperties() {
+                @Override
+                public Class<? extends Screen> screenClass() {
+                    return ChiseledEnchantingTableScreen.class;
                 }
 
                 @Override

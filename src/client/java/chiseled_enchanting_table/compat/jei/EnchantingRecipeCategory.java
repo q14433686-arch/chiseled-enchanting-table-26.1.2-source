@@ -82,17 +82,23 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
     ) {
         var font = Minecraft.getInstance().font;
         guiGraphics.text(font, "\u2192", ARROW_X, SLOT_Y + 4, 0xFF404040, false);
-        var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
-            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig(),
-            recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0
-        );
+        var runtimeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.effective();
+        boolean classicFullXp = runtimeCfg.xpMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.XpSettlementMode.CLASSIC_FULL_POINTS;
+        var lrCfg = chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig();
+        var xpReq = classicFullXp
+            ? chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forFullArcaneRitual(lrCfg, recipe.xpLevelCost(), 0)
+            : chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+                lrCfg, recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0);
         Identifier orb = chiseled_enchanting_table.gui.row.RowRenderSupport.orbSprite(xpReq.deductedLevels());
         guiGraphics.blit(orb, SLOT_TARGET_X, 27, SLOT_TARGET_X + 10, 37, 0.0f, 1.0f, 0.0f, 1.0f);
-        Component xpText = Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
-            xpReq.requiredLevel(),
-            xpReq.deductedLevels()
-        );
+        Component xpText = classicFullXp
+            ? Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_full", xpReq.deductedLevels())
+            : Component.translatable(
+                "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+                xpReq.requiredLevel(),
+                xpReq.deductedLevels()
+            );
         guiGraphics.text(font, xpText, SLOT_TARGET_X + 13, 29, 0xFF2E5B27, false);
     }
 
@@ -119,24 +125,32 @@ public class EnchantingRecipeCategory extends AbstractRecipeCategory<EnchantingR
         double mouseX,
         double mouseY
     ) {
-        var xpReq = chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
-            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig(),
-            recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0
-        );
-        tooltip.add(Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
-            xpReq.requiredLevel(),
-            xpReq.deductedLevels()
-        ));
+        var runtimeCfg = chiseled_enchanting_table.config.ModRuntimeConfig.effective();
+        boolean classicFullXp = runtimeCfg.xpMode()
+            == chiseled_enchanting_table.config.ModRuntimeConfig.XpSettlementMode.CLASSIC_FULL_POINTS;
+        var lrCfg = chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig();
+        var xpReq = classicFullXp
+            ? chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forFullArcaneRitual(lrCfg, recipe.xpLevelCost(), 0)
+            : chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.forMasterTomeEnchant(
+                lrCfg, recipe.level(), recipe.maxLevel(), recipe.xpLevelCost(), 0);
+        tooltip.add(classicFullXp
+            ? Component.translatable("jei.chiseled_enchanting_table.tooltip.xp_full", xpReq.deductedLevels())
+            : Component.translatable(
+                "jei.chiseled_enchanting_table.tooltip.xp_vanilla",
+                xpReq.requiredLevel(),
+                xpReq.deductedLevels()
+            ));
         tooltip.add(Component.translatable(
             recipe.serverCosts()
                 ? "jei.chiseled_enchanting_table.tooltip.cost_synced"
                 : "jei.chiseled_enchanting_table.tooltip.cost_hint"
         ));
-        tooltip.add(Component.translatable(
-            "jei.chiseled_enchanting_table.tooltip.bookshelf",
-            chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().maxTotalXpDiscountPercent()
-        ));
+        if (runtimeCfg.libraryDiscountEnabled()) {
+            tooltip.add(Component.translatable(
+                "jei.chiseled_enchanting_table.tooltip.bookshelf",
+                lrCfg.maxTotalXpDiscountPercent()
+            ));
+        }
         if (!recipe.conflictingEnchantments().isEmpty()) {
             tooltip.add(Component.translatable(
                 "jei.chiseled_enchanting_table.tooltip.conflicts",
