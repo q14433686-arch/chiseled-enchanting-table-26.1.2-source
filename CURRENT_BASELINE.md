@@ -1,6 +1,6 @@
 # Current Baseline
 
-**Date:** 2026-10-24
+**Date:** 2026-10-26
 **Minecraft Version:** 26.3
 **Fabric Loader:** 0.19.5
 **Fabric API:** 0.162.0+26.3
@@ -13,16 +13,29 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
+## Current engineering validation — 2026-10-26
+
+Verified implementation SHA: **`178747b663bd21dca2b38fefd9cd625ef9ee8cdc`**.
+Release **1.1.0**, MC **26.3**, wire **`26_3_revision_11`**.
+
+- [compile-check 40247733529](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40247733529): **107 JUnit tests, 0 failures/errors/skips**.
+- [build 40247733513](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40247733513): all four jobs successful, including full jar, optional-viewer-disabled compilation, real dedicated server and real SDL-window/integrated-client interactions.
+- Actual client coverage: committed CJK text through SDL's native event queue, real search/preset clicks, server save/ack/reopen, menu quick-move, overlay forwarding/native-focus release, target persistence after closing the menu.
+- CI logs are artifacts plus bounded API-readable diagnostic Check runs, **never Git write-back**. Both successful and failed diagnostic API retrieval have been exercised.
+- Mixin inventory below is generated from registration; coordinator growth and side-effect boundaries are gated.
+- [Engineering decisions, migrated responsibilities, Java-type migration caveat, cross-branch feedback and exact limitations](docs/reports/ENGINEERING_BOUNDARIES_2026_10_26.md).
+- This is automated Linux/Xvfb evidence, **not** human platform-IME candidate-window or multiplayer concurrency validation. Documentation-only evidence follow-ups do not change the verified code SHA.
+
 ## Latest synchronization — 2026-10-26 (supersedes historical rounds below)
 
 - Source locked to **`9f0e13bd75e31f7d1d8a569302d0f57abd2ce840`**, compared against previous source **`3e61f5de3ba7679ccbc92b73443dead149c96840`** and target **`1f2dd036ff35ea72712240b312a9c9b7e4e249bf`**.
 - Release remains **1.1.0 / MC 26.3**; wire is **`26_3_revision_11`**, not the source branch's revision_17. Update both ends.
 - Full tome/page/preset/data refactors integrated with 26.3 APIs preserved. Additional fixes cover six silent datapack overrides, external default-pinning packs, isolated loot-build inputs and failed reloads, hard wire-byte bounds, Creative shelf extraction, particle lifecycle and Iris F3+T invalidation.
-- Verified game/test source **`aa898aa`**: compile-check **40243203302**, **97 JUnit, zero failed/skipped**; build **40243203274**, all four jobs successful (full artifact, optional viewers disabled, real server load/reload/ritual probes). Follow-up fixes start/release SDL search input and distinguish Fabric metadata id `chiseled-enchanting-table` from resource namespace `chiseled_enchanting_table`, restoring bundled-option/preset editability without bypassing external policy.
-- [Seven-path audit, cross-branch feedback and validation boundaries](docs/reports/SYNC_9F0E13B_SEVEN_PATH_AUDIT_2026_10_26.md). Latest remote verification is recorded there; historical run counts below are not evidence for this synchronization.
+- Earlier input/preset-fix evidence (superseded by engineering validation above), source **`aa898aa`**: compile-check **40243203302**, **97 JUnit, zero failed/skipped**; build **40243203274**, all four jobs successful (full artifact, optional viewers disabled, real server load/reload/ritual probes). Follow-up fixes start/release SDL search input and distinguish Fabric metadata id `chiseled-enchanting-table` from resource namespace `chiseled_enchanting_table`, restoring bundled-option/preset editability without bypassing external policy.
+- [Seven-path audit, cross-branch feedback and validation boundaries](docs/reports/SYNC_9F0E13B_SEVEN_PATH_AUDIT_2026_10_26.md). That earlier synchronization evidence is recorded there; current engineering evidence is linked above; historical run counts below are not evidence for this synchronization.
 - Work is on the current Arena branch; no new PR or merge has been requested/performed for this round.
 
-## Current integrated baseline — option 3, source 3e61f5d
+## Historical integrated baseline — option 3, source 3e61f5d (superseded)
 
 The **entire** 26.1.2 gameplay/resource delta through **`3e61f5de3ba7679ccbc92b73443dead149c96840`** (PR #17/#18) is integrated on the current development branch, with architecture-first hardening. It is no longer a foundation-only change.
 
@@ -43,11 +56,11 @@ User selected faithful source defaults plus necessary hardening. The complete in
 
 Back up old worlds: defaults include mother-tome wear, external/unmarked refund scaling and configuration-over-datapack priority. There is no retroactive provenance inference. Update both client and server to revision 5 even though the displayed release label is 1.1.0.
 
-## Source of truth
+## Historical source boundary — 3e081f3 (superseded)
 
 All gameplay, assets, languages and viewer functionality from the 26.1.2 branch through
 `3e081f31f262dc13f6a92f0a50313e12f6af28c0` (1.1.0) are synced, with 26.3 adaptations.
-See the [current port report](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md) for the exact boundary, migration notes and verification.
+See the [historical port report](docs/reports/SYNC_26_1_2_3E081F3_OPTION1.md) for the exact boundary, migration notes and verification.
 [Player Wiki](docs/WIKI.md) describes resonance, Treasure Epiphany/freezing, XP, material
 alternatives, book upgrades, Blank Overwrite and transformations.
 
@@ -81,7 +94,7 @@ alternatives, book upgrades, Blank Overwrite and transformations.
 `python3 scripts/compat_check.py` and `python3 scripts/test_sync_26_3.py` are offline gates.
 GitHub Actions is the authoritative Java compilation check: the sandbox cannot reach the
 Fabric/Mojang Maven repositories. A green older 1.0.3 build is not evidence for this sync.
-Headless server smoke has passed. Remaining real-client/multiplayer checks are in NEXT_TASK.md.
+Real dedicated-server and selected real-client interactions have passed for the SHA above. Remaining platform-specific/manual and multiplayer coverage limits are in NEXT_TASK.md.
 
 Version declarations must agree in gradle.properties, README.md, fabric.mod.json,
 publish workflow and its docs/ci copy. Do not copy historical compile reports from 26.1.2.
@@ -105,7 +118,7 @@ The sections below predate the current option-1 port. Their pending-runtime note
 Final pinned-dependency verification (source commit `a0412e9`):
 `compile-check` **39824564921** succeeded; `build` **39824565189** completed
 all three jobs successfully (static checks, full Gradle build, no-viewers compilation).
-`build-reports/compile-java.log` records both exact pinned viewer versions and
+The historical `build-reports/compile-java.log` (now replaced by artifacts/Checks diagnostics) recorded both exact pinned viewer versions and
 `BUILD SUCCESSFUL`. This confirms compilation/packaging, not in-game runtime behaviour.
 
 ## 1.1.1 world-load hotfix (2026-10-23)
