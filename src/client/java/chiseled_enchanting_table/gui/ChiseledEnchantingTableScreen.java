@@ -303,11 +303,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         );
     }
 
-    private boolean shouldShowShelfHudBadge() {
+    boolean shouldShowShelfHudBadge() {
         return !this.menu.usesClassicShelfBoost() || this.menu.isLibraryDiscountEnabled();
     }
 
-    private boolean shouldShowSanctumPanel() {
+    boolean shouldShowSanctumPanel() {
         return this.menu.isRitualActive()
             || !isInscribeTab()
             || this.menu.isEpiphanyEnabled()
@@ -658,14 +658,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return mouseX >= x0 && mouseX < x0 + TableSkin.BTN_SIZE && mouseY >= y0 && mouseY < y0 + TableSkin.BTN_SIZE;
     }
 
-    private boolean isOverSacrificeSkipButton(double mouseX, double mouseY) {
+    boolean isOverSacrificeSkipButton(double mouseX, double mouseY) {
         if (!this.menu.isRitualActive()) return false;
         int x0 = this.leftPos + TableSkin.SKIP_SACRIFICE_BTN_X;
         int y0 = this.topPos + TableSkin.SKIP_SACRIFICE_BTN_Y;
         return mouseX >= x0 && mouseX < x0 + TableSkin.SKIP_BTN_W && mouseY >= y0 && mouseY < y0 + TableSkin.SKIP_BTN_H;
     }
 
-    private boolean isOverRushSkipButton(double mouseX, double mouseY) {
+    boolean isOverRushSkipButton(double mouseX, double mouseY) {
         if (!this.menu.isRitualActive()) return false;
         int x0 = this.leftPos + TableSkin.SKIP_RUSH_BTN_X;
         int y0 = this.topPos + TableSkin.SKIP_RUSH_BTN_Y;
@@ -995,7 +995,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         RowRenderSupport.renderBoundedText(ctx, this.minecraft, text.getString(), x, y, maxScale, maxWidth, argbColor);
     }
 
-    private void renderModeTabs(GuiGraphicsExtractor ctx, int i, int j, int mouseX, int mouseY) {
+    void renderModeTabs(GuiGraphicsExtractor ctx, int i, int j, int mouseX, int mouseY) {
         if (!this.menu.hasSecondaryTabs()) {
             int cx = i + TableSkin.CONFIG_BTN_X;
             int cy = j + TableSkin.CONFIG_BTN_Y_OFFSET;
@@ -1105,241 +1105,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     @Override
+    @Override
     public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         if (this.returningFromExternalScreen) {
             restoreAfterExternalScreenReturn(true);
         }
         super.extractBackground(ctx, mouseX, mouseY, partialTick);
-        int i = this.leftPos;
-        int j = this.topPos;
-
-        // Draw inactive tab under main frame, main frame, then active tab flush on top so its open bottom blends seamlessly!
-        ctx.blit(TableSkin.BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
-        renderModeTabs(ctx, i, j, mouseX, mouseY);
-        if (shouldShowShelfHudBadge()) {
-            renderHeaderShelfHudBadge(ctx, i, j, mouseX, mouseY);
-        }
-
-        int px = i + TableSkin.PANEL_X;
-        int py = j + TableSkin.PANEL_Y;
-        if (!shouldShowSanctumPanel()) {
-            return;
-        }
-
-        if (this.menu.isRitualActive()) {
-            ctx.blit(TableSkin.EPIPHANY_PANEL_FROZEN, px, py, px + TableSkin.PANEL_W, py + TableSkin.PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
-            ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
-            try {
-                int barX = px + 10;
-                int barY = py + 29;
-                int barW = 99;
-                int barH = 4;
-                ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC0A0614);
-                ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE181229);
-                long rem = this.menu.ritualRemainingTicks();
-                long tot = Math.max(1L, Math.max(rem, this.menu.ritualTotalTicks()));
-                float doneRatio = Mth.clamp(1.0f - (float) rem / (float) tot, 0.04f, 1.0f);
-                int filledW = Math.round(barW * doneRatio);
-                ctx.fill(barX, barY, barX + filledW, barY + barH, 0xFF42E39B);
-                ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFB8FFE0);
-
-                // Left button: Sacrifice XP Skip
-                int sx = i + TableSkin.SKIP_SACRIFICE_BTN_X;
-                int sy = j + TableSkin.SKIP_SACRIFICE_BTN_Y;
-                boolean canSac = this.menu.canSacrificeSkipNow();
-                ctx.fill(sx, sy, sx + TableSkin.SKIP_BTN_W, sy + TableSkin.SKIP_BTN_H, canSac ? 0xFFE0B85A : 0xFF584E68);
-                ctx.fill(
-                    sx + 1,
-                    sy + 1,
-                    sx + TableSkin.SKIP_BTN_W - 1,
-                    sy + TableSkin.SKIP_BTN_H - 1,
-                    canSac
-                        ? (isOverSacrificeSkipButton(mouseX, mouseY) ? 0xFF2E5B48 : 0xFF1E3E33)
-                        : 0xFF191522
-                );
-
-                // Right button: Non-Sacrifice Force Rush Skip
-                int rx = i + TableSkin.SKIP_RUSH_BTN_X;
-                int ry = j + TableSkin.SKIP_RUSH_BTN_Y;
-                boolean canRush = this.menu.canRushSkipNow();
-                ctx.fill(rx, ry, rx + TableSkin.SKIP_BTN_W, ry + TableSkin.SKIP_BTN_H, canRush ? 0xFFD9725A : 0xFF584E68);
-                ctx.fill(
-                    rx + 1,
-                    ry + 1,
-                    rx + TableSkin.SKIP_BTN_W - 1,
-                    ry + TableSkin.SKIP_BTN_H - 1,
-                    canRush
-                        ? (isOverRushSkipButton(mouseX, mouseY) ? 0xFF662932 : 0xFF491D26)
-                        : 0xFF191522
-                );
-            } finally {
-                ctx.disableScissor();
-            }
-            return;
-        }
-
-        if (isTomeTab()) {
-            ctx.blit(TableSkin.CLEANSE_PANEL, px, py, px + TableSkin.PANEL_W, py + TableSkin.PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
-            var selected = this.scrollContainer.selectedTomeEntry();
-            String[] labels = {
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_next").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_full").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_permanent").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_unlock").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_lock_all").getString()
-            };
-            for (int b = 0; b < labels.length; b++) {
-                int[] r = tomeButtonRect(b);
-                int bx = i + r[0];
-                int by = j + r[1];
-                boolean enabled = b == 4 || (selected != null && (b == 3 ? selected.locked() : !selected.locked()));
-                if (b < 3 && selected != null && selected.wear_used() <= 0 && b != 2) enabled = false;
-                if (b != 3 && !this.menu.isTomeLocksEnabled()) enabled = false;
-                boolean hovered = hoveredTomeButton(mouseX, mouseY) == b;
-                ctx.blit(TableSkin.TOME_BUTTONS[b], bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);
-                if (!enabled) {
-                    ctx.fill(bx, by, bx + r[2], by + r[3], 0xB0191522);
-                } else if (hovered) {
-                    ctx.fill(bx, by, bx + r[2], by + r[3], 0x332AD4EE);
-                }
-                RowRenderSupport.renderCenteredBoxText(ctx, this.minecraft, labels[b], bx + 1, r[2] - 2, by + r[3] * 0.5f, 0.58f,
-                    enabled ? 0xFFDFF7FF : 0xFF7D748D);
-            }
-            if (this.scrollContainer.children().isEmpty()) {
-                int lx = i + 12;
-                int ly = j + 74;
-                String hint = Component.translatable(this.menu.isTomePageUnlocked()
-                    ? "gui.chiseled_enchanting_table.tomes.empty"
-                    : "gui.chiseled_enchanting_table.tab.locked_tooltip").getString();
-                RowRenderSupport.renderBoundedText(ctx, this.minecraft, hint, lx, ly, 0.68f, 140, 0xFFAEEADF);
-            }
-            return;
-        }
-
-        if (isCleanseTab()) {
-            ctx.blit(TableSkin.CLEANSE_PANEL, px, py, px + TableSkin.PANEL_W, py + TableSkin.PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
-            ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
-            try {
-                ItemStack target = this.menu.get_enchantable_item();
-                int totalTraits = EnchantmentHelper.getEnchantmentsForCrafting(target).size();
-                int nonCurse = DisenchantmentApplication.countNonCurseEnchantments(target);
-                int barX = px + 10;
-                int barY = py + 45;
-                int barW = 80;
-                int barH = 4;
-                ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC071210);
-                ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE102420);
-                float ratio = totalTraits <= 0 ? 0.0f : Mth.clamp((float) nonCurse / (float) Math.max(1, totalTraits), 0.15f, 1.0f);
-                int filledW = Math.round(barW * ratio);
-                if (filledW > 0) {
-                    ctx.fill(barX, barY, barX + filledW, barY + barH, 0xFF39D99A);
-                    ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFA8FFE0);
-                }
-
-                int bx = i + TableSkin.CLEANSE_ALL_BTN_X;
-                int by = j + TableSkin.CLEANSE_ALL_BTN_Y;
-                boolean canAll = canCleanseAllNow();
-                ctx.blit(TableSkin.BTN_CLEANSE_ALL, bx, by, bx + TableSkin.BTN_SIZE, by + TableSkin.BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
-                if (!canAll) {
-                    ctx.fill(bx, by, bx + TableSkin.BTN_SIZE, by + TableSkin.BTN_SIZE, 0x990A1010);
-                } else if (isDisenchantAllConfirmPending()) {
-                    ctx.fill(bx - 1, by - 1, bx + TableSkin.BTN_SIZE + 1, by + TableSkin.BTN_SIZE + 1, 0xCCFFAA2A);
-                    ctx.fill(bx + 1, by + 1, bx + TableSkin.BTN_SIZE - 1, by + TableSkin.BTN_SIZE - 1, 0x44FFD066);
-                } else if (isOverCleanseAllButton(mouseX, mouseY)) {
-                    ctx.fill(bx, by, bx + TableSkin.BTN_SIZE, by + TableSkin.BTN_SIZE, 0x2E8CFFD2);
-                }
-            } finally {
-                ctx.disableScissor();
-            }
-
-            if (this.scrollContainer.children().isEmpty()) {
-                int lx = i + 12;
-                int ly = j + 74;
-                String hint1 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line1").getString();
-                String hint2 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line2").getString();
-                RowRenderSupport.renderBoundedText(ctx, this.minecraft, hint1, lx, ly, 0.72f, 140, 0xFFAEEADF);
-                RowRenderSupport.renderBoundedText(ctx, this.minecraft, hint2, lx, ly + 12, 0.64f, 140, 0xFF82B8AD);
-            }
-            return;
-        }
-
-        boolean frozen = this.menu.isEpiphanyFrozen();
-        Identifier panelSprite = frozen ? TableSkin.EPIPHANY_PANEL_FROZEN : TableSkin.EPIPHANY_PANEL;
-        ctx.blit(panelSprite, px, py, px + TableSkin.PANEL_W, py + TableSkin.PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
-
-        ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
-        try {
-            if (!this.menu.isEpiphanyEnabled()) {
-                int barX = px + 10;
-                int barY = py + 45;
-                int barW = 98;
-                int barH = 4;
-                ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC0A0614);
-                ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE1A122B);
-                int maxDisc = Math.max(1, this.menu.libraryResonanceConfig().maxTotalXpDiscountPercent());
-                float ratio = Mth.clamp((float) this.menu.xpDiscountPercent / (float) maxDisc, 0.0f, 1.0f);
-                int filledW = Math.round(barW * ratio);
-                if (filledW > 0) {
-                    ctx.fill(barX, barY, barX + filledW, barY + barH, 0xFF42E39B);
-                    ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFB8FFE0);
-                }
-                return;
-            }
-            int minShelves = Math.max(1, this.menu.epiphanyMinBookshelves());
-            boolean unlocked = this.menu.regularBookshelves >= minShelves;
-            int barX = px + 10;
-            int barY = py + 45;
-            int barW = 65;
-            int barH = 4;
-            ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC0A0614);
-            ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE1A122B);
-
-            float ratio;
-            int fillMain;
-            int fillHighlight;
-            if (!unlocked) {
-                ratio = Mth.clamp((float) this.menu.regularBookshelves / (float) minShelves, 0.0f, 1.0f);
-                fillMain = 0xFF8C52E8;
-                fillHighlight = 0xFFD2B0FF;
-            } else if (frozen) {
-                int maxSec = Math.max(1, this.menu.epiphanyMaxFreezeTicks() / 20);
-                ratio = Mth.clamp((float) this.menu.countdownSeconds() / (float) maxSec, 0.0f, 1.0f);
-                fillMain = 0xFF3FD8FF;
-                fillHighlight = 0xFFC2FBFF;
-            } else {
-                int cycleSec = Math.max(1, this.menu.epiphanyCycleTicks() / 20);
-                ratio = Mth.clamp((float) this.menu.countdownSeconds() / (float) cycleSec, 0.0f, 1.0f);
-                fillMain = 0xFFC86BFF;
-                fillHighlight = 0xFFFFDF8E;
-            }
-            int filledW = Math.round(barW * ratio);
-            if (filledW > 0) {
-                ctx.fill(barX, barY, barX + filledW, barY + barH, fillMain);
-                ctx.fill(barX, barY, barX + filledW, barY + 1, fillHighlight);
-            }
-
-            int fx = i + TableSkin.FREEZE_BTN_X;
-            int fy = j + TableSkin.FREEZE_BTN_Y;
-            boolean canFreeze = this.menu.canAffordFreezeEpiphany();
-            ctx.blit(TableSkin.BTN_FREEZE, fx, fy, fx + TableSkin.BTN_SIZE, fy + TableSkin.BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
-            if (!canFreeze) {
-                ctx.fill(fx, fy, fx + TableSkin.BTN_SIZE, fy + TableSkin.BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
-            } else if (isOverFreezeButton(mouseX, mouseY)) {
-                ctx.fill(fx, fy, fx + TableSkin.BTN_SIZE, fy + TableSkin.BTN_SIZE, 0x2C90F5FF);
-            }
-
-            int rx = i + TableSkin.REROLL_BTN_X;
-            int ry = j + TableSkin.REROLL_BTN_Y;
-            boolean canReroll = this.menu.canAffordRerollEpiphany();
-            ctx.blit(TableSkin.BTN_REROLL, rx, ry, rx + TableSkin.BTN_SIZE, ry + TableSkin.BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
-            if (!canReroll) {
-                ctx.fill(rx, ry, rx + TableSkin.BTN_SIZE, ry + TableSkin.BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
-            } else if (isOverRerollButton(mouseX, mouseY)) {
-                ctx.fill(rx, ry, rx + TableSkin.BTN_SIZE, ry + TableSkin.BTN_SIZE, 0x2CFFE082);
-            }
-        } finally {
-            ctx.disableScissor();
-        }
+        TablePanelBackground.render(this, ctx, mouseX, mouseY);
     }
 
     @Override
@@ -2148,7 +1920,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
     }
 
-    private void renderHeaderShelfHudBadge(GuiGraphicsExtractor ctx, int left, int top, int mouseX, int mouseY) {
+    void renderHeaderShelfHudBadge(GuiGraphicsExtractor ctx, int left, int top, int mouseX, int mouseY) {
         int bx = left + TableSkin.SHELF_HUD_X;
         int by = top + TableSkin.SHELF_HUD_Y;
         boolean hovered = isOverShelfHudBadge(mouseX, mouseY);
@@ -2175,140 +1947,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private List<Component> buildResonanceBreakdownTooltip() {
-        int woodenBonus = this.menu.woodenXpDiscountPercent();
-        int chiseledBonus = this.menu.globalMasteryDiscountPercent();
-        double totalUnits = this.menu.totalMasteryUnits();
-        double affinityUnits = this.menu.affinityMasteryUnits(this.menu.get_enchantable_item());
-        int minShelves = this.menu.epiphanyMinBookshelves();
-        var sg = this.menu.shelfGatesConfig();
-        List<Component> tip = new ArrayList<>();
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.title",
-            this.menu.xpDiscountPercent,
-            this.menu.libraryResonanceConfig().maxTotalXpDiscountPercent()
-        ).withStyle(ChatFormatting.GOLD));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.broad_breakdown",
-            this.menu.totalLibraryBookshelves(),
-            this.menu.regularBookshelves,
-            this.menu.emptyChiseledBookshelves,
-            this.menu.chiseledBookshelves
-        ).withStyle(ChatFormatting.YELLOW));
-        if (this.menu.crampedLibrary) {
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.cramped")
-                .withStyle(ChatFormatting.RED));
-        }
-        int minDiscShelves = this.menu.libraryResonanceConfig().minDiscountBookshelves();
-        if (this.menu.regularBookshelves < minDiscShelves) {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.wooden_locked",
-                this.menu.regularBookshelves,
-                minDiscShelves,
-                minDiscShelves
-            ).withStyle(ChatFormatting.GRAY));
-        } else {
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.wooden", this.menu.regularBookshelves, woodenBonus)
-                .withStyle(ChatFormatting.GRAY));
-        }
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.chiseled_mastery",
-            String.format(java.util.Locale.ROOT, "%.1f", totalUnits),
-            chiseledBonus
-        ).withStyle(ChatFormatting.AQUA));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.slot_cap_hint",
-            String.format(java.util.Locale.ROOT, "%.1f", this.menu.libraryResonanceConfig().maxMasteryUnitsPerSlot())
-        ).withStyle(ChatFormatting.DARK_AQUA));
-        tip.add(Component.translatable(
-            "gui.chiseled_enchanting_table.resonance.high_tier_books",
-            this.menu.qualifyingChiseledEnchantments(),
-            sg.tier3QualifyingEnchantments()
-        ).withStyle(this.menu.qualifyingChiseledEnchantments() >= sg.tier3QualifyingEnchantments()
-            ? ChatFormatting.GREEN
-            : ChatFormatting.GRAY));
-        var lrPanelCfg = this.menu.libraryResonanceConfig();
-        if (lrPanelCfg.tomeRegenEnabled()
-            && lrPanelCfg.tomeConsumptionMode() != chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.ConsumptionMode.KEEP) {
-            int nearShelves = this.menu.totalLibraryBookshelves();
-            double regenSec = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
-                .computeRegenSeconds(lrPanelCfg, nearShelves);
-            int regenTier = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear
-                .regenTierIndex(lrPanelCfg, nearShelves);
-            Component tierBadge = switch (regenTier) {
-                case 2 -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier2",
-                    lrPanelCfg.tomeRegenTier2Shelves()
-                );
-                case 1 -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier1",
-                    lrPanelCfg.tomeRegenTier1Shelves()
-                );
-                default -> Component.translatable(
-                    "gui.chiseled_enchanting_table.pricing.tome_regen_tier0",
-                    lrPanelCfg.tomeRegenTier1Shelves()
-                );
-            };
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.pricing.tome_regen_rate",
-                String.format(java.util.Locale.ROOT, "%.1f", regenSec / 1200.0),
-                nearShelves,
-                tierBadge
-            ).withStyle(regenTier >= 2
-                ? ChatFormatting.GOLD
-                : (regenTier == 1 ? ChatFormatting.GREEN : ChatFormatting.GRAY)));
-        }
-        if (affinityUnits > 0.005) {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.affinity_line",
-                String.format(java.util.Locale.ROOT, "%.1f", affinityUnits)
-            ).withStyle(ChatFormatting.GREEN));
-        }
-        if (this.menu.regularBookshelves >= minShelves) {
-            int pct = (int) Math.round(this.menu.epiphanyChance() * 100.0);
-            int maxSlots = Math.max(1, this.menu.epiphanyMaxSlots());
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.active", pct)
-                .withStyle(ChatFormatting.LIGHT_PURPLE));
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.slots_line", maxSlots)
-                .withStyle(ChatFormatting.GOLD));
-            if (this.menu.isEpiphanyFrozen()) {
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.epiphany.frozen_remaining",
-                    formatClock(this.menu.countdownSeconds()),
-                    Math.max(1, this.menu.epiphanyMaxFreezeTicks() / 1200)
-                ).withStyle(ChatFormatting.AQUA));
-            } else {
-                tip.add(Component.translatable(
-                    "gui.chiseled_enchanting_table.epiphany.cycle_remaining",
-                    formatClock(this.menu.countdownSeconds())
-                ).withStyle(ChatFormatting.GRAY));
-            }
-        } else {
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.epiphany.progress",
-                this.menu.regularBookshelves,
-                minShelves
-            ).withStyle(ChatFormatting.DARK_PURPLE));
-        }
-        tip.add(Component.translatable("gui.chiseled_enchanting_table.epiphany.treasure_rule")
-            .withStyle(ChatFormatting.DARK_GRAY));
-        BlockPos scanPos = effectiveTablePos();
-        if (this.minecraft != null && this.minecraft.level != null && scanPos != null) {
-            var ritScan = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .scanLibraryRitualContext(this.minecraft.level, scanPos, sg);
-            var rCfg = this.menu.ritualConfig();
-            double sigmaL = ritScan.totalWearImmuneLoad();
-            double slipPct = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics
-                .computeLoadSlipProbability(rCfg, sigmaL, ritScan.totalDetectedBookshelves()) * 100.0;
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.resonance.overload_sigma_line",
-                String.format(java.util.Locale.ROOT, "%.1f", sigmaL),
-                String.format(java.util.Locale.ROOT, "%.1f", slipPct),
-                String.format(java.util.Locale.ROOT, "%.1f", rCfg.crosslineSlip().minLoadThreshold())
-            ).withStyle(slipPct > 0.005 ? ChatFormatting.GOLD : ChatFormatting.GRAY));
-        }
-        tip.add(Component.translatable("gui.chiseled_enchanting_table.resonance.scapegoat_order_line")
-            .withStyle(ChatFormatting.DARK_GRAY));
-        return tip;
+        return ResonanceTooltip.build(this.menu);
     }
 
     @Override
