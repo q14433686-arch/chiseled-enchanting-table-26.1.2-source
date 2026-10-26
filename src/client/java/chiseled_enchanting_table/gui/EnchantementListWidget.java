@@ -53,7 +53,7 @@ import org.jetbrains.annotations.Nullable;
  * @deprecated Prefer {@link EnchantmentListWidget}.
  */
 @Deprecated(forRemoval = false)
-public class EnchantementListWidget extends AbstractSelectionList<EnchantementListWidget.EnchantUiEntry> {
+public class EnchantementListWidget extends AbstractSelectionList<EnchantementListWidget.EnchantUiEntry> implements TableListRead {
     public enum UiTabMode {
         INSCRIBE,
         CLEANSE,
@@ -212,6 +212,24 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             return Component.translatable("enchantment.level." + level).getString();
         }
         return String.valueOf(level);
+    }
+
+    @Override public boolean hasEntries() { return !this.children().isEmpty(); }
+    @Override public java.util.List<ChiseledEnchantingMenuPayloads.TomeBookEntry> selectedTomes() {
+        var selected = selectedTomeEntry();
+        return selected == null ? java.util.List.of() : java.util.List.of(selected);
+    }
+    @Override public TableRowView hoveredXpBadgeEntry(double x, double y) {
+        var entry = hoveredXpBadgeEntry0(x, y);
+        return entry == null ? null : entry.toView();
+    }
+    @Override public TableRowView hoveredSpecialRowEntry(double x, double y) {
+        var entry = hoveredSpecialRowEntry0(x, y);
+        return entry == null ? null : entry.toView();
+    }
+    @Override public TableRowView hoveredActionRowEntry(double x, double y) {
+        var entry = hoveredActionRowEntry0(x, y);
+        return entry == null ? null : entry.toView();
     }
 
     public String displayName(AvailableOption option) {
@@ -398,7 +416,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
-    public EnchantUiEntry hoveredXpBadgeEntry(double mouseX, double mouseY) {
+    public EnchantUiEntry hoveredXpBadgeEntry0(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;
         }
@@ -420,7 +438,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
-    public EnchantUiEntry hoveredActionRowEntry(double mouseX, double mouseY) {
+    public EnchantUiEntry hoveredActionRowEntry0(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;
         }
@@ -438,7 +456,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     @Nullable
-    public EnchantUiEntry hoveredSpecialRowEntry(double mouseX, double mouseY) {
+    public EnchantUiEntry hoveredSpecialRowEntry0(double mouseX, double mouseY) {
         if (mouseX < this.getX() || mouseX > this.getX() + this.width || mouseY < this.getY() || mouseY > this.getY() + this.height) {
             return null;
         }
@@ -933,6 +951,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (player.getAbilities().instabuild) return true;
             if (bundle.isEmpty()) return isZeroMaterialRow() || cost_item_stack.is(Items.ENCHANTED_BOOK);
             return handler.isBundleAffordableWithOverflow(bundle);
+        }
+
+        public TableRowView toView() {
+            return new TableRowView(discovery_locked, enchantment_id, shelf_locked, enchantment,
+                enchant_level, required_bookshelves, is_category_header, cleanse_theme, category_title,
+                category_badge, option_type, is_transformation, enchantable_item, existingSameLevel,
+                conflict_refund_points, xp_requirement, xpConditionMet());
         }
 
         public boolean enchantAlreadyExist() {

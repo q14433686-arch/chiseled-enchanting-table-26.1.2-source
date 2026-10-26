@@ -1431,7 +1431,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 );
                 return;
             }
-            var hoveredXpEntry = this.scrollContainer.hoveredXpBadgeEntry(mouseX, mouseY);
+            var hoveredXpEntry = this.scrollContainer.hoveredXpBadgeEntry0(mouseX, mouseY);
             if (hoveredXpEntry != null) {
                 var req = hoveredXpEntry.xp_requirement;
                 int playerLvl = this.menu.player.experienceLevel;
@@ -1501,7 +1501,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ctx.setTooltipForNextFrame(this.font, xpTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
-            var specialEntry = this.scrollContainer.hoveredSpecialRowEntry(mouseX, mouseY);
+            var specialEntry = this.scrollContainer.hoveredSpecialRowEntry0(mouseX, mouseY);
             if (specialEntry != null) {
                 if (specialEntry.discovery_locked) {
                     String lockedOut = this.menu.syncedTransformationOutputName(specialEntry.enchantment_id);
@@ -1623,7 +1623,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     return;
                 }
             }
-            var hoveredRow = this.scrollContainer.hoveredActionRowEntry(mouseX, mouseY);
+            var hoveredRow = this.scrollContainer.hoveredActionRowEntry0(mouseX, mouseY);
             if (hoveredRow != null) {
                 List<Component> rowTip = new ArrayList<>();
                 AvailableOption hoverOpt = new AvailableOption(
