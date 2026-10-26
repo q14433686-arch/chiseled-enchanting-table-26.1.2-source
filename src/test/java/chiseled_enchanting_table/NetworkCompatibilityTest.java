@@ -165,6 +165,18 @@ class NetworkCompatibilityTest {
             List.of(new EnchantCostTablePayload.CostEntry(OptionType.PURGE_CURSE, id("curse"), 3, 42, List.of())), displays, true);
     }
 
+    @Test void oversizedWireHeaderFailsInsteadOfEmittingPacket() {
+        var base = table(List.of());
+        // Rows can be trimmed away, but header/config bytes cannot: a measurer that never
+        // fits must surface an error instead of producing an oversized packet (NET-01).
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+            () -> EnchantCostTablePayload.trimToWireBudget(base, 100, p -> 5_000));
+        var trimmed = EnchantCostTablePayload.trimToWireBudget(base, 100,
+            p -> p.costs().isEmpty() ? 50 : 5_000);
+        assertTrue(trimmed.costs().isEmpty());
+        assertFalse(trimmed.costTableComplete());
+    }
+
     @Test void emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() {
         chiseled_enchanting_table.compat.SyncedEnchantmentCosts.apply(table(List.of()));
         try {

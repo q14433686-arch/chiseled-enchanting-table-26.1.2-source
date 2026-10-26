@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.data;
 
+import chiseled_enchanting_table.ChiseledEnchantingTable;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -31,13 +32,11 @@ final class DatapackKeyExtractor {
         var resource = selected.get();
         try (Reader reader = resource.openAsReader()) {
             JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
-            String source = resource.sourcePackId();
-            boolean own = source.equals("mod/chiseled_enchanting_table")
-                || source.equals("chiseled_enchanting_table")
-                || source.equals("fabric/chiseled_enchanting_table");
-            // Fabric's built-in resource pack ID can vary across loader versions; always treat
-            // content byte-identical to our bundled default table as owned by the mod itself.
-            if (!own) {
+            boolean own = ChiseledEnchantingTable.FABRIC_MOD_ID.equals(resource.sourcePackId());
+            // Aggregate sources such as "fabric"/"vanilla" cannot prove ownership by ID alone, so
+            // only there do we spend a content comparison against the bundled table. A user pack
+            // byte-identical to the bundled default is external governance, not our own layer.
+            if (!own && ("fabric".equals(resource.sourcePackId()) || "vanilla".equals(resource.sourcePackId()))) {
                 try (var stream = ChiseledEnchantingTableData.class.getResourceAsStream(
                     "/data/" + tableId.getNamespace() + "/" + tableId.getPath())) {
                     if (stream != null) own = object.equals(JsonParser.parseReader(
@@ -110,6 +109,15 @@ final class DatapackKeyExtractor {
                 };
                 for (String k : masteryKeys) {
                     if (hasAny(root, mastery, k)) keys.add(k);
+                }
+                JsonObject tomePages = root.has("tome_pages") && root.get("tome_pages").isJsonObject()
+                    ? root.getAsJsonObject("tome_pages") : null;
+                String[] tomePageKeys = {
+                    "locked_shelf_breakable", "locked_book_extraction_blocked", "early_unlock_xp_levels",
+                    "early_unlock_grit_count", "sacrifice_required", "tome_page_required_shelves"
+                };
+                for (String k : tomePageKeys) {
+                    if (hasAny(root, tomePages, k)) keys.add(k);
                 }
             }
             case "book_upgrades" -> {

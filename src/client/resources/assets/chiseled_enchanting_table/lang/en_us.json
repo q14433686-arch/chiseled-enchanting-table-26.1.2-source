@@ -973,5 +973,6 @@
   "config.chiseled_enchanting_table.trace.prefix_modern": "Modern:",
   "gui.chiseled_enchanting_table.transformation.batch_tip_survival": "Batch: %s / %s items (Survival: capped by XP & catalyst)",
   "gui.chiseled_enchanting_table.transformation.batch_tip_creative": "Batch: %s / %s items (Creative: XP & catalyst bypassed)",
-  "message.chiseled_enchanting_table.reload_closed": "Chiseled Enchanting Table closed to refresh reloaded datapack rules."
+  "message.chiseled_enchanting_table.reload_closed": "Chiseled Enchanting Table closed to refresh reloaded datapack rules.",
+  "message.chiseled_enchanting_table.cost_sync_failed": "Unable to synchronize enchanting rules. Ask the server administrator to check datapack costs and transformations."
 }

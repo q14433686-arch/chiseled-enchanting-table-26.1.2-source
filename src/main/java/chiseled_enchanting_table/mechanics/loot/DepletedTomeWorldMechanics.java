@@ -332,7 +332,8 @@ public final class DepletedTomeWorldMechanics {
 
     public static void initChestLootInjection() {
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
-            DepletedTomeChestSpawnConfig cfg = activeChestSpawnConfig;
+            DepletedTomeChestSpawnConfig cfg = chiseled_enchanting_table.data.ChiseledEnchantingTableData
+                .lootRegistryBuildRules().chestSpawns();
             if (!source.isBuiltin() && !cfg.allowNonBuiltinTables()) {
                 return;
             }

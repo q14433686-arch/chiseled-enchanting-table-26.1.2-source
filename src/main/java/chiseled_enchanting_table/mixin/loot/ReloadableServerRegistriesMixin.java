@@ -1,13 +1,10 @@
 package chiseled_enchanting_table.mixin.loot;
 
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import net.minecraft.core.LayeredRegistryAccess;
-import net.minecraft.core.Registry;
-import net.minecraft.server.RegistryLayer;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.ReloadableServerRegistries;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,28 +12,25 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Ensures {@code loot_injections.json} and {@code pack_policy.json} are preloaded from the incoming
- * {@link ResourceManager} BEFORE {@code RegistryDataLoader.load(..., RELOADABLE_REGISTRIES, ...)}
- * builds {@code Registries.LOOT_TABLE} and fires {@code LootTableEvents.MODIFY} on both initial
- * world boot and {@code /reload}.
+ * Makes the mod's loot-table preload part of the vanilla registry reload itself: when our
+ * datapack loot rules cannot be parsed, the whole reload fails and keeps the previous rules
+ * instead of silently falling back to bundled defaults (Audit RELOAD-01).
  */
 @Mixin(ReloadableServerRegistries.class)
 public abstract class ReloadableServerRegistriesMixin {
-    @Inject(method = "reload", at = @At("HEAD"))
-    private static void cet$preloadLootInjectionRules(
-        LayeredRegistryAccess<RegistryLayer> context,
-        List<Registry.PendingTags<?>> updatedContextTags,
-        ResourceManager manager,
-        Executor executor,
-        CallbackInfoReturnable<CompletableFuture<ReloadableServerRegistries.LoadResult>> cir
+    @Inject(method = "reload", at = @At("HEAD"), cancellable = true, require = 1)
+    private static void cet$preloadLootRules(
+        ResourceManager resourceManager,
+        PreparableReloadListener.PreparationBarrier preparationBarrier,
+        CallbackInfoReturnable<CompletableFuture<Identifier>> cir
     ) {
         try {
-            ChiseledEnchantingTableData.preloadForLootRegistries(manager);
+            ChiseledEnchantingTableData.preloadForLootRegistries(resourceManager);
         } catch (RuntimeException error) {
+            ChiseledEnchantingTableData.clearLootRegistryBuildRules();
             chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.error(
-                "Failed to preload loot_injections.json / pack_policy.json before loot registry reload; falling back to bundled defaults",
-                error
-            );
+                "Rejected invalid chiseled enchanting loot rules; keeping previous rules", error);
+            cir.setReturnValue(CompletableFuture.failedFuture(error));
         }
     }
 }

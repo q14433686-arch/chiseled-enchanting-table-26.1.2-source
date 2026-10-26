@@ -98,9 +98,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static volatile BookUpgradeRules rawBookUpgradeRules = builtInBookUpgradeRules();
     // Classic overlay set: bundled baselines, replaceable per-file by a
     // datapack carrying the same path (loaded in the reload listener below).
-    private static volatile CostTables classicCostTables = CostTables.fromJson(readBundledJsonObject("enchantment_costs_classic_1_0_3.json"));
-    private static volatile BookUpgradeRules classicBookUpgradeRules = BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades_classic_1_0_3.json"));
-    private static volatile Map<Identifier, ItemTransformation> classicItemTransformations = classic103ItemTransformations();
+    private static final CostTables BUILT_IN_CLASSIC_COSTS = CostTables.fromJson(readBundledJsonObject("enchantment_costs_classic_1_0_3.json"));
+    private static final BookUpgradeRules BUILT_IN_CLASSIC_UPGRADES = BookUpgradeRules.fromJson(readBundledJsonObject("book_upgrades_classic_1_0_3.json"));
+    private static final Map<Identifier, ItemTransformation> BUILT_IN_CLASSIC_TRANSFORMATIONS = classic103ItemTransformations();
+    private static volatile CostTables classicCostTables = BUILT_IN_CLASSIC_COSTS;
+    private static volatile BookUpgradeRules classicBookUpgradeRules = BUILT_IN_CLASSIC_UPGRADES;
+    private static volatile Map<Identifier, ItemTransformation> classicItemTransformations = BUILT_IN_CLASSIC_TRANSFORMATIONS;
     private static volatile TreasureEpiphanyRules rawTreasureEpiphanyRules = builtInTreasureEpiphanyRules();
     private static volatile DisenchantingRules rawDisenchantingRules = builtInDisenchantingRules();
     private static volatile chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config rawShelfGatesConfig =
@@ -118,8 +121,18 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     private static volatile Map<Identifier, ItemTransformation> itemTransformations = rawItemTransformations;
     private static volatile VanillaChestBooksMode vanillaChestBooksMode = rawVanillaChestBooksMode;
     private static volatile List<LootInjection> lootInjections = BUILT_IN_LOOT_TABLE.entries();
-    private static volatile List<LootInjection> preloadedLootInjections = null;
-    private static volatile VanillaChestBooksMode preloadedVanillaChestBooksMode = null;
+    /** Registry preparation is NOT a live gameplay generation; failed reloads must not leak it. */
+    public record LootRegistryBuildRules(List<LootInjection> entries, VanillaChestBooksMode mode,
+        chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns) {
+        public LootRegistryBuildRules { entries = List.copyOf(entries); }
+    }
+    private static volatile LootRegistryBuildRules pendingLootRegistryBuild;
+    public static void clearLootRegistryBuildRules() { pendingLootRegistryBuild = null; }
+    public static LootRegistryBuildRules lootRegistryBuildRules() {
+        var pending = pendingLootRegistryBuild;
+        return pending != null ? pending : new LootRegistryBuildRules(lootInjections(), vanillaChestBooksMode(),
+            chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.activeChestSpawnConfig());
+    }
     private static volatile BookshelfBookPool bookshelfBookPool = rawBookshelfBookPool;
     private static volatile BookUpgradeRules bookUpgradeRules = rawBookUpgradeRules;
     private static volatile TreasureEpiphanyRules treasureEpiphanyRules = rawTreasureEpiphanyRules;
@@ -164,10 +177,14 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(PackType.SERVER_DATA)
             .registerReloadListener(new ChiseledEnchantingTableData());
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(
-            server -> validateBookshelfTagDisjointness(server.registryAccess())
+            server -> {
+                clearLootRegistryBuildRules();
+                validateBookshelfTagDisjointness(server.registryAccess());
+            }
         );
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.END_DATA_PACK_RELOAD.register(
             (server, resourceManager, success) -> {
+                clearLootRegistryBuildRules();
                 if (success) {
                     validateBookshelfTagDisjointness(server.registryAccess());
                 }
@@ -711,17 +728,13 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * world boot and {@code /reload}.
      */
     public static void preloadForLootRegistries(ResourceManager resourceManager) {
-        try {
-            LootInjectionTable loaded = loadLootInjections(resourceManager);
-            var policy = loadPackPolicy(resourceManager);
-            var cfg = chiseled_enchanting_table.config.ModRuntimeConfig.get();
-            VanillaChestBooksMode effectiveMode = resolveEffectiveChestBooksMode(loaded.mode(), cfg, policy);
-            preloadedLootInjections = loaded.entries();
-            preloadedVanillaChestBooksMode = effectiveMode;
-            chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.updateChestSpawnConfig(loaded.chestSpawns());
-        } catch (Exception e) {
-            ChiseledEnchantingTable.LOGGER.warn("Failed to preload loot_injections.json before loot registry build: {}", e.getMessage());
-        }
+        LootInjectionTable loaded = loadLootInjections(resourceManager);
+        var policy = loadPackPolicy(resourceManager);
+        var cfg = chiseled_enchanting_table.config.ModRuntimeConfig.get();
+        VanillaChestBooksMode effectiveMode = resolveEffectiveChestBooksMode(loaded.mode(), cfg, policy);
+        // Publish all registry-build inputs together, only after parsing/validation succeeds.
+        // Live chest-spawn state is updated later by the successful full reload, never here.
+        pendingLootRegistryBuild = new LootRegistryBuildRules(loaded.entries(), effectiveMode, loaded.chestSpawns());
     }
 
     private static VanillaChestBooksMode resolveEffectiveChestBooksMode(
@@ -741,18 +754,10 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
     }
 
     public static List<LootInjection> lootInjections() {
-        List<LootInjection> preloaded = preloadedLootInjections;
-        if (preloaded != null) {
-            return preloaded;
-        }
         return (runtimeFrame == null ? lootInjections : runtimeFrame.lootInjections());
     }
 
     public static VanillaChestBooksMode vanillaChestBooksMode() {
-        VanillaChestBooksMode preloaded = preloadedVanillaChestBooksMode;
-        if (preloaded != null) {
-            return preloaded;
-        }
         return (runtimeFrame == null ? vanillaChestBooksMode : runtimeFrame.vanillaChestBooksMode());
     }
 
@@ -801,12 +806,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         costTables = loadCostTables(resourceManager);
         rawItemTransformations = loadItemTransformations(resourceManager);
         classicCostTables = loadClassicJson(resourceManager,
-            "enchantment_costs_classic_1_0_3.json", CostTables::fromJson, classicCostTables);
+            "enchantment_costs_classic_1_0_3.json", CostTables::fromJson, BUILT_IN_CLASSIC_COSTS);
         classicBookUpgradeRules = loadClassicJson(resourceManager,
-            "book_upgrades_classic_1_0_3.json", BookUpgradeRules::fromJson, classicBookUpgradeRules);
+            "book_upgrades_classic_1_0_3.json", BookUpgradeRules::fromJson, BUILT_IN_CLASSIC_UPGRADES);
         classicItemTransformations = loadClassicJson(resourceManager,
             "item_transformations_classic_1_0_3.json",
-            root -> parseItemTransformations(root), classicItemTransformations);
+            root -> parseItemTransformations(root), BUILT_IN_CLASSIC_TRANSFORMATIONS);
         LootInjectionTable loadedLoot = loadLootInjections(resourceManager);
         rawVanillaChestBooksMode = loadedLoot.mode();
         lootInjections = loadedLoot.entries();
@@ -820,8 +825,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         rawLibraryResonanceConfig = loadedResonance.resonance();
         rawRitualConfig = loadedResonance.ritual();
         applyRuntimeConfig(chiseled_enchanting_table.config.ModRuntimeConfig.get(), candidatePolicy, () -> {});
-        preloadedLootInjections = null;
-        preloadedVanillaChestBooksMode = null;
+        clearLootRegistryBuildRules();
         chiseled_enchanting_table.config.ModRuntimeConfig.setServerPackPolicy(candidatePolicy);
         ChiseledEnchantingTable.LOGGER.info(
             "Loaded chiseled enchanting data: {} default enchantments, {} default-unlock tag rules, {} item cost overrides, {} transformation rules, {} loot injections",
@@ -851,8 +855,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
             rawLibraryResonanceConfig = previous_rawLibraryResonanceConfig;
             rawRitualConfig = previous_rawRitualConfig;
             chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.updateChestSpawnConfig(previous_chestSpawns);
-            preloadedLootInjections = null;
-            preloadedVanillaChestBooksMode = null;
+            clearLootRegistryBuildRules();
             throw failure;
         }
         }
@@ -888,6 +891,12 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
         d.tomeRegenTier1Seconds = rawLibraryResonanceConfig.tomeRegenTier1Seconds();
         d.tomeRegenTier2Shelves = rawLibraryResonanceConfig.tomeRegenTier2Shelves();
         d.tomeRegenTier2Seconds = rawLibraryResonanceConfig.tomeRegenTier2Seconds();
+        d.lockedShelfBreakable = rawLibraryResonanceConfig.lockedShelfBreakable();
+        d.lockedBookExtractionBlocked = rawLibraryResonanceConfig.lockedBookExtractionBlocked();
+        d.earlyUnlockXpLevels = rawLibraryResonanceConfig.earlyUnlockXpLevels();
+        d.earlyUnlockGritCount = rawLibraryResonanceConfig.earlyUnlockGritCount();
+        d.sacrificeRequired = rawLibraryResonanceConfig.sacrificeRequired();
+        d.tomePageRequiredShelves = rawLibraryResonanceConfig.tomePageRequiredShelves();
         d.maxWoodenDiscountPercent = rawLibraryResonanceConfig.maxWoodenDiscountPercent();
         d.maxTotalXpDiscountPercent = rawLibraryResonanceConfig.maxTotalXpDiscountPercent();
         d.bookCombineEnabled = rawBookUpgradeRules.combineEnabled();

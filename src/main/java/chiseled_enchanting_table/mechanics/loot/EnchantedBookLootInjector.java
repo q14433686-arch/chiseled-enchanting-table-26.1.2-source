@@ -67,7 +67,8 @@ public final class EnchantedBookLootInjector {
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
             if (!source.isBuiltin()) return;
 
-            var chestMode = ChiseledEnchantingTableData.vanillaChestBooksMode();
+            var buildRules = ChiseledEnchantingTableData.lootRegistryBuildRules();
+            var chestMode = buildRules.mode();
             if (chestMode == ChiseledEnchantingTableData.VanillaChestBooksMode.DISABLED) {
                 return;
             }
@@ -79,7 +80,7 @@ public final class EnchantedBookLootInjector {
                 || tablePath.startsWith("pots/")
                 || tablePath.startsWith("spawners/");
 
-            List<LootInjection> injections = ChiseledEnchantingTableData.lootInjections();
+            List<LootInjection> injections = buildRules.entries();
             boolean matchedAny = false;
             if (!injections.isEmpty()) {
                 HolderGetter<Enchantment> enchantmentLookup = registries.lookupOrThrow(Registries.ENCHANTMENT);

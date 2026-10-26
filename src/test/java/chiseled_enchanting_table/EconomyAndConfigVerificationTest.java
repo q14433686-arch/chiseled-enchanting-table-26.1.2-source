@@ -1132,6 +1132,38 @@ class EconomyAndConfigVerificationTest {
     }
 
     @Test
+    void twentySixThreeBackfeedStaticGuards() throws Exception {
+        String mixin = Files.readString(Path.of(
+            "src/main/java/chiseled_enchanting_table/mixin/loot/ReloadableServerRegistriesMixin.java"));
+        assertTrue(mixin.contains("cancellable = true"), "RELOAD-01: loot preload mixin must be cancellable");
+        assertTrue(mixin.contains("CompletableFuture.failedFuture(error)"),
+            "RELOAD-01: invalid loot rules must fail the registry reload");
+        String data = Files.readString(Path.of(
+            "src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java"));
+        String preload = data.substring(data.indexOf("public static void preloadForLootRegistries"));
+        preload = preload.substring(0, preload.indexOf("private static VanillaChestBooksMode"));
+        assertFalse(preload.contains("updateChestSpawnConfig"),
+            "RELOAD-02: registry preload must not mutate live chest-spawn state");
+        assertTrue(preload.contains("pendingLootRegistryBuild = new LootRegistryBuildRules"),
+            "RELOAD-02: registry preload must stage one atomic build snapshot");
+        assertTrue(data.contains("BUILT_IN_CLASSIC_COSTS") && data.contains("CostTables::fromJson, BUILT_IN_CLASSIC_COSTS"),
+            "RELOAD-03: deleted classic datapack files must revert to bundled baselines");
+        String payload = Files.readString(Path.of(
+            "src/main/java/chiseled_enchanting_table/menu/EnchantCostTablePayload.java"));
+        assertTrue(payload.contains("Enchanting configuration/header exceeds wire budget"),
+            "NET-01: an oversized header must fail rather than emit an oversized packet");
+        String sync = Files.readString(Path.of(
+            "src/main/java/chiseled_enchanting_table/menu/EnchantCostSync.java"));
+        assertTrue(sync.contains("cost_sync_failed"), "NET-02: cost sync failure must disconnect fail-closed");
+        String particles = Files.readString(Path.of(
+            "src/main/java/chiseled_enchanting_table/mechanics/resonance/TomeParticleEffects.java"));
+        assertTrue(particles.contains("SERVER_STOPPED"), "LIFE-01: particle bursts must be cleared on server stop");
+        String mixins = Files.readString(Path.of("src/main/resources/chiseled-enchanting-table-port.mixins.json"));
+        assertTrue(mixins.contains("bookshelf.BookshelfCreativeExtractionMixin"),
+            "MIXIN-01: Creative shelf extraction mixin must be registered");
+    }
+
+    @Test
     void datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() throws Exception {
         try {
             // 1. Out-of-the-box default strictly prioritizes external datapacks over in-game config.
@@ -1154,11 +1186,34 @@ class EconomyAndConfigVerificationTest {
                       "chiseled_mastery": {
                         "max_tome_uses": 8,
                         "tome_regen_tier1_shelves": 36
+                      },
+                      "tome_pages": {
+                        "locked_shelf_breakable": false,
+                        "locked_book_extraction_blocked": true,
+                        "early_unlock_xp_levels": 5,
+                        "early_unlock_grit_count": "-1",
+                        "sacrifice_required": 9,
+                        "tome_page_required_shelves": 30
                       }
                     }
                     """).getAsJsonObject()
             );
-            assertEquals(Set.of("max_tome_uses", "tome_regen_tier1_shelves"), lrKeys);
+            // RULE-01: every tome_pages key must register as datapack-governed, and the raw
+            // datapack bridge must carry the same six fields into the runtime draft.
+            assertEquals(Set.of(
+                "max_tome_uses", "tome_regen_tier1_shelves",
+                "locked_shelf_breakable", "locked_book_extraction_blocked", "early_unlock_xp_levels",
+                "early_unlock_grit_count", "sacrifice_required", "tome_page_required_shelves"
+            ), lrKeys);
+            String dataSrc = Files.readString(Path.of(
+                "src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java"));
+            for (String field : new String[] {
+                "lockedShelfBreakable", "lockedBookExtractionBlocked", "earlyUnlockXpLevels",
+                "earlyUnlockGritCount", "sacrificeRequired", "tomePageRequiredShelves"
+            }) {
+                assertTrue(dataSrc.contains("d." + field + " = rawLibraryResonanceConfig." + field + "();"),
+                    "rawRuntimeConfig must bridge datapack field " + field);
+            }
 
             // 3. With default override_datapacks=false, even a player-tampered config file cannot beat an active datapack key!
             var dpPolicy = new chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy(
