@@ -1144,6 +1144,28 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     public Level world() {
         return this.world;
     }
+    private final MenuPaymentService.Access paymentAccess = new MenuPaymentService.Access() {
+        public Player player() { return ChiseledEnchantingTableScreenHandler.this.player; }
+        public ItemStack costSlot() { return getCostItem(); }
+        public void tableChanged() { markInventoryChanged(); }
+        public int availableUnits(List<ItemStack> bundle) { return MenuPricing.maxBundleUnitsAvailable(ChiseledEnchantingTableScreenHandler.this, bundle); }
+        public List<List<ItemStack>> costOptions(EnchantmentWithLevel enchantment, OptionType type) { return getEffectiveItemCostOptions(enchantment, type); }
+        public boolean materialFree(EnchantmentWithLevel enchantment, OptionType type) { return isMaterialFreeOperation(enchantment, type); }
+        public XpCostConversion.XpRequirement xpRequirement(EnchantmentWithLevel enchantment, OptionType type) { return resolveXpRequirement(enchantment, type); }
+    };
+
+    private final MenuQuickMove.Access quickMoveAccess = new MenuQuickMove.Access() {
+        public int slotCount() { return slots.size(); }
+        public net.minecraft.world.inventory.Slot slot(int index) { return getSlot(index); }
+        public boolean ritualActive() { return isRitualActive(); }
+        public boolean hasTransformation(ItemStack stack) { return !syncedTransformationsFor(stack).isEmpty(); }
+        public void insertCost(ItemStack stack) { moveItemStackTo(stack, COST_SLOT, COST_SLOT + 1, false); }
+        public void changed() {
+            inventory.setChanged();
+            ChiseledEnchantingTableScreenHandler.this.player.getInventory().setChanged();
+        }
+    };
+
     /** Narrow read-only pricing view of this menu (26.3 MenuPricingAccess split). */
     public MenuPricingAccess pricingAccess() {
         return this;
@@ -1463,28 +1485,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public int countAvailableInInventory(ItemStack required) {
-        if (required == null || required.isEmpty() || this.player == null) {
-            return 0;
-        }
-        int found = 0;
-        for (int slot = 0; slot < this.player.getInventory().getContainerSize(); slot++) {
-            ItemStack candidate = this.player.getInventory().getItem(slot);
-            if (!candidate.isEmpty() && ItemStack.isSameItemSameComponents(candidate, required)) {
-                found += candidate.getCount();
-            }
-        }
-        return found;
+        return MenuPaymentService.countAvailableInInventory(this.paymentAccess, required);
     }
 
     public int countAvailableIncludingCostSlot(ItemStack required) {
-        if (required == null || required.isEmpty()) {
-            return 0;
-        }
-        ItemStack costSlot = getCostItem();
-        int fromSlot = (!costSlot.isEmpty() && ItemStack.isSameItemSameComponents(costSlot, required))
-            ? costSlot.getCount()
-            : 0;
-        return fromSlot + countAvailableInInventory(required);
+        return MenuPaymentService.countAvailableIncludingCostSlot(this.paymentAccess, required);
     }
 
     public int resolveTransformationBatchCount(Identifier transformationId) {
@@ -1785,28 +1790,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     // ---- Condition / consumption (shared by both mechanics) ----
 
     private void consumeAdditionalCosts(List<ItemStack> costs) {
-        for (int i = 1; i < costs.size(); i++) {
-            ItemStack required = costs.get(i).copy();
-            for (int slot = 0; slot < this.player.getInventory().getContainerSize() && !required.isEmpty(); slot++) {
-                ItemStack candidate = this.player.getInventory().getItem(slot);
-                if (ItemStack.isSameItemSameComponents(candidate, required)) {
-                    int consumed = Math.min(candidate.getCount(), required.getCount());
-                    candidate.shrink(consumed);
-                    required.shrink(consumed);
-                    this.player.getInventory().setChanged();
-                }
-            }
-        }
+        MenuPaymentService.consumeAdditionalCosts(this.paymentAccess, costs);
     }
 
     public boolean isBundleAffordableWithOverflow(List<ItemStack> bundle) {
-        if (bundle == null || bundle.isEmpty()) {
-            return true;
-        }
-        if (this.player.getAbilities().instabuild) {
-            return true;
-        }
-        return MenuPricing.maxBundleUnitsAvailable(this, bundle) >= 1;
+        return MenuPaymentService.isBundleAffordableWithOverflow(this.paymentAccess, bundle);
     }
 
     @org.jetbrains.annotations.Nullable
@@ -1830,59 +1818,11 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public List<ItemStack> findMatchingAffordableCostBundle(EnchantmentWithLevel ewl, OptionType type) {
-        List<List<ItemStack>> options = getEffectiveItemCostOptions(ewl, type);
-        if (options.isEmpty()) {
-            // Fail closed (audit H-02): "no pricing data" is only free for whitelisted
-            // material-free operations; datapacks declare XP-only costs explicitly via
-            // "material_free": true, which produces one empty bundle instead.
-            return isMaterialFreeOperation(ewl, type) ? List.of() : null;
-        }
-        for (List<ItemStack> bundle : options) {
-            if (bundle.isEmpty()) {
-                return List.of();
-            }
-        }
-        if (this.player.getAbilities().instabuild) {
-            return ChiseledEnchantingTableData.mergeEquivalentCostBundle(options.getFirst());
-        }
-        for (List<ItemStack> bundle : options) {
-            List<ItemStack> merged = ChiseledEnchantingTableData.mergeEquivalentCostBundle(bundle);
-            if (!merged.isEmpty() && isBundleAffordableWithOverflow(merged)) {
-                return merged;
-            }
-        }
-        return null;
+        return MenuPaymentService.findMatchingAffordableCostBundle(this.paymentAccess, ewl, type);
     }
 
     public void deductMatchedBundle(List<ItemStack> matchedBundle) {
-        if (this.player.getAbilities().instabuild || matchedBundle == null || matchedBundle.isEmpty()) {
-            return;
-        }
-        List<ItemStack> merged = ChiseledEnchantingTableData.mergeEquivalentCostBundle(matchedBundle);
-        if (merged.isEmpty()) {
-            return;
-        }
-        ItemStack primary = merged.getFirst();
-        if (!primary.isEmpty()) {
-            int remainingPrimary = primary.getCount();
-            ItemStack costSlot = this.get_cost_item();
-            if (!costSlot.isEmpty() && ItemStack.isSameItemSameComponents(costSlot, primary)) {
-                int takeSlot = Math.min(remainingPrimary, costSlot.getCount());
-                costSlot.shrink(takeSlot);
-                remainingPrimary -= takeSlot;
-            }
-            for (int slot = 0; slot < this.player.getInventory().getContainerSize() && remainingPrimary > 0; slot++) {
-                ItemStack candidate = this.player.getInventory().getItem(slot);
-                if (!candidate.isEmpty() && ItemStack.isSameItemSameComponents(candidate, primary)) {
-                    int takeInv = Math.min(remainingPrimary, candidate.getCount());
-                    candidate.shrink(takeInv);
-                    remainingPrimary -= takeInv;
-                }
-            }
-            this.inventory.setChanged();
-            this.player.getInventory().setChanged();
-        }
-        consumeAdditionalCosts(merged);
+        MenuPaymentService.deductMatchedBundle(this.paymentAccess, matchedBundle);
     }
 
     /** Exact survival payment receipt used for 50% cross-line pollution compensation. */
@@ -1905,33 +1845,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     public PaymentReceipt applyEnchantmentConditionWithReceipt(ApplyEnchantmentPayload payload) {
-        EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), payload.enchantment_level());
-        OptionType effectiveType = payload.option_type();
-        if (effectiveType == OptionType.ENCHANTMENT && ChiseledEnchantingTableData.isTransformation(payload.enchantment_id())) {
-            effectiveType = OptionType.TRANSFORMATION;
-        }
-        var xpReq = resolveXpRequirement(ewl, effectiveType);
-        if (!xpReq.isMetBy(this.player)) {
-            return new PaymentReceipt(false, 0, List.of());
-        }
-
-        List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(ewl, effectiveType);
-        if (!player.getAbilities().instabuild && matchedBundle == null) {
-            return new PaymentReceipt(false, 0, List.of());
-        }
-
-        if (!player.getAbilities().instabuild) {
-            int xpBefore = XpCostConversion.totalPlayerXpPoints(this.player);
-            XpCostConversion.deductXp(this.player, xpReq);
-            int xpAfter = XpCostConversion.totalPlayerXpPoints(this.player);
-            int paidXpPoints = Math.max(0, xpBefore - xpAfter);
-            List<ItemStack> paidCopies = matchedBundle == null
-                ? List.of()
-                : matchedBundle.stream().map(ItemStack::copy).toList();
-            deductMatchedBundle(matchedBundle);
-            return new PaymentReceipt(true, paidXpPoints, paidCopies);
-        }
-        return new PaymentReceipt(true, 0, List.of());
+        return MenuPaymentService.applyEnchantmentConditionWithReceipt(this.paymentAccess, payload);
     }
 
     // ---- Dispatch ----
@@ -2009,137 +1923,9 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     @Override
     public void clicked(int slotIndex, int button, net.minecraft.world.inventory.ContainerInput actionType, Player player) {
-        if (actionType == net.minecraft.world.inventory.ContainerInput.QUICK_MOVE) {
-            if (slotIndex < 0 || slotIndex >= this.slots.size()) return;
-            Slot sourceSlot = this.getSlot(slotIndex);
-            if (!sourceSlot.hasItem() || !sourceSlot.mayPickup(player)) return;
-            ItemStack clickedStack = sourceSlot.getItem();
-            if (clickedStack.isEmpty()) return;
-
-            if (slotIndex == COST_SLOT || slotIndex == ENCHANTABLE_SLOT) {
-                if (slotIndex == ENCHANTABLE_SLOT && isRitualActive()) return;
-                ItemStack moving = clickedStack.copy();
-                sourceSlot.set(ItemStack.EMPTY);
-                chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, moving, java.util.Optional.empty());
-                this.inventory.setChanged();
-                this.player.getInventory().setChanged();
-                return;
-            }
-
-            Slot targetSlot = this.getSlot(ENCHANTABLE_SLOT);
-            boolean ritualLocked = isRitualActive();
-
-            if (!ritualLocked && targetSlot.mayPlace(clickedStack)) {
-                ItemStack existingTarget = targetSlot.getItem();
-                int maxTargetAllowed = Math.max(1, targetSlot.getMaxStackSize(clickedStack));
-
-                if (!existingTarget.isEmpty()
-                    && maxTargetAllowed > 1
-                    && ItemStack.isSameItemSameComponents(clickedStack, existingTarget)
-                    && existingTarget.getCount() < maxTargetAllowed) {
-                    int move = Math.min(maxTargetAllowed - existingTarget.getCount(), clickedStack.getCount());
-                    ItemStack updatedTarget = existingTarget.copyWithCount(existingTarget.getCount() + move);
-                    ItemStack remainingSource = clickedStack.getCount() > move
-                        ? clickedStack.copyWithCount(clickedStack.getCount() - move)
-                        : ItemStack.EMPTY;
-                    targetSlot.set(updatedTarget);
-                    sourceSlot.set(remainingSource);
-                    this.inventory.setChanged();
-                    this.player.getInventory().setChanged();
-                    return;
-
-                }
-
-                ItemStack clickedStackNoEnchant = clickedStack.copyWithCount(1);
-                EnchantmentHelper.updateEnchantments(clickedStackNoEnchant, m -> {
-                    var keys = new java.util.HashSet<>(m.keySet());
-                    for (var k : keys) m.set(k, 0);
-                });
-                boolean isBook = clickedStackNoEnchant.is(Items.BOOK) || clickedStackNoEnchant.is(Items.ENCHANTED_BOOK);
-                boolean hasExistingEnchants = !EnchantmentHelper.getEnchantmentsForCrafting(clickedStack).isEmpty();
-                boolean isDedicatedTransformInput = clickedStack.is(BlockRegistry.DEPLETED_TOME)
-                    || ChiseledEnchantingTableData.isResidualBook(clickedStack)
-                    || (!targetSlot.hasItem() && !this.syncedTransformationsFor(clickedStack).isEmpty());
-
-                boolean wantsTargetSlot = clickedStackNoEnchant.isEnchantable()
-                    || isDedicatedTransformInput
-                    || (hasExistingEnchants && !isBook && !targetSlot.hasItem())
-                    || (isBook && !targetSlot.hasItem());
-
-                if (wantsTargetSlot && (!targetSlot.hasItem() || targetSlot.mayPickup(player))) {
-                    ItemStack displaced = existingTarget.isEmpty() ? ItemStack.EMPTY : existingTarget.copy();
-                    int moveCount = Math.min(maxTargetAllowed, clickedStack.getCount());
-                    ItemStack placed = clickedStack.copyWithCount(moveCount);
-                    ItemStack remainingSource = clickedStack.getCount() > moveCount
-                        ? clickedStack.copyWithCount(clickedStack.getCount() - moveCount)
-                        : ItemStack.EMPTY;
-
-                    targetSlot.set(placed);
-                    if (displaced.isEmpty()) {
-                        sourceSlot.set(remainingSource);
-                    } else if (remainingSource.isEmpty()) {
-                        sourceSlot.set(displaced);
-                    } else {
-                        sourceSlot.set(remainingSource);
-                        int containerSlot = sourceSlot.getContainerSlot();
-                        java.util.Optional<Integer> preferredSlot = (containerSlot >= 0 && containerSlot < 36)
-                            ? java.util.Optional.of(containerSlot)
-                            : java.util.Optional.empty();
-                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, displaced, preferredSlot);
-                    }
-                    this.inventory.setChanged();
-                    this.player.getInventory().setChanged();
-                    return;
-                }
-            } else {
-                // While a ritual is active, never route enchantable gear or blank books into COST_SLOT by accident unless valid cost!
-                ItemStack probe = clickedStack.copyWithCount(1);
-                EnchantmentHelper.updateEnchantments(probe, m -> {
-                    var keys = new java.util.HashSet<>(m.keySet());
-                    for (var k : keys) m.set(k, 0);
-                });
-                if (probe.isEnchantable() || clickedStack.is(BlockRegistry.DEPLETED_TOME)) {
-                    return;
-                }
-            }
-
-            Slot costSlotObj = this.getSlot(COST_SLOT);
-            if (!costSlotObj.mayPlace(clickedStack)) {
-                return;
-            }
-            if (!costSlotObj.hasItem()) {
-                this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT + 1, false);
-            } else {
-                ItemStack costSlotStack = costSlotObj.getItem();
-                if (ItemStack.isSameItemSameComponents(clickedStack, costSlotStack)) {
-                    this.moveItemStackTo(clickedStack, COST_SLOT, COST_SLOT + 1, false);
-                } else if (costSlotObj.mayPickup(player)) {
-                    int containerSlot = sourceSlot.getContainerSlot();
-                    java.util.Optional<Integer> preferredSlot = (containerSlot >= 0 && containerSlot < 36)
-                        ? java.util.Optional.of(containerSlot)
-                        : java.util.Optional.empty();
-                    ItemStack returning = costSlotStack.copy();
-                    int maxCostAllowed = Math.max(1, costSlotObj.getMaxStackSize(clickedStack));
-                    int moveCount = Math.min(maxCostAllowed, clickedStack.getCount());
-                    ItemStack placedCost = clickedStack.copyWithCount(moveCount);
-                    ItemStack remainingSource = clickedStack.getCount() > moveCount
-                        ? clickedStack.copyWithCount(clickedStack.getCount() - moveCount)
-                        : ItemStack.EMPTY;
-
-                    costSlotObj.set(placedCost);
-                    if (remainingSource.isEmpty()) {
-                        sourceSlot.set(returning);
-                    } else {
-                        sourceSlot.set(remainingSource);
-                        chiseled_enchanting_table.utils.InventoryUtils.insertItem(this.player, returning, preferredSlot);
-                    }
-                }
-            }
-            this.inventory.setChanged();
-            this.player.getInventory().setChanged();
-            return;
+        if (!MenuQuickMove.handle(this.quickMoveAccess, this.player, slotIndex, actionType, player)) {
+            super.clicked(slotIndex, button, actionType, player);
         }
-        super.clicked(slotIndex, button, actionType, player);
     }
 
     public ItemStack quickMoveStack(Player player, int index) {
