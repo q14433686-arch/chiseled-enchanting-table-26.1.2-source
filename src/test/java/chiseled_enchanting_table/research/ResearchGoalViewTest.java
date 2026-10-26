@@ -42,6 +42,7 @@ class ResearchGoalViewTest {
     @Test void learnedGoalDoesNotAskToRepeatOtherRoute() {
         var j=new ResearchJournal(Set.of("test:learned"),Map.of());
         assertTrue(view(j,library).routes().stream().allMatch(r -> r.next()==ResearchGoalView.Action.LEARNED));
+        assertTrue(view(j,library).routes().stream().allMatch(r -> r.missingEvidence().isEmpty()));
     }
     @Test void missingWorkspaceConditionsAreNotHiddenByRouteChoice() {
         assertTrue(view(ResearchJournal.empty(),new ResearchCatalog.Library(0,Map.of())).routes().stream()

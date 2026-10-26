@@ -39,6 +39,7 @@ public final class ResearchGoalView {
                 boolean selected = current && attempt.hypothesis().equals(hypothesis.id());
                 Set<String> missing = new TreeSet<>(hypothesis.evidence());
                 if (current) missing.removeAll(attempt.observations());
+                if (learned >= goal.level()) missing.clear();
                 var analysis = analyses.stream().filter(a -> a.topic().equals(topic.id()) && a.hypothesis().equals(hypothesis.id())).findFirst();
                 String sample = analysis.map(ResearchSampleAnalysis.Rule::enchantment).orElse(null);
                 int sampleLevel = analysis.map(ResearchSampleAnalysis.Rule::minimumLevel).orElse(0);
