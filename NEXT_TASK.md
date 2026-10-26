@@ -7,7 +7,20 @@ The full source synchronization through `9f0e13bd75e31f7d1d8a569302d0f57abd2ce84
 cleanup are implemented. Version remains **1.1.0 / MC 26.3 / wire revision 11**. Do not re-run one-shot
 port scripts or restore older source/GUI/input conventions from historical reports.
 
-## Latest tome catalogue validation — 2026-10-26
+## Latest framed-icon UI validation — 2026-10-26
+
+Verified source **`3bd875ccfe0ce0b8001e404b33f193aa09953f9d`**; **1.1.0 / MC 26.3 / revision 11** unchanged.
+
+- [compile-check 40261676215](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40261676215): **148 JUnit, zero failures/errors/skips**. Ten new geometry contracts cover safe insets, non-overlap, icon/text ink, popup containment, stable list bottom and lock-panel bounds.
+- [build 40261676234](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40261676234): all four business jobs and both diagnostics successful. Real server and Chinese SDL client pass through actual select-visible/permanent-lock icon hit regions and authoritative owner sync.
+- Second image round, first candidate selected after both first-round candidates were rejected. Shared gold/purple/teal nine-slice skin for filter fields, icon actions and dropdown frames; no flat hover/disabled rectangles covering decorative borders.
+- Sort direction/reset/select-visible/clear and five lock actions are icon-only. Current filter values/counts remain text; action names, costs and batch warnings stay in tooltips. Count is now read-only; independent select-visible icon replaces its old click action.
+- Pure `TomeDirectoryLayout` is shared by painting, clipping, hit tests, panel origins, list offset and client probes. Four-pixel panel safe area and three-pixel button ink inset; popup capped to five visible rows; list bottom unchanged, with slightly fewer book rows to allow real padding.
+- Local UI Python **11/11**, static9 groups, architecture6, sync17, mixin4, diagnostics3 and hygiene pass. Eleven locales contain **1016 keys**. Previous catalogue functionality and six engineering splits retained.
+- [Installable build](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40261676234/artifacts/12623854370); [Chinese screenshot/logs](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40261676234/artifacts/12625020403). Final material/geometry preview inspected, actual CI game screenshot not manually inspected; automated evidence does not cover all resource-pack fonts/DPI/mod GUI combinations.
+- [Root cause, design and evidence](docs/reports/CATALOGUE_ICON_FRAME_2026_10_26.md). No PR/merge authorized or performed.
+
+## Previous tome catalogue validation — 2026-10-26
 
 Verified source **`ba1cb429f63d38904a2844a88402cfc83b757082`**; **1.1.0 / MC 26.3 / revision 11** unchanged.
 
