@@ -19,7 +19,7 @@ import net.minecraft.world.phys.Vec3;
 final class RainbowClothProbe {
     private static void check(boolean ok,String why) { if(!ok)throw new AssertionError("rainbow cloth: "+why); }
     static void verify(ServerPlayer player,BlockPos pos) {
-        var level=player.level();var saved=player.getMainHandItem().copy();boolean sneaking=player.isShiftKeyDown();
+        var level=player.level();var saved=player.getMainHandItem().copy();boolean sneaking=player.isShiftKeyDown(); boolean mayBuild=player.getAbilities().mayBuild;
         var tag=new ItemStack(Items.NAME_TAG);tag.set(DataComponents.CUSTOM_NAME,Component.literal("jeb_"));
         var hit=new BlockHitResult(Vec3.atCenterOf(pos),Direction.UP,pos,false);
         try {
@@ -27,7 +27,12 @@ final class RainbowClothProbe {
             player.setShiftKeyDown(false);
             UseBlockCallback.EVENT.invoker().interact(player,level,InteractionHand.MAIN_HAND,hit);
             check(!level.getBlockState(pos).getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"non-sneak enabled egg");
-            player.setShiftKeyDown(true);tag.set(DataComponents.CUSTOM_NAME,Component.literal("_JEB"));
+            player.setShiftKeyDown(true);
+            player.getAbilities().mayBuild=false;
+            UseBlockCallback.EVENT.invoker().interact(player,level,InteractionHand.MAIN_HAND,hit);
+            check(!level.getBlockState(pos).getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"build permission bypassed");
+            player.getAbilities().mayBuild=mayBuild;
+            tag.set(DataComponents.CUSTOM_NAME,Component.literal("_JEB"));
             UseBlockCallback.EVENT.invoker().interact(player,level,InteractionHand.MAIN_HAND,hit);
             check(!level.getBlockState(pos).getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"wrong name enabled egg");
             tag.set(DataComponents.CUSTOM_NAME,Component.literal("jeb_"));
@@ -56,6 +61,6 @@ final class RainbowClothProbe {
             check(level.getBlockState(pos).getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH),"reactivation failed");
             be.pendingFreezeTicks=0;
             System.out.println("RAINBOW CLOTH PASS: real sneaking callback + exact key/name guards + reusable tag + actual loot/placement flag + dye/freeze components + dye exit/consumption + reactivation");
-        } finally { player.setItemInHand(InteractionHand.MAIN_HAND,saved);player.setShiftKeyDown(sneaking); }
+        } finally { player.setItemInHand(InteractionHand.MAIN_HAND,saved);player.setShiftKeyDown(sneaking);player.getAbilities().mayBuild=mayBuild; }
     }
 }
