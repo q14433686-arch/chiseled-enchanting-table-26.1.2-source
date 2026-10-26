@@ -194,7 +194,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         Minecraft mc = Minecraft.getInstance();
         mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
         if (mc.gui != null) {
-            mc.gui.hud.setOverlayMessage(
+            mc.gui.setOverlayMessage(
                 Component.translatable("gui.chiseled_enchanting_table.network.channel_unavailable")
                     .withStyle(ChatFormatting.RED),
                 false
@@ -227,7 +227,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             Minecraft mc = Minecraft.getInstance();
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.85F));
             if (mc.gui != null) {
-                mc.gui.hud.setOverlayMessage(
+                mc.gui.setOverlayMessage(
                     Component.translatable("gui.chiseled_enchanting_table.cleanse.confirm_prompt")
                         .withStyle(ChatFormatting.GOLD),
                     false

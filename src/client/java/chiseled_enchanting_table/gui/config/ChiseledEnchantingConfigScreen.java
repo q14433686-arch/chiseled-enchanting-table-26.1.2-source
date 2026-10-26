@@ -250,10 +250,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         this.searchInput.setFocused(focused);
     }
 
-    @Override
-    public boolean capturesInput() {
-        return this.searchInput.focused();
-    }
+    // 26.1.2: Screen has no capturesInput() (an SDL text-capture hook in 26.3);
+    // character events are delivered without native capture ownership.
 
     @Override
     public void removed() {
