@@ -47,75 +47,6 @@ import org.jetbrains.annotations.Nullable;
 @Environment(EnvType.CLIENT)
 public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<ChiseledEnchantingTableScreenHandler> {
 
-    public static final Identifier SLOT_TEXTURE = Identifier.withDefaultNamespace("textures/gui/sprites/container/slot.png");
-    private static final Identifier BACKGROUND = ChiseledEnchantingTable.identifier("gui/chiseled_enchanting_table.png");
-    private static final Identifier EPIPHANY_PANEL = ChiseledEnchantingTable.identifier("gui/epiphany_panel.png");
-    private static final Identifier EPIPHANY_PANEL_FROZEN = ChiseledEnchantingTable.identifier("gui/epiphany_panel_frozen.png");
-    private static final Identifier CLEANSE_PANEL = ChiseledEnchantingTable.identifier("gui/cleanse_panel.png");
-    private static final Identifier BTN_FREEZE = ChiseledEnchantingTable.identifier("gui/btn_freeze.png");
-    private static final Identifier BTN_REROLL = ChiseledEnchantingTable.identifier("gui/btn_reroll.png");
-    private static final Identifier BTN_CLEANSE_ALL = ChiseledEnchantingTable.identifier("gui/btn_cleanse_all.png");
-    private static final Identifier BTN_GRIMOIRE = ChiseledEnchantingTable.identifier("gui/btn_grimoire.png");
-    private static final Identifier BTN_CONFIG = ChiseledEnchantingTable.identifier("gui/btn_config.png");
-
-    private static final int CONFIG_BTN_X = 293;
-    private static final int CONFIG_BTN_Y_OFFSET = -15;
-    private static final int CONFIG_BTN_SIZE = 15;
-    private static final int GRIMOIRE_BTN_X = 311;
-    private static final int GRIMOIRE_BTN_Y_OFFSET = -15;
-    private static final int GRIMOIRE_BTN_SIZE = 15;
-
-    private static final Identifier TAB_INSCRIBE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_active.png");
-    private static final Identifier TAB_INSCRIBE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_inactive.png");
-    private static final Identifier TAB_CLEANSE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_active.png");
-    private static final Identifier TAB_CLEANSE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_inactive.png");
-    private static final Identifier[] TOME_BUTTONS = {
-        ChiseledEnchantingTable.identifier("gui/tome_button_0.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_1.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_2.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_3.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_4.png")
-    };
-    private static final Identifier TAB_TOME_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_active.png");
-    private static final Identifier TAB_TOME_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_inactive.png");
-
-    // Top mode switcher tabs aligned pixel-for-pixel with the purple header cloth [x = 14 .. 167].
-    private static final int TAB_W = 75;
-    private static final int TAB_H = 18;
-    private static final int TAB_Y_OFFSET = -15;
-    private static final int TAB_INSCRIBE_X = 14;
-    private static final int TAB_CLEANSE_X = 92;
-    private static final int TAB_TOMES_X = 170;
-    private static final int SACRIFICE_BTN_X = 248;
-    private static final int SACRIFICE_BTN_W = 40;
-
-    // Integrated Sanctum / Cleanse Console coordinates inside the cohesive 340x166 window chassis.
-    private static final int PANEL_X = 214;
-    private static final int PANEL_Y = 18;
-    private static final int PANEL_W = 119;
-    private static final int PANEL_H = 61;
-
-    // Compact persistent W / S bookshelf HUD badge in the stitched header bar directly above PANEL_X.
-    private static final int SHELF_HUD_X = PANEL_X;
-    private static final int SHELF_HUD_Y = 2;
-    private static final int SHELF_HUD_W = 118;
-    private static final int SHELF_HUD_H = 12;
-    private static final long DISENCHANT_CONFIRM_WINDOW_MS = 2_000L;
-
-    private static final int BTN_SIZE = 14;
-    private static final int FREEZE_BTN_X = PANEL_X + 79;
-    private static final int FREEZE_BTN_Y = PANEL_Y + 35;
-    private static final int REROLL_BTN_X = PANEL_X + 95;
-    private static final int REROLL_BTN_Y = PANEL_Y + 35;
-    private static final int CLEANSE_ALL_BTN_X = PANEL_X + 95;
-    private static final int CLEANSE_ALL_BTN_Y = PANEL_Y + 35;
-
-    private static final int SKIP_SACRIFICE_BTN_X = PANEL_X + 10;
-    private static final int SKIP_SACRIFICE_BTN_Y = PANEL_Y + 36;
-    private static final int SKIP_BTN_W = 48;
-    private static final int SKIP_BTN_H = 14;
-    private static final int SKIP_RUSH_BTN_X = PANEL_X + 61;
-    private static final int SKIP_RUSH_BTN_Y = PANEL_Y + 36;
 
     private EnchantementListWidget scrollContainer;
     // Tome catalogue (26.3 port): filter/sort/selection model, toolbar controls and the paced
@@ -340,7 +271,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     public void requestDisenchantAll(boolean shiftBypass) {
         ItemStack target = this.menu.get_enchantable_item();
         if (!shiftBypass && requiresDisenchantAllConfirm(target) && !isDisenchantAllConfirmPending()) {
-            this.disenchantConfirmUntilMs = net.minecraft.util.Util.getMillis() + DISENCHANT_CONFIRM_WINDOW_MS;
+            this.disenchantConfirmUntilMs = net.minecraft.util.Util.getMillis() + TableSkin.DISENCHANT_CONFIRM_WINDOW_MS;
             this.disenchantConfirmSnapshot = target.copy();
             this.lastConfirmPending = true;
             Minecraft mc = Minecraft.getInstance();
@@ -385,9 +316,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private boolean isOverShelfHudBadge(double mouseX, double mouseY) {
         if (!shouldShowShelfHudBadge()) return false;
-        int x0 = this.leftPos + SHELF_HUD_X;
-        int y0 = this.topPos + SHELF_HUD_Y;
-        return mouseX >= x0 && mouseX < x0 + SHELF_HUD_W && mouseY >= y0 && mouseY < y0 + SHELF_HUD_H;
+        int x0 = this.leftPos + TableSkin.SHELF_HUD_X;
+        int y0 = this.topPos + TableSkin.SHELF_HUD_Y;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.SHELF_HUD_W && mouseY >= y0 && mouseY < y0 + TableSkin.SHELF_HUD_H;
     }
 
     private int computeNextShelfMilestoneTarget() {
@@ -454,24 +385,24 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private boolean isOverInscribeTab(double mouseX, double mouseY) {
         if (!this.menu.hasSecondaryTabs()) return false;
-        int x0 = this.leftPos + TAB_INSCRIBE_X;
-        int y0 = this.topPos + TAB_Y_OFFSET;
-        return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
+        int x0 = this.leftPos + TableSkin.TAB_INSCRIBE_X;
+        int y0 = this.topPos + TableSkin.TAB_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.TAB_W && mouseY >= y0 && mouseY < y0 + TableSkin.TAB_H - 2;
     }
 
     private boolean isOverTomeTab(double mouseX, double mouseY) {
         if (!this.menu.isTomePageEnabled()) return false;
-        int x0 = this.leftPos + TAB_TOMES_X;
-        int y0 = this.topPos + TAB_Y_OFFSET;
-        return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
+        int x0 = this.leftPos + TableSkin.TAB_TOMES_X;
+        int y0 = this.topPos + TableSkin.TAB_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.TAB_W && mouseY >= y0 && mouseY < y0 + TableSkin.TAB_H - 2;
     }
 
     private boolean isOverSacrificeButton(double mouseX, double mouseY) {
         if ((!this.menu.disenchantEnabled() && !this.menu.isTomePageEnabled())
             || (this.menu.disenchantEnabled() && this.menu.isCleansePageUnlocked())) return false;
-        int x0 = this.leftPos + SACRIFICE_BTN_X;
-        int y0 = this.topPos + TAB_Y_OFFSET;
-        return mouseX >= x0 && mouseX < x0 + SACRIFICE_BTN_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
+        int x0 = this.leftPos + TableSkin.SACRIFICE_BTN_X;
+        int y0 = this.topPos + TableSkin.TAB_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.SACRIFICE_BTN_W && mouseY >= y0 && mouseY < y0 + TableSkin.TAB_H - 2;
     }
 
     private int[] tomeButtonRect(int index) {
@@ -479,11 +410,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         // x 5-7 / 111-113 and y 5-7 / 53-55 in panel-relative GUI pixels. Both button
         // rows must end at x <= 109 and y <= 51 to keep a dark pixel clear of them.
         return switch (index) {
-            case 0 -> new int[] {PANEL_X + 9, PANEL_Y + 35, 32, 8};
-            case 1 -> new int[] {PANEL_X + 44, PANEL_Y + 35, 32, 8};
-            case 2 -> new int[] {PANEL_X + 78, PANEL_Y + 35, 31, 8};
-            case 3 -> new int[] {PANEL_X + 9, PANEL_Y + 44, 48, 8};
-            default -> new int[] {PANEL_X + 59, PANEL_Y + 44, 50, 8};
+            case 0 -> new int[] {TableSkin.PANEL_X + 9, TableSkin.PANEL_Y + 35, 32, 8};
+            case 1 -> new int[] {TableSkin.PANEL_X + 44, TableSkin.PANEL_Y + 35, 32, 8};
+            case 2 -> new int[] {TableSkin.PANEL_X + 78, TableSkin.PANEL_Y + 35, 31, 8};
+            case 3 -> new int[] {TableSkin.PANEL_X + 9, TableSkin.PANEL_Y + 44, 48, 8};
+            default -> new int[] {TableSkin.PANEL_X + 59, TableSkin.PANEL_Y + 44, 50, 8};
         };
     }
 
@@ -592,9 +523,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private boolean isOverCleanseTab(double mouseX, double mouseY) {
         if (!this.menu.disenchantEnabled()) return false;
-        int x0 = this.leftPos + TAB_CLEANSE_X;
-        int y0 = this.topPos + TAB_Y_OFFSET;
-        return mouseX >= x0 && mouseX < x0 + TAB_W && mouseY >= y0 && mouseY < y0 + TAB_H - 2;
+        int x0 = this.leftPos + TableSkin.TAB_CLEANSE_X;
+        int y0 = this.topPos + TableSkin.TAB_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.TAB_W && mouseY >= y0 && mouseY < y0 + TableSkin.TAB_H - 2;
     }
 
     public void openConfigFromGrimoire() {
@@ -609,15 +540,15 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private boolean isOverConfigButton(double mouseX, double mouseY) {
-        int x0 = this.leftPos + CONFIG_BTN_X;
-        int y0 = this.topPos + CONFIG_BTN_Y_OFFSET;
-        return mouseX >= x0 && mouseX < x0 + CONFIG_BTN_SIZE && mouseY >= y0 && mouseY < y0 + CONFIG_BTN_SIZE;
+        int x0 = this.leftPos + TableSkin.CONFIG_BTN_X;
+        int y0 = this.topPos + TableSkin.CONFIG_BTN_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.CONFIG_BTN_SIZE && mouseY >= y0 && mouseY < y0 + TableSkin.CONFIG_BTN_SIZE;
     }
 
     private boolean isOverGrimoireButton(double mouseX, double mouseY) {
-        int x0 = this.leftPos + GRIMOIRE_BTN_X;
-        int y0 = this.topPos + GRIMOIRE_BTN_Y_OFFSET;
-        return mouseX >= x0 && mouseX < x0 + GRIMOIRE_BTN_SIZE && mouseY >= y0 && mouseY < y0 + GRIMOIRE_BTN_SIZE;
+        int x0 = this.leftPos + TableSkin.GRIMOIRE_BTN_X;
+        int y0 = this.topPos + TableSkin.GRIMOIRE_BTN_Y_OFFSET;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.GRIMOIRE_BTN_SIZE && mouseY >= y0 && mouseY < y0 + TableSkin.GRIMOIRE_BTN_SIZE;
     }
 
     public boolean hasActiveConfigOverlay() {
@@ -643,23 +574,23 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         List<net.minecraft.client.renderer.Rect2i> areas = new ArrayList<>(5);
         if (this.menu.hasSecondaryTabs()) {
             areas.add(new net.minecraft.client.renderer.Rect2i(
-                this.leftPos + TAB_INSCRIBE_X,
-                this.topPos + TAB_Y_OFFSET,
-                (TAB_TOMES_X + TAB_W) - TAB_INSCRIBE_X,
-                TAB_H
+                this.leftPos + TableSkin.TAB_INSCRIBE_X,
+                this.topPos + TableSkin.TAB_Y_OFFSET,
+                (TableSkin.TAB_TOMES_X + TableSkin.TAB_W) - TableSkin.TAB_INSCRIBE_X,
+                TableSkin.TAB_H
             ));
         }
         areas.add(new net.minecraft.client.renderer.Rect2i(
-            this.leftPos + CONFIG_BTN_X,
-            this.topPos + CONFIG_BTN_Y_OFFSET,
-            CONFIG_BTN_SIZE,
-            CONFIG_BTN_SIZE
+            this.leftPos + TableSkin.CONFIG_BTN_X,
+            this.topPos + TableSkin.CONFIG_BTN_Y_OFFSET,
+            TableSkin.CONFIG_BTN_SIZE,
+            TableSkin.CONFIG_BTN_SIZE
         ));
         areas.add(new net.minecraft.client.renderer.Rect2i(
-            this.leftPos + GRIMOIRE_BTN_X,
-            this.topPos + GRIMOIRE_BTN_Y_OFFSET,
-            GRIMOIRE_BTN_SIZE,
-            GRIMOIRE_BTN_SIZE
+            this.leftPos + TableSkin.GRIMOIRE_BTN_X,
+            this.topPos + TableSkin.GRIMOIRE_BTN_Y_OFFSET,
+            TableSkin.GRIMOIRE_BTN_SIZE,
+            TableSkin.GRIMOIRE_BTN_SIZE
         ));
         if (this.configOverlay != null) {
             areas.add(this.configOverlay.fullGuiBounds());
@@ -708,37 +639,37 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private boolean isOverFreezeButton(double mouseX, double mouseY) {
         if (!this.menu.isEpiphanyEnabled() || !isInscribeTab() || this.menu.isRitualActive()) return false;
-        int x0 = this.leftPos + FREEZE_BTN_X;
-        int y0 = this.topPos + FREEZE_BTN_Y;
-        return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
+        int x0 = this.leftPos + TableSkin.FREEZE_BTN_X;
+        int y0 = this.topPos + TableSkin.FREEZE_BTN_Y;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.BTN_SIZE && mouseY >= y0 && mouseY < y0 + TableSkin.BTN_SIZE;
     }
 
     private boolean isOverRerollButton(double mouseX, double mouseY) {
         if (!this.menu.isEpiphanyEnabled() || !isInscribeTab() || this.menu.isRitualActive()) return false;
-        int x0 = this.leftPos + REROLL_BTN_X;
-        int y0 = this.topPos + REROLL_BTN_Y;
-        return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
+        int x0 = this.leftPos + TableSkin.REROLL_BTN_X;
+        int y0 = this.topPos + TableSkin.REROLL_BTN_Y;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.BTN_SIZE && mouseY >= y0 && mouseY < y0 + TableSkin.BTN_SIZE;
     }
 
     private boolean isOverCleanseAllButton(double mouseX, double mouseY) {
         if (!isCleanseTab() || this.menu.isRitualActive()) return false;
-        int x0 = this.leftPos + CLEANSE_ALL_BTN_X;
-        int y0 = this.topPos + CLEANSE_ALL_BTN_Y;
-        return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
+        int x0 = this.leftPos + TableSkin.CLEANSE_ALL_BTN_X;
+        int y0 = this.topPos + TableSkin.CLEANSE_ALL_BTN_Y;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.BTN_SIZE && mouseY >= y0 && mouseY < y0 + TableSkin.BTN_SIZE;
     }
 
     private boolean isOverSacrificeSkipButton(double mouseX, double mouseY) {
         if (!this.menu.isRitualActive()) return false;
-        int x0 = this.leftPos + SKIP_SACRIFICE_BTN_X;
-        int y0 = this.topPos + SKIP_SACRIFICE_BTN_Y;
-        return mouseX >= x0 && mouseX < x0 + SKIP_BTN_W && mouseY >= y0 && mouseY < y0 + SKIP_BTN_H;
+        int x0 = this.leftPos + TableSkin.SKIP_SACRIFICE_BTN_X;
+        int y0 = this.topPos + TableSkin.SKIP_SACRIFICE_BTN_Y;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.SKIP_BTN_W && mouseY >= y0 && mouseY < y0 + TableSkin.SKIP_BTN_H;
     }
 
     private boolean isOverRushSkipButton(double mouseX, double mouseY) {
         if (!this.menu.isRitualActive()) return false;
-        int x0 = this.leftPos + SKIP_RUSH_BTN_X;
-        int y0 = this.topPos + SKIP_RUSH_BTN_Y;
-        return mouseX >= x0 && mouseX < x0 + SKIP_BTN_W && mouseY >= y0 && mouseY < y0 + SKIP_BTN_H;
+        int x0 = this.leftPos + TableSkin.SKIP_RUSH_BTN_X;
+        int y0 = this.topPos + TableSkin.SKIP_RUSH_BTN_Y;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.SKIP_BTN_W && mouseY >= y0 && mouseY < y0 + TableSkin.SKIP_BTN_H;
     }
 
     private boolean canCleanseAllNow() {
@@ -749,9 +680,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private boolean isOverSanctumPanel(double mouseX, double mouseY) {
         if (!shouldShowSanctumPanel()) return false;
-        int x0 = this.leftPos + PANEL_X;
-        int y0 = this.topPos + PANEL_Y;
-        return mouseX >= x0 && mouseX < x0 + PANEL_W && mouseY >= y0 && mouseY < y0 + PANEL_H;
+        int x0 = this.leftPos + TableSkin.PANEL_X;
+        int y0 = this.topPos + TableSkin.PANEL_Y;
+        return mouseX >= x0 && mouseX < x0 + TableSkin.PANEL_W && mouseY >= y0 && mouseY < y0 + TableSkin.PANEL_H;
     }
 
     @Override
@@ -1066,30 +997,30 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private void renderModeTabs(GuiGraphicsExtractor ctx, int i, int j, int mouseX, int mouseY) {
         if (!this.menu.hasSecondaryTabs()) {
-            int cx = i + CONFIG_BTN_X;
-            int cy = j + CONFIG_BTN_Y_OFFSET;
-            ctx.blit(BTN_CONFIG, cx, cy, cx + CONFIG_BTN_SIZE, cy + CONFIG_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+            int cx = i + TableSkin.CONFIG_BTN_X;
+            int cy = j + TableSkin.CONFIG_BTN_Y_OFFSET;
+            ctx.blit(TableSkin.BTN_CONFIG, cx, cy, cx + TableSkin.CONFIG_BTN_SIZE, cy + TableSkin.CONFIG_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
             if (isOverConfigButton(mouseX, mouseY)) {
-                ctx.fill(cx + 1, cy + 1, cx + CONFIG_BTN_SIZE - 1, cy + CONFIG_BTN_SIZE - 1, 0x2EFFDF82);
+                ctx.fill(cx + 1, cy + 1, cx + TableSkin.CONFIG_BTN_SIZE - 1, cy + TableSkin.CONFIG_BTN_SIZE - 1, 0x2EFFDF82);
             }
-            int gx = i + GRIMOIRE_BTN_X;
-            int gy = j + GRIMOIRE_BTN_Y_OFFSET;
-            ctx.blit(BTN_GRIMOIRE, gx, gy, gx + GRIMOIRE_BTN_SIZE, gy + GRIMOIRE_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+            int gx = i + TableSkin.GRIMOIRE_BTN_X;
+            int gy = j + TableSkin.GRIMOIRE_BTN_Y_OFFSET;
+            ctx.blit(TableSkin.BTN_GRIMOIRE, gx, gy, gx + TableSkin.GRIMOIRE_BTN_SIZE, gy + TableSkin.GRIMOIRE_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
             if (isOverGrimoireButton(mouseX, mouseY)) {
-                ctx.fill(gx + 1, gy + 1, gx + GRIMOIRE_BTN_SIZE - 1, gy + GRIMOIRE_BTN_SIZE - 1, 0x2EFFDF82);
+                ctx.fill(gx + 1, gy + 1, gx + TableSkin.GRIMOIRE_BTN_SIZE - 1, gy + TableSkin.GRIMOIRE_BTN_SIZE - 1, 0x2EFFDF82);
             }
             return;
         }
         boolean cleanse = isCleanseTab();
         boolean tome = isTomeTab();
         boolean inscribe = isInscribeTab();
-        int tabY = j + TAB_Y_OFFSET;
+        int tabY = j + TableSkin.TAB_Y_OFFSET;
 
-        int inscribeX = i + TAB_INSCRIBE_X;
-        Identifier inscribeSprite = inscribe ? TAB_INSCRIBE_ACTIVE : TAB_INSCRIBE_INACTIVE;
-        ctx.blit(inscribeSprite, inscribeX, tabY, inscribeX + TAB_W, tabY + TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
+        int inscribeX = i + TableSkin.TAB_INSCRIBE_X;
+        Identifier inscribeSprite = inscribe ? TableSkin.TAB_INSCRIBE_ACTIVE : TableSkin.TAB_INSCRIBE_INACTIVE;
+        ctx.blit(inscribeSprite, inscribeX, tabY, inscribeX + TableSkin.TAB_W, tabY + TableSkin.TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
         if (!inscribe && isOverInscribeTab(mouseX, mouseY)) {
-            ctx.fill(inscribeX + 2, tabY + 2, inscribeX + TAB_W - 2, tabY + TAB_H - 3, 0x24FFE082);
+            ctx.fill(inscribeX + 2, tabY + 2, inscribeX + TableSkin.TAB_W - 2, tabY + TableSkin.TAB_H - 3, 0x24FFE082);
         }
         float tabVisualMidY = tabY + 8.0f;
         String tab1Text = Component.translatable("gui.chiseled_enchanting_table.tab.inscribe").getString();
@@ -1098,20 +1029,20 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.minecraft,
             tab1Text,
             inscribeX + 5,
-            TAB_W - 10,
+            TableSkin.TAB_W - 10,
             tabVisualMidY,
             0.76f,
             inscribe ? 0xFFFFF0C8 : 0xFFC2B2DC
         );
 
         if (this.menu.disenchantEnabled()) {
-            int cleanseX = i + TAB_CLEANSE_X;
-            Identifier cleanseSprite = cleanse ? TAB_CLEANSE_ACTIVE : TAB_CLEANSE_INACTIVE;
-            ctx.blit(cleanseSprite, cleanseX, tabY, cleanseX + TAB_W, tabY + TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
+            int cleanseX = i + TableSkin.TAB_CLEANSE_X;
+            Identifier cleanseSprite = cleanse ? TableSkin.TAB_CLEANSE_ACTIVE : TableSkin.TAB_CLEANSE_INACTIVE;
+            ctx.blit(cleanseSprite, cleanseX, tabY, cleanseX + TableSkin.TAB_W, tabY + TableSkin.TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
             if (!this.menu.isCleansePageUnlocked()) {
-                ctx.fill(cleanseX + 2, tabY + 2, cleanseX + TAB_W - 2, tabY + TAB_H - 3, 0xA0181024);
+                ctx.fill(cleanseX + 2, tabY + 2, cleanseX + TableSkin.TAB_W - 2, tabY + TableSkin.TAB_H - 3, 0xA0181024);
             } else if (!cleanse && isOverCleanseTab(mouseX, mouseY)) {
-                ctx.fill(cleanseX + 2, tabY + 2, cleanseX + TAB_W - 2, tabY + TAB_H - 3, 0x247CFFA6);
+                ctx.fill(cleanseX + 2, tabY + 2, cleanseX + TableSkin.TAB_W - 2, tabY + TableSkin.TAB_H - 3, 0x247CFFA6);
             }
             int traitCount = EnchantmentHelper.getEnchantmentsForCrafting(this.menu.get_enchantable_item()).size();
             String baseLabel = Component.translatable("gui.chiseled_enchanting_table.tab.cleanse").getString();
@@ -1121,7 +1052,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 this.minecraft,
                 tab2Text,
                 cleanseX + 5,
-                TAB_W - 10,
+                TableSkin.TAB_W - 10,
                 tabVisualMidY,
                 0.76f,
                 !this.menu.isCleansePageUnlocked() ? 0xFF8E829E : (cleanse ? 0xFF9EFFDB : (traitCount > 0 ? 0xFF8BE8C8 : 0xFFA2C4BC))
@@ -1129,13 +1060,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
 
         if (this.menu.isTomePageEnabled()) {
-            int tomeX = i + TAB_TOMES_X;
-            Identifier tomeSprite = tome ? TAB_TOME_ACTIVE : TAB_TOME_INACTIVE;
-            ctx.blit(tomeSprite, tomeX, tabY, tomeX + TAB_W, tabY + TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
+            int tomeX = i + TableSkin.TAB_TOMES_X;
+            Identifier tomeSprite = tome ? TableSkin.TAB_TOME_ACTIVE : TableSkin.TAB_TOME_INACTIVE;
+            ctx.blit(tomeSprite, tomeX, tabY, tomeX + TableSkin.TAB_W, tabY + TableSkin.TAB_H, 0.0f, 1.0f, 0.0f, 1.0f);
             if (!this.menu.isTomePageUnlocked()) {
-                ctx.fill(tomeX + 2, tabY + 2, tomeX + TAB_W - 2, tabY + TAB_H - 3, 0xA0181024);
+                ctx.fill(tomeX + 2, tabY + 2, tomeX + TableSkin.TAB_W - 2, tabY + TableSkin.TAB_H - 3, 0xA0181024);
             } else if (!tome && isOverTomeTab(mouseX, mouseY)) {
-                ctx.fill(tomeX + 2, tabY + 2, tomeX + TAB_W - 2, tabY + TAB_H - 3, 0x24B9F6FF);
+                ctx.fill(tomeX + 2, tabY + 2, tomeX + TableSkin.TAB_W - 2, tabY + TableSkin.TAB_H - 3, 0x24B9F6FF);
             }
             String tomeText = Component.translatable("gui.chiseled_enchanting_table.tab.tomes").getString();
             RowRenderSupport.renderCenteredBoxText(
@@ -1143,7 +1074,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 this.minecraft,
                 tomeText,
                 tomeX + 5,
-                TAB_W - 10,
+                TableSkin.TAB_W - 10,
                 tabVisualMidY,
                 0.76f,
                 !this.menu.isTomePageUnlocked() ? 0xFF8E829E : (tome ? 0xFFB9F6FF : 0xFFA8CBD8)
@@ -1151,25 +1082,25 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
 
         if (this.menu.disenchantEnabled() && !this.menu.isCleansePageUnlocked()) {
-            int sx = i + SACRIFICE_BTN_X;
-            ctx.fill(sx, tabY + 1, sx + SACRIFICE_BTN_W, tabY + TAB_H - 2, isOverSacrificeButton(mouseX, mouseY) ? 0xFF6B4E2E : 0xFF3A2A20);
-            ctx.fill(sx + 1, tabY + 2, sx + SACRIFICE_BTN_W - 1, tabY + TAB_H - 3, 0xFF241722);
+            int sx = i + TableSkin.SACRIFICE_BTN_X;
+            ctx.fill(sx, tabY + 1, sx + TableSkin.SACRIFICE_BTN_W, tabY + TableSkin.TAB_H - 2, isOverSacrificeButton(mouseX, mouseY) ? 0xFF6B4E2E : 0xFF3A2A20);
+            ctx.fill(sx + 1, tabY + 2, sx + TableSkin.SACRIFICE_BTN_W - 1, tabY + TableSkin.TAB_H - 3, 0xFF241722);
             String sacText = Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_short", this.menu.sacrificeProgress, this.menu.sacrificeRequired).getString();
-            RowRenderSupport.renderCenteredBoxText(ctx, this.minecraft, sacText, sx + 2, SACRIFICE_BTN_W - 4, tabVisualMidY, 0.62f, 0xFFFFC46B);
+            RowRenderSupport.renderCenteredBoxText(ctx, this.minecraft, sacText, sx + 2, TableSkin.SACRIFICE_BTN_W - 4, tabVisualMidY, 0.62f, 0xFFFFC46B);
         }
 
-        int cx = i + CONFIG_BTN_X;
-        int cy = j + CONFIG_BTN_Y_OFFSET;
-        ctx.blit(BTN_CONFIG, cx, cy, cx + CONFIG_BTN_SIZE, cy + CONFIG_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+        int cx = i + TableSkin.CONFIG_BTN_X;
+        int cy = j + TableSkin.CONFIG_BTN_Y_OFFSET;
+        ctx.blit(TableSkin.BTN_CONFIG, cx, cy, cx + TableSkin.CONFIG_BTN_SIZE, cy + TableSkin.CONFIG_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
         if (isOverConfigButton(mouseX, mouseY)) {
-            ctx.fill(cx + 1, cy + 1, cx + CONFIG_BTN_SIZE - 1, cy + CONFIG_BTN_SIZE - 1, 0x2EFFDF82);
+            ctx.fill(cx + 1, cy + 1, cx + TableSkin.CONFIG_BTN_SIZE - 1, cy + TableSkin.CONFIG_BTN_SIZE - 1, 0x2EFFDF82);
         }
 
-        int gx = i + GRIMOIRE_BTN_X;
-        int gy = j + GRIMOIRE_BTN_Y_OFFSET;
-        ctx.blit(BTN_GRIMOIRE, gx, gy, gx + GRIMOIRE_BTN_SIZE, gy + GRIMOIRE_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+        int gx = i + TableSkin.GRIMOIRE_BTN_X;
+        int gy = j + TableSkin.GRIMOIRE_BTN_Y_OFFSET;
+        ctx.blit(TableSkin.BTN_GRIMOIRE, gx, gy, gx + TableSkin.GRIMOIRE_BTN_SIZE, gy + TableSkin.GRIMOIRE_BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
         if (isOverGrimoireButton(mouseX, mouseY)) {
-            ctx.fill(gx + 1, gy + 1, gx + GRIMOIRE_BTN_SIZE - 1, gy + GRIMOIRE_BTN_SIZE - 1, 0x2EFFDF82);
+            ctx.fill(gx + 1, gy + 1, gx + TableSkin.GRIMOIRE_BTN_SIZE - 1, gy + TableSkin.GRIMOIRE_BTN_SIZE - 1, 0x2EFFDF82);
         }
     }
 
@@ -1183,20 +1114,20 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         int j = this.topPos;
 
         // Draw inactive tab under main frame, main frame, then active tab flush on top so its open bottom blends seamlessly!
-        ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.blit(TableSkin.BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
         renderModeTabs(ctx, i, j, mouseX, mouseY);
         if (shouldShowShelfHudBadge()) {
             renderHeaderShelfHudBadge(ctx, i, j, mouseX, mouseY);
         }
 
-        int px = i + PANEL_X;
-        int py = j + PANEL_Y;
+        int px = i + TableSkin.PANEL_X;
+        int py = j + TableSkin.PANEL_Y;
         if (!shouldShowSanctumPanel()) {
             return;
         }
 
         if (this.menu.isRitualActive()) {
-            ctx.blit(EPIPHANY_PANEL_FROZEN, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.blit(TableSkin.EPIPHANY_PANEL_FROZEN, px, py, px + TableSkin.PANEL_W, py + TableSkin.PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
             ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
             try {
                 int barX = px + 10;
@@ -1213,30 +1144,30 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFB8FFE0);
 
                 // Left button: Sacrifice XP Skip
-                int sx = i + SKIP_SACRIFICE_BTN_X;
-                int sy = j + SKIP_SACRIFICE_BTN_Y;
+                int sx = i + TableSkin.SKIP_SACRIFICE_BTN_X;
+                int sy = j + TableSkin.SKIP_SACRIFICE_BTN_Y;
                 boolean canSac = this.menu.canSacrificeSkipNow();
-                ctx.fill(sx, sy, sx + SKIP_BTN_W, sy + SKIP_BTN_H, canSac ? 0xFFE0B85A : 0xFF584E68);
+                ctx.fill(sx, sy, sx + TableSkin.SKIP_BTN_W, sy + TableSkin.SKIP_BTN_H, canSac ? 0xFFE0B85A : 0xFF584E68);
                 ctx.fill(
                     sx + 1,
                     sy + 1,
-                    sx + SKIP_BTN_W - 1,
-                    sy + SKIP_BTN_H - 1,
+                    sx + TableSkin.SKIP_BTN_W - 1,
+                    sy + TableSkin.SKIP_BTN_H - 1,
                     canSac
                         ? (isOverSacrificeSkipButton(mouseX, mouseY) ? 0xFF2E5B48 : 0xFF1E3E33)
                         : 0xFF191522
                 );
 
                 // Right button: Non-Sacrifice Force Rush Skip
-                int rx = i + SKIP_RUSH_BTN_X;
-                int ry = j + SKIP_RUSH_BTN_Y;
+                int rx = i + TableSkin.SKIP_RUSH_BTN_X;
+                int ry = j + TableSkin.SKIP_RUSH_BTN_Y;
                 boolean canRush = this.menu.canRushSkipNow();
-                ctx.fill(rx, ry, rx + SKIP_BTN_W, ry + SKIP_BTN_H, canRush ? 0xFFD9725A : 0xFF584E68);
+                ctx.fill(rx, ry, rx + TableSkin.SKIP_BTN_W, ry + TableSkin.SKIP_BTN_H, canRush ? 0xFFD9725A : 0xFF584E68);
                 ctx.fill(
                     rx + 1,
                     ry + 1,
-                    rx + SKIP_BTN_W - 1,
-                    ry + SKIP_BTN_H - 1,
+                    rx + TableSkin.SKIP_BTN_W - 1,
+                    ry + TableSkin.SKIP_BTN_H - 1,
                     canRush
                         ? (isOverRushSkipButton(mouseX, mouseY) ? 0xFF662932 : 0xFF491D26)
                         : 0xFF191522
@@ -1248,7 +1179,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
 
         if (isTomeTab()) {
-            ctx.blit(CLEANSE_PANEL, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.blit(TableSkin.CLEANSE_PANEL, px, py, px + TableSkin.PANEL_W, py + TableSkin.PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
             var selected = this.scrollContainer.selectedTomeEntry();
             String[] labels = {
                 Component.translatable("gui.chiseled_enchanting_table.tomes.btn_next").getString(),
@@ -1265,7 +1196,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 if (b < 3 && selected != null && selected.wear_used() <= 0 && b != 2) enabled = false;
                 if (b != 3 && !this.menu.isTomeLocksEnabled()) enabled = false;
                 boolean hovered = hoveredTomeButton(mouseX, mouseY) == b;
-                ctx.blit(TOME_BUTTONS[b], bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);
+                ctx.blit(TableSkin.TOME_BUTTONS[b], bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);
                 if (!enabled) {
                     ctx.fill(bx, by, bx + r[2], by + r[3], 0xB0191522);
                 } else if (hovered) {
@@ -1286,7 +1217,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
 
         if (isCleanseTab()) {
-            ctx.blit(CLEANSE_PANEL, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.blit(TableSkin.CLEANSE_PANEL, px, py, px + TableSkin.PANEL_W, py + TableSkin.PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
             ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
             try {
                 ItemStack target = this.menu.get_enchantable_item();
@@ -1305,17 +1236,17 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFA8FFE0);
                 }
 
-                int bx = i + CLEANSE_ALL_BTN_X;
-                int by = j + CLEANSE_ALL_BTN_Y;
+                int bx = i + TableSkin.CLEANSE_ALL_BTN_X;
+                int by = j + TableSkin.CLEANSE_ALL_BTN_Y;
                 boolean canAll = canCleanseAllNow();
-                ctx.blit(BTN_CLEANSE_ALL, bx, by, bx + BTN_SIZE, by + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+                ctx.blit(TableSkin.BTN_CLEANSE_ALL, bx, by, bx + TableSkin.BTN_SIZE, by + TableSkin.BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
                 if (!canAll) {
-                    ctx.fill(bx, by, bx + BTN_SIZE, by + BTN_SIZE, 0x990A1010);
+                    ctx.fill(bx, by, bx + TableSkin.BTN_SIZE, by + TableSkin.BTN_SIZE, 0x990A1010);
                 } else if (isDisenchantAllConfirmPending()) {
-                    ctx.fill(bx - 1, by - 1, bx + BTN_SIZE + 1, by + BTN_SIZE + 1, 0xCCFFAA2A);
-                    ctx.fill(bx + 1, by + 1, bx + BTN_SIZE - 1, by + BTN_SIZE - 1, 0x44FFD066);
+                    ctx.fill(bx - 1, by - 1, bx + TableSkin.BTN_SIZE + 1, by + TableSkin.BTN_SIZE + 1, 0xCCFFAA2A);
+                    ctx.fill(bx + 1, by + 1, bx + TableSkin.BTN_SIZE - 1, by + TableSkin.BTN_SIZE - 1, 0x44FFD066);
                 } else if (isOverCleanseAllButton(mouseX, mouseY)) {
-                    ctx.fill(bx, by, bx + BTN_SIZE, by + BTN_SIZE, 0x2E8CFFD2);
+                    ctx.fill(bx, by, bx + TableSkin.BTN_SIZE, by + TableSkin.BTN_SIZE, 0x2E8CFFD2);
                 }
             } finally {
                 ctx.disableScissor();
@@ -1333,8 +1264,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
 
         boolean frozen = this.menu.isEpiphanyFrozen();
-        Identifier panelSprite = frozen ? EPIPHANY_PANEL_FROZEN : EPIPHANY_PANEL;
-        ctx.blit(panelSprite, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
+        Identifier panelSprite = frozen ? TableSkin.EPIPHANY_PANEL_FROZEN : TableSkin.EPIPHANY_PANEL;
+        ctx.blit(panelSprite, px, py, px + TableSkin.PANEL_W, py + TableSkin.PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
 
         ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
         try {
@@ -1387,24 +1318,24 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 ctx.fill(barX, barY, barX + filledW, barY + 1, fillHighlight);
             }
 
-            int fx = i + FREEZE_BTN_X;
-            int fy = j + FREEZE_BTN_Y;
+            int fx = i + TableSkin.FREEZE_BTN_X;
+            int fy = j + TableSkin.FREEZE_BTN_Y;
             boolean canFreeze = this.menu.canAffordFreezeEpiphany();
-            ctx.blit(BTN_FREEZE, fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.blit(TableSkin.BTN_FREEZE, fx, fy, fx + TableSkin.BTN_SIZE, fy + TableSkin.BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
             if (!canFreeze) {
-                ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
+                ctx.fill(fx, fy, fx + TableSkin.BTN_SIZE, fy + TableSkin.BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
             } else if (isOverFreezeButton(mouseX, mouseY)) {
-                ctx.fill(fx, fy, fx + BTN_SIZE, fy + BTN_SIZE, 0x2C90F5FF);
+                ctx.fill(fx, fy, fx + TableSkin.BTN_SIZE, fy + TableSkin.BTN_SIZE, 0x2C90F5FF);
             }
 
-            int rx = i + REROLL_BTN_X;
-            int ry = j + REROLL_BTN_Y;
+            int rx = i + TableSkin.REROLL_BTN_X;
+            int ry = j + TableSkin.REROLL_BTN_Y;
             boolean canReroll = this.menu.canAffordRerollEpiphany();
-            ctx.blit(BTN_REROLL, rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.blit(TableSkin.BTN_REROLL, rx, ry, rx + TableSkin.BTN_SIZE, ry + TableSkin.BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
             if (!canReroll) {
-                ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
+                ctx.fill(rx, ry, rx + TableSkin.BTN_SIZE, ry + TableSkin.BTN_SIZE, unlocked ? 0x60100C1A : 0xA60C0814);
             } else if (isOverRerollButton(mouseX, mouseY)) {
-                ctx.fill(rx, ry, rx + BTN_SIZE, ry + BTN_SIZE, 0x2CFFE082);
+                ctx.fill(rx, ry, rx + TableSkin.BTN_SIZE, ry + TableSkin.BTN_SIZE, 0x2CFFE082);
             }
         } finally {
             ctx.disableScissor();
@@ -2218,21 +2149,21 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private void renderHeaderShelfHudBadge(GuiGraphicsExtractor ctx, int left, int top, int mouseX, int mouseY) {
-        int bx = left + SHELF_HUD_X;
-        int by = top + SHELF_HUD_Y;
+        int bx = left + TableSkin.SHELF_HUD_X;
+        int by = top + TableSkin.SHELF_HUD_Y;
         boolean hovered = isOverShelfHudBadge(mouseX, mouseY);
         int border = this.menu.crampedLibrary ? 0xFFB83A4B : (hovered ? 0xFFE5C46B : 0xFF563D78);
-        ctx.fill(bx, by, bx + SHELF_HUD_W, by + SHELF_HUD_H, border);
-        ctx.fill(bx + 1, by + 1, bx + SHELF_HUD_W - 1, by + SHELF_HUD_H - 1, 0xD0160F24);
+        ctx.fill(bx, by, bx + TableSkin.SHELF_HUD_W, by + TableSkin.SHELF_HUD_H, border);
+        ctx.fill(bx + 1, by + 1, bx + TableSkin.SHELF_HUD_W - 1, by + TableSkin.SHELF_HUD_H - 1, 0xD0160F24);
         if (hovered) {
-            ctx.fill(bx + 1, by + 1, bx + SHELF_HUD_W - 1, by + SHELF_HUD_H - 3, 0x22FFE082);
+            ctx.fill(bx + 1, by + 1, bx + TableSkin.SHELF_HUD_W - 1, by + TableSkin.SHELF_HUD_H - 3, 0x22FFE082);
         }
         int broad = this.menu.totalLibraryBookshelves();
         int target = computeNextShelfMilestoneTarget();
         float ratio = target <= 0 ? 1.0f : Mth.clamp((float) broad / (float) target, 0.0f, 1.0f);
         int barX = bx + 2;
-        int barY = by + SHELF_HUD_H - 3;
-        int barW = SHELF_HUD_W - 4;
+        int barY = by + TableSkin.SHELF_HUD_H - 3;
+        int barW = TableSkin.SHELF_HUD_W - 4;
         ctx.fill(barX, barY, barX + barW, barY + 2, 0xFF0B0714);
         int fillW = Math.round(barW * ratio);
         if (fillW > 0) {
@@ -2412,9 +2343,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 context,
                 this.minecraft,
                 hudText,
-                SHELF_HUD_X + 3,
-                SHELF_HUD_W - 6,
-                SHELF_HUD_Y + 4.8f,
+                TableSkin.SHELF_HUD_X + 3,
+                TableSkin.SHELF_HUD_W - 6,
+                TableSkin.SHELF_HUD_Y + 4.8f,
                 0.58f,
                 hudTextColor
             );
@@ -2424,10 +2355,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             return;
         }
 
-        int lx = PANEL_X + 10;
-        int ly = PANEL_Y;
+        int lx = TableSkin.PANEL_X + 10;
+        int ly = TableSkin.PANEL_Y;
 
-        context.enableScissor(PANEL_X + 9, PANEL_Y + 9, PANEL_X + 110, PANEL_Y + 52);
+        context.enableScissor(TableSkin.PANEL_X + 9, TableSkin.PANEL_Y + 9, TableSkin.PANEL_X + 110, TableSkin.PANEL_Y + 52);
         try {
             if (this.menu.isRitualActive()) {
                 int queueCount = Math.max(1, this.menu.queuedRitualSteps().size());
@@ -2462,9 +2393,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     context,
                     this.minecraft,
                     sacLabel,
-                    SKIP_SACRIFICE_BTN_X + 2,
-                    SKIP_BTN_W - 4,
-                    SKIP_SACRIFICE_BTN_Y + 7.0f,
+                    TableSkin.SKIP_SACRIFICE_BTN_X + 2,
+                    TableSkin.SKIP_BTN_W - 4,
+                    TableSkin.SKIP_SACRIFICE_BTN_Y + 7.0f,
                     0.68f,
                     canSac ? 0xFFA8FFD8 : 0xFF7D748D
                 );
@@ -2472,9 +2403,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     context,
                     this.minecraft,
                     rushLabel,
-                    SKIP_RUSH_BTN_X + 2,
-                    SKIP_BTN_W - 4,
-                    SKIP_RUSH_BTN_Y + 7.0f,
+                    TableSkin.SKIP_RUSH_BTN_X + 2,
+                    TableSkin.SKIP_BTN_W - 4,
+                    TableSkin.SKIP_RUSH_BTN_Y + 7.0f,
                     0.68f,
                     canRush ? 0xFFFFB2A6 : 0xFF7D748D
                 );
