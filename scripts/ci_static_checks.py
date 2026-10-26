@@ -456,6 +456,19 @@ def check_bundled_defaults_fresh() -> None:
 
 # --------------------------------------------------------------------------- #
 
+def check_baseline_mixin_inventory() -> None:
+    """Count AND class identities must agree with the generated baseline documentation."""
+    import subprocess
+    proc = subprocess.run(
+        [sys.executable, os.path.join(REPO, "scripts", "check_baseline_mixins.py"), "--check"],
+        capture_output=True, text=True, cwd=REPO,
+    )
+    if proc.returncode:
+        fail((proc.stdout or proc.stderr).strip())
+    else:
+        note("CURRENT_BASELINE Mixin count and inventory match registered configs")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--porcelain", action="store_true", help="machine readable output")
@@ -468,6 +481,7 @@ def main() -> int:
     check_bmp_safe_java_literals()
     check_locale_safe_formatting()
     check_bundled_defaults_fresh()
+    check_baseline_mixin_inventory()
 
     if args.porcelain:
         for msg in failures:
