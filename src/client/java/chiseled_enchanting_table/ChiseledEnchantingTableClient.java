@@ -144,20 +144,9 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
             BlockRegistry.CHISELED_ENCHANTING_TABLE
         );
 
+        chiseled_enchanting_table.render.RainbowTableItemVisuals.register();
         ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipFlag, lines) -> {
             if (stack.is(BlockRegistry.CHISELED_ENCHANTING_TABLE.asItem())) {
-                var data = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-                if (data != null && data.copyTag().getBooleanOr(
-                    chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, false)) {
-                    if (lines.size() > 1) {
-                        lines.add(1, Component.translatable("item.chiseled_enchanting_table.rainbow_badge")
-                            .withStyle(ChatFormatting.LIGHT_PURPLE));
-                    }
-                    lines.add(Component.translatable("item.chiseled_enchanting_table.rainbow_cloth")
-                        .withStyle(ChatFormatting.GRAY));
-                    lines.add(Component.translatable("item.chiseled_enchanting_table.rainbow_dye_hint")
-                        .withStyle(ChatFormatting.DARK_GRAY));
-                }
                 return;
             }
             if (!stack.is(Items.ENCHANTED_BOOK)) {
