@@ -1,5 +1,7 @@
 package chiseled_enchanting_table;
 
+import chiseled_enchanting_table.data.ItemCostOption;
+
 import chiseled_enchanting_table.config.ConfigCatalog;
 import chiseled_enchanting_table.config.ConfigLayoutSpec;
 import chiseled_enchanting_table.config.ModConfigNetworking;
