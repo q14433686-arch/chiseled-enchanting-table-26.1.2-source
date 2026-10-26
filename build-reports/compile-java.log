@@ -1,4 +1,4 @@
-commit: ede09277719e768d66720b7d0d7151503966d1de
+commit: 05970c709e56b433217478382781d5360861a485
 branch: arena/4313f0c3-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -18,100 +18,40 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:148: error: ';' expected
-        BookUpgradeRules bookUpgradeRules,
-                        ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:148: error: <identifier> expected
-        BookUpgradeRules bookUpgradeRules,
-                                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:149: error: ';' expected
-        TreasureEpiphanyRules treasureEpiphanyRules,
-                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:149: error: <identifier> expected
-        TreasureEpiphanyRules treasureEpiphanyRules,
-                                                   ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:150: error: ';' expected
-        DisenchantingRules disenchantingRules,
-                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:150: error: <identifier> expected
-        DisenchantingRules disenchantingRules,
-                                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:151: error: ';' expected
-        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig,
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:152: error: ';' expected
-        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig,
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:153: error: ';' expected
-        chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig,
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:154: error: ';' expected
-        CostTables costTables,
-                  ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:154: error: <identifier> expected
-        CostTables costTables,
-                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:155: error: ';' expected
-        Set<EnchantmentWithLevel> defaultEnchantmentValues,
-           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:155: error: <identifier> expected
-        Set<EnchantmentWithLevel> defaultEnchantmentValues,
-                                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:157: error: ';' expected
-        Set<Identifier> defaultExcludedIds,
-           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:157: error: <identifier> expected
-        Set<Identifier> defaultExcludedIds,
-                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:159: error: ';' expected
-        List<LootInjection> lootInjections,
-            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:159: error: <identifier> expected
-        List<LootInjection> lootInjections,
-                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:161: error: ';' expected
-        chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy policy,
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:162: error: ';' expected
-        chiseled_enchanting_table.config.rules.RuleBook.Snapshot rules) {}
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:162: error: ';' expected
-        chiseled_enchanting_table.config.rules.RuleBook.Snapshot rules) {}
-                                                                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1043: error: illegal start of type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1027: error: illegal start of type
     ) {
     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1129: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1113: error: ';' expected
         java.util.function.Function<JsonObject, T> parser,
             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1130: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1114: error: ';' expected
         T fallback
          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1130: error: <identifier> expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1114: error: <identifier> expected
         T fallback
                   ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1165: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1149: error: ';' expected
         Set<Identifier> excludedIds,
            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1165: error: <identifier> expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1149: error: <identifier> expected
         Set<Identifier> excludedIds,
                                    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1166: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1150: error: ';' expected
         List<Identifier> excludedTags
                                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1184: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1168: error: ';' expected
         chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns
                                  ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1184: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1168: error: ';' expected
         chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns
                                                                                                                     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1291: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1275: error: ';' expected
         chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritual
                                                                                            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1297: error: illegal start of type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1281: error: illegal start of type
     ) {
     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1313: error: illegal start of type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1297: error: illegal start of type
     ) {
     ^
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:34: error: ',', ')', or '[' expected
@@ -135,10 +75,10 @@ Fabric Loom: 1.16.3
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:324: error: ',', ')', or '[' expected
     record LootInjectionTable(
                              ^
-39 errors
+19 errors
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792992498929.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792992576868.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -165,106 +105,46 @@ Execution failed for task ':compileJava'.
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:324: error: ',', ')', or '[' expected
       record LootInjectionTable(
                                ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1043: error: illegal start of type
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1027: error: illegal start of type
+      ) {
+      ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1281: error: illegal start of type
       ) {
       ^
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1297: error: illegal start of type
       ) {
       ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1313: error: illegal start of type
-      ) {
-      ^
   /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:154: error: modifier static not allowed here
       static Map<Identifier, ItemTransformation> parseItemTransformations(JsonObject root) {
              ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:148: error: ';' expected
-          BookUpgradeRules bookUpgradeRules,
-                          ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:148: error: <identifier> expected
-          BookUpgradeRules bookUpgradeRules,
-                                           ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:149: error: ';' expected
-          TreasureEpiphanyRules treasureEpiphanyRules,
-                               ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:149: error: <identifier> expected
-          TreasureEpiphanyRules treasureEpiphanyRules,
-                                                     ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:150: error: ';' expected
-          DisenchantingRules disenchantingRules,
-                            ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:150: error: <identifier> expected
-          DisenchantingRules disenchantingRules,
-                                               ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:151: error: ';' expected
-          chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig,
-                                   ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:152: error: ';' expected
-          chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig,
-                                   ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:153: error: ';' expected
-          chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig,
-                                   ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:154: error: ';' expected
-          CostTables costTables,
-                    ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:154: error: <identifier> expected
-          CostTables costTables,
-                               ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:155: error: ';' expected
-          Set<EnchantmentWithLevel> defaultEnchantmentValues,
-             ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:155: error: <identifier> expected
-          Set<EnchantmentWithLevel> defaultEnchantmentValues,
-                                                            ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:157: error: ';' expected
-          Set<Identifier> defaultExcludedIds,
-             ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:157: error: <identifier> expected
-          Set<Identifier> defaultExcludedIds,
-                                            ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:159: error: ';' expected
-          List<LootInjection> lootInjections,
-              ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:159: error: <identifier> expected
-          List<LootInjection> lootInjections,
-                                            ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:161: error: ';' expected
-          chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy policy,
-                                   ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:162: error: ';' expected
-          chiseled_enchanting_table.config.rules.RuleBook.Snapshot rules) {}
-                                   ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:162: error: ';' expected
-          chiseled_enchanting_table.config.rules.RuleBook.Snapshot rules) {}
-                                                                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1129: error: ';' expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1113: error: ';' expected
           java.util.function.Function<JsonObject, T> parser,
               ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1130: error: ';' expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1114: error: ';' expected
           T fallback
            ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1130: error: <identifier> expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1114: error: <identifier> expected
           T fallback
                     ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1165: error: ';' expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1149: error: ';' expected
           Set<Identifier> excludedIds,
              ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1165: error: <identifier> expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1149: error: <identifier> expected
           Set<Identifier> excludedIds,
                                      ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1166: error: ';' expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1150: error: ';' expected
           List<Identifier> excludedTags
                                        ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1184: error: ';' expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1168: error: ';' expected
           chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns
                                    ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1184: error: ';' expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1168: error: ';' expected
           chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns
                                                                                                                       ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1291: error: ';' expected
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1275: error: ';' expected
           chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritual
                                                                                              ^
-  39 errors
+  19 errors
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -306,100 +186,40 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:148: error: ';' expected
-        BookUpgradeRules bookUpgradeRules,
-                        ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:148: error: <identifier> expected
-        BookUpgradeRules bookUpgradeRules,
-                                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:149: error: ';' expected
-        TreasureEpiphanyRules treasureEpiphanyRules,
-                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:149: error: <identifier> expected
-        TreasureEpiphanyRules treasureEpiphanyRules,
-                                                   ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:150: error: ';' expected
-        DisenchantingRules disenchantingRules,
-                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:150: error: <identifier> expected
-        DisenchantingRules disenchantingRules,
-                                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:151: error: ';' expected
-        chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config shelfGatesConfig,
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:152: error: ';' expected
-        chiseled_enchanting_table.mechanics.resonance.LibraryResonance.Config libraryResonanceConfig,
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:153: error: ';' expected
-        chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritualConfig,
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:154: error: ';' expected
-        CostTables costTables,
-                  ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:154: error: <identifier> expected
-        CostTables costTables,
-                             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:155: error: ';' expected
-        Set<EnchantmentWithLevel> defaultEnchantmentValues,
-           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:155: error: <identifier> expected
-        Set<EnchantmentWithLevel> defaultEnchantmentValues,
-                                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:157: error: ';' expected
-        Set<Identifier> defaultExcludedIds,
-           ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:157: error: <identifier> expected
-        Set<Identifier> defaultExcludedIds,
-                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:159: error: ';' expected
-        List<LootInjection> lootInjections,
-            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:159: error: <identifier> expected
-        List<LootInjection> lootInjections,
-                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:161: error: ';' expected
-        chiseled_enchanting_table.config.ModRuntimeConfig.PackPolicy policy,
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:162: error: ';' expected
-        chiseled_enchanting_table.config.rules.RuleBook.Snapshot rules) {}
-                                 ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:162: error: ';' expected
-        chiseled_enchanting_table.config.rules.RuleBook.Snapshot rules) {}
-                                                                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1043: error: illegal start of type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1027: error: illegal start of type
     ) {
     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1129: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1113: error: ';' expected
         java.util.function.Function<JsonObject, T> parser,
             ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1130: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1114: error: ';' expected
         T fallback
          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1130: error: <identifier> expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1114: error: <identifier> expected
         T fallback
                   ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1165: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1149: error: ';' expected
         Set<Identifier> excludedIds,
            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1165: error: <identifier> expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1149: error: <identifier> expected
         Set<Identifier> excludedIds,
                                    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1166: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1150: error: ';' expected
         List<Identifier> excludedTags
                                      ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1184: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1168: error: ';' expected
         chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns
                                  ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1184: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1168: error: ';' expected
         chiseled_enchanting_table.mechanics.loot.DepletedTomeWorldMechanics.DepletedTomeChestSpawnConfig chestSpawns
                                                                                                                     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1291: error: ';' expected
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1275: error: ';' expected
         chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config ritual
                                                                                            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1297: error: illegal start of type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1281: error: illegal start of type
     ) {
     ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1313: error: illegal start of type
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:1297: error: illegal start of type
     ) {
     ^
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:34: error: ',', ')', or '[' expected
@@ -423,7 +243,7 @@ Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Com
 /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:324: error: ',', ')', or '[' expected
     record LootInjectionTable(
                              ^
-39 errors
+19 errors
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -564,7 +384,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 13s
+BUILD FAILED in 12s
 1 actionable task: 1 executed
 gradle exit code: 1
 
