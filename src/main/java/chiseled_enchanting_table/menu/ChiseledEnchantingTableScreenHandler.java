@@ -1333,7 +1333,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.access.execute(action);
     }
 
-    int resolveEnchantmentMaxLevel(EnchantmentWithLevel e) {
+    public int resolveEnchantmentMaxLevel(EnchantmentWithLevel e) {
         return findEnchantment(e.enchantment_id(), this.world)
             .map(h -> Math.max(1, h.value().getMaxLevel()))
             .orElseGet(() -> Math.max(1, e.enchantment_level()));
