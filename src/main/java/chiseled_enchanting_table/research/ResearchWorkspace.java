@@ -21,13 +21,18 @@ import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 public final class ResearchWorkspace {
     private ResearchWorkspace() {}
     public static Optional<ResearchCatalog.Library> resolve(ServerPlayer player) {
-        if (!(player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu)
-            || player.isSpectator() || !player.getAbilities().mayBuild) return Optional.empty();
+        if (!(player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu)) return ResearchPrototype.resolve(player);
         ServerLevel level = player.level();
         BlockPos pos = menu.tableBlockPos();
-        if (pos == null || menu.world() != level || !level.hasChunkAt(pos)
-            || !level.getBlockState(pos).is(BlockRegistry.CHISELED_ENCHANTING_TABLE)
-            || !menu.stillValid(player) || !level.mayInteract(player,pos)
+        if (pos == null || menu.world() != level || !level.hasChunkAt(pos) || !menu.stillValid(player)) return Optional.empty();
+        return resolveAt(player,pos);
+    }
+    /** Explicit table address for the opt-in prototype; every call still checks live range and permissions. */
+    public static Optional<ResearchCatalog.Library> resolveAt(ServerPlayer player, BlockPos pos) {
+        ServerLevel level = player.level();
+        if (player.isSpectator() || !player.getAbilities().mayBuild || !level.hasChunkAt(pos)
+            || player.distanceToSqr(pos.getX()+0.5,pos.getY()+0.5,pos.getZ()+0.5) > 64
+            || !level.getBlockState(pos).is(BlockRegistry.CHISELED_ENCHANTING_TABLE) || !level.mayInteract(player,pos)
             || !player.mayUseItemAt(pos,Direction.UP,ItemStack.EMPTY)) return Optional.empty();
         return Optional.of(scan(level,pos,ChiseledEnchantingTableData.shelfGatesConfig()));
     }

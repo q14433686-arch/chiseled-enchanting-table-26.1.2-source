@@ -157,6 +157,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         ResearchFoundationProbe.verify(player, tablePos);
                         TomeWorldProbe.prepare(menu, player, tablePos);
                         ResearchWorkspaceProbe.verify(player, tablePos);
+                        ResearchPrototypeProbe.verify(player, tablePos);
                         menu.broadcastChanges();
                         menuPrepared = true;
                     } catch (Throwable error) { serverFailure = error; }

@@ -111,6 +111,7 @@ public final class ResearchRuntime implements SimpleSynchronousResourceReloadLis
         else try (Reader reader = resource.get().openAsReader()) {
             next = ResearchJson.catalog(JsonParser.parseReader(reader).getAsJsonObject());
         } catch (Exception e) { throw new IllegalArgumentException("Invalid research catalog; previous snapshot retained",e); }
+        next = ResearchPrototype.extend(next);
         pendingCatalog = next; // commit only on successful overall reload or initial server startup
     }
 }

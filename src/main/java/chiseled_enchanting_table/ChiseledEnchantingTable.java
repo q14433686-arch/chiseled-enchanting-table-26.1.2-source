@@ -73,6 +73,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
 
         ChiseledEnchantingTableData.init();
         chiseled_enchanting_table.research.ResearchRuntime.init();
+        chiseled_enchanting_table.research.ResearchPrototype.init();
         chiseled_enchanting_table.config.ModConfigNetworking.init();
         EnchantCostSync.init();
         chiseled_enchanting_table.mechanics.resonance.WorldRegeneration.init();
