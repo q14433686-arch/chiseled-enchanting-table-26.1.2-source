@@ -13,7 +13,19 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Latest rainbow-item validation — 2026-10-26
+## Research foundation in progress — 2026-10-26
+
+Source **`2278fc053c6e2bf32d6a06214ccafbd3afd00ffa`** adds the prerequisite research core, not advanced enchantment content. **1.1.0 / MC26.3 / revision12** unchanged; no payload, shared registry state or Mixin added.
+
+- Implemented: immutable validated topic graph, conclusion prerequisites, distinct knowledge breadth/quality, hypothesis selection, unique server-verified evidence, retained contrary observations, field observation separated from workspace conclusion, cancellation, schema/revision checks and world-local UUID journals.
+- Registered datapack loading and save lifecycle; catalog publication waits for overall successful reload. Corrupt/unknown-schema journals disable research rather than overwrite player knowledge. Domain/persistence/runtime boundaries have architecture gates.
+- [compile-check 40302066798](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40302066798): **181 JUnit, zero failures/errors/skips**, including 26 new research tests. Build, static checks and no-viewer compilation succeeded in [build 40302066671](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40302066671).
+- Native client validation is **not yet confirmed**: the job is still installing virtual-display dependencies. The test-only catalog/probe is present but its `RESEARCH FOUNDATION PASS` marker must actually run before claiming native success.
+- **Not player-ready:** no production topics, research UI/network, real table scan adapter, gameplay evidence providers, trial abilities or unlock enforcement yet. Default workspace access denies all; test fixtures are development-only. Existing wear/generation/lock rules have **not** been migrated or removed.
+- Next: workspace scan/authorization → bounded research UI/actions → one meaningful end-to-end introductory research experiment → unlock/book integration and old-rule migration → advanced enchantment content. Do not skip the research loop to implement Sharpness first.
+- [Detailed contracts, save format and limitations](docs/research/FOUNDATION.md). No new PR or merge performed.
+
+## Previous rainbow-item validation — 2026-10-26
 
 Verified source **`0a43bd3a7e4284beef49a21dbffa34bdc5e513f7`**; **1.1.0 / MC 26.3 / `26_3_revision_12`** unchanged. This client presentation extension adds no component, registered state, payload or Mixin.
 

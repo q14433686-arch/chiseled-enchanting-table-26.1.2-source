@@ -121,3 +121,12 @@ versioned roundtrips, UUID separation, save failures and corrupt-file preservati
 Native smoke exercises the real reload listener and player gateway with a test-only catalog and
 controlled verifier. Its marker is `RESEARCH FOUNDATION PASS`. This proves the integration contract,
 not the quality/completion of a gameplay research task.
+
+### Current CI evidence
+
+Functional source `2278fc053c6e2bf32d6a06214ccafbd3afd00ffa`:
+- compile-check 40302066798: success, **181 tests / 0 failures / 0 errors / 0 skipped** (26 new research tests).
+- build 40302066671: static, Gradle build and no-viewer compile succeeded.
+- At documentation time the native job is still installing virtual-display dependencies. The
+  research probe has not yet been confirmed executed; do not claim native success from JUnit.
+- Local static9, architecture7, sync17, UI11, Mixin4, diagnostics3, release12 and diff checks passed.

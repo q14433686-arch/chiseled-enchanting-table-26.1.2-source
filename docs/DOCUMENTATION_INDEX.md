@@ -6,6 +6,10 @@
 > Current version: **`1.1.0`** (Minecraft 26.3). The full architecture-first port through source `3e61f5d` is integrated on the development branch (wire revision 6); see the report for CI evidence and remaining manual checks.
 > [Latest cross-branch audit and progress](reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md).
 
+## Active research work
+
+[Research foundation](research/FOUNDATION.md) — agreed direction, implemented state machine, save format, extension contracts and explicitly unfinished player-facing integration.
+
 ## Read these first
 
 Roughly in the order a new contributor should walk them:
