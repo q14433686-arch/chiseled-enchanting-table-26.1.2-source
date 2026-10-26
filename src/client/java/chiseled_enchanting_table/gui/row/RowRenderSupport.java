@@ -4,6 +4,7 @@ import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -372,6 +373,45 @@ public final class RowRenderSupport {
         float drawX = boxX + (boxWidth - renderedW) * 0.5f;
         float drawY = visualCenterY - (GLYPH_INK_HEIGHT * scale) * 0.5f;
         renderScaledTextFloat(ctx, client, finalStr, drawX, drawY, scale, color);
+    }
+
+    /** Font-only overload for detached painters (e.g. the tome catalogue controls) that must not hold a Minecraft reference. */
+    public static void renderCenteredBoxText(
+        GuiGraphicsExtractor ctx,
+        Font font,
+        String text,
+        int boxX,
+        int boxWidth,
+        float visualCenterY,
+        float maxScale,
+        int color
+    ) {
+        if (text == null || text.isEmpty() || boxWidth <= 4) return;
+        int rawW = font.width(text);
+        if (rawW <= 0) return;
+
+        float minScale = 0.46f;
+        float scale = maxScale;
+        String finalStr = text;
+        if (rawW * scale > boxWidth) {
+            float needed = (float) boxWidth / (float) rawW;
+            if (needed >= minScale) {
+                scale = needed;
+            } else {
+                scale = minScale;
+                int maxRawPx = Math.max(8, Math.round(boxWidth / scale) - font.width("\u2026"));
+                finalStr = font.plainSubstrByWidth(text, maxRawPx) + "\u2026";
+            }
+        }
+        float renderedW = font.width(finalStr) * scale;
+        float drawX = boxX + (boxWidth - renderedW) * 0.5f;
+        float drawY = visualCenterY - (GLYPH_INK_HEIGHT * scale) * 0.5f;
+        var matrixStack = ctx.pose();
+        matrixStack.pushMatrix();
+        matrixStack.translate(drawX, drawY);
+        matrixStack.scale(scale, scale);
+        ctx.text(font, finalStr, 0, 0, color, true);
+        matrixStack.popMatrix();
     }
 
     /**

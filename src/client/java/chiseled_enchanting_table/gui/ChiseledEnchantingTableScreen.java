@@ -227,6 +227,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     protected void containerTick() {
         super.containerTick();
+        layoutDirectory();
+        if (isTomeTab() && this.configOverlay == null && this.grimoireOverlay == null) tomeActions.tick(this.menu.tomeBooks, this::sendTomeAction);
+        else { tomeActions.cancel(); tomeDirectory.close(); }
         if (this.configOverlay != null) {
             this.configOverlay.tick();
         }
@@ -458,6 +461,17 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return -1;
     }
 
+    private final TomeDirectoryControls tomeDirectory = new TomeDirectoryControls();
+    private final chiseled_enchanting_table.catalog.TomeActionQueue tomeActions = new chiseled_enchanting_table.catalog.TomeActionQueue();
+    private void layoutDirectory() {
+        int offset = isTomeTab() ? chiseled_enchanting_table.gui.TomeDirectoryLayout.listOffset() : 0;
+        if (this.scrollContainer != null) this.scrollContainer.updateSizeAndPosition(
+            chiseled_enchanting_table.gui.TomeDirectoryLayout.WIDTH,
+            chiseled_enchanting_table.gui.TomeDirectoryLayout.CONTENT_HEIGHT - offset,
+            this.leftPos + chiseled_enchanting_table.gui.TomeDirectoryLayout.CONTENT_X,
+            this.topPos + chiseled_enchanting_table.gui.TomeDirectoryLayout.CONTENT_Y + offset);
+    }
+
     private void sendTomeAction(
         chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action action,
         chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry entry
@@ -645,6 +659,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
+        if (isTomeTab() && tomeDirectory.scroll(scrollY)) return true;
+        if (isTomeTab() && net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+            var book = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
+            if (book != null) { TomeEnchantmentDetails.scroll(book, scrollY); return true; }
+        }
         if (isOverEnchantList(mouseX, mouseY) || isOverEnchantListScrollbar(mouseX, mouseY)) {
             return this.scrollContainer.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
@@ -718,24 +737,30 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             return true;
         }
+        if (isTomeTab() && event.button() == InputConstants.MOUSE_BUTTON_LEFT
+            && tomeDirectory.click(event.x(), event.y(), this.leftPos + chiseled_enchanting_table.gui.TomeDirectoryLayout.CONTENT_X,
+                this.topPos + chiseled_enchanting_table.gui.TomeDirectoryLayout.CONTENT_Y,
+                this.scrollContainer.catalogue, this.menu.player, this.scrollContainer::refreshDirectory)) {
+            tomeActions.cancel(); return true;
+        }
         int tomeButton = hoveredTomeButton(event.x(), event.y());
         if (tomeButton >= 0) {
-            var selected = this.scrollContainer.selectedTomeEntry();
+            // All five buttons now act on the explicit catalogue selection through the paced,
+            // confirmation-gated queue (server re-checks permission/cost per book). Button 4
+            // ("fill selected") no longer silently targets the whole scanned library.
             var action = switch (tomeButton) {
                 case 0 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_NEXT;
                 case 1 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_FULL;
                 case 2 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_PERMANENT;
                 case 3 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK;
-                default -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_ALL_FULL;
+                default -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_FULL;
             };
-            boolean needsBook = tomeButton != 4;
-            boolean valid = !needsBook || (selected != null && (tomeButton == 3 ? selected.locked() : !selected.locked()));
-            if (!valid) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
-            } else {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                sendTomeAction(action, tomeButton == 4 ? null : selected);
+            var targets = this.scrollContainer.selectedTomes();
+            if (targets.isEmpty()) {
+                var focused = this.scrollContainer.selectedTomeEntry();
+                if (focused != null) targets = List.of(focused);
             }
+            tomeActions.submit(action, targets);
             return true;
         }
         if (isOverSacrificeSkipButton(event.x(), event.y())) {
@@ -1102,19 +1127,24 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (isTomeTab()) {
             ctx.blit(CLEANSE_PANEL, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
             var selected = this.scrollContainer.selectedTomeEntry();
+            var targets = this.scrollContainer.selectedTomes();
+            if (targets.isEmpty() && selected != null) targets = List.of(selected);
             String[] labels = {
                 Component.translatable("gui.chiseled_enchanting_table.tomes.btn_next").getString(),
                 Component.translatable("gui.chiseled_enchanting_table.tomes.btn_full").getString(),
                 Component.translatable("gui.chiseled_enchanting_table.tomes.btn_permanent").getString(),
                 Component.translatable("gui.chiseled_enchanting_table.tomes.btn_unlock").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_lock_all").getString()
+                Component.translatable("gui.chiseled_enchanting_table.catalog.batch_full").getString()
             };
             for (int b = 0; b < labels.length; b++) {
                 int[] r = tomeButtonRect(b);
                 int bx = i + r[0];
                 int by = j + r[1];
-                boolean enabled = b == 4 || (selected != null && (b == 3 ? selected.locked() : !selected.locked()));
-                if (b < 3 && selected != null && selected.wear_used() <= 0 && b != 2) enabled = false;
+                // Mirror TomeActionQueue eligibility so greyed buttons never arm an empty batch.
+                final int button = b;
+                boolean enabled = targets.stream().anyMatch(book -> button == 3
+                    ? book.locked()
+                    : !book.locked() && (button == 2 || book.wear_used() > 0));
                 if (b != 3 && !this.menu.isTomeLocksEnabled()) enabled = false;
                 boolean hovered = hoveredTomeButton(mouseX, mouseY) == b;
                 ctx.blit(TOME_BUTTONS[b], bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);
@@ -1128,10 +1158,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             if (this.scrollContainer.children().isEmpty()) {
                 int lx = i + 12;
-                int ly = j + 74;
-                String hint = Component.translatable(this.menu.isTomePageUnlocked()
-                    ? "gui.chiseled_enchanting_table.tomes.empty"
-                    : "gui.chiseled_enchanting_table.tab.locked_tooltip").getString();
+                int ly = j + chiseled_enchanting_table.gui.TomeDirectoryLayout.CONTENT_Y
+                    + chiseled_enchanting_table.gui.TomeDirectoryLayout.listOffset() + 6;
+                String hint = Component.translatable(!this.menu.isTomePageUnlocked()
+                    ? "gui.chiseled_enchanting_table.tab.locked_tooltip"
+                    : this.menu.tomeBooks.isEmpty()
+                        ? "gui.chiseled_enchanting_table.tomes.empty"
+                        : "gui.chiseled_enchanting_table.catalog.empty").getString();
                 RowRenderSupport.renderBoundedText(ctx, this.minecraft, hint, lx, ly, 0.68f, 140, 0xFFAEEADF);
             }
             return;
@@ -1275,7 +1308,19 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.grimoireOverlay.extractRenderState(ctx, mouseX, mouseY, partialTick);
             return;
         }
+        layoutDirectory();
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        if (isTomeTab() && this.scrollContainer != null) {
+            var status = tomeActions.status();
+            if (status != null) {
+                ctx.fill(this.leftPos + PANEL_X + 9, this.topPos + PANEL_Y + 8, this.leftPos + PANEL_X + 110, this.topPos + PANEL_Y + 16, 0xFF102722);
+                RowRenderSupport.renderCenteredBoxText(ctx, this.font, TomeDirectoryControls.text(status.key(), status.count()),
+                    this.leftPos + PANEL_X + 10, 99, this.topPos + PANEL_Y + 12, 0.58f, 0xFFFFD280);
+            }
+            if (tomeDirectory.render(ctx, this.font, this.leftPos + chiseled_enchanting_table.gui.TomeDirectoryLayout.CONTENT_X,
+                this.topPos + chiseled_enchanting_table.gui.TomeDirectoryLayout.CONTENT_Y, mouseX, mouseY,
+                this.scrollContainer.catalogue, this.menu.player)) return;
+        }
         if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
             if (isOverConfigButton(mouseX, mouseY)) {
                 List<Component> tip = List.of(
@@ -1340,7 +1385,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     case 1 -> "gui.chiseled_enchanting_table.tomes.tip_full";
                     case 2 -> "gui.chiseled_enchanting_table.tomes.tip_permanent";
                     case 3 -> "gui.chiseled_enchanting_table.tomes.tip_unlock";
-                    default -> "gui.chiseled_enchanting_table.tomes.tip_lock_all";
+                    default -> "gui.chiseled_enchanting_table.catalog.batch_help";
                 };
                 var lrCfg = this.menu.libraryResonanceConfig();
                 var tipText = tomeBtn == 3
@@ -1348,10 +1393,25 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                         lrCfg.earlyUnlockXpLevels(),
                         lrCfg.earlyUnlockGritCount())
                     : Component.translatable(key);
-                ctx.setTooltipForNextFrame(this.font, List.of(tipText.withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
+                String titleKey = switch (tomeBtn) {
+                    case 0 -> "gui.chiseled_enchanting_table.tomes.btn_next";
+                    case 1 -> "gui.chiseled_enchanting_table.tomes.btn_full";
+                    case 2 -> "gui.chiseled_enchanting_table.tomes.btn_permanent";
+                    case 3 -> "gui.chiseled_enchanting_table.tomes.btn_unlock";
+                    default -> "gui.chiseled_enchanting_table.catalog.batch_full";
+                };
+                var buttonLines = new ArrayList<Component>();
+                buttonLines.add(Component.translatable(titleKey).withStyle(ChatFormatting.AQUA));
+                buttonLines.add(tipText.withStyle(ChatFormatting.GRAY));
+                if (tomeBtn != 4) buttonLines.add(Component.translatable("gui.chiseled_enchanting_table.catalog.batch_help").withStyle(ChatFormatting.GOLD));
+                ctx.setTooltipForNextFrame(this.font, buttonLines, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }
             var hoveredTome = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
+            if (hoveredTome != null && net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                TomeEnchantmentDetails.render(ctx, this.font, hoveredTome, this.menu.player, mouseX, mouseY);
+                return;
+            }
             if (hoveredTome != null) {
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, this.menu.player)).withStyle(ChatFormatting.GOLD));
@@ -1422,6 +1482,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                     tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", EnchantementListWidget.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
                 }
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.select_hint").withStyle(ChatFormatting.DARK_GRAY));
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.catalog.shift_details").withStyle(ChatFormatting.DARK_GRAY));
                 ctx.setTooltipForNextFrame(this.font, tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return;
             }

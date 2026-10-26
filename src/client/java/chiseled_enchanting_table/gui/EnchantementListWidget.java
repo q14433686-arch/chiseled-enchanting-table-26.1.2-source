@@ -66,9 +66,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     public Player player;
     public ChiseledEnchantingTableScreenHandler handler;
     private UiTabMode tabMode = UiTabMode.INSCRIBE;
-    @Nullable
-    private net.minecraft.core.BlockPos selectedTomeShelf;
-    private int selectedTomeSlot = -1;
+    final chiseled_enchanting_table.catalog.TomeCatalog catalogue = new chiseled_enchanting_table.catalog.TomeCatalog();
     private final Set<Identifier> expandedInscribeCategories = new HashSet<>();
     private final Set<Identifier> expandedCleanseCategories = new HashSet<>();
     private ItemStack lastTargetSnapshot = ItemStack.EMPTY;
@@ -94,28 +92,41 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         return this.tabMode;
     }
 
+    static chiseled_enchanting_table.catalog.TomeCatalog.Key tomeKey(ChiseledEnchantingMenuPayloads.TomeBookEntry book) {
+        return new chiseled_enchanting_table.catalog.TomeCatalog.Key(book.shelf_pos().asLong(), book.slot());
+    }
+
     public boolean isTomeSelected(ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
-        return entry != null && this.selectedTomeShelf != null
-            && this.selectedTomeShelf.equals(entry.shelf_pos()) && this.selectedTomeSlot == entry.slot();
+        return entry != null && catalogue.isSelected(tomeKey(entry));
     }
 
     public void selectTome(@Nullable ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
-        if (entry == null) {
-            this.selectedTomeShelf = null;
-            this.selectedTomeSlot = -1;
-        } else {
-            this.selectedTomeShelf = entry.shelf_pos().immutable();
-            this.selectedTomeSlot = entry.slot();
-        }
+        if (entry == null) catalogue.clearSelection(); else catalogue.select(tomeKey(entry), false);
+    }
+
+    public java.util.List<ChiseledEnchantingMenuPayloads.TomeBookEntry> selectedTomes() {
+        if (this.handler == null || this.handler.tomeBooks == null) return List.of();
+        return this.handler.tomeBooks.stream().filter(this::isTomeSelected).toList();
     }
 
     @Nullable
     public ChiseledEnchantingMenuPayloads.TomeBookEntry selectedTomeEntry() {
+        var selected = selectedTomes();
+        if (!selected.isEmpty()) return selected.getFirst();
+        // Panel-detail fallback only (does not mutate the explicit multi-selection): show the
+        // first currently visible tome so the detail panel stays informative before any click.
         if (this.handler == null || this.handler.tomeBooks == null || this.handler.tomeBooks.isEmpty()) return null;
-        for (var entry : this.handler.tomeBooks) {
-            if (isTomeSelected(entry)) return entry;
+        for (var row : catalogue.visible()) {
+            for (var book : this.handler.tomeBooks) {
+                if (tomeKey(book).equals(row.key())) return book;
+            }
         }
         return this.handler.tomeBooks.getFirst();
+    }
+
+    void refreshDirectory() {
+        updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
+        setScrollAmount(0);
     }
 
     public void setTabMode(UiTabMode nextMode) {
@@ -491,36 +502,21 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             selectTome(null);
             return;
         }
-        var selected = selectedTomeEntry();
-        selectTome(selected);
-        for (var book : this.handler.tomeBooks) {
-            this.addEntry(EnchantUiEntry.tomeEntry(minecraft, this.handler, book, this));
-        }
+        catalogue.update(this.handler.tomeBooks.stream().map(book -> new chiseled_enchanting_table.catalog.TomeCatalog.Row(
+            tomeKey(book), book.enchantments().stream().map(e -> e.enchantment_id().toString()).toList(),
+            book.enchantments().stream().map(e -> findEnchantment(e.enchantment_id(), this.player)
+                .map(h -> h.value().description().getString()).orElse(e.enchantment_id().toString()))
+                .sorted().collect(java.util.stream.Collectors.joining(" / ")),
+            book.remaining_charges(), book.effective_max_uses(), book.locked(), book.locked_by_viewer())).toList());
+        var books = new java.util.HashMap<chiseled_enchanting_table.catalog.TomeCatalog.Key, ChiseledEnchantingMenuPayloads.TomeBookEntry>();
+        for (var book : this.handler.tomeBooks) books.put(tomeKey(book), book);
+        for (var row : catalogue.visible()) this.addEntry(EnchantUiEntry.tomeEntry(minecraft, this.handler, books.get(row.key()), this));
         this.setScrollAmount(Math.min(previousScroll, this.maxScrollAmount()));
     }
 
-    static String tomeTitle(ChiseledEnchantingMenuPayloads.TomeBookEntry book, Player player) {
-        String custom = book.custom_name() == null ? "" : book.custom_name().trim();
-        String defaultName = new ItemStack(Items.ENCHANTED_BOOK).getHoverName().getString();
-        if (!custom.isEmpty() && !custom.equals(defaultName)) return custom;
-        if (book.enchantments().isEmpty()) return custom.isEmpty() ? defaultName : custom;
-        var first = book.enchantments().getFirst();
-        var holder = findEnchantment(first.enchantment_id(), player);
-        String title = holder.map(h -> Enchantment.getFullname(h, first.enchantment_level()).getString())
-            .orElse(first.enchantment_id().toString());
-        return book.enchantments().size() > 1 ? title + " +" + (book.enchantments().size() - 1) : title;
-    }
+    static String tomeTitle(ChiseledEnchantingMenuPayloads.TomeBookEntry book, Player player) { return TomeDisplayNames.tomeTitle(book, player); }
 
-    static String formatTomeEta(int ticks) {
-        if (ticks < 0) return "--:--";
-        long seconds = (ticks + 19L) / 20L;
-        long hours = seconds / 3600L;
-        long mins = (seconds % 3600L) / 60L;
-        long secs = seconds % 60L;
-        return hours > 0
-            ? String.format(java.util.Locale.ROOT, "%d:%02d:%02d", hours, mins, secs)
-            : String.format(java.util.Locale.ROOT, "%02d:%02d", mins, secs);
-    }
+    static String formatTomeEta(int ticks) { return TomeDisplayNames.formatTomeEta(ticks); }
 
     private void addActionEntry(AvailableOption opt, boolean nested, boolean lastChild) {
         addActionEntry(opt, nested, lastChild, false, 0);
@@ -1270,7 +1266,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         public boolean serverSendApplyEnchant(boolean shiftBypass) {
             if (is_tome_entry) {
-                parent.selectTome(this.tome_book);
+                parent.catalogue.select(tomeKey(this.tome_book), shiftBypass);
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 return true;
             }
