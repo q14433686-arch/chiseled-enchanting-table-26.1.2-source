@@ -85,7 +85,10 @@ class SyncContracts26_1_2(unittest.TestCase):
         self.assertTrue((MAIN / 'config/rules/RuntimeRules.java').exists())
         data_src = (MAIN / 'data/ChiseledEnchantingTableData.java').read_text()
         key_extractor_src = (MAIN / 'data/DatapackKeyExtractor.java').read_text()
-        self.assertIn('public record RuntimeFrame(', data_src)
+        # RuntimeFrame is a top-level record after the 26.3 split port.
+        frame_src = (MAIN / 'data/RuntimeFrame.java').read_text()
+        self.assertIn('public record RuntimeFrame(', frame_src)
+        self.assertIn('public static RuntimeFrame runtimeFrame()', data_src)
         self.assertIn('RuntimeRules.commit(prepared, persist)', data_src)
         self.assertIn('resource.sourcePackId()', data_src + key_extractor_src)
 
