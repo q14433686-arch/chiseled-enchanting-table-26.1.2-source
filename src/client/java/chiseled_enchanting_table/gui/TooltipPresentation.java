@@ -28,7 +28,7 @@ public final class TooltipPresentation {
             var critical = new ArrayList<Integer>();
             for (int i = 1; i < source.size(); i++) {
                 var color = source.get(i).getStyle().getColor();
-                if (color != null && color.getValue() == ChatFormatting.RED.getColor()) critical.add(i);
+                if (color != null && (color.getValue() == ChatFormatting.RED.getColor() || color.getValue() == ChatFormatting.DARK_RED.getColor())) critical.add(i);
             }
             for (int index : TooltipBudget.summaryIndices(source.size(), critical, 5)) selected.add(source.get(index));
             selected.add(Component.translatable("gui.chiseled_enchanting_table.ui.details").withStyle(ChatFormatting.DARK_GRAY));

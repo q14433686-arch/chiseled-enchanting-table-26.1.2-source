@@ -12,7 +12,7 @@ world = root / 'run/audit-world'
 if run.exists() or not world.is_dir():
     raise SystemExit('Refusing existing client run directory or missing disposable server-smoke world')
 shutil.copytree(world, run / 'saves/audit-world')
-(run / 'options.txt').write_text('onboardAccessibility:false\nguiScale:2\nmaxFps:60\nenableVsync:false\n')
+(run / 'options.txt').write_text('onboardAccessibility:false\nlang:zh_cn\nguiScale:2\nmaxFps:60\nenableVsync:false\n')
 log = root / 'build-reports/client-smoke.log'
 log.parent.mkdir(exist_ok=True)
 with log.open('w') as output:
@@ -33,3 +33,7 @@ result = run / 'client-smoke-result.txt'
 if code != 0 or not result.exists() or not result.read_text().startswith('CLIENT SMOKE PASS:'):
     raise SystemExit('Real client smoke did not pass; inspect client-smoke.log')
 print(result.read_text())
+
+if not (run / 'screenshots/table-ui-zh_cn.png').is_file():
+    raise SystemExit('Missing actual Chinese UI screenshot')
+print('UI BOUNDARY PASS: actual Chinese menu screenshot saved to artifacts')

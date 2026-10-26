@@ -164,6 +164,7 @@ jobs:
             build-reports/server-smoke.log
             build-reports/client-smoke.log
             run-client-smoke/client-smoke-result.txt
+            run-client-smoke/screenshots/*.png
             run-client-smoke/logs/latest.log
             run-client-smoke/crash-reports/**
             run/logs/latest.log
