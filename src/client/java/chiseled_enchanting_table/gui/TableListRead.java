@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 interface TableListRead {
     boolean hasEntries();
     TomeBookEntry selectedTomeEntry();
+    List<TomeBookEntry> selectedTomes();
     TomeBookEntry hoveredTomeEntry(double x, double y);
     ItemStack hoveredCostItem(double x, double y);
     List<List<ItemStack>> hoveredCostOptions(double x, double y);

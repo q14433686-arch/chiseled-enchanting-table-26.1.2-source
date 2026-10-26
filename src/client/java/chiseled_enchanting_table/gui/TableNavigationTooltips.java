@@ -77,7 +77,7 @@ final class TableNavigationTooltips {
                 case 1 -> "gui.chiseled_enchanting_table.tomes.tip_full";
                 case 2 -> "gui.chiseled_enchanting_table.tomes.tip_permanent";
                 case 3 -> "gui.chiseled_enchanting_table.tomes.tip_unlock";
-                default -> "gui.chiseled_enchanting_table.tomes.tip_lock_all";
+                default -> "gui.chiseled_enchanting_table.catalog.batch_help";
             };
             var lrCfg = state.menu().libraryResonanceConfig();
             var tipText = tomeBtn == 3
@@ -85,13 +85,18 @@ final class TableNavigationTooltips {
                     lrCfg.earlyUnlockXpLevels(),
                     lrCfg.earlyUnlockGritCount())
                 : Component.translatable(key);
-            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), List.of(tipText.withStyle(ChatFormatting.GRAY)), Optional.empty(), mouseX, mouseY, (Identifier) null);
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), List.of(tipText.withStyle(ChatFormatting.GRAY), Component.translatable("gui.chiseled_enchanting_table.catalog.batch_help").withStyle(ChatFormatting.GOLD)), Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
         var hoveredTome = state.list().hoveredTomeEntry(mouseX, mouseY);
         if (hoveredTome != null) {
             List<Component> tip = new ArrayList<>();
             tip.add(Component.literal(TomeDisplayNames.tomeTitle(hoveredTome, state.menu().player)).withStyle(ChatFormatting.GOLD));
+            if (TooltipPresentation.detailsRequested()) {
+                TomeEnchantmentDetails.render(ctx, state.font(), hoveredTome, state.menu().player, mouseX, mouseY);
+                return true;
+            }
+            tip.add(Component.translatable("gui.chiseled_enchanting_table.catalog.shift_details").withStyle(ChatFormatting.GRAY));
             var wearImmuneEntry = hoveredTome.enchantments().stream()
                 .filter(e -> EnchantmentDisplayNames.isWearImmuneEnchantmentId(e.enchantment_id(), state.menu().player))
                 .findFirst();

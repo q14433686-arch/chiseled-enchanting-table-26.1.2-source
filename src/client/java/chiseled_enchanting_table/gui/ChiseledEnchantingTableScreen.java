@@ -164,6 +164,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     @Override
     protected void containerTick() {
         super.containerTick();
+        layoutDirectory();
+        if (isTomeTab() && this.configOverlay == null && this.grimoireOverlay == null) tomeActions.tick(this.menu.tomeBooks, this::sendTomeAction);
+        else { tomeActions.cancel(); tomeDirectory.close(); }
         if (this.configOverlay != null) {
             this.configOverlay.tick();
         }
@@ -353,6 +356,13 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         return -1;
     }
 
+    private final TomeDirectoryControls tomeDirectory = new TomeDirectoryControls();
+    private final TomeActionQueue tomeActions = new TomeActionQueue();
+    private void layoutDirectory() {
+        if (this.scrollContainer != null) this.scrollContainer.updateSizeAndPosition(151, isTomeTab() ? 96 : 141,
+            this.leftPos + 7, this.topPos + (isTomeTab() ? 62 : 17));
+    }
+
     private void sendTomeAction(
         chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action action,
         chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry entry
@@ -540,6 +550,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
+        if (isTomeTab() && tomeDirectory.scroll(scrollY)) return true;
+        if (isTomeTab() && TooltipPresentation.detailsRequested()) {
+            var book = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
+            if (book != null) { TomeEnchantmentDetails.scroll(book, scrollY); return true; }
+        }
         if (isOverEnchantList(mouseX, mouseY) || isOverEnchantListScrollbar(mouseX, mouseY)) {
             return this.scrollContainer.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
@@ -613,24 +628,21 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             return true;
         }
+        if (isTomeTab() && event.button() == InputConstants.MOUSE_BUTTON_LEFT
+            && tomeDirectory.click(event.x(), event.y(), this.leftPos+7, this.topPos+17,
+                this.scrollContainer.catalogue, this.menu.player, this.scrollContainer::refreshDirectory)) {
+            tomeActions.cancel(); return true;
+        }
         int tomeButton = hoveredTomeButton(event.x(), event.y());
         if (tomeButton >= 0) {
-            var selected = this.scrollContainer.selectedTomeEntry();
             var action = switch (tomeButton) {
                 case 0 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_NEXT;
                 case 1 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_FULL;
                 case 2 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_PERMANENT;
                 case 3 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK;
-                default -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_ALL_FULL;
+                default -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_FULL;
             };
-            boolean needsBook = tomeButton != 4;
-            boolean valid = !needsBook || (selected != null && (tomeButton == 3 ? selected.locked() : !selected.locked()));
-            if (!valid) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
-            } else {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                sendTomeAction(action, tomeButton == 4 ? null : selected);
-            }
+            tomeActions.submit(action, this.scrollContainer.selectedTomes());
             return true;
         }
         if (isOverSacrificeSkipButton(event.x(), event.y())) {
@@ -815,7 +827,15 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.grimoireOverlay.extractRenderState(ctx, mouseX, mouseY, partialTick);
             return;
         }
+        layoutDirectory();
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        if (isTomeTab()) {
+            String status = tomeActions.status();
+            if (status != null) RowRenderSupport.renderCenteredBoxText(ctx, this.font, status,
+                this.leftPos+169, 154, this.topPos+77, 0.58f, 0xFFFFD280);
+            if (tomeDirectory.render(ctx, this.font, this.leftPos+7, this.topPos+17, mouseX, mouseY,
+                this.scrollContainer.catalogue, this.menu.player)) return;
+        }
         if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
             var state = tooltipInputs(mouseX, mouseY);
             if (TableNavigationTooltips.render(state, ctx, mouseX, mouseY)) return;

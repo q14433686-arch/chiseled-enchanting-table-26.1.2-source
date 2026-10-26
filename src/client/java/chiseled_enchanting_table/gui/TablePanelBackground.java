@@ -87,14 +87,16 @@ final class TablePanelBackground {
                 Component.translatable("gui.chiseled_enchanting_table.tomes.btn_full").getString(),
                 Component.translatable("gui.chiseled_enchanting_table.tomes.btn_permanent").getString(),
                 Component.translatable("gui.chiseled_enchanting_table.tomes.btn_unlock").getString(),
-                Component.translatable("gui.chiseled_enchanting_table.tomes.btn_lock_all").getString()
+                Component.translatable("gui.chiseled_enchanting_table.catalog.batch_full").getString()
             };
             for (int b = 0; b < labels.length; b++) {
                 int[] r = state.tomeRect().apply(b);
                 int bx = i + r[0];
                 int by = j + r[1];
-                boolean enabled = b == 4 || (selected != null && (b == 3 ? selected.locked() : !selected.locked()));
-                if (b < 3 && selected != null && selected.wear_used() <= 0 && b != 2) enabled = false;
+                boolean enabled = false;
+                for (var book : state.tooltips().list().selectedTomes()) {
+                    if (b == 3 ? book.locked() : !book.locked() && (b == 2 || book.wear_used() > 0)) enabled = true;
+                }
                 if (b != 3 && !state.tooltips().menu().isTomeLocksEnabled()) enabled = false;
                 boolean hovered = state.tooltips().tomeButton() == b;
                 ctx.blit(TOME_BUTTONS[b], bx, by, bx + r[2], by + r[3], 0.0f, 1.0f, 0.0f, 1.0f);

@@ -68,9 +68,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     public Player player;
     public ChiseledEnchantingTableScreenHandler handler;
     private UiTabMode tabMode = UiTabMode.INSCRIBE;
-    @Nullable
-    private net.minecraft.core.BlockPos selectedTomeShelf;
-    private int selectedTomeSlot = -1;
+    final chiseled_enchanting_table.catalog.TomeCatalog catalogue = new chiseled_enchanting_table.catalog.TomeCatalog();
     private final Set<Identifier> expandedInscribeCategories = new HashSet<>();
     private final Set<Identifier> expandedCleanseCategories = new HashSet<>();
     private ItemStack lastTargetSnapshot = ItemStack.EMPTY;
@@ -96,28 +94,25 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         return this.tabMode;
     }
 
+    private static chiseled_enchanting_table.catalog.TomeCatalog.Key tomeKey(ChiseledEnchantingMenuPayloads.TomeBookEntry book) {
+        return new chiseled_enchanting_table.catalog.TomeCatalog.Key(book.shelf_pos().asLong(), book.slot());
+    }
     public boolean isTomeSelected(ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
-        return entry != null && this.selectedTomeShelf != null
-            && this.selectedTomeShelf.equals(entry.shelf_pos()) && this.selectedTomeSlot == entry.slot();
+        return entry != null && catalogue.selected().contains(tomeKey(entry));
     }
-
     public void selectTome(@Nullable ChiseledEnchantingMenuPayloads.TomeBookEntry entry) {
-        if (entry == null) {
-            this.selectedTomeShelf = null;
-            this.selectedTomeSlot = -1;
-        } else {
-            this.selectedTomeShelf = entry.shelf_pos().immutable();
-            this.selectedTomeSlot = entry.slot();
-        }
+        if (entry == null) catalogue.clearSelection(); else catalogue.select(tomeKey(entry), false);
     }
-
+    public java.util.List<ChiseledEnchantingMenuPayloads.TomeBookEntry> selectedTomes() {
+        return this.handler.tomeBooks.stream().filter(this::isTomeSelected).toList();
+    }
     @Nullable
     public ChiseledEnchantingMenuPayloads.TomeBookEntry selectedTomeEntry() {
-        if (this.handler == null || this.handler.tomeBooks == null || this.handler.tomeBooks.isEmpty()) return null;
-        for (var entry : this.handler.tomeBooks) {
-            if (isTomeSelected(entry)) return entry;
-        }
-        return this.handler.tomeBooks.getFirst();
+        return selectedTomes().stream().findFirst().orElse(null);
+    }
+    void refreshDirectory() {
+        updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
+        setScrollAmount(0);
     }
 
     public void setTabMode(UiTabMode nextMode) {
@@ -439,11 +434,12 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             selectTome(null);
             return;
         }
-        var selected = selectedTomeEntry();
-        selectTome(selected);
-        for (var book : this.handler.tomeBooks) {
-            this.addEntry(EnchantUiEntry.tomeEntry(minecraft, this.handler, book, this));
-        }
+        catalogue.update(this.handler.tomeBooks.stream().map(book -> new chiseled_enchanting_table.catalog.TomeCatalog.Row(
+            tomeKey(book), book.enchantments().stream().map(e -> e.enchantment_id().toString()).toList(),
+            tomeTitle(book, this.player), book.remaining_charges(), book.effective_max_uses(), book.locked(), book.locked_by_viewer())).toList());
+        var books = new java.util.HashMap<chiseled_enchanting_table.catalog.TomeCatalog.Key, ChiseledEnchantingMenuPayloads.TomeBookEntry>();
+        for (var book : this.handler.tomeBooks) books.put(tomeKey(book), book);
+        for (var row : catalogue.visible()) this.addEntry(EnchantUiEntry.tomeEntry(minecraft, this.handler, books.get(row.key()), this));
         this.setScrollAmount(Math.min(previousScroll, this.maxScrollAmount()));
     }
 
@@ -987,7 +983,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
 
         public boolean serverSendApplyEnchant(boolean shiftBypass) {
             if (is_tome_entry) {
-                parent.selectTome(this.tome_book);
+                parent.catalogue.select(tomeKey(this.tome_book), shiftBypass);
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 return true;
             }

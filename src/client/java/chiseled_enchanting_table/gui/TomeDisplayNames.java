@@ -16,7 +16,7 @@ final class TomeDisplayNames {
         var holder = EnchantmentDisplayNames.findEnchantment(first.enchantment_id(), player);
         String title = holder.map(h -> Enchantment.getFullname(h, first.enchantment_level()).getString())
             .orElse(first.enchantment_id().toString());
-        return book.enchantments().size() > 1 ? title + " +" + (book.enchantments().size() - 1) : title;
+        return book.enchantments().size() > 1 ? title + " · " + net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.catalog.more", book.enchantments().size() - 1).getString() : title;
     }
 
     static String formatTomeEta(int ticks) {
