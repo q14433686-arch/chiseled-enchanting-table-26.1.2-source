@@ -109,7 +109,7 @@ final class TablePanelBackground {
                 RowRenderSupport.renderCenteredBoxText(ctx, state.tooltips().font(), labels[b], bx + 1, r[2] - 2, by + r[3] * 0.5f, 0.58f,
                     enabled ? 0xFFDFF7FF : 0xFF7D748D);
             }
-            if (state.tooltips().list().children().isEmpty()) {
+            if (!state.tooltips().list().hasEntries()) {
                 int lx = i + 12;
                 int ly = j + 74;
                 String hint = Component.translatable(state.tooltips().menu().isTomePageUnlocked()
@@ -156,7 +156,7 @@ final class TablePanelBackground {
                 ctx.disableScissor();
             }
 
-            if (state.tooltips().list().children().isEmpty()) {
+            if (!state.tooltips().list().hasEntries()) {
                 int lx = i + 12;
                 int ly = j + 74;
                 String hint1 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line1").getString();

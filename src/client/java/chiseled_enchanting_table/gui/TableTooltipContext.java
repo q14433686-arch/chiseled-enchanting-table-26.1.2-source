@@ -11,7 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /** Frame-scoped tooltip inputs; deliberately has no Screen, transport or mutation capability. */
-record TableTooltipContext(ChiseledEnchantingTableScreenHandler menu, EnchantementListWidget list,
+record TableTooltipContext(ChiseledEnchantingTableScreenHandler menu, TableListRead list,
     Font font, Level level, Set<Region> regions, int tomeButton,
     boolean isCleanseTab, boolean isTomeTab, boolean isDisenchantAllConfirmPending, boolean canCleanseAllNow,
     Function<ItemStack, List<Component>> itemTooltip, Supplier<List<Component>> resonance) {

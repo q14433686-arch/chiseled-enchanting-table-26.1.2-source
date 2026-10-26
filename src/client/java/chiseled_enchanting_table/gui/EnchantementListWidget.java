@@ -447,28 +447,9 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         this.setScrollAmount(Math.min(previousScroll, this.maxScrollAmount()));
     }
 
-    static String tomeTitle(ChiseledEnchantingMenuPayloads.TomeBookEntry book, Player player) {
-        String custom = book.custom_name() == null ? "" : book.custom_name().trim();
-        String defaultName = new ItemStack(Items.ENCHANTED_BOOK).getHoverName().getString();
-        if (!custom.isEmpty() && !custom.equals(defaultName)) return custom;
-        if (book.enchantments().isEmpty()) return custom.isEmpty() ? defaultName : custom;
-        var first = book.enchantments().getFirst();
-        var holder = findEnchantment(first.enchantment_id(), player);
-        String title = holder.map(h -> Enchantment.getFullname(h, first.enchantment_level()).getString())
-            .orElse(first.enchantment_id().toString());
-        return book.enchantments().size() > 1 ? title + " +" + (book.enchantments().size() - 1) : title;
-    }
+    static String tomeTitle(ChiseledEnchantingMenuPayloads.TomeBookEntry book, Player player) { return TomeDisplayNames.tomeTitle(book, player); }
 
-    static String formatTomeEta(int ticks) {
-        if (ticks < 0) return "--:--";
-        long seconds = (ticks + 19L) / 20L;
-        long hours = seconds / 3600L;
-        long mins = (seconds % 3600L) / 60L;
-        long secs = seconds % 60L;
-        return hours > 0
-            ? String.format(java.util.Locale.ROOT, "%d:%02d:%02d", hours, mins, secs)
-            : String.format(java.util.Locale.ROOT, "%02d:%02d", mins, secs);
-    }
+    static String formatTomeEta(int ticks) { return TomeDisplayNames.formatTomeEta(ticks); }
 
     private void addActionEntry(AvailableOption opt, boolean nested, boolean lastChild) {
         addActionEntry(opt, nested, lastChild, false, 0);
@@ -1346,4 +1327,32 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         public Set<EnchantmentWithLevel> syncedTransformationsFor(ItemStack target) { return handler.syncedTransformationsFor(target); }
         public boolean syncedTransformationMatches(Identifier id, ItemStack target) { return handler.syncedTransformationMatches(id, target); }
     };
+
+    private static TableRowView rowView(EnchantUiEntry row) {
+        return row == null ? null : new TableRowView(row.discovery_locked, row.enchantment_id, row.shelf_locked,
+            row.enchantment, row.enchant_level, row.required_bookshelves, row.is_category_header, row.cleanse_theme,
+            row.category_title, row.category_badge, row.option_type, row.is_transformation, row.enchantable_item,
+            row.existingSameLevel, row.conflict_refund_points, row.xp_requirement, row.xpConditionMet());
+    }
+
+    private final TableListRead tableRead = new TableListRead() {
+        public boolean hasEntries() { return !children().isEmpty(); }
+        public ChiseledEnchantingMenuPayloads.TomeBookEntry selectedTomeEntry() { return EnchantementListWidget.this.selectedTomeEntry(); }
+        public ChiseledEnchantingMenuPayloads.TomeBookEntry hoveredTomeEntry(double x, double y) { return EnchantementListWidget.this.hoveredTomeEntry(x, y); }
+        public Identifier hoveredEnchantmentId(double x, double y) { return EnchantementListWidget.this.hoveredEnchantmentId(x, y); }
+        public OptionType hoveredOptionType(double x, double y) { return EnchantementListWidget.this.hoveredOptionType(x, y); }
+        public TableRowView hoveredXpBadgeEntry(double x, double y) { return rowView(EnchantementListWidget.this.hoveredXpBadgeEntry(x, y)); }
+        public TableRowView hoveredSpecialRowEntry(double x, double y) { return rowView(EnchantementListWidget.this.hoveredSpecialRowEntry(x, y)); }
+        public TableRowView hoveredActionRowEntry(double x, double y) { return rowView(EnchantementListWidget.this.hoveredActionRowEntry(x, y)); }
+        public ItemStack hoveredCostItem(double x, double y) {
+            var item = EnchantementListWidget.this.hoveredCostItem(x, y);
+            return item == null ? null : item.copy();
+        }
+        public List<List<ItemStack>> hoveredCostOptions(double x, double y) {
+            var options = EnchantementListWidget.this.hoveredCostOptions(x, y);
+            return options == null ? null : options.stream().map(bundle -> bundle.stream().map(ItemStack::copy).toList()).toList();
+        }
+        public String displayName(AvailableOption option) { return EnchantementListWidget.this.displayName(option); }
+    };
+    TableListRead tableRead() { return this.tableRead; }
 }

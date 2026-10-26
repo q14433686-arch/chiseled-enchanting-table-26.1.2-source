@@ -877,7 +877,7 @@ if (isOverSacrificeSkipButton(mouseX, mouseY)) regions.add(TableTooltipContext.R
 if (isOverSanctumPanel(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverSanctumPanel);
 if (isOverShelfHudBadge(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverShelfHudBadge);
 if (isOverTomeTab(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverTomeTab);
-return new TableTooltipContext(this.menu, this.scrollContainer, this.font, this.minecraft.level,
+return new TableTooltipContext(this.menu, this.scrollContainer == null ? null : this.scrollContainer.tableRead(), this.font, this.minecraft.level,
     regions, hoveredTomeButton(mouseX, mouseY), isCleanseTab(), isTomeTab(),
     isDisenchantAllConfirmPending(), canCleanseAllNow(), this::getTooltipFromContainerItem,
     this::buildResonanceBreakdownTooltip);

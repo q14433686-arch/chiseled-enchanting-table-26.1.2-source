@@ -17,8 +17,8 @@ final class TableOptionTooltips {
     static boolean render(TableTooltipContext state, GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
         var specialEntry = state.list().hoveredSpecialRowEntry(mouseX, mouseY);
         if (specialEntry != null) {
-            if (specialEntry.discovery_locked) {
-                String lockedOut = state.menu().syncedTransformationOutputName(specialEntry.enchantment_id);
+            if (specialEntry.discovery_locked()) {
+                String lockedOut = state.menu().syncedTransformationOutputName(specialEntry.enchantment_id());
                 List<Component> discTip = new ArrayList<>();
                 discTip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.discovery_locked.tip_title",
@@ -31,20 +31,20 @@ final class TableOptionTooltips {
                 ctx.setTooltipForNextFrame(state.font(), discTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
-            if (specialEntry.shelf_locked && specialEntry.enchantment != null) {
+            if (specialEntry.shelf_locked() && specialEntry.enchantment() != null) {
                 String lockedName = net.minecraft.world.item.enchantment.Enchantment
-                    .getFullname(specialEntry.enchantment, specialEntry.enchant_level)
+                    .getFullname(specialEntry.enchantment(), specialEntry.enchant_level())
                     .getString();
                 List<Component> lockTip = new ArrayList<>();
                 lockTip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.shelf_locked.tip_title",
                     lockedName
                 ).withStyle(ChatFormatting.GOLD));
-                if (state.menu().regularBookshelves < specialEntry.required_bookshelves) {
+                if (state.menu().regularBookshelves < specialEntry.required_bookshelves()) {
                     lockTip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.shelf_locked.tip_req",
                         state.menu().regularBookshelves,
-                        specialEntry.required_bookshelves
+                        specialEntry.required_bookshelves()
                     ).withStyle(ChatFormatting.RED));
                 } else {
                     lockTip.add(Component.translatable(
@@ -57,7 +57,7 @@ final class TableOptionTooltips {
                 ctx.setTooltipForNextFrame(state.font(), lockTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
-            if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(specialEntry.enchantment_id)) {
+            if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(specialEntry.enchantment_id())) {
                 var dtTier = state.menu().depletedTomeTier();
                 var sg = state.menu().shelfGatesConfig();
                 int shelves = state.menu().regularBookshelves;
@@ -87,22 +87,22 @@ final class TableOptionTooltips {
                 ctx.setTooltipForNextFrame(state.font(), dtTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
-            if (specialEntry.is_category_header && !specialEntry.cleanse_theme) {
+            if (specialEntry.is_category_header() && !specialEntry.cleanse_theme()) {
                 int maxLvl = chiseled_enchanting_table.mechanics.resonance.LibraryResonance.resolveMaxLevel(
                     state.level(),
-                    specialEntry.enchantment_id
+                    specialEntry.enchantment_id()
                 );
                 var sg = state.menu().shelfGatesConfig();
                 int shelves = state.menu().regularBookshelves;
-                int storedLvl = state.menu().storedMasterLevel(specialEntry.enchantment_id);
-                int existingLvl = state.menu().currentTargetEnchantLevel(specialEntry.enchantment_id);
-                int directCap = state.menu().maxUnlockedDirectTier(specialEntry.enchantment_id, maxLvl);
+                int storedLvl = state.menu().storedMasterLevel(specialEntry.enchantment_id());
+                int existingLvl = state.menu().currentTargetEnchantLevel(specialEntry.enchantment_id());
+                int directCap = state.menu().maxUnlockedDirectTier(specialEntry.enchantment_id(), maxLvl);
                 int baseCap = existingLvl >= 1
                     ? directCap
-                    : state.menu().maxBlankWoodenTier(specialEntry.enchantment_id, maxLvl);
+                    : state.menu().maxBlankWoodenTier(specialEntry.enchantment_id(), maxLvl);
                 int effectiveCap = Math.min(maxLvl, Math.max(storedLvl, baseCap));
                 List<Component> catTip = new ArrayList<>();
-                catTip.add(Component.literal(specialEntry.category_title + "  " + specialEntry.category_badge)
+                catTip.add(Component.literal(specialEntry.category_title() + "  " + specialEntry.category_badge())
                     .withStyle(ChatFormatting.GOLD));
                 catTip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.category.tip_cap",
@@ -114,7 +114,7 @@ final class TableOptionTooltips {
                 if (effectiveCap < maxLvl) {
                     int nextTier = effectiveCap + 1;
                     int reqShelves = state.menu().requiredBookshelvesForDirectTier(
-                        specialEntry.enchantment_id,
+                        specialEntry.enchantment_id(),
                         nextTier,
                         maxLvl
                     );
@@ -141,13 +141,13 @@ final class TableOptionTooltips {
         if (hoveredRow != null) {
             List<Component> rowTip = new ArrayList<>();
             AvailableOption hoverOpt = new AvailableOption(
-                hoveredRow.option_type,
-                hoveredRow.enchantment_id,
-                hoveredRow.enchant_level
+                hoveredRow.option_type(),
+                hoveredRow.enchantment_id(),
+                hoveredRow.enchant_level()
             );
             rowTip.add(Component.literal(state.list().displayName(hoverOpt)).withStyle(ChatFormatting.GOLD));
             boolean fromBook = state.menu().get_cost_item().is(net.minecraft.world.item.Items.ENCHANTED_BOOK)
-                && hoveredRow.option_type == OptionType.ENCHANTMENT;
+                && hoveredRow.option_type() == OptionType.ENCHANTMENT;
             var lrCfg = state.menu().libraryResonanceConfig();
             if (fromBook) {
                 rowTip.add(Component.translatable(state.menu().returnsPlainDrainedBook()
@@ -156,12 +156,12 @@ final class TableOptionTooltips {
                     .withStyle(ChatFormatting.GREEN));
             } else if (state.menu().usesClassicFullPointXp()
                 && !state.menu().usesIncrementalCredit()
-                && !hoveredRow.is_transformation
-                && hoveredRow.option_type != OptionType.TREASURE_EPIPHANY
-                && hoveredRow.option_type != OptionType.DISENCHANT_ALL
-                && hoveredRow.option_type != OptionType.DOWNGRADE_ENCHANTMENT
-                && hoveredRow.option_type != OptionType.STRIP_SINGLE_ENCHANTMENT
-                && hoveredRow.option_type != OptionType.PURGE_CURSE) {
+                && !hoveredRow.is_transformation()
+                && hoveredRow.option_type() != OptionType.TREASURE_EPIPHANY
+                && hoveredRow.option_type() != OptionType.DISENCHANT_ALL
+                && hoveredRow.option_type() != OptionType.DOWNGRADE_ENCHANTMENT
+                && hoveredRow.option_type() != OptionType.STRIP_SINGLE_ENCHANTMENT
+                && hoveredRow.option_type() != OptionType.PURGE_CURSE) {
                 // 1.0.3 Classic pricing source: full target-level XP points +
                 // full materials, whether or not a stored book unlocked the
                 // level. Previously this branch said "Stored Template Book
@@ -169,12 +169,12 @@ final class TableOptionTooltips {
                 // contradicting the XP badge's "Full XP Level Cost" rule.
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.classic_1_0_3")
                     .withStyle(ChatFormatting.GREEN));
-            } else if (hoveredRow.is_transformation) {
+            } else if (hoveredRow.is_transformation()) {
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.transformation")
                     .withStyle(ChatFormatting.LIGHT_PURPLE));
-                if (hoveredRow.enchantable_item != null && hoveredRow.enchantable_item.getCount() > 1) {
-                    int batch = state.menu().resolveTransformationBatchCount(hoveredRow.enchantment_id);
-                    int inSlot = hoveredRow.enchantable_item.getCount();
+                if (hoveredRow.enchantable_item() != null && hoveredRow.enchantable_item().getCount() > 1) {
+                    int batch = state.menu().resolveTransformationBatchCount(hoveredRow.enchantment_id());
+                    int inSlot = hoveredRow.enchantable_item().getCount();
                     rowTip.add(Component.translatable(
                         state.menu().player.getAbilities().instabuild
                             ? "gui.chiseled_enchanting_table.transformation.batch_tip_creative"
@@ -183,28 +183,28 @@ final class TableOptionTooltips {
                         inSlot
                     ).withStyle(ChatFormatting.AQUA));
                 }
-            } else if (hoveredRow.option_type == OptionType.TREASURE_EPIPHANY) {
+            } else if (hoveredRow.option_type() == OptionType.TREASURE_EPIPHANY) {
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.epiphany")
                     .withStyle(ChatFormatting.LIGHT_PURPLE));
-            } else if (hoveredRow.option_type == OptionType.DISENCHANT_ALL
-                || hoveredRow.option_type == OptionType.DOWNGRADE_ENCHANTMENT) {
+            } else if (hoveredRow.option_type() == OptionType.DISENCHANT_ALL
+                || hoveredRow.option_type() == OptionType.DOWNGRADE_ENCHANTMENT) {
                 int extPct = (int) Math.round(state.menu().disenchantExternalRefundScale() * 100.0);
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_provenance", extPct)
                     .withStyle(ChatFormatting.AQUA));
-            } else if (hoveredRow.option_type == OptionType.STRIP_SINGLE_ENCHANTMENT
-                || hoveredRow.option_type == OptionType.PURGE_CURSE) {
+            } else if (hoveredRow.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
+                || hoveredRow.option_type() == OptionType.PURGE_CURSE) {
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_targeted")
                     .withStyle(ChatFormatting.AQUA));
             } else {
-                boolean masterBacked = state.menu().storedMasterLevel(hoveredRow.enchantment_id) >= hoveredRow.enchant_level;
+                boolean masterBacked = state.menu().storedMasterLevel(hoveredRow.enchantment_id()) >= hoveredRow.enchant_level();
                 if (masterBacked) {
                     rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.master_tome")
                         .withStyle(ChatFormatting.GREEN));
-                    boolean targetIsBook = hoveredRow.enchantable_item.is(net.minecraft.world.item.Items.BOOK)
-                        || hoveredRow.enchantable_item.is(net.minecraft.world.item.Items.ENCHANTED_BOOK);
+                    boolean targetIsBook = hoveredRow.enchantable_item().is(net.minecraft.world.item.Items.BOOK)
+                        || hoveredRow.enchantable_item().is(net.minecraft.world.item.Items.ENCHANTED_BOOK);
                     int wearCost = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.wearCostForTarget(lrCfg, targetIsBook);
                     if (wearCost > 0) {
-                        int liveRemaining = state.menu().masterTomeRemainingCharges(hoveredRow.enchantment_id, hoveredRow.enchant_level);
+                        int liveRemaining = state.menu().masterTomeRemainingCharges(hoveredRow.enchantment_id(), hoveredRow.enchant_level());
                         if (liveRemaining == chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.IMMORTAL_CHARGES) {
                             rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.tome_wear_infinite")
                                 .withStyle(ChatFormatting.LIGHT_PURPLE));
@@ -251,7 +251,7 @@ final class TableOptionTooltips {
                             }
                         }
                     }
-                } else if (hoveredRow.existingSameLevel.isPresent() && hoveredRow.existingSameLevel.getAsInt() > 0) {
+                } else if (hoveredRow.existingSameLevel().isPresent() && hoveredRow.existingSameLevel().getAsInt() > 0) {
                     rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.incremental")
                         .withStyle(ChatFormatting.AQUA));
                 } else {
@@ -259,14 +259,14 @@ final class TableOptionTooltips {
                         .withStyle(ChatFormatting.LIGHT_PURPLE));
                 }
             }
-            if (hoveredRow.conflict_refund_points > 0) {
+            if (hoveredRow.conflict_refund_points() > 0) {
                 rowTip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.pricing.conflict_refund",
-                    hoveredRow.conflict_refund_points
+                    hoveredRow.conflict_refund_points()
                 ).withStyle(ChatFormatting.GREEN));
             }
-            int rowDisc = state.menu().effectiveXpDiscountPercent(hoveredRow.enchantment_id, hoveredRow.option_type);
-            if (rowDisc > 0 && !hoveredRow.xp_requirement.isRefund() && !fromBook) {
+            int rowDisc = state.menu().effectiveXpDiscountPercent(hoveredRow.enchantment_id(), hoveredRow.option_type());
+            if (rowDisc > 0 && !hoveredRow.xp_requirement().isRefund() && !fromBook) {
                 rowTip.add(Component.translatable(
                     "gui.chiseled_enchanting_table.pricing.resonance_discount",
                     rowDisc

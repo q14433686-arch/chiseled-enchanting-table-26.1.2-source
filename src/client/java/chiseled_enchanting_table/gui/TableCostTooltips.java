@@ -115,7 +115,7 @@ final class TableCostTooltips {
         }
         var hoveredXpEntry = state.list().hoveredXpBadgeEntry(mouseX, mouseY);
         if (hoveredXpEntry != null) {
-            var req = hoveredXpEntry.xp_requirement;
+            var req = hoveredXpEntry.xp_requirement();
             int playerLvl = state.menu().player.experienceLevel;
             boolean met = hoveredXpEntry.xpConditionMet();
             List<Component> xpTip = new ArrayList<>();
@@ -129,7 +129,7 @@ final class TableCostTooltips {
                     (int) Math.round(state.menu().disenchantExternalRefundScale() * 100.0)
                 ).withStyle(ChatFormatting.GRAY));
             } else if (req.requiredLevel() <= 0 && req.deductedLevels() <= 0) {
-                if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(hoveredXpEntry.enchantment_id)) {
+                if (ChiseledEnchantingTableData.BLANK_OVERWRITE_ID.equals(hoveredXpEntry.enchantment_id())) {
                     xpTip.add(Component.translatable(
                         "gui.chiseled_enchanting_table.xp_mode.free_tome",
                         state.menu().shelfGatesConfig().tier1Bookshelves()
@@ -175,7 +175,7 @@ final class TableCostTooltips {
                 // 1.0.3 Classic: storing the book unlocks the level but does NOT
                 // switch to 1-3 level mode, so the hint would contradict the
                 // "Full XP Level Cost" title directly above it.
-                if (hoveredXpEntry.option_type == OptionType.ENCHANTMENT && !state.menu().usesClassicFullPointXp()) {
+                if (hoveredXpEntry.option_type() == OptionType.ENCHANTMENT && !state.menu().usesClassicFullPointXp()) {
                     xpTip.add(Component.translatable("gui.chiseled_enchanting_table.xp_mode.full.master_hint")
                         .withStyle(ChatFormatting.DARK_GRAY));
                 }

@@ -91,16 +91,16 @@ final class TableNavigationTooltips {
         var hoveredTome = state.list().hoveredTomeEntry(mouseX, mouseY);
         if (hoveredTome != null) {
             List<Component> tip = new ArrayList<>();
-            tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, state.menu().player)).withStyle(ChatFormatting.GOLD));
+            tip.add(Component.literal(TomeDisplayNames.tomeTitle(hoveredTome, state.menu().player)).withStyle(ChatFormatting.GOLD));
             var wearImmuneEntry = hoveredTome.enchantments().stream()
-                .filter(e -> EnchantementListWidget.isWearImmuneEnchantmentId(e.enchantment_id(), state.menu().player))
+                .filter(e -> EnchantmentDisplayNames.isWearImmuneEnchantmentId(e.enchantment_id(), state.menu().player))
                 .findFirst();
             boolean purelyImmune = hoveredTome.wear_immune()
                 && hoveredTome.wear_used() <= 0
                 && hoveredTome.remaining_charges() >= hoveredTome.effective_max_uses();
             if (wearImmuneEntry.isPresent() && hoveredTome.wear_immune()) {
                 var immuneId = wearImmuneEntry.get().enchantment_id();
-                EnchantementListWidget.findEnchantment(immuneId, state.menu().player).ifPresent(h -> {
+                EnchantmentDisplayNames.findEnchantment(immuneId, state.menu().player).ifPresent(h -> {
                     tip.add(net.minecraft.world.item.enchantment.Enchantment.getFullname(h, wearImmuneEntry.get().enchantment_level())
                         .copy().withStyle(ChatFormatting.GRAY));
                     String descKey = "enchantment." + immuneId.getNamespace() + "." + immuneId.getPath() + ".desc";
@@ -121,7 +121,7 @@ final class TableNavigationTooltips {
             if (!hoveredTome.last_used_enchant().isBlank() && hoveredTome.last_used_level() > 0) {
                 var lastId = Identifier.tryParse(hoveredTome.last_used_enchant());
                 String lastName = lastId == null ? hoveredTome.last_used_enchant()
-                    : EnchantementListWidget.findEnchantment(lastId, state.menu().player)
+                    : EnchantmentDisplayNames.findEnchantment(lastId, state.menu().player)
                         .map(h -> net.minecraft.world.item.enchantment.Enchantment.getFullname(h, hoveredTome.last_used_level()).getString())
                         .orElse(hoveredTome.last_used_enchant());
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.last_used", lastName).withStyle(ChatFormatting.LIGHT_PURPLE));
@@ -130,7 +130,7 @@ final class TableNavigationTooltips {
                 var depId = Identifier.tryParse(hoveredTome.deplete_enchant());
                 java.util.function.IntFunction<String> depName = lvl -> depId == null
                     ? hoveredTome.deplete_enchant()
-                    : EnchantementListWidget.findEnchantment(depId, state.menu().player)
+                    : EnchantmentDisplayNames.findEnchantment(depId, state.menu().player)
                         .map(h -> net.minecraft.world.item.enchantment.Enchantment.getFullname(h, lvl).getString())
                         .orElse(hoveredTome.deplete_enchant());
                 int depLevel = hoveredTome.deplete_level();
@@ -151,12 +151,12 @@ final class TableNavigationTooltips {
                 int lockEta = hoveredTome.lock_mode() == 0 ? hoveredTome.eta_next_ticks()
                     : hoveredTome.lock_mode() == 1 ? hoveredTome.eta_full_ticks() : -1;
                 if (lockEta >= 0) {
-                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_lock_remaining", EnchantementListWidget.formatTomeEta(lockEta)).withStyle(ChatFormatting.GOLD));
+                    tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_lock_remaining", TomeDisplayNames.formatTomeEta(lockEta)).withStyle(ChatFormatting.GOLD));
                 }
             }
             if (hoveredTome.charging()) {
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_next", EnchantementListWidget.formatTomeEta(hoveredTome.eta_next_ticks())).withStyle(ChatFormatting.GREEN));
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", EnchantementListWidget.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_next", TomeDisplayNames.formatTomeEta(hoveredTome.eta_next_ticks())).withStyle(ChatFormatting.GREEN));
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", TomeDisplayNames.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
             }
             tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.select_hint").withStyle(ChatFormatting.DARK_GRAY));
             ctx.setTooltipForNextFrame(state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);

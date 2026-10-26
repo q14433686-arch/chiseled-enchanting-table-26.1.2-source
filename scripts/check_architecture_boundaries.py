@@ -23,7 +23,7 @@ budgets = {
     base + 'menu/MenuQuickMove.java': 180,
     client + 'gui/ChiseledEnchantingTableScreen.java': 920,
     client + 'gui/config/ChiseledEnchantingConfigScreen.java': 1630,
-    client + 'gui/EnchantementListWidget.java': 1370,
+    client + 'gui/EnchantementListWidget.java': 1400,
     client + 'gui/config/ConfigPanelPainter.java': 180,
     client + 'gui/ResonanceTooltip.java': 170,
 }
@@ -35,7 +35,7 @@ for directory, limits in (
     (client + 'gui/', {'InscribeOptionModel': 240, 'CleanseOptionModel': 100, 'EnchantmentDisplayNames': 150,
         'TablePanelBackground': 400, 'TablePanelLabels': 230, 'TableNavigationTooltips': 240,
         'TableCostTooltips': 210, 'TableOptionTooltips': 300, 'TablePanelTooltips': 200,
-        'TableTooltipContext': 55, 'TablePanelContext': 20}),
+        'TableTooltipContext': 55, 'TablePanelContext': 20, 'TableListRead': 35, 'TableRowView': 30}),
     (client + 'gui/config/', {'ConfigOptionRenderer': 365, 'ConfigTraceRenderer': 280, 'ConfigViewContext': 35}),
 ):
     budgets.update({directory + name + '.java': limit for name, limit in limits.items()})
@@ -61,6 +61,7 @@ def split_violations(name, source):
         rules += ['ChiseledEnchantingConfigScreen', 'ClientPlayNetworking', 'ModConfigNetworking', 'ConfigFileStore', 'Minecraft.getInstance(']
     if name.startswith('Table') and name not in ('TableSkin',):
         rules += ['ChiseledEnchantingTableScreen', 'ClientPlayNetworking', 'sendServerbound', 'Minecraft.getInstance(']
+        rules += ['EnchantementListWidget']
     for forbidden in rules:
         present = bool(re.search(r'\b' + re.escape(forbidden) + r'\b', source)) if forbidden[-1].isalnum() else forbidden in source
         if present:

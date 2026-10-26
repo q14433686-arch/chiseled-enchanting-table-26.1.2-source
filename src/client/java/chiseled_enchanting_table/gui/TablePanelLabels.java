@@ -122,7 +122,7 @@ final class TablePanelLabels {
                     ? Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_gap", state.tooltips().menu().liveRegenTier + 1, state.tooltips().menu().nextRegenTierGap)
                     : Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_max", state.tooltips().menu().liveRegenTier + 1);
                 drawAutoScaledText(state, context, tier, lx, ly + 23, 0.64f, 99, 0xFFA8FFC4);
-                String interval = state.tooltips().menu().regenIntervalTicks > 0 ? EnchantementListWidget.formatTomeEta(state.tooltips().menu().regenIntervalTicks) : "--:--";
+                String interval = state.tooltips().menu().regenIntervalTicks > 0 ? TomeDisplayNames.formatTomeEta(state.tooltips().menu().regenIntervalTicks) : "--:--";
                 Component rate = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_rate", interval);
                 drawAutoScaledText(state, context, rate, lx, ly + 30, 0.64f, 99, 0xFFA8FFC4);
                 return;
