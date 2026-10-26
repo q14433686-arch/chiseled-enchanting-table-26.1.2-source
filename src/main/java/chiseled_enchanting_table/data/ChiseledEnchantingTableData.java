@@ -1227,6 +1227,8 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
 
 
 
+    private static chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.Config builtInRitualConfig() { return DataTableLoader.builtInRitualConfig(); }
+
     private static chiseled_enchanting_table.mechanics.resonance.BookshelfProgression.Config loadShelfGatesConfig(
         ResourceManager resourceManager
     ) { return DataTableLoader.loadShelfGatesConfig(resourceManager); }

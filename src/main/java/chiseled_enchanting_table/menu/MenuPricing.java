@@ -57,12 +57,28 @@ public final class MenuPricing {
         return MenuMaterialQuotes.getEnchantmentItemCostOptions(h.pricingAccess(), e, type);
     }
 
+    public static List<List<ItemStack>> getEnchantmentItemCostOptions(
+        MenuPricingAccess h,
+        EnchantmentWithLevel e,
+        OptionType type
+    ) {
+        return MenuMaterialQuotes.getEnchantmentItemCostOptions(h, e, type);
+    }
+
     public static int getBaseEnchantmentXpLevelCost(
         ChiseledEnchantingTableScreenHandler h,
         EnchantmentWithLevel e,
         OptionType type
     ) {
         return MenuXpQuotes.getBaseEnchantmentXpLevelCost(h.pricingAccess(), e, type);
+    }
+
+    public static int getBaseEnchantmentXpLevelCost(
+        MenuPricingAccess h,
+        EnchantmentWithLevel e,
+        OptionType type
+    ) {
+        return MenuXpQuotes.getBaseEnchantmentXpLevelCost(h, e, type);
     }
 
     public static List<List<ItemStack>> getEffectiveItemCostOptions(
@@ -73,7 +89,15 @@ public final class MenuPricing {
         return MenuMaterialQuotes.getEffectiveItemCostOptions(h.pricingAccess(), e, type);
     }
 
-    public static int maxBundleUnitsAvailable(ChiseledEnchantingTableScreenHandler h, List<ItemStack> unitBundle) {
+    public static List<List<ItemStack>> getEffectiveItemCostOptions(
+        MenuPricingAccess h,
+        EnchantmentWithLevel e,
+        OptionType type
+    ) {
+        return MenuMaterialQuotes.getEffectiveItemCostOptions(h, e, type);
+    }
+
+    public static int maxBundleUnitsAvailable(MenuPricingAccess h, List<ItemStack> unitBundle) {
         if (unitBundle == null || unitBundle.isEmpty()) {
             return Integer.MAX_VALUE;
         }
@@ -97,7 +121,11 @@ public final class MenuPricing {
         return Math.max(0, units);
     }
 
-    public static int resolveTransformationBatchCount(ChiseledEnchantingTableScreenHandler h, Identifier transformationId) {
+    public static int maxBundleUnitsAvailable(ChiseledEnchantingTableScreenHandler h, List<ItemStack> unitBundle) {
+        return maxBundleUnitsAvailable(h.pricingAccess(), unitBundle);
+    }
+
+    public static int resolveTransformationBatchCount(MenuPricingAccess h, Identifier transformationId) {
         if (transformationId == null) {
             return 1;
         }
@@ -105,7 +133,7 @@ public final class MenuPricing {
         int inputCount = Math.max(1, h.getEnchantableItem().getCount());
         int maxCap = isBlank ? Math.max(1, h.depletedTomeMaxBatchSize()) : h.transformationMaxBatchSize();
         int desired = Math.max(1, Math.min(maxCap, inputCount));
-        if (h.player != null && h.player.getAbilities().instabuild) {
+        if (h.creative()) {
             return desired;
         }
         if (desired <= 1) {
@@ -137,7 +165,7 @@ public final class MenuPricing {
 
         int maxXpUnits = XpCostConversion.maxTransformationBatchForLevel(
             effectiveUnitXp,
-            h.player != null ? h.player.experienceLevel : 0
+            h.playerLevel()
         );
         if (unitBundles.isEmpty()) {
             return maxXpUnits >= 1 ? Math.min(desired, maxXpUnits) : 1;
@@ -149,6 +177,10 @@ public final class MenuPricing {
         }
         int affordable = Math.min(maxMatUnits, maxXpUnits);
         return affordable >= 1 ? Math.min(desired, affordable) : 1;
+    }
+
+    public static int resolveTransformationBatchCount(ChiseledEnchantingTableScreenHandler h, Identifier transformationId) {
+        return resolveTransformationBatchCount(h.pricingAccess(), transformationId);
     }
 
     public static List<XpCostConversion.XpRequirement> collectBookCombineEntryRequirements(
@@ -186,6 +218,15 @@ public final class MenuPricing {
         boolean applyUpgradeRouteRawCap
     ) {
         return MenuXpQuotes.resolveEffectiveXpRequirement(h.pricingAccess(), e, type, applyUpgradeRouteRawCap);
+    }
+
+    public static XpCostConversion.XpRequirement resolveEffectiveXpRequirement(
+        MenuPricingAccess h,
+        EnchantmentWithLevel e,
+        OptionType type,
+        boolean applyUpgradeRouteRawCap
+    ) {
+        return MenuXpQuotes.resolveEffectiveXpRequirement(h, e, type, applyUpgradeRouteRawCap);
     }
 
 

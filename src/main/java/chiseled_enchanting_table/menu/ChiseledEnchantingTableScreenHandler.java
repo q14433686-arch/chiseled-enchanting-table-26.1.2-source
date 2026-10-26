@@ -50,7 +50,7 @@ import net.minecraft.world.item.Items;
  * {@code mechanics.transformation.ItemTransformationApplication}; wire payloads live in
  * {@code menu.ChiseledEnchantingMenuPayloads}.</p>
  */
-public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu {
+public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu implements MenuPricingAccess {
 
     /** Delegates to {@link EnchantingNetworking#init()} (god-class split, 2026-10-24 audit). */
     public static void init() {

@@ -2,13 +2,17 @@ package chiseled_enchanting_table.menu;
 
 import chiseled_enchanting_table.compat.SyncedEnchantmentCosts;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.mechanics.resonance.BookshelfProgression;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
+import chiseled_enchanting_table.registry.BlockRegistry;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 import static chiseled_enchanting_table.menu.MenuPricing.syncedRow;
-
 /** MenuMaterialQuotes consumes read-only economic capabilities, never the menu coordinator. */
 final class MenuMaterialQuotes {
     private MenuMaterialQuotes() {}
