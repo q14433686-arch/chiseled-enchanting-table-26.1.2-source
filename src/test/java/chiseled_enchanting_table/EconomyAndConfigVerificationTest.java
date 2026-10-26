@@ -1093,7 +1093,7 @@ class EconomyAndConfigVerificationTest {
         assertEquals(Integer.MAX_VALUE, MasterTomeWear.computeRegenIntervalTicks(disabledCfg, 42));
 
         // 3. ModRuntimeConfig + ConfigCatalog bidirectional reconciliation & two-level applicability.
-        var draft = new chiseled_enchanting_table.config.ModRuntimeConfig.Draft();
+        var draft = new chiseled_enchanting_table.config.ConfigDraft();
         draft.tomeRegenTier1Shelves = 45;
         draft.normalizeAfterEdit("tome_regen_tier1_shelves");
         assertEquals(45, draft.tomeRegenTier2Shelves, "Tier 2 shelves must push up when Tier 1 exceeds it");

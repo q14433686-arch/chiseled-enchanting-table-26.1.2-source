@@ -2,7 +2,7 @@ package chiseled_enchanting_table.config;
 
 import chiseled_enchanting_table.config.ModRuntimeConfig.CostTableDataset;
 import chiseled_enchanting_table.config.ModRuntimeConfig.DefaultUnlockFilter;
-import chiseled_enchanting_table.config.ModRuntimeConfig.Draft;
+import chiseled_enchanting_table.config.ConfigDraft;
 import chiseled_enchanting_table.config.ModRuntimeConfig.DrainedBookResult;
 import chiseled_enchanting_table.config.ModRuntimeConfig.MaterialSelectionMode;
 import chiseled_enchanting_table.config.ModRuntimeConfig.ResearchRoundingMode;
@@ -189,7 +189,7 @@ public final class ConfigCatalog {
             return "config.chiseled_enchanting_table.trace." + traceId + ".v110";
         }
 
-        public boolean isUsingClassic103(Draft draft) {
+        public boolean isUsingClassic103(ConfigDraft draft) {
             if (derived) {
                 return draft.build().isAllClassicAtoms();
             }
@@ -197,7 +197,7 @@ public final class ConfigCatalog {
             return opt.isPresent() && Objects.equals(opt.get().get(draft), classic103Value);
         }
 
-        public boolean isUsingModern110(Draft draft) {
+        public boolean isUsingModern110(ConfigDraft draft) {
             if (derived) {
                 return draft.build().countClassic103Atoms() == 0;
             }
@@ -205,12 +205,12 @@ public final class ConfigCatalog {
             return opt.isPresent() && Objects.equals(opt.get().get(draft), modern110Value);
         }
 
-        public void applyClassic103(Draft draft) {
+        public void applyClassic103(ConfigDraft draft) {
             if (derived || optionKey == null || classic103Value == null) return;
             byKey(optionKey).ifPresent(o -> o.set(draft, classic103Value));
         }
 
-        public void applyModern110(Draft draft) {
+        public void applyModern110(ConfigDraft draft) {
             if (derived || optionKey == null || modern110Value == null) return;
             byKey(optionKey).ifPresent(o -> o.set(draft, modern110Value));
         }
@@ -226,15 +226,15 @@ public final class ConfigCatalog {
         private final double min;
         private final double max;
         private final double step;
-        private final Function<Draft, Object> getter;
-        private final BiConsumer<Draft, Object> setter;
-        private final Function<Draft, String> valueLabeler;
-        private final BiConsumer<Draft, Integer> enumCycler;
-        private final Function<Draft, Double> sliderNormalizedGetter;
-        private final BiConsumer<Draft, Double> sliderNormalizedSetter;
-        private final Predicate<Draft> activeWhen;
+        private final Function<ConfigDraft, Object> getter;
+        private final BiConsumer<ConfigDraft, Object> setter;
+        private final Function<ConfigDraft, String> valueLabeler;
+        private final BiConsumer<ConfigDraft, Integer> enumCycler;
+        private final Function<ConfigDraft, Double> sliderNormalizedGetter;
+        private final BiConsumer<ConfigDraft, Double> sliderNormalizedSetter;
+        private final Predicate<ConfigDraft> activeWhen;
         @Nullable
-        private final Function<Draft, String> dynamicInactiveReasonKey;
+        private final Function<ConfigDraft, String> dynamicInactiveReasonKey;
 
         private OptionEntry(
             String key,
@@ -246,14 +246,14 @@ public final class ConfigCatalog {
             double min,
             double max,
             double step,
-            Function<Draft, Object> getter,
-            BiConsumer<Draft, Object> setter,
-            Function<Draft, String> valueLabeler,
-            BiConsumer<Draft, Integer> enumCycler,
-            Function<Draft, Double> sliderNormalizedGetter,
-            BiConsumer<Draft, Double> sliderNormalizedSetter,
-            Predicate<Draft> activeWhen,
-            @Nullable Function<Draft, String> dynamicInactiveReasonKey
+            Function<ConfigDraft, Object> getter,
+            BiConsumer<ConfigDraft, Object> setter,
+            Function<ConfigDraft, String> valueLabeler,
+            BiConsumer<ConfigDraft, Integer> enumCycler,
+            Function<ConfigDraft, Double> sliderNormalizedGetter,
+            BiConsumer<ConfigDraft, Double> sliderNormalizedSetter,
+            Predicate<ConfigDraft> activeWhen,
+            @Nullable Function<ConfigDraft, String> dynamicInactiveReasonKey
         ) {
             this.key = key;
             this.category = category;
@@ -294,7 +294,7 @@ public final class ConfigCatalog {
             return coreRuleAtom;
         }
 
-        public boolean isParentApplicable(Draft d) {
+        public boolean isParentApplicable(ConfigDraft d) {
             return activeWhen.test(d);
         }
 
@@ -326,22 +326,22 @@ public final class ConfigCatalog {
             return "config.chiseled_enchanting_table.opt." + key + ".desc";
         }
 
-        public Object get(Draft d) {
+        public Object get(ConfigDraft d) {
             return getter.apply(d);
         }
 
         /** Resolver-only assignment; normalize all related fields once after the complete overlay. */
-        public void setResolvedValue(Draft d, Object v) {
+        public void setResolvedValue(ConfigDraft d, Object v) {
             setter.accept(d, v);
         }
 
-        public void set(Draft d, Object v) {
+        public void set(ConfigDraft d, Object v) {
             setter.accept(d, v);
             d.markCustomized(key);
             d.normalizeAfterEdit(key);
         }
 
-        public void toggleOrCycle(Draft d, int direction) {
+        public void toggleOrCycle(ConfigDraft d, int direction) {
             if (kind == ControlKind.BOOLEAN) {
                 boolean cur = Boolean.TRUE.equals(getter.apply(d));
                 set(d, !cur);
@@ -352,18 +352,18 @@ public final class ConfigCatalog {
             }
         }
 
-        public double normalizedSliderValue(Draft d) {
+        public double normalizedSliderValue(ConfigDraft d) {
             return Math.max(0.0, Math.min(1.0, sliderNormalizedGetter.apply(d)));
         }
 
-        public void setFromNormalizedSlider(Draft d, double t) {
+        public void setFromNormalizedSlider(ConfigDraft d, double t) {
             double clamped = Math.max(0.0, Math.min(1.0, t));
             sliderNormalizedSetter.accept(d, clamped);
             d.markCustomized(key);
             d.normalizeAfterEdit(key);
         }
 
-        public void stepValue(Draft d, int steps) {
+        public void stepValue(ConfigDraft d, int steps) {
             if (kind == ControlKind.INT_SLIDER) {
                 int cur = ((Number) getter.apply(d)).intValue();
                 int next = (int) Math.max(min, Math.min(max, cur + steps * Math.max(1, (int) Math.round(step))));
@@ -381,23 +381,23 @@ public final class ConfigCatalog {
          * Returns either raw display text or a translation key prefixed with {@code "@"} so pure-Java
          * callers and I18n UI callers share the exact same formatting rules.
          */
-        public String rawOrKeyDisplay(Draft d) {
+        public String rawOrKeyDisplay(ConfigDraft d) {
             return valueLabeler.apply(d);
         }
 
-        public boolean isModifiedFromDefault(Draft d) {
-            Draft def = new Draft();
+        public boolean isModifiedFromDefault(ConfigDraft d) {
+            ConfigDraft def = new ConfigDraft();
             return !Objects.equals(getter.apply(d), getter.apply(def));
         }
 
-        public void resetToDefault(Draft d) {
-            Draft def = new Draft();
+        public void resetToDefault(ConfigDraft d) {
+            ConfigDraft def = new ConfigDraft();
             setter.accept(d, getter.apply(def));
             d.customizedKeys.remove(key);
             d.normalizeAfterEdit(null);
         }
 
-        public OptionAvailability evaluate(Draft draft, SessionMode sessionMode) {
+        public OptionAvailability evaluate(ConfigDraft draft, SessionMode sessionMode) {
             ModRuntimeConfig.PackPolicy policy = ModRuntimeConfig.effectivePackPolicy();
             boolean parentOk = activeWhen.test(draft);
             if (!sessionMode.writable()) {
@@ -447,7 +447,7 @@ public final class ConfigCatalog {
 
     // ---- Concise builders ----
 
-    private static final Predicate<Draft> ALWAYS = d -> true;
+    private static final Predicate<ConfigDraft> ALWAYS = d -> true;
 
     private static OptionEntry boolOpt(
         String key,
@@ -455,10 +455,10 @@ public final class ConfigCatalog {
         String sectionId,
         boolean coreAtom,
         EffectScope scope,
-        Function<Draft, Boolean> get,
-        BiConsumer<Draft, Boolean> set,
-        Predicate<Draft> activeWhen,
-        @Nullable Function<Draft, String> reasonFn
+        Function<ConfigDraft, Boolean> get,
+        BiConsumer<ConfigDraft, Boolean> set,
+        Predicate<ConfigDraft> activeWhen,
+        @Nullable Function<ConfigDraft, String> reasonFn
     ) {
         return new OptionEntry(
             key, cat, sectionId, coreAtom, ControlKind.BOOLEAN, scope, 0, 1, 1,
@@ -483,11 +483,11 @@ public final class ConfigCatalog {
         int min,
         int max,
         int step,
-        Function<Draft, Integer> get,
-        BiConsumer<Draft, Integer> set,
-        Function<Draft, String> fmt,
-        Predicate<Draft> activeWhen,
-        @Nullable Function<Draft, String> reasonFn
+        Function<ConfigDraft, Integer> get,
+        BiConsumer<ConfigDraft, Integer> set,
+        Function<ConfigDraft, String> fmt,
+        Predicate<ConfigDraft> activeWhen,
+        @Nullable Function<ConfigDraft, String> reasonFn
     ) {
         return new OptionEntry(
             key, cat, sectionId, false, ControlKind.INT_SLIDER, scope, min, max, step,
@@ -516,11 +516,11 @@ public final class ConfigCatalog {
         double min,
         double max,
         double step,
-        Function<Draft, Double> get,
-        BiConsumer<Draft, Double> set,
-        Function<Draft, String> fmt,
-        Predicate<Draft> activeWhen,
-        @Nullable Function<Draft, String> reasonFn
+        Function<ConfigDraft, Double> get,
+        BiConsumer<ConfigDraft, Double> set,
+        Function<ConfigDraft, String> fmt,
+        Predicate<ConfigDraft> activeWhen,
+        @Nullable Function<ConfigDraft, String> reasonFn
     ) {
         return new OptionEntry(
             key, cat, sectionId, false, ControlKind.DOUBLE_SLIDER, scope, min, max, step,
@@ -546,11 +546,11 @@ public final class ConfigCatalog {
         boolean coreAtom,
         EffectScope scope,
         E[] values,
-        Function<Draft, E> get,
-        BiConsumer<Draft, E> set,
+        Function<ConfigDraft, E> get,
+        BiConsumer<ConfigDraft, E> set,
         Function<E, String> tokenFn,
-        Predicate<Draft> activeWhen,
-        @Nullable Function<Draft, String> reasonFn
+        Predicate<ConfigDraft> activeWhen,
+        @Nullable Function<ConfigDraft, String> reasonFn
     ) {
         return new OptionEntry(
             key, cat, sectionId, coreAtom, ControlKind.ENUM_CYCLE, scope, 0, values.length - 1, 1,
@@ -1177,17 +1177,17 @@ public final class ConfigCatalog {
             .findFirst();
     }
 
-    public static long countModified(Draft draft) {
+    public static long countModified(ConfigDraft draft) {
         return ALL_OPTIONS.stream().filter(o -> o.isModifiedFromDefault(draft)).count();
     }
 
-    public static long countModifiedInCategory(Draft draft, CategoryId category) {
+    public static long countModifiedInCategory(ConfigDraft draft, CategoryId category) {
         return ALL_OPTIONS.stream()
             .filter(o -> o.category() == category && o.isModifiedFromDefault(draft))
             .count();
     }
 
-    public static void resetAll(Draft draft) {
+    public static void resetAll(ConfigDraft draft) {
         for (OptionEntry entry : ALL_OPTIONS) {
             entry.resetToDefault(draft);
         }

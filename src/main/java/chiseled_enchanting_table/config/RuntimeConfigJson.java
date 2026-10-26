@@ -133,7 +133,7 @@ final class RuntimeConfigJson {
         if (root == null) {
             return ModRuntimeConfig.DEFAULT;
         }
-        ModRuntimeConfig.Draft d = new ModRuntimeConfig.Draft();
+        ConfigDraft d = new ConfigDraft();
         JsonObject general = objOrEmpty(root, "general");
         JsonObject shelves = objOrEmpty(root, "bookshelves");
         JsonObject tomes = objOrEmpty(root, "tomes_and_economy");

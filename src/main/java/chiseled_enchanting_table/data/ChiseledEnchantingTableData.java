@@ -773,7 +773,7 @@ public final class ChiseledEnchantingTableData implements SimpleSynchronousResou
      * {@code override_datapacks == false} unless a field was explicitly edited in-game.
      */
     private static chiseled_enchanting_table.config.ModRuntimeConfig rawRuntimeConfig() {
-        var d = new chiseled_enchanting_table.config.ModRuntimeConfig.Draft();
+        var d = new chiseled_enchanting_table.config.ConfigDraft();
         d.directGatesEnabled = rawShelfGatesConfig.directGatesEnabled();
         d.blankMaxTierMode = rawShelfGatesConfig.blankMaxTierMode();
         d.maxDirectBookshelves = rawShelfGatesConfig.maxDirectBookshelves();

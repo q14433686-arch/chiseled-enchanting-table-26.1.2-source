@@ -17,7 +17,7 @@ import chiseled_enchanting_table.config.ConfigLayoutSpec.SliderControlLayout;
 import chiseled_enchanting_table.config.ConfigLayoutSpec.TraceCardLayout;
 import chiseled_enchanting_table.config.ModConfigNetworking;
 import chiseled_enchanting_table.config.ModRuntimeConfig;
-import chiseled_enchanting_table.config.ModRuntimeConfig.Draft;
+import chiseled_enchanting_table.config.ConfigDraft;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
 import chiseled_enchanting_table.gui.row.RowRenderSupport;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -151,9 +151,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     private final SessionMode sessionMode;
     private ModRuntimeConfig baselineConfig;
-    private Draft draft;
-    private final Draft defaultReferenceDraft = new Draft();
-    private final Draft classicReferenceDraft;
+    private ConfigDraft draft;
+    private final ConfigDraft defaultReferenceDraft = new ConfigDraft();
+    private final ConfigDraft classicReferenceDraft;
 
     private CategoryId activeCategory = CategoryId.BOOKSHELVES;
     private boolean ruleTracePage = false;
@@ -219,7 +219,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         this.sessionMode = detectSessionMode();
         this.baselineConfig = ModRuntimeConfig.preferences();
         this.draft = this.baselineConfig.toDraft();
-        Draft classicRef = new Draft();
+        ConfigDraft classicRef = new ConfigDraft();
         ModRuntimeConfig.Preset.CLASSIC.applyTo(classicRef);
         this.classicReferenceDraft = classicRef;
         this.activeCategory = CategoryId.BOOKSHELVES;
@@ -545,7 +545,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     // ---- Value & Provenance Formatting ----
 
-    private Draft displayedDraft(OptionEntry entry) {
+    private ConfigDraft displayedDraft(OptionEntry entry) {
         if (this.sessionMode == SessionMode.OFFLINE_CLIENT) return this.draft;
         var policy = ModRuntimeConfig.effectivePackPolicy();
         boolean governed = policy.isKeyLocked(entry.key())
@@ -554,7 +554,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return governed ? ModRuntimeConfig.effective().toDraft() : this.draft;
     }
 
-    private String formatValueFrom(OptionEntry entry, Draft source) {
+    private String formatValueFrom(OptionEntry entry, ConfigDraft source) {
         String raw = entry.rawOrKeyDisplay(source);
         return raw.startsWith("@") ? I18n.get(raw.substring(1)) : raw;
     }
@@ -1328,7 +1328,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int clipTop,
         int clipBottom
     ) {
-        Draft shown = displayedDraft(entry);
+        ConfigDraft shown = displayedDraft(entry);
         String valText = formatValueFrom(entry, shown);
         int cTop = Math.max(clipTop, cb.y());
         int cBot = Math.min(clipBottom, cb.bottom());
@@ -1481,7 +1481,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
     /**
      * Builds the L3 3-Value Provenance Tooltip:
-     * Pending Draft value vs Live Effective value vs 1.1.0 Default (+ 1.0.3 Classic reference),
+     * Pending ConfigDraft value vs Live Effective value vs 1.1.0 Default (+ 1.0.3 Classic reference),
      * dual-coded effect scope explanation, and parent-atom / governance lock reason.
      */
     private List<Component> buildL3ProvenanceTooltip(OptionEntry entry, OptionAvailability avail) {
