@@ -3,6 +3,8 @@ package chiseled_enchanting_table.gui;
 /** Single geometry contract for painting, clipping, mouse hit regions and client probes. */
 public final class TomeDirectoryLayout {
     private TomeDirectoryLayout() {}
+    public static final int CONTENT_X=7, CONTENT_Y=17, CONTENT_HEIGHT=141;
+    public static final int PANEL_X=214, PANEL_Y=18, PANEL_W=119, PANEL_H=61;
     public static final int WIDTH = 151, HEIGHT = 59, GAP = 2, FRAME = 4, BUTTON_INSET = 3;
     public static final int POPUP_Y = HEIGHT + GAP, POPUP_ROW_HEIGHT = 12, POPUP_LIMIT = 5;
     public record Rect(int x, int y, int width, int height) {
@@ -28,7 +30,7 @@ public final class TomeDirectoryLayout {
     public static Rect popupRow(int i) { return new Rect(4,POPUP_Y+4+i*POPUP_ROW_HEIGHT,WIDTH-8,POPUP_ROW_HEIGHT); }
     public static Rect lockButton(int i) {
         if(i<0 || i>4) throw new IllegalArgumentException("Unknown lock button");
-        return new Rect(214+9+i*20,18+38,19,13);
+        return new Rect(PANEL_X+9+i*20,PANEL_Y+38,19,13);
     }
     public static int listOffset() { return HEIGHT + GAP; }
 }

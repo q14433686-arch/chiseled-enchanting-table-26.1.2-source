@@ -75,6 +75,9 @@ class UiReadabilityTests(unittest.TestCase):
         screen = (GUI / 'ChiseledEnchantingTableScreen.java').read_text()
         self.assertIn('TomeDirectoryLayout.listOffset()', screen)
         self.assertIn('TomeDirectoryLayout.lockButton(index)', screen)
+        skin = (GUI / 'TableSkin.java').read_text()
+        for name in ('PANEL_X', 'PANEL_Y', 'PANEL_W', 'PANEL_H'):
+            self.assertIn(f'{name} = TomeDirectoryLayout.{name}', skin)
 
     def test_catalogue_material_and_icon_texture_dimensions(self):
         for name in ('frame', 'frame_hover', 'frame_disabled'):

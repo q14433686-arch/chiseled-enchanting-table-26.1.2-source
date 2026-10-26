@@ -96,7 +96,7 @@ final class TablePanelBackground {
             }
             if (!state.tooltips().list().hasEntries()) {
                 int lx = i + 12;
-                int ly = j + 17 + TomeDirectoryLayout.listOffset() + 10;
+                int ly = j + TomeDirectoryLayout.CONTENT_Y + TomeDirectoryLayout.listOffset() + 10;
                 String hint = Component.translatable(state.tooltips().menu().isTomePageUnlocked()
                     ? (state.tooltips().menu().tomeBooks.isEmpty() ? "gui.chiseled_enchanting_table.tomes.empty" : "gui.chiseled_enchanting_table.catalog.empty")
                     : "gui.chiseled_enchanting_table.tab.locked_tooltip").getString();
@@ -143,7 +143,7 @@ final class TablePanelBackground {
 
             if (!state.tooltips().list().hasEntries()) {
                 int lx = i + 12;
-                int ly = j + 17 + TomeDirectoryLayout.listOffset() + 10;
+                int ly = j + TomeDirectoryLayout.CONTENT_Y + TomeDirectoryLayout.listOffset() + 10;
                 String hint1 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line1").getString();
                 String hint2 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line2").getString();
                 RowRenderSupport.renderBoundedText(ctx, state.tooltips().font(), hint1, lx, ly, 0.72f, 140, 0xFFAEEADF);

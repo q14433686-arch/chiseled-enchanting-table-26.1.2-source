@@ -352,8 +352,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private final chiseled_enchanting_table.catalog.TomeActionQueue tomeActions = new chiseled_enchanting_table.catalog.TomeActionQueue();
     private void layoutDirectory() {
         int offset=isTomeTab() ? TomeDirectoryLayout.listOffset() : 0;
-        if (this.scrollContainer != null) this.scrollContainer.updateSizeAndPosition(TomeDirectoryLayout.WIDTH, 141-offset,
-            this.leftPos + 7, this.topPos + 17+offset);
+        if (this.scrollContainer != null) this.scrollContainer.updateSizeAndPosition(TomeDirectoryLayout.WIDTH, TomeDirectoryLayout.CONTENT_HEIGHT-offset,
+            this.leftPos + TomeDirectoryLayout.CONTENT_X, this.topPos + TomeDirectoryLayout.CONTENT_Y+offset);
     }
 
     private void sendTomeAction(
@@ -622,7 +622,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             return true;
         }
         if (isTomeTab() && event.button() == InputConstants.MOUSE_BUTTON_LEFT
-            && tomeDirectory.click(event.x(), event.y(), this.leftPos+7, this.topPos+17,
+            && tomeDirectory.click(event.x(), event.y(), this.leftPos+TomeDirectoryLayout.CONTENT_X, this.topPos+TomeDirectoryLayout.CONTENT_Y,
                 this.scrollContainer.catalogue, this.menu.player, this.scrollContainer::refreshDirectory)) {
             tomeActions.cancel(); return true;
         }
@@ -829,7 +829,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 RowRenderSupport.renderCenteredBoxText(ctx, this.font, TomeDirectoryControls.text(status.key(), status.count()),
                     this.leftPos+PANEL_X+10, 99, this.topPos+PANEL_Y+12, 0.58f, 0xFFFFD280);
             }
-            if (tomeDirectory.render(ctx, this.font, this.leftPos+7, this.topPos+17, mouseX, mouseY,
+            if (tomeDirectory.render(ctx, this.font, this.leftPos+TomeDirectoryLayout.CONTENT_X, this.topPos+TomeDirectoryLayout.CONTENT_Y, mouseX, mouseY,
                 this.scrollContainer.catalogue, this.menu.player)) return;
         }
         if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {

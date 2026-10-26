@@ -25,13 +25,6 @@ final class TableSkin {
     static final Identifier TAB_INSCRIBE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_inactive.png");
     static final Identifier TAB_CLEANSE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_active.png");
     static final Identifier TAB_CLEANSE_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_cleanse_inactive.png");
-    static final Identifier[] TOME_BUTTONS = {
-        ChiseledEnchantingTable.identifier("gui/tome_button_0.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_1.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_2.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_3.png"),
-        ChiseledEnchantingTable.identifier("gui/tome_button_4.png")
-    };
     static final Identifier TAB_TOME_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_active.png");
     static final Identifier TAB_TOME_INACTIVE = ChiseledEnchantingTable.identifier("gui/tab_tome_inactive.png");
 
@@ -46,10 +39,10 @@ final class TableSkin {
     static final int SACRIFICE_BTN_W = 40;
 
     // Integrated Sanctum / Cleanse Console coordinates inside the cohesive 340x166 window chassis.
-    static final int PANEL_X = 214;
-    static final int PANEL_Y = 18;
-    static final int PANEL_W = 119;
-    static final int PANEL_H = 61;
+    static final int PANEL_X = TomeDirectoryLayout.PANEL_X;
+    static final int PANEL_Y = TomeDirectoryLayout.PANEL_Y;
+    static final int PANEL_W = TomeDirectoryLayout.PANEL_W;
+    static final int PANEL_H = TomeDirectoryLayout.PANEL_H;
 
     // Text-only bookshelf status inside the header safe area; no frame over the gold corner or tabs.
     static final int SHELF_HUD_X = 124;
