@@ -209,9 +209,23 @@ class AuditRoundTwoTest {
                 "Duplicate entries in tag file: " + p);
         }
 
+        // Rainbow cloth port guards: state schema, interaction, variant model and renderer exist.
+        String blockSrc = Files.readString(Path.of(
+            "src/main/java/chiseled_enchanting_table/block/ChiseledEnchantingTableBlock.java"));
+        assertTrue(blockSrc.contains("BooleanProperty RAINBOW_CLOTH"));
+        assertTrue(blockSrc.contains("rainbowCloth = false;"), "Dye must exit rainbow mode");
+        assertTrue(Files.exists(Path.of(
+            "src/client/resources/assets/chiseled_enchanting_table/models/block/chiseled_enchanting_table_rainbow.json")));
+        String blockstate = Files.readString(Path.of(
+            "src/client/resources/assets/chiseled_enchanting_table/blockstates/chiseled_enchanting_table.json"));
+        assertTrue(blockstate.contains("rainbow_cloth=true"));
+        String mainSrc = Files.readString(Path.of(
+            "src/main/java/chiseled_enchanting_table/ChiseledEnchantingTable.java"));
+        assertTrue(mainSrc.contains("RainbowClothInteraction.register();"));
+
         // Verify wire protocol & byte budget constants
-        assertEquals(17, EnchantingProtocol.CURRENT_REVISION_NUMBER);
-        assertEquals("26_1_2_revision_17", EnchantingProtocol.REVISION);
+        assertEquals(18, EnchantingProtocol.CURRENT_REVISION_NUMBER);
+        assertEquals("26_1_2_revision_18", EnchantingProtocol.REVISION);
         assertEquals(980_000, PayloadLimits.MAX_SAFE_ENCODED_PAYLOAD_BYTES);
 
         JsonObject lrJson = readBundledJson("library_resonance.json");

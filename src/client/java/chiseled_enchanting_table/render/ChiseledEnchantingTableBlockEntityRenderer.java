@@ -20,7 +20,13 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 @Environment(EnvType.CLIENT)
-public class ChiseledEnchantingTableBlockEntityRenderer implements BlockEntityRenderer<ChiseledEnchantingTableBlockEntity, EnchantTableRenderState> {
+public class ChiseledEnchantingTableBlockEntityRenderer implements BlockEntityRenderer<ChiseledEnchantingTableBlockEntity, ChiseledEnchantingTableBlockEntityRenderer.TableRenderState> {
+
+    /** Vanilla table state plus the rainbow-cloth presentation captured at extract time. */
+    public static final class TableRenderState extends EnchantTableRenderState {
+        public boolean rainbow;
+        public int clothColor = -1;
+    }
     public static final SpriteId BOOK_TEXTURE = Sheets.BLOCK_ENTITIES_MAPPER.defaultNamespaceApply("enchantment/enchanting_table_book");
     private final SpriteGetter sprites;
     private final BookModel bookModel;
@@ -31,12 +37,12 @@ public class ChiseledEnchantingTableBlockEntityRenderer implements BlockEntityRe
     }
 
     @Override
-    public EnchantTableRenderState createRenderState() {
-        return new EnchantTableRenderState();
+    public TableRenderState createRenderState() {
+        return new TableRenderState();
     }
 
     @Override
-    public void extractRenderState(ChiseledEnchantingTableBlockEntity blockEntity, EnchantTableRenderState renderState, float partialTick, Vec3 cameraPos, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+    public void extractRenderState(ChiseledEnchantingTableBlockEntity blockEntity, TableRenderState renderState, float partialTick, Vec3 cameraPos, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, renderState, partialTick, cameraPos, crumblingOverlay);
         renderState.flip = Mth.lerp(partialTick, blockEntity.oFlip, blockEntity.flip);
         renderState.open = Mth.lerp(partialTick, blockEntity.oOpen, blockEntity.open);
@@ -46,10 +52,20 @@ public class ChiseledEnchantingTableBlockEntityRenderer implements BlockEntityRe
         while (rotationDelta >= Mth.PI) rotationDelta -= Mth.TWO_PI;
         while (rotationDelta < -Mth.PI) rotationDelta += Mth.TWO_PI;
         renderState.yRot = blockEntity.oRot + rotationDelta * partialTick;
+        var state = blockEntity.getBlockState();
+        renderState.rainbow = state.hasProperty(chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.RAINBOW_CLOTH)
+            && state.getValue(chiseled_enchanting_table.block.ChiseledEnchantingTableBlock.RAINBOW_CLOTH);
+        long gameTime = blockEntity.getLevel() != null ? blockEntity.getLevel().getGameTime() : blockEntity.time;
+        renderState.clothColor = RainbowClothRenderer.jebColor(gameTime, partialTick);
     }
 
     @Override
-    public void submit(EnchantTableRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+    public void submit(TableRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        if (renderState.rainbow) {
+            poseStack.pushPose();
+            RainbowClothRenderer.submit(poseStack, submitNodeCollector, renderState.clothColor, renderState.lightCoords);
+            poseStack.popPose();
+        }
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.75F, 0.5F);
         poseStack.translate(0.0F, 0.1F + Mth.sin((double)(renderState.time * 0.1F)) * 0.01F, 0.0F);

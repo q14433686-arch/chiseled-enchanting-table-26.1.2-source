@@ -1,6 +1,6 @@
 # Network Protocol & Wire Revision History
 
-> **Current wire revision:** `26_1_2_revision_17` (`EnchantingProtocol.WIRE_REVISION`)
+> **Current wire revision:** `26_1_2_revision_18` (`EnchantingProtocol.WIRE_REVISION`)
 > **Owner classes:** `chiseled_enchanting_table.menu.EnchantingProtocol`, `PayloadLimits`,
 > `EnchantCostSync`, `EnchantCostTablePayload`, `AvailableEnchantmentsPayload`, `ConfigSyncNetworking`.
 
@@ -25,7 +25,9 @@
 | `26_1_2_revision_11` | Added Tome management page (`OptionType` / lock state sync), page-unlock advancement state, container/session routing guards, and payload integrity tail marker. |
 | `26_1_2_revision_12` – `revision_15` | Added server-authoritative `ModRuntimeConfig` sync (`ConfigSyncNetworking`), `pack_policy.json` lock state, LAN publish permission bit (`IntegratedServer.isPublished()`), and 20 orthogonal Classic/Modern rule atoms. |
 | `26_1_2_revision_16` | Eliminated `t=0` vs `20-tick` opening sync skew across container `DataSlot` / initial `AvailableEnchantmentsPayload` push. |
-| **`26_1_2_revision_17`** *(current)* | Added data-driven `DisenchantmentApplication.EssenceValuation` (`essence_valuation`) and `InscriptionRitualMechanics.ApplicabilityConfig` (`ritual.applicability`) to `EnchantCostTablePayload`; enforced centralized `PayloadLimits` (`64` / `1,024` / `980,000` bytes via `Unpooled.buffer()` measurement); switched `EnchantCostSync` to a `UUID`-keyed cache; de-versioned canonical `CostTableDataset` (`modern`/`classic`) and `Preset` (`classic`) wire tokens while retaining read aliases for `classic_1_0_3` / `modern_1_1_0`. |
+| `26_1_2_revision_17` | Added data-driven `DisenchantmentApplication.EssenceValuation` (`essence_valuation`) and `InscriptionRitualMechanics.ApplicabilityConfig` (`ritual.applicability`) to `EnchantCostTablePayload`; enforced centralized `PayloadLimits` (`64` / `1,024` / `980,000` bytes via `Unpooled.buffer()` measurement); switched `EnchantCostSync` to a `UUID`-keyed cache; de-versioned canonical `CostTableDataset` (`modern`/`classic`) and `Preset` (`classic`) wire tokens while retaining read aliases for `classic_1_0_3` / `modern_1_1_0`. |
+
+| **`26_1_2_revision_18`** *(current)* | Added the `rainbow_cloth` block-state property (26.3 rainbow tablecloth port): a client/server-shared block-state schema change, so the capability/cost channels bump even though no menu payload field changed. revision_17 remains a generated legacy probe only. |
 
 ## 3. Checklist When Bumping `WIRE_REVISION`
 

@@ -57,6 +57,10 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
     public static final MapCodec<ChiseledEnchantingTableBlock> CODEC = simpleCodec(ChiseledEnchantingTableBlock::new);
     protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
+    /** Rainbow tablecloth easter egg state (26.3 port): default-off so existing worlds keep the static tinted model. */
+    public static final net.minecraft.world.level.block.state.properties.BooleanProperty RAINBOW_CLOTH =
+        net.minecraft.world.level.block.state.properties.BooleanProperty.create("rainbow_cloth");
+
     public static final net.minecraft.tags.TagKey<Block> REGULAR_BOOKSHELVES_TAG =
         chiseled_enchanting_table.registry.CetTags.Blocks.REGULAR_BOOKSHELVES;
 
@@ -118,6 +122,25 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
 
     public ChiseledEnchantingTableBlock(BlockBehaviour.Properties settings) {
         super(settings);
+        this.registerDefaultState(this.stateDefinition.any().setValue(RAINBOW_CLOTH, false));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(
+        net.minecraft.world.level.block.state.StateDefinition.Builder<Block, BlockState> builder
+    ) {
+        builder.add(RAINBOW_CLOTH);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext context) {
+        BlockState state = super.getStateForPlacement(context);
+        var data = context.getItemInHand().get(DataComponents.CUSTOM_DATA);
+        if (state != null && data != null
+            && data.copyTag().getBooleanOr(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, false)) {
+            state = state.setValue(RAINBOW_CLOTH, true);
+        }
+        return state;
     }
 
     @Override
@@ -224,6 +247,12 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         if (dyeColor != null
             && level.getBlockEntity(pos) instanceof ChiseledEnchantingTableBlockEntity tableBlockEntity) {
             if (!level.isClientSide()) {
+                if (state.getValue(RAINBOW_CLOTH)) {
+                    // Dyeing a rainbow table restores the static cloth: exit rainbow mode and
+                    // mix against the saved base colour, never a transient animation frame.
+                    level.setBlock(pos, state.setValue(RAINBOW_CLOTH, false), Block.UPDATE_ALL);
+                    tableBlockEntity.rainbowCloth = false;
+                }
                 int newColor = dyeColor.getTextureDiffuseColor();
                 int originalColor = tableBlockEntity.colorOrDefault();
                 tableBlockEntity.color = ARGB.average(newColor, originalColor) & 0x00FFFFFF;

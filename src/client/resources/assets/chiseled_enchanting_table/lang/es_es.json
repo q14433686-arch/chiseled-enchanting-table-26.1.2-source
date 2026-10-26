@@ -974,5 +974,8 @@
   "gui.chiseled_enchanting_table.transformation.batch_tip_survival": "Lote: %s / %s objetos (Supervivencia: limitado por XP y catalizador)",
   "gui.chiseled_enchanting_table.transformation.batch_tip_creative": "Lote: %s / %s objetos (Creativo: sin límite de XP ni catalizador)",
   "message.chiseled_enchanting_table.reload_closed": "Se cerró la Mesa de encantamientos cincelada para actualizar las reglas recargadas del datapack.",
-  "message.chiseled_enchanting_table.cost_sync_failed": "No se pudieron sincronizar las reglas de encantamiento. Pide al administrador que revise los costes y las transformaciones de los paquetes de datos."
+  "message.chiseled_enchanting_table.cost_sync_failed": "No se pudieron sincronizar las reglas de encantamiento. Pide al administrador que revise los costes y las transformaciones de los paquetes de datos.",
+  "item.chiseled_enchanting_table.rainbow_badge": "[Arcoíris]",
+  "item.chiseled_enchanting_table.rainbow_cloth": "Mantel arcoíris · secreto jeb_",
+  "item.chiseled_enchanting_table.rainbow_dye_hint": "Aplica tinte para recuperar un mantel de color fijo."
 }

@@ -79,6 +79,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     @Nullable
     private Component customName;
     public volatile int color = -1;
+    /** Rainbow tablecloth flag; mirrors the {@code rainbow_cloth} block state for item persistence. */
+    public volatile boolean rainbowCloth;
     public volatile int epiphanySeed = 0;
     public volatile long epiphanyFreezeUntilGameTime = 0L;
     public volatile long pendingFreezeTicks = 0L;
@@ -1022,6 +1024,14 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     }
 
     @Override
+    public void setBlockState(BlockState state) {
+        super.setBlockState(state);
+        if (state.hasProperty(ChiseledEnchantingTableBlock.RAINBOW_CLOTH)) {
+            this.rainbowCloth = state.getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH);
+        }
+    }
+
+    @Override
     protected void applyImplicitComponents(DataComponentGetter components) {
         super.applyImplicitComponents(components);
         DyedItemColor dyedColor = components.get(DataComponents.DYED_COLOR);
@@ -1030,6 +1040,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         CustomData customData = components.get(DataComponents.CUSTOM_DATA);
         if (customData != null) {
             CompoundTag tag = customData.copyTag();
+            this.rainbowCloth = tag.getBooleanOr(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, false);
             this.epiphanySeed = tag.getIntOr("epiphanySeed", 0);
             this.pendingFreezeTicks = tag.getLongOr("pendingFreezeTicks", 0L);
             this.frozenCycleIndex = tag.getIntOr("frozenCycleIndex", 0);
@@ -1051,10 +1062,21 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         long rem = this.pendingFreezeTicks > 0L
             ? this.pendingFreezeTicks
             : (this.level != null ? remainingFreezeTicks(this.level.getGameTime()) : 0L);
+        if (this.rainbowCloth && rem <= 0L) {
+            CompoundTag tag = new CompoundTag();
+            if (this.epiphanySeed != 0) {
+                tag.putInt("epiphanySeed", this.epiphanySeed);
+            }
+            tag.putBoolean(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, true);
+            componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        }
         if (rem > 0L) {
             CompoundTag tag = new CompoundTag();
             if (this.epiphanySeed != 0) {
                 tag.putInt("epiphanySeed", this.epiphanySeed);
+            }
+            if (this.rainbowCloth) {
+                tag.putBoolean(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, true);
             }
             tag.putLong("pendingFreezeTicks", rem);
             tag.putInt("frozenCycleIndex", this.frozenCycleIndex);
