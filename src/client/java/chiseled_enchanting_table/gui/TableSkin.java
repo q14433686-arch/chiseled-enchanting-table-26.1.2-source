@@ -15,10 +15,10 @@ final class TableSkin {
     static final Identifier BTN_CONFIG = ChiseledEnchantingTable.identifier("gui/btn_config.png");
 
     static final int CONFIG_BTN_X = 293;
-    static final int CONFIG_BTN_Y_OFFSET = -15;
+    static final int CONFIG_BTN_Y_OFFSET = -20;
     static final int CONFIG_BTN_SIZE = 15;
     static final int GRIMOIRE_BTN_X = 311;
-    static final int GRIMOIRE_BTN_Y_OFFSET = -15;
+    static final int GRIMOIRE_BTN_Y_OFFSET = -20;
     static final int GRIMOIRE_BTN_SIZE = 15;
 
     static final Identifier TAB_INSCRIBE_ACTIVE = ChiseledEnchantingTable.identifier("gui/tab_inscribe_active.png");

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
@@ -28,7 +29,7 @@ public final class TooltipPresentation {
             var critical = new ArrayList<Integer>();
             for (int i = 1; i < source.size(); i++) {
                 var color = source.get(i).getStyle().getColor();
-                if (color != null && (color.getValue() == ChatFormatting.RED.getColor() || color.getValue() == ChatFormatting.DARK_RED.getColor())) critical.add(i);
+                if (TextColor.RED.equals(color) || TextColor.DARK_RED.equals(color)) critical.add(i);
             }
             for (int index : TooltipBudget.summaryIndices(source.size(), critical, 5)) selected.add(source.get(index));
             selected.add(Component.translatable("gui.chiseled_enchanting_table.ui.details").withStyle(ChatFormatting.DARK_GRAY));
