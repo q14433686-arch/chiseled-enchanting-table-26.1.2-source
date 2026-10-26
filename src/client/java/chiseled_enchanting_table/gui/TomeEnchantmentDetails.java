@@ -20,7 +20,8 @@ final class TomeEnchantmentDetails {
     }
     static void render(GuiGraphicsExtractor ctx, Font font, TomeBookEntry book, Player player, int x, int y) {
         identify(book);
-        int size=Math.max(1,Math.min(8,(ctx.guiHeight()-80)/18));
+        int guiHeight = net.minecraft.client.Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        int size=Math.max(1,Math.min(8,(guiHeight-80)/18));
         int pages=Math.max(1,(book.enchantments().size()+size-1)/size); page=Math.min(page,pages-1);
         var lines=new ArrayList<Component>();
         lines.add(Component.literal(TomeDisplayNames.tomeTitle(book,player)));

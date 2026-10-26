@@ -23,7 +23,7 @@ final class CatalogueSkin {
         if(iw<=0 || ih<=0) return;
         ctx.enableScissor(ix,iy,ix+iw,iy+ih);
         try {
-            RowRenderSupport.renderCenteredBoxText(ctx,font,label,ix,iw,iy+ih*.5f,
+            RowRenderSupport.renderCenteredBoxText(ctx,net.minecraft.client.Minecraft.getInstance(),label,ix,iw,iy+ih*.5f,
                 Math.min(.60f,(float)ih/font.lineHeight),color);
         } finally { ctx.disableScissor(); }
     }

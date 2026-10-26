@@ -18,7 +18,11 @@ import net.minecraft.world.inventory.tooltip.TooltipComponent;
 public final class TooltipPresentation {
     private TooltipPresentation() {}
     public static boolean detailsRequested() {
-        return InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT);
+        // 26.1.2 keeps the GLFW-era signature: the window must be passed explicitly
+        // (26.3's windowless overload does not exist here).
+        var window = net.minecraft.client.Minecraft.getInstance().getWindow();
+        return InputConstants.isKeyDown(window, InputConstants.KEY_LSHIFT)
+            || InputConstants.isKeyDown(window, InputConstants.KEY_RSHIFT);
     }
     public static void show(GuiGraphicsExtractor ctx, Font font, List<Component> source,
         Optional<TooltipComponent> image, int mouseX, int mouseY, Identifier style) {
@@ -35,8 +39,9 @@ public final class TooltipPresentation {
             selected.add(Component.translatable("gui.chiseled_enchanting_table.ui.details").withStyle(ChatFormatting.DARK_GRAY));
         }
         var wrapped = new ArrayList<FormattedCharSequence>();
-        for (Component line : selected) wrapped.addAll(font.split(line, TooltipBudget.width(ctx.guiWidth())));
-        int budget = TooltipBudget.rows(ctx.guiHeight(), expanded);
+        var windowSize = net.minecraft.client.Minecraft.getInstance().getWindow();
+        for (Component line : selected) wrapped.addAll(font.split(line, TooltipBudget.width(windowSize.getGuiScaledWidth())));
+        int budget = TooltipBudget.rows(windowSize.getGuiScaledHeight(), expanded);
         if (wrapped.size() > budget) {
             wrapped.subList(budget - 1, wrapped.size()).clear();
             wrapped.add(Component.translatable(expanded ? "gui.chiseled_enchanting_table.ui.guide"

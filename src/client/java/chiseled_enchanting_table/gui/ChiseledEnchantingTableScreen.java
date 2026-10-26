@@ -764,7 +764,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             return this.grimoireOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         }
         if (isTomeTab() && this.menu.isTomePageUnlocked() && this.catalogueLayoutApplied) {
-            if (this.tomeControls.scroll(mouseX, mouseY, this.leftPos + 7, this.topPos + 17, scrollY)) {
+            if (this.tomeControls.scroll(scrollY)) {
                 return true;
             }
             var hoveredTome = this.scrollContainer.hoveredTomeEntry(mouseX, mouseY);
@@ -848,8 +848,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             return true;
         }
         if (isTomeTab() && this.menu.isTomePageUnlocked() && this.catalogueLayoutApplied
-            && this.tomeControls.click(event.x(), event.y(), this.leftPos + 7, this.topPos + 17, this.tomeCatalog)) {
-            refreshCatalogueList();
+            && this.tomeControls.click(event.x(), event.y(), this.leftPos + 7, this.topPos + 17,
+                this.tomeCatalog, this.menu.player, this::refreshCatalogueList)) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             return true;
         }
@@ -1426,8 +1426,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
         if (isTomeTab() && this.menu.isTomePageUnlocked() && this.catalogueLayoutApplied) {
-            this.tomeControls.render(ctx, this.leftPos + 7, this.topPos + 17,
-                (int) mouseX, (int) mouseY, this.font, this.tomeCatalog);
+            this.tomeControls.render(ctx, this.font, this.leftPos + 7, this.topPos + 17,
+                (int) mouseX, (int) mouseY, this.tomeCatalog, this.menu.player);
         }
         if (this.menu.getCarried().isEmpty() && this.scrollContainer != null) {
             if (isOverConfigButton(mouseX, mouseY)) {
@@ -1508,8 +1508,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             if (hoveredTome != null && Screen.hasShiftDown()) {
                 // Catalogue details mode: Shift-hover shows the full paged enchantment list
                 // (Shift-scroll pages it); the plain tooltip resumes when Shift is released.
-                var detailed = TomeEnchantmentDetails.render(hoveredTome, this.menu.player);
-                ctx.setTooltipForNextFrame(this.font, detailed, Optional.empty(), mouseX, mouseY, (Identifier) null);
+                TomeEnchantmentDetails.render(ctx, this.font, hoveredTome, this.menu.player, mouseX, mouseY);
             } else if (hoveredTome != null) {
                 List<Component> tip = new ArrayList<>();
                 tip.add(Component.literal(EnchantementListWidget.tomeTitle(hoveredTome, this.menu.player)).withStyle(ChatFormatting.GOLD));
