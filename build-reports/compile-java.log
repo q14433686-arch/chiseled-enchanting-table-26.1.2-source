@@ -1,4 +1,4 @@
-commit: 428f1680fb8b75a287778098ba9df45a5df76f4d
+commit: 90b80682fcfc7d949d2e9ef9759ec04e82f0fccc
 branch: arena/4313f0c3-chiseled-enchanting-table-26-1
 minecraft: 26.1.2
 fabric-api: 0.151.0+26.1.2
@@ -18,160 +18,18 @@ Daemon will be stopped at the end of the build
 Fabric Loom: 1.16.3
 
 > Task :compileJava
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1149: error: incompatible types: ChiseledEnchantingTableScreenHandler cannot be converted to MenuPricingAccess
-        return this;
-               ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1152: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1157: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1162: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1167: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1172: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:114: error: cannot find symbol
-        builtInRitualConfig();
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1336: error: resolveEnchantmentMaxLevel(EnchantmentWithLevel) in ChiseledEnchantingTableScreenHandler cannot implement resolveEnchantmentMaxLevel(EnchantmentWithLevel) in MenuPricingAccess
+    int resolveEnchantmentMaxLevel(EnchantmentWithLevel e) {
         ^
-  symbol:   method builtInRitualConfig()
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:42: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-    default List<List<ItemStack>> getEnchantmentItemCostOptions(EnchantmentWithLevel e, OptionType type) { return MenuPricing.getEnchantmentItemCostOptions(this, e, type); }
-                                                                                                                                                            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:43: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-    default int getBaseEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) { return MenuPricing.getBaseEnchantmentXpLevelCost(this, e, type); }
-                                                                                                                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:44: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-    default int resolveTransformationBatchCount(Identifier id) { return MenuPricing.resolveTransformationBatchCount(this, id); }
-                                                                                                                    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:46: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-        return MenuPricing.resolveEffectiveXpRequirement(this, e, type, type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE);
-                                                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:37: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, SHELF_GATES_ID, "shelf_gates", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:38: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, LIBRARY_RESONANCE_ID, "library_resonance", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:39: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, BOOK_UPGRADES_ID, "book_upgrades", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:40: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, TREASURE_EPIPHANY_ID, "treasure_epiphany", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:41: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, DISENCHANTING_ID, "disenchanting", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:42: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, ITEM_TRANSFORMATIONS_ID, "item_transformations", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:43: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, LOOT_INJECTIONS_ID, "loot_injections", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:44: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, BOOKSHELF_BOOK_POOL_ID, "bookshelf_book_pool", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:19: error: cannot find symbol
-        var serverRow = syncedRow(h, e, type);
-                        ^
-  symbol:   method syncedRow(MenuPricingAccess,EnchantmentWithLevel,OptionType)
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:71: error: cannot find symbol
-            int totalRefund = DisenchantmentApplication.totalFullDisenchantRefund(
-                              ^
-  symbol:   variable DisenchantmentApplication
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:85: error: cannot find symbol
-            int refund = DisenchantmentApplication.provenanceRefundForStepDown(
-                         ^
-  symbol:   variable DisenchantmentApplication
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:98: error: cannot find symbol
-            var curMap = EnchantmentHelper.getEnchantmentsForCrafting(target);
-                         ^
-  symbol:   variable EnchantmentHelper
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:104: error: cannot find symbol
-                int refund = DisenchantmentApplication.provenanceEssencePotential(
-                             ^
-  symbol:   variable DisenchantmentApplication
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:141: error: cannot find symbol
-                return BookshelfProgression.applyDepletedTomeXpTierWithBatch(
-                       ^
-  symbol:   variable BookshelfProgression
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:151: error: cannot find symbol
-        int maxLvl = LibraryResonance.resolveMaxLevel(h.world(), e.enchantment_id());
-                     ^
-  symbol:   variable LibraryResonance
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:95: error: cannot find symbol
-            if (EnchantmentHelper.getEnchantmentsForCrafting(target).size() <= 1) {
-                ^
-  symbol:   variable EnchantmentHelper
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:106: error: cannot find symbol
-                return BookshelfProgression.applyDepletedTomeMaterialTierWithBatch(
-                       ^
-  symbol:   variable BookshelfProgression
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:113: error: cannot find symbol
-            return BookshelfProgression.scaleBundlesWithBatch(
-                   ^
-  symbol:   variable BookshelfProgression
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:138: error: cannot find symbol
-            || (h.getEnchantableItem().is(Items.ENCHANTED_BOOK) && e.enchantment_level() == existingLevel + 1))
-                                          ^
-  symbol:   variable Items
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:142: error: cannot find symbol
-        List<List<ItemStack>> out = new ArrayList<>(targetBundles.size() + researchBundles.size());
-                                        ^
-  symbol:   class ArrayList
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:152: error: cannot find symbol
-            List<ItemStack> reduced = new ArrayList<>(tgtBundle.size());
-                                          ^
-  symbol:   class ArrayList
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:155: error: cannot find symbol
-                if (!copy.is(BlockRegistry.ARCANE_CATALYST)) {
-                             ^
-  symbol:   variable BlockRegistry
-  location: class MenuMaterialQuotes
+  attempting to assign weaker access privileges; was public
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-33 errors
+1 error
 
 > Task :compileJava FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792992791507.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792993035651.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -181,156 +39,14 @@ FAILURE: Build failed with an exception.
 Execution failed for task ':compileJava'.
 > Compilation failed; see the compiler output below.
   Note: Recompile with -Xlint:deprecation for details.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1149: error: incompatible types: ChiseledEnchantingTableScreenHandler cannot be converted to MenuPricingAccess
-          return this;
-                 ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:42: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-      default List<List<ItemStack>> getEnchantmentItemCostOptions(EnchantmentWithLevel e, OptionType type) { return MenuPricing.getEnchantmentItemCostOptions(this, e, type); }
-                                                                                                                                                              ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:43: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-      default int getBaseEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) { return MenuPricing.getBaseEnchantmentXpLevelCost(this, e, type); }
-                                                                                                                                            ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:44: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-      default int resolveTransformationBatchCount(Identifier id) { return MenuPricing.resolveTransformationBatchCount(this, id); }
-                                                                                                                      ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:46: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-          return MenuPricing.resolveEffectiveXpRequirement(this, e, type, type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE);
-                                                           ^
+  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1336: error: resolveEnchantmentMaxLevel(EnchantmentWithLevel) in ChiseledEnchantingTableScreenHandler cannot implement resolveEnchantmentMaxLevel(EnchantmentWithLevel) in MenuPricingAccess
+      int resolveEnchantmentMaxLevel(EnchantmentWithLevel e) {
+          ^
+    attempting to assign weaker access privileges; was public
   Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:71: error: cannot find symbol
-              int totalRefund = DisenchantmentApplication.totalFullDisenchantRefund(
-                                ^
-    symbol:   variable DisenchantmentApplication
-    location: class MenuXpQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:85: error: cannot find symbol
-              int refund = DisenchantmentApplication.provenanceRefundForStepDown(
-                           ^
-    symbol:   variable DisenchantmentApplication
-    location: class MenuXpQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:98: error: cannot find symbol
-              var curMap = EnchantmentHelper.getEnchantmentsForCrafting(target);
-                           ^
-    symbol:   variable EnchantmentHelper
-    location: class MenuXpQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:104: error: cannot find symbol
-                  int refund = DisenchantmentApplication.provenanceEssencePotential(
-                               ^
-    symbol:   variable DisenchantmentApplication
-    location: class MenuXpQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:141: error: cannot find symbol
-                  return BookshelfProgression.applyDepletedTomeXpTierWithBatch(
-                         ^
-    symbol:   variable BookshelfProgression
-    location: class MenuXpQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:151: error: cannot find symbol
-          int maxLvl = LibraryResonance.resolveMaxLevel(h.world(), e.enchantment_id());
-                       ^
-    symbol:   variable LibraryResonance
-    location: class MenuXpQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:95: error: cannot find symbol
-              if (EnchantmentHelper.getEnchantmentsForCrafting(target).size() <= 1) {
-                  ^
-    symbol:   variable EnchantmentHelper
-    location: class MenuMaterialQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:106: error: cannot find symbol
-                  return BookshelfProgression.applyDepletedTomeMaterialTierWithBatch(
-                         ^
-    symbol:   variable BookshelfProgression
-    location: class MenuMaterialQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:113: error: cannot find symbol
-              return BookshelfProgression.scaleBundlesWithBatch(
-                     ^
-    symbol:   variable BookshelfProgression
-    location: class MenuMaterialQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:138: error: cannot find symbol
-              || (h.getEnchantableItem().is(Items.ENCHANTED_BOOK) && e.enchantment_level() == existingLevel + 1))
-                                            ^
-    symbol:   variable Items
-    location: class MenuMaterialQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:142: error: cannot find symbol
-          List<List<ItemStack>> out = new ArrayList<>(targetBundles.size() + researchBundles.size());
-                                          ^
-    symbol:   class ArrayList
-    location: class MenuMaterialQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:152: error: cannot find symbol
-              List<ItemStack> reduced = new ArrayList<>(tgtBundle.size());
-                                            ^
-    symbol:   class ArrayList
-    location: class MenuMaterialQuotes
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:155: error: cannot find symbol
-                  if (!copy.is(BlockRegistry.ARCANE_CATALYST)) {
-                               ^
-    symbol:   variable BlockRegistry
-    location: class MenuMaterialQuotes
   Note: Recompile with -Xlint:unchecked for details.
   Note: Some input files use or override a deprecated API.
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1152: error: method does not override or implement a method from a supertype
-      @Override
-      ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1157: error: method does not override or implement a method from a supertype
-      @Override
-      ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1162: error: method does not override or implement a method from a supertype
-      @Override
-      ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1167: error: method does not override or implement a method from a supertype
-      @Override
-      ^
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1172: error: method does not override or implement a method from a supertype
-      @Override
-      ^
-  Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:114: error: cannot find symbol
-          builtInRitualConfig();
-          ^
-    symbol:   method builtInRitualConfig()
-    location: class ChiseledEnchantingTableData
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:37: error: cannot find symbol
-          collectExternalDatapackKeys(resourceManager, SHELF_GATES_ID, "shelf_gates", externalKeys);
-          ^
-    symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-    location: class DataTableLoader
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:38: error: cannot find symbol
-          collectExternalDatapackKeys(resourceManager, LIBRARY_RESONANCE_ID, "library_resonance", externalKeys);
-          ^
-    symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-    location: class DataTableLoader
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:39: error: cannot find symbol
-          collectExternalDatapackKeys(resourceManager, BOOK_UPGRADES_ID, "book_upgrades", externalKeys);
-          ^
-    symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-    location: class DataTableLoader
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:40: error: cannot find symbol
-          collectExternalDatapackKeys(resourceManager, TREASURE_EPIPHANY_ID, "treasure_epiphany", externalKeys);
-          ^
-    symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-    location: class DataTableLoader
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:41: error: cannot find symbol
-          collectExternalDatapackKeys(resourceManager, DISENCHANTING_ID, "disenchanting", externalKeys);
-          ^
-    symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-    location: class DataTableLoader
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:42: error: cannot find symbol
-          collectExternalDatapackKeys(resourceManager, ITEM_TRANSFORMATIONS_ID, "item_transformations", externalKeys);
-          ^
-    symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-    location: class DataTableLoader
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:43: error: cannot find symbol
-          collectExternalDatapackKeys(resourceManager, LOOT_INJECTIONS_ID, "loot_injections", externalKeys);
-          ^
-    symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-    location: class DataTableLoader
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:44: error: cannot find symbol
-          collectExternalDatapackKeys(resourceManager, BOOKSHELF_BOOK_POOL_ID, "bookshelf_book_pool", externalKeys);
-          ^
-    symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-    location: class DataTableLoader
-  /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:19: error: cannot find symbol
-          var serverRow = syncedRow(h, e, type);
-                          ^
-    symbol:   method syncedRow(MenuPricingAccess,EnchantmentWithLevel,OptionType)
-    location: class MenuXpQuotes
-  33 errors
+  1 error
 
 * Try:
 > Check your code and dependencies to fix the compilation error(s)
@@ -372,157 +88,15 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':compile
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
 Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1149: error: incompatible types: ChiseledEnchantingTableScreenHandler cannot be converted to MenuPricingAccess
-        return this;
-               ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1152: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1157: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1162: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1167: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1172: error: method does not override or implement a method from a supertype
-    @Override
-    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/ChiseledEnchantingTableData.java:114: error: cannot find symbol
-        builtInRitualConfig();
+/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java:1336: error: resolveEnchantmentMaxLevel(EnchantmentWithLevel) in ChiseledEnchantingTableScreenHandler cannot implement resolveEnchantmentMaxLevel(EnchantmentWithLevel) in MenuPricingAccess
+    int resolveEnchantmentMaxLevel(EnchantmentWithLevel e) {
         ^
-  symbol:   method builtInRitualConfig()
-  location: class ChiseledEnchantingTableData
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:42: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-    default List<List<ItemStack>> getEnchantmentItemCostOptions(EnchantmentWithLevel e, OptionType type) { return MenuPricing.getEnchantmentItemCostOptions(this, e, type); }
-                                                                                                                                                            ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:43: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-    default int getBaseEnchantmentXpLevelCost(EnchantmentWithLevel e, OptionType type) { return MenuPricing.getBaseEnchantmentXpLevelCost(this, e, type); }
-                                                                                                                                          ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:44: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-    default int resolveTransformationBatchCount(Identifier id) { return MenuPricing.resolveTransformationBatchCount(this, id); }
-                                                                                                                    ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuPricingAccess.java:46: error: incompatible types: MenuPricingAccess cannot be converted to ChiseledEnchantingTableScreenHandler
-        return MenuPricing.resolveEffectiveXpRequirement(this, e, type, type == OptionType.BOOK_RESEARCH_UPGRADE || type == OptionType.BOOK_COMBINE_UPGRADE);
-                                                         ^
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:37: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, SHELF_GATES_ID, "shelf_gates", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:38: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, LIBRARY_RESONANCE_ID, "library_resonance", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:39: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, BOOK_UPGRADES_ID, "book_upgrades", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:40: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, TREASURE_EPIPHANY_ID, "treasure_epiphany", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:41: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, DISENCHANTING_ID, "disenchanting", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:42: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, ITEM_TRANSFORMATIONS_ID, "item_transformations", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:43: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, LOOT_INJECTIONS_ID, "loot_injections", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/data/DataTableLoader.java:44: error: cannot find symbol
-        collectExternalDatapackKeys(resourceManager, BOOKSHELF_BOOK_POOL_ID, "bookshelf_book_pool", externalKeys);
-        ^
-  symbol:   method collectExternalDatapackKeys(ResourceManager,Identifier,String,Set<String>)
-  location: class DataTableLoader
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:19: error: cannot find symbol
-        var serverRow = syncedRow(h, e, type);
-                        ^
-  symbol:   method syncedRow(MenuPricingAccess,EnchantmentWithLevel,OptionType)
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:71: error: cannot find symbol
-            int totalRefund = DisenchantmentApplication.totalFullDisenchantRefund(
-                              ^
-  symbol:   variable DisenchantmentApplication
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:85: error: cannot find symbol
-            int refund = DisenchantmentApplication.provenanceRefundForStepDown(
-                         ^
-  symbol:   variable DisenchantmentApplication
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:98: error: cannot find symbol
-            var curMap = EnchantmentHelper.getEnchantmentsForCrafting(target);
-                         ^
-  symbol:   variable EnchantmentHelper
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:104: error: cannot find symbol
-                int refund = DisenchantmentApplication.provenanceEssencePotential(
-                             ^
-  symbol:   variable DisenchantmentApplication
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:141: error: cannot find symbol
-                return BookshelfProgression.applyDepletedTomeXpTierWithBatch(
-                       ^
-  symbol:   variable BookshelfProgression
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuXpQuotes.java:151: error: cannot find symbol
-        int maxLvl = LibraryResonance.resolveMaxLevel(h.world(), e.enchantment_id());
-                     ^
-  symbol:   variable LibraryResonance
-  location: class MenuXpQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:95: error: cannot find symbol
-            if (EnchantmentHelper.getEnchantmentsForCrafting(target).size() <= 1) {
-                ^
-  symbol:   variable EnchantmentHelper
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:106: error: cannot find symbol
-                return BookshelfProgression.applyDepletedTomeMaterialTierWithBatch(
-                       ^
-  symbol:   variable BookshelfProgression
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:113: error: cannot find symbol
-            return BookshelfProgression.scaleBundlesWithBatch(
-                   ^
-  symbol:   variable BookshelfProgression
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:138: error: cannot find symbol
-            || (h.getEnchantableItem().is(Items.ENCHANTED_BOOK) && e.enchantment_level() == existingLevel + 1))
-                                          ^
-  symbol:   variable Items
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:142: error: cannot find symbol
-        List<List<ItemStack>> out = new ArrayList<>(targetBundles.size() + researchBundles.size());
-                                        ^
-  symbol:   class ArrayList
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:152: error: cannot find symbol
-            List<ItemStack> reduced = new ArrayList<>(tgtBundle.size());
-                                          ^
-  symbol:   class ArrayList
-  location: class MenuMaterialQuotes
-/home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/MenuMaterialQuotes.java:155: error: cannot find symbol
-                if (!copy.is(BlockRegistry.ARCANE_CATALYST)) {
-                             ^
-  symbol:   variable BlockRegistry
-  location: class MenuMaterialQuotes
+  attempting to assign weaker access privileges; was public
 Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/main/java/chiseled_enchanting_table/menu/ChiseledEnchantingTableScreenHandler.java uses unchecked or unsafe operations.
 Note: Recompile with -Xlint:unchecked for details.
-Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
-33 errors
+1 error
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
 	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
 	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
@@ -663,7 +237,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 12s
+BUILD FAILED in 16s
 1 actionable task: 1 executed
 gradle exit code: 1
 
