@@ -13,8 +13,12 @@ bash docs/ci/install.sh --check
 
 - `compile-check.yml`: compile main/client/test sources and execute JUnit; preserve full logs,
   dependency information and JUnit XML as 14-day artifacts.
-- `build.yml`: offline validation, full jar build, optional-viewer-disabled compilation, and
-  real dedicated-server loading/reload/ritual probes.
+- `build.yml`: offline validation (incl. the architecture-boundary ratchet:
+  coordinator line budgets + capability rules), full jar build, optional-viewer-disabled
+  compilation, real dedicated-server loading/reload/ritual probes, and the disposable
+  real-client integration probe (`src/clientSmoke`, compiled with `-Pclient_smoke=true`,
+  executed under xvfb via `scripts/client_smoke.py`; 26.1.2 has no SDL layer, so committed
+  text is delivered through the real `Screen#charTyped` callbacks).
 - `consistency.yml`: version/metadata/README/release-workflow consistency.
 - `publish.yml`: manual publishing, not activated by this refactor.
 
@@ -35,7 +39,7 @@ and log tails directly through `api.github.com`, on both success and failure:
 REPO=q14433686-arch/chiseled-enchanting-table-26.1.2-source
 SHA=<exact-source-sha>
 gh api "repos/$REPO/commits/$SHA/check-runs" \
-  --jq '.check_runs[] | select(.name=="compile-diagnostics" or .name=="server-smoke-diagnostics") | .output.summary'
+  --jq '.check_runs[] | select(.name=="compile-diagnostics" or .name=="server-smoke-diagnostics" or .name=="client-smoke-diagnostics") | .output.summary'
 ```
 
 Push/manual runs publish diagnostics with `checks: write`. Pull requests skip this supplemental

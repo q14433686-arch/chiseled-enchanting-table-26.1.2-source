@@ -45,8 +45,11 @@
 
 ### 第五期 clientSmoke（`af7fa7e`）
 一次性真实客户端集成探针（独立可选 source set `-Pclient_smoke=true`，永不打包进发布 jar）：
-8 个 PASS 标记覆盖配置搜索 CJK 输入与保存往返、列表模型、UI 呈现预算、目录锁定往返、
-模态 overlay 输入隔离、彩虹世界/物品/资源重载、图鉴书世界流程；CI 以 xvfb 真实执行。
+9 个 PASS 标记覆盖配置搜索 CJK 输入与保存往返、列表模型、UI 呈现预算、目录锁定往返、
+菜单经济边界、模态 overlay 输入隔离、彩虹世界/物品/资源重载、图鉴书世界流程；
+CI 以 xvfb 真实执行（`1161fe5`：`client-smoke-diagnostics` 载明全部标记，
+含 `RAINBOW ITEM PASS` 的跨帧烘焙 tint 实证）。26.1.2 无 SDL 文本输入层，
+提交文本改经真实 `Screen#charTyped(CharacterEvent)` 回调送达。
 
 ## 二、七路审计最终状态
 1. **源码 API**：与 26.3 的剩余差异即版本边界集（方块编解码、BER 提交式渲染、结构处理、
