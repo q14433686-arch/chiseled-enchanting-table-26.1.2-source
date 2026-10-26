@@ -32,7 +32,9 @@ public final class TooltipPresentation {
             var critical = new ArrayList<Integer>();
             for (int i = 1; i < source.size(); i++) {
                 var color = source.get(i).getStyle().getColor();
-                if (TextColor.RED.equals(color) || TextColor.DARK_RED.equals(color)) critical.add(i);
+                // 26.1.2 TextColor has no RED/DARK_RED constants yet; legacy-format lookup is equivalent.
+                if (TextColor.fromLegacyFormat(ChatFormatting.RED).equals(color)
+                    || TextColor.fromLegacyFormat(ChatFormatting.DARK_RED).equals(color)) critical.add(i);
             }
             for (int index : TooltipBudget.summaryIndices(source.size(), critical, 5)) selected.add(source.get(index));
             selected.add(Component.translatable("gui.chiseled_enchanting_table.ui.details").withStyle(ChatFormatting.DARK_GRAY));
