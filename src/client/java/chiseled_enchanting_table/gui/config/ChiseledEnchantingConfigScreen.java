@@ -57,76 +57,13 @@ import org.jetbrains.annotations.Nullable;
 public class ChiseledEnchantingConfigScreen extends Screen {
 
     // ---- Color Palette (Obsidian / Crying Amethyst / Gilded Brass) ----
-    private static final int BG_SCRIM = 0xD206040D;
-    private static final int BACKDROP_WASH = 0x6E0B0715;
-    private static final int GOLD_TEXT = 0xFFFFE599;
-    private static final int CREAM_TEXT = 0xFFF5EEFF;
-    private static final int MUTED_TEXT = 0xFF9F91B8;
-    private static final int DIM_TEXT = 0xFF75688C;
-    private static final int EMERALD_TEXT = 0xFF7CFFA8;
-    private static final int CYAN_TEXT = 0xFF82EEFF;
-    private static final int AMBER_TEXT = 0xFFFFC978;
-    private static final int CORAL_TEXT = 0xFFFF8585;
 
-    private static final float GLYPH_INK_H = 8.0f;
-
-    // ---- Modular 2x HD Pixel-Art Layers (assets/chiseled_enchanting_table/gui/config/) ----
-    private static final Identifier MODAL_FRAME = ChiseledEnchantingTable.identifier("gui/config/modal_frame.png");
-    private static final Identifier FRAME_GEM_PIP = ChiseledEnchantingTable.identifier("gui/config/frame_gem_pip.png");
-    private static final Identifier BACKDROP_TILE = ChiseledEnchantingTable.identifier("gui/config/backdrop_tile.png");
-    private static final Identifier DIVIDER_ORNAMENT = ChiseledEnchantingTable.identifier("gui/config/divider_ornament.png");
-    private static final Identifier EMBLEM_TRACE_LARGE = ChiseledEnchantingTable.identifier("gui/config/emblem_trace_large.png");
-
-    private static final Identifier RAIL_TAB = ChiseledEnchantingTable.identifier("gui/config/rail_tab.png");
-    private static final Identifier RAIL_TAB_ACTIVE = ChiseledEnchantingTable.identifier("gui/config/rail_tab_active.png");
-
-    private static final Identifier SECTION_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/section_plaque.png");
-    private static final Identifier ROW_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/row_plaque.png");
-    private static final Identifier ROW_PLAQUE_HOVER = ChiseledEnchantingTable.identifier("gui/config/row_plaque_hover.png");
-    private static final Identifier ROW_PLAQUE_ATOM = ChiseledEnchantingTable.identifier("gui/config/row_plaque_atom.png");
-    private static final Identifier ROW_PLAQUE_DISABLED = ChiseledEnchantingTable.identifier("gui/config/row_plaque_disabled.png");
-
-    private static final Identifier BTN_PLAQUE = ChiseledEnchantingTable.identifier("gui/config/btn_plaque.png");
-    private static final Identifier BTN_PLAQUE_HOVER = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_hover.png");
-    private static final Identifier BTN_PLAQUE_GOLD = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_gold.png");
-    private static final Identifier BTN_PLAQUE_DISABLED = ChiseledEnchantingTable.identifier("gui/config/btn_plaque_disabled.png");
-
-    private static final Identifier MICRO_BTN = ChiseledEnchantingTable.identifier("gui/config/micro_btn.png");
-    private static final Identifier MICRO_BTN_HOVER = ChiseledEnchantingTable.identifier("gui/config/micro_btn_hover.png");
-    private static final Identifier MICRO_BTN_DISABLED = ChiseledEnchantingTable.identifier("gui/config/micro_btn_disabled.png");
-    private static final Identifier ICON_RESET = ChiseledEnchantingTable.identifier("gui/config/icon_reset.png");
-    private static final Identifier ICON_RESET_DISABLED = ChiseledEnchantingTable.identifier("gui/config/icon_reset_disabled.png");
-
-    private static final Identifier SEARCH_BOX = ChiseledEnchantingTable.identifier("gui/config/search_box.png");
-    private static final Identifier SEARCH_BOX_FOCUS = ChiseledEnchantingTable.identifier("gui/config/search_box_focus.png");
-
-    private static final Identifier TOGGLE_ON = ChiseledEnchantingTable.identifier("gui/config/toggle_on.png");
-    private static final Identifier TOGGLE_OFF = ChiseledEnchantingTable.identifier("gui/config/toggle_off.png");
-    private static final Identifier TOGGLE_LOCKED = ChiseledEnchantingTable.identifier("gui/config/toggle_locked.png");
-
-    private static final Identifier SLIDER_TRACK = ChiseledEnchantingTable.identifier("gui/config/slider_track.png");
-    private static final Identifier SLIDER_FILL = ChiseledEnchantingTable.identifier("gui/config/slider_fill.png");
-    private static final Identifier SLIDER_KNOB = ChiseledEnchantingTable.identifier("gui/config/slider_knob.png");
-    private static final Identifier SLIDER_KNOB_HOVER = ChiseledEnchantingTable.identifier("gui/config/slider_knob_hover.png");
-
-    private static final Identifier ICON_TRACE = ChiseledEnchantingTable.identifier("gui/config/icon_domain_trace.png");
-
-    private static Identifier domainIcon(CategoryId category) {
+    private static Identifier ConfigSkin.domainIcon(CategoryId category) {
         return ChiseledEnchantingTable.identifier("gui/config/" + category.iconFile());
     }
 
     // ---- Interactive Hit Regions ----
-    private record HitBox(Box box, Runnable onLeftClick, @Nullable Runnable onRightClick) {
-        boolean contains(double mx, double my) {
-            return box.contains(mx, my);
-        }
-    }
 
-    private record SliderTrack(OptionEntry entry, Box box) {
-        boolean contains(double mx, double my) {
-            return box.contains(mx, my);
-        }
-    }
 
     private record DisplayItem(
         boolean isSectionHeader,
@@ -197,10 +134,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private ModalLayout layout;
     private int stickyBodyOffset = 0;
 
-    private final List<HitBox> hitBoxes = new ArrayList<>();
-    private final List<SliderTrack> sliderTracks = new ArrayList<>();
+    private final List<ConfigInteractions.HitBox> hitBoxes = new ArrayList<>();
+    private final List<ConfigInteractions.SliderTrack> sliderTracks = new ArrayList<>();
     @Nullable
-    private SliderTrack activeDraggingSlider = null;
+    private ConfigInteractions.SliderTrack activeDraggingSlider = null;
     private boolean draggingScrollbar = false;
 
     private long pendingSaveId = 0L;
@@ -371,10 +308,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             for (int tx = area.x(); tx < area.right(); tx += tileSize) {
                 int drawW = Math.min(tileSize, area.right() - tx);
                 float uMax = (float) drawW / (float) tileSize;
-                ctx.blit(BACKDROP_TILE, tx, ty, tx + drawW, ty + drawH, 0.0f, uMax, 0.0f, vMax);
+                ctx.blit(ConfigSkin.BACKDROP_TILE, tx, ty, tx + drawW, ty + drawH, 0.0f, uMax, 0.0f, vMax);
             }
         }
-        ctx.fill(area.x(), area.y(), area.right(), area.bottom(), BACKDROP_WASH);
+        ctx.fill(area.x(), area.y(), area.right(), area.bottom(), ConfigSkin.BACKDROP_WASH);
     }
 
     private static void blitOrnamentDivider(GuiGraphicsExtractor ctx, Box divBox) {
@@ -383,7 +320,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int ornW = Math.min(136, divBox.w() - 16);
         if (ornW >= 48) {
             int ox = Math.round(divBox.centerX() - ornW * 0.5f);
-            ctx.blit(DIVIDER_ORNAMENT, ox, cy - 5, ox + ornW, cy + 6, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.blit(ConfigSkin.DIVIDER_ORNAMENT, ox, cy - 5, ox + ornW, cy + 6, 0.0f, 1.0f, 0.0f, 1.0f);
         }
     }
 
@@ -649,15 +586,15 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         Box modal = this.layout.modal();
 
         // Layer 0: Full-viewport scrim + tiled arcane backdrop + 9-slice sculpted obsidian/brass frame + symmetrical clasps
-        ctx.fill(0, 0, this.width, this.height, BG_SCRIM);
+        ctx.fill(0, 0, this.width, this.height, ConfigSkin.BG_SCRIM);
         blitTiledBackdrop(ctx, this.layout.backdropArea());
-        blitNineSliceRect(ctx, MODAL_FRAME, modal.x(), modal.y(), modal.w(), modal.h(), 28, 28, 96, 96);
+        blitNineSliceRect(ctx, ConfigSkin.MODAL_FRAME, modal.x(), modal.y(), modal.w(), modal.h(), 28, 28, 96, 96);
 
         int claspW = 44;
         int claspH = 12;
         int claspX = Math.round(modal.centerX() - claspW * 0.5f);
-        ctx.blit(FRAME_GEM_PIP, claspX, modal.y(), claspX + claspW, modal.y() + claspH, 0.0f, 1.0f, 0.0f, 1.0f);
-        ctx.blit(FRAME_GEM_PIP, claspX, modal.bottom() - claspH, claspX + claspW, modal.bottom(), 0.0f, 1.0f, 1.0f, 0.0f);
+        ctx.blit(ConfigSkin.FRAME_GEM_PIP, claspX, modal.y(), claspX + claspW, modal.y() + claspH, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.blit(ConfigSkin.FRAME_GEM_PIP, claspX, modal.bottom() - claspH, claspX + claspW, modal.bottom(), 0.0f, 1.0f, 1.0f, 0.0f);
 
         // Layer 1 (L0): Header & Preset/Search Toolbar
         List<Component> l0Tip = renderL0HeaderAndToolbar(ctx, mouseX, mouseY);
@@ -694,7 +631,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             this.layout.headerTitleBox(),
             ConfigLayoutSpec.PRIMARY_TEXT_SCALE + 0.04f,
             ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-            GOLD_TEXT
+            ConfigSkin.GOLD_TEXT
         );
 
         // L0-A2: Modified Filter Chip ("★ N")
@@ -704,8 +641,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         Box modBtn = this.layout.modifiedFilterBtn();
         boolean overMod = modBtn.contains(mouseX, mouseY);
         Identifier modSprite = this.filterModifiedOnly
-            ? BTN_PLAQUE_GOLD
-            : (overMod ? BTN_PLAQUE_HOVER : BTN_PLAQUE);
+            ? ConfigSkin.BTN_PLAQUE_GOLD
+            : (overMod ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE);
         blitNineSliceRect(ctx, modSprite, modBtn.x(), modBtn.y(), modBtn.w(), modBtn.h(), 6, 6, 64, 18);
         String modLabel = "\u2605 " + modCount;
         drawClampedCenteredText(
@@ -714,9 +651,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(modBtn.x() + 4, modBtn.y(), Math.max(12, modBtn.w() - 8), modBtn.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            this.filterModifiedOnly ? GOLD_TEXT : (modCount > 0 ? EMERALD_TEXT : MUTED_TEXT)
+            this.filterModifiedOnly ? ConfigSkin.GOLD_TEXT : (modCount > 0 ? ConfigSkin.EMERALD_TEXT : ConfigSkin.MUTED_TEXT)
         );
-        this.hitBoxes.add(new HitBox(modBtn, () -> {
+        this.hitBoxes.add(new ConfigInteractions.HitBox(modBtn, () -> {
             this.filterModifiedOnly = !this.filterModifiedOnly;
             if (this.filterModifiedOnly) {
                 this.ruleTracePage = false;
@@ -739,7 +676,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overMode = modeBox.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            shownMode.writable() ? (overMode ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
+            shownMode.writable() ? (overMode ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE) : ConfigSkin.BTN_PLAQUE_DISABLED,
             modeBox.x(), modeBox.y(), modeBox.w(), modeBox.h(), 6, 6, 64, 18
         );
         int modeTint = switch (shownMode) {
@@ -752,11 +689,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         };
         ctx.fill(modeBox.x() + 4, modeBox.y() + 3, modeBox.right() - 4, modeBox.bottom() - 3, modeTint);
         int modeTextColor = switch (shownMode) {
-            case SINGLEPLAYER_LIVE -> EMERALD_TEXT;
-            case LAN_HOST_LIVE -> CYAN_TEXT;
-            case DEDICATED_ADMIN -> GOLD_TEXT;
-            case OFFLINE_CLIENT -> CYAN_TEXT;
-            case DEDICATED_READONLY, MODPACK_LOCKED -> AMBER_TEXT;
+            case SINGLEPLAYER_LIVE -> ConfigSkin.EMERALD_TEXT;
+            case LAN_HOST_LIVE -> ConfigSkin.CYAN_TEXT;
+            case DEDICATED_ADMIN -> ConfigSkin.GOLD_TEXT;
+            case OFFLINE_CLIENT -> ConfigSkin.CYAN_TEXT;
+            case DEDICATED_READONLY, MODPACK_LOCKED -> ConfigSkin.AMBER_TEXT;
         };
         String modeLabel = (shownMode.writable() ? "\u270e " : "\u2298 ") + I18n.get(shownMode.bannerKey());
         drawClampedCenteredText(
@@ -789,8 +726,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             boolean writable = this.sessionMode.writable();
             boolean over = pb.contains(mouseX, mouseY);
             Identifier sprite = !writable
-                ? BTN_PLAQUE_DISABLED
-                : (active ? BTN_PLAQUE_GOLD : (over ? BTN_PLAQUE_HOVER : BTN_PLAQUE));
+                ? ConfigSkin.BTN_PLAQUE_DISABLED
+                : (active ? ConfigSkin.BTN_PLAQUE_GOLD : (over ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE));
             blitNineSliceRect(ctx, sprite, pb.x(), pb.y(), pb.w(), pb.h(), 6, 6, 64, 18);
 
             String title = I18n.get("config.chiseled_enchanting_table.preset." + preset.id() + ".short");
@@ -804,11 +741,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 new Box(pb.x() + 4, pb.y(), Math.max(12, pb.w() - 8), pb.h()),
                 ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
                 ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-                !writable ? DIM_TEXT : (active ? GOLD_TEXT : CREAM_TEXT)
+                !writable ? ConfigSkin.DIM_TEXT : (active ? ConfigSkin.GOLD_TEXT : ConfigSkin.CREAM_TEXT)
             );
 
             if (writable) {
-                this.hitBoxes.add(new HitBox(pb, () -> {
+                this.hitBoxes.add(new ConfigInteractions.HitBox(pb, () -> {
                     preset.applyTo(this.draft);
                     syncAutoCollapsedSections();
                     playClick(1.06f);
@@ -824,7 +761,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overSearch = sb.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            (this.searchFocused || !this.searchQuery.isEmpty()) ? SEARCH_BOX_FOCUS : SEARCH_BOX,
+            (this.searchFocused || !this.searchQuery.isEmpty()) ? ConfigSkin.SEARCH_BOX_FOCUS : ConfigSkin.SEARCH_BOX,
             sb.x(), sb.y(), sb.w(), sb.h(), 8, 6, 80, 18
         );
 
@@ -840,7 +777,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             searchTextBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            (hasQuery || this.searchFocused) ? CREAM_TEXT : MUTED_TEXT
+            (hasQuery || this.searchFocused) ? ConfigSkin.CREAM_TEXT : ConfigSkin.MUTED_TEXT
         );
 
         if (hasQuery) {
@@ -852,15 +789,15 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 clearBox,
                 ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
                 ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-                overClear ? CORAL_TEXT : GOLD_TEXT
+                overClear ? ConfigSkin.CORAL_TEXT : ConfigSkin.GOLD_TEXT
             );
-            this.hitBoxes.add(new HitBox(clearBox, () -> {
+            this.hitBoxes.add(new ConfigInteractions.HitBox(clearBox, () -> {
                 setSearchQuery("");
                 playClick(0.95f);
             }, null));
         }
 
-        this.hitBoxes.add(new HitBox(new Box(sb.x(), sb.y(), sb.w() - clearW, sb.h()), () -> {
+        this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(sb.x(), sb.y(), sb.w() - clearW, sb.h()), () -> {
             this.searchFocused = true;
             playClick(1.0f);
         }, () -> {
@@ -926,7 +863,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
                 blitNineSliceRect(
                     ctx,
-                    selected ? RAIL_TAB_ACTIVE : RAIL_TAB,
+                    selected ? ConfigSkin.RAIL_TAB_ACTIVE : ConfigSkin.RAIL_TAB,
                     tb.x(), tb.y(), tb.w(), tb.h(), 12, 5, 80, 22
                 );
                 if (!selected && hovered) {
@@ -934,7 +871,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 }
 
                 // 14x14 crisp pixel-art domain icon (7px inset clears 5.5px brass pillar)
-                Identifier icon = isTraceTab ? ICON_TRACE : domainIcon(cat);
+                Identifier icon = isTraceTab ? ConfigSkin.ICON_TRACE : ConfigSkin.domainIcon(cat);
                 int iconSize = 14;
                 int iconX = tb.x() + 7;
                 int iconY = Math.round(tb.centerY() - iconSize * 0.5f);
@@ -942,18 +879,18 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
                 // Right-side count badge (modified count for domains; classic atom ratio for Rule Trace)
                 String badgeStr = "";
-                int badgeColor = MUTED_TEXT;
+                int badgeColor = ConfigSkin.MUTED_TEXT;
                 if (isTraceTab) {
                     int classicAtoms = this.draft.build().countClassic103Atoms();
                     badgeStr = classicAtoms + "/" + ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT;
-                    badgeColor = classicAtoms > 0 ? AMBER_TEXT : MUTED_TEXT;
+                    badgeColor = classicAtoms > 0 ? ConfigSkin.AMBER_TEXT : ConfigSkin.MUTED_TEXT;
                 } else {
                     int catMod = (int) ConfigCatalog.optionsInCategory(cat).stream()
                         .filter(o -> o.isModifiedFromDefault(this.draft))
                         .count();
                     if (catMod > 0) {
                         badgeStr = Integer.toString(catMod);
-                        badgeColor = EMERALD_TEXT;
+                        badgeColor = ConfigSkin.EMERALD_TEXT;
                     }
                 }
 
@@ -973,7 +910,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                     labelBox,
                     ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
                     ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-                    selected ? GOLD_TEXT : (isTraceTab ? AMBER_TEXT : CREAM_TEXT)
+                    selected ? ConfigSkin.GOLD_TEXT : (isTraceTab ? ConfigSkin.AMBER_TEXT : ConfigSkin.CREAM_TEXT)
                 );
 
                 if (badgeW > 0) {
@@ -993,7 +930,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 if (clippedBot > clippedTop) {
                     Box clickBox = new Box(tb.x(), clippedTop, tb.w(), clippedBot - clippedTop);
                     if (isTraceTab) {
-                        this.hitBoxes.add(new HitBox(clickBox, () -> {
+                        this.hitBoxes.add(new ConfigInteractions.HitBox(clickBox, () -> {
                             this.ruleTracePage = true;
                             this.filterModifiedOnly = false;
                             setSearchQuery("");
@@ -1003,7 +940,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                         }, null));
                     } else {
                         CategoryId targetCat = cat;
-                        this.hitBoxes.add(new HitBox(clickBox, () -> {
+                        this.hitBoxes.add(new ConfigInteractions.HitBox(clickBox, () -> {
                             this.ruleTracePage = false;
                             this.filterModifiedOnly = false;
                             this.activeCategory = targetCat;
@@ -1052,7 +989,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 int embSize = 40;
                 int ex = Math.round(vp.centerX() - embSize * 0.5f);
                 int ey = Math.max(vp.y() + 8, Math.round(vp.centerY() - 32.0f));
-                ctx.blit(EMBLEM_TRACE_LARGE, ex, ey, ex + embSize, ey + embSize, 0.0f, 1.0f, 0.0f, 1.0f);
+                ctx.blit(ConfigSkin.EMBLEM_TRACE_LARGE, ex, ey, ex + embSize, ey + embSize, 0.0f, 1.0f, 0.0f, 1.0f);
                 String emptyMsg = I18n.get(this.filterModifiedOnly
                     ? "config.chiseled_enchanting_table.empty.modified"
                     : "config.chiseled_enchanting_table.empty.search");
@@ -1062,7 +999,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                     new Box(vp.x() + 10, ey + embSize + 6, Math.max(40, vp.w() - 20), 16),
                     ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
                     ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-                    MUTED_TEXT
+                    ConfigSkin.MUTED_TEXT
                 );
             } finally {
                 ctx.disableScissor();
@@ -1151,13 +1088,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean inClip = mouseY >= clipTop && mouseY < clipBottom;
         boolean hovered = inClip && box.contains(mouseX, mouseY);
 
-        blitNineSliceRect(ctx, SECTION_PLAQUE, x, y, w, box.h(), 14, 5, 96, 18);
+        blitNineSliceRect(ctx, ConfigSkin.SECTION_PLAQUE, x, y, w, box.h(), 14, 5, 96, 18);
         if (hovered) {
             ctx.fill(x + 2, y + 2, x + w - 2, y + box.h() - 2, 0x22FFE599);
         }
 
         RowRenderSupport.drawDisclosureTriangle(
-            ctx, x + 9, box.centerY(), sec.sectionExpanded(), GOLD_TEXT
+            ctx, x + 9, box.centerY(), sec.sectionExpanded(), ConfigSkin.GOLD_TEXT
         );
 
         boolean allGated = sec.sectionActiveCount() == 0 && sec.sectionTotalCount() > 0;
@@ -1174,7 +1111,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             titleBox,
             ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-            allGated ? MUTED_TEXT : GOLD_TEXT
+            allGated ? ConfigSkin.MUTED_TEXT : ConfigSkin.GOLD_TEXT
         );
         drawClampedCenteredText(
             ctx,
@@ -1182,14 +1119,14 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             rightBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            allGated ? AMBER_TEXT : MUTED_TEXT
+            allGated ? ConfigSkin.AMBER_TEXT : ConfigSkin.MUTED_TEXT
         );
 
         int cTop = Math.max(clipTop, y);
         int cBot = Math.min(clipBottom, y + box.h());
         if (cBot > cTop && sec.sectionKey() != null) {
             String key = sec.sectionKey();
-            this.hitBoxes.add(new HitBox(new Box(x, cTop, w, cBot - cTop), () -> {
+            this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(x, cTop, w, cBot - cTop), () -> {
                 this.userToggledSections.add(key);
                 if (!this.collapsedSections.remove(key)) {
                     this.collapsedSections.add(key);
@@ -1227,13 +1164,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean focused = (flatIndex == this.focusedOptionIndex);
 
         Identifier plaqueSprite = !editable
-            ? ROW_PLAQUE_DISABLED
-            : (hovered ? ROW_PLAQUE_HOVER : (entry.isCoreRuleAtom() ? ROW_PLAQUE_ATOM : ROW_PLAQUE));
+            ? ConfigSkin.ROW_PLAQUE_DISABLED
+            : (hovered ? ConfigSkin.ROW_PLAQUE_HOVER : (entry.isCoreRuleAtom() ? ConfigSkin.ROW_PLAQUE_ATOM : ConfigSkin.ROW_PLAQUE));
         blitNineSliceRect(ctx, plaqueSprite, x, y, w, row.plaque().h(), 16, 6, 96, 24);
 
         if (focused) {
-            ctx.fill(x + 1, y + 1, x + w - 1, y + 2, GOLD_TEXT);
-            ctx.fill(x + 1, y + row.plaque().h() - 2, x + w - 1, y + row.plaque().h() - 1, GOLD_TEXT);
+            ctx.fill(x + 1, y + 1, x + w - 1, y + 2, ConfigSkin.GOLD_TEXT);
+            ctx.fill(x + 1, y + row.plaque().h() - 2, x + w - 1, y + row.plaque().h() - 1, ConfigSkin.GOLD_TEXT);
         }
 
         // 1. Modified indicator pip
@@ -1241,19 +1178,19 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             Box pip = row.modifiedPip();
             int cx = Math.round(pip.centerX());
             int cy = Math.round(pip.centerY());
-            ctx.fill(cx - 2, cy - 2, cx + 2, cy + 2, GOLD_TEXT);
+            ctx.fill(cx - 2, cy - 2, cx + 2, cy + 2, ConfigSkin.GOLD_TEXT);
         } else if (entry.isCoreRuleAtom()) {
             Box pip = row.modifiedPip();
             int cx = Math.round(pip.centerX());
             int cy = Math.round(pip.centerY());
-            ctx.fill(cx - 1, cy - 1, cx + 2, cy + 2, editable ? 0xFFB995FF : DIM_TEXT);
+            ctx.fill(cx - 1, cy - 1, cx + 2, cy + 2, editable ? 0xFFB995FF : ConfigSkin.DIM_TEXT);
         }
 
         // 2. Option Title (strictly >= 0.85f)
         String name = I18n.get(entry.nameKey());
         int nameColor = !editable
-            ? MUTED_TEXT
-            : (entry.isCoreRuleAtom() ? GOLD_TEXT : CREAM_TEXT);
+            ? ConfigSkin.MUTED_TEXT
+            : (entry.isCoreRuleAtom() ? ConfigSkin.GOLD_TEXT : ConfigSkin.CREAM_TEXT);
         drawClampedLeftText(
             ctx,
             name,
@@ -1267,11 +1204,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         Box sb = row.scopeBadgeBox();
         String scopeGlyph = (!editable ? "\u2298" : "") + avail.effectScope().glyph();
         int scopeColor = switch (avail.effectScope()) {
-            case IMMEDIATE -> EMERALD_TEXT;
-            case NEW_GENERATION -> CYAN_TEXT;
-            case RESTART_REQUIRED -> AMBER_TEXT;
+            case IMMEDIATE -> ConfigSkin.EMERALD_TEXT;
+            case NEW_GENERATION -> ConfigSkin.CYAN_TEXT;
+            case RESTART_REQUIRED -> ConfigSkin.AMBER_TEXT;
         };
-        if (!editable) scopeColor = MUTED_TEXT;
+        if (!editable) scopeColor = ConfigSkin.MUTED_TEXT;
         ctx.fill(sb.x(), sb.y(), sb.right(), sb.bottom(), 0x88140D22);
         drawClampedCenteredText(
             ctx,
@@ -1291,14 +1228,14 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overReset = inClip && canReset && rb.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            canReset ? (overReset ? MICRO_BTN_HOVER : MICRO_BTN) : MICRO_BTN_DISABLED,
+            canReset ? (overReset ? ConfigSkin.MICRO_BTN_HOVER : ConfigSkin.MICRO_BTN) : ConfigSkin.MICRO_BTN_DISABLED,
             rb.x(), rb.y(), rb.w(), rb.h(), 3, 3, 16, 16
         );
         int iconSz = Math.min(10, Math.min(rb.w() - 4, rb.h() - 4));
         int iconX = Math.round(rb.centerX() - iconSz * 0.5f);
         int iconY = Math.round(rb.centerY() - iconSz * 0.5f);
         ctx.blit(
-            canReset ? ICON_RESET : ICON_RESET_DISABLED,
+            canReset ? ConfigSkin.ICON_RESET : ConfigSkin.ICON_RESET_DISABLED,
             iconX, iconY, iconX + iconSz, iconY + iconSz,
             0.0f, 1.0f, 0.0f, 1.0f
         );
@@ -1306,7 +1243,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             int cTop = Math.max(clipTop, rb.y());
             int cBot = Math.min(clipBottom, rb.bottom());
             if (cBot > cTop) {
-                this.hitBoxes.add(new HitBox(new Box(rb.x(), cTop, rb.w(), cBot - cTop), () -> {
+                this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(rb.x(), cTop, rb.w(), cBot - cTop), () -> {
                     entry.resetToDefault(this.draft);
                     syncAutoCollapsedSections();
                     playClick(0.92f);
@@ -1341,7 +1278,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             int swH = 16;
             int swX = cb.right() - swW;
             int swY = Math.round(cb.centerY() - swH * 0.5f);
-            Identifier swSprite = !editable ? TOGGLE_LOCKED : (isOn ? TOGGLE_ON : TOGGLE_OFF);
+            Identifier swSprite = !editable ? ConfigSkin.TOGGLE_LOCKED : (isOn ? ConfigSkin.TOGGLE_ON : ConfigSkin.TOGGLE_OFF);
             ctx.blit(swSprite, swX, swY, swX + swW, swY + swH, 0.0f, 1.0f, 0.0f, 1.0f);
             if (overBool) {
                 ctx.fill(swX + 1, swY + 1, swX + swW - 1, swY + swH - 1, 0x24FFE599);
@@ -1357,11 +1294,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 stateTextBox,
                 ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
                 ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-                !editable ? DIM_TEXT : (isOn ? EMERALD_TEXT : (overBool ? CREAM_TEXT : MUTED_TEXT))
+                !editable ? ConfigSkin.DIM_TEXT : (isOn ? ConfigSkin.EMERALD_TEXT : (overBool ? ConfigSkin.CREAM_TEXT : ConfigSkin.MUTED_TEXT))
             );
 
             if (editable && hitValid) {
-                this.hitBoxes.add(new HitBox(new Box(cb.x(), cTop, cb.w(), cBot - cTop), () -> {
+                this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(cb.x(), cTop, cb.w(), cBot - cTop), () -> {
                     entry.toggleOrCycle(this.draft, 1);
                     syncAutoCollapsedSections();
                     playClick(1.04f);
@@ -1377,8 +1314,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         if (entry.kind() == ControlKind.ENUM_CYCLE) {
             boolean over = inClip && editable && cb.contains(mouseX, mouseY);
             Identifier sprite = !editable
-                ? BTN_PLAQUE_DISABLED
-                : (over ? BTN_PLAQUE_HOVER : (entry.isCoreRuleAtom() ? BTN_PLAQUE_GOLD : BTN_PLAQUE));
+                ? ConfigSkin.BTN_PLAQUE_DISABLED
+                : (over ? ConfigSkin.BTN_PLAQUE_HOVER : (entry.isCoreRuleAtom() ? ConfigSkin.BTN_PLAQUE_GOLD : ConfigSkin.BTN_PLAQUE));
             blitNineSliceRect(ctx, sprite, cb.x(), cb.y(), cb.w(), cb.h(), 6, 6, 64, 18);
 
             String decorated = "\u25c2 " + valText + " \u25b8";
@@ -1388,11 +1325,11 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 new Box(cb.x() + 4, cb.y(), Math.max(16, cb.w() - 8), cb.h()),
                 ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
                 ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-                !editable ? DIM_TEXT : CREAM_TEXT
+                !editable ? ConfigSkin.DIM_TEXT : ConfigSkin.CREAM_TEXT
             );
 
             if (editable && hitValid) {
-                this.hitBoxes.add(new HitBox(new Box(cb.x(), cTop, cb.w(), cBot - cTop), () -> {
+                this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(cb.x(), cTop, cb.w(), cBot - cTop), () -> {
                     entry.toggleOrCycle(this.draft, 1);
                     syncAutoCollapsedSections();
                     playClick(1.04f);
@@ -1421,43 +1358,43 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(valuePill.x() + 2, valuePill.y(), Math.max(12, valuePill.w() - 4), valuePill.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            editable ? GOLD_TEXT : DIM_TEXT
+            editable ? ConfigSkin.GOLD_TEXT : ConfigSkin.DIM_TEXT
         );
 
         boolean overMinus = inClip && editable && minusBox.contains(mouseX, mouseY);
         boolean overPlus = inClip && editable && plusBox.contains(mouseX, mouseY);
         boolean overTrack = inClip && editable && trackArea.contains(mouseX, mouseY);
 
-        blitNineSliceRect(ctx, !editable ? MICRO_BTN_DISABLED : (overMinus ? MICRO_BTN_HOVER : MICRO_BTN),
+        blitNineSliceRect(ctx, !editable ? ConfigSkin.MICRO_BTN_DISABLED : (overMinus ? ConfigSkin.MICRO_BTN_HOVER : ConfigSkin.MICRO_BTN),
             minusBox.x(), minusBox.y(), minusBox.w(), minusBox.h(), 3, 3, 16, 16);
         drawClampedCenteredText(ctx, "-", minusBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            editable ? (overMinus ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT);
+            editable ? (overMinus ? ConfigSkin.GOLD_TEXT : ConfigSkin.CREAM_TEXT) : ConfigSkin.DIM_TEXT);
 
-        blitNineSliceRect(ctx, !editable ? MICRO_BTN_DISABLED : (overPlus ? MICRO_BTN_HOVER : MICRO_BTN),
+        blitNineSliceRect(ctx, !editable ? ConfigSkin.MICRO_BTN_DISABLED : (overPlus ? ConfigSkin.MICRO_BTN_HOVER : ConfigSkin.MICRO_BTN),
             plusBox.x(), plusBox.y(), plusBox.w(), plusBox.h(), 3, 3, 16, 16);
         drawClampedCenteredText(ctx, "+", plusBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE, ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            editable ? (overPlus ? GOLD_TEXT : CREAM_TEXT) : DIM_TEXT);
+            editable ? (overPlus ? ConfigSkin.GOLD_TEXT : ConfigSkin.CREAM_TEXT) : ConfigSkin.DIM_TEXT);
 
         int barH = 8;
         int barY = Math.round(trackArea.centerY() - barH * 0.5f);
-        blitNineSliceRect(ctx, SLIDER_TRACK, trackArea.x(), barY, trackArea.w(), barH, 4, 3, 64, 8);
+        blitNineSliceRect(ctx, ConfigSkin.SLIDER_TRACK, trackArea.x(), barY, trackArea.w(), barH, 4, 3, 64, 8);
 
         double norm = entry.normalizedSliderValue(shown);
         int fillW = Math.round((float) (trackArea.w() * norm));
         if (fillW > 2) {
-            blitNineSliceRect(ctx, SLIDER_FILL, trackArea.x(), barY, fillW, barH, 4, 3, 64, 8);
+            blitNineSliceRect(ctx, ConfigSkin.SLIDER_FILL, trackArea.x(), barY, fillW, barH, 4, 3, 64, 8);
         }
 
         int knobW = 10;
         int knobH = 14;
         int knobX = trackArea.x() + Mth.clamp(fillW - knobW / 2, 0, Math.max(0, trackArea.w() - knobW));
         int knobY = Math.round(trackArea.centerY() - knobH * 0.5f);
-        ctx.blit(overTrack ? SLIDER_KNOB_HOVER : SLIDER_KNOB, knobX, knobY, knobX + knobW, knobY + knobH, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.blit(overTrack ? ConfigSkin.SLIDER_KNOB_HOVER : ConfigSkin.SLIDER_KNOB, knobX, knobY, knobX + knobW, knobY + knobH, 0.0f, 1.0f, 0.0f, 1.0f);
 
         if (editable && hitValid) {
-            this.hitBoxes.add(new HitBox(new Box(minusBox.x(), cTop, minusBox.w(), cBot - cTop), () -> {
+            this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(minusBox.x(), cTop, minusBox.w(), cBot - cTop), () -> {
                 entry.stepValue(this.draft, -1);
                 syncAutoCollapsedSections();
                 playClick(0.96f);
@@ -1466,7 +1403,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 syncAutoCollapsedSections();
                 playClick(0.90f);
             }));
-            this.hitBoxes.add(new HitBox(new Box(plusBox.x(), cTop, plusBox.w(), cBot - cTop), () -> {
+            this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(plusBox.x(), cTop, plusBox.w(), cBot - cTop), () -> {
                 entry.stepValue(this.draft, 1);
                 syncAutoCollapsedSections();
                 playClick(1.04f);
@@ -1475,7 +1412,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 syncAutoCollapsedSections();
                 playClick(1.10f);
             }));
-            this.sliderTracks.add(new SliderTrack(entry, new Box(trackArea.x(), cTop, trackArea.w(), cBot - cTop)));
+            this.sliderTracks.add(new ConfigInteractions.SliderTrack(entry, new Box(trackArea.x(), cTop, trackArea.w(), cBot - cTop)));
         }
     }
 
@@ -1584,12 +1521,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int clipBottom
     ) {
         Box banner = new Box(x, y, w, ConfigLayoutSpec.TRACE_BANNER_H);
-        blitNineSliceRect(ctx, ROW_PLAQUE_ATOM, x, y, w, banner.h(), 16, 6, 96, 24);
+        blitNineSliceRect(ctx, ConfigSkin.ROW_PLAQUE_ATOM, x, y, w, banner.h(), 16, 6, 96, 24);
 
         int embSize = 32;
         int embX = x + 10;
         int embY = Math.round(banner.centerY() - embSize * 0.5f);
-        ctx.blit(EMBLEM_TRACE_LARGE, embX, embY, embX + embSize, embY + embSize, 0.0f, 1.0f, 0.0f, 1.0f);
+        ctx.blit(ConfigSkin.EMBLEM_TRACE_LARGE, embX, embY, embX + embSize, embY + embSize, 0.0f, 1.0f, 0.0f, 1.0f);
 
         int btnW = Math.min(76, Math.max(54, w * 21 / 100));
         int btnH = 16;
@@ -1608,7 +1545,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             titleBox,
             ConfigLayoutSpec.PRIMARY_TEXT_SCALE,
             ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-            GOLD_TEXT
+            ConfigSkin.GOLD_TEXT
         );
         drawClampedLeftText(
             ctx,
@@ -1617,7 +1554,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             subBox,
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            activeClassic == ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT ? GOLD_TEXT : CYAN_TEXT
+            activeClassic == ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT ? ConfigSkin.GOLD_TEXT : ConfigSkin.CYAN_TEXT
         );
 
         boolean writable = this.sessionMode.writable();
@@ -1625,7 +1562,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         // Quick-apply all 19 classic atoms
         boolean overClassic = inClip && writable && btnClassic.contains(mouseX, mouseY);
-        blitNineSliceRect(ctx, !writable ? BTN_PLAQUE_DISABLED : (overClassic ? BTN_PLAQUE_HOVER : BTN_PLAQUE_GOLD),
+        blitNineSliceRect(ctx, !writable ? ConfigSkin.BTN_PLAQUE_DISABLED : (overClassic ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE_GOLD),
             btnClassic.x(), btnClassic.y(), btnClassic.w(), btnClassic.h(), 4, 4, 64, 18);
         drawClampedCenteredText(
             ctx,
@@ -1633,12 +1570,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(btnClassic.x() + 3, btnClassic.y(), Math.max(12, btnClassic.w() - 6), btnClassic.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            writable ? GOLD_TEXT : DIM_TEXT
+            writable ? ConfigSkin.GOLD_TEXT : ConfigSkin.DIM_TEXT
         );
 
         // Quick-restore all 19 modern 1.1.0 atoms
         boolean overModern = inClip && writable && btnModern.contains(mouseX, mouseY);
-        blitNineSliceRect(ctx, !writable ? BTN_PLAQUE_DISABLED : (overModern ? BTN_PLAQUE_HOVER : BTN_PLAQUE),
+        blitNineSliceRect(ctx, !writable ? ConfigSkin.BTN_PLAQUE_DISABLED : (overModern ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE),
             btnModern.x(), btnModern.y(), btnModern.w(), btnModern.h(), 4, 4, 64, 18);
         drawClampedCenteredText(
             ctx,
@@ -1646,14 +1583,14 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(btnModern.x() + 3, btnModern.y(), Math.max(12, btnModern.w() - 6), btnModern.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            writable ? EMERALD_TEXT : DIM_TEXT
+            writable ? ConfigSkin.EMERALD_TEXT : ConfigSkin.DIM_TEXT
         );
 
         if (writable) {
             int cTop1 = Math.max(clipTop, btnClassic.y());
             int cBot1 = Math.min(clipBottom, btnClassic.bottom());
             if (cBot1 > cTop1) {
-                this.hitBoxes.add(new HitBox(new Box(btnClassic.x(), cTop1, btnClassic.w(), cBot1 - cTop1), () -> {
+                this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(btnClassic.x(), cTop1, btnClassic.w(), cBot1 - cTop1), () -> {
                     ModRuntimeConfig.Preset.CLASSIC.applyTo(this.draft);
                     syncAutoCollapsedSections();
                     playClick(1.06f);
@@ -1662,7 +1599,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             int cTop2 = Math.max(clipTop, btnModern.y());
             int cBot2 = Math.min(clipBottom, btnModern.bottom());
             if (cBot2 > cTop2) {
-                this.hitBoxes.add(new HitBox(new Box(btnModern.x(), cTop2, btnModern.w(), cBot2 - cTop2), () -> {
+                this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(btnModern.x(), cTop2, btnModern.w(), cBot2 - cTop2), () -> {
                     ModRuntimeConfig.Preset.STANDARD.applyTo(this.draft);
                     syncAutoCollapsedSections();
                     playClick(1.04f);
@@ -1713,7 +1650,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         blitNineSliceRect(
             ctx,
-            hovered ? ROW_PLAQUE_HOVER : (isClassic ? ROW_PLAQUE_ATOM : ROW_PLAQUE),
+            hovered ? ConfigSkin.ROW_PLAQUE_HOVER : (isClassic ? ConfigSkin.ROW_PLAQUE_ATOM : ConfigSkin.ROW_PLAQUE),
             x, y, w, tc.card().h(), 16, 6, 96, 24
         );
 
@@ -1725,7 +1662,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             tc.titleBox(),
             ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.PRIMARY_TEXT_MIN_SCALE,
-            isClassic ? GOLD_TEXT : CREAM_TEXT
+            isClassic ? ConfigSkin.GOLD_TEXT : ConfigSkin.CREAM_TEXT
         );
 
         // Top-middle: Domain Jump Chip ("[↗ Pricing]")
@@ -1739,12 +1676,12 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(jb.x() + 2, jb.y(), Math.max(12, jb.w() - 4), jb.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            overJump ? GOLD_TEXT : CYAN_TEXT
+            overJump ? ConfigSkin.GOLD_TEXT : ConfigSkin.CYAN_TEXT
         );
         int jTop = Math.max(clipTop, jb.y());
         int jBot = Math.min(clipBottom, jb.bottom());
         if (jBot > jTop) {
-            this.hitBoxes.add(new HitBox(new Box(jb.x(), jTop, jb.w(), jBot - jTop), () -> {
+            this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(jb.x(), jTop, jb.w(), jBot - jTop), () -> {
                 this.ruleTracePage = false;
                 this.filterModifiedOnly = false;
                 this.activeCategory = trace.domain();
@@ -1763,8 +1700,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
                 .orElse(false);
         boolean overToggle = inClip && canToggle && tb.contains(mouseX, mouseY);
         Identifier tSprite = trace.derived()
-            ? BTN_PLAQUE_DISABLED
-            : (!canToggle ? BTN_PLAQUE_DISABLED : (overToggle ? BTN_PLAQUE_HOVER : (isClassic ? BTN_PLAQUE_GOLD : BTN_PLAQUE)));
+            ? ConfigSkin.BTN_PLAQUE_DISABLED
+            : (!canToggle ? ConfigSkin.BTN_PLAQUE_DISABLED : (overToggle ? ConfigSkin.BTN_PLAQUE_HOVER : (isClassic ? ConfigSkin.BTN_PLAQUE_GOLD : ConfigSkin.BTN_PLAQUE)));
         blitNineSliceRect(ctx, tSprite, tb.x(), tb.y(), tb.w(), tb.h(), 4, 4, 64, 18);
         String tLabel = trace.derived()
             ? I18n.get("config.chiseled_enchanting_table.trace.derived_badge")
@@ -1777,13 +1714,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(tb.x() + 3, tb.y(), Math.max(12, tb.w() - 6), tb.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            trace.derived() ? MUTED_TEXT : (isClassic ? GOLD_TEXT : EMERALD_TEXT)
+            trace.derived() ? ConfigSkin.MUTED_TEXT : (isClassic ? ConfigSkin.GOLD_TEXT : ConfigSkin.EMERALD_TEXT)
         );
         if (canToggle) {
             int tTop = Math.max(clipTop, tb.y());
             int tBot = Math.min(clipBottom, tb.bottom());
             if (tBot > tTop) {
-                this.hitBoxes.add(new HitBox(new Box(tb.x(), tTop, tb.w(), tBot - tTop), () -> {
+                this.hitBoxes.add(new ConfigInteractions.HitBox(new Box(tb.x(), tTop, tb.w(), tBot - tTop), () -> {
                     toggleTraceAtom(trace);
                     playClick(1.04f);
                 }, null));
@@ -1806,7 +1743,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(cPill.x() + 3, cPill.y(), Math.max(16, cPill.w() - 6), cPill.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            isClassic ? GOLD_TEXT : 0xFFB8AAD2
+            isClassic ? ConfigSkin.GOLD_TEXT : 0xFFB8AAD2
         );
         drawClampedLeftText(
             ctx,
@@ -1814,7 +1751,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(mPill.x() + 3, mPill.y(), Math.max(16, mPill.w() - 6), mPill.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            !isClassic ? EMERALD_TEXT : 0xFFB8AAD2
+            !isClassic ? ConfigSkin.EMERALD_TEXT : 0xFFB8AAD2
         );
 
         if (hovered) {
@@ -1844,7 +1781,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int travel = Math.max(1, track.h() - thumbH);
         int thumbY = track.y() + Math.round((this.listScroll / this.maxListScroll) * travel);
         boolean over = track.contains(mouseX, mouseY) || this.draggingScrollbar;
-        ctx.fill(track.x(), thumbY, track.right(), thumbY + thumbH, over ? GOLD_TEXT : 0xFFA88948);
+        ctx.fill(track.x(), thumbY, track.right(), thumbY + thumbH, over ? ConfigSkin.GOLD_TEXT : 0xFFA88948);
         ctx.fill(track.x() + 1, thumbY + 1, track.right() - 1, thumbY + thumbH - 1, over ? 0xFF7052A8 : 0xFF4C3578);
     }
 
@@ -1868,7 +1805,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overResetPage = canResetPage && resetPageBtn.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            canResetPage ? (overResetPage ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
+            canResetPage ? (overResetPage ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE) : ConfigSkin.BTN_PLAQUE_DISABLED,
             resetPageBtn.x(), resetPageBtn.y(), resetPageBtn.w(), resetPageBtn.h(), 10, 5, 64, 18
         );
         drawClampedCenteredText(
@@ -1877,10 +1814,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(resetPageBtn.x() + 5, resetPageBtn.y(), Math.max(16, resetPageBtn.w() - 10), resetPageBtn.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            canResetPage ? CREAM_TEXT : DIM_TEXT
+            canResetPage ? ConfigSkin.CREAM_TEXT : ConfigSkin.DIM_TEXT
         );
         if (canResetPage) {
-            this.hitBoxes.add(new HitBox(resetPageBtn, () -> {
+            this.hitBoxes.add(new ConfigInteractions.HitBox(resetPageBtn, () -> {
                 for (OptionEntry entry : pageOpts) {
                     if (entry.evaluate(this.draft, this.sessionMode).editable()) {
                         entry.resetToDefault(this.draft);
@@ -1898,7 +1835,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overReset = canResetAll && resetBtn.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            canResetAll ? (overReset ? BTN_PLAQUE_HOVER : BTN_PLAQUE) : BTN_PLAQUE_DISABLED,
+            canResetAll ? (overReset ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE) : ConfigSkin.BTN_PLAQUE_DISABLED,
             resetBtn.x(), resetBtn.y(), resetBtn.w(), resetBtn.h(), 10, 5, 64, 18
         );
         drawClampedCenteredText(
@@ -1907,10 +1844,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(resetBtn.x() + 4, resetBtn.y(), Math.max(16, resetBtn.w() - 8), resetBtn.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            canResetAll ? CORAL_TEXT : DIM_TEXT
+            canResetAll ? ConfigSkin.CORAL_TEXT : ConfigSkin.DIM_TEXT
         );
         if (canResetAll) {
-            this.hitBoxes.add(new HitBox(resetBtn, () -> {
+            this.hitBoxes.add(new ConfigInteractions.HitBox(resetBtn, () -> {
                 for (OptionEntry entry : ConfigCatalog.ALL_OPTIONS) {
                     entry.resetToDefault(this.draft);
                 }
@@ -1925,31 +1862,31 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         int statusColor;
         if (this.pendingSaveId != 0) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.saving");
-            statusColor = GOLD_TEXT;
+            statusColor = ConfigSkin.GOLD_TEXT;
         } else if (System.currentTimeMillis() < this.statusToastUntilMs) {
             statusText = I18n.get(this.lastSaveFailed
                 ? "config.chiseled_enchanting_table.msg.save_failed"
                 : "config.chiseled_enchanting_table.msg.saved");
-            statusColor = this.lastSaveFailed ? CORAL_TEXT : EMERALD_TEXT;
+            statusColor = this.lastSaveFailed ? ConfigSkin.CORAL_TEXT : ConfigSkin.EMERALD_TEXT;
         } else if (stackShrinkRisk) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.stack_shrink_risk");
-            statusColor = CORAL_TEXT;
+            statusColor = ConfigSkin.CORAL_TEXT;
         } else if (restartChanged) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.restart_hint");
-            statusColor = AMBER_TEXT;
+            statusColor = ConfigSkin.AMBER_TEXT;
         } else if (hasUnsaved) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.unsaved");
-            statusColor = GOLD_TEXT;
+            statusColor = ConfigSkin.GOLD_TEXT;
         } else if (preview.isAllClassicAtoms()) {
             statusText = I18n.get("config.chiseled_enchanting_table.msg.classic_1_0_3_active");
-            statusColor = AMBER_TEXT;
+            statusColor = ConfigSkin.AMBER_TEXT;
         } else {
             int classicAtoms = preview.countClassic103Atoms();
             statusText = classicAtoms > 0
                 ? I18n.get("config.chiseled_enchanting_table.msg.hybrid_atoms",
                     classicAtoms, ModRuntimeConfig.CLASSIC_RULE_ATOM_COUNT)
                 : I18n.get("config.chiseled_enchanting_table.msg.synced");
-            statusColor = classicAtoms > 0 ? CYAN_TEXT : MUTED_TEXT;
+            statusColor = classicAtoms > 0 ? ConfigSkin.CYAN_TEXT : ConfigSkin.MUTED_TEXT;
         }
         drawClampedLeftText(
             ctx,
@@ -1968,7 +1905,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overClose = closeBtn.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            overClose ? BTN_PLAQUE_HOVER : BTN_PLAQUE,
+            overClose ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE,
             closeBtn.x(), closeBtn.y(), closeBtn.w(), closeBtn.h(), 6, 6, 64, 18
         );
         drawClampedCenteredText(
@@ -1977,9 +1914,9 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(closeBtn.x() + 4, closeBtn.y(), Math.max(16, closeBtn.w() - 8), closeBtn.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            CREAM_TEXT
+            ConfigSkin.CREAM_TEXT
         );
-        this.hitBoxes.add(new HitBox(closeBtn, () -> {
+        this.hitBoxes.add(new ConfigInteractions.HitBox(closeBtn, () -> {
             playClick(0.95f);
             onClose();
         }, null));
@@ -1990,7 +1927,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         boolean overSave = canSave && saveBtn.contains(mouseX, mouseY);
         blitNineSliceRect(
             ctx,
-            !canSave ? BTN_PLAQUE_DISABLED : (overSave ? BTN_PLAQUE_HOVER : BTN_PLAQUE_GOLD),
+            !canSave ? ConfigSkin.BTN_PLAQUE_DISABLED : (overSave ? ConfigSkin.BTN_PLAQUE_HOVER : ConfigSkin.BTN_PLAQUE_GOLD),
             saveBtn.x(), saveBtn.y(), saveBtn.w(), saveBtn.h(), 6, 6, 64, 18
         );
         drawClampedCenteredText(
@@ -1999,10 +1936,10 @@ public class ChiseledEnchantingConfigScreen extends Screen {
             new Box(saveBtn.x() + 4, saveBtn.y(), Math.max(16, saveBtn.w() - 8), saveBtn.h()),
             ConfigLayoutSpec.SECONDARY_TEXT_SCALE,
             ConfigLayoutSpec.SECONDARY_TEXT_MIN_SCALE,
-            canSave ? GOLD_TEXT : DIM_TEXT
+            canSave ? ConfigSkin.GOLD_TEXT : ConfigSkin.DIM_TEXT
         );
         if (canSave) {
-            this.hitBoxes.add(new HitBox(saveBtn, () -> saveAndApply(true), () -> saveAndApply(false)));
+            this.hitBoxes.add(new ConfigInteractions.HitBox(saveBtn, () -> saveAndApply(true), () -> saveAndApply(false)));
             if (overSave) {
                 tip = List.of(
                     Component.translatable("config.chiseled_enchanting_table.btn.save").withStyle(ChatFormatting.GOLD),
@@ -2027,7 +1964,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         }
 
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            for (SliderTrack slider : this.sliderTracks) {
+            for (ConfigInteractions.SliderTrack slider : this.sliderTracks) {
                 if (slider.contains(mx, my)) {
                     this.activeDraggingSlider = slider;
                     double t = (mx - slider.box().x()) / (double) Math.max(1, slider.box().w());
@@ -2046,7 +1983,7 @@ public class ChiseledEnchantingConfigScreen extends Screen {
 
         // Iterate in reverse so topmost elements (e.g. sticky section header, clear 'x' inside search) win cleanly.
         for (int i = this.hitBoxes.size() - 1; i >= 0; i--) {
-            HitBox hb = this.hitBoxes.get(i);
+            ConfigInteractions.HitBox hb = this.hitBoxes.get(i);
             if (hb.contains(mx, my)) {
                 if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                     hb.onLeftClick().run();

@@ -245,11 +245,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     public static boolean requiresDisenchantAllConfirm(ItemStack target) {
-        if (target == null || target.isEmpty() || !target.is(net.minecraft.world.item.Items.ENCHANTED_BOOK)) {
-            return false;
-        }
-        return DisenchantmentApplication.countNonCurseEnchantments(target) >= 3
-            || chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.hasInfinityImmunity(target);
+        return TableCleansePresentation.requiresDisenchantAllConfirm(target);
     }
 
     public boolean isDisenchantAllConfirmPending() {
