@@ -55,6 +55,7 @@ public class ChiseledEnchantingTable implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        chiseled_enchanting_table.cosmetic.RainbowClothInteraction.register();
         LOGGER.info("Chiseling the enchant system!");
 
         int bookStackSize = Math.max(

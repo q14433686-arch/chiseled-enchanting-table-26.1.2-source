@@ -152,6 +152,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         require(menu.get_enchantable_item().is(Items.DIAMOND_SWORD), "quick-move missed target slot");
                         require(player.getInventory().getItem(0).isEmpty(), "quick-move duplicated source stack");
                         MenuBoundaryProbe.verify(menu);
+                        RainbowClothProbe.verify(player, tablePos);
                         TomeWorldProbe.prepare(menu, player, tablePos);
                         menu.broadcastChanges();
                         menuPrepared = true;
@@ -164,6 +165,9 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (!((ChiseledEnchantingTableScreenHandler) client.player.containerMenu).get_enchantable_item().is(Items.DIAMOND_SWORD)) return;
                 var syncedMenu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
                 if (!syncedMenu.isTomePageUnlocked() || syncedMenu.tomeBooks.size()<2) return;
+                client.player.setYRot(-90); client.player.setXRot(40);
+                require(chiseled_enchanting_table.render.ChiseledEnchantingTableBlockEntityRenderer.clothColor(0,0)
+                    != chiseled_enchanting_table.render.ChiseledEnchantingTableBlockEntityRenderer.clothColor(12,.5f),"rainbow colour did not interpolate");
                 chiseled_enchanting_table.gui.ListModelProbe.verify(client.player);
                 chiseled_enchanting_table.gui.UiPresentationProbe.verify(client, (ChiseledEnchantingTableScreenHandler) client.player.containerMenu);
                 net.minecraft.client.Screenshot.grab(client.gameDirectory, "table-ui-zh_cn.png",
