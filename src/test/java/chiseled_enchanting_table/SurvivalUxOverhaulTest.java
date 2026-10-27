@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -62,10 +61,15 @@ class SurvivalUxOverhaulTest {
 
     @Test
     void mendingFirstXpRefundMathRepairsTwoDurabilityPerPointAndReturnsRemainder() {
-        assertArrayEquals(new int[] { 20, 40 }, CleanseMechanics.repairMendingDamageStep(100, 60, 40));
-        assertArrayEquals(new int[] { 0, 15 }, CleanseMechanics.repairMendingDamageStep(29, 30, 15));
-        assertArrayEquals(new int[] { 0, 0 }, CleanseMechanics.repairMendingDamageStep(0, 50, 0));
-        assertArrayEquals(new int[] { 10, 0 }, CleanseMechanics.repairMendingDamageStep(10, 0, 0));
+        int[] out = new int[1];
+        assertEquals(0, CleanseMechanics.repairMendingDamageStep(100, 30, out));
+        assertEquals(40, out[0]);
+        assertEquals(15, CleanseMechanics.repairMendingDamageStep(29, 30, out));
+        assertEquals(0, out[0]);
+        assertEquals(50, CleanseMechanics.repairMendingDamageStep(0, 50, out));
+        assertEquals(0, out[0]);
+        assertEquals(0, CleanseMechanics.repairMendingDamageStep(10, 0, out));
+        assertEquals(10, out[0]);
     }
 
     @Test
