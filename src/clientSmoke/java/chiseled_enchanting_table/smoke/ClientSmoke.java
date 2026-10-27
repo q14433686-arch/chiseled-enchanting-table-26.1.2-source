@@ -134,6 +134,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 next(5);
             }
             case 5 -> {
+                ConfigViewportProbe.verify(client);
                 require(ModRuntimeConfig.Preset.CASUAL.matches(((ConfigEditSession) field(editor, "editSession")).draft()), "reopened preferences lost preset");
                 editor.onClose();
                 var server = client.getSingleplayerServer();
