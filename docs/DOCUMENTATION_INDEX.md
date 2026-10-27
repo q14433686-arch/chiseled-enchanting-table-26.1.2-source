@@ -6,18 +6,6 @@
 > Current version: **`1.1.0`** (Minecraft 26.3). The full architecture-first port through source `3e61f5d` is integrated on the development branch (wire revision 6); see the report for CI evidence and remaining manual checks.
 > [Latest cross-branch audit and progress](reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md).
 
-## Active research work
-
-[First in-game playtest](research/PLAYTEST.md) — verified download, opt-in setup, exact commands, expected results and explicit unimplemented gameplay.
-
-
-[Concrete human review](research/reviews/TARGET_FIRST_REVIEW_2026_10_27.md) — agreed learning routes, first topic and page structure; unresolved gameplay/UI details remain explicit.
-
-
-[Research master plan](research/MASTER_PLAN.md) — gameplay loops, architecture, mechanism replacement and phased acceptance.
-
-[Research foundation](research/FOUNDATION.md) — agreed direction, implemented state machine, save format, extension contracts and explicitly unfinished player-facing integration.
-
 ## Read these first
 
 Roughly in the order a new contributor should walk them:

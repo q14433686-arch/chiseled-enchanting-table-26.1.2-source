@@ -211,7 +211,6 @@ if (providers.gradleProperty('client_smoke').orNull == 'true') {
             client()
             source sourceSets.clientSmoke
             runDir 'run-client-smoke'
-            vmArg '-Dcet.research.prototype=true'
             programArg '--quickPlaySingleplayer'
             programArg 'audit-world'
             programArg '--width'
