@@ -33,7 +33,7 @@ final class TablePanelLabels {
         int lx = PANEL_X + 10;
         int ly = PANEL_Y;
 
-        context.enableScissor(PANEL_X + 9, PANEL_Y + 9, PANEL_X + 110, PANEL_Y + 52);
+        context.enableScissor(PANEL_X + 8, PANEL_Y + 8, PANEL_X + 111, PANEL_Y + 51);
         try {
             if (!state.tooltips().isTomeTab() && !state.tooltips().isCleanseTab() && state.tooltips().menu().isRitualActive()) {
                 int queueCount = Math.max(1, state.tooltips().menu().queuedRitualSteps().size());
@@ -42,13 +42,13 @@ final class TablePanelLabels {
                     "gui.chiseled_enchanting_table.ritual.panel_title",
                     queueCount
                 );
-                drawAutoScaledText(state, context, header, lx, ly + 9, 0.66f, 99, 0xFFFFE082);
+                drawAutoScaledText(state, context, header, lx, ly + 9, 0.65f, 97, 0xFFFFE082);
 
                 Component timer = Component.translatable(
                     "gui.chiseled_enchanting_table.ritual.panel_timer",
                     formatClock(remSeconds)
                 );
-                drawAutoScaledText(state, context, timer, lx, ly + 17, 0.64f, 99, 0xFF8CFFF0);
+                drawAutoScaledText(state, context, timer, lx, ly + 17, 0.63f, 97, 0xFF8CFFF0);
                 return;
             }
 
@@ -82,7 +82,7 @@ final class TablePanelLabels {
                 drawAutoScaledText(state, context, countLine, lx, ly + 22, 0.82f, 98, totalTraits > 0 ? 0xFFE6FFF6 : 0xFFA2C4BC);
 
                 Component refundLine = Component.translatable("gui.chiseled_enchanting_table.cleanse.panel_refund", refund);
-                drawAutoScaledText(state, context, refundLine, lx, ly + 34, 0.80f, 80, refund > 0 ? 0xFF7CFFA6 : 0xFF8FB8AD);
+                drawAutoScaledText(state, context, refundLine, lx, ly + 34, 0.80f, 65, refund > 0 ? 0xFF7CFFA6 : 0xFF8FB8AD);
                 return;
             }
 

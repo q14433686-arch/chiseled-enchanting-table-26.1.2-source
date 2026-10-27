@@ -193,6 +193,9 @@ final class TableOptionTooltips {
                 int extPct = (int) Math.round(state.menu().disenchantExternalRefundScale() * 100.0);
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_provenance", extPct)
                     .withStyle(ChatFormatting.AQUA));
+            } else if (hoveredRow.option_type() == OptionType.EXTRACT_ENCHANTMENT_BOOK) {
+                rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_extract")
+                    .withStyle(ChatFormatting.AQUA));
             } else if (hoveredRow.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
                 || hoveredRow.option_type() == OptionType.PURGE_CURSE) {
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_targeted")

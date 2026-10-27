@@ -17,6 +17,20 @@ import chiseled_enchanting_table.gui.TableTooltipContext.Region;
 final class TablePanelTooltips {
     private TablePanelTooltips() {}
     static boolean render(TableTooltipContext state, GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        if (state.hovered(Region.isOverPurgeCursesButton)) {
+            int curses = chiseled_enchanting_table.mechanics.enchanting.CleanseMechanics.countCurses(state.menu().get_enchantable_item());
+            List<Component> tip = new ArrayList<>();
+            tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_purge_curses_title").withStyle(ChatFormatting.GOLD));
+            if (curses <= 0) {
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_purge_curses_none").withStyle(ChatFormatting.GRAY));
+            } else {
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_purge_curses_count", curses)
+                    .withStyle(state.canPurgeCursesNow() ? ChatFormatting.GREEN : ChatFormatting.RED));
+            }
+            tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_purge_curses_hint").withStyle(ChatFormatting.DARK_GRAY));
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            return true;
+        }
         if (state.hovered(Region.isOverCleanseAllButton)) {
             int refund = DisenchantmentApplication.totalFullDisenchantRefund(
                 state.menu().libraryResonanceConfig(),

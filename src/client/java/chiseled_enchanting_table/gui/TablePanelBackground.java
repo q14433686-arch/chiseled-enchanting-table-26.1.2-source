@@ -29,11 +29,11 @@ final class TablePanelBackground {
 
         if (!state.tooltips().isTomeTab() && !state.tooltips().isCleanseTab() && state.tooltips().menu().isRitualActive()) {
             ctx.blit(RITUAL_PANEL, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
-            ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
+            ctx.enableScissor(px + 8, py + 8, px + 111, py + 51);
             try {
                 int barX = px + 11;
                 int barY = py + 25;
-                int barW = 97;
+                int barW = 95;
                 int barH = 4;
                 ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC0A0614);
                 ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE181229);
@@ -128,7 +128,7 @@ final class TablePanelBackground {
                 int nonCurse = DisenchantmentApplication.countNonCurseEnchantments(target);
                 int barX = px + 10;
                 int barY = py + 45;
-                int barW = 80;
+                int barW = 65;
                 int barH = 4;
                 ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC071210);
                 ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE102420);
@@ -137,6 +137,18 @@ final class TablePanelBackground {
                 if (filledW > 0) {
                     ctx.fill(barX, barY, barX + filledW, barY + barH, 0xFF39D99A);
                     ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFA8FFE0);
+                }
+
+                if (state.tooltips().menu().disenchantAllowCursePurge()) {
+                    int pcx = i + PURGE_CURSES_BTN_X;
+                    int pcy = j + PURGE_CURSES_BTN_Y;
+                    boolean canPurge = state.tooltips().canPurgeCursesNow();
+                    ctx.blit(BTN_PURGE_ALL_CURSES, pcx, pcy, pcx + BTN_SIZE, pcy + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+                    if (!canPurge) {
+                        ctx.fill(pcx, pcy, pcx + BTN_SIZE, pcy + BTN_SIZE, 0x990A1010);
+                    } else if (state.tooltips().hovered(TableTooltipContext.Region.isOverPurgeCursesButton)) {
+                        ctx.fill(pcx, pcy, pcx + BTN_SIZE, pcy + BTN_SIZE, 0x2E8CFFD2);
+                    }
                 }
 
                 int bx = i + CLEANSE_ALL_BTN_X;
@@ -157,7 +169,7 @@ final class TablePanelBackground {
 
             if (!state.tooltips().list().hasEntries()) {
                 int lx = i + 12;
-                int ly = j + TomeDirectoryLayout.CONTENT_Y + TomeDirectoryLayout.listOffset() + 10;
+                int ly = j + TomeDirectoryLayout.CONTENT_Y + TomeDirectoryLayout.cleanseListOffset() + 10;
                 String hint1 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line1").getString();
                 String hint2 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line2").getString();
                 RowRenderSupport.renderBoundedText(ctx, state.tooltips().font(), hint1, lx, ly, 0.72f, 140, 0xFFAEEADF);
@@ -336,10 +348,16 @@ final class TablePanelBackground {
             int sh = TAB_H - 3;
             ctx.blit(BTN_SACRIFICE_PLAQUE, sx, sy, sx + SACRIFICE_BTN_W, sy + sh, 0.0f, 1.0f, 0.0f, 1.0f);
             if (state.tooltips().hovered(TableTooltipContext.Region.isOverSacrificeButton)) {
-                ctx.fill(sx + 1, sy + 1, sx + SACRIFICE_BTN_W - 1, sy + sh - 1, 0x28FFDF82);
+                ctx.fill(sx + 2, sy + 2, sx + SACRIFICE_BTN_W - 2, sy + sh - 2, 0x28FFDF82);
             }
-            String sacText = Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_short", state.tooltips().menu().sacrificeProgress, state.tooltips().menu().sacrificeRequired).getString();
-            RowRenderSupport.renderCenteredBoxText(ctx, state.tooltips().font(), sacText, sx + 3, SACRIFICE_BTN_W - 6, tabVisualMidY, 0.62f, 0xFFFFE29A);
+            ctx.enableScissor(sx + 2, sy + 2, sx + SACRIFICE_BTN_W - 2, sy + sh - 2);
+            try {
+                String sacText = Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_short",
+                    state.tooltips().menu().sacrificeProgress, state.tooltips().menu().sacrificeRequired).getString();
+                RowRenderSupport.renderCenteredBoxText(ctx, state.tooltips().font(), sacText, sx + 3, SACRIFICE_BTN_W - 6, sy + sh * 0.5f - 0.2f, 0.58f, 0xFFFFE29A);
+            } finally {
+                ctx.disableScissor();
+            }
         }
 
         int cx = i + CONFIG_BTN_X;

@@ -210,8 +210,8 @@ class AuditRoundTwoTest {
         }
 
         // Verify wire protocol & byte budget constants
-        assertEquals(19, EnchantingProtocol.CURRENT_REVISION_NUMBER);
-        assertEquals("26_1_2_revision_19", EnchantingProtocol.REVISION);
+        assertEquals(20, EnchantingProtocol.CURRENT_REVISION_NUMBER);
+        assertEquals("26_1_2_revision_20", EnchantingProtocol.REVISION);
         assertEquals(980_000, PayloadLimits.MAX_SAFE_ENCODED_PAYLOAD_BYTES);
 
         JsonObject lrJson = readBundledJson("library_resonance.json");

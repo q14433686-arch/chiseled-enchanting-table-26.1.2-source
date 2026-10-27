@@ -44,7 +44,9 @@ public final class ChiseledEnchantingMenuPayloads {
         DISENCHANT_ALL("disenchant_all"),
         DOWNGRADE_ENCHANTMENT("downgrade_enchantment"),
         STRIP_SINGLE_ENCHANTMENT("strip_single_enchantment"),
-        PURGE_CURSE("purge_curse");
+        EXTRACT_ENCHANTMENT_BOOK("extract_enchantment_book"),
+        PURGE_CURSE("purge_curse"),
+        PURGE_ALL_CURSES("purge_all_curses");
 
         private final String token;
 

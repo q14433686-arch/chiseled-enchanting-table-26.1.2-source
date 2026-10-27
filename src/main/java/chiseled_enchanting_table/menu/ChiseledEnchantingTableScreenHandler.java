@@ -1662,6 +1662,19 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     public boolean isBundleAffordableWithOverflow(List<ItemStack> bundle) { return MenuPaymentService.isBundleAffordableWithOverflow(this.paymentAccess, bundle); }
 
+    public boolean isCleanseBundleAffordableFromBagOrSlot(List<ItemStack> bundle) {
+        return MenuCleanseQuotes.isCleanseBundleAffordableFromBagOrSlot(this.paymentAccess, bundle);
+    }
+
+    @org.jetbrains.annotations.Nullable
+    public List<ItemStack> resolveCleanseCostBundle(EnchantmentWithLevel ewl, OptionType type, int costOptionIndex) {
+        return MenuCleanseQuotes.resolveCleanseCostBundle(this.paymentAccess, ewl, type, costOptionIndex);
+    }
+
+    public void deductCleanseBundle(List<ItemStack> matchedBundle) {
+        MenuCleanseQuotes.deductCleanseBundle(this.paymentAccess, matchedBundle);
+    }
+
     @org.jetbrains.annotations.Nullable
     /**
      * Audit H-02: the exhaustive whitelist of operations that are <b>by design</b> allowed to
@@ -1725,16 +1738,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         boolean cleanseAction = payload.option_type() == OptionType.DISENCHANT_ALL
             || payload.option_type() == OptionType.DOWNGRADE_ENCHANTMENT
-            || payload.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
-            || payload.option_type() == OptionType.PURGE_CURSE;
+            || AvailableOption.isBagPayableCleanse(payload.option_type());
         if (cleanseAction && !isCleansePageUnlocked()) {
             tomeActionMessage("gui.chiseled_enchanting_table.tab.locked_tooltip");
             return;
         }
-        if (payload.option_type() == OptionType.DISENCHANT_ALL
-            || payload.option_type() == OptionType.DOWNGRADE_ENCHANTMENT
-            || payload.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
-            || payload.option_type() == OptionType.PURGE_CURSE) {
+        if (cleanseAction) {
             if (isRitualActive()) {
                 return;
             }

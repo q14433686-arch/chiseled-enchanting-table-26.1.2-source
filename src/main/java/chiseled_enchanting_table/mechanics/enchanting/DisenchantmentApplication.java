@@ -21,14 +21,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * Unified, single-source disenchanting, step-down downgrading, targeted single-trait stripping,
@@ -480,8 +478,10 @@ public final class DisenchantmentApplication {
         switch (type) {
             case DISENCHANT_ALL -> applyFullDisenchant(menu, target);
             case DOWNGRADE_ENCHANTMENT -> applyDowngrade(menu, target, payload.enchantment_id(), payload.enchantment_level());
-            case STRIP_SINGLE_ENCHANTMENT -> applyTargetedStrip(menu, target, payload.enchantment_id());
-            case PURGE_CURSE -> applyCursePurge(menu, target, payload.enchantment_id());
+            case STRIP_SINGLE_ENCHANTMENT -> applyTargetedStrip(menu, target, payload.enchantment_id(), payload.cost_option_index());
+            case EXTRACT_ENCHANTMENT_BOOK -> CleanseMechanics.applyExtractBook(menu, target, payload.enchantment_id(), payload.cost_option_index());
+            case PURGE_CURSE -> applyCursePurge(menu, target, payload.enchantment_id(), payload.cost_option_index());
+            case PURGE_ALL_CURSES -> CleanseMechanics.applyPurgeAllCurses(menu, target);
             default -> {}
         }
     }
@@ -563,7 +563,8 @@ public final class DisenchantmentApplication {
     private static void applyTargetedStrip(
         ChiseledEnchantingTableScreenHandler menu,
         ItemStack target,
-        Identifier targetId
+        Identifier targetId,
+        int costOptionIndex
     ) {
         ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(target);
         Holder<Enchantment> matched = findHolderById(current, targetId);
@@ -573,13 +574,13 @@ public final class DisenchantmentApplication {
         int curLvl = current.getLevel(matched);
         var ewl = new EnchantmentWithLevel(targetId, curLvl);
         var xpReq = menu.resolveEffectiveXpRequirement(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT);
-        List<ItemStack> affordableBundle = menu.findMatchingAffordableCostBundle(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT);
+        List<ItemStack> affordableBundle = menu.resolveCleanseCostBundle(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT, costOptionIndex);
         if (!xpReq.isMetBy(menu.player) || (!menu.player.getAbilities().instabuild && affordableBundle == null)) {
             return;
         }
 
         XpCostConversion.deductXp(menu.player, xpReq);
-        menu.deductMatchedBundle(affordableBundle);
+        menu.deductCleanseBundle(affordableBundle);
 
         ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
         for (var entry : current.entrySet()) {
@@ -598,7 +599,8 @@ public final class DisenchantmentApplication {
     private static void applyCursePurge(
         ChiseledEnchantingTableScreenHandler menu,
         ItemStack target,
-        Identifier targetId
+        Identifier targetId,
+        int costOptionIndex
     ) {
         if (!menu.disenchantAllowCursePurge()) {
             return;
@@ -610,13 +612,13 @@ public final class DisenchantmentApplication {
         }
         var ewl = new EnchantmentWithLevel(targetId, current.getLevel(matched));
         var xpReq = menu.resolveEffectiveXpRequirement(ewl, OptionType.PURGE_CURSE);
-        List<ItemStack> affordableBundle = menu.findMatchingAffordableCostBundle(ewl, OptionType.PURGE_CURSE);
+        List<ItemStack> affordableBundle = menu.resolveCleanseCostBundle(ewl, OptionType.PURGE_CURSE, costOptionIndex);
         if (!xpReq.isMetBy(menu.player) || (!menu.player.getAbilities().instabuild && affordableBundle == null)) {
             return;
         }
 
         XpCostConversion.deductXp(menu.player, xpReq);
-        menu.deductMatchedBundle(affordableBundle);
+        menu.deductCleanseBundle(affordableBundle);
 
         ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
         for (var entry : current.entrySet()) {
@@ -632,7 +634,7 @@ public final class DisenchantmentApplication {
         Advancement.give(menu.player, "purge_curse");
     }
 
-    private static Holder<Enchantment> findHolderById(ItemEnchantments enchantments, Identifier id) {
+    static Holder<Enchantment> findHolderById(ItemEnchantments enchantments, Identifier id) {
         for (var entry : enchantments.entrySet()) {
             if (entry.getKey().unwrapKey().map(k -> k.identifier().equals(id)).orElse(false)) {
                 return entry.getKey();
@@ -641,7 +643,7 @@ public final class DisenchantmentApplication {
         return null;
     }
 
-    private static ItemStack finishEnchantmentWrite(ItemStack source, ItemEnchantments remaining) {
+    static ItemStack finishEnchantmentWrite(ItemStack source, ItemEnchantments remaining) {
         if (source.is(Items.ENCHANTED_BOOK) && remaining.isEmpty()) {
             return new ItemStack(BlockRegistry.DEPLETED_TOME, 1);
         }
@@ -659,17 +661,10 @@ public final class DisenchantmentApplication {
         if (refundPoints <= 0) {
             return;
         }
-        Player player = menu.player;
-        if (player.level() instanceof ServerLevel serverLevel) {
-            BlockPos tablePos = menu.tableBlockPos();
-            Vec3 spawnPos = tablePos != null
-                ? Vec3.atCenterOf(tablePos).add(0.0, 0.85, 0.0)
-                : player.position().add(0.0, 0.5, 0.0);
-            ExperienceOrb.award(serverLevel, spawnPos, refundPoints);
-        }
+        CleanseMechanics.awardSmartXpRefund(menu.player, menu.tableBlockPos(), refundPoints);
     }
 
-    private static void playCleanseFeedback(ChiseledEnchantingTableScreenHandler menu, float pitch) {
+    static void playCleanseFeedback(ChiseledEnchantingTableScreenHandler menu, float pitch) {
         Player player = menu.player;
         if (player.level() instanceof ServerLevel serverLevel) {
             BlockPos pos = menu.tableBlockPos();

@@ -637,11 +637,16 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             + Math.max(0, totalSkippedXpRefund);
         int totalXpOrbRefund = (int) Math.min(Integer.MAX_VALUE, totalRefundLong);
         if (totalXpOrbRefund > 0 && level instanceof ServerLevel serverLevel) {
-            ExperienceOrb.award(
-                serverLevel,
-                net.minecraft.world.phys.Vec3.atCenterOf(pos).add(0.0, 0.9, 0.0),
-                totalXpOrbRefund
-            );
+            if (recipient != null && recipient.isAlive()) {
+                chiseled_enchanting_table.mechanics.enchanting.CleanseMechanics.awardSmartXpRefund(
+                    recipient, pos, totalXpOrbRefund);
+            } else {
+                ExperienceOrb.award(
+                    serverLevel,
+                    net.minecraft.world.phys.Vec3.atCenterOf(pos).add(0.0, 0.9, 0.0),
+                    totalXpOrbRefund
+                );
+            }
         }
         if (!totalPollutionMaterialRefunds.isEmpty() && level instanceof ServerLevel serverLevel) {
             for (ItemStack refundStack : totalPollutionMaterialRefunds) {

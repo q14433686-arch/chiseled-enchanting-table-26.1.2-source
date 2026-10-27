@@ -284,19 +284,19 @@ public final class InscribeFilterBar {
         ctx.blit(searchSprite, sx, sy, sx + searchRect.width(), sy + searchRect.height(), 0.0f, 1.0f, 0.0f, 1.0f);
 
         String text = this.searchBuffer.text();
-        ctx.enableScissor(sx + 4, sy + 2, sx + searchRect.width() - 4, sy + searchRect.height() - 2);
+        ctx.enableScissor(sx + 5, sy + 2, sx + searchRect.width() - 5, sy + searchRect.height() - 2);
         try {
             if (text.isEmpty() && !this.searchInput.focused()) {
                 String ph = Component.translatable("gui.chiseled_enchanting_table.inscribe.search_placeholder").getString();
-                RowRenderSupport.renderCenteredYText(ctx, font, ph, sx + 14, sy + 7.5f, 0.56f, searchRect.width() - 18, 0xFF9C90B3);
+                RowRenderSupport.renderCenteredYText(ctx, font, ph, sx + 6, sy + 7.5f, 0.56f, searchRect.width() - 12, 0xFF9C90B3);
             } else {
                 String shown = text;
                 if (this.searchInput.focused() && ((net.minecraft.util.Util.getMillis() / 500L) & 1L) == 0L) {
                     shown = text + "|";
                 }
-                RowRenderSupport.renderCenteredYText(ctx, font, shown, sx + 14, sy + 7.5f, 0.60f, searchRect.width() - 24, 0xFFF7F2EA);
+                RowRenderSupport.renderCenteredYText(ctx, font, shown, sx + 6, sy + 7.5f, 0.60f, searchRect.width() - 18, 0xFFF7F2EA);
                 if (!text.isEmpty()) {
-                    RowRenderSupport.renderCenteredYText(ctx, font, "\u00d7", sx + searchRect.width() - 9, sy + 7.5f, 0.66f, 8, 0xFFD9B8FF);
+                    RowRenderSupport.renderCenteredYText(ctx, font, "\u00d7", sx + searchRect.width() - 10, sy + 7.5f, 0.64f, 6, 0xFFD9B8FF);
                 }
             }
         } finally {

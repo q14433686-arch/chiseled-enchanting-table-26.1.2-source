@@ -26,7 +26,13 @@ final class TableSkin {
     static final Identifier BTN_FILTER_EXPAND = ChiseledEnchantingTable.identifier("gui/btn_filter_expand.png");
     static final Identifier BADGE_COST_CYCLE = ChiseledEnchantingTable.identifier("gui/badge_cost_cycle.png");
     static final Identifier SEARCH_BOX = ChiseledEnchantingTable.identifier("gui/config/search_box.png");
-    static final Identifier SEARCH_BOX_FOCUSED = ChiseledEnchantingTable.identifier("gui/config/search_box_focused.png");
+    static final Identifier SEARCH_BOX_FOCUSED = ChiseledEnchantingTable.identifier("gui/config/search_box_focus.png");
+    static final Identifier CLEANSE_SEARCH_BOX = ChiseledEnchantingTable.identifier("gui/cleanse_search_box.png");
+    static final Identifier CLEANSE_SEARCH_BOX_FOCUSED = ChiseledEnchantingTable.identifier("gui/cleanse_search_box_focus.png");
+    static final Identifier BTN_CLEANSE_MODE = ChiseledEnchantingTable.identifier("gui/btn_cleanse_mode.png");
+    static final Identifier BTN_CLEANSE_AFFORDABLE = ChiseledEnchantingTable.identifier("gui/btn_cleanse_affordable.png");
+    static final Identifier BTN_CLEANSE_EXPAND = ChiseledEnchantingTable.identifier("gui/btn_cleanse_expand.png");
+    static final Identifier BTN_PURGE_ALL_CURSES = ChiseledEnchantingTable.identifier("gui/btn_purge_all_curses.png");
 
     static final int CONFIG_BTN_X = 293;
     static final int CONFIG_BTN_Y_OFFSET = -20;
@@ -49,8 +55,8 @@ final class TableSkin {
     static final int TAB_INSCRIBE_X = 14;
     static final int TAB_CLEANSE_X = 92;
     static final int TAB_TOMES_X = 170;
-    static final int SACRIFICE_BTN_X = 248;
-    static final int SACRIFICE_BTN_W = 40;
+    static final int SACRIFICE_BTN_X = 247;
+    static final int SACRIFICE_BTN_W = 44;
 
     // Integrated Sanctum / Cleanse Console coordinates inside the cohesive 340x166 window chassis.
     static final int PANEL_X = TomeDirectoryLayout.PANEL_X;
@@ -70,6 +76,8 @@ final class TableSkin {
     static final int FREEZE_BTN_Y = PANEL_Y + 35;
     static final int REROLL_BTN_X = PANEL_X + 95;
     static final int REROLL_BTN_Y = PANEL_Y + 35;
+    static final int PURGE_CURSES_BTN_X = PANEL_X + 79;
+    static final int PURGE_CURSES_BTN_Y = PANEL_Y + 35;
     static final int CLEANSE_ALL_BTN_X = PANEL_X + 95;
     static final int CLEANSE_ALL_BTN_Y = PANEL_Y + 35;
 

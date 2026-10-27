@@ -8,6 +8,7 @@ public final class TomeDirectoryLayout {
     public static final int WIDTH = 151, HEIGHT = 59, GAP = 2, FRAME = 4, BUTTON_INSET = 3;
     public static final int POPUP_Y = HEIGHT + GAP, POPUP_ROW_HEIGHT = 12, POPUP_LIMIT = 5;
     public static final int INSCRIBE_BAR_HEIGHT = 15, INSCRIBE_LIST_OFFSET = INSCRIBE_BAR_HEIGHT + GAP;
+    public static final int CLEANSE_BAR_HEIGHT = 15, CLEANSE_LIST_OFFSET = CLEANSE_BAR_HEIGHT + GAP;
     public static final int TOME_BUTTON_COUNT = 8, RITUAL_BUTTON_COUNT = 4;
     public record Rect(int x, int y, int width, int height) {
         public int right() { return x + width; }
@@ -37,11 +38,16 @@ public final class TomeDirectoryLayout {
     }
     public static Rect ritualButton(int i) {
         if(i<0 || i>=RITUAL_BUTTON_COUNT) throw new IllegalArgumentException("Unknown ritual button: " + i);
-        return new Rect(PANEL_X+13+i*24, PANEL_Y+34, 18, 18);
+        return new Rect(PANEL_X+14+i*24, PANEL_Y+33, 16, 16);
     }
     public static Rect inscribeSearchBox() { return new Rect(0, 0, 115, INSCRIBE_BAR_HEIGHT); }
     public static Rect inscribeAffordableButton() { return new Rect(118, 0, INSCRIBE_BAR_HEIGHT, INSCRIBE_BAR_HEIGHT); }
     public static Rect inscribeExpandButton() { return new Rect(136, 0, INSCRIBE_BAR_HEIGHT, INSCRIBE_BAR_HEIGHT); }
+    public static Rect cleanseSearchBox() { return new Rect(0, 0, 97, CLEANSE_BAR_HEIGHT); }
+    public static Rect cleanseModeButton() { return new Rect(100, 0, CLEANSE_BAR_HEIGHT, CLEANSE_BAR_HEIGHT); }
+    public static Rect cleanseAffordableButton() { return new Rect(118, 0, CLEANSE_BAR_HEIGHT, CLEANSE_BAR_HEIGHT); }
+    public static Rect cleanseExpandButton() { return new Rect(136, 0, CLEANSE_BAR_HEIGHT, CLEANSE_BAR_HEIGHT); }
     public static int listOffset() { return HEIGHT + GAP; }
     public static int inscribeListOffset() { return INSCRIBE_LIST_OFFSET; }
+    public static int cleanseListOffset() { return CLEANSE_LIST_OFFSET; }
 }
