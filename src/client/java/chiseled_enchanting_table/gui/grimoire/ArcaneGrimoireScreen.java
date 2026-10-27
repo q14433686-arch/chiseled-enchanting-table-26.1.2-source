@@ -1,4 +1,5 @@
 package chiseled_enchanting_table.gui.grimoire;
+import chiseled_enchanting_table.gui.TooltipPresentation;
 
 import static chiseled_enchanting_table.gui.grimoire.GrimoireTextLayout.*;
 
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import chiseled_enchanting_table.compat.CetFormatting;
+import net.minecraft.network.chat.Style;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -49,7 +52,7 @@ public class ArcaneGrimoireScreen extends Screen {
     /** Base UV coordinate system of {@code gui/grimoire_spread.png} (672x424 = 2x of 336x212). */
     public static final int BASE_BOOK_W = 336;
     public static final int BASE_BOOK_H = 212;
-    public static final int CHAPTER_COUNT = 8;
+    public static final int CHAPTER_COUNT = 9;
 
     /** Maps every spread index (`0 = Home`, `1..N = multi-page chapter spreads`) to `(chapter, subPage, totalPages)`. */
     public record SpreadSpec(int chapter, int subPage, int totalPages) {}
@@ -69,7 +72,8 @@ public class ArcaneGrimoireScreen extends Screen {
         new SpreadSpec(6, 1, 1), // 11: Ch 6 — 宝藏顿悟（稀有×通用加权）、冰封与重随
         new SpreadSpec(7, 1, 2), // 12: Ch 7 (1/2) — 物品批量置换与台内残卷 4 档还原
         new SpreadSpec(7, 2, 2), // 13: Ch 7 (2/2) — 褪魔残卷：世界宝箱、野生书架(<=30%)与图书管理员交易
-        new SpreadSpec(8, 1, 1)  // 14: Ch 8 — 退魔返经验、单洗词条与破除诅咒
+        new SpreadSpec(8, 1, 1), // 14: Ch 8 — 退魔返经验、单洗词条与破除诅咒
+        new SpreadSpec(9, 1, 1)  // 15: Ch 9 — 功能页解锁、纂刻的书与母本锁定
     );
 
     public static final int MAX_SPREAD_INDEX = SPREAD_SPECS.size() - 1;
@@ -105,7 +109,8 @@ public class ArcaneGrimoireScreen extends Screen {
         0xFF4C236E,
         0xFF8B5E14,
         0xFF2B6B58,
-        0xFF7D2430
+        0xFF7D2430,
+        0xFF285E8B
     };
 
     @Nullable
@@ -203,7 +208,8 @@ public class ArcaneGrimoireScreen extends Screen {
                 new ItemStack(Items.ENCHANTED_BOOK),
                 new ItemStack(BlockRegistry.ARCANE_CATALYST),
                 new ItemStack(Items.ENCHANTED_GOLDEN_APPLE),
-                new ItemStack(BlockRegistry.CLEANSING_GRIT)
+                new ItemStack(BlockRegistry.CLEANSING_GRIT),
+                new ItemStack(Items.CLOCK)
             );
         }
     }
@@ -331,18 +337,11 @@ public class ArcaneGrimoireScreen extends Screen {
             List<Component> itemLines = new ArrayList<>(Screen.getTooltipFromItem(this.minecraft, st));
             if (GrimoireViewerBridge.isAvailable()) {
                 itemLines.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.viewer_hint")
-                    .withStyle(style -> style.withColor(0xFF555555)));
+                    .withStyle(CetFormatting.DARK_GRAY));
             }
-            ctx.setTooltipForNextFrame(
-                this.font,
-                itemLines,
-                st.getTooltipImage(),
-                mouseX,
-                mouseY,
-                st.get(DataComponents.TOOLTIP_STYLE)
-            );
+            TooltipPresentation.show(ctx, this.font, itemLines, st.getTooltipImage(), mouseX, mouseY, st.get(DataComponents.TOOLTIP_STYLE));
         } else if (!hoveredTabTip.isEmpty()) {
-            ctx.setTooltipForNextFrame(this.font, hoveredTabTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            TooltipPresentation.show(ctx, this.font, hoveredTabTip, Optional.empty(), mouseX, mouseY, null);
         }
     }
 
@@ -429,7 +428,7 @@ public class ArcaneGrimoireScreen extends Screen {
         if (this.spreadIndex == 0) {
             crumb = Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.crumb_home").getString();
         } else {
-            String base = String.format("%02d / %02d  ", curSpec.chapter(), CHAPTER_COUNT)
+            String base = String.format(java.util.Locale.ROOT, "%02d / %02d  ", curSpec.chapter(), CHAPTER_COUNT)
                 + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + curSpec.chapter() + ".short").getString();
             crumb = curSpec.totalPages() > 1
                 ? base + " · " + curSpec.subPage() + "/" + curSpec.totalPages()
@@ -474,7 +473,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 drawCenteredBox(
                     ctx,
                     this.font,
-                    String.format("%02d", i),
+                    String.format(java.util.Locale.ROOT, "%02d", i),
                     tx + 2,
                     tw - 4,
                     ty + tabH * 0.5f,
@@ -488,13 +487,13 @@ public class ArcaneGrimoireScreen extends Screen {
             if (over) {
                 if (i == 0) {
                     hoveredTabTip.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.nav.home")
-                        .withStyle(style -> style.withColor(0xFFFFAA00)));
+                        .withStyle(CetFormatting.GOLD));
                 } else {
-                    hoveredTabTip.add(Component.literal(String.format("%02d  ", i))
+                    hoveredTabTip.add(Component.literal(String.format(java.util.Locale.ROOT, "%02d  ", i))
                         .append(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + i + ".title"))
-                        .withStyle(style -> style.withColor(0xFFFFAA00)));
+                        .withStyle(CetFormatting.GOLD));
                     hoveredTabTip.add(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + i + ".sub")
-                        .withStyle(style -> style.withColor(0xFFAAAAAA)));
+                        .withStyle(CetFormatting.GRAY));
                 }
             }
         }
@@ -599,7 +598,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 this.interactiveRegions.add(new HitRegion(cx, fy, chipW, this.footerH, NAV_SPREAD, String.valueOf(spreadOf(curSpec.chapter(), p))));
             }
         } else {
-            String pageCounter = String.format("%d / %d", this.spreadIndex, MAX_SPREAD_INDEX);
+            String pageCounter = String.format(java.util.Locale.ROOT, "%d / %d", this.spreadIndex, MAX_SPREAD_INDEX);
             drawLeftCenteredY(ctx, this.font, pageCounter, rx + 2, fy + this.footerH * 0.5f, 0.68f, 52, INK_MUTED, false);
         }
 
@@ -797,7 +796,7 @@ public class ArcaneGrimoireScreen extends Screen {
             pose.popMatrix();
             this.itemSlots.add(new HoveredSlot(icon, new Rect2i(iconX - 1, ry + 1, iconSize + 2, rowH - 2), false));
 
-            String title = String.format("%02d  ", ch)
+            String title = String.format(java.util.Locale.ROOT, "%02d  ", ch)
                 + Component.translatable("gui.chiseled_enchanting_table.grimoire.ch" + ch + ".title").getString();
             drawLeftCenteredY(
                 ctx,
@@ -837,8 +836,8 @@ public class ArcaneGrimoireScreen extends Screen {
         String d2 = GrimoireDiagramRenderer.formatCleanGameDays(lr.tomeRegenTier2Seconds());
 
         String badge = spec.totalPages() > 1
-            ? String.format("%02d·%d", ch, sub)
-            : String.format("%02d", ch);
+            ? String.format(java.util.Locale.ROOT, "%02d·%d", ch, sub)
+            : String.format(java.util.Locale.ROOT, "%02d", ch);
         Component title;
         if (ch == 3 && sub == 1) {
             title = Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.title");
@@ -900,7 +899,12 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.rules"), INK_GOLD_DARK),
                     PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.s1")),
                     PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.s2")),
-                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.s3")),
+                    PageBlock.step(3, Component.translatable(
+                        "gui.chiseled_enchanting_table.grimoire.ch3p0.s3",
+                        lr.maxWoodenDiscountPercent(),
+                        lr.tomeRegenTier1Shelves(),
+                        lr.tomeRegenTier2Shelves()
+                    )),
                     PageBlock.callout(
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.note_t"),
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p0.note_b"),
@@ -911,7 +915,8 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.lead(Component.translatable(
                         "gui.chiseled_enchanting_table.grimoire.ch3.lead",
                         sg.horizontalScanRadius(),
-                        sg.verticalScanRadius()
+                        sg.verticalScanRadius(),
+                        sg.minOpenAdjacentBlocks()
                     )),
                     PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.tracks"), INK_GOLD_DARK),
                     PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t1")),
@@ -919,7 +924,7 @@ public class ArcaneGrimoireScreen extends Screen {
                         "gui.chiseled_enchanting_table.grimoire.ch3.t2",
                         sg.maxDirectBookshelves()
                     )),
-                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t3")),
+                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.t3", lr.maxTomeUses())),
                     PageBlock.callout(
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.note_t"),
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3.note_b"),
@@ -930,12 +935,16 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.lead(Component.translatable(
                         "gui.chiseled_enchanting_table.grimoire.ch3p2.lead",
                         midShelf,
-                        10
+                        SyncedEnchantmentCosts.ritualConfig().minTomeEnchantsForWait()
                     )),
                     PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.rules"), INK_PURPLE),
                     PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.s1")),
                     PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.s2")),
-                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.s3")),
+                    PageBlock.step(3, Component.translatable(
+                        "gui.chiseled_enchanting_table.grimoire.ch3p2.s3",
+                        (int) Math.round(SyncedEnchantmentCosts.ritualConfig().maxRushDegradeNormal() * 100.0),
+                        (int) Math.round(SyncedEnchantmentCosts.ritualConfig().maxRushDegradeInfinity() * 100.0)
+                    )),
                     PageBlock.callout(
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.note_t"),
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch3p2.note_b"),
@@ -957,7 +966,8 @@ public class ArcaneGrimoireScreen extends Screen {
                             lr.maxWoodenDiscountPercent(),
                             lr.maxGlobalMasteryDiscountPercent(),
                             lr.maxBaseXpDiscountPercent(),
-                            lr.maxSpecificEnchantBonusPercent()
+                            lr.maxSpecificEnchantBonusPercent(),
+                            lr.maxTotalXpDiscountPercent()
                         ),
                         INK_EMERALD
                     )
@@ -983,7 +993,12 @@ public class ArcaneGrimoireScreen extends Screen {
                     PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch5.s3")),
                     PageBlock.callout(
                         Component.translatable("gui.chiseled_enchanting_table.grimoire.ch5.note_t"),
-                        Component.translatable("gui.chiseled_enchanting_table.grimoire.ch5.note_b"),
+                        Component.translatable(
+                            "gui.chiseled_enchanting_table.grimoire.ch5.note_b",
+                            lr.maxTomeUses(),
+                            lr.tomeRegenTier1Shelves(),
+                            lr.tomeRegenTier2Shelves()
+                        ),
                         INK_GOLD_DARK
                     )
                 )
@@ -1012,6 +1027,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 PageBlock.step(2, Component.translatable(
                     "gui.chiseled_enchanting_table.grimoire.ch6.s2",
                     SyncedEnchantmentCosts.epiphanyMinBookshelves(),
+                    Math.max(1, Math.round(SyncedEnchantmentCosts.epiphanyCycleTicks() / 1200.0f)),
                     SyncedEnchantmentCosts.epiphanyMaxSlotsCap()
                 )),
                 PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch6.s3")),
@@ -1055,15 +1071,60 @@ public class ArcaneGrimoireScreen extends Screen {
                         INK_PURPLE
                     )
                 );
-            default -> List.of(
-                PageBlock.lead(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.lead")),
-                PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.steps"), INK_CRIMSON),
-                PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s1")),
-                PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s2")),
-                PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s3")),
-                PageBlock.step(4, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s4"))
+            case 9 -> List.of(
+                PageBlock.lead(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.lead")),
+                PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.rules"), INK_GOLD_DARK),
+                PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s1",
+                    chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().sacrificeRequired())),
+                PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s2",
+                    chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().tomePageRequiredShelves())),
+                PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s3")),
+                PageBlock.step(4, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.s4",
+                    chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().earlyUnlockXpLevels(),
+                    chiseled_enchanting_table.compat.SyncedEnchantmentCosts.libraryResonanceConfig().earlyUnlockGritCount())),
+                PageBlock.callout(
+                    Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.note_t"),
+                    Component.translatable("gui.chiseled_enchanting_table.grimoire.ch9.note_b"),
+                    INK_PURPLE
+                )
             );
+            default -> {
+                int curseXp = SyncedEnchantmentCosts.find(
+                    chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.PURGE_CURSE,
+                    net.minecraft.resources.Identifier.withDefaultNamespace("binding_curse"),
+                    1
+                ).map(SyncedEnchantmentCosts.Cost::xpLevelCost)
+                    .orElseGet(chiseled_enchanting_table.data.ChiseledEnchantingTableData::cursePurgeXpCost);
+                yield List.of(
+                    PageBlock.lead(Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.lead")),
+                    PageBlock.header(Component.translatable("gui.chiseled_enchanting_table.grimoire.sec.steps"), INK_CRIMSON),
+                    PageBlock.step(1, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s1")),
+                    PageBlock.step(2, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s2")),
+                    PageBlock.step(3, Component.translatable("gui.chiseled_enchanting_table.grimoire.ch8.s3")),
+                    PageBlock.step(4, Component.translatable(
+                        "gui.chiseled_enchanting_table.grimoire.ch8.s4",
+                        curseXp,
+                        lr.maxBaseXpDiscountPercent()
+                    ))
+                );
+            }
         };
+
+        // 1.0.3 Classic (audit finding 12): chapters describing systems that do
+        // not exist in classic (resonance discounts Ch.4, tome wear/regen Ch.5,
+        // Treasure Epiphany Ch.6, cleanse Ch.8, tome-page locks Ch.9, ritual
+        // wait/slip Ch.3 p.3) must say so instead of teaching standard-mode rules.
+        boolean classic103 = chiseled_enchanting_table.config.ModRuntimeConfig.effective().classic103Mode();
+        if (classic103 && ch != 0) {
+            List<PageBlock> withNotice = new ArrayList<>();
+            withNotice.add(PageBlock.callout(
+                Component.translatable("gui.chiseled_enchanting_table.grimoire.classic_notice.title"),
+                Component.translatable("gui.chiseled_enchanting_table.grimoire.classic_notice"),
+                INK_EMERALD
+            ));
+            withNotice.addAll(blocks);
+            blocks = List.copyOf(withNotice);
+        }
 
         return GrimoireTextLayout.renderStructuredColumn(
             ctx,
@@ -1155,6 +1216,9 @@ public class ArcaneGrimoireScreen extends Screen {
                         );
                     }
                 }
+                case 9 -> GrimoireDiagramRenderer.renderChapter5InfinityAndRegen(
+                    ctx, this.minecraft, x, y, w, h, mouseX, mouseY, this.itemSlots
+                );
                 default -> GrimoireDiagramRenderer.renderChapter8Cleanse(
                     ctx, this.minecraft, x, y, w, h, mouseX, mouseY, this.itemSlots
                 );
@@ -1173,22 +1237,21 @@ public class ArcaneGrimoireScreen extends Screen {
         double mouseX = event.x();
         double mouseY = event.y();
 
-        // 26.2 still reports GLFW button ids here (left = 0, right = 1); the SDL renumbering
-        // that 26.3 needed does not apply to this line.
+        // Use InputConstants button constants across Minecraft versions.
         HoveredSlot slot = hoveredIngredient(mouseX, mouseY);
         if (slot != null && GrimoireViewerBridge.isAvailable()) {
-            if (event.button() == 1) {
+            if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
                 if (GrimoireViewerBridge.openUses(slot.stack())) {
                     return true;
                 }
-            } else if (event.button() == 0 && (slot.leftClickOpensRecipes() || event.hasShiftDown())) {
+            } else if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && (slot.leftClickOpensRecipes() || event.hasShiftDown())) {
                 if (GrimoireViewerBridge.openRecipes(slot.stack())) {
                     return true;
                 }
             }
         }
 
-        if (event.button() == 0) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             int maxCap = Math.max(1, SyncedEnchantmentCosts.shelfGatesConfig().maxDirectBookshelves());
             for (HitRegion region : this.interactiveRegions) {
                 if (region.contains(mouseX, mouseY)) {
@@ -1270,8 +1333,12 @@ public class ArcaneGrimoireScreen extends Screen {
             return true;
         }
 
-        // Direct R / U recipe-viewer lookup fallback when hovering an item slot
-        if ((keyCode == InputConstants.KEY_R || keyCode == InputConstants.KEY_U) && GrimoireViewerBridge.isAvailable()) {
+        // Configurable recipe-viewer lookup keybindings when hovering an item slot (GUI-03)
+        boolean matchRecipe = chiseled_enchanting_table.ChiseledEnchantingTableClient.KEY_GRIMOIRE_RECIPE != null
+            && chiseled_enchanting_table.ChiseledEnchantingTableClient.KEY_GRIMOIRE_RECIPE.matches(event);
+        boolean matchUses = chiseled_enchanting_table.ChiseledEnchantingTableClient.KEY_GRIMOIRE_USES != null
+            && chiseled_enchanting_table.ChiseledEnchantingTableClient.KEY_GRIMOIRE_USES.matches(event);
+        if ((matchRecipe || matchUses) && GrimoireViewerBridge.isAvailable()) {
             double mx = this.minecraft.mouseHandler.xpos()
                 * (double) this.minecraft.getWindow().getGuiScaledWidth()
                 / (double) this.minecraft.getWindow().getScreenWidth();
@@ -1280,7 +1347,7 @@ public class ArcaneGrimoireScreen extends Screen {
                 / (double) this.minecraft.getWindow().getScreenHeight();
             HoveredSlot slot = hoveredIngredient(mx, my);
             if (slot != null) {
-                boolean opened = (keyCode == InputConstants.KEY_R)
+                boolean opened = matchRecipe
                     ? GrimoireViewerBridge.openRecipes(slot.stack())
                     : GrimoireViewerBridge.openUses(slot.stack());
                 if (opened) {

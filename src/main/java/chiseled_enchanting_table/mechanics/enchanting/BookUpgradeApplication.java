@@ -36,9 +36,12 @@ public final class BookUpgradeApplication {
         if (!ChiseledEnchantingTableData.bookCombineEnabled()) return false;
         ItemStack targetBook = handler.get_enchantable_item();
         ItemStack costBook = handler.get_cost_item();
-        if (!targetBook.is(Items.ENCHANTED_BOOK) || !costBook.is(Items.ENCHANTED_BOOK)) return false;
+        if (!targetBook.is(Items.ENCHANTED_BOOK) || targetBook.getCount() != 1
+            || !costBook.is(Items.ENCHANTED_BOOK) || costBook.isEmpty()) return false;
 
-        Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), handler.world());
+        var optEnchantment = ChiseledEnchantingTableScreenHandler.findEnchantment(payload.enchantment_id(), handler.world());
+        if (optEnchantment.isEmpty()) return false;
+        Holder<Enchantment> enchantment = optEnchantment.get();
         int targetLevel = payload.enchantment_level();
         int sourceLevel = targetLevel - 1;
         if (sourceLevel < 1 || targetLevel > enchantment.value().getMaxLevel()) return false;
@@ -47,13 +50,14 @@ public final class BookUpgradeApplication {
         ItemEnchantments costEnchants = EnchantmentHelper.getEnchantmentsForCrafting(costBook);
         if (targetEnchants.getLevel(enchantment) != sourceLevel || costEnchants.getLevel(enchantment) != sourceLevel) return false;
 
-        EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), targetLevel);
-        var xpReq = handler.resolveEffectiveXpRequirement(ewl, OptionType.BOOK_COMBINE_UPGRADE);
+        // Audit H-01: charge for every enchantment this click actually raises on the
+        // merged book, not just the clicked row (the merge below applies all of them).
+        var xpReq = handler.bookCombineXpRequirement();
         if (!xpReq.isMetBy(handler.player)) return false;
         XpCostConversion.deductXp(handler.player, xpReq);
 
         ItemStack targetSnapshot = targetBook.copy();
-        ItemStack costSnapshot = costBook.copy();
+        ItemStack costSnapshot = costBook.copyWithCount(1);
 
         ItemEnchantments.Mutable merged = new ItemEnchantments.Mutable(targetEnchants);
         for (var entry : costEnchants.entrySet()) {
@@ -67,15 +71,32 @@ public final class BookUpgradeApplication {
         }
         merged.set(enchantment, targetLevel);
         writeEnchantments(targetBook, merged);
-        EnchantmentProvenance.recordBookCombine(
-            targetSnapshot,
-            costSnapshot,
-            targetBook,
-            EnchantmentHelper.getEnchantmentsForCrafting(targetBook)
-        );
+        if (handler.isProvenanceEnabled()) {
+            EnchantmentProvenance.recordBookCombine(
+                targetSnapshot,
+                costSnapshot,
+                targetBook,
+                EnchantmentHelper.getEnchantmentsForCrafting(targetBook)
+            );
+            chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                targetBook,
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.mergedGeneration(
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(targetSnapshot),
+                    chiseled_enchanting_table.mechanics.resonance.TomeWearData.getGeneration(costSnapshot)));
+        } else {
+            EnchantmentProvenance.clearAll(targetBook);
+        }
 
-        // Drained source book carries arcane residue and becomes a stackable Depleted Tome requiring Blank Overwrite.
-        handler.setCostSlot(new ItemStack(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME, 1));
+        ItemStack depleted = new ItemStack(
+            handler.returnsPlainDrainedBook() ? Items.BOOK : chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME,
+            1
+        );
+        if (costBook.getCount() <= 1) {
+            handler.setCostSlot(depleted);
+        } else {
+            handler.setCostSlot(costBook.copyWithCount(costBook.getCount() - 1));
+            chiseled_enchanting_table.utils.InventoryUtils.insertItem(handler.player, depleted, java.util.Optional.empty());
+        }
         finish(handler);
         Advancement.give(handler.player, "upgrade_enchanted_book");
         Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());
@@ -85,9 +106,11 @@ public final class BookUpgradeApplication {
     private static boolean applyResearch(ChiseledEnchantingTableScreenHandler handler, ApplyEnchantmentPayload payload) {
         if (!ChiseledEnchantingTableData.bookResearchEnabled()) return false;
         ItemStack targetBook = handler.get_enchantable_item();
-        if (!targetBook.is(Items.ENCHANTED_BOOK)) return false;
+        if (!targetBook.is(Items.ENCHANTED_BOOK) || targetBook.getCount() != 1) return false;
 
-        Holder<Enchantment> enchantment = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(payload.enchantment_id(), handler.world());
+        var optEnchantment = ChiseledEnchantingTableScreenHandler.findEnchantment(payload.enchantment_id(), handler.world());
+        if (optEnchantment.isEmpty()) return false;
+        Holder<Enchantment> enchantment = optEnchantment.get();
         int targetLevel = payload.enchantment_level();
         int sourceLevel = targetLevel - 1;
         if (sourceLevel < 1 || targetLevel > enchantment.value().getMaxLevel()) return false;
@@ -108,8 +131,12 @@ public final class BookUpgradeApplication {
         ItemEnchantments.Mutable upgraded = new ItemEnchantments.Mutable(current);
         upgraded.set(enchantment, targetLevel);
         writeEnchantments(targetBook, upgraded);
-        EnchantmentProvenance.recordTablePayment(targetBook, payload.enchantment_id(), sourceLevel, targetLevel);
-        EnchantmentProvenance.pruneToCurrentEnchantments(targetBook, EnchantmentHelper.getEnchantmentsForCrafting(targetBook));
+        if (handler.isProvenanceEnabled()) {
+            EnchantmentProvenance.recordTablePayment(targetBook, payload.enchantment_id(), sourceLevel, targetLevel);
+            EnchantmentProvenance.pruneToCurrentEnchantments(targetBook, EnchantmentHelper.getEnchantmentsForCrafting(targetBook));
+        } else {
+            EnchantmentProvenance.clearAll(targetBook);
+        }
         finish(handler);
         Advancement.give(handler.player, "upgrade_enchanted_book");
         Advancement.checkBookMilestones(handler.player, handler.world(), handler.get_enchantable_item());

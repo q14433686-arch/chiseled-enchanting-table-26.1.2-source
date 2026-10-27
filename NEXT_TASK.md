@@ -1,5 +1,11 @@
 # Next Task: post-1.1.0 backlog (Minecraft 26.2 line)
 
+> **2026-10-27 update — full 26.3 rev12 port + seven-path audit LANDED on this line (wire `26_2_revision_7`).
+> Real CI green (162 JUnit / jar / server smoke). The remaining items below that describe GUI/IME/multiplayer
+> manual checks are still valid; the functional feature/balance items from the 26.3 line have been ported.
+> See [`docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md`](docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md).**
+
+
 > **Unofficial community port.** All instructions below apply to the unofficial 26.2 port
 > (this repository). The upstream `Sacramentix/chiseled-enchanting-table` project is not affected
 > by this version line.

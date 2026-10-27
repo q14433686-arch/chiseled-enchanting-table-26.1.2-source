@@ -3,8 +3,9 @@
 > **Unofficial community port.** All documents indexed below describe the unofficial 26.2 port
 > in this repository. It is not affiliated with or endorsed by the original author of
 > [`chiseled-enchanting-table`](https://github.com/Sacramentix/chiseled-enchanting-table).
-> Current version: **`1.1.0`** (Minecraft 26.2). The `26.3`-line increment through source
-> `3e61f5d` is ported to this line (wire revision 6); see
+> Current version: **`1.1.0`** (Minecraft 26.2), wire **`26_2_revision_7`** (as of the 2026-10-27
+> full port, see [`reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md`](reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md).
+> Earlier: the `26.3`-line increment through source `3e61f5d` was ported (wire revision 6); see
 > [`reports/SYNC_FROM_26_3_SIDE_REPORT.md`](reports/SYNC_FROM_26_3_SIDE_REPORT.md) for the change
 > mapping, the 26.2 adaptations and the CI evidence, plus the source branch's
 > [cross-branch audit](reports/CROSS_BRANCH_3E61F5D_ARCHITECTURE_REVIEW.md).

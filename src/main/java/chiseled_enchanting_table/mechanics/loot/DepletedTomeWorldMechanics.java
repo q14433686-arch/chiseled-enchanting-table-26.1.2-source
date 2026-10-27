@@ -1,9 +1,16 @@
 package chiseled_enchanting_table.mechanics.loot;
 
+import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.registry.BlockRegistry;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,7 +81,9 @@ public final class DepletedTomeWorldMechanics {
         MASTER_TOME_CHISELED_BOOKSHELF;
 
         public boolean isBroadBookshelf() {
-            return this != NONE;
+            return this == REGULAR_BOOKSHELF
+                || this == BOOK_CHISELED_BOOKSHELF
+                || this == MASTER_TOME_CHISELED_BOOKSHELF;
         }
 
         public boolean isRegularBookshelf() {
@@ -92,27 +101,33 @@ public final class DepletedTomeWorldMechanics {
         boolean anySlotHasBookIncludingDepletedTome,
         boolean anySlotHasEnchantedBook
     ) {
+        // Audit COUP-05: enforce W ∩ C = ∅ unconditionally; Chiseled Bookshelves always classify
+        // under the Chiseled branch even if a datapack erroneously adds them to #regular_bookshelves.
+        if (chiseledBookshelfBlock) {
+            if (!anySlotHasBookIncludingDepletedTome) {
+                return ShelfTaxonomyKind.EMPTY_CHISELED_BOOKSHELF;
+            }
+            return anySlotHasEnchantedBook
+                ? ShelfTaxonomyKind.MASTER_TOME_CHISELED_BOOKSHELF
+                : ShelfTaxonomyKind.BOOK_CHISELED_BOOKSHELF;
+        }
         if (regularWoodenBookshelf) {
             return ShelfTaxonomyKind.REGULAR_BOOKSHELF;
         }
-        if (!chiseledBookshelfBlock) {
-            return ShelfTaxonomyKind.NONE;
-        }
-        if (!anySlotHasBookIncludingDepletedTome) {
-            return ShelfTaxonomyKind.EMPTY_CHISELED_BOOKSHELF;
-        }
-        return anySlotHasEnchantedBook
-            ? ShelfTaxonomyKind.MASTER_TOME_CHISELED_BOOKSHELF
-            : ShelfTaxonomyKind.BOOK_CHISELED_BOOKSHELF;
+        return ShelfTaxonomyKind.NONE;
     }
 
+    /**
+     * Computes broad-sense bookshelf count ({@code 广义书架}): regular bookshelves plus occupied
+     * chiseled bookshelves (holding at least one book, including Depleted Tomes). Empty chiseled
+     * bookshelves ({@code 0} books) provide zero arcane resonance and are excluded.
+     */
     public static int computeBroadBookshelfCount(
         int regularBookshelves,
         int emptyChiseledBookshelves,
         int occupiedChiseledBookshelvesIncludingDepletedTome
     ) {
         return Math.max(0, regularBookshelves)
-            + Math.max(0, emptyChiseledBookshelves)
             + Math.max(0, occupiedChiseledBookshelvesIncludingDepletedTome);
     }
 
@@ -161,66 +176,169 @@ public final class DepletedTomeWorldMechanics {
     }
 
     // -------------------------------------------------------------------------
-    // 3. Structure Chest Loot Spawn Table
+    // 3. Structure Chest Loot Spawn Table (Data-Driven via loot_injections.json)
     // -------------------------------------------------------------------------
 
     public record ChestLootSpec(String category, float probability, int minCount, int maxCount) {}
 
-    private static final Map<String, ChestLootSpec> EXACT_CHEST_SPECS = Map.ofEntries(
-        // Tier S — Ancient Libraries & Grand Archives (35% - 55%)
-        Map.entry("chests/stronghold_library", new ChestLootSpec("archive", 0.55F, 1, 3)),
-        Map.entry("chests/woodland_mansion", new ChestLootSpec("archive", 0.42F, 1, 2)),
-        Map.entry("chests/ancient_city", new ChestLootSpec("archive", 0.40F, 1, 3)),
-        Map.entry("chests/ancient_city_ice_box", new ChestLootSpec("archive", 0.28F, 1, 2)),
-        Map.entry("chests/end_city_treasure", new ChestLootSpec("archive", 0.35F, 1, 2)),
-        // Tier A — Temples, Strongholds, Bastions & Nether Fortresses (24% - 30%)
-        Map.entry("chests/desert_pyramid", new ChestLootSpec("temple", 0.30F, 1, 2)),
-        Map.entry("chests/jungle_temple", new ChestLootSpec("temple", 0.30F, 1, 2)),
-        Map.entry("chests/stronghold_corridor", new ChestLootSpec("temple", 0.28F, 1, 2)),
-        Map.entry("chests/stronghold_crossing", new ChestLootSpec("temple", 0.28F, 1, 2)),
-        Map.entry("chests/nether_bridge", new ChestLootSpec("temple", 0.25F, 1, 2)),
-        Map.entry("chests/bastion_treasure", new ChestLootSpec("temple", 0.28F, 1, 2)),
-        Map.entry("chests/bastion_other", new ChestLootSpec("temple", 0.24F, 1, 2)),
-        Map.entry("chests/bastion_bridge", new ChestLootSpec("temple", 0.22F, 1, 2)),
-        Map.entry("chests/bastion_hoglin_stable", new ChestLootSpec("temple", 0.20F, 1, 1)),
-        Map.entry("chests/ruined_portal", new ChestLootSpec("temple", 0.24F, 1, 2)),
-        // Tier B — Dungeons, Mineshafts, Shipwrecks & Ruins (18% - 20%)
-        Map.entry("chests/simple_dungeon", new ChestLootSpec("dungeon", 0.20F, 1, 2)),
-        Map.entry("chests/abandoned_mineshaft", new ChestLootSpec("dungeon", 0.20F, 1, 2)),
-        Map.entry("chests/shipwreck_map", new ChestLootSpec("dungeon", 0.22F, 1, 2)),
-        Map.entry("chests/shipwreck_treasure", new ChestLootSpec("dungeon", 0.18F, 1, 1)),
-        Map.entry("chests/underwater_ruin_big", new ChestLootSpec("dungeon", 0.20F, 1, 2)),
-        Map.entry("chests/underwater_ruin_small", new ChestLootSpec("dungeon", 0.16F, 1, 1)),
-        Map.entry("chests/pillager_outpost", new ChestLootSpec("dungeon", 0.18F, 1, 1)),
-        Map.entry("chests/igloo_chest", new ChestLootSpec("dungeon", 0.18F, 1, 1)),
-        Map.entry("chests/buried_treasure", new ChestLootSpec("dungeon", 0.18F, 1, 1))
-    );
+    public record PrefixRule(String namespaceAndPathPrefix, ChestLootSpec spec) {}
+
+    /**
+     * Data-driven chest spawn table loaded from {@code loot_injections.json -> depleted_tome_chest_spawns}
+     * (Audit CODEC-06: eliminates the hardcoded 24-entry {@code EXACT_CHEST_SPECS} map and prefix rules).
+     */
+    public record DepletedTomeChestSpawnConfig(
+        boolean allowNonBuiltinTables,
+        Map<Identifier, ChestLootSpec> exactTables,
+        List<PrefixRule> prefixRules
+    ) {
+        public static final DepletedTomeChestSpawnConfig EMPTY =
+            new DepletedTomeChestSpawnConfig(false, Map.of(), List.of());
+
+        public static DepletedTomeChestSpawnConfig fromLootInjectionsJson(@Nullable JsonObject root) {
+            if (root == null
+                || !root.has("depleted_tome_chest_spawns")
+                || !root.get("depleted_tome_chest_spawns").isJsonObject()) {
+                return BUNDLED_CHEST_SPAWN_CONFIG != null ? BUNDLED_CHEST_SPAWN_CONFIG : EMPTY;
+            }
+            return parseSection(root.getAsJsonObject("depleted_tome_chest_spawns"));
+        }
+
+        private static DepletedTomeChestSpawnConfig parseSection(JsonObject sec) {
+            boolean allowNonBuiltin = sec.has("allow_non_builtin_tables")
+                && sec.get("allow_non_builtin_tables").isJsonPrimitive()
+                && sec.get("allow_non_builtin_tables").getAsBoolean();
+
+            Map<Identifier, ChestLootSpec> exact = new LinkedHashMap<>();
+            if (sec.has("exact_tables") && sec.get("exact_tables").isJsonObject()) {
+                for (Map.Entry<String, JsonElement> e : sec.getAsJsonObject("exact_tables").entrySet()) {
+                    if (e.getKey().startsWith("_") || !e.getValue().isJsonObject()) continue;
+                    Identifier tableId = parseLootTableKey(e.getKey());
+                    ChestLootSpec spec = parseChestSpec(e.getValue().getAsJsonObject());
+                    if (tableId != null && spec != null) {
+                        exact.put(tableId, spec);
+                    }
+                }
+            }
+
+            List<PrefixRule> prefixes = new ArrayList<>();
+            if (sec.has("prefix_rules") && sec.get("prefix_rules").isJsonArray()) {
+                for (JsonElement el : sec.getAsJsonArray("prefix_rules")) {
+                    if (el == null || !el.isJsonObject()) continue;
+                    JsonObject ruleObj = el.getAsJsonObject();
+                    if (!ruleObj.has("prefix") || !ruleObj.get("prefix").isJsonPrimitive()) continue;
+                    String rawPrefix = ruleObj.get("prefix").getAsString().trim();
+                    if (rawPrefix.isEmpty()) continue;
+                    String normalizedPrefix = rawPrefix.contains(":") ? rawPrefix : ("minecraft:" + rawPrefix);
+                    ChestLootSpec spec = parseChestSpec(ruleObj);
+                    if (spec != null) {
+                        prefixes.add(new PrefixRule(normalizedPrefix, spec));
+                    }
+                }
+            }
+
+            return new DepletedTomeChestSpawnConfig(
+                allowNonBuiltin,
+                Map.copyOf(exact),
+                List.copyOf(prefixes)
+            );
+        }
+
+        @Nullable
+        private static Identifier parseLootTableKey(String rawKey) {
+            String trimmed = rawKey == null ? "" : rawKey.trim();
+            if (trimmed.isEmpty()) return null;
+            return trimmed.contains(":")
+                ? Identifier.tryParse(trimmed)
+                : Identifier.tryParse("minecraft:" + trimmed);
+        }
+
+        @Nullable
+        private static ChestLootSpec parseChestSpec(JsonObject obj) {
+            String category = obj.has("category") && obj.get("category").isJsonPrimitive()
+                ? obj.get("category").getAsString()
+                : "dungeon";
+            float prob = obj.has("probability") && obj.get("probability").isJsonPrimitive()
+                ? Mth.clamp(obj.get("probability").getAsFloat(), 0.0F, 1.0F)
+                : 0.0F;
+            int minC = obj.has("min_count") && obj.get("min_count").isJsonPrimitive()
+                ? Mth.clamp(obj.get("min_count").getAsInt(), 0, 64)
+                : 1;
+            int maxC = obj.has("max_count") && obj.get("max_count").isJsonPrimitive()
+                ? Mth.clamp(obj.get("max_count").getAsInt(), minC, 64)
+                : Math.max(1, minC);
+            return new ChestLootSpec(category, prob, minC, maxC);
+        }
+    }
+
+    private static final String BUNDLED_LOOT_INJECTIONS_PATH =
+        "/data/chiseled_enchanting_table/chiseled_enchanting_table/loot_injections.json";
+
+    private static final DepletedTomeChestSpawnConfig BUNDLED_CHEST_SPAWN_CONFIG = loadBundledChestSpawnConfig();
+    private static volatile DepletedTomeChestSpawnConfig activeChestSpawnConfig = BUNDLED_CHEST_SPAWN_CONFIG;
+
+    private static DepletedTomeChestSpawnConfig loadBundledChestSpawnConfig() {
+        try (var in = DepletedTomeWorldMechanics.class.getResourceAsStream(BUNDLED_LOOT_INJECTIONS_PATH)) {
+            if (in != null) {
+                JsonObject root = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
+                if (root.has("depleted_tome_chest_spawns") && root.get("depleted_tome_chest_spawns").isJsonObject()) {
+                    return DepletedTomeChestSpawnConfig.parseSection(root.getAsJsonObject("depleted_tome_chest_spawns"));
+                }
+            }
+        } catch (Exception ex) {
+            ChiseledEnchantingTable.LOGGER.error("Failed to load bundled depleted_tome_chest_spawns from loot_injections.json", ex);
+        }
+        return DepletedTomeChestSpawnConfig.EMPTY;
+    }
+
+    public static DepletedTomeChestSpawnConfig activeChestSpawnConfig() {
+        return activeChestSpawnConfig;
+    }
+
+    public static void updateChestSpawnConfig(@Nullable DepletedTomeChestSpawnConfig updated) {
+        activeChestSpawnConfig = updated != null ? updated : BUNDLED_CHEST_SPAWN_CONFIG;
+    }
 
     @Nullable
     public static ChestLootSpec chestSpawnSpecForTableId(String namespace, String path) {
-        if (!"minecraft".equals(namespace) || path == null) {
+        return chestSpawnSpecForTableId(activeChestSpawnConfig, namespace, path);
+    }
+
+    @Nullable
+    public static ChestLootSpec chestSpawnSpecForTableId(
+        @Nullable DepletedTomeChestSpawnConfig cfg,
+        String namespace,
+        String path
+    ) {
+        if (namespace == null || path == null || namespace.isEmpty() || path.isEmpty()) {
             return null;
         }
-        ChestLootSpec exact = EXACT_CHEST_SPECS.get(path);
-        if (exact != null) {
-            return exact;
+        DepletedTomeChestSpawnConfig active = cfg != null ? cfg : BUNDLED_CHEST_SPAWN_CONFIG;
+        Identifier tableId = Identifier.tryBuild(namespace, path);
+        if (tableId != null) {
+            ChestLootSpec exact = active.exactTables().get(tableId);
+            if (exact != null) {
+                return exact.probability() > 0.0F ? exact : null;
+            }
         }
-        if (path.startsWith("chests/trial_chambers/")) {
-            return new ChestLootSpec("temple", 0.28F, 1, 2);
-        }
-        if (path.startsWith("chests/village/")) {
-            return new ChestLootSpec("village", 0.10F, 1, 1);
+        String fullId = namespace + ":" + path;
+        for (PrefixRule rule : active.prefixRules()) {
+            if (fullId.startsWith(rule.namespaceAndPathPrefix())) {
+                return rule.spec().probability() > 0.0F ? rule.spec() : null;
+            }
         }
         return null;
     }
 
     public static void initChestLootInjection() {
         LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
-            if (!source.isBuiltin()) {
+            DepletedTomeChestSpawnConfig cfg = chiseled_enchanting_table.data.ChiseledEnchantingTableData
+                .lootRegistryBuildRules().chestSpawns();
+            if (!source.isBuiltin() && !cfg.allowNonBuiltinTables()) {
                 return;
             }
             Identifier id = key.identifier();
-            ChestLootSpec spec = chestSpawnSpecForTableId(id.getNamespace(), id.getPath());
+            ChestLootSpec spec = chestSpawnSpecForTableId(cfg, id.getNamespace(), id.getPath());
             if (spec == null || spec.probability() <= 0.0F) {
                 return;
             }
@@ -231,7 +349,7 @@ public final class DepletedTomeWorldMechanics {
             int totalPoolWeight = 1000 * span;
             int emptyWeight = Math.max(0, totalPoolWeight - perCountHitWeight * span);
 
-            LootPool.Builder pool = LootPool.lootPool().setRolls(ConstantValue.exactly(1));
+            LootPool.Builder pool = LootPool.lootPool().setRolls(ConstantValue.exactly(1.0F));
             for (int c = minC; c <= maxC; c++) {
                 pool.add(
                     LootItem.lootTableItem(BlockRegistry.DEPLETED_TOME)
@@ -401,16 +519,33 @@ public final class DepletedTomeWorldMechanics {
         );
     }
 
+    public static final net.minecraft.tags.TagKey<Enchantment> EPIPHANY_EXCLUSIVE_TAG =
+        chiseled_enchanting_table.registry.CetTags.Enchantments.EPIPHANY_EXCLUSIVE;
+
     /** True only for non-curse enchantments excluding {@code minecraft:infinity}. */
     public static boolean isAllowedLibrarianCommissionEnchantment(Identifier enchantmentId, boolean isCurse) {
-        if (enchantmentId == null || isCurse) {
+        return isAllowedLibrarianCommissionEnchantment(enchantmentId, isCurse, true, false);
+    }
+
+    /**
+     * Full Librarian Depleted Tome commission eligibility gate:
+     * requires {@code #minecraft:tradeable}, excludes {@code #minecraft:curse},
+     * excludes {@code #chiseled_enchanting_table:epiphany_exclusive}, and excludes {@code minecraft:infinity}.
+     */
+    public static boolean isAllowedLibrarianCommissionEnchantment(
+        Identifier enchantmentId,
+        boolean isCurse,
+        boolean isTradeable,
+        boolean isEpiphanyExclusive
+    ) {
+        if (enchantmentId == null || isCurse || !isTradeable || isEpiphanyExclusive) {
             return false;
         }
         return !MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(enchantmentId);
     }
 
     public static final ResourceKey<VillagerProfession> LIBRARIAN_PROFESSION_KEY =
-        ResourceKey.create(Registries.VILLAGER_PROFESSION, Identifier.withDefaultNamespace("librarian"));
+        VillagerProfession.LIBRARIAN;
 
     /** Pure profession check helper for JUnit tests and runtime guard. */
     public static boolean isLibrarianProfessionKey(@Nullable ResourceKey<VillagerProfession> key) {
@@ -425,12 +560,68 @@ public final class DepletedTomeWorldMechanics {
         };
     }
 
-    private static final String COMMISSION_BAND = "cet_commission_band";
-    private static boolean hasCommissionBand(MerchantOffers offers, int band) {
-        for (var offer : offers) {
+    private static final String LEGACY_COMMISSION_BAND_KEY = "cet_commission_band";
+
+    /**
+     * Strips legacy {@code cet_commission_band} custom NBT from pre-existing Librarian offers so
+     * upgraded worlds never hand out unstackable Enchanted Books.
+     */
+    private static void sanitizeLegacyCommissionOffers(MerchantOffers offers) {
+        for (int i = 0; i < offers.size(); i++) {
+            MerchantOffer offer = offers.get(i);
             if (offer.getItemCostA().item().value() != BlockRegistry.DEPLETED_TOME) continue;
-            var data = offer.getResult().get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-            if (data != null && data.copyTag().getIntOr(COMMISSION_BAND, -1) == band) return true;
+            ItemStack result = offer.getResult();
+            if (!result.is(Items.ENCHANTED_BOOK)) continue;
+            var custom = result.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+            if (custom == null) continue;
+            var tag = custom.copyTag();
+            if (!tag.contains(LEGACY_COMMISSION_BAND_KEY)) continue;
+            ItemStack sanitized = result.copy();
+            chiseled_enchanting_table.utils.CetCustomData.mutate(sanitized, t -> t.remove(LEGACY_COMMISSION_BAND_KEY));
+            MerchantOffer replacement = new MerchantOffer(
+                offer.getItemCostA(),
+                offer.getItemCostB(),
+                sanitized,
+                offer.getUses(),
+                offer.getMaxUses(),
+                offer.getXp(),
+                offer.getPriceMultiplier(),
+                offer.getDemand()
+            );
+            replacement.setSpecialPriceDiff(offer.getSpecialPriceDiff());
+            offers.set(i, replacement);
+        }
+    }
+
+    private static int countCommissionBookOffers(MerchantOffers offers) {
+        int count = 0;
+        for (MerchantOffer offer : offers) {
+            if (offer.getItemCostA().item().value() == BlockRegistry.DEPLETED_TOME
+                && offer.getResult().is(Items.ENCHANTED_BOOK)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static boolean hasCommissionInBand(MerchantOffers offers, int band, int[] bandRanks) {
+        for (MerchantOffer offer : offers) {
+            if (offer.getItemCostA().item().value() != BlockRegistry.DEPLETED_TOME) continue;
+            if (!offer.getResult().is(Items.ENCHANTED_BOOK)) continue;
+            boolean secondaryEmerald = offer.getItemCostB()
+                .map(cost -> cost.item().value() == Items.EMERALD)
+                .orElse(false);
+            if (band == 0 && !secondaryEmerald) {
+                return true;
+            }
+            if (band > 0 && secondaryEmerald) {
+                int offerXp = offer.getXp();
+                for (int rank : bandRanks) {
+                    if (offerXp == 2 + rank * 3 && (band == 1 ? rank <= 3 : rank >= 5)) {
+                        return true;
+                    }
+                }
+            }
         }
         return false;
     }
@@ -481,7 +672,8 @@ public final class DepletedTomeWorldMechanics {
      * duplicating prior trades.
      */
     public static void ensureLibrarianDepletedTomeOffers(Level world, Villager villager) {
-        if (world == null || villager == null) {
+        if (world == null || villager == null
+            || !chiseled_enchanting_table.config.ModRuntimeConfig.forSide(world.isClientSide()).librarianTomeOffers()) {
             return;
         }
         if (!villager.getVillagerData().profession().is(LIBRARIAN_PROFESSION_KEY)) {
@@ -491,6 +683,7 @@ public final class DepletedTomeWorldMechanics {
         if (offers == null) {
             return;
         }
+        sanitizeLegacyCommissionOffers(offers);
         int currentVillagerLevel = Mth.clamp(
             villager.getVillagerData().level(),
             MIN_VILLAGER_PROFESSION_LEVEL,
@@ -550,7 +743,9 @@ public final class DepletedTomeWorldMechanics {
         enchRegistry.listElements().forEach(ref -> {
             Identifier id = ref.key().identifier();
             boolean curse = ref.is(EnchantmentTags.CURSE);
-            if (isAllowedLibrarianCommissionEnchantment(id, curse)) {
+            boolean tradeable = ref.is(EnchantmentTags.TRADEABLE);
+            boolean epiphanyExclusive = ref.is(EPIPHANY_EXCLUSIVE_TAG);
+            if (isAllowedLibrarianCommissionEnchantment(id, curse, tradeable, epiphanyExclusive)) {
                 eligible.add(ref);
             }
         });
@@ -591,6 +786,9 @@ public final class DepletedTomeWorldMechanics {
         };
 
         for (int b = 0; b < rankBands.length; b++) {
+            if (countCommissionBookOffers(offers) >= rankBands.length) {
+                break;
+            }
             List<CandidateEnchantRoll> pool = new ArrayList<>();
             for (int rank : rankBands[b]) {
                 pool.addAll(byRequiredRank[rank]);
@@ -599,7 +797,7 @@ public final class DepletedTomeWorldMechanics {
                 continue;
             }
             CandidateEnchantRoll pick = pool.get(rng.nextInt(pool.size()));
-            if (hasCommissionBand(offers, b)) continue;
+            if (hasCommissionInBand(offers, b, rankBands[b])) continue;
             if (!canLibrarianOfferCommission(currentVillagerLevel, pick.quote())) {
                 // Villager has not yet reached the dynamic profession rank required for this enchantment!
                 continue;
@@ -612,10 +810,6 @@ public final class DepletedTomeWorldMechanics {
 
             ItemStack bookOut = new ItemStack(Items.ENCHANTED_BOOK, 1);
             EnchantmentHelper.updateEnchantments(bookOut, mutable -> mutable.set(pick.holder(), pick.enchantLevel()));
-            var marker = new net.minecraft.nbt.CompoundTag();
-            marker.putInt(COMMISSION_BAND, b);
-            bookOut.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
-                net.minecraft.world.item.component.CustomData.of(marker));
 
             offers.add(new MerchantOffer(
                 new ItemCost(BlockRegistry.DEPLETED_TOME, 1),

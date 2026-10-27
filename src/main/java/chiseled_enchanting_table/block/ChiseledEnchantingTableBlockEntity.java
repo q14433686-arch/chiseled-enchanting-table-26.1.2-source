@@ -7,13 +7,15 @@ import chiseled_enchanting_table.mechanics.resonance.MasterTomeWear;
 import chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics;
 import chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.QueuedInscription;
 import chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler;
-import chiseled_enchanting_table.registry.EntityRegistry;
+import chiseled_enchanting_table.registry.BlockEntityRegistry;
 import chiseled_enchanting_table.utils.Advancement;
 import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+import chiseled_enchanting_table.compat.CetFormatting;
+import net.minecraft.network.chat.Style;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -96,7 +98,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     public float tRot;
 
     public ChiseledEnchantingTableBlockEntity(BlockPos pos, BlockState state) {
-        super(EntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, pos, state);
+        super(BlockEntityRegistry.CHISELED_ENCHANTING_TABLE_ENTITY_TYPE, pos, state);
     }
 
     // ---- Persistent Container implementation (Chest-style persistence) ----
@@ -194,26 +196,38 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         return false;
     }
 
-    public static final int MAX_RITUAL_STEPS = 256;
-    public static final int MAX_RITUAL_CHARACTERS = 32_000;
+    public static final int MAX_RITUAL_STEPS = InscriptionRitualMechanics.MAX_QUEUE_STEPS;
+    public static final int MAX_RITUAL_CHARACTERS = InscriptionRitualMechanics.MAX_QUEUE_CHARACTERS;
     private long ritualSession;
     private ItemStack ritualTarget = ItemStack.EMPTY;
     private boolean ritualBlocked;
     private String ritualCorruptQueue = "";
+    public boolean isRitualBlocked() {
+        return this.ritualBlocked || !this.ritualCorruptQueue.isEmpty();
+    }
     public long ritualSession() { return this.ritualSession; }
-    public boolean ownsRitual(UUID actor) { return !hasActiveRitual() || actor.equals(this.ritualOwnerUuid); }
+    public boolean ownsRitual(UUID actor) {
+        if (!hasActiveRitual()) return true;
+        if (this.ritualOwnerUuid != null) return this.ritualOwnerUuid.equals(actor);
+        // Audit R-03 recovery: a ritual whose owner record was corrupted is quarantined
+        // (blocked) at load time. It can never complete, so allow any player to cancel it
+        // and reclaim the table (the target item stays in the slot; breaking the table
+        // also still returns it). Queueing/skipping stay blocked via isRitualBlocked().
+        return isRitualBlocked();
+    }
     public boolean canQueue(UUID actor) { return canQueue(actor, 0); }
     public boolean canQueue(UUID actor, int extraRefund) {
         long refund = Math.max(0, extraRefund);
         for (var step : ritualQueue) refund += step.conflictRefundPoints();
         if (refund > Integer.MAX_VALUE) return false;
+        long maxStepWait = ChiseledEnchantingTableData.ritualConfig().maxSingleWaitTicks();
         ItemStack target = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
-        return ownsRitual(actor) && !ritualBlocked && target.getCount() == 1
+        return ownsRitual(actor) && !isRitualBlocked() && target.getCount() == 1
             && (ritualQueue.isEmpty() || ItemStack.isSameItemSameComponents(target, ritualTarget))
             && ritualQueue.size() < MAX_RITUAL_STEPS
             && InscriptionRitualMechanics.serializeQueue(ritualQueue).length() + 1024 <= MAX_RITUAL_CHARACTERS
-            && ritualRemainingTicks <= Long.MAX_VALUE - InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS
-            && ritualTotalTicks <= Long.MAX_VALUE - InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS;
+            && ritualRemainingTicks <= Long.MAX_VALUE - maxStepWait
+            && ritualTotalTicks <= Long.MAX_VALUE - maxStepWait;
     }
     public boolean cancelRitual(UUID actor) {
         if (!ownsRitual(actor)) return false;
@@ -222,7 +236,47 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         return true;
     }
     @Override public boolean canPlaceItem(int slot, ItemStack stack) {
-        return slot != ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT || !hasActiveRitual();
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        if (slot == ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT) {
+            if (hasActiveRitual()) {
+                return false;
+            }
+            boolean isDepleted = stack.is(chiseled_enchanting_table.registry.BlockRegistry.DEPLETED_TOME);
+            boolean isBookOrGear = stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK) || stack.isEnchantable();
+            boolean isTransform = ChiseledEnchantingTableData.hasTransformationForInput(stack);
+            if (!isDepleted && !isBookOrGear && !isTransform) {
+                return false;
+            }
+            int maxAllowed;
+            if (isDepleted) {
+                var sg = ChiseledEnchantingTableData.shelfGatesConfig();
+                maxAllowed = Math.max(1, Math.max(sg.baseBatchSize(), sg.tier3BatchSize()));
+            } else if (!isBookOrGear && isTransform) {
+                maxAllowed = Math.max(1, chiseled_enchanting_table.config.ModRuntimeConfig.effective().transformationMaxBatchSize());
+            } else {
+                maxAllowed = 1;
+            }
+            // Audit H-04: batch caps never exceed the item's own stack limit (e.g. glass
+            // bottles cap at 16), so the persistent BE, menu Slot, client prediction
+            // container and hoppers all agree on one capacity.
+            maxAllowed = Math.max(1, Math.min(maxAllowed, stack.getMaxStackSize()));
+            ItemStack existing = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
+            if (!existing.isEmpty()) {
+                return maxAllowed > 1
+                    && existing.getCount() < maxAllowed
+                    && ItemStack.isSameItemSameComponents(existing, stack);
+            }
+            return true;
+        }
+        if (slot == ChiseledEnchantingTableScreenHandler.COST_SLOT) {
+            if (stack.is(Items.ENCHANTED_BOOK)) {
+                return getItem(ChiseledEnchantingTableScreenHandler.COST_SLOT).isEmpty();
+            }
+            return true;
+        }
+        return false;
     }
     @Override public boolean canTakeItem(net.minecraft.world.Container hopper, int slot, ItemStack stack) {
         return slot != ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT || !hasActiveRitual();
@@ -236,7 +290,8 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             this.ritualSession = java.util.UUID.randomUUID().getLeastSignificantBits();
             if (this.ritualSession == 0) this.ritualSession = 1;
         }
-        long add = Math.max(1L, Math.min(InscriptionRitualMechanics.MAX_SINGLE_WAIT_TICKS, stepWaitTicks));
+        long maxWait = ChiseledEnchantingTableData.ritualConfig().maxSingleWaitTicks();
+        long add = Math.max(1L, Math.min(maxWait, stepWaitTicks));
         this.ritualTotalTicks = Math.addExact(this.ritualTotalTicks, add);
         this.ritualRemainingTicks = Math.addExact(this.ritualRemainingTicks, add);
         this.ritualQueue.add(step);
@@ -276,13 +331,12 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             return false;
         }
         for (QueuedInscription step : this.ritualQueue) {
-            try {
-                var holder = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(step.enchantmentId(), level);
-                if (!currentTarget.is(Items.BOOK) && !currentTarget.is(Items.ENCHANTED_BOOK)
-                    && !holder.value().canEnchant(currentTarget)) throw new IllegalArgumentException("Unsupported target");
-            } catch (RuntimeException error) {
+            var optHolder = ChiseledEnchantingTableScreenHandler.findEnchantment(step.enchantmentId(), level);
+            if (optHolder.isEmpty()
+                || (!currentTarget.is(Items.BOOK) && !currentTarget.is(Items.ENCHANTED_BOOK)
+                    && !optHolder.get().value().canEnchant(currentTarget))) {
                 ritualBlocked = true;
-                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.warn("Quarantined invalid ritual at {}", pos, error);
+                chiseled_enchanting_table.ChiseledEnchantingTable.LOGGER.warn("Quarantined invalid ritual at {}", pos);
                 return false;
             }
         }
@@ -295,55 +349,202 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
         List<QueuedInscription> finishing = List.copyOf(this.ritualQueue);
 
+        // 1.0.3 Classic: inscriptions are instant and exact (tag 26.1.2_1.0.3
+        // EnchantmentApplication had no queue, no slip, no cross-line pollution).
+        // Classic steps are enqueued with a 1-tick completion only as an internal
+        // transport, so the completion path must not roll post-1.0.3 ritual outcomes
+        // for them — previously a wear-immune tome could still «抄错» in classic.
+        var activeCfg = chiseled_enchanting_table.config.ModRuntimeConfig
+            .forSide(level != null && level.isClientSide());
+        boolean ritualQueueEnabled = activeCfg.ritualQueueEnabled();
+        boolean provenanceEnabled = activeCfg.provenanceEnabled();
+
+        var ritualCfg = ChiseledEnchantingTableData.ritualConfig();
         var scan = InscriptionRitualMechanics.scanLibraryRitualContext(
             level,
             pos,
             ChiseledEnchantingTableData.shelfGatesConfig()
         );
-        double slipChance = InscriptionRitualMechanics.computeTranscriptionSlipChance(
-            scan.maxOverloadedInfinityTomeEnchants(),
-            scan.totalDetectedBookshelves()
-        );
+        var enchantRegistry = level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT);
 
         boolean targetWasBook = currentTarget.is(Items.BOOK) || currentTarget.is(Items.ENCHANTED_BOOK);
         if (currentTarget.is(Items.BOOK)) {
-            ItemStack converted = new ItemStack(Items.ENCHANTED_BOOK, 1);
-            var customNameComp = currentTarget.get(DataComponents.CUSTOM_NAME);
-            if (customNameComp != null) {
-                converted.set(DataComponents.CUSTOM_NAME, customNameComp);
-            }
-            currentTarget = converted;
+            currentTarget = chiseled_enchanting_table.mechanics.enchanting.BookConversion.toEnchantedBook(currentTarget);
         }
 
         ItemEnchantments.Mutable working = new ItemEnchantments.Mutable(
             EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
         );
         int totalConflictRefund = 0;
+        int totalPollutionXpRefund = 0;
+        int totalSkippedXpRefund = 0;
+        List<ItemStack> totalPollutionMaterialRefunds = new ArrayList<>();
         boolean anySlipOccurred = false;
+        boolean anyCrosslinePollution = false;
         boolean anyEpiphanyConsumed = false;
         boolean replicatedInfinityFromTome = false;
+        int maxInheritedGeneration = -1;
         Component lastSlippedDesc = null;
         int lastSlippedLevel = 1;
+        Component lastCrosslineIntendedDesc = null;
+        Component lastCrosslineActualDesc = null;
 
         for (QueuedInscription step : finishing) {
-            Holder<Enchantment> holder;
-            try {
-                holder = ChiseledEnchantingTableScreenHandler.IdentifierToEnchantment(step.enchantmentId(), level);
-            } catch (RuntimeException ignored) {
+            var optHolder = ChiseledEnchantingTableScreenHandler.findEnchantment(step.enchantmentId(), level);
+            if (optHolder.isEmpty()) {
                 continue;
             }
-            int finalLevel = InscriptionRitualMechanics.resolveTranscribedLevel(
+            Holder<Enchantment> holder = optHolder.get();
+
+            // Audit C-01: re-validate the queued plan against the ACTUAL in-progress item.
+            // Steps were priced against a virtual copy with every earlier step applied; if an
+            // earlier step slipped/was polluted, the actual level no longer matches the planned
+            // previousLevel. Writing targetLevel anyway would skip the intermediate level the
+            // player already got refunded for. Skip the stale step and refund its full
+            // unexecuted receipt instead; later steps for other enchantments may still apply.
+            int actualPrevious = working.getLevel(holder);
+            int effectiveTarget = InscriptionRitualMechanics.effectiveQueuedTargetLevel(
                 step.targetLevel(),
-                scan.maxOverloadedInfinityTomeEnchants(),
-                slipChance,
+                holder.value().getMaxLevel()
+            );
+            if (!InscriptionRitualMechanics.isQueuedStepStillApplicable(
+                actualPrevious,
+                step.previousLevel(),
+                effectiveTarget
+            )) {
+                totalSkippedXpRefund += Math.max(0, step.paidXpPoints());
+                totalPollutionMaterialRefunds.addAll(
+                    InscriptionRitualMechanics.fullMaterialRefundStacks(step.paidItems())
+                );
+                if (step.consumedEpiphany()) {
+                    anyEpiphanyConsumed = true;
+                }
+                continue;
+            }
+
+            // Iron Rule #2: ONLY steps actually copied from an overloaded wear-immune Master Tome roll slip/cross-line,
+            // evaluated against max(step's queue-time load, live library-wide Sigma L across active wear-immune tomes)!
+            double stepSlipProb = (ritualQueueEnabled && step.masterTomeUsed() && step.usedInfinityTome())
+                ? InscriptionRitualMechanics.computeLoadSlipProbability(
+                    ritualCfg,
+                    Math.max(step.infinityTomeLoad(), scan.totalWearImmuneLoad()),
+                    scan.totalDetectedBookshelves()
+                )
+                : 0.0;
+            var outcome = InscriptionRitualMechanics.rollMergedSlipOutcome(
+                ritualCfg,
+                stepSlipProb,
                 level.getRandom().nextDouble(),
                 level.getRandom().nextDouble()
             );
-            if (finalLevel < step.targetLevel()) {
+
+            // Single-level traits (max/target == 1, e.g. Mending I / Silk Touch I / Flame I) cannot drop to 0:
+            // promote a TIER_DROP roll on targetLevel == 1 into JUNK_CROSSLINE so nothing is ever erased.
+            if (outcome == InscriptionRitualMechanics.SlipOutcomeKind.TIER_DROP && step.targetLevel() <= 1) {
+                outcome = InscriptionRitualMechanics.SlipOutcomeKind.JUNK_CROSSLINE;
+            }
+
+            if (outcome.isCrosslinePollution()) {
+                Holder<Enchantment> polluted = (outcome == InscriptionRitualMechanics.SlipOutcomeKind.CURSE_CROSSLINE)
+                    ? InscriptionRitualMechanics.selectCurseCrosslineEnchantment(
+                        enchantRegistry,
+                        working.keySet(),
+                        level.getRandom()
+                    )
+                    : InscriptionRitualMechanics.selectJunkCrosslineEnchantment(
+                        enchantRegistry,
+                        currentTarget,
+                        targetWasBook,
+                        step.enchantmentId(),
+                        working.keySet(),
+                        level.getRandom()
+                    );
+                if (polluted != null) {
+                    // Iron Rule #1: NEVER wipe conflicting player enchantments on a polluted step!
+                    int pollutedLvl = Math.max(1, working.getLevel(polluted));
+                    working.set(polluted, pollutedLvl);
+                    net.minecraft.resources.Identifier pollutedId = polluted.unwrapKey().map(k -> k.identifier()).orElse(null);
+                    if (pollutedId != null) {
+                        EnchantmentProvenance.recordTablePayment(currentTarget, pollutedId, 0, pollutedLvl);
+                    }
+                    // Iron Rule #3: Refund 50% XP + 50% materials and stamp «墨污» (Ink Stain) lore!
+                    totalPollutionXpRefund += InscriptionRitualMechanics.computePollutionXpRefund(
+                        ritualCfg,
+                        step.paidXpPoints()
+                    );
+                    totalPollutionMaterialRefunds.addAll(
+                        InscriptionRitualMechanics.computePollutionMaterialRefunds(
+                            ritualCfg,
+                            step.paidItems(),
+                            level.getRandom()
+                        )
+                    );
+                    anyCrosslinePollution = true;
+                    lastCrosslineIntendedDesc = holder.value().description();
+                    lastCrosslineActualDesc = polluted.value().description();
+                    if (step.consumedEpiphany()) {
+                        anyEpiphanyConsumed = true;
+                    }
+                    continue;
+                }
+                // Fallback if registry had zero cross-line candidates
+                outcome = effectiveTarget >= 2
+                    ? InscriptionRitualMechanics.SlipOutcomeKind.TIER_DROP
+                    : InscriptionRitualMechanics.SlipOutcomeKind.NONE;
+            }
+
+            if (outcome == InscriptionRitualMechanics.SlipOutcomeKind.TIER_DROP) {
+                int slippedLevel = Math.max(1, effectiveTarget - 1);
                 anySlipOccurred = true;
                 lastSlippedDesc = holder.value().description();
-                lastSlippedLevel = finalLevel;
+                lastSlippedLevel = slippedLevel;
+                if (slippedLevel <= actualPrevious) {
+                    // Upgrading e.g. IV -> V slipped by 1 tier back to IV: keep IV intact without wiping anything,
+                    // and refund 50% of this upgrade step's XP & materials.
+                    totalPollutionXpRefund += InscriptionRitualMechanics.computePollutionXpRefund(
+                        ritualCfg,
+                        step.paidXpPoints()
+                    );
+                    totalPollutionMaterialRefunds.addAll(
+                        InscriptionRitualMechanics.computePollutionMaterialRefunds(
+                            ritualCfg,
+                            step.paidItems(),
+                            level.getRandom()
+                        )
+                    );
+                    if (step.consumedEpiphany()) {
+                        anyEpiphanyConsumed = true;
+                    }
+                    continue;
+                }
+                // Audit C-02: price the conflict refund from enchantments ACTUALLY removed
+                // from the in-progress item, never from the virtual queue-time plan.
+                int tierDropConflictRefund = actualConflictRefundPoints(
+                    currentTarget, working.toImmutable(), holder, targetWasBook
+                );
+                if (!targetWasBook) {
+                    var keys = new HashSet<>(working.keySet());
+                    for (var key : keys) {
+                        if (!Enchantment.areCompatible(key, holder)) {
+                            working.set(key, 0);
+                        }
+                    }
+                }
+                working.set(holder, slippedLevel);
+                totalConflictRefund += tierDropConflictRefund;
+                if (step.consumedEpiphany()) {
+                    anyEpiphanyConsumed = true;
+                }
+                EnchantmentProvenance.recordTablePayment(currentTarget, step.enchantmentId(), actualPrevious, slippedLevel);
+                maxInheritedGeneration = Math.max(maxInheritedGeneration, step.inheritedGeneration());
+                continue;
             }
+
+            // Clean outcome (NONE)
+            int finalLevel = effectiveTarget;
+            int cleanConflictRefund = actualConflictRefundPoints(
+                currentTarget, working.toImmutable(), holder, targetWasBook
+            );
             if (!targetWasBook) {
                 var keys = new HashSet<>(working.keySet());
                 for (var key : keys) {
@@ -353,14 +554,17 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 }
             }
             working.set(holder, finalLevel);
-            totalConflictRefund += Math.max(0, step.conflictRefundPoints());
+            totalConflictRefund += cleanConflictRefund;
             if (step.consumedEpiphany()) {
                 anyEpiphanyConsumed = true;
             }
-            if (step.masterTomeUsed() && MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(step.enchantmentId())) {
+            if (step.masterTomeUsed()
+                && (MasterTomeWear.INFINITY_ENCHANTMENT_ID.equals(step.enchantmentId())
+                    || chiseled_enchanting_table.mechanics.resonance.TomeWearData.isWearImmuneEnchantment(holder))) {
                 replicatedInfinityFromTome = true;
             }
             EnchantmentProvenance.recordTablePayment(currentTarget, step.enchantmentId(), step.previousLevel(), finalLevel);
+            maxInheritedGeneration = Math.max(maxInheritedGeneration, step.inheritedGeneration());
         }
 
         EnchantmentHelper.updateEnchantments(currentTarget, m -> {
@@ -370,25 +574,60 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 m.set(key, working.getLevel(key));
             }
         });
-        EnchantmentProvenance.pruneToCurrentEnchantments(
-            currentTarget,
-            EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
-        );
+        if (provenanceEnabled) {
+            EnchantmentProvenance.pruneToCurrentEnchantments(
+                currentTarget,
+                EnchantmentHelper.getEnchantmentsForCrafting(currentTarget)
+            );
+            if (maxInheritedGeneration >= 0 && currentTarget.is(Items.ENCHANTED_BOOK)) {
+                chiseled_enchanting_table.mechanics.resonance.TomeWearData.stampInheritedGeneration(
+                    currentTarget, maxInheritedGeneration);
+            }
+            if (anyCrosslinePollution) {
+                chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
+            }
+        } else {
+            EnchantmentProvenance.clearAll(currentTarget);
+            if (anyCrosslinePollution && ritualQueueEnabled) {
+                chiseled_enchanting_table.mechanics.enchanting.InkStainLore.applyInkStain(currentTarget);
+            }
+        }
 
         this.items.set(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT, currentTarget);
         clearRitualState();
         this.setChanged();
 
-        if (totalConflictRefund > 0 && level instanceof ServerLevel serverLevel) {
+        long totalRefundLong = (long) Math.max(0, totalConflictRefund)
+            + Math.max(0, totalPollutionXpRefund)
+            + Math.max(0, totalSkippedXpRefund);
+        int totalXpOrbRefund = (int) Math.min(Integer.MAX_VALUE, totalRefundLong);
+        if (totalXpOrbRefund > 0 && level instanceof ServerLevel serverLevel) {
             ExperienceOrb.award(
                 serverLevel,
                 net.minecraft.world.phys.Vec3.atCenterOf(pos).add(0.0, 0.9, 0.0),
-                totalConflictRefund
+                totalXpOrbRefund
             );
+        }
+        if (!totalPollutionMaterialRefunds.isEmpty() && level instanceof ServerLevel serverLevel) {
+            for (ItemStack refundStack : totalPollutionMaterialRefunds) {
+                if (refundStack.isEmpty()) continue;
+                if (recipient != null && recipient.isAlive()) {
+                    chiseled_enchanting_table.utils.InventoryUtils.insertItem(
+                        recipient,
+                        refundStack.copy(),
+                        java.util.Optional.empty()
+                    );
+                } else {
+                    net.minecraft.world.level.block.Block.popResource(serverLevel, pos.above(), refundStack.copy());
+                }
+            }
         }
 
         level.playSound(null, pos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.4F, 1.0F);
         level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.1F, 1.15F);
+        if (anyCrosslinePollution) {
+            level.playSound(null, pos, SoundEvents.SQUID_SQUIRT, SoundSource.BLOCKS, 0.95F, 0.85F);
+        }
         if (level instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(
                 ParticleTypes.ENCHANT,
@@ -401,17 +640,43 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
                 0.35D,
                 0.6D
             );
+            if (anyCrosslinePollution) {
+                serverLevel.sendParticles(
+                    ParticleTypes.SQUID_INK,
+                    pos.getX() + 0.5D,
+                    pos.getY() + 1.15D,
+                    pos.getZ() + 0.5D,
+                    14,
+                    0.28D,
+                    0.20D,
+                    0.28D,
+                    0.04D
+                );
+            }
         }
 
         if (recipient != null) {
             if (anySlipOccurred && lastSlippedDesc != null) {
                 Advancement.give(recipient, "scribes_slip");
+            }
+            if (anyCrosslinePollution) {
+                Advancement.give(recipient, "crossline_slip");
+            }
+            if (anyCrosslinePollution && lastCrosslineIntendedDesc != null && lastCrosslineActualDesc != null) {
+                recipient.connection.send(new ClientboundSetActionBarTextPacket(
+                    Component.translatable(
+                        "gui.chiseled_enchanting_table.ritual.crossline_warning",
+                        lastCrosslineIntendedDesc,
+                        lastCrosslineActualDesc
+                    ).withStyle(CetFormatting.LIGHT_PURPLE)
+                ));
+            } else if (anySlipOccurred && lastSlippedDesc != null) {
                 recipient.connection.send(new ClientboundSetActionBarTextPacket(
                     Component.translatable(
                         "gui.chiseled_enchanting_table.ritual.slip_warning",
                         lastSlippedDesc,
                         lastSlippedLevel
-                    ).withStyle(style -> style.withColor(0xFFFFFF55))
+                    ).withStyle(CetFormatting.YELLOW)
                 ));
             }
             if (replicatedInfinityFromTome) {
@@ -432,6 +697,47 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.setChanged();
         syncOpenMenusWatchingTable(level, pos);
         return true;
+    }
+
+    /**
+     * Audit C-02: recomputes the conflict-overwrite refund from the enchantments actually
+     * present on the in-progress item (and their recorded provenance), mirroring
+     * {@code EnchantmentApplication.computeConflictOverwriteRefund} at queue time. The
+     * persisted {@code conflictRefundPoints} of a queued step is a virtual-plan estimate
+     * and is never paid out directly anymore.
+     */
+    private static int actualConflictRefundPoints(
+        ItemStack provenanceSource,
+        ItemEnchantments actualCurrent,
+        Holder<Enchantment> incoming,
+        boolean targetWasBook
+    ) {
+        if (targetWasBook || provenanceSource == null || provenanceSource.isEmpty() || actualCurrent == null) {
+            return 0;
+        }
+        if (!ChiseledEnchantingTableData.disenchantEnabled()) {
+            return 0;
+        }
+        long total = 0L;
+        var cfg = ChiseledEnchantingTableData.libraryResonanceConfig();
+        double tableScale = ChiseledEnchantingTableData.disenchantRefundScale();
+        double externalScale = ChiseledEnchantingTableData.disenchantExternalRefundScale();
+        for (var entry : actualCurrent.entrySet()) {
+            Holder<Enchantment> existingHolder = entry.getKey();
+            if (!existingHolder.equals(incoming)
+                && !Enchantment.areCompatible(existingHolder, incoming)
+                && !DisenchantmentApplication.isCurse(existingHolder)) {
+                total += DisenchantmentApplication.provenanceEssencePotential(
+                    cfg,
+                    provenanceSource,
+                    existingHolder,
+                    entry.getIntValue(),
+                    tableScale,
+                    externalScale
+                );
+            }
+        }
+        return (int) Math.min(Integer.MAX_VALUE, total);
     }
 
     public static void syncOpenMenusWatchingTable(Level level, BlockPos pos) {
@@ -472,6 +778,9 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         ContainerHelper.saveAllItems(output, this.items);
         output.putLong("ritualSession", this.ritualSession);
         if (!this.ritualTarget.isEmpty()) output.store("ritualTarget", ItemStack.CODEC, this.ritualTarget);
+        if (!this.ritualQueue.isEmpty() && this.ritualCorruptQueue.isEmpty()) {
+            output.store("ritualQueueData", InscriptionRitualMechanics.STRUCTURED_QUEUE_CODEC, this.ritualQueue);
+        }
         output.putString("ritualQueue", this.ritualCorruptQueue.isEmpty()
             ? InscriptionRitualMechanics.serializeQueue(this.ritualQueue) : this.ritualCorruptQueue);
         output.putBoolean("ritualBlocked", this.ritualBlocked);
@@ -494,10 +803,12 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.ritualSession = input.getLongOr("ritualSession", 0L);
         this.ritualTarget = input.read("ritualTarget", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         String rawQueue = input.getStringOr("ritualQueue", "");
+        java.util.Optional<List<QueuedInscription>> structuredQueue =
+            input.read("ritualQueueData", InscriptionRitualMechanics.STRUCTURED_QUEUE_CODEC);
         this.ritualCorruptQueue = "";
         this.ritualBlocked = input.getBooleanOr("ritualBlocked", false);
         try {
-            this.ritualQueue = InscriptionRitualMechanics.deserializeQueue(rawQueue);
+            this.ritualQueue = InscriptionRitualMechanics.recoverQueue(structuredQueue, rawQueue);
         } catch (IllegalArgumentException malformed) {
             this.ritualQueue = new ArrayList<>();
             this.ritualCorruptQueue = rawQueue.substring(0, Math.min(rawQueue.length(), MAX_RITUAL_CHARACTERS));
@@ -732,24 +1043,26 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         long rem = this.pendingFreezeTicks > 0L
             ? this.pendingFreezeTicks
             : (this.level != null ? remainingFreezeTicks(this.level.getGameTime()) : 0L);
+        CompoundTag tag = new CompoundTag();
+        if (getBlockState().getValue(ChiseledEnchantingTableBlock.RAINBOW_CLOTH))
+            tag.putBoolean(chiseled_enchanting_table.cosmetic.RainbowCloth.ITEM_FLAG, true);
         if (rem > 0L) {
-            CompoundTag tag = new CompoundTag();
             if (this.epiphanySeed != 0) {
                 tag.putInt("epiphanySeed", this.epiphanySeed);
             }
             tag.putLong("pendingFreezeTicks", rem);
             tag.putInt("frozenCycleIndex", this.frozenCycleIndex);
             int totalSec = (int) ((rem + 19L) / 20L);
-            String clock = String.format("%02d:%02d", totalSec / 60, totalSec % 60);
+            String clock = String.format(java.util.Locale.ROOT, "%02d:%02d", totalSec / 60, totalSec % 60);
             componentMapBuilder.set(
                 DataComponents.LORE,
                 new ItemLore(java.util.List.of(
                     Component.translatable("item.chiseled_enchanting_table.frozen_lore", clock)
-                        .withStyle(style -> style.withItalic(false).withColor(0xFF55FFFF))
+                        .withStyle(style -> style.withItalic(false).withColor(CetFormatting.AQUA_ARGB))
                 ))
             );
-            componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         }
+        if (!tag.isEmpty()) componentMapBuilder.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
     @Override

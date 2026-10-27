@@ -1,20 +1,21 @@
-# Worldgen bookshelf fill: hard deadlock fix (Minecraft 26.2 / mod 1.0.3 line)
+# Worldgen bookshelf fill: hard deadlock fix (Minecraft 26.1.2 / mod 1.0.3 line)
 
-> **Scope.** Fix for the integrated-server freeze reported against this unofficial 26.2 port:
+> **Scope.** Fix for the integrated-server freeze reported against this unofficial 26.1.2 port:
 > `BookshelfReplacerProcessor#finalizeProcessing` touching the live `ServerLevel` from a worldgen
 > worker thread. Affects `mechanics/structure/BookshelfReplacerProcessor`,
 > `mechanics/structure/BookshelfBookFiller` and `mixin/structure/LevelChunkPostProcessMixin`.
 >
-> **Status:** patch generated against the `chiseled-enchanting-table-26.2-source` branch
-> (see the branch notes below and §7). **Compile and runtime verification are both still
-> open on this branch** — the `compile-check` workflow does not build it, and there is no
-> client in the authoring sandbox.
+> **Status:** applied to branch `arena/3ae35b5e-chiseled-enchanting-table-26-1` (mod 1.0.3) and
+> **compiles green on GitHub Actions** — `compile-check` run `39668301472` and all three `build.yml`
+> jobs on commit `315fb6e`, 2026-10-21 (§7). **Runtime verification is still open**: there is no
+> Minecraft client in the authoring sandbox, so the freeze reproduction and the "shelves come out
+> filled and correctly facing" check have not been run (§7, and `NEXT_TASK.md` §A0.1).
 
 > **Branch notes.** Generated on 2026-10-22 from the 26.3 write-up (source commits
 > `55a62fc` + the `ChunkStatus` package fix on the 26.3 line); the code in this patch is
-> adapted to the `26.2` API.
+> adapted to the `26.1.2` API.
 >
-> **This branch:** identical API surface to 26.3 for everything this patch touches (`StructureProcessor` interface with `codec()`, `ChunkStatus` in `net.minecraft.world.level.chunk.status`, `ChunkAccess#markPosForPostProcessing`). The three files are the 26.3 fix verbatim.
+> **This branch:** `StructureProcessor` is still an abstract class here (`getType()` instead of `codec()`, `processBlock` takes the `originalBlockInfo` record), `ChunkAccess#markPosForPostprocessing` keeps its historical lower-case spelling, and `StructureTemplate.processBlockInfos` does **not** clip the block-info list to the chunk currently being generated — so this processor sees the whole piece, including positions in neighbouring chunks. Nothing in the fix depends on the clipping; the deferred facing pass simply skips positions outside the current worldgen region.
 
 ## 1. Symptom
 
@@ -31,9 +32,9 @@ it generates chunks on its own pool instead of the vanilla chunk scheduler.
 
 ## 2. Root cause
 
-### 2.1 What the vanilla 26.2 API actually hands a processor
+### 2.1 What the vanilla 26.1.2 API actually hands a processor
 
-Verified against decompiled Minecraft 26.2 sources (`net.minecraft.world.level.levelgen.structure.
+Verified against decompiled Minecraft 26.1.2 sources (`net.minecraft.world.level.levelgen.structure.
 templatesystem.StructureTemplate`):
 
 ```java
@@ -84,7 +85,7 @@ BookshelfBookFiller.applyToPlacedBookshelf(level, info.pos(), random);
     ... level.setBlock(pos, ...); level.getBlockEntity(pos);
 ```
 
-For a chunk that is mid-generation, `ServerChunkCache#getChunk` cannot be a cache hit. In 26.2 it
+For a chunk that is mid-generation, `ServerChunkCache#getChunk` cannot be a cache hit. In 26.1.2 it
 is explicitly off-thread-aware:
 
 ```java
@@ -202,7 +203,7 @@ walls are still in the template, not in the world. So:
 ## 6. Why not the other two suggestions from the report
 
 * **"Use the passed `ServerLevelAccessor` and guard for positions outside the generation area."**
-  Right idea, but 26.2's `WorldGenRegion#getBlockState` *throws*
+  Right idea, but 26.1.2's `WorldGenRegion#getBlockState` *throws*
   (`ReportedException: Requested chunk unavailable during world generation`) instead of failing
   fast, and inside the write zone it sees pre-placement terrain — the piece's own walls are not
   there yet, so the facing rubric would score an empty room. Pure-data fill + deferred facing keeps
@@ -220,15 +221,35 @@ Done in this round (no client available in the sandbox):
   parity).
 * `python3 scripts/compat_check.py` → `PASS` (Tier 1; Tier 2 skipped, no MC jar).
 * `bash scripts/check_release_consistency.sh --strict` → `12 passed, 0 warned, 0 failed`.
-* Compile: **not** verified from this patch. The `compile-check` workflow's push filter does not
-  cover this branch, so apply the patch and run `./gradlew build --rerun-tasks` before
-  releasing (or add the branch to the workflow's `on.push.branches` list).
+* Compile: **green on GitHub Actions** (the sandbox has no JDK, so this is the only channel).
+  `compile-check.yml` run `39670181582` on commit `da77188` — `compileJava` + `compileClientJava`,
+  `BUILD SUCCESSFUL in 48s`; `build.yml` run `39670181557` — static gates, full `build`
+  (`remapJar` + sources jar artifact) and the `no-viewers` job all success. (The previous commit
+  `315fb6e` was green as well: runs `39668301472` / `39668301133`.) The workflow's push
+  filter covers `arena/**`, `chiseled-enchanting-table-26.1.2-source` and `main`, and the log is
+  committed back to the branch as `build-reports/compile-java.log`.
+* The two javac warnings in that log are JEI deprecations in `compat/jei/EnchantingRecipeCategory`,
+  unrelated to this fix (`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §6). No warning or error comes
+  from `mechanics/structure/**` or `mixin/structure/**`.
+
+First real-client signal (2026-10-22, `RawOutput.log`, commit `fcf5108`): a tester entered a save
+with **Distant Horizons 3.3.3 active** on Minecraft 26.1.2 / loader 0.19.3 and this mod at 1.0.3.
+`Started DhWorld of type [CLIENT_SERVER]`, spawn preparation ran to 57% (`准备生成区域中：57%`) and the
+player joined at `(-6.5, 107.0, 10.5)` — i.e. **no freeze during worldgen with DH installed**, which
+is the symptom this fix targets. That is encouraging but *not* a pass: the client then crashed on the
+first rendered frame for an unrelated reason (Distant Horizons calling
+`IrisApi.isReverseZDuringShaders()`, which the installed Iris `1.11.3+mc26.1.2` does not have —
+`NoSuchMethodError`, zero `chiseled_enchanting_table` frames; analysis in
+`docs/reports/VIEWER_INTEGRATION_JEI_REI.md` §7.3), so no structure chunk with chiseled bookshelves
+was ever reached. Items 1–4 below are all still open.
 
 Still open (needs a real client):
 
 1. DH + C2ME + Lithium world, `FEATURES`/`SURFACE_THEN_CHUNKS`, generate distant terrain while
    flying: no freeze, `jstack` shows no `DH-World Gen Thread` in `CompletableFuture.join()` under
-   `BookshelfReplacerProcessor`.
+   `BookshelfReplacerProcessor`. **To get in-world at all, the tester first has to resolve the
+   DH↔Iris mismatch** (update Iris to a build that has `isReverseZDuringShaders`, downgrade DH, or
+   disable the shader pack / DH LOD rendering).
 2. A village library / mansion library / ancient-city shelf: books present, `slot_*_occupied`
    matches the contents, shelf faces the open side.
 3. Stronghold library regression pass (post-process path).

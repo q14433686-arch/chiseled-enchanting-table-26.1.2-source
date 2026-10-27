@@ -1,5 +1,5 @@
-commit: f6a9fc64f164ab1b9891b1cd0f376260a0a8ed28
-branch: arena/3f862174-chiseled-enchanting-table-26-1
+commit: fb9fc17ddc1038fa64165a15bab34633a0b62509
+branch: arena/aa2dbb26-chiseled-enchanting-table-26-1
 minecraft: 26.2
 fabric-api: 0.155.2+26.2
 loader: 0.19.3
@@ -38,26 +38,110 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :classes
 
 > Task :compileClientJava
-Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/client/java/chiseled_enchanting_table/ChiseledEnchantingTableClient.java uses or overrides a deprecated API.
+Note: Some input files use or override a deprecated API.
 Note: Recompile with -Xlint:deprecation for details.
 
 > Task :processClientResources
 > Task :clientClasses
+
 > Task :compileTestJava
+Note: /home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/src/test/java/chiseled_enchanting_table/ConfigurationSafetyTest.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
 > Task :processTestResources NO-SOURCE
 > Task :testClasses
 
 > Task :test
 
+AuditMechanicsTest > wearImmunityCurveDecaysSmoothlyAndGenerationCapStripsImmunity() PASSED
+
+AuditMechanicsTest > tomeLockEtaIncludesCurrentAndRemainingCharges() PASSED
+
+AuditMechanicsTest > perSlotMasteryCapPreventsSingleSuperBookFromMaxingGlobalDiscount() PASSED
+
+AuditMechanicsTest > queueScaledSacrificeSkipAndActiveRitualVictimPriority() PASSED
+
+AuditMechanicsTest > timedTomeLocksExpireExactlyAtTargetWear() PASSED
+
+AuditMechanicsTest > essenceWearStepOnlyBuysBackWhatWasBurned() PASSED
+
+AuditMechanicsTest > remainingChargesRespectFadedCap() PASSED
+
+AuditMechanicsTest > tomeLockTargetsFollowWear() PASSED
+
+AuditMechanicsTest > scapegoatTokensRoundTripAndDefaultToEssence() PASSED
+
+AuditMechanicsTest > cetCustomDataStampsSchemaAndReadsLegacyUnversionedTags() PASSED
+
+AuditMechanicsTest > boundedCountsAcceptInRangeAndRejectOutside() PASSED
+
+AuditMechanicsTest > flatPricingKeepsHistoricalFullReset() PASSED
+
+AuditMechanicsTest > generationFadesCapacityWithFloorOfOne() PASSED
+
+AuditMechanicsTest > essencePricingRestoresProportionally() PASSED
+
+AuditMechanicsTest > lineageAdvancesOnCopyAndMergesToMoreFadedParent() PASSED
+
+AuditMechanicsTest > queuedInscriptionCodecRoundTripsAndMatchesLegacyStringEncoding() PASSED
+
+AuditRoundTwoTest > bookshelfOverrideLadderValidatesMonotonicityAndDirectTierNeverRegresses() PASSED
+
+AuditRoundTwoTest > nestedLibraryResonanceCodecRoundTripsAndClampsWoodenDiscountAgainstTotalCeiling() PASSED
+
+AuditRoundTwoTest > deVersionedConfigEnumsPreserveLegacyAliasesAndFailClosedOnTypos() PASSED
+
+AuditRoundTwoTest > datapackDrivenDepletedTomeChestSpawnsAndTagFilesStayAligned() PASSED
+
+AuditRoundTwoTest > searchTextBufferHandlesSurrogatePairsWithoutCorruptingUtf16Boundaries() PASSED
+
+ConfigInteractionTest > destructiveConfirmationTracksTargetIdentityAndTimeout() PASSED
+
+ConfigInteractionTest > unavailableTransportFailureDoesNotCreateAPendingRequest() PASSED
+
+ConfigInteractionTest > searchNativeOwnershipFollowsFocusAndAcceptsUnicode() PASSED
+
+ConfigInteractionTest > editingAndRejectingNeverChangesBaselineOrDiscardsDraft() PASSED
+
+ConfigInteractionTest > allPresetEditsSurviveSerializationBeforeSubmission() PASSED
+
+ConfigInteractionTest > staleDuplicateAndLateAcksCannotAcceptAnotherRequest() PASSED
+
+ConfigInteractionTest > acceptedSaveReloadsPreferencesAndPreservesCloseIntent() PASSED
+
 ConfigurationSafetyTest > malformedUpdatesAreRejectedAndSaveIdsDoNotRepeat() PASSED
+
+ConfigurationSafetyTest > classicBookUpgradeJsonCarries103ResearchMaterials() PASSED
+
+ConfigurationSafetyTest > classicSaltedCountIsStablePerPlayerAndVariesAcrossPlayers() PASSED
+
+ConfigurationSafetyTest > parentRuleAtomsGateOnlyTheirNaturalSubordinateSliders() PASSED
+
+ConfigurationSafetyTest > legacyClassic103JsonAndPackPolicyMigrateCleanlyToGranularAtoms() PASSED
+
+ConfigurationSafetyTest > configModalLayoutAndLayeredAssetsGuaranteeZeroOverlapAcrossResolutions() PASSED
 
 ConfigurationSafetyTest > failedReplacementDoesNotDestroyExistingTarget() PASSED
 
 ConfigurationSafetyTest > atomicSaveReplacesValidConfigurationAndCleansTemporaryFiles() PASSED
 
+ConfigurationSafetyTest > lanHostSessionModeResolvesCleanlyWithoutBreakingSingleplayerOrDedicatedModes() PASSED
+
+ConfigurationSafetyTest > booleanControlsScanRadiiDiscountCapsAndExpertPresetTakeEffectCleanly() PASSED
+
+ConfigurationSafetyTest > allFourPresetsRoundTripRestore64BookStackAnd103Semantics() PASSED
+
+ConfigurationSafetyTest > ruleTraceCatalogCoversAllTwentyEntriesAndTogglesEveryAtomCleanly() PASSED
+
+ConfigurationSafetyTest > granularRuleAtomsOperateOrthogonallyWithoutMonolithicCrossLocking() PASSED
+
 ConfigurationSafetyTest > lanGuestsAreNotImplicitAdministrators() PASSED
 
+EconomyAndConfigVerificationTest > configCatalogCoversAllSevenCategoriesAndRoundTripsJsonLosslessly() PASSED
+
 EconomyAndConfigVerificationTest > bookshelfTaxonomyAndDepletedTomeWorldAndLibrarianEconomyGate() PASSED
+
+EconomyAndConfigVerificationTest > openingSnapshotNeverDivergesFromLiveShelfSyncAtTickZero() PASSED
 
 EconomyAndConfigVerificationTest > infinityMasterTomeImmunityAnd38And42TwoTierRegenerationContract() PASSED
 
@@ -79,11 +163,11 @@ EconomyAndConfigVerificationTest > universalTransformationBatchingHasZeroThresho
 
 EconomyAndConfigVerificationTest > grimoireDualShapelessRecipesAndBookshelfTagAreValid() PASSED
 
-EconomyAndConfigVerificationTest > configCatalogCoversAllSixCategoriesAndRoundTripsJsonLosslessly() PASSED
-
 EconomyAndConfigVerificationTest > shippedLibraryResonanceJsonMatchesDefaultAndEveryKeyMutatesConfig() PASSED
 
 EconomyAndConfigVerificationTest > configCatalogApplicabilityAndCrossFieldCoherenceEnforceAllDependencies() PASSED
+
+EconomyAndConfigVerificationTest > partBTemplateDurabilityWildPreWearUnbreakingWaiverAndCrosslineInvariants() PASSED
 
 EconomyAndConfigVerificationTest > bookCombineNeverExceedsBookResearchCost() PASSED
 
@@ -91,17 +175,43 @@ EconomyAndConfigVerificationTest > allConfigTranslationKeysAndModMenuExclusionAr
 
 EconomyAndConfigVerificationTest > disenchantingAndWordingAccuracyZeroDriftGate() PASSED
 
+EconomyAndConfigVerificationTest > ritualWaitCurveLoadReferencesAreDatapackConfigurable() PASSED
+
+EconomyAndConfigVerificationTest > queuedRitualStepsRevalidateAgainstActualItem() PASSED
+
 EconomyAndConfigVerificationTest > runtimeConservationStrictAndReloadSafeHoldAcrossEdgeInputs() PASSED
 
 EconomyAndConfigVerificationTest > d1ToD7DesignInvariantsHoldAcrossWearProvenanceBreathingDiscoveryAndConfig() PASSED
 
+EconomyAndConfigVerificationTest > combineSequentialChargesEveryUpgradeOnce() PASSED
+
 EconomyAndConfigVerificationTest > datapackPriorityDefaultAndPackPolicyAntiTamperGovernance() PASSED
+
+EngineeringSplitTest > allDirectTraceAtomsToggleInBothDirectionsWithoutChangingDefaults() PASSED
+
+EngineeringSplitTest > presetApplicationCannotAliasAnotherDraft() PASSED
+
+EngineeringSplitTest > schemaAndEveryPresetRoundTripWithoutPublishingRuntimeState() PASSED
+
+EngineeringSplitTest > legacySevenAndTenFieldQueueFixturesMigrateToExactElevenFieldEncoding() PASSED
+
+EngineeringSplitTest > coupledTomeTraceAndDerivedTracePreserveTheirSemantics() PASSED
+
+EngineeringSplitTest > policySchemaMigratesLegacyAtomKeysWithoutPublishingPolicy() PASSED
+
+EngineeringSplitTest > structuredRecoveryReconcilesLegacyMirrorsAndReturnsOwnedMutableQueue() PASSED
+
+EngineeringSplitTest > queueEncodingIsLocaleIndependentAndPreservesInheritedGeneration() PASSED
+
+EngineeringSplitTest > queueRecoveryRejectsAnInvalidTailAndAggregateRefundOverflow() PASSED
+
+EngineeringSplitTest > sliderOwnsDragClampingAndReleaseWithoutOwningTheScreen() PASSED
 
 FullPortRuntimeTest > liveShelfWirePreservesChargeSentinelsAndCounts() PASSED
 
 FullPortRuntimeTest > configurationWireDoesNotConfuseStoredPreferencesWithEffectiveValues() PASSED
 
-FullPortRuntimeTest > ritualWirePreservesMenuSessionAndQueue() PASSED
+FullPortRuntimeTest > ritualWirePreservesMenuSessionQueueAndBlockedState() PASSED
 
 FullPortRuntimeTest > malformedPolicyNeverBecomesAnUnlockedDefault() PASSED
 
@@ -111,13 +221,17 @@ FullPortRuntimeTest > persistedQueueHasFiniteResourceBounds() PASSED
 
 NetworkCompatibilityTest > countsAreValidatedBeforeAllocationAndIteration() PASSED
 
-NetworkCompatibilityTest > allActionTokensAndNoBodyPacketsRoundTrip() PASSED
+NetworkCompatibilityTest > actualWireBudgetTrimsRowsButRejectsOversizedHeader() PASSED
 
 NetworkCompatibilityTest > unknownActionsCannotSilentlyBecomeEnchantment() PASSED
+
+NetworkCompatibilityTest > allActionTokensAndMenuTargetedPacketsRoundTrip() PASSED
 
 NetworkCompatibilityTest > costTableConfigurationAndRowsRoundTrip() PASSED
 
 NetworkCompatibilityTest > runtimeConfigRequestAndAcknowledgementRoundTrip() PASSED
+
+NetworkCompatibilityTest > applyPayloadRejectsOutOfRangeFieldsAtConstruction() PASSED
 
 NetworkCompatibilityTest > liveUpdatesOnlyTargetTheMatchingMenu() PASSED
 
@@ -127,9 +241,23 @@ NetworkCompatibilityTest > openingAndLiveShelfCodecsPreserveAllFields() PASSED
 
 NetworkCompatibilityTest > emptyServerCatalogIsNotLocalFallbackAndDisconnectClearsIt() PASSED
 
-RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
+NetworkCompatibilityTest > tomeDashboardAndActionPayloadsRoundTrip() PASSED
 
-RuleArchitectureTest > missingWindowCannotCreditBackpackOrUnloadedTime() PASSED
+RainbowClothTest > negativeTicksStillProduceValidPaletteIndex() PASSED
+
+RainbowClothTest > exactVanillaNameOnly() PASSED
+
+RainbowClothTest > partialTickIsNotDiscarded() PASSED
+
+RainbowClothTest > hugeWorldAgeKeepsFractionalPrecision() PASSED
+
+RainbowClothTest > invalidPartialTicksAreClamped() PASSED
+
+RainbowClothTest > phaseLoopsEveryTwentySeconds() PASSED
+
+RainbowClothTest > wrapIsContinuous() PASSED
+
+RuleArchitectureTest > effectiveValueAndOriginComeFromTheSameSnapshot() PASSED
 
 RuleArchitectureTest > overlapUsesFastestRateIndependentOfProposalOrder() PASSED
 
@@ -147,12 +275,108 @@ RuleArchitectureTest > fullyRestoredBooksAreEvictedWithoutOngoingDirtyWrites() P
 
 RuleArchitectureTest > fullLockResolvesEveryDefinedRuntimeKeyNotJustDatapackKeys() PASSED
 
+RuleArchitectureTest > unloadedWindowPausesWithoutCreditingOfflineTimeAndPersistsSnapshots() PASSED
+
 RuleArchitectureTest > rateChangesDoNotRetroactivelyRepriceOldTime() PASSED
 
 RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrite() PASSED
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1792783379824.json
+
+TomeActionQueueTest > cancellationPreventsQueuedRequests() PASSED
+
+TomeActionQueueTest > multipleBooksRequireSameSelectionAndActionWithinDeadline() PASSED
+
+TomeActionQueueTest > replacedBookInSameSlotIsSkipped() PASSED
+
+TomeActionQueueTest > pacedSubmissionDoesNotMutateAuthoritativeEntries() PASSED
+
+TomeActionQueueTest > unlockOnlyTargetsLockedEntriesAndRejectsReentrantBatch() PASSED
+
+TomeCatalogTest > removedBookCannotRemainSelected() PASSED
+
+TomeCatalogTest > filtersIntersect() PASSED
+
+TomeCatalogTest > normalClickReplacesSelection() PASSED
+
+TomeCatalogTest > clearReallyClearsAndResetRestoresView() PASSED
+
+TomeCatalogTest > ownershipFilterExcludesUnlocked() PASSED
+
+TomeCatalogTest > hiddenSelectionCannotBeActedUpon() PASSED
+
+TomeCatalogTest > numericSortAndReverse() PASSED
+
+TomeCatalogTest > secondaryEnchantmentsAreFilterable() PASSED
+
+TomeCatalogTest > shiftSelectionTogglesWithoutLosingOtherSelections() PASSED
+
+TomeCatalogTest > reorderPreservesIdentity() PASSED
+
+TomeDirectoryLayoutTest > lockIconsFitInsideExistingPanelAndBelowRateText() PASSED
+
+TomeDirectoryLayoutTest > textInkIsInsetFromEveryButtonEdge() PASSED
+
+TomeDirectoryLayoutTest > popupRowsStayInsideTheirOwnInnerBorder() PASSED
+
+TomeDirectoryLayoutTest > unknownButtonsFailInsteadOfTargetingClearOrBatchAction() PASSED
+
+TomeDirectoryLayoutTest > controlsAndReadOnlyCounterNeverOverlap() PASSED
+
+TomeDirectoryLayoutTest > listStartsBelowPanelAndKeepsOriginalBottom() PASSED
+
+TomeDirectoryLayoutTest > allControlsAreInsideThePanelInnerFrame() PASSED
+
+TomeDirectoryLayoutTest > longestPopupCannotCoverTheListBottomFrame() PASSED
+
+TomeDirectoryLayoutTest > iconInkHasSevenPixelsWithoutCoveringItsBorder() PASSED
+
+TomeDirectoryLayoutTest > decorativeOuterBorderIsNotAButton() PASSED
+
+TooltipBudgetTest > wrappingUsesViewportRatherThanUnboundedTextWidth() PASSED
+
+TooltipBudgetTest > shortTooltipIsNotPaddedOrExpanded() PASSED
+
+TooltipBudgetTest > summaryNeverDuplicatesCriticalRowsOrAcceptsBadIndices() PASSED
+
+TooltipBudgetTest > compactAndExpandedHeightRemainBoundedOnSmallGuiScales() PASSED
+
+TooltipBudgetTest > summaryKeepsTitleAndLateFailureBeforeOptionalMechanics() PASSED
+
+TooltipBudgetTest > emptyAndZeroBudgetsAreSafe() PASSED
+
+ConfigFileStoreTest > providerWithoutAtomicMoveCanStillReplaceAndCleanTemporaryFile() PASSED
+
+ConfigFileStoreTest > replacementFailureNeverTruncatesLastGoodConfiguration() PASSED
+
+Backport26_3AuditTest > tomePageDatapackRulesReachTheResolverAndPublishedDomain() PASSED
+
+Backport26_3AuditTest > removingClassicOverlayRestoresAllThreeImmutableBundledBaselines() PASSED
+
+Backport26_3AuditTest > externalPackCanPinEvenByteIdenticalBundledDefaults() PASSED
+
+Backport26_3AuditTest > invalidLootOrPolicyAbortsPreparationWithoutPublishingPartialInputs() PASSED
+
+Backport26_3AuditTest > publishedFrameCollectionsAreSnapshotCopies() PASSED
+
+Backport26_3AuditTest > actualFabricBundledPackDoesNotLockCleanseOrOverridePresets() PASSED
+
+Backport26_3AuditTest > registryPreloadDoesNotPublishToGameplayOrChestSpawnCache() PASSED
+
+LatestPortAuditTest > tomePageDatapackRulesReachTheResolverAndPublishedDomain() PASSED
+
+LatestPortAuditTest > removingClassicOverlayRestoresAllThreeImmutableBundledBaselines() PASSED
+
+LatestPortAuditTest > externalPackCanPinEvenByteIdenticalBundledDefaults() PASSED
+
+LatestPortAuditTest > invalidLootOrPolicyAbortsPreparationWithoutPublishingPartialInputs() PASSED
+
+LatestPortAuditTest > actualFabricBundledPackDoesNotLockCleanseOrOverridePresets() PASSED
+
+LatestPortAuditTest > registryPreloadDoesNotPublishToGameplayOrChestSpawnCache() PASSED
+
+RuntimeFrameSnapshotTest > callerOwnedCollectionsCannotMutatePublishedFrame() PASSED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793063315941.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 

@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.mechanics.resonance;
 
+import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion;
 import chiseled_enchanting_table.mechanics.enchanting.XpCostConversion.XpRequirement;
 import com.google.gson.JsonElement;
@@ -28,8 +29,9 @@ import net.minecraft.world.level.Level;
  *       Enchanted Book already carries {@code existingLevel >= 1}, regular bookshelves unlock step
  *       upgrades all the way to {@code MAX} at {@code 38} shelves ({@code [0, 7, 16, 27, 38]} for
  *       {@code maxLevel = 5}, {@code [0, 10, 23, 38]} for {@code maxLevel = 4}, {@code [0, 16, 38]}
- *       for {@code maxLevel = 3}, {@code [0, 38]} for {@code maxLevel = 2}, strictly increasing
- *       for {@code 1 <= maxLevel <= anchor + 1}, and smoothly distributed across all {@code 39}
+ *       for {@code maxLevel = 3}, {@code [0, 22]} for {@code maxLevel = 2} via
+ *       {@code two_level_max_bookshelves = 22}, strictly increasing for
+ *       {@code 1 <= maxLevel <= anchor + 1}, and smoothly distributed across all {@code 39}
  *       discrete shelf counts {@code 0..anchor} when {@code maxLevel > anchor + 1}).</li>
  *   <li><b>Depleted Tome 3-Gradient Restoration</b> ({@link DepletedTomeTier}): linear batch
  *       conversion with configurable batch sizes and deduplicated distinct high-tier Master Tome
@@ -37,24 +39,25 @@ import net.minecraft.world.level.Level;
  * </ol>
  */
 public final class BookshelfProgression {
-    public static final int DEFAULT_SCAN_HORIZONTAL_RADIUS = 3;
-    public static final int DEFAULT_SCAN_VERTICAL_RADIUS = 2;
+    // Generated from shelf_gates.json (single source of truth); see BundledDefaults.
+    public static final int DEFAULT_SCAN_HORIZONTAL_RADIUS = chiseled_enchanting_table.BundledDefaults.SCAN_HORIZONTAL_RADIUS;
+    public static final int DEFAULT_SCAN_VERTICAL_RADIUS = chiseled_enchanting_table.BundledDefaults.SCAN_VERTICAL_RADIUS;
     public static final int MAX_SCAN_HORIZONTAL_RADIUS = 8;
     public static final int MAX_SCAN_VERTICAL_RADIUS = 6;
-    public static final int MAX_SCAN_VOLUME_BLOCKS = 2048;
-    public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = 38;
-    public static final double DIRECT_TIER_CURVE_EXPONENT = 1.25;
+    public static final int MAX_SCAN_VOLUME_BLOCKS = 4096;
+    public static final int DEFAULT_MAX_DIRECT_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.MAX_DIRECT_BOOKSHELVES;
+    public static final int DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.TWO_LEVEL_MAX_BOOKSHELVES;
+    public static final double DIRECT_TIER_CURVE_EXPONENT = chiseled_enchanting_table.BundledDefaults.DIRECT_TIER_GAMMA;
 
-    public static final int DEFAULT_TIER1_BOOKSHELVES = 12;
-    public static final int DEFAULT_TIER2_BOOKSHELVES = 32;
-    public static final double DEFAULT_TIER2_MATERIAL_MULTIPLIER = 0.50;
-    public static final int DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS = 6;
-    public static final int DEFAULT_BASE_BATCH_SIZE = 64;
-    public static final int DEFAULT_TIER3_BATCH_SIZE = 64;
-    public static final int DEFAULT_MIN_OPEN_ADJACENT_BLOCKS = 6;
+    public static final int DEFAULT_TIER1_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER1_BOOKSHELVES;
+    public static final int DEFAULT_TIER2_BOOKSHELVES = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER2_BOOKSHELVES;
+    public static final double DEFAULT_TIER2_MATERIAL_MULTIPLIER = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER2_MATERIAL_MULTIPLIER;
+    public static final int DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER3_QUALIFYING_ENCHANTMENTS;
+    public static final int DEFAULT_BASE_BATCH_SIZE = chiseled_enchanting_table.BundledDefaults.DEPLETED_BASE_BATCH_SIZE;
+    public static final int DEFAULT_TIER3_BATCH_SIZE = chiseled_enchanting_table.BundledDefaults.DEPLETED_TIER3_BATCH_SIZE;
+    public static final int DEFAULT_MIN_OPEN_ADJACENT_BLOCKS = chiseled_enchanting_table.BundledDefaults.MIN_OPEN_ADJACENT_BLOCKS;
 
-    private static final TagKey<Enchantment> CURSE_TAG =
-        TagKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("curse"));
+    private static final TagKey<Enchantment> CURSE_TAG = chiseled_enchanting_table.registry.CetTags.Enchantments.CURSE;
 
     public static int scanVolumeBlocks(int horizontalRadius, int verticalRadius) {
         int h = Math.max(1, horizontalRadius);
@@ -125,6 +128,7 @@ public final class BookshelfProgression {
     public record Config(
         boolean directGatesEnabled,
         int maxDirectBookshelves,
+        int twoLevelMaxBookshelves,
         double gamma,
         BlankMaxTierMode blankMaxTierMode,
         int horizontalScanRadius,
@@ -142,10 +146,11 @@ public final class BookshelfProgression {
         boolean requireLineOfSight
     ) {
         public static final Config DEFAULT = new Config(
-            true,
+            chiseled_enchanting_table.BundledDefaults.DIRECT_GATES_ENABLED,
             DEFAULT_MAX_DIRECT_BOOKSHELVES,
+            DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES,
             DIRECT_TIER_CURVE_EXPONENT,
-            BlankMaxTierMode.HALF_CEIL,
+            BlankMaxTierMode.fromToken(chiseled_enchanting_table.BundledDefaults.BLANK_MAX_TIER_MODE),
             DEFAULT_SCAN_HORIZONTAL_RADIUS,
             DEFAULT_SCAN_VERTICAL_RADIUS,
             Map.of(),
@@ -155,13 +160,15 @@ public final class BookshelfProgression {
             DEFAULT_TIER3_QUALIFYING_ENCHANTMENTS,
             DEFAULT_BASE_BATCH_SIZE,
             DEFAULT_TIER3_BATCH_SIZE,
-            VanillaTableMode.BOOKS,
-            true,
+            VanillaTableMode.fromToken(chiseled_enchanting_table.BundledDefaults.VANILLA_TABLE_MODE),
+            chiseled_enchanting_table.BundledDefaults.REQUIRE_BREATHING_ROOM,
             DEFAULT_MIN_OPEN_ADJACENT_BLOCKS,
-            false
+            chiseled_enchanting_table.BundledDefaults.REQUIRE_LINE_OF_SIGHT
         );
 
         public Config {
+            maxDirectBookshelves = clampInt(maxDirectBookshelves, 1, 256);
+            twoLevelMaxBookshelves = clampInt(twoLevelMaxBookshelves, 1, maxDirectBookshelves);
             horizontalScanRadius = clampInt(horizontalScanRadius, 1, MAX_SCAN_HORIZONTAL_RADIUS);
             verticalScanRadius = clampInt(verticalScanRadius, 0, MAX_SCAN_VERTICAL_RADIUS);
             vanillaTableMode = vanillaTableMode != null ? vanillaTableMode : VanillaTableMode.BOOKS;
@@ -174,6 +181,47 @@ public final class BookshelfProgression {
                 && scanVolumeBlocks(horizontalScanRadius, verticalScanRadius) > MAX_SCAN_VOLUME_BLOCKS) {
                 horizontalScanRadius--;
             }
+        }
+
+        public Config(
+            boolean directGatesEnabled,
+            int maxDirectBookshelves,
+            double gamma,
+            BlankMaxTierMode blankMaxTierMode,
+            int horizontalScanRadius,
+            int verticalScanRadius,
+            Map<Identifier, List<Integer>> overrides,
+            int tier1Bookshelves,
+            int tier2Bookshelves,
+            double tier2MaterialMultiplier,
+            int tier3QualifyingEnchantments,
+            int baseBatchSize,
+            int tier3BatchSize,
+            VanillaTableMode vanillaTableMode,
+            boolean requireBreathingRoom,
+            int minOpenAdjacentBlocks,
+            boolean requireLineOfSight
+        ) {
+            this(
+                directGatesEnabled,
+                maxDirectBookshelves,
+                Math.min(Math.max(1, maxDirectBookshelves), DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES),
+                gamma,
+                blankMaxTierMode,
+                horizontalScanRadius,
+                verticalScanRadius,
+                overrides,
+                tier1Bookshelves,
+                tier2Bookshelves,
+                tier2MaterialMultiplier,
+                tier3QualifyingEnchantments,
+                baseBatchSize,
+                tier3BatchSize,
+                vanillaTableMode,
+                requireBreathingRoom,
+                minOpenAdjacentBlocks,
+                requireLineOfSight
+            );
         }
 
         public Config(
@@ -279,6 +327,7 @@ public final class BookshelfProgression {
 
             boolean enabled = true;
             int maxDirect = DEFAULT_MAX_DIRECT_BOOKSHELVES;
+            int twoLevelMax = DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES;
             double curveExp = DIRECT_TIER_CURVE_EXPONENT;
             BlankMaxTierMode blankMode = BlankMaxTierMode.HALF_CEIL;
             Map<Identifier, List<Integer>> parsedOverrides = new HashMap<>();
@@ -290,6 +339,10 @@ public final class BookshelfProgression {
                 }
                 if (directObj.has("max_bookshelves")) {
                     maxDirect = clampInt(directObj.get("max_bookshelves").getAsInt(), 1, 256);
+                }
+                twoLevelMax = Math.min(maxDirect, DEFAULT_TWO_LEVEL_MAX_BOOKSHELVES);
+                if (directObj.has("two_level_max_bookshelves")) {
+                    twoLevelMax = clampInt(directObj.get("two_level_max_bookshelves").getAsInt(), 1, maxDirect);
                 }
                 if (directObj.has("gamma")) {
                     double rawExp = directObj.get("gamma").getAsDouble();
@@ -304,35 +357,71 @@ public final class BookshelfProgression {
                 if (directObj.has("overrides") && directObj.get("overrides").isJsonObject()) {
                     JsonObject ovRoot = directObj.getAsJsonObject("overrides");
                     for (Map.Entry<String, JsonElement> entry : ovRoot.entrySet()) {
+                        if (entry.getKey().startsWith("_")) continue;
                         Identifier id = Identifier.tryParse(entry.getKey());
-                        if (id == null) continue;
+                        if (id == null) {
+                            ChiseledEnchantingTable.LOGGER.warn(
+                                "shelf_gates.json direct_upgrade_gates.overrides has malformed enchantment ID '{}'; ignoring",
+                                entry.getKey()
+                            );
+                            continue;
+                        }
+                        List<Integer> rawLadder = null;
                         if (entry.getValue().isJsonArray()) {
-                            List<Integer> ladder = new ArrayList<>();
+                            rawLadder = new ArrayList<>();
+                            boolean validNumbers = true;
                             for (JsonElement elem : entry.getValue().getAsJsonArray()) {
-                                ladder.add(clampInt(elem.getAsInt(), 0, 256));
+                                if (elem == null || !elem.isJsonPrimitive() || !elem.getAsJsonPrimitive().isNumber()) {
+                                    validNumbers = false;
+                                    break;
+                                }
+                                rawLadder.add(elem.getAsInt());
                             }
-                            if (!ladder.isEmpty()) {
-                                parsedOverrides.put(id, List.copyOf(ladder));
+                            if (!validNumbers) {
+                                ChiseledEnchantingTable.LOGGER.warn(
+                                    "shelf_gates.json direct_upgrade_gates.overrides '{}' contains non-numeric entry; falling back to default curve",
+                                    id
+                                );
+                                rawLadder = null;
                             }
                         } else if (entry.getValue().isJsonObject()) {
                             int maxKey = 0;
                             Map<Integer, Integer> sparse = new HashMap<>();
+                            boolean validSparse = true;
                             for (Map.Entry<String, JsonElement> lvlEntry : entry.getValue().getAsJsonObject().entrySet()) {
+                                if (lvlEntry.getKey().startsWith("_")) continue;
                                 try {
                                     int lvl = Integer.parseInt(lvlEntry.getKey());
-                                    if (lvl >= 1) {
-                                        maxKey = Math.max(maxKey, lvl);
-                                        sparse.put(lvl, clampInt(lvlEntry.getValue().getAsInt(), 0, 256));
+                                    if (lvl < 1
+                                        || lvlEntry.getValue() == null
+                                        || !lvlEntry.getValue().isJsonPrimitive()
+                                        || !lvlEntry.getValue().getAsJsonPrimitive().isNumber()) {
+                                        validSparse = false;
+                                        break;
                                     }
-                                } catch (Exception ignored) {
+                                    maxKey = Math.max(maxKey, lvl);
+                                    sparse.put(lvl, lvlEntry.getValue().getAsInt());
+                                } catch (Exception ex) {
+                                    validSparse = false;
+                                    break;
                                 }
                             }
-                            if (maxKey >= 1) {
-                                List<Integer> ladder = new ArrayList<>(maxKey);
+                            if (!validSparse) {
+                                ChiseledEnchantingTable.LOGGER.warn(
+                                    "shelf_gates.json direct_upgrade_gates.overrides '{}' contains invalid sparse level mapping; falling back to default curve",
+                                    id
+                                );
+                            } else if (maxKey >= 1) {
+                                rawLadder = new ArrayList<>(maxKey);
                                 for (int l = 1; l <= maxKey; l++) {
-                                    ladder.add(sparse.getOrDefault(l, requiredBookshelvesForDirectTier(l, maxKey, maxDirect, curveExp)));
+                                    rawLadder.add(sparse.getOrDefault(l, requiredBookshelvesForDirectTier(l, maxKey, maxDirect, curveExp)));
                                 }
-                                parsedOverrides.put(id, List.copyOf(ladder));
+                            }
+                        }
+                        if (rawLadder != null && !rawLadder.isEmpty()) {
+                            List<Integer> validated = validateOverrideLadder(id, rawLadder, maxDirect);
+                            if (validated != null) {
+                                parsedOverrides.put(id, validated);
                             }
                         }
                     }
@@ -370,6 +459,7 @@ public final class BookshelfProgression {
             return new Config(
                 enabled,
                 maxDirect,
+                twoLevelMax,
                 curveExp,
                 blankMode,
                 hRadius,
@@ -453,7 +543,10 @@ public final class BookshelfProgression {
                 return Math.max(0, ladder.get(targetLevel - 1));
             }
         }
-        return requiredBookshelvesForDirectTier(targetLevel, maxLevel, cfg.maxDirectBookshelves(), cfg.gamma());
+        int effectiveCap = Math.max(1, maxLevel) == 2
+            ? Math.min(cfg.maxDirectBookshelves(), cfg.twoLevelMaxBookshelves())
+            : cfg.maxDirectBookshelves();
+        return requiredBookshelvesForDirectTier(targetLevel, maxLevel, effectiveCap, cfg.gamma());
     }
 
     public static int maxUnlockedDirectTier(
@@ -473,11 +566,27 @@ public final class BookshelfProgression {
             int req = requiredBookshelvesForDirectTier(cfg, enchantmentId, lvl, clampedMax);
             if (shelves >= req) {
                 unlocked = lvl;
-            } else {
-                break;
             }
         }
         return unlocked;
+    }
+
+    public static List<Integer> validateOverrideLadder(Identifier id, List<Integer> rawLadder, int maxDirect) {
+        int prev = -1;
+        for (int i = 0; i < rawLadder.size(); i++) {
+            int req = rawLadder.get(i);
+            if (req < 0 || req > maxDirect || req < prev) {
+                ChiseledEnchantingTable.LOGGER.warn(
+                    "shelf_gates.json direct_upgrade_gates.overrides '{}' must be monotonically non-decreasing within [0, {}] (got {}); falling back to default curve",
+                    id,
+                    maxDirect,
+                    rawLadder
+                );
+                return null;
+            }
+            prev = req;
+        }
+        return List.copyOf(rawLadder);
     }
 
     public static int maxBlankWoodenTier(
@@ -595,7 +704,10 @@ public final class BookshelfProgression {
             return List.of();
         }
         if (tier == DepletedTomeTier.TIER_3_FREE) {
-            return List.of();
+            // One explicitly-empty bundle = legally material-free (audit H-02). Returning a
+            // completely empty option list here used to be indistinguishable from missing
+            // cost data, which the menu layer now treats as fail-closed.
+            return List.of(List.of());
         }
         int safeBatch = Math.max(1, batchCount);
         double mult = (tier == DepletedTomeTier.TIER_2_DISCOUNT_MAT)
@@ -604,7 +716,10 @@ public final class BookshelfProgression {
 
         List<List<ItemStack>> out = new ArrayList<>(baseBundles.size());
         for (List<ItemStack> bundle : baseBundles) {
-            if (bundle.isEmpty()) continue;
+            if (bundle.isEmpty()) {
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> scaled = new ArrayList<>(bundle.size());
             for (ItemStack stack : bundle) {
                 ItemStack copy = stack.copy();
@@ -632,7 +747,11 @@ public final class BookshelfProgression {
         }
         List<List<ItemStack>> out = new ArrayList<>(unitBundles.size());
         for (List<ItemStack> bundle : unitBundles) {
-            if (bundle.isEmpty()) continue;
+            if (bundle.isEmpty()) {
+                // Explicitly-empty (material-free) bundles survive batch scaling (audit H-02).
+                out.add(List.of());
+                continue;
+            }
             List<ItemStack> scaled = new ArrayList<>(bundle.size());
             for (ItemStack stack : bundle) {
                 ItemStack copy = stack.copy();

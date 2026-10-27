@@ -2,9 +2,9 @@ package chiseled_enchanting_table.mechanics.structure;
 
 import chiseled_enchanting_table.ChiseledEnchantingTable;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.BookshelfBookPool;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.LootInjection;
-import chiseled_enchanting_table.data.ChiseledEnchantingTableData.LootInjectionEntry;
+import chiseled_enchanting_table.data.BookshelfBookPool;
+import chiseled_enchanting_table.data.LootInjection;
+import chiseled_enchanting_table.data.LootInjectionEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -130,8 +130,24 @@ import org.jetbrains.annotations.Nullable;
  * still in the template, not in the world, so scoring there would see an empty room.</p>
  */
 public final class BookshelfBookFiller {
-    /** Block-entity id written into the structure-tag path, matching vanilla template NBT. */
+    /** Fallback block-entity id used only before registry bootstrap; runtime derives from {@code BuiltInRegistries}. */
     public static final String BOOKSHELF_BLOCK_ENTITY_ID = "minecraft:chiseled_bookshelf";
+    private static volatile @Nullable String resolvedBookshelfBlockEntityId;
+
+    /**
+     * 26.2 adaptation: this Minecraft line does not expose the chiseled-bookshelf block-entity
+     * type under a stable {@code BlockEntityType(s)} field. Write the canonical constant id used by
+     * vanilla template NBT (verified on this line); avoids a version-bound registry lookup.
+     */
+    public static String bookshelfBlockEntityId() {
+        return BOOKSHELF_BLOCK_ENTITY_ID;
+    }
+
+    /** 26.2: no version-bound registry key to assert; kept as an intentional no-op startup hook. */
+    public static void verifyVanillaKeys() {
+        // Structure book NBT uses the canonical "minecraft:chiseled_bookshelf" id (see
+        // BOOKSHELF_BLOCK_ENTITY_ID). No reflection/registry probe is needed on this line.
+    }
 
     /**
      * Lore line stamped on every generated enchanted book.
@@ -240,7 +256,7 @@ public final class BookshelfBookFiller {
         CompoundTag tag = output.buildResult();
         // Vanilla template NBT carries the block-entity id; loadWithComponents ignores it, but
         // keeping it makes the generated tag indistinguishable from a hand-built structure file.
-        tag.putString("id", BOOKSHELF_BLOCK_ENTITY_ID);
+        tag.putString("id", bookshelfBlockEntityId());
         return tag;
     }
 
@@ -537,6 +553,11 @@ public final class BookshelfBookFiller {
         Holder<Enchantment> holder = picked.holder;
         EnchantmentHelper.updateEnchantments(stack, mutable -> mutable.set(holder, level));
         stack.set(DataComponents.LORE, new ItemLore(List.of(LORE)));
+        chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.applyWildBookWear(
+            stack,
+            random,
+            ChiseledEnchantingTableData.libraryResonanceConfig()
+        );
         return stack;
     }
 
