@@ -105,6 +105,20 @@ final class MenuPaymentService {
         consumeAdditionalCosts(access, merged);
     }
 
+    static List<ItemStack> resolveRequestedCostBundle(
+        Access access, EnchantmentWithLevel ewl, OptionType type, int costOptionIndex
+    ) {
+        if (costOptionIndex < 0) return findMatchingAffordableCostBundle(access, ewl, type);
+        List<List<ItemStack>> options = access.costOptions(ewl, type);
+        if (options.isEmpty()) return (costOptionIndex == 0 && access.materialFree(ewl, type)) ? List.of() : null;
+        if (costOptionIndex >= options.size()) return null;
+        List<ItemStack> chosen = options.get(costOptionIndex);
+        if (chosen.isEmpty()) return List.of();
+        List<ItemStack> merged = ChiseledEnchantingTableData.mergeEquivalentCostBundle(chosen);
+        if (access.player().getAbilities().instabuild) return merged;
+        return (!merged.isEmpty() && isBundleAffordableWithOverflow(access, merged)) ? merged : null;
+    }
+
     static PaymentReceipt applyEnchantmentConditionWithReceipt(Access access, ApplyEnchantmentPayload payload) {
         EnchantmentWithLevel ewl = new EnchantmentWithLevel(payload.enchantment_id(), payload.enchantment_level());
         OptionType effectiveType = payload.option_type();
@@ -116,7 +130,7 @@ final class MenuPaymentService {
             return new PaymentReceipt(false, 0, List.of());
         }
 
-        List<ItemStack> matchedBundle = findMatchingAffordableCostBundle(access, ewl, effectiveType);
+        List<ItemStack> matchedBundle = resolveRequestedCostBundle(access, ewl, effectiveType, payload.cost_option_index());
         if (!access.player().getAbilities().instabuild && matchedBundle == null) {
             return new PaymentReceipt(false, 0, List.of());
         }

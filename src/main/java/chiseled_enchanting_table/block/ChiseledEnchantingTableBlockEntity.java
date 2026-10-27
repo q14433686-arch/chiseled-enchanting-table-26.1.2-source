@@ -63,7 +63,20 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     public enum RitualCompletionKind {
         NATURAL,
         SACRIFICED_XP,
-        RUSHED_NO_SACRIFICE
+        RUSHED_NO_SACRIFICE,
+        CATALYST_PERFECT
+    }
+
+    /** Exact shelf-slot wear snapshot recorded per queued ritual step so Safe Abort rolls back unfinalized wear without dupes. */
+    public record TomeWearUndo(BlockPos shelfPos, int slot, ItemStack preWear, ItemStack postWear) {
+        public static final com.mojang.serialization.Codec<TomeWearUndo> CODEC =
+            com.mojang.serialization.codecs.RecordCodecBuilder.create(inst -> inst.group(
+                BlockPos.CODEC.fieldOf("pos").forGetter(TomeWearUndo::shelfPos),
+                com.mojang.serialization.Codec.INT.fieldOf("slot").forGetter(TomeWearUndo::slot),
+                ItemStack.CODEC.fieldOf("pre").forGetter(TomeWearUndo::preWear),
+                ItemStack.CODEC.fieldOf("post").forGetter(TomeWearUndo::postWear)
+            ).apply(inst, TomeWearUndo::new));
+        public static final com.mojang.serialization.Codec<List<TomeWearUndo>> LIST_CODEC = CODEC.listOf();
     }
 
     /** Chest-style persistent 2-slot container (slot 0: enchantable item/book, slot 1: lapis/material). */
@@ -71,6 +84,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
     /** Active queued inscriptions persisted across GUI close/reopen, chunk unloads, and world restarts. */
     private List<QueuedInscription> ritualQueue = new ArrayList<>();
+    private List<TomeWearUndo> ritualTomeUndos = new ArrayList<>();
     private long ritualTotalTicks = 0L;
     private long ritualRemainingTicks = 0L;
     @Nullable
@@ -176,6 +190,23 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
     public List<QueuedInscription> queuedInscriptions() {
         return List.copyOf(this.ritualQueue);
+    }
+
+    public List<TomeWearUndo> queuedTomeWearUndos() {
+        return List.copyOf(this.ritualTomeUndos);
+    }
+
+    public void recordTomeWearUndo(TomeWearUndo undo) {
+        if (undo != null && this.ritualTomeUndos.size() < MAX_RITUAL_STEPS) {
+            this.ritualTomeUndos.add(undo);
+            this.setChanged();
+        }
+    }
+
+    public long reduceRitualRemainingTicks(long deltaTicks) {
+        this.ritualRemainingTicks = Math.max(0L, this.ritualRemainingTicks - Math.max(0L, deltaTicks));
+        this.setChanged();
+        return this.ritualRemainingTicks;
     }
 
     public List<EnchantmentWithLevel> queuedEnchantmentSummary() {
@@ -300,6 +331,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
     public void clearRitualState() {
         this.ritualQueue.clear();
+        this.ritualTomeUndos.clear();
         this.ritualTotalTicks = 0L;
         this.ritualRemainingTicks = 0L;
         this.ritualOwnerUuid = null;
@@ -423,7 +455,11 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
 
             // Iron Rule #2: ONLY steps actually copied from an overloaded wear-immune Master Tome roll slip/cross-line,
             // evaluated against max(step's queue-time load, live library-wide Sigma L across active wear-immune tomes)!
-            double stepSlipProb = (ritualQueueEnabled && step.masterTomeUsed() && step.usedInfinityTome())
+            // Arcane Catalyst completion (CATALYST_PERFECT) guarantees 0% slip/crossline risk.
+            double stepSlipProb = (ritualQueueEnabled
+                && completionKind != RitualCompletionKind.CATALYST_PERFECT
+                && step.masterTomeUsed()
+                && step.usedInfinityTome())
                 ? InscriptionRitualMechanics.computeLoadSlipProbability(
                     ritualCfg,
                     Math.max(step.infinityTomeLoad(), scan.totalWearImmuneLoad()),
@@ -780,6 +816,9 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         if (!this.ritualQueue.isEmpty() && this.ritualCorruptQueue.isEmpty()) {
             output.store("ritualQueueData", InscriptionRitualMechanics.STRUCTURED_QUEUE_CODEC, this.ritualQueue);
         }
+        if (!this.ritualTomeUndos.isEmpty() && this.ritualCorruptQueue.isEmpty()) {
+            output.store("ritualTomeUndos", TomeWearUndo.LIST_CODEC, this.ritualTomeUndos);
+        }
         output.putString("ritualQueue", this.ritualCorruptQueue.isEmpty()
             ? InscriptionRitualMechanics.serializeQueue(this.ritualQueue) : this.ritualCorruptQueue);
         output.putBoolean("ritualBlocked", this.ritualBlocked);
@@ -801,6 +840,7 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         ContainerHelper.loadAllItems(input, this.items);
         this.ritualSession = input.getLongOr("ritualSession", 0L);
         this.ritualTarget = input.read("ritualTarget", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        this.ritualTomeUndos = new ArrayList<>(input.read("ritualTomeUndos", TomeWearUndo.LIST_CODEC).orElse(List.of()));
         String rawQueue = input.getStringOr("ritualQueue", "");
         java.util.Optional<List<QueuedInscription>> structuredQueue =
             input.read("ritualQueueData", InscriptionRitualMechanics.STRUCTURED_QUEUE_CODEC);

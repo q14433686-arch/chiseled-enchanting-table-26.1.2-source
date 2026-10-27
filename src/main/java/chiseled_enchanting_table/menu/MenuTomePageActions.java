@@ -97,6 +97,17 @@ public final class MenuTomePageActions {
         return false;
     }
 
+    public static final int MEND_DEPLETED_COST = 1;
+    public static final int MEND_GRIT_COST = 2;
+    public static final int MEND_XP_LEVELS = 2;
+
+    private static boolean isLockCreationAction(ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action action) {
+        return action == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_NEXT
+            || action == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_FULL
+            || action == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_PERMANENT
+            || action == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_ALL_FULL;
+    }
+
     public static void handleTomePageAction(
         ChiseledEnchantingTableScreenHandler h,
         ChiseledEnchantingMenuPayloads.TomePageActionPayload payload
@@ -115,21 +126,20 @@ public final class MenuTomePageActions {
 
         if (payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.SACRIFICE_DEPLETED) {
             sacrificeDepletedTomes(h, sp, tablePos);
-            h.refreshLiveShelfState();
+            h.refreshLiveShelfState(true);
             return;
         }
         if (!h.isTomePageUnlocked()) {
             h.tomeActionMessage("gui.chiseled_enchanting_table.tab.locked_tooltip");
             return;
         }
-        if (payload.action() != ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK
-            && !h.isTomeLocksEnabled()) {
+        if (isLockCreationAction(payload.action()) && !h.isTomeLocksEnabled()) {
             return;
         }
         if (payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_ALL_FULL) {
             int locked = lockAllChargingTomes(h, sp, tablePos);
             h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.batch", locked);
-            h.refreshLiveShelfState();
+            h.refreshLiveShelfState(true);
             return;
         }
         if (!isShelfInScope(h, tablePos, payload.shelf_pos())
@@ -138,44 +148,52 @@ public final class MenuTomePageActions {
             return;
         }
         int slot = payload.slot();
+        if (slot < 0 || slot >= ChiseledBookShelfBlockEntity.MAX_BOOKS_IN_STORAGE) {
+            h.tomeActionMessage("message.chiseled_enchanting_table.tome_action.invalid");
+            return;
+        }
         ItemStack current = shelf.getItem(slot);
         if (!current.is(Items.ENCHANTED_BOOK)) {
             h.tomeActionMessage("message.chiseled_enchanting_table.tome_action.invalid");
             return;
         }
-        ItemStack updated = current;
+        ItemStack updated = current.copy();
         var expired = TomeLockData.clearExpired(updated);
         if (expired != null
             && payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK) {
             writeShelfStack(h, shelf, payload.shelf_pos(), slot, updated);
             h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.expired");
-            h.refreshLiveShelfState();
+            h.refreshLiveShelfState(true);
             return;
         }
 
-        if (payload.action() == ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK) {
-            unlockTome(h, sp, shelf, payload.shelf_pos(), slot, updated);
-        } else {
-            var mode = switch (payload.action()) {
-                case LOCK_NEXT -> TomeLockData.Mode.NEXT_CHARGE;
-                case LOCK_FULL -> TomeLockData.Mode.FULL_CHARGE;
-                case LOCK_PERMANENT -> TomeLockData.Mode.PERMANENT;
-                default -> null;
-            };
-            if (mode == null) return;
-            if (TomeLockData.isEffectivelyLocked(updated)) {
-                h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.already_locked");
-                return;
+        switch (payload.action()) {
+            case UNLOCK -> unlockTome(h, sp, shelf, payload.shelf_pos(), slot, updated);
+            case MEND_ONE -> mendTomeOneCharge(h, sp, shelf, payload.shelf_pos(), slot, updated);
+            case SANCTIFY_CATALYST -> sanctifyTomeWithCatalyst(h, sp, shelf, payload.shelf_pos(), slot, updated);
+            case LOCATE_PING -> pingTomeLocation(h, sp, tablePos, payload.shelf_pos(), slot);
+            default -> {
+                var mode = switch (payload.action()) {
+                    case LOCK_NEXT -> TomeLockData.Mode.NEXT_CHARGE;
+                    case LOCK_FULL -> TomeLockData.Mode.FULL_CHARGE;
+                    case LOCK_PERMANENT -> TomeLockData.Mode.PERMANENT;
+                    default -> null;
+                };
+                if (mode == null) return;
+                if (TomeLockData.isEffectivelyLocked(updated)) {
+                    h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.already_locked");
+                    return;
+                }
+                if (!TomeLockData.lock(updated, sp.getUUID(), sp.getName().getString(), mode)) {
+                    h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.full");
+                    return;
+                }
+                writeShelfStack(h, shelf, payload.shelf_pos(), slot, updated);
+                TomeParticleEffects.portalAt(h.world(), payload.shelf_pos(), slot);
+                h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.locked");
             }
-            if (!TomeLockData.lock(updated, sp.getUUID(), sp.getName().getString(), mode)) {
-                h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.full");
-                return;
-            }
-            writeShelfStack(h, shelf, payload.shelf_pos(), slot, updated);
-            TomeParticleEffects.portalAt(h.world(), payload.shelf_pos(), slot);
-            h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.locked");
         }
-        h.refreshLiveShelfState();
+        h.refreshLiveShelfState(true);
     }
 
     private static void unlockTome(
@@ -254,6 +272,113 @@ public final class MenuTomePageActions {
         return locked;
     }
 
+    private static void mendTomeOneCharge(
+        ChiseledEnchantingTableScreenHandler h,
+        ServerPlayer sp,
+        ChiseledBookShelfBlockEntity shelf,
+        BlockPos shelfPos,
+        int slot,
+        ItemStack updated
+    ) {
+        int wearUsed = TomeWearData.getWearUsed(updated);
+        if (wearUsed <= 0) {
+            h.tomeActionMessage("message.chiseled_enchanting_table.tome_mend.already_full");
+            return;
+        }
+        var lock = TomeLockData.getLock(updated);
+        boolean creative = sp.getAbilities().instabuild;
+        if (!creative && lock != null && TomeLockData.isEffectivelyLocked(updated) && !lock.ownedBy(sp.getUUID())) {
+            h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.not_owner", lock.ownerName());
+            return;
+        }
+        if (!creative) {
+            if (sp.experienceLevel < MEND_XP_LEVELS
+                || chiseled_enchanting_table.mechanics.ritual.RitualActionService.countDepletedTomesAvailable(h, true) < MEND_DEPLETED_COST
+                || chiseled_enchanting_table.mechanics.ritual.RitualActionService.countItemInSlotAndBag(h, BlockRegistry.CLEANSING_GRIT) < MEND_GRIT_COST) {
+                h.tomeActionMessage("message.chiseled_enchanting_table.tome_mend.cost", MEND_DEPLETED_COST, MEND_GRIT_COST, MEND_XP_LEVELS);
+                return;
+            }
+            if (!chiseled_enchanting_table.mechanics.ritual.RitualActionService.consumeDepletedTomesBagFirst(h, MEND_DEPLETED_COST, true)
+                || !chiseled_enchanting_table.mechanics.ritual.RitualActionService.consumeFromCostSlotThenBag(h, BlockRegistry.CLEANSING_GRIT, MEND_GRIT_COST)) {
+                h.tomeActionMessage("message.chiseled_enchanting_table.tome_mend.cost", MEND_DEPLETED_COST, MEND_GRIT_COST, MEND_XP_LEVELS);
+                return;
+            }
+            sp.giveExperienceLevels(-MEND_XP_LEVELS);
+        }
+        int nextWear = Math.max(0, wearUsed - 1);
+        TomeWearData.setWearUsed(updated, nextWear);
+        TomeLockData.clearExpired(updated);
+        writeShelfStack(h, shelf, shelfPos, slot, updated);
+        TomeParticleEffects.endRodAt(h.world(), shelfPos, slot);
+        h.world().playSound(null, shelfPos, net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.15F);
+        h.world().playSound(null, shelfPos, net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 1.2F);
+        int maxUses = TomeWearData.effectiveMaxUses(updated, h.libraryResonanceConfig().maxTomeUses(), h.libraryResonanceConfig().wearImmuneMaxGeneration());
+        h.tomeActionMessage("message.chiseled_enchanting_table.tome_mend.restored", Math.max(0, maxUses - nextWear), maxUses);
+        h.broadcastChanges();
+    }
+
+    private static void sanctifyTomeWithCatalyst(
+        ChiseledEnchantingTableScreenHandler h,
+        ServerPlayer sp,
+        ChiseledBookShelfBlockEntity shelf,
+        BlockPos shelfPos,
+        int slot,
+        ItemStack updated
+    ) {
+        int wearUsed = TomeWearData.getWearUsed(updated);
+        if (wearUsed <= 0) {
+            h.tomeActionMessage("message.chiseled_enchanting_table.tome_mend.already_full");
+            return;
+        }
+        var lock = TomeLockData.getLock(updated);
+        boolean creative = sp.getAbilities().instabuild;
+        if (!creative && lock != null && TomeLockData.isEffectivelyLocked(updated) && !lock.ownedBy(sp.getUUID())) {
+            h.tomeActionMessage("message.chiseled_enchanting_table.tome_lock.not_owner", lock.ownerName());
+            return;
+        }
+        if (!creative) {
+            if (!chiseled_enchanting_table.mechanics.ritual.RitualActionService.consumeFromCostSlotThenBag(
+                h, BlockRegistry.ARCANE_CATALYST, 1)) {
+                h.tomeActionMessage("message.chiseled_enchanting_table.tome_sanctify.cost");
+                return;
+            }
+        }
+        // Restores full current-generation durability without altering cet_generation (no copy laundering).
+        TomeWearData.setWearUsed(updated, 0);
+        TomeLockData.clearExpired(updated);
+        writeShelfStack(h, shelf, shelfPos, slot, updated);
+        TomeParticleEffects.locateBeaconAt(h.world(), shelfPos, slot);
+        h.world().playSound(null, shelfPos, net.minecraft.sounds.SoundEvents.BEACON_POWER_SELECT, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.3F);
+        int maxUses = TomeWearData.effectiveMaxUses(updated, h.libraryResonanceConfig().maxTomeUses(), h.libraryResonanceConfig().wearImmuneMaxGeneration());
+        h.tomeActionMessage("message.chiseled_enchanting_table.tome_sanctify.restored", maxUses, maxUses);
+        h.broadcastChanges();
+    }
+
+    private static void pingTomeLocation(
+        ChiseledEnchantingTableScreenHandler h,
+        ServerPlayer sp,
+        BlockPos tablePos,
+        BlockPos shelfPos,
+        int slot
+    ) {
+        TomeParticleEffects.locateBeaconAt(h.world(), shelfPos, slot);
+        h.world().playSound(null, shelfPos, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, net.minecraft.sounds.SoundSource.BLOCKS, 1.3F, 1.35F);
+        int dx = shelfPos.getX() - tablePos.getX();
+        int dy = shelfPos.getY() - tablePos.getY();
+        int dz = shelfPos.getZ() - tablePos.getZ();
+        String relX = (dx >= 0 ? "+" : "") + dx;
+        String relY = (dy >= 0 ? "+" : "") + dy;
+        String relZ = (dz >= 0 ? "+" : "") + dz;
+        h.tomeActionMessage(
+            "message.chiseled_enchanting_table.tome_locate.ping",
+            shelfPos.getX(),
+            shelfPos.getY(),
+            shelfPos.getZ(),
+            relX + "/" + relY + "/" + relZ,
+            slot + 1
+        );
+    }
+
     private static void sacrificeDepletedTomes(
         ChiseledEnchantingTableScreenHandler h,
         ServerPlayer sp,
@@ -266,6 +391,59 @@ public final class MenuTomePageActions {
         int needed = h.effectiveSacrificeRequired(sp)
             - Advancement.completedCriteria(sp, Advancement.DISENCHANT_SACRIFICE);
         int consumed = 0;
+
+        // 1. Table Slots (ENCHANTABLE_SLOT when idle, then COST_SLOT)
+        if (!h.isRitualActive() && needed > 0) {
+            ItemStack main = h.getEnchantableItem();
+            if (main.is(BlockRegistry.DEPLETED_TOME)) {
+                int here = 0;
+                while (here < main.getCount() && needed > 0
+                    && Advancement.awardNextCriterion(sp, Advancement.DISENCHANT_SACRIFICE)) {
+                    here++;
+                    needed--;
+                    consumed++;
+                }
+                if (here > 0) {
+                    main.shrink(here);
+                    h.markInventoryChanged();
+                }
+            }
+        }
+        if (needed > 0) {
+            ItemStack cost = h.getCostItem();
+            if (cost.is(BlockRegistry.DEPLETED_TOME)) {
+                int here = 0;
+                while (here < cost.getCount() && needed > 0
+                    && Advancement.awardNextCriterion(sp, Advancement.DISENCHANT_SACRIFICE)) {
+                    here++;
+                    needed--;
+                    consumed++;
+                }
+                if (here > 0) {
+                    cost.shrink(here);
+                    h.markInventoryChanged();
+                }
+            }
+        }
+
+        // 2. Player Inventory
+        for (int invSlot = 0; invSlot < sp.getInventory().getContainerSize() && needed > 0; invSlot++) {
+            ItemStack current = sp.getInventory().getItem(invSlot);
+            if (!current.is(BlockRegistry.DEPLETED_TOME)) continue;
+            int here = 0;
+            while (here < current.getCount() && needed > 0
+                && Advancement.awardNextCriterion(sp, Advancement.DISENCHANT_SACRIFICE)) {
+                here++;
+                needed--;
+                consumed++;
+            }
+            if (here > 0) {
+                current.shrink(here);
+                sp.getInventory().setChanged();
+            }
+        }
+
+        // 3. Nearby Chiseled Bookshelves
         for (BlockPos shelfPos : sacrificeShelfPositions(h, tablePos)) {
             if (needed <= 0) break;
             if (!(h.world().getBlockEntity(shelfPos) instanceof ChiseledBookShelfBlockEntity shelf)) continue;
@@ -285,6 +463,11 @@ public final class MenuTomePageActions {
                     writeShelfStack(h, shelf, shelfPos, slot, updated.isEmpty() ? ItemStack.EMPTY : updated);
                 }
             }
+        }
+        if (consumed > 0) {
+            h.world().playSound(null, tablePos, net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.05F);
+            h.world().playSound(null, tablePos, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.2F);
+            h.broadcastChanges();
         }
         if (h.isCleansePageUnlocked()) {
             h.tomeActionMessage("message.chiseled_enchanting_table.sacrifice.done");

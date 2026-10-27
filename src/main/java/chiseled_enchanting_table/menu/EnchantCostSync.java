@@ -100,23 +100,7 @@ public final class EnchantCostSync {
             if (server.getTickCount() % 20 != 0) return;
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (!ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) continue;
-                UUID playerId = player.getUUID();
-                var displays = ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays(player);
-                if (!displays.equals(LAST_DISPLAYS.get(playerId))) {
-                    LAST_DISPLAYS.put(playerId, displays);
-                    int activeContainerId = player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
-                        ? menu.containerId
-                        : PayloadLimits.NO_CONTAINER;
-                    if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
-                        menu.applyTransformationSnapshot(displays);
-                    }
-                    if (ServerPlayNetworking.canSend(player, ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE)) {
-                        ServerPlayNetworking.send(
-                            player,
-                            new ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload(activeContainerId, displays)
-                        );
-                    }
-                }
+                syncPlayerTransformationsNow(player);
             }
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_DISPLAYS.clear());
@@ -145,6 +129,27 @@ public final class EnchantCostSync {
     }
 
     /** Pushes the player's resolved cost table, if their client registered the payload. */
+    public static void syncPlayerTransformationsNow(ServerPlayer player) {
+        if (player == null) return;
+        UUID playerId = player.getUUID();
+        var displays = ChiseledEnchantingMenuPayloads.AvailableEnchantmentPayload.buildTransformationDisplays(player);
+        if (!displays.equals(LAST_DISPLAYS.get(playerId))) {
+            LAST_DISPLAYS.put(playerId, displays);
+            int activeContainerId = player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu
+                ? menu.containerId
+                : PayloadLimits.NO_CONTAINER;
+            if (player.containerMenu instanceof ChiseledEnchantingTableScreenHandler menu) {
+                menu.applyTransformationSnapshot(displays);
+            }
+            if (ServerPlayNetworking.canSend(player, ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE)) {
+                ServerPlayNetworking.send(
+                    player,
+                    new ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload(activeContainerId, displays)
+                );
+            }
+        }
+    }
+
     public static void sendTo(ServerPlayer player) {
         if (!ServerPlayNetworking.canSend(player, EnchantCostTablePayload.TYPE)
             || !ServerPlayNetworking.canSend(player, EnchantingProtocol.Capability.TYPE)) {

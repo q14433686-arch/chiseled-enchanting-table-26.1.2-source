@@ -28,6 +28,9 @@ final class TableOptionTooltips {
                     "gui.chiseled_enchanting_table.discovery_locked.tip_desc",
                     lockedOut
                 ).withStyle(ChatFormatting.YELLOW));
+                discTip.add(Component.translatable(
+                    "gui.chiseled_enchanting_table.discovery_locked.tip_catalyst"
+                ).withStyle(ChatFormatting.LIGHT_PURPLE));
                 chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), discTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }

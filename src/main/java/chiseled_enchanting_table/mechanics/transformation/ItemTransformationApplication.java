@@ -36,12 +36,12 @@ public final class ItemTransformationApplication {
             return false;
         }
         ItemTransformation rule = match.get();
-        if (!rule.isUnlockedFor(handler.player)) {
-            return false;
-        }
         ItemStack input = handler.get_enchantable_item();
         if (!rule.matchesInput(input)) {
             return false;
+        }
+        if (!rule.isUnlockedFor(handler.player)) {
+            return tryDecipherWithCatalyst(handler, rule);
         }
 
         int batchCount = Math.max(1, Math.min(input.getCount(), handler.resolveTransformationBatchCount(rule.id())));
@@ -50,7 +50,8 @@ public final class ItemTransformationApplication {
             handler.containerId,
             OptionType.TRANSFORMATION,
             rule.id(),
-            rule.level()
+            rule.level(),
+            payload.cost_option_index()
         );
         if (!handler.applyEnchantementCondition(canonical)) {
             return false;
@@ -88,6 +89,50 @@ public final class ItemTransformationApplication {
         if (unitSample.is(Items.ENCHANTED_GOLDEN_APPLE)) {
             Advancement.give(player, "enchanted_golden_apple");
         }
+        return true;
+    }
+
+    /**
+     * Arcane Catalyst breakthrough: placing the base input in slot 0 and an Arcane Catalyst in the
+     * reagent slot permanently deciphers and unlocks a discovery-locked transformation for that player.
+     */
+    private static boolean tryDecipherWithCatalyst(ChiseledEnchantingTableScreenHandler handler, ItemTransformation rule) {
+        ItemStack costSlot = handler.get_cost_item();
+        if (costSlot.isEmpty() || !costSlot.is(chiseled_enchanting_table.registry.BlockRegistry.ARCANE_CATALYST)) {
+            return false;
+        }
+        if (!(handler.player instanceof net.minecraft.server.level.ServerPlayer sp)) {
+            return false;
+        }
+        var outOpt = rule.resolveOutputItem();
+        if (outOpt.isEmpty()) {
+            return false;
+        }
+        if (!sp.getAbilities().instabuild) {
+            costSlot.shrink(1);
+            handler.markInventoryChanged();
+        }
+        var outItem = outOpt.get();
+        sp.awardStat(net.minecraft.stats.Stats.ITEM_CRAFTED.get(outItem), 1);
+        if (rule.requiredAdvancement() != null && sp.level().getServer() != null) {
+            var advHolder = sp.level().getServer().getAdvancements().get(rule.requiredAdvancement());
+            if (advHolder != null) {
+                var progress = sp.getAdvancements().getOrStartProgress(advHolder);
+                for (String criterion : progress.getRemainingCriteria()) {
+                    sp.getAdvancements().award(advHolder, criterion);
+                }
+            }
+        }
+        chiseled_enchanting_table.menu.EnchantCostSync.syncPlayerTransformationsNow(sp);
+        handler.world().playSound(null, sp.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0F, 1.25F);
+        handler.world().playSound(null, sp.blockPosition(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.BLOCKS, 0.9F, 1.2F);
+        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
+            net.minecraft.network.chat.Component.translatable(
+                "gui.chiseled_enchanting_table.discovery_locked.deciphered",
+                new ItemStack(outItem).getHoverName()
+            ).withStyle(net.minecraft.ChatFormatting.LIGHT_PURPLE)
+        ));
+        handler.broadcastChanges();
         return true;
     }
 }

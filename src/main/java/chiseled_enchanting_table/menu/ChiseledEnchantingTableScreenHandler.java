@@ -1010,114 +1010,26 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return copy;
     }
 
+    public boolean canFuelBoostNow() {
+        return chiseled_enchanting_table.mechanics.ritual.RitualActionService.canFuelBoostNow(this);
+    }
+
+    public boolean canCatalystInstantNow() {
+        return chiseled_enchanting_table.mechanics.ritual.RitualActionService.canCatalystInstantNow(this);
+    }
+
+    public boolean canSafeAbortNow() {
+        return chiseled_enchanting_table.mechanics.ritual.RitualActionService.canSafeAbortNow(this);
+    }
+
+    public boolean handleRitualAction(ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action action) {
+        return chiseled_enchanting_table.mechanics.ritual.RitualActionService.handleAction(this, action);
+    }
+
     public boolean skipActiveRitual(boolean sacrificeXp) {
-        if (this.world.isClientSide()) {
-            return false;
-        }
-        refreshLiveShelfState();
-        var pos = tableBlockPos();
-        if (pos == null
-            || !(this.world.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity tableBe)
-            || !tableBe.hasActiveRitual()
-            || tableBe.isRitualBlocked()
-            || !tableBe.ownsRitual(this.player.getUUID())) {
-            pushRitualStateToViewer();
-            return false;
-        }
-
-        if (sacrificeXp) {
-            int levelsCost = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(
-                ritualConfig(),
-                tableBe.ritualRemainingTicks(),
-                queuedRitualSteps().size()
-            );
-            if (!this.player.getAbilities().instabuild && this.player.experienceLevel < levelsCost) {
-                this.world.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
-                return false;
-            }
-            if (!tableBe.completeActiveRitual(
-                this.world,
-                pos,
-                this.player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
-                chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.RitualCompletionKind.SACRIFICED_XP
-            )) return false;
-            if (!this.player.getAbilities().instabuild) this.player.giveExperienceLevels(-levelsCost);
-            chiseled_enchanting_table.utils.Advancement.give(this.player, "soul_fed_ink");
-            this.world.playSound(
-                null,
-                pos,
-                net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP,
-                net.minecraft.sounds.SoundSource.PLAYERS,
-                1.0F,
-                0.85F
-            );
-            return true;
-        }
-
-        var scan = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.scanLibraryRitualContext(
-            this.world,
-            pos,
-            shelfGatesConfig()
-        );
-        if (!scan.hasAnyMasterTome()) {
-            if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-                sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
-                    net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
-                        .withStyle(net.minecraft.ChatFormatting.RED)
-                ));
-            }
-            this.world.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
-            pushRitualStateToViewer();
-            return false;
-        }
-
-        // Non-sacrifice forced rush skip: dynamic probability of degrading lowest-priority Master Tome to 褪魔残卷,
-        // prioritizing Master Tomes that actively backed the queued ritual steps over unrelated scapegoat books!
-        long remBeforeSkip = tableBe.ritualRemainingTicks();
-        boolean usedInfTome = tableBe.anyQueuedStepUsedInfinityTome();
-        Set<Identifier> activeRitualEnchantIds = new HashSet<>();
-        for (EnchantmentWithLevel step : queuedRitualSteps()) {
-            if (step != null && step.enchantment_id() != null) {
-                activeRitualEnchantIds.add(step.enchantment_id());
-            }
-        }
-        double degradeProb = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(
-            ritualConfig(),
-            remBeforeSkip,
-            usedInfTome
-        );
-        if (!tableBe.completeActiveRitual(
-            this.world,
-            pos,
-            this.player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
-            chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.RitualCompletionKind.RUSHED_NO_SACRIFICE
-        )) return false;
-        if (this.world.getRandom().nextDouble() < degradeProb) {
-            ItemStack degradedTome = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.degradeLowestPriorityMasterTomeInWorld(
-                this.world,
-                pos,
-                shelfGatesConfig(),
-                activeRitualEnchantIds
-            );
-            if (degradedTome != null) {
-                chiseled_enchanting_table.utils.Advancement.give(this.player, "haste_makes_waste");
-                if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-                    sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
-                        net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.degraded_to_remnant")
-                            .withStyle(net.minecraft.ChatFormatting.RED)
-                    ));
-                }
-                refreshLiveShelfState();
-                pushRitualStateToViewer();
-                broadcastChanges();
-            }
-        } else if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
-                net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.rush_lucky")
-                    .withStyle(net.minecraft.ChatFormatting.GREEN)
-            ));
-        }
-        return true;
+        return handleRitualAction(sacrificeXp
+            ? ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.SACRIFICE_XP
+            : ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.FORCE_RUSH);
     }
 
     @Override

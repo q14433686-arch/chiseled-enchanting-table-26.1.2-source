@@ -8,11 +8,25 @@ final class TableSkin {
     static final Identifier EPIPHANY_PANEL = ChiseledEnchantingTable.identifier("gui/epiphany_panel.png");
     static final Identifier EPIPHANY_PANEL_FROZEN = ChiseledEnchantingTable.identifier("gui/epiphany_panel_frozen.png");
     static final Identifier CLEANSE_PANEL = ChiseledEnchantingTable.identifier("gui/cleanse_panel.png");
+    static final Identifier RITUAL_PANEL = ChiseledEnchantingTable.identifier("gui/ritual_panel.png");
     static final Identifier BTN_FREEZE = ChiseledEnchantingTable.identifier("gui/btn_freeze.png");
     static final Identifier BTN_REROLL = ChiseledEnchantingTable.identifier("gui/btn_reroll.png");
     static final Identifier BTN_CLEANSE_ALL = ChiseledEnchantingTable.identifier("gui/btn_cleanse_all.png");
     static final Identifier BTN_GRIMOIRE = ChiseledEnchantingTable.identifier("gui/btn_grimoire.png");
     static final Identifier BTN_CONFIG = ChiseledEnchantingTable.identifier("gui/btn_config.png");
+    static final Identifier BTN_SACRIFICE_PLAQUE = ChiseledEnchantingTable.identifier("gui/btn_sacrifice_plaque.png");
+    static final Identifier BTN_RITUAL_SACRIFICE = ChiseledEnchantingTable.identifier("gui/btn_ritual_sacrifice.png");
+    static final Identifier BTN_RITUAL_FUEL = ChiseledEnchantingTable.identifier("gui/btn_ritual_fuel.png");
+    static final Identifier BTN_RITUAL_RUSH = ChiseledEnchantingTable.identifier("gui/btn_ritual_rush.png");
+    static final Identifier BTN_RITUAL_ABORT = ChiseledEnchantingTable.identifier("gui/btn_ritual_abort.png");
+    static final Identifier BTN_TOME_MEND = ChiseledEnchantingTable.identifier("gui/btn_tome_mend.png");
+    static final Identifier BTN_TOME_SANCTIFY = ChiseledEnchantingTable.identifier("gui/btn_tome_sanctify.png");
+    static final Identifier BTN_TOME_LOCATE = ChiseledEnchantingTable.identifier("gui/btn_tome_locate.png");
+    static final Identifier BTN_FILTER_AFFORDABLE = ChiseledEnchantingTable.identifier("gui/btn_filter_affordable.png");
+    static final Identifier BTN_FILTER_EXPAND = ChiseledEnchantingTable.identifier("gui/btn_filter_expand.png");
+    static final Identifier BADGE_COST_CYCLE = ChiseledEnchantingTable.identifier("gui/badge_cost_cycle.png");
+    static final Identifier SEARCH_BOX = ChiseledEnchantingTable.identifier("gui/config/search_box.png");
+    static final Identifier SEARCH_BOX_FOCUSED = ChiseledEnchantingTable.identifier("gui/config/search_box_focused.png");
 
     static final int CONFIG_BTN_X = 293;
     static final int CONFIG_BTN_Y_OFFSET = -20;

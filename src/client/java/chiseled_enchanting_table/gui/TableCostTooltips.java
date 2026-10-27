@@ -27,6 +27,10 @@ final class TableCostTooltips {
                     ? "gui.chiseled_enchanting_table.cost_bundle.header"
                     : "gui.chiseled_enchanting_table.cost_alternatives.header")
                     .withStyle(ChatFormatting.GOLD));
+                if (options.size() > 1) {
+                    lines.add(Component.translatable("gui.chiseled_enchanting_table.cost_bundle.click_to_cycle")
+                        .withStyle(ChatFormatting.YELLOW));
+                }
                 boolean instabuild = state.menu().player.getAbilities().instabuild;
                 ItemStack slotCatalyst = state.menu().get_cost_item();
                 for (int optIdx = 0; optIdx < options.size(); optIdx++) {

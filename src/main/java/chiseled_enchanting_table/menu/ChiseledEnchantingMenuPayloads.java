@@ -1001,7 +1001,10 @@ public final class ChiseledEnchantingMenuPayloads {
             LOCK_PERMANENT,
             UNLOCK,
             LOCK_ALL_FULL,
-            SACRIFICE_DEPLETED
+            SACRIFICE_DEPLETED,
+            MEND_ONE,
+            SANCTIFY_CATALYST,
+            LOCATE_PING
         }
 
         public TomePageActionPayload {
@@ -1053,8 +1056,12 @@ public final class ChiseledEnchantingMenuPayloads {
         int containerId,
         OptionType option_type,
         Identifier enchantment_id,
-        int enchantment_level
+        int enchantment_level,
+        int cost_option_index
     ) implements CustomPacketPayload {
+        public static final int AUTO_COST_OPTION = -1;
+        public static final int MAX_COST_OPTION_INDEX = 63;
+
         /**
          * Audit NET-03: decode-boundary validation lives in the compact constructor so no
          * construction path (wire or programmatic) can smuggle out-of-range values into
@@ -1074,18 +1081,25 @@ public final class ChiseledEnchantingMenuPayloads {
             if (enchantment_level < 0 || enchantment_level > PayloadLimits.MAX_ENCHANTMENT_LEVEL) {
                 throw new IllegalArgumentException("Invalid enchantment level: " + enchantment_level);
             }
+            if (cost_option_index < AUTO_COST_OPTION || cost_option_index > MAX_COST_OPTION_INDEX) {
+                throw new IllegalArgumentException("Invalid cost option index: " + cost_option_index);
+            }
         }
 
         public static final CustomPacketPayload.Type<ApplyEnchantmentPayload> APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID = new CustomPacketPayload.Type<>(APPLY_CHISELED_ENCHANTMENT_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, ApplyEnchantmentPayload> APPLY_CHISELED_ENCHANTMENT_CODEC =
             CustomPacketPayload.codec(ApplyEnchantmentPayload::write, ApplyEnchantmentPayload::read);
 
+        public ApplyEnchantmentPayload(int containerId, OptionType option_type, Identifier enchantment_id, int enchantment_level) {
+            this(containerId, option_type, enchantment_id, enchantment_level, AUTO_COST_OPTION);
+        }
+
         public ApplyEnchantmentPayload(OptionType option_type, Identifier enchantment_id, int enchantment_level) {
-            this(-1, option_type, enchantment_id, enchantment_level);
+            this(-1, option_type, enchantment_id, enchantment_level, AUTO_COST_OPTION);
         }
 
         public ApplyEnchantmentPayload(Identifier enchantment_id, int enchantment_level) {
-            this(-1, OptionType.ENCHANTMENT, enchantment_id, enchantment_level);
+            this(-1, OptionType.ENCHANTMENT, enchantment_id, enchantment_level, AUTO_COST_OPTION);
         }
 
         public boolean targets(int activeContainerId) {
@@ -1097,6 +1111,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeUtf(option_type.token());
             buf.writeInt(enchantment_level);
             buf.writeIdentifier(enchantment_id);
+            buf.writeVarInt(cost_option_index);
         }
 
         private static ApplyEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
@@ -1104,7 +1119,8 @@ public final class ChiseledEnchantingMenuPayloads {
             OptionType optionType = OptionType.fromToken(buf.readUtf(PayloadLimits.MAX_OPTION_TOKEN_LENGTH));
             int enchantmentLevel = buf.readInt();
             Identifier enchantmentId = buf.readIdentifier();
-            return new ApplyEnchantmentPayload(containerId, optionType, enchantmentId, enchantmentLevel);
+            int costOptionIndex = buf.readVarInt();
+            return new ApplyEnchantmentPayload(containerId, optionType, enchantmentId, enchantmentLevel, costOptionIndex);
         }
 
         @Override
@@ -1174,14 +1190,53 @@ public final class ChiseledEnchantingMenuPayloads {
         }
     }
 
-    public record SkipRitualPayload(int containerId, long session, boolean sacrificeXp) implements CustomPacketPayload {
+    public record SkipRitualPayload(int containerId, long session, Action action) implements CustomPacketPayload {
+        public enum Action {
+            SACRIFICE_XP,
+            FUEL_BOOST,
+            CATALYST_INSTANT,
+            FORCE_RUSH,
+            SAFE_ABORT
+        }
+
+        public SkipRitualPayload {
+            if (containerId < PayloadLimits.NO_CONTAINER) {
+                throw new IllegalArgumentException("Invalid container id: " + containerId);
+            }
+            if (action == null) {
+                throw new IllegalArgumentException("Missing ritual action");
+            }
+        }
+
+        public SkipRitualPayload(int containerId, long session, boolean sacrificeXp) {
+            this(containerId, session, sacrificeXp ? Action.SACRIFICE_XP : Action.FORCE_RUSH);
+        }
+
+        public boolean sacrificeXp() {
+            return action == Action.SACRIFICE_XP;
+        }
+
         public static final CustomPacketPayload.Type<SkipRitualPayload> TYPE =
             new CustomPacketPayload.Type<>(SKIP_RITUAL_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, SkipRitualPayload> CODEC =
-            CustomPacketPayload.codec(
-                (payload, buf) -> { buf.writeVarInt(payload.containerId()); buf.writeLong(payload.session()); buf.writeBoolean(payload.sacrificeXp()); },
-                buf -> new SkipRitualPayload(buf.readVarInt(), buf.readLong(), buf.readBoolean())
-            );
+            CustomPacketPayload.codec(SkipRitualPayload::write, SkipRitualPayload::read);
+
+        private void write(RegistryFriendlyByteBuf buf) {
+            buf.writeVarInt(containerId);
+            buf.writeLong(session);
+            buf.writeVarInt(action.ordinal());
+        }
+
+        private static SkipRitualPayload read(RegistryFriendlyByteBuf buf) {
+            int cid = buf.readVarInt();
+            long sess = buf.readLong();
+            int ord = buf.readVarInt();
+            Action[] values = Action.values();
+            if (ord < 0 || ord >= values.length) {
+                throw new IllegalArgumentException("Invalid ritual action: " + ord);
+            }
+            return new SkipRitualPayload(cid, sess, values[ord]);
+        }
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {

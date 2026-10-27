@@ -128,7 +128,7 @@ class SyncContracts26_1_2(unittest.TestCase):
 
     def test_audit_guards_authoritative_sync_and_input(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('CURRENT_REVISION_NUMBER = 18', protocol)
+        self.assertIn('CURRENT_REVISION_NUMBER = 19', protocol)
         self.assertIn('REVISION = "26_1_2_revision_" + CURRENT_REVISION_NUMBER', protocol)
         self.assertIn('IntStream.range(1, CURRENT_REVISION_NUMBER)', protocol)
         self.assertIn('IntStream.range(9, CURRENT_REVISION_NUMBER)', protocol)

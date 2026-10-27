@@ -35,71 +35,30 @@ final class TablePanelLabels {
 
         context.enableScissor(PANEL_X + 9, PANEL_Y + 9, PANEL_X + 110, PANEL_Y + 52);
         try {
-            if (state.tooltips().menu().isRitualActive()) {
+            if (!state.tooltips().isTomeTab() && !state.tooltips().isCleanseTab() && state.tooltips().menu().isRitualActive()) {
                 int queueCount = Math.max(1, state.tooltips().menu().queuedRitualSteps().size());
                 int remSeconds = (int) ((state.tooltips().menu().ritualRemainingTicks() + 19L) / 20L);
                 Component header = Component.translatable(
                     "gui.chiseled_enchanting_table.ritual.panel_title",
                     queueCount
                 );
-                drawAutoScaledText(state, context, header, lx, ly + 9, 0.78f, 99, 0xFFFFE082);
+                drawAutoScaledText(state, context, header, lx, ly + 9, 0.66f, 99, 0xFFFFE082);
 
                 Component timer = Component.translatable(
                     "gui.chiseled_enchanting_table.ritual.panel_timer",
                     formatClock(remSeconds)
                 );
-                drawAutoScaledText(state, context, timer, lx, ly + 19, 0.78f, 99, 0xFF8CFFF0);
-
-                int sacLvls = state.tooltips().menu().currentSacrificeSkipLevels();
-                int rushPct = (int) Math.round(state.tooltips().menu().currentRushSkipDegradeChance() * 100.0);
-                boolean canSac = state.tooltips().menu().canSacrificeSkipNow();
-                boolean canRush = state.tooltips().menu().canRushSkipNow();
-
-                String sacLabel = Component.translatable(
-                    "gui.chiseled_enchanting_table.ritual.btn_sacrifice",
-                    sacLvls
-                ).getString();
-                String rushLabel = Component.translatable(
-                    "gui.chiseled_enchanting_table.ritual.btn_rush",
-                    rushPct
-                ).getString();
-
-                RowRenderSupport.renderCenteredBoxText(
-                    context,
-                    state.tooltips().font(),
-                    sacLabel,
-                    SKIP_SACRIFICE_BTN_X + 2,
-                    SKIP_BTN_W - 4,
-                    SKIP_SACRIFICE_BTN_Y + 7.0f,
-                    0.68f,
-                    canSac ? 0xFFA8FFD8 : 0xFF7D748D
-                );
-                RowRenderSupport.renderCenteredBoxText(
-                    context,
-                    state.tooltips().font(),
-                    rushLabel,
-                    SKIP_RUSH_BTN_X + 2,
-                    SKIP_BTN_W - 4,
-                    SKIP_RUSH_BTN_Y + 7.0f,
-                    0.68f,
-                    canRush ? 0xFFFFB2A6 : 0xFF7D748D
-                );
+                drawAutoScaledText(state, context, timer, lx, ly + 17, 0.64f, 99, 0xFF8CFFF0);
                 return;
             }
 
             if (state.tooltips().isTomeTab()) {
-                Component header = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_title");
-                drawAutoScaledText(state, context, header, lx, ly + 9, 0.8f, 99, 0xFFB9F6FF);
                 Component shelves = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_shelves",
                     state.tooltips().menu().qualifyingEnchantedBookshelves, state.tooltips().menu().liveTotalLibraryBookshelves);
-                drawAutoScaledText(state, context, shelves, lx, ly + 16, 0.7f, 99, 0xFFE6F7FF);
-                Component tier = state.tooltips().menu().nextRegenTierGap > 0
-                    ? Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_gap", state.tooltips().menu().liveRegenTier + 1, state.tooltips().menu().nextRegenTierGap)
-                    : Component.translatable("gui.chiseled_enchanting_table.tomes.panel_regen_max", state.tooltips().menu().liveRegenTier + 1);
-                drawAutoScaledText(state, context, tier, lx, ly + 23, 0.64f, 99, 0xFFA8FFC4);
+                drawAutoScaledText(state, context, shelves, lx, ly + 9, 0.64f, 99, 0xFFE6F7FF);
                 String interval = state.tooltips().menu().regenIntervalTicks > 0 ? TomeDisplayNames.formatTomeEta(state.tooltips().menu().regenIntervalTicks) : "--:--";
                 Component rate = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_rate", interval);
-                drawAutoScaledText(state, context, rate, lx, ly + 30, 0.64f, 99, 0xFFA8FFC4);
+                drawAutoScaledText(state, context, rate, lx, ly + 17, 0.60f, 99, 0xFFA8FFC4);
                 return;
             }
 

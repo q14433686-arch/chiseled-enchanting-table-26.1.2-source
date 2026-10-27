@@ -149,9 +149,23 @@ public final class MasterTomeWear {
     public record ResolvedTomeUse(
         WearOutcome outcome,
         boolean usedInfinityTome,
-        ItemStack chosenTomeSnapshot
+        ItemStack chosenTomeSnapshot,
+        @org.jetbrains.annotations.Nullable BlockPos shelfPos,
+        int shelfSlot,
+        ItemStack preWearSnapshot,
+        ItemStack postWearSnapshot
     ) {
-        public static final ResolvedTomeUse NONE = new ResolvedTomeUse(WearOutcome.NONE, false, ItemStack.EMPTY);
+        public static final ResolvedTomeUse NONE = new ResolvedTomeUse(
+            WearOutcome.NONE, false, ItemStack.EMPTY, null, -1, ItemStack.EMPTY, ItemStack.EMPTY
+        );
+
+        public ResolvedTomeUse(WearOutcome outcome, boolean usedInfinityTome, ItemStack chosenTomeSnapshot) {
+            this(outcome, usedInfinityTome, chosenTomeSnapshot, null, -1, ItemStack.EMPTY, ItemStack.EMPTY);
+        }
+
+        public boolean hasShelfUndo() {
+            return shelfPos != null && shelfSlot >= 0 && !preWearSnapshot.isEmpty() && !postWearSnapshot.isEmpty();
+        }
     }
 
     /** Returns the stored {@code minecraft:unbreaking} level on {@code stack} ({@code 0} if absent). */
@@ -794,6 +808,14 @@ public final class MasterTomeWear {
         if (fullyDepleted && cfg.tomeConsumptionMode() != ConsumptionMode.KEEP) {
             TomeParticleEffects.portalAt(level, chosen.pos(), chosen.slot());
         }
-        return new ResolvedTomeUse(outcome, usedWearImmuneTome, chosenSnapshot);
+        return new ResolvedTomeUse(
+            outcome,
+            usedWearImmuneTome,
+            chosenSnapshot,
+            chosen.pos(),
+            chosen.slot(),
+            chosenSnapshot.copy(),
+            mutated.copy()
+        );
     }
 }

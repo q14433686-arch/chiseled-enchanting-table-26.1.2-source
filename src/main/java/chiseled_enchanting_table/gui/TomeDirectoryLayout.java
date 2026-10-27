@@ -7,6 +7,8 @@ public final class TomeDirectoryLayout {
     public static final int PANEL_X=214, PANEL_Y=18, PANEL_W=119, PANEL_H=61;
     public static final int WIDTH = 151, HEIGHT = 59, GAP = 2, FRAME = 4, BUTTON_INSET = 3;
     public static final int POPUP_Y = HEIGHT + GAP, POPUP_ROW_HEIGHT = 12, POPUP_LIMIT = 5;
+    public static final int INSCRIBE_BAR_HEIGHT = 15, INSCRIBE_LIST_OFFSET = INSCRIBE_BAR_HEIGHT + GAP;
+    public static final int TOME_BUTTON_COUNT = 8, RITUAL_BUTTON_COUNT = 4;
     public record Rect(int x, int y, int width, int height) {
         public int right() { return x + width; }
         public int bottom() { return y + height; }
@@ -29,8 +31,17 @@ public final class TomeDirectoryLayout {
     public static Rect popup(int count) { return new Rect(0,POPUP_Y,WIDTH,Math.min(POPUP_LIMIT,Math.max(0,count))*POPUP_ROW_HEIGHT+8); }
     public static Rect popupRow(int i) { return new Rect(4,POPUP_Y+4+i*POPUP_ROW_HEIGHT,WIDTH-8,POPUP_ROW_HEIGHT); }
     public static Rect lockButton(int i) {
-        if(i<0 || i>4) throw new IllegalArgumentException("Unknown lock button");
-        return new Rect(PANEL_X+9+i*20,PANEL_Y+38,19,13);
+        if(i<0 || i>=TOME_BUTTON_COUNT) throw new IllegalArgumentException("Unknown lock button: " + i);
+        int col = i % 4, row = i / 4;
+        return new Rect(PANEL_X+9+col*25, PANEL_Y+24+row*15, 23, 13);
     }
+    public static Rect ritualButton(int i) {
+        if(i<0 || i>=RITUAL_BUTTON_COUNT) throw new IllegalArgumentException("Unknown ritual button: " + i);
+        return new Rect(PANEL_X+13+i*24, PANEL_Y+34, 18, 18);
+    }
+    public static Rect inscribeSearchBox() { return new Rect(0, 0, 115, INSCRIBE_BAR_HEIGHT); }
+    public static Rect inscribeAffordableButton() { return new Rect(118, 0, INSCRIBE_BAR_HEIGHT, INSCRIBE_BAR_HEIGHT); }
+    public static Rect inscribeExpandButton() { return new Rect(136, 0, INSCRIBE_BAR_HEIGHT, INSCRIBE_BAR_HEIGHT); }
     public static int listOffset() { return HEIGHT + GAP; }
+    public static int inscribeListOffset() { return INSCRIBE_LIST_OFFSET; }
 }

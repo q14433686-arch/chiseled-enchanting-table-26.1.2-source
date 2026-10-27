@@ -16,10 +16,23 @@ public final class TomeActionQueue {
     private long deadline;
     private final ArrayDeque<TomeBookEntry> pending = new ArrayDeque<>();
     private int delay;
+    private static boolean isEligibleFor(Action requested, TomeBookEntry b) {
+        return switch (requested) {
+            case UNLOCK -> b.locked();
+            case MEND_ONE, SANCTIFY_CATALYST -> !b.wear_immune() && b.wear_used() > 0 && (!b.locked() || b.locked_by_viewer());
+            case LOCATE_PING -> true;
+            case LOCK_PERMANENT -> !b.locked();
+            default -> !b.locked() && b.wear_used() > 0;
+        };
+    }
+
     public boolean submit(Action requested, List<TomeBookEntry> books) {
-        var eligible = books.stream().filter(b -> requested == Action.UNLOCK ? b.locked()
-            : !b.locked() && (requested == Action.LOCK_PERMANENT || b.wear_used() > 0)).toList();
+        var eligible = books.stream().filter(b -> isEligibleFor(requested, b)).toList();
         if (eligible.isEmpty() || !pending.isEmpty()) return false;
+        if (requested == Action.LOCATE_PING) {
+            action = requested; pending.add(eligible.getFirst()); armed = List.of(); armedAction = null;
+            return true;
+        }
         if (eligible.size() > 1 && (requested != armedAction || !eligible.equals(armed) || clock.getAsLong() > deadline)) {
             armedAction = requested; armed = eligible;
             deadline = clock.getAsLong() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
@@ -37,7 +50,7 @@ public final class TomeActionQueue {
         live.stream().filter(b -> b.shelf_pos().equals(old.shelf_pos()) && b.slot() == old.slot()
             && b.enchantments().equals(old.enchantments()) && b.custom_name().equals(old.custom_name())
             && b.generation() == old.generation() && b.effective_max_uses() == old.effective_max_uses())
-            .findFirst().filter(b -> action == Action.UNLOCK ? b.locked() : !b.locked()).ifPresent(b -> send.accept(action,b));
+            .findFirst().filter(b -> isEligibleFor(action, b)).ifPresent(b -> send.accept(action,b));
     }
     public Status status() {
         if (!pending.isEmpty()) return new Status("pending", pending.size());

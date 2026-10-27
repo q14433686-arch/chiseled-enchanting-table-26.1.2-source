@@ -162,7 +162,18 @@ public final class EnchantmentApplication {
         );
         boolean ritualQueueEnabled = handler.isRitualQueueEnabled();
         boolean provenanceEnabled = handler.isProvenanceEnabled();
-        int waitTicks = !ritualQueueEnabled ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
+        boolean tableAlreadyActive = tablePos != null
+            && world.getBlockEntity(tablePos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity existingBe
+            && existingBe.hasActiveRitual();
+        boolean bypassWait = chiseled_enchanting_table.mechanics.ritual.RitualActionService.shouldBypassRitualWait(
+            ritualQueueEnabled,
+            tableAlreadyActive,
+            masterTomeUsed,
+            payload.option_type(),
+            enchantment_level,
+            maxLvl
+        );
+        int waitTicks = bypassWait ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
             handler.ritualConfig(),
             ritualScan.totalDetectedBookshelves(),
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.medianShelfGate(shelfCfg),
@@ -199,6 +210,14 @@ public final class EnchantmentApplication {
             if (waitTicks > 0 || tableBe.hasActiveRitual()) {
                 int effectiveAddTicks = Math.max(20, waitTicks);
                 tableBe.enqueueInscription(queuedStep, effectiveAddTicks, handler.player.getUUID());
+                if (resolvedWear.hasShelfUndo()) {
+                    tableBe.recordTomeWearUndo(new chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.TomeWearUndo(
+                        resolvedWear.shelfPos(),
+                        resolvedWear.shelfSlot(),
+                        resolvedWear.preWearSnapshot(),
+                        resolvedWear.postWearSnapshot()
+                    ));
+                }
                 handler.player.awardStat(Stats.ENCHANT_ITEM);
                 world.playSound(
                     null,

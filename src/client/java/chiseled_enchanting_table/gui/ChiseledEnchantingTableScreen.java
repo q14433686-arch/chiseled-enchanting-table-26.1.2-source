@@ -132,7 +132,6 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             if (!this.children().contains(this.scrollContainer)) {
                 this.addRenderableWidget(this.scrollContainer);
             }
-            this.scrollContainer.updateSizeAndPosition(151, 141, this.leftPos + 7, this.topPos + 17);
             boolean wasReturning = this.returningFromExternalScreen;
             double restoreScroll = wasReturning ? this.savedScrollAmount : this.scrollContainer.scrollAmount();
             UiTabMode rawTab = wasReturning ? this.savedTabMode : this.scrollContainer.tabMode();
@@ -143,6 +142,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             if (targetTab != null && this.scrollContainer.tabMode() != targetTab) {
                 this.scrollContainer.setTabMode(targetTab);
             }
+            layoutDirectory();
             this.scrollContainer.updateEntry(this.menu.getEffectiveEnchantableItem(), this.menu.get_cost_item());
             this.scrollContainer.setScrollAmount(Math.min(restoreScroll, this.scrollContainer.maxScrollAmount()));
         }
@@ -339,11 +339,20 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private int hoveredTomeButton(double mouseX, double mouseY) {
         if (!isTomeTab() || !this.menu.isTomePageUnlocked()) return -1;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < TomeDirectoryLayout.TOME_BUTTON_COUNT; i++) {
             int[] r = tomeButtonRect(i);
-            int x0 = this.leftPos + r[0];
-            int y0 = this.topPos + r[1];
+            int x0 = this.leftPos + r[0], y0 = this.topPos + r[1];
             if (mouseX >= x0 && mouseX < x0 + r[2] && mouseY >= y0 && mouseY < y0 + r[3]) return i;
+        }
+        return -1;
+    }
+
+    private int hoveredRitualButton(double mouseX, double mouseY) {
+        if (!isInscribeTab() || !this.menu.isRitualActive()) return -1;
+        for (int i = 0; i < TomeDirectoryLayout.RITUAL_BUTTON_COUNT; i++) {
+            var r = TomeDirectoryLayout.ritualButton(i);
+            int x0 = this.leftPos + r.x(), y0 = this.topPos + r.y();
+            if (mouseX >= x0 && mouseX < x0 + r.width() && mouseY >= y0 && mouseY < y0 + r.height()) return i;
         }
         return -1;
     }
@@ -351,7 +360,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     private final TomeDirectoryControls tomeDirectory = new TomeDirectoryControls();
     private final chiseled_enchanting_table.catalog.TomeActionQueue tomeActions = new chiseled_enchanting_table.catalog.TomeActionQueue();
     private void layoutDirectory() {
-        int offset=isTomeTab() ? TomeDirectoryLayout.listOffset() : 0;
+        int offset = isTomeTab() ? TomeDirectoryLayout.listOffset()
+            : (isInscribeTab() ? TomeDirectoryLayout.inscribeListOffset() : 0);
         if (this.scrollContainer != null) this.scrollContainer.updateSizeAndPosition(TomeDirectoryLayout.WIDTH, TomeDirectoryLayout.CONTENT_HEIGHT-offset,
             this.leftPos + TomeDirectoryLayout.CONTENT_X, this.topPos + TomeDirectoryLayout.CONTENT_Y+offset);
     }
@@ -502,24 +512,9 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private boolean isOverCleanseAllButton(double mouseX, double mouseY) {
-        if (!isCleanseTab() || this.menu.isRitualActive()) return false;
-        int x0 = this.leftPos + CLEANSE_ALL_BTN_X;
-        int y0 = this.topPos + CLEANSE_ALL_BTN_Y;
+        if (!isCleanseTab()) return false;
+        int x0 = this.leftPos + CLEANSE_ALL_BTN_X, y0 = this.topPos + CLEANSE_ALL_BTN_Y;
         return mouseX >= x0 && mouseX < x0 + BTN_SIZE && mouseY >= y0 && mouseY < y0 + BTN_SIZE;
-    }
-
-    private boolean isOverSacrificeSkipButton(double mouseX, double mouseY) {
-        if (!this.menu.isRitualActive()) return false;
-        int x0 = this.leftPos + SKIP_SACRIFICE_BTN_X;
-        int y0 = this.topPos + SKIP_SACRIFICE_BTN_Y;
-        return mouseX >= x0 && mouseX < x0 + SKIP_BTN_W && mouseY >= y0 && mouseY < y0 + SKIP_BTN_H;
-    }
-
-    private boolean isOverRushSkipButton(double mouseX, double mouseY) {
-        if (!this.menu.isRitualActive()) return false;
-        int x0 = this.leftPos + SKIP_RUSH_BTN_X;
-        int y0 = this.topPos + SKIP_RUSH_BTN_Y;
-        return mouseX >= x0 && mouseX < x0 + SKIP_BTN_W && mouseY >= y0 && mouseY < y0 + SKIP_BTN_H;
     }
 
     private boolean canCleanseAllNow() {
@@ -564,6 +559,12 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.grimoireOverlay.mouseClicked(event, isDoubleClick);
             return true;
         }
+        if (isInscribeTab() && this.scrollContainer != null && this.scrollContainer.inscribeFilter.mouseClicked(
+            event.x(), event.y(), event.button(), this.leftPos + TomeDirectoryLayout.CONTENT_X,
+            this.topPos + TomeDirectoryLayout.CONTENT_Y, this.scrollContainer::refreshInscribeFilter,
+            this.scrollContainer::toggleExpandAllInscribeCategories)) {
+            return true;
+        }
         // Restrict custom actions to the platform left button, but retain vanilla
         // inventory right-click handling. Overlay events above remain fully forwarded.
         if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
@@ -599,7 +600,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         if (isOverInscribeTab(event.x(), event.y())) {
             if (!isInscribeTab()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                this.scrollContainer.setTabMode(UiTabMode.INSCRIBE);
+                this.scrollContainer.setTabMode(UiTabMode.INSCRIBE); layoutDirectory();
             }
             return true;
         }
@@ -608,7 +609,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             } else if (!isCleanseTab()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
-                this.scrollContainer.setTabMode(UiTabMode.CLEANSE);
+                this.scrollContainer.setTabMode(UiTabMode.CLEANSE); layoutDirectory();
             }
             return true;
         }
@@ -617,7 +618,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             } else if (!isTomeTab()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.95F));
-                this.scrollContainer.setTabMode(UiTabMode.TOMES);
+                this.scrollContainer.setTabMode(UiTabMode.TOMES); layoutDirectory();
             }
             return true;
         }
@@ -628,46 +629,49 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
         int tomeButton = hoveredTomeButton(event.x(), event.y());
         if (tomeButton >= 0) {
+            var explicit = this.scrollContainer.selectedTomes();
+            if (tomeButton == 4 && explicit.isEmpty()) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                sendTomeAction(chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_ALL_FULL, null);
+                return true;
+            }
             var action = switch (tomeButton) {
                 case 0 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_NEXT;
-                case 1 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_FULL;
+                case 1, 4 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_FULL;
                 case 2 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_PERMANENT;
                 case 3 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.UNLOCK;
-                default -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCK_FULL;
+                case 5 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.MEND_ONE;
+                case 6 -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.SANCTIFY_CATALYST;
+                default -> chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCATE_PING;
             };
-            // 26.1.2 adaptation: with no explicit multi-selection, act on the panel-focused
-            // tome (selectedTomeEntry fallback) so the 1.1.0 single-book flow does not regress.
-            var targets = this.scrollContainer.selectedTomes();
-            if (targets.isEmpty()) {
-                var focused = this.scrollContainer.selectedTomeEntry();
-                if (focused != null) targets = java.util.List.of(focused);
+            var targets = explicit;
+            if (targets.isEmpty() && this.scrollContainer.selectedTomeEntry() != null) {
+                targets = java.util.List.of(this.scrollContainer.selectedTomeEntry());
             }
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             tomeActions.submit(action, targets);
             return true;
         }
-        if (isOverSacrificeSkipButton(event.x(), event.y())) {
-            if (this.menu.canSacrificeSkipNow()) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.1F));
-                sendServerboundOrWarn(
-                    new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload(
-                        this.menu.containerId, this.menu.ritualSession(), true
-                    ),
-                    chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload.TYPE
-                );
-            } else {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
-            }
-            return true;
-        }
-        if (isOverRushSkipButton(event.x(), event.y())) {
-            if (this.menu.canRushSkipNow()) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 0.9F));
-                sendServerboundOrWarn(
-                    new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload(
-                        this.menu.containerId, this.menu.ritualSession(), false
-                    ),
-                    chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload.TYPE
-                );
+        int ritualBtn = hoveredRitualButton(event.x(), event.y());
+        if (ritualBtn >= 0) {
+            var skipAction = switch (ritualBtn) {
+                case 0 -> this.menu.canSacrificeSkipNow() ? chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.SACRIFICE_XP : null;
+                case 1 -> {
+                    boolean preferCatalyst = event.hasShiftDown()
+                        || this.menu.get_cost_item().is(chiseled_enchanting_table.registry.BlockRegistry.ARCANE_CATALYST)
+                        || !this.menu.canFuelBoostNow();
+                    if (preferCatalyst && this.menu.canCatalystInstantNow())
+                        yield chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.CATALYST_INSTANT;
+                    yield this.menu.canFuelBoostNow() ? chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.FUEL_BOOST : null;
+                }
+                case 2 -> this.menu.canRushSkipNow() ? chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.FORCE_RUSH : null;
+                default -> this.menu.canSafeAbortNow() ? chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.SAFE_ABORT : null;
+            };
+            if (skipAction != null) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
+                sendServerboundOrWarn(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload(
+                    this.menu.containerId, this.menu.ritualSession(), skipAction),
+                    chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.SkipRitualPayload.TYPE);
             } else {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             }
@@ -770,6 +774,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             }
             return true;
         }
+        if (isInscribeTab() && this.scrollContainer != null
+            && this.scrollContainer.inscribeFilter.keyPressed(event, this.scrollContainer::refreshInscribeFilter)) {
+            return true;
+        }
         if (this.scrollContainer.keyPressed(event)) {
             return true;
         }
@@ -784,6 +792,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
         if (this.grimoireOverlay != null) {
             this.grimoireOverlay.charTyped(event);
+            return true;
+        }
+        if (isInscribeTab() && this.scrollContainer != null
+            && this.scrollContainer.inscribeFilter.charTyped(event, this.scrollContainer::refreshInscribeFilter)) {
             return true;
         }
         if (this.scrollContainer.charTyped(event)) {
@@ -829,6 +841,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
         layoutDirectory();
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        if (isInscribeTab() && this.scrollContainer != null) {
+            if (this.scrollContainer.inscribeFilter.render(ctx, this.font,
+                this.leftPos + TomeDirectoryLayout.CONTENT_X, this.topPos + TomeDirectoryLayout.CONTENT_Y,
+                mouseX, mouseY, this.scrollContainer.areAllInscribeCategoriesExpanded())) return;
+        }
         if (isTomeTab()) {
             var status = tomeActions.status();
             if (status != null) {
@@ -872,14 +889,12 @@ if (isOverFreezeButton(mouseX, mouseY)) regions.add(TableTooltipContext.Region.i
 if (isOverGrimoireButton(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverGrimoireButton);
 if (isOverInscribeTab(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverInscribeTab);
 if (isOverRerollButton(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverRerollButton);
-if (isOverRushSkipButton(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverRushSkipButton);
 if (isOverSacrificeButton(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverSacrificeButton);
-if (isOverSacrificeSkipButton(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverSacrificeSkipButton);
 if (isOverSanctumPanel(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverSanctumPanel);
 if (isOverShelfHudBadge(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverShelfHudBadge);
 if (isOverTomeTab(mouseX, mouseY)) regions.add(TableTooltipContext.Region.isOverTomeTab);
 return new TableTooltipContext(this.menu, this.scrollContainer == null ? null : this.scrollContainer.tableRead(), this.font, this.minecraft.level,
-    regions, hoveredTomeButton(mouseX, mouseY), isCleanseTab(), isTomeTab(),
+    regions, hoveredTomeButton(mouseX, mouseY), hoveredRitualButton(mouseX, mouseY), isCleanseTab(), isTomeTab(),
     isDisenchantAllConfirmPending(), canCleanseAllNow(), this::getTooltipFromContainerItem,
     this::buildResonanceBreakdownTooltip);
     }
