@@ -22,6 +22,15 @@ and older release notes are archived under [`docs/CHANGELOG_HISTORY.md`](docs/CH
 > disenchant/cleanse system, the economy anti-arbitrage hardening and the de-hardcoded data-pack
 > configuration) was synced in the same way — the version stays `1.1.0`, since `1.1.0` had not been
 > released from this branch yet and the addition is part of the same feature release.
+> On **2026-10-27** the full 26.3 rev12 / 26.1.2 rev18 feature set was ported onto this 26.2 line
+> (真全量回移植 + 七路径彻查): wire bumps to **`26_2_revision_7`**, 14 active mixins, 1019 lang keys x 11 locales,
+> Tome Catalogue, rainbow-cloth easter egg, UI-readability batch, 80-option layered config, engineering splits,
+> Classic 1.0.3 balance data, full tag/loot data-ization, and all seven-path cross-line fixes
+> (RULE/RELOAD/NET/LIFE/MIXIN/DEAD). 26.2-specific API adaptations re-applied: `ChatFormatting` removal
+> (CetFormatting shim), `gui.setScreen`/`gui.screen()`, `Gui.hud.setOverlayMessage`, interface
+> `StructureProcessor`+`codec()`, 26.2 plural loot schema, version-adaptive SDL text-input focus.
+> Real CI (`compile-check` + `build`) green on MC 26.2: 162 JUnit, jar, server smoke. `mod_version`
+> stays `1.1.0`. See [`docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md`](docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md).
 > On **2026-10-24** the `26.3` branch's second batch (source `3e61f5d`: effective-rule snapshots,
 > persistent table inventories, bounded inscription rituals, tome regeneration, depleted-tome world
 > content, wire revision 6) was ported as well — still `1.1.0`, still no 26.3 toolchain. See

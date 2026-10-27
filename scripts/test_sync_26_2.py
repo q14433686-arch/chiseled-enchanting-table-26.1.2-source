@@ -118,6 +118,23 @@ class SyncContracts26_2(unittest.TestCase):
         # legacy hard-coded chest-loot packages, not the registered function).
         self.assertTrue((MAIN / 'mechanics/loot/RemoveEnchantedBooksFunction.java').exists())
 
+    def test_gui_input_sdl_focus_bridge(self):
+        """D4 (GUI input): version-adaptive SDL focus bridge must exist in the CLIENT source set,
+        reflectively resolve the focus hook (never a static client-only Screen override), and the
+        config screen must wire it into SearchInputSession instead of a hard-coded no-op."""
+        bridge = ROOT / 'src/client/java/chiseled_enchanting_table/config/NativeTextInputFocus.java'
+        self.assertTrue(bridge.exists())
+        b = bridge.read_text()
+        self.assertIn('getMethods()', b)
+        self.assertIn('onTextInputFocusChange', b)
+        # No main->client references (Loom split source sets: main cannot import net.minecraft.client).
+        self.assertFalse((MAIN / 'config/NativeTextInputFocus.java').exists())
+        screen = (CLIENT / 'gui/config/ChiseledEnchantingConfigScreen.java').read_text()
+        self.assertIn('NativeTextInputFocus.apply', screen)
+        # Must NOT statically declare capturesInput() (26.3-only Screen hook; signature differs).
+        self.assertNotIn('public boolean capturesInput()', screen)
+        self.assertIn('charTyped(CharacterEvent', screen)
+
     def test_no_stray_scratch_files(self):
         for stray in ['Dummy.java', 'Dummy.class', 'abstract_container_screen.txt',
                       'adapt_handler.py', 'adapted_handler.java', 'append.py', 'net']:

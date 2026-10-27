@@ -1,7 +1,16 @@
-# 26.1.2 线协议修订史（enchanting wire revisions）
+## 皱纹修订史（本线 26.2，2026-10-27 全量回移植）
+
+- **单一事实源**：`menu/EnchantingProtocol.java` 的 `CURRENT_REVISION_NUMBER = 7`，通道前缀 `26_2_revision_`。
+- 本线 rev6 与 rev1..6 历史探针以 `IntStream.range(1, N)` 生成（cost + apply 皆然）；裸
+  `enchant_cost_table` 与裸 `apply_chiseled_enchantment` 仅作 query-only 旧探针。
+- 26.3 线的 `range(9, N)` apply 探针区间为线专属，不倒灌本线；详见
+  `docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md` 路径 C / D6。
+- 下表（rev1..18）为**姊妹 26.1.2 线**的修订序列，作为 schema/线格式变更点的历史参考；本线现为 **rev7**。
+
+# 协议修订史（enchanting wire revisions）— 本线 26.2
 
 > **单一事实源**：`menu/EnchantingProtocol.java`（`CURRENT_REVISION_NUMBER`）。
-> 每次 bump 都会改变通道标识（`…_26_1_2_revision_N`），新旧修订对端在加入时被友好断开
+> 每次 bump 都会改变通道标识（`…_26_2_revision_N`（本线）；姊妹 26.1.2 线为 `…_26_1_2_revision_N`），新旧修订对端在加入时被友好断开
 > 而非解码崩溃。历史修订通道以 **query-only 探针** 保留（cost 表自 revision_1、
 > apply 通道自 revision_9），服务端仅据此判定对端版本并给出升级提示，绝不消费旧负载。
 > 本文件由代码注释与发布报告汇总；早期修订语义以当时的线格式变更点为准。

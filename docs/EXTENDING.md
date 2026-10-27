@@ -167,11 +167,12 @@ the same table.
 `chiseled_enchanting_table:remove_enchanted_books` in the vanilla loot-function registry —
 usable directly from any `.mcfunction`-style loot pool JSON).
 
-**Derivation script:** `scripts/import_upstream_loot.py` regenerates this file from the
-upstream Java source (`ReworkEnchantedBookChestLoot.java`, kept in-tree under
-`src/main/java/chiseled_enchanting_table/modifyChestLootTable/` but excluded from the compile
-slice). The script also normalises pre-1.17 vanilla loot-table paths (e.g.
-`chests/village_armorer` → `chests/village/village_armorer`).
+**Single source of truth:** `loot_injections.json` is the authoritative table. The retired
+`ReworkEnchantedBookChestLoot.java` scraper was removed by the 2026-10-24 / 2026-10-27 dead-code
+cleanups. `scripts/import_upstream_loot.py` is now a read-only **validator** (run it locally; CI uses
+`compat_check.py`). It also documents the pre-1.17 vanilla loot-table path normalisation (e.g.
+`chests/village_armorer` → `chests/village/village_armorer`); the curated 196-entry table already
+uses modern paths. See `docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md` §F.
 
 ### 5. Structure bookshelf book pool — `bookshelf_book_pool.json` (schema v2)
 

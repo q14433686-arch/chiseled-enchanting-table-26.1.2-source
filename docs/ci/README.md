@@ -1,64 +1,62 @@
-# CI workflows and diagnostic evidence — 26.1.2 line
+# CI workflows and diagnostic evidence — 26.2 line
 
-The four workflow reference copies here must remain byte-identical to `.github/workflows/`.
-Workflow edits were previously blocked by the sandbox GitHub App permissions; as of the
-2026-10-26 sessions, workflow pushes and the diagnostic Checks API have both been exercised
-successfully. Do not retain the historical permission limitation as a current assertion.
+The four workflow reference copies here must remain byte-identical to `.github/workflows/`
+(verified by `bash docs/ci/install.sh --check`). This line's CI is **Contents-API writeback**:
+the network-restricted sandbox cannot reliably reach the GitHub Actions log-blob host, so
+`compile-check.yml` and `build.yml` deliberately write `build-reports/*.log` back to the branch
+via the GitHub Contents API on `arena/**` pushes. That writeback is this line's **only real Java
+compile-verification channel** (the sandbox has no JDK/Maven). A sibling line (26.1.2/26.3) uses an
+artifacts-only + Checks-API model with an opt-in `clientSmoke` source set; that model is NOT used
+here — do not reintroduce `client_smoke.py` / `post_ci_diagnostics.py` / check-run publishers as
+required gates on this line.
 
 ```bash
 bash docs/ci/install.sh --check
 ```
 
-## Workflows
+## Workflows (this line)
 
-- `compile-check.yml`: compile main/client/test sources and execute JUnit; preserve full logs,
-  dependency information and JUnit XML as 14-day artifacts.
-- `build.yml`: offline validation (incl. the architecture-boundary ratchet:
-  coordinator line budgets + capability rules), full jar build, optional-viewer-disabled
-  compilation, real dedicated-server loading/reload/ritual probes, and the disposable
-  real-client integration probe (`src/clientSmoke`, compiled with `-Pclient_smoke=true`,
-  executed under xvfb via `scripts/client_smoke.py`; 26.1.2 has no SDL layer, so committed
-  text is delivered through the real `Screen#charTyped` callbacks).
-- `consistency.yml`: version/metadata/README/release-workflow consistency.
-- `publish.yml`: manual publishing, not activated by this refactor.
+- `compile-check.yml`: `./gradlew compileJava compileClientJava test` on real MC 26.2 / JDK 25,
+  writes `build-reports/compile-java.log` (+ `compile-deps.log` on failure) back via Contents API.
+  Read it back in the sandbox with:
+  ```bash
+  gh api "repos/q14433686-arch/chiseled-enchanting-table-26.1.2-source/contents/build-reports/compile-java.log?ref=<branch>" --jq .content | base64 -d
+  ```
+- `build.yml`: offline validation (3 gates — `ci_static_checks.py`, `compat_check.py`,
+  `check_release_consistency.sh`), full `gradle build` (jar artifact), the no-viewers compile
+  escape hatch (JEI/REI off), and the real dedicated-server loading + `/reload` smoke
+  (`scripts/server_smoke.py` writes `build-reports/server-smoke.log` back).
+- `consistency.yml`: version/metadata/release-workflow consistency.
+- `publish.yml`: manual publishing (dry-run by default). `paths-ignore: build-reports/**` prevents
+  the writeback commits from re-triggering CI loops.
 
 Every success is evidence for its **exact source SHA and exercised scenarios**, not for future
-HEADs, every graphics driver, every input method, or concurrent multiplayer races.
+HEADs. `build-reports/*.log` are intentionally tracked on this line (unlike the sibling lines):
+`scripts/check_repository_hygiene.py` is adapted to allow them, while still rejecting stray
+bytecode / ad-hoc logs and disposable run artifacts.
 
-## No generated diagnostics in Git
-
-`build-reports/`, bytecode and disposable run directories are ignored. CI never calls the
-Contents API to commit logs, needs no `contents: write`, and no longer needs log-commit trigger
-exclusions. Markdown-only edits run the inventory gate as well.
-
-Full logs: open/download the run's artifacts. The sandbox cannot reliably reach the Actions log
-blob host, so **bounded diagnostic Check runs** carry source SHA, compiler errors, test totals
-and log tails directly through `api.github.com`, on both success and failure:
+## Offline gates (no network / JDK needed)
 
 ```bash
-REPO=q14433686-arch/chiseled-enchanting-table-26.1.2-source
-SHA=<exact-source-sha>
-gh api "repos/$REPO/commits/$SHA/check-runs" \
-  --jq '.check_runs[] | select(.name=="compile-diagnostics" or .name=="server-smoke-diagnostics" or .name=="client-smoke-diagnostics") | .output.summary'
-```
-
-Push/manual runs publish diagnostics with `checks: write`. Pull requests skip this supplemental
-publisher (including forks with read-only tokens) but retain workflow step results and artifacts.
-Diagnostic publication is a separate final step: it cannot turn a failed build into success;
-publication failures are visible rather than silently discarded. Diagnostics are summarized to
-fit Checks' UTF-8 byte limit; they are not a replacement for the full artifact.
-
-## Local verification
-
-```bash
-python3 scripts/ci_static_checks.py
+python3 scripts/ci_static_checks.py          # mixin inventory, lang parity, single-source-of-truth, BMP, Locale.ROOT, BundledDefaults, CURRENT_BASELINE mixin list
+python3 scripts/compat_check.py              # datapack schema / ids / tags / loot-function codecs
+python3 scripts/gen_bundled_defaults.py --check
+python3 scripts/test_sync_26_2.py          # 26.2 API boundary contracts (ChatFormatting shim, gui.setScreen, StructureProcessor, protocol 7, seven-path fixes)
 python3 scripts/test_baseline_mixins.py
-python3 scripts/test_ci_diagnostics.py
-python3 scripts/test_sync_26_1_2.py
+python3 scripts/test_architecture_boundaries.py
 python3 scripts/test_ui_readability.py
+python3 scripts/test_ci_diagnostics.py
 python3 scripts/check_repository_hygiene.py
-python3 scripts/compat_check.py
 bash scripts/check_release_consistency.sh --strict
 ```
 
-Keep `gradlew` executable (`100755`). No CI output should ever be committed back to the branch.
+Keep `gradlew` executable (`100755`).
+
+## Not covered by headless CI (manual / real client required)
+
+Real client GUI interaction, SDL/IME text input (this line bridges it version-adaptively — see
+`NativeTextInputFocus`), mouse drag / scaled layouts, JEI/REI screen switching, LAN authority,
+multiplayer contention, hopper/automation against a running ritual, cross-dimension same-coord
+menus, hard restart / chunk unload, third-party trade lifecycles, large-library performance.
+Do not present headless smoke as these having been manually verified. See
+`docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md` §5.

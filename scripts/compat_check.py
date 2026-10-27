@@ -315,6 +315,30 @@ def check_advancements_use_26_1_2_schema() -> None:
                 err(f"{rel}: criteria '{name}' 'recipe_id' must be a single recipe id string")
 
 
+def check_loot_function_codecs_keep_conditions() -> None:
+    """26.2-specific guard (kept from this line's rev6 gate; the 26.1.2/26.3 compat_check
+    lacks it. A loot function MapCodec built with MapCodec.unit(...) silently discards a data
+    pack's conditions[] array. Every LootItemConditionalFunction subclass on this line must route
+    its codec through commonFields(i). This caught an always-false random_chance on
+    remove_enchanted_books in the 2026-10-23 server smoke. Guard retained across the full port.
+
+    Also verify each function's codec() returns the MapCodec (26.2 loot API)."""
+    loot_dir = os.path.join(REPO, "src", "main", "java", "chiseled_enchanting_table",
+                            "mechanics", "loot")
+    for path in sorted(glob.glob(os.path.join(loot_dir, "*.java"))):
+        rel = os.path.relpath(path, REPO)
+        with open(path, encoding="utf-8") as fh:
+            source = fh.read()
+        if "extends LootItemConditionalFunction" not in source:
+            continue
+        if "MapCodec.unit(" in source:
+            err(f"{rel}: MapCodec.unit(...) drops the loot-function 'conditions' array; "
+                f"build the codec with RecordCodecBuilder.mapCodec(i -> commonFields(i)...)")
+        if "commonFields(" not in source:
+            err(f"{rel}: loot function codec never calls commonFields(...), "
+                f"so per-function conditions cannot be parsed")
+
+
 def check_transformation_json_matches_java() -> None:
     """Single-source-of-truth gate (F8 / R2-9): verify ChiseledEnchantingTableData reads
     bundled classpath JSON resources directly via readBundledJsonObject(...) with zero
@@ -1213,7 +1237,7 @@ def check_grimoire_recipes_sounds_and_textures() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mc-jar", help="path to the MC 26.1.2 extracted jar for Tier 2 checks")
+    parser.add_argument("--mc-jar", help="path to the MC 26.2 extracted jar for Tier 2 checks")
     parser.add_argument(
         "--extra-jar",
         action="append",
@@ -1227,6 +1251,7 @@ def main() -> int:
     check_datapack_dir_naming()
     check_block_loot_tables_drop_something()
     check_loot_tables_use_26_1_2_schema()
+    check_loot_function_codecs_keep_conditions()
     check_advancements_use_26_1_2_schema()
     check_transformation_json_matches_java()
     check_default_enchantment_tags_well_formed()

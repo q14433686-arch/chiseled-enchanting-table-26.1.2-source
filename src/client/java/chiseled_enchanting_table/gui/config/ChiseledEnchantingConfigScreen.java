@@ -118,10 +118,13 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     }
 
     private boolean filterModifiedOnly = false;
-    // 26.1.2 has no SDL text-input manager (onTextInputFocusChange is a 26.3 API):
-    // native focus ownership is a no-op and the buffer receives CharacterEvent text directly.
+    // 26.2 version-adaptive: some 26.x lines route text through an SDL native-input manager that
+    // must be told when the hand-drawn search field gains focus, otherwise no CharacterEvent ever
+    // reaches charTyped(...). NativeTextInputFocus resolves the hook reflectively (no-op where the
+    // line has no SDL layer). See docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md GUI-input.
     private final chiseled_enchanting_table.config.SearchInputSession searchInput =
-        new chiseled_enchanting_table.config.SearchInputSession(focused -> {});
+        new chiseled_enchanting_table.config.SearchInputSession(focused ->
+            chiseled_enchanting_table.config.NativeTextInputFocus.apply(this.minecraft, this, focused));
     private final chiseled_enchanting_table.config.SearchTextBuffer searchBuffer = searchInput.buffer();
     private String searchQuery = "";
 
@@ -246,13 +249,17 @@ public class ChiseledEnchantingConfigScreen extends Screen {
         return true;
     }
 
-    /** 26.3 uses SDL text input; a private boolean alone never starts character events. */
+    /** Keeps the SearchInputSession focus state and (where present) the native SDL capture in sync. */
     private void setSearchFocused(boolean focused) {
         this.searchInput.setFocused(focused);
     }
 
-    // 26.1.2: Screen has no capturesInput() (an SDL text-capture hook in 26.3);
-    // character events are delivered without native capture ownership.
+    // 26.2 version-adaptive: NativeTextInputFocus.apply (wired into the SearchInputSession above)
+    // reflectively drives onTextInputFocusChange where the SDL text-input manager exists and is a
+    // no-op where it does not. We deliberately do NOT declare capturesInput() statically: that hook
+    // is a 26.3-only Screen method whose signature/finality differs across lines, and a hard
+    // reference would break 26.2 compilation. Character events arrive via charTyped(CharacterEvent)
+    // on every 26.x line, which is the port's stable input path.
 
     @Override
     public void removed() {

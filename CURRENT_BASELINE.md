@@ -1,5 +1,11 @@
 # Current Baseline
 
+> **2026-10-27 full port:** this line now ships the 26.3 rev12 / 26.1.2 rev18 feature set at wire
+> `26_2_revision_7` (14 mixins, 1019 lang keys x 11 locales). Real CI (`compile-check`+`build`) green
+> on MC 26.2. See [`docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md`](docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md). The revision-6 text below
+> is kept as the historical baseline for that earlier round.
+
+
 > **Unofficial community port.** This repository is an unofficial community port of
 > [Sacramentix/chiseled-enchanting-table](https://github.com/Sacramentix/chiseled-enchanting-table)
 > to Minecraft **26.2** on Fabric. It is **not affiliated with, endorsed by, or maintained by

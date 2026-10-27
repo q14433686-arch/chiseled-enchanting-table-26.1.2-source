@@ -1,6 +1,6 @@
 # Canonical Domain & Localization Glossary
 
-> **Applies to:** Chiseled Enchanting Table (`1.1.0`, Minecraft `26.1.2`).
+> **Applies to:** Chiseled Enchanting Table (`1.1.0`, Minecraft `26.2`).
 > This glossary defines the authoritative English (`en_us`), Simplified Chinese (`zh_cn`),
 > Traditional Chinese (`zh_tw`), and Java/datapack identifiers for every core concept in the mod.
 > Contributors adding strings, documentation, or datapack keys must keep these terms consistent.
