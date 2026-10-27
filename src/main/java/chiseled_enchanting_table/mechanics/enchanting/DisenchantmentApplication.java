@@ -21,12 +21,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Unified, single-source disenchanting, step-down downgrading, targeted single-trait stripping,
@@ -661,7 +663,15 @@ public final class DisenchantmentApplication {
         if (refundPoints <= 0) {
             return;
         }
-        CleanseMechanics.awardSmartXpRefund(menu.player, menu.tableBlockPos(), refundPoints);
+        if (menu.player != null && menu.player.isAlive()) {
+            CleanseMechanics.awardSmartXpRefund(menu.player, menu.tableBlockPos(), refundPoints);
+            return;
+        }
+        if (menu.player != null && menu.player.level() instanceof ServerLevel serverLevel) {
+            BlockPos pos = menu.tableBlockPos();
+            Vec3 spawnPos = pos != null ? Vec3.atCenterOf(pos).add(0.0, 0.85, 0.0) : menu.player.position();
+            ExperienceOrb.award(serverLevel, spawnPos, refundPoints);
+        }
     }
 
     static void playCleanseFeedback(ChiseledEnchantingTableScreenHandler menu, float pitch) {

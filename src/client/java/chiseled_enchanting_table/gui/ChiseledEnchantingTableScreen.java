@@ -486,7 +486,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     private boolean canPurgeCursesNow() {
-        return this.menu.canPurgeAnyCurseNow();
+        return chiseled_enchanting_table.mechanics.enchanting.CleanseMechanics.canPurgeAnyCurseNow(this.menu);
     }
 
     private boolean isOverSanctumPanel(double mouseX, double mouseY) {
@@ -653,8 +653,8 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             if (canPurgeCursesNow()) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.05F));
                 sendServerboundOrWarn(new ApplyEnchantmentPayload(this.menu.containerId,
-                    new AvailableOption(OptionType.PURGE_ALL_CURSES, ChiseledEnchantingTableData.DISENCHANT_ALL_ID, 0),
-                    ApplyEnchantmentPayload.AUTO_COST_OPTION), ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID);
+                    OptionType.PURGE_ALL_CURSES, DisenchantmentApplication.DISENCHANT_ALL_ID, 0),
+                    ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID);
             } else {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
             }
