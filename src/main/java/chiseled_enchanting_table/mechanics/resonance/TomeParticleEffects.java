@@ -126,6 +126,18 @@ public final class TomeParticleEffects {
         burst(level, shelfPos, slot, ParticleTypes.END_ROD, END_ROD_TICKS);
     }
 
+    /** Sustained 6-second book-locator beacon on the exact shelf slot face. */
+    public static void locateBeaconAt(Level level, BlockPos shelfPos, int slot) {
+        burst(level, shelfPos, slot, ParticleTypes.END_ROD, 120);
+        burst(level, shelfPos, slot, ParticleTypes.GLOW, 120);
+    }
+
+    /** Sustained 6-second smoldering ember & smoke beacon on a FORCE_RUSH burned Master Tome slot. */
+    public static void backlashAt(Level level, BlockPos shelfPos, int slot) {
+        burst(level, shelfPos, slot, ParticleTypes.SMOKE, 120);
+        burst(level, shelfPos, slot, ParticleTypes.FLAME, 120);
+    }
+
     /**
      * Charge-restored cue from the regeneration settle loop: fires only when a tome
      * actually gained charge since its pre-settle data was sampled.

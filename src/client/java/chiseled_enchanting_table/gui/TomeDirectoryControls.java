@@ -3,9 +3,12 @@ package chiseled_enchanting_table.gui;
 
 import chiseled_enchanting_table.catalog.TomeCatalog;
 import java.util.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 
 /** Compact catalogue controls and scrollable choice popup, independent of screen/list owners. */
 final class TomeDirectoryControls {
@@ -43,6 +46,12 @@ final class TomeDirectoryControls {
         }
         return List.copyOf(result);
     }
+    private static void playClick() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc != null) {
+            mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        }
+    }
     boolean click(double mx, double my, int x, int y, TomeCatalog model,
                   net.minecraft.world.entity.player.Player player, Runnable refresh) {
         if (open >= 0) {
@@ -50,6 +59,7 @@ final class TomeDirectoryControls {
             for(int row=0;row<count;row++) {
                 if(!TomeDirectoryLayout.popupRow(row).contains(mx-x,my-y)) continue;
                 choices.get(offset+row).apply().run(); model.refresh(); refresh.run();
+                playClick();
                 break;
             }
             close(); return true;
@@ -63,6 +73,7 @@ final class TomeDirectoryControls {
                 case 8 -> model.clearSelection();
                 default -> { choices = choices(i, model, player); open = i; offset = 0; }
             }
+            playClick();
             return true;
         }
         return false;

@@ -279,6 +279,7 @@ final class RitualWorldAccess {
             1.0F,
             0.75F
         );
+        chiseled_enchanting_table.menu.TableVisualEvents.onTomeBacklash(level, tablePos, victim.shelfPos(), victim.slot());
         return destroyedCopy;
     }
 

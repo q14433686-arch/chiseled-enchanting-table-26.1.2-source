@@ -12,10 +12,11 @@ import net.minecraft.world.level.Level;
 
 /** Frame-scoped tooltip inputs; deliberately has no Screen, transport or mutation capability. */
 record TableTooltipContext(ChiseledEnchantingTableScreenHandler menu, TableListRead list,
-    Font font, Level level, Set<Region> regions, int tomeButton,
-    boolean isCleanseTab, boolean isTomeTab, boolean isDisenchantAllConfirmPending, boolean canCleanseAllNow,
+    Font font, Level level, Set<Region> regions, int tomeButton, int ritualButton,
+    boolean isCleanseTab, boolean isTomeTab, boolean isDisenchantAllConfirmPending,
+    boolean canCleanseAllNow, boolean canPurgeCursesNow,
     Function<ItemStack, List<Component>> itemTooltip, Supplier<List<Component>> resonance) {
-    enum Region { isOverCleanseAllButton, isOverCleanseTab, isOverConfigButton, isOverFreezeButton, isOverGrimoireButton, isOverInscribeTab, isOverRerollButton, isOverRushSkipButton, isOverSacrificeButton, isOverSacrificeSkipButton, isOverSanctumPanel, isOverShelfHudBadge, isOverTomeTab }
+    enum Region { isOverCleanseAllButton, isOverPurgeCursesButton, isOverCleanseTab, isOverConfigButton, isOverFreezeButton, isOverGrimoireButton, isOverInscribeTab, isOverRerollButton, isOverSacrificeButton, isOverSanctumPanel, isOverShelfHudBadge, isOverTomeTab }
     TableTooltipContext { regions = Set.copyOf(regions); }
     boolean hovered(Region region) { return regions.contains(region); }
     int countMatching(ItemStack target) {

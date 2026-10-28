@@ -1,3 +1,5 @@
+> **2026-10-28 移植说明：** 26.1.2 `abb2af1` 的 revision 19–22 功能已移植到 26.2，协议为 `26_2_revision_8`；客户端和服务端须同时更新。CI 已通过构建、JUnit、真实服务器和客户端烟测；多人和完整玩法仍需人工验证。
+
 # Chiseled Enchanting Table — Unofficial 26.2 Port
 
 ![Chiseled enchanting table banner](./banner.png)

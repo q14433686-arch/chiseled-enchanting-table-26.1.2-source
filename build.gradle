@@ -190,3 +190,30 @@ tasks.named('runServer', JavaExec).configure {
 tasks.withType(Jar).configureEach {
     exclude 'com/terraformersmc/**'
 }
+// Opt-in, separate development-only mod: never packaged in the released main/client jar.
+// Backported from 26.3: compile with ./gradlew compileClientSmokeJava -Pclient_smoke=true,
+// execute via scripts/client_smoke.py (xvfb-run runClientSmoke).
+if (providers.gradleProperty('client_smoke').orNull == 'true') {
+    sourceSets {
+        clientSmoke {
+            compileClasspath += sourceSets.main.output + sourceSets.client.output + sourceSets.client.compileClasspath
+            runtimeClasspath += sourceSets.main.output + sourceSets.client.runtimeClasspath
+        }
+    }
+    loom.mods {
+        'cet-client-smoke' { sourceSet sourceSets.clientSmoke }
+    }
+    loom.runs {
+        clientSmoke {
+            client()
+            source sourceSets.clientSmoke
+            runDir 'run-client-smoke'
+            programArg '--quickPlaySingleplayer'
+            programArg 'audit-world'
+            programArg '--width'
+            programArg '960'
+            programArg '--height'
+            programArg '640'
+        }
+    }
+}

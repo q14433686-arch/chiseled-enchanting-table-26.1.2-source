@@ -52,10 +52,14 @@ final class MenuXpQuotes {
                 maxLevel
             );
         }
+        if (type == OptionType.EXTRACT_ENCHANTMENT_BOOK) {
+            return MenuCleanseQuotes.computeExtractRawXpLevels(
+                getBaseEnchantmentXpLevelCost(h, e, OptionType.STRIP_SINGLE_ENCHANTMENT));
+        }
         if (type == OptionType.PURGE_CURSE) {
             return ChiseledEnchantingTableData.cursePurgeXpCost();
         }
-        if (type == OptionType.DISENCHANT_ALL || type == OptionType.DOWNGRADE_ENCHANTMENT) {
+        if (type == OptionType.DISENCHANT_ALL || type == OptionType.DOWNGRADE_ENCHANTMENT || type == OptionType.PURGE_ALL_CURSES) {
             return 0;
         }
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
@@ -123,6 +127,12 @@ final class MenuXpQuotes {
         if (type == OptionType.PURGE_CURSE) {
             int rawPurge = h.getBaseEnchantmentXpLevelCost(e, OptionType.PURGE_CURSE);
             return XpCostConversion.forFullArcaneRitual(resonanceCfg, rawPurge, h.xpDiscountPercent());
+        }
+        if (type == OptionType.EXTRACT_ENCHANTMENT_BOOK) {
+            return MenuCleanseQuotes.extractBookXpRequirement(h, e);
+        }
+        if (type == OptionType.PURGE_ALL_CURSES) {
+            return XpCostConversion.XpRequirement.FREE;
         }
 
         int rawCost = h.getBaseEnchantmentXpLevelCost(e, type);

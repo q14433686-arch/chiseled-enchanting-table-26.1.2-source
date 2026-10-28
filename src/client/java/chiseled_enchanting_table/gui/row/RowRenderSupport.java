@@ -36,6 +36,7 @@ public final class RowRenderSupport {
     public static final Identifier XP_ORB_3 = ChiseledEnchantingTable.identifier("gui/xp_orb_3.png");
     public static final Identifier XP_RITUAL_FLASK = ChiseledEnchantingTable.identifier("gui/xp_ritual_flask.png");
     public static final Identifier XP_REFUND_ORB = ChiseledEnchantingTable.identifier("gui/xp_refund_orb.png");
+    public static final Identifier BADGE_COST_CYCLE = ChiseledEnchantingTable.identifier("gui/badge_cost_cycle.png");
 
     public static final int XP_GREEN = 0xFF7CFFA6;
     public static final int JADE_MINT = 0xFF9EFFDB;
@@ -235,7 +236,22 @@ public final class RowRenderSupport {
     }
 
     public static void drawPrimaryCost(GuiGraphicsExtractor ctx, Minecraft client, ItemStack cost, int x, int y, boolean affordable) {
+        drawPrimaryCost(ctx, client, cost, x, y, affordable, false);
+    }
+
+    public static void drawPrimaryCost(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        ItemStack cost,
+        int x,
+        int y,
+        boolean affordable,
+        boolean cyclable
+    ) {
         drawCompactCostStack(ctx, client, cost, x, y, affordable);
+        if (cyclable && !cost.isEmpty()) {
+            ctx.blit(BADGE_COST_CYCLE, x - 1, y - 1, x + 5, y + 5, 0.0f, 1.0f, 0.0f, 1.0f);
+        }
     }
 
     public static void drawAdditionalCosts(

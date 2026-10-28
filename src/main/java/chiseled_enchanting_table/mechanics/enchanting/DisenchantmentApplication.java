@@ -480,8 +480,10 @@ public final class DisenchantmentApplication {
         switch (type) {
             case DISENCHANT_ALL -> applyFullDisenchant(menu, target);
             case DOWNGRADE_ENCHANTMENT -> applyDowngrade(menu, target, payload.enchantment_id(), payload.enchantment_level());
-            case STRIP_SINGLE_ENCHANTMENT -> applyTargetedStrip(menu, target, payload.enchantment_id());
-            case PURGE_CURSE -> applyCursePurge(menu, target, payload.enchantment_id());
+            case STRIP_SINGLE_ENCHANTMENT -> applyTargetedStrip(menu, target, payload.enchantment_id(), payload.cost_option_index());
+            case EXTRACT_ENCHANTMENT_BOOK -> CleanseMechanics.applyExtractBook(menu, target, payload.enchantment_id(), payload.cost_option_index());
+            case PURGE_CURSE -> applyCursePurge(menu, target, payload.enchantment_id(), payload.cost_option_index());
+            case PURGE_ALL_CURSES -> CleanseMechanics.applyPurgeAllCurses(menu, target);
             default -> {}
         }
     }
@@ -515,6 +517,7 @@ public final class DisenchantmentApplication {
         menu.setEnchantableSlot(resulting);
         awardRefundOrbs(menu, totalRefund);
         playCleanseFeedback(menu, 1.15f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleanseExtractOrStrip(menu.world(), menu.tableBlockPos(), false);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
 
@@ -557,13 +560,15 @@ public final class DisenchantmentApplication {
         menu.setEnchantableSlot(resulting);
         awardRefundOrbs(menu, refund);
         playCleanseFeedback(menu, 1.05f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleanseExtractOrStrip(menu.world(), menu.tableBlockPos(), false);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
 
     private static void applyTargetedStrip(
         ChiseledEnchantingTableScreenHandler menu,
         ItemStack target,
-        Identifier targetId
+        Identifier targetId,
+        int costOptionIndex
     ) {
         ItemEnchantments current = EnchantmentHelper.getEnchantmentsForCrafting(target);
         Holder<Enchantment> matched = findHolderById(current, targetId);
@@ -573,13 +578,13 @@ public final class DisenchantmentApplication {
         int curLvl = current.getLevel(matched);
         var ewl = new EnchantmentWithLevel(targetId, curLvl);
         var xpReq = menu.resolveEffectiveXpRequirement(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT);
-        List<ItemStack> affordableBundle = menu.findMatchingAffordableCostBundle(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT);
+        List<ItemStack> affordableBundle = menu.resolveCleanseCostBundle(ewl, OptionType.STRIP_SINGLE_ENCHANTMENT, costOptionIndex);
         if (!xpReq.isMetBy(menu.player) || (!menu.player.getAbilities().instabuild && affordableBundle == null)) {
             return;
         }
 
         XpCostConversion.deductXp(menu.player, xpReq);
-        menu.deductMatchedBundle(affordableBundle);
+        menu.deductCleanseBundle(affordableBundle);
 
         ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
         for (var entry : current.entrySet()) {
@@ -592,13 +597,15 @@ public final class DisenchantmentApplication {
         InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         playCleanseFeedback(menu, 0.95f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleanseExtractOrStrip(menu.world(), menu.tableBlockPos(), false);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
 
     private static void applyCursePurge(
         ChiseledEnchantingTableScreenHandler menu,
         ItemStack target,
-        Identifier targetId
+        Identifier targetId,
+        int costOptionIndex
     ) {
         if (!menu.disenchantAllowCursePurge()) {
             return;
@@ -610,13 +617,13 @@ public final class DisenchantmentApplication {
         }
         var ewl = new EnchantmentWithLevel(targetId, current.getLevel(matched));
         var xpReq = menu.resolveEffectiveXpRequirement(ewl, OptionType.PURGE_CURSE);
-        List<ItemStack> affordableBundle = menu.findMatchingAffordableCostBundle(ewl, OptionType.PURGE_CURSE);
+        List<ItemStack> affordableBundle = menu.resolveCleanseCostBundle(ewl, OptionType.PURGE_CURSE, costOptionIndex);
         if (!xpReq.isMetBy(menu.player) || (!menu.player.getAbilities().instabuild && affordableBundle == null)) {
             return;
         }
 
         XpCostConversion.deductXp(menu.player, xpReq);
-        menu.deductMatchedBundle(affordableBundle);
+        menu.deductCleanseBundle(affordableBundle);
 
         ItemEnchantments.Mutable next = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
         for (var entry : current.entrySet()) {
@@ -629,10 +636,11 @@ public final class DisenchantmentApplication {
         InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         playCleanseFeedback(menu, 0.72f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleansePurgeCurse(menu.world(), menu.tableBlockPos(), 1);
         Advancement.give(menu.player, "purge_curse");
     }
 
-    private static Holder<Enchantment> findHolderById(ItemEnchantments enchantments, Identifier id) {
+    static Holder<Enchantment> findHolderById(ItemEnchantments enchantments, Identifier id) {
         for (var entry : enchantments.entrySet()) {
             if (entry.getKey().unwrapKey().map(k -> k.identifier().equals(id)).orElse(false)) {
                 return entry.getKey();
@@ -641,7 +649,7 @@ public final class DisenchantmentApplication {
         return null;
     }
 
-    private static ItemStack finishEnchantmentWrite(ItemStack source, ItemEnchantments remaining) {
+    static ItemStack finishEnchantmentWrite(ItemStack source, ItemEnchantments remaining) {
         if (source.is(Items.ENCHANTED_BOOK) && remaining.isEmpty()) {
             return new ItemStack(BlockRegistry.DEPLETED_TOME, 1);
         }
@@ -659,23 +667,24 @@ public final class DisenchantmentApplication {
         if (refundPoints <= 0) {
             return;
         }
-        Player player = menu.player;
-        if (player.level() instanceof ServerLevel serverLevel) {
-            BlockPos tablePos = menu.tableBlockPos();
-            Vec3 spawnPos = tablePos != null
-                ? Vec3.atCenterOf(tablePos).add(0.0, 0.85, 0.0)
-                : player.position().add(0.0, 0.5, 0.0);
+        if (menu.player != null && menu.player.isAlive()) {
+            CleanseMechanics.awardSmartXpRefund(menu.player, menu.tableBlockPos(), refundPoints);
+            return;
+        }
+        if (menu.player != null && menu.player.level() instanceof ServerLevel serverLevel) {
+            BlockPos pos = menu.tableBlockPos();
+            Vec3 spawnPos = pos != null ? Vec3.atCenterOf(pos).add(0.0, 0.85, 0.0) : menu.player.position();
             ExperienceOrb.award(serverLevel, spawnPos, refundPoints);
         }
     }
 
-    private static void playCleanseFeedback(ChiseledEnchantingTableScreenHandler menu, float pitch) {
+    static void playCleanseFeedback(ChiseledEnchantingTableScreenHandler menu, float pitch) {
         Player player = menu.player;
         if (player.level() instanceof ServerLevel serverLevel) {
             BlockPos pos = menu.tableBlockPos();
             BlockPos soundPos = pos != null ? pos : player.blockPosition();
-            serverLevel.playSound(null, soundPos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.85f, pitch);
-            serverLevel.playSound(null, soundPos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.90f, 1.15f);
+            serverLevel.playSound(null, soundPos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.42f, pitch);
+            serverLevel.playSound(null, soundPos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.85f, 1.18f);
         }
     }
 }

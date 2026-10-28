@@ -1,5 +1,5 @@
-commit: fb9fc17ddc1038fa64165a15bab34633a0b62509
-branch: arena/aa2dbb26-chiseled-enchanting-table-26-1
+commit: 64d80964c22f6d5dd581038802b781db87f603b0
+branch: arena/397ed082-chiseled-enchanting-table-26-1
 minecraft: 26.2
 fabric-api: 0.155.2+26.2
 loader: 0.19.3
@@ -283,6 +283,26 @@ RuleArchitectureTest > failedPersistenceDoesNotPublishAndStaleProposalsDoNotWrit
 
 RuleArchitectureTest > configurationPriorityCannotDefeatAnEnforcedDatapack() PASSED
 
+SensoryPolishRoundThreeTest > visualEventPayloadRoundTripsEveryKindAndClampsBounds() PASSED
+
+SensoryPolishRoundThreeTest > slotWorldCoordinatesPinpointExact3x2BookshelfSlotsAcrossAllFacings() PASSED
+
+SensoryPolishRoundThreeTest > customParticleSpritesExistAsClean32x32TransparentRgbaAssets() PASSED
+
+SurvivalUxOverhaulTest > bagPayableCleanseFlagCoversOnlyMaterialCleanseOperations() PASSED
+
+SurvivalUxOverhaulTest > cleanseExtractPricingUsesOnePointFiveMultiplierCappedAtFifteen() PASSED
+
+SurvivalUxOverhaulTest > smartRitualGateBypassesLowAndMidTierDirectInscriptions() PASSED
+
+SurvivalUxOverhaulTest > mendingFirstXpRefundMathRepairsTwoDurabilityPerPointAndReturnsRemainder() PASSED
+
+SurvivalUxOverhaulTest > extractedBookGenerationBlocksMobLootArbitrageWhilePreservingCatalystAndTableProvenance() PASSED
+
+SurvivalUxOverhaulTest > searchBoxAndCleansePixelArtResourcesExistAtExactPaths() PASSED
+
+SurvivalUxOverhaulTest > smartRitualGateRequiresRitualForCapstonesTomeCopiesEpiphaniesAndQueues() PASSED
+
 TomeActionQueueTest > cancellationPreventsQueuedRequests() PASSED
 
 TomeActionQueueTest > multipleBooksRequireSameSelectionAndActionWithinDeadline() PASSED
@@ -292,6 +312,18 @@ TomeActionQueueTest > replacedBookInSameSlotIsSkipped() PASSED
 TomeActionQueueTest > pacedSubmissionDoesNotMutateAuthoritativeEntries() PASSED
 
 TomeActionQueueTest > unlockOnlyTargetsLockedEntriesAndRejectsReentrantBatch() PASSED
+
+TomeActionQueueTest > mendAndSanctifyBatchRequireConfirmationWhileLocatePingQueuesAllTargetsImmediately() PASSED
+
+TomeBatchAndReloadSyncRoundFourTest > tomePageActionPayloadRoundTripsExtraLocateTargetsAndEnforcesBounds() PASSED
+
+TomeBatchAndReloadSyncRoundFourTest > ctrlClickWithImplicitFirstRowSelectsFirstAndClickedRow() PASSED
+
+TomeBatchAndReloadSyncRoundFourTest > tomeLocateVisualEventKindRoundTrips() PASSED
+
+TomeBatchAndReloadSyncRoundFourTest > syncRitualStatePayloadRoundTripsActiveTomeSlots() PASSED
+
+TomeCatalogTest > interactiveShiftRangeAndCtrlToggleIncludeImplicitFirstRowAndContiguousSpan() PASSED
 
 TomeCatalogTest > removedBookCannotRemainSelected() PASSED
 
@@ -313,9 +345,13 @@ TomeCatalogTest > shiftSelectionTogglesWithoutLosingOtherSelections() PASSED
 
 TomeCatalogTest > reorderPreservesIdentity() PASSED
 
+TomeDirectoryLayoutTest > cleanseFilterBarStaysCompactAndDisjoint() PASSED
+
 TomeDirectoryLayoutTest > lockIconsFitInsideExistingPanelAndBelowRateText() PASSED
 
 TomeDirectoryLayoutTest > textInkIsInsetFromEveryButtonEdge() PASSED
+
+TomeDirectoryLayoutTest > inscribeFilterBarStaysCompactAndLeavesFullListRoom() PASSED
 
 TomeDirectoryLayoutTest > popupRowsStayInsideTheirOwnInnerBorder() PASSED
 
@@ -324,6 +360,8 @@ TomeDirectoryLayoutTest > unknownButtonsFailInsteadOfTargetingClearOrBatchAction
 TomeDirectoryLayoutTest > controlsAndReadOnlyCounterNeverOverlap() PASSED
 
 TomeDirectoryLayoutTest > listStartsBelowPanelAndKeepsOriginalBottom() PASSED
+
+TomeDirectoryLayoutTest > ritualConsoleButtonsFitInsidePanelAndNeverOverlap() PASSED
 
 TomeDirectoryLayoutTest > allControlsAreInsideThePanelInnerFrame() PASSED
 
@@ -376,7 +414,7 @@ LatestPortAuditTest > actualFabricBundledPackDoesNotLockCleanseOrOverridePresets
 LatestPortAuditTest > registryPreloadDoesNotPublishToGameplayOrChestSpawnCache() PASSED
 
 RuntimeFrameSnapshotTest > callerOwnedCollectionsCannotMutatePublishedFrame() PASSED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793063315941.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1793158140748.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/chiseled-enchanting-table-26.1.2-source/chiseled-enchanting-table-26.1.2-source/build/reports/problems/problems-report.html
 
@@ -386,7 +424,7 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.5.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 1m 3s
+BUILD SUCCESSFUL in 1m 11s
 6 actionable tasks: 6 executed
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
 gradle exit code: 0

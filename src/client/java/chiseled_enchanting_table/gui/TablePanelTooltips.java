@@ -18,6 +18,20 @@ import chiseled_enchanting_table.gui.TableTooltipContext.Region;
 final class TablePanelTooltips {
     private TablePanelTooltips() {}
     static boolean render(TableTooltipContext state, GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        if (state.hovered(Region.isOverPurgeCursesButton)) {
+            int curses = chiseled_enchanting_table.mechanics.enchanting.CleanseMechanics.countCurses(state.menu().get_enchantable_item());
+            List<Component> tip = new ArrayList<>();
+            tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_purge_curses_title").withStyle(CetFormatting.GOLD));
+            if (curses <= 0) {
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_purge_curses_none").withStyle(CetFormatting.GRAY));
+            } else {
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_purge_curses_count", curses)
+                    .withStyle(state.canPurgeCursesNow() ? CetFormatting.GREEN : CetFormatting.RED));
+            }
+            tip.add(Component.translatable("gui.chiseled_enchanting_table.cleanse.btn_purge_curses_hint").withStyle(CetFormatting.DARK_GRAY));
+            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
+            return true;
+        }
         if (state.hovered(Region.isOverCleanseAllButton)) {
             int refund = DisenchantmentApplication.totalFullDisenchantRefund(
                 state.menu().libraryResonanceConfig(),
@@ -124,8 +138,7 @@ final class TablePanelTooltips {
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.panel_title").withStyle(CetFormatting.AQUA));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.panel_shelves", state.menu().qualifyingEnchantedBookshelves, state.menu().liveTotalLibraryBookshelves).withStyle(CetFormatting.GRAY));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.unlock_progress", state.menu().qualifyingEnchantedBookshelves, state.menu().tomeRequiredShelves).withStyle(state.menu().isTomePageUnlocked() ? CetFormatting.GREEN : CetFormatting.YELLOW));
-                var sel = state.list().selectedTomeEntry();
-                if (sel != null) tip.add(Component.literal(TomeDisplayNames.tomeTitle(sel, state.menu().player)).withStyle(CetFormatting.GOLD));
+                TomeBatchPreview.appendPanelSelectionSummary(tip, state.menu(), state.list().selectedTomes(), state.list().selectedTomeEntry());
                 chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }

@@ -56,14 +56,52 @@ class TomeDirectoryLayoutTest {
     }
     @Test void lockIconsFitInsideExistingPanelAndBelowRateText() {
         var safe=new Rect(214+9,18+9,101,43);
-        for(int i=0;i<5;i++) {
+        for(int i=0;i<TomeDirectoryLayout.TOME_BUTTON_COUNT;i++) {
             var b=TomeDirectoryLayout.lockButton(i); inside(b,safe);
-            assertTrue(b.y()>=18+37); assertTrue(b.inset(3).height()>=7);
-            if(i>0) assertFalse(overlaps(b,TomeDirectoryLayout.lockButton(i-1)));
+            assertTrue(b.y()>=18+24); assertTrue(b.inset(3).height()>=7);
+            for(int j=i+1;j<TomeDirectoryLayout.TOME_BUTTON_COUNT;j++)
+                assertFalse(overlaps(b,TomeDirectoryLayout.lockButton(j)));
         }
+    }
+    @Test void ritualConsoleButtonsFitInsidePanelAndNeverOverlap() {
+        var safe=new Rect(214+8,18+8,103,43);
+        for(int i=0;i<TomeDirectoryLayout.RITUAL_BUTTON_COUNT;i++) {
+            var b=TomeDirectoryLayout.ritualButton(i); inside(b,safe);
+            assertEquals(16,b.width()); assertEquals(16,b.height());
+            assertTrue(b.y()>=18+31 && b.bottom()<=18+50);
+            for(int j=i+1;j<TomeDirectoryLayout.RITUAL_BUTTON_COUNT;j++)
+                assertFalse(overlaps(b,TomeDirectoryLayout.ritualButton(j)));
+        }
+    }
+    @Test void inscribeFilterBarStaysCompactAndLeavesFullListRoom() {
+        var bar=new Rect(0,0,TomeDirectoryLayout.WIDTH,TomeDirectoryLayout.INSCRIBE_BAR_HEIGHT);
+        var search=TomeDirectoryLayout.inscribeSearchBox();
+        var afford=TomeDirectoryLayout.inscribeAffordableButton();
+        var expand=TomeDirectoryLayout.inscribeExpandButton();
+        inside(search,bar); inside(afford,bar); inside(expand,bar);
+        assertFalse(overlaps(search,afford)); assertFalse(overlaps(afford,expand)); assertFalse(overlaps(search,expand));
+        assertTrue(TomeDirectoryLayout.inscribeListOffset()>TomeDirectoryLayout.INSCRIBE_BAR_HEIGHT);
+        assertTrue(TomeDirectoryLayout.CONTENT_HEIGHT-TomeDirectoryLayout.inscribeListOffset()>=120);
+    }
+    @Test void cleanseFilterBarStaysCompactAndDisjoint() {
+        var bar=new Rect(0,0,TomeDirectoryLayout.WIDTH,TomeDirectoryLayout.CLEANSE_BAR_HEIGHT);
+        var search=TomeDirectoryLayout.cleanseSearchBox();
+        var mode=TomeDirectoryLayout.cleanseModeButton();
+        var afford=TomeDirectoryLayout.cleanseAffordableButton();
+        var expand=TomeDirectoryLayout.cleanseExpandButton();
+        var items=new Rect[]{search,mode,afford,expand};
+        for(int i=0;i<items.length;i++) {
+            inside(items[i],bar);
+            for(int j=i+1;j<items.length;j++) assertFalse(overlaps(items[i],items[j]));
+        }
+        assertTrue(TomeDirectoryLayout.cleanseListOffset()>TomeDirectoryLayout.CLEANSE_BAR_HEIGHT);
+        assertTrue(TomeDirectoryLayout.CONTENT_HEIGHT-TomeDirectoryLayout.cleanseListOffset()>=120);
     }
     @Test void unknownButtonsFailInsteadOfTargetingClearOrBatchAction() {
         assertThrows(IllegalArgumentException.class,()->TomeDirectoryLayout.button(9));
         assertThrows(IllegalArgumentException.class,()->TomeDirectoryLayout.lockButton(-1));
+        assertThrows(IllegalArgumentException.class,()->TomeDirectoryLayout.lockButton(TomeDirectoryLayout.TOME_BUTTON_COUNT));
+        assertThrows(IllegalArgumentException.class,()->TomeDirectoryLayout.ritualButton(-1));
+        assertThrows(IllegalArgumentException.class,()->TomeDirectoryLayout.ritualButton(TomeDirectoryLayout.RITUAL_BUTTON_COUNT));
     }
 }

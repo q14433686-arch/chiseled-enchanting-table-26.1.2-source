@@ -71,33 +71,7 @@ final class TableNavigationTooltips {
             chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }
-        int tomeBtn = state.tomeButton();
-        if (tomeBtn >= 0) {
-            String key = switch (tomeBtn) {
-                case 0 -> "gui.chiseled_enchanting_table.tomes.tip_next";
-                case 1 -> "gui.chiseled_enchanting_table.tomes.tip_full";
-                case 2 -> "gui.chiseled_enchanting_table.tomes.tip_permanent";
-                case 3 -> "gui.chiseled_enchanting_table.tomes.tip_unlock";
-                default -> "gui.chiseled_enchanting_table.catalog.batch_help";
-            };
-            var lrCfg = state.menu().libraryResonanceConfig();
-            var tipText = tomeBtn == 3
-                ? Component.translatable(key,
-                    lrCfg.earlyUnlockXpLevels(),
-                    lrCfg.earlyUnlockGritCount())
-                : Component.translatable(key);
-            String titleKey = switch(tomeBtn) {
-                case 0 -> "gui.chiseled_enchanting_table.tomes.btn_next";
-                case 1 -> "gui.chiseled_enchanting_table.tomes.btn_full";
-                case 2 -> "gui.chiseled_enchanting_table.tomes.btn_permanent";
-                case 3 -> "gui.chiseled_enchanting_table.tomes.btn_unlock";
-                default -> "gui.chiseled_enchanting_table.catalog.batch_full";
-            };
-            var lines = new ArrayList<Component>();
-            lines.add(Component.translatable(titleKey).withStyle(CetFormatting.AQUA));
-            lines.add(tipText.withStyle(CetFormatting.GRAY));
-            if(tomeBtn!=4) lines.add(Component.translatable("gui.chiseled_enchanting_table.catalog.batch_help").withStyle(CetFormatting.GOLD));
-            TooltipPresentation.show(ctx,state.font(),lines,Optional.empty(),mouseX,mouseY,null);
+        if (TableActionTooltips.render(state, ctx, mouseX, mouseY)) {
             return true;
         }
         var hoveredTome = state.list().hoveredTomeEntry(mouseX, mouseY);
@@ -175,53 +149,11 @@ final class TableNavigationTooltips {
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_next", TomeDisplayNames.formatTomeEta(hoveredTome.eta_next_ticks())).withStyle(CetFormatting.GREEN));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", TomeDisplayNames.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(CetFormatting.GREEN));
             }
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.select_hint").withStyle(CetFormatting.DARK_GRAY));
-            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
-            return true;
-        }
-        if (state.hovered(Region.isOverSacrificeSkipButton)) {
-            int lvls = state.menu().currentSacrificeSkipLevels();
-            List<Component> tip = new ArrayList<>();
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_title")
-                .withStyle(CetFormatting.GOLD));
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.ritual.tip_sacrifice_cost",
-                lvls,
-                state.menu().player.experienceLevel
-            ).withStyle(state.menu().player.experienceLevel >= lvls ? CetFormatting.GREEN : CetFormatting.RED));
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_safe")
-                .withStyle(CetFormatting.AQUA));
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_sacrifice_currency")
-                .withStyle(CetFormatting.DARK_GRAY));
-            chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
-            return true;
-        }
-        if (state.hovered(Region.isOverRushSkipButton)) {
-            double riskPct = state.menu().currentRushSkipDegradeChance() * 100.0;
-            var rCfg = state.menu().ritualConfig();
-            int capPct = (int) Math.round(100.0 * (state.menu().ritualUsedInfinityTome()
-                ? rCfg.maxRushDegradeInfinity()
-                : rCfg.maxRushDegradeNormal()));
-            int infCapPct = (int) Math.round(100.0 * rCfg.maxRushDegradeInfinity());
-            boolean hasTome = state.menu().hasAnyMasterTomeInRange();
-            List<Component> tip = new ArrayList<>();
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_rush_title")
-                .withStyle(CetFormatting.RED));
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.ritual.tip_rush_risk",
-                String.format(java.util.Locale.ROOT, "%.1f", riskPct),
-                capPct
-            ).withStyle(CetFormatting.GOLD));
-            tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.tip_rush_priority")
-                .withStyle(CetFormatting.GRAY));
-            tip.add(Component.translatable(
-                "gui.chiseled_enchanting_table.ritual.tip_rush_currency",
-                infCapPct
-            ).withStyle(CetFormatting.DARK_GRAY));
-            if (!hasTome) {
-                tip.add(Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
-                    .withStyle(CetFormatting.RED));
+            if (state.menu().isTomeActiveInRitual(hoveredTome.shelf_pos(), hoveredTome.slot())) {
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.active_ritual_tip").withStyle(CetFormatting.LIGHT_PURPLE));
             }
+            tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.select_hint").withStyle(CetFormatting.DARK_GRAY));
+            tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_select_shortcuts").withStyle(CetFormatting.DARK_GRAY));
             chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }

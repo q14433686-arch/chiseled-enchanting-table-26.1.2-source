@@ -323,7 +323,21 @@ public class ChiseledEnchantingTableClient implements ClientModInitializer {
                 }
             })
         );
+        ClientPlayNetworking.registerGlobalReceiver(
+            chiseled_enchanting_table.menu.TableVisualEventPayload.TYPE,
+            (payload, ctx) -> ctx.client().execute(() -> {
+                chiseled_enchanting_table.render.TableCustomParticles.handleVisualEvent(payload);
+                chiseled_enchanting_table.gui.GuiMicroEffects.onVisualEvent(payload);
+            })
+        );
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (!client.isPaused()) {
+                chiseled_enchanting_table.render.TableCustomParticles.clientTick();
+            }
+        });
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
+            chiseled_enchanting_table.render.TableCustomParticles.clear();
+            chiseled_enchanting_table.gui.GuiMicroEffects.reset();
             SyncedEnchantmentCosts.clear();
             ModRuntimeConfig.clearRemoteSync();
             // Audit COUP-04: mirror the SYNC path's guard. In singleplayer the integrated

@@ -29,6 +29,9 @@ final class TableOptionTooltips {
                     "gui.chiseled_enchanting_table.discovery_locked.tip_desc",
                     lockedOut
                 ).withStyle(CetFormatting.YELLOW));
+                discTip.add(Component.translatable(
+                    "gui.chiseled_enchanting_table.discovery_locked.tip_catalyst"
+                ).withStyle(CetFormatting.LIGHT_PURPLE));
                 chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), discTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
@@ -133,6 +136,9 @@ final class TableOptionTooltips {
                 }
                 catTip.add(Component.translatable("gui.chiseled_enchanting_table.category.tip_master")
                     .withStyle(CetFormatting.DARK_GRAY));
+                if (storedLvl > 0 && state.menu().isTomePageEnabled()) {
+                    catTip.add(Component.translatable("gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint").withStyle(CetFormatting.AQUA));
+                }
                 chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), catTip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }
@@ -191,6 +197,9 @@ final class TableOptionTooltips {
                 int extPct = (int) Math.round(state.menu().disenchantExternalRefundScale() * 100.0);
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_provenance", extPct)
                     .withStyle(CetFormatting.AQUA));
+            } else if (hoveredRow.option_type() == OptionType.EXTRACT_ENCHANTMENT_BOOK) {
+                rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_extract")
+                    .withStyle(CetFormatting.AQUA));
             } else if (hoveredRow.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
                 || hoveredRow.option_type() == OptionType.PURGE_CURSE) {
                 rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.cleanse_targeted")
@@ -200,6 +209,7 @@ final class TableOptionTooltips {
                 if (masterBacked) {
                     rowTip.add(Component.translatable("gui.chiseled_enchanting_table.pricing.master_tome")
                         .withStyle(CetFormatting.GREEN));
+                    if (state.menu().isTomePageEnabled()) rowTip.add(Component.translatable("gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint").withStyle(CetFormatting.AQUA));
                     boolean targetIsBook = hoveredRow.enchantable_item().is(net.minecraft.world.item.Items.BOOK)
                         || hoveredRow.enchantable_item().is(net.minecraft.world.item.Items.ENCHANTED_BOOK);
                     int wearCost = chiseled_enchanting_table.mechanics.resonance.MasterTomeWear.wearCostForTarget(lrCfg, targetIsBook);
