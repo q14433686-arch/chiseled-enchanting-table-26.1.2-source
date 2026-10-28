@@ -1,5 +1,6 @@
 {
-    "values": [
-      "chiseled_enchanting_table:chiseled_enchanting_table"
-    ]
+  "replace": false,
+  "values": [
+    "enchantment_fusion:enchantment_fusion_table"
+  ]
 }

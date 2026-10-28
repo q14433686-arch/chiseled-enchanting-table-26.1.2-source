@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "profiles": {
+    "minecraft:sharpness": {
+      "trigger": "ON_MELEE_STRIKE",
+      "payload": "EDGE"
+    },
+    "minecraft:smite": {
+      "trigger": "ON_MELEE_STRIKE",
+      "payload": "BANE"
+    },
+    "minecraft:bane_of_arthropods": {
+      "trigger": "ON_MELEE_STRIKE",
+      "payload": "BANE"
+    },
+    "minecraft:fire_aspect": {
+      "trigger": "ON_MELEE_STRIKE",
+      "payload": "PYRO"
+    },
+    "minecraft:knockback": {
+      "trigger": "ON_MELEE_STRIKE",
+      "payload": "GALE"
+    },
+    "minecraft:breach": {
+      "trigger": "ON_MELEE_STRIKE",
+      "payload": "PIERCE"
+    },
+    "minecraft:density": {
+      "trigger": "ON_MELEE_STRIKE",
+      "payload": "GRAVITY"
+    },
+    "minecraft:sweeping_edge": {
+      "trigger": "ON_SWEEP_OR_CLEAVE",
+      "payload": "SCATTER"
+    },
+    "minecraft:wind_burst": {
+      "trigger": "ON_SWEEP_OR_CLEAVE",
+      "payload": "GALE"
+    },
+    "minecraft:power": {
+      "trigger": "ON_PROJECTILE_IMPACT",
+      "payload": "EDGE"
+    },
+    "minecraft:punch": {
+      "trigger": "ON_PROJECTILE_IMPACT",
+      "payload": "GALE"
+    },
+    "minecraft:flame": {
+      "trigger": "ON_PROJECTILE_IMPACT",
+      "payload": "PYRO"
+    },
+    "minecraft:infinity": {
+      "trigger": "ON_PROJECTILE_IMPACT",
+      "payload": "MEND"
+    },
+    "minecraft:multishot": {
+      "trigger": "ON_PROJECTILE_IMPACT",
+      "payload": "SCATTER"
+    },
+    "minecraft:piercing": {
+      "trigger": "ON_PROJECTILE_IMPACT",
+      "payload": "PIERCE"
+    },
+    "minecraft:quick_charge": {
+      "trigger": "ON_PROJECTILE_IMPACT",
+      "payload": "MEND"
+    },
+    "minecraft:loyalty": {
+      "trigger": "ON_TRIDENT_CHANNEL",
+      "payload": "RETURN"
+    },
+    "minecraft:riptide": {
+      "trigger": "ON_TRIDENT_CHANNEL",
+      "payload": "TIDE"
+    },
+    "minecraft:channeling": {
+      "trigger": "ON_TRIDENT_CHANNEL",
+      "payload": "VOLT"
+    },
+    "minecraft:impaling": {
+      "trigger": "ON_TRIDENT_CHANNEL",
+      "payload": "EDGE"
+    },
+    "minecraft:efficiency": {
+      "trigger": "ON_BLOCK_HARVEST",
+      "payload": "EDGE"
+    },
+    "minecraft:silk_touch": {
+      "trigger": "ON_BLOCK_HARVEST",
+      "payload": "AEGIS"
+    },
+    "minecraft:fortune": {
+      "trigger": "ON_BLOCK_HARVEST",
+      "payload": "FORTUNE"
+    },
+    "minecraft:protection": {
+      "trigger": "ON_DAMAGE_TAKEN",
+      "payload": "AEGIS"
+    },
+    "minecraft:fire_protection": {
+      "trigger": "ON_DAMAGE_TAKEN",
+      "payload": "PYRO"
+    },
+    "minecraft:blast_protection": {
+      "trigger": "ON_DAMAGE_TAKEN",
+      "payload": "SCATTER"
+    },
+    "minecraft:projectile_protection": {
+      "trigger": "ON_DAMAGE_TAKEN",
+      "payload": "AEGIS"
+    },
+    "minecraft:thorns": {
+      "trigger": "ON_DAMAGE_TAKEN",
+      "payload": "PIERCE"
+    },
+    "minecraft:soul_speed": {
+      "trigger": "ON_DAMAGE_TAKEN",
+      "payload": "MEND"
+    },
+    "minecraft:swift_sneak": {
+      "trigger": "ON_DAMAGE_TAKEN",
+      "payload": "MEND"
+    },
+    "minecraft:feather_falling": {
+      "trigger": "ON_MOVEMENT_OR_LAND",
+      "payload": "GRAVITY"
+    },
+    "minecraft:depth_strider": {
+      "trigger": "ON_MOVEMENT_OR_LAND",
+      "payload": "TIDE"
+    },
+    "minecraft:frost_walker": {
+      "trigger": "ON_MOVEMENT_OR_LAND",
+      "payload": "CRYO"
+    },
+    "minecraft:respiration": {
+      "trigger": "ON_MOVEMENT_OR_LAND",
+      "payload": "AEGIS"
+    },
+    "minecraft:aqua_affinity": {
+      "trigger": "ON_MOVEMENT_OR_LAND",
+      "payload": "TIDE"
+    },
+    "minecraft:looting": {
+      "trigger": "ON_UTILITY_CYCLE",
+      "payload": "FORTUNE"
+    },
+    "minecraft:mending": {
+      "trigger": "ON_UTILITY_CYCLE",
+      "payload": "MEND"
+    },
+    "minecraft:unbreaking": {
+      "trigger": "ON_UTILITY_CYCLE",
+      "payload": "AEGIS"
+    },
+    "minecraft:luck_of_the_sea": {
+      "trigger": "ON_UTILITY_CYCLE",
+      "payload": "TIDE"
+    },
+    "minecraft:lure": {
+      "trigger": "ON_UTILITY_CYCLE",
+      "payload": "RETURN"
+    },
+    "minecraft:binding_curse": {
+      "trigger": "ON_DAMAGE_TAKEN",
+      "payload": "GRAVITY"
+    },
+    "minecraft:vanishing_curse": {
+      "trigger": "ON_UTILITY_CYCLE",
+      "payload": "SCATTER"
+    }
+  }
+}

@@ -1,7 +1,6 @@
 {
   "replace": false,
   "values": [
-    "chiseled_enchanting_table:arcane_grimoire",
-    "chiseled_enchanting_table:depleted_tome"
+    "enchantment_fusion:fused_enchanted_book"
   ]
 }

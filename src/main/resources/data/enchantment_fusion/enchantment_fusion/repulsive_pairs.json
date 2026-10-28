@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "base_instability_chance": 0.35,
+  "exclusive_groups": [
+    [
+      "minecraft:infinity",
+      "minecraft:mending"
+    ],
+    [
+      "minecraft:silk_touch",
+      "minecraft:fortune"
+    ],
+    [
+      "minecraft:multishot",
+      "minecraft:piercing"
+    ],
+    [
+      "minecraft:loyalty",
+      "minecraft:riptide"
+    ],
+    [
+      "minecraft:depth_strider",
+      "minecraft:frost_walker"
+    ],
+    [
+      "minecraft:density",
+      "minecraft:breach",
+      "minecraft:sharpness",
+      "minecraft:smite",
+      "minecraft:bane_of_arthropods"
+    ],
+    [
+      "minecraft:protection",
+      "minecraft:fire_protection",
+      "minecraft:blast_protection",
+      "minecraft:projectile_protection"
+    ]
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ABA",
+    "LIL",
+    "DDD"
+  ],
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "B": "minecraft:book",
+    "L": "minecraft:lapis_block",
+    "I": "#minecraft:anvil",
+    "D": "minecraft:polished_deepslate"
+  },
+  "result": {
+    "id": "enchantment_fusion:enchantment_fusion_table",
+    "count": 1
+  }
+}

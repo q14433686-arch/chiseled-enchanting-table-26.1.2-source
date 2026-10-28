@@ -1,0 +1,95 @@
+package enchantment_fusion;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.awt.image.BufferedImage;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.imageio.ImageIO;
+import org.junit.jupiter.api.Test;
+
+class AssetAndLocaleContractTest {
+    private static final List<String> LOCALES = List.of(
+        "de_de", "en_us", "es_es", "fr_fr", "it_it", "ja_jp",
+        "ko_kr", "pt_br", "ru_ru", "zh_cn", "zh_tw"
+    );
+
+    @Test
+    void allElevenLocalesHaveExactKeyParityAndCleanFormatting() throws Exception {
+        Path langDir = Path.of("src/client/resources/assets/enchantment_fusion/lang");
+        JsonObject enUs = JsonParser.parseString(
+            Files.readString(langDir.resolve("en_us.json"), StandardCharsets.UTF_8)
+        ).getAsJsonObject();
+        Set<String> expectedKeys = enUs.keySet();
+        assertTrue(expectedKeys.size() >= 100, "Expected full UI/matrix translation table");
+
+        for (String code : LOCALES) {
+            Path file = langDir.resolve(code + ".json");
+            assertTrue(Files.isRegularFile(file), "Missing locale file: " + file);
+            JsonObject obj = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+            assertEquals(expectedKeys, obj.keySet(), "Key parity mismatch in locale " + code);
+            for (String k : obj.keySet()) {
+                String val = obj.get(k).getAsString();
+                assertFalse(val.contains("\n"), "Literal newline forbidden in " + code + ":" + k);
+                assertTrue(val.chars().allMatch(ch -> ch <= 0xFFFF), "Non-BMP glyph forbidden in " + code + ":" + k);
+            }
+        }
+
+        JsonObject zhTw = JsonParser.parseString(
+            Files.readString(langDir.resolve("zh_tw.json"), StandardCharsets.UTF_8)
+        ).getAsJsonObject();
+        assertTrue(
+            zhTw.get("tooltip.enchantment_fusion.aberrant_cet_active").getAsString().contains("\u7E82\u523B\u9644\u9B54\u53F0"),
+            "zh_tw must reference sister mod as 纂刻附魔台"
+        );
+    }
+
+    @Test
+    void allPixelArtPngAssetsExistAndGuiUsesZeroSolidFillPlaceholders() throws Exception {
+        List<Path> requiredPngs = List.of(
+            Path.of("icon.png"),
+            Path.of("src/main/resources/assets/enchantment_fusion/icon.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/block/enchantment_fusion_table_top.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/block/enchantment_fusion_table_side.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/block/enchantment_fusion_table_bottom.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/item/fused_enchanted_book.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/item/resonance_stabilizer.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/fusion_panel.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/slot_frame.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_swap_normal.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_swap_hover.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_fuse_normal.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_fuse_hover.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_fuse_disabled.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_action_small_normal.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_action_small_hover.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_action_small_disabled.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_empty.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_filled.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_aberrant.png")
+        );
+
+        for (Path png : requiredPngs) {
+            assertTrue(Files.isRegularFile(png), "Missing required PNG texture: " + png);
+            BufferedImage img = ImageIO.read(png.toFile());
+            assertNotNull(img, "Corrupt PNG texture: " + png);
+            assertTrue(img.getWidth() >= 16 && img.getHeight() >= 16, "Invalid dimensions on " + png);
+        }
+
+        // Verify zero ctx.fill(...) calls inside src/client/java/enchantment_fusion/gui/
+        try (var paths = Files.walk(Path.of("src/client/java/enchantment_fusion/gui"))) {
+            List<Path> guiFiles = paths.filter(p -> p.toString().endsWith(".java")).collect(Collectors.toList());
+            assertFalse(guiFiles.isEmpty());
+            for (Path jf : guiFiles) {
+                String src = Files.readString(jf, StandardCharsets.UTF_8);
+                assertFalse(src.contains(".fill("), "Raw solid-color .fill( placeholder forbidden in " + jf);
+            }
+        }
+    }
+}

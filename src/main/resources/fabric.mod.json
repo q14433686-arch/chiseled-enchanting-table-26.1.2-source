@@ -1,52 +1,39 @@
 {
-	"schemaVersion": 1,
-	"id": "chiseled-enchanting-table",
-	"version": "${version}",
-	"name": "Chiseled Enchanting Table (Unofficial 26.1.2 Port)",
-	"description": "Unofficial community port of Sacramentix's Chiseled Enchanting Table to Minecraft 26.1.2 / Fabric. Not affiliated with or endorsed by the original author. A rework of enchantment progression: you can now enchant your gear using enchanted books placed in nearby chiseled bookshelves using a chiseled enchanting table.",
-	"authors": [
-		"Sacramentix (original mod)",
-		"q14433686-arch (unofficial 26.1.2 port)"
-	],
-	"contact": {
-		"sources": "https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source",
-		"homepage": "https://github.com/Sacramentix/chiseled-enchanting-table"
-	},
-	"license": "MIT",
-	"icon": "assets/chiseled_enchanting_table/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"main": [
-			"chiseled_enchanting_table.ChiseledEnchantingTable"
-		],
-		"client": [
-			"chiseled_enchanting_table.ChiseledEnchantingTableClient"
-		],
-		"jei_mod_plugin": [
-			"chiseled_enchanting_table.compat.jei.ChiseledEnchantingJeiPlugin"
-		],
-		"rei_client": [
-			"chiseled_enchanting_table.compat.rei.ChiseledEnchantingReiPlugin"
-		],
-		"modmenu": [
-			"chiseled_enchanting_table.compat.modmenu.ChiseledEnchantingModMenuPlugin"
-		]
-	},
-	"mixins": [
-		"chiseled-enchanting-table-port.mixins.json"
-	],
-	"depends": {
-		"fabricloader": ">=0.19.3",
-		"minecraft": "26.1.2",
-		"java": ">=25",
-		"fabric-api": ">=0.151.0"
-	},
-	"suggests": {
-		"jei": "*",
-		"rei": "*",
-		"modmenu": "*"
-	},
-	"custom": {
-		"chiseled_enchanting_table:port_notes": "Unofficial community port to Minecraft 26.1.2. Includes worldgen-safe chiseled bookshelf filling and facing, full dyeable Chiseled Enchanting Table rendering/drop support, stackable 64 enchanted books, configurable anvil prior-work cost scaling (RemoveXpCostScaling), depth-scaled Mineshaft Efficiency II-V loot, complete 29-advancement progression and 1019 UI/config/guide strings localized across all 11 shipped languages, 80-option in-game configuration with Classic/Modern Rule Trace, full S2C cost and rule synchronization (26_1_2_revision_19), rainbow cloth (jeb_ easter egg) table cosmetics, bounded Shift-detail tooltips, engineered modular internals with real server/client integration smoke gates, and optional JEI/REI/ModMenu integration. Active mixins live in chiseled-enchanting-table-port.mixins.json. See CURRENT_BASELINE.md, docs/WIKI.md, and docs/EXTENDING.md for details."
-	}
+  "schemaVersion": 1,
+  "id": "enchantment_fusion",
+  "version": "${version}",
+  "name": "Enchantment Fusion",
+  "description": "Order-sensitive Vanilla+ enchantment fusion ([A ▷ B] != [B ▷ A]) and cross-domain grafting for Minecraft 26.1.2 on Fabric.",
+  "authors": [
+    "q14433686-arch"
+  ],
+  "contact": {
+    "sources": "https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source"
+  },
+  "license": "MIT",
+  "icon": "assets/enchantment_fusion/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "enchantment_fusion.EnchantmentFusion"
+    ],
+    "client": [
+      "enchantment_fusion.EnchantmentFusionClient"
+    ],
+    "jei_mod_plugin": [
+      "enchantment_fusion.compat.jei.EnchantmentFusionJeiPlugin"
+    ],
+    "rei_client": [
+      "enchantment_fusion.compat.rei.EnchantmentFusionReiPlugin"
+    ]
+  },
+  "mixins": [
+    "enchantment_fusion.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.1.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
 }

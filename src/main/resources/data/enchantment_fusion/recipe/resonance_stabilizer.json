@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:amethyst_shard",
+    "minecraft:amethyst_shard",
+    "minecraft:quartz",
+    "minecraft:crying_obsidian"
+  ],
+  "result": {
+    "id": "enchantment_fusion:resonance_stabilizer",
+    "count": 2
+  }
+}

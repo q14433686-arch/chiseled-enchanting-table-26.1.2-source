@@ -1,9 +1,16 @@
 {
   "schemaVersion": 1,
-  "id": "cet-client-smoke",
-  "version": "1.0.0",
-  "name": "CET disposable client integration probe",
+  "id": "ef-client-smoke",
+  "version": "0.1.0",
+  "name": "Enchantment Fusion disposable client integration probe",
   "environment": "client",
-  "entrypoints": {"client": ["chiseled_enchanting_table.smoke.ClientSmoke"]},
-  "depends": {"chiseled-enchanting-table": "*", "fabric-api": "*"}
+  "entrypoints": {
+    "client": [
+      "enchantment_fusion.smoke.ClientSmoke"
+    ]
+  },
+  "depends": {
+    "enchantment_fusion": "*",
+    "fabric-api": "*"
+  }
 }
