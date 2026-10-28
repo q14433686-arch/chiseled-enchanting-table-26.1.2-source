@@ -72,10 +72,13 @@ final class MenuMaterialQuotes {
                 maxLevel
             );
         }
+        if (type == OptionType.EXTRACT_ENCHANTMENT_BOOK) {
+            return MenuCleanseQuotes.extractBookCostOptions();
+        }
         if (type == OptionType.PURGE_CURSE) {
             return ChiseledEnchantingTableData.cursePurgeCostOptions(e.enchantment_id());
         }
-        if (type == OptionType.DISENCHANT_ALL || type == OptionType.DOWNGRADE_ENCHANTMENT) {
+        if (type == OptionType.DISENCHANT_ALL || type == OptionType.DOWNGRADE_ENCHANTMENT || type == OptionType.PURGE_ALL_CURSES) {
             return List.of();
         }
         if (type == OptionType.TRANSFORMATION || ChiseledEnchantingTableData.isTransformation(e.enchantment_id())) {
@@ -91,8 +94,13 @@ final class MenuMaterialQuotes {
     ) {
         if (type == OptionType.BOOK_COMBINE_UPGRADE
             || type == OptionType.DISENCHANT_ALL
-            || type == OptionType.DOWNGRADE_ENCHANTMENT) {
+            || type == OptionType.DOWNGRADE_ENCHANTMENT
+            || type == OptionType.PURGE_ALL_CURSES) {
             return List.of();
+        }
+        if (type == OptionType.EXTRACT_ENCHANTMENT_BOOK) {
+            return MenuCleanseQuotes.canExtractToBook(h.getEnchantableItem())
+                ? MenuCleanseQuotes.extractBookCostOptions() : List.of();
         }
         if (type == OptionType.STRIP_SINGLE_ENCHANTMENT) {
             ItemStack target = h.getEnchantableItem();

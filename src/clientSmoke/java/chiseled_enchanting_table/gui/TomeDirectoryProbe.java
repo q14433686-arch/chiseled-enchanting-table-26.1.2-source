@@ -31,6 +31,9 @@ final class TomeDirectoryProbe {
         check(controls.scroll(-1),"open enchantment dropdown did not own wheel input");
         controls.close(); check(!controls.scroll(-1),"closed dropdown swallowed list scroll");
         check(!controls.click(1,1,0,0,m,client.player,refresh),"outer ornament was an active button");
+        m.reset();
+        m.selectInteractive(new TomeCatalog.Key(1,1), true, false);
+        check(m.selected().size()==2,"shift range from implicit first row must select both visible books");
         for(String name:List.of("frame","frame_hover","frame_disabled","icon_ascending","icon_descending","icon_reset","icon_select_visible","icon_clear",
             "icon_lock_next","icon_lock_full","icon_lock_permanent","icon_unlock","icon_batch_full")) {
             var id=chiseled_enchanting_table.ChiseledEnchantingTable.identifier("gui/catalogue_"+name+".png");

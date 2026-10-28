@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
 final class TomeWorldProbe {
     static void prepare(ChiseledEnchantingTableScreenHandler menu, ServerPlayer player, BlockPos table) {
         Advancement.give(player, Advancement.HOW_MUCH_LONGER);
+        Advancement.give(player, Advancement.DISENCHANT_SACRIFICE);
         var level=player.level();
         var pos=table.offset(2,0,0);
         level.setBlockAndUpdate(table.offset(1,0,0),Blocks.AIR.defaultBlockState());

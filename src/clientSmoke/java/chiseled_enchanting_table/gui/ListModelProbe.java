@@ -44,7 +44,16 @@ public final class ListModelProbe {
             Set.of(new EnchantmentWithLevel(sharp, 1), new EnchantmentWithLevel(sharp, 2)), option -> option.id().toString());
         check(upgraded.groups().get(sharp).size() == 1 && upgraded.groups().get(sharp).getFirst().option().level() == 2, "same-level dead candidate returned");
         var cleanse = CleanseOptionModel.build(target, false);
-        check(cleanse.pinned().size() == 1 && cleanse.groups().isEmpty(), "single level-one trait should only expose full cleanse");
+        check(cleanse.pinned().size() == 1 && cleanse.groups().size() == 1
+            && cleanse.groups().get(sharp).size() == 1
+            && cleanse.groups().get(sharp).getFirst().type()
+                == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType.EXTRACT_ENCHANTMENT_BOOK,
+            "single level-one gear trait should expose full cleanse + extract-to-book");
+        var singleBook = new ItemStack(Items.ENCHANTED_BOOK);
+        singleBook.enchant(EnchantmentDisplayNames.identifierToEnchantment(sharp, player), 1);
+        var bookCleanse = CleanseOptionModel.build(singleBook, false);
+        check(bookCleanse.pinned().size() == 1 && bookCleanse.groups().isEmpty(),
+            "single level-one enchanted book should only expose full cleanse");
         check(costs.getCount() == 1, "candidate construction consumed cost items");
         System.out.println("CANDIDATE BOUNDARY PASS: registry-backed support filter + tier sorting + immutable groups + no same-level candidate + cleanse availability + no Widget ownership");
     }

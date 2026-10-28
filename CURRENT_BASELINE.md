@@ -1,6 +1,6 @@
 # Current Baseline
 
-**Date:** 2026-10-26
+**Date:** 2026-10-28
 **Minecraft Version:** 26.3
 **Fabric Loader:** 0.19.5
 **Fabric API:** 0.162.0+26.3
@@ -13,7 +13,21 @@ This is an **unofficial community port** of Sacramentix's MIT-licensed mod, not 
 with or endorsed by the original author. The repository name contains `26.1.2` for historical
 reasons; this branch targets **26.3**.
 
-## Latest rainbow-item validation — 2026-10-26
+## Current forward port — 2026-10-28
+
+Target remains **Minecraft 26.3 / mod 1.1.0**, protocol **26_3_revision_13**.
+Source: 26.1.2 PR27 merge `abb2af10828429f07a944269ec1319a85bbe496f` (revision22).
+All four source rounds are ported: smart ritual gating/refunds/maintenance, Cleanse extraction/curse purge,
+custom 3D particles/floating target/washing, and batch locate/reload synchronization/cross-tab selection.
+26.3-specific SDL input, model/render, loot/structure APIs and independent protocol namespace are retained.
+Existing configuration viewport fixes remain. Full-page responsive UI is still unfinished, not supplied by this port.
+[Full scope and verification](docs/reports/FULL_PORT_PR27_TO_26_3_2026_10_28.md).
+Verified code `03f45de26685059ec461a2849c030236b34513af`: [compile-check 40622304180](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40622304180)
+and [build 40622303743](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40622303743) all successful;
+177 JUnit, no failures/errors/skips; native FILTER SDL / BATCH LOCATE WORLD / CONFIG VIEWPORT / CLIENT SMOKE PASS.
+Historical green runs below do not validate newer code.
+
+## Historical rainbow-item validation — 2026-10-26
 
 Verified source **`0a43bd3a7e4284beef49a21dbffa34bdc5e513f7`**; **1.1.0 / MC 26.3 / `26_3_revision_12`** unchanged. This client presentation extension adds no component, registered state, payload or Mixin.
 

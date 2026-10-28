@@ -2,6 +2,15 @@
 
 The release label stays `1.1.0`; it is not sufficient to establish client/server compatibility. Install matching current builds at both ends. `EnchantingProtocol` advertises the current revision and generates query-only legacy probes; old business packet decoders are not registered.
 
+## 26_3_revision_13 — full PR27 forward port (2026-10-28)
+
+Ports 26.1.2 PR27 (`abb2af10828429f07a944269ec1319a85bbe496f`, source revision22) to 26.3.
+The release label remains 1.1.0. Apply actions include book extraction and curse purge; ritual actions now
+encode an enum rather than a boolean; tome actions carry additional targets and ritual snapshots include
+active tome slots. A new clientbound table visual-event payload drives bounded custom particles.
+Both client and server must update together. All revision1–12 cost probes and revision9–12 apply probes
+remain query-only; no 26.1.2 business channel or decoder is registered on the 26.3 line.
+
 ## 26_3_revision_12 — rainbow cloth block-state schema (2026-10-26)
 
 The cosmetic adds a `rainbow_cloth` boolean to the registered table block state. Business payload fields do not change, but an old client lacks the state, variant and renderer. Advance the capability channel and version-suffixed business channels rather than silently mixing these builds. Revision 11 is automatically retained among legacy probes.

@@ -18,12 +18,13 @@ public final class TomeCatalog {
     public boolean descending;
     private List<Row> source = List.of(), visible = List.of();
     private final Set<Key> selected = new LinkedHashSet<>();
+    private Key anchor;
     public List<Row> source() { return source; }
     public List<Row> visible() { return visible; }
     public Set<Key> selected() { return Set.copyOf(selected); }
     public boolean isSelected(Key key) { return selected.contains(key); }
     public void update(List<Row> rows) { source = List.copyOf(rows); refresh(); }
-    public void reset() { enchantment = null; remaining = total = null; lock = Lock.ALL; sort = Sort.LOCATION; descending = false; refresh(); }
+    public void reset() { enchantment = null; remaining = total = null; lock = Lock.ALL; sort = Sort.LOCATION; descending = false; anchor = null; refresh(); }
     public void refresh() {
         Comparator<Row> order = switch (sort) {
             case ENCHANTMENT -> Comparator.comparing(Row::title, String.CASE_INSENSITIVE_ORDER);
@@ -40,14 +41,60 @@ public final class TomeCatalog {
                 case ALL -> true; case LOCKED -> r.locked(); case UNLOCKED -> !r.locked();
                 case MINE -> r.locked() && r.mine(); case OTHER -> r.locked() && !r.mine();
             }).sorted(order).toList();
+        var visibleKeys = visible.stream().map(Row::key).toList();
         // Never act on an invisible or removed book after filters/live updates change.
-        selected.retainAll(visible.stream().map(Row::key).toList());
+        selected.retainAll(visibleKeys);
+        if (anchor != null && !visibleKeys.contains(anchor)) anchor = null;
     }
     public void select(Key key, boolean toggle) {
         if (!toggle) selected.clear();
         if (visible.stream().noneMatch(r -> r.key().equals(key))) return;
-        if (!toggle || !selected.remove(key)) selected.add(key);
+        if (!toggle || !selected.remove(key)) {
+            selected.add(key);
+            anchor = key;
+        }
     }
-    public void clearSelection() { selected.clear(); }
-    public void selectVisible() { visible.forEach(r -> selected.add(r.key())); }
+    public void selectInteractive(Key key, boolean shiftRange, boolean ctrlToggle) {
+        int targetIdx = indexOfVisible(key);
+        if (targetIdx < 0) return;
+        if (shiftRange) {
+            int anchorIdx = anchor != null ? indexOfVisible(anchor) : -1;
+            if (anchorIdx < 0) {
+                anchorIdx = 0;
+                anchor = visible.getFirst().key();
+            }
+            if (!ctrlToggle) selected.clear();
+            int lo = Math.min(anchorIdx, targetIdx);
+            int hi = Math.max(anchorIdx, targetIdx);
+            for (int i = lo; i <= hi; i++) {
+                selected.add(visible.get(i).key());
+            }
+            return;
+        }
+        if (ctrlToggle) {
+            if (selected.isEmpty() && targetIdx > 0) {
+                selected.add(visible.getFirst().key());
+            }
+            if (!selected.remove(key)) {
+                selected.add(key);
+            }
+            anchor = key;
+            return;
+        }
+        selected.clear();
+        selected.add(key);
+        anchor = key;
+    }
+    private int indexOfVisible(Key key) {
+        if (key == null) return -1;
+        for (int i = 0; i < visible.size(); i++) {
+            if (visible.get(i).key().equals(key)) return i;
+        }
+        return -1;
+    }
+    public void clearSelection() { selected.clear(); anchor = null; }
+    public void selectVisible() {
+        visible.forEach(r -> selected.add(r.key()));
+        if (anchor == null && !visible.isEmpty()) anchor = visible.getFirst().key();
+    }
 }

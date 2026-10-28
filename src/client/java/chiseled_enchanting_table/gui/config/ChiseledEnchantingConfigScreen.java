@@ -207,8 +207,8 @@ public class ChiseledEnchantingConfigScreen extends Screen {
     private void recomputeLayout() {
         int railCount = CategoryId.values().length + 1; // 7 domains + Rule Trace
         this.layout = ConfigLayoutSpec.compute(
-            Math.max(320, this.width),
-            Math.max(220, this.height),
+            this.width,
+            this.height,
             ModRuntimeConfig.Preset.values().length,
             railCount
         );

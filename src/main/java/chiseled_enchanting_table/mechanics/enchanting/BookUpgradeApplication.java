@@ -156,6 +156,9 @@ public final class BookUpgradeApplication {
     private static void finish(ChiseledEnchantingTableScreenHandler handler) {
         handler.markInventoryChanged();
         handler.player.awardStat(Stats.ENCHANT_ITEM);
-        handler.world().playSound(null, handler.player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 2.0F, handler.world().getRandom().nextFloat() * 0.1F + 0.9F);
+        handler.world().playSound(null, handler.player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.95F, handler.world().getRandom().nextFloat() * 0.1F + 0.95F);
+        chiseled_enchanting_table.menu.TableVisualEvents.onRitualPulse(
+            handler.world(), handler.tableBlockPos(), chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+        );
     }
 }

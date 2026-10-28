@@ -199,7 +199,7 @@ public final class EnchantingNetworking {
                     if (chiseledEnchantingTableScreenHandler.containerId == payload.containerId()
                         && chiseledEnchantingTableScreenHandler.ritualSession() == payload.session()
                         && chiseledEnchantingTableScreenHandler.stillValid(player)) {
-                        chiseledEnchantingTableScreenHandler.skipActiveRitual(payload.sacrificeXp());
+                        chiseledEnchantingTableScreenHandler.handleRitualAction(payload.action());
                     }
                 }
             });

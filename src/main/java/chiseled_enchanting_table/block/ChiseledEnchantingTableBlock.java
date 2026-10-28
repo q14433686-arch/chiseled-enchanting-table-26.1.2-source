@@ -219,6 +219,29 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
         );
     }
 
+    public static boolean isWaterBottle(ItemStack stack) {
+        if (stack == null || stack.isEmpty() || !stack.is(net.minecraft.world.item.Items.POTION)) {
+            return false;
+        }
+        var potion = stack.get(DataComponents.POTION_CONTENTS);
+        if (potion == null) {
+            return false;
+        }
+        return potion.potion()
+            .flatMap(net.minecraft.core.Holder::unwrapKey)
+            .map(key -> net.minecraft.resources.Identifier.withDefaultNamespace("water").equals(key.identifier()))
+            .orElse(false);
+    }
+
+    public static boolean isClothWashItem(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        return stack.is(net.minecraft.world.item.Items.WATER_BUCKET)
+            || stack.is(net.minecraft.world.item.Items.WET_SPONGE)
+            || isWaterBottle(stack);
+    }
+
     @Override
     protected InteractionResult useItemOn(
         ItemStack stack,
@@ -243,7 +266,35 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                 BlockState dyedState=state.setValue(RAINBOW_CLOTH,false);
                 level.setBlock(pos,dyedState,Block.UPDATE_ALL);
                 level.sendBlockUpdated(pos, state, dyedState, Block.UPDATE_ALL | Block.UPDATE_IMMEDIATE);
+                chiseled_enchanting_table.menu.TableVisualEvents.onClothVisual(
+                    level, pos, tableBlockEntity.colorOrDefault(), false, false
+                );
                 Advancement.give(player, "color_table");
+            }
+            return InteractionResult.SUCCESS;
+        }
+        if (isClothWashItem(stack)
+            && level.getBlockEntity(pos) instanceof ChiseledEnchantingTableBlockEntity tableBlockEntity
+            && (tableBlockEntity.color != -1 || state.getValue(RAINBOW_CLOTH))) {
+            if (!level.isClientSide()) {
+                boolean consumeBottle = isWaterBottle(stack) && !player.getAbilities().instabuild;
+                tableBlockEntity.color = -1;
+                tableBlockEntity.setChanged();
+                BlockState washedState = state.setValue(RAINBOW_CLOTH, false);
+                level.setBlock(pos, washedState, Block.UPDATE_ALL);
+                level.sendBlockUpdated(pos, state, washedState, Block.UPDATE_ALL | Block.UPDATE_IMMEDIATE);
+                if (consumeBottle) {
+                    stack.shrink(1);
+                    ItemStack emptyBottle = new ItemStack(net.minecraft.world.item.Items.GLASS_BOTTLE);
+                    if (stack.isEmpty()) {
+                        player.setItemInHand(hand, emptyBottle);
+                    } else if (!player.getInventory().add(emptyBottle)) {
+                        player.drop(emptyBottle, false, net.minecraft.util.Prediction.PREDICTED);
+                    }
+                }
+                chiseled_enchanting_table.menu.TableVisualEvents.onClothVisual(
+                    level, pos, ChiseledEnchantingTableBlockEntity.DEFAULT_COLOR, true, false
+                );
             }
             return InteractionResult.SUCCESS;
         }

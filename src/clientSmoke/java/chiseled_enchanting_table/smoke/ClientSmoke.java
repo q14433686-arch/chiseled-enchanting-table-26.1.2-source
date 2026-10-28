@@ -134,6 +134,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 next(5);
             }
             case 5 -> {
+                ConfigViewportProbe.verify(client);
                 require(ModRuntimeConfig.Preset.CASUAL.matches(((ConfigEditSession) field(editor, "editSession")).draft()), "reopened preferences lost preset");
                 editor.onClose();
                 var server = client.getSingleplayerServer();
@@ -165,7 +166,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (!menuPrepared || !(client.gui.screen() instanceof ChiseledEnchantingTableScreen table)) return;
                 if (!((ChiseledEnchantingTableScreenHandler) client.player.containerMenu).get_enchantable_item().is(Items.DIAMOND_SWORD)) return;
                 var syncedMenu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
-                if (!syncedMenu.isTomePageUnlocked() || syncedMenu.tomeBooks.size()<2) return;
+                if (!syncedMenu.isTomePageUnlocked() || !syncedMenu.isCleansePageUnlocked() || syncedMenu.tomeBooks.size()<2) return;
                 if(!chiseled_enchanting_table.render.RainbowTableItemVisuals.isRainbow(client.player.getInventory().getItem(8))) return;
                 chiseled_enchanting_table.render.RainbowItemProbe.begin(client);
                 client.player.setYRot(-90); client.player.setXRot(40);
@@ -175,7 +176,38 @@ public final class ClientSmoke implements ClientModInitializer {
                 chiseled_enchanting_table.gui.UiPresentationProbe.verify(client, (ChiseledEnchantingTableScreenHandler) client.player.containerMenu);
                 net.minecraft.client.Screenshot.grab(client.gameDirectory, "table-ui-zh_cn.png",
                     client.gameRenderer.mainRenderTarget(), 1, message -> System.out.println("UI screenshot: " + message.getString()));
-                click(table, (int) field(table, "leftPos") + 172, (int) field(table, "topPos") - 12, InputConstants.MOUSE_BUTTON_LEFT);
+                click(table, (int) field(table, "leftPos") + 12, (int) field(table, "topPos") + 22, InputConstants.MOUSE_BUTTON_LEFT);
+                require(table.capturesInput() && SDLKeyboard.SDL_TextInputActive(handle), "inscribe filter did not acquire SDL input");
+                pushText(client);
+                next(40);
+            }
+            case 40 -> {
+                var table = (ChiseledEnchantingTableScreen) client.gui.screen();
+                var list = (chiseled_enchanting_table.gui.EnchantementListWidget) field(table, "scrollContainer");
+                if (!awaitText((SearchInputSession) field(list.inscribeFilter, "searchInput"), "native inscribe search")) return;
+                MemoryUtil.memFree(text); text = null;
+                int left = (int) field(table, "leftPos"), top = (int) field(table, "topPos");
+                click(table, left + 12, top + 22, InputConstants.MOUSE_BUTTON_RIGHT);
+                click(table, left + 100, top - 12, InputConstants.MOUSE_BUTTON_LEFT);
+                require(list.tabMode() == chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode.CLEANSE,
+                    "cleanse test fixture/tab is locked or failed to switch");
+                require(!SDLKeyboard.SDL_TextInputActive(handle), "tab change leaked inscribe focus");
+                click(table, left + 12, top + 22, InputConstants.MOUSE_BUTTON_LEFT);
+                require(table.capturesInput() && SDLKeyboard.SDL_TextInputActive(handle), "cleanse filter did not acquire SDL input");
+                pushText(client);
+                next(41);
+            }
+            case 41 -> {
+                var table = (ChiseledEnchantingTableScreen) client.gui.screen();
+                var list = (chiseled_enchanting_table.gui.EnchantementListWidget) field(table, "scrollContainer");
+                if (!awaitText((SearchInputSession) field(list.cleanseFilter, "searchInput"), "native cleanse search")) return;
+                MemoryUtil.memFree(text); text = null;
+                int left = (int) field(table, "leftPos"), top = (int) field(table, "topPos");
+                click(table, left + 12, top + 22, InputConstants.MOUSE_BUTTON_RIGHT);
+                click(table, left + 20, top - 12, InputConstants.MOUSE_BUTTON_LEFT);
+                require(!table.capturesInput() && !SDLKeyboard.SDL_TextInputActive(handle), "tab change leaked cleanse focus");
+                System.out.println("FILTER SDL PASS: actual Inscribe/Cleanse clicks + committed CJK events + tab-change focus release");
+                click(table, left + 172, top - 12, InputConstants.MOUSE_BUTTON_LEFT);
                 next(20);
             }
             case 20 -> {
@@ -185,6 +217,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 var list=(chiseled_enchanting_table.gui.EnchantementListWidget)field(table,"scrollContainer");
                 require(list.tabMode()==chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode.TOMES,"tome tab click did not switch catalogue");
                 int left=(int)field(table,"leftPos"), top=(int)field(table,"topPos");
+                require(list.selectedTomes().isEmpty() && list.selectedTomeEntry() != null,
+                    "single-tome panel fallback must not mutate explicit multi-selection");
                 var select=chiseled_enchanting_table.gui.TomeDirectoryLayout.button(7);
                 click(table,left+7+select.x()+select.width()/2.0,top+17+select.y()+select.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
                 require(list.selectedTomes().size()==menu.tomeBooks.size(),"visible-selection control did not select real shelf books");
@@ -209,6 +243,17 @@ public final class ClientSmoke implements ClientModInitializer {
                 var table=(ChiseledEnchantingTableScreen)client.gui.screen();
                 net.minecraft.client.Screenshot.grab(client.gameDirectory,"tome-catalogue-zh_cn.png",
                     client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Catalogue screenshot: "+message.getString()));
+                chiseled_enchanting_table.render.TableCustomParticles.clear();
+                var locate = chiseled_enchanting_table.gui.TomeDirectoryLayout.lockButton(7);
+                click(table, (int) field(table, "leftPos") + locate.x() + locate.width() / 2.0,
+                    (int) field(table, "topPos") + locate.y() + locate.height() / 2.0, InputConstants.MOUSE_BUTTON_LEFT);
+                next(23);
+            }
+            case 23 -> {
+                var menu = (ChiseledEnchantingTableScreenHandler) client.player.containerMenu;
+                if (chiseled_enchanting_table.render.TableCustomParticles.activeEmitterCount() < menu.tomeBooks.size()) return;
+                System.out.println("BATCH LOCATE WORLD PASS: single actual Locate click + serverbound batch + clientbound per-slot 3D beacons");
+                var table = (ChiseledEnchantingTableScreen) client.gui.screen();
                 click(table, (int) field(table, "leftPos") + 300, (int) field(table, "topPos") - 8, InputConstants.MOUSE_BUTTON_LEFT);
                 require(table.hasActiveConfigOverlay(), "table config button did not open overlay");
                 editor = (ChiseledEnchantingConfigScreen) field(table, "configOverlay");
@@ -250,6 +295,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if(!itemReload.isDone() || client.gui.overlay()!=null) return;
                 itemReload.join();
                 chiseled_enchanting_table.render.RainbowItemProbe.afterReload(client);
+                SensoryPolishProbe.verify(client, tablePos);
                 finish(client, "CLIENT SMOKE PASS: real SDL committed CJK text + preset click + server save/ack + reopen + real menu quick-move + overlay forwarding/focus release + persistent target after close");
             }
             default -> throw new AssertionError("bad phase " + phase);

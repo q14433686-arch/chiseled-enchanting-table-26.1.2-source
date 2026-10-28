@@ -148,10 +148,10 @@ public final class ConfigLayoutSpec {
         int modalW = clamp(availW, MODAL_MIN_W, MODAL_TARGET_W);
         int modalH = clamp(availH, MODAL_MIN_H, MODAL_TARGET_H);
         if (modalW > screenW - 4) {
-            modalW = Math.max(268, screenW - 4);
+            modalW = Math.max(1, screenW - 4);
         }
         if (modalH > screenH - 4) {
-            modalH = Math.max(198, screenH - 4);
+            modalH = Math.max(1, screenH - 4);
         }
 
         int modalX = (screenW - modalW) / 2;
@@ -223,7 +223,7 @@ public final class ConfigLayoutSpec {
         // Body Region (L1 Rail + L2/L3 Content Panel) — leave crisp breathing room clear of divider gems
         int bodyTop = topDivider.bottom() + 4;
         int bodyBottom = bottomDivider.y() - 4;
-        int bodyH = Math.max(60, bodyBottom - bodyTop);
+        int bodyH = Math.max(1, bodyBottom - bodyTop);
 
         int railW = compact
             ? clamp(Math.round(safe.w() * 0.25f), 82, 110)
@@ -340,6 +340,9 @@ public final class ConfigLayoutSpec {
     public static List<String> verifyInvariants(ModalLayout layout) {
         List<String> violations = new ArrayList<>();
         Box safe = layout.safeInterior();
+        Box viewport = new Box(0,0,layout.screenW(),layout.screenH());
+        checkContained(viewport,layout.modal(),"modal in actual viewport",violations);
+        checkContained(layout.modal(),safe,"safe interior in modal",violations);
 
         checkContained(safe, layout.headerBar(), "headerBar", violations);
         checkContained(safe, layout.toolbarBar(), "toolbarBar", violations);

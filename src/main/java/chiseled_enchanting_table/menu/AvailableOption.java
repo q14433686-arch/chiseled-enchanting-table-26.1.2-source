@@ -45,8 +45,16 @@ public record AvailableOption(OptionType type, Identifier id, int level) {
         return new AvailableOption(OptionType.STRIP_SINGLE_ENCHANTMENT, id, currentLevel);
     }
 
+    public static AvailableOption extractEnchantmentBook(Identifier id, int currentLevel) {
+        return new AvailableOption(OptionType.EXTRACT_ENCHANTMENT_BOOK, id, currentLevel);
+    }
+
     public static AvailableOption purgeCurse(Identifier id, int currentLevel) {
         return new AvailableOption(OptionType.PURGE_CURSE, id, currentLevel);
+    }
+
+    public static AvailableOption purgeAllCurses(Identifier id) {
+        return new AvailableOption(OptionType.PURGE_ALL_CURSES, id, 0);
     }
 
     public boolean isTransformation() {
@@ -57,11 +65,17 @@ public record AvailableOption(OptionType type, Identifier id, int level) {
         return type == OptionType.TREASURE_EPIPHANY;
     }
 
+    public static boolean isBagPayableCleanse(OptionType type) {
+        return type == OptionType.STRIP_SINGLE_ENCHANTMENT
+            || type == OptionType.EXTRACT_ENCHANTMENT_BOOK
+            || type == OptionType.PURGE_CURSE
+            || type == OptionType.PURGE_ALL_CURSES;
+    }
+
     public boolean isCleanseOperation() {
         return type == OptionType.DISENCHANT_ALL
             || type == OptionType.DOWNGRADE_ENCHANTMENT
-            || type == OptionType.STRIP_SINGLE_ENCHANTMENT
-            || type == OptionType.PURGE_CURSE;
+            || isBagPayableCleanse(type);
     }
 
     public boolean isDisenchantAll() {
@@ -76,8 +90,16 @@ public record AvailableOption(OptionType type, Identifier id, int level) {
         return type == OptionType.STRIP_SINGLE_ENCHANTMENT;
     }
 
+    public boolean isExtractEnchantmentBook() {
+        return type == OptionType.EXTRACT_ENCHANTMENT_BOOK;
+    }
+
     public boolean isPurgeCurse() {
         return type == OptionType.PURGE_CURSE;
+    }
+
+    public boolean isPurgeAllCurses() {
+        return type == OptionType.PURGE_ALL_CURSES;
     }
 
     public boolean isBookUpgrade() {
