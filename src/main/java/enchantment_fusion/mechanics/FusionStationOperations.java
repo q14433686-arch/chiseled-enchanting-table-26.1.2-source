@@ -445,8 +445,9 @@ public final class FusionStationOperations {
             ));
         }
         int clampedLv = Math.min(bookCand.maxLevel(), bookCand.level());
-        int currentTransmuted = sTarget.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of())
-            .getOrDefault(bookCand.id(), 0);
+        int currentTransmuted = sTarget.getOrDefault(
+            FusionDataComponents.TRANSMUTED_ENCHANTS, Map.<String, Integer>of()
+        ).getOrDefault(bookCand.id(), 0);
         int currentVanilla = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY)
             .getLevel(bookCand.holder());
         if (Math.max(currentTransmuted, currentVanilla) >= clampedLv) {

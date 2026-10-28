@@ -838,7 +838,7 @@ public final class CrossDomainTransmutations {
     public static int getStandaloneEnchantLevel(ItemStack stack, String enchId) {
         if (stack == null || stack.isEmpty() || enchId == null) return 0;
         int transLv = stack.getOrDefault(
-            enchantment_fusion.registry.FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()
+            enchantment_fusion.registry.FusionDataComponents.TRANSMUTED_ENCHANTS, Map.<String, Integer>of()
         ).getOrDefault(enchId, 0);
         if (transLv > 0) {
             return transLv;
