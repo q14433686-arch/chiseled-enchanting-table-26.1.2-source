@@ -1,6 +1,5 @@
 package enchantment_fusion.gui;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.compat.CetSoftBridge;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.AberrantRegistry;
@@ -16,11 +15,13 @@ import enchantment_fusion.model.HostForm;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
@@ -35,9 +36,10 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 /**
  * Renders Enchantment Fusion tooltips:
  * <ul>
- *   <li>Replaces cross-domain standalone enchantment lines directly in-place with their transmuted variant titles
- *       (e.g., {@code ✦ 自动熔炼 II}, {@code ✦ 沂水}, {@code ✦ 锯刃 II}), expanding origin + cross-domain details on {@code [Shift]}.</li>
- *   <li>Renders Vessel Spirit sockets ({@code ◇/◈/◉}), bespoke Signature Pair titles, and Aberrant mutation warnings.</li>
+ *   <li>Renders Cross-Domain Transmutations stored in {@link FusionDataComponents#TRANSMUTED_ENCHANTS}
+ *       (API-01: never polluting vanilla slot-based {@code DataComponents.ENCHANTMENTS}) as well as
+ *       legacy cross-domain items, expanding origin + mechanics on {@code [Shift]}.</li>
+ *   <li>Renders Vessel Slot badges ({@code ◇/◈/◉}), Signature Resonance titles, and Aberrant Fusion warnings.</li>
  * </ul>
  */
 public final class FusionTooltipRenderer {
@@ -50,12 +52,7 @@ public final class FusionTooltipRenderer {
     }
 
     public static boolean isShiftHeld() {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc == null || mc.getWindow() == null) {
-            return false;
-        }
-        return InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_LSHIFT)
-            || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_RSHIFT);
+        return FusionGuiSkin.isShiftHeld();
     }
 
     public static void appendFusionTooltips(
@@ -67,9 +64,25 @@ public final class FusionTooltipRenderer {
             return;
         }
 
+        if (stack.is(FusionItems.RESONANCE_STABILIZER)) {
+            lines.add(Component.translatable("item.enchantment_fusion.resonance_stabilizer.lore")
+                .withStyle(ChatFormatting.GRAY));
+            return;
+        }
+        if (stack.is(FusionItems.FUSION_GRIMOIRE)) {
+            lines.add(Component.translatable("item.enchantment_fusion.fusion_grimoire.lore")
+                .withStyle(ChatFormatting.GRAY));
+            return;
+        }
+        if (stack.is(FusionItems.FUSION_TATTERED_PAGE)) {
+            lines.add(Component.translatable("item.enchantment_fusion.fusion_tattered_page.lore")
+                .withStyle(ChatFormatting.GRAY));
+            return;
+        }
+
         boolean shift = isShiftHeld();
         FusedEnchantmentList list = stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-        boolean hasCrossTransmute = replaceCrossDomainEnchantmentLines(stack, list, lines, shift);
+        boolean hasCrossTransmute = renderCrossDomainEnchantmentLines(stack, registries, list, lines, shift);
 
         int bonus = VesselCapacityRules.vesselBonus(stack);
         if (list.isEmpty() && bonus <= 0 && !stack.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
@@ -82,7 +95,7 @@ public final class FusionTooltipRenderer {
 
         if (VesselCapacityRules.isPotentialEquipmentHost(stack) && (!list.isEmpty() || bonus > 0)) {
             int used = list.size();
-            int max = VesselCapacityRules.maxVesselSlots(stack);
+            int max = VesselCapacityRules.getMaxVesselSlots(stack);
             StringBuilder glyphs = new StringBuilder();
             for (int i = 0; i < max; i++) {
                 if (i < used) {
@@ -159,25 +172,58 @@ public final class FusionTooltipRenderer {
     }
 
     /**
-     * Replaces vanilla standalone enchantment lines on cross-domain items directly with their
-     * transmuted variant names, expanding source enchantment + mechanics when {@code [Shift]} is held.
+     * Renders cross-domain standalone enchantments from {@link FusionDataComponents#TRANSMUTED_ENCHANTS}
+     * (API-01) and replaces any legacy cross-domain lines in {@link DataComponents#ENCHANTMENTS}.
      */
-    private static boolean replaceCrossDomainEnchantmentLines(
+    private static boolean renderCrossDomainEnchantmentLines(
         ItemStack stack,
+        HolderLookup.Provider registries,
         FusedEnchantmentList fusedList,
         List<Component> lines,
         boolean shift
     ) {
+        boolean any = false;
+        Set<String> renderedIds = new HashSet<>();
+
+        // 1. Primary clean storage: TRANSMUTED_ENCHANTS (API-01)
+        Map<String, Integer> transmuted = stack.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of());
+        int insertCursor = Math.min(1, lines.size());
+        for (Map.Entry<String, Integer> entry : transmuted.entrySet()) {
+            String enchId = entry.getKey();
+            int level = Math.max(1, entry.getValue());
+            if (enchId == null || enchId.isEmpty() || fusedList.containsEnchantmentId(enchId)) {
+                continue;
+            }
+            Optional<TransmuteVariant> varOpt = CrossDomainTransmutations.resolve(stack, enchId);
+            if (varOpt.isEmpty()) {
+                continue;
+            }
+            renderedIds.add(enchId);
+            any = true;
+            TransmuteVariant variant = varOpt.get();
+            int maxLv = resolveMaxLevel(registries, enchId);
+            Component vanillaFull = formatEnchantmentWithLevel(registries, enchId, level);
+            Component transmutedLine = buildTransmutedDisplayName(variant, level, maxLv, enchId);
+            lines.add(insertCursor++, transmutedLine);
+            if (shift) {
+                lines.add(insertCursor++, Component.translatable(
+                    "tooltip.enchantment_fusion.transmute_origin_desc",
+                    vanillaFull,
+                    Component.translatable(variant.descKey())
+                ).withStyle(ChatFormatting.DARK_AQUA));
+            }
+        }
+
+        // 2. Legacy backward-compat fallback for pre-0.4.1 items that stored cross-domain enchants in ENCHANTMENTS
         ItemEnchantments enchants = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         if (enchants.isEmpty()) {
-            return false;
+            return any;
         }
-        boolean any = false;
         for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
             Holder<Enchantment> holder = entry.getKey();
             int level = entry.getIntValue();
             String enchId = holder.unwrapKey().map(k -> k.identifier().toString()).orElse("");
-            if (enchId.isEmpty() || fusedList.containsEnchantmentId(enchId)) {
+            if (enchId.isEmpty() || renderedIds.contains(enchId) || fusedList.containsEnchantmentId(enchId)) {
                 continue;
             }
             Optional<TransmuteVariant> varOpt = CrossDomainTransmutations.resolve(stack, enchId);
@@ -220,6 +266,21 @@ public final class FusionTooltipRenderer {
             }
         }
         return any;
+    }
+
+    private static int resolveMaxLevel(HolderLookup.Provider registries, String enchantId) {
+        Identifier parsed = Identifier.tryParse(enchantId);
+        if (registries != null && parsed != null) {
+            var optLookup = registries.lookup(Registries.ENCHANTMENT);
+            if (optLookup.isPresent()) {
+                ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, parsed);
+                var optHolder = optLookup.get().get(key);
+                if (optHolder.isPresent()) {
+                    return optHolder.get().value().getMaxLevel();
+                }
+            }
+        }
+        return 1;
     }
 
     public static Component buildTransmutedDisplayName(

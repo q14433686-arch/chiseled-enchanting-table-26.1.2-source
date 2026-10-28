@@ -14,8 +14,8 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 
 /**
- * Reloads {@code data/enchantment_fusion/enchantment_fusion/matrix_profiles.json} and
- * {@code repulsive_pairs.json} atomically on server startup and {@code /reload}.
+ * Reloads {@code matrix_profiles.json}, {@code repulsive_pairs.json}, and {@code economy.json}
+ * atomically on server startup and {@code /reload}.
  */
 public final class FusionDataLoader implements SimpleSynchronousResourceReloadListener {
     private static final Identifier RELOAD_ID = EnchantmentFusion.id("matrix_data");
@@ -23,6 +23,8 @@ public final class FusionDataLoader implements SimpleSynchronousResourceReloadLi
         EnchantmentFusion.id("enchantment_fusion/matrix_profiles.json");
     private static final Identifier REPULSIVE_PAIRS_PATH =
         EnchantmentFusion.id("enchantment_fusion/repulsive_pairs.json");
+    private static final Identifier ECONOMY_PATH =
+        EnchantmentFusion.id("enchantment_fusion/economy.json");
 
     public static void init() {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new FusionDataLoader());
@@ -38,7 +40,8 @@ public final class FusionDataLoader implements SimpleSynchronousResourceReloadLi
         try {
             JsonObject matrixObj = readJson(manager, MATRIX_PROFILES_PATH);
             JsonObject repulsiveObj = readJson(manager, REPULSIVE_PAIRS_PATH);
-            FusionMatrixRegistry.Snapshot staged = FusionMatrixRegistry.parseFromJson(matrixObj, repulsiveObj);
+            JsonObject economyObj = readJson(manager, ECONOMY_PATH);
+            FusionMatrixRegistry.Snapshot staged = FusionMatrixRegistry.parseFromJson(matrixObj, repulsiveObj, economyObj);
             FusionMatrixRegistry.publish(staged);
             EnchantmentFusion.LOGGER.info(
                 "Loaded Enchantment Fusion matrix ({} profiles, {} exclusive groups)",

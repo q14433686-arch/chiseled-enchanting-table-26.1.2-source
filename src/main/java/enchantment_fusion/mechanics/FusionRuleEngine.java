@@ -6,21 +6,19 @@ import enchantment_fusion.model.FusedPair;
 import java.util.Set;
 
 /**
- * Pure, side-effect-free validation and pricing engine for Enchantment Fusion.
- * Supports Universal Any-Gear Inscription ("万物可铭刻"): any fused pair [A ▷ B] or [B ▷ A]
- * may be socketed onto any valid equipment host regardless of vanilla slot restrictions.
+ * Pure, side-effect-free validation engine for Enchantment Fusion.
+ * Pricing and instability quotes live exclusively in {@link FusionEconomyRules} (DEAD-02).
  */
 public final class FusionRuleEngine {
     public enum RejectReason {
         NONE(""),
         MISSING_INPUT("gui.enchantment_fusion.reject.missing_input"),
         SAME_ENCHANTMENT("gui.enchantment_fusion.reject.same_enchantment"),
-        PRIMARY_INCOMPATIBLE_HOST("gui.enchantment_fusion.reject.primary_incompatible"),
         REPULSIVE_REQUIRES_MAX_LEVEL("gui.enchantment_fusion.reject.repulsive_needs_max"),
         DUPLICATE_ON_HOST("gui.enchantment_fusion.reject.duplicate_on_host"),
+        EXCLUSIVE_ON_HOST("gui.enchantment_fusion.reject.exclusive_on_host"),
         VESSEL_CAPACITY_FULL("gui.enchantment_fusion.reject.vessel_full"),
         ABERRANT_LOCKED("gui.enchantment_fusion.reject.aberrant_locked"),
-        NEEDS_CATALYST("gui.enchantment_fusion.reject.needs_catalyst"),
         ALREADY_MAX_VESSEL("gui.enchantment_fusion.reject.already_max_vessel"),
         OUTPUT_OCCUPIED("gui.enchantment_fusion.reject.output_occupied"),
         NOT_CROSS_DOMAIN("gui.enchantment_fusion.reject.not_cross_domain"),
@@ -40,9 +38,12 @@ public final class FusionRuleEngine {
     public record EnchantInput(
         String id,
         int level,
-        int maxLevel,
-        boolean primaryFitsHost
+        int maxLevel
     ) {
+        public EnchantInput(String id, int level, int maxLevel, boolean ignoredLegacyFitsHost) {
+            this(id, level, maxLevel);
+        }
+
         public boolean isAtMaxLevel() {
             return level >= Math.max(1, maxLevel);
         }
@@ -52,12 +53,10 @@ public final class FusionRuleEngine {
         boolean valid,
         RejectReason rejectReason,
         FusedPair resultingPair,
-        boolean repulsiveExclusive,
-        double instabilityChance,
-        int xpLevelsCost
+        boolean repulsiveExclusive
     ) {
         public static PairEvaluation rejected(RejectReason reason) {
-            return new PairEvaluation(false, reason, null, false, 0.0, 0);
+            return new PairEvaluation(false, reason, null, false);
         }
     }
 
@@ -71,10 +70,10 @@ public final class FusionRuleEngine {
         EnchantInput secondary,
         boolean targetingEquipment,
         FusedEnchantmentList existingHostFusions,
-        Set<String> existingHostVanillaEnchantIds,
+        Set<String> existingHostEnchantIds,
         int maxHostVesselSlots,
-        boolean hasStabilizer,
-        boolean zeroXpStabilizer
+        boolean extraRuntimeIncompatiblePair,
+        boolean incompatibleWithExistingHost
     ) {
         if (primary == null || secondary == null || primary.id() == null || secondary.id() == null) {
             return PairEvaluation.rejected(RejectReason.MISSING_INPUT);
@@ -84,7 +83,7 @@ public final class FusionRuleEngine {
         }
 
         FusionMatrixRegistry.Snapshot matrix = FusionMatrixRegistry.current();
-        boolean repulsive = matrix.areRepulsiveExclusives(primary.id(), secondary.id());
+        boolean repulsive = extraRuntimeIncompatiblePair || matrix.areRepulsiveExclusives(primary.id(), secondary.id());
         if (repulsive && (!primary.isAtMaxLevel() || !secondary.isAtMaxLevel())) {
             return PairEvaluation.rejected(RejectReason.REPULSIVE_REQUIRES_MAX_LEVEL);
         }
@@ -97,25 +96,32 @@ public final class FusionRuleEngine {
             if (hostList.containsEnchantmentId(primary.id()) || hostList.containsEnchantmentId(secondary.id())) {
                 return PairEvaluation.rejected(RejectReason.DUPLICATE_ON_HOST);
             }
-            if (existingHostVanillaEnchantIds != null) {
-                if (existingHostVanillaEnchantIds.contains(primary.id()) || existingHostVanillaEnchantIds.contains(secondary.id())) {
+            if (existingHostEnchantIds != null) {
+                if (existingHostEnchantIds.contains(primary.id()) || existingHostEnchantIds.contains(secondary.id())) {
                     return PairEvaluation.rejected(RejectReason.DUPLICATE_ON_HOST);
+                }
+            }
+            if (incompatibleWithExistingHost) {
+                return PairEvaluation.rejected(RejectReason.EXCLUSIVE_ON_HOST);
+            }
+            for (FusedPair existingPair : hostList.pairs()) {
+                if (matrix.areRepulsiveExclusives(primary.id(), existingPair.primaryId())) {
+                    return PairEvaluation.rejected(RejectReason.EXCLUSIVE_ON_HOST);
+                }
+            }
+            if (existingHostEnchantIds != null) {
+                for (String existingId : existingHostEnchantIds) {
+                    if (matrix.areRepulsiveExclusives(primary.id(), existingId)) {
+                        return PairEvaluation.rejected(RejectReason.EXCLUSIVE_ON_HOST);
+                    }
                 }
             }
         }
 
-        int clampedPrimary = Math.max(1, Math.min(primary.maxLevel(), primary.level()));
-        int clampedSecondary = Math.max(1, Math.min(secondary.maxLevel(), secondary.level()));
+        int clampedPrimary = Math.clamp(primary.level(), 1, Math.max(1, primary.maxLevel()));
+        int clampedSecondary = Math.clamp(secondary.level(), 1, Math.max(1, secondary.maxLevel()));
         FusedPair result = FusedPair.clean(primary.id(), clampedPrimary, secondary.id(), clampedSecondary);
-
-        double instability = (repulsive && !hasStabilizer) ? matrix.baseInstabilityChance() : 0.0;
-        int baseXp = repulsive ? 8 : Math.max(2, clampedPrimary + clampedSecondary);
-        if (targetingEquipment) {
-            baseXp += 1;
-        }
-        int finalXp = zeroXpStabilizer ? 0 : baseXp;
-
-        return new PairEvaluation(true, RejectReason.NONE, result, repulsive, instability, finalXp);
+        return new PairEvaluation(true, RejectReason.NONE, result, repulsive);
     }
 
     public static RejectReason canFlipPair(FusedPair existing) {

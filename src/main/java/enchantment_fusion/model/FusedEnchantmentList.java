@@ -9,6 +9,7 @@ import net.minecraft.network.codec.StreamCodec;
 
 /**
  * Immutable DataComponent payload storing up to {@link #HARD_MAX_VESSEL_SLOTS} fused pairs on an item.
+ * Both constructor and Codec truncate gracefully to {@link #HARD_MAX_VESSEL_SLOTS} so legacy/command items never lose all pairs (DATA-01).
  */
 public record FusedEnchantmentList(List<FusedPair> pairs) {
     public static final int HARD_MAX_VESSEL_SLOTS = 2;
@@ -24,11 +25,11 @@ public record FusedEnchantmentList(List<FusedPair> pairs) {
     }
 
     public static final Codec<FusedEnchantmentList> CODEC = FusedPair.CODEC
-        .listOf(0, HARD_MAX_VESSEL_SLOTS)
+        .listOf()
         .xmap(FusedEnchantmentList::new, FusedEnchantmentList::pairs);
 
     public static final StreamCodec<ByteBuf, FusedEnchantmentList> STREAM_CODEC = FusedPair.STREAM_CODEC
-        .apply(ByteBufCodecs.list(HARD_MAX_VESSEL_SLOTS))
+        .apply(ByteBufCodecs.list(16))
         .map(FusedEnchantmentList::new, FusedEnchantmentList::pairs);
 
     public boolean isEmpty() {

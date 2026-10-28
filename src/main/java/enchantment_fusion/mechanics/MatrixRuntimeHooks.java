@@ -1,7 +1,9 @@
 package enchantment_fusion.mechanics;
 
 import enchantment_fusion.model.TriggerType;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -10,6 +12,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
@@ -17,14 +20,16 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.FishingRodItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.phys.Vec3;
 
 /**
  * Wires Fabric server lifecycle, damage/death interception, combat, mining, item usage,
- * fishing hooks, and passive world ticks into {@link SignaturePairs}, {@link AberrantRegistry},
- * {@link MatrixEffectExecutor}, and {@link CrossDomainTransmutations}.
+ * fishing hooks, disconnect cleanup (CPL-02), and throttled world scans (CPL-03).
  */
 public final class MatrixRuntimeHooks {
     private static final EquipmentSlot[] ARMOR_AND_HAND_SLOTS = {
@@ -42,6 +47,8 @@ public final class MatrixRuntimeHooks {
     private MatrixRuntimeHooks() {}
 
     public static void init() {
+        ServerLifecycleEvents.SERVER_STOPPING.register(AberrantRegistry::flushAllCages);
+
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             MatrixEffectExecutor.clearCooldowns();
             SignaturePairs.clearRuntimeState();
@@ -50,10 +57,20 @@ public final class MatrixRuntimeHooks {
             PEAK_FALL_DISTANCE.clear();
         });
 
-        // Pre-damage interception: [时运 ▷ 保护] 招财金身, 琉璃圣盾 & Cross-Domain 避雷充能
+        // CPL-02: Evict per-player runtime caches on disconnect
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            UUID pid = handler.getPlayer().getUUID();
+            PEAK_FALL_DISTANCE.remove(pid);
+            SignaturePairs.onPlayerDisconnect(pid);
+            CrossDomainTransmutations.onPlayerDisconnect(pid);
+            MatrixEffectExecutor.onPlayerDisconnect(pid);
+            CompendiumDiscoveryTracker.onPlayerDisconnect(pid);
+        });
+
+        // Pre-damage interception (API-04: passes DamageSource to respect BYPASSES_INVULNERABILITY)
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (entity instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
-                if (!SignaturePairs.allowIncomingDamage(serverPlayer, amount)) {
+                if (!SignaturePairs.allowIncomingDamage(serverPlayer, source, amount)) {
                     return false;
                 }
                 return CrossDomainTransmutations.allowIncomingDamage(serverLevel, serverPlayer, source, amount);
@@ -61,21 +78,21 @@ public final class MatrixRuntimeHooks {
             return true;
         });
 
-        // Lethal interception: [保护 ▷ 时运] 吉星高照, [保护 ▷ 忠诚] 归元护主 & Cross-Domain 裂而不碎 Totem survival
+        // Lethal interception (API-04: passes DamageSource to respect /kill)
         ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource, damageAmount) -> {
             if (entity instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
-                if (!SignaturePairs.allowPlayerDeath(serverPlayer)) {
+                if (!SignaturePairs.allowPlayerDeath(serverPlayer, damageSource)) {
                     return false;
                 }
-                return CrossDomainTransmutations.allowPlayerDeath(serverLevel, serverPlayer);
+                return CrossDomainTransmutations.allowPlayerDeath(serverLevel, serverPlayer, damageSource);
             }
             return true;
         });
 
-        // Melee Strike + Pet Protection (完壁) + Sweep/Cleave + Cross-Domain Melee Transmutations
-        // Preserves target.invulnerableTime so bonus hurtServer() never swallows vanilla player.attack()!
+        // Melee Strike + Riptide Spin-Attack (MIX-02) + Pet Protection + Charge-Gated Dispatch (CPL-01)
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (!world.isClientSide()
+                && !player.isSpectator()
                 && world instanceof ServerLevel serverLevel
                 && player instanceof ServerPlayer serverPlayer
                 && entity instanceof LivingEntity target) {
@@ -83,15 +100,26 @@ public final class MatrixRuntimeHooks {
                     return InteractionResult.FAIL;
                 }
                 ItemStack weapon = serverPlayer.getItemInHand(hand);
-                boolean fullCharge = serverPlayer.getAttackStrengthScale(0.5F) >= 0.90F;
+                float charge = serverPlayer.getAttackStrengthScale(0.5F);
+                boolean riptideSpin = serverPlayer.isAutoSpinAttack();
+                // CPL-01: Require >= 55% attack charge (or active Riptide spin) before firing bonus magic procs
+                if (charge < 0.55F && !riptideSpin) {
+                    return InteractionResult.PASS;
+                }
+                boolean fullCharge = charge >= 0.90F || riptideSpin;
+                Set<TriggerType> triggers = EnumSet.of(TriggerType.ON_MELEE_STRIKE);
+                if (fullCharge) {
+                    triggers.add(TriggerType.ON_SWEEP_OR_CLEAVE);
+                }
+                if (riptideSpin || weapon.getItem() instanceof TridentItem) {
+                    triggers.add(TriggerType.ON_TRIDENT_CHANNEL);
+                }
                 int savedInvuln = target.invulnerableTime;
                 try {
-                    MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_MELEE_STRIKE, target, target.position(), fullCharge);
+                    MatrixEffectExecutor.dispatch(
+                        serverLevel, serverPlayer, weapon, triggers, target, target.position(), fullCharge, charge
+                    );
                     target.invulnerableTime = 0;
-                    if (fullCharge) {
-                        MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_SWEEP_OR_CLEAVE, target, target.position(), true);
-                        target.invulnerableTime = 0;
-                    }
                     CrossDomainTransmutations.onMeleeAttack(serverLevel, serverPlayer, target, fullCharge);
                 } finally {
                     target.invulnerableTime = savedInvuln;
@@ -100,9 +128,10 @@ public final class MatrixRuntimeHooks {
             return InteractionResult.PASS;
         });
 
-        // Right-Click Item Use (飞剑掷斧, 水龙突刺, 驭浪盾冲, 幻影连投, Fishing Rod retrieve, Instant Throwables)
+        // Right-Click Item Use (MIX-03: Fishing Rod reel-in signatures fire strictly here on reel!)
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (!world.isClientSide()
+                && !player.isSpectator()
                 && world instanceof ServerLevel serverLevel
                 && player instanceof ServerPlayer serverPlayer) {
                 ItemStack held = serverPlayer.getItemInHand(hand);
@@ -117,7 +146,7 @@ public final class MatrixRuntimeHooks {
             return InteractionResult.PASS;
         });
 
-        // Pre-Break Interception (Auto-Smelt Pickaxe, Charcoal/Ash Axe, Nest Purger)
+        // Pre-Break Interception (API-03: only Adventure-checked infested stone purger cancels BEFORE)
         PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
             if (!world.isClientSide() && world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 ItemStack tool = serverPlayer.getMainHandItem();
@@ -131,7 +160,7 @@ public final class MatrixRuntimeHooks {
             return true;
         });
 
-        // Block Harvest (Signature ore geode, molten smelting, 3x1 rock-splitter, magnet, etc. + Matrix + Cross-Domain)
+        // Post-Break Harvest (Auto-Smelt Pick, Charcoal Axe, 3x1 Excavate, Magnet, Matrix, etc.)
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
             if (!world.isClientSide() && world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 ItemStack tool = serverPlayer.getMainHandItem();
@@ -142,7 +171,7 @@ public final class MatrixRuntimeHooks {
             }
         });
 
-        // Post-Damage Counter, Blood Vengeance & Cross-Domain Armor/Shield Reactions
+        // Post-Damage Counter
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
             if (Boolean.TRUE.equals(IN_AFTER_DAMAGE.get())) {
                 return;
@@ -177,7 +206,7 @@ public final class MatrixRuntimeHooks {
             }
         });
 
-        // Movement / Landing + Frosted Ice Cage Cracking + Passive Signature / Cross-Domain Ticks
+        // Movement / Landing + Frosted Ice Cage Cracking + Gated Projectile Flight Physics (CPL-03)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             SignaturePairs.tickWorldDots(server);
             AberrantRegistry.tickFrostedCages(server);
@@ -189,17 +218,20 @@ public final class MatrixRuntimeHooks {
                 SignaturePairs.tickServerPlayer(serverLevel, player);
                 CrossDomainTransmutations.tickServerPlayer(serverLevel, player);
 
-                for (Projectile proj : serverLevel.getEntitiesOfClass(
-                    Projectile.class,
-                    player.getBoundingBox().inflate(72.0D),
-                    p -> p.isAlive() && p.getOwner() == player && p.tickCount <= 160
-                )) {
-                    ItemStack weapon = proj.getWeaponItem();
-                    if (weapon == null || weapon.isEmpty()) {
-                        weapon = player.getMainHandItem();
-                    }
-                    if (!weapon.isEmpty()) {
-                        CrossDomainTransmutations.onProjectileTick(serverLevel, proj, player, weapon);
+                // CPL-03: Only scan nearby in-flight projectiles when player holds a ranged/trident weapon with transmutations
+                // (or on a 4-tick cadence for previously launched arrows whose weapon ItemStack is embedded on the projectile)
+                boolean holdsTransmutedRanged = isTransmutedRangedWeapon(player.getMainHandItem())
+                    || isTransmutedRangedWeapon(player.getOffhandItem());
+                if (holdsTransmutedRanged || serverLevel.getGameTime() % 4L == 0L) {
+                    for (Projectile proj : serverLevel.getEntitiesOfClass(
+                        Projectile.class,
+                        player.getBoundingBox().inflate(64.0D),
+                        p -> p.isAlive() && p.getOwner() == player && p.tickCount <= 160
+                    )) {
+                        ItemStack weapon = proj.getWeaponItem();
+                        if (weapon != null && !weapon.isEmpty() && CrossDomainTransmutations.hasAnyTransmutedEnchants(weapon)) {
+                            CrossDomainTransmutations.onProjectileTick(serverLevel, proj, player, weapon);
+                        }
                     }
                 }
 
@@ -221,5 +253,13 @@ public final class MatrixRuntimeHooks {
                 }
             }
         });
+    }
+
+    private static boolean isTransmutedRangedWeapon(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        boolean ranged = stack.getItem() instanceof BowItem
+            || stack.getItem() instanceof CrossbowItem
+            || stack.getItem() instanceof TridentItem;
+        return ranged && CrossDomainTransmutations.hasAnyTransmutedEnchants(stack);
     }
 }

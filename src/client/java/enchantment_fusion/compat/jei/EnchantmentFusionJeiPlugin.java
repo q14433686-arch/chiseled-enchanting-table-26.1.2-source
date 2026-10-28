@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Optional JEI integration registering workstation & item guide pages when JEI is present.
+ * Optional JEI integration registering workstation, book, stabilizer, grimoire, and page info guides when JEI is present.
  */
 @JeiPlugin
 public final class EnchantmentFusionJeiPlugin implements IModPlugin {
@@ -40,6 +40,16 @@ public final class EnchantmentFusionJeiPlugin implements IModPlugin {
             List.of(new ItemStack(FusionItems.RESONANCE_STABILIZER)),
             VanillaTypes.ITEM_STACK,
             Component.translatable("compat.enchantment_fusion.jei.stabilizer_info")
+        );
+        registration.addIngredientInfo(
+            List.of(new ItemStack(FusionItems.FUSION_GRIMOIRE)),
+            VanillaTypes.ITEM_STACK,
+            Component.translatable("item.enchantment_fusion.fusion_grimoire.lore")
+        );
+        registration.addIngredientInfo(
+            List.of(new ItemStack(FusionItems.FUSION_TATTERED_PAGE)),
+            VanillaTypes.ITEM_STACK,
+            Component.translatable("item.enchantment_fusion.fusion_tattered_page.lore")
         );
     }
 }

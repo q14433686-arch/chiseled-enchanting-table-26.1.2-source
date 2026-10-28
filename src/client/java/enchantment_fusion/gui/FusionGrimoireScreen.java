@@ -1,6 +1,7 @@
 package enchantment_fusion.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import enchantment_fusion.gui.FusionGuiSkin.HitBox;
 import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
@@ -26,9 +27,9 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Responsive double-page {@code 《融合秘典》 (Fusion Grimoire)} UI inspired by
- * Chiseled Enchanting Table's {@code ArcaneGrimoireScreen} and Herbcraft's 3-stage
- * {@code CodexScreen} ({@code 未知 -> 初识 -> 通晓}).
+ * Responsive double-page {@code 《融合秘典》 (Fusion Grimoire)} UI with 3-stage
+ * {@code 未知 -> 初识 -> 通晓} discovery, cached chapter lists (GUI-03),
+ * and full cursor/clipboard search input (GUI-02).
  * Uses exclusively pixel-art PNG textures (zero solid rectangle draw calls).
  */
 public final class FusionGrimoireScreen extends Screen {
@@ -44,6 +45,7 @@ public final class FusionGrimoireScreen extends Screen {
     public static final int PAGE_TOP_Y = 22;
 
     private static final int ROWS_PER_PAGE = 7;
+    private static final int MAX_SEARCH_LEN = 40;
 
     public enum Chapter {
         OVERVIEW("gui.enchantment_fusion.grimoire.chapter.overview"),
@@ -78,8 +80,19 @@ public final class FusionGrimoireScreen extends Screen {
     private int bookTop;
     private int listScroll = 0;
     private int selectedIndex = 0;
+
+    // GUI-02: Full cursor & clipboard state for custom pixel-art search bar
     private String searchQuery = "";
+    private int searchCaret = 0;
+    private boolean searchSelectAll = false;
     private boolean searchFocused = false;
+
+    // GUI-03: Cached chapter entries invalidated only when chapter, query, or discovery count changes
+    private @Nullable Chapter cachedChapterKey = null;
+    private int cachedDiscoveryHash = Integer.MIN_VALUE;
+    private List<EntryItem> cachedAllEntries = List.of();
+    private String cachedFilterQuery = null;
+    private List<EntryItem> cachedFilteredEntries = List.of();
 
     public FusionGrimoireScreen(@Nullable Runnable closeOverlayCallback, int initialChapter) {
         super(Component.translatable("item.enchantment_fusion.fusion_grimoire"));
@@ -94,6 +107,12 @@ public final class FusionGrimoireScreen extends Screen {
         super.init();
         this.bookLeft = (this.width - BOOK_W) / 2;
         this.bookTop = (this.height - BOOK_H) / 2 + 6;
+        invalidateEntryCache();
+    }
+
+    private void invalidateEntryCache() {
+        this.cachedChapterKey = null;
+        this.cachedFilterQuery = null;
     }
 
     @Override
@@ -124,7 +143,6 @@ public final class FusionGrimoireScreen extends Screen {
         int bx = this.bookLeft;
         int by = this.bookTop;
 
-        // 1. Top Chapter Tabs behind book top edge, then double-page Grimoire spread, then active tab
         Chapter[] chapters = Chapter.values();
         for (int i = 0; i < chapters.length; i++) {
             if (chapters[i] != this.activeChapter) {
@@ -136,16 +154,15 @@ public final class FusionGrimoireScreen extends Screen {
         renderChapterTab(ctx, this.activeChapter.ordinal(), this.activeChapter, true, mouseX, mouseY);
 
         // Top-right Close [X] button on the upper leather corner
-        int closeX = bx + BOOK_W - 24;
-        int closeY = by - 14;
-        boolean overClose = inside(mouseX, mouseY, closeX, closeY, 20, 16);
+        HitBox closeBox = new HitBox(bx + BOOK_W - 24, by - 14, 20, 16);
+        boolean overClose = closeBox.contains(mouseX, mouseY);
         FusionGuiSkin.drawNineSlice(
             ctx,
             overClose ? FusionGuiSkin.BTN_HOVER : FusionGuiSkin.BTN_NORMAL,
-            closeX, closeY, 20, 16, 32, 32, 4
+            closeBox.x(), closeBox.y(), closeBox.w(), closeBox.h(), 32, 32, 4
         );
         FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font, "\u2715", closeX + 2, 16, closeY + 8.0F,
+            ctx, this.font, "\u2715", closeBox.x() + 2, 16, closeBox.y() + 8.0F,
             0.65F, overClose ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_CREAM
         );
 
@@ -158,29 +175,23 @@ public final class FusionGrimoireScreen extends Screen {
             0.66F, FusionGuiSkin.COLOR_INK_TITLE
         );
 
-        HolderLookup.Provider registries = currentRegistries();
-        List<EntryItem> allEntries = buildEntriesForChapter(this.activeChapter, registries);
-        List<EntryItem> filtered = filterEntries(allEntries);
+        List<EntryItem> allEntries = getOrBuildChapterEntries();
+        List<EntryItem> filtered = getOrFilterEntries(allEntries);
 
-        // Progress badge at bottom of Left Page
         renderProgressFooter(ctx, allEntries, bx + LEFT_PAGE_X, by + 190, LEFT_PAGE_W);
 
         // Pixel-art Search Bar on Left Page (chapters with searchable entries)
         if (this.activeChapter != Chapter.OVERVIEW) {
-            int sx = bx + LEFT_PAGE_X + 2;
-            int sy = by + PAGE_TOP_Y + 14;
-            int sw = LEFT_PAGE_W - 4;
-            boolean hovSearch = inside(mouseX, mouseY, sx, sy, sw, 14);
+            HitBox searchBox = new HitBox(bx + LEFT_PAGE_X + 2, by + PAGE_TOP_Y + 14, LEFT_PAGE_W - 4, 14);
+            boolean hovSearch = searchBox.contains(mouseX, mouseY);
             var searchSprite = this.searchFocused ? FusionGuiSkin.ROW_SELECTED_B
                 : (hovSearch ? FusionGuiSkin.ROW_HOVER : FusionGuiSkin.ROW_UNSELECTED);
-            FusionGuiSkin.drawNineSlice(ctx, searchSprite, sx, sy, sw, 14, 64, 18, 4);
-            String shown = this.searchQuery.isEmpty()
-                ? (this.searchFocused ? "_" : Component.translatable("gui.enchantment_fusion.grimoire.search_hint").getString())
-                : (this.searchQuery + (this.searchFocused ? "_" : ""));
+            FusionGuiSkin.drawNineSlice(ctx, searchSprite, searchBox.x(), searchBox.y(), searchBox.w(), searchBox.h(), 64, 18, 4);
+            String shown = formatSearchTextWithCaret();
             int col = this.searchQuery.isEmpty() && !this.searchFocused
                 ? FusionGuiSkin.COLOR_MUTED
-                : FusionGuiSkin.COLOR_CREAM;
-            FusionGuiSkin.drawLeftBoundedText(ctx, this.font, shown, sx + 5, sy + 4, sw - 10, 0.56F, col);
+                : (this.searchSelectAll ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_CREAM);
+            FusionGuiSkin.drawLeftBoundedText(ctx, this.font, shown, searchBox.x() + 5, searchBox.y() + 4, searchBox.w() - 10, 0.56F, col);
         }
 
         int listStartY = (this.activeChapter == Chapter.OVERVIEW) ? (by + PAGE_TOP_Y + 16) : (by + PAGE_TOP_Y + 31);
@@ -201,13 +212,13 @@ public final class FusionGrimoireScreen extends Screen {
                 int idx = scroll + r;
                 if (idx >= filtered.size()) break;
                 EntryItem entry = filtered.get(idx);
-                int ry = listStartY + r * 18;
+                HitBox rowBox = new HitBox(bx + LEFT_PAGE_X, listStartY + r * 18, LEFT_PAGE_W, 17);
                 boolean sel = (idx == safeSel);
-                boolean hov = inside(mouseX, mouseY, bx + LEFT_PAGE_X, ry, LEFT_PAGE_W, 17);
+                boolean hov = rowBox.contains(mouseX, mouseY);
 
                 var rowSprite = sel ? FusionGuiSkin.ROW_SELECTED_A
                     : (hov ? FusionGuiSkin.ROW_HOVER : FusionGuiSkin.ROW_UNSELECTED);
-                FusionGuiSkin.drawNineSlice(ctx, rowSprite, bx + LEFT_PAGE_X, ry, LEFT_PAGE_W, 17, 64, 18, 4);
+                FusionGuiSkin.drawNineSlice(ctx, rowSprite, rowBox.x(), rowBox.y(), rowBox.w(), rowBox.h(), 64, 18, 4);
 
                 int textCol = switch (entry.stage()) {
                     case CompendiumDiscoveryTracker.STATE_MASTERED -> sel ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_CREAM;
@@ -216,33 +227,63 @@ public final class FusionGrimoireScreen extends Screen {
                 };
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font, entry.rowLabel(),
-                    bx + LEFT_PAGE_X + 6, ry + 5, LEFT_PAGE_W - 12,
+                    rowBox.x() + 6, rowBox.y() + 5, rowBox.w() - 12,
                     0.56F, textCol
                 );
             }
 
-            // Prev / Next scroll arrows if list exceeds visibleRows
             if (maxScroll > 0) {
                 renderScrollButtons(ctx, scroll, maxScroll, bx + LEFT_PAGE_X, by + 173, mouseX, mouseY);
             }
 
-            // Right Page Illuminated Detail View
             renderRightDetailPage(ctx, filtered.get(safeSel), bx + RIGHT_PAGE_X, by + PAGE_TOP_Y, RIGHT_PAGE_W);
         }
 
-        // Render child widgets (EditBox search bar)
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
     }
 
+    private String formatSearchTextWithCaret() {
+        if (this.searchQuery.isEmpty()) {
+            return this.searchFocused
+                ? "|"
+                : Component.translatable("gui.enchantment_fusion.grimoire.search_hint").getString();
+        }
+        if (!this.searchFocused) {
+            return this.searchQuery;
+        }
+        int clampedCaret = Math.max(0, Math.min(this.searchCaret, this.searchQuery.length()));
+        return this.searchQuery.substring(0, clampedCaret) + "|" + this.searchQuery.substring(clampedCaret);
+    }
+
+    private List<EntryItem> getOrBuildChapterEntries() {
+        int discHash = CompendiumDiscoveryTracker.clientMasteredCount() * 31
+            + CompendiumDiscoveryTracker.clientState("sig/frostfire_true_blade");
+        if (this.cachedChapterKey != this.activeChapter || this.cachedDiscoveryHash != discHash) {
+            this.cachedAllEntries = buildEntriesForChapter(this.activeChapter, currentRegistries());
+            this.cachedChapterKey = this.activeChapter;
+            this.cachedDiscoveryHash = discHash;
+            this.cachedFilterQuery = null;
+        }
+        return this.cachedAllEntries;
+    }
+
+    private List<EntryItem> getOrFilterEntries(List<EntryItem> allEntries) {
+        String q = this.searchQuery == null ? "" : this.searchQuery.trim().toLowerCase(Locale.ROOT);
+        if (!q.equals(this.cachedFilterQuery)) {
+            this.cachedFilteredEntries = filterEntries(allEntries, q);
+            this.cachedFilterQuery = q;
+        }
+        return this.cachedFilteredEntries;
+    }
+
     private void renderChapterTab(GuiGraphicsExtractor ctx, int idx, Chapter ch, boolean active, int mouseX, int mouseY) {
-        int tx = this.bookLeft + 24 + idx * (CHAPTER_TAB_W + 4);
-        int ty = this.bookTop - 15;
-        boolean hov = inside(mouseX, mouseY, tx, ty, CHAPTER_TAB_W, CHAPTER_TAB_H);
+        HitBox tabBox = new HitBox(this.bookLeft + 24 + idx * (CHAPTER_TAB_W + 4), this.bookTop - 15, CHAPTER_TAB_W, CHAPTER_TAB_H);
+        boolean hov = tabBox.contains(mouseX, mouseY);
         var sprite = active ? FusionGuiSkin.TAB_ACTIVE : (hov ? FusionGuiSkin.TAB_HOVER : FusionGuiSkin.TAB_INACTIVE);
-        FusionGuiSkin.drawSprite(ctx, sprite, tx, ty, CHAPTER_TAB_W, CHAPTER_TAB_H + (active ? 2 : 0));
+        FusionGuiSkin.drawSprite(ctx, sprite, tabBox.x(), tabBox.y(), tabBox.w(), tabBox.h() + (active ? 2 : 0));
         FusionGuiSkin.drawCenteredBoundedText(
             ctx, this.font, Component.translatable(ch.langKey()).getString(),
-            tx + 4, CHAPTER_TAB_W - 8, ty + 9.5F,
+            tabBox.x() + 4, tabBox.w() - 8, tabBox.y() + 9.5F,
             0.58F, active ? FusionGuiSkin.COLOR_GOLD : (hov ? FusionGuiSkin.COLOR_CREAM : FusionGuiSkin.COLOR_MUTED)
         );
     }
@@ -250,16 +291,12 @@ public final class FusionGrimoireScreen extends Screen {
     private void renderScrollButtons(GuiGraphicsExtractor ctx, int scroll, int maxScroll, int lx, int by, int mx, int my) {
         boolean canPrev = scroll > 0;
         boolean canNext = scroll < maxScroll;
-        boolean hovPrev = inside(mx, my, lx, by, 26, 14);
-        boolean hovNext = inside(mx, my, lx + LEFT_PAGE_W - 26, by, 26, 14);
+        HitBox prevBox = new HitBox(lx, by, 26, 14);
+        HitBox nextBox = new HitBox(lx + LEFT_PAGE_W - 26, by, 26, 14);
 
-        FusionGuiSkin.drawNineSlice(
-            ctx, !canPrev ? FusionGuiSkin.BTN_DISABLED : (hovPrev ? FusionGuiSkin.BTN_HOVER : FusionGuiSkin.BTN_NORMAL),
-            lx, by, 26, 14, 32, 32, 4
-        );
-        FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font, "\u25C0", lx + 2, 22, by + 7.0F, 0.56F,
-            canPrev ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_MUTED
+        FusionGuiSkin.drawButtonBox(
+            ctx, this.font, 0, 0, prevBox,
+            canPrev, prevBox.contains(mx, my), "\u25C0", 0.56F, FusionGuiSkin.COLOR_GOLD
         );
 
         String pageIndicator = (scroll + 1) + "/" + (maxScroll + 1);
@@ -267,13 +304,9 @@ public final class FusionGrimoireScreen extends Screen {
             ctx, this.font, pageIndicator, lx + 28, LEFT_PAGE_W - 56, by + 7.0F, 0.54F, FusionGuiSkin.COLOR_INK_MUTED
         );
 
-        FusionGuiSkin.drawNineSlice(
-            ctx, !canNext ? FusionGuiSkin.BTN_DISABLED : (hovNext ? FusionGuiSkin.BTN_HOVER : FusionGuiSkin.BTN_NORMAL),
-            lx + LEFT_PAGE_W - 26, by, 26, 14, 32, 32, 4
-        );
-        FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font, "\u25B6", lx + LEFT_PAGE_W - 24, 22, by + 7.0F, 0.56F,
-            canNext ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_MUTED
+        FusionGuiSkin.drawButtonBox(
+            ctx, this.font, 0, 0, nextBox,
+            canNext, nextBox.contains(mx, my), "\u25B6", 0.56F, FusionGuiSkin.COLOR_GOLD
         );
     }
 
@@ -296,7 +329,6 @@ public final class FusionGrimoireScreen extends Screen {
     private void renderRightDetailPage(GuiGraphicsExtractor ctx, EntryItem item, int rx, int ry, int rw) {
         ctx.enableScissor(rx - 2, ry - 2, rx + rw + 2, ry + 178);
         try {
-            // Stage pill badge
             String stageKey = switch (item.stage()) {
                 case CompendiumDiscoveryTracker.STATE_MASTERED -> "gui.enchantment_fusion.grimoire.stage.mastered";
                 case CompendiumDiscoveryTracker.STATE_HEARD -> "gui.enchantment_fusion.grimoire.stage.heard";
@@ -312,20 +344,17 @@ public final class FusionGrimoireScreen extends Screen {
                 rx, ry, rw, 0.56F, stageCol
             );
 
-            // Detail Title
             FusionGuiSkin.drawLeftBoundedText(
                 ctx, this.font, item.detailTitle(),
                 rx, ry + 13, rw, 0.70F, FusionGuiSkin.COLOR_INK_TITLE
             );
 
-            // Formula / Source Banner inside ornate relic socket frame
             FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SOCKET_EMPTY, rx, ry + 27, rw, 22, 96, 40, 7);
             FusionGuiSkin.drawCenteredBoundedText(
                 ctx, this.font, item.formulaLine(),
                 rx + 5, rw - 10, ry + 38.0F, 0.56F, FusionGuiSkin.COLOR_CREAM
             );
 
-            // Wrapped multi-line parchment body text
             float scale = 0.60F;
             int wrapWidth = Math.max(80, Math.round(rw / scale));
             List<FormattedCharSequence> lines = this.font.split(Component.literal(item.bodyText()), wrapWidth);
@@ -500,8 +529,7 @@ public final class FusionGrimoireScreen extends Screen {
         return out;
     }
 
-    private List<EntryItem> filterEntries(List<EntryItem> raw) {
-        String q = this.searchQuery == null ? "" : this.searchQuery.trim().toLowerCase(Locale.ROOT);
+    private List<EntryItem> filterEntries(List<EntryItem> raw, String q) {
         if (q.isEmpty() || this.activeChapter == Chapter.OVERVIEW) {
             return raw;
         }
@@ -518,7 +546,7 @@ public final class FusionGrimoireScreen extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         int delta = scrollY > 0 ? -1 : (scrollY < 0 ? 1 : 0);
         if (delta != 0) {
-            List<EntryItem> filtered = filterEntries(buildEntriesForChapter(this.activeChapter, currentRegistries()));
+            List<EntryItem> filtered = getOrFilterEntries(getOrBuildChapterEntries());
             int visibleRows = (this.activeChapter == Chapter.OVERVIEW) ? 8 : ROWS_PER_PAGE;
             int maxScroll = Math.max(0, filtered.size() - visibleRows);
             this.listScroll = Math.max(0, Math.min(maxScroll, this.listScroll + delta));
@@ -535,39 +563,36 @@ public final class FusionGrimoireScreen extends Screen {
         int by = this.bookTop;
 
         if (event.button() == 0) {
-            // Search Box Focus Toggle
-            int sx = bx + LEFT_PAGE_X + 2;
-            int sy = by + PAGE_TOP_Y + 14;
-            int sw = LEFT_PAGE_W - 4;
-            if (this.activeChapter != Chapter.OVERVIEW && inside(mx, my, sx, sy, sw, 14)) {
+            HitBox searchBox = new HitBox(bx + LEFT_PAGE_X + 2, by + PAGE_TOP_Y + 14, LEFT_PAGE_W - 4, 14);
+            if (this.activeChapter != Chapter.OVERVIEW && searchBox.contains(mx, my)) {
                 this.searchFocused = true;
+                this.searchCaret = this.searchQuery.length();
+                this.searchSelectAll = false;
                 return true;
             }
             this.searchFocused = false;
+            this.searchSelectAll = false;
 
-            // Close [X] button
-            if (inside(mx, my, bx + BOOK_W - 24, by - 14, 20, 16)) {
+            if (new HitBox(bx + BOOK_W - 24, by - 14, 20, 16).contains(mx, my)) {
                 playPageTurn(0.95F);
                 this.onClose();
                 return true;
             }
 
-            // Chapter Tabs
             Chapter[] chapters = Chapter.values();
             for (int i = 0; i < chapters.length; i++) {
-                int tx = bx + 24 + i * (CHAPTER_TAB_W + 4);
-                int ty = by - 15;
-                if (inside(mx, my, tx, ty, CHAPTER_TAB_W, CHAPTER_TAB_H)) {
+                HitBox tabBox = new HitBox(bx + 24 + i * (CHAPTER_TAB_W + 4), by - 15, CHAPTER_TAB_W, CHAPTER_TAB_H);
+                if (tabBox.contains(mx, my)) {
                     this.activeChapter = chapters[i];
                     this.listScroll = 0;
                     this.selectedIndex = 0;
+                    invalidateEntryCache();
                     playPageTurn(1.05F);
                     return true;
                 }
             }
 
-            // Entry Rows & Scroll Buttons
-            List<EntryItem> filtered = filterEntries(buildEntriesForChapter(this.activeChapter, currentRegistries()));
+            List<EntryItem> filtered = getOrFilterEntries(getOrBuildChapterEntries());
             int listStartY = (this.activeChapter == Chapter.OVERVIEW) ? (by + PAGE_TOP_Y + 16) : (by + PAGE_TOP_Y + 31);
             int visibleRows = (this.activeChapter == Chapter.OVERVIEW) ? 8 : ROWS_PER_PAGE;
             int maxScroll = Math.max(0, filtered.size() - visibleRows);
@@ -576,8 +601,8 @@ public final class FusionGrimoireScreen extends Screen {
             for (int r = 0; r < visibleRows; r++) {
                 int idx = scroll + r;
                 if (idx >= filtered.size()) break;
-                int ry = listStartY + r * 18;
-                if (inside(mx, my, bx + LEFT_PAGE_X, ry, LEFT_PAGE_W, 17)) {
+                HitBox rowBox = new HitBox(bx + LEFT_PAGE_X, listStartY + r * 18, LEFT_PAGE_W, 17);
+                if (rowBox.contains(mx, my)) {
                     this.selectedIndex = idx;
                     playPageTurn(1.12F);
                     return true;
@@ -586,12 +611,12 @@ public final class FusionGrimoireScreen extends Screen {
 
             if (maxScroll > 0) {
                 int sby = by + 173;
-                if (scroll > 0 && inside(mx, my, bx + LEFT_PAGE_X, sby, 26, 14)) {
+                if (scroll > 0 && new HitBox(bx + LEFT_PAGE_X, sby, 26, 14).contains(mx, my)) {
                     this.listScroll = Math.max(0, scroll - visibleRows);
                     playPageTurn(0.98F);
                     return true;
                 }
-                if (scroll < maxScroll && inside(mx, my, bx + LEFT_PAGE_X + LEFT_PAGE_W - 26, sby, 26, 14)) {
+                if (scroll < maxScroll && new HitBox(bx + LEFT_PAGE_X + LEFT_PAGE_W - 26, sby, 26, 14).contains(mx, my)) {
                     this.listScroll = Math.min(maxScroll, scroll + visibleRows);
                     playPageTurn(1.04F);
                     return true;
@@ -604,30 +629,82 @@ public final class FusionGrimoireScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (event.key() == InputConstants.KEY_ESCAPE) {
+        int key = event.key();
+        if (key == InputConstants.KEY_ESCAPE) {
             if (this.searchFocused && !this.searchQuery.isEmpty()) {
-                this.searchQuery = "";
-                this.listScroll = 0;
-                this.selectedIndex = 0;
+                updateSearchText("", 0);
                 return true;
             }
             this.onClose();
             return true;
         }
         if (this.searchFocused) {
-            if (event.key() == InputConstants.KEY_BACKSPACE) {
-                if (!this.searchQuery.isEmpty()) {
-                    this.searchQuery = this.searchQuery.substring(0, this.searchQuery.length() - 1);
-                    this.listScroll = 0;
-                    this.selectedIndex = 0;
+            boolean ctrl = FusionGuiSkin.isCtrlOrCmdHeld();
+            if (ctrl && key == InputConstants.KEY_A) {
+                this.searchSelectAll = !this.searchQuery.isEmpty();
+                this.searchCaret = this.searchQuery.length();
+                return true;
+            }
+            if (ctrl && key == InputConstants.KEY_C) {
+                if (this.minecraft != null && !this.searchQuery.isEmpty()) {
+                    this.minecraft.keyboardHandler.setClipboard(this.searchQuery);
                 }
                 return true;
             }
-            if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
-                this.searchFocused = false;
+            if (ctrl && key == InputConstants.KEY_V) {
+                if (this.minecraft != null) {
+                    String clip = sanitizeSearchPaste(this.minecraft.keyboardHandler.getClipboard());
+                    if (!clip.isEmpty()) {
+                        insertAtSearchCaret(clip);
+                    }
+                }
                 return true;
             }
-            // Swallow inventory 'E' and movement keys while typing in search box
+            if (key == InputConstants.KEY_LEFT) {
+                this.searchSelectAll = false;
+                this.searchCaret = Math.max(0, this.searchCaret - 1);
+                return true;
+            }
+            if (key == InputConstants.KEY_RIGHT) {
+                this.searchSelectAll = false;
+                this.searchCaret = Math.min(this.searchQuery.length(), this.searchCaret + 1);
+                return true;
+            }
+            if (key == InputConstants.KEY_HOME) {
+                this.searchSelectAll = false;
+                this.searchCaret = 0;
+                return true;
+            }
+            if (key == InputConstants.KEY_END) {
+                this.searchSelectAll = false;
+                this.searchCaret = this.searchQuery.length();
+                return true;
+            }
+            if (key == InputConstants.KEY_BACKSPACE) {
+                if (this.searchSelectAll) {
+                    updateSearchText("", 0);
+                } else if (this.searchCaret > 0 && !this.searchQuery.isEmpty()) {
+                    String next = this.searchQuery.substring(0, this.searchCaret - 1)
+                        + this.searchQuery.substring(this.searchCaret);
+                    updateSearchText(next, this.searchCaret - 1);
+                }
+                return true;
+            }
+            if (key == InputConstants.KEY_DELETE) {
+                if (this.searchSelectAll) {
+                    updateSearchText("", 0);
+                } else if (this.searchCaret < this.searchQuery.length()) {
+                    String next = this.searchQuery.substring(0, this.searchCaret)
+                        + this.searchQuery.substring(this.searchCaret + 1);
+                    updateSearchText(next, this.searchCaret);
+                }
+                return true;
+            }
+            if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
+                this.searchFocused = false;
+                this.searchSelectAll = false;
+                return true;
+            }
             return true;
         }
         return super.keyPressed(event);
@@ -637,24 +714,53 @@ public final class FusionGrimoireScreen extends Screen {
     public boolean charTyped(CharacterEvent event) {
         if (this.searchFocused) {
             int cp = event.codepoint();
-            if (cp >= 32 && cp <= 0xFFFF && cp != 127 && this.searchQuery.length() < 40) {
-                this.searchQuery = this.searchQuery + Character.toString(cp);
-                this.listScroll = 0;
-                this.selectedIndex = 0;
+            if (cp >= 32 && cp <= 0xFFFF && cp != 127) {
+                insertAtSearchCaret(Character.toString(cp));
             }
             return true;
         }
         return super.charTyped(event);
     }
 
+    private void insertAtSearchCaret(String text) {
+        String base = this.searchSelectAll ? "" : this.searchQuery;
+        int pos = this.searchSelectAll ? 0 : Math.max(0, Math.min(this.searchCaret, base.length()));
+        int room = MAX_SEARCH_LEN - base.length();
+        if (room <= 0) {
+            return;
+        }
+        String chunk = text.length() <= room ? text : text.substring(0, room);
+        String next = base.substring(0, pos) + chunk + base.substring(pos);
+        updateSearchText(next, pos + chunk.length());
+    }
+
+    private void updateSearchText(String next, int nextCaret) {
+        this.searchQuery = next;
+        this.searchCaret = Math.max(0, Math.min(nextCaret, next.length()));
+        this.searchSelectAll = false;
+        this.listScroll = 0;
+        this.selectedIndex = 0;
+        this.cachedFilterQuery = null;
+    }
+
+    private static String sanitizeSearchPaste(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < raw.length() && sb.length() < MAX_SEARCH_LEN; i++) {
+            char c = raw.charAt(i);
+            if (c >= 32 && c != 127) {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
     private @Nullable HolderLookup.Provider currentRegistries() {
         return this.minecraft != null && this.minecraft.level != null
             ? this.minecraft.level.registryAccess()
             : null;
-    }
-
-    private static boolean inside(double mx, double my, int x, int y, int w, int h) {
-        return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 
     private static void playPageTurn(float pitch) {

@@ -11,8 +11,8 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.InteractionResult;
 
 /**
- * Optional REI 26.1 integration registering the exact 308x214 bounds of {@link EnchantmentFusionScreen}
- * so REI's side panels never overlap the custom 3-tab fusion workstation panel.
+ * Optional REI 26.1 integration registering the exact active bounds of {@link EnchantmentFusionScreen}
+ * (308x214 2-tab workstation panel or 396x236 embedded Fusion Grimoire spread) so REI's side panels never overlap.
  */
 public final class EnchantmentFusionReiPlugin implements REIClientPlugin {
     @Override

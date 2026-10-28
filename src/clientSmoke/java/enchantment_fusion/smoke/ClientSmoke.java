@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -46,13 +47,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * End-to-end real client + integrated server probe for Enchantment Fusion 0.4.0 on MC 26.1.2.
+ * End-to-end real client + integrated server probe for Enchantment Fusion 0.4.1 on MC 26.1.2.
  * Exercises:
  * 1. Localized BlockItem + Fusion Grimoire + Tattered Fusion Page item names.
  * 2. 2-tab 308x214 pixel-art GUI + top-right embedded Fusion Grimoire modal overlay (without closing container).
- * 3. Tiered-risk reagent fees + Resonance Stabilizer 100% synthesis & conversion.
- * 4. 26.1.2 minecraft:lunge + Golden Spear 2-vessel-slot rules + Frosted Ice temporary cages.
- * 5. Container persistence & resource reload with 0 missing resources.
+ * 3. Needed-only Resonance Stabilizer consumption (BAL-03) & zero-stabilizer-burn Flip (CPL-05).
+ * 4. API-01 TRANSMUTED_ENCHANTS non-native isolation on Diamond Pickaxe + Shift-expandable transmuted tooltip.
+ * 5. 26.1.2 minecraft:lunge + Golden Spear 2-vessel-slot tag rules + Frosted Ice temporary cages + resource reload.
  */
 public final class ClientSmoke implements ClientModInitializer {
     private int phase = 0;
@@ -144,14 +145,13 @@ public final class ClientSmoke implements ClientModInitializer {
                         Holder<Enchantment> loyalty = enchReg.getOrThrow(
                             ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("loyalty"))
                         );
-                        // Verify 26.1.2 minecraft:lunge exists in runtime enchantment registry!
                         Holder<Enchantment> lunge = enchReg.getOrThrow(
                             ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("lunge"))
                         );
                         require(lunge.value().getMaxLevel() == 3, "Expected 26.1.2 minecraft:lunge maxLevel == 3");
                         require(
                             VesselCapacityRules.getMaxVesselSlots(new ItemStack(Items.GOLDEN_SPEAR)) == 2,
-                            "Expected Golden Spear to hold 2 innate Vessel Spirit slots"
+                            "Expected Golden Spear to hold 2 innate Vessel Slots via tag"
                         );
                         require(
                             "yishui".equals(CrossDomainTransmutations.resolve(new ItemStack(Items.GOLDEN_SPEAR), "minecraft:aqua_affinity").orElseThrow().id()),
@@ -193,10 +193,9 @@ public final class ClientSmoke implements ClientModInitializer {
                     msg -> System.out.println("Saved fusion UI screenshot: " + msg.getString())
                 );
                 Rect2i b = screen.guiBounds();
-                // Open top-right embedded Fusion Grimoire button (232..300, 0..18) — container MUST remain open!
+                // Open top-right embedded Fusion Grimoire button — container MUST remain open!
                 click(screen, b.getX() + 266, b.getY() + 9);
                 require(client.screen instanceof EnchantmentFusionScreen, "Embedded Grimoire must not replace EnchantmentFusionScreen");
-                // Close embedded Grimoire via Escape key
                 boolean escHandled = screen.keyPressed(new KeyEvent(256, 0, 0));
                 require(escHandled, "Escape should close embedded Grimoire overlay cleanly");
 
@@ -222,7 +221,7 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                // Click primary execute button (237..298, 95..121)
+                // Click primary execute button (237..298, 97..121)
                 click(screen, b.getX() + 267, b.getY() + 108);
                 next(4, 14);
             }
@@ -283,6 +282,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (socketed.isEmpty()) {
                     return;
                 }
+                int stabilizersBeforeFlip = screen.getMenu().getSlot(2).getItem().getCount();
+                require(stabilizersBeforeFlip > 0, "Expected leftover Resonance Stabilizers in Slot 2 before Flip");
                 Rect2i b = screen.guiBounds();
                 // Click inline [⇄] Flip button on Socket Card 0 (246..268, 37..54)
                 click(screen, b.getX() + 257, b.getY() + 45);
@@ -302,6 +303,13 @@ public final class ClientSmoke implements ClientModInitializer {
                         require(
                             "minecraft:loyalty".equals(list.pairs().get(0).primaryId()),
                             "Expected inline socket flip to invert pair to [Loyalty ▷ Sharpness]"
+                        );
+                        // CPL-05: Flip must NEVER consume Resonance Stabilizers sitting in Slot 2!
+                        require(be.getItem(2).getCount() == 6, "CPL-05: Flip must not burn Resonance Stabilizers in Slot 2");
+                        // API-01: Non-native Loyalty must NOT be placed into vanilla DataComponents.ENCHANTMENTS on Helmet!
+                        require(
+                            helmet.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).isEmpty(),
+                            "API-01: Non-native primary must not pollute vanilla DataComponents.ENCHANTMENTS"
                         );
 
                         // Prepare Single Cross-Domain Inscription (Fire Aspect II Book -> Diamond Pickaxe = Auto-Smelt II at 0◇!)
@@ -347,23 +355,23 @@ public final class ClientSmoke implements ClientModInitializer {
                         ItemStack pick = be.getItem(3);
                         require(pick.is(Items.DIAMOND_PICKAXE), "Expected Diamond Pickaxe in Slot 3");
                         FusedEnchantmentList fused = pick.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-                        require(fused.isEmpty(), "Single Cross-Domain Inscription must consume 0 Vessel Spirit slots!");
-                        ItemEnchantments ench = pick.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-                        require(ench.size() == 1, "Expected standalone cross-domain enchantment on Diamond Pickaxe");
+                        require(fused.isEmpty(), "Single Cross-Domain Transmutation must consume 0 Vessel Slots!");
 
-                        var enchReg = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
-                        Holder<Enchantment> fireAspect = enchReg.getOrThrow(
-                            ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("fire_aspect"))
-                        );
+                        // API-01: Fire Aspect II on Pickaxe lives in TRANSMUTED_ENCHANTS, leaving vanilla ENCHANTMENTS empty!
+                        ItemEnchantments vanillaEnch = pick.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+                        require(vanillaEnch.isEmpty(), "API-01: Cross-domain Fire Aspect must not enter vanilla ENCHANTMENTS on Pickaxe");
+                        Map<String, Integer> transMap = pick.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of());
+                        require(transMap.getOrDefault("minecraft:fire_aspect", 0) == 2, "Expected Fire Aspect II in TRANSMUTED_ENCHANTS");
+                        require(Boolean.TRUE.equals(pick.get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE)), "Expected glint override on transmuted Pickaxe");
+
                         List<Component> lines = new ArrayList<>();
                         lines.add(pick.getHoverName());
-                        lines.add(Enchantment.getFullname(fireAspect, 2));
                         FusionTooltipRenderer.appendFusionTooltips(pick, sp.level().registryAccess(), lines);
-                        String replaced = lines.get(1).getString();
+                        require(lines.size() >= 2, "Expected transmuted tooltip line appended");
+                        String rendered = lines.get(1).getString();
                         String expectedTitle = Component.translatable("transmute.enchantment_fusion.auto_smelt_pick.title").getString();
-                        require(replaced.contains(expectedTitle), "Expected transmuted tooltip title '" + expectedTitle + "', got: " + replaced);
+                        require(rendered.contains(expectedTitle), "Expected transmuted tooltip title '" + expectedTitle + "', got: " + rendered);
 
-                        // Verify Frost Walker Frosted Ice cage placement uses Blocks.FROSTED_ICE!
                         BlockPos icePos = sp.blockPosition().above(4);
                         sp.level().setBlockAndUpdate(icePos, Blocks.AIR.defaultBlockState());
                         AberrantRegistry.placeSingleFrostedIce(sp.level(), icePos);
@@ -407,7 +415,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 resourceReloadFuture.join();
                 finish(
                     client,
-                    "CLIENT SMOKE PASS: 0.4.0 2-tab GUI + embedded Grimoire + Lunge/Golden Spear + tiered-risk reagents + Frosted Ice + resource reload"
+                    "CLIENT SMOKE PASS: 0.4.1 audit-hardened 2-tab GUI + TRANSMUTED_ENCHANTS isolation + 150 directional signatures + resource reload"
                 );
             }
             default -> throw new AssertionError("Unknown phase " + phase);

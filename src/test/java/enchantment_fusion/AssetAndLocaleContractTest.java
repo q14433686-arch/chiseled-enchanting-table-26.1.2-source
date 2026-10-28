@@ -21,13 +21,16 @@ class AssetAndLocaleContractTest {
     );
 
     @Test
-    void allElevenLocalesHaveExactKeyParityAndCleanFormatting() throws Exception {
+    void allElevenLocalesHaveExactKeyParityUnifiedTerminologyAndZeroDeadKeys() throws Exception {
         Path langDir = Path.of("src/client/resources/assets/enchantment_fusion/lang");
         JsonObject enUs = JsonParser.parseString(
             Files.readString(langDir.resolve("en_us.json"), StandardCharsets.UTF_8)
         ).getAsJsonObject();
         Set<String> expectedKeys = enUs.keySet();
-        assertTrue(expectedKeys.size() >= 100, "Expected full UI/matrix translation table");
+        assertTrue(expectedKeys.size() >= 700, "Expected full 0.4.1 UI/matrix/signature translation table");
+        assertFalse(expectedKeys.contains("gui.enchantment_fusion.tab.compendium"), "Dead tab key must stay purged");
+        assertFalse(expectedKeys.contains("gui.enchantment_fusion.preview.idle_line1"), "Dead preview key must stay purged");
+        assertEquals("Remove", enUs.get("gui.enchantment_fusion.btn.unsocket").getAsString());
 
         for (String code : LOCALES) {
             Path file = langDir.resolve(code + ".json");
@@ -41,13 +44,21 @@ class AssetAndLocaleContractTest {
             }
         }
 
+        JsonObject zhCn = JsonParser.parseString(
+            Files.readString(langDir.resolve("zh_cn.json"), StandardCharsets.UTF_8)
+        ).getAsJsonObject();
         JsonObject zhTw = JsonParser.parseString(
             Files.readString(langDir.resolve("zh_tw.json"), StandardCharsets.UTF_8)
         ).getAsJsonObject();
         assertTrue(
+            zhCn.get("tooltip.enchantment_fusion.aberrant_cet_active").getAsString().contains("\u7E82\u523B\u9644\u9B54\u53F0"),
+            "zh_cn must reference sister mod as 纂刻附魔台"
+        );
+        assertTrue(
             zhTw.get("tooltip.enchantment_fusion.aberrant_cet_active").getAsString().contains("\u7E82\u523B\u9644\u9B54\u53F0"),
             "zh_tw must reference sister mod as 纂刻附魔台"
         );
+        assertEquals("\u5171\u9E23\u7A33\u5B9A\u6676", zhCn.get("item.enchantment_fusion.resonance_stabilizer").getAsString());
     }
 
     @Test

@@ -1,10 +1,14 @@
 package enchantment_fusion;
 
+import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.gui.EnchantmentFusionScreen;
 import enchantment_fusion.gui.FusionGrimoireScreen;
 import enchantment_fusion.gui.FusionTooltipRenderer;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
+import enchantment_fusion.menu.FusionNetworking;
+import enchantment_fusion.menu.FusionNetworking.CompendiumDeltaPayload;
 import enchantment_fusion.menu.FusionNetworking.CompendiumSyncPayload;
+import enchantment_fusion.menu.FusionNetworking.MatrixSyncPayload;
 import enchantment_fusion.menu.FusionNetworking.OpenGrimoirePayload;
 import enchantment_fusion.registry.FusionBlockEntities;
 import enchantment_fusion.registry.FusionMenus;
@@ -20,7 +24,8 @@ import net.minecraft.client.gui.screens.MenuScreens;
 
 /**
  * Client entrypoint registering the pixel-art Fusion Table screen, floating BlockEntity renderer,
- * standalone Fusion Grimoire screen, Compendium sync receiver, and dynamic Shift-expandable tooltips.
+ * standalone Fusion Grimoire screen, Matrix & Compendium sync receivers (NET-01 / NET-05),
+ * and dynamic Shift-expandable tooltips.
  */
 @Environment(EnvType.CLIENT)
 public final class EnchantmentFusionClient implements ClientModInitializer {
@@ -36,11 +41,18 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(CompendiumSyncPayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> CompendiumDiscoveryTracker.applyClientSync(payload.unlockedPairs()));
         });
+        ClientPlayNetworking.registerGlobalReceiver(CompendiumDeltaPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> CompendiumDiscoveryTracker.applyClientDelta(payload.entryKey(), payload.stage()));
+        });
+        ClientPlayNetworking.registerGlobalReceiver(MatrixSyncPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> FusionNetworking.applyClientMatrixSync(payload));
+        });
         ClientPlayNetworking.registerGlobalReceiver(OpenGrimoirePayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> ctx.client().setScreen(new FusionGrimoireScreen(null, payload.initialChapter())));
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             CompendiumDiscoveryTracker.applyClientSync(List.of());
+            FusionMatrixRegistry.setClientSnapshot(null);
         });
     }
 }

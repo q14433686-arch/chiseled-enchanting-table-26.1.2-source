@@ -304,6 +304,17 @@ public final class CrossDomainTransmutations {
         return List.copyOf(ALL_VARIANTS.values());
     }
 
+    public static void onPlayerDisconnect(UUID playerId) {
+        if (playerId == null) return;
+        SOUL_CHASE_TARGET.remove(playerId);
+        SOUL_CHASE_UNTIL.remove(playerId);
+        LAST_SWING_TICK.remove(playerId);
+        LAST_PLAYER_XP.remove(playerId);
+        BOTTLE_XP_BUFFER.remove(playerId);
+        REPLENISH_XP_BUFFER.remove(playerId);
+        ACTIVE_SKILL_COOLDOWN.remove(playerId);
+    }
+
     public static void clearRuntimeState() {
         SOUL_CHASE_TARGET.clear();
         SOUL_CHASE_UNTIL.clear();
@@ -786,9 +797,29 @@ public final class CrossDomainTransmutations {
         return Optional.ofNullable(found != null ? found : new TransmuteVariant(vid, enchId));
     }
 
+    public static boolean hasAnyTransmutedEnchants(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        if (!stack.getOrDefault(enchantment_fusion.registry.FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()).isEmpty()) {
+            return true;
+        }
+        return !stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).isEmpty();
+    }
+
     public static int getTransmutedLevel(ItemStack stack, String variantId) {
         if (stack == null || stack.isEmpty() || variantId == null) {
             return 0;
+        }
+        // API-01: Primary source is TRANSMUTED_ENCHANTS; falls back to legacy ENCHANTMENTS for backward compatibility
+        Map<String, Integer> transMap = stack.getOrDefault(
+            enchantment_fusion.registry.FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()
+        );
+        if (!transMap.isEmpty()) {
+            for (Map.Entry<String, Integer> e : transMap.entrySet()) {
+                Optional<TransmuteVariant> v = resolve(e.getKey(), stack);
+                if (v.isPresent() && variantId.equals(v.get().id())) {
+                    return Math.max(0, e.getValue());
+                }
+            }
         }
         ItemEnchantments enchs = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         if (enchs.isEmpty()) {
@@ -805,7 +836,13 @@ public final class CrossDomainTransmutations {
     }
 
     public static int getStandaloneEnchantLevel(ItemStack stack, String enchId) {
-        if (stack == null || stack.isEmpty()) return 0;
+        if (stack == null || stack.isEmpty() || enchId == null) return 0;
+        int transLv = stack.getOrDefault(
+            enchantment_fusion.registry.FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()
+        ).getOrDefault(enchId, 0);
+        if (transLv > 0) {
+            return transLv;
+        }
         ItemEnchantments enchs = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         for (Holder<Enchantment> holder : enchs.keySet()) {
             String id = holder.unwrapKey().map(k -> k.identifier().toString()).orElse("");
@@ -926,10 +963,15 @@ public final class CrossDomainTransmutations {
     // =========================================================================
 
     /**
-     * Returns {@code false} if we custom-broke the block (replacing vanilla drops cleanly).
+     * API-03 & BAL-09: Only intercepts infested silverfish stone AFTER checking Adventure/build restrictions;
+     * Auto-Smelt Pick & Charcoal Axe run post-break in {@link #onAfterBlockBreak} so vanilla protection checks,
+     * Fortune, stats, and exhaustion are NEVER bypassed, and Sneak cleanly pauses smelting!
      */
     public static boolean onBeforeBlockBreak(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
-        if (player.getAbilities().instabuild) {
+        if (player.getAbilities().instabuild || player.isSpectator()) {
+            return true;
+        }
+        if (!player.mayBuild() || player.blockActionRestricted(level, pos, player.gameMode.getGameModeForPlayer())) {
             return true;
         }
         ItemStack tool = player.getMainHandItem();
@@ -937,7 +979,7 @@ public final class CrossDomainTransmutations {
             return true;
         }
 
-        // 17. Bane of Arthropods "清巢": crush silverfish inside infested blocks before they spawn!
+        // 17. Bane of Arthropods "清巢": crush silverfish inside infested blocks before InfestedBlock#spawnAfterBreak fires
         if (getTransmutedLevel(tool, "nest_purger") > 0) {
             Item cleanStone = mapInfestedBlockToCleanItem(state.getBlock());
             if (cleanStone != null) {
@@ -950,69 +992,62 @@ public final class CrossDomainTransmutations {
             }
         }
 
-        // 0a-Axe: Fire Aspect / Flame on Axe -> Logs ~100% Charcoal, Planks/Wood chance to vanish as ash or drop Charcoal!
-        if (getTransmutedLevel(tool, "auto_smelt_axe") > 0) {
-            RandomSource rng = level.getRandom();
-            if (state.is(BlockTags.LOGS)) {
-                level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                if (rng.nextFloat() < 0.99F) {
-                    spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(Items.CHARCOAL, 1));
-                } else {
-                    Block.dropResources(state, level, pos, null, player, tool);
-                }
-                level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.25D, 0.25D, 0.25D, 0.02D);
-                damageItemSafely(tool, 1, player);
-                onAfterBlockBreak(level, player, pos, state);
-                return false;
-            }
-            if (state.is(BlockTags.PLANKS) || state.is(BlockTags.WOODEN_SLABS) || state.is(BlockTags.WOODEN_STAIRS) || state.is(BlockTags.WOODEN_FENCES)) {
-                level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                float roll = rng.nextFloat();
-                if (roll < 0.45F) {
-                    // Burned to ash and vanished!
-                    level.sendParticles(ParticleTypes.LARGE_SMOKE, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 8, 0.25D, 0.25D, 0.25D, 0.03D);
-                    level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.35F, 1.3F);
-                } else if (roll < 0.82F) {
-                    spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(Items.CHARCOAL, 1));
-                    level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 5, 0.2D, 0.2D, 0.2D, 0.02D);
-                } else {
-                    Block.dropResources(state, level, pos, null, player, tool);
-                }
-                damageItemSafely(tool, 1, player);
-                onAfterBlockBreak(level, player, pos, state);
-                return false;
-            }
-        }
-
-        // 0a-Pick/Shovel: Fire Aspect / Flame on Pickaxe/Shovel -> Auto-Smelt ores, stone, sand, clay!
-        if (getTransmutedLevel(tool, "auto_smelt_pick") > 0) {
-            Item smelted = mapAutoSmeltOutput(state.getBlock());
-            if (smelted != null) {
-                int fortuneLv = getStandaloneEnchantLevel(tool, "minecraft:fortune");
-                int count = 1 + (isOreForFortuneSmelt(state.getBlock()) && fortuneLv > 0 ? level.getRandom().nextInt(fortuneLv + 1) : 0);
-                level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-                ItemStack out = new ItemStack(smelted, count);
-                if (getTransmutedLevel(tool, "auto_loot_return") > 0) {
-                    if (!player.getInventory().add(out)) {
-                        spawnItem(level, player.position(), out);
-                    }
-                } else {
-                    spawnItem(level, Vec3.atCenterOf(pos), out);
-                }
-                ExperienceOrb.award(level, Vec3.atCenterOf(pos), 1);
-                level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.25D, 0.25D, 0.25D, 0.02D);
-                damageItemSafely(tool, 1, player);
-                onAfterBlockBreak(level, player, pos, state);
-                return false;
-            }
-        }
-
         return true;
     }
 
     public static void onAfterBlockBreak(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
         ItemStack tool = player.getMainHandItem();
         if (tool.isEmpty()) return;
+
+        // 0a-Axe & 0a-Pick (API-03 + BAL-09): Post-break in-place smelting of freshly dropped items (Sneak pauses!)
+        if (!player.isShiftKeyDown()) {
+            int axeLv = getTransmutedLevel(tool, "auto_smelt_axe");
+            if (axeLv > 0) {
+                RandomSource rng = level.getRandom();
+                AABB dropBox = AABB.ofSize(Vec3.atCenterOf(pos), 2.4D, 2.4D, 2.4D);
+                if (state.is(BlockTags.LOGS)) {
+                    float charcoalChance = axeLv >= 2 ? 1.0F : 0.60F; // BAL-09: Level I = 60%, Level II+ = 100%
+                    for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
+                        if (ie.getItem().is(ItemTags.LOGS) && rng.nextFloat() < charcoalChance) {
+                            ie.setItem(new ItemStack(Items.CHARCOAL, ie.getItem().getCount()));
+                            level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.25D, 0.25D, 0.25D, 0.02D);
+                        }
+                    }
+                } else if (state.is(BlockTags.PLANKS) || state.is(BlockTags.WOODEN_SLABS) || state.is(BlockTags.WOODEN_STAIRS) || state.is(BlockTags.WOODEN_FENCES)) {
+                    float ashChance = axeLv >= 2 ? 0.20F : 0.45F;
+                    float charcoalThreshold = axeLv >= 2 ? 0.85F : 0.78F;
+                    for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
+                        float roll = rng.nextFloat();
+                        if (roll < ashChance) {
+                            ie.discard();
+                            level.sendParticles(ParticleTypes.LARGE_SMOKE, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 8, 0.25D, 0.25D, 0.25D, 0.03D);
+                            level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.35F, 1.3F);
+                        } else if (roll < charcoalThreshold) {
+                            ie.setItem(new ItemStack(Items.CHARCOAL, 1));
+                            level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 5, 0.2D, 0.2D, 0.2D, 0.02D);
+                        }
+                    }
+                }
+            }
+
+            if (getTransmutedLevel(tool, "auto_smelt_pick") > 0) {
+                Item smelted = mapAutoSmeltOutput(state.getBlock());
+                if (smelted != null) {
+                    AABB dropBox = AABB.ofSize(Vec3.atCenterOf(pos), 2.4D, 2.4D, 2.4D);
+                    boolean smeltedAny = false;
+                    for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
+                        if (!ie.getItem().is(smelted)) {
+                            ie.setItem(new ItemStack(smelted, Math.max(1, ie.getItem().getCount())));
+                            smeltedAny = true;
+                        }
+                    }
+                    if (smeltedAny) {
+                        ExperienceOrb.award(level, Vec3.atCenterOf(pos), 1);
+                        level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.25D, 0.25D, 0.25D, 0.02D);
+                    }
+                }
+            }
+        }
 
         // 1. Frost Walker "封冻": seal adjacent water/lava into frosted ice / cobblestone!
         if (getTransmutedLevel(tool, "frost_seal") > 0) {
@@ -1458,10 +1493,21 @@ public final class CrossDomainTransmutations {
             level.sendParticles(ParticleTypes.SPLASH, player.getX(), player.getY() + 0.8D, player.getZ(), 16, 0.4D, 0.3D, 0.4D, 0.1D);
         }
 
-        // 37a: Unbreaking on Instant Throwable Consumables ("经久省用": refund 1 item with probability!)
-        // Multi-tick eat/drink items (DataComponents.CONSUMABLE) roll in onConsumableFinished() instead!
-        if (!stack.has(DataComponents.CONSUMABLE)) {
-            tryRefundRationItem(level, player, stack);
+        // 37a: Unbreaking on Instant Throwable Consumables ("经久省用" — EF-002):
+        // Verify on next server execution step that Item.use() ACTUALLY consumed 1 item from hand
+        // (prevents Ender Pearl / Wind Charge cooldown or non-gliding Firework click duping!).
+        if (!stack.has(DataComponents.CONSUMABLE) && getTransmutedLevel(stack, "unbreaking_ration") > 0 && !player.getAbilities().instabuild) {
+            Item expectedItem = stack.getItem();
+            int countBefore = stack.getCount();
+            ItemStack snapshot = stack.copyWithCount(1);
+            level.getServer().execute(() -> {
+                if (!player.isAlive()) return;
+                ItemStack after = player.getItemInHand(hand);
+                boolean consumed = after.isEmpty() || (after.is(expectedItem) && after.getCount() < countBefore);
+                if (consumed) {
+                    tryRefundRationItemImmediate(level, player, snapshot);
+                }
+            });
         }
     }
 
@@ -1469,11 +1515,16 @@ public final class CrossDomainTransmutations {
         if (snapshotBeforeConsume == null || snapshotBeforeConsume.isEmpty()) {
             return;
         }
-        tryRefundRationItem(level, player, snapshotBeforeConsume);
+        ItemStack singleCopy = snapshotBeforeConsume.copyWithCount(1);
+        level.getServer().execute(() -> {
+            if (player.isAlive()) {
+                tryRefundRationItemImmediate(level, player, singleCopy);
+            }
+        });
     }
 
-    private static void tryRefundRationItem(ServerLevel level, ServerPlayer player, ItemStack stack) {
-        int rationLv = getTransmutedLevel(stack, "unbreaking_ration");
+    private static void tryRefundRationItemImmediate(ServerLevel level, ServerPlayer player, ItemStack singleSnapshot) {
+        int rationLv = getTransmutedLevel(singleSnapshot, "unbreaking_ration");
         if (rationLv > 0 && !player.getAbilities().instabuild) {
             CompendiumDiscoveryTracker.recordTransmuteProgress(player, "unbreaking_ration", CompendiumDiscoveryTracker.STATE_MASTERED);
             float saveChance = switch (rationLv) {
@@ -1482,12 +1533,7 @@ public final class CrossDomainTransmutations {
                 default -> 0.48F;
             };
             if (level.getRandom().nextFloat() < saveChance) {
-                ItemStack singleRefund = stack.copyWithCount(1);
-                level.getServer().execute(() -> {
-                    if (player.isAlive()) {
-                        player.getInventory().placeItemBackInInventory(singleRefund);
-                    }
-                });
+                player.getInventory().placeItemBackInInventory(singleSnapshot.copyWithCount(1));
             }
         }
     }
@@ -1750,8 +1796,11 @@ public final class CrossDomainTransmutations {
     // =========================================================================
 
     public static boolean allowIncomingDamage(ServerLevel level, ServerPlayer player, DamageSource source, float amount) {
+        if (source != null && source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            return true;
+        }
         // 28: Channeling on Armor/Shield -> 100% Lightning immunity + charge buff!
-        if (source.getDirectEntity() instanceof LightningBolt && hasArmorTransmute(player, "lightning_conductor_armor")) {
+        if (source != null && source.getDirectEntity() instanceof LightningBolt && hasArmorTransmute(player, "lightning_conductor_armor")) {
             grantEffect(player, "strength", 140, 0);
             grantEffect(player, "speed", 140, 1);
             for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 5.0D, null)) {
@@ -1905,7 +1954,11 @@ public final class CrossDomainTransmutations {
         }
     }
 
-    public static boolean allowPlayerDeath(ServerLevel level, ServerPlayer player) {
+    public static boolean allowPlayerDeath(ServerLevel level, ServerPlayer player, DamageSource source) {
+        // API-04: Never block /kill or void BYPASSES_INVULNERABILITY sources with Totem Unbreaking!
+        if (source != null && source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            return true;
+        }
         // 37a: Unbreaking on Totem of Undying -> 10% / 18% / 25% chance to trigger Totem save WITHOUT shattering the Totem!
         for (InteractionHand hand : InteractionHand.values()) {
             ItemStack held = player.getItemInHand(hand);
@@ -2109,9 +2162,11 @@ public final class CrossDomainTransmutations {
     }
 
     public static void tickWorldItems(ServerLevel level) {
-        if (level.getGameTime() % 4L != 0L) {
+        // CPL-03: Throttled to 10-tick cadence with visited-entity deduplication across nearby players
+        if (level.getGameTime() % 10L != 0L || level.players().isEmpty()) {
             return;
         }
+        Set<Integer> visitedIds = new java.util.HashSet<>();
         for (ServerPlayer player : level.players()) {
             AABB columnBox = new AABB(
                 player.getX() - 96.0D, level.getMinY() - 96.0D, player.getZ() - 96.0D,
@@ -2119,8 +2174,11 @@ public final class CrossDomainTransmutations {
             );
             List<ItemEntity> nearby = level.getEntitiesOfClass(ItemEntity.class, columnBox, Entity::isAlive);
             for (ItemEntity ie : nearby) {
+                if (!visitedIds.add(ie.getId())) {
+                    continue;
+                }
                 ItemStack st = ie.getItem();
-                if (st.isEmpty()) continue;
+                if (st.isEmpty() || !hasAnyTransmutedEnchants(st)) continue;
 
                 // 9 & 10: Fire Protection / Blast Protection dropped item indestructibility!
                 if (getStandaloneEnchantLevel(st, "minecraft:fire_protection") > 0 && resolve("minecraft:fire_protection", st).isPresent()) {

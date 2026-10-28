@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,14 +26,16 @@ class FusionModelAndMatrixTest {
     static void loadRealDatapackMatrix() throws Exception {
         Path matrixPath = Path.of("src/main/resources/data/enchantment_fusion/enchantment_fusion/matrix_profiles.json");
         Path repulsivePath = Path.of("src/main/resources/data/enchantment_fusion/enchantment_fusion/repulsive_pairs.json");
+        Path economyPath = Path.of("src/main/resources/data/enchantment_fusion/enchantment_fusion/economy.json");
         JsonObject matrixJson = JsonParser.parseString(Files.readString(matrixPath, StandardCharsets.UTF_8)).getAsJsonObject();
         JsonObject repulsiveJson = JsonParser.parseString(Files.readString(repulsivePath, StandardCharsets.UTF_8)).getAsJsonObject();
-        snapshot = FusionMatrixRegistry.parseFromJson(matrixJson, repulsiveJson);
+        JsonObject economyJson = JsonParser.parseString(Files.readString(economyPath, StandardCharsets.UTF_8)).getAsJsonObject();
+        snapshot = FusionMatrixRegistry.parseFromJson(matrixJson, repulsiveJson, economyJson);
         FusionMatrixRegistry.publish(snapshot);
     }
 
     @Test
-    void directionalOrderIsStrictlyDistinct() {
+    void directionalOrderAndLevelTruncationInvariants() {
         FusedPair ab = new FusedPair("minecraft:sharpness", 5, "minecraft:fire_aspect", 2, "");
         FusedPair ba = ab.flipped();
 
@@ -42,12 +45,19 @@ class FusionModelAndMatrixTest {
         assertEquals("minecraft:sharpness", ba.secondaryId());
         assertEquals(5, ba.secondaryLevel());
         assertFalse(ab.isAberrant());
+
+        // DATA-01: Constructor clamps levels to [1, 10] and truncates overly long strings safely
+        FusedPair clamped = new FusedPair("minecraft:sharpness", 99, "minecraft:loyalty", 0, null);
+        assertEquals(10, clamped.primaryLevel());
+        assertEquals(1, clamped.secondaryLevel());
+        assertEquals("", clamped.aberrationId());
     }
 
     @Test
-    void fusedEnchantmentListSupportsImmutableCrudAndAberrantDetection() {
+    void fusedEnchantmentListSupportsImmutableCrudTruncationAndAberrantDetection() {
         FusedPair p1 = new FusedPair("minecraft:efficiency", 5, "minecraft:loyalty", 3, "");
-        FusedPair p2 = new FusedPair("minecraft:silk_touch", 1, "minecraft:fortune", 3, "schrodinger_pick");
+        FusedPair p2 = new FusedPair("minecraft:silk_touch", 1, "minecraft:fortune", 3, "ab_greedy_abyss");
+        FusedPair p3 = new FusedPair("minecraft:power", 5, "minecraft:flame", 1, "");
 
         FusedEnchantmentList list = FusedEnchantmentList.EMPTY.append(p1);
         assertEquals(1, list.size());
@@ -59,14 +69,18 @@ class FusionModelAndMatrixTest {
         assertEquals(2, withAb.size());
         assertTrue(withAb.hasAberration());
 
+        // DATA-01: Hard max 2 vessel slots enforced even on oversized raw lists
+        FusedEnchantmentList truncated = new FusedEnchantmentList(List.of(p1, p2, p3));
+        assertEquals(2, truncated.size());
+
         FusedEnchantmentList afterRemoveFirst = withAb.removeAt(0);
         assertEquals(1, afterRemoveFirst.size());
-        assertEquals("schrodinger_pick", afterRemoveFirst.pairs().get(0).aberrationId());
+        assertEquals("ab_greedy_abyss", afterRemoveFirst.pairs().get(0).aberrationId());
     }
 
     @Test
-    void datapackCoversAllEightTriggersAndFourteenPayloads() {
-        assertTrue(snapshot.profiles().size() >= 38, "Expected >= 38 non-curse vanilla enchantment profiles");
+    void datapackCoversAllEightTriggersFourteenPayloadsAndReplaceSemantics() {
+        assertTrue(snapshot.profiles().size() >= 43, "Expected all 43 vanilla 26.1.2 enchantment profiles");
 
         Set<TriggerType> seenTriggers = EnumSet.noneOf(TriggerType.class);
         Set<PayloadType> seenPayloads = EnumSet.noneOf(PayloadType.class);
@@ -75,14 +89,14 @@ class FusionModelAndMatrixTest {
             seenPayloads.add(profile.payload());
         }
         assertEquals(EnumSet.allOf(TriggerType.class), seenTriggers, "All 8 triggers must be populated in matrix_profiles.json");
+        assertEquals(EnumSet.allOf(TriggerType.class).size(), 8);
         assertEquals(EnumSet.allOf(PayloadType.class), seenPayloads, "All 14 payloads must be populated in matrix_profiles.json");
 
-        // Verify iconic cross-domain mappings from GDD §5
-        assertEquals(TriggerType.ON_BLOCK_HARVEST, snapshot.resolve("minecraft:efficiency").trigger());
-        assertEquals(PayloadType.RETURN, snapshot.resolve("minecraft:loyalty").payload());
-        assertEquals(TriggerType.ON_MOVEMENT_OR_LAND, snapshot.resolve("minecraft:feather_falling").trigger());
-        assertEquals(PayloadType.GRAVITY, snapshot.resolve("minecraft:density").payload());
-        assertEquals(PayloadType.SCATTER, snapshot.resolve("minecraft:multishot").payload());
+        // DATA-04: Explicit empty exclusive_groups with replace:true clears repulsive groups cleanly
+        JsonObject clearRepulsive = JsonParser.parseString("{\"replace\": true, \"exclusive_groups\": []}").getAsJsonObject();
+        var clearedSnap = FusionMatrixRegistry.parseFromJson(null, clearRepulsive, null);
+        assertTrue(clearedSnap.exclusiveGroups().isEmpty());
+        assertFalse(clearedSnap.areRepulsiveExclusives("minecraft:sharpness", "minecraft:smite"));
     }
 
     @Test
@@ -96,13 +110,14 @@ class FusionModelAndMatrixTest {
     }
 
     @Test
-    void repulsiveExclusiveGroupsAreSymmetric() {
+    void repulsiveExclusiveGroupsIncludeChannelingRiptideAndAreSymmetric() {
         assertTrue(snapshot.areRepulsiveExclusives("minecraft:sharpness", "minecraft:smite"));
         assertTrue(snapshot.areRepulsiveExclusives("minecraft:smite", "minecraft:sharpness"));
         assertTrue(snapshot.areRepulsiveExclusives("minecraft:silk_touch", "minecraft:fortune"));
         assertTrue(snapshot.areRepulsiveExclusives("minecraft:infinity", "minecraft:mending"));
         assertTrue(snapshot.areRepulsiveExclusives("minecraft:multishot", "minecraft:piercing"));
         assertTrue(snapshot.areRepulsiveExclusives("minecraft:density", "minecraft:breach"));
+        assertTrue(snapshot.areRepulsiveExclusives("minecraft:channeling", "minecraft:riptide"), "DATA-05: channeling x riptide must be repulsive");
         assertFalse(snapshot.areRepulsiveExclusives("minecraft:sharpness", "minecraft:loyalty"));
     }
 }

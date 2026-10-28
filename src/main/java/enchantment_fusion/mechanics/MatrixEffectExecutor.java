@@ -8,12 +8,15 @@ import enchantment_fusion.model.HostForm;
 import enchantment_fusion.model.PayloadType;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -29,6 +32,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -36,7 +40,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Executes Aberrant mutations, Handcrafted Signature Pairs, and the 8x14 Universal Cross-Domain Matrix
+ * Executes Aberrant mutations, Handcrafted Signature Resonances, and the 8x14 Universal Cross-Domain Matrix
  * across any host equipment ("万物可铭刻").
  */
 public final class MatrixEffectExecutor {
@@ -50,6 +54,12 @@ public final class MatrixEffectExecutor {
         SignaturePairs.clearRuntimeState();
     }
 
+    public static void onPlayerDisconnect(UUID playerId) {
+        if (playerId == null) return;
+        String prefix = playerId + "|";
+        COOLDOWNS.keySet().removeIf(k -> k.startsWith(prefix));
+    }
+
     public static void dispatch(
         ServerLevel level,
         ServerPlayer player,
@@ -58,7 +68,7 @@ public final class MatrixEffectExecutor {
         @Nullable LivingEntity targetEntity,
         Vec3 originPos
     ) {
-        dispatch(level, player, hostStack, firedTrigger, targetEntity, originPos, true);
+        dispatch(level, player, hostStack, EnumSet.of(firedTrigger), targetEntity, originPos, true, 1.0F);
     }
 
     public static void dispatch(
@@ -70,7 +80,24 @@ public final class MatrixEffectExecutor {
         Vec3 originPos,
         boolean fullChargeMelee
     ) {
-        if (Boolean.TRUE.equals(IN_EXECUTION.get()) || hostStack == null || hostStack.isEmpty()) {
+        dispatch(level, player, hostStack, EnumSet.of(firedTrigger), targetEntity, originPos, fullChargeMelee, 1.0F);
+    }
+
+    public static void dispatch(
+        ServerLevel level,
+        ServerPlayer player,
+        ItemStack hostStack,
+        Set<TriggerType> firedTriggers,
+        @Nullable LivingEntity targetEntity,
+        Vec3 originPos,
+        boolean fullChargeMelee,
+        float chargeScale
+    ) {
+        if (Boolean.TRUE.equals(IN_EXECUTION.get())
+            || hostStack == null
+            || hostStack.isEmpty()
+            || firedTriggers == null
+            || firedTriggers.isEmpty()) {
             return;
         }
         FusedEnchantmentList list = hostStack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
@@ -81,28 +108,36 @@ public final class MatrixEffectExecutor {
         HostForm hostForm = HostForm.resolve(hostStack);
         FusionMatrixRegistry.Snapshot snapshot = FusionMatrixRegistry.current();
         long now = level.getGameTime();
+        var registries = level.registryAccess();
 
         IN_EXECUTION.set(Boolean.TRUE);
         try {
             for (FusedPair pair : list.pairs()) {
-                FusionMatrixRegistry.MatrixProfile primaryProfile = snapshot.resolve(pair.primaryId());
-                if (!matchesUniversalHostTrigger(primaryProfile.trigger(), firedTrigger, hostForm)) {
+                Holder<Enchantment> pHolder = FusionStationOperations.lookupEnchantment(registries, pair.primaryId()).orElse(null);
+                FusionMatrixRegistry.MatrixProfile primaryProfile = snapshot.resolve(pair.primaryId(), pHolder);
+
+                TriggerType matchedTrigger = null;
+                for (TriggerType ft : firedTriggers) {
+                    if (matchesUniversalHostTrigger(primaryProfile.trigger(), ft, hostForm)) {
+                        matchedTrigger = ft;
+                        break;
+                    }
+                }
+                if (matchedTrigger == null) {
                     continue;
                 }
 
-                String cdKey = cooldownKey(player.getUUID(), firedTrigger, pair.primaryId(), pair.secondaryId());
+                String cdKey = cooldownKey(player.getUUID(), pair.primaryId(), pair.secondaryId());
                 long readyAt = COOLDOWNS.getOrDefault(cdKey, 0L);
                 if (now < readyAt) {
                     continue;
                 }
-                COOLDOWNS.put(cdKey, now + Math.max(6, firedTrigger.cooldownTicks()));
+                COOLDOWNS.put(cdKey, now + Math.max(6, matchedTrigger.cooldownTicks()));
 
-                // 1. Unstable Aberrant Fusion execution (double-edged / gag effect)
                 if (pair.isAberrant()) {
                     AberrantRegistry.executeAberration(level, player, pair.aberrationId(), targetEntity, originPos);
                 }
 
-                // 2. Handcrafted Signature Pair execution (if defined across the 16 bespoke batches)
                 Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
                 if (sigOpt.isPresent()) {
                     boolean handled = SignaturePairs.executeSignatureCombat(
@@ -113,9 +148,9 @@ public final class MatrixEffectExecutor {
                     }
                 }
 
-                // 3. Universal 8x14 Cross-Domain Adaptive Matrix fallback
-                PayloadType payload = snapshot.resolve(pair.secondaryId()).payload();
-                float scale = Math.max(0.35F, Math.min(2.0F, pair.secondaryLevel() * 0.45F));
+                Holder<Enchantment> sHolder = FusionStationOperations.lookupEnchantment(registries, pair.secondaryId()).orElse(null);
+                PayloadType payload = snapshot.resolve(pair.secondaryId(), sHolder).payload();
+                float scale = Math.clamp(pair.secondaryLevel() * 0.45F * Math.clamp(chargeScale, 0.5F, 1.0F), 0.35F, 2.0F);
                 executePayload(level, player, hostStack, hostForm, payload, scale, targetEntity, originPos);
             }
         } finally {
@@ -123,10 +158,6 @@ public final class MatrixEffectExecutor {
         }
     }
 
-    /**
-     * Under Universal Any-Gear Inscription ("万物可铭刻"), e.g. [Frost Walker ▷ Fire Aspect] socketed onto a Sword
-     * fires naturally on melee/projectile strikes even though Frost Walker's native trigger is movement!
-     */
     private static boolean matchesUniversalHostTrigger(
         TriggerType nativeTrigger,
         TriggerType firedTrigger,
@@ -143,8 +174,8 @@ public final class MatrixEffectExecutor {
         };
     }
 
-    private static String cooldownKey(UUID uuid, TriggerType trigger, String primaryId, String secondaryId) {
-        return uuid + "|" + trigger.name() + "|" + primaryId + ">" + secondaryId;
+    private static String cooldownKey(UUID uuid, String primaryId, String secondaryId) {
+        return uuid + "|" + primaryId + ">" + secondaryId;
     }
 
     private static void executePayload(
@@ -157,12 +188,13 @@ public final class MatrixEffectExecutor {
         @Nullable LivingEntity target,
         Vec3 pos
     ) {
+        boolean utility = (hostForm == HostForm.TOOL || hostForm == HostForm.ARMOR);
         switch (payload) {
             case PYRO -> {
                 if (target != null) {
                     target.igniteForSeconds(Math.max(2.0F, 3.0F * scale));
                 }
-                if (hostForm == HostForm.ARMOR && player.isOnFire()) {
+                if (utility && player.isOnFire()) {
                     player.clearFire();
                 }
                 level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 0.5D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.03D);
@@ -172,7 +204,9 @@ public final class MatrixEffectExecutor {
                     target.setTicksFrozen(Math.min(300, target.getTicksFrozen() + Math.round(90 * scale)));
                     grantEffect(target, "slowness", Math.round(50 * scale), 1);
                 }
-                freezeNearbySurfaceWater(level, BlockPos.containing(pos));
+                if (player.mayBuild()) {
+                    freezeNearbySurfaceWater(level, BlockPos.containing(pos));
+                }
                 level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.5D, pos.z, 10, 0.35D, 0.25D, 0.35D, 0.02D);
             }
             case VOLT -> {
@@ -180,7 +214,7 @@ public final class MatrixEffectExecutor {
                     float bonus = (level.isThundering() || target.isInWaterOrRain()) ? 3.5F * scale : 2.0F * scale;
                     target.hurtServer(level, level.damageSources().magic(), bonus);
                     grantEffect(target, "slowness", 30, 1);
-                } else if (hostForm == HostForm.TOOL) {
+                } else if (utility) {
                     grantEffect(player, "haste", Math.round(60 * scale), 0);
                 }
                 level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y + 0.6D, pos.z, 12, 0.3D, 0.3D, 0.3D, 0.08D);
@@ -191,7 +225,9 @@ public final class MatrixEffectExecutor {
                     pullNearbyDrops(level, player, pos, 5.0D);
                 } else {
                     AABB box = AABB.ofSize(pos, 5.0D, 3.0D, 5.0D);
-                    List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class, box, e -> e != player && e.isAlive());
+                    List<LivingEntity> nearby = level.getEntitiesOfClass(
+                        LivingEntity.class, box, e -> e != player && e.isAlive() && !e.isAlliedTo(player)
+                    );
                     for (LivingEntity mob : nearby) {
                         Vec3 push = mob.position().subtract(player.position()).normalize().scale(0.55D * scale);
                         mob.push(push.x, 0.28D * scale, push.z);
@@ -213,7 +249,7 @@ public final class MatrixEffectExecutor {
             case PIERCE -> {
                 if (target != null) {
                     target.hurtServer(level, level.damageSources().magic(), 2.0F * scale);
-                } else if (hostForm == HostForm.ARMOR) {
+                } else if (utility) {
                     grantEffect(player, "strength", 50, 0);
                 }
                 level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 0.6D, pos.z, 8, 0.2D, 0.2D, 0.2D, 0.08D);
@@ -221,7 +257,7 @@ public final class MatrixEffectExecutor {
             case SCATTER -> {
                 AABB area = AABB.ofSize(pos, 4.0D, 2.5D, 4.0D);
                 List<LivingEntity> splashTargets = level.getEntitiesOfClass(
-                    LivingEntity.class, area, e -> e != player && e != target && e.isAlive()
+                    LivingEntity.class, area, e -> e != player && e != target && e.isAlive() && !e.isAlliedTo(player)
                 );
                 int hitCount = 0;
                 for (LivingEntity extra : splashTargets) {
@@ -232,7 +268,9 @@ public final class MatrixEffectExecutor {
             }
             case GRAVITY -> {
                 AABB slamBox = AABB.ofSize(pos, 5.5D, 2.5D, 5.5D);
-                List<LivingEntity> slammed = level.getEntitiesOfClass(LivingEntity.class, slamBox, e -> e != player && e.isAlive());
+                List<LivingEntity> slammed = level.getEntitiesOfClass(
+                    LivingEntity.class, slamBox, e -> e != player && e.isAlive() && !e.isAlliedTo(player)
+                );
                 float slamDamage = Math.max(2.0F, (float) Math.min(10.0D, player.fallDistance * 0.8D + 2.2D * scale));
                 for (LivingEntity mob : slammed) {
                     mob.hurtServer(level, level.damageSources().playerAttack(player), slamDamage);
@@ -242,7 +280,7 @@ public final class MatrixEffectExecutor {
                 level.playSound(null, BlockPos.containing(pos), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.35F, 1.4F);
             }
             case EDGE -> {
-                if (hostForm == HostForm.TOOL) {
+                if (utility) {
                     grantEffect(player, "haste", Math.round(55 * scale), 0);
                 } else {
                     grantEffect(player, "strength", Math.round(45 * scale), 0);
@@ -253,6 +291,8 @@ public final class MatrixEffectExecutor {
                 if (target != null) {
                     grantEffect(target, "slowness", Math.round(60 * scale), 1);
                     target.hurtServer(level, level.damageSources().magic(), 1.8F * scale);
+                } else if (utility) {
+                    grantEffect(player, "resistance", 45, 0);
                 }
                 level.sendParticles(ParticleTypes.WITCH, pos.x, pos.y + 0.5D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.02D);
             }

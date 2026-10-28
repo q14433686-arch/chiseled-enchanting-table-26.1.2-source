@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "low_fail_chance": 0.0,
+  "mid_fail_chance": 0.18,
+  "high_fail_chance": 0.28,
+  "repulsive_fail_chance": 0.45,
+  "repulsive_min_floor": 0.08,
+  "stabilizer_reduction_repulsive": 0.13,
+  "stabilizer_reduction_normal": 0.18,
+  "max_repulsive_stabilizers": 3
+}

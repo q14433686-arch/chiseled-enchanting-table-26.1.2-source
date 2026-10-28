@@ -1,6 +1,8 @@
 package enchantment_fusion.mechanics;
 
 import enchantment_fusion.compat.CetSoftBridge;
+import enchantment_fusion.data.FusionMatrixRegistry;
+import enchantment_fusion.data.FusionMatrixRegistry.EconomyConfig;
 import enchantment_fusion.model.FusedPair;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
@@ -10,14 +12,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Pure + runtime {@code tiered_risk} economy calculator for Book Synthesis ({@code 合成})
- * and Cross-Domain Single/Fused Conversion ({@code 转换}):
+ * Tiered-risk economy calculator aligned with {@link EconomyConfig} (EF-003 / BAL-03 / BAL-04 / BAL-05 / BAL-07):
  * <ul>
- *   <li>Charges tiered XP Levels + Enchanting Reagents ({@code Lapis Lazuli / Amethyst Shard / Emerald})
- *       from the Catalyst slot or the player's inventory.</li>
- *   <li>Computes failure probability reducible via {@code Resonance Stabilizer} catalysts.</li>
- *   <li>Normal failure keeps host gear / primary book safe, consumes 1 book, and charges only half the fee
- *       (50% refund); high-risk max-level / repulsive failure produces an Aberrant book or taints gear.</li>
+ *   <li><b>Low Tier</b>: {@code 0%} failure rate (beginner-friendly, consumes {@code 0} stabilizers).</li>
+ *   <li><b>Mid Tier</b>: Moderate failure rate reducible to {@code 0%} via Resonance Stabilizer;
+ *       failure NEVER destroys any book or gear (charges only half XP & reagent rounded down).</li>
+ *   <li><b>High / Repulsive Tier</b>: High-tier max-level or mutually-exclusive clash;
+ *       Stabilizers are consumed strictly by needed count ({@code ceil((base - floor) / reduction)}),
+ *       with repulsive fusions retaining an honest {@code 8%} minimum instability floor (unless CET Arcane Catalyst is used).</li>
  * </ul>
  */
 public final class FusionEconomyRules {
@@ -34,7 +36,12 @@ public final class FusionEconomyRules {
         }
 
         public String translationKey() {
-            return "gui.enchantment_fusion.reagent." + key;
+            return switch (this) {
+                case NONE -> "gui.enchantment_fusion.reagent.none";
+                case LAPIS -> "gui.enchantment_fusion.reagent.lapis";
+                case AMETHYST -> "gui.enchantment_fusion.reagent.amethyst";
+                case EMERALD -> "gui.enchantment_fusion.reagent.emerald";
+            };
         }
 
         public Item asVanillaItem() {
@@ -60,9 +67,21 @@ public final class FusionEconomyRules {
         int reagentCount,
         double failureChance,
         boolean highRiskTier,
+        boolean destroysBookOnFail,
         int stabilizersUsed
     ) {
-        public static final EconomyQuote FREE = new EconomyQuote(0, ReagentKind.NONE, 0, 0.0, false, 0);
+        public static final EconomyQuote FREE = new EconomyQuote(0, ReagentKind.NONE, 0, 0.0, false, false, 0);
+
+        public EconomyQuote(
+            int xpLevels,
+            ReagentKind reagent,
+            int reagentCount,
+            double failureChance,
+            boolean highRiskTier,
+            int stabilizersUsed
+        ) {
+            this(xpLevels, reagent, reagentCount, failureChance, highRiskTier, false, stabilizersUsed);
+        }
 
         public int halfChargedXp() {
             return xpLevels / 2;
@@ -82,6 +101,15 @@ public final class FusionEconomyRules {
         return CetSoftBridge.isStabilizerCatalyst(catalystSlot) ? catalystSlot.getCount() : 0;
     }
 
+    /** Computes the exact stabilizer count needed so extra crystals in Slot 2 are never wasted (BAL-03). */
+    public static int computeNeededStabilizers(double baseFail, double floorFail, double perStab, int cap, int available) {
+        if (available <= 0 || cap <= 0 || baseFail <= floorFail + 1e-6 || perStab <= 1e-6) {
+            return 0;
+        }
+        int needed = (int) Math.ceil((baseFail - floorFail - 1e-9) / perStab);
+        return Math.max(0, Math.min(available, Math.min(cap, needed)));
+    }
+
     public static EconomyQuote computeSynthesisQuote(
         String primaryId,
         int pLv,
@@ -94,41 +122,58 @@ public final class FusionEconomyRules {
         int stabilizerCount,
         boolean zeroXpCatalyst
     ) {
+        EconomyConfig eco = FusionMatrixRegistry.current().economy();
         int safeStab = Math.max(0, stabilizerCount);
         int sumLv = Math.max(2, pLv + sLv);
 
         if (repulsive) {
             int xp = zeroXpCatalyst ? 0 : (7 + Math.min(4, sumLv / 3));
             int mats = (pLv >= pMax && sLv >= sMax) ? 3 : 2;
-            int used = Math.min(3, safeStab);
-            double fail = clampProb(0.45 - 0.12 * used, 0.08, 0.85);
-            return new EconomyQuote(xp, ReagentKind.EMERALD, mats, fail, true, used);
+            if (zeroXpCatalyst) {
+                return new EconomyQuote(0, ReagentKind.EMERALD, mats, 0.0, true, false, Math.min(1, safeStab));
+            }
+            double base = eco.repulsiveFailChance();
+            double floor = eco.repulsiveMinFloor();
+            double step = eco.stabilizerReductionRepulsive();
+            int used = computeNeededStabilizers(base, floor, step, eco.maxRepulsiveStabilizers(), safeStab);
+            double fail = clampProb(base - step * used, floor, 0.85);
+            return new EconomyQuote(xp, ReagentKind.EMERALD, mats, fail, true, false, used);
         }
 
         boolean bothMaxHigh = (pLv >= pMax && sLv >= sMax && (pMax >= 3 || sMax >= 3));
         if (bothMaxHigh) {
             int xp = zeroXpCatalyst ? 0 : Math.min(9, 4 + sumLv / 2);
-            int used = Math.min(2, safeStab);
-            double base = signature ? 0.28 : 0.22;
-            double fail = clampProb(base - 0.15 * used, 0.0, 0.75);
-            return new EconomyQuote(xp, ReagentKind.EMERALD, 2, fail, true, used);
+            if (zeroXpCatalyst) {
+                return new EconomyQuote(0, ReagentKind.EMERALD, 2, 0.0, true, false, Math.min(1, safeStab));
+            }
+            double base = signature ? eco.highFailChance() : Math.max(0.0, eco.highFailChance() - 0.06);
+            double step = eco.stabilizerReductionNormal();
+            int used = computeNeededStabilizers(base, 0.0, step, 2, safeStab);
+            double fail = clampProb(base - step * used, 0.0, 0.75);
+            return new EconomyQuote(xp, ReagentKind.EMERALD, 2, fail, true, false, used);
         }
 
         if (signature || sumLv >= 5) {
             int xp = zeroXpCatalyst ? 0 : Math.max(3, Math.min(7, 2 + sumLv / 2));
             int mats = Math.max(1, Math.min(3, sumLv / 3));
-            int used = Math.min(2, safeStab);
-            double base = (signature ? 0.18 : 0.14) + 0.02 * Math.max(0, sumLv - 4);
-            double fail = clampProb(base - 0.16 * used, 0.0, 0.65);
-            return new EconomyQuote(xp, ReagentKind.AMETHYST, mats, fail, false, used);
+            if (zeroXpCatalyst) {
+                return new EconomyQuote(0, ReagentKind.AMETHYST, mats, 0.0, false, false, Math.min(1, safeStab));
+            }
+            double base = eco.midFailChance() + 0.02 * Math.max(0, sumLv - 5);
+            double step = eco.stabilizerReductionNormal();
+            int used = computeNeededStabilizers(base, 0.0, step, 2, safeStab);
+            double fail = clampProb(base - step * used, 0.0, 0.65);
+            // Mid-tier failure NEVER destroys books — only charges half fee! (Choice 3A / BAL-05)
+            return new EconomyQuote(xp, ReagentKind.AMETHYST, mats, fail, false, false, used);
         }
 
+        // Low-tier beginner fusion: 0% failure rate, 0 stabilizers consumed! (Choice 3A)
         int xp = zeroXpCatalyst ? 0 : Math.max(2, 1 + sumLv / 2);
-        int mats = Math.max(2, Math.min(5, 1 + sumLv));
-        int used = Math.min(2, safeStab);
-        double base = 0.10 + 0.03 * Math.max(0, sumLv - 2);
-        double fail = clampProb(base - 0.18 * used, 0.0, 0.50);
-        return new EconomyQuote(xp, ReagentKind.LAPIS, mats, fail, false, used);
+        int mats = Math.max(2, Math.min(4, 1 + sumLv));
+        double base = eco.lowFailChance();
+        int used = computeNeededStabilizers(base, 0.0, eco.stabilizerReductionNormal(), 1, safeStab);
+        double fail = clampProb(base - eco.stabilizerReductionNormal() * used, 0.0, 0.50);
+        return new EconomyQuote(xp, ReagentKind.LAPIS, mats, fail, false, false, used);
     }
 
     public static EconomyQuote computeConversionQuote(
@@ -137,28 +182,59 @@ public final class FusionEconomyRules {
         int stabilizerCount,
         boolean zeroXpCatalyst
     ) {
+        return computeConversionQuote(enchLevel, maxLevel, 1, stabilizerCount, zeroXpCatalyst);
+    }
+
+    /**
+     * Conversion quote factoring both enchantment level ratio and rarity/anvilCost so rare
+     * 1-level enchantments (Mending, Infinity, Silk Touch, Channeling, Wind Burst) are priced in
+     * Mid/High tier rather than Low tier (BAL-07).
+     */
+    public static EconomyQuote computeConversionQuote(
+        int enchLevel,
+        int maxLevel,
+        int anvilCost,
+        int stabilizerCount,
+        boolean zeroXpCatalyst
+    ) {
+        EconomyConfig eco = FusionMatrixRegistry.current().economy();
         int safeLv = Math.max(1, enchLevel);
         int safeMax = Math.max(1, maxLevel);
+        int safeAnvil = Math.max(1, anvilCost);
         int safeStab = Math.max(0, stabilizerCount);
 
-        if (safeLv >= safeMax && safeMax >= 4) {
-            int xp = zeroXpCatalyst ? 0 : 5;
-            int used = Math.min(2, safeStab);
-            double fail = clampProb(0.24 - 0.15 * used, 0.0, 0.60);
-            return new EconomyQuote(xp, ReagentKind.EMERALD, 2, fail, true, used);
+        boolean highRarity = safeAnvil >= 8 || (safeLv >= safeMax && safeMax >= 4);
+        if (highRarity) {
+            int xp = zeroXpCatalyst ? 0 : Math.max(5, Math.min(8, 3 + safeAnvil / 2));
+            if (zeroXpCatalyst) {
+                return new EconomyQuote(0, ReagentKind.EMERALD, 2, 0.0, true, false, Math.min(1, safeStab));
+            }
+            double base = Math.max(0.0, eco.highFailChance() - 0.04);
+            int used = computeNeededStabilizers(base, 0.0, eco.stabilizerReductionNormal(), 2, safeStab);
+            double fail = clampProb(base - eco.stabilizerReductionNormal() * used, 0.0, 0.60);
+            return new EconomyQuote(xp, ReagentKind.EMERALD, 2, fail, true, false, used);
         }
-        if (safeLv >= 3 || (safeLv >= safeMax && safeMax >= 2)) {
-            int xp = zeroXpCatalyst ? 0 : Math.max(3, safeLv);
-            int mats = Math.min(3, Math.max(1, safeLv - 1));
-            int used = Math.min(2, safeStab);
-            double fail = clampProb(0.15 - 0.16 * used, 0.0, 0.50);
-            return new EconomyQuote(xp, ReagentKind.AMETHYST, mats, fail, false, used);
+
+        boolean midTier = safeAnvil >= 4 || safeLv >= 3 || (safeLv >= safeMax && safeMax >= 2);
+        if (midTier) {
+            int xp = zeroXpCatalyst ? 0 : Math.max(3, Math.max(safeLv, safeAnvil));
+            int mats = Math.min(3, Math.max(2, safeLv));
+            if (zeroXpCatalyst) {
+                return new EconomyQuote(0, ReagentKind.AMETHYST, mats, 0.0, false, false, Math.min(1, safeStab));
+            }
+            double base = eco.midFailChance();
+            int used = computeNeededStabilizers(base, 0.0, eco.stabilizerReductionNormal(), 2, safeStab);
+            double fail = clampProb(base - eco.stabilizerReductionNormal() * used, 0.0, 0.50);
+            return new EconomyQuote(xp, ReagentKind.AMETHYST, mats, fail, false, false, used);
         }
+
+        // Low-tier conversion: 0% failure rate!
         int xp = zeroXpCatalyst ? 0 : (1 + safeLv);
         int mats = 2 + safeLv;
-        int used = Math.min(1, safeStab);
-        double fail = clampProb(0.09 - 0.18 * used, 0.0, 0.40);
-        return new EconomyQuote(xp, ReagentKind.LAPIS, mats, fail, false, used);
+        double base = eco.lowFailChance();
+        int used = computeNeededStabilizers(base, 0.0, eco.stabilizerReductionNormal(), 1, safeStab);
+        double fail = clampProb(base - eco.stabilizerReductionNormal() * used, 0.0, 0.40);
+        return new EconomyQuote(xp, ReagentKind.LAPIS, mats, fail, false, false, used);
     }
 
     public static EconomyQuote computeSocketFusedBookQuote(
@@ -166,13 +242,18 @@ public final class FusionEconomyRules {
         int stabilizerCount,
         boolean zeroXpCatalyst
     ) {
+        EconomyConfig eco = FusionMatrixRegistry.current().economy();
         int safeStab = Math.max(0, stabilizerCount);
-        int used = Math.min(1, safeStab);
         boolean ab = pair != null && pair.isAberrant();
         int xp = zeroXpCatalyst ? 0 : 2;
         ReagentKind kind = ab ? ReagentKind.EMERALD : ReagentKind.AMETHYST;
-        double fail = clampProb((ab ? 0.15 : 0.06) - 0.16 * used, 0.0, 0.40);
-        return new EconomyQuote(xp, kind, 1, fail, ab, used);
+        if (!ab || zeroXpCatalyst) {
+            return new EconomyQuote(xp, kind, 1, 0.0, ab, false, zeroXpCatalyst ? Math.min(1, safeStab) : 0);
+        }
+        double base = 0.15;
+        int used = computeNeededStabilizers(base, 0.0, eco.stabilizerReductionNormal(), 1, safeStab);
+        double fail = clampProb(base - eco.stabilizerReductionNormal() * used, 0.0, 0.40);
+        return new EconomyQuote(xp, kind, 1, fail, true, false, used);
     }
 
     public static int countAvailableReagent(Container stationInv, Player player, ReagentKind kind) {

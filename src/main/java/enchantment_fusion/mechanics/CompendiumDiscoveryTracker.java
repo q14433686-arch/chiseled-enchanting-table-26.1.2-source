@@ -16,8 +16,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,15 +44,14 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.storage.LevelResource;
 
 /**
- * Three-stage knowledge progression engine for {@code 《融合秘典》 (Fusion Grimoire)},
- * modeled after Herbcraft's {@code KnowledgeAPI} + {@code KnowledgeInventoryScanner} + {@code TatteredPageItem}:
+ * Three-stage knowledge progression engine for {@code 《融合秘典》 (Fusion Grimoire)}:
  * <ul>
  *   <li>{@code STATE_UNKNOWN (0)}: Masked {@code ???}</li>
- *   <li>{@code STATE_HEARD (1 / 初识)}: Unlocked when scanning related Enchanted Books in inventory,
- *       reading a Common Tattered Page, or attempting a failed synthesis — reveals formula & target gear clue.</li>
- *   <li>{@code STATE_MASTERED (2 / 通晓)}: Unlocked when crafting/transmuting at the Fusion Table,
- *       triggering the effect in live gameplay, or reading a Rare Ancient Page — reveals full title & mechanics.</li>
+ *   <li>{@code STATE_HEARD (1 / 初识)}: Formula & target gear clue unlocked.</li>
+ *   <li>{@code STATE_MASTERED (2 / 通晓)}: Full title & mechanics unlocked.</li>
  * </ul>
+ * Uses batched dirty-flagged atomic temp-file writes every 200 ticks + shutdown flush (DATA-03)
+ * and incremental {@code CompendiumDeltaPayload} updates on single-entry unlocks (NET-05).
  */
 public final class CompendiumDiscoveryTracker {
     public static final int STATE_UNKNOWN = 0;
@@ -60,6 +61,7 @@ public final class CompendiumDiscoveryTracker {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<UUID, Map<String, Integer>> SERVER_STATES = new ConcurrentHashMap<>();
     private static final Map<UUID, Set<String>> SCANNED_ENCHANTS_CACHE = new ConcurrentHashMap<>();
+    private static volatile boolean dirtySave = false;
     private static volatile Map<String, Integer> CLIENT_STATES = Map.of();
 
     private CompendiumDiscoveryTracker() {}
@@ -84,24 +86,43 @@ public final class CompendiumDiscoveryTracker {
         return "aberrant/" + aberrationId;
     }
 
+    public static void onPlayerDisconnect(UUID playerId) {
+        if (playerId != null) {
+            SCANNED_ENCHANTS_CACHE.remove(playerId);
+        }
+    }
+
     public static void initServerHooks() {
         ServerLifecycleEvents.SERVER_STARTED.register(CompendiumDiscoveryTracker::loadWorldFile);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            saveWorldFile(server);
+            saveWorldFileAtomically(server);
+            dirtySave = false;
             SERVER_STATES.clear();
             SCANNED_ENCHANTS_CACHE.clear();
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerPlayer player = handler.player;
+            ServerPlayer player = handler.getPlayer();
+            FusionNetworking.sendMatrixSync(player);
             scanPlayerInventory(player);
             FusionNetworking.sendCompendiumSync(player, encodeStates(player.getUUID()));
         });
-        // Herbcraft-style 20-tick inventory scanner: acquiring an Enchanted Book unlocks Stage 1 clues!
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+            if (success) {
+                for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                    FusionNetworking.sendMatrixSync(player);
+                }
+            }
+        });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTickCount() % 20 == 0) {
+            int tick = server.getTickCount();
+            if (tick % 20 == 0) {
                 for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                     scanPlayerInventory(player);
                 }
+            }
+            if (dirtySave && tick % 200 == 0) {
+                dirtySave = false;
+                saveWorldFileAtomically(server);
             }
         });
     }
@@ -111,7 +132,7 @@ public final class CompendiumDiscoveryTracker {
         Set<String> seenEnchants = SCANNED_ENCHANTS_CACHE.computeIfAbsent(
             player.getUUID(), k -> ConcurrentHashMap.newKeySet()
         );
-        boolean dirty = false;
+        boolean bulkChanged = false;
 
         int size = inv.getContainerSize();
         for (int i = 0; i < size; i++) {
@@ -123,7 +144,17 @@ public final class CompendiumDiscoveryTracker {
                 for (Holder<Enchantment> h : stored.keySet()) {
                     String eid = h.unwrapKey().map(k -> k.identifier().toString()).orElse("");
                     if (!eid.isEmpty() && seenEnchants.add(eid)) {
-                        dirty |= unlockHeardForEnchantment(player.getUUID(), eid);
+                        bulkChanged |= unlockHeardForEnchantment(player.getUUID(), eid);
+                    }
+                }
+            }
+
+            Map<String, Integer> transmuted = st.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of());
+            if (!transmuted.isEmpty()) {
+                for (String eid : transmuted.keySet()) {
+                    Optional<TransmuteVariant> tv = CrossDomainTransmutations.resolve(st, eid);
+                    if (tv.isPresent()) {
+                        bulkChanged |= advanceStateInternal(player.getUUID(), transmuteKey(tv.get().id()), STATE_MASTERED);
                     }
                 }
             }
@@ -131,19 +162,21 @@ public final class CompendiumDiscoveryTracker {
             FusedEnchantmentList fused = st.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
             if (!fused.isEmpty()) {
                 for (FusedPair pair : fused.pairs()) {
-                    dirty |= advanceStateInternal(player.getUUID(), pairKey(pair), STATE_MASTERED);
-                    SignaturePairs.resolve(pair).ifPresent(sig ->
-                        advanceStateInternal(player.getUUID(), sigKey(sig.id()), STATE_MASTERED)
-                    );
+                    bulkChanged |= advanceStateInternal(player.getUUID(), pairKey(pair), STATE_MASTERED);
+                    Optional<SignatureEntry> sig = SignaturePairs.resolve(pair);
+                    if (sig.isPresent()) {
+                        bulkChanged |= advanceStateInternal(player.getUUID(), sigKey(sig.get().id()), STATE_MASTERED);
+                    }
                     if (pair.isAberrant()) {
-                        dirty |= advanceStateInternal(player.getUUID(), aberrantKey(pair.aberrationId()), STATE_MASTERED);
+                        bulkChanged |= advanceStateInternal(player.getUUID(), aberrantKey(pair.aberrationId()), STATE_MASTERED);
                     }
                 }
             }
         }
 
-        if (dirty) {
-            persistAndSync(player);
+        if (bulkChanged) {
+            dirtySave = true;
+            FusionNetworking.sendCompendiumSync(player, encodeStates(player.getUUID()));
         }
     }
 
@@ -164,9 +197,11 @@ public final class CompendiumDiscoveryTracker {
     }
 
     public static boolean advanceState(ServerPlayer player, String key, int targetState) {
-        boolean changed = advanceStateInternal(player.getUUID(), key, targetState);
+        int clamped = Math.min(STATE_MASTERED, targetState);
+        boolean changed = advanceStateInternal(player.getUUID(), key, clamped);
         if (changed) {
-            persistAndSync(player);
+            dirtySave = true;
+            FusionNetworking.sendCompendiumDelta(player, key, clamped);
         }
         return changed;
     }
@@ -180,49 +215,58 @@ public final class CompendiumDiscoveryTracker {
         int prev = map.getOrDefault(key, STATE_UNKNOWN);
         if (clamped > prev) {
             map.put(key, clamped);
+            dirtySave = true;
             return true;
         }
         return false;
     }
 
     public static boolean recordDiscovery(ServerPlayer player, String primaryId, String secondaryId) {
-        boolean changed = advanceStateInternal(player.getUUID(), pairKey(primaryId, secondaryId), STATE_MASTERED);
-        SignaturePairs.resolve(FusedPair.clean(primaryId, 1, secondaryId, 1)).ifPresent(sig ->
-            advanceStateInternal(player.getUUID(), sigKey(sig.id()), STATE_MASTERED)
-        );
+        String pk = pairKey(primaryId, secondaryId);
+        boolean changed = advanceStateInternal(player.getUUID(), pk, STATE_MASTERED);
         if (changed) {
-            persistAndSync(player);
+            FusionNetworking.sendCompendiumDelta(player, pk, STATE_MASTERED);
+        }
+        Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(FusedPair.clean(primaryId, 1, secondaryId, 1));
+        if (sigOpt.isPresent()) {
+            String sk = sigKey(sigOpt.get().id());
+            if (advanceStateInternal(player.getUUID(), sk, STATE_MASTERED)) {
+                FusionNetworking.sendCompendiumDelta(player, sk, STATE_MASTERED);
+                changed = true;
+            }
         }
         return changed;
     }
 
     public static void recordPairHeard(ServerPlayer player, String primaryId, String secondaryId) {
-        boolean changed = advanceStateInternal(player.getUUID(), pairKey(primaryId, secondaryId), STATE_HEARD);
+        String pk = pairKey(primaryId, secondaryId);
+        if (advanceStateInternal(player.getUUID(), pk, STATE_HEARD)) {
+            FusionNetworking.sendCompendiumDelta(player, pk, STATE_HEARD);
+        }
         Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(FusedPair.clean(primaryId, 1, secondaryId, 1));
         if (sigOpt.isPresent()) {
-            changed |= advanceStateInternal(player.getUUID(), sigKey(sigOpt.get().id()), STATE_HEARD);
-        }
-        if (changed) {
-            persistAndSync(player);
+            String sk = sigKey(sigOpt.get().id());
+            if (advanceStateInternal(player.getUUID(), sk, STATE_HEARD)) {
+                FusionNetworking.sendCompendiumDelta(player, sk, STATE_HEARD);
+            }
         }
     }
 
     public static void recordTransmuteProgress(ServerPlayer player, String variantId, int state) {
-        if (advanceStateInternal(player.getUUID(), transmuteKey(variantId), state)) {
-            persistAndSync(player);
+        int clamped = Math.min(STATE_MASTERED, state);
+        String tk = transmuteKey(variantId);
+        if (advanceStateInternal(player.getUUID(), tk, clamped)) {
+            FusionNetworking.sendCompendiumDelta(player, tk, clamped);
         }
     }
 
     public static void recordAberrantMastered(ServerPlayer player, String aberrationId) {
-        if (advanceStateInternal(player.getUUID(), aberrantKey(aberrationId), STATE_MASTERED)) {
-            persistAndSync(player);
+        String ak = aberrantKey(aberrationId);
+        if (advanceStateInternal(player.getUUID(), ak, STATE_MASTERED)) {
+            FusionNetworking.sendCompendiumDelta(player, ak, STATE_MASTERED);
         }
     }
 
-    /**
-     * Consumes a tiered {@code 融合残页} (0 = Common -> HEARD, 1 = Rare -> MASTERED, 2 = Aberrant -> MASTERED).
-     * Returns true if a new discovery was made; false if nothing left to learn for this tier.
-     */
     public static boolean consumeTatteredPage(ServerPlayer player, int pageTier) {
         UUID pid = player.getUUID();
         Map<String, Integer> states = SERVER_STATES.computeIfAbsent(pid, k -> new ConcurrentHashMap<>());
@@ -237,15 +281,16 @@ public final class CompendiumDiscoveryTracker {
             }
             if (!unmasteredAberrant.isEmpty()) {
                 String picked = unmasteredAberrant.get(rng.nextInt(unmasteredAberrant.size()));
-                advanceStateInternal(pid, aberrantKey(picked), STATE_MASTERED);
-                persistAndSync(player);
+                String ak = aberrantKey(picked);
+                advanceStateInternal(pid, ak, STATE_MASTERED);
+                FusionNetworking.sendCompendiumDelta(player, ak, STATE_MASTERED);
                 Component title = Component.translatable(AberrantRegistry.titleKey(picked)).withStyle(ChatFormatting.LIGHT_PURPLE);
                 player.sendSystemMessage(Component.translatable("message.enchantment_fusion.page.mastered", title), true);
                 return true;
             }
         }
 
-        record Candidate(String key, String PairMirrorKey, Component title, int curState) {}
+        record Candidate(String key, String pairMirrorKey, Component title, int curState) {}
         List<Candidate> unknownPool = new ArrayList<>();
         List<Candidate> heardPool = new ArrayList<>();
 
@@ -271,11 +316,7 @@ public final class CompendiumDiscoveryTracker {
                 return false;
             }
             Candidate pick = pool.get(rng.nextInt(pool.size()));
-            advanceStateInternal(pid, pick.key(), STATE_MASTERED);
-            if (pick.PairMirrorKey() != null) {
-                advanceStateInternal(pid, pick.PairMirrorKey(), STATE_MASTERED);
-            }
-            persistAndSync(player);
+            unlockCandidateWithDelta(player, pick, STATE_MASTERED);
             player.sendSystemMessage(
                 Component.translatable("message.enchantment_fusion.page.mastered", pick.title().copy().withStyle(ChatFormatting.GOLD)),
                 true
@@ -283,14 +324,9 @@ public final class CompendiumDiscoveryTracker {
             return true;
         }
 
-        // Common page: prefer UNKNOWN -> HEARD; fallback HEARD -> MASTERED if all recipes heard
         if (!unknownPool.isEmpty()) {
             Candidate pick = unknownPool.get(rng.nextInt(unknownPool.size()));
-            advanceStateInternal(pid, pick.key(), STATE_HEARD);
-            if (pick.PairMirrorKey() != null) {
-                advanceStateInternal(pid, pick.PairMirrorKey(), STATE_HEARD);
-            }
-            persistAndSync(player);
+            unlockCandidateWithDelta(player, pick, STATE_HEARD);
             player.sendSystemMessage(
                 Component.translatable("message.enchantment_fusion.page.heard", pick.title().copy().withStyle(ChatFormatting.AQUA)),
                 true
@@ -299,11 +335,7 @@ public final class CompendiumDiscoveryTracker {
         }
         if (!heardPool.isEmpty()) {
             Candidate pick = heardPool.get(rng.nextInt(heardPool.size()));
-            advanceStateInternal(pid, pick.key(), STATE_MASTERED);
-            if (pick.PairMirrorKey() != null) {
-                advanceStateInternal(pid, pick.PairMirrorKey(), STATE_MASTERED);
-            }
-            persistAndSync(player);
+            unlockCandidateWithDelta(player, pick, STATE_MASTERED);
             player.sendSystemMessage(
                 Component.translatable("message.enchantment_fusion.page.mastered", pick.title().copy().withStyle(ChatFormatting.GOLD)),
                 true
@@ -315,12 +347,22 @@ public final class CompendiumDiscoveryTracker {
         return false;
     }
 
-    private static void persistAndSync(ServerPlayer player) {
-        MinecraftServer srv = player.level().getServer();
-        if (srv != null) {
-            saveWorldFile(srv);
+    private static void unlockCandidateWithDelta(ServerPlayer player, Record candRec, int stage) {
+        UUID pid = player.getUUID();
+        if (candRec != null) {
+            try {
+                String k = (String) candRec.getClass().getDeclaredMethod("key").invoke(candRec);
+                String mirror = (String) candRec.getClass().getDeclaredMethod("pairMirrorKey").invoke(candRec);
+                if (advanceStateInternal(pid, k, stage)) {
+                    FusionNetworking.sendCompendiumDelta(player, k, stage);
+                }
+                if (mirror != null && advanceStateInternal(pid, mirror, stage)) {
+                    FusionNetworking.sendCompendiumDelta(player, mirror, stage);
+                }
+            } catch (ReflectiveOperationException ignored) {
+                FusionNetworking.sendCompendiumSync(player, encodeStates(pid));
+            }
         }
-        FusionNetworking.sendCompendiumSync(player, encodeStates(player.getUUID()));
     }
 
     public static List<String> encodeStates(UUID playerUuid) {
@@ -342,14 +384,14 @@ public final class CompendiumDiscoveryTracker {
     }
 
     public static void applyClientSync(Iterable<String> encoded) {
-        Map<String, Integer> next = new ConcurrentHashMap<>();
+        Map<String, Integer> next = new HashMap<>();
         for (String token : encoded) {
             if (token == null || token.isBlank()) continue;
             int eq = token.lastIndexOf('=');
             if (eq > 0 && eq < token.length() - 1) {
                 try {
                     int st = Integer.parseInt(token.substring(eq + 1));
-                    next.put(token.substring(0, eq), Math.max(STATE_UNKNOWN, Math.min(STATE_MASTERED, st)));
+                    next.put(token.substring(0, eq), Math.clamp(st, STATE_UNKNOWN, STATE_MASTERED));
                 } catch (NumberFormatException ignored) {
                     next.put(token, STATE_MASTERED);
                 }
@@ -357,6 +399,18 @@ public final class CompendiumDiscoveryTracker {
                 next.put(token, STATE_MASTERED);
             }
         }
+        CLIENT_STATES = Collections.unmodifiableMap(next);
+    }
+
+    public static void applyClientDelta(String entryKey, int stage) {
+        if (entryKey == null || entryKey.isBlank()) return;
+        int clamped = Math.clamp(stage, STATE_UNKNOWN, STATE_MASTERED);
+        Map<String, Integer> cur = CLIENT_STATES;
+        if (clamped <= cur.getOrDefault(entryKey, STATE_UNKNOWN)) {
+            return;
+        }
+        Map<String, Integer> next = new HashMap<>(cur);
+        next.put(entryKey, clamped);
         CLIENT_STATES = Collections.unmodifiableMap(next);
     }
 
@@ -375,6 +429,7 @@ public final class CompendiumDiscoveryTracker {
     private static void loadWorldFile(MinecraftServer server) {
         SERVER_STATES.clear();
         SCANNED_ENCHANTS_CACHE.clear();
+        dirtySave = false;
         Path path = resolveSaveFile(server);
         if (!Files.isRegularFile(path)) {
             return;
@@ -387,13 +442,12 @@ public final class CompendiumDiscoveryTracker {
                 Map<String, Integer> states = new ConcurrentHashMap<>();
                 JsonElement val = entry.getValue();
                 if (val.isJsonArray()) {
-                    // Backward-compatibility with 0.1.0 - 0.3.1 saves!
                     for (JsonElement elem : val.getAsJsonArray()) {
                         states.put(elem.getAsString(), STATE_MASTERED);
                     }
                 } else if (val.isJsonObject()) {
                     for (Map.Entry<String, JsonElement> kv : val.getAsJsonObject().entrySet()) {
-                        states.put(kv.getKey(), Math.max(STATE_UNKNOWN, Math.min(STATE_MASTERED, kv.getValue().getAsInt())));
+                        states.put(kv.getKey(), Math.clamp(kv.getValue().getAsInt(), STATE_UNKNOWN, STATE_MASTERED));
                     }
                 }
                 SERVER_STATES.put(uuid, states);
@@ -403,8 +457,10 @@ public final class CompendiumDiscoveryTracker {
         }
     }
 
-    private static void saveWorldFile(MinecraftServer server) {
+    /** Atomic temp-file write + move so mid-save crashes never leave half-written JSON (DATA-03). */
+    private static void saveWorldFileAtomically(MinecraftServer server) {
         Path path = resolveSaveFile(server);
+        Path tmp = path.resolveSibling("enchantment_fusion_compendium.json.tmp");
         try {
             Files.createDirectories(path.getParent());
             JsonObject root = new JsonObject();
@@ -420,7 +476,12 @@ public final class CompendiumDiscoveryTracker {
                 }
                 root.add(entry.getKey().toString(), playerObj);
             }
-            Files.writeString(path, GSON.toJson(root), StandardCharsets.UTF_8);
+            Files.writeString(tmp, GSON.toJson(root), StandardCharsets.UTF_8);
+            try {
+                Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException nonAtomic) {
+                Files.move(tmp, path, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException ex) {
             EnchantmentFusion.LOGGER.warn("[EnchantmentFusion] Failed to save compendium file {}: {}", path, ex.toString());
         }

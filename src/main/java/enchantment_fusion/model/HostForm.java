@@ -2,22 +2,25 @@ package enchantment_fusion.model;
 
 import java.util.Locale;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.BrushItem;
 import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.FishingRodItem;
+import net.minecraft.world.item.FlintAndSteelItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MaceItem;
+import net.minecraft.world.item.ShearsItem;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.TridentItem;
 
 /**
  * Classifies host equipment into four adaptive families for secondary payload resolution,
- * including 26.1+ Spears and Copper equipment.
+ * including 26.1+ Spears (via {@code #minecraft:spears}) and utility tools (Fishing Rod, Shears, Brush, Flint & Steel — HC-06).
  */
 public enum HostForm {
     MELEE,
@@ -35,14 +38,7 @@ public enum HostForm {
     }
 
     public static boolean isSpear(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return false;
-        }
-        if (stack.is(SPEARS_TAG)) {
-            return true;
-        }
-        Identifier key = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        return key != null && key.getPath().endsWith("_spear");
+        return stack != null && !stack.isEmpty() && stack.is(SPEARS_TAG);
     }
 
     public static HostForm resolve(ItemStack stack) {
@@ -53,7 +49,7 @@ public enum HostForm {
         if (item instanceof BowItem || item instanceof CrossbowItem || item instanceof TridentItem) {
             return RANGED;
         }
-        if (isSpear(stack) || stack.is(ItemTags.SWORDS) || item instanceof MaceItem) {
+        if (isSpear(stack) || stack.is(ItemTags.SWORDS) || stack.is(ItemTags.AXES) || item instanceof MaceItem) {
             return MELEE;
         }
         if (item instanceof ShieldItem
@@ -64,7 +60,11 @@ public enum HostForm {
             || stack.has(DataComponents.EQUIPPABLE)) {
             return ARMOR;
         }
-        if (stack.is(ItemTags.PICKAXES)
+        if (item instanceof FishingRodItem
+            || item instanceof ShearsItem
+            || item instanceof FlintAndSteelItem
+            || item instanceof BrushItem
+            || stack.is(ItemTags.PICKAXES)
             || stack.is(ItemTags.SHOVELS)
             || stack.is(ItemTags.HOES)
             || stack.has(DataComponents.TOOL)) {

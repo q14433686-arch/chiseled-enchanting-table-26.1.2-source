@@ -3,7 +3,7 @@
   "id": "enchantment_fusion",
   "version": "${version}",
   "name": "Enchantment Fusion",
-  "description": "Order-sensitive Vanilla+ enchantment fusion ([A ▷ B] != [B ▷ A]) and cross-domain grafting for Minecraft 26.1.2 on Fabric.",
+  "description": "Order-sensitive Vanilla+ enchantment fusion ([A ▷ B] != [B ▷ A]) and cross-domain transmutations for Minecraft 26.1.2 on Fabric.",
   "authors": [
     "q14433686-arch"
   ],
@@ -34,6 +34,9 @@
     "fabricloader": ">=0.19.3",
     "minecraft": "~26.1.2",
     "java": ">=25",
-    "fabric-api": "*"
+    "fabric-api": ">=0.151.0"
+  },
+  "suggests": {
+    "chiseled-enchanting-table": "*"
   }
 }

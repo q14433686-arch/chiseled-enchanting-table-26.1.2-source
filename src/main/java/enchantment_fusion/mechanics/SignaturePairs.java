@@ -22,8 +22,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -42,8 +45,9 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Handcrafted directional Signature Pair registry and runtime mechanics across all 16 user-designed groups.
- * Every entry defines {@code [Primary A ▷ Secondary B]} with bespoke combat, mining, defense, or world effects.
+ * Handcrafted directional Signature Resonance registry ({@code 150} unique ordered entries, {@code 0} symmetric aliases).
+ * Every ordered pair {@code [Primary A ▷ Secondary B]} has a distinct identity from {@code [Secondary B ▷ Primary A]} (BAL-06).
+ * Same-ID signatures equipped across multiple slots deduplicate to the strongest copy (BAL-02).
  */
 public final class SignaturePairs {
     public record SignatureEntry(
@@ -60,10 +64,25 @@ public final class SignaturePairs {
         }
     }
 
+    private record EquippedSignature(
+        String sigId,
+        FusedPair pair,
+        EquipmentSlot slot,
+        ItemStack stack
+    ) {
+        int totalLevel() {
+            return pair.primaryLevel() + pair.secondaryLevel();
+        }
+    }
+
+    private static final EquipmentSlot[] ALL_EQUIP_SLOTS = {
+        EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS,
+        EquipmentSlot.FEET, EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND
+    };
+
     private static final Map<String, SignatureEntry> DIRECT_MAP = new LinkedHashMap<>();
     private static final List<SignatureEntry> UNIQUE_SIGNATURES = new ArrayList<>();
 
-    // Per-entity neurotoxin stack counter & player snapback / shield / vengeance states
     private static final Map<UUID, Integer> NEUROTOXIN_STACKS = new ConcurrentHashMap<>();
     private static final Map<UUID, Vec3> RIPTIDE_ANCHORS = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> RIPTIDE_ANCHOR_EXPIRY = new ConcurrentHashMap<>();
@@ -72,6 +91,9 @@ public final class SignaturePairs {
     private static final Map<UUID, Long> RECENT_DAMAGE_UNTIL = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> GLASS_SHIELD_COOLDOWN = new ConcurrentHashMap<>();
     private static final Map<UUID, Long> FORTUNE_GRACE_COOLDOWN = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> LUCKY_GOLDEN_COOLDOWN = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> PORCELAIN_BASTION_COOLDOWN = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> LOYAL_LIFELINE_COOLDOWN = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> SOUL_FIRE_TICKS = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> SKYFIRE_BOLT_TICKS = new ConcurrentHashMap<>();
     private static final ThreadLocal<Boolean> IN_SIGNATURE_MINING = ThreadLocal.withInitial(() -> Boolean.FALSE);
@@ -95,9 +117,9 @@ public final class SignaturePairs {
         reg("searing_feast", "minecraft:looting", "minecraft:fire_aspect");
         reg("alchemic_pyre", "minecraft:fire_aspect", "minecraft:looting");
         reg("concussive_plunder", "minecraft:knockback", "minecraft:looting");
-        regAlias("concussive_plunder", "minecraft:looting", "minecraft:knockback");
+        reg("trophy_shockwave", "minecraft:looting", "minecraft:knockback");
         reg("legion_plunder", "minecraft:looting", "minecraft:sweeping_edge");
-        regAlias("legion_plunder", "minecraft:sweeping_edge", "minecraft:looting");
+        reg("reaping_gale", "minecraft:sweeping_edge", "minecraft:looting");
 
         // === Batch 3: Tool Core (Silk Touch x Fortune x Efficiency x Mending x Unbreaking) ===
         reg("raw_ore_geode", "minecraft:silk_touch", "minecraft:fortune");
@@ -105,7 +127,7 @@ public final class SignaturePairs {
         reg("pulse_prospect", "minecraft:efficiency", "minecraft:fortune");
         reg("gold_rush_haste", "minecraft:fortune", "minecraft:efficiency");
         reg("vein_peel", "minecraft:efficiency", "minecraft:silk_touch");
-        regAlias("vein_peel", "minecraft:silk_touch", "minecraft:efficiency");
+        reg("velvet_shear", "minecraft:silk_touch", "minecraft:efficiency");
         reg("overflow_plating", "minecraft:mending", "minecraft:unbreaking");
         reg("self_healing_lattice", "minecraft:unbreaking", "minecraft:mending");
 
@@ -117,7 +139,7 @@ public final class SignaturePairs {
         reg("explosive_flare_arrow", "minecraft:flame", "minecraft:punch");
         reg("meteor_streak", "minecraft:punch", "minecraft:flame");
         reg("swift_draw_burst", "minecraft:quick_charge", "minecraft:power");
-        regAlias("swift_draw_burst", "minecraft:power", "minecraft:quick_charge");
+        reg("overdraw_snipe", "minecraft:power", "minecraft:quick_charge");
 
         // === Batch 5: Trident & Mace (Loyalty x Riptide x Channeling, Wind Burst x Density x Breach) ===
         reg("hydro_flying_sword", "minecraft:loyalty", "minecraft:riptide");
@@ -125,7 +147,7 @@ public final class SignaturePairs {
         reg("clear_sky_thunder", "minecraft:channeling", "minecraft:riptide");
         reg("thunder_avatar", "minecraft:riptide", "minecraft:channeling");
         reg("meteor_crush", "minecraft:wind_burst", "minecraft:density");
-        regAlias("meteor_crush", "minecraft:density", "minecraft:wind_burst");
+        reg("crushing_updraft", "minecraft:density", "minecraft:wind_burst");
         reg("armor_shatter", "minecraft:density", "minecraft:breach");
         reg("ground_gust", "minecraft:breach", "minecraft:wind_burst");
 
@@ -137,91 +159,91 @@ public final class SignaturePairs {
         reg("deflection_field", "minecraft:protection", "minecraft:projectile_protection");
         reg("arrow_stride", "minecraft:projectile_protection", "minecraft:protection");
         reg("pyro_thorns", "minecraft:thorns", "minecraft:fire_protection");
-        regAlias("pyro_thorns", "minecraft:fire_protection", "minecraft:thorns");
+        reg("cinder_backlash", "minecraft:fire_protection", "minecraft:thorns");
         reg("blast_thorns", "minecraft:thorns", "minecraft:blast_protection");
-        regAlias("blast_thorns", "minecraft:blast_protection", "minecraft:thorns");
+        reg("concussion_shrapnel", "minecraft:blast_protection", "minecraft:thorns");
         reg("sniper_thorns", "minecraft:thorns", "minecraft:projectile_protection");
-        regAlias("sniper_thorns", "minecraft:projectile_protection", "minecraft:thorns");
+        reg("ricochet_ward", "minecraft:projectile_protection", "minecraft:thorns");
 
         // === Batch 7: Boots, Leggings & Helmet Mobility (incl. Frost x Fire Protection magma basalt!) ===
         reg("tide_breaker_dive", "minecraft:depth_strider", "minecraft:frost_walker");
         reg("permafrost_wake", "minecraft:frost_walker", "minecraft:depth_strider");
         reg("magma_basalt_step", "minecraft:frost_walker", "minecraft:fire_protection");
-        regAlias("magma_basalt_step", "minecraft:fire_protection", "minecraft:frost_walker");
+        reg("glacial_hearth", "minecraft:fire_protection", "minecraft:frost_walker");
         reg("frost_meteor_fall", "minecraft:feather_falling", "minecraft:frost_walker");
-        regAlias("frost_meteor_fall", "minecraft:frost_walker", "minecraft:feather_falling");
+        reg("feather_rime_glide", "minecraft:frost_walker", "minecraft:feather_falling");
         reg("soul_stride_landing", "minecraft:feather_falling", "minecraft:soul_speed");
-        regAlias("soul_stride_landing", "minecraft:soul_speed", "minecraft:feather_falling");
+        reg("wraith_plume", "minecraft:soul_speed", "minecraft:feather_falling");
         reg("phantom_assassin_step", "minecraft:soul_speed", "minecraft:swift_sneak");
-        regAlias("phantom_assassin_step", "minecraft:swift_sneak", "minecraft:soul_speed");
+        reg("grave_stalk_rush", "minecraft:swift_sneak", "minecraft:soul_speed");
         reg("abyssal_sight", "minecraft:respiration", "minecraft:aqua_affinity");
         reg("ocean_breath_mine", "minecraft:aqua_affinity", "minecraft:respiration");
 
-        // === Batch 8: Fishing Rod & Curses Turned Into Power ===
+        // === Batch 8: Fishing Rod ===
         reg("tidal_double_catch", "minecraft:luck_of_the_sea", "minecraft:lure");
         reg("raging_hook", "minecraft:lure", "minecraft:luck_of_the_sea");
 
         // === Batch 9 & 10: Signature Cross-Domain Weapons / Tools / Bows / Armor ===
         reg("thunder_iaido", "minecraft:sharpness", "minecraft:channeling");
-        regAlias("thunder_iaido", "minecraft:sweeping_edge", "minecraft:channeling");
+        reg("arc_lightning_cleave", "minecraft:sweeping_edge", "minecraft:channeling");
         reg("phantom_triple_slash", "minecraft:sharpness", "minecraft:multishot");
         reg("flying_sword_qi", "minecraft:sharpness", "minecraft:loyalty");
         reg("midas_cleave", "minecraft:sharpness", "minecraft:fortune");
-        regAlias("midas_cleave", "minecraft:looting", "minecraft:fortune");
+        reg("bounty_jackpot", "minecraft:looting", "minecraft:fortune");
         reg("rising_dragon_leap", "minecraft:sharpness", "minecraft:feather_falling");
         reg("blood_vengeance", "minecraft:sharpness", "minecraft:thorns");
         reg("molten_core_pick", "minecraft:efficiency", "minecraft:fire_aspect");
-        regAlias("molten_core_pick", "minecraft:efficiency", "minecraft:flame");
+        reg("kiln_overdrive", "minecraft:efficiency", "minecraft:flame");
         reg("magnetic_pick", "minecraft:efficiency", "minecraft:loyalty");
         reg("rock_splitter_pick", "minecraft:efficiency", "minecraft:sweeping_edge");
-        regAlias("rock_splitter_pick", "minecraft:efficiency", "minecraft:blast_protection");
+        reg("controlled_demolition", "minecraft:efficiency", "minecraft:blast_protection");
         reg("thunder_bow", "minecraft:power", "minecraft:channeling");
         reg("winter_frost_arrow", "minecraft:power", "minecraft:frost_walker");
         reg("gale_guardian_armor", "minecraft:protection", "minecraft:wind_burst");
-        regAlias("gale_guardian_armor", "minecraft:feather_falling", "minecraft:wind_burst");
+        reg("zephyr_cushion", "minecraft:feather_falling", "minecraft:wind_burst");
 
         // === Batch 11: Elemental Reactions (User-Specified Steam True Damage & 3x3x3 Frostfire Cage!) ===
         reg("steam_scald", "minecraft:fire_aspect", "minecraft:frost_walker");
-        regAlias("steam_scald", "minecraft:flame", "minecraft:frost_walker");
+        reg("scald_plume_arrow", "minecraft:flame", "minecraft:frost_walker");
         reg("frostfire_cage", "minecraft:frost_walker", "minecraft:fire_aspect");
-        regAlias("frostfire_cage", "minecraft:frost_walker", "minecraft:flame");
+        reg("permafrost_brand_arrow", "minecraft:frost_walker", "minecraft:flame");
         reg("superconduct_shatter", "minecraft:channeling", "minecraft:frost_walker");
         reg("aurora_thunder_prison", "minecraft:frost_walker", "minecraft:channeling");
         reg("plasma_overload", "minecraft:channeling", "minecraft:fire_aspect");
-        regAlias("plasma_overload", "minecraft:channeling", "minecraft:flame");
+        reg("thunder_pyre_lance", "minecraft:channeling", "minecraft:flame");
         reg("skyfire_lightning", "minecraft:fire_aspect", "minecraft:channeling");
-        regAlias("skyfire_lightning", "minecraft:flame", "minecraft:channeling");
+        reg("solar_arc_arrow", "minecraft:flame", "minecraft:channeling");
         reg("boiling_blood", "minecraft:respiration", "minecraft:fire_aspect");
-        regAlias("boiling_blood", "minecraft:depth_strider", "minecraft:fire_aspect");
+        reg("hydrothermal_wake", "minecraft:depth_strider", "minecraft:fire_aspect");
         reg("choking_smoke", "minecraft:fire_aspect", "minecraft:respiration");
         reg("flame_tornado", "minecraft:wind_burst", "minecraft:fire_aspect");
         reg("blizzard_squall", "minecraft:wind_burst", "minecraft:frost_walker");
 
         // === Batch 12: Concept Cross-Domain Weapons ===
         reg("oxygen_drain_slash", "minecraft:sharpness", "minecraft:respiration");
-        regAlias("oxygen_drain_slash", "minecraft:power", "minecraft:respiration");
+        reg("pressure_pierce_shot", "minecraft:power", "minecraft:respiration");
         reg("abyssal_full_breath", "minecraft:respiration", "minecraft:sharpness");
         reg("shadow_backstab", "minecraft:swift_sneak", "minecraft:sharpness");
-        regAlias("shadow_backstab", "minecraft:swift_sneak", "minecraft:power");
+        reg("ambush_longshot", "minecraft:swift_sneak", "minecraft:power");
         reg("vanish_on_kill", "minecraft:sharpness", "minecraft:swift_sneak");
         reg("nether_soul_fire", "minecraft:soul_speed", "minecraft:fire_aspect");
-        regAlias("nether_soul_fire", "minecraft:soul_speed", "minecraft:sharpness");
+        reg("wraith_rend_step", "minecraft:soul_speed", "minecraft:sharpness");
         reg("soul_steal_haste", "minecraft:sharpness", "minecraft:soul_speed");
         reg("pristine_trophy", "minecraft:silk_touch", "minecraft:sharpness");
-        regAlias("pristine_trophy", "minecraft:silk_touch", "minecraft:looting");
+        reg("curated_harvest", "minecraft:silk_touch", "minecraft:looting");
         reg("crystal_snare", "minecraft:silk_touch", "minecraft:knockback");
 
         // === Batch 13: Defense & Utility Concept Crosses ===
         reg("frost_spike_armor", "minecraft:thorns", "minecraft:frost_walker");
         reg("ice_thorn_trail", "minecraft:frost_walker", "minecraft:thorns");
         reg("loyal_lifeline", "minecraft:protection", "minecraft:loyalty");
-        regAlias("loyal_lifeline", "minecraft:feather_falling", "minecraft:loyalty");
+        reg("homing_plume", "minecraft:feather_falling", "minecraft:loyalty");
         reg("boundless_mining", "minecraft:efficiency", "minecraft:aqua_affinity");
         reg("liquid_cutter", "minecraft:aqua_affinity", "minecraft:efficiency");
         reg("soul_siphon_mend", "minecraft:sharpness", "minecraft:mending");
-        regAlias("soul_siphon_mend", "minecraft:power", "minecraft:mending");
+        reg("vital_siphon_shot", "minecraft:power", "minecraft:mending");
         reg("overflow_edge", "minecraft:mending", "minecraft:sharpness");
-        regAlias("overflow_edge", "minecraft:mending", "minecraft:power");
+        reg("pristine_overcharge", "minecraft:mending", "minecraft:power");
 
         // === Batch 14 & 15: User-Specified Lucky Golden Body (immune + 2x durability loss!) & Wild Crosses ===
         reg("fortune_grace", "minecraft:protection", "minecraft:fortune");
@@ -229,20 +251,20 @@ public final class SignaturePairs {
         reg("triple_excavate", "minecraft:multishot", "minecraft:efficiency");
         reg("rapid_bowstring", "minecraft:efficiency", "minecraft:multishot");
         reg("land_water_dragon", "minecraft:riptide", "minecraft:sharpness");
-        regAlias("land_water_dragon", "minecraft:riptide", "minecraft:wind_burst");
+        reg("maelstrom_vault", "minecraft:riptide", "minecraft:wind_burst");
         reg("drenched_impale", "minecraft:impaling", "minecraft:sharpness");
-        regAlias("drenched_impale", "minecraft:impaling", "minecraft:power");
+        reg("harpoon_ballista", "minecraft:impaling", "minecraft:power");
         reg("gale_blade_flurry", "minecraft:quick_charge", "minecraft:sharpness");
-        regAlias("gale_blade_flurry", "minecraft:quick_charge", "minecraft:sweeping_edge");
+        reg("snap_crescent_draw", "minecraft:quick_charge", "minecraft:sweeping_edge");
         reg("shield_piercer", "minecraft:piercing", "minecraft:sharpness");
         reg("perpetual_craft", "minecraft:infinity", "minecraft:efficiency");
-        regAlias("perpetual_craft", "minecraft:infinity", "minecraft:unbreaking");
+        reg("eternal_bowstring", "minecraft:infinity", "minecraft:unbreaking");
         reg("undying_hellfire", "minecraft:infinity", "minecraft:fire_aspect");
-        regAlias("undying_hellfire", "minecraft:infinity", "minecraft:flame");
+        reg("sunfire_barrage", "minecraft:infinity", "minecraft:flame");
         reg("shakedown_thorns", "minecraft:looting", "minecraft:thorns");
-        regAlias("shakedown_thorns", "minecraft:thorns", "minecraft:looting");
+        reg("extortion_carapace", "minecraft:thorns", "minecraft:looting");
         reg("glass_holy_shield", "minecraft:silk_touch", "minecraft:protection");
-        regAlias("glass_holy_shield", "minecraft:protection", "minecraft:silk_touch");
+        reg("porcelain_bastion", "minecraft:protection", "minecraft:silk_touch");
 
         // === Batch 16: 26.1.2 Spear & Lunge (突进) Directional Signatures ===
         reg("gale_vault_thrust", "minecraft:lunge", "minecraft:wind_burst");
@@ -252,7 +274,7 @@ public final class SignaturePairs {
         reg("tidal_harpoon_rush", "minecraft:lunge", "minecraft:riptide");
         reg("surge_skewer", "minecraft:riptide", "minecraft:lunge");
 
-        // === Wildcard Curse / Fishing / Grappling Secondary Rules ===
+        // === Wildcard Secondary Rules ([X ▷ lure], [X ▷ binding_curse], [X ▷ vanishing_curse]) ===
         reg("spirit_grapnel", "*", "minecraft:lure");
         reg("blood_pact_curse", "*", "minecraft:binding_curse");
         reg("soulburn_elegy_curse", "*", "minecraft:vanishing_curse");
@@ -268,10 +290,6 @@ public final class SignaturePairs {
         UNIQUE_SIGNATURES.add(entry);
     }
 
-    private static void regAlias(String id, String p, String s) {
-        DIRECT_MAP.put(p + ">" + s, new SignatureEntry(id, p, s));
-    }
-
     public static List<SignatureEntry> allUniqueSignatures() {
         return Collections.unmodifiableList(UNIQUE_SIGNATURES);
     }
@@ -281,17 +299,18 @@ public final class SignaturePairs {
     }
 
     public static Optional<SignatureEntry> resolve(String primaryId, String secondaryId) {
-        if (primaryId == null || secondaryId == null) {
+        if (primaryId == null || secondaryId == null || primaryId.equals(secondaryId)) {
             return Optional.empty();
         }
         SignatureEntry direct = DIRECT_MAP.get(primaryId + ">" + secondaryId);
         if (direct != null) {
             return Optional.of(direct);
         }
-        if ("minecraft:binding_curse".equals(secondaryId) || "minecraft:binding_curse".equals(primaryId)) {
+        // Strictly secondary-only wildcard match so [A ▷ curse] != [curse ▷ A] (BAL-06)!
+        if ("minecraft:binding_curse".equals(secondaryId)) {
             return Optional.of(new SignatureEntry("blood_pact_curse", primaryId, secondaryId));
         }
-        if ("minecraft:vanishing_curse".equals(secondaryId) || "minecraft:vanishing_curse".equals(primaryId)) {
+        if ("minecraft:vanishing_curse".equals(secondaryId)) {
             return Optional.of(new SignatureEntry("soulburn_elegy_curse", primaryId, secondaryId));
         }
         if ("minecraft:lure".equals(secondaryId)) {
@@ -321,6 +340,50 @@ public final class SignaturePairs {
         return false;
     }
 
+    public static boolean playerHasEquippedSignature(ServerPlayer player, String signatureId) {
+        for (EquipmentSlot slot : ALL_EQUIP_SLOTS) {
+            if (stackHasSignature(player.getItemBySlot(slot), signatureId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Deduplicates equipped signatures across all 6 equipment slots so duplicate copies never stack (BAL-02). */
+    private static Map<String, EquippedSignature> collectUniqueEquippedSignatures(ServerPlayer player) {
+        Map<String, EquippedSignature> best = new LinkedHashMap<>();
+        for (EquipmentSlot slot : ALL_EQUIP_SLOTS) {
+            ItemStack gear = player.getItemBySlot(slot);
+            if (gear.isEmpty()) continue;
+            FusedEnchantmentList list = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+            for (FusedPair pair : list.pairs()) {
+                Optional<SignatureEntry> sigOpt = resolve(pair);
+                if (sigOpt.isEmpty()) continue;
+                String sigId = sigOpt.get().id();
+                EquippedSignature cand = new EquippedSignature(sigId, pair, slot, gear);
+                EquippedSignature prev = best.get(sigId);
+                if (prev == null || cand.totalLevel() > prev.totalLevel()) {
+                    best.put(sigId, cand);
+                }
+            }
+        }
+        return best;
+    }
+
+    public static void onPlayerDisconnect(UUID playerId) {
+        if (playerId == null) return;
+        RIPTIDE_ANCHORS.remove(playerId);
+        RIPTIDE_ANCHOR_EXPIRY.remove(playerId);
+        LAST_SAFE_GROUND.remove(playerId);
+        RECENT_DAMAGE_TAKEN.remove(playerId);
+        RECENT_DAMAGE_UNTIL.remove(playerId);
+        GLASS_SHIELD_COOLDOWN.remove(playerId);
+        FORTUNE_GRACE_COOLDOWN.remove(playerId);
+        LUCKY_GOLDEN_COOLDOWN.remove(playerId);
+        PORCELAIN_BASTION_COOLDOWN.remove(playerId);
+        LOYAL_LIFELINE_COOLDOWN.remove(playerId);
+    }
+
     public static void clearRuntimeState() {
         NEUROTOXIN_STACKS.clear();
         RIPTIDE_ANCHORS.clear();
@@ -330,6 +393,9 @@ public final class SignaturePairs {
         RECENT_DAMAGE_UNTIL.clear();
         GLASS_SHIELD_COOLDOWN.clear();
         FORTUNE_GRACE_COOLDOWN.clear();
+        LUCKY_GOLDEN_COOLDOWN.clear();
+        PORCELAIN_BASTION_COOLDOWN.clear();
+        LOYAL_LIFELINE_COOLDOWN.clear();
         SOUL_FIRE_TICKS.clear();
         SKYFIRE_BOLT_TICKS.clear();
     }
@@ -361,52 +427,45 @@ public final class SignaturePairs {
     // 1. Pre-Damage Interception (Lucky Golden Body & Glass Holy Shield)
     // =========================================================================
 
-    public static boolean allowIncomingDamage(ServerPlayer player, float amount) {
+    public static boolean allowIncomingDamage(ServerPlayer player, DamageSource source, float amount) {
         if (!(player.level() instanceof ServerLevel level) || amount <= 0.0F) {
             return true;
         }
+        // API-04: Never block /kill, void, or creative BYPASSES_INVULNERABILITY damage!
+        if (source != null && source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            return true;
+        }
         long now = level.getGameTime();
-        EquipmentSlot[] slots = {
-            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS,
-            EquipmentSlot.FEET, EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND
-        };
+        Map<String, EquippedSignature> unique = collectUniqueEquippedSignatures(player);
 
-        for (EquipmentSlot slot : slots) {
-            ItemStack gear = player.getItemBySlot(slot);
-            if (gear.isEmpty()) continue;
-            FusedEnchantmentList list = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-            for (FusedPair pair : list.pairs()) {
-                Optional<SignatureEntry> sigOpt = resolve(pair);
-                if (sigOpt.isEmpty()) continue;
-                String sigId = sigOpt.get().id();
-
-                // [时运 ▷ 保护] 招财金身：小概率免疫本次伤害，但加倍耐久降低！
-                if ("lucky_golden_body".equals(sigId)) {
-                    float procChance = 0.10F + 0.05F * pair.primaryLevel();
-                    if (level.getRandom().nextFloat() < procChance) {
-                        if (gear.isDamageableItem()) {
-                            int extraDurabilityLoss = Math.max(2, Math.round(amount * 2.0F));
-                            int nextDmg = Math.min(gear.getMaxDamage() - 1, gear.getDamageValue() + extraDurabilityLoss);
-                            gear.setDamageValue(nextDmg);
-                        }
-                        level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.0D, player.getZ(), 14, 0.35D, 0.4D, 0.35D, 0.08D);
-                        level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.9F, 1.4F);
-                        return false;
-                    }
+        // [时运 ▷ 保护] 招财金身：不跨部位叠加，内置 5 秒冷却，调用真实 hurtAndBreak 可损毁（BAL-01/02, CPL-06）
+        EquippedSignature lucky = unique.get("lucky_golden_body");
+        if (lucky != null && now >= LUCKY_GOLDEN_COOLDOWN.getOrDefault(player.getUUID(), 0L)) {
+            float procChance = 0.10F + 0.05F * lucky.pair().primaryLevel();
+            if (level.getRandom().nextFloat() < procChance) {
+                LUCKY_GOLDEN_COOLDOWN.put(player.getUUID(), now + 100L);
+                if (lucky.stack().isDamageableItem()) {
+                    int extraDurabilityLoss = Math.max(2, Math.round(amount * 2.0F));
+                    lucky.stack().hurtAndBreak(extraDurabilityLoss, player, lucky.slot());
                 }
-
-                // [精准采集 ▷ 保护] 琉璃圣盾：满血时完美抵挡一次伤害（15秒脱战充能）
-                if ("glass_holy_shield".equals(sigId)) {
-                    long readyAt = GLASS_SHIELD_COOLDOWN.getOrDefault(player.getUUID(), 0L);
-                    if (player.getHealth() >= player.getMaxHealth() - 0.1F && now >= readyAt) {
-                        GLASS_SHIELD_COOLDOWN.put(player.getUUID(), now + 300L);
-                        level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.0D, player.getZ(), 18, 0.4D, 0.5D, 0.4D, 0.06D);
-                        level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.95F, 1.55F);
-                        return false;
-                    }
-                }
+                level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.0D, player.getZ(), 14, 0.35D, 0.4D, 0.35D, 0.08D);
+                level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.9F, 1.4F);
+                return false;
             }
         }
+
+        // [精准采集 ▷ 保护] 琉璃圣盾：满血时完美抵挡一次伤害（15秒充能）
+        EquippedSignature glass = unique.get("glass_holy_shield");
+        if (glass != null) {
+            long readyAt = GLASS_SHIELD_COOLDOWN.getOrDefault(player.getUUID(), 0L);
+            if (player.getHealth() >= player.getMaxHealth() - 0.1F && now >= readyAt) {
+                GLASS_SHIELD_COOLDOWN.put(player.getUUID(), now + 300L);
+                level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.0D, player.getZ(), 18, 0.4D, 0.5D, 0.4D, 0.06D);
+                level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.95F, 1.55F);
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -414,54 +473,52 @@ public final class SignaturePairs {
     // 2. Lethal Save Interception (Fortune Grace & Loyal Lifeline Void Rescue)
     // =========================================================================
 
-    public static boolean allowPlayerDeath(ServerPlayer player) {
+    public static boolean allowPlayerDeath(ServerPlayer player, DamageSource source) {
         if (!(player.level() instanceof ServerLevel level)) {
             return true;
         }
+        // Never block /kill or non-void BYPASSES_INVULNERABILITY sources (API-04)
+        boolean isVoidFall = source != null && source.is(DamageTypes.FELL_OUT_OF_WORLD);
+        if (source != null && source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) && !isVoidFall) {
+            return true;
+        }
         long now = level.getGameTime();
-        EquipmentSlot[] slots = {
-            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS,
-            EquipmentSlot.FEET, EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND
-        };
+        Map<String, EquippedSignature> unique = collectUniqueEquippedSignatures(player);
 
-        for (EquipmentSlot slot : slots) {
-            ItemStack gear = player.getItemBySlot(slot);
-            if (gear.isEmpty()) continue;
-            FusedEnchantmentList list = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-            for (FusedPair pair : list.pairs()) {
-                Optional<SignatureEntry> sigOpt = resolve(pair);
-                if (sigOpt.isEmpty()) continue;
-                String sigId = sigOpt.get().id();
-
-                // [保护 ▷ 时运] 吉星高照：概率锁 1 滴血幸运免死（60秒冷却）
-                if ("fortune_grace".equals(sigId)) {
-                    long readyAt = FORTUNE_GRACE_COOLDOWN.getOrDefault(player.getUUID(), 0L);
-                    float saveChance = 0.18F + 0.08F * pair.secondaryLevel();
-                    if (now >= readyAt && level.getRandom().nextFloat() < saveChance) {
-                        FORTUNE_GRACE_COOLDOWN.put(player.getUUID(), now + 1200L);
-                        player.setHealth(1.0F);
-                        grantEffect(player, "absorption", 100, 1);
-                        level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.0D, player.getZ(), 24, 0.4D, 0.5D, 0.4D, 0.12D);
-                        return false;
-                    }
-                }
-
-                // [保护/摔落缓冲 ▷ 忠诚] 归元护主：虚空坠落拉回最后安全立足点！
-                if ("loyal_lifeline".equals(sigId) && player.getY() < level.getMinY() + 2) {
-                    Vec3 safe = LAST_SAFE_GROUND.get(player.getUUID());
-                    if (safe != null) {
-                        player.setHealth(Math.max(2.0F, player.getHealth()));
-                        player.fallDistance = 0.0F;
-                        player.teleportTo(safe.x, safe.y + 0.5D, safe.z);
-                        if (gear.isDamageableItem()) {
-                            gear.setDamageValue(Math.min(gear.getMaxDamage() - 1, gear.getDamageValue() + 20));
-                        }
-                        level.sendParticles(ParticleTypes.PORTAL, safe.x, safe.y + 1.0D, safe.z, 30, 0.4D, 0.6D, 0.4D, 0.15D);
-                        return false;
-                    }
+        // [保护 ▷ 时运] 吉星高照：概率锁 1 滴血幸运免死（60秒冷却，不挡虚空/kill）
+        if (!isVoidFall) {
+            EquippedSignature grace = unique.get("fortune_grace");
+            if (grace != null) {
+                long readyAt = FORTUNE_GRACE_COOLDOWN.getOrDefault(player.getUUID(), 0L);
+                float saveChance = 0.18F + 0.08F * grace.pair().secondaryLevel();
+                if (now >= readyAt && level.getRandom().nextFloat() < saveChance) {
+                    FORTUNE_GRACE_COOLDOWN.put(player.getUUID(), now + 1200L);
+                    player.setHealth(1.0F);
+                    grantEffect(player, "absorption", 100, 1);
+                    level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1.0D, player.getZ(), 24, 0.4D, 0.5D, 0.4D, 0.12D);
+                    return false;
                 }
             }
         }
+
+        // [保护 ▷ 忠诚] 归元护主：虚空坠落拉回最后安全立足点（30秒冷却）
+        EquippedSignature loyal = unique.get("loyal_lifeline");
+        if (loyal != null && (isVoidFall || player.getY() < level.getMinY() + 2)) {
+            long readyAt = LOYAL_LIFELINE_COOLDOWN.getOrDefault(player.getUUID(), 0L);
+            Vec3 safe = LAST_SAFE_GROUND.get(player.getUUID());
+            if (safe != null && now >= readyAt) {
+                LOYAL_LIFELINE_COOLDOWN.put(player.getUUID(), now + 600L);
+                player.setHealth(Math.max(2.0F, player.getHealth()));
+                player.fallDistance = 0.0F;
+                player.teleportTo(safe.x, safe.y + 0.5D, safe.z);
+                if (loyal.stack().isDamageableItem()) {
+                    loyal.stack().hurtAndBreak(20, player, loyal.slot());
+                }
+                level.sendParticles(ParticleTypes.PORTAL, safe.x, safe.y + 1.0D, safe.z, 30, 0.4D, 0.6D, 0.4D, 0.15D);
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -491,7 +548,6 @@ public final class SignaturePairs {
         int pLv = Math.max(1, pair.primaryLevel());
         int sLv = Math.max(1, pair.secondaryLevel());
 
-        // Curses turned into power: +25% bonus strike on Soulburn Elegy!
         if ("soulburn_elegy_curse".equals(sigId)) {
             if (target != null) {
                 target.hurtServer(level, level.damageSources().magic(), 2.5F + 0.6F * pLv);
@@ -514,18 +570,19 @@ public final class SignaturePairs {
         }
 
         switch (sigId) {
-            // --- User's Custom #1: [火焰附加 ▷ 冰霜行者] 高压蒸汽（无视护甲真伤！）---
-            case "steam_scald" -> {
+            case "steam_scald", "scald_plume_arrow" -> {
                 if (target != null) {
                     float trueSteamDmg = 2.5F + 1.15F * pLv + 1.0F * sLv;
                     target.hurtServer(level, level.damageSources().magic(), trueSteamDmg);
                     target.clearFire();
+                    if ("scald_plume_arrow".equals(sigId)) {
+                        grantEffect(target, "blindness", 45, 0);
+                    }
                 }
                 level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.7D, pos.z, 18, 0.35D, 0.35D, 0.35D, 0.06D);
                 level.sendParticles(ParticleTypes.POOF, pos.x, pos.y + 0.7D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.04D);
                 return true;
             }
-            // --- User's Custom #2: [冰霜行者 ▷ 火焰附加] 冰火两重天（缓慢 + 燃烧 + 低概率 3x3x3 霜冰牢笼！）---
             case "frostfire_cage" -> {
                 if (target != null) {
                     grantEffect(target, "slowness", 60 + 20 * pLv, 1);
@@ -537,6 +594,18 @@ public final class SignaturePairs {
                 }
                 level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.6D, pos.z, 10, 0.35D, 0.35D, 0.35D, 0.03D);
                 level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 0.6D, pos.z, 10, 0.35D, 0.35D, 0.35D, 0.03D);
+                return true;
+            }
+            case "permafrost_brand_arrow" -> {
+                if (target != null) {
+                    target.setTicksFrozen(Math.min(300, target.getTicksFrozen() + 130));
+                    target.igniteForSeconds(2.5F + 1.5F * sLv);
+                    grantEffect(target, "slowness", 70, 2);
+                    if (rng.nextFloat() < 0.40F && player.mayBuild()) {
+                        AberrantRegistry.placeFrostedIceSnare(level, target.blockPosition());
+                    }
+                }
+                level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.6D, pos.z, 12, 0.3D, 0.3D, 0.3D, 0.04D);
                 return true;
             }
 
@@ -624,10 +693,12 @@ public final class SignaturePairs {
                     Vec3 dir = target.position().subtract(player.position()).normalize();
                     target.push(dir.x * (0.7D + 0.25D * pLv), 0.28D, dir.z * (0.7D + 0.25D * pLv));
                     target.igniteForSeconds(4.0F);
-                    for (int step = 1; step <= 3; step++) {
-                        BlockPos firePos = BlockPos.containing(pos.add(dir.scale(step)));
-                        if (level.getBlockState(firePos).isAir() && !level.getBlockState(firePos.below()).isAir()) {
-                            level.setBlockAndUpdate(firePos, Blocks.FIRE.defaultBlockState());
+                    if (player.mayBuild() && !player.isShiftKeyDown()) {
+                        for (int step = 1; step <= 3; step++) {
+                            BlockPos firePos = BlockPos.containing(pos.add(dir.scale(step)));
+                            if (level.getBlockState(firePos).isAir() && !level.getBlockState(firePos.below()).isAir()) {
+                                level.setBlockAndUpdate(firePos, Blocks.FIRE.defaultBlockState());
+                            }
                         }
                     }
                 }
@@ -662,12 +733,47 @@ public final class SignaturePairs {
                 return true;
             }
             case "gale_vortex" -> {
-                Vec3 center = pos;
-                for (LivingEntity mob : nearbyHostiles(level, player, center, 5.5D, target)) {
-                    Vec3 pull = center.subtract(mob.position()).scale(0.42D);
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 5.5D, target)) {
+                    Vec3 pull = pos.subtract(mob.position()).scale(0.42D);
                     mob.push(pull.x, 0.15D, pull.z);
                 }
-                level.sendParticles(ParticleTypes.CLOUD, center.x, center.y + 0.5D, center.z, 12, 0.5D, 0.2D, 0.5D, 0.03D);
+                level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.5D, pos.z, 12, 0.5D, 0.2D, 0.5D, 0.03D);
+                return true;
+            }
+            case "trophy_shockwave" -> {
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.8D, null)) {
+                    Vec3 push = mob.position().subtract(player.position()).normalize().scale(0.75D + 0.15D * sLv);
+                    mob.push(push.x, 0.28D, push.z);
+                }
+                if (rng.nextFloat() < 0.20F + 0.05F * pLv) {
+                    spawnItem(level, pos, new ItemStack(Items.GOLD_NUGGET, 1 + rng.nextInt(2)));
+                }
+                return true;
+            }
+            case "reaping_gale" -> {
+                if (fullChargeMelee) {
+                    int hits = 0;
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.6D, target)) {
+                        mob.hurtServer(level, level.damageSources().playerAttack(player), 1.8F + 0.5F * pLv);
+                        if (++hits >= 3) break;
+                    }
+                    grantEffect(player, "luck", 100, 0);
+                    if (rng.nextFloat() < 0.28F) {
+                        ExperienceOrb.award(level, pos, 1 + sLv);
+                    }
+                }
+                return true;
+            }
+            case "bounty_jackpot" -> {
+                if (rng.nextFloat() < 0.18F + 0.05F * pLv) {
+                    Item jackpot = switch (rng.nextInt(3)) {
+                        case 0 -> Items.EMERALD;
+                        case 1 -> Items.LAPIS_LAZULI;
+                        default -> Items.GOLD_NUGGET;
+                    };
+                    spawnItem(level, pos, new ItemStack(jackpot, 1));
+                    ExperienceOrb.award(level, pos, 2);
+                }
                 return true;
             }
             case "searing_feast", "alchemic_pyre", "concussive_plunder", "legion_plunder", "midas_cleave" -> {
@@ -693,6 +799,36 @@ public final class SignaturePairs {
                 }
                 return true;
             }
+            case "vital_siphon_shot" -> {
+                if (target != null) {
+                    if (hostStack.isDamaged()) {
+                        hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 2));
+                    } else {
+                        player.heal(1.0F + 0.3F * pLv);
+                    }
+                    level.sendParticles(ParticleTypes.HEART, player.getX(), player.getY() + 1.1D, player.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.02D);
+                }
+                return true;
+            }
+            case "pristine_overcharge" -> {
+                if (target != null) {
+                    boolean pristine = !hostStack.isDamageableItem()
+                        || hostStack.getDamageValue() <= hostStack.getMaxDamage() / 10;
+                    if (pristine) {
+                        target.hurtServer(level, level.damageSources().magic(), 2.8F + 0.65F * sLv);
+                        level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.8D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.08D);
+                    }
+                }
+                return true;
+            }
+            case "overdraw_snipe" -> {
+                if (target != null) {
+                    float bonus = 1.6F + 0.45F * pLv + target.getArmorValue() * 0.12F;
+                    target.hurtServer(level, level.damageSources().magic(), bonus);
+                    grantEffect(player, "speed", 50 + 15 * sLv, 0);
+                }
+                return true;
+            }
             case "spectral_condense" -> {
                 if (!hostStack.isDamaged() && rng.nextFloat() < 0.22F) {
                     player.getInventory().placeItemBackInInventory(new ItemStack(Items.SPECTRAL_ARROW, 1));
@@ -701,8 +837,7 @@ public final class SignaturePairs {
             }
             case "converging_volley" -> {
                 if (target != null) {
-                    target.invulnerableTime = 0;
-                    target.hurtServer(level, level.damageSources().magic(), 2.8F + 0.5F * sLv);
+                    hurtBypassingIframe(level, target, level.damageSources().magic(), 2.8F + 0.5F * sLv);
                 }
                 return true;
             }
@@ -720,21 +855,36 @@ public final class SignaturePairs {
                 }
                 return true;
             }
-            case "explosive_flare_arrow", "plasma_overload" -> {
+            case "explosive_flare_arrow", "plasma_overload", "thunder_pyre_lance" -> {
                 for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.8D, null)) {
                     mob.igniteForSeconds(4.0F);
-                    mob.hurtServer(level, level.damageSources().magic(), 3.2F);
+                    mob.hurtServer(level, level.damageSources().magic(), "thunder_pyre_lance".equals(sigId) ? 3.6F : 3.2F);
                     Vec3 blast = mob.position().subtract(pos).normalize().scale(0.75D);
                     mob.push(blast.x, 0.38D, blast.z);
                 }
-                level.sendParticles(ParticleTypes.EXPLOSION, pos.x, pos.y + 0.5D, pos.z, 2, 0.2D, 0.2D, 0.2D, 0.0D);
+                level.sendParticles(
+                    "thunder_pyre_lance".equals(sigId) ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.EXPLOSION,
+                    pos.x, pos.y + 0.5D, pos.z, 10, 0.35D, 0.25D, 0.35D, 0.05D
+                );
                 return true;
             }
-            case "meteor_streak" -> {
+            case "meteor_streak", "sunfire_barrage" -> {
                 if (target != null) {
-                    target.igniteForSeconds(6.0F);
+                    target.igniteForSeconds("sunfire_barrage".equals(sigId) ? 8.0F : 6.0F);
                     for (LivingEntity mob : nearbyHostiles(level, player, pos, 2.8D, target)) {
                         mob.igniteForSeconds(4.0F);
+                    }
+                }
+                return true;
+            }
+            case "solar_arc_arrow" -> {
+                if (target != null) {
+                    target.igniteForSeconds(5.0F);
+                    target.hurtServer(level, level.damageSources().magic(), 2.2F + 0.6F * pLv);
+                    if (level.canSeeSky(target.blockPosition()) && rng.nextFloat() < 0.45F) {
+                        AberrantRegistry.spawnLightning(level, target.position());
+                    } else {
+                        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y + 0.8D, pos.z, 16, 0.3D, 0.4D, 0.3D, 0.1D);
                     }
                 }
                 return true;
@@ -779,11 +929,21 @@ public final class SignaturePairs {
                 }
                 return true;
             }
+            case "arc_lightning_cleave" -> {
+                if (fullChargeMelee) {
+                    float mult = level.isRaining() ? 1.35F : 1.0F;
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.0D, null)) {
+                        mob.hurtServer(level, level.damageSources().magic(), (2.4F + 0.55F * pLv) * mult);
+                        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, mob.getX(), mob.getY() + 0.8D, mob.getZ(), 10, 0.25D, 0.3D, 0.25D, 0.08D);
+                    }
+                }
+                return true;
+            }
             case "thunder_avatar", "aurora_thunder_prison" -> {
                 for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.0D, null)) {
                     mob.hurtServer(level, level.damageSources().magic(), 2.8F + 0.5F * pLv);
                     grantEffect(mob, "slowness", 60, 2);
-                    if ("aurora_thunder_prison".equals(sigId) && rng.nextFloat() < 0.35F) {
+                    if ("aurora_thunder_prison".equals(sigId) && rng.nextFloat() < 0.35F && player.mayBuild()) {
                         AberrantRegistry.placeFrostedIceSnare(level, mob.blockPosition());
                     }
                 }
@@ -806,14 +966,29 @@ public final class SignaturePairs {
                 }
                 return true;
             }
-            case "ground_gust", "gale_guardian_armor" -> {
+            case "crushing_updraft" -> {
+                if (target != null) {
+                    grantEffect(target, "slowness", 65, 2);
+                    target.hurtServer(level, level.damageSources().playerAttack(player), 2.4F + 0.55F * pLv);
+                }
+                player.fallDistance = 0.0F;
+                player.push(0.0D, 0.38D + 0.08D * sLv, 0.0D);
+                player.hurtMarked = true;
+                level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.4D, pos.z, 14, 0.4D, 0.2D, 0.4D, 0.06D);
+                return true;
+            }
+            case "ground_gust", "gale_guardian_armor", "zephyr_cushion" -> {
                 for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.2D, null)) {
                     Vec3 away = mob.position().subtract(player.position()).normalize().scale(0.85D);
                     mob.push(away.x, 0.42D, away.z);
                 }
-                if ("gale_guardian_armor".equals(sigId)) {
-                    player.push(0.0D, 0.45D, 0.0D);
+                if ("gale_guardian_armor".equals(sigId) || "zephyr_cushion".equals(sigId)) {
+                    player.fallDistance = 0.0F;
+                    player.push(0.0D, "zephyr_cushion".equals(sigId) ? 0.35D : 0.45D, 0.0D);
                     player.hurtMarked = true;
+                    if ("zephyr_cushion".equals(sigId)) {
+                        grantEffect(player, "slow_falling", 55, 0);
+                    }
                 }
                 level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.5D, pos.z, 12, 0.4D, 0.2D, 0.4D, 0.06D);
                 return true;
@@ -828,6 +1003,15 @@ public final class SignaturePairs {
                 }
                 return true;
             }
+            case "cinder_backlash" -> {
+                player.clearFire();
+                grantEffect(player, "fire_resistance", 80, 0);
+                if (target != null && target != player) {
+                    target.igniteForSeconds(3.0F + pLv);
+                    target.hurtServer(level, level.damageSources().thorns(player), 2.0F + 0.4F * sLv);
+                }
+                return true;
+            }
             case "blast_thorns", "kinetic_payback" -> {
                 grantEffect(player, "strength", 80, 0);
                 for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 3.6D, null)) {
@@ -837,9 +1021,35 @@ public final class SignaturePairs {
                 }
                 return true;
             }
+            case "concussion_shrapnel" -> {
+                for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 4.0D, null)) {
+                    mob.hurtServer(level, level.damageSources().magic(), 2.2F + 0.45F * pLv);
+                    grantEffect(mob, "weakness", 70, 0);
+                }
+                level.sendParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 0.9D, player.getZ(), 12, 0.4D, 0.3D, 0.4D, 0.1D);
+                return true;
+            }
             case "deflection_field", "sniper_thorns" -> {
                 if (target != null && target != player) {
                     target.hurtServer(level, level.damageSources().thorns(player), 3.0F + 0.5F * pLv);
+                }
+                return true;
+            }
+            case "ricochet_ward" -> {
+                grantEffect(player, "resistance", 60, 0);
+                if (target != null && target != player) {
+                    grantEffect(target, "slowness", 60, 1);
+                    target.hurtServer(level, level.damageSources().thorns(player), 2.0F + 0.4F * sLv);
+                }
+                return true;
+            }
+            case "porcelain_bastion" -> {
+                long now = level.getGameTime();
+                if (player.getHealth() >= player.getMaxHealth() * 0.5F
+                    && now >= PORCELAIN_BASTION_COOLDOWN.getOrDefault(player.getUUID(), 0L)) {
+                    PORCELAIN_BASTION_COOLDOWN.put(player.getUUID(), now + 240L);
+                    grantEffect(player, "absorption", 100, 0);
+                    level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.0D, player.getZ(), 10, 0.3D, 0.4D, 0.3D, 0.04D);
                 }
                 return true;
             }
@@ -850,6 +1060,16 @@ public final class SignaturePairs {
             case "shakedown_thorns" -> {
                 if (target != null && rng.nextFloat() < 0.22F) {
                     spawnItem(level, player.position(), new ItemStack(rng.nextBoolean() ? Items.GOLD_NUGGET : Items.EMERALD, 1));
+                }
+                return true;
+            }
+            case "extortion_carapace" -> {
+                if (target != null && target != player) {
+                    target.hurtServer(level, level.damageSources().thorns(player), 1.8F + 0.5F * pLv);
+                    grantEffect(target, "weakness", 60, 0);
+                    if (rng.nextFloat() < 0.25F) {
+                        ExperienceOrb.award(level, player.position(), 1 + sLv);
+                    }
                 }
                 return true;
             }
@@ -864,8 +1084,7 @@ public final class SignaturePairs {
             // --- Batch 9, 11, 12, 13, 14, 15 Cross-Domain Combat ---
             case "phantom_triple_slash" -> {
                 if (fullChargeMelee && target != null) {
-                    target.invulnerableTime = 0;
-                    target.hurtServer(level, level.damageSources().magic(), 1.8F + 0.35F * pLv);
+                    hurtBypassingIframe(level, target, level.damageSources().magic(), 1.8F + 0.35F * pLv);
                     level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.9D, pos.z, 2, 0.25D, 0.2D, 0.25D, 0.0D);
                 }
                 return true;
@@ -892,7 +1111,7 @@ public final class SignaturePairs {
                 if (target != null) {
                     target.setTicksFrozen(Math.min(300, target.getTicksFrozen() + 140));
                     grantEffect(target, "slowness", 80, 2);
-                    if (rng.nextFloat() < 0.35F) {
+                    if (rng.nextFloat() < 0.35F && player.mayBuild()) {
                         AberrantRegistry.placeFrostedIceSnare(level, target.blockPosition());
                     }
                 }
@@ -911,6 +1130,18 @@ public final class SignaturePairs {
                     target.hurtServer(level, level.damageSources().drown(), 2.8F + 0.5F * pLv);
                 }
                 level.sendParticles(ParticleTypes.BUBBLE_POP, pos.x, pos.y + 0.7D, pos.z, 14, 0.3D, 0.3D, 0.3D, 0.05D);
+                return true;
+            }
+            case "hydrothermal_wake" -> {
+                if (target != null) {
+                    target.igniteForSeconds(3.0F + sLv);
+                    float bonus = (player.isInWaterOrRain() || target.isInWaterOrRain()) ? (3.2F + 0.6F * pLv) : 1.8F;
+                    target.hurtServer(level, level.damageSources().magic(), bonus);
+                }
+                if (player.isInWaterOrRain()) {
+                    grantEffect(player, "dolphins_grace", 60, 0);
+                }
+                level.sendParticles(ParticleTypes.BUBBLE_POP, pos.x, pos.y + 0.6D, pos.z, 12, 0.3D, 0.3D, 0.3D, 0.05D);
                 return true;
             }
             case "choking_smoke" -> {
@@ -939,13 +1170,13 @@ public final class SignaturePairs {
                 level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.6D, pos.z, 22, 0.7D, 0.4D, 0.7D, 0.05D);
                 return true;
             }
-            case "oxygen_drain_slash" -> {
+            case "oxygen_drain_slash", "pressure_pierce_shot" -> {
                 if (target != null) {
-                    int nextAir = target.getAirSupply() - 110;
+                    int drain = "pressure_pierce_shot".equals(sigId) ? 130 : 110;
+                    int nextAir = target.getAirSupply() - drain;
                     target.setAirSupply(Math.max(-20, nextAir));
-                    if (nextAir <= 0) {
-                        target.hurtServer(level, level.damageSources().drown(), 3.8F + 0.5F * pLv);
-                    }
+                    float bonus = nextAir <= 0 ? (3.8F + 0.5F * pLv) : (1.6F + 0.35F * sLv);
+                    target.hurtServer(level, level.damageSources().drown(), bonus);
                 }
                 level.sendParticles(ParticleTypes.BUBBLE, pos.x, pos.y + 0.8D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.05D);
                 return true;
@@ -957,11 +1188,14 @@ public final class SignaturePairs {
                 player.setAirSupply(player.getMaxAirSupply());
                 return true;
             }
-            case "shadow_backstab" -> {
+            case "shadow_backstab", "ambush_longshot" -> {
                 if (target != null) {
                     double dot = player.getLookAngle().normalize().dot(target.getLookAngle().normalize());
                     if (player.isShiftKeyDown() || dot > 0.35D) {
-                        target.hurtServer(level, level.damageSources().playerAttack(player), 5.0F + 1.1F * sLv);
+                        target.hurtServer(level, level.damageSources().playerAttack(player), 4.6F + 1.0F * sLv);
+                        if ("ambush_longshot".equals(sigId)) {
+                            grantEffect(target, "slowness", 60, 1);
+                        }
                         level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 0.8D, pos.z, 16, 0.25D, 0.25D, 0.25D, 0.1D);
                     }
                 }
@@ -989,8 +1223,16 @@ public final class SignaturePairs {
                 }
                 return true;
             }
+            case "wraith_rend_step" -> {
+                if (target != null) {
+                    target.hurtServer(level, level.damageSources().magic(), 2.4F + 0.5F * sLv);
+                }
+                grantEffect(player, "speed", 60, 0);
+                level.sendParticles(ParticleTypes.SOUL, pos.x, pos.y + 0.5D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.03D);
+                return true;
+            }
             case "crystal_snare" -> {
-                if (target != null && rng.nextFloat() < 0.22F) {
+                if (target != null && rng.nextFloat() < 0.22F && player.mayBuild()) {
                     AberrantRegistry.placeIceCage3x3x3(level, target.blockPosition(), Blocks.GLASS.defaultBlockState(), false);
                 }
                 return true;
@@ -1010,9 +1252,22 @@ public final class SignaturePairs {
                 }
                 return true;
             }
-            case "drenched_impale" -> {
-                if (target != null && (target.isInWaterOrRain() || player.isInWaterOrRain())) {
-                    target.hurtServer(level, level.damageSources().magic(), 3.0F + 1.1F * pLv);
+            case "maelstrom_vault" -> {
+                player.fallDistance = 0.0F;
+                player.push(0.0D, 0.52D + 0.08D * pLv, 0.0D);
+                player.hurtMarked = true;
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.2D, target)) {
+                    Vec3 pull = pos.subtract(mob.position()).scale(0.38D);
+                    mob.push(pull.x, 0.20D, pull.z);
+                }
+                level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.5D, pos.z, 18, 0.45D, 0.3D, 0.45D, 0.08D);
+                return true;
+            }
+            case "drenched_impale", "harpoon_ballista" -> {
+                if (target != null) {
+                    boolean wet = target.isInWaterOrRain() || player.isInWaterOrRain();
+                    float base = "harpoon_ballista".equals(sigId) ? (2.2F + 0.55F * sLv) : (1.5F + 0.4F * pLv);
+                    target.hurtServer(level, level.damageSources().magic(), wet ? base * 1.85F : base);
                 }
                 return true;
             }
@@ -1028,9 +1283,19 @@ public final class SignaturePairs {
                 }
                 return true;
             }
-            case "perpetual_craft" -> {
+            case "snap_crescent_draw" -> {
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.4D, target)) {
+                    mob.hurtServer(level, level.damageSources().playerAttack(player), 2.0F + 0.45F * sLv);
+                }
+                level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.7D, pos.z, 2, 0.35D, 0.1D, 0.35D, 0.0D);
+                return true;
+            }
+            case "perpetual_craft", "eternal_bowstring" -> {
                 if (hostStack.isDamaged() && rng.nextFloat() < 0.75F) {
                     hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 1));
+                }
+                if ("eternal_bowstring".equals(sigId)) {
+                    grantEffect(player, "haste", 50, 0);
                 }
                 return true;
             }
@@ -1040,7 +1305,21 @@ public final class SignaturePairs {
                 }
                 return true;
             }
-            // --- Previously Unhandled Batch 6 / 7 / 8 Signatures ---
+            case "kiln_overdrive" -> {
+                if (target != null) {
+                    target.igniteForSeconds(3.0F + sLv);
+                }
+                grantEffect(player, "haste", 70, 0);
+                return true;
+            }
+            case "controlled_demolition" -> {
+                grantEffect(player, "resistance", 60, 0);
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.2D, null)) {
+                    Vec3 away = mob.position().subtract(player.position()).normalize().scale(0.65D);
+                    mob.push(away.x, 0.25D, away.z);
+                }
+                return true;
+            }
             case "reactive_plate" -> {
                 grantEffect(player, "absorption", 140, 0);
                 for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 3.6D, null)) {
@@ -1052,15 +1331,28 @@ public final class SignaturePairs {
                 return true;
             }
             case "frost_meteor_fall" -> {
-                AberrantRegistry.placeFrostedIceSnare(level, player.blockPosition());
+                if (player.mayBuild()) {
+                    AberrantRegistry.placeFrostedIceSnare(level, player.blockPosition());
+                }
                 for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.0D, null)) {
                     mob.setTicksFrozen(Math.min(320, mob.getTicksFrozen() + 130));
                     grantEffect(mob, "slowness", 80, 2);
                     mob.hurtServer(level, level.damageSources().freeze(), 3.0F + 0.7F * pLv);
-                    AberrantRegistry.placeSingleFrostedIce(level, mob.blockPosition());
+                    if (player.mayBuild()) {
+                        AberrantRegistry.placeSingleFrostedIce(level, mob.blockPosition());
+                    }
                 }
                 level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.3D, pos.z, 24, 1.2D, 0.2D, 1.2D, 0.06D);
                 level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.85F, 1.25F);
+                return true;
+            }
+            case "feather_rime_glide" -> {
+                player.fallDistance = 0.0F;
+                grantEffect(player, "slow_falling", 60, 0);
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.2D, null)) {
+                    grantEffect(mob, "slowness", 50, 1);
+                }
+                level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.2D, pos.z, 12, 0.6D, 0.15D, 0.6D, 0.03D);
                 return true;
             }
             case "soul_stride_landing" -> {
@@ -1070,6 +1362,23 @@ public final class SignaturePairs {
                     SOUL_FIRE_TICKS.put(mob.getUUID(), 60);
                 }
                 level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x, pos.y + 0.25D, pos.z, 22, 1.1D, 0.2D, 1.1D, 0.05D);
+                return true;
+            }
+            case "wraith_plume" -> {
+                player.fallDistance = 0.0F;
+                grantEffect(player, "jump_boost", 80, 1);
+                grantEffect(player, "speed", 80, 0);
+                level.sendParticles(ParticleTypes.SOUL, pos.x, pos.y + 0.2D, pos.z, 10, 0.5D, 0.15D, 0.5D, 0.03D);
+                return true;
+            }
+            case "homing_plume" -> {
+                player.fallDistance = 0.0F;
+                grantEffect(player, "slow_falling", 70, 0);
+                AABB box = AABB.ofSize(player.position(), 8.0D, 5.0D, 8.0D);
+                for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, box, Entity::isAlive)) {
+                    item.setNoPickUpDelay();
+                    item.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+                }
                 return true;
             }
             case "raging_hook" -> {
@@ -1182,7 +1491,7 @@ public final class SignaturePairs {
     }
 
     // =========================================================================
-    // 4. Block Harvest Execution (Silk x Fortune, Molten Pick, 3x1 Excavate, etc.)
+    // 4. Block Harvest Execution
     // =========================================================================
 
     public static void onBlockHarvested(
@@ -1222,12 +1531,27 @@ public final class SignaturePairs {
                         ExperienceOrb.award(level, Vec3.atCenterOf(pos), 2);
                     }
                 }
-                case "molten_core_pick" -> {
+                case "molten_core_pick", "kiln_overdrive" -> {
                     Item smelted = smeltedResultForBlock(minedState.getBlock());
                     if (smelted != null) {
                         spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(smelted, 1));
                         ExperienceOrb.award(level, Vec3.atCenterOf(pos), 1);
                         level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.2D, 0.2D, 0.2D, 0.02D);
+                    }
+                    if ("kiln_overdrive".equals(sigId)) {
+                        grantEffect(player, "haste", 70, 0);
+                    }
+                }
+                case "controlled_demolition" -> {
+                    grantEffect(player, "resistance", 60, 0);
+                    level.sendParticles(ParticleTypes.POOF, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.25D, 0.25D, 0.25D, 0.03D);
+                }
+                case "velvet_shear" -> {
+                    grantEffect(player, "haste", 80, 1);
+                    AABB box = AABB.ofSize(Vec3.atCenterOf(pos), 5.0D, 4.0D, 5.0D);
+                    for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, box, Entity::isAlive)) {
+                        item.setNoPickUpDelay();
+                        item.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
                     }
                 }
                 case "magnetic_pick" -> {
@@ -1245,7 +1569,7 @@ public final class SignaturePairs {
                         tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
                     }
                 }
-                case "perpetual_craft", "overflow_plating" -> {
+                case "perpetual_craft", "eternal_bowstring", "overflow_plating" -> {
                     if (tool.isDamaged() && rng.nextFloat() < 0.75F) {
                         tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
                     }
@@ -1254,7 +1578,7 @@ public final class SignaturePairs {
                     player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 45));
                 }
                 case "rock_splitter_pick", "triple_excavate", "vein_peel" -> {
-                    if (!player.isShiftKeyDown() && !Boolean.TRUE.equals(IN_SIGNATURE_MINING.get())) {
+                    if (player.mayBuild() && !player.isShiftKeyDown() && !Boolean.TRUE.equals(IN_SIGNATURE_MINING.get())) {
                         IN_SIGNATURE_MINING.set(Boolean.TRUE);
                         try {
                             Direction facing = player.getDirection();
@@ -1262,7 +1586,9 @@ public final class SignaturePairs {
                             for (int offset : new int[]{-1, 1}) {
                                 BlockPos adj = pos.relative(side, offset);
                                 BlockState adjState = level.getBlockState(adj);
-                                if (adjState.is(minedState.getBlock()) && adjState.getDestroySpeed(level, adj) >= 0.0F) {
+                                if (adjState.is(minedState.getBlock())
+                                    && level.getBlockEntity(adj) == null
+                                    && adjState.getDestroySpeed(level, adj) >= 0.0F) {
                                     level.destroyBlock(adj, true, player);
                                 }
                             }
@@ -1276,7 +1602,7 @@ public final class SignaturePairs {
     }
 
     // =========================================================================
-    // 5. Entity Kill Drops (Pristine Trophy Heads, Vanish-on-Kill, Abyssal Heal)
+    // 5. Entity Kill Drops
     // =========================================================================
 
     public static void onEntityKilled(ServerLevel level, ServerPlayer killer, LivingEntity victim) {
@@ -1301,6 +1627,17 @@ public final class SignaturePairs {
                         }
                     }
                 }
+                case "curated_harvest" -> {
+                    if (level.getRandom().nextFloat() < 0.28F) {
+                        Item curio = switch (level.getRandom().nextInt(3)) {
+                            case 0 -> Items.LEATHER;
+                            case 1 -> Items.BONE;
+                            default -> Items.FEATHER;
+                        };
+                        spawnItem(level, victim.position(), new ItemStack(curio, 1 + level.getRandom().nextInt(2)));
+                        ExperienceOrb.award(level, victim.position(), 2);
+                    }
+                }
                 case "vanish_on_kill" -> {
                     grantEffect(killer, "invisibility", 70, 0);
                     grantEffect(killer, "speed", 70, 1);
@@ -1314,7 +1651,7 @@ public final class SignaturePairs {
     }
 
     // =========================================================================
-    // 6. Periodic Passive & World Tick (Magma Basalt, Ice Thorns, Soul Fire, Loyal Save)
+    // 6. Periodic Passive & World Tick
     // =========================================================================
 
     public static void tickServerPlayer(ServerLevel level, ServerPlayer player) {
@@ -1326,48 +1663,46 @@ public final class SignaturePairs {
             return;
         }
 
-        EquipmentSlot[] slots = {
-            EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS,
-            EquipmentSlot.FEET, EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND
-        };
+        for (EquippedSignature eq : collectUniqueEquippedSignatures(player).values()) {
+            String sigId = eq.sigId();
+            ItemStack gear = eq.stack();
+            EquipmentSlot slot = eq.slot();
 
-        for (EquipmentSlot slot : slots) {
-            ItemStack gear = player.getItemBySlot(slot);
-            if (gear.isEmpty()) continue;
-            FusedEnchantmentList list = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-            for (FusedPair pair : list.pairs()) {
-                Optional<SignatureEntry> sigOpt = resolve(pair);
-                if (sigOpt.isEmpty()) continue;
-                String sigId = sigOpt.get().id();
-
-                switch (sigId) {
-                    case "loyal_lifeline" -> {
-                        // Lock durability at 1 remaining point before shattering and pop safely into inventory!
-                        if (gear.isDamageableItem() && gear.getDamageValue() >= gear.getMaxDamage() - 1 && slot != EquipmentSlot.MAINHAND) {
-                            ItemStack rescued = gear.copy();
-                            rescued.setDamageValue(Math.max(0, gear.getMaxDamage() - 2));
-                            player.setItemSlot(slot, ItemStack.EMPTY);
-                            player.getInventory().placeItemBackInInventory(rescued);
-                        }
+            switch (sigId) {
+                case "loyal_lifeline" -> {
+                    if (gear.isDamageableItem() && gear.getDamageValue() >= gear.getMaxDamage() - 1 && slot != EquipmentSlot.MAINHAND) {
+                        ItemStack rescued = gear.copy();
+                        rescued.setDamageValue(Math.max(0, gear.getMaxDamage() - 2));
+                        player.setItemSlot(slot, ItemStack.EMPTY);
+                        player.getInventory().placeItemBackInInventory(rescued);
                     }
-                    case "furnace_aegis" -> {
-                        if (player.isOnFire() || player.isInLava()) {
-                            grantEffect(player, "fire_resistance", 40, 0);
-                            grantEffect(player, "regeneration", 40, 0);
-                        }
+                }
+                case "furnace_aegis" -> {
+                    if (player.isOnFire() || player.isInLava()) {
+                        grantEffect(player, "fire_resistance", 40, 0);
+                        grantEffect(player, "regeneration", 40, 0);
                     }
-                    case "tide_breaker_dive" -> {
-                        if (player.isInWater() && player.isShiftKeyDown()) {
-                            grantEffect(player, "dolphins_grace", 40, 0);
-                        }
+                }
+                case "glacial_hearth" -> {
+                    player.clearFire();
+                    for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 3.0D, null)) {
+                        grantEffect(mob, "slowness", 35, 0);
+                        mob.setTicksFrozen(Math.min(200, mob.getTicksFrozen() + 25));
                     }
-                    case "permafrost_wake" -> {
-                        player.clearFire();
-                        for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 2.8D, null)) {
-                            mob.setTicksFrozen(Math.min(300, mob.getTicksFrozen() + 50));
-                        }
+                }
+                case "tide_breaker_dive" -> {
+                    if (player.isInWater() && player.isShiftKeyDown()) {
+                        grantEffect(player, "dolphins_grace", 40, 0);
                     }
-                    case "magma_basalt_step" -> {
+                }
+                case "permafrost_wake" -> {
+                    player.clearFire();
+                    for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 2.8D, null)) {
+                        mob.setTicksFrozen(Math.min(300, mob.getTicksFrozen() + 50));
+                    }
+                }
+                case "magma_basalt_step" -> {
+                    if (player.mayBuild() && !player.isShiftKeyDown()) {
                         BlockPos feet = player.blockPosition();
                         for (int dx = -1; dx <= 1; dx++) {
                             for (int dz = -1; dz <= 1; dz++) {
@@ -1379,34 +1714,39 @@ public final class SignaturePairs {
                             }
                         }
                     }
-                    case "ice_thorn_trail" -> {
-                        for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 4.5D, null)) {
-                            BlockState under = level.getBlockState(mob.blockPosition().below());
-                            if (under.is(BlockTags.ICE)) {
-                                mob.hurtServer(level, level.damageSources().cactus(), 1.5F);
-                            }
+                }
+                case "ice_thorn_trail" -> {
+                    for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 4.5D, null)) {
+                        BlockState under = level.getBlockState(mob.blockPosition().below());
+                        if (under.is(BlockTags.ICE)) {
+                            mob.hurtServer(level, level.damageSources().cactus(), 1.5F);
                         }
                     }
-                    case "phantom_assassin_step" -> {
-                        if (player.isShiftKeyDown()) {
-                            grantEffect(player, "speed", 30, 1);
-                            grantEffect(player, "invisibility", 30, 0);
-                        }
+                }
+                case "phantom_assassin_step" -> {
+                    if (player.isShiftKeyDown()) {
+                        grantEffect(player, "speed", 30, 1);
+                        grantEffect(player, "invisibility", 30, 0);
                     }
-                    case "abyssal_sight" -> {
-                        if (player.isInWater()) {
-                            grantEffect(player, "night_vision", 240, 0);
-                            grantEffect(player, "water_breathing", 30, 0);
-                        }
+                }
+                case "grave_stalk_rush" -> {
+                    if (player.isShiftKeyDown() || player.isSprinting()) {
+                        grantEffect(player, "speed", 30, 1);
                     }
-                    case "gale_blade_flurry", "rapid_bowstring", "swift_draw_burst" -> {
-                        if (slot == EquipmentSlot.MAINHAND) {
-                            grantEffect(player, "haste", 30, 1);
-                        }
+                }
+                case "abyssal_sight" -> {
+                    if (player.isInWater()) {
+                        grantEffect(player, "night_vision", 240, 0);
+                        grantEffect(player, "water_breathing", 30, 0);
                     }
-                    case "blood_pact_curse" -> {
-                        grantEffect(player, "health_boost", 60, 0);
+                }
+                case "gale_blade_flurry", "rapid_bowstring", "swift_draw_burst" -> {
+                    if (slot == EquipmentSlot.MAINHAND) {
+                        grantEffect(player, "haste", 30, 1);
                     }
+                }
+                case "blood_pact_curse" -> {
+                    grantEffect(player, "health_boost", 60, 0);
                 }
             }
         }
@@ -1478,9 +1818,15 @@ public final class SignaturePairs {
         return null;
     }
 
-    // =========================================================================
-    // Helpers
-    // =========================================================================
+    private static void hurtBypassingIframe(ServerLevel level, LivingEntity target, DamageSource source, float amount) {
+        int prevInvuln = target.invulnerableTime;
+        target.invulnerableTime = 0;
+        try {
+            target.hurtServer(level, source, amount);
+        } finally {
+            target.invulnerableTime = prevInvuln;
+        }
+    }
 
     private static List<LivingEntity> nearbyHostiles(
         ServerLevel level,

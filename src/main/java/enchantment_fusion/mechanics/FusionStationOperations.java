@@ -12,8 +12,12 @@ import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.ChatFormatting;
@@ -36,13 +40,15 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * Evaluates and executes 3-Tab + Mode C Enchantment-Picker + Vessel-Socket operations:
+ * Evaluates and executes 2-Tab Enchantment Fusion Table operations:
  * <ul>
- *   <li>Tab 0 ({@code TAB_FUSE}): Book + Book (or multi-enchantment book) -> Fused Enchanted Book in Slot 3 (no blank book needed!) + Top-Up</li>
- *   <li>Tab 1 ({@code TAB_SOCKET}): Host Gear in Slot 3 -> Vessel Socket card management (Socket Fused Book, Flip Socket, Unsocket to Book, +1 Vessel Inlay) + In-Place Gear 2-in-1 Fusion!</li>
- *   <li>Tab 2 ({@code TAB_COMPENDIUM}): Fused Book Flip / Clean Split into two single books + Resonance Compendium browser</li>
+ *   <li>Tab 0 ({@code TAB_FUSE}): Book + Book (or single multi-enchantment book, atomic conservation EF-001)
+ *       -> Fused Enchanted Book in Slot 3, plus integrated Fused-Book Flip / Split.</li>
+ *   <li>Tab 1 ({@code TAB_SOCKET}): Host Gear in Slot 3 -> Vessel Socket management (Socket, Flip, Remove, +1 Vessel Inlay),
+ *       In-Place Gear 2-in-1 Fusion, and {@code 0◇} Cross-Domain Transmutations stored in {@code TRANSMUTED_ENCHANTS} (API-01).</li>
  * </ul>
  */
 public final class FusionStationOperations {
@@ -53,7 +59,6 @@ public final class FusionStationOperations {
 
     public static final int TAB_FUSE = 0;
     public static final int TAB_SOCKET = 1;
-    public static final int TAB_COMPENDIUM = 2;
 
     public enum OperationKind {
         NONE,
@@ -86,6 +91,14 @@ public final class FusionStationOperations {
         public EnchantCandidate secondary() {
             return (secondaryIndex >= 0 && secondaryIndex < candidates.size()) ? candidates.get(secondaryIndex) : null;
         }
+
+        public String buildSelectionToken() {
+            EnchantCandidate p = primary();
+            EnchantCandidate s = secondary();
+            String ps = p == null ? "-" : (p.sourceSlot() + ":" + p.id() + ":" + p.level());
+            String ss = s == null ? "-" : (s.sourceSlot() + ":" + s.id() + ":" + s.level());
+            return ps + "|" + ss;
+        }
     }
 
     public record StationPreview(
@@ -116,27 +129,7 @@ public final class FusionStationOperations {
             this(
                 kind, executable, rejectReason, previewPair, repulsive, instabilityChance, xpCost,
                 selection, manageXpCost, null, null,
-                new EconomyQuote(xpCost, FusionEconomyRules.ReagentKind.NONE, 0, instabilityChance, repulsive, 0)
-            );
-        }
-
-        public StationPreview(
-            OperationKind kind,
-            boolean executable,
-            RejectReason rejectReason,
-            FusedPair previewPair,
-            boolean repulsive,
-            double instabilityChance,
-            int xpCost,
-            ResolvedSelection selection,
-            int manageXpCost,
-            CrossDomainTransmutations.TransmuteVariant previewTransmute,
-            EnchantCandidate singleCandidate
-        ) {
-            this(
-                kind, executable, rejectReason, previewPair, repulsive, instabilityChance, xpCost,
-                selection, manageXpCost, previewTransmute, singleCandidate,
-                new EconomyQuote(xpCost, FusionEconomyRules.ReagentKind.NONE, 0, instabilityChance, repulsive, 0)
+                new EconomyQuote(xpCost, FusionEconomyRules.ReagentKind.NONE, 0, instabilityChance, repulsive, false, 0)
             );
         }
     }
@@ -146,8 +139,6 @@ public final class FusionStationOperations {
     public static List<EnchantCandidate> collectCandidates(Container inv, int activeTab) {
         List<EnchantCandidate> out = new ArrayList<>();
         if (activeTab == TAB_SOCKET) {
-            // In Tab 1 (Gear Vessel & In-Place Fusion), include unfused standalone enchantments on Host Gear (Slot 3) FIRST,
-            // plus any enchantments on books placed in Slot 0 or Slot 1!
             ItemStack gear = inv.getItem(SLOT_TARGET);
             if (VesselCapacityRules.isPotentialEquipmentHost(gear)) {
                 FusedEnchantmentList fusedOnGear = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
@@ -165,7 +156,6 @@ public final class FusionStationOperations {
             appendBookEnchantments(inv.getItem(SLOT_PRIMARY), SLOT_PRIMARY, out);
             appendBookEnchantments(inv.getItem(SLOT_SECONDARY), SLOT_SECONDARY, out);
         } else {
-            // In Tab 0 (Book Fusion), collect all stored enchantments from Slot 0 and Slot 1 (single or multi-enchant books!)
             appendBookEnchantments(inv.getItem(SLOT_PRIMARY), SLOT_PRIMARY, out);
             appendBookEnchantments(inv.getItem(SLOT_SECONDARY), SLOT_SECONDARY, out);
         }
@@ -196,12 +186,10 @@ public final class FusionStationOperations {
         }
         int a = (preferredA >= 0 && preferredA < n) ? preferredA : 0;
         if (preferredB == -2) {
-            // Explicit Single Cross-Domain Inscription mode (user toggled [B] off)
             return new ResolvedSelection(candidates, a, -1);
         }
         int b = (preferredB >= 0 && preferredB < n && preferredB != a) ? preferredB : -1;
         if (b == -1) {
-            // Prefer an enchantment from a different slot first, or any distinct enchantment ID
             for (int i = 0; i < n; i++) {
                 if (i != a && candidates.get(i).sourceSlot() != candidates.get(a).sourceSlot()
                     && !candidates.get(i).id().equals(candidates.get(a).id())) {
@@ -233,15 +221,12 @@ public final class FusionStationOperations {
         ItemStack sCatalyst = inv.getItem(SLOT_CATALYST);
         ItemStack sTarget = inv.getItem(SLOT_TARGET);
 
-        int manageXp = (CetSoftBridge.isSplitOrFlipCatalyst(sCatalyst) || CetSoftBridge.isStabilizerCatalyst(sCatalyst)) ? 0 : 2;
+        // CPL-05: Only dedicated flip/split catalysts (Amethyst / Lapis / CET Grit) waive the 2-XP manage cost — NEVER Resonance Stabilizers!
+        int manageXp = CetSoftBridge.isSplitOrFlipCatalyst(sCatalyst) ? 0 : 2;
         List<EnchantCandidate> candidates = collectCandidates(inv, activeTab);
         ResolvedSelection sel = resolveSelection(candidates, preferredA, preferredB);
 
-        if (activeTab == TAB_COMPENDIUM) {
-            return new StationPreview(OperationKind.NONE, false, RejectReason.NONE, null, false, 0.0, 0, sel, manageXp);
-        }
-
-        // === TAB 1 (or auto-detected Gear in Slot 3): Vessel Expansion, Socket Fused Book, Top-Up, or In-Place Gear Fusion ===
+        // === TAB 1 (or auto-detected Gear in Slot 3): Vessel Expansion, Socket Fused Book, Top-Up, Cross-Domain, or In-Place Gear Fusion ===
         if (VesselCapacityRules.isPotentialEquipmentHost(sTarget)) {
             FusedEnchantmentList targetFusions = sTarget.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
 
@@ -255,7 +240,7 @@ public final class FusionStationOperations {
                 return new StationPreview(OperationKind.EXPAND_VESSEL, true, RejectReason.NONE, null, false, 0.0, 5, sel, manageXp);
             }
 
-            // 2. Socket a Fused Enchanted Book from Slot 0 or Slot 1 onto ANY Gear (Universal Any-Gear!)
+            // 2. Socket a Fused Enchanted Book from Slot 0 or Slot 1 onto ANY Gear
             ItemStack fusedBookSlot = sPrimary.is(FusionItems.FUSED_ENCHANTED_BOOK) ? sPrimary
                 : (sSecondary.is(FusionItems.FUSED_ENCHANTED_BOOK) ? sSecondary : ItemStack.EMPTY);
             if (!fusedBookSlot.isEmpty()) {
@@ -266,12 +251,15 @@ public final class FusionStationOperations {
                     if (targetFusions.size() >= maxSlots) {
                         return new StationPreview(OperationKind.INVALID, false, RejectReason.VESSEL_CAPACITY_FULL, pair, false, 0.0, 0, sel, manageXp);
                     }
-                    Set<String> standaloneVanilla = readUnfusedVanillaEnchantIds(sTarget, targetFusions);
+                    Set<String> allStandalone = readAllStandaloneEnchantIds(sTarget, targetFusions);
                     if (targetFusions.containsEnchantmentId(pair.primaryId())
                         || targetFusions.containsEnchantmentId(pair.secondaryId())
-                        || standaloneVanilla.contains(pair.primaryId())
-                        || standaloneVanilla.contains(pair.secondaryId())) {
+                        || allStandalone.contains(pair.primaryId())
+                        || allStandalone.contains(pair.secondaryId())) {
                         return new StationPreview(OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, pair, false, 0.0, 0, sel, manageXp);
+                    }
+                    if (isIncompatibleWithHost(sTarget, targetFusions, allStandalone, pair.primaryId(), registries)) {
+                        return new StationPreview(OperationKind.INVALID, false, RejectReason.EXCLUSIVE_ON_HOST, pair, false, 0.0, 0, sel, manageXp);
                     }
                     int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
                     boolean zeroXp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst);
@@ -289,38 +277,37 @@ public final class FusionStationOperations {
                 return topUp.get();
             }
 
-            // 4. Single Cross-Domain Book Inscription (0 Vessel Slots!) when [B] is unset or toggled off,
-            //    OR Fuse two picked candidate enchantments directly into a Gear Vessel Slot!
+            // 4. Single Cross-Domain Book Inscription (0 Vessel Slots!) or In-Place Gear 2-in-1 Fusion
             List<EnchantCandidate> gearModeCandidates = activeTab == TAB_SOCKET ? candidates : collectCandidates(inv, TAB_SOCKET);
             ResolvedSelection gearSel = activeTab == TAB_SOCKET ? sel : resolveSelection(gearModeCandidates, preferredA, preferredB);
             EnchantCandidate p = gearSel.primary();
             EnchantCandidate s = gearSel.secondary();
             if (p != null && s == null) {
-                Optional<StationPreview> singleCross = evaluateSingleCrossDomain(sTarget, targetFusions, gearSel, p, sCatalyst, manageXp);
+                Optional<StationPreview> singleCross = evaluateSingleCrossDomain(sTarget, targetFusions, gearSel, p, sCatalyst, manageXp, registries);
                 if (singleCross.isPresent()) {
                     return singleCross.get();
                 }
             }
             if (p != null && s != null) {
-                Set<String> blockingVanilla = readUnfusedVanillaEnchantIds(sTarget, targetFusions);
-                if (p.sourceSlot() == SLOT_TARGET) blockingVanilla.remove(p.id());
-                if (s.sourceSlot() == SLOT_TARGET) blockingVanilla.remove(s.id());
+                Set<String> blockingIds = readAllStandaloneEnchantIds(sTarget, targetFusions);
+                if (p.sourceSlot() == SLOT_TARGET) blockingIds.remove(p.id());
+                if (s.sourceSlot() == SLOT_TARGET) blockingIds.remove(s.id());
 
-                boolean hasStab = CetSoftBridge.isStabilizerCatalyst(sCatalyst);
                 boolean zeroXp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst);
+                boolean runtimeIncompatPair = !Enchantment.areCompatible(p.holder(), s.holder());
+                boolean incompatHost = isIncompatibleWithHost(sTarget, targetFusions, blockingIds, p.id(), registries);
                 PairEvaluation eval = FusionRuleEngine.evaluateFusion(
-                    new EnchantInput(p.id(), p.level(), p.maxLevel(), true),
-                    new EnchantInput(s.id(), s.level(), s.maxLevel(), true),
-                    true, targetFusions, blockingVanilla,
-                    VesselCapacityRules.getMaxVesselSlots(sTarget), hasStab, zeroXp
+                    new EnchantInput(p.id(), p.level(), p.maxLevel()),
+                    new EnchantInput(s.id(), s.level(), s.maxLevel()),
+                    true, targetFusions, blockingIds,
+                    VesselCapacityRules.getMaxVesselSlots(sTarget),
+                    runtimeIncompatPair, incompatHost
                 );
                 if (!eval.valid()) {
-                    // Smart Fallback: if Vessel Spirit slots are full (or fusion rejected), check if a book candidate
-                    // can be inscribed directly as a 0-vessel-slot Cross-Domain Transmutation!
                     EnchantCandidate bookCand = p.sourceSlot() != SLOT_TARGET ? p : (s.sourceSlot() != SLOT_TARGET ? s : null);
                     if (bookCand != null) {
                         Optional<StationPreview> fallbackSingle = evaluateSingleCrossDomain(
-                            sTarget, targetFusions, gearSel, bookCand, sCatalyst, manageXp
+                            sTarget, targetFusions, gearSel, bookCand, sCatalyst, manageXp, registries
                         );
                         if (fallbackSingle.isPresent() && fallbackSingle.get().executable()) {
                             return fallbackSingle.get();
@@ -344,7 +331,7 @@ public final class FusionStationOperations {
             return new StationPreview(OperationKind.NONE, false, RejectReason.NONE, null, false, 0.0, 0, gearSel, manageXp);
         }
 
-        // === TAB 1 Special Cross-Domain Non-Equipment Hosts (Totem of Undying, Glass Bottle, Consumables — 0 Vessel Slots!) ===
+        // === TAB 1 Special Cross-Domain Non-Equipment Hosts (Totem, Glass Bottle, Consumables — 0 Vessel Slots!) ===
         if (!sTarget.isEmpty() && !sTarget.is(Items.BOOK) && !sTarget.is(FusionItems.FUSED_ENCHANTED_BOOK)
             && CrossDomainTransmutations.isEligibleCrossDomainHost(sTarget)) {
             if (sTarget.getCount() != 1) {
@@ -353,7 +340,7 @@ public final class FusionStationOperations {
             EnchantCandidate p = sel.primary();
             if (p != null && p.sourceSlot() != SLOT_TARGET) {
                 Optional<StationPreview> specialSingle = evaluateSingleCrossDomain(
-                    sTarget, FusedEnchantmentList.EMPTY, sel, p, sCatalyst, manageXp
+                    sTarget, FusedEnchantmentList.EMPTY, sel, p, sCatalyst, manageXp, registries
                 );
                 if (specialSingle.isPresent()) {
                     return specialSingle.get();
@@ -362,7 +349,7 @@ public final class FusionStationOperations {
             return new StationPreview(OperationKind.NONE, false, RejectReason.NONE, null, false, 0.0, 0, sel, manageXp);
         }
 
-        // === TAB 0: Book Fusion -> Output Fused Enchanted Book into Slot 3 (NO blank book required!) ===
+        // === TAB 0: Book Fusion -> Output Fused Enchanted Book into Slot 3 ===
         if (sTarget.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
             FusedEnchantmentList bookFusions = sTarget.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
             Optional<StationPreview> topUp = checkTopUp(sTarget, bookFusions, sPrimary, sSecondary, sel, manageXp);
@@ -377,12 +364,12 @@ public final class FusionStationOperations {
             if (!sTarget.isEmpty() && !(sTarget.is(Items.BOOK) && sTarget.getCount() >= 1)) {
                 return new StationPreview(OperationKind.INVALID, false, RejectReason.OUTPUT_OCCUPIED, null, false, 0.0, 0, sel, manageXp);
             }
-            boolean hasStab = CetSoftBridge.isStabilizerCatalyst(sCatalyst);
             boolean zeroXp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst);
+            boolean runtimeIncompatPair = !Enchantment.areCompatible(p.holder(), s.holder());
             PairEvaluation eval = FusionRuleEngine.evaluateFusion(
-                new EnchantInput(p.id(), p.level(), p.maxLevel(), true),
-                new EnchantInput(s.id(), s.level(), s.maxLevel(), true),
-                false, FusedEnchantmentList.EMPTY, Set.of(), 0, hasStab, zeroXp
+                new EnchantInput(p.id(), p.level(), p.maxLevel()),
+                new EnchantInput(s.id(), s.level(), s.maxLevel()),
+                false, FusedEnchantmentList.EMPTY, Set.of(), 0, runtimeIncompatPair, false
             );
             if (!eval.valid()) {
                 return new StationPreview(OperationKind.INVALID, false, eval.rejectReason(), null, false, 0.0, 0, sel, manageXp);
@@ -403,13 +390,44 @@ public final class FusionStationOperations {
         return new StationPreview(OperationKind.NONE, false, RejectReason.NONE, null, false, 0.0, 0, sel, manageXp);
     }
 
+    private static boolean isIncompatibleWithHost(
+        ItemStack host,
+        FusedEnchantmentList targetFusions,
+        Set<String> standaloneIds,
+        String newEnchantId,
+        @Nullable HolderLookup.Provider registries
+    ) {
+        if (registries == null) {
+            return false;
+        }
+        Optional<Holder<Enchantment>> newHolderOpt = lookupEnchantment(registries, newEnchantId);
+        if (newHolderOpt.isEmpty()) {
+            return false;
+        }
+        Holder<Enchantment> newHolder = newHolderOpt.get();
+        for (FusedPair fp : targetFusions.pairs()) {
+            Optional<Holder<Enchantment>> ex = lookupEnchantment(registries, fp.primaryId());
+            if (ex.isPresent() && !Enchantment.areCompatible(newHolder, ex.get())) {
+                return true;
+            }
+        }
+        for (String sid : standaloneIds) {
+            Optional<Holder<Enchantment>> ex = lookupEnchantment(registries, sid);
+            if (ex.isPresent() && !Enchantment.areCompatible(newHolder, ex.get())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static Optional<StationPreview> evaluateSingleCrossDomain(
         ItemStack sTarget,
         FusedEnchantmentList targetFusions,
         ResolvedSelection sel,
         EnchantCandidate bookCand,
         ItemStack sCatalyst,
-        int manageXp
+        int manageXp,
+        @Nullable HolderLookup.Provider registries
     ) {
         if (bookCand == null || bookCand.sourceSlot() == SLOT_TARGET) {
             return Optional.empty();
@@ -417,7 +435,6 @@ public final class FusionStationOperations {
         Optional<CrossDomainTransmutations.TransmuteVariant> variantOpt =
             CrossDomainTransmutations.resolve(sTarget, bookCand.id());
         if (variantOpt.isEmpty()) {
-            // Native single-book enchanting stays on the vanilla Anvil to prevent accidental mis-clicks!
             return Optional.of(new StationPreview(
                 OperationKind.INVALID, false, RejectReason.NOT_CROSS_DOMAIN, null, false, 0.0, 0, sel, manageXp
             ));
@@ -427,18 +444,29 @@ public final class FusionStationOperations {
                 OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, null, false, 0.0, 0, sel, manageXp
             ));
         }
-        ItemEnchantments existing = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        int currentLv = existing.getLevel(bookCand.holder());
         int clampedLv = Math.min(bookCand.maxLevel(), bookCand.level());
-        if (currentLv >= clampedLv) {
+        int currentTransmuted = sTarget.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of())
+            .getOrDefault(bookCand.id(), 0);
+        int currentVanilla = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY)
+            .getLevel(bookCand.holder());
+        if (Math.max(currentTransmuted, currentVanilla) >= clampedLv) {
             return Optional.of(new StationPreview(
                 OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, null, false, 0.0, 0, sel, manageXp
             ));
         }
+        Set<String> otherIds = readAllStandaloneEnchantIds(sTarget, targetFusions);
+        otherIds.remove(bookCand.id());
+        if (isIncompatibleWithHost(sTarget, targetFusions, otherIds, bookCand.id(), registries)) {
+            return Optional.of(new StationPreview(
+                OperationKind.INVALID, false, RejectReason.EXCLUSIVE_ON_HOST, null, false, 0.0, 0, sel, manageXp
+            ));
+        }
+
         int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
         boolean zeroXp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst);
+        int anvilCost = bookCand.holder().value().getAnvilCost();
         EconomyQuote convQuote = FusionEconomyRules.computeConversionQuote(
-            clampedLv, bookCand.maxLevel(), stabCount, zeroXp
+            clampedLv, bookCand.maxLevel(), anvilCost, stabCount, zeroXp
         );
         return Optional.of(new StationPreview(
             OperationKind.INSCRIBE_SINGLE_CROSS, true, RejectReason.NONE,
@@ -462,19 +490,20 @@ public final class FusionStationOperations {
         appendBookEnchantments(sPrimary, SLOT_PRIMARY, donors);
         appendBookEnchantments(sSecondary, SLOT_SECONDARY, donors);
         for (EnchantCandidate donor : donors) {
+            int clampedDonor = Math.min(donor.maxLevel(), donor.level()); // BAL-08: compare clamped level!
             for (FusedPair existing : targetFusions.pairs()) {
                 if (existing.isAberrant()) continue;
-                if (existing.primaryId().equals(donor.id()) && donor.level() > existing.primaryLevel()) {
+                if (existing.primaryId().equals(donor.id()) && clampedDonor > existing.primaryLevel()) {
                     return Optional.of(new StationPreview(
                         OperationKind.TOP_UP_LEVEL, true, RejectReason.NONE,
-                        existing.withPrimaryLevel(Math.min(donor.maxLevel(), donor.level())),
+                        existing.withPrimaryLevel(clampedDonor),
                         false, 0.0, 2, sel, manageXp
                     ));
                 }
-                if (existing.secondaryId().equals(donor.id()) && donor.level() > existing.secondaryLevel()) {
+                if (existing.secondaryId().equals(donor.id()) && clampedDonor > existing.secondaryLevel()) {
                     return Optional.of(new StationPreview(
                         OperationKind.TOP_UP_LEVEL, true, RejectReason.NONE,
-                        existing.withSecondaryLevel(Math.min(donor.maxLevel(), donor.level())),
+                        existing.withSecondaryLevel(clampedDonor),
                         false, 0.0, 2, sel, manageXp
                     ));
                 }
@@ -491,8 +520,25 @@ public final class FusionStationOperations {
         int preferredA,
         int preferredB
     ) {
+        return executePrimaryOperation(inv, player, registries, activeTab, preferredA, preferredB, "");
+    }
+
+    public static boolean executePrimaryOperation(
+        Container inv,
+        Player player,
+        HolderLookup.Provider registries,
+        int activeTab,
+        int preferredA,
+        int preferredB,
+        String expectedToken
+    ) {
         StationPreview preview = inspect(inv, registries, activeTab, preferredA, preferredB);
         if (!preview.executable()) {
+            return false;
+        }
+        // NET-03: If client supplied a snapshot token, verify inputs haven't been swapped by another player!
+        if (expectedToken != null && !expectedToken.isEmpty()
+            && !expectedToken.equals(preview.selection().buildSelectionToken())) {
             return false;
         }
         EconomyQuote quote = preview.economyQuote();
@@ -515,35 +561,24 @@ public final class FusionStationOperations {
         boolean rolledFailure = failChance > 0.0005 && player.getRandom().nextDouble() < failChance;
         boolean highRisk = quote != null ? quote.highRiskTier() : preview.repulsive();
 
-        // Normal Failure (tiered_risk): Host Gear / Primary Book stays safe, 1 book consumed, 50% fee refund!
+        // Mid-tier failure (Choice 3A / EF-004 / BAL-05): ALL books and gear stay 100% intact; only half fee charged!
         if (rolledFailure && !highRisk && (
             preview.kind() == OperationKind.FUSE_BOOKS
                 || preview.kind() == OperationKind.FUSE_ONTO_GEAR
                 || preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS
                 || preview.kind() == OperationKind.SOCKET_FUSED_BOOK
         )) {
-            if (preview.kind() == OperationKind.FUSE_BOOKS || preview.kind() == OperationKind.FUSE_ONTO_GEAR) {
+            if (player instanceof ServerPlayer sp) {
                 EnchantCandidate cA = preview.selection().primary();
                 EnchantCandidate cB = preview.selection().secondary();
-                EnchantCandidate sacrificial = (cB != null && cB.sourceSlot() != SLOT_TARGET) ? cB : cA;
-                if (sacrificial != null && sacrificial.sourceSlot() != SLOT_TARGET) {
-                    consumeCandidateFromSlot(inv, sacrificial);
-                }
-                if (player instanceof ServerPlayer sp && cA != null && cB != null) {
+                if (cA != null && cB != null) {
                     CompendiumDiscoveryTracker.recordPairHeard(sp, cA.id(), cB.id());
-                }
-            } else if (preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS && preview.singleCandidate() != null) {
-                consumeCandidateFromSlot(inv, preview.singleCandidate());
-                if (player instanceof ServerPlayer sp && preview.previewTransmute() != null) {
-                    CompendiumDiscoveryTracker.recordTransmuteProgress(sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_HEARD);
-                }
-            } else if (preview.kind() == OperationKind.SOCKET_FUSED_BOOK) {
-                ItemStack bookSlot = sPrimary.is(FusionItems.FUSED_ENCHANTED_BOOK) ? sPrimary : sSecondary;
-                if (!bookSlot.isEmpty()) {
-                    bookSlot.shrink(1);
+                } else if (preview.previewTransmute() != null) {
+                    CompendiumDiscoveryTracker.recordTransmuteProgress(
+                        sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_HEARD
+                    );
                 }
             }
-
             FusionEconomyRules.deductFeeAndStabilizers(inv, player, quote, true);
             inv.setChanged();
             playWorkstationSound(player, SoundEvents.FIRE_EXTINGUISH, 0.85F);
@@ -551,15 +586,18 @@ public final class FusionStationOperations {
                 if (sp.level() instanceof ServerLevel sl) {
                     sl.sendParticles(ParticleTypes.LARGE_SMOKE, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 10, 0.3D, 0.2D, 0.3D, 0.02D);
                 }
+                int halfXp = quote == null ? 0 : quote.halfChargedXp();
+                int halfMat = quote == null ? 0 : quote.halfChargedReagents();
                 sp.sendSystemMessage(
-                    Component.translatable("message.enchantment_fusion.failure.normal_refund").withStyle(ChatFormatting.YELLOW),
+                    Component.translatable("message.enchantment_fusion.failure.normal_refund", halfXp, halfMat)
+                        .withStyle(ChatFormatting.YELLOW),
                     true
                 );
             }
             return true;
         }
 
-        // High-Risk Failure (max-level / repulsive): Mutates into Aberrant Fused Pair or Curse Taint!
+        // High-Risk Failure (max-level / repulsive): Mutates into Aberrant Fused Pair!
         if (rolledFailure && highRisk && finalPair != null) {
             String abId = AberrantRegistry.pickAberration(finalPair.primaryId(), finalPair.secondaryId(), player.getRandom());
             finalPair = new FusedPair(
@@ -572,7 +610,10 @@ public final class FusionStationOperations {
             if (player instanceof ServerPlayer sp) {
                 CompendiumDiscoveryTracker.recordAberrantMastered(sp, abId);
                 sp.sendSystemMessage(
-                    Component.translatable("message.enchantment_fusion.failure.aberrant").withStyle(ChatFormatting.LIGHT_PURPLE),
+                    Component.translatable(
+                        "message.enchantment_fusion.failure.aberrant",
+                        Component.translatable(AberrantRegistry.titleKey(abId))
+                    ).withStyle(ChatFormatting.LIGHT_PURPLE),
                     true
                 );
             }
@@ -590,8 +631,9 @@ public final class FusionStationOperations {
                 if (cA == null || cB == null || finalPair == null) {
                     return false;
                 }
-                consumeCandidateFromSlot(inv, cA);
-                consumeCandidateFromSlot(inv, cB);
+                if (!consumeCandidatesAtomically(inv, List.of(cA, cB))) {
+                    return false;
+                }
 
                 ItemStack outBook = FusedEnchantedBookItem.createForPair(finalPair);
                 if (sTarget.is(Items.BOOK)) {
@@ -619,9 +661,15 @@ public final class FusionStationOperations {
                 if (cA == null || cB == null || finalPair == null) {
                     return false;
                 }
-                if (cA.sourceSlot() != SLOT_TARGET) consumeCandidateFromSlot(inv, cA);
-                if (cB.sourceSlot() != SLOT_TARGET) consumeCandidateFromSlot(inv, cB);
-                // If Secondary B came from the gear's own standalone enchantments, remove its standalone copy cleanly
+                List<EnchantCandidate> fromBooks = new ArrayList<>(2);
+                if (cA.sourceSlot() != SLOT_TARGET) fromBooks.add(cA);
+                if (cB.sourceSlot() != SLOT_TARGET) fromBooks.add(cB);
+                if (!fromBooks.isEmpty() && !consumeCandidatesAtomically(inv, fromBooks)) {
+                    return false;
+                }
+                if (cA.sourceSlot() == SLOT_TARGET) {
+                    removeGearVanillaEnchant(sTarget, cA.id());
+                }
                 if (cB.sourceSlot() == SLOT_TARGET) {
                     removeGearVanillaEnchant(sTarget, cB.id());
                 }
@@ -633,26 +681,36 @@ public final class FusionStationOperations {
                     return false;
                 }
                 int clampedLv = Math.min(cand.maxLevel(), cand.level());
-                consumeCandidateFromSlot(inv, cand);
-                ItemEnchantments current = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-                ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(current);
+                if (!consumeCandidatesAtomically(inv, List.of(cand))) {
+                    return false;
+                }
                 if (rolledFailure && highRisk) {
-                    // High-tier cross-domain conversion failure: gear survives, gains curse taint instead of clean upgrade!
+                    ItemEnchantments current = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+                    ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(current);
                     lookupEnchantment(registries, "minecraft:vanishing_curse").ifPresent(c -> mut.set(c, 1));
+                    sTarget.set(DataComponents.ENCHANTMENTS, mut.toImmutable());
                     if (player instanceof ServerPlayer sp) {
-                        CompendiumDiscoveryTracker.recordTransmuteProgress(sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_HEARD);
+                        CompendiumDiscoveryTracker.recordTransmuteProgress(
+                            sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_HEARD
+                        );
                         sp.sendSystemMessage(
                             Component.translatable("message.enchantment_fusion.failure.cursed").withStyle(ChatFormatting.RED),
                             true
                         );
                     }
                 } else {
-                    mut.set(cand.holder(), Math.max(current.getLevel(cand.holder()), clampedLv));
+                    // API-01: Store cross-domain single enchantments in TRANSMUTED_ENCHANTS so vanilla slot effects never double-trigger!
+                    Map<String, Integer> prevTrans = sTarget.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of());
+                    Map<String, Integer> nextTrans = new LinkedHashMap<>(prevTrans);
+                    nextTrans.put(cand.id(), Math.max(prevTrans.getOrDefault(cand.id(), 0), clampedLv));
+                    sTarget.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Collections.unmodifiableMap(nextTrans));
+                    syncGlintOverride(sTarget);
                     if (player instanceof ServerPlayer sp) {
-                        CompendiumDiscoveryTracker.recordTransmuteProgress(sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_MASTERED);
+                        CompendiumDiscoveryTracker.recordTransmuteProgress(
+                            sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_MASTERED
+                        );
                     }
                 }
-                sTarget.set(DataComponents.ENCHANTMENTS, mut.toImmutable());
             }
             case TOP_UP_LEVEL -> {
                 List<EnchantCandidate> donors = new ArrayList<>();
@@ -662,23 +720,28 @@ public final class FusionStationOperations {
                 boolean upgradedAny = false;
                 for (EnchantCandidate donor : donors) {
                     if (upgradedAny) break;
+                    int nextLvl = Math.min(donor.maxLevel(), donor.level());
                     for (int i = 0; i < list.size(); i++) {
                         FusedPair old = list.pairs().get(i);
                         if (old.isAberrant()) continue;
-                        if (old.primaryId().equals(donor.id()) && donor.level() > old.primaryLevel()) {
-                            int nextLvl = Math.min(donor.maxLevel(), donor.level());
+                        if (old.primaryId().equals(donor.id()) && nextLvl > old.primaryLevel()) {
+                            if (!consumeCandidatesAtomically(inv, List.of(donor))) {
+                                return false;
+                            }
                             sTarget.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(i, old.withPrimaryLevel(nextLvl)));
-                            if (VesselCapacityRules.isPotentialEquipmentHost(sTarget)) {
+                            if (VesselCapacityRules.isPotentialEquipmentHost(sTarget) && donor.holder().value().canEnchant(sTarget)) {
                                 setGearVanillaEnchantLevel(sTarget, donor.holder(), nextLvl);
                             }
-                            consumeCandidateFromSlot(inv, donor);
+                            syncGlintOverride(sTarget);
                             upgradedAny = true;
                             break;
                         }
-                        if (old.secondaryId().equals(donor.id()) && donor.level() > old.secondaryLevel()) {
-                            int nextLvl = Math.min(donor.maxLevel(), donor.level());
+                        if (old.secondaryId().equals(donor.id()) && nextLvl > old.secondaryLevel()) {
+                            if (!consumeCandidatesAtomically(inv, List.of(donor))) {
+                                return false;
+                            }
                             sTarget.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(i, old.withSecondaryLevel(nextLvl)));
-                            consumeCandidateFromSlot(inv, donor);
+                            syncGlintOverride(sTarget);
                             upgradedAny = true;
                             break;
                         }
@@ -693,7 +756,7 @@ public final class FusionStationOperations {
             }
         }
 
-        if (quote != null && (quote.reagentCount() > 0 || quote.stabilizersUsed() > 0)) {
+        if (quote != null && (quote.reagentCount() > 0 || quote.stabilizersUsed() > 0 || quote.xpLevels() > 0)) {
             FusionEconomyRules.deductFeeAndStabilizers(inv, player, quote, false);
         } else if (!player.getAbilities().instabuild && preview.xpCost() > 0) {
             player.giveExperienceLevels(-preview.xpCost());
@@ -701,7 +764,7 @@ public final class FusionStationOperations {
         if (CetSoftBridge.isZeroXpCetStabilizer(sCatalyst) && (quote == null || quote.stabilizersUsed() == 0)) {
             sCatalyst.shrink(1);
         }
-        if (player instanceof ServerPlayer serverPlayer && finalPair != null) {
+        if (player instanceof ServerPlayer serverPlayer && finalPair != null && !finalPair.isAberrant()) {
             CompendiumDiscoveryTracker.recordDiscovery(
                 serverPlayer,
                 finalPair.primaryId(),
@@ -710,6 +773,49 @@ public final class FusionStationOperations {
         }
         inv.setChanged();
         playWorkstationSound(player, rolledFailure ? SoundEvents.ANVIL_DESTROY : SoundEvents.ENCHANTMENT_TABLE_USE, rolledFailure ? 0.9F : 1.05F);
+        return true;
+    }
+
+    /**
+     * Atomically verifies and consumes selected enchantments grouped by source book slot (EF-001).
+     * When two candidates come from the same multi-enchantment book, both enchantments are removed
+     * in a single pass so the second enchantment never survives or duplicates!
+     */
+    public static boolean consumeCandidatesAtomically(Container inv, List<EnchantCandidate> candidates) {
+        Map<Integer, Set<String>> bySlot = new HashMap<>();
+        for (EnchantCandidate c : candidates) {
+            if (c == null || c.sourceSlot() == SLOT_TARGET) continue;
+            bySlot.computeIfAbsent(c.sourceSlot(), k -> new HashSet<>()).add(c.id());
+        }
+        // First pass: validate all selected enchantments still exist on their source book stacks
+        for (Map.Entry<Integer, Set<String>> entry : bySlot.entrySet()) {
+            ItemStack book = inv.getItem(entry.getKey());
+            if (book.isEmpty() || !book.is(Items.ENCHANTED_BOOK) || book.getCount() != 1) {
+                return false;
+            }
+            ItemEnchantments stored = book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
+            Set<String> presentIds = new HashSet<>();
+            for (Object2IntMap.Entry<Holder<Enchantment>> se : stored.entrySet()) {
+                se.getKey().unwrapKey().ifPresent(k -> presentIds.add(k.identifier().toString()));
+            }
+            if (!presentIds.containsAll(entry.getValue())) {
+                return false;
+            }
+        }
+        // Second pass: remove all selected enchantments per slot in one atomic mutation
+        for (Map.Entry<Integer, Set<String>> entry : bySlot.entrySet()) {
+            ItemStack book = inv.getItem(entry.getKey());
+            Set<String> idsToRemove = entry.getValue();
+            ItemEnchantments stored = book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
+            ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(stored);
+            mut.removeIf(h -> h.unwrapKey().map(k -> idsToRemove.contains(k.identifier().toString())).orElse(false));
+            ItemEnchantments remaining = mut.toImmutable();
+            if (remaining.isEmpty()) {
+                book.shrink(1);
+            } else {
+                book.set(DataComponents.STORED_ENCHANTMENTS, remaining);
+            }
+        }
         return true;
     }
 
@@ -735,22 +841,35 @@ public final class FusionStationOperations {
             return false;
         }
 
+        FusedPair flipped = oldPair.flipped();
+        if (VesselCapacityRules.isPotentialEquipmentHost(target)) {
+            FusedEnchantmentList otherFusions = list.removeAt(socketIndex);
+            Set<String> standalone = readAllStandaloneEnchantIds(target, list);
+            if (isIncompatibleWithHost(target, otherFusions, standalone, flipped.primaryId(), registries)) {
+                return false;
+            }
+        }
+
         ItemStack cat = inv.getItem(SLOT_CATALYST);
-        int xpCost = (CetSoftBridge.isSplitOrFlipCatalyst(cat) || CetSoftBridge.isStabilizerCatalyst(cat)) ? 0 : 2;
+        boolean freeByCat = CetSoftBridge.isSplitOrFlipCatalyst(cat);
+        int xpCost = freeByCat ? 0 : 2;
         if (!player.getAbilities().instabuild && player.experienceLevel < xpCost) {
             return false;
         }
 
-        FusedPair flipped = oldPair.flipped();
         target.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(socketIndex, flipped));
 
         if (VesselCapacityRules.isPotentialEquipmentHost(target)) {
             removeGearVanillaEnchant(target, oldPair.primaryId());
-            lookupEnchantment(registries, flipped.primaryId())
-                .ifPresent(h -> setGearVanillaEnchantLevel(target, h, flipped.primaryLevel()));
+            lookupEnchantment(registries, flipped.primaryId()).ifPresent(h -> {
+                if (h.value().canEnchant(target)) {
+                    setGearVanillaEnchantLevel(target, h, flipped.primaryLevel());
+                }
+            });
+            syncGlintOverride(target);
         }
 
-        if (xpCost == 0 && !cat.isEmpty()) {
+        if (freeByCat) {
             cat.shrink(1);
         } else if (!player.getAbilities().instabuild && xpCost > 0) {
             player.giveExperienceLevels(-xpCost);
@@ -765,7 +884,7 @@ public final class FusionStationOperations {
     }
 
     /**
-     * On Gear: cleanly unsockets socketIndex into a Fused Enchanted Book (like removing a socketed gem!).
+     * On Gear: cleanly unsockets socketIndex into a Fused Enchanted Book.
      * On Fused Enchanted Book: cleanly splits the Fused Book back into two separate single Enchanted Books!
      */
     public static boolean executeUnsocketOrSplit(
@@ -788,7 +907,8 @@ public final class FusionStationOperations {
         }
 
         ItemStack cat = inv.getItem(SLOT_CATALYST);
-        int xpCost = (CetSoftBridge.isSplitOrFlipCatalyst(cat) || CetSoftBridge.isStabilizerCatalyst(cat)) ? 0 : 2;
+        boolean freeByCat = CetSoftBridge.isSplitOrFlipCatalyst(cat);
+        int xpCost = freeByCat ? 0 : 2;
         if (!player.getAbilities().instabuild && player.experienceLevel < xpCost) {
             return false;
         }
@@ -806,7 +926,6 @@ public final class FusionStationOperations {
             placeInSlotOrInventory(inv, SLOT_PRIMARY, player, bookA);
             placeInSlotOrInventory(inv, SLOT_SECONDARY, player, bookB);
         } else {
-            // Unsocket gem from Gear back into a reusable Fused Enchanted Book!
             FusedEnchantmentList remaining = list.removeAt(socketIndex);
             if (remaining.isEmpty()) {
                 target.remove(FusionDataComponents.FUSED_PAIRS);
@@ -815,12 +934,13 @@ public final class FusionStationOperations {
             }
             removeGearVanillaEnchant(target, oldPair.primaryId());
             removeGearVanillaEnchant(target, oldPair.secondaryId());
+            syncGlintOverride(target);
 
             ItemStack extractedFusedBook = FusedEnchantedBookItem.createForPair(oldPair);
             placeInSlotOrInventory(inv, SLOT_PRIMARY, player, extractedFusedBook);
         }
 
-        if (xpCost == 0 && !cat.isEmpty()) {
+        if (freeByCat) {
             cat.shrink(1);
         } else if (!player.getAbilities().instabuild && xpCost > 0) {
             player.giveExperienceLevels(-xpCost);
@@ -840,21 +960,6 @@ public final class FusionStationOperations {
             return sPrimary;
         }
         return sTarget;
-    }
-
-    private static void consumeCandidateFromSlot(Container inv, EnchantCandidate cand) {
-        ItemStack book = inv.getItem(cand.sourceSlot());
-        if (book.isEmpty() || !book.is(Items.ENCHANTED_BOOK)) {
-            return;
-        }
-        ItemEnchantments stored = book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
-        if (stored.size() <= 1) {
-            book.shrink(1);
-        } else {
-            ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(stored);
-            mut.removeIf(h -> h.unwrapKey().map(k -> k.identifier().toString().equals(cand.id())).orElse(false));
-            book.set(DataComponents.STORED_ENCHANTMENTS, mut.toImmutable());
-        }
     }
 
     private static void placeInSlotOrInventory(Container inv, int slot, Player player, ItemStack stack) {
@@ -889,6 +994,13 @@ public final class FusionStationOperations {
         return registries.lookupOrThrow(Registries.ENCHANTMENT).get(key).map(h -> (Holder<Enchantment>) h);
     }
 
+    public static Set<String> readAllStandaloneEnchantIds(ItemStack gear, FusedEnchantmentList fusedList) {
+        Set<String> out = new HashSet<>(readUnfusedVanillaEnchantIds(gear, fusedList));
+        Map<String, Integer> transmuted = gear.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of());
+        out.addAll(transmuted.keySet());
+        return out;
+    }
+
     public static Set<String> readUnfusedVanillaEnchantIds(ItemStack gear, FusedEnchantmentList fusedList) {
         Set<String> out = new HashSet<>();
         ItemEnchantments ench = gear.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
@@ -911,11 +1023,31 @@ public final class FusionStationOperations {
         return book;
     }
 
+    /**
+     * Applies a fused pair to gear: writes {@code primaryId} into vanilla {@code ENCHANTMENTS}
+     * ONLY when {@code holder.value().canEnchant(gear)} is true (native host), preventing
+     * non-native vanilla slot effects from double-triggering (API-01).
+     */
     public static void applyFusedPairToGear(ItemStack gear, FusedPair pair, HolderLookup.Provider registries) {
         FusedEnchantmentList existing = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         gear.set(FusionDataComponents.FUSED_PAIRS, existing.append(pair));
-        lookupEnchantment(registries, pair.primaryId())
-            .ifPresent(h -> setGearVanillaEnchantLevel(gear, h, pair.primaryLevel()));
+        lookupEnchantment(registries, pair.primaryId()).ifPresent(h -> {
+            if (h.value().canEnchant(gear)) {
+                setGearVanillaEnchantLevel(gear, h, pair.primaryLevel());
+            }
+        });
+        syncGlintOverride(gear);
+    }
+
+    public static void syncGlintOverride(ItemStack stack) {
+        boolean hasFused = !stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).isEmpty();
+        boolean hasTransmuted = !stack.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()).isEmpty();
+        boolean hasVanilla = !stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).isEmpty();
+        if ((hasFused || hasTransmuted) && !hasVanilla) {
+            stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        } else if (!hasFused && !hasTransmuted) {
+            stack.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
+        }
     }
 
     private static void setGearVanillaEnchantLevel(ItemStack gear, Holder<Enchantment> holder, int level) {

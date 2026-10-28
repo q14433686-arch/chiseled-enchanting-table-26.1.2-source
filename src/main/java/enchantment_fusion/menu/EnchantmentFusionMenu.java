@@ -29,12 +29,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Container menu for the 3-Tab Enchantment Fusion Table (308 x 214 layout including top folder tabs):
+ * Container menu for the 2-Tab Enchantment Fusion Table (308 x 214 layout + top-right Grimoire button):
  * <ul>
- *   <li>Slot 0 ({@code 18, 52}): Material / Book Slot 1</li>
- *   <li>Slot 1 ({@code 78, 52}): Material / Book Slot 2</li>
- *   <li>Slot 2 ({@code 48, 80}): Optional Stabilizer / Catalyst</li>
- *   <li>Slot 3 ({@code 48, 108}): Output Fused Book (Tab 0) / Host Equipment (Tab 1) / Split Target (Tab 2)</li>
+ *   <li>Slot 0 ({@code 18, 52}): A · Primary Book / Material Slot</li>
+ *   <li>Slot 1 ({@code 78, 52}): B · Secondary Book / Material Slot</li>
+ *   <li>Slot 2 ({@code 48, 80}): Optional Resonance Stabilizer / Reagent / Split Catalyst</li>
+ *   <li>Slot 3 ({@code 48, 108}): Output Fused Book (Tab 0) / Host Equipment or Special Relic (Tab 1)</li>
  * </ul>
  */
 public final class EnchantmentFusionMenu extends AbstractContainerMenu {
@@ -58,14 +58,15 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     private final ContainerLevelAccess access;
     private final Player player;
     private final BlockPos tablePos;
-    // Syncs [0]=activeTab, [1]=selectedPrimaryA, [2]=selectedSecondaryB between server & client!
+    // Syncs [0]=activeTab, [1]=selectedPrimaryA, [2]=selectedSecondaryB between server & client
     private final ContainerData uiState = new SimpleContainerData(3);
 
     public EnchantmentFusionMenu(int syncId, Inventory playerInventory, OpenStationPayload payload) {
+        // NET-04: Client menu uses an isolated SimpleContainer(4) synced strictly via menu slots!
         this(
             syncId,
             playerInventory,
-            resolveClientContainer(playerInventory, payload.blockPos()),
+            new SimpleContainer(EnchantmentFusionTableBlockEntity.CONTAINER_SIZE),
             ContainerLevelAccess.NULL,
             payload.blockPos()
         );
@@ -90,7 +91,9 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         this.uiState.set(1, -1);
         this.uiState.set(2, -1);
         this.addDataSlots(this.uiState);
-        stationInv.startOpen(playerInventory.player);
+        if (!playerInventory.player.level().isClientSide()) {
+            stationInv.startOpen(playerInventory.player);
+        }
 
         // 0..3: Workstation slots
         this.addSlot(new Slot(stationInv, FusionStationOperations.SLOT_PRIMARY, SLOT_PRIMARY_X, SLOT_PRIMARY_Y));
@@ -110,13 +113,6 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         }
     }
 
-    private static Container resolveClientContainer(Inventory playerInventory, BlockPos pos) {
-        if (playerInventory.player.level().getBlockEntity(pos) instanceof EnchantmentFusionTableBlockEntity be) {
-            return be;
-        }
-        return new SimpleContainer(EnchantmentFusionTableBlockEntity.CONTAINER_SIZE);
-    }
-
     public BlockPos tableBlockPos() {
         return tablePos;
     }
@@ -130,7 +126,7 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     }
 
     public int activeTab() {
-        return Math.max(0, Math.min(1, uiState.get(0)));
+        return Math.clamp(uiState.get(0), 0, 1);
     }
 
     public int preferredPrimaryIndex() {
@@ -139,6 +135,10 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
 
     public int preferredSecondaryIndex() {
         return uiState.get(2);
+    }
+
+    public boolean isSingleModeToggled() {
+        return uiState.get(2) == -2;
     }
 
     public StationPreview computePreview() {
@@ -153,12 +153,16 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     }
 
     public boolean performAction(Player actor, StationAction action, int paramA, int paramB) {
+        return performAction(actor, action, paramA, paramB, "");
+    }
+
+    public boolean performAction(Player actor, StationAction action, int paramA, int paramB, String expectedToken) {
         HolderLookup.Provider registries = actor.level().registryAccess();
         boolean changed = false;
 
         switch (action) {
             case SELECT_TAB -> {
-                int clamped = Math.max(0, Math.min(1, paramA));
+                int clamped = Math.clamp(paramA, 0, 1);
                 uiState.set(0, clamped);
                 uiState.set(1, -1);
                 uiState.set(2, -1);
@@ -180,7 +184,6 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 if (paramA >= 0 && paramA < cands.size()) {
                     ResolvedSelection cur = FusionStationOperations.resolveSelection(cands, preferredPrimaryIndex(), preferredSecondaryIndex());
                     if (paramA == cur.secondaryIndex()) {
-                        // Right-clicking the active [B] row toggles [B] OFF into Single Cross-Domain Inscription mode!
                         uiState.set(2, -2);
                     } else {
                         if (paramA == cur.primaryIndex()) {
@@ -190,6 +193,14 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                     }
                     changed = true;
                 }
+            }
+            case TOGGLE_SINGLE_MODE -> {
+                if (uiState.get(2) == -2) {
+                    uiState.set(2, -1);
+                } else {
+                    uiState.set(2, -2);
+                }
+                changed = true;
             }
             case SWAP_ORDER -> {
                 List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
@@ -215,7 +226,7 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
             }
             case EXECUTE_PRIMARY -> {
                 changed = FusionStationOperations.executePrimaryOperation(
-                    stationInv, actor, registries, activeTab(), preferredPrimaryIndex(), preferredSecondaryIndex()
+                    stationInv, actor, registries, activeTab(), preferredPrimaryIndex(), preferredSecondaryIndex(), expectedToken
                 );
                 if (changed) {
                     uiState.set(1, -1);
@@ -303,6 +314,8 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        this.stationInv.stopOpen(player);
+        if (!player.level().isClientSide()) {
+            this.stationInv.stopOpen(player);
+        }
     }
 }

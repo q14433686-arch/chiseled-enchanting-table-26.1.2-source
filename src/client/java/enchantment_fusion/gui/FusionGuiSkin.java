@@ -1,15 +1,33 @@
 package enchantment_fusion.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.EnchantmentFusion;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 
 /**
- * Pixel-art GUI sprite identifiers, 9-slice blitter, and bounded text helpers for the
- * Enchantment Fusion Table. Uses exclusively genuine pixel-art PNG textures.
+ * Pixel-art GUI sprite identifiers, shared {@link HitBox} geometry (GUI-01),
+ * 9-slice blitter, and bounded text helpers for the Enchantment Fusion Table and Grimoire.
+ * Uses exclusively genuine pixel-art PNG textures.
  */
 public final class FusionGuiSkin {
+    /**
+     * Shared UI rectangle for hit-testing and pixel-art button rendering across screens (GUI-01).
+     */
+    public record HitBox(int x, int y, int w, int h) {
+        public boolean contains(double mx, double my) {
+            return mx >= x && mx < x + w && my >= y && my < y + h;
+        }
+
+        public boolean containsAt(int originX, int originY, double mx, double my) {
+            int gx = originX + x;
+            int gy = originY + y;
+            return mx >= gx && mx < gx + w && my >= gy && my < gy + h;
+        }
+    }
+
     public static final Identifier PANEL_FRAME = EnchantmentFusion.id("textures/gui/panel_frame.png");
     public static final Identifier GRIMOIRE_SPREAD = EnchantmentFusion.id("textures/gui/grimoire_spread.png");
 
@@ -40,7 +58,7 @@ public final class FusionGuiSkin {
     public static final Identifier ROW_SELECTED_A = EnchantmentFusion.id("textures/gui/row_selected_a.png");
     public static final Identifier ROW_SELECTED_B = EnchantmentFusion.id("textures/gui/row_selected_b.png");
 
-    // 96x40 ornate Vessel Spirit socket cards (9-slice border = 8)
+    // 96x40 ornate Vessel Slot socket cards (9-slice border = 8)
     public static final Identifier SOCKET_EMPTY = EnchantmentFusion.id("textures/gui/socket_card_empty.png");
     public static final Identifier SOCKET_FILLED = EnchantmentFusion.id("textures/gui/socket_card_filled.png");
     public static final Identifier SOCKET_ABERRANT = EnchantmentFusion.id("textures/gui/socket_card_aberrant.png");
@@ -65,6 +83,26 @@ public final class FusionGuiSkin {
     private static final float GLYPH_HEIGHT = 8.0F;
 
     private FusionGuiSkin() {}
+
+    public static boolean isShiftHeld() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.getWindow() == null) {
+            return false;
+        }
+        return InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_LSHIFT)
+            || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_RSHIFT);
+    }
+
+    public static boolean isCtrlOrCmdHeld() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.getWindow() == null) {
+            return false;
+        }
+        return InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_LCONTROL)
+            || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_RCONTROL)
+            || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_LSUPER)
+            || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_RSUPER);
+    }
 
     public static void drawSprite(GuiGraphicsExtractor ctx, Identifier sprite, int x, int y, int w, int h) {
         ctx.blit(sprite, x, y, x + w, y + h, 0.0F, 1.0F, 0.0F, 1.0F);
@@ -116,6 +154,29 @@ public final class FusionGuiSkin {
         if (x2 > x1 && y2 > y1) {
             ctx.blit(sprite, x1, y1, x2, y2, u1, u2, v1, v2);
         }
+    }
+
+    public static void drawButtonBox(
+        GuiGraphicsExtractor ctx,
+        Font font,
+        int originX,
+        int originY,
+        HitBox box,
+        boolean enabled,
+        boolean hovered,
+        String label,
+        float scale,
+        int enabledColor
+    ) {
+        Identifier sprite = !enabled ? BTN_DISABLED : (hovered ? BTN_HOVER : BTN_NORMAL);
+        int gx = originX + box.x();
+        int gy = originY + box.y();
+        drawNineSlice(ctx, sprite, gx, gy, box.w(), box.h(), 32, 32, 4);
+        drawCenteredBoundedText(
+            ctx, font, label,
+            gx + 3, box.w() - 6, gy + box.h() * 0.5F,
+            scale, enabled ? enabledColor : COLOR_MUTED
+        );
     }
 
     public static void drawCenteredBoundedText(

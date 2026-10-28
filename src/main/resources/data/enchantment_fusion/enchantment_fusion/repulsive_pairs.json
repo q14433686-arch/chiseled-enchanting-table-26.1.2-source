@@ -1,6 +1,7 @@
 {
-  "schema_version": 1,
-  "base_instability_chance": 0.35,
+  "schema_version": 2,
+  "replace": false,
+  "base_instability_chance": 0.45,
   "exclusive_groups": [
     [
       "minecraft:infinity",
@@ -16,6 +17,10 @@
     ],
     [
       "minecraft:loyalty",
+      "minecraft:riptide"
+    ],
+    [
+      "minecraft:channeling",
       "minecraft:riptide"
     ],
     [

@@ -7,9 +7,8 @@ import java.util.Optional;
 import java.util.Set;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
-import net.minecraft.core.component.DataComponentExactPredicate;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.npc.villager.VillagerProfession;
@@ -18,33 +17,34 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.EmptyLootItem;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.SetComponentsFunction;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
 /**
- * Injects {@code 《融合残页》} into vanilla dungeon, library, temple, bastion, and ancient-city
- * chests, and adds Apprentice/Master Librarian trades so survival players can naturally discover
- * Grimoire entries via exploration or trading.
+ * Injects {@code 《融合残页》} into typed {@link BuiltInLootTables} dungeon, library, temple, bastion,
+ * and ancient-city chests (HC-07), and adds Apprentice/Master Librarian trades.
  */
 public final class FusionWorldLoot {
-    private static final Set<String> COMMON_PAGE_CHESTS = Set.of(
-        "chests/simple_dungeon",
-        "chests/abandoned_mineshaft",
-        "chests/desert_pyramid",
-        "chests/jungle_temple",
-        "chests/shipwreck_map",
-        "chests/pillager_outpost",
-        "chests/woodland_mansion"
+    private static final Set<ResourceKey<LootTable>> COMMON_PAGE_CHESTS = Set.of(
+        BuiltInLootTables.SIMPLE_DUNGEON,
+        BuiltInLootTables.ABANDONED_MINESHAFT,
+        BuiltInLootTables.DESERT_PYRAMID,
+        BuiltInLootTables.JUNGLE_TEMPLE,
+        BuiltInLootTables.SHIPWRECK_MAP,
+        BuiltInLootTables.PILLAGER_OUTPOST,
+        BuiltInLootTables.WOODLAND_MANSION
     );
 
-    private static final Set<String> HIGH_TIER_CHESTS = Set.of(
-        "chests/stronghold_library",
-        "chests/ancient_city",
-        "chests/bastion_treasure",
-        "chests/end_city_treasure"
+    private static final Set<ResourceKey<LootTable>> HIGH_TIER_CHESTS = Set.of(
+        BuiltInLootTables.STRONGHOLD_LIBRARY,
+        BuiltInLootTables.ANCIENT_CITY,
+        BuiltInLootTables.BASTION_TREASURE,
+        BuiltInLootTables.END_CITY_TREASURE
     );
 
     private FusionWorldLoot() {}
@@ -54,18 +54,13 @@ public final class FusionWorldLoot {
             if (!source.isBuiltin()) {
                 return;
             }
-            Identifier id = key.identifier();
-            if (!"minecraft".equals(id.getNamespace())) {
-                return;
-            }
-            String path = id.getPath();
-            if (COMMON_PAGE_CHESTS.contains(path)) {
+            if (COMMON_PAGE_CHESTS.contains(key)) {
                 LootPool.Builder pool = LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1.0F))
                     .add(LootItem.lootTableItem(FusionItems.FUSION_TATTERED_PAGE).setWeight(26))
                     .add(EmptyLootItem.emptyItem().setWeight(74));
                 tableBuilder.withPool(pool);
-            } else if (HIGH_TIER_CHESTS.contains(path)) {
+            } else if (HIGH_TIER_CHESTS.contains(key)) {
                 LootPool.Builder pool = LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1.0F))
                     .add(LootItem.lootTableItem(FusionItems.FUSION_TATTERED_PAGE).setWeight(28))
@@ -86,7 +81,6 @@ public final class FusionWorldLoot {
             }
         });
 
-        // Librarian Villager trades for Common & Rare Tattered Fusion Pages
         UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (!world.isClientSide() && entity instanceof Villager villager) {
                 var vData = villager.getVillagerData();

@@ -87,9 +87,27 @@ tasks.named('compileClientJava') {
 
 processResources {
     inputs.property "version", project.version
+    inputs.property "jeiEnabled", jeiEnabled
+    inputs.property "reiEnabled", reiEnabled
 
     filesMatching("fabric.mod.json") {
         expand "version": inputs.properties.version
+    }
+
+    doLast {
+        if (!jeiEnabled || !reiEnabled) {
+            def outFmj = file("${destinationDir}/fabric.mod.json")
+            if (outFmj.exists()) {
+                def parsed = new groovy.json.JsonSlurper().parseText(outFmj.getText('UTF-8'))
+                if (!jeiEnabled && parsed.entrypoints != null) {
+                    parsed.entrypoints.remove('jei_mod_plugin')
+                }
+                if (!reiEnabled && parsed.entrypoints != null) {
+                    parsed.entrypoints.remove('rei_client')
+                }
+                outFmj.setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(parsed)) + "\n", 'UTF-8')
+            }
+        }
     }
 }
 

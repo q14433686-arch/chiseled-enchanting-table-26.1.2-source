@@ -5,9 +5,7 @@ import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
 import java.util.Set;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -17,7 +15,8 @@ import net.minecraft.world.item.Items;
  * Restrained Vessel Capacity ("器魂槽") rules per GDD §3:
  * <ul>
  *   <li>Standard equipment starts with {@code 1} vessel slot ({@code ◇}).</li>
- *   <li>Gold equipment naturally starts with {@code 2} vessel slots ({@code ◇◇}).</li>
+ *   <li>Items in {@code #enchantment_fusion:innate_two_vessel_items} (gold gear incl. Golden Spear)
+ *       start with {@code 2} vessel slots ({@code ◇◇}) — purely tag-driven in runtime so datapacks can add or remove entries (HC-05).</li>
  *   <li>Non-gold equipment can inlay at most {@code +1} extra slot ({@code vessel_bonus = 1}),
  *       strictly capped at {@code 2} total across the entire game.</li>
  * </ul>
@@ -32,7 +31,7 @@ public final class VesselCapacityRules {
         EnchantmentFusion.id("innate_two_vessel_items")
     );
 
-    private static final Set<String> BUILTIN_GOLD_ITEM_IDS = Set.of(
+    private static final Set<String> DEFAULT_TAG_ITEM_IDS = Set.of(
         "minecraft:golden_sword",
         "minecraft:golden_spear",
         "minecraft:golden_axe",
@@ -49,7 +48,7 @@ public final class VesselCapacityRules {
 
     public static int computeMaxSlots(boolean innateTwoSlots, int vesselBonus) {
         int base = innateTwoSlots ? GOLD_INNATE_SLOTS : DEFAULT_SLOTS;
-        int clampedBonus = Math.max(0, Math.min(1, vesselBonus));
+        int clampedBonus = Math.clamp(vesselBonus, 0, 1);
         return Math.min(HARD_CAP_SLOTS, base + clampedBonus);
     }
 
@@ -57,19 +56,17 @@ public final class VesselCapacityRules {
         return computeMaxSlots(innateTwoSlots, vesselBonus) < HARD_CAP_SLOTS;
     }
 
+    /** Pure-JVM helper mirroring the default {@code innate_two_vessel_items.json} tag contents for unit tests. */
     public static boolean isInnateTwoSlotItemId(String itemId) {
-        return itemId != null && BUILTIN_GOLD_ITEM_IDS.contains(itemId);
+        return itemId != null && DEFAULT_TAG_ITEM_IDS.contains(itemId);
     }
 
+    /** Runtime check driven strictly by the {@code #enchantment_fusion:innate_two_vessel_items} item tag (HC-05). */
     public static boolean isInnateTwoSlotStack(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return false;
         }
-        if (stack.is(INNATE_TWO_VESSEL_ITEMS)) {
-            return true;
-        }
-        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        return id != null && isInnateTwoSlotItemId(id.toString());
+        return stack.is(INNATE_TWO_VESSEL_ITEMS);
     }
 
     public static int getMaxVesselSlots(ItemStack stack) {
@@ -78,10 +75,6 @@ public final class VesselCapacityRules {
         }
         int bonus = stack.getOrDefault(FusionDataComponents.VESSEL_BONUS, 0);
         return computeMaxSlots(isInnateTwoSlotStack(stack), bonus);
-    }
-
-    public static int maxVesselSlots(ItemStack stack) {
-        return getMaxVesselSlots(stack);
     }
 
     public static int vesselBonus(ItemStack stack) {

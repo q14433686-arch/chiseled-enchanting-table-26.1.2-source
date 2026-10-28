@@ -29,7 +29,8 @@ import org.jetbrains.annotations.Nullable;
 /**
  * 6 double-edged Aberrant Fusions produced when repulsive mutually-exclusive max-level
  * enchantments destabilize or when high-tier synthesis suffers an unstable failure.
- * Also manages temporary {@code Blocks.FROSTED_ICE} (Frost Walker cracking ice) prisons & snares.
+ * Also manages temporary {@code Blocks.FROSTED_ICE} prisons & snares with unloaded-chunk retention
+ * and shutdown cleanup (EF-012).
  */
 public final class AberrantRegistry {
     public static final String BLOOD_FRENZY = "blood_frenzy";
@@ -53,7 +54,8 @@ public final class AberrantRegistry {
         BlockPos pos,
         boolean wasWater,
         int stage,
-        long nextStepTick
+        long nextStepTick,
+        long createdAtTick
     ) {}
 
     private static final Map<String, TrackedFrostedCell> TRACKED_FROSTED_ICE = new ConcurrentHashMap<>();
@@ -65,6 +67,22 @@ public final class AberrantRegistry {
     }
 
     public static void clearRuntimeState() {
+        TRACKED_FROSTED_ICE.clear();
+    }
+
+    public static void flushAllCages(MinecraftServer server) {
+        if (TRACKED_FROSTED_ICE.isEmpty()) {
+            return;
+        }
+        for (TrackedFrostedCell cell : TRACKED_FROSTED_ICE.values()) {
+            ServerLevel level = server.getLevel(cell.dimension());
+            if (level != null && level.isLoaded(cell.pos()) && level.getBlockState(cell.pos()).is(Blocks.FROSTED_ICE)) {
+                level.setBlockAndUpdate(
+                    cell.pos(),
+                    cell.wasWater() ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState()
+                );
+            }
+        }
         TRACKED_FROSTED_ICE.clear();
     }
 
@@ -154,7 +172,7 @@ public final class AberrantRegistry {
                 level.playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.35F, 1.65F);
             }
             case MUTUAL_GLACIER -> {
-                if (rng.nextFloat() < 0.25F) {
+                if (rng.nextFloat() < 0.25F && player.mayBuild()) {
                     BlockPos center = target != null ? target.blockPosition() : player.blockPosition();
                     placeFrostedIceCage3x3x3(level, center, false);
                     player.teleportTo(center.getX() + 0.5D, center.getY() + 0.1D, center.getZ() + 0.5D);
@@ -174,10 +192,6 @@ public final class AberrantRegistry {
         }
     }
 
-    /**
-     * Places a 3x3x3 prison of vanilla Frost Walker's {@code minecraft:frosted_ice} ({@code 霜冰})
-     * centered at {@code center}, scheduling progressive cracking ticks so it never griefs terrain permanently.
-     */
     public static void placeFrostedIceCage3x3x3(ServerLevel level, BlockPos center, boolean solidCore) {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = 0; dy <= 2; dy++) {
@@ -195,9 +209,6 @@ public final class AberrantRegistry {
         placeFrostedIceCage3x3x3(level, center, solidCore);
     }
 
-    /**
-     * Places a foot-level Frost Walker {@code minecraft:frosted_ice} snare around a frozen target.
-     */
     public static void placeFrostedIceSnare(ServerLevel level, BlockPos center) {
         placeSingleFrostedIce(level, center);
         placeSingleFrostedIce(level, center.north());
@@ -213,12 +224,13 @@ public final class AberrantRegistry {
             BlockPos imm = p.immutable();
             level.setBlockAndUpdate(imm, Blocks.FROSTED_ICE.defaultBlockState());
             int delay = Mth.nextInt(level.getRandom(), 24, 48);
+            long now = level.getGameTime();
             level.scheduleTick(imm, Blocks.FROSTED_ICE, delay);
             if (TRACKED_FROSTED_ICE.size() < 4096) {
                 String cellKey = level.dimension().identifier() + "@" + imm.asLong();
                 TRACKED_FROSTED_ICE.put(
                     cellKey,
-                    new TrackedFrostedCell(level.dimension(), imm, wasWater, 0, level.getGameTime() + delay)
+                    new TrackedFrostedCell(level.dimension(), imm, wasWater, 0, now + delay, now)
                 );
             }
         }
@@ -226,8 +238,7 @@ public final class AberrantRegistry {
 
     /**
      * Advances tracked {@code Blocks.FROSTED_ICE} cells through vanilla's 4 cracking states
-     * ({@code possibleStates[0..3]}) even in dark underground caves, then clears dry-land cages to Air
-     * and water-frozen cells back to Water.
+     * even in dark caves; retains temporarily unloaded chunks until reloaded (EF-012).
      */
     public static void tickFrostedCages(MinecraftServer server) {
         if (TRACKED_FROSTED_ICE.isEmpty() || server.getTickCount() % 10 != 0) {
@@ -238,11 +249,19 @@ public final class AberrantRegistry {
             String key = entry.getKey();
             TrackedFrostedCell cell = entry.getValue();
             ServerLevel level = server.getLevel(cell.dimension());
-            if (level == null || !level.isLoaded(cell.pos())) {
+            if (level == null) {
                 TRACKED_FROSTED_ICE.remove(key);
                 continue;
             }
-            if (level.getGameTime() < cell.nextStepTick()) {
+            long now = level.getGameTime();
+            if (!level.isLoaded(cell.pos())) {
+                // EF-012: Keep tracked while chunk is unloaded so it melts once chunk reloads (evict only after 15 minutes)
+                if (now - cell.createdAtTick() > 18000L) {
+                    TRACKED_FROSTED_ICE.remove(key);
+                }
+                continue;
+            }
+            if (now < cell.nextStepTick()) {
                 continue;
             }
             BlockState cur = level.getBlockState(cell.pos());
@@ -256,7 +275,7 @@ public final class AberrantRegistry {
                 int delay = Mth.nextInt(level.getRandom(), 20, 36);
                 TRACKED_FROSTED_ICE.put(
                     key,
-                    new TrackedFrostedCell(cell.dimension(), cell.pos(), cell.wasWater(), nextStage, level.getGameTime() + delay)
+                    new TrackedFrostedCell(cell.dimension(), cell.pos(), cell.wasWater(), nextStage, now + delay, cell.createdAtTick())
                 );
             } else {
                 level.setBlockAndUpdate(cell.pos(), cell.wasWater() ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState());
