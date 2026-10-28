@@ -166,7 +166,7 @@ jobs:
           done
 
       - name: compile disposable client integration probe
-        run: mkdir -p build-reports && ./gradlew compileClientSmokeJava -Pclient_smoke=true --console=plain --stacktrace 2>&1 | tee build-reports/client-smoke.log
+        run: set -o pipefail; mkdir -p build-reports && ./gradlew compileClientSmokeJava -Pclient_smoke=true --console=plain --stacktrace 2>&1 | tee build-reports/client-smoke.log
 
       - name: real client input and menu integration
         env:
