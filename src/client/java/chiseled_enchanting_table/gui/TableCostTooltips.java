@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.gui;
 import chiseled_enchanting_table.data.ChiseledEnchantingTableData;
+import chiseled_enchanting_table.menu.AvailableOption;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.OptionType;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ final class TableCostTooltips {
         ItemStack hoveredCost = state.list().hoveredCostItem(mouseX, mouseY);
         if (hoveredCost != null && !hoveredCost.isEmpty()) {
             List<Component> lines = new ArrayList<>(state.itemTooltip().apply(hoveredCost));
+            var hoveredOptType = state.list().hoveredOptionType(mouseX, mouseY);
             List<List<ItemStack>> options = state.list().hoveredCostOptions(mouseX, mouseY);
             if (options != null && !options.isEmpty()) {
                 boolean hasMultiBundle = options.stream().anyMatch(b -> b != null && b.size() > 1);
@@ -28,16 +30,21 @@ final class TableCostTooltips {
                     ? "gui.chiseled_enchanting_table.cost_bundle.header"
                     : "gui.chiseled_enchanting_table.cost_alternatives.header")
                     .withStyle(CetFormatting.GOLD));
+                if (options.size() > 1) {
+                    lines.add(Component.translatable("gui.chiseled_enchanting_table.cost_bundle.click_to_cycle")
+                        .withStyle(CetFormatting.YELLOW));
+                }
                 boolean instabuild = state.menu().player.getAbilities().instabuild;
                 ItemStack slotCatalyst = state.menu().get_cost_item();
+                boolean bagPayable = AvailableOption.isBagPayableCleanse(hoveredOptType);
                 for (int optIdx = 0; optIdx < options.size(); optIdx++) {
                     List<ItemStack> bundle = options.get(optIdx);
                     if (bundle == null || bundle.isEmpty()) continue;
                     if (bundle.size() == 1) {
                         ItemStack st = bundle.getFirst();
-                        int inSlot = (!slotCatalyst.isEmpty() && ItemStack.isSameItemSameComponents(slotCatalyst, st))
-                            ? slotCatalyst.getCount()
-                            : 0;
+                        int inSlot = bagPayable
+                            ? state.menu().countAvailableIncludingCostSlot(st)
+                            : ((!slotCatalyst.isEmpty() && ItemStack.isSameItemSameComponents(slotCatalyst, st)) ? slotCatalyst.getCount() : 0);
                         boolean slotMet = instabuild || inSlot >= st.getCount();
                         MutableComponent bullet = Component.literal(" \u2022 ")
                             .withStyle(slotMet ? CetFormatting.GREEN : CetFormatting.GRAY)
@@ -56,12 +63,12 @@ final class TableCostTooltips {
                             ).withStyle(CetFormatting.LIGHT_PURPLE));
                         }
                         ItemStack primary = bundle.getFirst();
-                        int slotHave = (!slotCatalyst.isEmpty() && ItemStack.isSameItemSameComponents(slotCatalyst, primary))
-                            ? slotCatalyst.getCount()
-                            : 0;
+                        int slotHave = bagPayable
+                            ? state.menu().countAvailableIncludingCostSlot(primary)
+                            : ((!slotCatalyst.isEmpty() && ItemStack.isSameItemSameComponents(slotCatalyst, primary)) ? slotCatalyst.getCount() : 0);
                         boolean primaryMet = instabuild || slotHave >= primary.getCount();
                         lines.add(Component.translatable(
-                            "gui.chiseled_enchanting_table.cost_bundle.slot_item",
+                            bagPayable ? "gui.chiseled_enchanting_table.cost_bundle.inventory_item" : "gui.chiseled_enchanting_table.cost_bundle.slot_item",
                             primary.getCount(),
                             primary.getHoverName(),
                             instabuild ? primary.getCount() : slotHave,
@@ -70,7 +77,7 @@ final class TableCostTooltips {
                         ).withStyle(primaryMet ? CetFormatting.GREEN : CetFormatting.YELLOW));
                         for (int idx = 1; idx < bundle.size(); idx++) {
                             ItemStack extra = bundle.get(idx);
-                            int invHave = state.countMatching(extra);
+                            int invHave = bagPayable ? state.menu().countAvailableIncludingCostSlot(extra) : state.countMatching(extra);
                             boolean extraMet = instabuild || invHave >= extra.getCount();
                             lines.add(Component.translatable(
                                 "gui.chiseled_enchanting_table.cost_bundle.inventory_item",
@@ -85,7 +92,6 @@ final class TableCostTooltips {
                 }
             }
             Identifier hoveredEnchId = state.list().hoveredEnchantmentId(mouseX, mouseY);
-            var hoveredOptType = state.list().hoveredOptionType(mouseX, mouseY);
             if (hoveredEnchId != null && hoveredOptType != null) {
                 int storedLvl = state.menu().storedMasterLevel(hoveredEnchId);
                 int specBonus = state.menu().specificEnchantDiscountBonus(hoveredEnchId);

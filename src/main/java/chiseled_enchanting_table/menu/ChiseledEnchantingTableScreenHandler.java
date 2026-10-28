@@ -242,6 +242,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             this.syncedQueuedSteps = List.copyOf(initialTableBe.queuedEnchantmentSummary());
             this.syncedUsedInfinityTome = initialTableBe.anyQueuedStepUsedInfinityTome();
             this.syncedRitualBlocked = initialTableBe.isRitualBlocked();
+            this.syncedActiveRitualTomeSlots = List.copyOf(initialTableBe.activeRitualTomeSlots());
         }
         java.util.Map<Identifier, TransformationDisplay> displays = new java.util.HashMap<>();
         for (TransformationDisplay display : payload.transformations()) {
@@ -914,11 +915,28 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     private long syncedRitualSession;
+    private List<ChiseledEnchantingMenuPayloads.TomeSlotRef> syncedActiveRitualTomeSlots = List.of();
     public long ritualSession() {
         if (this.world.isClientSide()) return this.syncedRitualSession;
         var pos = tableBlockPos();
         return pos != null && this.world.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be
             ? be.ritualSession() : 0L;
+    }
+
+    public List<ChiseledEnchantingMenuPayloads.TomeSlotRef> activeRitualTomeSlots() {
+        if (!isRitualActive()) return List.of();
+        if (this.world.isClientSide()) return this.syncedActiveRitualTomeSlots;
+        var pos = tableBlockPos();
+        return pos != null && this.world.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be
+            ? be.activeRitualTomeSlots() : List.of();
+    }
+
+    public boolean isTomeActiveInRitual(net.minecraft.core.BlockPos shelfPos, int slot) {
+        if (shelfPos == null || slot < 0 || !isRitualActive()) return false;
+        for (var ref : activeRitualTomeSlots()) {
+            if (ref.slot() == slot && shelfPos.equals(ref.shelf_pos())) return true;
+        }
+        return false;
     }
 
     public void pushRitualStateToViewer() {
@@ -934,7 +952,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             queuedRitualSteps(),
             ritualUsedInfinityTome(),
             hasAnyMasterTomeInRange(),
-            isRitualBlocked()
+            isRitualBlocked(),
+            activeRitualTomeSlots()
         );
         ServerPlayNetworking.send(sp, payload);
     }
@@ -946,6 +965,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.syncedUsedInfinityTome = payload.usedInfinityTome();
         this.syncedHasAnyMasterTome = payload.hasAnyMasterTome();
         this.syncedRitualBlocked = payload.ritualBlocked();
+        this.syncedActiveRitualTomeSlots = payload.activeTomeSlots() != null ? List.copyOf(payload.activeTomeSlots()) : List.of();
         if (this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
         }
@@ -1011,114 +1031,26 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         return copy;
     }
 
+    public boolean canFuelBoostNow() {
+        return chiseled_enchanting_table.mechanics.ritual.RitualActionService.canFuelBoostNow(this);
+    }
+
+    public boolean canCatalystInstantNow() {
+        return chiseled_enchanting_table.mechanics.ritual.RitualActionService.canCatalystInstantNow(this);
+    }
+
+    public boolean canSafeAbortNow() {
+        return chiseled_enchanting_table.mechanics.ritual.RitualActionService.canSafeAbortNow(this);
+    }
+
+    public boolean handleRitualAction(ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action action) {
+        return chiseled_enchanting_table.mechanics.ritual.RitualActionService.handleAction(this, action);
+    }
+
     public boolean skipActiveRitual(boolean sacrificeXp) {
-        if (this.world.isClientSide()) {
-            return false;
-        }
-        refreshLiveShelfState();
-        var pos = tableBlockPos();
-        if (pos == null
-            || !(this.world.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity tableBe)
-            || !tableBe.hasActiveRitual()
-            || tableBe.isRitualBlocked()
-            || !tableBe.ownsRitual(this.player.getUUID())) {
-            pushRitualStateToViewer();
-            return false;
-        }
-
-        if (sacrificeXp) {
-            int levelsCost = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSacrificeXpLevels(
-                ritualConfig(),
-                tableBe.ritualRemainingTicks(),
-                queuedRitualSteps().size()
-            );
-            if (!this.player.getAbilities().instabuild && this.player.experienceLevel < levelsCost) {
-                this.world.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
-                return false;
-            }
-            if (!tableBe.completeActiveRitual(
-                this.world,
-                pos,
-                this.player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
-                chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.RitualCompletionKind.SACRIFICED_XP
-            )) return false;
-            if (!this.player.getAbilities().instabuild) this.player.giveExperienceLevels(-levelsCost);
-            chiseled_enchanting_table.utils.Advancement.give(this.player, "soul_fed_ink");
-            this.world.playSound(
-                null,
-                pos,
-                net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP,
-                net.minecraft.sounds.SoundSource.PLAYERS,
-                1.0F,
-                0.85F
-            );
-            return true;
-        }
-
-        var scan = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.scanLibraryRitualContext(
-            this.world,
-            pos,
-            shelfGatesConfig()
-        );
-        if (!scan.hasAnyMasterTome()) {
-            if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-                sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
-                    net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.no_tome_cannot_skip")
-                        .withStyle(CetFormatting.RED)
-                ));
-            }
-            this.world.playSound(null, pos, net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
-            pushRitualStateToViewer();
-            return false;
-        }
-
-        // Non-sacrifice forced rush skip: dynamic probability of degrading lowest-priority Master Tome to 褪魔残卷,
-        // prioritizing Master Tomes that actively backed the queued ritual steps over unrelated scapegoat books!
-        long remBeforeSkip = tableBe.ritualRemainingTicks();
-        boolean usedInfTome = tableBe.anyQueuedStepUsedInfinityTome();
-        Set<Identifier> activeRitualEnchantIds = new HashSet<>();
-        for (EnchantmentWithLevel step : queuedRitualSteps()) {
-            if (step != null && step.enchantment_id() != null) {
-                activeRitualEnchantIds.add(step.enchantment_id());
-            }
-        }
-        double degradeProb = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeRushDegradeChance(
-            ritualConfig(),
-            remBeforeSkip,
-            usedInfTome
-        );
-        if (!tableBe.completeActiveRitual(
-            this.world,
-            pos,
-            this.player instanceof net.minecraft.server.level.ServerPlayer sp ? sp : null,
-            chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.RitualCompletionKind.RUSHED_NO_SACRIFICE
-        )) return false;
-        if (this.world.getRandom().nextDouble() < degradeProb) {
-            ItemStack degradedTome = chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.degradeLowestPriorityMasterTomeInWorld(
-                this.world,
-                pos,
-                shelfGatesConfig(),
-                activeRitualEnchantIds
-            );
-            if (degradedTome != null) {
-                chiseled_enchanting_table.utils.Advancement.give(this.player, "haste_makes_waste");
-                if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-                    sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
-                        net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.degraded_to_remnant")
-                            .withStyle(CetFormatting.RED)
-                    ));
-                }
-                refreshLiveShelfState();
-                pushRitualStateToViewer();
-                broadcastChanges();
-            }
-        } else if (this.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
-                net.minecraft.network.chat.Component.translatable("gui.chiseled_enchanting_table.ritual.rush_lucky")
-                    .withStyle(CetFormatting.GREEN)
-            ));
-        }
-        return true;
+        return handleRitualAction(sacrificeXp
+            ? ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.SACRIFICE_XP
+            : ChiseledEnchantingMenuPayloads.SkipRitualPayload.Action.FORCE_RUSH);
     }
 
     @Override
@@ -1751,6 +1683,19 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
 
     public boolean isBundleAffordableWithOverflow(List<ItemStack> bundle) { return MenuPaymentService.isBundleAffordableWithOverflow(this.paymentAccess, bundle); }
 
+    public boolean isCleanseBundleAffordableFromBagOrSlot(List<ItemStack> bundle) {
+        return MenuCleanseQuotes.isCleanseBundleAffordableFromBagOrSlot(this.paymentAccess, bundle);
+    }
+
+    @org.jetbrains.annotations.Nullable
+    public List<ItemStack> resolveCleanseCostBundle(EnchantmentWithLevel ewl, OptionType type, int costOptionIndex) {
+        return MenuCleanseQuotes.resolveCleanseCostBundle(this.paymentAccess, ewl, type, costOptionIndex);
+    }
+
+    public void deductCleanseBundle(List<ItemStack> matchedBundle) {
+        MenuCleanseQuotes.deductCleanseBundle(this.paymentAccess, matchedBundle);
+    }
+
     @org.jetbrains.annotations.Nullable
     /**
      * Audit H-02: the exhaustive whitelist of operations that are <b>by design</b> allowed to
@@ -1814,16 +1759,12 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         }
         boolean cleanseAction = payload.option_type() == OptionType.DISENCHANT_ALL
             || payload.option_type() == OptionType.DOWNGRADE_ENCHANTMENT
-            || payload.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
-            || payload.option_type() == OptionType.PURGE_CURSE;
+            || AvailableOption.isBagPayableCleanse(payload.option_type());
         if (cleanseAction && !isCleansePageUnlocked()) {
             tomeActionMessage("gui.chiseled_enchanting_table.tab.locked_tooltip");
             return;
         }
-        if (payload.option_type() == OptionType.DISENCHANT_ALL
-            || payload.option_type() == OptionType.DOWNGRADE_ENCHANTMENT
-            || payload.option_type() == OptionType.STRIP_SINGLE_ENCHANTMENT
-            || payload.option_type() == OptionType.PURGE_CURSE) {
+        if (cleanseAction) {
             if (isRitualActive()) {
                 return;
             }

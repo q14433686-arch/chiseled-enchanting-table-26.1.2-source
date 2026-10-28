@@ -67,9 +67,9 @@ class SyncContracts26_2(unittest.TestCase):
                       'YELLOW', 'DARK_AQUA', 'DARK_PURPLE', 'DARK_RED']:
             self.assertIn(f'Style {color}', s)
 
-    def test_protocol_26_2_revision_7(self):
+    def test_protocol_26_2_revision_8(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('CURRENT_REVISION_NUMBER = 7', protocol)
+        self.assertIn('CURRENT_REVISION_NUMBER = 8', protocol)
         self.assertIn('"26_2_revision_" + CURRENT_REVISION_NUMBER', protocol)
         self.assertIn('IntStream.range(1, CURRENT_REVISION_NUMBER)', protocol)
         self.assertNotIn('IntStream.range(9, CURRENT_REVISION_NUMBER)', protocol)

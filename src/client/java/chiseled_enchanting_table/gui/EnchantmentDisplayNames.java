@@ -78,6 +78,9 @@ final class EnchantmentDisplayNames {
         if (option.isStripSingle()) {
             return I18n.get("gui.chiseled_enchanting_table.cleanse.strip_row", name);
         }
+        if (option.isExtractEnchantmentBook()) {
+            return I18n.get("gui.chiseled_enchanting_table.cleanse.extract_row", name);
+        }
         if (option.isPurgeCurse()) {
             return I18n.get("gui.chiseled_enchanting_table.cleanse.curse_row", name);
         }

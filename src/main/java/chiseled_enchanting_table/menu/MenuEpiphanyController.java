@@ -300,22 +300,7 @@ public final class MenuEpiphanyController {
         });
         h.broadcastChanges();
         Advancement.give(h.player, "freeze_epiphany");
-        h.world().playSound(
-            null,
-            h.player.blockPosition(),
-            SoundEvents.GLASS_PLACE,
-            SoundSource.BLOCKS,
-            1.0F,
-            1.35F
-        );
-        h.world().playSound(
-            null,
-            h.player.blockPosition(),
-            SoundEvents.AMETHYST_BLOCK_RESONATE,
-            SoundSource.BLOCKS,
-            1.2F,
-            0.85F
-        );
+        TableVisualEvents.onEpiphanyFreeze(h.world(), h.tableBlockPos());
         return true;
     }
 
@@ -335,14 +320,7 @@ public final class MenuEpiphanyController {
             }
         }
         h.advanceTableEpiphanySeed(true);
-        h.world().playSound(
-            null,
-            h.player.blockPosition(),
-            SoundEvents.AMETHYST_BLOCK_CHIME,
-            SoundSource.BLOCKS,
-            1.2F,
-            1.15F
-        );
+        TableVisualEvents.onArcanePulse(h.world(), h.tableBlockPos(), TableVisualEvents.COLOR_ARCANE_VIOLET);
         return true;
     }
 
