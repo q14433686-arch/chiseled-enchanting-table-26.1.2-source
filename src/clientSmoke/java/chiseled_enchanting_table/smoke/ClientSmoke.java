@@ -166,7 +166,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (!menuPrepared || !(client.gui.screen() instanceof ChiseledEnchantingTableScreen table)) return;
                 if (!((ChiseledEnchantingTableScreenHandler) client.player.containerMenu).get_enchantable_item().is(Items.DIAMOND_SWORD)) return;
                 var syncedMenu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
-                if (!syncedMenu.isTomePageUnlocked() || syncedMenu.tomeBooks.size()<2) return;
+                if (!syncedMenu.isTomePageUnlocked() || !syncedMenu.isCleansePageUnlocked() || syncedMenu.tomeBooks.size()<2) return;
                 if(!chiseled_enchanting_table.render.RainbowTableItemVisuals.isRainbow(client.player.getInventory().getItem(8))) return;
                 chiseled_enchanting_table.render.RainbowItemProbe.begin(client);
                 client.player.setYRot(-90); client.player.setXRot(40);
@@ -189,6 +189,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 int left = (int) field(table, "leftPos"), top = (int) field(table, "topPos");
                 click(table, left + 12, top + 22, InputConstants.MOUSE_BUTTON_RIGHT);
                 click(table, left + 100, top - 12, InputConstants.MOUSE_BUTTON_LEFT);
+                require(list.tabMode() == chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode.CLEANSE,
+                    "cleanse test fixture/tab is locked or failed to switch");
                 require(!SDLKeyboard.SDL_TextInputActive(handle), "tab change leaked inscribe focus");
                 click(table, left + 12, top + 22, InputConstants.MOUSE_BUTTON_LEFT);
                 require(table.capturesInput() && SDLKeyboard.SDL_TextInputActive(handle), "cleanse filter did not acquire SDL input");
