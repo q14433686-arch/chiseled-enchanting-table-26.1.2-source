@@ -67,7 +67,7 @@ final class FusionRuleEngineTest {
         EnchantInput swordSecondary = new EnchantInput("minecraft:sharpness", 5, 5, false);
 
         PairEvaluation universal = FusionRuleEngine.evaluateFusion(
-            tridentPrimary, swordSecondary, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false
+            tridentPrimary, swordSecondary, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
         );
         assertTrue(universal.valid(), "universal_any_gear must allow [Loyalty ▷ Sharpness] on any equipment host");
         assertEquals("minecraft:loyalty", universal.resultingPair().primaryId());
@@ -76,7 +76,7 @@ final class FusionRuleEngineTest {
         // API-02: Host carrying Smite rejects Sharpness primary with EXCLUSIVE_ON_HOST
         EnchantInput sharpPrimary = new EnchantInput("minecraft:sharpness", 5, 5, true);
         PairEvaluation exclusiveBlocked = FusionRuleEngine.evaluateFusion(
-            sharpPrimary, tridentPrimary, true, FusedEnchantmentList.EMPTY, Set.of("minecraft:smite"), 1, true
+            sharpPrimary, tridentPrimary, true, FusedEnchantmentList.EMPTY, Set.of("minecraft:smite"), 1, false, true
         );
         assertFalse(exclusiveBlocked.valid());
         assertEquals(RejectReason.EXCLUSIVE_ON_HOST, exclusiveBlocked.rejectReason());
@@ -113,14 +113,14 @@ final class FusionRuleEngineTest {
         EnchantInput smite5 = new EnchantInput("minecraft:smite", 5, 5, true);
 
         PairEvaluation rejectedLow = FusionRuleEngine.evaluateFusion(
-            sharp4, smite5, false, FusedEnchantmentList.EMPTY, Set.of(), 1, false
+            sharp4, smite5, false, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
         );
         assertFalse(rejectedLow.valid());
         assertEquals(RejectReason.REPULSIVE_REQUIRES_MAX_LEVEL, rejectedLow.rejectReason());
 
         EnchantInput sharpOver = new EnchantInput("minecraft:sharpness", 9, 5, true);
         PairEvaluation clampedMax = FusionRuleEngine.evaluateFusion(
-            sharpOver, smite5, false, FusedEnchantmentList.EMPTY, Set.of(), 1, false
+            sharpOver, smite5, false, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
         );
         assertTrue(clampedMax.valid());
         assertTrue(clampedMax.repulsiveExclusive());
