@@ -10,7 +10,7 @@ import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageAct
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action;
 import chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeSlotRef;
 import chiseled_enchanting_table.menu.EnchantingProtocol;
-import chiseled_enchanting_table.menu.EnchantmentWithLevel;
+import chiseled_enchanting_table.utils.EnchantmentWithLevel;
 import chiseled_enchanting_table.menu.TableVisualEventPayload;
 import chiseled_enchanting_table.menu.TableVisualEventPayload.Kind;
 import chiseled_enchanting_table.menu.TableVisualEvents;
