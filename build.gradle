@@ -96,16 +96,16 @@ processResources {
 
     doLast {
         if (!jeiEnabled || !reiEnabled) {
-            def outFmj = file("${destinationDir}/fabric.mod.json")
-            if (outFmj.exists()) {
-                def parsed = new groovy.json.JsonSlurper().parseText(outFmj.getText('UTF-8'))
-                if (!jeiEnabled && parsed.entrypoints != null) {
-                    parsed.entrypoints.remove('jei_mod_plugin')
+            def outFmj = layout.buildDirectory.file("resources/main/fabric.mod.json").get().asFile
+            if (outFmj.isFile()) {
+                String txt = outFmj.getText('UTF-8')
+                if (!jeiEnabled) {
+                    txt = txt.replaceAll(',\\s*"jei_mod_plugin"\\s*:\\s*\\[[^\\]]*\\]', '')
                 }
-                if (!reiEnabled && parsed.entrypoints != null) {
-                    parsed.entrypoints.remove('rei_client')
+                if (!reiEnabled) {
+                    txt = txt.replaceAll(',\\s*"rei_client"\\s*:\\s*\\[[^\\]]*\\]', '')
                 }
-                outFmj.setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(parsed)) + "\n", 'UTF-8')
+                outFmj.setText(txt, 'UTF-8')
             }
         }
     }

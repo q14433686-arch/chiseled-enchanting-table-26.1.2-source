@@ -46,9 +46,9 @@ class FusionModelAndMatrixTest {
         assertEquals(5, ba.secondaryLevel());
         assertFalse(ab.isAberrant());
 
-        // DATA-01: Constructor clamps levels to [1, 10] and truncates overly long strings safely
-        FusedPair clamped = new FusedPair("minecraft:sharpness", 99, "minecraft:loyalty", 0, null);
-        assertEquals(10, clamped.primaryLevel());
+        // DATA-01: Constructor clamps levels to [1, 255] symmetrically with StreamCodec
+        FusedPair clamped = new FusedPair("minecraft:sharpness", 999, "minecraft:loyalty", 0, null);
+        assertEquals(255, clamped.primaryLevel());
         assertEquals(1, clamped.secondaryLevel());
         assertEquals("", clamped.aberrationId());
     }
