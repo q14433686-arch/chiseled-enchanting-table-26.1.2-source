@@ -154,6 +154,17 @@ jobs:
       - name: boot fresh world and reload datapacks
         run: python3 scripts/server_smoke.py
 
+      - name: inspect 26.2 client API for smoke portability
+        run: |
+          mkdir -p build-reports
+          for jar in $(find ~/.gradle/caches/fabric-loom -name '*.jar'); do
+            if jar tf "$jar" 2>/dev/null | grep -q '^net/minecraft/client/Minecraft.class$'; then
+              echo "=== $jar ===" >> build-reports/client-api.log
+              javap -classpath "$jar" net.minecraft.client.Minecraft net.minecraft.client.gui.Gui net.minecraft.client.renderer.GameRenderer >> build-reports/client-api.log 2>&1 || true
+              break
+            fi
+          done
+
       - name: compile disposable client integration probe
         run: mkdir -p build-reports && ./gradlew compileClientSmokeJava -Pclient_smoke=true --console=plain --stacktrace 2>&1 | tee build-reports/client-smoke.log
 
@@ -180,7 +191,7 @@ jobs:
         if: always() && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/post_ci_diagnostics.py --publish --name client-smoke-diagnostics --conclusion '${{ job.status }}' build-reports/client-smoke.log
+        run: python3 scripts/post_ci_diagnostics.py --publish --name client-smoke-diagnostics --conclusion '${{ job.status }}' build-reports/client-smoke.log build-reports/client-api.log
 
       # 与 compile-check 同理：沙箱里读不到 Actions 日志 blob，只能靠 Contents API 把日志
       # 写回分支（paths-ignore 'build-reports/**' 保证不会自触发）。只在 arena/** 回推。
