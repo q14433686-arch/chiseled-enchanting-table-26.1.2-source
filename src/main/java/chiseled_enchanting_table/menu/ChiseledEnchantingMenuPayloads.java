@@ -991,11 +991,50 @@ public final class ChiseledEnchantingMenuPayloads {
         return Map.copyOf(map);
     }
 
+    public record TomeSlotRef(BlockPos shelf_pos, int slot) {
+        public static final int MAX_BATCH_SLOTS = 64;
+
+        public TomeSlotRef {
+            shelf_pos = shelf_pos == null ? BlockPos.ZERO : shelf_pos.immutable();
+            if (slot < 0 || slot > 5) {
+                throw new IllegalArgumentException("Invalid shelf slot: " + slot);
+            }
+        }
+
+        public static void writeList(RegistryFriendlyByteBuf buf, @Nullable List<TomeSlotRef> list) {
+            List<TomeSlotRef> safe = list == null ? List.of() : list;
+            if (safe.size() > MAX_BATCH_SLOTS) {
+                throw new IllegalArgumentException("Too many tome slot targets: " + safe.size());
+            }
+            buf.writeVarInt(safe.size());
+            for (TomeSlotRef ref : safe) {
+                buf.writeBlockPos(ref.shelf_pos());
+                buf.writeVarInt(ref.slot());
+            }
+        }
+
+        public static List<TomeSlotRef> readList(RegistryFriendlyByteBuf buf) {
+            int n = PayloadLimits.readCount(buf);
+            if (n > MAX_BATCH_SLOTS) {
+                throw new IllegalArgumentException("Too many tome slot targets: " + n);
+            }
+            if (n == 0) {
+                return List.of();
+            }
+            List<TomeSlotRef> out = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                out.add(new TomeSlotRef(buf.readBlockPos(), buf.readVarInt()));
+            }
+            return List.copyOf(out);
+        }
+    }
+
     public record TomePageActionPayload(
         int containerId,
         Action action,
         BlockPos shelf_pos,
-        int slot
+        int slot,
+        List<TomeSlotRef> extra_targets
     ) implements CustomPacketPayload {
         public enum Action {
             LOCK_NEXT,
@@ -1020,6 +1059,18 @@ public final class ChiseledEnchantingMenuPayloads {
             if (slot < -1 || slot > 5) {
                 throw new IllegalArgumentException("Invalid shelf slot: " + slot);
             }
+            if (extra_targets == null || extra_targets.isEmpty()) {
+                extra_targets = List.of();
+            } else {
+                if (extra_targets.size() > TomeSlotRef.MAX_BATCH_SLOTS) {
+                    throw new IllegalArgumentException("Too many extra tome targets: " + extra_targets.size());
+                }
+                extra_targets = List.copyOf(extra_targets);
+            }
+        }
+
+        public TomePageActionPayload(int containerId, Action action, BlockPos shelf_pos, int slot) {
+            this(containerId, action, shelf_pos, slot, List.of());
         }
 
         public static final CustomPacketPayload.Type<TomePageActionPayload> TYPE =
@@ -1036,6 +1087,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(action.ordinal());
             buf.writeBlockPos(shelf_pos);
             buf.writeVarInt(slot);
+            TomeSlotRef.writeList(buf, extra_targets);
         }
 
         private static TomePageActionPayload read(RegistryFriendlyByteBuf buf) {
@@ -1045,7 +1097,10 @@ public final class ChiseledEnchantingMenuPayloads {
             if (ordinal < 0 || ordinal >= values.length) {
                 throw new IllegalArgumentException("Invalid tome page action: " + ordinal);
             }
-            return new TomePageActionPayload(container, values[ordinal], buf.readBlockPos(), buf.readVarInt());
+            BlockPos primaryPos = buf.readBlockPos();
+            int primarySlot = buf.readVarInt();
+            List<TomeSlotRef> extras = TomeSlotRef.readList(buf);
+            return new TomePageActionPayload(container, values[ordinal], primaryPos, primarySlot, extras);
         }
 
         @Override
@@ -1252,8 +1307,14 @@ public final class ChiseledEnchantingMenuPayloads {
         List<EnchantmentWithLevel> queuedSteps,
         boolean usedInfinityTome,
         boolean hasAnyMasterTome,
-        boolean ritualBlocked
+        boolean ritualBlocked,
+        List<TomeSlotRef> activeTomeSlots
     ) implements CustomPacketPayload {
+        public SyncRitualStatePayload {
+            queuedSteps = queuedSteps == null ? List.of() : List.copyOf(queuedSteps);
+            activeTomeSlots = activeTomeSlots == null ? List.of() : List.copyOf(activeTomeSlots);
+        }
+
         public static final CustomPacketPayload.Type<SyncRitualStatePayload> TYPE =
             new CustomPacketPayload.Type<>(SYNC_RITUAL_STATE_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, SyncRitualStatePayload> CODEC =
@@ -1264,9 +1325,20 @@ public final class ChiseledEnchantingMenuPayloads {
             long session,
             List<EnchantmentWithLevel> queuedSteps,
             boolean usedInfinityTome,
+            boolean hasAnyMasterTome,
+            boolean ritualBlocked
+        ) {
+            this(containerId, session, queuedSteps, usedInfinityTome, hasAnyMasterTome, ritualBlocked, List.of());
+        }
+
+        public SyncRitualStatePayload(
+            int containerId,
+            long session,
+            List<EnchantmentWithLevel> queuedSteps,
+            boolean usedInfinityTome,
             boolean hasAnyMasterTome
         ) {
-            this(containerId, session, queuedSteps, usedInfinityTome, hasAnyMasterTome, false);
+            this(containerId, session, queuedSteps, usedInfinityTome, hasAnyMasterTome, false, List.of());
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
@@ -1281,6 +1353,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeBoolean(usedInfinityTome);
             buf.writeBoolean(hasAnyMasterTome);
             buf.writeBoolean(ritualBlocked);
+            TomeSlotRef.writeList(buf, activeTomeSlots);
         }
 
         private static SyncRitualStatePayload read(RegistryFriendlyByteBuf buf) {
@@ -1295,7 +1368,8 @@ public final class ChiseledEnchantingMenuPayloads {
             boolean inf = buf.readBoolean();
             boolean tome = buf.readBoolean();
             boolean blocked = buf.readBoolean();
-            return new SyncRitualStatePayload(containerId, session, List.copyOf(list), inf, tome, blocked);
+            List<TomeSlotRef> activeSlots = TomeSlotRef.readList(buf);
+            return new SyncRitualStatePayload(containerId, session, list, inf, tome, blocked, activeSlots);
         }
 
         @Override

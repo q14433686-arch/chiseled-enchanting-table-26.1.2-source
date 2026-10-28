@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "재료나 XP가 부족한 항목 숨기기",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "모두 접기",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "모두 펼치기",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "모든 마법 그룹 펼치기/접기"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "모든 마법 그룹 펼치기/접기",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ 원본서 %s권의 유도 신호기를 동시에 점등했습니다 (채팅창에 좌표 목록 출력)",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ 위치 확인된 원본서 (%s권) ═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s] (편차 %s) · 슬롯 #%s",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "선택 중 잠금 가능: %s/%s권",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "일괄 해제 (%s/%s): 총 %s레벨 + 정화가루 %s · 현재 가능 %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "일괄 수선 (%s/%s): 고갈 고서 %s + 정화가루 %s + %s레벨 · 현재 가능 %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "일괄 성별 (%s/%s): 비전 촉매 %s개 · 현재 가능 %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "한 번 클릭으로 선택한 %s권 모두에 유도 광선 및 6초 신호기 표시",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "다중 선택: Shift+클릭 범위 · Ctrl+클릭 개별 전환 · Ctrl+A 전체 선택",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "원본서 %s권 선택됨",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "선택된 원본서 (%s권):",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " …외 %s권 선택됨",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ 의식 공명 중",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ 현재 진행 중인 각인 의식에 마력을 공급 중 (안전 중단 시 마모 복구)",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "우클릭: 목록 탭으로 이동하여 해당 원본서 필터링 및 선택"
 }

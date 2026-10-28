@@ -35,7 +35,7 @@ class TomeActionQueueTest {
         assertTrue(q.submit(Action.UNLOCK,List.of(locked,free)));assertFalse(q.submit(Action.UNLOCK,List.of(locked)));
         q.tick(List.of(locked,free),(a,b)->{assertEquals(Action.UNLOCK,a);assertEquals(locked,b);});
     }
-    @Test void mendAndSanctifyBatchRequireConfirmationWhileLocatePingExecutesSingleTarget() {
+    @Test void mendAndSanctifyBatchRequireConfirmationWhileLocatePingQueuesAllTargetsImmediately() {
         var clock=new AtomicLong();var q=new TomeActionQueue(clock::get);
         var wornA=book(0,"a",-1);var wornB=book(1,"b",-1);
         var fullC=new TomeBookEntry(new BlockPos(1,64,1),2,"c",List.of(),0,4,4,0,false,false,0,0,-1,"","",0,false,"",0,0,"",0);
@@ -43,9 +43,12 @@ class TomeActionQueueTest {
         assertEquals("confirm",q.status().key());assertEquals(2,q.status().count());
         assertTrue(q.submit(Action.MEND_ONE,List.of(wornA,wornB,fullC)));
         q.cancel();
+        assertTrue(q.submit(Action.LOCATE_PING,List.of(fullC,wornA,wornB)));
+        assertEquals(List.of(fullC,wornA,wornB),q.drainPendingForImmediateBatch(Action.LOCATE_PING));
+        assertNull(q.status());
         var pinged=new ArrayList<TomeBookEntry>();
         assertTrue(q.submit(Action.LOCATE_PING,List.of(fullC,wornA)));
-        q.tick(List.of(fullC,wornA),(a,b)->{assertEquals(Action.LOCATE_PING,a);pinged.add(b);});
-        assertEquals(List.of(fullC),pinged);assertNull(q.status());
+        for(int i=0;i<5;i++) q.tick(List.of(fullC,wornA),(a,b)->{assertEquals(Action.LOCATE_PING,a);pinged.add(b);});
+        assertEquals(List.of(fullC,wornA),pinged);assertNull(q.status());
     }
 }

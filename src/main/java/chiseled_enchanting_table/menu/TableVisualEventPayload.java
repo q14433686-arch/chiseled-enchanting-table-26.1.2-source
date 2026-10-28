@@ -42,7 +42,9 @@ public record TableVisualEventPayload(
         /** Epiphany reroll, Arcane Decipher, or item transformation completion pulse + GUI slot ripple. */
         ARCANE_PULSE,
         /** Table cloth dyed, jeb_ rainbow cloth activated, or washed clean with water/wet sponge. */
-        CLOTH_DYE_OR_WASH
+        CLOTH_DYE_OR_WASH,
+        /** Tome Locate Beacon: cyan-gold guide beam from tablePos to (targetPos, slot) + 6s slot rune beacon. */
+        TOME_LOCATE
     }
 
     public static final Type<TableVisualEventPayload> TYPE =

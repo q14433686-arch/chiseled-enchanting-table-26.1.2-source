@@ -33,6 +33,7 @@ public final class TableVisualEvents {
     public static final int COLOR_FROST_BLUE = 0xFF8CE8FF;
     public static final int COLOR_AMBER_EMBER = 0xFFFFAD5C;
     public static final int COLOR_WATER_WASH = 0xFF8FD4FF;
+    public static final int COLOR_LOCATE_CYAN = 0xFF74F3FF;
 
     private TableVisualEvents() {}
 
@@ -109,6 +110,17 @@ public final class TableVisualEvents {
         int facing2D = shelfFacing2D(serverLevel, shelfPos);
         broadcast(serverLevel, tablePos, new TableVisualEventPayload(
             Kind.TOME_RESTORE, tablePos, shelfPos, slot, facing2D, argb
+        ));
+    }
+
+    /** Multi-select or single Tome Locate guide beam + 6s slot rune beacon at (shelfPos, slot). */
+    public static void onTomeLocateBeam(Level level, BlockPos tablePos, BlockPos shelfPos, int slot) {
+        if (!(level instanceof ServerLevel serverLevel) || tablePos == null || shelfPos == null) {
+            return;
+        }
+        int facing2D = shelfFacing2D(serverLevel, shelfPos);
+        broadcast(serverLevel, tablePos, new TableVisualEventPayload(
+            Kind.TOME_LOCATE, tablePos, shelfPos, slot, facing2D, COLOR_LOCATE_CYAN
         ));
     }
 

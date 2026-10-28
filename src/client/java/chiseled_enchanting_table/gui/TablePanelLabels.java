@@ -57,9 +57,15 @@ final class TablePanelLabels {
                 Component shelves = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_shelves",
                     state.tooltips().menu().qualifyingEnchantedBookshelves, state.tooltips().menu().liveTotalLibraryBookshelves);
                 drawAutoScaledText(state, context, shelves, lx, ly + 9, 0.64f, 99, 0xFFE6F7FF);
-                String interval = state.tooltips().menu().regenIntervalTicks > 0 ? TomeDisplayNames.formatTomeEta(state.tooltips().menu().regenIntervalTicks) : "--:--";
-                Component rate = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_rate", interval);
-                drawAutoScaledText(state, context, rate, lx, ly + 17, 0.60f, 99, 0xFFA8FFC4);
+                int selCount = state.tooltips().list() != null ? state.tooltips().list().selectedTomes().size() : 0;
+                if (selCount >= 2) {
+                    Component selLine = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_selected_count", selCount);
+                    drawAutoScaledText(state, context, selLine, lx, ly + 17, 0.60f, 99, 0xFFFFDF82);
+                } else {
+                    String interval = state.tooltips().menu().regenIntervalTicks > 0 ? TomeDisplayNames.formatTomeEta(state.tooltips().menu().regenIntervalTicks) : "--:--";
+                    Component rate = Component.translatable("gui.chiseled_enchanting_table.tomes.panel_rate", interval);
+                    drawAutoScaledText(state, context, rate, lx, ly + 17, 0.60f, 99, 0xFFA8FFC4);
+                }
                 return;
             }
 

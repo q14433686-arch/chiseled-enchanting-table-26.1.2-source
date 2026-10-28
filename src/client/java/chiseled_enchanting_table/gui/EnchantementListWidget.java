@@ -141,31 +141,43 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
         }
     }
 
+    @Nullable
+    public Identifier hoveredMasterBackedInscribeId(double mouseX, double mouseY) {
+        if (this.tabMode != UiTabMode.INSCRIBE || !this.isMouseOver(mouseX, mouseY)) return null;
+        for (EnchantUiEntry entry : this.children()) {
+            if (!entry.isMouseOver(mouseX, mouseY) || entry.is_transformation || entry.enchantment_id == null) continue;
+            if (entry.is_category_header) return (!entry.cleanse_theme && this.handler.storedMasterLevel(entry.enchantment_id) > 0) ? entry.enchantment_id : null;
+            if (entry.option_type == OptionType.ENCHANTMENT && !entry.cost_item_stack.is(Items.ENCHANTED_BOOK)
+                && this.handler.storedMasterLevel(entry.enchantment_id) >= entry.enchant_level) return entry.enchantment_id;
+        }
+        return null;
+    }
+
+    public void jumpToTomesForEnchantment(Identifier enchantId) {
+        this.inscribeFilter.unfocus(); this.cleanseFilter.unfocus();
+        this.catalogue.reset(); this.catalogue.enchantment = enchantId.toString();
+        this.tabMode = UiTabMode.TOMES; this.setFocused(null); this.setScrollAmount(0);
+        this.updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
+        this.catalogue.selectVisible();
+    }
+
     public boolean areAllCleanseCategoriesExpanded() {
-        return !this.visibleCleanseGroupIds.isEmpty()
-            && this.expandedCleanseCategories.containsAll(this.visibleCleanseGroupIds);
+        return !this.visibleCleanseGroupIds.isEmpty() && this.expandedCleanseCategories.containsAll(this.visibleCleanseGroupIds);
     }
 
     public void toggleExpandAllCleanseCategories() {
-        if (areAllCleanseCategoriesExpanded()) {
-            this.expandedCleanseCategories.clear();
-        } else {
-            this.expandedCleanseCategories.addAll(this.visibleCleanseGroupIds);
-        }
+        if (areAllCleanseCategoriesExpanded()) this.expandedCleanseCategories.clear();
+        else this.expandedCleanseCategories.addAll(this.visibleCleanseGroupIds);
         refreshInscribeFilter();
     }
 
     public boolean areAllInscribeCategoriesExpanded() {
-        return !this.visibleInscribeGroupIds.isEmpty()
-            && this.expandedInscribeCategories.containsAll(this.visibleInscribeGroupIds);
+        return !this.visibleInscribeGroupIds.isEmpty() && this.expandedInscribeCategories.containsAll(this.visibleInscribeGroupIds);
     }
 
     public void toggleExpandAllInscribeCategories() {
-        if (areAllInscribeCategoriesExpanded()) {
-            this.expandedInscribeCategories.clear();
-        } else {
-            this.expandedInscribeCategories.addAll(this.visibleInscribeGroupIds);
-        }
+        if (areAllInscribeCategoriesExpanded()) this.expandedInscribeCategories.clear();
+        else this.expandedInscribeCategories.addAll(this.visibleInscribeGroupIds);
         refreshInscribeFilter();
     }
 
@@ -176,20 +188,13 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
 
     public boolean isCategoryExpanded(Identifier categoryId) {
-        return (this.tabMode == UiTabMode.CLEANSE ? this.expandedCleanseCategories : this.expandedInscribeCategories)
-            .contains(categoryId);
+        return (this.tabMode == UiTabMode.CLEANSE ? this.expandedCleanseCategories : this.expandedInscribeCategories).contains(categoryId);
     }
 
     public void toggleCategory(Identifier categoryId) {
-        Set<Identifier> set = (this.tabMode == UiTabMode.CLEANSE)
-            ? this.expandedCleanseCategories
-            : this.expandedInscribeCategories;
-        if (!set.remove(categoryId)) {
-            set.add(categoryId);
-        }
-        double savedScroll = this.scrollAmount();
-        this.updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());
-        this.setScrollAmount(Math.min(savedScroll, this.maxScrollAmount()));
+        Set<Identifier> set = (this.tabMode == UiTabMode.CLEANSE) ? this.expandedCleanseCategories : this.expandedInscribeCategories;
+        if (!set.remove(categoryId)) set.add(categoryId);
+        refreshInscribeFilter();
     }
 
     @Override
@@ -231,6 +236,14 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     @Override
     public boolean keyPressed(KeyEvent event) {
         int keyCode = event.key();
+        if (this.tabMode == UiTabMode.TOMES
+            && keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_A
+            && event.hasControlDown()
+            && !catalogue.visible().isEmpty()) {
+            catalogue.selectVisible();
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            return true;
+        }
         if (keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_RETURN
             || keyCode == com.mojang.blaze3d.platform.InputConstants.KEY_NUMPADENTER) {
             var focusedEntry = this.getFocused();
@@ -1028,6 +1041,14 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
                 return false;
             }
+            if (is_tome_entry && this.tome_book != null) {
+                parent.catalogue.selectInteractive(tomeKey(this.tome_book), event.hasShiftDown(), event.hasControlDown());
+                if (Minecraft.getInstance().screen instanceof ChiseledEnchantingTableScreen tableScreen) {
+                    tableScreen.cancelPendingTomeActions();
+                }
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                return true;
+            }
             if (!canDecipherWithCatalyst() && hoveredCostOptions(event.x(), event.y()) != null) {
                 AvailableOption opt = new AvailableOption(option_type, enchantment_id, enchant_level);
                 if (AvailableOption.isBagPayableCleanse(option_type)) {
@@ -1112,8 +1133,12 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                 int dx = effectiveDx();
                 int dw = effectiveDw();
                 boolean selected = parent.isTomeSelected(this.tome_book);
+                boolean inRitual = handler.isTomeActiveInRitual(this.tome_book.shelf_pos(), this.tome_book.slot());
                 RowRenderSupport.drawPlaque(ctx, dx, dy, dw, dh,
                     RowRenderSupport.RowVisualStyle.STANDARD, true, hovered, isFocused || selected);
+                if (inRitual) {
+                    ctx.fill(dx + 2, dy + 2, dx + 4, dy + dh - 2, 0xFFD99BFF);
+                }
                 RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
                 try {
                     String title = tomeTitle(this.tome_book, this.player);
@@ -1162,6 +1187,10 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
                     } else {
                         status = I18n.get("gui.chiseled_enchanting_table.tomes.not_charging");
                         statusColor = 0xFFC9BFD8;
+                    }
+                    if (inRitual) {
+                        status = I18n.get("gui.chiseled_enchanting_table.tomes.active_ritual_badge") + " · " + status;
+                        statusColor = 0xFFE6A8FF;
                     }
                     RowRenderSupport.renderBoundedText(ctx, client, status, dx + 7, dy + 16, 0.5f, dw - 14, statusColor);
                 } finally {

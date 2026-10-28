@@ -241,6 +241,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             this.syncedQueuedSteps = List.copyOf(initialTableBe.queuedEnchantmentSummary());
             this.syncedUsedInfinityTome = initialTableBe.anyQueuedStepUsedInfinityTome();
             this.syncedRitualBlocked = initialTableBe.isRitualBlocked();
+            this.syncedActiveRitualTomeSlots = List.copyOf(initialTableBe.activeRitualTomeSlots());
         }
         java.util.Map<Identifier, TransformationDisplay> displays = new java.util.HashMap<>();
         for (TransformationDisplay display : payload.transformations()) {
@@ -913,11 +914,28 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
     }
 
     private long syncedRitualSession;
+    private List<ChiseledEnchantingMenuPayloads.TomeSlotRef> syncedActiveRitualTomeSlots = List.of();
     public long ritualSession() {
         if (this.world.isClientSide()) return this.syncedRitualSession;
         var pos = tableBlockPos();
         return pos != null && this.world.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be
             ? be.ritualSession() : 0L;
+    }
+
+    public List<ChiseledEnchantingMenuPayloads.TomeSlotRef> activeRitualTomeSlots() {
+        if (!isRitualActive()) return List.of();
+        if (this.world.isClientSide()) return this.syncedActiveRitualTomeSlots;
+        var pos = tableBlockPos();
+        return pos != null && this.world.getBlockEntity(pos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity be
+            ? be.activeRitualTomeSlots() : List.of();
+    }
+
+    public boolean isTomeActiveInRitual(net.minecraft.core.BlockPos shelfPos, int slot) {
+        if (shelfPos == null || slot < 0 || !isRitualActive()) return false;
+        for (var ref : activeRitualTomeSlots()) {
+            if (ref.slot() == slot && shelfPos.equals(ref.shelf_pos())) return true;
+        }
+        return false;
     }
 
     public void pushRitualStateToViewer() {
@@ -933,7 +951,8 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
             queuedRitualSteps(),
             ritualUsedInfinityTome(),
             hasAnyMasterTomeInRange(),
-            isRitualBlocked()
+            isRitualBlocked(),
+            activeRitualTomeSlots()
         );
         ServerPlayNetworking.send(sp, payload);
     }
@@ -945,6 +964,7 @@ public class ChiseledEnchantingTableScreenHandler extends AbstractContainerMenu 
         this.syncedUsedInfinityTome = payload.usedInfinityTome();
         this.syncedHasAnyMasterTome = payload.hasAnyMasterTome();
         this.syncedRitualBlocked = payload.ritualBlocked();
+        this.syncedActiveRitualTomeSlots = payload.activeTomeSlots() != null ? List.copyOf(payload.activeTomeSlots()) : List.of();
         if (this.onContentChangedCallback != null) {
             this.onContentChangedCallback.run();
         }

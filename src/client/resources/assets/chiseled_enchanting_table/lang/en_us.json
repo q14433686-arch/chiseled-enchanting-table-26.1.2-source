@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "Hide rows lacking bag/slot materials or XP",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "Collapse All Traits",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "Expand All Traits",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Toggle all enchantment trait groups"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Toggle all enchantment trait groups",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ Located %s Master Tomes — guide beams lit & coordinates printed in chat",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ Located Master Tomes (%s) ═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s] (Δ %s) · Slot #%s",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "Eligible in selection: %s/%s tomes",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "Batch unlock (%s/%s): %s Lv + %s Grit · Affordable now: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "Batch mend (%s/%s): %s Depleted + %s Grit + %s Lv · Affordable now: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "Batch sanctify (%s/%s): %s Catalyst · Affordable now: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "Single click lights guide beams & 6s beacons for all %s selected tomes",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "Shortcuts: Shift+Click range · Ctrl+Click toggle · Ctrl+A select all",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "Selected: %s Master Tomes",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "Selected Master Tomes (%s):",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " …and %s more selected",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ In Ritual",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ Currently fueling the active inscription ritual (Safe Abort rolls back wear)",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "Right-click: Jump to matching Master Tomes in Catalogue"
 }

@@ -222,6 +222,9 @@ public final class EnchantmentApplication {
             if (waitTicks > 0 || tableBe.hasActiveRitual()) {
                 int effectiveAddTicks = Math.max(20, waitTicks);
                 tableBe.enqueueInscription(queuedStep, effectiveAddTicks, handler.player.getUUID());
+                if (resolvedWear.shelfPos() != null && resolvedWear.shelfSlot() >= 0) {
+                    tableBe.recordActiveRitualTomeSlot(resolvedWear.shelfPos(), resolvedWear.shelfSlot());
+                }
                 if (resolvedWear.hasShelfUndo()) {
                     tableBe.recordTomeWearUndo(new chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.TomeWearUndo(
                         resolvedWear.shelfPos(),

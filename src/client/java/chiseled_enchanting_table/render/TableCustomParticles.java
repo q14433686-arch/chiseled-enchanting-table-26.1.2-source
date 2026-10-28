@@ -34,8 +34,8 @@ public final class TableCustomParticles {
     public static final Identifier ARCANE_RUNE_SPARK_TEXTURE =
         ChiseledEnchantingTable.identifier("textures/particle/arcane_rune_spark.png");
 
-    private static final int MAX_PARTICLES = 256;
-    private static final int MAX_EMITTERS = 12;
+    private static final int MAX_PARTICLES = 320;
+    private static final int MAX_EMITTERS = 64;
     private static final int FULLBRIGHT_LIGHT = 0xF000F0;
 
     public enum SpriteKind {
@@ -147,13 +147,15 @@ public final class TableCustomParticles {
     private static final class BacklashSlotEmitter {
         final BlockPos anchorTable;
         final double sx, sy, sz;
+        final boolean locateBeacon;
         int ticksRemaining;
 
-        BacklashSlotEmitter(BlockPos anchorTable, double sx, double sy, double sz, int ticksRemaining) {
+        BacklashSlotEmitter(BlockPos anchorTable, double sx, double sy, double sz, int ticksRemaining, boolean locateBeacon) {
             this.anchorTable = anchorTable.immutable();
             this.sx = sx;
             this.sy = sy;
             this.sz = sz;
+            this.locateBeacon = locateBeacon;
             this.ticksRemaining = ticksRemaining;
         }
     }
@@ -190,38 +192,57 @@ public final class TableCustomParticles {
             while (eit.hasNext()) {
                 BacklashSlotEmitter em = eit.next();
                 if (em.ticksRemaining % 6 == 0) {
-                    push(new Particle(
-                        em.anchorTable,
-                        SpriteKind.SCORCHED_PAGE,
-                        em.sx + (rnd.nextDouble() - 0.5D) * 0.16D,
-                        em.sy + (rnd.nextDouble() - 0.5D) * 0.14D,
-                        em.sz + (rnd.nextDouble() - 0.5D) * 0.16D,
-                        (rnd.nextDouble() - 0.5D) * 0.018D,
-                        0.008D + rnd.nextDouble() * 0.012D,
-                        (rnd.nextDouble() - 0.5D) * 0.018D,
-                        26 + rnd.nextInt(10),
-                        0.095F,
-                        (float) (rnd.nextDouble() * Math.PI * 2.0D),
-                        (rnd.nextFloat() - 0.5F) * 0.22F,
-                        0.0022F,
-                        0xFFFFFFFF
-                    ));
-                    push(new Particle(
-                        em.anchorTable,
-                        SpriteKind.ARCANE_RUNE_SPARK,
-                        em.sx + (rnd.nextDouble() - 0.5D) * 0.14D,
-                        em.sy + (rnd.nextDouble() - 0.5D) * 0.12D,
-                        em.sz + (rnd.nextDouble() - 0.5D) * 0.14D,
-                        (rnd.nextDouble() - 0.5D) * 0.014D,
-                        0.018D + rnd.nextDouble() * 0.016D,
-                        (rnd.nextDouble() - 0.5D) * 0.014D,
-                        18 + rnd.nextInt(8),
-                        0.068F,
-                        0.0F,
-                        0.16F,
-                        -0.0005F,
-                        rnd.nextBoolean() ? 0xFFFF4858 : 0xFFFF9E44
-                    ));
+                    if (em.locateBeacon) {
+                        push(new Particle(
+                            em.anchorTable,
+                            SpriteKind.ARCANE_RUNE_SPARK,
+                            em.sx + (rnd.nextDouble() - 0.5D) * 0.11D,
+                            em.sy + (rnd.nextDouble() - 0.5D) * 0.10D,
+                            em.sz + (rnd.nextDouble() - 0.5D) * 0.11D,
+                            (rnd.nextDouble() - 0.5D) * 0.010D,
+                            0.012D + rnd.nextDouble() * 0.014D,
+                            (rnd.nextDouble() - 0.5D) * 0.010D,
+                            20 + rnd.nextInt(8),
+                            0.078F,
+                            0.0F,
+                            0.18F,
+                            -0.0004F,
+                            rnd.nextBoolean() ? 0xFF74F3FF : 0xFFFFE48F
+                        ));
+                    } else {
+                        push(new Particle(
+                            em.anchorTable,
+                            SpriteKind.SCORCHED_PAGE,
+                            em.sx + (rnd.nextDouble() - 0.5D) * 0.16D,
+                            em.sy + (rnd.nextDouble() - 0.5D) * 0.14D,
+                            em.sz + (rnd.nextDouble() - 0.5D) * 0.16D,
+                            (rnd.nextDouble() - 0.5D) * 0.018D,
+                            0.008D + rnd.nextDouble() * 0.012D,
+                            (rnd.nextDouble() - 0.5D) * 0.018D,
+                            26 + rnd.nextInt(10),
+                            0.095F,
+                            (float) (rnd.nextDouble() * Math.PI * 2.0D),
+                            (rnd.nextFloat() - 0.5F) * 0.22F,
+                            0.0022F,
+                            0xFFFFFFFF
+                        ));
+                        push(new Particle(
+                            em.anchorTable,
+                            SpriteKind.ARCANE_RUNE_SPARK,
+                            em.sx + (rnd.nextDouble() - 0.5D) * 0.14D,
+                            em.sy + (rnd.nextDouble() - 0.5D) * 0.12D,
+                            em.sz + (rnd.nextDouble() - 0.5D) * 0.14D,
+                            (rnd.nextDouble() - 0.5D) * 0.014D,
+                            0.018D + rnd.nextDouble() * 0.016D,
+                            (rnd.nextDouble() - 0.5D) * 0.014D,
+                            18 + rnd.nextInt(8),
+                            0.068F,
+                            0.0F,
+                            0.16F,
+                            -0.0005F,
+                            rnd.nextBoolean() ? 0xFFFF4858 : 0xFFFF9E44
+                        ));
+                    }
                 }
                 if (--em.ticksRemaining <= 0) {
                     eit.remove();
@@ -314,7 +335,30 @@ public final class TableCustomParticles {
                 while (EMITTERS.size() >= MAX_EMITTERS) {
                     EMITTERS.pollFirst();
                 }
-                EMITTERS.addLast(new BacklashSlotEmitter(tablePos, slotCoords[0], slotCoords[1], slotCoords[2], 120));
+                EMITTERS.addLast(new BacklashSlotEmitter(tablePos, slotCoords[0], slotCoords[1], slotCoords[2], 120, false));
+            }
+            case TOME_LOCATE -> {
+                double[] slotCoords = TomeParticleEffects.slotWorldCoordinates(
+                    payload.targetPos(), payload.shelfFacingOrSouth(), payload.slot()
+                );
+                for (int i = 0; i < 8; i++) {
+                    push(new Particle(
+                        tablePos,
+                        SpriteKind.ARCANE_RUNE_SPARK,
+                        tx, ty + 0.04D, tz,
+                        slotCoords[0], slotCoords[1], slotCoords[2],
+                        0.22D,
+                        i * 2,
+                        16,
+                        0.082F,
+                        0.22F,
+                        (i % 2 == 0) ? payload.argbColor() : 0xFFFFE48F
+                    ));
+                }
+                while (EMITTERS.size() >= MAX_EMITTERS) {
+                    EMITTERS.pollFirst();
+                }
+                EMITTERS.addLast(new BacklashSlotEmitter(tablePos, slotCoords[0], slotCoords[1], slotCoords[2], 120, true));
             }
             case TOME_TETHER -> {
                 double[] slotCoords = TomeParticleEffects.slotWorldCoordinates(

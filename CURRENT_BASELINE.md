@@ -283,7 +283,7 @@ CI-gated phases — see
 
 1. **Rainbow Cloth** (`bb770ee`): `jeb_` sneak + name-tag toggle, `rainbow_cloth` blockstate
    property, item badge/animated tint (Fabric model-wrapper API on 26.1.2), completion ring,
-   11 lang keys × 11 (**1019 keys**). **Wire bumped to `26_1_2_revision_21`** (blockstate + menu actions + Cleanse extraction/curse-purge + `TableVisualEventPayload` visual event schema;
+   11 lang keys × 11 (**1034 keys**). **Wire bumped to `26_1_2_revision_22`** (blockstate + menu actions + Cleanse extraction/curse-purge + `TableVisualEventPayload` visual event schema + atomic multi-tome `extra_targets` & `activeTomeSlots`;
    see [`docs/PROTOCOL_HISTORY.md`](docs/PROTOCOL_HISTORY.md)).
 2. **UI readability** (`5ebd328`): `TooltipBudget`/`TooltipPresentation`/`ResonanceTooltip`
    primary + Shift-details routing everywhere, text-only shelf HUD, icon-only lock buttons,

@@ -322,6 +322,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
 
     private final TomeDirectoryControls tomeDirectory = new TomeDirectoryControls();
     private final chiseled_enchanting_table.catalog.TomeActionQueue tomeActions = new chiseled_enchanting_table.catalog.TomeActionQueue();
+    void cancelPendingTomeActions() { tomeActions.cancel(); }
     private void layoutDirectory() {
         int offset = isTomeTab() ? TomeDirectoryLayout.listOffset()
             : (isInscribeTab() ? TomeDirectoryLayout.inscribeListOffset()
@@ -334,15 +335,17 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action action,
         chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry entry
     ) {
-        sendServerboundOrWarn(
-            new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload(
-                this.menu.containerId,
-                action,
-                entry == null ? net.minecraft.core.BlockPos.ZERO : entry.shelf_pos(),
-                entry == null ? -1 : entry.slot()
-            ),
-            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.TYPE
-        );
+        sendServerboundOrWarn(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload(
+            this.menu.containerId, action, entry == null ? net.minecraft.core.BlockPos.ZERO : entry.shelf_pos(), entry == null ? -1 : entry.slot()),
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.TYPE);
+    }
+
+    private void sendLocateBatch(List<chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeBookEntry> batch) {
+        var first = batch.getFirst();
+        var extras = batch.stream().skip(1).map(b -> new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomeSlotRef(b.shelf_pos(), b.slot())).toList();
+        sendServerboundOrWarn(new chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload(
+            this.menu.containerId, chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCATE_PING, first.shelf_pos(), first.slot(), extras),
+            chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.TYPE);
     }
 
     private boolean isOverCleanseTab(double mouseX, double mouseY) {
@@ -537,6 +540,22 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             this.scrollContainer::toggleExpandAllCleanseCategories)) {
             return true;
         }
+        if (event.button() == InputConstants.MOUSE_BUTTON_RIGHT && isInscribeTab() && this.menu.isTomePageEnabled() && this.scrollContainer != null) {
+            Identifier jumpId = this.scrollContainer.hoveredMasterBackedInscribeId(event.x(), event.y());
+            if (jumpId != null) {
+                if (!this.menu.isTomePageUnlocked()) {
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+                    if (this.minecraft != null && this.minecraft.gui != null) {
+                        this.minecraft.gui.setOverlayMessage(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(ChatFormatting.YELLOW), false);
+                    }
+                } else {
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.08F));
+                    tomeActions.cancel(); tomeDirectory.close();
+                    this.scrollContainer.jumpToTomesForEnchantment(jumpId); layoutDirectory();
+                }
+                return true;
+            }
+        }
         // Restrict custom actions to the platform left button, but retain vanilla
         // inventory right-click handling. Overlay events above remain fully forwarded.
         if (event.button() != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
@@ -621,7 +640,10 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 targets = java.util.List.of(this.scrollContainer.selectedTomeEntry());
             }
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-            tomeActions.submit(action, targets);
+            if (tomeActions.submit(action, targets) && action == chiseled_enchanting_table.menu.ChiseledEnchantingMenuPayloads.TomePageActionPayload.Action.LOCATE_PING) {
+                var batch = tomeActions.drainPendingForImmediateBatch(action);
+                if (!batch.isEmpty()) sendLocateBatch(batch);
+            }
             return true;
         }
         int ritualBtn = hoveredRitualButton(event.x(), event.y());
@@ -760,6 +782,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
             return true;
         }
         if (this.scrollContainer.keyPressed(event)) {
+            if (isTomeTab()) tomeActions.cancel();
             return true;
         }
         return super.keyPressed(event);

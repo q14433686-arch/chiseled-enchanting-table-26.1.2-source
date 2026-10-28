@@ -72,6 +72,17 @@ public class ChiseledEnchantingTableBlockEntityRenderer implements BlockEntityRe
 
         ItemStack displayStack = blockEntity.visualDisplayStack();
         Minecraft mc = Minecraft.getInstance();
+        if (mc != null && mc.player != null
+            && mc.player.containerMenu instanceof chiseled_enchanting_table.menu.ChiseledEnchantingTableScreenHandler openMenu
+            && blockEntity.getBlockPos().equals(openMenu.tableBlockPos())) {
+            renderState.ritualActive = openMenu.isRitualActive();
+            ItemStack liveMenuStack = openMenu.get_enchantable_item();
+            if (!liveMenuStack.isEmpty()) {
+                displayStack = liveMenuStack;
+            } else if (!openMenu.isRitualActive()) {
+                displayStack = ItemStack.EMPTY;
+            }
+        }
         if (mc != null && mc.getItemModelResolver() != null) {
             mc.getItemModelResolver().updateForTopItem(
                 renderState.floatingItem,

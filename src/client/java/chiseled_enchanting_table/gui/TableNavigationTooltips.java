@@ -148,7 +148,11 @@ final class TableNavigationTooltips {
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_next", TomeDisplayNames.formatTomeEta(hoveredTome.eta_next_ticks())).withStyle(ChatFormatting.GREEN));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_eta_full", TomeDisplayNames.formatTomeEta(hoveredTome.eta_full_ticks())).withStyle(ChatFormatting.GREEN));
             }
+            if (state.menu().isTomeActiveInRitual(hoveredTome.shelf_pos(), hoveredTome.slot())) {
+                tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.active_ritual_tip").withStyle(ChatFormatting.LIGHT_PURPLE));
+            }
             tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.select_hint").withStyle(ChatFormatting.DARK_GRAY));
+            tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_select_shortcuts").withStyle(ChatFormatting.DARK_GRAY));
             chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
             return true;
         }

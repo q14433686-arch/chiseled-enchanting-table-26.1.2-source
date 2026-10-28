@@ -85,6 +85,10 @@ public final class SensoryPolishProbe {
             Kind.TOME_TETHER, tablePos, shelfPos, 1, Direction.WEST.get2DDataValue(), TableVisualEvents.COLOR_ARCANE_VIOLET
         ));
         TableCustomParticles.handleVisualEvent(new TableVisualEventPayload(
+            Kind.TOME_LOCATE, tablePos, shelfPos, 4, Direction.WEST.get2DDataValue(), TableVisualEvents.COLOR_LOCATE_CYAN
+        ));
+        check(TableCustomParticles.activeEmitterCount() == 2, "expected backlash + 6s locate beacon emitters");
+        TableCustomParticles.handleVisualEvent(new TableVisualEventPayload(
             Kind.CLEANSE_PURGE_CURSE, tablePos, tablePos, -1, -1, TableVisualEvents.COLOR_SACRED_GOLD
         ));
         TableCustomParticles.clientTick();
@@ -113,6 +117,41 @@ public final class SensoryPolishProbe {
         GuiMicroEffects.observeModeSignature(5);
         int jolt = GuiMicroEffects.currentPanelJoltX();
         check(jolt >= -3 && jolt <= 3, "jolt out of bounds: " + jolt);
+
+        // 6. Bug 1 regression: save/reload BE with enchanted item -> remove item -> updateTag must clear stale client item!
+        var integrated = client.getSingleplayerServer();
+        check(integrated != null, "missing integrated server for reload sync probe");
+        net.minecraft.nbt.CompoundTag postRemoveTag = integrated.submit(() -> {
+            var sPlayer = integrated.getPlayerList().getPlayers().getFirst();
+            var sLevel = sPlayer.level();
+            var rawBe = sLevel.getBlockEntity(tablePos);
+            check(rawBe instanceof ChiseledEnchantingTableBlockEntity, "missing server table BE");
+            var sBe = (ChiseledEnchantingTableBlockEntity) rawBe;
+            net.minecraft.nbt.CompoundTag saved = sBe.saveWithFullMetadata(sLevel.registryAccess());
+            var loadedRaw = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(
+                tablePos, sLevel.getBlockState(tablePos), saved, sLevel.registryAccess()
+            );
+            check(loadedRaw instanceof ChiseledEnchantingTableBlockEntity, "BlockEntity.loadStatic failed");
+            var reloaded = (ChiseledEnchantingTableBlockEntity) loadedRaw;
+            reloaded.setLevel(sLevel);
+            check(reloaded.visualDisplayStack().is(Items.DIAMOND_SWORD), "reloaded BE lost DIAMOND_SWORD");
+            reloaded.setItem(0, ItemStack.EMPTY);
+            check(reloaded.visualDisplayStack().isEmpty(), "reloaded BE did not clear slot 0");
+            return reloaded.getUpdateTag(sLevel.registryAccess());
+        }).join();
+        check(postRemoveTag.contains("Items"), "empty table updateTag omitted Items list (ghost item regression)");
+        net.minecraft.nbt.CompoundTag merged = client.level.getBlockState(tablePos) != null
+            ? postRemoveTag.copy()
+            : postRemoveTag;
+        merged.putString("id", "chiseled_enchanting_table:chiseled_enchanting_table");
+        var clientLoaded = net.minecraft.world.level.block.entity.BlockEntity.loadStatic(
+            tablePos, tableBe.getBlockState(), merged, client.level.registryAccess()
+        );
+        check(clientLoaded instanceof ChiseledEnchantingTableBlockEntity, "client loadStatic failed");
+        check(
+            ((ChiseledEnchantingTableBlockEntity) clientLoaded).visualDisplayStack().isEmpty(),
+            "client BE retained ghost floating item after empty updateTag"
+        );
 
         TableCustomParticles.clear();
         GuiMicroEffects.reset();

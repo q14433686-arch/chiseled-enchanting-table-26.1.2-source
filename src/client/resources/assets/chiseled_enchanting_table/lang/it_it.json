@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "Nascondi righe prive di materiali o PE sufficienti",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "Comprimi tutto",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "Espandi tutto",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Alterna tutti i gruppi di incantesimi"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Alterna tutti i gruppi di incantesimi",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ Localizzati %s tomi maestri — fasci guida attivi e coordinate in chat",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ Tomi maestri localizzati (%s) ═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s] (Δ %s) · Slot #%s",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "Idonei nella selezione: %s/%s tomi",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "Sblocco lotto (%s/%s): %s liv. + %s sabbia · Sostenibili: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "Ripara lotto (%s/%s): %s esauriti + %s sabbia + %s liv. · Sostenibili: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "Santifica lotto (%s/%s): %s catalizzatore · Sostenibili: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "Un clic accende fasci guida e fari da 6 s per tutti i %s tomi selezionati",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "Selezione: Maiusc+Clic intervallo · Ctrl+Clic alterna · Ctrl+A tutti",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "Selezionati: %s tomi",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "Tomi maestri selezionati (%s):",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " …e altri %s selezionati",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ In rituale",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ Alimenta il rituale d’iscrizione attivo (l’annullamento sicuro ripristina l’usura)",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "Clic destro: Vai ai tomi maestri corrispondenti nel catalogo"
 }

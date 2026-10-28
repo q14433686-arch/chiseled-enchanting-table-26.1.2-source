@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "素材やXPが不足している項目を隠す",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "すべて折りたたむ",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "すべて展開",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "全グループの展開/折りたたみを切替"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "全グループの展開/折りたたみを切替",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ 原典 %s 冊の誘導ビーコンを同時点灯しました（座標一覧をチャットに出力）",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ 原典位置一覧（計 %s 冊）═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s]（差分 %s）· スロット #%s",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "選択中のロック可能対象：%s/%s 冊",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "一括解錠（%s/%s 冊）：計 %s Lv + 浄化塵 %s · 現在支払可能 %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "一括修復（%s/%s 冊）：枯渇古書 %s + 浄化塵 %s + %s Lv · 現在可能 %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "一括聖別（%s/%s 冊）：秘術触媒 %s 個 · 現在可能 %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "1クリックで選択中の全 %s 冊へ誘導光線と6秒ビーコンを照射",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "複数選択：Shift+クリック 範囲 · Ctrl+クリック 切替 · Ctrl+A 全選択",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "%s 冊の原典を選択中",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "選択中の原典（%s 冊）：",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " …ほか %s 冊を選択中",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ 儀式共鳴中",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ 現在進行中の刻印儀式に魔力を供給中（安全中断で消耗を復元）",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "右クリック：目録タブで該当する原典を絞り込み＆選択"
 }

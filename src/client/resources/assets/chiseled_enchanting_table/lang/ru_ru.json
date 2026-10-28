@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "Скрыть строки без нужных материалов или опыта",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "Свернуть все",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "Развернуть все",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Переключить все группы чар"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Переключить все группы чар",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ Найдено эталонных фолиантов: %s — лучи зажжены, координаты выведены в чат",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ Найденные эталонные фолианты (%s) ═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s] (Δ %s) · Ячейка #%s",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "Доступно в выборе: %s/%s книг",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "Снятие блока (%s/%s): %s ур. + %s пыли · Доступно сейчас: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "Починка (%s/%s): %s истощ. + %s пыли + %s ур. · Доступно: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "Освящение (%s/%s): %s катализ. · Доступно: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "Один клик зажигает лучи и маяки на 6 с для всех %s выбранных книг",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "Выбор: Shift+Клик диапазон · Ctrl+Клик перекл. · Ctrl+A все",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "Выбрано фолиантов: %s",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "Выбранные фолианты (%s):",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " …и ещё %s выбрано",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ В ритуале",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ Питает активный ритуал начертания (безопасная отмена вернёт прочность)",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "ПКМ: Перейти к соответствующим фолиантам в каталоге"
 }

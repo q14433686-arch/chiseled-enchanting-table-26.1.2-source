@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "Masquer les actions manquant de matériaux ou d'XP",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "Tout replier",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "Tout déplier",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Déplier ou replier tous les groupes"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Déplier ou replier tous les groupes",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ %s tomes maîtres localisés — faisceaux actifs et coordonnées dans le chat",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ Tomes maîtres localisés (%s) ═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s] (Δ %s) · Emplacement #%s",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "Éligibles dans la sélection : %s/%s tomes",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "Déverr. lot (%s/%s) : %s niv. + %s poudre · Finançable : %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "Répar. lot (%s/%s) : %s épuisés + %s poudre + %s niv. · Finançable : %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "Sanctif. lot (%s/%s) : %s catalyseur · Finançable : %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "Un clic allume faisceaux et balises 6 s pour les %s tomes sélectionnés",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "Sélection : Maj+Clic plage · Ctrl+Clic bascule · Ctrl+A tout",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "Sélection : %s tomes",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "Tomes maîtres sélectionnés (%s) :",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " …et %s autres sélectionnés",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ En rituel",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ Alimente actuellement le rituel d’inscription actif (l’annulation sûre restaure l’usure)",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "Clic droit : Ouvrir et sélectionner les tomes maîtres associés"
 }

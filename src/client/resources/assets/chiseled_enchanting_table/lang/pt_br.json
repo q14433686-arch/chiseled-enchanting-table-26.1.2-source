@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "Ocultar linhas sem materiais ou XP suficiente",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "Recolher Tudo",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "Expandir Tudo",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Alternar todos os grupos de encantamentos"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Alternar todos os grupos de encantamentos",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ %s tomos mestres localizados — feixes ativos e coordenadas no chat",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ Tomos Mestres Localizados (%s) ═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s] (Δ %s) · Espaço #%s",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "Elegíveis na seleção: %s/%s tomos",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "Desbloq. lote (%s/%s): %s nív. + %s pó · Pagável: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "Reparo lote (%s/%s): %s esgotados + %s pó + %s nív. · Pagável: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "Santif. lote (%s/%s): %s catalisador · Pagável: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "Um clique acende feixes-guia e sinalizadores de 6 s para todos os %s tomos",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "Atalhos: Shift+Clique intervalo · Ctrl+Clique alternar · Ctrl+A todos",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "Selecionados: %s tomos",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "Tomos mestres selecionados (%s):",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " …e mais %s selecionados",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ Em ritual",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ Alimentando o ritual de inscrição ativo (aborto seguro reverte o desgaste)",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "Clique direito: Ir aos tomos mestres correspondentes no catálogo"
 }

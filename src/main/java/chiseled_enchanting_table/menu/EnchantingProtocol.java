@@ -17,7 +17,7 @@ import net.minecraft.resources.Identifier;
  * compatibility; no probe needs to be sent before the first cost/menu packet can safely be decoded.
  */
 public final class EnchantingProtocol {
-    public static final int CURRENT_REVISION_NUMBER = 21;
+    public static final int CURRENT_REVISION_NUMBER = 22;
     public static final String REVISION = "26_1_2_revision_" + CURRENT_REVISION_NUMBER;
 
     // Query only. Never register a decoder on legacy channels: an old server may send its

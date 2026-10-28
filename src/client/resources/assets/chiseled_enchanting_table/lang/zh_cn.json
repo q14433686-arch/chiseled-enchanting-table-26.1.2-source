@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "隐藏背包/槽位耗材或等级不足的条目",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "全部折叠词条",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "全部展开词条",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "一键展开或收起全部附魔分组"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "一键展开或收起全部附魔分组",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ 已同步点亮 %s 本模板书导引信标（坐标清单已输出至聊天栏）",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ 已定位模板书清单（共 %s 本）═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s]（偏移 %s）· 第 %s 槽",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "当前已选可锁定：%s/%s 本模板书",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "批量解锁（%s/%s 本）：共需 %s 级 + %s 份净尘 · 当前可支付 %s/%s 本",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "批量修补（%s/%s 本）：共需 %s 本枯竭古籍 + %s 份净尘 + %s 级 · 当前可修 %s/%s 本",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "批量祝圣（%s/%s 本）：共需 %s 枚秘法催化剂 · 当前可祝圣 %s/%s 本",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "单次点击即刻点亮全部 %s 本已选模板书导引光束与 6 秒信标",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "多选快捷键：Shift+点击 区间连选 · Ctrl+点击 单本增减 · Ctrl+A 全选可见",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "已多选 %s 本模板书",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "当前已选模板书（共 %s 本）：",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " ……另有 %s 本已选模板书",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ 仪式供能中",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ 当前正在为进行中的铭刻仪式供能（安全撤回将回滚其耐久损耗）",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "右键点击：跳转至【纂刻的书】并筛选选中对应模板书"
 }

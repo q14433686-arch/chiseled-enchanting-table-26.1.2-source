@@ -90,6 +90,9 @@ final class TableActionTooltips {
                 lines.add(Component.translatable("gui.chiseled_enchanting_table.tomes.tip_locate").withStyle(ChatFormatting.GRAY));
             }
         }
+        TomeBatchPreview.appendActionBatchTooltip(
+            lines, state.menu(), state.list().selectedTomes(), state.list().selectedTomeEntry(), tomeBtn
+        );
         TooltipPresentation.show(ctx, state.font(), lines, Optional.empty(), mouseX, mouseY, (Identifier) null);
     }
 

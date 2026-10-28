@@ -709,18 +709,24 @@ public final class MasterTomeWear {
             double unbreakingWaiver = computeUnbreakingWaiverChance(cfg, getUnbreakingLevel(chosenSnapshot));
             double effectiveWaiver = Math.max(immuneWaiver, unbreakingWaiver);
             if (effectiveWaiver >= 1.0 || level.getRandom().nextDouble() < effectiveWaiver) {
-                return new ResolvedTomeUse(WearOutcome.IMMORTAL, true, chosenSnapshot);
+                return new ResolvedTomeUse(
+                    WearOutcome.IMMORTAL, true, chosenSnapshot, chosen.pos(), chosen.slot(), ItemStack.EMPTY, ItemStack.EMPTY
+                );
             }
         }
         if (cfg.tomeConsumptionMode() == ConsumptionMode.KEEP) {
-            return new ResolvedTomeUse(WearOutcome.NONE, usedWearImmuneTome, chosenSnapshot);
+            return new ResolvedTomeUse(
+                WearOutcome.NONE, usedWearImmuneTome, chosenSnapshot, chosen.pos(), chosen.slot(), ItemStack.EMPTY, ItemStack.EMPTY
+            );
         }
 
         if (!usedWearImmuneTome) {
             int unbreakingLvl = getUnbreakingLevel(chosenSnapshot);
             double waiveChance = computeUnbreakingWaiverChance(cfg, unbreakingLvl);
             if (waiveChance > 0.0 && level.getRandom().nextDouble() < waiveChance) {
-                return new ResolvedTomeUse(WearOutcome.WAIVED_BY_UNBREAKING, false, chosenSnapshot);
+                return new ResolvedTomeUse(
+                    WearOutcome.WAIVED_BY_UNBREAKING, false, chosenSnapshot, chosen.pos(), chosen.slot(), ItemStack.EMPTY, ItemStack.EMPTY
+                );
             }
         }
 

@@ -137,8 +137,7 @@ final class TablePanelTooltips {
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.panel_title").withStyle(ChatFormatting.AQUA));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.panel_shelves", state.menu().qualifyingEnchantedBookshelves, state.menu().liveTotalLibraryBookshelves).withStyle(ChatFormatting.GRAY));
                 tip.add(Component.translatable("gui.chiseled_enchanting_table.tomes.unlock_progress", state.menu().qualifyingEnchantedBookshelves, state.menu().tomeRequiredShelves).withStyle(state.menu().isTomePageUnlocked() ? ChatFormatting.GREEN : ChatFormatting.YELLOW));
-                var sel = state.list().selectedTomeEntry();
-                if (sel != null) tip.add(Component.literal(TomeDisplayNames.tomeTitle(sel, state.menu().player)).withStyle(ChatFormatting.GOLD));
+                TomeBatchPreview.appendPanelSelectionSummary(tip, state.menu(), state.list().selectedTomes(), state.list().selectedTomeEntry());
                 chiseled_enchanting_table.gui.TooltipPresentation.show(ctx, state.font(), tip, Optional.empty(), mouseX, mouseY, (Identifier) null);
                 return true;
             }

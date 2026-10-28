@@ -22,6 +22,7 @@
 | 19 | **`ApplyEnchantmentPayload` 严格材料方案索引 `cost_option_index`、`SkipRitualPayload.Action`（献祭/燃料加速/催化剂瞬发/强冲/安全取消）与 `TomePageActionPayload.Action`（主动修补/催化剂祝圣/母本信标定位）** |
 | 20 | **去除附魔页扩展动作类型（`OptionType.EXTRACT_ENCHANTMENT_BOOK` 单条附魔剥离成书、`OptionType.PURGE_ALL_CURSES` 一键净除全部诅咒）及背包/材料槽双源扣费与严格方案索引联动** |
 | 21 | **新增客户端定向视效与微动效事件包（`TableVisualEventPayload`：强冲反噬烧书槽位追踪束+6秒余烬信标、母本输魔/回滚流光、净除/剥离/修补/灵光冻结与桌布染色洗净事件同步）** |
+| 22 | **`TomePageActionPayload` 扩展批量书架槽位列表 `extra_targets`（支持多选单次原子定位与导引光束同步）、`SyncRitualStatePayload` 扩展进行中仪式供能母本槽位 `activeTomeSlots`、`TableVisualEventPayload.Kind.TOME_LOCATE` 定向青金导引束与 6 秒槽位信标** |
 
 ## Bump 策略
 

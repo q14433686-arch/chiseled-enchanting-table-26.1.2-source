@@ -1074,5 +1074,20 @@
   "gui.chiseled_enchanting_table.cleanse_filter.affordable_hint": "Unbezahlbare Zeilen ausblenden",
   "gui.chiseled_enchanting_table.cleanse_filter.collapse_all": "Alle einklappen",
   "gui.chiseled_enchanting_table.cleanse_filter.expand_all": "Alle ausklappen",
-  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Alle Verzauberungsgruppen umschalten"
+  "gui.chiseled_enchanting_table.cleanse_filter.expand_hint": "Alle Verzauberungsgruppen umschalten",
+  "message.chiseled_enchanting_table.tome_locate.batch_summary": "✦ %s Meisterfolianten geortet — Leitstrahlen aktiv & Koordinaten im Chat",
+  "message.chiseled_enchanting_table.tome_locate.batch_header": "═══ ✦ Geortete Meisterfolianten (%s) ═══",
+  "message.chiseled_enchanting_table.tome_locate.batch_line": " #%s [%s] -> [%s, %s, %s] (Δ %s) · Fach #%s",
+  "gui.chiseled_enchanting_table.tomes.batch_eligible": "Sperrbar in Auswahl: %s/%s Folianten",
+  "gui.chiseled_enchanting_table.tomes.batch_unlock_total": "Stapel-Entsperren (%s/%s): %s St. + %s Staub · Bezahlbar: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_mend_total": "Stapel-Flickung (%s/%s): %s Erschöpft + %s Staub + %s St. · Machbar: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_sanctify_total": "Stapel-Weihe (%s/%s): %s Katalysator · Machbar: %s/%s",
+  "gui.chiseled_enchanting_table.tomes.batch_locate_total": "Ein Klick aktiviert Leitstrahlen & 6s-Leuchtfeuer für alle %s Folianten",
+  "gui.chiseled_enchanting_table.tomes.tip_select_shortcuts": "Auswahl: Shift+Klick Bereich · Strg+Klick Umschalten · Strg+A Alle",
+  "gui.chiseled_enchanting_table.tomes.panel_selected_count": "Ausgewählt: %s Folianten",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_header": "Ausgewählte Folianten (%s):",
+  "gui.chiseled_enchanting_table.tomes.panel_multi_more": " …und %s weitere ausgewählt",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_badge": "✦ Im Ritual",
+  "gui.chiseled_enchanting_table.tomes.active_ritual_tip": "✦ Speist derzeit das aktive Inschriftritual (Sicherer Abbruch stellt Abnutzung wieder her)",
+  "gui.chiseled_enchanting_table.inscribe.jump_to_tome_hint": "Rechtsklick: Zu passenden Meisterfolianten im Katalog springen"
 }
