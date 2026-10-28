@@ -1043,7 +1043,7 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
             }
             if (is_tome_entry && this.tome_book != null) {
                 parent.catalogue.selectInteractive(tomeKey(this.tome_book), event.hasShiftDown(), event.hasControlDown());
-                if (Minecraft.getInstance().screen instanceof ChiseledEnchantingTableScreen tableScreen) {
+                if (Minecraft.getInstance().gui.screen() instanceof ChiseledEnchantingTableScreen tableScreen) {
                     tableScreen.cancelPendingTomeActions();
                 }
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));

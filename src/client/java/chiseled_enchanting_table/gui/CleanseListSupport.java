@@ -130,7 +130,7 @@ final class CleanseListSupport {
     static EnchantmentRowRenderer.OverrideAnnotation cleanseOverrideAnnotation(EnchantUiEntry entry) {
         OptionType type = entry.option_type;
         if (type == OptionType.DISENCHANT_ALL) {
-            if (Minecraft.getInstance().screen instanceof ChiseledEnchantingTableScreen tableScreen
+            if (Minecraft.getInstance().gui.screen() instanceof ChiseledEnchantingTableScreen tableScreen
                 && tableScreen.isDisenchantAllConfirmPending()) {
                 return new EnchantmentRowRenderer.OverrideAnnotation(
                     I18n.get("gui.chiseled_enchanting_table.cleanse.confirm_row_sub"),

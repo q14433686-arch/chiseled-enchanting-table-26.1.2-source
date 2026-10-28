@@ -547,7 +547,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
                 if (!this.menu.isTomePageUnlocked()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
                     if (this.minecraft != null && this.minecraft.gui != null) {
-                        this.minecraft.gui.setOverlayMessage(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(CetFormatting.YELLOW), false);
+                        this.minecraft.gui.hud.setOverlayMessage(Component.translatable("gui.chiseled_enchanting_table.tab.locked_tooltip").withStyle(CetFormatting.YELLOW), false);
                     }
                 } else {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.08F));

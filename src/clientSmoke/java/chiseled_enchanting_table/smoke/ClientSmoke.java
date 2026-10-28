@@ -76,7 +76,7 @@ public final class ClientSmoke implements ClientModInitializer {
         // 26.1.2: deliver committed text through the real Screen#charTyped path, one code point
         // at a time, exactly as the GLFW window handler dispatches typed text to the open screen.
         for (int codePoint : "洗练 abc".codePoints().toArray()) {
-            require(client.screen.charTyped(new CharacterEvent(codePoint)), "screen rejected typed code point " + codePoint);
+            require(client.gui.screen().charTyped(new CharacterEvent(codePoint)), "screen rejected typed code point " + codePoint);
         }
     }
     private void next(int phase) { this.phase = phase; delay = 6; }
@@ -154,7 +154,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 next(6);
             }
             case 6 -> {
-                if (!menuPrepared || !(client.screen instanceof ChiseledEnchantingTableScreen table)) return;
+                if (!menuPrepared || !(client.gui.screen() instanceof ChiseledEnchantingTableScreen table)) return;
                 if (!((ChiseledEnchantingTableScreenHandler) client.player.containerMenu).get_enchantable_item().is(Items.DIAMOND_SWORD)) return;
                 var syncedMenu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
                 if (!syncedMenu.isTomePageUnlocked() || syncedMenu.tomeBooks.size()<2) return;
@@ -171,7 +171,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 next(20);
             }
             case 20 -> {
-                var table=(ChiseledEnchantingTableScreen)client.screen;
+                var table=(ChiseledEnchantingTableScreen)client.gui.screen();
                 var menu=(ChiseledEnchantingTableScreenHandler)client.player.containerMenu;
                 if (!menu.isTomePageUnlocked() || menu.tomeBooks.size()<2) return;
                 var list=(chiseled_enchanting_table.gui.EnchantementListWidget)field(table,"scrollContainer");
@@ -198,7 +198,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if(!chiseled_enchanting_table.render.RainbowItemProbe.laterFrame(client)) return;
                 net.minecraft.client.Screenshot.grab(client.gameDirectory,"rainbow-items-b.png",
                     client.getMainRenderTarget(), 1, message->System.out.println("Rainbow items screenshot B: "+message.getString()));
-                var table=(ChiseledEnchantingTableScreen)client.screen;
+                var table=(ChiseledEnchantingTableScreen)client.gui.screen();
                 net.minecraft.client.Screenshot.grab(client.gameDirectory,"tome-catalogue-zh_cn.png",
                     client.getMainRenderTarget(), 1, message->System.out.println("Catalogue screenshot: "+message.getString()));
                 click(table, (int) field(table, "leftPos") + 300, (int) field(table, "topPos") - 8, InputConstants.MOUSE_BUTTON_LEFT);
@@ -210,7 +210,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (layout() == null || ((java.util.List<?>) field(editor, "hitBoxes")).isEmpty()) return;
                 var box = layout().searchBox();
                 // Dispatch through the parent menu screen, exercising overlay forwarding.
-                click(client.screen, box.x() + 4, box.y() + box.h() / 2.0, InputConstants.MOUSE_BUTTON_LEFT);
+                click(client.gui.screen(), box.x() + 4, box.y() + box.h() / 2.0, InputConstants.MOUSE_BUTTON_LEFT);
                 require(((SearchInputSession) field(editor, "searchInput")).focused(), "overlay search did not take focus");
                 pushText(client);
                 next(8);
@@ -219,7 +219,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (!awaitText((SearchInputSession) field(editor, "searchInput"), "overlay native search")) return;
                 editor.onClose();
                 require(!((SearchInputSession) field(editor, "searchInput")).focused(), "closing overlay leaked search focus");
-                require(client.screen instanceof ChiseledEnchantingTableScreen table && !table.hasActiveConfigOverlay(), "overlay close lost parent table");
+                require(client.gui.screen() instanceof ChiseledEnchantingTableScreen table && !table.hasActiveConfigOverlay(), "overlay close lost parent table");
                 var server = client.getSingleplayerServer();
                 server.execute(() -> {
                     try {
