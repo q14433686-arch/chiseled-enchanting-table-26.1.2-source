@@ -90,7 +90,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 // Wait for initial remote permission/config synchronization.
                 if (!ModRuntimeConfig.clientCanEditServerConfig()) return;
                 editor = new ChiseledEnchantingConfigScreen(null);
-                client.setScreen(editor);
+                client.gui.setScreen(editor);
                 next(1);
             }
             case 1 -> {
@@ -122,7 +122,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 require(!edit.dirty() && ModRuntimeConfig.Preset.CASUAL.matches(edit.baseline().toDraft()), "accepted save did not reconcile baseline");
                 editor.onClose();
                 editor = new ChiseledEnchantingConfigScreen(null);
-                client.setScreen(editor);
+                client.gui.setScreen(editor);
                 next(5);
             }
             case 5 -> {
