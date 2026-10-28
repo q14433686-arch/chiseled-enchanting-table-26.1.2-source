@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Tomi esauriti da sacrificare per sbloccare Purifica (limitato dai criteri del progresso).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Librerie per scheda Tomi",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Librerie cesellate con libri incantati necessarie per sbloccare la scheda Tomi.",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Versione di Chiseled Enchanting Table non corrispondente tra client e server (serve la stessa build per Minecraft 26.1.2).",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Versione di Chiseled Enchanting Table non corrispondente tra client e server (serve la stessa build per Minecraft 26.3).",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "Dimensione pila libri incantati diversa: client=%s, server=%s. Allinea config/chiseled_enchanting_table.json e riavvia.",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "Azione non disponibile: canale di rete mancante sul server.",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "Riclicca entro 5s per confermare (o Maiusc+clic per purificare subito).",

@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Tomos Exauridos que devem ser sacrificados para abrir Purificar (limitado pelo avanço).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Estantes para Aba Tomos",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Estantes cinzeladas com livros encantados necessárias para liberar a aba Tomos.",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Versão incompatível do Chiseled Enchanting Table entre cliente e servidor (ambos devem usar a mesma build para Minecraft 26.1.2).",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Versão incompatível do Chiseled Enchanting Table entre cliente e servidor (ambos devem usar a mesma build para Minecraft 26.3).",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "Tamanho de pilha de livros encantados divergente: cliente=%s, servidor=%s. Iguale config/chiseled_enchanting_table.json e reinicie.",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "Ação indisponível: canal de rede ausente no servidor.",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "Clique novamente em até 5s para confirmar (ou Shift+clique para limpar na hora).",

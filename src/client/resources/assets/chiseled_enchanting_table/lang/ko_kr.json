@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "정화 페이지 해금에 필요한 마력 바랜 잔권 헌납 수입니다(발전 과제 기준 수 상한).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "고서 페이지 해금 책장 수",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "고서 페이지 해금에 필요한 마법 책 보관 조각된 책장 개수입니다.",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "조각된 마법 부여대 클라이언트와 서버 버전이 일치하지 않습니다 (Minecraft 26.1.2용 동일 빌드 필요).",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "조각된 마법 부여대 클라이언트와 서버 버전이 일치하지 않습니다 (Minecraft 26.3용 동일 빌드 필요).",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "마법이 부여된 책 겹침 수 불일치: 클라이언트=%s, 서버=%s. 양쪽 config/chiseled_enchanting_table.json을 맞추고 재시작하세요.",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "사용 불가: 서버에 필요한 네트워크 채널이 없습니다.",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "5초 안에 '모두 정화'를 다시 클릭하여 확인하세요 (Shift+클릭 시 즉시 실행).",

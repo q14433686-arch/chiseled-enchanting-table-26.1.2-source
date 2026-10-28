@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "解鎖「去除附魔」頁需要累計獻祭的褪魔殘卷數量（不超過該進度的準則總數）。",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "纂刻的書解鎖書架數",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "解鎖「纂刻的書」頁所需、各存有至少 1 本附魔書的雕紋書架數量。",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "鑿紋附魔台使用者端與伺服器版本不符（雙方皆須執行適配 Minecraft 26.1.2 的同版本模組）。",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "鑿紋附魔台使用者端與伺服器版本不符（雙方皆須執行適配 Minecraft 26.3 的同版本模組）。",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "鑿紋附魔台附魔書堆疊上限不一致：使用者端 enchanted_book_stack_size=%s，伺服器=%s。請統一雙方 config/chiseled_enchanting_table.json 後重啟遊戲。",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "操作不可用：伺服器缺少對應的鑿紋附魔台網路通道。",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "5 秒內再次點選「全部洗去」以確認（按住 Shift 點選可立即洗去）。",

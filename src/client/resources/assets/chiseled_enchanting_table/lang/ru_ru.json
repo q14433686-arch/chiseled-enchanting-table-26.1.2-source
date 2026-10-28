@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Число Истощённых фолиантов для открытия вкладки «Очищение» (ограничено критериями достижения).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Полки для вкладки «Фолианты»",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Число резных полок с чародейскими книгами, нужное для открытия вкладки «Фолианты».",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Несовпадение версий Chiseled Enchanting Table между клиентом и сервером (нужна одинаковая сборка для Minecraft 26.1.2).",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Несовпадение версий Chiseled Enchanting Table между клиентом и сервером (нужна одинаковая сборка для Minecraft 26.3).",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "Несовпадение размера стака чародейских книг: клиент=%s, сервер=%s. Синхронизируйте config/chiseled_enchanting_table.json и перезапустите игру.",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "Действие недоступно: на сервере отсутствует нужный сетевой канал.",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "Нажмите ещё раз в течение 5 с для подтверждения (Shift+клик — сразу).",

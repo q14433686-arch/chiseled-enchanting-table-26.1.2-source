@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Anzahl zu opfernder Folianten zum Freischalten von „Läutern“ (begrenzt durch Fortschrittskriterien).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Regale für Folianten-Seite",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Gemeißelte Regale mit Verzauberten Büchern, die zum Öffnen von „Folianten“ nötig sind.",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Versionskonflikt bei Chiseled Enchanting Table zwischen Client und Server (beide Seiten benötigen denselben Build für Minecraft 26.1.2).",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Versionskonflikt bei Chiseled Enchanting Table zwischen Client und Server (beide Seiten benötigen denselben Build für Minecraft 26.3).",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "Stapelgrößen-Konflikt für Verzauberte Bücher: Client=%s, Server=%s. Bitte config/chiseled_enchanting_table.json angleichen und neu starten.",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "Aktion nicht verfügbar: Dem Server fehlt der erforderliche Netzwerkkanal.",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "Erneut innerhalb von 5s klicken zum Bestätigen (oder Umschalt+Klick für sofort).",

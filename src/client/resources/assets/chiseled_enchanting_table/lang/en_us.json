@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Depleted Tomes that must be sacrificed to unlock the Cleanse page (capped by the advancement's criteria count).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Shelves for Tomes Page",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Chiseled bookshelves holding enchanted books needed to unlock the Tomes page.",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Chiseled Enchanting Table version mismatch between client and server (both sides must run the matching mod build for Minecraft 26.1.2).",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Chiseled Enchanting Table version mismatch between client and server (both sides must run the matching mod build for Minecraft 26.3).",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "Chiseled Enchanting Table stack-size mismatch: client enchanted_book_stack_size=%s, server=%s. Match config/chiseled_enchanting_table.json on both sides and restart.",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "Action unavailable: server is missing the required Chiseled Enchanting Table network channel.",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "Click Cleanse All again within 5s to confirm (or Shift-click to cleanse immediately).",

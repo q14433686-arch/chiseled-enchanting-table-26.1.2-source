@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 /**
- * Lightweight clientbound visual event packet ({@code 26_1_2_revision_21}) driving custom
+ * Lightweight clientbound visual event packet ({@code 26_3_revision_13}) driving custom
  * 3D pixel-art particles ({@code scorched_page.png}, {@code arcane_rune_spark.png}),
  * directional bookshelf-slot tethers/backlash beams, and GUI micro-animations.
  */

@@ -112,7 +112,16 @@ public class EnchantementListWidget extends AbstractSelectionList<EnchantementLi
     }
     @Nullable
     public ChiseledEnchantingMenuPayloads.TomeBookEntry selectedTomeEntry() {
-        return selectedTomes().stream().findFirst().orElse(null);
+        var selected = selectedTomes();
+        if (!selected.isEmpty()) return selected.getFirst();
+        // Source single-book fallback affects panel focus, never explicit batch selection.
+        if (this.handler == null || this.handler.tomeBooks == null || this.handler.tomeBooks.isEmpty()) return null;
+        for (var row : catalogue.visible()) {
+            for (var book : this.handler.tomeBooks) {
+                if (tomeKey(book).equals(row.key())) return book;
+            }
+        }
+        return this.handler.tomeBooks.getFirst();
     }
     void refreshDirectory() {
         updateEntry(this.handler.getEffectiveEnchantableItem(), this.handler.get_cost_item());

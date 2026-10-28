@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "Nombre de Tomes épuisés à sacrifier pour débloquer Purifier (plafonné par le progrès).",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "Étagères pour la page Tomes",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "Bibliothèques ciselées garnies de livres enchantés requises pour ouvrir la page Tomes.",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Incompatibilité de version Chiseled Enchanting Table entre client et serveur (même build Minecraft 26.1.2 requis).",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "Incompatibilité de version Chiseled Enchanting Table entre client et serveur (même build Minecraft 26.3 requis).",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "Taille de pile des livres enchantés différente : client=%s, serveur=%s. Alignez config/chiseled_enchanting_table.json et redémarrez.",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "Action indisponible : canal réseau manquant sur le serveur.",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "Recliquez sous 5 s pour confirmer (ou Maj+clic pour tout purifier immédiatement).",

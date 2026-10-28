@@ -748,7 +748,7 @@
   "config.chiseled_enchanting_table.opt.sacrifice_required.desc": "「浄化」ページの解放に必要な魔力枯れの残巻の累計献祭数（進捗の条件数が上限）。",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves": "典籍ページ解放に必要な本棚数",
   "config.chiseled_enchanting_table.opt.tome_page_required_shelves.desc": "「典籍」ページの解放に必要な、エンチャント本を保管した模様入りの本棚の数。",
-  "disconnect.chiseled_enchanting_table.protocol_mismatch": "模様入りエンチャントテーブルのクライアントとサーバーのバージョンが一致しません（Minecraft 26.1.2 用の同一ビルドが必要です）。",
+  "disconnect.chiseled_enchanting_table.protocol_mismatch": "模様入りエンチャントテーブルのクライアントとサーバーのバージョンが一致しません（Minecraft 26.3 用の同一ビルドが必要です）。",
   "disconnect.chiseled_enchanting_table.book_stack_mismatch": "エンチャントの本のスタック上限が不一致です（クライアント=%s、サーバー=%s）。両側の config/chiseled_enchanting_table.json を揃えて再起動してください。",
   "gui.chiseled_enchanting_table.network.channel_unavailable": "操作できません：サーバーに必要なネットワークチャンネルがありません。",
   "gui.chiseled_enchanting_table.cleanse.confirm_prompt": "5秒以内にもう一度「すべて浄化」をクリックして確定（Shift+クリックで即時実行）。",

@@ -215,6 +215,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 var list=(chiseled_enchanting_table.gui.EnchantementListWidget)field(table,"scrollContainer");
                 require(list.tabMode()==chiseled_enchanting_table.gui.EnchantementListWidget.UiTabMode.TOMES,"tome tab click did not switch catalogue");
                 int left=(int)field(table,"leftPos"), top=(int)field(table,"topPos");
+                require(list.selectedTomes().isEmpty() && list.selectedTomeEntry() != null,
+                    "single-tome panel fallback must not mutate explicit multi-selection");
                 var select=chiseled_enchanting_table.gui.TomeDirectoryLayout.button(7);
                 click(table,left+7+select.x()+select.width()/2.0,top+17+select.y()+select.height()/2.0,InputConstants.MOUSE_BUTTON_LEFT);
                 require(list.selectedTomes().size()==menu.tomeBooks.size(),"visible-selection control did not select real shelf books");
@@ -239,6 +241,17 @@ public final class ClientSmoke implements ClientModInitializer {
                 var table=(ChiseledEnchantingTableScreen)client.gui.screen();
                 net.minecraft.client.Screenshot.grab(client.gameDirectory,"tome-catalogue-zh_cn.png",
                     client.gameRenderer.mainRenderTarget(),1,message->System.out.println("Catalogue screenshot: "+message.getString()));
+                chiseled_enchanting_table.render.TableCustomParticles.clear();
+                var locate = chiseled_enchanting_table.gui.TomeDirectoryLayout.lockButton(7);
+                click(table, (int) field(table, "leftPos") + locate.x() + locate.width() / 2.0,
+                    (int) field(table, "topPos") + locate.y() + locate.height() / 2.0, InputConstants.MOUSE_BUTTON_LEFT);
+                next(23);
+            }
+            case 23 -> {
+                var menu = (ChiseledEnchantingTableScreenHandler) client.player.containerMenu;
+                if (chiseled_enchanting_table.render.TableCustomParticles.activeEmitterCount() < menu.tomeBooks.size()) return;
+                System.out.println("BATCH LOCATE WORLD PASS: single actual Locate click + serverbound batch + clientbound per-slot 3D beacons");
+                var table = (ChiseledEnchantingTableScreen) client.gui.screen();
                 click(table, (int) field(table, "leftPos") + 300, (int) field(table, "topPos") - 8, InputConstants.MOUSE_BUTTON_LEFT);
                 require(table.hasActiveConfigOverlay(), "table config button did not open overlay");
                 editor = (ChiseledEnchantingConfigScreen) field(table, "configOverlay");
