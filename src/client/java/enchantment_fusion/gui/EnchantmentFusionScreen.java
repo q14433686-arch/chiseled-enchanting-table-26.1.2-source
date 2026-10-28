@@ -22,6 +22,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -61,13 +62,15 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     private static final int PREVIEW_H = 60;
 
     public EnchantmentFusionScreen(EnchantmentFusionMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title);
-        this.imageWidth = EnchantmentFusionMenu.GUI_WIDTH;
-        this.imageHeight = EnchantmentFusionMenu.GUI_HEIGHT;
+        super(menu, playerInventory, title, EnchantmentFusionMenu.GUI_WIDTH, EnchantmentFusionMenu.GUI_HEIGHT);
         this.titleLabelX = 12;
         this.titleLabelY = 8;
         this.inventoryLabelX = 58;
         this.inventoryLabelY = 106;
+    }
+
+    public Rect2i guiBounds() {
+        return new Rect2i(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
     }
 
     @Override

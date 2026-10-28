@@ -99,7 +99,7 @@ public final class FusionTooltipRenderer {
                     secondaryLabel
                 ).withStyle(ChatFormatting.RED));
                 lines.add(Component.translatable(
-                    CetSoftBridge.isChiseledEnchantingTableLoaded()
+                    CetSoftBridge.isCetLoaded()
                         ? "tooltip.enchantment_fusion.aberrant_cet_active"
                         : "tooltip.enchantment_fusion.aberrant_cet_required"
                 ).withStyle(ChatFormatting.DARK_RED));

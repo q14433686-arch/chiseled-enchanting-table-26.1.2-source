@@ -14,6 +14,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -76,6 +77,35 @@ public final class EnchantmentFusionTableBlock extends BaseEntityBlock {
     }
 
     @Override
+    protected @Nullable MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
+        if (!(level.getBlockEntity(pos) instanceof EnchantmentFusionTableBlockEntity tableBe)) {
+            return null;
+        }
+        return new ExtendedMenuProvider<OpenStationPayload>() {
+            @Override
+            public OpenStationPayload getScreenOpeningData(ServerPlayer serverPlayer) {
+                return new OpenStationPayload(pos);
+            }
+
+            @Override
+            public Component getDisplayName() {
+                return tableBe.getDisplayName();
+            }
+
+            @Override
+            public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory, Player p) {
+                return new EnchantmentFusionMenu(
+                    syncId,
+                    playerInventory,
+                    tableBe,
+                    ContainerLevelAccess.create(level, pos),
+                    pos
+                );
+            }
+        };
+    }
+
+    @Override
     protected InteractionResult useWithoutItem(
         BlockState state,
         Level level,
@@ -86,29 +116,9 @@ public final class EnchantmentFusionTableBlock extends BaseEntityBlock {
         if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
-        if (level.getBlockEntity(pos) instanceof EnchantmentFusionTableBlockEntity tableBe) {
-            player.openMenu(new ExtendedMenuProvider<OpenStationPayload>() {
-                @Override
-                public OpenStationPayload getScreenOpeningData(ServerPlayer serverPlayer) {
-                    return new OpenStationPayload(pos);
-                }
-
-                @Override
-                public Component getDisplayName() {
-                    return tableBe.getDisplayName();
-                }
-
-                @Override
-                public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory, Player p) {
-                    return new EnchantmentFusionMenu(
-                        syncId,
-                        playerInventory,
-                        tableBe,
-                        ContainerLevelAccess.create(level, pos),
-                        pos
-                    );
-                }
-            });
+        MenuProvider provider = this.getMenuProvider(state, level, pos);
+        if (provider != null) {
+            player.openMenu(provider);
             return InteractionResult.CONSUME;
         }
         return InteractionResult.PASS;

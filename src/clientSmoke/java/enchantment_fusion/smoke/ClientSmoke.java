@@ -9,7 +9,6 @@ import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.registry.FusionBlocks;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
@@ -20,19 +19,17 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * End-to-end real client + integrated server probe for Enchantment Fusion on MC 26.1.2.
@@ -70,17 +67,6 @@ public final class ClientSmoke implements ClientModInitializer {
         }
     }
 
-    private static int intField(Object target, String name) throws Exception {
-        for (Class<?> c = target.getClass(); c != null; c = c.getSuperclass()) {
-            try {
-                Field f = c.getDeclaredField(name);
-                f.setAccessible(true);
-                return (int) f.get(target);
-            } catch (NoSuchFieldException ignored) {}
-        }
-        throw new NoSuchFieldException(name);
-    }
-
     private static void click(Screen screen, double x, double y) {
         boolean handled = screen.mouseClicked(
             new MouseButtonEvent(x, y, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0)),
@@ -116,8 +102,9 @@ public final class ClientSmoke implements ClientModInitializer {
                     try {
                         ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
                         sp.giveExperienceLevels(30);
-                        tablePos = sp.blockPosition().north(2);
-                        sp.level().setBlockAndUpdate(tablePos, FusionBlocks.ENCHANTMENT_FUSION_TABLE.defaultBlockState());
+                        tablePos = sp.blockPosition().offset(1, 0, 0);
+                        BlockState state = FusionBlocks.ENCHANTMENT_FUSION_TABLE.defaultBlockState();
+                        sp.level().setBlockAndUpdate(tablePos, state);
 
                         var enchReg = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                         Holder<Enchantment> sharp = enchReg.getOrThrow(
@@ -133,20 +120,19 @@ public final class ClientSmoke implements ClientModInitializer {
                         be.setItem(1, FusionStationOperations.createSingleEnchantedBook(loyalty, 3));
                         be.setItem(3, new ItemStack(Items.BOOK, 1));
 
-                        BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(tablePos), Direction.UP, tablePos, false);
-                        sp.gameMode.useItemOn(sp, sp.level(), ItemStack.EMPTY, InteractionHand.MAIN_HAND, hit);
+                        sp.openMenu(state.getMenuProvider(sp.level(), tablePos));
+                        sp.containerMenu.broadcastChanges();
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
                     }
                 });
-                next(1, 12);
+                next(1, 14);
             }
             case 1 -> {
                 if (!serverReadyFlag || !(client.screen instanceof EnchantmentFusionScreen screen)) {
                     return;
                 }
-                // Capture actual zh_cn pixel-art GUI screenshot
                 Screenshot.grab(
                     client.gameDirectory,
                     "fusion-ui-zh_cn.png",
@@ -154,11 +140,10 @@ public final class ClientSmoke implements ClientModInitializer {
                     1,
                     msg -> System.out.println("Saved fusion UI screenshot: " + msg.getString())
                 );
-                int left = intField(screen, "leftPos");
-                int top = intField(screen, "topPos");
+                Rect2i b = screen.guiBounds();
                 // Click [⇄] Swap-Order button (48..70, 31..53)
-                click(screen, left + 58, top + 41);
-                next(2, 10);
+                click(screen, b.getX() + 58, b.getY() + 41);
+                next(2, 12);
             }
             case 2 -> {
                 require(client.screen instanceof EnchantmentFusionScreen, "Screen closed unexpectedly");
@@ -169,18 +154,15 @@ public final class ClientSmoke implements ClientModInitializer {
                     "minecraft:loyalty".equals(previewAfterSwap.previewPair().primaryId()),
                     "Swap button did not move Loyalty to Primary A"
                 );
-                int left = intField(screen, "leftPos");
-                int top = intField(screen, "topPos");
-                // Swap back to [Sharpness V ▷ Loyalty III] and click Fuse (122..198, 88..108)
-                click(screen, left + 58, top + 41);
-                next(3, 10);
+                Rect2i b = screen.guiBounds();
+                click(screen, b.getX() + 58, b.getY() + 41);
+                next(3, 12);
             }
             case 3 -> {
                 EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
-                int left = intField(screen, "leftPos");
-                int top = intField(screen, "topPos");
-                click(screen, left + 158, top + 98);
-                next(4, 12);
+                Rect2i b = screen.guiBounds();
+                click(screen, b.getX() + 158, b.getY() + 98);
+                next(4, 14);
             }
             case 4 -> {
                 var server = client.getSingleplayerServer();
@@ -196,7 +178,6 @@ public final class ClientSmoke implements ClientModInitializer {
                         require("minecraft:sharpness".equals(list.pairs().get(0).primaryId()), "Expected Sharpness as Primary A");
                         require("minecraft:loyalty".equals(list.pairs().get(0).secondaryId()), "Expected Loyalty as Secondary B");
 
-                        // Move Fused Book to Slot 0 and place a Diamond Sword in Slot 3 to test cross-domain gear inscription!
                         be.setItem(0, fusedBook.copy());
                         be.setItem(3, new ItemStack(Items.DIAMOND_SWORD, 1));
                         sp.containerMenu.broadcastChanges();
@@ -205,7 +186,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         serverFailure = t;
                     }
                 });
-                next(5, 10);
+                next(5, 12);
             }
             case 5 -> {
                 if (!serverReadyFlag) {
@@ -216,11 +197,9 @@ public final class ClientSmoke implements ClientModInitializer {
                     "Client compendium did not receive discovery sync"
                 );
                 EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
-                int left = intField(screen, "leftPos");
-                int top = intField(screen, "topPos");
-                // Click Inscribe button
-                click(screen, left + 158, top + 98);
-                next(6, 12);
+                Rect2i b = screen.guiBounds();
+                click(screen, b.getX() + 158, b.getY() + 98);
+                next(6, 14);
             }
             case 6 -> {
                 var server = client.getSingleplayerServer();
