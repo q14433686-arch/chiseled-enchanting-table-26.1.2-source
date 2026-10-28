@@ -8,7 +8,9 @@ import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.FusionStationOperations.OperationKind;
+import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.model.FusedEnchantmentList;
+import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.registry.FusionBlocks;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
@@ -344,12 +346,26 @@ public final class ClientSmoke implements ClientModInitializer {
 
                         sp.closeContainer();
                         require(be.getItem(3).is(Items.DIAMOND_PICKAXE), "Closing menu must persist pickaxe inside table BlockEntity");
+
+                        // Regression guard: enqueue both SOUL_FIRE_TICKS and SKYFIRE_BOLT_TICKS on a live LivingEntity
+                        // and let the integrated server tick >= 25 ticks to verify tickWorldDots never throws!
+                        ItemStack testSword = new ItemStack(Items.NETHERITE_SWORD, 1);
+                        SignaturePairs.executeSignatureCombat(
+                            sp.level(), sp, testSword,
+                            FusedPair.clean("minecraft:fire_aspect", 2, "minecraft:channeling", 1),
+                            "skyfire_lightning", sp, sp.position(), true
+                        );
+                        SignaturePairs.executeSignatureCombat(
+                            sp.level(), sp, testSword,
+                            FusedPair.clean("minecraft:soul_speed", 3, "minecraft:fire_aspect", 2),
+                            "nether_soul_fire", sp, sp.position(), true
+                        );
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
                     }
                 });
-                next(11, 10);
+                next(11, 28);
             }
             case 11 -> {
                 if (!serverReadyFlag) {

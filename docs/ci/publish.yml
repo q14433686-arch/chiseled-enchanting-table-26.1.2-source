@@ -5,8 +5,8 @@ on: [ workflow_dispatch ]
 env:
   MINECRAFT_VERSION: 26.1.2
   JAVA_VERSION: 25
-  VERSION: 0.3.0
-  RELEASE_NAME: Enchantment Fusion 0.3.0 (Minecraft 26.1.2 Fabric)
+  VERSION: 0.3.1
+  RELEASE_NAME: Enchantment Fusion 0.3.1 (Minecraft 26.1.2 Fabric)
   MODRINTH_ID: ${{ secrets.PUBLISH_MODRINTH_ID }}
   MODRINTH_TOKEN: ${{ secrets.PUBLISH_MODRINTH_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.PUBLISH_GITHUB_TOKEN }}

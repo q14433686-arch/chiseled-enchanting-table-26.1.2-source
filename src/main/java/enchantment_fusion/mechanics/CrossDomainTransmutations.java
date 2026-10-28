@@ -1422,6 +1422,9 @@ public final class CrossDomainTransmutations {
         if (weapon.isEmpty() || !proj.isAlive()) return;
 
         // First-tick launch modifiers
+        if (LAUNCH_PROCESSED_PROJ.size() > 4096) {
+            LAUNCH_PROCESSED_PROJ.clear();
+        }
         if (LAUNCH_PROCESSED_PROJ.add(proj.getUUID())) {
             double speedBoost = 1.0D;
             if (getTransmutedLevel(weapon, "yishui") > 0 && shooter.isInWaterOrRain()) {
@@ -1660,8 +1663,23 @@ public final class CrossDomainTransmutations {
     }
 
     public static void onAfterDamage(ServerLevel level, ServerPlayer player, DamageSource source, float damageTaken, boolean blocked) {
+        if (Boolean.TRUE.equals(IN_CUSTOM_COMBAT.get())) {
+            return;
+        }
+        IN_CUSTOM_COMBAT.set(Boolean.TRUE);
+        try {
+            onAfterDamageInternal(level, player, source, damageTaken, blocked);
+        } finally {
+            IN_CUSTOM_COMBAT.set(Boolean.FALSE);
+        }
+    }
+
+    private static void onAfterDamageInternal(ServerLevel level, ServerPlayer player, DamageSource source, float damageTaken, boolean blocked) {
         LivingEntity attacker = source.getEntity() instanceof LivingEntity liv ? liv : null;
         RandomSource rng = level.getRandom();
+        if (PICKPOCKETED_MOBS.size() > 4096) {
+            PICKPOCKETED_MOBS.clear();
+        }
 
         // Shield-specific reactions when blocking
         ItemStack useItem = player.isBlocking() ? player.getUseItem() : ItemStack.EMPTY;
@@ -1989,9 +2007,13 @@ public final class CrossDomainTransmutations {
 
             if (getTransmutedLevel(st, "mending_xp_bottle") > 0) {
                 int buf = BOTTLE_XP_BUFFER.merge(pid, gained, Integer::sum);
-                while (buf >= 8 && !st.isEmpty()) {
+                int converted = 0;
+                while (buf >= 8 && !st.isEmpty() && converted < 8) {
                     buf -= 8;
-                    player.giveExperiencePoints(-8);
+                    converted++;
+                    if (player.totalExperience >= 8) {
+                        player.giveExperiencePoints(-8);
+                    }
                     // Prefer converting plain glass bottles in inventory first so the enchanted condenser bottle can keep working!
                     int plainSlot = player.getInventory().findSlotMatchingItem(new ItemStack(Items.GLASS_BOTTLE));
                     if (plainSlot >= 0 && player.getInventory().getItem(plainSlot) != st) {
@@ -2002,6 +2024,7 @@ public final class CrossDomainTransmutations {
                     player.getInventory().placeItemBackInInventory(new ItemStack(Items.EXPERIENCE_BOTTLE, 1));
                 }
                 BOTTLE_XP_BUFFER.put(pid, Math.max(0, buf));
+                LAST_PLAYER_XP.put(pid, player.totalExperience);
                 return;
             }
             if (getTransmutedLevel(st, "mending_vitality") > 0) {

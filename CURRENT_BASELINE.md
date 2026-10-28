@@ -1,4 +1,4 @@
-# Current Baseline — Enchantment Fusion (`0.3.0`)
+# Current Baseline — Enchantment Fusion (`0.3.1`)
 
 - **Mod ID:** `enchantment_fusion`
 - **Target:** Minecraft `26.1.2`, Fabric Loader `0.19.3`, Fabric API `0.151.0+26.1.2`, Java `25`

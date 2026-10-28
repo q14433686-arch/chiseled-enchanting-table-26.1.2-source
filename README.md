@@ -2,7 +2,7 @@
 
 ![Enchantment Fusion icon](./icon.png)
 
-**Current version:** `0.3.0`
+**Current version:** `0.3.1`
 **Target:** Minecraft `26.1.2`, Fabric Loader `>=0.19.3`, Fabric API `0.151.0+26.1.2`, Java `>=25`.
 
 📖 **Full Game Design Document (完整玩法与系统设计定稿): [`docs/GDD.md`](docs/GDD.md)**
@@ -23,7 +23,7 @@
 
 ## Installation
 
-Grab `enchantment-fusion-0.3.0.jar` from GitHub Actions build artifacts and place it in `mods/` alongside Fabric API `0.151.0+26.1.2`.
+Grab `enchantment-fusion-0.3.1.jar` from GitHub Actions build artifacts and place it in `mods/` alongside Fabric API `0.151.0+26.1.2`.
 
 ## License
 

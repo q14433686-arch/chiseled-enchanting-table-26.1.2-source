@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1] - 2026-10-29
+
+### Hotfix — Server Tick DoT Crash Fix & Re-Entrancy Hardening
+
+- Fixed a `java.lang.UnsupportedOperationException` server tick crash in `SignaturePairs.tickWorldDots` (`SOUL_FIRE_TICKS` / `SKYFIRE_BOLT_TICKS`, triggered by `[灵魂疾行 ▷ 火焰附加]` *Nether Soul-Fire* and `[火焰附加 ▷ 引雷]` *Skyfire Bolt*) caused by calling `Map.Entry#setValue` inside `ConcurrentHashMap.entrySet().removeIf(...)` on Java 25, and prevented multi-dimension ticks from prematurely clearing active Overworld DoTs.
+- Added `ThreadLocal` re-entrancy guards around `AFTER_DAMAGE` reactive hooks, `CrossDomainTransmutations.onAfterDamage`, and 3×1 `SignaturePairs` mining, plus JUnit & live `ClientSmoke` regression assertions.
+
 ## [0.3.0] - 2026-10-29
 
 ### Phase 3 — Cross-Domain Single Enchantment Transmutations ("异位单附魔化形")

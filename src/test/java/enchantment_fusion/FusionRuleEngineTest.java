@@ -254,4 +254,17 @@ final class FusionRuleEngineTest {
         assertEquals("mending_replenish", CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.CONSUMABLE, false).orElseThrow().id());
         assertEquals("mending_vitality", CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.TOTEM, false).orElseThrow().id());
     }
+
+    @Test
+    void noJavaSourceMutatesMapEntryViaSetValueOnConcurrentHashMap() throws Exception {
+        try (var stream = Files.walk(Path.of("src/main/java"))) {
+            for (Path javaFile : stream.filter(p -> p.toString().endsWith(".java")).toList()) {
+                String src = Files.readString(javaFile, StandardCharsets.UTF_8);
+                assertFalse(
+                    src.contains(".setValue("),
+                    "Forbidden Map.Entry.setValue() (crashes ConcurrentHashMap.entrySet().removeIf on Java 25): " + javaFile
+                );
+            }
+        }
+    }
 }

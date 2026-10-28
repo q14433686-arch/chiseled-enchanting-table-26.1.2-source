@@ -16,6 +16,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -73,6 +74,7 @@ public final class SignaturePairs {
     private static final Map<UUID, Long> FORTUNE_GRACE_COOLDOWN = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> SOUL_FIRE_TICKS = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> SKYFIRE_BOLT_TICKS = new ConcurrentHashMap<>();
+    private static final ThreadLocal<Boolean> IN_SIGNATURE_MINING = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     static {
         // === Batch 1: Damage Trio (Sharpness x Smite x Bane of Arthropods) ===
@@ -1075,15 +1077,20 @@ public final class SignaturePairs {
                     player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 45));
                 }
                 case "rock_splitter_pick", "triple_excavate", "vein_peel" -> {
-                    if (!player.isShiftKeyDown()) {
-                        Direction facing = player.getDirection();
-                        Direction side = facing.getClockWise();
-                        for (int offset : new int[]{-1, 1}) {
-                            BlockPos adj = pos.relative(side, offset);
-                            BlockState adjState = level.getBlockState(adj);
-                            if (adjState.is(minedState.getBlock()) && adjState.getDestroySpeed(level, adj) >= 0.0F) {
-                                level.destroyBlock(adj, true, player);
+                    if (!player.isShiftKeyDown() && !Boolean.TRUE.equals(IN_SIGNATURE_MINING.get())) {
+                        IN_SIGNATURE_MINING.set(Boolean.TRUE);
+                        try {
+                            Direction facing = player.getDirection();
+                            Direction side = facing.getClockWise();
+                            for (int offset : new int[]{-1, 1}) {
+                                BlockPos adj = pos.relative(side, offset);
+                                BlockState adjState = level.getBlockState(adj);
+                                if (adjState.is(minedState.getBlock()) && adjState.getDestroySpeed(level, adj) >= 0.0F) {
+                                    level.destroyBlock(adj, true, player);
+                                }
                             }
+                        } finally {
+                            IN_SIGNATURE_MINING.set(Boolean.FALSE);
                         }
                     }
                 }
@@ -1228,40 +1235,70 @@ public final class SignaturePairs {
         }
     }
 
-    public static void tickWorldDots(ServerLevel level) {
-        if (level.getGameTime() % 20L != 0L) {
+    public static void tickWorldDots(MinecraftServer server) {
+        if (server.getTickCount() % 20 != 0) {
             return;
         }
-        SOUL_FIRE_TICKS.entrySet().removeIf(entry -> {
-            Entity e = level.getEntity(entry.getKey());
-            if (!(e instanceof LivingEntity liv) || !liv.isAlive()) {
-                return true;
+        if (!SOUL_FIRE_TICKS.isEmpty()) {
+            for (UUID entityId : new ArrayList<>(SOUL_FIRE_TICKS.keySet())) {
+                Integer remaining = SOUL_FIRE_TICKS.get(entityId);
+                if (remaining == null || remaining <= 0) {
+                    SOUL_FIRE_TICKS.remove(entityId);
+                    continue;
+                }
+                LivingEntity liv = findLivingAcrossLevels(server, entityId);
+                if (liv == null || !liv.isAlive() || !(liv.level() instanceof ServerLevel entLevel)) {
+                    SOUL_FIRE_TICKS.remove(entityId);
+                    continue;
+                }
+                liv.hurtServer(entLevel, entLevel.damageSources().magic(), 2.0F);
+                entLevel.sendParticles(
+                    ParticleTypes.SOUL_FIRE_FLAME,
+                    liv.getX(), liv.getY() + 0.6D, liv.getZ(),
+                    6, 0.25D, 0.25D, 0.25D, 0.02D
+                );
+                int next = remaining - 20;
+                if (next <= 0) {
+                    SOUL_FIRE_TICKS.remove(entityId);
+                } else {
+                    SOUL_FIRE_TICKS.put(entityId, next);
+                }
             }
-            liv.hurtServer(level, level.damageSources().magic(), 2.0F);
-            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, liv.getX(), liv.getY() + 0.6D, liv.getZ(), 6, 0.25D, 0.25D, 0.25D, 0.02D);
-            int next = entry.getValue() - 20;
-            if (next <= 0) {
-                return true;
-            }
-            entry.setValue(next);
-            return false;
-        });
+        }
 
-        SKYFIRE_BOLT_TICKS.entrySet().removeIf(entry -> {
-            Entity e = level.getEntity(entry.getKey());
-            if (!(e instanceof LivingEntity liv) || !liv.isAlive()) {
-                return true;
+        if (!SKYFIRE_BOLT_TICKS.isEmpty()) {
+            for (UUID entityId : new ArrayList<>(SKYFIRE_BOLT_TICKS.keySet())) {
+                Integer remaining = SKYFIRE_BOLT_TICKS.get(entityId);
+                if (remaining == null || remaining <= 0) {
+                    SKYFIRE_BOLT_TICKS.remove(entityId);
+                    continue;
+                }
+                LivingEntity liv = findLivingAcrossLevels(server, entityId);
+                if (liv == null || !liv.isAlive() || !(liv.level() instanceof ServerLevel entLevel)) {
+                    SKYFIRE_BOLT_TICKS.remove(entityId);
+                    continue;
+                }
+                if (remaining % 40 == 0) {
+                    AberrantRegistry.spawnLightning(entLevel, liv.position());
+                }
+                int next = remaining - 20;
+                if (next <= 0) {
+                    SKYFIRE_BOLT_TICKS.remove(entityId);
+                } else {
+                    SKYFIRE_BOLT_TICKS.put(entityId, next);
+                }
             }
-            if (entry.getValue() % 40 == 0) {
-                AberrantRegistry.spawnLightning(level, liv.position());
+        }
+    }
+
+    private static @Nullable LivingEntity findLivingAcrossLevels(MinecraftServer server, UUID entityId) {
+        for (ServerLevel level : server.getAllLevels()) {
+            Entity e = level.getEntity(entityId);
+            if (e instanceof LivingEntity liv) {
+                return liv;
             }
-            int next = entry.getValue() - 20;
-            if (next <= 0) {
-                return true;
-            }
-            entry.setValue(next);
-            return false;
-        });
+        }
+        return null;
     }
 
     // =========================================================================

@@ -35,6 +35,7 @@ public final class MatrixRuntimeHooks {
     };
 
     private static final Map<UUID, Float> PEAK_FALL_DISTANCE = new ConcurrentHashMap<>();
+    private static final ThreadLocal<Boolean> IN_AFTER_DAMAGE = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     private MatrixRuntimeHooks() {}
 
@@ -125,18 +126,26 @@ public final class MatrixRuntimeHooks {
 
         // Post-Damage Counter, Blood Vengeance & Cross-Domain Armor/Shield Reactions
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
+            if (Boolean.TRUE.equals(IN_AFTER_DAMAGE.get())) {
+                return;
+            }
             if (entity instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
-                SignaturePairs.recordIncomingDamage(serverPlayer, damageTaken, serverLevel.getGameTime());
-                LivingEntity attacker = source.getEntity() instanceof LivingEntity liv ? liv : null;
-                for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
-                    ItemStack equipped = serverPlayer.getItemBySlot(slot);
-                    if (!equipped.isEmpty()) {
-                        MatrixEffectExecutor.dispatch(
-                            serverLevel, serverPlayer, equipped, TriggerType.ON_DAMAGE_TAKEN, attacker, serverPlayer.position()
-                        );
+                IN_AFTER_DAMAGE.set(Boolean.TRUE);
+                try {
+                    SignaturePairs.recordIncomingDamage(serverPlayer, damageTaken, serverLevel.getGameTime());
+                    LivingEntity attacker = source.getEntity() instanceof LivingEntity liv ? liv : null;
+                    for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
+                        ItemStack equipped = serverPlayer.getItemBySlot(slot);
+                        if (!equipped.isEmpty()) {
+                            MatrixEffectExecutor.dispatch(
+                                serverLevel, serverPlayer, equipped, TriggerType.ON_DAMAGE_TAKEN, attacker, serverPlayer.position()
+                            );
+                        }
                     }
+                    CrossDomainTransmutations.onAfterDamage(serverLevel, serverPlayer, source, damageTaken, blocked);
+                } finally {
+                    IN_AFTER_DAMAGE.set(Boolean.FALSE);
                 }
-                CrossDomainTransmutations.onAfterDamage(serverLevel, serverPlayer, source, damageTaken, blocked);
             }
         });
 
@@ -152,8 +161,8 @@ public final class MatrixRuntimeHooks {
 
         // Movement / Landing + Passive Signature Ticks + Cross-Domain Passives / Projectiles / World Items
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            SignaturePairs.tickWorldDots(server);
             for (ServerLevel world : server.getAllLevels()) {
-                SignaturePairs.tickWorldDots(world);
                 CrossDomainTransmutations.tickWorldItems(world);
             }
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
