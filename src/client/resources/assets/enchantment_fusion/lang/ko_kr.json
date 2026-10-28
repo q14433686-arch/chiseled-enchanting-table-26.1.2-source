@@ -103,5 +103,6 @@
   "fusion.enchantment_fusion.effect.mend.utility": "restores host durability on trigger",
   "compat.enchantment_fusion.jei.table_info": "Combine two single-enchantment books into directional [A ▷ B] fusions, swap order with [⇄], or graft cross-domain payloads onto gear within Vessel Spirit capacity.",
   "compat.enchantment_fusion.jei.book_info": "Holds a directional [A ▷ B] enchantment pair. Inscribe onto compatible gear at the Enchantment Fusion Table, or Flip / Split cleanly.",
-  "compat.enchantment_fusion.jei.stabilizer_info": "Place in the catalyst slot of the Enchantment Fusion Table to guarantee 100% stability when fusing max-level repulsive enchantments."
+  "compat.enchantment_fusion.jei.stabilizer_info": "Place in the catalyst slot of the Enchantment Fusion Table to guarantee 100% stability when fusing max-level repulsive enchantments.",
+  "tag.item.enchantment_fusion.innate_two_vessel_items": "선천 2기혼 장비"
 }

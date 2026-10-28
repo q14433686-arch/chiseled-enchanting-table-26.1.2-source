@@ -101,7 +101,8 @@ try:
 
         try:
             wait_for("Done (", 420.0)
-            send("function ef_audit_smoke:verify_station")
+            send("forceload add 0 0")
+            send("schedule function ef_audit_smoke:verify_station 20t")
             wait_for("EF_AUDIT_STATION_READY", 60.0)
             send("data get block 0 65 0 Items")
             wait_for("minecraft:diamond_sword", 30.0)

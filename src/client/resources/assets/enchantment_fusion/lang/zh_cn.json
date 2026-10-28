@@ -103,5 +103,6 @@
   "fusion.enchantment_fusion.effect.mend.utility": "触发时自动修补宿主耐久",
   "compat.enchantment_fusion.jei.table_info": "将两本单附魔书有向融合为 [A ▷ B] 融合附魔书，支持 [⇄] 一键互换主副顺序，并在器魂槽位上限内将跨界副词条铭刻至装备。",
   "compat.enchantment_fusion.jei.book_info": "承载一组有向 [A ▷ B] 融合附魔。可在附魔融合台铭刻至适配装备，亦可随时翻转主副或无损拆解。",
-  "compat.enchantment_fusion.jei.stabilizer_info": "置于附魔融合台催化槽，可在强行融合满级互斥附魔时提供 100% 稳定保障。"
+  "compat.enchantment_fusion.jei.stabilizer_info": "置于附魔融合台催化槽，可在强行融合满级互斥附魔时提供 100% 稳定保障。",
+  "tag.item.enchantment_fusion.innate_two_vessel_items": "天生双器魂装备"
 }

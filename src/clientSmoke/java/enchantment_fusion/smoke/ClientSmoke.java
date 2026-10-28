@@ -133,6 +133,13 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (!serverReadyFlag || !(client.screen instanceof EnchantmentFusionScreen screen)) {
                     return;
                 }
+                if (
+                    screen.getMenu().getSlot(0).getItem().isEmpty()
+                    || screen.getMenu().getSlot(1).getItem().isEmpty()
+                    || screen.getMenu().getSlot(3).getItem().isEmpty()
+                ) {
+                    return;
+                }
                 Screenshot.grab(
                     client.gameDirectory,
                     "fusion-ui-zh_cn.png",
@@ -141,25 +148,30 @@ public final class ClientSmoke implements ClientModInitializer {
                     msg -> System.out.println("Saved fusion UI screenshot: " + msg.getString())
                 );
                 Rect2i b = screen.guiBounds();
-                // Click [⇄] Swap-Order button (48..70, 31..53)
+                // Click [⇄] Swap-Order button (47..71, 30..54)
                 click(screen, b.getX() + 58, b.getY() + 41);
-                next(2, 12);
+                next(2, 8);
             }
             case 2 -> {
                 require(client.screen instanceof EnchantmentFusionScreen, "Screen closed unexpectedly");
                 EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
+                if (screen.getMenu().getSlot(0).getItem().isEmpty() || screen.getMenu().getSlot(1).getItem().isEmpty()) {
+                    return;
+                }
                 var previewAfterSwap = screen.getMenu().computePreview();
-                require(previewAfterSwap.previewPair() != null, "Expected swapped preview pair");
-                require(
-                    "minecraft:loyalty".equals(previewAfterSwap.previewPair().primaryId()),
-                    "Swap button did not move Loyalty to Primary A"
-                );
+                if (previewAfterSwap.previewPair() == null || !"minecraft:loyalty".equals(previewAfterSwap.previewPair().primaryId())) {
+                    return;
+                }
                 Rect2i b = screen.guiBounds();
                 click(screen, b.getX() + 58, b.getY() + 41);
-                next(3, 12);
+                next(3, 8);
             }
             case 3 -> {
                 EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
+                var preview = screen.getMenu().computePreview();
+                if (preview.previewPair() == null || !"minecraft:sharpness".equals(preview.previewPair().primaryId())) {
+                    return;
+                }
                 Rect2i b = screen.guiBounds();
                 click(screen, b.getX() + 158, b.getY() + 98);
                 next(4, 14);
@@ -186,17 +198,19 @@ public final class ClientSmoke implements ClientModInitializer {
                         serverFailure = t;
                     }
                 });
-                next(5, 12);
+                next(5, 8);
             }
             case 5 -> {
                 if (!serverReadyFlag) {
                     return;
                 }
-                require(
-                    CompendiumDiscoveryTracker.isClientDiscovered("minecraft:sharpness", "minecraft:loyalty"),
-                    "Client compendium did not receive discovery sync"
-                );
+                if (!CompendiumDiscoveryTracker.isClientDiscovered("minecraft:sharpness", "minecraft:loyalty")) {
+                    return;
+                }
                 EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
+                if (!screen.getMenu().getSlot(3).getItem().is(Items.DIAMOND_SWORD)) {
+                    return;
+                }
                 Rect2i b = screen.guiBounds();
                 click(screen, b.getX() + 158, b.getY() + 98);
                 next(6, 14);
