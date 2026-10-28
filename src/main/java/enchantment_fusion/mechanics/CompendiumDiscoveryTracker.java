@@ -418,6 +418,20 @@ public final class CompendiumDiscoveryTracker {
         return CLIENT_STATES.getOrDefault(key, STATE_UNKNOWN);
     }
 
+    public static int clientStateVersionHash() {
+        return CLIENT_STATES.hashCode();
+    }
+
+    public static int clientMasteredCount() {
+        int count = 0;
+        for (int v : CLIENT_STATES.values()) {
+            if (v >= STATE_MASTERED) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public static boolean isClientDiscovered(String primaryId, String secondaryId) {
         return clientState(pairKey(primaryId, secondaryId)) >= STATE_MASTERED;
     }

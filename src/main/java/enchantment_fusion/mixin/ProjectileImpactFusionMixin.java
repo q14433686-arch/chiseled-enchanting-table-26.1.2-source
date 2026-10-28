@@ -37,7 +37,7 @@ public abstract class ProjectileImpactFusionMixin {
     @Unique
     private ItemStack ef$launchWeapon = ItemStack.EMPTY;
 
-    @Inject(method = "setOwner", at = @At("TAIL"))
+    @Inject(method = "setOwner(Lnet/minecraft/world/entity/Entity;)V", at = @At("TAIL"))
     private void ef$captureLaunchWeaponOnOwnerBind(@Nullable Entity owner, CallbackInfo ci) {
         Projectile self = (Projectile) (Object) this;
         if (!(self.level() instanceof ServerLevel) || !(owner instanceof ServerPlayer shooter)) {

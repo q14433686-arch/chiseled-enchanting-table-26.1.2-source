@@ -256,8 +256,7 @@ public final class FusionGrimoireScreen extends Screen {
     }
 
     private List<EntryItem> getOrBuildChapterEntries() {
-        int discHash = CompendiumDiscoveryTracker.clientMasteredCount() * 31
-            + CompendiumDiscoveryTracker.clientState("sig/frostfire_true_blade");
+        int discHash = CompendiumDiscoveryTracker.clientStateVersionHash();
         if (this.cachedChapterKey != this.activeChapter || this.cachedDiscoveryHash != discHash) {
             this.cachedAllEntries = buildEntriesForChapter(this.activeChapter, currentRegistries());
             this.cachedChapterKey = this.activeChapter;

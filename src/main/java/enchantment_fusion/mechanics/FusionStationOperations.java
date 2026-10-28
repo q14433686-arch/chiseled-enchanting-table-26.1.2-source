@@ -77,7 +77,11 @@ public final class FusionStationOperations {
         String id,
         int level,
         int maxLevel
-    ) {}
+    ) {
+        public String selectionToken() {
+            return sourceSlot + ":" + id;
+        }
+    }
 
     public record ResolvedSelection(
         List<EnchantCandidate> candidates,

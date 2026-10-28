@@ -141,6 +141,22 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         return uiState.get(2) == -2;
     }
 
+    public boolean singleOnlyMode() {
+        return isSingleModeToggled();
+    }
+
+    private static int resolveCandidateIndex(List<EnchantCandidate> cands, int fallbackIndex, String expectedToken) {
+        if (expectedToken != null && !expectedToken.isEmpty()) {
+            for (int i = 0; i < cands.size(); i++) {
+                if (expectedToken.equals(cands.get(i).selectionToken())) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        return (fallbackIndex >= 0 && fallbackIndex < cands.size()) ? fallbackIndex : -1;
+    }
+
     public StationPreview computePreview() {
         HolderLookup.Provider registries = player.level().registryAccess();
         return FusionStationOperations.inspect(
@@ -170,26 +186,28 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
             }
             case PICK_PRIMARY_A -> {
                 List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
-                if (paramA >= 0 && paramA < cands.size()) {
+                int resolvedIdx = resolveCandidateIndex(cands, paramA, expectedToken);
+                if (resolvedIdx >= 0) {
                     ResolvedSelection cur = FusionStationOperations.resolveSelection(cands, preferredPrimaryIndex(), preferredSecondaryIndex());
-                    if (paramA == cur.secondaryIndex()) {
+                    if (resolvedIdx == cur.secondaryIndex()) {
                         uiState.set(2, cur.primaryIndex());
                     }
-                    uiState.set(1, paramA);
+                    uiState.set(1, resolvedIdx);
                     changed = true;
                 }
             }
             case PICK_SECONDARY_B -> {
                 List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
-                if (paramA >= 0 && paramA < cands.size()) {
+                int resolvedIdx = resolveCandidateIndex(cands, paramA, expectedToken);
+                if (resolvedIdx >= 0) {
                     ResolvedSelection cur = FusionStationOperations.resolveSelection(cands, preferredPrimaryIndex(), preferredSecondaryIndex());
-                    if (paramA == cur.secondaryIndex()) {
+                    if (resolvedIdx == cur.secondaryIndex()) {
                         uiState.set(2, -2);
                     } else {
-                        if (paramA == cur.primaryIndex()) {
+                        if (resolvedIdx == cur.primaryIndex()) {
                             uiState.set(1, cur.secondaryIndex() >= 0 ? cur.secondaryIndex() : 0);
                         }
-                        uiState.set(2, paramA);
+                        uiState.set(2, resolvedIdx);
                     }
                     changed = true;
                 }
