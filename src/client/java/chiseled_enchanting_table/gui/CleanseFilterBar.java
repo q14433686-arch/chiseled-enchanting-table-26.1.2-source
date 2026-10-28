@@ -55,7 +55,8 @@ public final class CleanseFilterBar {
         }
     }
 
-    private final SearchInputSession searchInput = new SearchInputSession(focused -> {});
+    private final NativeFilterInput nativeInput = new NativeFilterInput();
+    private final SearchInputSession searchInput = this.nativeInput.session;
     private final SearchTextBuffer searchBuffer = searchInput.buffer();
     private Mode mode = Mode.ALL;
     private boolean affordableOnly = false;
@@ -271,6 +272,7 @@ public final class CleanseFilterBar {
 
         int sx = barX + searchRect.x();
         int sy = barY + searchRect.y();
+        this.nativeInput.updateArea(sx + 5, sy, searchRect.width() - 10, searchRect.height());
         Identifier searchSprite = this.searchInput.focused() ? CLEANSE_SEARCH_BOX_FOCUSED : CLEANSE_SEARCH_BOX;
         ctx.blit(searchSprite, sx, sy, sx + searchRect.width(), sy + searchRect.height(), 0.0f, 1.0f, 0.0f, 1.0f);
 

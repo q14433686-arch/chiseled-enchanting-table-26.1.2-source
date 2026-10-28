@@ -176,7 +176,36 @@ public final class ClientSmoke implements ClientModInitializer {
                 chiseled_enchanting_table.gui.UiPresentationProbe.verify(client, (ChiseledEnchantingTableScreenHandler) client.player.containerMenu);
                 net.minecraft.client.Screenshot.grab(client.gameDirectory, "table-ui-zh_cn.png",
                     client.gameRenderer.mainRenderTarget(), 1, message -> System.out.println("UI screenshot: " + message.getString()));
-                click(table, (int) field(table, "leftPos") + 172, (int) field(table, "topPos") - 12, InputConstants.MOUSE_BUTTON_LEFT);
+                click(table, (int) field(table, "leftPos") + 12, (int) field(table, "topPos") + 22, InputConstants.MOUSE_BUTTON_LEFT);
+                require(table.capturesInput() && SDLKeyboard.SDL_TextInputActive(handle), "inscribe filter did not acquire SDL input");
+                pushText(client);
+                next(40);
+            }
+            case 40 -> {
+                var table = (ChiseledEnchantingTableScreen) client.gui.screen();
+                var list = (chiseled_enchanting_table.gui.EnchantementListWidget) field(table, "scrollContainer");
+                if (!awaitText((SearchInputSession) field(list.inscribeFilter, "searchInput"), "native inscribe search")) return;
+                MemoryUtil.memFree(text); text = null;
+                int left = (int) field(table, "leftPos"), top = (int) field(table, "topPos");
+                click(table, left + 12, top + 22, InputConstants.MOUSE_BUTTON_RIGHT);
+                click(table, left + 100, top - 12, InputConstants.MOUSE_BUTTON_LEFT);
+                require(!SDLKeyboard.SDL_TextInputActive(handle), "tab change leaked inscribe focus");
+                click(table, left + 12, top + 22, InputConstants.MOUSE_BUTTON_LEFT);
+                require(table.capturesInput() && SDLKeyboard.SDL_TextInputActive(handle), "cleanse filter did not acquire SDL input");
+                pushText(client);
+                next(41);
+            }
+            case 41 -> {
+                var table = (ChiseledEnchantingTableScreen) client.gui.screen();
+                var list = (chiseled_enchanting_table.gui.EnchantementListWidget) field(table, "scrollContainer");
+                if (!awaitText((SearchInputSession) field(list.cleanseFilter, "searchInput"), "native cleanse search")) return;
+                MemoryUtil.memFree(text); text = null;
+                int left = (int) field(table, "leftPos"), top = (int) field(table, "topPos");
+                click(table, left + 12, top + 22, InputConstants.MOUSE_BUTTON_RIGHT);
+                click(table, left + 20, top - 12, InputConstants.MOUSE_BUTTON_LEFT);
+                require(!table.capturesInput() && !SDLKeyboard.SDL_TextInputActive(handle), "tab change leaked cleanse focus");
+                System.out.println("FILTER SDL PASS: actual Inscribe/Cleanse clicks + committed CJK events + tab-change focus release");
+                click(table, left + 172, top - 12, InputConstants.MOUSE_BUTTON_LEFT);
                 next(20);
             }
             case 20 -> {

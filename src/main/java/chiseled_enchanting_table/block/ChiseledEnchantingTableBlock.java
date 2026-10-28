@@ -289,7 +289,7 @@ public class ChiseledEnchantingTableBlock extends BaseEntityBlock {
                     if (stack.isEmpty()) {
                         player.setItemInHand(hand, emptyBottle);
                     } else if (!player.getInventory().add(emptyBottle)) {
-                        player.drop(emptyBottle, false);
+                        player.drop(emptyBottle, false, net.minecraft.util.Prediction.PREDICTED);
                     }
                 }
                 chiseled_enchanting_table.menu.TableVisualEvents.onClothVisual(

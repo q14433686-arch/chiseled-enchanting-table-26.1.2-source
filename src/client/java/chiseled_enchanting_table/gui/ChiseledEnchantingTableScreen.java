@@ -108,7 +108,14 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     @Override
+    public boolean capturesInput() {
+        return (this.configOverlay != null && this.configOverlay.capturesInput())
+            || NativeFilterInput.captures(this.scrollContainer);
+    }
+
+    @Override
     public void removed() {
+        NativeFilterInput.release(this.scrollContainer);
         if (this.configOverlay != null) this.configOverlay.removed();
         if (this.scrollContainer != null) {
             this.savedScrollAmount = this.scrollContainer.scrollAmount();
