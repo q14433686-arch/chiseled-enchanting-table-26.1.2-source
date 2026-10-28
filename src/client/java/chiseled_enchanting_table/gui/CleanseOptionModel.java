@@ -3,6 +3,7 @@ package chiseled_enchanting_table.gui;
 
 import chiseled_enchanting_table.mechanics.enchanting.DisenchantmentApplication;
 import chiseled_enchanting_table.menu.AvailableOption;
+import chiseled_enchanting_table.menu.MenuCleanseQuotes;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,6 +57,9 @@ final class CleanseOptionModel {
                 List<AvailableOption> subRows = new ArrayList<>();
                 for (int nextLvl = curLvl - 1; nextLvl >= 1; nextLvl--) {
                     subRows.add(AvailableOption.downgradeEnchantment(id, nextLvl));
+                }
+                if (MenuCleanseQuotes.canExtractToBook(target)) {
+                    subRows.add(AvailableOption.extractEnchantmentBook(id, curLvl));
                 }
                 if (totalTraits >= 2) {
                     subRows.add(AvailableOption.stripSingleEnchantment(id, curLvl));

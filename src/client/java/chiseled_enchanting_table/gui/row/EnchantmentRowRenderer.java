@@ -72,6 +72,31 @@ public final class EnchantmentRowRenderer {
         XpRequirement xpRequirement,
         OverrideAnnotation annotation
     ) {
+        render(
+            ctx, client, dx, dy, dw, dh, visualStyle, isFocused, hovered, canEnchant,
+            primaryCostMet, additionalCostsMet, xpMet, enchantmentName, primaryCost,
+            additionalCosts, xpRequirement, annotation, false
+        );
+    }
+
+    public static void render(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        int dx, int dy, int dw, int dh,
+        RowRenderSupport.RowVisualStyle visualStyle,
+        boolean isFocused,
+        boolean hovered,
+        boolean canEnchant,
+        boolean primaryCostMet,
+        List<Boolean> additionalCostsMet,
+        boolean xpMet,
+        String enchantmentName,
+        ItemStack primaryCost,
+        List<ItemStack> additionalCosts,
+        XpRequirement xpRequirement,
+        OverrideAnnotation annotation,
+        boolean cyclablePrimary
+    ) {
         RowRenderSupport.drawPlaque(ctx, dx, dy, dw, dh, visualStyle, canEnchant, hovered, isFocused);
 
         RowRenderSupport.beginRowContentClip(ctx, dx, dy, dw, dh);
@@ -81,7 +106,7 @@ public final class EnchantmentRowRenderer {
             if (hasPrimary) {
                 int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
                 int itemY = RowRenderSupport.costIconY(dy, dh);
-                RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+                RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet, cyclablePrimary);
             }
             if (!additionalCosts.isEmpty()) {
                 int itemY = RowRenderSupport.costIconY(dy, dh);

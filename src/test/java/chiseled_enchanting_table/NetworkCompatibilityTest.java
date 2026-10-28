@@ -106,8 +106,21 @@ class NetworkCompatibilityTest {
         for (OptionType type : OptionType.values()) {
             var apply = new ApplyEnchantmentPayload(42, type, id("action"), 255);
             roundTrip(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_CODEC, apply);
+            assertEquals(ApplyEnchantmentPayload.AUTO_COST_OPTION, apply.cost_option_index());
+            var pinned = new ApplyEnchantmentPayload(42, type, id("action"), 255, 3);
+            roundTrip(ApplyEnchantmentPayload.APPLY_CHISELED_ENCHANTMENT_CODEC, pinned);
+            assertEquals(3, pinned.cost_option_index());
             assertTrue(apply.targets(42));
             assertFalse(apply.targets(43));
+        }
+        assertThrows(IllegalArgumentException.class,
+            () -> new ApplyEnchantmentPayload(42, OptionType.ENCHANTMENT, id("action"), 1, -2));
+        assertThrows(IllegalArgumentException.class,
+            () -> new ApplyEnchantmentPayload(42, OptionType.ENCHANTMENT, id("action"), 1, 64));
+        for (SkipRitualPayload.Action action : SkipRitualPayload.Action.values()) {
+            var skip = new SkipRitualPayload(42, 99887766L, action);
+            roundTrip(SkipRitualPayload.CODEC, skip);
+            assertEquals(action, skip.action());
         }
         var reroll = new RerollEpiphanyPayload(42);
         var freeze = new FreezeEpiphanyPayload(42);

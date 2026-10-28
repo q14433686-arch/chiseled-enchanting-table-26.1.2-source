@@ -234,7 +234,7 @@ class SyncContracts(unittest.TestCase):
 
     def test_new_source_features_keep_port_specific_safeguards(self):
         protocol = (MAIN / 'menu/EnchantingProtocol.java').read_text()
-        self.assertIn('CURRENT_REVISION_NUMBER = 12', protocol)
+        self.assertIn('CURRENT_REVISION_NUMBER = 13', protocol)
         self.assertIn('26_3_revision_', protocol)
         self.assertIn('IntStream.range(1, CURRENT_REVISION_NUMBER)', protocol)
         self.assertIn('IntStream.range(9, CURRENT_REVISION_NUMBER)', protocol)

@@ -16,8 +16,11 @@ import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
 /** A shared, viewport-aware presentation policy for table, configuration and guide hovers. */
 public final class TooltipPresentation {
+    private static boolean testForceDetails = false;
     private TooltipPresentation() {}
+    static void setForceDetailsForTest(boolean force) { testForceDetails = force; }
     public static boolean detailsRequested() {
+        if (testForceDetails) return true;
         return InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT);
     }
     public static void show(GuiGraphicsExtractor ctx, Font font, List<Component> source,

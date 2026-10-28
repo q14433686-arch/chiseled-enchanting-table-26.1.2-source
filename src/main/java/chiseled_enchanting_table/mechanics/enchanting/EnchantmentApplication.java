@@ -162,7 +162,18 @@ public final class EnchantmentApplication {
         );
         boolean ritualQueueEnabled = handler.isRitualQueueEnabled();
         boolean provenanceEnabled = handler.isProvenanceEnabled();
-        int waitTicks = !ritualQueueEnabled ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
+        boolean tableAlreadyActive = tablePos != null
+            && world.getBlockEntity(tablePos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity existingBe
+            && existingBe.hasActiveRitual();
+        boolean bypassWait = chiseled_enchanting_table.mechanics.ritual.RitualActionService.shouldBypassRitualWait(
+            ritualQueueEnabled,
+            tableAlreadyActive,
+            masterTomeUsed,
+            payload.option_type(),
+            enchantment_level,
+            maxLvl
+        );
+        int waitTicks = bypassWait ? 0 : chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.computeSingleEnchantWaitTicks(
             handler.ritualConfig(),
             ritualScan.totalDetectedBookshelves(),
             chiseled_enchanting_table.mechanics.ritual.InscriptionRitualMechanics.medianShelfGate(shelfCfg),
@@ -195,10 +206,33 @@ public final class EnchantmentApplication {
         );
 
         if (tablePos != null
+            && resolvedWear.shelfPos() != null
+            && resolvedWear.shelfSlot() >= 0) {
+            chiseled_enchanting_table.menu.TableVisualEvents.onTomeTether(
+                world,
+                tablePos,
+                resolvedWear.shelfPos(),
+                resolvedWear.shelfSlot(),
+                chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+            );
+        }
+
+        if (tablePos != null
             && world.getBlockEntity(tablePos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity tableBe) {
             if (waitTicks > 0 || tableBe.hasActiveRitual()) {
                 int effectiveAddTicks = Math.max(20, waitTicks);
                 tableBe.enqueueInscription(queuedStep, effectiveAddTicks, handler.player.getUUID());
+                if (resolvedWear.shelfPos() != null && resolvedWear.shelfSlot() >= 0) {
+                    tableBe.recordActiveRitualTomeSlot(resolvedWear.shelfPos(), resolvedWear.shelfSlot());
+                }
+                if (resolvedWear.hasShelfUndo()) {
+                    tableBe.recordTomeWearUndo(new chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity.TomeWearUndo(
+                        resolvedWear.shelfPos(),
+                        resolvedWear.shelfSlot(),
+                        resolvedWear.preWearSnapshot(),
+                        resolvedWear.postWearSnapshot()
+                    ));
+                }
                 handler.player.awardStat(Stats.ENCHANT_ITEM);
                 world.playSound(
                     null,
@@ -477,6 +511,9 @@ public final class EnchantmentApplication {
         handler.markInventoryChanged();
         handler.refreshLiveShelfState();
         player.awardStat(Stats.ENCHANT_ITEM);
-        world.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 2.0F, world.getRandom().nextFloat() * 0.1F + 0.9F);
+        world.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.95F, world.getRandom().nextFloat() * 0.1F + 0.95F);
+        chiseled_enchanting_table.menu.TableVisualEvents.onRitualPulse(
+            world, handler.tableBlockPos(), chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+        );
     }
 }

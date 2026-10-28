@@ -21,19 +21,19 @@ final class TablePanelBackground {
         ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
         renderModeTabs(state, ctx, i, j, mouseX, mouseY);
 
-        int px = i + PANEL_X;
+        int px = i + PANEL_X + GuiMicroEffects.currentPanelJoltX();
         int py = j + PANEL_Y;
         if (!state.showSanctum()) {
             return;
         }
 
-        if (state.tooltips().menu().isRitualActive()) {
-            ctx.blit(EPIPHANY_PANEL_FROZEN, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
-            ctx.enableScissor(px + 9, py + 9, px + 110, py + 52);
+        if (!state.tooltips().isTomeTab() && !state.tooltips().isCleanseTab() && state.tooltips().menu().isRitualActive()) {
+            ctx.blit(RITUAL_PANEL, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
+            ctx.enableScissor(px + 8, py + 8, px + 111, py + 51);
             try {
-                int barX = px + 10;
-                int barY = py + 29;
-                int barW = 99;
+                int barX = px + 11;
+                int barY = py + 25;
+                int barW = 95;
                 int barH = 4;
                 ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC0A0614);
                 ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE181229);
@@ -44,35 +44,26 @@ final class TablePanelBackground {
                 ctx.fill(barX, barY, barX + filledW, barY + barH, 0xFF42E39B);
                 ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFB8FFE0);
 
-                // Left button: Sacrifice XP Skip
-                int sx = i + SKIP_SACRIFICE_BTN_X;
-                int sy = j + SKIP_SACRIFICE_BTN_Y;
-                boolean canSac = state.tooltips().menu().canSacrificeSkipNow();
-                ctx.fill(sx, sy, sx + SKIP_BTN_W, sy + SKIP_BTN_H, canSac ? 0xFFE0B85A : 0xFF584E68);
-                ctx.fill(
-                    sx + 1,
-                    sy + 1,
-                    sx + SKIP_BTN_W - 1,
-                    sy + SKIP_BTN_H - 1,
-                    canSac
-                        ? (state.tooltips().hovered(TableTooltipContext.Region.isOverSacrificeSkipButton) ? 0xFF2E5B48 : 0xFF1E3E33)
-                        : 0xFF191522
-                );
-
-                // Right button: Non-Sacrifice Force Rush Skip
-                int rx = i + SKIP_RUSH_BTN_X;
-                int ry = j + SKIP_RUSH_BTN_Y;
-                boolean canRush = state.tooltips().menu().canRushSkipNow();
-                ctx.fill(rx, ry, rx + SKIP_BTN_W, ry + SKIP_BTN_H, canRush ? 0xFFD9725A : 0xFF584E68);
-                ctx.fill(
-                    rx + 1,
-                    ry + 1,
-                    rx + SKIP_BTN_W - 1,
-                    ry + SKIP_BTN_H - 1,
-                    canRush
-                        ? (state.tooltips().hovered(TableTooltipContext.Region.isOverRushSkipButton) ? 0xFF662932 : 0xFF491D26)
-                        : 0xFF191522
-                );
+                Identifier[] rIcons = {BTN_RITUAL_SACRIFICE, BTN_RITUAL_FUEL, BTN_RITUAL_RUSH, BTN_RITUAL_ABORT};
+                boolean[] rEnabled = {
+                    state.tooltips().menu().canSacrificeSkipNow(),
+                    state.tooltips().menu().canFuelBoostNow() || state.tooltips().menu().canCatalystInstantNow(),
+                    state.tooltips().menu().canRushSkipNow(),
+                    state.tooltips().menu().canSafeAbortNow()
+                };
+                for (int rb = 0; rb < rIcons.length; rb++) {
+                    var rect = TomeDirectoryLayout.ritualButton(rb);
+                    int rbx = i + rect.x();
+                    int rby = j + rect.y();
+                    ctx.blit(rIcons[rb], rbx, rby, rbx + rect.width(), rby + rect.height(), 0.0f, 1.0f, 0.0f, 1.0f);
+                    if (!rEnabled[rb]) {
+                        ctx.fill(rbx, rby, rbx + rect.width(), rby + rect.height(), 0x800B0814);
+                    } else if (state.tooltips().ritualButton() == rb) {
+                        ctx.fill(rbx, rby, rbx + rect.width(), rby + 1, 0xFFFFDF82);
+                        ctx.fill(rbx, rby + rect.height() - 1, rbx + rect.width(), rby + rect.height(), 0xFFFFDF82);
+                        ctx.fill(rbx + 1, rby + 1, rbx + rect.width() - 1, rby + rect.height() - 1, 0x26FFDF82);
+                    }
+                }
             } finally {
                 ctx.disableScissor();
             }
@@ -82,17 +73,40 @@ final class TablePanelBackground {
         if (state.tooltips().isTomeTab()) {
             ctx.blit(CLEANSE_PANEL, px, py, px + PANEL_W, py + PANEL_H, 0.0f, 1.0f, 0.0f, 1.0f);
             String[] icons={"lock_next","lock_full","lock_permanent","unlock","batch_full"};
-            for (int b = 0; b < icons.length; b++) {
+            Identifier[] maintSprites={BTN_TOME_MEND, BTN_TOME_SANCTIFY, BTN_TOME_LOCATE};
+            var targets = state.tooltips().list().selectedTomes();
+            if (targets.isEmpty() && state.tooltips().list().selectedTomeEntry() != null)
+                targets = java.util.List.of(state.tooltips().list().selectedTomeEntry());
+            for (int b = 0; b < TomeDirectoryLayout.TOME_BUTTON_COUNT; b++) {
                 int[] r = state.tomeRect().apply(b);
                 int bx = i + r[0];
                 int by = j + r[1];
                 boolean enabled = false;
-                for (var book : state.tooltips().list().selectedTomes()) {
-                    if (b == 3 ? book.locked() : !book.locked() && (b == 2 || book.wear_used() > 0)) enabled = true;
+                if (b == 4 && state.tooltips().list().selectedTomes().isEmpty()) {
+                    enabled = state.tooltips().menu().isTomeLocksEnabled()
+                        && state.tooltips().menu().tomeBooks.stream().anyMatch(tb -> !tb.locked() && tb.wear_used() > 0);
+                } else if (b == 7) {
+                    enabled = !targets.isEmpty();
+                } else {
+                    for (var book : targets) {
+                        if (b == 3) { if (book.locked()) enabled = true; }
+                        else if (b == 5 || b == 6) {
+                            if (!book.wear_immune() && book.wear_used() > 0 && (!book.locked() || book.locked_by_viewer())) enabled = true;
+                        } else if (!book.locked() && (b == 2 || book.wear_used() > 0)) enabled = true;
+                    }
+                    if (b < 5 && b != 3 && !state.tooltips().menu().isTomeLocksEnabled()) enabled = false;
                 }
-                if (b != 3 && !state.tooltips().menu().isTomeLocksEnabled()) enabled = false;
                 boolean hovered = state.tooltips().tomeButton() == b;
-                CatalogueSkin.icon(ctx,icons[b],bx,by,r[2],r[3],hovered,enabled);
+                if (b < icons.length) {
+                    CatalogueSkin.icon(ctx,icons[b],bx,by,r[2],r[3],hovered,enabled);
+                } else {
+                    CatalogueSkin.frame(ctx, bx, by, r[2], r[3], hovered, enabled);
+                    int s = 11;
+                    int ix = bx + (r[2] - s) / 2;
+                    int iy = by + (r[3] - s) / 2;
+                    ctx.blit(maintSprites[b - 5], ix, iy, ix + s, iy + s, 0.0f, 1.0f, 0.0f, 1.0f);
+                    if (!enabled) ctx.fill(ix, iy, ix + s, iy + s, 0x880B1520);
+                }
             }
             if (!state.tooltips().list().hasEntries()) {
                 int lx = i + 12;
@@ -114,7 +128,7 @@ final class TablePanelBackground {
                 int nonCurse = DisenchantmentApplication.countNonCurseEnchantments(target);
                 int barX = px + 10;
                 int barY = py + 45;
-                int barW = 80;
+                int barW = 65;
                 int barH = 4;
                 ctx.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0xCC071210);
                 ctx.fill(barX, barY, barX + barW, barY + barH, 0xEE102420);
@@ -123,6 +137,18 @@ final class TablePanelBackground {
                 if (filledW > 0) {
                     ctx.fill(barX, barY, barX + filledW, barY + barH, 0xFF39D99A);
                     ctx.fill(barX, barY, barX + filledW, barY + 1, 0xFFA8FFE0);
+                }
+
+                if (state.tooltips().menu().disenchantAllowCursePurge()) {
+                    int pcx = i + PURGE_CURSES_BTN_X;
+                    int pcy = j + PURGE_CURSES_BTN_Y;
+                    boolean canPurge = state.tooltips().canPurgeCursesNow();
+                    ctx.blit(BTN_PURGE_ALL_CURSES, pcx, pcy, pcx + BTN_SIZE, pcy + BTN_SIZE, 0.0f, 1.0f, 0.0f, 1.0f);
+                    if (!canPurge) {
+                        ctx.fill(pcx, pcy, pcx + BTN_SIZE, pcy + BTN_SIZE, 0x990A1010);
+                    } else if (state.tooltips().hovered(TableTooltipContext.Region.isOverPurgeCursesButton)) {
+                        ctx.fill(pcx, pcy, pcx + BTN_SIZE, pcy + BTN_SIZE, 0x2E8CFFD2);
+                    }
                 }
 
                 int bx = i + CLEANSE_ALL_BTN_X;
@@ -143,7 +169,7 @@ final class TablePanelBackground {
 
             if (!state.tooltips().list().hasEntries()) {
                 int lx = i + 12;
-                int ly = j + TomeDirectoryLayout.CONTENT_Y + TomeDirectoryLayout.listOffset() + 10;
+                int ly = j + TomeDirectoryLayout.CONTENT_Y + TomeDirectoryLayout.cleanseListOffset() + 10;
                 String hint1 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line1").getString();
                 String hint2 = Component.translatable("gui.chiseled_enchanting_table.cleanse.empty_line2").getString();
                 RowRenderSupport.renderBoundedText(ctx, state.tooltips().font(), hint1, lx, ly, 0.72f, 140, 0xFFAEEADF);
@@ -318,10 +344,20 @@ final class TablePanelBackground {
 
         if (state.tooltips().menu().disenchantEnabled() && !state.tooltips().menu().isCleansePageUnlocked()) {
             int sx = i + SACRIFICE_BTN_X;
-            ctx.fill(sx, tabY + 1, sx + SACRIFICE_BTN_W, tabY + TAB_H - 2, state.tooltips().hovered(TableTooltipContext.Region.isOverSacrificeButton) ? 0xFF6B4E2E : 0xFF3A2A20);
-            ctx.fill(sx + 1, tabY + 2, sx + SACRIFICE_BTN_W - 1, tabY + TAB_H - 3, 0xFF241722);
-            String sacText = Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_short", state.tooltips().menu().sacrificeProgress, state.tooltips().menu().sacrificeRequired).getString();
-            RowRenderSupport.renderCenteredBoxText(ctx, state.tooltips().font(), sacText, sx + 2, SACRIFICE_BTN_W - 4, tabVisualMidY, 0.62f, 0xFFFFC46B);
+            int sy = tabY + 1;
+            int sh = TAB_H - 3;
+            ctx.blit(BTN_SACRIFICE_PLAQUE, sx, sy, sx + SACRIFICE_BTN_W, sy + sh, 0.0f, 1.0f, 0.0f, 1.0f);
+            if (state.tooltips().hovered(TableTooltipContext.Region.isOverSacrificeButton)) {
+                ctx.fill(sx + 2, sy + 2, sx + SACRIFICE_BTN_W - 2, sy + sh - 2, 0x28FFDF82);
+            }
+            ctx.enableScissor(sx + 2, sy + 2, sx + SACRIFICE_BTN_W - 2, sy + sh - 2);
+            try {
+                String sacText = Component.translatable("gui.chiseled_enchanting_table.tomes.sacrifice_short",
+                    state.tooltips().menu().sacrificeProgress, state.tooltips().menu().sacrificeRequired).getString();
+                RowRenderSupport.renderCenteredBoxText(ctx, state.tooltips().font(), sacText, sx + 3, SACRIFICE_BTN_W - 6, sy + sh * 0.5f - 0.2f, 0.58f, 0xFFFFE29A);
+            } finally {
+                ctx.disableScissor();
+            }
         }
 
         int cx = i + CONFIG_BTN_X;
