@@ -21,7 +21,7 @@ class SensoryPolishRoundThreeTest {
 
     @Test
     void visualEventPayloadRoundTripsEveryKindAndClampsBounds() {
-        assertEquals(22, EnchantingProtocol.CURRENT_REVISION_NUMBER);
+        assertEquals(8, EnchantingProtocol.CURRENT_REVISION_NUMBER);
         assertEquals("26_2_revision_8", EnchantingProtocol.REVISION);
         assertEquals(
             "chiseled_enchanting_table:table_visual_event_26_2_revision_8",

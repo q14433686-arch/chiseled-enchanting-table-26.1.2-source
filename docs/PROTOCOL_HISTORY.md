@@ -1,11 +1,11 @@
-## 皱纹修订史（本线 26.2，2026-10-27 全量回移植）
+## 协议修订史（本线 26.2，2026-10-27 全量回移植）
 
-- **单一事实源**：`menu/EnchantingProtocol.java` 的 `CURRENT_REVISION_NUMBER = 7`，通道前缀 `26_2_revision_`。
-- 本线 rev6 与 rev1..6 历史探针以 `IntStream.range(1, N)` 生成（cost + apply 皆然）；裸
+- **单一事实源**：`menu/EnchantingProtocol.java` 的 `CURRENT_REVISION_NUMBER = 8`，通道前缀 `26_2_revision_`。
+- 本线 rev7 与 rev1..6 历史探针以 `IntStream.range(1, N)` 生成（cost + apply 皆然）；裸
   `enchant_cost_table` 与裸 `apply_chiseled_enchantment` 仅作 query-only 旧探针。
 - 26.3 线的 `range(9, N)` apply 探针区间为线专属，不倒灌本线；详见
   `docs/reports/FULL_PORT_26_3_REV12_SEVEN_PATH_AUDIT_2026_10_27.md` 路径 C / D6。
-- 下表（rev1..18）为**姊妹 26.1.2 线**的修订序列，作为 schema/线格式变更点的历史参考；本线现为 **rev7**。
+- 下表（rev1..18）为**姊妹 26.1.2 线**的修订序列，作为 schema/线格式变更点的历史参考；本线现为 **rev8**。
 
 # 协议修订史（enchanting wire revisions）— 本线 26.2
 
@@ -28,6 +28,8 @@
 | 16 | TomeState 完整状态同步 |
 | 17 | 书架能量（shelf power）服务器权威同步 |
 | 18 | **`rainbow_cloth` 方块状态属性加入已同步 blockstate schema**（26.3 彩虹布全量回移植）；无其他线格式变化，仍须按门禁策略 bump |
+
+本线 revision 8 汇总移植 26.1.2 revision 19–22：材料方案索引和仪式动作、净除动作、视觉事件包、Tome 批量目标与仪式供能槽位。与 revision 7 不兼容，客户端和服务端需同时更新。
 
 ## Bump 策略
 

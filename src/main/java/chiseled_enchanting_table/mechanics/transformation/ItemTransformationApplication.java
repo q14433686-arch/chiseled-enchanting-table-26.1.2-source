@@ -137,7 +137,7 @@ public final class ItemTransformationApplication {
             net.minecraft.network.chat.Component.translatable(
                 "gui.chiseled_enchanting_table.discovery_locked.deciphered",
                 new ItemStack(outItem).getHoverName()
-            ).withStyle(net.minecraft.CetFormatting.LIGHT_PURPLE)
+            ).withStyle(chiseled_enchanting_table.compat.CetFormatting.LIGHT_PURPLE)
         ));
         handler.broadcastChanges();
         return true;

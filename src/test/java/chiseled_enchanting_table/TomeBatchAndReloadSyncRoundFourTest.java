@@ -27,7 +27,7 @@ class TomeBatchAndReloadSyncRoundFourTest {
 
     @Test
     void tomePageActionPayloadRoundTripsExtraLocateTargetsAndEnforcesBounds() {
-        assertEquals(22, EnchantingProtocol.CURRENT_REVISION_NUMBER);
+        assertEquals(8, EnchantingProtocol.CURRENT_REVISION_NUMBER);
         BlockPos primary = new BlockPos(10, 64, -20);
         List<TomeSlotRef> extras = List.of(
             new TomeSlotRef(new BlockPos(11, 65, -20), 2),

@@ -467,7 +467,7 @@ public final class MenuTomePageActions {
             net.minecraft.network.chat.Component.translatable(
                 "message.chiseled_enchanting_table.tome_locate.batch_header",
                 valid.size()
-            ).withStyle(net.minecraft.CetFormatting.AQUA),
+            ).withStyle(chiseled_enchanting_table.compat.CetFormatting.AQUA),
             false
         );
         for (int i = 0; i < valid.size(); i++) {
@@ -482,7 +482,7 @@ public final class MenuTomePageActions {
                     t.shelfPos().getZ(),
                     formatRelativeDelta(tablePos, t.shelfPos()),
                     t.slot() + 1
-                ).withStyle(net.minecraft.CetFormatting.GRAY),
+                ).withStyle(chiseled_enchanting_table.compat.CetFormatting.GRAY),
                 false
             );
         }

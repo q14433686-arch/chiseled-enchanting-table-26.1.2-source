@@ -1,3 +1,5 @@
+> **2026-10-28 移植说明：** 26.1.2 `abb2af1` 的 revision 19–22 功能正在移植到 26.2，协议为 `26_2_revision_8`；客户端和服务端须同时更新。验证状态以 CI 为准。
+
 # Current Baseline
 
 > **2026-10-27 full port:** this line now ships the 26.3 rev12 / 26.1.2 rev18 feature set at wire

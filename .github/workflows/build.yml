@@ -130,9 +130,10 @@ jobs:
   server-smoke:
     permissions:
       contents: write
+      checks: write
     name: real server world-load + datapack reload
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     needs: static
     steps:
       - uses: actions/checkout@v4
@@ -153,6 +154,15 @@ jobs:
       - name: boot fresh world and reload datapacks
         run: python3 scripts/server_smoke.py
 
+      - name: compile disposable client integration probe
+        run: mkdir -p build-reports && ./gradlew compileClientSmokeJava -Pclient_smoke=true --console=plain --stacktrace 2>&1 | tee build-reports/client-smoke.log
+
+      - name: real client input and menu integration
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          ALSOFT_DRIVERS: 'null'
+        run: xvfb-run -a -s '-screen 0 1280x720x24' python3 scripts/client_smoke.py
+
       - name: smoke-test logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -160,9 +170,17 @@ jobs:
           name: server-smoke-${{ github.sha }}
           path: |
             build-reports/server-smoke.log
+            build-reports/client-smoke.log
+            run-client-smoke/client-smoke-result.txt
             run/logs/latest.log
             run/crash-reports/**
           if-no-files-found: warn
+
+      - name: publish API-readable client smoke diagnostics
+        if: always() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/post_ci_diagnostics.py --publish --name client-smoke-diagnostics --conclusion '${{ job.status }}' build-reports/client-smoke.log
 
       # 与 compile-check 同理：沙箱里读不到 Actions 日志 blob，只能靠 Contents API 把日志
       # 写回分支（paths-ignore 'build-reports/**' 保证不会自触发）。只在 arena/** 回推。
