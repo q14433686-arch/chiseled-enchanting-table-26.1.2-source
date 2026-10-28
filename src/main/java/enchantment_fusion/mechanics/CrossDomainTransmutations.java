@@ -2043,9 +2043,13 @@ public final class CrossDomainTransmutations {
         // 26: Loyalty "虚空归返" emergency player void rescue!
         if (player.getY() < level.getMinY() - 6 && hasArmorOrShieldTransmute(player, "void_homing")
             && checkActiveCooldown(player, level.getGameTime(), 1200)) {
-            BlockPos spawn = level.getSharedSpawnPos();
+            int terrainY = level.getHeight(
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING,
+                player.getBlockX(),
+                player.getBlockZ()
+            );
             player.resetFallDistance();
-            player.teleportTo(player.getX(), Math.max(level.getMinY() + 68, spawn.getY() + 4), player.getZ());
+            player.teleportTo(player.getX(), Math.max(level.getMinY() + 68, terrainY + 4), player.getZ());
             grantEffect(player, "slow_falling", 180, 0);
             level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.9F, 1.1F);
         }

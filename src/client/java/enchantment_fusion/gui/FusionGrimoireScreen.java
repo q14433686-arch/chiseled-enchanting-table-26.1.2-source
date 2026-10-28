@@ -1,5 +1,6 @@
 package enchantment_fusion.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -79,7 +79,7 @@ public final class FusionGrimoireScreen extends Screen {
     private int listScroll = 0;
     private int selectedIndex = 0;
     private String searchQuery = "";
-    private @Nullable EditBox searchBox;
+    private boolean searchFocused = false;
 
     public FusionGrimoireScreen(@Nullable Runnable closeOverlayCallback, int initialChapter) {
         super(Component.translatable("item.enchantment_fusion.fusion_grimoire"));
@@ -94,26 +94,6 @@ public final class FusionGrimoireScreen extends Screen {
         super.init();
         this.bookLeft = (this.width - BOOK_W) / 2;
         this.bookTop = (this.height - BOOK_H) / 2 + 6;
-
-        EditBox box = new EditBox(
-            this.font,
-            this.bookLeft + LEFT_PAGE_X + 2,
-            this.bookTop + PAGE_TOP_Y + 14,
-            LEFT_PAGE_W - 4,
-            13,
-            Component.translatable("gui.enchantment_fusion.grimoire.search_hint")
-        );
-        box.setMaxLength(40);
-        box.setBordered(true);
-        box.setValue(this.searchQuery);
-        box.setHint(Component.translatable("gui.enchantment_fusion.grimoire.search_hint"));
-        box.setResponder(val -> {
-            this.searchQuery = val == null ? "" : val;
-            this.listScroll = 0;
-            this.selectedIndex = 0;
-        });
-        this.searchBox = box;
-        this.addRenderableWidget(box);
     }
 
     @Override
@@ -185,9 +165,22 @@ public final class FusionGrimoireScreen extends Screen {
         // Progress badge at bottom of Left Page
         renderProgressFooter(ctx, allEntries, bx + LEFT_PAGE_X, by + 190, LEFT_PAGE_W);
 
-        // Left Page Entry List (7 rows at y = PAGE_TOP_Y + 31 .. + 149)
-        if (this.searchBox != null) {
-            this.searchBox.visible = (this.activeChapter != Chapter.OVERVIEW);
+        // Pixel-art Search Bar on Left Page (chapters with searchable entries)
+        if (this.activeChapter != Chapter.OVERVIEW) {
+            int sx = bx + LEFT_PAGE_X + 2;
+            int sy = by + PAGE_TOP_Y + 14;
+            int sw = LEFT_PAGE_W - 4;
+            boolean hovSearch = inside(mouseX, mouseY, sx, sy, sw, 14);
+            var searchSprite = this.searchFocused ? FusionGuiSkin.ROW_SELECTED_B
+                : (hovSearch ? FusionGuiSkin.ROW_HOVER : FusionGuiSkin.ROW_UNSELECTED);
+            FusionGuiSkin.drawNineSlice(ctx, searchSprite, sx, sy, sw, 14, 64, 18, 4);
+            String shown = this.searchQuery.isEmpty()
+                ? (this.searchFocused ? "_" : Component.translatable("gui.enchantment_fusion.grimoire.search_hint").getString())
+                : (this.searchQuery + (this.searchFocused ? "_" : ""));
+            int col = this.searchQuery.isEmpty() && !this.searchFocused
+                ? FusionGuiSkin.COLOR_MUTED
+                : FusionGuiSkin.COLOR_CREAM;
+            FusionGuiSkin.drawLeftBoundedText(ctx, this.font, shown, sx + 5, sy + 4, sw - 10, 0.56F, col);
         }
 
         int listStartY = (this.activeChapter == Chapter.OVERVIEW) ? (by + PAGE_TOP_Y + 16) : (by + PAGE_TOP_Y + 31);
@@ -542,6 +535,16 @@ public final class FusionGrimoireScreen extends Screen {
         int by = this.bookTop;
 
         if (event.button() == 0) {
+            // Search Box Focus Toggle
+            int sx = bx + LEFT_PAGE_X + 2;
+            int sy = by + PAGE_TOP_Y + 14;
+            int sw = LEFT_PAGE_W - 4;
+            if (this.activeChapter != Chapter.OVERVIEW && inside(mx, my, sx, sy, sw, 14)) {
+                this.searchFocused = true;
+                return true;
+            }
+            this.searchFocused = false;
+
             // Close [X] button
             if (inside(mx, my, bx + BOOK_W - 24, by - 14, 20, 16)) {
                 playPageTurn(0.95F);
@@ -601,24 +604,44 @@ public final class FusionGrimoireScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (event.key() == 256) { // GLFW_KEY_ESCAPE
+        if (event.key() == InputConstants.KEY_ESCAPE) {
+            if (this.searchFocused && !this.searchQuery.isEmpty()) {
+                this.searchQuery = "";
+                this.listScroll = 0;
+                this.selectedIndex = 0;
+                return true;
+            }
             this.onClose();
             return true;
         }
-        if (this.searchBox != null && this.searchBox.isFocused()) {
-            if (this.searchBox.keyPressed(event)) {
+        if (this.searchFocused) {
+            if (event.key() == InputConstants.KEY_BACKSPACE) {
+                if (!this.searchQuery.isEmpty()) {
+                    this.searchQuery = this.searchQuery.substring(0, this.searchQuery.length() - 1);
+                    this.listScroll = 0;
+                    this.selectedIndex = 0;
+                }
                 return true;
             }
-            if (event.key() == 69) { // Swallow inventory 'E' key while typing in search box!
+            if (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER) {
+                this.searchFocused = false;
                 return true;
             }
+            // Swallow inventory 'E' and movement keys while typing in search box
+            return true;
         }
         return super.keyPressed(event);
     }
 
     @Override
     public boolean charTyped(CharacterEvent event) {
-        if (this.searchBox != null && this.searchBox.isFocused() && this.searchBox.charTyped(event)) {
+        if (this.searchFocused) {
+            int cp = event.codepoint();
+            if (cp >= 32 && cp <= 0xFFFF && cp != 127 && this.searchQuery.length() < 40) {
+                this.searchQuery = this.searchQuery + Character.toString(cp);
+                this.listScroll = 0;
+                this.selectedIndex = 0;
+            }
             return true;
         }
         return super.charTyped(event);

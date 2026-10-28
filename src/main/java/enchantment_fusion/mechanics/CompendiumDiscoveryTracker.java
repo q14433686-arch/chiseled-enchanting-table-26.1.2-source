@@ -240,7 +240,7 @@ public final class CompendiumDiscoveryTracker {
                 advanceStateInternal(pid, aberrantKey(picked), STATE_MASTERED);
                 persistAndSync(player);
                 Component title = Component.translatable(AberrantRegistry.titleKey(picked)).withStyle(ChatFormatting.LIGHT_PURPLE);
-                player.displayClientMessage(Component.translatable("message.enchantment_fusion.page.mastered", title), true);
+                player.sendSystemMessage(Component.translatable("message.enchantment_fusion.page.mastered", title), true);
                 return true;
             }
         }
@@ -267,7 +267,7 @@ public final class CompendiumDiscoveryTracker {
         if (pageTier >= 1) {
             List<Candidate> pool = !heardPool.isEmpty() ? heardPool : unknownPool;
             if (pool.isEmpty()) {
-                player.displayClientMessage(Component.translatable("message.enchantment_fusion.page.all_known"), true);
+                player.sendSystemMessage(Component.translatable("message.enchantment_fusion.page.all_known"), true);
                 return false;
             }
             Candidate pick = pool.get(rng.nextInt(pool.size()));
@@ -276,7 +276,7 @@ public final class CompendiumDiscoveryTracker {
                 advanceStateInternal(pid, pick.PairMirrorKey(), STATE_MASTERED);
             }
             persistAndSync(player);
-            player.displayClientMessage(
+            player.sendSystemMessage(
                 Component.translatable("message.enchantment_fusion.page.mastered", pick.title().copy().withStyle(ChatFormatting.GOLD)),
                 true
             );
@@ -291,7 +291,7 @@ public final class CompendiumDiscoveryTracker {
                 advanceStateInternal(pid, pick.PairMirrorKey(), STATE_HEARD);
             }
             persistAndSync(player);
-            player.displayClientMessage(
+            player.sendSystemMessage(
                 Component.translatable("message.enchantment_fusion.page.heard", pick.title().copy().withStyle(ChatFormatting.AQUA)),
                 true
             );
@@ -304,14 +304,14 @@ public final class CompendiumDiscoveryTracker {
                 advanceStateInternal(pid, pick.PairMirrorKey(), STATE_MASTERED);
             }
             persistAndSync(player);
-            player.displayClientMessage(
+            player.sendSystemMessage(
                 Component.translatable("message.enchantment_fusion.page.mastered", pick.title().copy().withStyle(ChatFormatting.GOLD)),
                 true
             );
             return true;
         }
 
-        player.displayClientMessage(Component.translatable("message.enchantment_fusion.page.all_known"), true);
+        player.sendSystemMessage(Component.translatable("message.enchantment_fusion.page.all_known"), true);
         return false;
     }
 

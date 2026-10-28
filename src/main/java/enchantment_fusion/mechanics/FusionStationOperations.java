@@ -551,7 +551,7 @@ public final class FusionStationOperations {
                 if (sp.level() instanceof ServerLevel sl) {
                     sl.sendParticles(ParticleTypes.LARGE_SMOKE, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 10, 0.3D, 0.2D, 0.3D, 0.02D);
                 }
-                sp.displayClientMessage(
+                sp.sendSystemMessage(
                     Component.translatable("message.enchantment_fusion.failure.normal_refund").withStyle(ChatFormatting.YELLOW),
                     true
                 );
@@ -571,7 +571,7 @@ public final class FusionStationOperations {
             );
             if (player instanceof ServerPlayer sp) {
                 CompendiumDiscoveryTracker.recordAberrantMastered(sp, abId);
-                sp.displayClientMessage(
+                sp.sendSystemMessage(
                     Component.translatable("message.enchantment_fusion.failure.aberrant").withStyle(ChatFormatting.LIGHT_PURPLE),
                     true
                 );
@@ -641,7 +641,7 @@ public final class FusionStationOperations {
                     lookupEnchantment(registries, "minecraft:vanishing_curse").ifPresent(c -> mut.set(c, 1));
                     if (player instanceof ServerPlayer sp) {
                         CompendiumDiscoveryTracker.recordTransmuteProgress(sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_HEARD);
-                        sp.displayClientMessage(
+                        sp.sendSystemMessage(
                             Component.translatable("message.enchantment_fusion.failure.cursed").withStyle(ChatFormatting.RED),
                             true
                         );
