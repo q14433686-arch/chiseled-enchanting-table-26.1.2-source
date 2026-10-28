@@ -32,14 +32,14 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * Custom pixel-art GUI screen for the Enchantment Fusion Table (276 x 198).
- * Features the interactive {@code [⇄]} Swap-Order button with instant live matrix preview,
- * Vessel Spirit diamond indicators, and Fuse / Flip / Split workstation controls.
+ * Features 9-slice ornate stone/amethyst frames, color-coded slot bezels, the 24x24 pixel-art
+ * {@code [⇄]} Swap-Order button, Vessel Spirit diamond gems, and Fuse / Flip / Split controls.
  */
 public final class EnchantmentFusionScreen extends AbstractContainerScreen<EnchantmentFusionMenu> {
-    private static final int SWAP_BTN_X = 48;
-    private static final int SWAP_BTN_Y = 31;
-    private static final int SWAP_BTN_W = 22;
-    private static final int SWAP_BTN_H = 22;
+    private static final int SWAP_BTN_X = 47;
+    private static final int SWAP_BTN_Y = 30;
+    private static final int SWAP_BTN_W = 24;
+    private static final int SWAP_BTN_H = 24;
 
     private static final int FUSE_BTN_X = 122;
     private static final int FUSE_BTN_Y = 88;
@@ -84,36 +84,37 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         int left = this.leftPos;
         int top = this.topPos;
 
-        // 1. Main ornate stone & amethyst panel (276 x 198)
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.PANEL_BG, left, top, this.imageWidth, this.imageHeight);
+        // 1. Main ornate stone & amethyst 9-slice panel (276 x 198) + recessed preview sub-frame (141 x 60)
+        FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.PANEL_FRAME, left, top, this.imageWidth, this.imageHeight, 48, 48, 6);
+        FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.PANEL_FRAME, left + PREVIEW_X, top + PREVIEW_Y, PREVIEW_W, PREVIEW_H, 48, 48, 5);
 
         // 2. Title header
         FusionGuiSkin.drawCenteredBoundedText(
             ctx, this.font, this.title.getString(),
-            left + 16, this.imageWidth - 32, top + 12.0F, 0.85F, FusionGuiSkin.COLOR_GOLD
+            left + 16, this.imageWidth - 32, top + 12.5F, 0.85F, FusionGuiSkin.COLOR_GOLD
         );
 
-        // 3. Workstation 4 slot frames (20x20 centered around 16x16 item slots)
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_FRAME, left + 20, top + 32, 20, 20);
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_FRAME, left + 84, top + 32, 20, 20);
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_FRAME, left + 52, top + 60, 20, 20);
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_FRAME, left + 52, top + 90, 20, 20);
+        // 3. Workstation 4 role-specific 18x18 pixel-art slot bezels
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_PRIMARY, left + 21, top + 33, 18, 18);
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_SECONDARY, left + 85, top + 33, 18, 18);
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_CATALYST, left + 53, top + 61, 18, 18);
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_DEFAULT, left + 53, top + 91, 18, 18);
 
         // Slot role badges ("A", "B")
         FusionGuiSkin.drawCenteredBoundedText(
             ctx, this.font, Component.translatable("gui.enchantment_fusion.slot.primary_short").getString(),
-            left + 16, 28, top + 26.5F, 0.65F, FusionGuiSkin.COLOR_GOLD
+            left + 14, 32, top + 26.5F, 0.64F, FusionGuiSkin.COLOR_GOLD
         );
         FusionGuiSkin.drawCenteredBoundedText(
             ctx, this.font, Component.translatable("gui.enchantment_fusion.slot.secondary_short").getString(),
-            left + 80, 28, top + 26.5F, 0.65F, FusionGuiSkin.COLOR_CYAN
+            left + 78, 32, top + 26.5F, 0.64F, FusionGuiSkin.COLOR_CYAN
         );
 
         // 4. Player inventory 36 slot frames (18x18)
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 FusionGuiSkin.drawSprite(
-                    ctx, FusionGuiSkin.SLOT_FRAME,
+                    ctx, FusionGuiSkin.SLOT_DEFAULT,
                     left + EnchantmentFusionMenu.PLAYER_INV_X - 1 + col * 18,
                     top + EnchantmentFusionMenu.PLAYER_INV_Y - 1 + row * 18,
                     18, 18
@@ -122,7 +123,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         }
         for (int col = 0; col < 9; col++) {
             FusionGuiSkin.drawSprite(
-                ctx, FusionGuiSkin.SLOT_FRAME,
+                ctx, FusionGuiSkin.SLOT_DEFAULT,
                 left + EnchantmentFusionMenu.PLAYER_INV_X - 1 + col * 18,
                 top + EnchantmentFusionMenu.PLAYER_INV_Y + 57,
                 18, 18
@@ -132,26 +133,24 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         // 5. Vessel Spirit diamonds next to Target Slot (Slot 3)
         renderVesselDiamonds(ctx, left + 77, top + 94);
 
-        // 6. Interactive buttons (Swap [⇄], Fuse, Flip, Split)
+        // 6. Interactive buttons (24x24 pixel-art Swap [⇄], plus 9-slice Fuse, Flip, Split)
         StationPreview preview = this.menu.computePreview();
+        boolean canSwapNow = !this.menu.stationContainer().getItem(0).isEmpty()
+            || !this.menu.stationContainer().getItem(1).isEmpty();
         boolean overSwap = isHoveringRect(SWAP_BTN_X, SWAP_BTN_Y, SWAP_BTN_W, SWAP_BTN_H, mouseX, mouseY);
         FusionGuiSkin.drawSprite(
             ctx,
-            overSwap ? FusionGuiSkin.BTN_SWAP_HOVER : FusionGuiSkin.BTN_SWAP_NORMAL,
+            !canSwapNow ? FusionGuiSkin.BTN_SWAP_DISABLED : (overSwap ? FusionGuiSkin.BTN_SWAP_HOVER : FusionGuiSkin.BTN_SWAP_NORMAL),
             left + SWAP_BTN_X, top + SWAP_BTN_Y, SWAP_BTN_W, SWAP_BTN_H
-        );
-        FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font, "\u21C4",
-            left + SWAP_BTN_X + 2, SWAP_BTN_W - 4, top + SWAP_BTN_Y + 11.0F, 0.85F, FusionGuiSkin.COLOR_GOLD
         );
 
         boolean canAffordPrimary = canAffordXp(preview.xpCost());
         boolean primaryReady = preview.executable() && canAffordPrimary;
         boolean overFuse = isHoveringRect(FUSE_BTN_X, FUSE_BTN_Y, FUSE_BTN_W, FUSE_BTN_H, mouseX, mouseY);
-        FusionGuiSkin.drawSprite(
+        FusionGuiSkin.drawNineSlice(
             ctx,
-            !primaryReady ? FusionGuiSkin.BTN_FUSE_DISABLED : (overFuse ? FusionGuiSkin.BTN_FUSE_HOVER : FusionGuiSkin.BTN_FUSE_NORMAL),
-            left + FUSE_BTN_X, top + FUSE_BTN_Y, FUSE_BTN_W, FUSE_BTN_H
+            !primaryReady ? FusionGuiSkin.BTN_DISABLED : (overFuse ? FusionGuiSkin.BTN_HOVER : FusionGuiSkin.BTN_NORMAL),
+            left + FUSE_BTN_X, top + FUSE_BTN_Y, FUSE_BTN_W, FUSE_BTN_H, 32, 32, 4
         );
         String fuseBtnLabel = Component.translatable(primaryActionLabelKey(preview.kind())).getString();
         FusionGuiSkin.drawCenteredBoundedText(
@@ -162,28 +161,28 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
         boolean flipReady = preview.canFlipTarget() && canAffordXp(preview.flipOrSplitXpCost());
         boolean overFlip = isHoveringRect(FLIP_BTN_X, FLIP_BTN_Y, FLIP_BTN_W, FLIP_BTN_H, mouseX, mouseY);
-        FusionGuiSkin.drawSprite(
+        FusionGuiSkin.drawNineSlice(
             ctx,
-            !flipReady ? FusionGuiSkin.BTN_SMALL_DISABLED : (overFlip ? FusionGuiSkin.BTN_SMALL_HOVER : FusionGuiSkin.BTN_SMALL_NORMAL),
-            left + FLIP_BTN_X, top + FLIP_BTN_Y, FLIP_BTN_W, FLIP_BTN_H
+            !flipReady ? FusionGuiSkin.BTN_DISABLED : (overFlip ? FusionGuiSkin.BTN_HOVER : FusionGuiSkin.BTN_NORMAL),
+            left + FLIP_BTN_X, top + FLIP_BTN_Y, FLIP_BTN_W, FLIP_BTN_H, 32, 32, 4
         );
         FusionGuiSkin.drawCenteredBoundedText(
             ctx, this.font, Component.translatable("gui.enchantment_fusion.btn.flip").getString(),
-            left + FLIP_BTN_X + 3, FLIP_BTN_W - 6, top + FLIP_BTN_Y + 9.0F,
-            0.64F, flipReady ? FusionGuiSkin.COLOR_CYAN : FusionGuiSkin.COLOR_MUTED
+            left + FLIP_BTN_X + 4, FLIP_BTN_W - 8, top + FLIP_BTN_Y + 9.0F,
+            0.62F, flipReady ? FusionGuiSkin.COLOR_CYAN : FusionGuiSkin.COLOR_MUTED
         );
 
         boolean splitReady = preview.canSplitTarget() && canAffordXp(preview.flipOrSplitXpCost());
         boolean overSplit = isHoveringRect(SPLIT_BTN_X, SPLIT_BTN_Y, SPLIT_BTN_W, SPLIT_BTN_H, mouseX, mouseY);
-        FusionGuiSkin.drawSprite(
+        FusionGuiSkin.drawNineSlice(
             ctx,
-            !splitReady ? FusionGuiSkin.BTN_SMALL_DISABLED : (overSplit ? FusionGuiSkin.BTN_SMALL_HOVER : FusionGuiSkin.BTN_SMALL_NORMAL),
-            left + SPLIT_BTN_X, top + SPLIT_BTN_Y, SPLIT_BTN_W, SPLIT_BTN_H
+            !splitReady ? FusionGuiSkin.BTN_DISABLED : (overSplit ? FusionGuiSkin.BTN_HOVER : FusionGuiSkin.BTN_NORMAL),
+            left + SPLIT_BTN_X, top + SPLIT_BTN_Y, SPLIT_BTN_W, SPLIT_BTN_H, 32, 32, 4
         );
         FusionGuiSkin.drawCenteredBoundedText(
             ctx, this.font, Component.translatable("gui.enchantment_fusion.btn.split").getString(),
-            left + SPLIT_BTN_X + 3, SPLIT_BTN_W - 6, top + SPLIT_BTN_Y + 9.0F,
-            0.64F, splitReady ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_MUTED
+            left + SPLIT_BTN_X + 4, SPLIT_BTN_W - 8, top + SPLIT_BTN_Y + 9.0F,
+            0.62F, splitReady ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_MUTED
         );
 
         // 7. Scissor-clipped Live Resonance Preview Readout
@@ -198,12 +197,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         int maxSlots = VesselCapacityRules.maxVesselSlots(target);
         FusedEnchantmentList list = target.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         for (int i = 0; i < maxSlots; i++) {
-            var sprite = FusionGuiSkin.VESSEL_EMPTY;
-            if (i < list.size()) {
-                sprite = list.pairs().get(i).isAberrant()
-                    ? FusionGuiSkin.VESSEL_ABERRANT
-                    : FusionGuiSkin.VESSEL_FILLED;
-            }
+            var sprite = (i < list.size()) ? FusionGuiSkin.VESSEL_FILLED : FusionGuiSkin.VESSEL_EMPTY;
             FusionGuiSkin.drawSprite(ctx, sprite, startX + i * 13, y, 12, 12);
         }
     }
@@ -216,10 +210,10 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         int pw,
         int ph
     ) {
-        ctx.enableScissor(px + 2, py + 2, px + pw - 2, py + ph - 2);
+        ctx.enableScissor(px + 5, py + 5, px + pw - 5, py + ph - 5);
         try {
-            int innerX = px + 5;
-            int innerW = pw - 10;
+            int innerX = px + 7;
+            int innerW = pw - 14;
             var registries = this.minecraft != null && this.minecraft.level != null
                 ? this.minecraft.level.registryAccess()
                 : null;
@@ -230,23 +224,23 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.idle_title").getString(),
-                    innerX, py + 6, innerW, 0.72F, FusionGuiSkin.COLOR_GOLD
+                    innerX, py + 8, innerW, 0.70F, FusionGuiSkin.COLOR_GOLD
                 );
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.idle_line1").getString(),
-                    innerX, py + 20, innerW, 0.62F, FusionGuiSkin.COLOR_CREAM
+                    innerX, py + 21, innerW, 0.60F, FusionGuiSkin.COLOR_CREAM
                 );
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.idle_line2").getString(),
-                    innerX, py + 32, innerW, 0.60F, FusionGuiSkin.COLOR_MUTED
+                    innerX, py + 33, innerW, 0.58F, FusionGuiSkin.COLOR_MUTED
                 );
                 if (preview.canFlipTarget() || preview.canSplitTarget()) {
                     FusionGuiSkin.drawLeftBoundedText(
                         ctx, this.font,
                         Component.translatable("gui.enchantment_fusion.preview.flip_split_ready", preview.flipOrSplitXpCost()).getString(),
-                        innerX, py + 45, innerW, 0.62F, FusionGuiSkin.COLOR_CYAN
+                        innerX, py + 45, innerW, 0.60F, FusionGuiSkin.COLOR_CYAN
                     );
                 }
                 return;
@@ -256,17 +250,17 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.blocked").getString(),
-                    innerX, py + 7, innerW, 0.72F, FusionGuiSkin.COLOR_RED
+                    innerX, py + 8, innerW, 0.70F, FusionGuiSkin.COLOR_RED
                 );
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable(rejectKey(preview.rejectReason())).getString(),
-                    innerX, py + 22, innerW, 0.62F, FusionGuiSkin.COLOR_WARN
+                    innerX, py + 22, innerW, 0.60F, FusionGuiSkin.COLOR_WARN
                 );
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.try_swap_hint").getString(),
-                    innerX, py + 38, innerW, 0.58F, FusionGuiSkin.COLOR_MUTED
+                    innerX, py + 38, innerW, 0.56F, FusionGuiSkin.COLOR_MUTED
                 );
                 return;
             }
@@ -275,12 +269,12 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.expand_title").getString(),
-                    innerX, py + 7, innerW, 0.72F, FusionGuiSkin.COLOR_GOLD
+                    innerX, py + 8, innerW, 0.70F, FusionGuiSkin.COLOR_GOLD
                 );
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.expand_desc").getString(),
-                    innerX, py + 22, innerW, 0.62F, FusionGuiSkin.COLOR_CYAN
+                    innerX, py + 22, innerW, 0.60F, FusionGuiSkin.COLOR_CYAN
                 );
                 drawXpLine(ctx, preview.xpCost(), innerX, py + 44, innerW);
                 return;
@@ -290,12 +284,12 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.topup_title").getString(),
-                    innerX, py + 7, innerW, 0.72F, FusionGuiSkin.COLOR_GREEN
+                    innerX, py + 8, innerW, 0.70F, FusionGuiSkin.COLOR_GREEN
                 );
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font,
                     Component.translatable("gui.enchantment_fusion.preview.topup_desc").getString(),
-                    innerX, py + 22, innerW, 0.62F, FusionGuiSkin.COLOR_CREAM
+                    innerX, py + 22, innerW, 0.60F, FusionGuiSkin.COLOR_CREAM
                 );
                 drawXpLine(ctx, preview.xpCost(), innerX, py + 44, innerW);
                 return;
@@ -306,7 +300,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 String pName = FusionTooltipRenderer.formatEnchantmentWithLevel(registries, pair.primaryId(), pair.primaryLevel()).getString();
                 String sName = FusionTooltipRenderer.formatEnchantmentWithLevel(registries, pair.secondaryId(), pair.secondaryLevel()).getString();
                 String header = Component.translatable("tooltip.enchantment_fusion.pair_header", pName, sName).getString();
-                FusionGuiSkin.drawLeftBoundedText(ctx, this.font, header, innerX, py + 5, innerW, 0.68F, FusionGuiSkin.COLOR_AMETHYST);
+                FusionGuiSkin.drawLeftBoundedText(ctx, this.font, header, innerX, py + 7, innerW, 0.66F, FusionGuiSkin.COLOR_AMETHYST);
 
                 boolean discovered = FusionTooltipRenderer.shouldShowUnlockedPreview(pair);
                 String effectLine = discovered
@@ -314,7 +308,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                     : FusionTooltipRenderer.buildClueSentence(pair).getString();
                 FusionGuiSkin.drawLeftBoundedText(
                     ctx, this.font, effectLine,
-                    innerX, py + 19, innerW, 0.60F,
+                    innerX, py + 20, innerW, 0.58F,
                     discovered ? FusionGuiSkin.COLOR_CYAN : FusionGuiSkin.COLOR_GOLD
                 );
 
@@ -326,14 +320,14 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                     ).getString();
                     FusionGuiSkin.drawLeftBoundedText(
                         ctx, this.font, stabStr,
-                        innerX, py + 32, innerW, 0.58F,
+                        innerX, py + 33, innerW, 0.56F,
                         preview.instabilityChance() > 0.01 ? FusionGuiSkin.COLOR_WARN : FusionGuiSkin.COLOR_GREEN
                     );
                 } else {
                     FusionGuiSkin.drawLeftBoundedText(
                         ctx, this.font,
                         Component.translatable("gui.enchantment_fusion.preview.harmonic_stable").getString(),
-                        innerX, py + 32, innerW, 0.58F, FusionGuiSkin.COLOR_GREEN
+                        innerX, py + 33, innerW, 0.56F, FusionGuiSkin.COLOR_GREEN
                     );
                 }
                 drawXpLine(ctx, preview.xpCost(), innerX, py + 45, innerW);
@@ -348,7 +342,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         String xpText = Component.translatable("gui.enchantment_fusion.preview.xp_cost", xpCost).getString();
         FusionGuiSkin.drawLeftBoundedText(
             ctx, this.font, xpText,
-            x, y, maxW, 0.62F,
+            x, y, maxW, 0.60F,
             affordable ? FusionGuiSkin.COLOR_GREEN : FusionGuiSkin.COLOR_RED
         );
     }

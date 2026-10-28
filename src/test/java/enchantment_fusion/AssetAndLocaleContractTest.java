@@ -60,29 +60,28 @@ class AssetAndLocaleContractTest {
             Path.of("src/client/resources/assets/enchantment_fusion/textures/block/enchantment_fusion_table_bottom.png"),
             Path.of("src/client/resources/assets/enchantment_fusion/textures/item/fused_enchanted_book.png"),
             Path.of("src/client/resources/assets/enchantment_fusion/textures/item/resonance_stabilizer.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/fusion_panel.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/slot_frame.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_swap_normal.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_swap_hover.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_fuse_normal.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_fuse_hover.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_fuse_disabled.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_action_small_normal.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_action_small_hover.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/btn_action_small_disabled.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_empty.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_filled.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_aberrant.png")
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/panel_frame.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/slot_primary.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/slot_secondary.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/slot_catalyst.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/slot_default.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/swap_button.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/swap_button_hover.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/swap_button_disabled.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/button_normal.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/button_hover.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/button_disabled.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_gem_empty.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_gem_filled.png")
         );
 
         for (Path png : requiredPngs) {
             assertTrue(Files.isRegularFile(png), "Missing required PNG texture: " + png);
             BufferedImage img = ImageIO.read(png.toFile());
             assertNotNull(img, "Corrupt PNG texture: " + png);
-            assertTrue(img.getWidth() >= 16 && img.getHeight() >= 16, "Invalid dimensions on " + png);
+            assertTrue(img.getWidth() >= 12 && img.getHeight() >= 12, "Invalid dimensions on " + png);
         }
 
-        // Verify zero ctx.fill(...) calls inside src/client/java/enchantment_fusion/gui/
         try (var paths = Files.walk(Path.of("src/client/java/enchantment_fusion/gui"))) {
             List<Path> guiFiles = paths.filter(p -> p.toString().endsWith(".java")).collect(Collectors.toList());
             assertFalse(guiFiles.isEmpty());

@@ -15,11 +15,11 @@ def overlaps(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> bool
 class UiReadabilityTest(unittest.TestCase):
     def test_workstation_regions_do_not_overlap(self) -> None:
         regions = {
-            "slot_primary": (20, 32, 20, 20),
-            "btn_swap": (48, 31, 22, 22),
-            "slot_secondary": (84, 32, 20, 20),
-            "slot_catalyst": (52, 60, 20, 20),
-            "slot_target": (52, 90, 20, 20),
+            "slot_primary": (21, 33, 18, 18),
+            "btn_swap": (47, 30, 24, 24),
+            "slot_secondary": (85, 33, 18, 18),
+            "slot_catalyst": (53, 61, 18, 18),
+            "slot_target": (53, 91, 18, 18),
             "vessel_diamonds": (77, 94, 26, 12),
             "preview_panel": (122, 24, 141, 60),
             "btn_fuse": (122, 88, 76, 20),

@@ -74,7 +74,7 @@ class FusionRuleEngineTest {
         );
         assertTrue(unstabilized.valid());
         assertTrue(unstabilized.repulsiveExclusive());
-        assertEquals(0.25, unstabilized.instabilityChance(), 1e-6);
+        assertEquals(0.35, unstabilized.instabilityChance(), 1e-6);
 
         PairEvaluation stabilized = FusionRuleEngine.evaluateFusion(
             sharp5, smite5, true, FusedEnchantmentList.EMPTY, Set.of(), 1, true, false

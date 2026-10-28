@@ -6,27 +6,27 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 
 /**
- * Pixel-art GUI sprite identifiers and bounded text helpers for the Enchantment Fusion Table.
- * Uses exclusively genuine pixel-art PNG textures (zero raw solid-color placeholder boxes).
+ * Pixel-art GUI sprite identifiers, 9-slice blitter, and bounded text helpers for the
+ * Enchantment Fusion Table. Uses exclusively genuine pixel-art PNG textures.
  */
 public final class FusionGuiSkin {
-    public static final Identifier PANEL_BG = EnchantmentFusion.id("gui/fusion_panel.png");
-    public static final Identifier SLOT_FRAME = EnchantmentFusion.id("gui/slot_frame.png");
+    public static final Identifier PANEL_FRAME = EnchantmentFusion.id("gui/panel_frame.png");
 
-    public static final Identifier BTN_SWAP_NORMAL = EnchantmentFusion.id("gui/btn_swap_normal.png");
-    public static final Identifier BTN_SWAP_HOVER = EnchantmentFusion.id("gui/btn_swap_hover.png");
+    public static final Identifier SLOT_PRIMARY = EnchantmentFusion.id("gui/slot_primary.png");
+    public static final Identifier SLOT_SECONDARY = EnchantmentFusion.id("gui/slot_secondary.png");
+    public static final Identifier SLOT_CATALYST = EnchantmentFusion.id("gui/slot_catalyst.png");
+    public static final Identifier SLOT_DEFAULT = EnchantmentFusion.id("gui/slot_default.png");
 
-    public static final Identifier BTN_FUSE_NORMAL = EnchantmentFusion.id("gui/btn_fuse_normal.png");
-    public static final Identifier BTN_FUSE_HOVER = EnchantmentFusion.id("gui/btn_fuse_hover.png");
-    public static final Identifier BTN_FUSE_DISABLED = EnchantmentFusion.id("gui/btn_fuse_disabled.png");
+    public static final Identifier BTN_SWAP_NORMAL = EnchantmentFusion.id("gui/swap_button.png");
+    public static final Identifier BTN_SWAP_HOVER = EnchantmentFusion.id("gui/swap_button_hover.png");
+    public static final Identifier BTN_SWAP_DISABLED = EnchantmentFusion.id("gui/swap_button_disabled.png");
 
-    public static final Identifier BTN_SMALL_NORMAL = EnchantmentFusion.id("gui/btn_action_small_normal.png");
-    public static final Identifier BTN_SMALL_HOVER = EnchantmentFusion.id("gui/btn_action_small_hover.png");
-    public static final Identifier BTN_SMALL_DISABLED = EnchantmentFusion.id("gui/btn_action_small_disabled.png");
+    public static final Identifier BTN_NORMAL = EnchantmentFusion.id("gui/button_normal.png");
+    public static final Identifier BTN_HOVER = EnchantmentFusion.id("gui/button_hover.png");
+    public static final Identifier BTN_DISABLED = EnchantmentFusion.id("gui/button_disabled.png");
 
-    public static final Identifier VESSEL_EMPTY = EnchantmentFusion.id("gui/vessel_empty.png");
-    public static final Identifier VESSEL_FILLED = EnchantmentFusion.id("gui/vessel_filled.png");
-    public static final Identifier VESSEL_ABERRANT = EnchantmentFusion.id("gui/vessel_aberrant.png");
+    public static final Identifier VESSEL_EMPTY = EnchantmentFusion.id("gui/vessel_gem_empty.png");
+    public static final Identifier VESSEL_FILLED = EnchantmentFusion.id("gui/vessel_gem_filled.png");
 
     public static final int COLOR_GOLD = 0xFFFFDF88;
     public static final int COLOR_CREAM = 0xFFF6EFE2;
@@ -43,6 +43,54 @@ public final class FusionGuiSkin {
 
     public static void drawSprite(GuiGraphicsExtractor ctx, Identifier sprite, int x, int y, int w, int h) {
         ctx.blit(sprite, x, y, x + w, y + h, 0.0F, 1.0F, 0.0F, 1.0F);
+    }
+
+    /**
+     * Renders a pixel-art 9-slice frame (`panel_frame.png` 48x48 or `button_*.png` 32x32)
+     * so corner studs and borders stay 1:1 razor-sharp at any target rectangle size.
+     */
+    public static void drawNineSlice(
+        GuiGraphicsExtractor ctx,
+        Identifier sprite,
+        int x,
+        int y,
+        int w,
+        int h,
+        int texW,
+        int texH,
+        int border
+    ) {
+        int b = Math.min(border, Math.min(w / 2, h / 2));
+        float u1 = (float) b / (float) texW;
+        float u2 = (float) (texW - b) / (float) texW;
+        float v1 = (float) b / (float) texH;
+        float v2 = (float) (texH - b) / (float) texH;
+
+        int x1 = x + b;
+        int x2 = x + w - b;
+        int y1 = y + b;
+        int y2 = y + h - b;
+
+        // 4 corners
+        ctx.blit(sprite, x, y, x1, y1, 0.0F, u1, 0.0F, v1);
+        ctx.blit(sprite, x2, y, x + w, y1, u2, 1.0F, 0.0F, v1);
+        ctx.blit(sprite, x, y2, x1, y + h, 0.0F, u1, v2, 1.0F);
+        ctx.blit(sprite, x2, y2, x + w, y + h, u2, 1.0F, v2, 1.0F);
+
+        // Top & bottom edges
+        if (x2 > x1) {
+            ctx.blit(sprite, x1, y, x2, y1, u1, u2, 0.0F, v1);
+            ctx.blit(sprite, x1, y2, x2, y + h, u1, u2, v2, 1.0F);
+        }
+        // Left & right edges
+        if (y2 > y1) {
+            ctx.blit(sprite, x, y1, x1, y2, 0.0F, u1, v1, v2);
+            ctx.blit(sprite, x2, y1, x + w, y2, u2, 1.0F, v1, v2);
+        }
+        // Center body
+        if (x2 > x1 && y2 > y1) {
+            ctx.blit(sprite, x1, y1, x2, y2, u1, u2, v1, v2);
+        }
     }
 
     public static void drawCenteredBoundedText(
@@ -71,7 +119,7 @@ public final class FusionGuiSkin {
                 scale = fit;
             } else {
                 scale = minScale;
-                int maxRaw = Math.max(8, Math.round(boxW / scale) - font.width("\u2026"));
+                int maxRaw = Math.max(8, Math.round(maxWForEllipsis(boxW, scale, font)));
                 shown = font.plainSubstrByWidth(text, maxRaw) + "\u2026";
             }
         }
@@ -106,11 +154,15 @@ public final class FusionGuiSkin {
                 scale = fit;
             } else {
                 scale = minScale;
-                int maxRaw = Math.max(8, Math.round(maxW / scale) - font.width("\u2026"));
+                int maxRaw = Math.max(8, Math.round(maxWForEllipsis(maxW, scale, font)));
                 shown = font.plainSubstrByWidth(text, maxRaw) + "\u2026";
             }
         }
         drawScaledText(ctx, font, shown, x, y, scale, argbColor);
+    }
+
+    private static float maxWForEllipsis(int boxW, float scale, Font font) {
+        return (boxW / scale) - font.width("\u2026");
     }
 
     private static void drawScaledText(
