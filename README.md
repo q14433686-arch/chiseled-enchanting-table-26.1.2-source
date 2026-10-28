@@ -21,6 +21,8 @@ Targeted, deterministic enchanting for Fabric **26.3** — choose exact enchantm
 
 **Current compatibility:** `26_3_revision_13` — update both client and server to this build; older `1.1.0` jars use incompatible ritual/tome payloads and lack the new visual-event channel. [Compatibility history](docs/PROTOCOL_HISTORY.md).
 
+**2026-10-28 full source sync:** 26.1.2 PR27 (revision22) → 26.3 revision13: smart ritual wait/abort/fuel, tome maintenance, Cleanse extraction and curse purge, custom 3D effects/floating targets, batch locate and cross-tab tome selection. [Scope and validation](docs/reports/FULL_PORT_PR27_TO_26_3_2026_10_28.md).
+
 <details>
 <summary>Optional cosmetic easter egg (spoiler)</summary>
 

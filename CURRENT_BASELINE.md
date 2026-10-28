@@ -21,7 +21,11 @@ All four source rounds are ported: smart ritual gating/refunds/maintenance, Clea
 custom 3D particles/floating target/washing, and batch locate/reload synchronization/cross-tab selection.
 26.3-specific SDL input, model/render, loot/structure APIs and independent protocol namespace are retained.
 Existing configuration viewport fixes remain. Full-page responsive UI is still unfinished, not supplied by this port.
-Validation of this new source must use its own CI SHA; the historical green runs below do not validate it.
+[Full scope and verification](docs/reports/FULL_PORT_PR27_TO_26_3_2026_10_28.md).
+Verified code `03f45de26685059ec461a2849c030236b34513af`: [compile-check 40622304180](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40622304180)
+and [build 40622303743](https://github.com/q14433686-arch/chiseled-enchanting-table-26.1.2-source/actions/runs/40622303743) all successful;
+177 JUnit, no failures/errors/skips; native FILTER SDL / BATCH LOCATE WORLD / CONFIG VIEWPORT / CLIENT SMOKE PASS.
+Historical green runs below do not validate newer code.
 
 ## Historical rainbow-item validation — 2026-10-26
 
