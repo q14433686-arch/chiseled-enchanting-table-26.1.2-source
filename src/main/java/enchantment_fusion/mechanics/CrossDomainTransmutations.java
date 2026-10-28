@@ -1380,7 +1380,7 @@ public final class CrossDomainTransmutations {
                     hit.hurtServer(level, level.damageSources().magic(), 7.5F);
                 }
             }
-            level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 0.8F, 1.2F);
+            level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_THROW.value(), SoundSource.PLAYERS, 0.8F, 1.2F);
         }
 
         // 27: Riptide "水龙突刺 / 驭浪盾冲" in water or rain!
