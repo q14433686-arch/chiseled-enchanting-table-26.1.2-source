@@ -507,16 +507,17 @@ public final class SignaturePairs {
                 if (target != null) {
                     float armorBypass = Math.min(6.0F, 1.5F + target.getArmorValue() * 0.22F);
                     target.hurtServer(level, level.damageSources().magic(), armorBypass);
-                    if (target.getType().is(EntityTypeTags.UNDEAD) && target.getHealth() <= target.getMaxHealth() * 0.22F) {
+                    if (BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(target.getType()).is(EntityTypeTags.UNDEAD)
+                        && target.getHealth() <= target.getMaxHealth() * 0.22F) {
                         target.hurtServer(level, level.damageSources().magic(), target.getHealth() + 10.0F);
-                        level.sendParticles(ParticleTypes.FLASH, pos.x, pos.y + 0.9D, pos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+                        level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.9D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.08D);
                     }
                 }
                 return true;
             }
             case "radiant_shockwave" -> {
                 for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.2D, target)) {
-                    if (mob.getType().is(EntityTypeTags.UNDEAD)) {
+                    if (BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(mob.getType()).is(EntityTypeTags.UNDEAD)) {
                         mob.hurtServer(level, level.damageSources().magic(), 3.5F + 0.7F * pLv);
                     } else {
                         mob.hurtServer(level, level.damageSources().magic(), 1.8F);

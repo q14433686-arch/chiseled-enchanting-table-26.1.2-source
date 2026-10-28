@@ -361,7 +361,7 @@ public final class FusionStationOperations {
         if (finalPair != null && preview.repulsive() && preview.instabilityChance() > 0.001) {
             if (player.getRandom().nextDouble() < preview.instabilityChance()) {
                 String abId = AberrantRegistry.pickRandomAberration(player.getRandom());
-                finalPair = FusedPair.aberrant(
+                finalPair = new FusedPair(
                     finalPair.primaryId(),
                     finalPair.primaryLevel(),
                     finalPair.secondaryId(),
