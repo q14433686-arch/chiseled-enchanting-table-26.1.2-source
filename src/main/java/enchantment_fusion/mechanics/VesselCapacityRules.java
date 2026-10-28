@@ -72,8 +72,7 @@ public final class VesselCapacityRules {
     }
 
     public static int getMaxVesselSlots(ItemStack stack) {
-        if (stack == null || stack.isEmpty() || stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK)
-            || stack.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
+        if (!isPotentialEquipmentHost(stack)) {
             return 0;
         }
         int bonus = stack.getOrDefault(FusionDataComponents.VESSEL_BONUS, 0);
@@ -110,7 +109,8 @@ public final class VesselCapacityRules {
         if (stack == null || stack.isEmpty()) {
             return false;
         }
-        if (stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK) || stack.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
+        if (stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK) || stack.is(FusionItems.FUSED_ENCHANTED_BOOK)
+            || stack.is(Items.TOTEM_OF_UNDYING) || stack.is(Items.GLASS_BOTTLE) || stack.is(Items.EXPERIENCE_BOTTLE)) {
             return false;
         }
         return stack.getMaxStackSize() == 1 && (stack.isDamageableItem() || stack.isEnchantable() || stack.isEnchanted());

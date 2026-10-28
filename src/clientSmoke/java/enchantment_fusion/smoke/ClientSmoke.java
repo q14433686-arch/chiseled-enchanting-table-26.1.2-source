@@ -3,14 +3,19 @@ package enchantment_fusion.smoke;
 import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.gui.EnchantmentFusionScreen;
+import enchantment_fusion.gui.FusionTooltipRenderer;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
+import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.mechanics.FusionStationOperations.OperationKind;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.registry.FusionBlocks;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -22,17 +27,20 @@ import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * End-to-end real client + integrated server probe for Enchantment Fusion 0.2.0 on MC 26.1.2.
+ * End-to-end real client + integrated server probe for Enchantment Fusion 0.3.0 on MC 26.1.2.
  * Exercises:
  * 1. BlockItem localized display name (never raw item.enchantment_fusion.enchantment_fusion_table).
  * 2. 3-tab 308x214 pixel-art GUI + Tab 0 direct Book+Book -> Fused Enchanted Book (no blank book needed).
@@ -262,30 +270,102 @@ public final class ClientSmoke implements ClientModInitializer {
                             "minecraft:loyalty".equals(list.pairs().get(0).primaryId()),
                             "Expected inline socket flip to invert pair to [Loyalty ▷ Sharpness]"
                         );
-                        sp.closeContainer();
-                        require(be.getItem(3).is(Items.DIAMOND_HELMET), "Closing menu must persist helmet inside table BlockEntity");
+
+                        // Phase 3: Prepare Single Cross-Domain Inscription (Fire Aspect II Book -> Diamond Pickaxe = Auto-Smelt II at 0◇!)
+                        var enchReg = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+                        Holder<Enchantment> fireAspect = enchReg.getOrThrow(
+                            ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("fire_aspect"))
+                        );
+                        be.setItem(0, FusionStationOperations.createSingleEnchantedBook(fireAspect, 2));
+                        be.setItem(1, ItemStack.EMPTY);
+                        be.setItem(3, new ItemStack(Items.DIAMOND_PICKAXE, 1));
+                        sp.containerMenu.broadcastChanges();
+
+                        // Verify special non-damageable cross-domain hosts resolve cleanly on real ItemStacks
+                        require(
+                            "mending_xp_bottle".equals(CrossDomainTransmutations.resolve(new ItemStack(Items.GLASS_BOTTLE), "minecraft:mending").orElseThrow().id()),
+                            "Expected Mending on Glass Bottle -> mending_xp_bottle"
+                        );
+                        require(
+                            "unbreaking_totem".equals(CrossDomainTransmutations.resolve(new ItemStack(Items.TOTEM_OF_UNDYING), "minecraft:unbreaking").orElseThrow().id()),
+                            "Expected Unbreaking on Totem of Undying -> unbreaking_totem"
+                        );
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
                     }
                 });
-                next(9, 10);
+                next(9, 12);
             }
             case 9 -> {
                 if (!serverReadyFlag) {
                     return;
                 }
-                resourceReloadFuture = client.reloadResourcePacks();
-                next(10, 8);
+                EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
+                var preview = screen.getMenu().computePreview();
+                if (preview.kind() != OperationKind.INSCRIBE_SINGLE_CROSS || !preview.executable()) {
+                    return;
+                }
+                require(
+                    preview.previewTransmute() != null && "auto_smelt_pick".equals(preview.previewTransmute().id()),
+                    "Expected Auto-Smelt Pickaxe preview for Fire Aspect II on Diamond Pickaxe"
+                );
+                Rect2i b = screen.guiBounds();
+                // Click [异位铭刻 / Transmute] primary execute button
+                click(screen, b.getX() + 267, b.getY() + 107);
+                next(10, 14);
             }
             case 10 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
+                        var be = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
+                        ItemStack pick = be.getItem(3);
+                        require(pick.is(Items.DIAMOND_PICKAXE), "Expected Diamond Pickaxe in Slot 3");
+                        FusedEnchantmentList fused = pick.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+                        require(fused.isEmpty(), "Single Cross-Domain Inscription must consume 0 Vessel Spirit slots!");
+                        ItemEnchantments ench = pick.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+                        require(ench.size() == 1, "Expected standalone cross-domain enchantment on Diamond Pickaxe");
+
+                        // Verify in-place Tooltip replacement replaces vanilla Fire Aspect II with transmuted title!
+                        var enchReg = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+                        Holder<Enchantment> fireAspect = enchReg.getOrThrow(
+                            ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("fire_aspect"))
+                        );
+                        List<Component> lines = new ArrayList<>();
+                        lines.add(pick.getHoverName());
+                        lines.add(Enchantment.getFullname(fireAspect, 2));
+                        FusionTooltipRenderer.appendFusionTooltips(pick, sp.level().registryAccess(), lines);
+                        String replaced = lines.get(1).getString();
+                        String expectedTitle = Component.translatable("transmute.enchantment_fusion.auto_smelt_pick.title").getString();
+                        require(replaced.contains(expectedTitle), "Expected transmuted tooltip title '" + expectedTitle + "', got: " + replaced);
+
+                        sp.closeContainer();
+                        require(be.getItem(3).is(Items.DIAMOND_PICKAXE), "Closing menu must persist pickaxe inside table BlockEntity");
+                        serverReadyFlag = true;
+                    } catch (Throwable t) {
+                        serverFailure = t;
+                    }
+                });
+                next(11, 10);
+            }
+            case 11 -> {
+                if (!serverReadyFlag) {
+                    return;
+                }
+                resourceReloadFuture = client.reloadResourcePacks();
+                next(12, 8);
+            }
+            case 12 -> {
                 if (!resourceReloadFuture.isDone() || client.getOverlay() != null) {
                     return;
                 }
                 resourceReloadFuture.join();
                 finish(
                     client,
-                    "CLIENT SMOKE PASS: localized 3D fusion table + 3-tab GUI + direct Book->FusedBook + universal-host helmet socket & flip + resource reload"
+                    "CLIENT SMOKE PASS: localized 3D fusion table + 3-tab GUI + direct Book->FusedBook + universal-host socket/flip + Phase 3 0-slot cross-domain transmutation & tooltip replacement + resource reload"
                 );
             }
             default -> throw new AssertionError("Unknown phase " + phase);

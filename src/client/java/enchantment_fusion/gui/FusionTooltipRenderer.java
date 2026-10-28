@@ -5,6 +5,8 @@ import enchantment_fusion.compat.CetSoftBridge;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
+import enchantment_fusion.mechanics.CrossDomainTransmutations;
+import enchantment_fusion.mechanics.CrossDomainTransmutations.TransmuteVariant;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.mechanics.VesselCapacityRules;
@@ -13,6 +15,7 @@ import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.HostForm;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.util.List;
 import java.util.Optional;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
@@ -20,16 +23,22 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 /**
- * Renders the composite Enchantment Fusion tooltip lines on Fused Enchanted Books and
- * equipment bearing fused pairs (including bespoke Signature titles/effects and Aberrant mutations).
+ * Renders Enchantment Fusion tooltips:
+ * <ul>
+ *   <li>Replaces cross-domain standalone enchantment lines directly in-place with their transmuted variant titles
+ *       (e.g., {@code ✦ 自动熔炼 II}, {@code ✦ 沂水}, {@code ✦ 锯刃 II}), expanding origin + cross-domain details on {@code [Shift]}.</li>
+ *   <li>Renders Vessel Spirit sockets ({@code ◇/◈/◉}), bespoke Signature Pair titles, and Aberrant mutation warnings.</li>
+ * </ul>
  */
 public final class FusionTooltipRenderer {
     private FusionTooltipRenderer() {}
@@ -58,9 +67,16 @@ public final class FusionTooltipRenderer {
             return;
         }
 
+        boolean shift = isShiftHeld();
         FusedEnchantmentList list = stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        boolean hasCrossTransmute = replaceCrossDomainEnchantmentLines(stack, list, lines, shift);
+
         int bonus = VesselCapacityRules.vesselBonus(stack);
         if (list.isEmpty() && bonus <= 0 && !stack.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
+            if (hasCrossTransmute && !shift) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.hold_shift")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+            }
             return;
         }
 
@@ -90,7 +106,6 @@ public final class FusionTooltipRenderer {
         }
 
         HostForm hostForm = HostForm.resolve(stack);
-        boolean shift = isShiftHeld();
 
         for (FusedPair pair : list.pairs()) {
             Component primaryLabel = formatEnchantmentWithLevel(registries, pair.primaryId(), pair.primaryLevel());
@@ -137,10 +152,92 @@ public final class FusionTooltipRenderer {
             }
         }
 
-        if (!list.isEmpty() && !shift) {
+        if ((!list.isEmpty() || hasCrossTransmute) && !shift) {
             lines.add(Component.translatable("tooltip.enchantment_fusion.hold_shift")
                 .withStyle(ChatFormatting.DARK_GRAY));
         }
+    }
+
+    /**
+     * Replaces vanilla standalone enchantment lines on cross-domain items directly with their
+     * transmuted variant names, expanding source enchantment + mechanics when {@code [Shift]} is held.
+     */
+    private static boolean replaceCrossDomainEnchantmentLines(
+        ItemStack stack,
+        FusedEnchantmentList fusedList,
+        List<Component> lines,
+        boolean shift
+    ) {
+        ItemEnchantments enchants = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        if (enchants.isEmpty()) {
+            return false;
+        }
+        boolean any = false;
+        for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
+            Holder<Enchantment> holder = entry.getKey();
+            int level = entry.getIntValue();
+            String enchId = holder.unwrapKey().map(k -> k.identifier().toString()).orElse("");
+            if (enchId.isEmpty() || fusedList.containsEnchantmentId(enchId)) {
+                continue;
+            }
+            Optional<TransmuteVariant> varOpt = CrossDomainTransmutations.resolve(stack, enchId);
+            if (varOpt.isEmpty()) {
+                continue;
+            }
+            any = true;
+            TransmuteVariant variant = varOpt.get();
+            Component vanillaFull = Enchantment.getFullname(holder, level);
+            Component transmutedLine = buildTransmutedDisplayName(variant, level, holder.value().getMaxLevel(), enchId);
+
+            int foundIdx = -1;
+            String targetText = vanillaFull.getString();
+            for (int i = 0; i < lines.size(); i++) {
+                if (lines.get(i).getString().equals(targetText)) {
+                    foundIdx = i;
+                    break;
+                }
+            }
+
+            if (foundIdx >= 0) {
+                lines.set(foundIdx, transmutedLine);
+                if (shift) {
+                    lines.add(foundIdx + 1, Component.translatable(
+                        "tooltip.enchantment_fusion.transmute_origin_desc",
+                        vanillaFull,
+                        Component.translatable(variant.descKey())
+                    ).withStyle(ChatFormatting.DARK_AQUA));
+                }
+            } else {
+                int insertAt = Math.min(1, lines.size());
+                lines.add(insertAt, transmutedLine);
+                if (shift) {
+                    lines.add(insertAt + 1, Component.translatable(
+                        "tooltip.enchantment_fusion.transmute_origin_desc",
+                        vanillaFull,
+                        Component.translatable(variant.descKey())
+                    ).withStyle(ChatFormatting.DARK_AQUA));
+                }
+            }
+        }
+        return any;
+    }
+
+    public static Component buildTransmutedDisplayName(
+        TransmuteVariant variant,
+        int level,
+        int maxLevel,
+        String enchId
+    ) {
+        ChatFormatting color = "minecraft:binding_curse".equals(enchId) ? ChatFormatting.RED : ChatFormatting.AQUA;
+        Component title = Component.translatable(variant.titleKey());
+        if (maxLevel <= 1 && level <= 1) {
+            return Component.translatable("tooltip.enchantment_fusion.transmute_single", title).withStyle(color);
+        }
+        return Component.translatable(
+            "tooltip.enchantment_fusion.transmute_leveled",
+            title,
+            toRoman(level)
+        ).withStyle(color);
     }
 
     public static Component buildEffectSummary(FusedPair pair, HostForm hostForm) {

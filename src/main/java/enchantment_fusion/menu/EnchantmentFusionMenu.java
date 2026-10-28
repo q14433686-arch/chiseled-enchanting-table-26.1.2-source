@@ -2,6 +2,7 @@ package enchantment_fusion.menu;
 
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.compat.CetSoftBridge;
+import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.FusionStationOperations.EnchantCandidate;
 import enchantment_fusion.mechanics.FusionStationOperations.ResolvedSelection;
@@ -83,7 +84,7 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         this.access = access;
         this.player = playerInventory.player;
         this.tablePos = tablePos;
-        this.uiState.set(0, VesselCapacityRules.isPotentialEquipmentHost(stationInv.getItem(FusionStationOperations.SLOT_TARGET))
+        this.uiState.set(0, CrossDomainTransmutations.isEligibleCrossDomainHost(stationInv.getItem(FusionStationOperations.SLOT_TARGET))
             ? FusionStationOperations.TAB_SOCKET
             : FusionStationOperations.TAB_FUSE);
         this.uiState.set(1, -1);
@@ -174,10 +175,15 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
                 if (paramA >= 0 && paramA < cands.size()) {
                     ResolvedSelection cur = FusionStationOperations.resolveSelection(cands, preferredPrimaryIndex(), preferredSecondaryIndex());
-                    if (paramA == cur.primaryIndex()) {
-                        uiState.set(1, cur.secondaryIndex());
+                    if (paramA == cur.secondaryIndex()) {
+                        // Right-clicking the active [B] row toggles [B] OFF into Single Cross-Domain Inscription mode!
+                        uiState.set(2, -2);
+                    } else {
+                        if (paramA == cur.primaryIndex()) {
+                            uiState.set(1, cur.secondaryIndex() >= 0 ? cur.secondaryIndex() : 0);
+                        }
+                        uiState.set(2, paramA);
                     }
-                    uiState.set(2, paramA);
                     changed = true;
                 }
             }
@@ -248,6 +254,13 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 if (!this.moveItemStackTo(source, 3, 4, false)) {
                     return ItemStack.EMPTY;
                 }
+                uiState.set(0, FusionStationOperations.TAB_SOCKET);
+            } else if (CrossDomainTransmutations.isSpecialNonEquipmentHost(source)) {
+                Slot targetSlot = this.slots.get(FusionStationOperations.SLOT_TARGET);
+                if (targetSlot.hasItem()) {
+                    return ItemStack.EMPTY;
+                }
+                targetSlot.setByPlayer(source.split(1));
                 uiState.set(0, FusionStationOperations.TAB_SOCKET);
             } else if (source.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
                 if (activeTab() == FusionStationOperations.TAB_COMPENDIUM) {

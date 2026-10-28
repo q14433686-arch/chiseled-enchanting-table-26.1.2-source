@@ -1,5 +1,6 @@
 package enchantment_fusion.mixin;
 
+import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
 import enchantment_fusion.model.TriggerType;
 import net.minecraft.server.level.ServerLevel;
@@ -17,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Hooks server-side projectile impacts so bows, crossbows, and thrown tridents carrying
- * fused pairs trigger {@code ON_PROJECTILE_IMPACT} and {@code ON_TRIDENT_CHANNEL}.
+ * binary Fused Pairs or Cross-Domain Single Transmutations trigger their impact effects.
  */
 @Mixin(Projectile.class)
 public abstract class ProjectileImpactFusionMixin {
@@ -36,6 +37,7 @@ public abstract class ProjectileImpactFusionMixin {
             ? TriggerType.ON_TRIDENT_CHANNEL
             : TriggerType.ON_PROJECTILE_IMPACT;
         MatrixEffectExecutor.dispatch(serverLevel, shooter, weapon, trigger, target, hitResult.getLocation());
+        CrossDomainTransmutations.onProjectileImpact(serverLevel, self, shooter, weapon, target, hitResult.getLocation());
     }
 
     @Inject(method = "onHitBlock", at = @At("TAIL"))
@@ -52,6 +54,7 @@ public abstract class ProjectileImpactFusionMixin {
             ? TriggerType.ON_TRIDENT_CHANNEL
             : TriggerType.ON_PROJECTILE_IMPACT;
         MatrixEffectExecutor.dispatch(serverLevel, shooter, weapon, trigger, null, hitResult.getLocation());
+        CrossDomainTransmutations.onProjectileImpact(serverLevel, self, shooter, weapon, null, hitResult.getLocation());
     }
 
     private static ItemStack resolveFiringWeapon(Projectile self, ServerPlayer shooter) {

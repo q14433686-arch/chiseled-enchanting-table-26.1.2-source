@@ -9,130 +9,222 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.Vec3;
 
 /**
- * Wires Fabric server lifecycle, damage/death interception, combat, mining, and passive world ticks
- * into {@link SignaturePairs}, {@link AberrantRegistry}, and {@link MatrixEffectExecutor}.
+ * Registers Fabric gameplay hooks so both binary Fused Pairs ({@code [A ▷ B]} / {@code [B ▷ A]})
+ * and Phase 3 Cross-Domain Single Transmutations execute in real combat, mining, ranged shots,
+ * item usage, defensive triggers, and world item survival.
  */
 public final class MatrixRuntimeHooks {
-    private static final EquipmentSlot[] ARMOR_AND_HAND_SLOTS = {
+    private static final EquipmentSlot[] ARMOR_SLOTS = {
         EquipmentSlot.HEAD,
         EquipmentSlot.CHEST,
         EquipmentSlot.LEGS,
-        EquipmentSlot.FEET,
-        EquipmentSlot.OFFHAND,
-        EquipmentSlot.MAINHAND
+        EquipmentSlot.FEET
     };
-
-    private static final Map<UUID, Float> PEAK_FALL_DISTANCE = new ConcurrentHashMap<>();
+    private static final Map<UUID, ItemStack> BLOCK_BREAK_TOOL_SNAPSHOT = new ConcurrentHashMap<>();
 
     private MatrixRuntimeHooks() {}
 
-    public static void init() {
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            MatrixEffectExecutor.clearCooldowns();
-            PEAK_FALL_DISTANCE.clear();
+    public static void register() {
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            BLOCK_BREAK_TOOL_SNAPSHOT.clear();
+            SignaturePairs.clearRuntimeState();
+            CrossDomainTransmutations.clearRuntimeState();
         });
 
-        // Pre-damage interception: [时运 ▷ 保护] 招财金身 (chance to negate damage at 2x durability cost) & 琉璃圣盾
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
-            if (entity instanceof ServerPlayer serverPlayer) {
-                return SignaturePairs.allowIncomingDamage(serverPlayer, amount);
+        // 1. Pre-Break Smelting / Wood Charcoal-Ash & Post-Break Block Harvest
+        PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
+            if (world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
+                ItemStack tool = serverPlayer.getMainHandItem();
+                BLOCK_BREAK_TOOL_SNAPSHOT.put(serverPlayer.getUUID(), tool.copy());
+                if (!CrossDomainTransmutations.onBeforeBlockBreak(serverLevel, serverPlayer, pos, state)) {
+                    // Handled directly (e.g., Auto-Smelt Pickaxe or Auto-Smelt Axe Charcoal/Ash); still run binary fusion hooks!
+                    SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
+                    MatrixEffectExecutor.dispatch(
+                        serverLevel,
+                        serverPlayer,
+                        tool,
+                        TriggerType.ON_BLOCK_BREAK,
+                        null,
+                        pos.getCenter()
+                    );
+                    return false;
+                }
             }
             return true;
         });
 
-        // Lethal interception: [保护 ▷ 时运] 吉星高照 (lucky survival at 1 HP) & [保护 ▷ 忠诚] 归元护主 (void save)
-        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource, damageAmount) -> {
-            if (entity instanceof ServerPlayer serverPlayer) {
-                return SignaturePairs.allowPlayerDeath(serverPlayer);
+        PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
+            if (world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
+                ItemStack tool = serverPlayer.getMainHandItem();
+                if (tool.isEmpty()) {
+                    tool = BLOCK_BREAK_TOOL_SNAPSHOT.getOrDefault(serverPlayer.getUUID(), ItemStack.EMPTY);
+                }
+                SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
+                MatrixEffectExecutor.dispatch(
+                    serverLevel,
+                    serverPlayer,
+                    tool,
+                    TriggerType.ON_BLOCK_BREAK,
+                    null,
+                    pos.getCenter()
+                );
+                CrossDomainTransmutations.onAfterBlockBreak(serverLevel, serverPlayer, pos, state);
             }
-            return true;
         });
 
-        // Melee Strike + Sweep/Cleave (checks full charge 90%+ for ranged sword-waves & lightning iaido)
+        // 2. Melee Hit: Pet-Safeguard (完壁) + Binary Fusions + Cross-Domain Melee Transmutations
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-            if (!world.isClientSide()
+            if (!player.isSpectator()
+                && hand == InteractionHand.MAIN_HAND
                 && world instanceof ServerLevel serverLevel
                 && player instanceof ServerPlayer serverPlayer
                 && entity instanceof LivingEntity target) {
-                ItemStack weapon = serverPlayer.getItemInHand(hand);
-                boolean fullCharge = serverPlayer.getAttackStrengthScale(0.5F) >= 0.90F;
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_MELEE_STRIKE, target, target.position(), fullCharge);
-                if (fullCharge) {
-                    MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_SWEEP_OR_CLEAVE, target, target.position(), true);
+                if (!CrossDomainTransmutations.allowAttackTarget(serverPlayer, target)) {
+                    return InteractionResult.FAIL;
                 }
+                ItemStack weapon = serverPlayer.getMainHandItem();
+                boolean fullCharge = serverPlayer.getAttackStrengthScale(0.5F) > 0.9F;
+                MatrixEffectExecutor.dispatch(
+                    serverLevel,
+                    serverPlayer,
+                    weapon,
+                    TriggerType.ON_MELEE_HIT,
+                    target,
+                    target.position()
+                );
+                CrossDomainTransmutations.onMeleeAttack(serverLevel, serverPlayer, target, fullCharge);
             }
             return InteractionResult.PASS;
         });
 
-        // Block Harvest (Signature ore geode, molten smelting, 3x1 rock-splitter, magnet, etc. + Matrix)
-        PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
-            if (!world.isClientSide() && world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
-                ItemStack tool = serverPlayer.getMainHandItem();
-                SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, tool, TriggerType.ON_BLOCK_HARVEST, null, Vec3.atCenterOf(pos));
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, tool, TriggerType.ON_UTILITY_CYCLE, null, Vec3.atCenterOf(pos));
+        // 3. Right-Click Item Use (飞剑掷斧, 水龙突刺, 驭浪盾冲, 幻影连投, 经久省用 Consumables)
+        UseItemCallback.EVENT.register((player, world, hand) -> {
+            if (!player.isSpectator()
+                && world instanceof ServerLevel serverLevel
+                && player instanceof ServerPlayer serverPlayer) {
+                CrossDomainTransmutations.onUseItem(serverLevel, serverPlayer, hand, serverPlayer.getItemInHand(hand));
             }
+            return InteractionResult.PASS;
         });
 
-        // Post-Damage Counter & Blood Vengeance tracking
+        // 4. Pre-Damage Immunity Interception (Lucky Golden Body, Glass Holy Shield, 避雷充能)
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            if (entity instanceof ServerPlayer serverPlayer && entity.level() instanceof ServerLevel serverLevel) {
+                if (!SignaturePairs.allowIncomingDamage(serverPlayer, amount)) {
+                    return false;
+                }
+                return CrossDomainTransmutations.allowIncomingDamage(serverLevel, serverPlayer, source, amount);
+            }
+            return true;
+        });
+
+        // 5. Post-Damage Reactive Hooks (Armor + Shield + Weapon Bracer)
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
-            if (entity instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
-                SignaturePairs.recordIncomingDamage(serverPlayer, damageTaken, serverLevel.getGameTime());
+            if (entity instanceof ServerPlayer serverPlayer && entity.level() instanceof ServerLevel serverLevel) {
                 LivingEntity attacker = source.getEntity() instanceof LivingEntity liv ? liv : null;
-                for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
-                    ItemStack equipped = serverPlayer.getItemBySlot(slot);
-                    if (!equipped.isEmpty()) {
+                for (EquipmentSlot slot : ARMOR_SLOTS) {
+                    ItemStack piece = serverPlayer.getItemBySlot(slot);
+                    if (!piece.isEmpty()) {
                         MatrixEffectExecutor.dispatch(
-                            serverLevel, serverPlayer, equipped, TriggerType.ON_DAMAGE_TAKEN, attacker, serverPlayer.position()
+                            serverLevel,
+                            serverPlayer,
+                            piece,
+                            TriggerType.ON_DAMAGED,
+                            attacker,
+                            serverPlayer.position()
                         );
                     }
                 }
+                for (InteractionHand hand : InteractionHand.values()) {
+                    ItemStack held = serverPlayer.getItemInHand(hand);
+                    if (!held.isEmpty() && blocked) {
+                        MatrixEffectExecutor.dispatch(
+                            serverLevel,
+                            serverPlayer,
+                            held,
+                            TriggerType.ON_DAMAGED,
+                            attacker,
+                            serverPlayer.position()
+                        );
+                    }
+                }
+                CrossDomainTransmutations.onAfterDamage(serverLevel, serverPlayer, source, damageTaken, blocked);
             }
         });
 
-        // Entity Kill hooks (Pristine Trophy mob heads, Vanish-on-Kill invisibility, Abyssal breath heal)
+        // 6. Fatal Damage Interception (Phoenix Nirvana + 裂而不碎 Totem Survival)
+        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource, damageAmount) -> {
+            if (entity instanceof ServerPlayer serverPlayer && entity.level() instanceof ServerLevel serverLevel) {
+                if (!SignaturePairs.allowPlayerDeath(serverPlayer)) {
+                    return false;
+                }
+                return CrossDomainTransmutations.allowPlayerDeath(serverLevel, serverPlayer);
+            }
+            return true;
+        });
+
+        // 7. Entity Kill Hooks (Kill Plunder, Soul Siphon, 猎宝, 海猎, 完壁)
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
-                SignaturePairs.onEntityKilled(serverLevel, serverPlayer, entity);
-                ItemStack main = serverPlayer.getMainHandItem();
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, main, TriggerType.ON_UTILITY_CYCLE, entity, entity.position());
+            if (entity.level() instanceof ServerLevel serverLevel
+                && damageSource.getEntity() instanceof ServerPlayer killer) {
+                SignaturePairs.onEntityKilledByPlayer(serverLevel, killer, entity, killer.getMainHandItem());
+                CrossDomainTransmutations.onEntityKilled(serverLevel, killer, entity);
             }
         });
 
-        // Movement / Landing + Passive Signature Ticks + Soul-Fire / Skyfire DoTs
+        // 8. Server Tick: Player Passives, In-Flight Cross-Domain Projectiles, and World Item Survival / Sticky Curse
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            for (ServerLevel world : server.getAllLevels()) {
-                SignaturePairs.tickWorldDots(world);
-            }
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                if (!(player.level() instanceof ServerLevel serverLevel)) continue;
-                SignaturePairs.tickServerPlayer(serverLevel, player);
+                if (!player.isAlive() || !(player.level() instanceof ServerLevel serverLevel)) {
+                    continue;
+                }
+                SignaturePairs.tickServerPlayer(player);
+                CrossDomainTransmutations.tickServerPlayer(serverLevel, player);
 
-                UUID id = player.getUUID();
-                if (!player.onGround() && player.fallDistance > 1.5F) {
-                    PEAK_FALL_DISTANCE.merge(id, (float) player.fallDistance, Math::max);
-                } else if (player.onGround()) {
-                    Float peak = PEAK_FALL_DISTANCE.remove(id);
-                    if (peak != null && peak >= 3.2F) {
-                        for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
-                            ItemStack gear = player.getItemBySlot(slot);
-                            if (!gear.isEmpty()) {
-                                MatrixEffectExecutor.dispatch(
-                                    serverLevel, player, gear, TriggerType.ON_MOVEMENT_OR_LAND, null, player.position()
-                                );
-                            }
+                // Tick active player-owned projectiles within 72 blocks for cross-domain flight behaviors
+                for (Projectile proj : serverLevel.getEntitiesOfClass(
+                    Projectile.class,
+                    player.getBoundingBox().inflate(72.0D),
+                    p -> p.isAlive() && p.getOwner() == player && p.tickCount <= 160
+                )) {
+                    ItemStack weapon = proj.getWeaponItem();
+                    if (weapon == null || weapon.isEmpty()) {
+                        weapon = player.getMainHandItem();
+                    }
+                    if (!weapon.isEmpty()) {
+                        CrossDomainTransmutations.onProjectileTick(serverLevel, proj, player, weapon);
+                    }
+                }
+
+                if (serverLevel.getGameTime() % 40L == 0L) {
+                    for (EquipmentSlot slot : ARMOR_SLOTS) {
+                        ItemStack piece = player.getItemBySlot(slot);
+                        if (!piece.isEmpty()) {
+                            MatrixEffectExecutor.dispatch(
+                                serverLevel,
+                                player,
+                                piece,
+                                TriggerType.ON_ARMOR_TICK,
+                                null,
+                                player.position()
+                            );
                         }
                     }
                 }
+            }
+            for (ServerLevel worldLevel : server.getAllLevels()) {
+                CrossDomainTransmutations.tickWorldItems(worldLevel);
             }
         });
     }

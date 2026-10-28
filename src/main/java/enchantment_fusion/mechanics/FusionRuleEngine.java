@@ -22,7 +22,9 @@ public final class FusionRuleEngine {
         ABERRANT_LOCKED("gui.enchantment_fusion.reject.aberrant_locked"),
         NEEDS_CATALYST("gui.enchantment_fusion.reject.needs_catalyst"),
         ALREADY_MAX_VESSEL("gui.enchantment_fusion.reject.already_max_vessel"),
-        OUTPUT_OCCUPIED("gui.enchantment_fusion.reject.output_occupied");
+        OUTPUT_OCCUPIED("gui.enchantment_fusion.reject.output_occupied"),
+        NOT_CROSS_DOMAIN("gui.enchantment_fusion.reject.not_cross_domain"),
+        STACK_MUST_BE_SINGLE("gui.enchantment_fusion.reject.stack_must_be_single");
 
         private final String langKey;
 

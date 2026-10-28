@@ -2,6 +2,7 @@ package enchantment_fusion.gui;
 
 import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
+import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.FusionStationOperations.EnchantCandidate;
@@ -263,6 +264,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         int top = this.topPos;
         ItemStack host = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
         boolean hasGear = VesselCapacityRules.isPotentialEquipmentHost(host);
+        boolean hasSpecialCross = !hasGear && CrossDomainTransmutations.isEligibleCrossDomainHost(host);
 
         FusionGuiSkin.drawLeftBoundedText(
             ctx, this.font,
@@ -286,7 +288,26 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 : (pair.isAberrant() ? FusionGuiSkin.SOCKET_ABERRANT : FusionGuiSkin.SOCKET_FILLED);
             FusionGuiSkin.drawNineSlice(ctx, cardSprite, left + RIGHT_X, top + cardY, RIGHT_W, 23, 96, 40, 7);
 
-            if (!hasGear) {
+            if (!hasGear && hasSpecialCross) {
+                if (idx == 0) {
+                    FusionGuiSkin.drawCenteredBoundedText(
+                        ctx, this.font,
+                        Component.translatable("gui.enchantment_fusion.socket.special_cross_host").getString(),
+                        left + RIGHT_X + 8, RIGHT_W - 16, top + cardY + 11.5F, 0.56F, FusionGuiSkin.COLOR_CYAN
+                    );
+                } else if (preview.previewTransmute() != null && preview.singleCandidate() != null) {
+                    String tName = FusionTooltipRenderer.buildTransmutedDisplayName(
+                        preview.previewTransmute(),
+                        Math.min(preview.singleCandidate().maxLevel(), preview.singleCandidate().level()),
+                        preview.singleCandidate().maxLevel(),
+                        preview.singleCandidate().id()
+                    ).getString();
+                    FusionGuiSkin.drawCenteredBoundedText(
+                        ctx, this.font, tName,
+                        left + RIGHT_X + 8, RIGHT_W - 16, top + cardY + 11.5F, 0.58F, FusionGuiSkin.COLOR_GOLD
+                    );
+                }
+            } else if (!hasGear) {
                 if (idx == 0) {
                     FusionGuiSkin.drawCenteredBoundedText(
                         ctx, this.font,
@@ -624,6 +645,22 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         if (isHoveringRect(SWAP_BTN_X, SWAP_BTN_Y, SWAP_BTN_W, SWAP_BTN_H, mouseX, mouseY)) {
             lines.add(Component.translatable("gui.enchantment_fusion.tip.swap.title").withStyle(ChatFormatting.GOLD));
             lines.add(Component.translatable("gui.enchantment_fusion.tip.swap.desc").withStyle(ChatFormatting.GRAY));
+        } else if (isHoveringRect(EXEC_BTN_X, EXEC_BTN_Y, EXEC_BTN_W, EXEC_BTN_H, mouseX, mouseY)
+            && preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS
+            && preview.previewTransmute() != null
+            && preview.singleCandidate() != null) {
+            EnchantCandidate cand = preview.singleCandidate();
+            int lv = Math.min(cand.maxLevel(), cand.level());
+            lines.add(FusionTooltipRenderer.buildTransmutedDisplayName(
+                preview.previewTransmute(), lv, cand.maxLevel(), cand.id()
+            ));
+            lines.add(Component.translatable("gui.enchantment_fusion.tip.cross_zero_slot")
+                .withStyle(ChatFormatting.GOLD));
+            lines.add(Component.translatable(
+                "tooltip.enchantment_fusion.transmute_origin_desc",
+                FusionTooltipRenderer.formatEnchantmentWithLevel(registries, cand.id(), lv),
+                Component.translatable(preview.previewTransmute().descKey())
+            ).withStyle(ChatFormatting.DARK_AQUA));
         } else if ((isHoveringRect(EXEC_BTN_X, EXEC_BTN_Y, EXEC_BTN_W, EXEC_BTN_H, mouseX, mouseY)
             || (tab == FusionStationOperations.TAB_FUSE && isHoveringRect(TAB0_PREVIEW_X, TAB0_PREVIEW_Y, TAB0_PREVIEW_W, TAB0_PREVIEW_H, mouseX, mouseY)))
             && preview.previewPair() != null) {
@@ -849,6 +886,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             case EXPAND_VESSEL -> "gui.enchantment_fusion.btn.expand_vessel";
             case TOP_UP_LEVEL -> "gui.enchantment_fusion.btn.top_up";
             case SOCKET_FUSED_BOOK -> "gui.enchantment_fusion.btn.inscribe";
+            case INSCRIBE_SINGLE_CROSS -> "gui.enchantment_fusion.btn.inscribe_cross";
             case FUSE_ONTO_GEAR -> "gui.enchantment_fusion.btn.fuse_gear";
             default -> "gui.enchantment_fusion.btn.fuse";
         };

@@ -55,6 +55,7 @@ public final class FusionStationOperations {
         FUSE_BOOKS,
         SOCKET_FUSED_BOOK,
         FUSE_ONTO_GEAR,
+        INSCRIBE_SINGLE_CROSS,
         TOP_UP_LEVEL,
         EXPAND_VESSEL,
         INVALID
@@ -91,8 +92,24 @@ public final class FusionStationOperations {
         double instabilityChance,
         int xpCost,
         ResolvedSelection selection,
-        int manageXpCost
-    ) {}
+        int manageXpCost,
+        CrossDomainTransmutations.TransmuteVariant previewTransmute,
+        EnchantCandidate singleCandidate
+    ) {
+        public StationPreview(
+            OperationKind kind,
+            boolean executable,
+            RejectReason rejectReason,
+            FusedPair previewPair,
+            boolean repulsive,
+            double instabilityChance,
+            int xpCost,
+            ResolvedSelection selection,
+            int manageXpCost
+        ) {
+            this(kind, executable, rejectReason, previewPair, repulsive, instabilityChance, xpCost, selection, manageXpCost, null, null);
+        }
+    }
 
     private FusionStationOperations() {}
 
@@ -148,6 +165,10 @@ public final class FusionStationOperations {
             return new ResolvedSelection(candidates, -1, -1);
         }
         int a = (preferredA >= 0 && preferredA < n) ? preferredA : 0;
+        if (preferredB == -2) {
+            // Explicit Single Cross-Domain Inscription mode (user toggled [B] off)
+            return new ResolvedSelection(candidates, a, -1);
+        }
         int b = (preferredB >= 0 && preferredB < n && preferredB != a) ? preferredB : -1;
         if (b == -1) {
             // Prefer an enchantment from a different slot first, or any distinct enchantment ID
@@ -233,11 +254,18 @@ public final class FusionStationOperations {
                 return topUp.get();
             }
 
-            // 4. Fuse two picked candidate enchantments (e.g., two enchantments already on the Gear itself, or Gear + Book!) directly into a Gear Vessel Slot!
+            // 4. Single Cross-Domain Book Inscription (0 Vessel Slots!) when [B] is unset or toggled off,
+            //    OR Fuse two picked candidate enchantments directly into a Gear Vessel Slot!
             List<EnchantCandidate> gearModeCandidates = activeTab == TAB_SOCKET ? candidates : collectCandidates(inv, TAB_SOCKET);
             ResolvedSelection gearSel = activeTab == TAB_SOCKET ? sel : resolveSelection(gearModeCandidates, preferredA, preferredB);
             EnchantCandidate p = gearSel.primary();
             EnchantCandidate s = gearSel.secondary();
+            if (p != null && s == null) {
+                Optional<StationPreview> singleCross = evaluateSingleCrossDomain(sTarget, targetFusions, gearSel, p, sCatalyst, manageXp);
+                if (singleCross.isPresent()) {
+                    return singleCross.get();
+                }
+            }
             if (p != null && s != null) {
                 Set<String> blockingVanilla = readUnfusedVanillaEnchantIds(sTarget, targetFusions);
                 if (p.sourceSlot() == SLOT_TARGET) blockingVanilla.remove(p.id());
@@ -252,6 +280,17 @@ public final class FusionStationOperations {
                     VesselCapacityRules.getMaxVesselSlots(sTarget), hasStab, zeroXp
                 );
                 if (!eval.valid()) {
+                    // Smart Fallback: if Vessel Spirit slots are full (or fusion rejected), check if a book candidate
+                    // can be inscribed directly as a 0-vessel-slot Cross-Domain Transmutation!
+                    EnchantCandidate bookCand = p.sourceSlot() != SLOT_TARGET ? p : (s.sourceSlot() != SLOT_TARGET ? s : null);
+                    if (bookCand != null) {
+                        Optional<StationPreview> fallbackSingle = evaluateSingleCrossDomain(
+                            sTarget, targetFusions, gearSel, bookCand, sCatalyst, manageXp
+                        );
+                        if (fallbackSingle.isPresent() && fallbackSingle.get().executable()) {
+                            return fallbackSingle.get();
+                        }
+                    }
                     return new StationPreview(OperationKind.INVALID, false, eval.rejectReason(), null, false, 0.0, 0, gearSel, manageXp);
                 }
                 return new StationPreview(
@@ -262,6 +301,24 @@ public final class FusionStationOperations {
             }
 
             return new StationPreview(OperationKind.NONE, false, RejectReason.NONE, null, false, 0.0, 0, gearSel, manageXp);
+        }
+
+        // === TAB 1 Special Cross-Domain Non-Equipment Hosts (Totem of Undying, Glass Bottle, Consumables — 0 Vessel Slots!) ===
+        if (!sTarget.isEmpty() && !sTarget.is(Items.BOOK) && !sTarget.is(FusionItems.FUSED_ENCHANTED_BOOK)
+            && CrossDomainTransmutations.isEligibleCrossDomainHost(sTarget)) {
+            if (sTarget.getCount() != 1) {
+                return new StationPreview(OperationKind.INVALID, false, RejectReason.STACK_MUST_BE_SINGLE, null, false, 0.0, 0, sel, manageXp);
+            }
+            EnchantCandidate p = sel.primary();
+            if (p != null && p.sourceSlot() != SLOT_TARGET) {
+                Optional<StationPreview> specialSingle = evaluateSingleCrossDomain(
+                    sTarget, FusedEnchantmentList.EMPTY, sel, p, sCatalyst, manageXp
+                );
+                if (specialSingle.isPresent()) {
+                    return specialSingle.get();
+                }
+            }
+            return new StationPreview(OperationKind.NONE, false, RejectReason.NONE, null, false, 0.0, 0, sel, manageXp);
         }
 
         // === TAB 0: Book Fusion -> Output Fused Enchanted Book into Slot 3 (NO blank book required!) ===
@@ -297,6 +354,46 @@ public final class FusionStationOperations {
         }
 
         return new StationPreview(OperationKind.NONE, false, RejectReason.NONE, null, false, 0.0, 0, sel, manageXp);
+    }
+
+    private static Optional<StationPreview> evaluateSingleCrossDomain(
+        ItemStack sTarget,
+        FusedEnchantmentList targetFusions,
+        ResolvedSelection sel,
+        EnchantCandidate bookCand,
+        ItemStack sCatalyst,
+        int manageXp
+    ) {
+        if (bookCand == null || bookCand.sourceSlot() == SLOT_TARGET) {
+            return Optional.empty();
+        }
+        Optional<CrossDomainTransmutations.TransmuteVariant> variantOpt =
+            CrossDomainTransmutations.resolve(sTarget, bookCand.id());
+        if (variantOpt.isEmpty()) {
+            // Native single-book enchanting stays on the vanilla Anvil to prevent accidental mis-clicks!
+            return Optional.of(new StationPreview(
+                OperationKind.INVALID, false, RejectReason.NOT_CROSS_DOMAIN, null, false, 0.0, 0, sel, manageXp
+            ));
+        }
+        if (targetFusions.containsEnchantmentId(bookCand.id())) {
+            return Optional.of(new StationPreview(
+                OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, null, false, 0.0, 0, sel, manageXp
+            ));
+        }
+        ItemEnchantments existing = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        int currentLv = existing.getLevel(bookCand.holder());
+        int clampedLv = Math.min(bookCand.maxLevel(), bookCand.level());
+        if (currentLv >= clampedLv) {
+            return Optional.of(new StationPreview(
+                OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, null, false, 0.0, 0, sel, manageXp
+            ));
+        }
+        int xp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst) ? 0 : Math.max(1, Math.min(4, clampedLv));
+        return Optional.of(new StationPreview(
+            OperationKind.INSCRIBE_SINGLE_CROSS, true, RejectReason.NONE,
+            null, false, 0.0, xp, sel, manageXp,
+            variantOpt.get(), bookCand
+        ));
     }
 
     private static Optional<StationPreview> checkTopUp(
@@ -426,6 +523,21 @@ public final class FusionStationOperations {
                 }
                 applyFusedPairToGear(sTarget, finalPair, registries);
                 if (preview.repulsive() && CetSoftBridge.isStabilizerCatalyst(sCatalyst)) {
+                    sCatalyst.shrink(1);
+                }
+            }
+            case INSCRIBE_SINGLE_CROSS -> {
+                EnchantCandidate cand = preview.singleCandidate();
+                if (cand == null || preview.previewTransmute() == null || sTarget.getCount() != 1) {
+                    return false;
+                }
+                int clampedLv = Math.min(cand.maxLevel(), cand.level());
+                consumeCandidateFromSlot(inv, cand);
+                ItemEnchantments current = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+                ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(current);
+                mut.set(cand.holder(), Math.max(current.getLevel(cand.holder()), clampedLv));
+                sTarget.set(DataComponents.ENCHANTMENTS, mut.toImmutable());
+                if (CetSoftBridge.isZeroXpCetStabilizer(sCatalyst)) {
                     sCatalyst.shrink(1);
                 }
             }

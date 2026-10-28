@@ -7,6 +7,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.AberrantRegistry;
+import enchantment_fusion.mechanics.CrossDomainTransmutations;
+import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
 import enchantment_fusion.mechanics.FusionRuleEngine;
 import enchantment_fusion.mechanics.FusionRuleEngine.EnchantInput;
 import enchantment_fusion.mechanics.FusionRuleEngine.PairEvaluation;
@@ -190,6 +192,11 @@ final class FusionRuleEngineTest {
                         assertTrue(keys.contains(AberrantRegistry.titleKey(abId)), "Missing aberrant title key: " + abId);
                         assertTrue(keys.contains(AberrantRegistry.descKey(abId)), "Missing aberrant desc key: " + abId);
                     }
+                    assertEquals(111, CrossDomainTransmutations.allVariants().size(), "Expected all 111 Phase 3 TransmuteVariants");
+                    for (var tv : CrossDomainTransmutations.allVariants()) {
+                        assertTrue(keys.contains(tv.titleKey()), "Missing transmute title key: " + tv.titleKey());
+                        assertTrue(keys.contains(tv.descKey()), "Missing transmute desc key: " + tv.descKey());
+                    }
                 } else {
                     assertEquals(baselineKeys, keys, "Locale key mismatch in " + code);
                 }
@@ -199,5 +206,52 @@ final class FusionRuleEngineTest {
                 }
             }
         }
+    }
+
+    @Test
+    void phase3CrossDomainSingleTransmutationsRespectNativeExclusionsAndSpecialRelics() {
+        // 0a: Fire Aspect / Flame -> Auto-Smelt Pick & Axe Charcoal/Ash, while native Sword/Bow stay vanilla
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:fire_aspect", TargetRole.SWORD, true).isEmpty());
+        assertEquals("auto_smelt_pick", CrossDomainTransmutations.resolveForRole("minecraft:fire_aspect", TargetRole.DIG_TOOL, true).orElseThrow().id());
+        assertEquals("auto_smelt_axe", CrossDomainTransmutations.resolveForRole("minecraft:fire_aspect", TargetRole.AXE, true).orElseThrow().id());
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:flame", TargetRole.BOW, true).isEmpty());
+        assertEquals("auto_smelt_pick", CrossDomainTransmutations.resolveForRole("minecraft:flame", TargetRole.DIG_TOOL, true).orElseThrow().id());
+        assertEquals("auto_smelt_axe", CrossDomainTransmutations.resolveForRole("minecraft:flame", TargetRole.AXE, true).orElseThrow().id());
+
+        // 0b: Aqua Affinity -> Yishui on Sword, Bow, Trident, Mace; native on Helmet
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:aqua_affinity", TargetRole.HEAD_ARMOR, true).isEmpty());
+        assertEquals("yishui", CrossDomainTransmutations.resolveForRole("minecraft:aqua_affinity", TargetRole.SWORD, true).orElseThrow().id());
+        assertEquals("yishui", CrossDomainTransmutations.resolveForRole("minecraft:aqua_affinity", TargetRole.BOW, true).orElseThrow().id());
+        assertEquals("yishui", CrossDomainTransmutations.resolveForRole("minecraft:aqua_affinity", TargetRole.TRIDENT, true).orElseThrow().id());
+        assertEquals("yishui", CrossDomainTransmutations.resolveForRole("minecraft:aqua_affinity", TargetRole.MACE, true).orElseThrow().id());
+
+        // 5, 7, 14: Soul Speed combo, Thorns Serrated Hook, Fortune $3 Bill
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:soul_speed", TargetRole.FOOT_ARMOR, true).isEmpty());
+        assertEquals("soul_chase", CrossDomainTransmutations.resolveForRole("minecraft:soul_speed", TargetRole.SWORD, true).orElseThrow().id());
+        assertEquals("soul_escape", CrossDomainTransmutations.resolveForRole("minecraft:soul_speed", TargetRole.CHEST_ARMOR, true).orElseThrow().id());
+        assertEquals("soul_seeker_arrow", CrossDomainTransmutations.resolveForRole("minecraft:soul_speed", TargetRole.BOW, true).orElseThrow().id());
+
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:thorns", TargetRole.CHEST_ARMOR, true).isEmpty());
+        assertEquals("serrated_hook", CrossDomainTransmutations.resolveForRole("minecraft:thorns", TargetRole.SWORD, true).orElseThrow().id());
+        assertEquals("barbed_arrow", CrossDomainTransmutations.resolveForRole("minecraft:thorns", TargetRole.BOW, true).orElseThrow().id());
+        assertEquals("spiked_shield", CrossDomainTransmutations.resolveForRole("minecraft:thorns", TargetRole.SHIELD, true).orElseThrow().id());
+
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:fortune", TargetRole.DIG_TOOL, true).isEmpty());
+        assertEquals("three_dollar_luck", CrossDomainTransmutations.resolveForRole("minecraft:fortune", TargetRole.SWORD, true).orElseThrow().id());
+        assertEquals("three_dollar_luck", CrossDomainTransmutations.resolveForRole("minecraft:fortune", TargetRole.BOW, true).orElseThrow().id());
+
+        // 36, 37a, 37b: Universal Vanishing stays vanilla; Unbreaking & Mending transmute only on non-damageable relics
+        for (TargetRole role : TargetRole.values()) {
+            assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:vanishing_curse", role, true).isEmpty());
+            assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:vanishing_curse", role, false).isEmpty());
+        }
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:unbreaking", TargetRole.SWORD, true).isEmpty());
+        assertEquals("unbreaking_totem", CrossDomainTransmutations.resolveForRole("minecraft:unbreaking", TargetRole.TOTEM, false).orElseThrow().id());
+        assertEquals("unbreaking_ration", CrossDomainTransmutations.resolveForRole("minecraft:unbreaking", TargetRole.CONSUMABLE, false).orElseThrow().id());
+
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.SWORD, true).isEmpty());
+        assertEquals("mending_xp_bottle", CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.GLASS_BOTTLE, false).orElseThrow().id());
+        assertEquals("mending_replenish", CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.CONSUMABLE, false).orElseThrow().id());
+        assertEquals("mending_vitality", CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.TOTEM, false).orElseThrow().id());
     }
 }
