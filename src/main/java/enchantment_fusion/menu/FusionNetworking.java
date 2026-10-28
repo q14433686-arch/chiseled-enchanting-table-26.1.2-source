@@ -14,15 +14,19 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Typed network payloads for opening and operating the Enchantment Fusion Table
+ * Typed network payloads for opening and operating the 3-Tab Enchantment Fusion Table
+ * (Tab switch, Mode C enchantment list picking, Swap-Order, Execute, Socket Flip, Unsocket/Split)
  * and syncing Compendium pair discoveries.
  */
 public final class FusionNetworking {
     public enum StationAction {
+        SELECT_TAB,
+        PICK_PRIMARY_A,
+        PICK_SECONDARY_B,
         SWAP_ORDER,
         EXECUTE_PRIMARY,
-        EXECUTE_FLIP,
-        EXECUTE_SPLIT
+        FLIP_SOCKET,
+        UNSOCKET_OR_SPLIT
     }
 
     public record OpenStationPayload(BlockPos blockPos) implements CustomPacketPayload {
@@ -37,12 +41,19 @@ public final class FusionNetworking {
         }
     }
 
-    public record StationActionPayload(int containerId, int actionOrdinal) implements CustomPacketPayload {
+    public record StationActionPayload(
+        int containerId,
+        int actionOrdinal,
+        int paramA,
+        int paramB
+    ) implements CustomPacketPayload {
         public static final Type<StationActionPayload> TYPE =
             new Type<>(EnchantmentFusion.id("station_action"));
         public static final StreamCodec<ByteBuf, StationActionPayload> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.VAR_INT, StationActionPayload::containerId,
             ByteBufCodecs.VAR_INT, StationActionPayload::actionOrdinal,
+            ByteBufCodecs.VAR_INT, StationActionPayload::paramA,
+            ByteBufCodecs.VAR_INT, StationActionPayload::paramB,
             StationActionPayload::new
         );
 
@@ -84,7 +95,7 @@ public final class FusionNetworking {
                 if (payload.actionOrdinal() < 0 || payload.actionOrdinal() >= actions.length) {
                     return;
                 }
-                menu.performAction(player, actions[payload.actionOrdinal()]);
+                menu.performAction(player, actions[payload.actionOrdinal()], payload.paramA(), payload.paramB());
             });
         });
     }

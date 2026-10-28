@@ -3,6 +3,8 @@ package enchantment_fusion.menu;
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.compat.CetSoftBridge;
 import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.mechanics.FusionStationOperations.EnchantCandidate;
+import enchantment_fusion.mechanics.FusionStationOperations.ResolvedSelection;
 import enchantment_fusion.mechanics.FusionStationOperations.StationPreview;
 import enchantment_fusion.mechanics.VesselCapacityRules;
 import enchantment_fusion.menu.FusionNetworking.OpenStationPayload;
@@ -10,6 +12,7 @@ import enchantment_fusion.menu.FusionNetworking.StationAction;
 import enchantment_fusion.registry.FusionBlocks;
 import enchantment_fusion.registry.FusionItems;
 import enchantment_fusion.registry.FusionMenus;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.Container;
@@ -17,40 +20,45 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Container menu for the Enchantment Fusion Table (276 x 198 layout):
+ * Container menu for the 3-Tab Enchantment Fusion Table (308 x 214 layout including top folder tabs):
  * <ul>
- *   <li>Slot 0 ({@code 22, 34}): Primary Carrier {@code A}</li>
- *   <li>Slot 1 ({@code 86, 34}): Secondary Graft {@code B}</li>
- *   <li>Slot 2 ({@code 54, 62}): Catalyst / Stabilizer</li>
- *   <li>Slot 3 ({@code 54, 92}): Host Equipment / Target Book</li>
+ *   <li>Slot 0 ({@code 18, 52}): Material / Book Slot 1</li>
+ *   <li>Slot 1 ({@code 78, 52}): Material / Book Slot 2</li>
+ *   <li>Slot 2 ({@code 48, 80}): Optional Stabilizer / Catalyst</li>
+ *   <li>Slot 3 ({@code 48, 108}): Output Fused Book (Tab 0) / Host Equipment (Tab 1) / Split Target (Tab 2)</li>
  * </ul>
  */
 public final class EnchantmentFusionMenu extends AbstractContainerMenu {
-    public static final int GUI_WIDTH = 276;
-    public static final int GUI_HEIGHT = 198;
+    public static final int GUI_WIDTH = 308;
+    public static final int GUI_HEIGHT = 214;
+    public static final int TAB_BAR_H = 20;
 
-    public static final int SLOT_PRIMARY_X = 22;
-    public static final int SLOT_PRIMARY_Y = 34;
-    public static final int SLOT_SECONDARY_X = 86;
-    public static final int SLOT_SECONDARY_Y = 34;
-    public static final int SLOT_CATALYST_X = 54;
-    public static final int SLOT_CATALYST_Y = 62;
-    public static final int SLOT_TARGET_X = 54;
-    public static final int SLOT_TARGET_Y = 92;
+    public static final int SLOT_PRIMARY_X = 18;
+    public static final int SLOT_PRIMARY_Y = 52;
+    public static final int SLOT_SECONDARY_X = 78;
+    public static final int SLOT_SECONDARY_Y = 52;
+    public static final int SLOT_CATALYST_X = 48;
+    public static final int SLOT_CATALYST_Y = 80;
+    public static final int SLOT_TARGET_X = 48;
+    public static final int SLOT_TARGET_Y = 108;
 
-    public static final int PLAYER_INV_X = 58;
-    public static final int PLAYER_INV_Y = 116;
+    public static final int PLAYER_INV_X = 74;
+    public static final int PLAYER_INV_Y = 132;
 
     private final Container stationInv;
     private final ContainerLevelAccess access;
     private final Player player;
     private final BlockPos tablePos;
+    // Syncs [0]=activeTab, [1]=selectedPrimaryA, [2]=selectedSecondaryB between server & client!
+    private final ContainerData uiState = new SimpleContainerData(3);
 
     public EnchantmentFusionMenu(int syncId, Inventory playerInventory, OpenStationPayload payload) {
         this(
@@ -75,6 +83,12 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         this.access = access;
         this.player = playerInventory.player;
         this.tablePos = tablePos;
+        this.uiState.set(0, VesselCapacityRules.isPotentialEquipmentHost(stationInv.getItem(FusionStationOperations.SLOT_TARGET))
+            ? FusionStationOperations.TAB_SOCKET
+            : FusionStationOperations.TAB_FUSE);
+        this.uiState.set(1, -1);
+        this.uiState.set(2, -1);
+        this.addDataSlots(this.uiState);
         stationInv.startOpen(playerInventory.player);
 
         // 0..3: Workstation slots
@@ -110,19 +124,102 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         return stationInv;
     }
 
-    public StationPreview computePreview() {
-        HolderLookup.Provider registries = player.level().registryAccess();
-        return FusionStationOperations.inspect(stationInv, registries);
+    public int activeTab() {
+        return Math.max(0, Math.min(2, uiState.get(0)));
     }
 
-    public boolean performAction(Player actor, StationAction action) {
+    public int preferredPrimaryIndex() {
+        return uiState.get(1);
+    }
+
+    public int preferredSecondaryIndex() {
+        return uiState.get(2);
+    }
+
+    public StationPreview computePreview() {
+        HolderLookup.Provider registries = player.level().registryAccess();
+        return FusionStationOperations.inspect(
+            stationInv,
+            registries,
+            activeTab(),
+            preferredPrimaryIndex(),
+            preferredSecondaryIndex()
+        );
+    }
+
+    public boolean performAction(Player actor, StationAction action, int paramA, int paramB) {
         HolderLookup.Provider registries = actor.level().registryAccess();
-        boolean changed = switch (action) {
-            case SWAP_ORDER -> FusionStationOperations.swapInputSlots(stationInv);
-            case EXECUTE_PRIMARY -> FusionStationOperations.executePrimaryOperation(stationInv, actor, registries);
-            case EXECUTE_FLIP -> FusionStationOperations.executeFlipOperation(stationInv, actor, registries);
-            case EXECUTE_SPLIT -> FusionStationOperations.executeSplitOperation(stationInv, actor, registries);
-        };
+        boolean changed = false;
+
+        switch (action) {
+            case SELECT_TAB -> {
+                int clamped = Math.max(0, Math.min(2, paramA));
+                uiState.set(0, clamped);
+                uiState.set(1, -1);
+                uiState.set(2, -1);
+                changed = true;
+            }
+            case PICK_PRIMARY_A -> {
+                List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
+                if (paramA >= 0 && paramA < cands.size()) {
+                    ResolvedSelection cur = FusionStationOperations.resolveSelection(cands, preferredPrimaryIndex(), preferredSecondaryIndex());
+                    if (paramA == cur.secondaryIndex()) {
+                        uiState.set(2, cur.primaryIndex());
+                    }
+                    uiState.set(1, paramA);
+                    changed = true;
+                }
+            }
+            case PICK_SECONDARY_B -> {
+                List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
+                if (paramA >= 0 && paramA < cands.size()) {
+                    ResolvedSelection cur = FusionStationOperations.resolveSelection(cands, preferredPrimaryIndex(), preferredSecondaryIndex());
+                    if (paramA == cur.primaryIndex()) {
+                        uiState.set(1, cur.secondaryIndex());
+                    }
+                    uiState.set(2, paramA);
+                    changed = true;
+                }
+            }
+            case SWAP_ORDER -> {
+                List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
+                ResolvedSelection cur = FusionStationOperations.resolveSelection(cands, preferredPrimaryIndex(), preferredSecondaryIndex());
+                if (cur.primaryIndex() >= 0 && cur.secondaryIndex() >= 0) {
+                    EnchantCandidate p = cur.primary();
+                    EnchantCandidate s = cur.secondary();
+                    if (activeTab() == FusionStationOperations.TAB_FUSE
+                        && p != null && s != null
+                        && p.sourceSlot() != s.sourceSlot()
+                        && cands.size() == 2) {
+                        changed = FusionStationOperations.swapInputSlots(stationInv);
+                        uiState.set(1, -1);
+                        uiState.set(2, -1);
+                    } else {
+                        uiState.set(1, cur.secondaryIndex());
+                        uiState.set(2, cur.primaryIndex());
+                        changed = true;
+                    }
+                } else {
+                    changed = FusionStationOperations.swapInputSlots(stationInv);
+                }
+            }
+            case EXECUTE_PRIMARY -> {
+                changed = FusionStationOperations.executePrimaryOperation(
+                    stationInv, actor, registries, activeTab(), preferredPrimaryIndex(), preferredSecondaryIndex()
+                );
+                if (changed) {
+                    uiState.set(1, -1);
+                    uiState.set(2, -1);
+                }
+            }
+            case FLIP_SOCKET -> {
+                changed = FusionStationOperations.executeFlipSocket(stationInv, actor, registries, paramA);
+            }
+            case UNSOCKET_OR_SPLIT -> {
+                changed = FusionStationOperations.executeUnsocketOrSplit(stationInv, actor, registries, paramA);
+            }
+        }
+
         if (changed) {
             this.broadcastChanges();
         }
@@ -147,14 +244,23 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 if (!this.moveItemStackTo(source, 2, 3, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (VesselCapacityRules.isPotentialEquipmentHost(source) || source.is(Items.BOOK)) {
+            } else if (VesselCapacityRules.isPotentialEquipmentHost(source)) {
                 if (!this.moveItemStackTo(source, 3, 4, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (source.is(Items.ENCHANTED_BOOK) || source.is(FusionItems.FUSED_ENCHANTED_BOOK)
-                || source.is(Items.ECHO_SHARD) || source.is(Items.AMETHYST_CLUSTER)) {
-                if (!this.moveItemStackTo(source, 0, 2, false)
-                    && !(source.is(FusionItems.FUSED_ENCHANTED_BOOK) && this.moveItemStackTo(source, 3, 4, false))) {
+                uiState.set(0, FusionStationOperations.TAB_SOCKET);
+            } else if (source.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
+                if (activeTab() == FusionStationOperations.TAB_COMPENDIUM) {
+                    if (!this.moveItemStackTo(source, 3, 4, false) && !this.moveItemStackTo(source, 0, 2, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else {
+                    if (!this.moveItemStackTo(source, 0, 2, false) && !this.moveItemStackTo(source, 3, 4, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                }
+            } else if (source.is(Items.ENCHANTED_BOOK) || source.is(Items.ECHO_SHARD) || source.is(Items.AMETHYST_CLUSTER)) {
+                if (!this.moveItemStackTo(source, 0, 2, false)) {
                     return ItemStack.EMPTY;
                 }
             } else {
@@ -179,7 +285,6 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        // Persistent chest-like table inventory: items stay safely inside EnchantmentFusionTableBlockEntity!
         this.stationInv.stopOpen(player);
     }
 }

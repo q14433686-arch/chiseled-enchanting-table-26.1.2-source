@@ -76,7 +76,7 @@ public final class EnchantmentFusionTableRenderer
         }
         poseStack.pushPose();
         float bob = Mth.sin(state.hoverTicks * 0.08F) * 0.05F;
-        poseStack.translate(0.5F, 1.12F + bob, 0.5F);
+        poseStack.translate(0.5F, 1.02F + bob, 0.5F);
         poseStack.mulPose(Axis.YP.rotationDegrees((state.hoverTicks * 2.2F) % 360.0F));
         poseStack.scale(0.58F, 0.58F, 0.58F);
         state.floatingItem.submit(poseStack, collector, state.lightCoords, OverlayTexture.NO_OVERLAY, 0);

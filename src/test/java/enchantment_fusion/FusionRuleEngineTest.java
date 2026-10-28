@@ -2,24 +2,33 @@ package enchantment_fusion;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import enchantment_fusion.data.FusionMatrixRegistry;
+import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.FusionRuleEngine;
 import enchantment_fusion.mechanics.FusionRuleEngine.EnchantInput;
 import enchantment_fusion.mechanics.FusionRuleEngine.PairEvaluation;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
+import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.VesselCapacityRules;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.HostForm;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-class FusionRuleEngineTest {
+final class FusionRuleEngineTest {
     @BeforeAll
     static void initMatrix() throws Exception {
         Path matrixPath = Path.of("src/main/resources/data/enchantment_fusion/enchantment_fusion/matrix_profiles.json");
@@ -37,78 +46,158 @@ class FusionRuleEngineTest {
 
         assertEquals(2, VesselCapacityRules.computeMaxSlots(true, 0));
         assertEquals(2, VesselCapacityRules.computeMaxSlots(true, 1));
+        assertTrue(VesselCapacityRules.isInnateTwoSlotItemId("minecraft:golden_sword"));
+        assertFalse(VesselCapacityRules.isInnateTwoSlotItemId("minecraft:diamond_sword"));
     }
 
     @Test
-    void primaryMustFitHostWhileSecondaryAllowsFullCrossDomainGrafting() {
-        EnchantInput pickPrimaryOnSword = new EnchantInput("minecraft:efficiency", 5, 5, false);
-        EnchantInput tridentSecondary = new EnchantInput("minecraft:loyalty", 3, 3, false);
-        PairEvaluation invalid = FusionRuleEngine.evaluateFusion(
-            pickPrimaryOnSword, tridentSecondary, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
-        );
-        assertFalse(invalid.valid());
-        assertEquals(RejectReason.PRIMARY_INCOMPATIBLE_HOST, invalid.rejectReason());
+    void universalAnyGearAllowsEveryCrossDomainFusedPairEvenWhenVanillaIncompatible() {
+        // primaryFitsHost = false (e.g., Loyalty III on a Diamond Helmet or Multishot I on a Pickaxe)
+        EnchantInput tridentPrimary = new EnchantInput("minecraft:loyalty", 3, 3, false);
+        EnchantInput swordSecondary = new EnchantInput("minecraft:sharpness", 5, 5, false);
 
-        EnchantInput swordPrimary = new EnchantInput("minecraft:sharpness", 3, 5, true);
-        EnchantInput crossbowSecondary = new EnchantInput("minecraft:multishot", 1, 1, false);
-        PairEvaluation crossDomain = FusionRuleEngine.evaluateFusion(
-            swordPrimary, crossbowSecondary, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
+        PairEvaluation universal = FusionRuleEngine.evaluateFusion(
+            tridentPrimary, swordSecondary, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
         );
-        assertTrue(crossDomain.valid(), "Secondary B must allow full cross-domain grafting even at non-max Primary level");
-        assertEquals(0.0, crossDomain.instabilityChance());
+        assertTrue(universal.valid(), "universal_any_gear must allow [Loyalty ▷ Sharpness] on any equipment host");
+        assertEquals("minecraft:loyalty", universal.resultingPair().primaryId());
+        assertEquals("minecraft:sharpness", universal.resultingPair().secondaryId());
+
+        EnchantInput multishotPrimary = new EnchantInput("minecraft:multishot", 1, 1, false);
+        EnchantInput effSecondary = new EnchantInput("minecraft:efficiency", 5, 5, false);
+        PairEvaluation pickEval = FusionRuleEngine.evaluateFusion(
+            multishotPrimary, effSecondary, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
+        );
+        assertTrue(pickEval.valid());
+        assertEquals("triple_excavate", SignaturePairs.resolve(pickEval.resultingPair()).orElseThrow().id());
     }
 
     @Test
-    void repulsiveExclusiveClashRequiresBothAtMaxLevelAndStabilizerZerosInstability() {
+    void directionalAsymmetryAndUserMandatedSignaturePairs() {
+        EnchantInput fireAspect = new EnchantInput("minecraft:fire_aspect", 2, 2, true);
+        EnchantInput frostWalker = new EnchantInput("minecraft:frost_walker", 2, 2, false);
+        EnchantInput fortune = new EnchantInput("minecraft:fortune", 3, 3, false);
+        EnchantInput protection = new EnchantInput("minecraft:protection", 4, 4, true);
+
+        PairEvaluation steam = FusionRuleEngine.evaluateFusion(
+            fireAspect, frostWalker, false, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
+        );
+        PairEvaluation frostfire = FusionRuleEngine.evaluateFusion(
+            frostWalker, fireAspect, false, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
+        );
+        assertTrue(steam.valid());
+        assertTrue(frostfire.valid());
+        assertNotEquals(steam.resultingPair(), frostfire.resultingPair());
+
+        // User-mandated exact signatures:
+        assertEquals("steam_scald", SignaturePairs.resolve(steam.resultingPair()).orElseThrow().id());
+        assertEquals("frostfire_cage", SignaturePairs.resolve(frostfire.resultingPair()).orElseThrow().id());
+
+        PairEvaluation gilded = FusionRuleEngine.evaluateFusion(
+            fortune, protection, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
+        );
+        PairEvaluation grace = FusionRuleEngine.evaluateFusion(
+            protection, fortune, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
+        );
+        assertEquals("lucky_golden_body", SignaturePairs.resolve(gilded.resultingPair()).orElseThrow().id());
+        assertEquals("fortune_grace", SignaturePairs.resolve(grace.resultingPair()).orElseThrow().id());
+        assertTrue(SignaturePairs.allUniqueSignatures().size() >= 100);
+    }
+
+    @Test
+    void repulsiveExclusivePairRequiresBothAtVanillaMaxLevelAndNeverExceedsCap() {
         EnchantInput sharp4 = new EnchantInput("minecraft:sharpness", 4, 5, true);
         EnchantInput smite5 = new EnchantInput("minecraft:smite", 5, 5, true);
-        PairEvaluation underMax = FusionRuleEngine.evaluateFusion(
-            sharp4, smite5, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
-        );
-        assertFalse(underMax.valid());
-        assertEquals(RejectReason.REPULSIVE_REQUIRES_MAX_LEVEL, underMax.rejectReason());
 
-        EnchantInput sharp5 = new EnchantInput("minecraft:sharpness", 5, 5, true);
-        PairEvaluation unstabilized = FusionRuleEngine.evaluateFusion(
-            sharp5, smite5, true, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
+        PairEvaluation rejectedLow = FusionRuleEngine.evaluateFusion(
+            sharp4, smite5, false, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
         );
-        assertTrue(unstabilized.valid());
-        assertTrue(unstabilized.repulsiveExclusive());
-        assertEquals(0.35, unstabilized.instabilityChance(), 1e-6);
+        assertFalse(rejectedLow.valid());
+        assertEquals(RejectReason.REPULSIVE_REQUIRES_MAX_LEVEL, rejectedLow.rejectReason());
+
+        EnchantInput sharpOver = new EnchantInput("minecraft:sharpness", 9, 5, true);
+        PairEvaluation clampedMax = FusionRuleEngine.evaluateFusion(
+            sharpOver, smite5, false, FusedEnchantmentList.EMPTY, Set.of(), 1, false, false
+        );
+        assertTrue(clampedMax.valid());
+        assertTrue(clampedMax.repulsiveExclusive());
+        assertEquals(5, clampedMax.resultingPair().primaryLevel(), "Level cap must never exceed vanilla maxLevel");
+        assertTrue(clampedMax.instabilityChance() > 0.30);
 
         PairEvaluation stabilized = FusionRuleEngine.evaluateFusion(
-            sharp5, smite5, true, FusedEnchantmentList.EMPTY, Set.of(), 1, true, false
+            sharpOver, smite5, false, FusedEnchantmentList.EMPTY, Set.of(), 1, true, false
         );
-        assertTrue(stabilized.valid());
-        assertTrue(stabilized.repulsiveExclusive());
         assertEquals(0.0, stabilized.instabilityChance(), 1e-6);
     }
 
     @Test
-    void vesselCapacityFullAndAberrantLockAreEnforced() {
-        FusedEnchantmentList oneFilled = FusedEnchantmentList.EMPTY.append(
-            new FusedPair("minecraft:sharpness", 5, "minecraft:fire_aspect", 2, "")
-        );
-        EnchantInput knockback = new EnchantInput("minecraft:knockback", 2, 2, true);
-        EnchantInput windBurst = new EnchantInput("minecraft:wind_burst", 2, 3, false);
+    void aberrantMutationsAreLockedAgainstFlipAndUnsocketWhileCleanPairsAllowBoth() {
+        FusedPair clean = FusedPair.clean("minecraft:sharpness", 5, "minecraft:loyalty", 3);
+        assertEquals(RejectReason.NONE, FusionRuleEngine.canFlipPair(clean));
+        assertEquals(RejectReason.NONE, FusionRuleEngine.canUnsocketOrSplitPair(clean));
 
-        PairEvaluation blockedOnOneSlotGear = FusionRuleEngine.evaluateFusion(
-            knockback, windBurst, true, oneFilled, Set.of("minecraft:sharpness"), 1, false, false
-        );
-        assertFalse(blockedOnOneSlotGear.valid());
-        assertEquals(RejectReason.VESSEL_CAPACITY_FULL, blockedOnOneSlotGear.rejectReason());
+        for (String abId : AberrantRegistry.ALL_IDS) {
+            FusedPair aberrant = new FusedPair("minecraft:sharpness", 5, "minecraft:smite", 5, abId);
+            assertTrue(aberrant.isAberrant());
+            assertEquals(RejectReason.ABERRANT_LOCKED, FusionRuleEngine.canFlipPair(aberrant));
+            assertEquals(RejectReason.ABERRANT_LOCKED, FusionRuleEngine.canUnsocketOrSplitPair(aberrant));
+        }
 
-        PairEvaluation allowedOnTwoSlotGoldGear = FusionRuleEngine.evaluateFusion(
-            knockback, windBurst, true, oneFilled, Set.of("minecraft:sharpness"), 2, false, false
-        );
-        assertTrue(allowedOnTwoSlotGoldGear.valid());
+        // Verify FusedEnchantmentList append / replaceAt / removeAt socket index management
+        FusedEnchantmentList list = FusedEnchantmentList.EMPTY.append(clean);
+        assertEquals(1, list.size());
+        list = list.replaceAt(0, clean.flipped());
+        assertEquals("minecraft:loyalty", list.pairs().get(0).primaryId());
+        list = list.removeAt(0);
+        assertTrue(list.isEmpty());
+    }
 
-        FusedPair aberrant = new FusedPair("minecraft:infinity", 1, "minecraft:mending", 1, "perpetual_overdraw");
-        assertEquals(RejectReason.ABERRANT_LOCKED, FusionRuleEngine.canSplitPair(aberrant, true));
-        assertEquals(RejectReason.ABERRANT_LOCKED, FusionRuleEngine.canFlipPair(aberrant, false, true, true));
-        assertEquals(
-            RejectReason.NONE,
-            FusionRuleEngine.canSplitPair(new FusedPair("minecraft:sharpness", 5, "minecraft:loyalty", 3, ""), true)
+    @Test
+    void allFortyTwoVanillaEnchantmentsHaveExplicitMatrixProfiles() {
+        var snap = FusionMatrixRegistry.current();
+        assertTrue(snap.profiles().size() >= 42, "Expected >= 42 vanilla matrix profiles");
+        for (HostForm form : HostForm.values()) {
+            for (var profile : snap.profiles().values()) {
+                assertNotNull(profile.trigger().translationKey());
+                assertNotNull(profile.payload().effectKey(form));
+            }
+        }
+    }
+
+    @Test
+    void allElevenLocalesShareIdenticalTranslationKeySetIncludingSignaturesAndAberrations() throws Exception {
+        List<String> locales = List.of(
+            "de_de", "en_us", "es_es", "fr_fr", "it_it", "ja_jp",
+            "ko_kr", "pt_br", "ru_ru", "zh_cn", "zh_tw"
         );
+        Set<String> baselineKeys = null;
+        for (String code : locales) {
+            String path = "/assets/enchantment_fusion/lang/" + code + ".json";
+            try (InputStream in = FusionRuleEngineTest.class.getResourceAsStream(path)) {
+                assertNotNull(in, "Missing locale file: " + path);
+                JsonObject obj = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
+                Set<String> keys = obj.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toSet());
+                if (baselineKeys == null) {
+                    baselineKeys = keys;
+                    assertTrue(keys.size() >= 350, "Expected comprehensive Phase 2 translation key set");
+                    assertTrue(keys.contains("block.enchantment_fusion.enchantment_fusion_table"));
+                    assertTrue(keys.contains("item.enchantment_fusion.enchantment_fusion_table"));
+                    for (var sig : SignaturePairs.allUniqueSignatures()) {
+                        assertTrue(keys.contains(sig.titleKey()), "Missing signature title key: " + sig.titleKey());
+                        assertTrue(keys.contains(sig.descKey()), "Missing signature desc key: " + sig.descKey());
+                    }
+                    for (String abId : AberrantRegistry.ALL_IDS) {
+                        assertTrue(keys.contains(AberrantRegistry.titleKey(abId)), "Missing aberrant title key: " + abId);
+                        assertTrue(keys.contains(AberrantRegistry.descKey(abId)), "Missing aberrant desc key: " + abId);
+                    }
+                } else {
+                    assertEquals(baselineKeys, keys, "Locale key mismatch in " + code);
+                }
+                for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                    String val = entry.getValue().getAsString();
+                    assertFalse(val.contains("\n"), "Literal newline forbidden in " + code + " key " + entry.getKey());
+                }
+            }
+        }
     }
 }

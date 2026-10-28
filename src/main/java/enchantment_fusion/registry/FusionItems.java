@@ -21,7 +21,10 @@ import net.minecraft.world.item.component.ItemLore;
 public final class FusionItems {
     public static final Item ENCHANTMENT_FUSION_TABLE_ITEM = register(
         "enchantment_fusion_table",
-        props -> new BlockItem(FusionBlocks.ENCHANTMENT_FUSION_TABLE, props.rarity(Rarity.UNCOMMON))
+        props -> new BlockItem(
+            FusionBlocks.ENCHANTMENT_FUSION_TABLE,
+            props.useBlockDescriptionPrefix().rarity(Rarity.UNCOMMON)
+        )
     );
 
     public static final Item FUSED_ENCHANTED_BOOK = register(

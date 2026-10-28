@@ -28,6 +28,22 @@ public final class FusionGuiSkin {
     public static final Identifier VESSEL_EMPTY = EnchantmentFusion.id("textures/gui/vessel_gem_empty.png");
     public static final Identifier VESSEL_FILLED = EnchantmentFusion.id("textures/gui/vessel_gem_filled.png");
 
+    // 64x22 top folder tabs
+    public static final Identifier TAB_ACTIVE = EnchantmentFusion.id("textures/gui/tab_active.png");
+    public static final Identifier TAB_HOVER = EnchantmentFusion.id("textures/gui/tab_hover.png");
+    public static final Identifier TAB_INACTIVE = EnchantmentFusion.id("textures/gui/tab_inactive.png");
+
+    // 64x18 Mode C enchantment list picker rows (9-slice border = 4)
+    public static final Identifier ROW_UNSELECTED = EnchantmentFusion.id("textures/gui/row_unselected.png");
+    public static final Identifier ROW_HOVER = EnchantmentFusion.id("textures/gui/row_hover.png");
+    public static final Identifier ROW_SELECTED_A = EnchantmentFusion.id("textures/gui/row_selected_a.png");
+    public static final Identifier ROW_SELECTED_B = EnchantmentFusion.id("textures/gui/row_selected_b.png");
+
+    // 96x40 ornate Vessel Spirit socket cards (9-slice border = 8)
+    public static final Identifier SOCKET_EMPTY = EnchantmentFusion.id("textures/gui/socket_card_empty.png");
+    public static final Identifier SOCKET_FILLED = EnchantmentFusion.id("textures/gui/socket_card_filled.png");
+    public static final Identifier SOCKET_ABERRANT = EnchantmentFusion.id("textures/gui/socket_card_aberrant.png");
+
     public static final int COLOR_GOLD = 0xFFFFDF88;
     public static final int COLOR_CREAM = 0xFFF6EFE2;
     public static final int COLOR_CYAN = 0xFF7CF0FF;

@@ -6,8 +6,9 @@ import enchantment_fusion.model.FusedPair;
 import java.util.Set;
 
 /**
- * Pure, side-effect-free validation and pricing engine for Enchantment Fusion (GDD §2, §3, §6).
- * Decoupled from {@code ItemStack} so JUnit 5 tests verify all edge cases deterministically.
+ * Pure, side-effect-free validation and pricing engine for Enchantment Fusion.
+ * Supports Universal Any-Gear Inscription ("万物可铭刻"): any fused pair [A ▷ B] or [B ▷ A]
+ * may be socketed onto any valid equipment host regardless of vanilla slot restrictions.
  */
 public final class FusionRuleEngine {
     public enum RejectReason {
@@ -20,7 +21,8 @@ public final class FusionRuleEngine {
         VESSEL_CAPACITY_FULL("gui.enchantment_fusion.reject.vessel_full"),
         ABERRANT_LOCKED("gui.enchantment_fusion.reject.aberrant_locked"),
         NEEDS_CATALYST("gui.enchantment_fusion.reject.needs_catalyst"),
-        ALREADY_MAX_VESSEL("gui.enchantment_fusion.reject.already_max_vessel");
+        ALREADY_MAX_VESSEL("gui.enchantment_fusion.reject.already_max_vessel"),
+        OUTPUT_OCCUPIED("gui.enchantment_fusion.reject.output_occupied");
 
         private final String langKey;
 
@@ -60,7 +62,7 @@ public final class FusionRuleEngine {
     private FusionRuleEngine() {}
 
     /**
-     * Evaluates creating a new fused pair {@code [A ▷ B]} (either onto a book or onto host equipment).
+     * Evaluates creating or inscribing a fused pair {@code [A ▷ B]} onto a book or any equipment host.
      */
     public static PairEvaluation evaluateFusion(
         EnchantInput primary,
@@ -78,9 +80,6 @@ public final class FusionRuleEngine {
         if (primary.id().equals(secondary.id())) {
             return PairEvaluation.rejected(RejectReason.SAME_ENCHANTMENT);
         }
-        if (targetingEquipment && !primary.primaryFitsHost()) {
-            return PairEvaluation.rejected(RejectReason.PRIMARY_INCOMPATIBLE_HOST);
-        }
 
         FusionMatrixRegistry.Snapshot matrix = FusionMatrixRegistry.current();
         boolean repulsive = matrix.areRepulsiveExclusives(primary.id(), secondary.id());
@@ -97,8 +96,7 @@ public final class FusionRuleEngine {
                 return PairEvaluation.rejected(RejectReason.DUPLICATE_ON_HOST);
             }
             if (existingHostVanillaEnchantIds != null) {
-                // Secondary enchantment cannot already exist standalone on the same equipment
-                if (existingHostVanillaEnchantIds.contains(secondary.id())) {
+                if (existingHostVanillaEnchantIds.contains(primary.id()) || existingHostVanillaEnchantIds.contains(secondary.id())) {
                     return PairEvaluation.rejected(RejectReason.DUPLICATE_ON_HOST);
                 }
             }
@@ -118,31 +116,22 @@ public final class FusionRuleEngine {
         return new PairEvaluation(true, RejectReason.NONE, result, repulsive, instability, finalXp);
     }
 
-    public static RejectReason canFlipPair(FusedPair existing, boolean targetingEquipment, boolean secondaryFitsHostAsPrimary, boolean hasCatalyst) {
+    public static RejectReason canFlipPair(FusedPair existing) {
         if (existing == null) {
             return RejectReason.MISSING_INPUT;
         }
         if (existing.isAberrant()) {
             return RejectReason.ABERRANT_LOCKED;
-        }
-        if (targetingEquipment && !secondaryFitsHostAsPrimary) {
-            return RejectReason.PRIMARY_INCOMPATIBLE_HOST;
-        }
-        if (!hasCatalyst) {
-            return RejectReason.NEEDS_CATALYST;
         }
         return RejectReason.NONE;
     }
 
-    public static RejectReason canSplitPair(FusedPair existing, boolean hasCatalyst) {
+    public static RejectReason canUnsocketOrSplitPair(FusedPair existing) {
         if (existing == null) {
             return RejectReason.MISSING_INPUT;
         }
         if (existing.isAberrant()) {
             return RejectReason.ABERRANT_LOCKED;
-        }
-        if (!hasCatalyst) {
-            return RejectReason.NEEDS_CATALYST;
         }
         return RejectReason.NONE;
     }

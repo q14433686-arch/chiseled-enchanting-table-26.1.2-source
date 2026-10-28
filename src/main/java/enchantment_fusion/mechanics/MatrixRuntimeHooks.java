@@ -18,7 +18,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Wires Fabric server lifecycle, combat, mining, damage, kill, and landing events into {@link MatrixEffectExecutor}.
+ * Wires Fabric server lifecycle, damage/death interception, combat, mining, and passive world ticks
+ * into {@link SignaturePairs}, {@link AberrantRegistry}, and {@link MatrixEffectExecutor}.
  */
 public final class MatrixRuntimeHooks {
     private static final EquipmentSlot[] ARMOR_AND_HAND_SLOTS = {
@@ -40,31 +41,52 @@ public final class MatrixRuntimeHooks {
             PEAK_FALL_DISTANCE.clear();
         });
 
-        // 1 & 2: Melee Strike + Sweep/Cleave
+        // Pre-damage interception: [时运 ▷ 保护] 招财金身 (chance to negate damage at 2x durability cost) & 琉璃圣盾
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+            if (entity instanceof ServerPlayer serverPlayer) {
+                return SignaturePairs.allowIncomingDamage(serverPlayer, amount);
+            }
+            return true;
+        });
+
+        // Lethal interception: [保护 ▷ 时运] 吉星高照 (lucky survival at 1 HP) & [保护 ▷ 忠诚] 归元护主 (void save)
+        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource, damageAmount) -> {
+            if (entity instanceof ServerPlayer serverPlayer) {
+                return SignaturePairs.allowPlayerDeath(serverPlayer);
+            }
+            return true;
+        });
+
+        // Melee Strike + Sweep/Cleave (checks full charge 90%+ for ranged sword-waves & lightning iaido)
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (!world.isClientSide()
                 && world instanceof ServerLevel serverLevel
                 && player instanceof ServerPlayer serverPlayer
                 && entity instanceof LivingEntity target) {
                 ItemStack weapon = serverPlayer.getItemInHand(hand);
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_MELEE_STRIKE, target, target.position());
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_SWEEP_OR_CLEAVE, target, target.position());
+                boolean fullCharge = serverPlayer.getAttackStrengthScale(0.5F) >= 0.90F;
+                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_MELEE_STRIKE, target, target.position(), fullCharge);
+                if (fullCharge) {
+                    MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_SWEEP_OR_CLEAVE, target, target.position(), true);
+                }
             }
             return InteractionResult.PASS;
         });
 
-        // 5: Block Harvest
+        // Block Harvest (Signature ore geode, molten smelting, 3x1 rock-splitter, magnet, etc. + Matrix)
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
             if (!world.isClientSide() && world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 ItemStack tool = serverPlayer.getMainHandItem();
+                SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
                 MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, tool, TriggerType.ON_BLOCK_HARVEST, null, Vec3.atCenterOf(pos));
                 MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, tool, TriggerType.ON_UTILITY_CYCLE, null, Vec3.atCenterOf(pos));
             }
         });
 
-        // 6: Damage Taken
+        // Post-Damage Counter & Blood Vengeance tracking
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
             if (entity instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
+                SignaturePairs.recordIncomingDamage(serverPlayer, damageTaken, serverLevel.getGameTime());
                 LivingEntity attacker = source.getEntity() instanceof LivingEntity liv ? liv : null;
                 for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
                     ItemStack equipped = serverPlayer.getItemBySlot(slot);
@@ -77,18 +99,24 @@ public final class MatrixRuntimeHooks {
             }
         });
 
-        // 8: Utility Cycle on Entity Kill
+        // Entity Kill hooks (Pristine Trophy mob heads, Vanish-on-Kill invisibility, Abyssal breath heal)
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
+                SignaturePairs.onEntityKilled(serverLevel, serverPlayer, entity);
                 ItemStack main = serverPlayer.getMainHandItem();
                 MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, main, TriggerType.ON_UTILITY_CYCLE, entity, entity.position());
             }
         });
 
-        // 7: Movement / Landing (e.g. [Feather Falling ▷ Density] ground-slam!)
+        // Movement / Landing + Passive Signature Ticks + Soul-Fire / Skyfire DoTs
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            for (ServerLevel world : server.getAllLevels()) {
+                SignaturePairs.tickWorldDots(world);
+            }
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (!(player.level() instanceof ServerLevel serverLevel)) continue;
+                SignaturePairs.tickServerPlayer(serverLevel, player);
+
                 UUID id = player.getUUID();
                 if (!player.onGround() && player.fallDistance > 1.5F) {
                     PEAK_FALL_DISTANCE.merge(id, (float) player.fallDistance, Math::max);

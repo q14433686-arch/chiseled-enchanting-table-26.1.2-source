@@ -32,9 +32,13 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * End-to-end real client + integrated server probe for Enchantment Fusion on MC 26.1.2.
- * Exercises table placement, pixel-art GUI rendering, [⇄] Swap-Order button click,
- * Book+Book fusion, Compendium discovery sync, Gear inscription, and container persistence.
+ * End-to-end real client + integrated server probe for Enchantment Fusion 0.2.0 on MC 26.1.2.
+ * Exercises:
+ * 1. BlockItem localized display name (never raw item.enchantment_fusion.enchantment_fusion_table).
+ * 2. 3-tab 308x214 pixel-art GUI + Tab 0 direct Book+Book -> Fused Enchanted Book (no blank book needed).
+ * 3. [⇄] Swap-Order button & Compendium discovery sync.
+ * 4. Tab 1 universal-gear inscription ([Sharpness ▷ Loyalty] onto a Diamond Helmet) + inline socket [⇄] flip.
+ * 5. Container persistence & resource reload with 0 missing resources.
  */
 public final class ClientSmoke implements ClientModInitializer {
     private int phase = 0;
@@ -96,6 +100,13 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (client.player == null || client.getSingleplayerServer() == null || client.getOverlay() != null) {
                     return;
                 }
+                // Verify BlockItem hover name resolves localized block name rather than raw translation key
+                String itemHoverName = new ItemStack(FusionItems.ENCHANTMENT_FUSION_TABLE_ITEM).getHoverName().getString();
+                require(
+                    !itemHoverName.startsWith("item.") && !itemHoverName.startsWith("block."),
+                    "Unlocalized BlockItem hover name: " + itemHoverName
+                );
+
                 var server = client.getSingleplayerServer();
                 serverReadyFlag = false;
                 server.execute(() -> {
@@ -118,7 +129,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         require(be != null, "Missing EnchantmentFusionTableBlockEntity");
                         be.setItem(0, FusionStationOperations.createSingleEnchantedBook(sharp, 5));
                         be.setItem(1, FusionStationOperations.createSingleEnchantedBook(loyalty, 3));
-                        be.setItem(3, new ItemStack(Items.BOOK, 1));
+                        be.setItem(3, ItemStack.EMPTY); // Phase 2: NO blank book needed!
 
                         sp.openMenu(state.getMenuProvider(sp.level(), tablePos));
                         sp.containerMenu.broadcastChanges();
@@ -136,7 +147,6 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (
                     screen.getMenu().getSlot(0).getItem().isEmpty()
                     || screen.getMenu().getSlot(1).getItem().isEmpty()
-                    || screen.getMenu().getSlot(3).getItem().isEmpty()
                 ) {
                     return;
                 }
@@ -148,23 +158,20 @@ public final class ClientSmoke implements ClientModInitializer {
                     msg -> System.out.println("Saved fusion UI screenshot: " + msg.getString())
                 );
                 Rect2i b = screen.guiBounds();
-                // Click [⇄] Swap-Order button (47..71, 30..54)
-                click(screen, b.getX() + 58, b.getY() + 41);
-                next(2, 8);
+                // Click [⇄] Swap-Order button (43..67, 48..72)
+                click(screen, b.getX() + 55, b.getY() + 60);
+                next(2, 10);
             }
             case 2 -> {
                 require(client.screen instanceof EnchantmentFusionScreen, "Screen closed unexpectedly");
                 EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
-                if (screen.getMenu().getSlot(0).getItem().isEmpty() || screen.getMenu().getSlot(1).getItem().isEmpty()) {
-                    return;
-                }
                 var previewAfterSwap = screen.getMenu().computePreview();
                 if (previewAfterSwap.previewPair() == null || !"minecraft:loyalty".equals(previewAfterSwap.previewPair().primaryId())) {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 58, b.getY() + 41);
-                next(3, 8);
+                click(screen, b.getX() + 55, b.getY() + 60);
+                next(3, 10);
             }
             case 3 -> {
                 EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
@@ -173,7 +180,8 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 158, b.getY() + 98);
+                // Click primary execute button (237..298, 95..119)
+                click(screen, b.getX() + 267, b.getY() + 107);
                 next(4, 14);
             }
             case 4 -> {
@@ -184,21 +192,22 @@ public final class ClientSmoke implements ClientModInitializer {
                         ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
                         var be = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
                         ItemStack fusedBook = be.getItem(3);
-                        require(fusedBook.is(FusionItems.FUSED_ENCHANTED_BOOK), "Expected Fused Enchanted Book in target slot");
+                        require(fusedBook.is(FusionItems.FUSED_ENCHANTED_BOOK), "Expected Fused Enchanted Book directly in Slot 3 without blank book");
                         FusedEnchantmentList list = fusedBook.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
                         require(list.size() == 1, "Expected 1 fused pair on Fused Enchanted Book");
                         require("minecraft:sharpness".equals(list.pairs().get(0).primaryId()), "Expected Sharpness as Primary A");
                         require("minecraft:loyalty".equals(list.pairs().get(0).secondaryId()), "Expected Loyalty as Secondary B");
 
+                        // Prepare universal-host inscription onto a DIAMOND HELMET!
                         be.setItem(0, fusedBook.copy());
-                        be.setItem(3, new ItemStack(Items.DIAMOND_SWORD, 1));
+                        be.setItem(3, new ItemStack(Items.DIAMOND_HELMET, 1));
                         sp.containerMenu.broadcastChanges();
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
                     }
                 });
-                next(5, 8);
+                next(5, 10);
             }
             case 5 -> {
                 if (!serverReadyFlag) {
@@ -208,48 +217,75 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
-                if (!screen.getMenu().getSlot(3).getItem().is(Items.DIAMOND_SWORD)) {
+                if (!screen.getMenu().getSlot(3).getItem().is(Items.DIAMOND_HELMET)) {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 158, b.getY() + 98);
-                next(6, 14);
+                // Switch to Tab 1 (② 器魂铭刻, 100..184, 0..20)
+                click(screen, b.getX() + 142, b.getY() + 10);
+                next(6, 10);
             }
             case 6 -> {
+                EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
+                if (screen.getMenu().activeTab() != FusionStationOperations.TAB_SOCKET) {
+                    return;
+                }
+                Rect2i b = screen.guiBounds();
+                // Click [镶入融合书] execute button (237..298, 95..119)
+                click(screen, b.getX() + 267, b.getY() + 107);
+                next(7, 14);
+            }
+            case 7 -> {
+                EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
+                ItemStack helmetClient = screen.getMenu().getSlot(3).getItem();
+                FusedEnchantmentList socketed = helmetClient.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+                if (socketed.isEmpty()) {
+                    return;
+                }
+                Rect2i b = screen.guiBounds();
+                // Click inline [⇄] Flip button on Socket Card 0 (246..268, 37..54)
+                click(screen, b.getX() + 257, b.getY() + 45);
+                next(8, 14);
+            }
+            case 8 -> {
                 var server = client.getSingleplayerServer();
                 serverReadyFlag = false;
                 server.execute(() -> {
                     try {
                         ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
                         var be = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
-                        ItemStack sword = be.getItem(3);
-                        require(sword.is(Items.DIAMOND_SWORD), "Expected Diamond Sword in Slot 3");
-                        FusedEnchantmentList list = sword.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-                        require(list.size() == 1, "Expected cross-domain [Sharpness ▷ Loyalty] inscribed on Diamond Sword");
+                        ItemStack helmet = be.getItem(3);
+                        require(helmet.is(Items.DIAMOND_HELMET), "Expected Diamond Helmet in Slot 3");
+                        FusedEnchantmentList list = helmet.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+                        require(list.size() == 1, "Expected universal-gear fused pair on Diamond Helmet");
+                        require(
+                            "minecraft:loyalty".equals(list.pairs().get(0).primaryId()),
+                            "Expected inline socket flip to invert pair to [Loyalty ▷ Sharpness]"
+                        );
                         sp.closeContainer();
-                        require(be.getItem(3).is(Items.DIAMOND_SWORD), "Closing menu must persist sword inside table BlockEntity");
+                        require(be.getItem(3).is(Items.DIAMOND_HELMET), "Closing menu must persist helmet inside table BlockEntity");
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
                     }
                 });
-                next(7, 10);
+                next(9, 10);
             }
-            case 7 -> {
+            case 9 -> {
                 if (!serverReadyFlag) {
                     return;
                 }
                 resourceReloadFuture = client.reloadResourcePacks();
-                next(8, 8);
+                next(10, 8);
             }
-            case 8 -> {
+            case 10 -> {
                 if (!resourceReloadFuture.isDone() || client.getOverlay() != null) {
                     return;
                 }
                 resourceReloadFuture.join();
                 finish(
                     client,
-                    "CLIENT SMOKE PASS: pixel-art fusion GUI + [⇄] swap order + Book+Book fusion + compendium sync + cross-domain Diamond Sword inscription + container persistence + resource reload"
+                    "CLIENT SMOKE PASS: localized 3D fusion table + 3-tab GUI + direct Book->FusedBook + universal-host helmet socket & flip + resource reload"
                 );
             }
             default -> throw new AssertionError("Unknown phase " + phase);

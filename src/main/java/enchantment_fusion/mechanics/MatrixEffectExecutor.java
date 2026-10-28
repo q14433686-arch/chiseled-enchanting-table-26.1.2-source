@@ -1,6 +1,7 @@
 package enchantment_fusion.mechanics;
 
 import enchantment_fusion.data.FusionMatrixRegistry;
+import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.HostForm;
@@ -9,6 +10,7 @@ import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -34,8 +36,8 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Executes the 8 Triggers x 14 Payloads adaptive matrix on the server thread with
- * per-player internal cooldowns and re-entrancy protection.
+ * Executes Aberrant mutations, Handcrafted Signature Pairs, and the 8x14 Universal Cross-Domain Matrix
+ * across any host equipment ("万物可铭刻").
  */
 public final class MatrixEffectExecutor {
     private static final ThreadLocal<Boolean> IN_EXECUTION = ThreadLocal.withInitial(() -> Boolean.FALSE);
@@ -45,6 +47,7 @@ public final class MatrixEffectExecutor {
 
     public static void clearCooldowns() {
         COOLDOWNS.clear();
+        SignaturePairs.clearRuntimeState();
     }
 
     public static void dispatch(
@@ -54,6 +57,18 @@ public final class MatrixEffectExecutor {
         TriggerType firedTrigger,
         @Nullable LivingEntity targetEntity,
         Vec3 originPos
+    ) {
+        dispatch(level, player, hostStack, firedTrigger, targetEntity, originPos, true);
+    }
+
+    public static void dispatch(
+        ServerLevel level,
+        ServerPlayer player,
+        ItemStack hostStack,
+        TriggerType firedTrigger,
+        @Nullable LivingEntity targetEntity,
+        Vec3 originPos,
+        boolean fullChargeMelee
     ) {
         if (Boolean.TRUE.equals(IN_EXECUTION.get()) || hostStack == null || hostStack.isEmpty()) {
             return;
@@ -71,16 +86,34 @@ public final class MatrixEffectExecutor {
         try {
             for (FusedPair pair : list.pairs()) {
                 FusionMatrixRegistry.MatrixProfile primaryProfile = snapshot.resolve(pair.primaryId());
-                if (primaryProfile.trigger() != firedTrigger) {
+                if (!matchesUniversalHostTrigger(primaryProfile.trigger(), firedTrigger, hostForm)) {
                     continue;
                 }
-                String cdKey = cooldownKey(player.getUUID(), firedTrigger, pair.secondaryId());
+
+                String cdKey = cooldownKey(player.getUUID(), firedTrigger, pair.primaryId(), pair.secondaryId());
                 long readyAt = COOLDOWNS.getOrDefault(cdKey, 0L);
                 if (now < readyAt) {
                     continue;
                 }
-                COOLDOWNS.put(cdKey, now + firedTrigger.cooldownTicks());
+                COOLDOWNS.put(cdKey, now + Math.max(6, firedTrigger.cooldownTicks()));
 
+                // 1. Unstable Aberrant Fusion execution (double-edged / gag effect)
+                if (pair.isAberrant()) {
+                    AberrantRegistry.executeAberration(level, player, pair.aberrationId(), targetEntity, originPos);
+                }
+
+                // 2. Handcrafted Signature Pair execution (if defined across the 16 bespoke batches)
+                Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
+                if (sigOpt.isPresent()) {
+                    boolean handled = SignaturePairs.executeSignatureCombat(
+                        level, player, hostStack, pair, sigOpt.get().id(), targetEntity, originPos, fullChargeMelee
+                    );
+                    if (handled) {
+                        continue;
+                    }
+                }
+
+                // 3. Universal 8x14 Cross-Domain Adaptive Matrix fallback
                 PayloadType payload = snapshot.resolve(pair.secondaryId()).payload();
                 float scale = Math.max(0.35F, Math.min(2.0F, pair.secondaryLevel() * 0.45F));
                 executePayload(level, player, hostStack, hostForm, payload, scale, targetEntity, originPos);
@@ -90,8 +123,28 @@ public final class MatrixEffectExecutor {
         }
     }
 
-    private static String cooldownKey(UUID uuid, TriggerType trigger, String secondaryId) {
-        return uuid + "|" + trigger.name() + "|" + secondaryId;
+    /**
+     * Under Universal Any-Gear Inscription ("万物可铭刻"), e.g. [Frost Walker ▷ Fire Aspect] socketed onto a Sword
+     * fires naturally on melee/projectile strikes even though Frost Walker's native trigger is movement!
+     */
+    private static boolean matchesUniversalHostTrigger(
+        TriggerType nativeTrigger,
+        TriggerType firedTrigger,
+        HostForm hostForm
+    ) {
+        if (nativeTrigger == firedTrigger) {
+            return true;
+        }
+        return switch (hostForm) {
+            case MELEE -> firedTrigger == TriggerType.ON_MELEE_STRIKE;
+            case RANGED -> firedTrigger == TriggerType.ON_PROJECTILE_IMPACT;
+            case TOOL -> firedTrigger == TriggerType.ON_BLOCK_HARVEST || firedTrigger == TriggerType.ON_MELEE_STRIKE;
+            case ARMOR -> firedTrigger == TriggerType.ON_DAMAGE_TAKEN || firedTrigger == TriggerType.ON_MOVEMENT_OR_LAND;
+        };
+    }
+
+    private static String cooldownKey(UUID uuid, TriggerType trigger, String primaryId, String secondaryId) {
+        return uuid + "|" + trigger.name() + "|" + primaryId + ">" + secondaryId;
     }
 
     private static void executePayload(

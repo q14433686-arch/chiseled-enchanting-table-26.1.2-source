@@ -3,6 +3,7 @@ package enchantment_fusion.mechanics;
 import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.registry.FusionDataComponents;
+import enchantment_fusion.registry.FusionItems;
 import java.util.Set;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -71,7 +72,8 @@ public final class VesselCapacityRules {
     }
 
     public static int getMaxVesselSlots(ItemStack stack) {
-        if (stack == null || stack.isEmpty() || stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK)) {
+        if (stack == null || stack.isEmpty() || stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK)
+            || stack.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
             return 0;
         }
         int bonus = stack.getOrDefault(FusionDataComponents.VESSEL_BONUS, 0);
@@ -108,7 +110,7 @@ public final class VesselCapacityRules {
         if (stack == null || stack.isEmpty()) {
             return false;
         }
-        if (stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK)) {
+        if (stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK) || stack.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
             return false;
         }
         return stack.getMaxStackSize() == 1 && (stack.isDamageableItem() || stack.isEnchantable() || stack.isEnchanted());

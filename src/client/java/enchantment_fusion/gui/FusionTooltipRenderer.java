@@ -3,7 +3,10 @@ package enchantment_fusion.gui;
 import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.compat.CetSoftBridge;
 import enchantment_fusion.data.FusionMatrixRegistry;
+import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
+import enchantment_fusion.mechanics.SignaturePairs;
+import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.mechanics.VesselCapacityRules;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
@@ -11,6 +14,7 @@ import enchantment_fusion.model.HostForm;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
 import java.util.List;
+import java.util.Optional;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -25,7 +29,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 
 /**
  * Renders the composite Enchantment Fusion tooltip lines on Fused Enchanted Books and
- * equipment bearing fused pairs or expanded Vessel Spirit slots.
+ * equipment bearing fused pairs (including bespoke Signature titles/effects and Aberrant mutations).
  */
 public final class FusionTooltipRenderer {
     private FusionTooltipRenderer() {}
@@ -91,28 +95,45 @@ public final class FusionTooltipRenderer {
         for (FusedPair pair : list.pairs()) {
             Component primaryLabel = formatEnchantmentWithLevel(registries, pair.primaryId(), pair.primaryLevel());
             Component secondaryLabel = formatEnchantmentWithLevel(registries, pair.secondaryId(), pair.secondaryLevel());
+            Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
 
             if (pair.isAberrant()) {
+                Component abTitle = Component.translatable(AberrantRegistry.titleKey(pair.aberrationId()));
                 lines.add(Component.translatable(
-                    "tooltip.enchantment_fusion.pair_aberrant",
+                    "tooltip.enchantment_fusion.pair_aberrant_named",
+                    abTitle,
                     primaryLabel,
                     secondaryLabel
                 ).withStyle(ChatFormatting.RED));
+                if (shift) {
+                    lines.add(Component.translatable(AberrantRegistry.descKey(pair.aberrationId()))
+                        .withStyle(ChatFormatting.GOLD));
+                }
                 lines.add(Component.translatable(
                     CetSoftBridge.isCetLoaded()
                         ? "tooltip.enchantment_fusion.aberrant_cet_active"
                         : "tooltip.enchantment_fusion.aberrant_cet_required"
                 ).withStyle(ChatFormatting.DARK_RED));
+            } else if (sigOpt.isPresent()) {
+                Component sigTitle = Component.translatable(sigOpt.get().titleKey());
+                lines.add(Component.translatable(
+                    "tooltip.enchantment_fusion.pair_signature",
+                    sigTitle,
+                    primaryLabel,
+                    secondaryLabel
+                ).withStyle(ChatFormatting.LIGHT_PURPLE));
+                if (shift) {
+                    lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
+                }
             } else {
                 lines.add(Component.translatable(
                     "tooltip.enchantment_fusion.pair_header",
                     primaryLabel,
                     secondaryLabel
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
-            }
-
-            if (shift) {
-                lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
+                if (shift) {
+                    lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
+                }
             }
         }
 
@@ -120,6 +141,31 @@ public final class FusionTooltipRenderer {
             lines.add(Component.translatable("tooltip.enchantment_fusion.hold_shift")
                 .withStyle(ChatFormatting.DARK_GRAY));
         }
+    }
+
+    public static Component buildEffectSummary(FusedPair pair, HostForm hostForm) {
+        if (pair.isAberrant()) {
+            return Component.translatable(AberrantRegistry.descKey(pair.aberrationId()));
+        }
+        Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
+        if (sigOpt.isPresent()) {
+            return Component.translatable(sigOpt.get().descKey());
+        }
+        return buildMatrixSentence(pair, hostForm);
+    }
+
+    public static Component buildPairDisplayName(HolderLookup.Provider registries, FusedPair pair) {
+        Component p = formatEnchantmentWithLevel(registries, pair.primaryId(), pair.primaryLevel());
+        Component s = formatEnchantmentWithLevel(registries, pair.secondaryId(), pair.secondaryLevel());
+        Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
+        if (sigOpt.isPresent()) {
+            return Component.translatable(
+                "tooltip.enchantment_fusion.pair_signature",
+                Component.translatable(sigOpt.get().titleKey()),
+                p, s
+            );
+        }
+        return Component.translatable("tooltip.enchantment_fusion.pair_header", p, s);
     }
 
     public static Component buildMatrixSentence(FusedPair pair, HostForm hostForm) {
@@ -167,6 +213,21 @@ public final class FusionTooltipRenderer {
         }
         String fallbackName = parsed != null ? parsed.getPath().replace('_', ' ') : enchantId;
         return Component.literal(fallbackName + " " + toRoman(level));
+    }
+
+    public static Component formatEnchantmentBaseName(HolderLookup.Provider registries, String enchantId) {
+        Identifier parsed = Identifier.tryParse(enchantId);
+        if (registries != null && parsed != null) {
+            var optLookup = registries.lookup(Registries.ENCHANTMENT);
+            if (optLookup.isPresent()) {
+                ResourceKey<Enchantment> key = ResourceKey.create(Registries.ENCHANTMENT, parsed);
+                var optHolder = optLookup.get().get(key);
+                if (optHolder.isPresent()) {
+                    return optHolder.get().value().description();
+                }
+            }
+        }
+        return Component.literal(parsed != null ? parsed.getPath().replace('_', ' ') : enchantId);
     }
 
     private static String toRoman(int level) {

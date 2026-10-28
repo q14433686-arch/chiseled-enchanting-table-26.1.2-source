@@ -39,7 +39,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class EnchantmentFusionTableBlock extends BaseEntityBlock {
     public static final MapCodec<EnchantmentFusionTableBlock> CODEC = simpleCodec(EnchantmentFusionTableBlock::new);
-    private static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 14.0D, 16.0D);
+    private static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
     public EnchantmentFusionTableBlock(BlockBehaviour.Properties properties) {
         super(properties);
