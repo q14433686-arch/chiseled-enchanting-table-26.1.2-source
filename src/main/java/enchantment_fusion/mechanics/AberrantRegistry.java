@@ -1,28 +1,35 @@
 package enchantment_fusion.mechanics;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Handcrafted pool of unstable "Aberrant Fusions" ("畸融异变") produced when forcing
- * max-level mutually-exclusive enchantments together without a Resonance Stabilizer.
- * Cannot be removed by Grindstone, Anvil, or Fusion Table — only via Chiseled Enchanting Table curse-purge.
+ * 6 double-edged Aberrant Fusions produced when repulsive mutually-exclusive max-level
+ * enchantments destabilize or when high-tier synthesis suffers an unstable failure.
+ * Also manages temporary {@code Blocks.FROSTED_ICE} (Frost Walker cracking ice) prisons & snares.
  */
 public final class AberrantRegistry {
     public static final String BLOOD_FRENZY = "blood_frenzy";
@@ -41,10 +48,51 @@ public final class AberrantRegistry {
         HOT_POTATO
     );
 
+    public record TrackedFrostedCell(
+        ResourceKey<Level> dimension,
+        BlockPos pos,
+        boolean wasWater,
+        int stage,
+        long nextStepTick
+    ) {}
+
+    private static final Map<String, TrackedFrostedCell> TRACKED_FROSTED_ICE = new ConcurrentHashMap<>();
+
     private AberrantRegistry() {}
 
-    public static String pickRandomAberration(RandomSource random) {
-        return ALL_IDS.get(random.nextInt(ALL_IDS.size()));
+    public static List<String> allIds() {
+        return ALL_IDS;
+    }
+
+    public static void clearRuntimeState() {
+        TRACKED_FROSTED_ICE.clear();
+    }
+
+    public static String pickRandomAberration(RandomSource rng) {
+        return ALL_IDS.get(rng.nextInt(ALL_IDS.size()));
+    }
+
+    public static String pickAberration(String primaryId, String secondaryId, RandomSource rng) {
+        String pair = (primaryId + "|" + secondaryId);
+        if (pair.contains("smite") || pair.contains("sharpness") || pair.contains("bane_of_arthropods")) {
+            return BLOOD_FRENZY;
+        }
+        if (pair.contains("channeling") || pair.contains("riptide") || pair.contains("loyalty")) {
+            return ROGUE_LIGHTNING;
+        }
+        if (pair.contains("fortune") || pair.contains("silk_touch") || pair.contains("mending") || pair.contains("infinity")) {
+            return GREEDY_ABYSS;
+        }
+        if (pair.contains("frost_walker") || pair.contains("depth_strider")) {
+            return MUTUAL_GLACIER;
+        }
+        if (pair.contains("fire_protection") || pair.contains("fire_aspect") || pair.contains("flame")) {
+            return HOT_POTATO;
+        }
+        if (pair.contains("blast_protection") || pair.contains("projectile_protection") || pair.contains("protection") || pair.contains("lunge")) {
+            return RECOIL_SKID;
+        }
+        return ALL_IDS.get(rng.nextInt(ALL_IDS.size()));
     }
 
     public static String titleKey(String aberrationId) {
@@ -65,6 +113,7 @@ public final class AberrantRegistry {
         Vec3 pos
     ) {
         String id = (aberrationId == null || aberrationId.isBlank()) ? BLOOD_FRENZY : aberrationId;
+        CompendiumDiscoveryTracker.recordAberrantMastered(player, id);
         RandomSource rng = level.getRandom();
 
         switch (id) {
@@ -107,7 +156,7 @@ public final class AberrantRegistry {
             case MUTUAL_GLACIER -> {
                 if (rng.nextFloat() < 0.25F) {
                     BlockPos center = target != null ? target.blockPosition() : player.blockPosition();
-                    placeIceCage3x3x3(level, center, Blocks.PACKED_ICE.defaultBlockState(), false);
+                    placeFrostedIceCage3x3x3(level, center, false);
                     player.teleportTo(center.getX() + 0.5D, center.getY() + 0.1D, center.getZ() + 0.5D);
                     level.playSound(null, center, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.85F, 0.7F);
                 }
@@ -126,22 +175,97 @@ public final class AberrantRegistry {
     }
 
     /**
-     * Places a 3x3x3 ice prison centered at {@code center} (replacing only air/replaceable vegetation).
-     * When {@code solidCore} is true, even the inner space gets ice blocks; when false, leaves a 1x2x1 breathing pocket.
+     * Places a 3x3x3 prison of vanilla Frost Walker's {@code minecraft:frosted_ice} ({@code 霜冰})
+     * centered at {@code center}, scheduling progressive cracking ticks so it never griefs terrain permanently.
      */
-    public static void placeIceCage3x3x3(ServerLevel level, BlockPos center, BlockState iceState, boolean solidCore) {
+    public static void placeFrostedIceCage3x3x3(ServerLevel level, BlockPos center, boolean solidCore) {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = 0; dy <= 2; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     if (!solidCore && dx == 0 && dz == 0 && (dy == 0 || dy == 1)) {
                         continue;
                     }
-                    BlockPos p = center.offset(dx, dy, dz);
-                    BlockState cur = level.getBlockState(p);
-                    if (cur.isAir() || cur.canBeReplaced()) {
-                        level.setBlockAndUpdate(p, iceState);
-                    }
+                    placeSingleFrostedIce(level, center.offset(dx, dy, dz));
                 }
+            }
+        }
+    }
+
+    public static void placeIceCage3x3x3(ServerLevel level, BlockPos center, BlockState ignoredLegacyState, boolean solidCore) {
+        placeFrostedIceCage3x3x3(level, center, solidCore);
+    }
+
+    /**
+     * Places a foot-level Frost Walker {@code minecraft:frosted_ice} snare around a frozen target.
+     */
+    public static void placeFrostedIceSnare(ServerLevel level, BlockPos center) {
+        placeSingleFrostedIce(level, center);
+        placeSingleFrostedIce(level, center.north());
+        placeSingleFrostedIce(level, center.south());
+        placeSingleFrostedIce(level, center.east());
+        placeSingleFrostedIce(level, center.west());
+    }
+
+    public static void placeSingleFrostedIce(ServerLevel level, BlockPos p) {
+        BlockState cur = level.getBlockState(p);
+        boolean wasWater = cur.is(Blocks.WATER) && cur.getFluidState().isSource();
+        if (cur.isAir() || cur.canBeReplaced() || wasWater) {
+            BlockPos imm = p.immutable();
+            level.setBlockAndUpdate(imm, Blocks.FROSTED_ICE.defaultBlockState());
+            int delay = Mth.nextInt(level.getRandom(), 24, 48);
+            level.scheduleTick(imm, Blocks.FROSTED_ICE, delay);
+            if (TRACKED_FROSTED_ICE.size() < 4096) {
+                String cellKey = level.dimension().identifier() + "@" + imm.asLong();
+                TRACKED_FROSTED_ICE.put(
+                    cellKey,
+                    new TrackedFrostedCell(level.dimension(), imm, wasWater, 0, level.getGameTime() + delay)
+                );
+            }
+        }
+    }
+
+    /**
+     * Advances tracked {@code Blocks.FROSTED_ICE} cells through vanilla's 4 cracking states
+     * ({@code possibleStates[0..3]}) even in dark underground caves, then clears dry-land cages to Air
+     * and water-frozen cells back to Water.
+     */
+    public static void tickFrostedCages(MinecraftServer server) {
+        if (TRACKED_FROSTED_ICE.isEmpty() || server.getTickCount() % 10 != 0) {
+            return;
+        }
+        List<BlockState> states = Blocks.FROSTED_ICE.getStateDefinition().getPossibleStates();
+        for (Map.Entry<String, TrackedFrostedCell> entry : new ArrayList<>(TRACKED_FROSTED_ICE.entrySet())) {
+            String key = entry.getKey();
+            TrackedFrostedCell cell = entry.getValue();
+            ServerLevel level = server.getLevel(cell.dimension());
+            if (level == null || !level.isLoaded(cell.pos())) {
+                TRACKED_FROSTED_ICE.remove(key);
+                continue;
+            }
+            if (level.getGameTime() < cell.nextStepTick()) {
+                continue;
+            }
+            BlockState cur = level.getBlockState(cell.pos());
+            if (!cur.is(Blocks.FROSTED_ICE)) {
+                TRACKED_FROSTED_ICE.remove(key);
+                continue;
+            }
+            int nextStage = cell.stage() + 1;
+            if (nextStage < states.size()) {
+                level.setBlockAndUpdate(cell.pos(), states.get(nextStage));
+                int delay = Mth.nextInt(level.getRandom(), 20, 36);
+                TRACKED_FROSTED_ICE.put(
+                    key,
+                    new TrackedFrostedCell(cell.dimension(), cell.pos(), cell.wasWater(), nextStage, level.getGameTime() + delay)
+                );
+            } else {
+                level.setBlockAndUpdate(cell.pos(), cell.wasWater() ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState());
+                level.sendParticles(
+                    ParticleTypes.SNOWFLAKE,
+                    cell.pos().getX() + 0.5D, cell.pos().getY() + 0.5D, cell.pos().getZ() + 0.5D,
+                    4, 0.25D, 0.25D, 0.25D, 0.02D
+                );
+                TRACKED_FROSTED_ICE.remove(key);
             }
         }
     }

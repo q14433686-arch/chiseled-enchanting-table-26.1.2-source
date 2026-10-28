@@ -15,13 +15,15 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.FishingRodItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 /**
  * Wires Fabric server lifecycle, damage/death interception, combat, mining, item usage,
- * and passive world ticks into {@link SignaturePairs}, {@link AberrantRegistry},
+ * fishing hooks, and passive world ticks into {@link SignaturePairs}, {@link AberrantRegistry},
  * {@link MatrixEffectExecutor}, and {@link CrossDomainTransmutations}.
  */
 public final class MatrixRuntimeHooks {
@@ -43,6 +45,7 @@ public final class MatrixRuntimeHooks {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             MatrixEffectExecutor.clearCooldowns();
             SignaturePairs.clearRuntimeState();
+            AberrantRegistry.clearRuntimeState();
             CrossDomainTransmutations.clearRuntimeState();
             PEAK_FALL_DISTANCE.clear();
         });
@@ -70,6 +73,7 @@ public final class MatrixRuntimeHooks {
         });
 
         // Melee Strike + Pet Protection (完壁) + Sweep/Cleave + Cross-Domain Melee Transmutations
+        // Preserves target.invulnerableTime so bonus hurtServer() never swallows vanilla player.attack()!
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (!world.isClientSide()
                 && world instanceof ServerLevel serverLevel
@@ -80,21 +84,35 @@ public final class MatrixRuntimeHooks {
                 }
                 ItemStack weapon = serverPlayer.getItemInHand(hand);
                 boolean fullCharge = serverPlayer.getAttackStrengthScale(0.5F) >= 0.90F;
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_MELEE_STRIKE, target, target.position(), fullCharge);
-                if (fullCharge) {
-                    MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_SWEEP_OR_CLEAVE, target, target.position(), true);
+                int savedInvuln = target.invulnerableTime;
+                try {
+                    MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_MELEE_STRIKE, target, target.position(), fullCharge);
+                    target.invulnerableTime = 0;
+                    if (fullCharge) {
+                        MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, weapon, TriggerType.ON_SWEEP_OR_CLEAVE, target, target.position(), true);
+                        target.invulnerableTime = 0;
+                    }
+                    CrossDomainTransmutations.onMeleeAttack(serverLevel, serverPlayer, target, fullCharge);
+                } finally {
+                    target.invulnerableTime = savedInvuln;
                 }
-                CrossDomainTransmutations.onMeleeAttack(serverLevel, serverPlayer, target, fullCharge);
             }
             return InteractionResult.PASS;
         });
 
-        // Right-Click Item Use (飞剑掷斧, 水龙突刺, 驭浪盾冲, 幻影连投, 经久省用 Consumables)
+        // Right-Click Item Use (飞剑掷斧, 水龙突刺, 驭浪盾冲, 幻影连投, Fishing Rod retrieve, Instant Throwables)
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (!world.isClientSide()
                 && world instanceof ServerLevel serverLevel
                 && player instanceof ServerPlayer serverPlayer) {
-                CrossDomainTransmutations.onUseItem(serverLevel, serverPlayer, hand, serverPlayer.getItemInHand(hand));
+                ItemStack held = serverPlayer.getItemInHand(hand);
+                if (held.getItem() instanceof FishingRodItem && serverPlayer.fishing != null) {
+                    FishingHook bobber = serverPlayer.fishing;
+                    LivingEntity hookedMob = bobber.getHookedIn() instanceof LivingEntity liv ? liv : null;
+                    boolean inWaterReel = bobber.isInWater() && hookedMob == null;
+                    SignaturePairs.onFishingReel(serverLevel, serverPlayer, held, hookedMob, inWaterReel);
+                }
+                CrossDomainTransmutations.onUseItem(serverLevel, serverPlayer, hand, held);
             }
             return InteractionResult.PASS;
         });
@@ -149,7 +167,7 @@ public final class MatrixRuntimeHooks {
             }
         });
 
-        // Entity Kill hooks (Pristine Trophy mob heads, Vanish-on-Kill invisibility, Abyssal breath heal, 猎宝, 海猎, 完壁)
+        // Entity Kill hooks
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
                 SignaturePairs.onEntityKilled(serverLevel, serverPlayer, entity);
@@ -159,9 +177,10 @@ public final class MatrixRuntimeHooks {
             }
         });
 
-        // Movement / Landing + Passive Signature Ticks + Cross-Domain Passives / Projectiles / World Items
+        // Movement / Landing + Frosted Ice Cage Cracking + Passive Signature / Cross-Domain Ticks
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             SignaturePairs.tickWorldDots(server);
+            AberrantRegistry.tickFrostedCages(server);
             for (ServerLevel world : server.getAllLevels()) {
                 CrossDomainTransmutations.tickWorldItems(world);
             }
@@ -189,7 +208,7 @@ public final class MatrixRuntimeHooks {
                     PEAK_FALL_DISTANCE.merge(id, (float) player.fallDistance, Math::max);
                 } else if (player.onGround()) {
                     Float peak = PEAK_FALL_DISTANCE.remove(id);
-                    if (peak != null && peak >= 3.2F) {
+                    if (peak != null && peak >= 3.0F) {
                         for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
                             ItemStack gear = player.getItemBySlot(slot);
                             if (!gear.isEmpty()) {

@@ -2,6 +2,7 @@ package enchantment_fusion.mechanics;
 
 import enchantment_fusion.compat.CetSoftBridge;
 import enchantment_fusion.item.FusedEnchantedBookItem;
+import enchantment_fusion.mechanics.FusionEconomyRules.EconomyQuote;
 import enchantment_fusion.mechanics.FusionRuleEngine.EnchantInput;
 import enchantment_fusion.mechanics.FusionRuleEngine.PairEvaluation;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
@@ -15,12 +16,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -94,7 +99,8 @@ public final class FusionStationOperations {
         ResolvedSelection selection,
         int manageXpCost,
         CrossDomainTransmutations.TransmuteVariant previewTransmute,
-        EnchantCandidate singleCandidate
+        EnchantCandidate singleCandidate,
+        EconomyQuote economyQuote
     ) {
         public StationPreview(
             OperationKind kind,
@@ -107,7 +113,31 @@ public final class FusionStationOperations {
             ResolvedSelection selection,
             int manageXpCost
         ) {
-            this(kind, executable, rejectReason, previewPair, repulsive, instabilityChance, xpCost, selection, manageXpCost, null, null);
+            this(
+                kind, executable, rejectReason, previewPair, repulsive, instabilityChance, xpCost,
+                selection, manageXpCost, null, null,
+                new EconomyQuote(xpCost, FusionEconomyRules.ReagentKind.NONE, 0, instabilityChance, repulsive, 0)
+            );
+        }
+
+        public StationPreview(
+            OperationKind kind,
+            boolean executable,
+            RejectReason rejectReason,
+            FusedPair previewPair,
+            boolean repulsive,
+            double instabilityChance,
+            int xpCost,
+            ResolvedSelection selection,
+            int manageXpCost,
+            CrossDomainTransmutations.TransmuteVariant previewTransmute,
+            EnchantCandidate singleCandidate
+        ) {
+            this(
+                kind, executable, rejectReason, previewPair, repulsive, instabilityChance, xpCost,
+                selection, manageXpCost, previewTransmute, singleCandidate,
+                new EconomyQuote(xpCost, FusionEconomyRules.ReagentKind.NONE, 0, instabilityChance, repulsive, 0)
+            );
         }
     }
 
@@ -243,8 +273,13 @@ public final class FusionStationOperations {
                         || standaloneVanilla.contains(pair.secondaryId())) {
                         return new StationPreview(OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, pair, false, 0.0, 0, sel, manageXp);
                     }
-                    int xp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst) ? 0 : 2;
-                    return new StationPreview(OperationKind.SOCKET_FUSED_BOOK, true, RejectReason.NONE, pair, false, 0.0, xp, sel, manageXp);
+                    int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
+                    boolean zeroXp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst);
+                    EconomyQuote sockQuote = FusionEconomyRules.computeSocketFusedBookQuote(pair, stabCount, zeroXp);
+                    return new StationPreview(
+                        OperationKind.SOCKET_FUSED_BOOK, true, RejectReason.NONE, pair, pair.isAberrant(),
+                        sockQuote.failureChance(), sockQuote.xpLevels(), sel, manageXp, null, null, sockQuote
+                    );
                 }
             }
 
@@ -293,10 +328,16 @@ public final class FusionStationOperations {
                     }
                     return new StationPreview(OperationKind.INVALID, false, eval.rejectReason(), null, false, 0.0, 0, gearSel, manageXp);
                 }
+                int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
+                boolean isSig = SignaturePairs.resolve(eval.resultingPair()).isPresent();
+                EconomyQuote gearQuote = FusionEconomyRules.computeSynthesisQuote(
+                    p.id(), p.level(), p.maxLevel(), s.id(), s.level(), s.maxLevel(),
+                    eval.repulsiveExclusive(), isSig, stabCount, zeroXp
+                );
                 return new StationPreview(
                     OperationKind.FUSE_ONTO_GEAR, true, RejectReason.NONE,
-                    eval.resultingPair(), eval.repulsiveExclusive(), eval.instabilityChance(), eval.xpLevelsCost(),
-                    gearSel, manageXp
+                    eval.resultingPair(), eval.repulsiveExclusive(), gearQuote.failureChance(), gearQuote.xpLevels(),
+                    gearSel, manageXp, null, null, gearQuote
                 );
             }
 
@@ -346,10 +387,16 @@ public final class FusionStationOperations {
             if (!eval.valid()) {
                 return new StationPreview(OperationKind.INVALID, false, eval.rejectReason(), null, false, 0.0, 0, sel, manageXp);
             }
+            int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
+            boolean isSig = SignaturePairs.resolve(eval.resultingPair()).isPresent();
+            EconomyQuote fuseQuote = FusionEconomyRules.computeSynthesisQuote(
+                p.id(), p.level(), p.maxLevel(), s.id(), s.level(), s.maxLevel(),
+                eval.repulsiveExclusive(), isSig, stabCount, zeroXp
+            );
             return new StationPreview(
                 OperationKind.FUSE_BOOKS, true, RejectReason.NONE,
-                eval.resultingPair(), eval.repulsiveExclusive(), eval.instabilityChance(), eval.xpLevelsCost(),
-                sel, manageXp
+                eval.resultingPair(), eval.repulsiveExclusive(), fuseQuote.failureChance(), fuseQuote.xpLevels(),
+                sel, manageXp, null, null, fuseQuote
             );
         }
 
@@ -388,11 +435,15 @@ public final class FusionStationOperations {
                 OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, null, false, 0.0, 0, sel, manageXp
             ));
         }
-        int xp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst) ? 0 : Math.max(1, Math.min(4, clampedLv));
+        int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
+        boolean zeroXp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst);
+        EconomyQuote convQuote = FusionEconomyRules.computeConversionQuote(
+            clampedLv, bookCand.maxLevel(), stabCount, zeroXp
+        );
         return Optional.of(new StationPreview(
             OperationKind.INSCRIBE_SINGLE_CROSS, true, RejectReason.NONE,
-            null, false, 0.0, xp, sel, manageXp,
-            variantOpt.get(), bookCand
+            null, false, convQuote.failureChance(), convQuote.xpLevels(), sel, manageXp,
+            variantOpt.get(), bookCand, convQuote
         ));
     }
 
@@ -444,8 +495,14 @@ public final class FusionStationOperations {
         if (!preview.executable()) {
             return false;
         }
-        if (!player.getAbilities().instabuild && player.experienceLevel < preview.xpCost()) {
-            return false;
+        EconomyQuote quote = preview.economyQuote();
+        if (!player.getAbilities().instabuild) {
+            if (player.experienceLevel < preview.xpCost()) {
+                return false;
+            }
+            if (quote != null && !FusionEconomyRules.canAfford(inv, player, quote)) {
+                return false;
+            }
         }
 
         ItemStack sPrimary = inv.getItem(SLOT_PRIMARY);
@@ -454,16 +511,69 @@ public final class FusionStationOperations {
         ItemStack sTarget = inv.getItem(SLOT_TARGET);
         FusedPair finalPair = preview.previewPair();
 
-        // Roll unstable Aberrant Mutation if forcing a max-level repulsive pair without a stabilizer!
-        if (finalPair != null && preview.repulsive() && preview.instabilityChance() > 0.001) {
-            if (player.getRandom().nextDouble() < preview.instabilityChance()) {
-                String abId = AberrantRegistry.pickRandomAberration(player.getRandom());
-                finalPair = new FusedPair(
-                    finalPair.primaryId(),
-                    finalPair.primaryLevel(),
-                    finalPair.secondaryId(),
-                    finalPair.secondaryLevel(),
-                    abId
+        double failChance = quote != null ? quote.failureChance() : preview.instabilityChance();
+        boolean rolledFailure = failChance > 0.0005 && player.getRandom().nextDouble() < failChance;
+        boolean highRisk = quote != null ? quote.highRiskTier() : preview.repulsive();
+
+        // Normal Failure (tiered_risk): Host Gear / Primary Book stays safe, 1 book consumed, 50% fee refund!
+        if (rolledFailure && !highRisk && (
+            preview.kind() == OperationKind.FUSE_BOOKS
+                || preview.kind() == OperationKind.FUSE_ONTO_GEAR
+                || preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS
+                || preview.kind() == OperationKind.SOCKET_FUSED_BOOK
+        )) {
+            if (preview.kind() == OperationKind.FUSE_BOOKS || preview.kind() == OperationKind.FUSE_ONTO_GEAR) {
+                EnchantCandidate cA = preview.selection().primary();
+                EnchantCandidate cB = preview.selection().secondary();
+                EnchantCandidate sacrificial = (cB != null && cB.sourceSlot() != SLOT_TARGET) ? cB : cA;
+                if (sacrificial != null && sacrificial.sourceSlot() != SLOT_TARGET) {
+                    consumeCandidateFromSlot(inv, sacrificial);
+                }
+                if (player instanceof ServerPlayer sp && cA != null && cB != null) {
+                    CompendiumDiscoveryTracker.recordPairHeard(sp, cA.id(), cB.id());
+                }
+            } else if (preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS && preview.singleCandidate() != null) {
+                consumeCandidateFromSlot(inv, preview.singleCandidate());
+                if (player instanceof ServerPlayer sp && preview.previewTransmute() != null) {
+                    CompendiumDiscoveryTracker.recordTransmuteProgress(sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_HEARD);
+                }
+            } else if (preview.kind() == OperationKind.SOCKET_FUSED_BOOK) {
+                ItemStack bookSlot = sPrimary.is(FusionItems.FUSED_ENCHANTED_BOOK) ? sPrimary : sSecondary;
+                if (!bookSlot.isEmpty()) {
+                    bookSlot.shrink(1);
+                }
+            }
+
+            FusionEconomyRules.deductFeeAndStabilizers(inv, player, quote, true);
+            inv.setChanged();
+            playWorkstationSound(player, SoundEvents.FIRE_EXTINGUISH, 0.85F);
+            if (player instanceof ServerPlayer sp) {
+                if (sp.level() instanceof ServerLevel sl) {
+                    sl.sendParticles(ParticleTypes.LARGE_SMOKE, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 10, 0.3D, 0.2D, 0.3D, 0.02D);
+                }
+                sp.displayClientMessage(
+                    Component.translatable("message.enchantment_fusion.failure.normal_refund").withStyle(ChatFormatting.YELLOW),
+                    true
+                );
+            }
+            return true;
+        }
+
+        // High-Risk Failure (max-level / repulsive): Mutates into Aberrant Fused Pair or Curse Taint!
+        if (rolledFailure && highRisk && finalPair != null) {
+            String abId = AberrantRegistry.pickAberration(finalPair.primaryId(), finalPair.secondaryId(), player.getRandom());
+            finalPair = new FusedPair(
+                finalPair.primaryId(),
+                finalPair.primaryLevel(),
+                finalPair.secondaryId(),
+                finalPair.secondaryLevel(),
+                abId
+            );
+            if (player instanceof ServerPlayer sp) {
+                CompendiumDiscoveryTracker.recordAberrantMastered(sp, abId);
+                sp.displayClientMessage(
+                    Component.translatable("message.enchantment_fusion.failure.aberrant").withStyle(ChatFormatting.LIGHT_PURPLE),
+                    true
                 );
             }
         }
@@ -494,9 +604,6 @@ public final class FusionStationOperations {
                 } else {
                     inv.setItem(SLOT_TARGET, outBook);
                 }
-                if (preview.repulsive() && CetSoftBridge.isStabilizerCatalyst(sCatalyst)) {
-                    sCatalyst.shrink(1);
-                }
             }
             case SOCKET_FUSED_BOOK -> {
                 ItemStack bookSlot = sPrimary.is(FusionItems.FUSED_ENCHANTED_BOOK) ? sPrimary : sSecondary;
@@ -505,9 +612,6 @@ public final class FusionStationOperations {
                 }
                 applyFusedPairToGear(sTarget, finalPair, registries);
                 bookSlot.shrink(1);
-                if (CetSoftBridge.isZeroXpCetStabilizer(sCatalyst)) {
-                    sCatalyst.shrink(1);
-                }
             }
             case FUSE_ONTO_GEAR -> {
                 EnchantCandidate cA = preview.selection().primary();
@@ -522,9 +626,6 @@ public final class FusionStationOperations {
                     removeGearVanillaEnchant(sTarget, cB.id());
                 }
                 applyFusedPairToGear(sTarget, finalPair, registries);
-                if (preview.repulsive() && CetSoftBridge.isStabilizerCatalyst(sCatalyst)) {
-                    sCatalyst.shrink(1);
-                }
             }
             case INSCRIBE_SINGLE_CROSS -> {
                 EnchantCandidate cand = preview.singleCandidate();
@@ -535,11 +636,23 @@ public final class FusionStationOperations {
                 consumeCandidateFromSlot(inv, cand);
                 ItemEnchantments current = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
                 ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(current);
-                mut.set(cand.holder(), Math.max(current.getLevel(cand.holder()), clampedLv));
-                sTarget.set(DataComponents.ENCHANTMENTS, mut.toImmutable());
-                if (CetSoftBridge.isZeroXpCetStabilizer(sCatalyst)) {
-                    sCatalyst.shrink(1);
+                if (rolledFailure && highRisk) {
+                    // High-tier cross-domain conversion failure: gear survives, gains curse taint instead of clean upgrade!
+                    lookupEnchantment(registries, "minecraft:vanishing_curse").ifPresent(c -> mut.set(c, 1));
+                    if (player instanceof ServerPlayer sp) {
+                        CompendiumDiscoveryTracker.recordTransmuteProgress(sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_HEARD);
+                        sp.displayClientMessage(
+                            Component.translatable("message.enchantment_fusion.failure.cursed").withStyle(ChatFormatting.RED),
+                            true
+                        );
+                    }
+                } else {
+                    mut.set(cand.holder(), Math.max(current.getLevel(cand.holder()), clampedLv));
+                    if (player instanceof ServerPlayer sp) {
+                        CompendiumDiscoveryTracker.recordTransmuteProgress(sp, preview.previewTransmute().id(), CompendiumDiscoveryTracker.STATE_MASTERED);
+                    }
                 }
+                sTarget.set(DataComponents.ENCHANTMENTS, mut.toImmutable());
             }
             case TOP_UP_LEVEL -> {
                 List<EnchantCandidate> donors = new ArrayList<>();
@@ -580,8 +693,13 @@ public final class FusionStationOperations {
             }
         }
 
-        if (!player.getAbilities().instabuild && preview.xpCost() > 0) {
+        if (quote != null && (quote.reagentCount() > 0 || quote.stabilizersUsed() > 0)) {
+            FusionEconomyRules.deductFeeAndStabilizers(inv, player, quote, false);
+        } else if (!player.getAbilities().instabuild && preview.xpCost() > 0) {
             player.giveExperienceLevels(-preview.xpCost());
+        }
+        if (CetSoftBridge.isZeroXpCetStabilizer(sCatalyst) && (quote == null || quote.stabilizersUsed() == 0)) {
+            sCatalyst.shrink(1);
         }
         if (player instanceof ServerPlayer serverPlayer && finalPair != null) {
             CompendiumDiscoveryTracker.recordDiscovery(
@@ -591,7 +709,7 @@ public final class FusionStationOperations {
             );
         }
         inv.setChanged();
-        playWorkstationSound(player, SoundEvents.ENCHANTMENT_TABLE_USE, 1.05F);
+        playWorkstationSound(player, rolledFailure ? SoundEvents.ANVIL_DESTROY : SoundEvents.ENCHANTMENT_TABLE_USE, rolledFailure ? 0.9F : 1.05F);
         return true;
     }
 

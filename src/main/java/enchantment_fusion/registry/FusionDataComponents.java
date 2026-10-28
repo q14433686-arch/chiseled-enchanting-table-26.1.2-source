@@ -9,7 +9,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
 
 /**
- * Custom item data components for fused enchantment pairs and vessel slot expansion.
+ * Custom item data components for fused enchantment pairs, vessel slot expansion,
+ * and tiered tattered knowledge pages.
  */
 public final class FusionDataComponents {
     public static final DataComponentType<FusedEnchantmentList> FUSED_PAIRS = Registry.register(
@@ -26,6 +27,16 @@ public final class FusionDataComponents {
         EnchantmentFusion.id("vessel_bonus"),
         DataComponentType.<Integer>builder()
             .persistent(Codec.intRange(0, 1))
+            .networkSynchronized(ByteBufCodecs.VAR_INT)
+            .build()
+    );
+
+    /** 0 = Common Tattered Page, 1 = Rare Ancient Page, 2 = Aberrant Research Note. */
+    public static final DataComponentType<Integer> PAGE_TIER = Registry.register(
+        BuiltInRegistries.DATA_COMPONENT_TYPE,
+        EnchantmentFusion.id("page_tier"),
+        DataComponentType.<Integer>builder()
+            .persistent(Codec.intRange(0, 2))
             .networkSynchronized(ByteBufCodecs.VAR_INT)
             .build()
     );

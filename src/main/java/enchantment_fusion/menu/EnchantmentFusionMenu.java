@@ -125,8 +125,12 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         return stationInv;
     }
 
+    public Player viewer() {
+        return player;
+    }
+
     public int activeTab() {
-        return Math.max(0, Math.min(2, uiState.get(0)));
+        return Math.max(0, Math.min(1, uiState.get(0)));
     }
 
     public int preferredPrimaryIndex() {
@@ -154,7 +158,7 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
 
         switch (action) {
             case SELECT_TAB -> {
-                int clamped = Math.max(0, Math.min(2, paramA));
+                int clamped = Math.max(0, Math.min(1, paramA));
                 uiState.set(0, clamped);
                 uiState.set(1, -1);
                 uiState.set(2, -1);
@@ -246,7 +250,8 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 return ItemStack.EMPTY;
             }
         } else {
-            if (CetSoftBridge.isStabilizerCatalyst(source) || CetSoftBridge.isSplitOrFlipCatalyst(source)) {
+            if (CetSoftBridge.isStabilizerCatalyst(source) || CetSoftBridge.isSplitOrFlipCatalyst(source)
+                || source.is(Items.LAPIS_LAZULI) || source.is(Items.AMETHYST_SHARD) || source.is(Items.EMERALD)) {
                 if (!this.moveItemStackTo(source, 2, 3, false)) {
                     return ItemStack.EMPTY;
                 }
@@ -263,7 +268,7 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 targetSlot.setByPlayer(source.split(1));
                 uiState.set(0, FusionStationOperations.TAB_SOCKET);
             } else if (source.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
-                if (activeTab() == FusionStationOperations.TAB_COMPENDIUM) {
+                if (activeTab() == FusionStationOperations.TAB_FUSE) {
                     if (!this.moveItemStackTo(source, 3, 4, false) && !this.moveItemStackTo(source, 0, 2, false)) {
                         return ItemStack.EMPTY;
                     }

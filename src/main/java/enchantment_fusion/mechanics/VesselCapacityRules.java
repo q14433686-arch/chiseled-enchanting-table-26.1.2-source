@@ -34,6 +34,7 @@ public final class VesselCapacityRules {
 
     private static final Set<String> BUILTIN_GOLD_ITEM_IDS = Set.of(
         "minecraft:golden_sword",
+        "minecraft:golden_spear",
         "minecraft:golden_axe",
         "minecraft:golden_pickaxe",
         "minecraft:golden_shovel",
@@ -110,6 +111,7 @@ public final class VesselCapacityRules {
             return false;
         }
         if (stack.is(Items.BOOK) || stack.is(Items.ENCHANTED_BOOK) || stack.is(FusionItems.FUSED_ENCHANTED_BOOK)
+            || stack.is(FusionItems.FUSION_GRIMOIRE) || stack.is(FusionItems.FUSION_TATTERED_PAGE)
             || stack.is(Items.TOTEM_OF_UNDYING) || stack.is(Items.GLASS_BOTTLE) || stack.is(Items.EXPERIENCE_BOTTLE)) {
             return false;
         }

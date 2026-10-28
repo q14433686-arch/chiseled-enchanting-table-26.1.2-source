@@ -130,6 +130,7 @@ public final class FusionMatrixRegistry {
         put(m, "minecraft:knockback", TriggerType.ON_MELEE_STRIKE, PayloadType.GALE);
         put(m, "minecraft:breach", TriggerType.ON_MELEE_STRIKE, PayloadType.PIERCE);
         put(m, "minecraft:density", TriggerType.ON_MELEE_STRIKE, PayloadType.GRAVITY);
+        put(m, "minecraft:lunge", TriggerType.ON_MELEE_STRIKE, PayloadType.PIERCE);
         put(m, "minecraft:sweeping_edge", TriggerType.ON_SWEEP_OR_CLEAVE, PayloadType.SCATTER);
         put(m, "minecraft:wind_burst", TriggerType.ON_SWEEP_OR_CLEAVE, PayloadType.GALE);
         put(m, "minecraft:power", TriggerType.ON_PROJECTILE_IMPACT, PayloadType.EDGE);

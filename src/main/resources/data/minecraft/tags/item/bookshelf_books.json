@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
-    "enchantment_fusion:fused_enchanted_book"
+    "enchantment_fusion:fused_enchanted_book",
+    "enchantment_fusion:fusion_grimoire",
+    "enchantment_fusion:fusion_tattered_page"
   ]
 }

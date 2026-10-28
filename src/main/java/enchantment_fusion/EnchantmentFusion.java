@@ -2,6 +2,7 @@ package enchantment_fusion;
 
 import enchantment_fusion.data.FusionDataLoader;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
+import enchantment_fusion.mechanics.FusionWorldLoot;
 import enchantment_fusion.mechanics.MatrixRuntimeHooks;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.registry.FusionBlockEntities;
@@ -34,8 +35,9 @@ public final class EnchantmentFusion implements ModInitializer {
         FusionMenus.init();
         FusionNetworking.init();
         FusionDataLoader.init();
+        FusionWorldLoot.init();
         CompendiumDiscoveryTracker.initServerHooks();
         MatrixRuntimeHooks.init();
-        LOGGER.info("Enchantment Fusion initialized (8x14 cross-domain matrix ready).");
+        LOGGER.info("Enchantment Fusion initialized (26.1.2 full 43-enchantment & Grimoire system ready).");
     }
 }

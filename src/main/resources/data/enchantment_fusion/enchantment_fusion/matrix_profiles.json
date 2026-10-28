@@ -29,6 +29,10 @@
       "trigger": "ON_MELEE_STRIKE",
       "payload": "GRAVITY"
     },
+    "minecraft:lunge": {
+      "trigger": "ON_MELEE_STRIKE",
+      "payload": "PIERCE"
+    },
     "minecraft:sweeping_edge": {
       "trigger": "ON_SWEEP_OR_CLEAVE",
       "payload": "SCATTER"

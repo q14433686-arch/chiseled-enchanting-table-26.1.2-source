@@ -4,11 +4,13 @@ import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.gui.EnchantmentFusionScreen;
 import enchantment_fusion.gui.FusionTooltipRenderer;
+import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.FusionStationOperations.OperationKind;
 import enchantment_fusion.mechanics.SignaturePairs;
+import enchantment_fusion.mechanics.VesselCapacityRules;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.registry.FusionBlocks;
@@ -24,6 +26,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.renderer.Rect2i;
@@ -39,15 +42,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * End-to-end real client + integrated server probe for Enchantment Fusion 0.3.0 on MC 26.1.2.
+ * End-to-end real client + integrated server probe for Enchantment Fusion 0.4.0 on MC 26.1.2.
  * Exercises:
- * 1. BlockItem localized display name (never raw item.enchantment_fusion.enchantment_fusion_table).
- * 2. 3-tab 308x214 pixel-art GUI + Tab 0 direct Book+Book -> Fused Enchanted Book (no blank book needed).
- * 3. [⇄] Swap-Order button & Compendium discovery sync.
- * 4. Tab 1 universal-gear inscription ([Sharpness ▷ Loyalty] onto a Diamond Helmet) + inline socket [⇄] flip.
+ * 1. Localized BlockItem + Fusion Grimoire + Tattered Fusion Page item names.
+ * 2. 2-tab 308x214 pixel-art GUI + top-right embedded Fusion Grimoire modal overlay (without closing container).
+ * 3. Tiered-risk reagent fees + Resonance Stabilizer 100% synthesis & conversion.
+ * 4. 26.1.2 minecraft:lunge + Golden Spear 2-vessel-slot rules + Frosted Ice temporary cages.
  * 5. Container persistence & resource reload with 0 missing resources.
  */
 public final class ClientSmoke implements ClientModInitializer {
@@ -110,19 +114,25 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (client.player == null || client.getSingleplayerServer() == null || client.getOverlay() != null) {
                     return;
                 }
-                // Verify BlockItem hover name resolves localized block name rather than raw translation key
-                String itemHoverName = new ItemStack(FusionItems.ENCHANTMENT_FUSION_TABLE_ITEM).getHoverName().getString();
-                require(
-                    !itemHoverName.startsWith("item.") && !itemHoverName.startsWith("block."),
-                    "Unlocalized BlockItem hover name: " + itemHoverName
-                );
+                for (ItemStack checkStack : List.of(
+                    new ItemStack(FusionItems.ENCHANTMENT_FUSION_TABLE_ITEM),
+                    new ItemStack(FusionItems.FUSION_GRIMOIRE),
+                    new ItemStack(FusionItems.FUSION_TATTERED_PAGE)
+                )) {
+                    String hover = checkStack.getHoverName().getString();
+                    require(!hover.startsWith("item.") && !hover.startsWith("block."), "Unlocalized hover name: " + hover);
+                }
 
                 var server = client.getSingleplayerServer();
                 serverReadyFlag = false;
                 server.execute(() -> {
                     try {
                         ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
-                        sp.giveExperienceLevels(30);
+                        sp.giveExperienceLevels(45);
+                        sp.getInventory().add(new ItemStack(Items.LAPIS_LAZULI, 32));
+                        sp.getInventory().add(new ItemStack(Items.AMETHYST_SHARD, 32));
+                        sp.getInventory().add(new ItemStack(Items.EMERALD, 32));
+
                         tablePos = sp.blockPosition().offset(1, 0, 0);
                         BlockState state = FusionBlocks.ENCHANTMENT_FUSION_TABLE.defaultBlockState();
                         sp.level().setBlockAndUpdate(tablePos, state);
@@ -134,12 +144,30 @@ public final class ClientSmoke implements ClientModInitializer {
                         Holder<Enchantment> loyalty = enchReg.getOrThrow(
                             ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("loyalty"))
                         );
+                        // Verify 26.1.2 minecraft:lunge exists in runtime enchantment registry!
+                        Holder<Enchantment> lunge = enchReg.getOrThrow(
+                            ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("lunge"))
+                        );
+                        require(lunge.value().getMaxLevel() == 3, "Expected 26.1.2 minecraft:lunge maxLevel == 3");
+                        require(
+                            VesselCapacityRules.getMaxVesselSlots(new ItemStack(Items.GOLDEN_SPEAR)) == 2,
+                            "Expected Golden Spear to hold 2 innate Vessel Spirit slots"
+                        );
+                        require(
+                            "yishui".equals(CrossDomainTransmutations.resolve(new ItemStack(Items.GOLDEN_SPEAR), "minecraft:aqua_affinity").orElseThrow().id()),
+                            "Expected Aqua Affinity on Spear -> yishui"
+                        );
+                        require(
+                            CrossDomainTransmutations.resolve(new ItemStack(Items.GOLDEN_SPEAR), "minecraft:lunge").isEmpty(),
+                            "Expected Lunge on Spear to stay native"
+                        );
 
                         var be = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
                         require(be != null, "Missing EnchantmentFusionTableBlockEntity");
                         be.setItem(0, FusionStationOperations.createSingleEnchantedBook(sharp, 5));
                         be.setItem(1, FusionStationOperations.createSingleEnchantedBook(loyalty, 3));
-                        be.setItem(3, ItemStack.EMPTY); // Phase 2: NO blank book needed!
+                        be.setItem(2, new ItemStack(FusionItems.RESONANCE_STABILIZER, 8));
+                        be.setItem(3, ItemStack.EMPTY);
 
                         sp.openMenu(state.getMenuProvider(sp.level(), tablePos));
                         sp.containerMenu.broadcastChanges();
@@ -154,10 +182,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (!serverReadyFlag || !(client.screen instanceof EnchantmentFusionScreen screen)) {
                     return;
                 }
-                if (
-                    screen.getMenu().getSlot(0).getItem().isEmpty()
-                    || screen.getMenu().getSlot(1).getItem().isEmpty()
-                ) {
+                if (screen.getMenu().getSlot(0).getItem().isEmpty() || screen.getMenu().getSlot(1).getItem().isEmpty()) {
                     return;
                 }
                 Screenshot.grab(
@@ -168,6 +193,13 @@ public final class ClientSmoke implements ClientModInitializer {
                     msg -> System.out.println("Saved fusion UI screenshot: " + msg.getString())
                 );
                 Rect2i b = screen.guiBounds();
+                // Open top-right embedded Fusion Grimoire button (232..300, 0..18) — container MUST remain open!
+                click(screen, b.getX() + 266, b.getY() + 9);
+                require(client.screen instanceof EnchantmentFusionScreen, "Embedded Grimoire must not replace EnchantmentFusionScreen");
+                // Close embedded Grimoire via Escape key
+                boolean escHandled = screen.keyPressed(new KeyEvent(256, 0, 0));
+                require(escHandled, "Escape should close embedded Grimoire overlay cleanly");
+
                 // Click [⇄] Swap-Order button (43..67, 48..72)
                 click(screen, b.getX() + 55, b.getY() + 60);
                 next(2, 10);
@@ -190,8 +222,8 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                // Click primary execute button (237..298, 95..119)
-                click(screen, b.getX() + 267, b.getY() + 107);
+                // Click primary execute button (237..298, 95..121)
+                click(screen, b.getX() + 267, b.getY() + 108);
                 next(4, 14);
             }
             case 4 -> {
@@ -202,7 +234,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
                         var be = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
                         ItemStack fusedBook = be.getItem(3);
-                        require(fusedBook.is(FusionItems.FUSED_ENCHANTED_BOOK), "Expected Fused Enchanted Book directly in Slot 3 without blank book");
+                        require(fusedBook.is(FusionItems.FUSED_ENCHANTED_BOOK), "Expected Fused Enchanted Book directly in Slot 3");
                         FusedEnchantmentList list = fusedBook.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
                         require(list.size() == 1, "Expected 1 fused pair on Fused Enchanted Book");
                         require("minecraft:sharpness".equals(list.pairs().get(0).primaryId()), "Expected Sharpness as Primary A");
@@ -231,8 +263,8 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                // Switch to Tab 1 (② 器魂铭刻, 100..184, 0..20)
-                click(screen, b.getX() + 142, b.getY() + 10);
+                // Switch to Tab 1 (② 器魂铭刻, 120..224, 0..20)
+                click(screen, b.getX() + 172, b.getY() + 10);
                 next(6, 10);
             }
             case 6 -> {
@@ -241,8 +273,7 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                // Click [镶入融合书] execute button (237..298, 95..119)
-                click(screen, b.getX() + 267, b.getY() + 107);
+                click(screen, b.getX() + 267, b.getY() + 108);
                 next(7, 14);
             }
             case 7 -> {
@@ -273,7 +304,7 @@ public final class ClientSmoke implements ClientModInitializer {
                             "Expected inline socket flip to invert pair to [Loyalty ▷ Sharpness]"
                         );
 
-                        // Phase 3: Prepare Single Cross-Domain Inscription (Fire Aspect II Book -> Diamond Pickaxe = Auto-Smelt II at 0◇!)
+                        // Prepare Single Cross-Domain Inscription (Fire Aspect II Book -> Diamond Pickaxe = Auto-Smelt II at 0◇!)
                         var enchReg = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                         Holder<Enchantment> fireAspect = enchReg.getOrThrow(
                             ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("fire_aspect"))
@@ -282,16 +313,6 @@ public final class ClientSmoke implements ClientModInitializer {
                         be.setItem(1, ItemStack.EMPTY);
                         be.setItem(3, new ItemStack(Items.DIAMOND_PICKAXE, 1));
                         sp.containerMenu.broadcastChanges();
-
-                        // Verify special non-damageable cross-domain hosts resolve cleanly on real ItemStacks
-                        require(
-                            "mending_xp_bottle".equals(CrossDomainTransmutations.resolve(new ItemStack(Items.GLASS_BOTTLE), "minecraft:mending").orElseThrow().id()),
-                            "Expected Mending on Glass Bottle -> mending_xp_bottle"
-                        );
-                        require(
-                            "unbreaking_totem".equals(CrossDomainTransmutations.resolve(new ItemStack(Items.TOTEM_OF_UNDYING), "minecraft:unbreaking").orElseThrow().id()),
-                            "Expected Unbreaking on Totem of Undying -> unbreaking_totem"
-                        );
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
@@ -313,8 +334,7 @@ public final class ClientSmoke implements ClientModInitializer {
                     "Expected Auto-Smelt Pickaxe preview for Fire Aspect II on Diamond Pickaxe"
                 );
                 Rect2i b = screen.guiBounds();
-                // Click [异位铭刻 / Transmute] primary execute button
-                click(screen, b.getX() + 267, b.getY() + 107);
+                click(screen, b.getX() + 267, b.getY() + 108);
                 next(10, 14);
             }
             case 10 -> {
@@ -331,7 +351,6 @@ public final class ClientSmoke implements ClientModInitializer {
                         ItemEnchantments ench = pick.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
                         require(ench.size() == 1, "Expected standalone cross-domain enchantment on Diamond Pickaxe");
 
-                        // Verify in-place Tooltip replacement replaces vanilla Fire Aspect II with transmuted title!
                         var enchReg = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                         Holder<Enchantment> fireAspect = enchReg.getOrThrow(
                             ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("fire_aspect"))
@@ -344,11 +363,18 @@ public final class ClientSmoke implements ClientModInitializer {
                         String expectedTitle = Component.translatable("transmute.enchantment_fusion.auto_smelt_pick.title").getString();
                         require(replaced.contains(expectedTitle), "Expected transmuted tooltip title '" + expectedTitle + "', got: " + replaced);
 
+                        // Verify Frost Walker Frosted Ice cage placement uses Blocks.FROSTED_ICE!
+                        BlockPos icePos = sp.blockPosition().above(4);
+                        sp.level().setBlockAndUpdate(icePos, Blocks.AIR.defaultBlockState());
+                        AberrantRegistry.placeSingleFrostedIce(sp.level(), icePos);
+                        require(
+                            sp.level().getBlockState(icePos).is(Blocks.FROSTED_ICE),
+                            "Freezing effects must place vanilla Blocks.FROSTED_ICE"
+                        );
+
                         sp.closeContainer();
                         require(be.getItem(3).is(Items.DIAMOND_PICKAXE), "Closing menu must persist pickaxe inside table BlockEntity");
 
-                        // Regression guard: enqueue both SOUL_FIRE_TICKS and SKYFIRE_BOLT_TICKS on a live LivingEntity
-                        // and let the integrated server tick >= 25 ticks to verify tickWorldDots never throws!
                         ItemStack testSword = new ItemStack(Items.NETHERITE_SWORD, 1);
                         SignaturePairs.executeSignatureCombat(
                             sp.level(), sp, testSword,
@@ -357,8 +383,8 @@ public final class ClientSmoke implements ClientModInitializer {
                         );
                         SignaturePairs.executeSignatureCombat(
                             sp.level(), sp, testSword,
-                            FusedPair.clean("minecraft:soul_speed", 3, "minecraft:fire_aspect", 2),
-                            "nether_soul_fire", sp, sp.position(), true
+                            FusedPair.clean("minecraft:lunge", 3, "minecraft:wind_burst", 3),
+                            "gale_vault_thrust", sp, sp.position(), true
                         );
                         serverReadyFlag = true;
                     } catch (Throwable t) {
@@ -381,7 +407,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 resourceReloadFuture.join();
                 finish(
                     client,
-                    "CLIENT SMOKE PASS: localized 3D fusion table + 3-tab GUI + direct Book->FusedBook + universal-host socket/flip + Phase 3 0-slot cross-domain transmutation & tooltip replacement + resource reload"
+                    "CLIENT SMOKE PASS: 0.4.0 2-tab GUI + embedded Grimoire + Lunge/Golden Spear + tiered-risk reagents + Frosted Ice + resource reload"
                 );
             }
             default -> throw new AssertionError("Unknown phase " + phase);

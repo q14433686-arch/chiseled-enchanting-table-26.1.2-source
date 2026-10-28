@@ -14,9 +14,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Typed network payloads for opening and operating the 3-Tab Enchantment Fusion Table
- * (Tab switch, Mode C enchantment list picking, Swap-Order, Execute, Socket Flip, Unsocket/Split)
- * and syncing Compendium pair discoveries.
+ * Typed network payloads for opening and operating the 2-Tab Enchantment Fusion Table,
+ * syncing three-stage Grimoire discovery states, and opening the standalone Fusion Grimoire.
  */
 public final class FusionNetworking {
     public enum StationAction {
@@ -76,11 +75,24 @@ public final class FusionNetworking {
         }
     }
 
+    public record OpenGrimoirePayload(int initialChapter) implements CustomPacketPayload {
+        public static final Type<OpenGrimoirePayload> TYPE =
+            new Type<>(EnchantmentFusion.id("open_grimoire"));
+        public static final StreamCodec<ByteBuf, OpenGrimoirePayload> STREAM_CODEC =
+            ByteBufCodecs.VAR_INT.map(OpenGrimoirePayload::new, OpenGrimoirePayload::initialChapter);
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     private FusionNetworking() {}
 
     public static void init() {
         PayloadTypeRegistry.serverboundPlay().register(StationActionPayload.TYPE, StationActionPayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CompendiumSyncPayload.TYPE, CompendiumSyncPayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(OpenGrimoirePayload.TYPE, OpenGrimoirePayload.STREAM_CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(StationActionPayload.TYPE, (payload, ctx) -> {
             ServerPlayer player = ctx.player();
@@ -100,9 +112,15 @@ public final class FusionNetworking {
         });
     }
 
-    public static void sendCompendiumSync(ServerPlayer player, Collection<String> unlockedPairs) {
+    public static void sendCompendiumSync(ServerPlayer player, Collection<String> encodedStates) {
         if (ServerPlayNetworking.canSend(player, CompendiumSyncPayload.TYPE)) {
-            ServerPlayNetworking.send(player, new CompendiumSyncPayload(new ArrayList<>(unlockedPairs)));
+            ServerPlayNetworking.send(player, new CompendiumSyncPayload(new ArrayList<>(encodedStates)));
+        }
+    }
+
+    public static void sendOpenGrimoire(ServerPlayer player, int initialChapter) {
+        if (ServerPlayNetworking.canSend(player, OpenGrimoirePayload.TYPE)) {
+            ServerPlayNetworking.send(player, new OpenGrimoirePayload(initialChapter));
         }
     }
 }

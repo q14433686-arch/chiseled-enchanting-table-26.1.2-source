@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:book",
+    "minecraft:lapis_lazuli",
+    "minecraft:amethyst_shard"
+  ],
+  "result": {
+    "id": "enchantment_fusion:fusion_grimoire",
+    "count": 1
+  }
+}

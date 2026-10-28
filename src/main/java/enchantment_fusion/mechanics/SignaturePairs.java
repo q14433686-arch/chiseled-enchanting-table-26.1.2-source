@@ -244,6 +244,14 @@ public final class SignaturePairs {
         reg("glass_holy_shield", "minecraft:silk_touch", "minecraft:protection");
         regAlias("glass_holy_shield", "minecraft:protection", "minecraft:silk_touch");
 
+        // === Batch 16: 26.1.2 Spear & Lunge (突进) Directional Signatures ===
+        reg("gale_vault_thrust", "minecraft:lunge", "minecraft:wind_burst");
+        reg("sky_spear_dive", "minecraft:wind_burst", "minecraft:lunge");
+        reg("blazing_dragoon", "minecraft:lunge", "minecraft:fire_aspect");
+        reg("searing_charge", "minecraft:fire_aspect", "minecraft:lunge");
+        reg("tidal_harpoon_rush", "minecraft:lunge", "minecraft:riptide");
+        reg("surge_skewer", "minecraft:riptide", "minecraft:lunge");
+
         // === Wildcard Curse / Fishing / Grappling Secondary Rules ===
         reg("spirit_grapnel", "*", "minecraft:lure");
         reg("blood_pact_curse", "*", "minecraft:binding_curse");
@@ -265,6 +273,10 @@ public final class SignaturePairs {
     }
 
     public static List<SignatureEntry> allUniqueSignatures() {
+        return Collections.unmodifiableList(UNIQUE_SIGNATURES);
+    }
+
+    public static List<SignatureEntry> allOrderedEntries() {
         return Collections.unmodifiableList(UNIQUE_SIGNATURES);
     }
 
@@ -320,6 +332,29 @@ public final class SignaturePairs {
         FORTUNE_GRACE_COOLDOWN.clear();
         SOUL_FIRE_TICKS.clear();
         SKYFIRE_BOLT_TICKS.clear();
+    }
+
+    public static void onFishingReel(
+        ServerLevel level,
+        ServerPlayer player,
+        ItemStack rod,
+        @Nullable LivingEntity hookedMob,
+        boolean caughtFishOrLoot
+    ) {
+        FusedEnchantmentList list = rod.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        if (list.isEmpty()) {
+            return;
+        }
+        for (FusedPair pair : list.pairs()) {
+            Optional<SignatureEntry> sigOpt = resolve(pair);
+            if (sigOpt.isEmpty()) continue;
+            String sid = sigOpt.get().id();
+            if ("raging_hook".equals(sid) && hookedMob != null) {
+                executeSignatureCombat(level, player, rod, pair, sid, hookedMob, hookedMob.position(), true);
+            } else if ("tidal_double_catch".equals(sid) && caughtFishOrLoot) {
+                executeSignatureCombat(level, player, rod, pair, sid, null, player.position(), false);
+            }
+        }
     }
 
     // =========================================================================
@@ -451,6 +486,7 @@ public final class SignaturePairs {
         Vec3 pos,
         boolean fullChargeMelee
     ) {
+        CompendiumDiscoveryTracker.recordDiscovery(player, pair.primaryId(), pair.secondaryId());
         RandomSource rng = level.getRandom();
         int pLv = Math.max(1, pair.primaryLevel());
         int sLv = Math.max(1, pair.secondaryLevel());
@@ -489,13 +525,13 @@ public final class SignaturePairs {
                 level.sendParticles(ParticleTypes.POOF, pos.x, pos.y + 0.7D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.04D);
                 return true;
             }
-            // --- User's Custom #2: [冰霜行者 ▷ 火焰附加] 冰火两重天（缓慢 + 燃烧 + 低概率 3x3x3 冰块！）---
+            // --- User's Custom #2: [冰霜行者 ▷ 火焰附加] 冰火两重天（缓慢 + 燃烧 + 低概率 3x3x3 霜冰牢笼！）---
             case "frostfire_cage" -> {
                 if (target != null) {
                     grantEffect(target, "slowness", 60 + 20 * pLv, 1);
                     target.igniteForSeconds(3.0F + 2.0F * sLv);
-                    if (rng.nextFloat() < 0.20F) {
-                        AberrantRegistry.placeIceCage3x3x3(level, target.blockPosition(), Blocks.ICE.defaultBlockState(), false);
+                    if (rng.nextFloat() < 0.25F) {
+                        AberrantRegistry.placeFrostedIceCage3x3x3(level, target.blockPosition(), false);
                         level.playSound(null, target.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.85F, 1.3F);
                     }
                 }
@@ -747,6 +783,9 @@ public final class SignaturePairs {
                 for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.0D, null)) {
                     mob.hurtServer(level, level.damageSources().magic(), 2.8F + 0.5F * pLv);
                     grantEffect(mob, "slowness", 60, 2);
+                    if ("aurora_thunder_prison".equals(sigId) && rng.nextFloat() < 0.35F) {
+                        AberrantRegistry.placeFrostedIceSnare(level, mob.blockPosition());
+                    }
                 }
                 level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y + 0.6D, pos.z, 22, 0.6D, 0.3D, 0.6D, 0.1D);
                 return true;
@@ -853,6 +892,9 @@ public final class SignaturePairs {
                 if (target != null) {
                     target.setTicksFrozen(Math.min(300, target.getTicksFrozen() + 140));
                     grantEffect(target, "slowness", 80, 2);
+                    if (rng.nextFloat() < 0.35F) {
+                        AberrantRegistry.placeFrostedIceSnare(level, target.blockPosition());
+                    }
                 }
                 return true;
             }
@@ -995,6 +1037,141 @@ public final class SignaturePairs {
             case "undying_hellfire" -> {
                 if (target != null) {
                     target.igniteForSeconds(12.0F + 4.0F * sLv);
+                }
+                return true;
+            }
+            // --- Previously Unhandled Batch 6 / 7 / 8 Signatures ---
+            case "reactive_plate" -> {
+                grantEffect(player, "absorption", 140, 0);
+                for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 3.6D, null)) {
+                    Vec3 away = mob.position().subtract(player.position()).normalize().scale(0.8D + 0.12D * pLv);
+                    mob.push(away.x, 0.30D, away.z);
+                    mob.hurtServer(level, level.damageSources().explosion(player, player), 2.0F + 0.5F * sLv);
+                }
+                level.sendParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY() + 0.8D, player.getZ(), 2, 0.25D, 0.2D, 0.25D, 0.02D);
+                return true;
+            }
+            case "frost_meteor_fall" -> {
+                AberrantRegistry.placeFrostedIceSnare(level, player.blockPosition());
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.0D, null)) {
+                    mob.setTicksFrozen(Math.min(320, mob.getTicksFrozen() + 130));
+                    grantEffect(mob, "slowness", 80, 2);
+                    mob.hurtServer(level, level.damageSources().freeze(), 3.0F + 0.7F * pLv);
+                    AberrantRegistry.placeSingleFrostedIce(level, mob.blockPosition());
+                }
+                level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.3D, pos.z, 24, 1.2D, 0.2D, 1.2D, 0.06D);
+                level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.85F, 1.25F);
+                return true;
+            }
+            case "soul_stride_landing" -> {
+                grantEffect(player, "speed", 110, 1);
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.8D, null)) {
+                    mob.hurtServer(level, level.damageSources().magic(), 2.8F + 0.6F * sLv);
+                    SOUL_FIRE_TICKS.put(mob.getUUID(), 60);
+                }
+                level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x, pos.y + 0.25D, pos.z, 22, 1.1D, 0.2D, 1.1D, 0.05D);
+                return true;
+            }
+            case "raging_hook" -> {
+                if (target != null) {
+                    Vec3 pull = player.position().subtract(target.position()).normalize().scale(0.95D + 0.15D * pLv);
+                    target.push(pull.x, 0.32D, pull.z);
+                    target.hurtMarked = true;
+                    target.hurtServer(level, level.damageSources().playerAttack(player), 3.2F + 0.8F * pLv);
+                    grantEffect(target, "slowness", 60, 1);
+                    if (rng.nextFloat() < 0.22F + 0.06F * sLv) {
+                        Item catchDrop = rng.nextFloat() < 0.20F ? Items.NAUTILUS_SHELL : (rng.nextBoolean() ? Items.COD : Items.SALMON);
+                        spawnItem(level, player.position(), new ItemStack(catchDrop, 1));
+                    }
+                }
+                level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.6D, pos.z, 16, 0.35D, 0.35D, 0.35D, 0.08D);
+                return true;
+            }
+            case "tidal_double_catch" -> {
+                ExperienceOrb.award(level, player.position(), 2 + sLv);
+                if (rng.nextFloat() < 0.35F + 0.10F * pLv) {
+                    Item bonusCatch = switch (rng.nextInt(5)) {
+                        case 0 -> Items.PRISMARINE_CRYSTALS;
+                        case 1 -> Items.LAPIS_LAZULI;
+                        case 2 -> Items.SALMON;
+                        case 3 -> Items.TROPICAL_FISH;
+                        default -> Items.NAUTILUS_SHELL;
+                    };
+                    spawnItem(level, player.position(), new ItemStack(bonusCatch, 1));
+                    level.sendParticles(ParticleTypes.FISHING, player.getX(), player.getY() + 0.9D, player.getZ(), 12, 0.3D, 0.2D, 0.3D, 0.05D);
+                }
+                return true;
+            }
+            // --- Batch 16: 26.1.2 Spear & Lunge (突进) Signatures ---
+            case "gale_vault_thrust" -> {
+                if (fullChargeMelee) {
+                    Vec3 dash = player.getLookAngle().normalize().scale(0.65D + 0.16D * pLv);
+                    player.push(dash.x, 0.24D, dash.z);
+                    player.hurtMarked = true;
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.2D, null)) {
+                        mob.hurtServer(level, level.damageSources().playerAttack(player), 2.5F + 0.7F * pLv);
+                        Vec3 gust = mob.position().subtract(player.position()).normalize().scale(0.65D);
+                        mob.push(gust.x, 0.32D, gust.z);
+                    }
+                    level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.6D, pos.z, 16, 0.4D, 0.3D, 0.4D, 0.08D);
+                }
+                return true;
+            }
+            case "sky_spear_dive" -> {
+                if (fullChargeMelee) {
+                    player.push(0.0D, 0.62D + 0.10D * pLv, 0.0D);
+                    player.hurtMarked = true;
+                    grantEffect(player, "slow_falling", 50, 0);
+                    if (target != null) {
+                        target.hurtServer(level, level.damageSources().playerAttack(player), 3.0F + 0.8F * sLv);
+                    }
+                    level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.3D, player.getZ(), 18, 0.45D, 0.2D, 0.45D, 0.09D);
+                }
+                return true;
+            }
+            case "blazing_dragoon" -> {
+                if (fullChargeMelee) {
+                    Vec3 dash = player.getLookAngle().normalize().scale(0.55D + 0.14D * pLv);
+                    player.push(dash.x, 0.15D, dash.z);
+                    player.hurtMarked = true;
+                    if (target != null) {
+                        target.igniteForSeconds(5.0F + 2.0F * sLv);
+                        target.hurtServer(level, level.damageSources().onFire(), 2.6F + 0.7F * pLv);
+                    }
+                    level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 0.6D, pos.z, 18, 0.4D, 0.3D, 0.4D, 0.05D);
+                }
+                return true;
+            }
+            case "searing_charge" -> {
+                if (target != null) {
+                    target.igniteForSeconds(4.0F + 2.0F * pLv);
+                    grantEffect(player, "speed", 70, 1);
+                    Vec3 lunge = player.getLookAngle().normalize().scale(0.45D + 0.12D * sLv);
+                    player.push(lunge.x, 0.1D, lunge.z);
+                    player.hurtMarked = true;
+                }
+                return true;
+            }
+            case "tidal_harpoon_rush" -> {
+                double scale = player.isInWaterOrRain() ? (0.95D + 0.20D * pLv) : (0.55D + 0.12D * pLv);
+                Vec3 surge = player.getLookAngle().normalize().scale(scale);
+                player.push(surge.x, 0.18D, surge.z);
+                player.hurtMarked = true;
+                if (target != null) {
+                    float bonus = player.isInWaterOrRain() ? (4.0F + 0.9F * sLv) : (2.4F + 0.6F * pLv);
+                    target.hurtServer(level, level.damageSources().trident(player, player), bonus);
+                }
+                level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.6D, pos.z, 18, 0.4D, 0.3D, 0.4D, 0.08D);
+                return true;
+            }
+            case "surge_skewer" -> {
+                Vec3 look = player.getLookAngle().normalize();
+                for (int step = 1; step <= 4 + sLv; step++) {
+                    Vec3 p = player.getEyePosition().add(look.scale(step));
+                    level.sendParticles(ParticleTypes.SPLASH, p.x, p.y, p.z, 3, 0.15D, 0.15D, 0.15D, 0.02D);
+                    for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(p, 1.6D, 1.6D, 1.6D), e -> e != player && e.isAlive())) {
+                        mob.hurtServer(level, level.damageSources().playerAttack(player), 2.6F + 0.7F * pLv);
+                    }
                 }
                 return true;
             }

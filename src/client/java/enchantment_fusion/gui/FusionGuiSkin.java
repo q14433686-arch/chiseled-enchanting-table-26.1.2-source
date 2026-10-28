@@ -11,6 +11,7 @@ import net.minecraft.resources.Identifier;
  */
 public final class FusionGuiSkin {
     public static final Identifier PANEL_FRAME = EnchantmentFusion.id("textures/gui/panel_frame.png");
+    public static final Identifier GRIMOIRE_SPREAD = EnchantmentFusion.id("textures/gui/grimoire_spread.png");
 
     public static final Identifier SLOT_PRIMARY = EnchantmentFusion.id("textures/gui/slot_primary.png");
     public static final Identifier SLOT_SECONDARY = EnchantmentFusion.id("textures/gui/slot_secondary.png");
@@ -52,6 +53,14 @@ public final class FusionGuiSkin {
     public static final int COLOR_WARN = 0xFFFFB86C;
     public static final int COLOR_RED = 0xFFFF7A7A;
     public static final int COLOR_MUTED = 0xFFB5AC9E;
+
+    // Warm dark sepia & illuminated inks for the parchment pages of grimoire_spread.png
+    public static final int COLOR_INK_TITLE = 0xFF3A2210;
+    public static final int COLOR_INK_BODY = 0xFF4E331B;
+    public static final int COLOR_INK_GOLD = 0xFF8C5308;
+    public static final int COLOR_INK_TEAL = 0xFF165B63;
+    public static final int COLOR_INK_PURPLE = 0xFF5D2675;
+    public static final int COLOR_INK_MUTED = 0xFF7B6752;
 
     private static final float GLYPH_HEIGHT = 8.0F;
 

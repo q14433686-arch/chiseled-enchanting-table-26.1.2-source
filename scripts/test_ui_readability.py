@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verifies EnchantmentFusionScreen 308x214 3-tab layout geometry is overlap-free, scissor-clipped, and pixel-art backed."""
+"""Verifies EnchantmentFusionScreen 308x214 2-tab + Grimoire button & FusionGrimoireScreen 360x224 geometry."""
 import unittest
 from pathlib import Path
 
@@ -12,14 +12,19 @@ def overlaps(a: tuple[int, int, int, int], b: tuple[int, int, int, int]) -> bool
     return not (ax + aw <= bx or bx + bw <= ax or ay + ah <= by or by + bh <= ay)
 
 
-def assert_disjoint(testcase: unittest.TestCase, regions: dict[str, tuple[int, int, int, int]]) -> None:
+def assert_disjoint(
+    testcase: unittest.TestCase,
+    regions: dict[str, tuple[int, int, int, int]],
+    max_w: int = 308,
+    max_h: int = 214,
+) -> None:
     names = list(regions.keys())
     for i in range(len(names)):
         x, y, w, h = regions[names[i]]
         testcase.assertGreaterEqual(x, 0)
         testcase.assertGreaterEqual(y, 0)
-        testcase.assertLessEqual(x + w, 308, f"{names[i]} exceeds 308px width")
-        testcase.assertLessEqual(y + h, 214, f"{names[i]} exceeds 214px height")
+        testcase.assertLessEqual(x + w, max_w, f"{names[i]} exceeds {max_w}px width")
+        testcase.assertLessEqual(y + h, max_h, f"{names[i]} exceeds {max_h}px height")
         for j in range(i + 1, len(names)):
             testcase.assertFalse(
                 overlaps(regions[names[i]], regions[names[j]]),
@@ -29,9 +34,9 @@ def assert_disjoint(testcase: unittest.TestCase, regions: dict[str, tuple[int, i
 
 class UiReadabilityTest(unittest.TestCase):
     COMMON = {
-        "tab_0": (12, 0, 84, 20),
-        "tab_1": (100, 0, 84, 20),
-        "tab_2": (188, 0, 84, 20),
+        "tab_0": (12, 0, 104, 20),
+        "tab_1": (120, 0, 104, 20),
+        "btn_grimoire": (232, 0, 68, 18),
         "slot_primary": (17, 51, 18, 18),
         "btn_swap": (43, 48, 24, 24),
         "slot_secondary": (77, 51, 18, 18),
@@ -47,7 +52,18 @@ class UiReadabilityTest(unittest.TestCase):
             {
                 "picker_rows_3": (112, 36, 186, 50),
                 "preview_plaque": (112, 89, 122, 36),
-                "btn_execute": (237, 95, 61, 24),
+                "btn_execute": (237, 95, 61, 26),
+            }
+        )
+        assert_disjoint(self, regions)
+
+    def test_tab0_integrated_book_manage_buttons_do_not_overlap(self) -> None:
+        regions = dict(self.COMMON)
+        regions.update(
+            {
+                "picker_rows_3": (112, 36, 186, 50),
+                "btn_book_flip": (140, 98, 44, 20),
+                "btn_book_split": (187, 98, 47, 20),
             }
         )
         assert_disjoint(self, regions)
@@ -59,30 +75,31 @@ class UiReadabilityTest(unittest.TestCase):
                 "socket_card_0": (112, 34, 186, 23),
                 "socket_card_1": (112, 59, 186, 23),
                 "inplace_picker_2": (112, 86, 122, 33),
-                "btn_execute": (237, 95, 61, 24),
+                "btn_execute": (237, 95, 61, 26),
             }
         )
         assert_disjoint(self, regions)
 
-    def test_tab2_split_and_compendium_regions_do_not_overlap(self) -> None:
-        regions = dict(self.COMMON)
-        regions.update(
-            {
-                "book_label": (112, 35, 85, 18),
-                "btn_flip": (200, 35, 46, 18),
-                "btn_split": (249, 35, 49, 18),
-                "compendium_rows_4": (112, 57, 186, 67),
-            }
-        )
-        assert_disjoint(self, regions)
+    def test_grimoire_double_page_spread_regions_do_not_overlap(self) -> None:
+        spread = {
+            "left_header": (25, 18, 141, 16),
+            "left_search": (27, 36, 137, 13),
+            "left_rows": (25, 53, 141, 120),
+            "left_pager": (25, 173, 141, 14),
+            "left_footer": (25, 190, 141, 14),
+            "right_detail": (194, 22, 141, 178),
+        }
+        assert_disjoint(self, spread, max_w=360, max_h=224)
 
-    def test_screen_uses_gpu_scissor_and_real_textures(self) -> None:
-        screen_src = (ROOT / "src/client/java/enchantment_fusion/gui/EnchantmentFusionScreen.java").read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("enableScissor", screen_src)
-        self.assertIn("disableScissor", screen_src)
-        self.assertNotIn(".fill(", screen_src)
+    def test_screens_use_gpu_scissor_and_zero_solid_fills(self) -> None:
+        for rel in (
+            "src/client/java/enchantment_fusion/gui/EnchantmentFusionScreen.java",
+            "src/client/java/enchantment_fusion/gui/FusionGrimoireScreen.java",
+        ):
+            src = (ROOT / rel).read_text(encoding="utf-8")
+            self.assertIn("enableScissor", src)
+            self.assertIn("disableScissor", src)
+            self.assertNotIn(".fill(", src)
 
 
 if __name__ == "__main__":

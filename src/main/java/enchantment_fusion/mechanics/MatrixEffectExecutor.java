@@ -137,7 +137,7 @@ public final class MatrixEffectExecutor {
         }
         return switch (hostForm) {
             case MELEE -> firedTrigger == TriggerType.ON_MELEE_STRIKE;
-            case RANGED -> firedTrigger == TriggerType.ON_PROJECTILE_IMPACT;
+            case RANGED -> firedTrigger == TriggerType.ON_PROJECTILE_IMPACT || firedTrigger == TriggerType.ON_TRIDENT_CHANNEL;
             case TOOL -> firedTrigger == TriggerType.ON_BLOCK_HARVEST || firedTrigger == TriggerType.ON_MELEE_STRIKE;
             case ARMOR -> firedTrigger == TriggerType.ON_DAMAGE_TAKEN || firedTrigger == TriggerType.ON_MOVEMENT_OR_LAND;
         };
@@ -297,7 +297,7 @@ public final class MatrixEffectExecutor {
                 BlockPos waterPos = center.offset(dx, -1, dz);
                 BlockState state = level.getBlockState(waterPos);
                 if (state.is(Blocks.WATER) && state.getFluidState().isSource() && level.getBlockState(waterPos.above()).isAir()) {
-                    level.setBlockAndUpdate(waterPos, Blocks.FROSTED_ICE.defaultBlockState());
+                    AberrantRegistry.placeSingleFrostedIce(level, waterPos);
                 }
             }
         }

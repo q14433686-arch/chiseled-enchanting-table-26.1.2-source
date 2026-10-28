@@ -49,7 +49,9 @@ final class FusionRuleEngineTest {
         assertEquals(2, VesselCapacityRules.computeMaxSlots(true, 0));
         assertEquals(2, VesselCapacityRules.computeMaxSlots(true, 1));
         assertTrue(VesselCapacityRules.isInnateTwoSlotItemId("minecraft:golden_sword"));
+        assertTrue(VesselCapacityRules.isInnateTwoSlotItemId("minecraft:golden_spear"));
         assertFalse(VesselCapacityRules.isInnateTwoSlotItemId("minecraft:diamond_sword"));
+        assertFalse(VesselCapacityRules.isInnateTwoSlotItemId("minecraft:copper_spear"));
     }
 
     @Test
@@ -155,9 +157,10 @@ final class FusionRuleEngineTest {
     }
 
     @Test
-    void allFortyTwoVanillaEnchantmentsHaveExplicitMatrixProfiles() {
+    void allFortyThreeVanilla2612EnchantmentsHaveExplicitMatrixProfiles() {
         var snap = FusionMatrixRegistry.current();
-        assertTrue(snap.profiles().size() >= 42, "Expected >= 42 vanilla matrix profiles");
+        assertTrue(snap.profiles().size() >= 43, "Expected all 43 vanilla 26.1.2 matrix profiles including minecraft:lunge");
+        assertTrue(snap.profiles().containsKey("minecraft:lunge"), "minecraft:lunge must be explicitly profiled");
         for (HostForm form : HostForm.values()) {
             for (var profile : snap.profiles().values()) {
                 assertNotNull(profile.trigger().translationKey());
@@ -192,7 +195,7 @@ final class FusionRuleEngineTest {
                         assertTrue(keys.contains(AberrantRegistry.titleKey(abId)), "Missing aberrant title key: " + abId);
                         assertTrue(keys.contains(AberrantRegistry.descKey(abId)), "Missing aberrant desc key: " + abId);
                     }
-                    assertEquals(111, CrossDomainTransmutations.allVariants().size(), "Expected all 111 Phase 3 TransmuteVariants");
+                    assertEquals(115, CrossDomainTransmutations.allVariants().size(), "Expected all 115 Phase 4 TransmuteVariants (incl. 4 minecraft:lunge variants)");
                     for (var tv : CrossDomainTransmutations.allVariants()) {
                         assertTrue(keys.contains(tv.titleKey()), "Missing transmute title key: " + tv.titleKey());
                         assertTrue(keys.contains(tv.descKey()), "Missing transmute desc key: " + tv.descKey());
@@ -253,6 +256,61 @@ final class FusionRuleEngineTest {
         assertEquals("mending_xp_bottle", CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.GLASS_BOTTLE, false).orElseThrow().id());
         assertEquals("mending_replenish", CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.CONSUMABLE, false).orElseThrow().id());
         assertEquals("mending_vitality", CrossDomainTransmutations.resolveForRole("minecraft:mending", TargetRole.TOTEM, false).orElseThrow().id());
+
+        // Phase 4 (26.1.2): Spear native vs cross-domain & minecraft:lunge transmutations
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:lunge", TargetRole.SPEAR, true).isEmpty());
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:sharpness", TargetRole.SPEAR, true).isEmpty());
+        assertTrue(CrossDomainTransmutations.resolveForRole("minecraft:fire_aspect", TargetRole.SPEAR, true).isEmpty());
+        assertEquals("yishui", CrossDomainTransmutations.resolveForRole("minecraft:aqua_affinity", TargetRole.SPEAR, true).orElseThrow().id());
+        assertEquals("heavy_cleave", CrossDomainTransmutations.resolveForRole("minecraft:sweeping_edge", TargetRole.SPEAR, true).orElseThrow().id());
+        assertEquals("lunge_dash_strike", CrossDomainTransmutations.resolveForRole("minecraft:lunge", TargetRole.SWORD, true).orElseThrow().id());
+        assertEquals("lunge_vault_shot", CrossDomainTransmutations.resolveForRole("minecraft:lunge", TargetRole.BOW, true).orElseThrow().id());
+        assertEquals("lunge_wind_stride", CrossDomainTransmutations.resolveForRole("minecraft:lunge", TargetRole.FOOT_ARMOR, true).orElseThrow().id());
+        assertEquals("lunge_tunnel_rush", CrossDomainTransmutations.resolveForRole("minecraft:lunge", TargetRole.DIG_TOOL, true).orElseThrow().id());
+    }
+
+    @Test
+    void phase4TieredRiskEconomyThreeStageDiscoveryAndFrostedIceGuards() throws Exception {
+        // 1. Tiered reagent quotes + Stabilizer reduction + 50% normal failure refund
+        var lowQuote = enchantment_fusion.mechanics.FusionEconomyRules.computeSynthesisQuote(
+            "minecraft:sharpness", 1, 5, "minecraft:knockback", 1, 2, false, false, 0, false
+        );
+        assertEquals(enchantment_fusion.mechanics.FusionEconomyRules.ReagentKind.LAPIS, lowQuote.reagent());
+        assertFalse(lowQuote.highRiskTier());
+        assertTrue(lowQuote.failureChance() > 0.05);
+        assertTrue(lowQuote.halfChargedXp() <= lowQuote.xpLevels() / 2);
+
+        var lowStabilized = enchantment_fusion.mechanics.FusionEconomyRules.computeSynthesisQuote(
+            "minecraft:sharpness", 1, 5, "minecraft:knockback", 1, 2, false, false, 1, false
+        );
+        assertEquals(0.0, lowStabilized.failureChance(), 1e-6);
+
+        var repulsiveQuote = enchantment_fusion.mechanics.FusionEconomyRules.computeSynthesisQuote(
+            "minecraft:sharpness", 5, 5, "minecraft:smite", 5, 5, true, true, 0, false
+        );
+        assertEquals(enchantment_fusion.mechanics.FusionEconomyRules.ReagentKind.EMERALD, repulsiveQuote.reagent());
+        assertTrue(repulsiveQuote.highRiskTier());
+        assertTrue(repulsiveQuote.failureChance() >= 0.40);
+
+        var lungeSig = SignaturePairs.resolve("minecraft:lunge", "minecraft:wind_burst").orElseThrow();
+        assertEquals("gale_vault_thrust", lungeSig.id());
+
+        // 2. Three-stage Compendium discovery state roundtrip + legacy compatibility
+        enchantment_fusion.mechanics.CompendiumDiscoveryTracker.applyClientSync(List.of(
+            "sig/gale_vault_thrust=1",
+            "transmute/yishui=2",
+            "minecraft:sharpness>minecraft:loyalty"
+        ));
+        assertEquals(1, enchantment_fusion.mechanics.CompendiumDiscoveryTracker.clientState("sig/gale_vault_thrust"));
+        assertEquals(2, enchantment_fusion.mechanics.CompendiumDiscoveryTracker.clientState("transmute/yishui"));
+        assertTrue(enchantment_fusion.mechanics.CompendiumDiscoveryTracker.isClientDiscovered("minecraft:sharpness", "minecraft:loyalty"));
+
+        // 3. Freezing effects must use Blocks.FROSTED_ICE (zero permanent Blocks.ICE / PACKED_ICE cages)
+        String abSrc = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/AberrantRegistry.java"), StandardCharsets.UTF_8);
+        String sigSrc = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/SignaturePairs.java"), StandardCharsets.UTF_8);
+        assertTrue(abSrc.contains("Blocks.FROSTED_ICE"), "AberrantRegistry must place Blocks.FROSTED_ICE");
+        assertFalse(abSrc.contains("Blocks.PACKED_ICE"), "Permanent PACKED_ICE cages forbidden");
+        assertFalse(sigSrc.contains("Blocks.ICE."), "Permanent Blocks.ICE cages forbidden in SignaturePairs");
     }
 
     @Test

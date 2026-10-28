@@ -1,5 +1,6 @@
 package enchantment_fusion.mechanics;
 
+import enchantment_fusion.model.HostForm;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -21,6 +22,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RandomSource;
@@ -64,6 +66,7 @@ import org.jetbrains.annotations.Nullable;
 public final class CrossDomainTransmutations {
     public enum TargetRole {
         SWORD,
+        SPEAR,
         AXE,
         MACE,
         TRIDENT,
@@ -82,7 +85,7 @@ public final class CrossDomainTransmutations {
         OTHER;
 
         public boolean isMeleeWeapon() {
-            return this == SWORD || this == AXE || this == MACE || this == TRIDENT;
+            return this == SWORD || this == SPEAR || this == AXE || this == MACE || this == TRIDENT;
         }
 
         public boolean isRangedWeapon() {
@@ -283,7 +286,12 @@ public final class CrossDomainTransmutations {
             // 37b: Mending on Special Items
             {"mending_xp_bottle", "minecraft:mending"},
             {"mending_replenish", "minecraft:mending"},
-            {"mending_vitality", "minecraft:mending"}
+            {"mending_vitality", "minecraft:mending"},
+            // 38: 26.1.2 Lunge (突进) Cross-Domain Transmutations
+            {"lunge_dash_strike", "minecraft:lunge"},
+            {"lunge_vault_shot", "minecraft:lunge"},
+            {"lunge_wind_stride", "minecraft:lunge"},
+            {"lunge_tunnel_rush", "minecraft:lunge"}
         };
         for (String[] d : defs) {
             ALL_VARIANTS.put(d[0], new TransmuteVariant(d[0], d[1]));
@@ -350,6 +358,7 @@ public final class CrossDomainTransmutations {
         if (item instanceof FishingRodItem) return TargetRole.FISHING_ROD;
 
         if (stack.is(ItemTags.SWORDS)) return TargetRole.SWORD;
+        if (HostForm.isSpear(stack)) return TargetRole.SPEAR;
         if (stack.is(ItemTags.AXES)) return TargetRole.AXE;
         if (stack.is(ItemTags.PICKAXES) || stack.is(ItemTags.SHOVELS) || stack.is(ItemTags.HOES)
             || stack.is(Items.SHEARS) || stack.is(Items.BRUSH)) {
@@ -415,7 +424,7 @@ public final class CrossDomainTransmutations {
 
             // 0a: Fire Aspect / Flame -> Pickaxe/Tool & Axe Auto-Smelt
             case "minecraft:fire_aspect" -> {
-                if (role == TargetRole.SWORD || role == TargetRole.MACE) yield null;
+                if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.MACE) yield null;
                 if (role == TargetRole.AXE) yield "auto_smelt_axe";
                 if (role == TargetRole.DIG_TOOL) yield "auto_smelt_pick";
                 yield null;
@@ -556,7 +565,7 @@ public final class CrossDomainTransmutations {
 
             // 15: Sharpness
             case "minecraft:sharpness" -> {
-                if (role == TargetRole.SWORD || role == TargetRole.AXE) yield null;
+                if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE) yield null;
                 if (role == TargetRole.DIG_TOOL) yield "sharpened_tool";
                 if (role.isRangedWeapon() || role == TargetRole.TRIDENT) yield "broadhead_arrow";
                 if (role.isArmorOrShield()) yield "bladed_rim";
@@ -565,7 +574,7 @@ public final class CrossDomainTransmutations {
 
             // 16: Smite
             case "minecraft:smite" -> {
-                if (role == TargetRole.SWORD || role == TargetRole.AXE || role == TargetRole.MACE) yield null;
+                if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.MACE) yield null;
                 if (role.isRangedWeapon() || role == TargetRole.TRIDENT) yield "holy_bolt";
                 if (role == TargetRole.DIG_TOOL) yield "hallowed_pick";
                 if (role.isArmorOrShield()) yield "undead_ward";
@@ -574,7 +583,7 @@ public final class CrossDomainTransmutations {
 
             // 17: Bane of Arthropods
             case "minecraft:bane_of_arthropods" -> {
-                if (role == TargetRole.SWORD || role == TargetRole.AXE || role == TargetRole.MACE) yield null;
+                if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.MACE) yield null;
                 if (role.isRangedWeapon() || role == TargetRole.TRIDENT) yield "arthropod_bolt";
                 if (role == TargetRole.DIG_TOOL) yield "nest_purger";
                 if (role.isArmorOrShield()) yield "venom_ward";
@@ -583,13 +592,13 @@ public final class CrossDomainTransmutations {
 
             // 18: Knockback / Punch
             case "minecraft:knockback", "minecraft:punch" -> {
-                if ("minecraft:knockback".equals(enchId) && role == TargetRole.SWORD) yield null;
+                if ("minecraft:knockback".equals(enchId) && (role == TargetRole.SWORD || role == TargetRole.SPEAR)) yield null;
                 if ("minecraft:punch".equals(enchId) && role == TargetRole.BOW) {
-                    // Punch on Bow is native, though Knockback on Bow / Punch on Sword/Crossbow transmutes!
+                    // Punch on Bow is native, though Knockback on Bow / Punch on Sword/Spear/Crossbow transmutes!
                     yield null;
                 }
                 if (role == TargetRole.CROSSBOW || role == TargetRole.TRIDENT) yield "heavy_impact";
-                if (role == TargetRole.BOW || role == TargetRole.SWORD || role == TargetRole.AXE || role == TargetRole.MACE) {
+                if (role == TargetRole.BOW || role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.MACE) {
                     yield role.isRangedWeapon() ? "recoil_jump" : "warding_shove";
                 }
                 if (role == TargetRole.DIG_TOOL) yield "warding_shove";
@@ -600,7 +609,7 @@ public final class CrossDomainTransmutations {
             // 19: Sweeping Edge
             case "minecraft:sweeping_edge" -> {
                 if (role == TargetRole.SWORD) yield null;
-                if (role == TargetRole.AXE || role == TargetRole.TRIDENT || role == TargetRole.MACE) yield "heavy_cleave";
+                if (role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.TRIDENT || role == TargetRole.MACE) yield "heavy_cleave";
                 if (role == TargetRole.DIG_TOOL) yield "wide_reap";
                 if (role.isRangedWeapon()) yield "wind_cutter_arrow";
                 if (role == TargetRole.SHIELD) yield "shield_sweep";
@@ -609,7 +618,7 @@ public final class CrossDomainTransmutations {
 
             // 20: Looting
             case "minecraft:looting" -> {
-                if (role == TargetRole.SWORD) yield null;
+                if (role == TargetRole.SWORD || role == TargetRole.SPEAR) yield null;
                 if (role.isRangedWeapon() || role == TargetRole.AXE || role == TargetRole.TRIDENT || role == TargetRole.MACE) {
                     yield "ranged_heavy_plunder";
                 }
@@ -669,7 +678,7 @@ public final class CrossDomainTransmutations {
             // 26: Loyalty
             case "minecraft:loyalty" -> {
                 if (role == TargetRole.TRIDENT) yield null;
-                if (role == TargetRole.SWORD || role == TargetRole.AXE || role == TargetRole.MACE) yield "returning_blade_throw";
+                if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.MACE) yield "returning_blade_throw";
                 if (role.isRangedWeapon()) yield "boomerang_arrow";
                 if (role == TargetRole.DIG_TOOL) yield "auto_loot_return";
                 if (role.isArmorOrShield()) yield "void_homing";
@@ -754,6 +763,16 @@ public final class CrossDomainTransmutations {
                 if (role.isAttackWeapon() || role == TargetRole.DIG_TOOL || role == TargetRole.SHIELD) {
                     yield "sticky_root_curse";
                 }
+                yield null;
+            }
+
+            // 38: 26.1.2 Lunge (突进 — native on SPEAR, transmutes on other weapons/tools/armor!)
+            case "minecraft:lunge" -> {
+                if (role == TargetRole.SPEAR) yield null;
+                if (role.isMeleeWeapon()) yield "lunge_dash_strike";
+                if (role.isRangedWeapon()) yield "lunge_vault_shot";
+                if (role == TargetRole.DIG_TOOL) yield "lunge_tunnel_rush";
+                if (role.isArmorOrShield()) yield "lunge_wind_stride";
                 yield null;
             }
 
@@ -875,6 +894,10 @@ public final class CrossDomainTransmutations {
         }
         if (getTransmutedLevel(tool, "nest_purger") > 0 && state.is(Blocks.COBWEB)) {
             mult *= 5.0F;
+        }
+        int silentPickLv = getTransmutedLevel(tool, "silent_pick");
+        if (silentPickLv > 0 && player.isShiftKeyDown()) {
+            mult *= (1.0F + 0.25F * silentPickLv);
         }
         int powerLv = getTransmutedLevel(tool, "hardrock_breaker");
         if (powerLv > 0 && state.getBlock().defaultDestroyTime() >= 3.0F) {
@@ -1009,13 +1032,35 @@ public final class CrossDomainTransmutations {
             player.clearFire();
         }
 
-        // 2 & 26: Depth Strider "定流" / Loyalty "归囊" pull drops straight to player
+        // 2, 6 & 26: Depth Strider "定流" / Swift Sneak "静默镐" / Loyalty "归囊" pull drops straight to player
         if ((getTransmutedLevel(tool, "current_anchor") > 0 && player.isInWater())
+            || (getTransmutedLevel(tool, "silent_pick") > 0 && player.isShiftKeyDown())
             || getTransmutedLevel(tool, "auto_loot_return") > 0) {
             for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, AABB.ofSize(Vec3.atCenterOf(pos), 3.5D, 3.5D, 3.5D), Entity::isAlive)) {
                 drop.setNoPickUpDelay();
                 drop.setPos(player.getX(), player.getY() + 0.4D, player.getZ());
             }
+        }
+
+        // 10: Blast Protection "防爆震凿" — small concussive crack on adjacent stone
+        int blastGuardLv = getTransmutedLevel(tool, "blast_guard");
+        if (blastGuardLv > 0 && !Boolean.TRUE.equals(IN_MULTI_BREAK.get()) && level.getRandom().nextFloat() < 0.14F * blastGuardLv) {
+            IN_MULTI_BREAK.set(Boolean.TRUE);
+            try {
+                BlockPos adj = pos.relative(Direction.getRandom(level.getRandom()));
+                BlockState adjSt = level.getBlockState(adj);
+                if (adjSt.is(BlockTags.BASE_STONE_OVERWORLD) || adjSt.is(Blocks.COBBLESTONE) || adjSt.is(Blocks.NETHERRACK)) {
+                    level.destroyBlock(adj, true, player);
+                }
+            } finally {
+                IN_MULTI_BREAK.set(Boolean.FALSE);
+            }
+        }
+
+        // 38: Lunge "掘进冲刺" — burst mining stride
+        int tunnelLv = getTransmutedLevel(tool, "lunge_tunnel_rush");
+        if (tunnelLv > 0) {
+            grantEffect(player, "speed", 50, Math.min(1, tunnelLv - 1));
         }
 
         // 25. Quick Charge "连掘": brief Haste
@@ -1129,12 +1174,30 @@ public final class CrossDomainTransmutations {
                 level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.8D, pos.z, 10, 0.3D, 0.25D, 0.3D, 0.08D);
             }
 
-            // 1: Frost Walker -> "凝霜"
+            // 1: Frost Walker -> "凝霜" (with Frost Walker frosted_ice snare!)
             int frostLv = getTransmutedLevel(weapon, "frost_edge");
             if (frostLv > 0) {
                 target.setTicksFrozen(Math.min(350, target.getTicksFrozen() + 70 * frostLv));
                 grantEffect(target, "slowness", 55, frostLv - 1);
+                if (target.getTicksFrozen() >= 140 || rng.nextFloat() < 0.25F) {
+                    AberrantRegistry.placeSingleFrostedIce(level, target.blockPosition());
+                }
                 level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.8D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.04D);
+            }
+
+            // 21: Power on Armor/Shield -> "泰坦护腕" melee force bonus!
+            if (fullCharge && hasArmorOrShieldTransmute(player, "titan_brace")) {
+                target.hurtServer(level, level.damageSources().playerAttack(player), 1.6F);
+            }
+
+            // 38: Lunge -> "寸步突刺" forward micro-dash & pierce strike!
+            int lungeStrikeLv = getTransmutedLevel(weapon, "lunge_dash_strike");
+            if (lungeStrikeLv > 0 && fullCharge) {
+                Vec3 dash = player.getLookAngle().normalize().scale(0.42D + 0.14D * lungeStrikeLv);
+                player.push(dash.x, 0.12D, dash.z);
+                player.hurtMarked = true;
+                target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F * lungeStrikeLv);
+                level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.4D, player.getZ(), 8, 0.25D, 0.15D, 0.25D, 0.05D);
             }
 
             // 3: Respiration -> "气劲吐纳"
@@ -1395,9 +1458,24 @@ public final class CrossDomainTransmutations {
             level.sendParticles(ParticleTypes.SPLASH, player.getX(), player.getY() + 0.8D, player.getZ(), 16, 0.4D, 0.3D, 0.4D, 0.1D);
         }
 
-        // 37a: Unbreaking on Consumables ("经久省用": refund 1 item with probability!)
+        // 37a: Unbreaking on Instant Throwable Consumables ("经久省用": refund 1 item with probability!)
+        // Multi-tick eat/drink items (DataComponents.CONSUMABLE) roll in onConsumableFinished() instead!
+        if (!stack.has(DataComponents.CONSUMABLE)) {
+            tryRefundRationItem(level, player, stack);
+        }
+    }
+
+    public static void onConsumableFinished(ServerLevel level, ServerPlayer player, ItemStack snapshotBeforeConsume) {
+        if (snapshotBeforeConsume == null || snapshotBeforeConsume.isEmpty()) {
+            return;
+        }
+        tryRefundRationItem(level, player, snapshotBeforeConsume);
+    }
+
+    private static void tryRefundRationItem(ServerLevel level, ServerPlayer player, ItemStack stack) {
         int rationLv = getTransmutedLevel(stack, "unbreaking_ration");
         if (rationLv > 0 && !player.getAbilities().instabuild) {
+            CompendiumDiscoveryTracker.recordTransmuteProgress(player, "unbreaking_ration", CompendiumDiscoveryTracker.STATE_MASTERED);
             float saveChance = switch (rationLv) {
                 case 1 -> 0.22F;
                 case 2 -> 0.35F;
@@ -1454,6 +1532,18 @@ public final class CrossDomainTransmutations {
             }
             if (speedBoost != 1.0D) {
                 proj.setDeltaMovement(proj.getDeltaMovement().scale(speedBoost));
+            }
+
+            // 38: Lunge on Bow/Crossbow -> "跃射步" agile vault step on shot!
+            int vaultLv = getTransmutedLevel(weapon, "lunge_vault_shot");
+            if (vaultLv > 0) {
+                Vec3 horiz = new Vec3(shooter.getLookAngle().x, 0.0D, shooter.getLookAngle().z);
+                if (horiz.lengthSqr() > 0.001D) {
+                    Vec3 step = horiz.normalize().scale(0.38D + 0.12D * vaultLv);
+                    shooter.push(step.x, 0.16D, step.z);
+                    shooter.hurtMarked = true;
+                    level.sendParticles(ParticleTypes.CLOUD, shooter.getX(), shooter.getY() + 0.2D, shooter.getZ(), 6, 0.2D, 0.1D, 0.2D, 0.04D);
+                }
             }
 
             // 18: Knockback/Punch "反冲跳" (Sneak + shoot downward to rocket-jump!)
@@ -1531,6 +1621,16 @@ public final class CrossDomainTransmutations {
             if (frostLv > 0) {
                 target.setTicksFrozen(Math.min(350, target.getTicksFrozen() + 70 * frostLv));
                 grantEffect(target, "slowness", 55, frostLv - 1);
+                if (target.getTicksFrozen() >= 140 || rng.nextFloat() < 0.28F) {
+                    AberrantRegistry.placeSingleFrostedIce(level, target.blockPosition());
+                }
+            }
+            int breechLv = getTransmutedLevel(weapon, "blast_breech");
+            if (breechLv > 0) {
+                for (LivingEntity mob : nearbyHostiles(level, shooter, hitPos, 2.4D, null)) {
+                    mob.hurtServer(level, level.damageSources().explosion(shooter, proj), 1.4F + 0.5F * breechLv);
+                }
+                level.sendParticles(ParticleTypes.EXPLOSION, hitPos.x, hitPos.y + 0.4D, hitPos.z, 1, 0.1D, 0.1D, 0.1D, 0.0D);
             }
             int barbLv = getTransmutedLevel(weapon, "barbed_arrow");
             if (barbLv > 0) {
@@ -1716,6 +1816,7 @@ public final class CrossDomainTransmutations {
 
         // Handheld parry & defensive mitigation heal-back
         ItemStack main = player.getMainHandItem();
+        ItemStack off = player.getOffhandItem();
         int parryLv = getTransmutedLevel(main, "blade_parry");
         if (parryLv > 0 && damageTaken > 0.5F) {
             long lastSwing = LAST_SWING_TICK.getOrDefault(player.getUUID(), -100L);
@@ -1725,6 +1826,23 @@ public final class CrossDomainTransmutations {
             if (activeParry) {
                 damageItemSafely(main, 1, player);
                 level.playSound(null, player.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.3F, 1.8F);
+            }
+        }
+        int bracerLv = Math.max(getTransmutedLevel(main, "bracer_guard"), getTransmutedLevel(off, "bracer_guard"));
+        if (bracerLv > 0 && damageTaken > 0.5F) {
+            player.heal(damageTaken * (0.10F + 0.04F * bracerLv));
+        }
+        int minerGuardLv = Math.max(getTransmutedLevel(main, "miner_guard"), getTransmutedLevel(off, "miner_guard"));
+        if (minerGuardLv > 0 && damageTaken > 0.5F) {
+            player.heal(damageTaken * (0.10F + 0.04F * minerGuardLv));
+        }
+        if (source.is(DamageTypeTags.IS_EXPLOSION) && damageTaken > 0.5F) {
+            int blastMit = Math.max(
+                Math.max(getTransmutedLevel(main, "blast_breech"), getTransmutedLevel(off, "blast_breech")),
+                Math.max(getTransmutedLevel(main, "blast_guard"), getTransmutedLevel(off, "blast_guard"))
+            );
+            if (blastMit > 0) {
+                player.heal(damageTaken * Math.min(0.65F, 0.25F + 0.10F * blastMit));
             }
         }
 
@@ -1754,6 +1872,18 @@ public final class CrossDomainTransmutations {
             if (repulseLv > 0 && attacker != null && player.distanceToSqr(attacker) < 10.0D) {
                 Vec3 push = attacker.position().subtract(player.position()).normalize().scale(0.55D * repulseLv);
                 attacker.push(push.x, 0.25D, push.z);
+            }
+            int guardianLv = getTransmutedLevel(gear, "guardian_ward");
+            if (guardianLv > 0 && (player.isInWaterOrRain()
+                || (attacker != null && BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(attacker.getType()).is(EntityTypeTags.AQUATIC)))) {
+                player.heal(Math.min(2.5F, damageTaken * 0.20F));
+                if (attacker != null) {
+                    attacker.hurtServer(level, level.damageSources().thorns(player), 1.4F * guardianLv);
+                }
+            }
+            if (getTransmutedLevel(gear, "titan_brace") > 0) {
+                player.setDeltaMovement(player.getDeltaMovement().scale(0.55D));
+                player.hurtMarked = true;
             }
             if (getTransmutedLevel(gear, "gale_shield") > 0 && !player.isUnderWater() && damageTaken >= 2.0F) {
                 for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 4.2D, null)) {
@@ -1891,9 +2021,33 @@ public final class CrossDomainTransmutations {
             grantEffect(player, "speed", 25, 1);
         }
 
-        // 6: Swift Sneak "暗矢" (bow sneak speed)
+        // 6: Swift Sneak "暗矢" (bow sneak speed) & "暗影披风" (shroud cloak sneak stealth!)
         if (player.isShiftKeyDown() && getTransmutedLevel(player.getMainHandItem(), "silent_arrow") > 0) {
             grantEffect(player, "speed", 25, 0);
+        }
+        if (player.isShiftKeyDown() && hasArmorOrShieldTransmute(player, "shroud_cloak")) {
+            grantEffect(player, "invisibility", 30, 0);
+        }
+
+        // 38: Lunge "疾行突步" (periodic forward wind-stride while sprinting!)
+        if (player.isSprinting() && level.getGameTime() % 50L == 0L && hasArmorOrShieldTransmute(player, "lunge_wind_stride")) {
+            Vec3 horiz = new Vec3(player.getLookAngle().x, 0.0D, player.getLookAngle().z);
+            if (horiz.lengthSqr() > 0.001D) {
+                Vec3 boost = horiz.normalize().scale(0.42D);
+                player.push(boost.x, 0.08D, boost.z);
+                player.hurtMarked = true;
+                level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.15D, player.getZ(), 5, 0.2D, 0.1D, 0.2D, 0.03D);
+            }
+        }
+
+        // 26: Loyalty "虚空归返" emergency player void rescue!
+        if (player.getY() < level.getMinY() - 6 && hasArmorOrShieldTransmute(player, "void_homing")
+            && checkActiveCooldown(player, level.getGameTime(), 1200)) {
+            BlockPos spawn = level.getSharedSpawnPos();
+            player.resetFallDistance();
+            player.teleportTo(player.getX(), Math.max(level.getMinY() + 68, spawn.getY() + 4), player.getZ());
+            grantEffect(player, "slow_falling", 180, 0);
+            level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.9F, 1.1F);
         }
 
         // 12: Efficiency "利落" (speed compensation while shielding/eating)
@@ -1955,7 +2109,11 @@ public final class CrossDomainTransmutations {
             return;
         }
         for (ServerPlayer player : level.players()) {
-            List<ItemEntity> nearby = level.getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(36.0D), Entity::isAlive);
+            AABB columnBox = new AABB(
+                player.getX() - 96.0D, level.getMinY() - 96.0D, player.getZ() - 96.0D,
+                player.getX() + 96.0D, player.getY() + 64.0D, player.getZ() + 96.0D
+            );
+            List<ItemEntity> nearby = level.getEntitiesOfClass(ItemEntity.class, columnBox, Entity::isAlive);
             for (ItemEntity ie : nearby) {
                 ItemStack st = ie.getItem();
                 if (st.isEmpty()) continue;
@@ -1974,12 +2132,18 @@ public final class CrossDomainTransmutations {
 
                 // 26: Loyalty void/lava homing back to owner!
                 if (getStandaloneEnchantLevel(st, "minecraft:loyalty") > 0 && resolve("minecraft:loyalty", st).isPresent()) {
+                    ie.setInvulnerable(true);
                     if (ie.getY() <= level.getMinY() + 6 || ie.isInLava()) {
                         ServerPlayer targetOwner = (ie.getOwner() instanceof ServerPlayer sp && sp.isAlive()) ? sp : player;
                         ie.setNoPickUpDelay();
+                        ie.setNoGravity(true);
                         if (targetOwner.getInventory().add(st.copy())) {
                             ie.discard();
+                            level.playSound(null, targetOwner.blockPosition(), SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.7F, 1.2F);
                             continue;
+                        } else {
+                            ie.setPos(targetOwner.getX(), targetOwner.getY() + 0.5D, targetOwner.getZ());
+                            ie.setDeltaMovement(Vec3.ZERO);
                         }
                     }
                 }
