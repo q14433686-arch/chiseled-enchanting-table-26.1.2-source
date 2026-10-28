@@ -310,6 +310,7 @@ public final class MenuTomePageActions {
         TomeLockData.clearExpired(updated);
         writeShelfStack(h, shelf, shelfPos, slot, updated);
         TomeParticleEffects.endRodAt(h.world(), shelfPos, slot);
+        TableVisualEvents.onTomeRestore(h.world(), h.tableBlockPos(), shelfPos, slot, TableVisualEvents.COLOR_JADE_MINT);
         h.world().playSound(null, shelfPos, net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.15F);
         h.world().playSound(null, shelfPos, net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 0.8F, 1.2F);
         int maxUses = TomeWearData.effectiveMaxUses(updated, h.libraryResonanceConfig().maxTomeUses(), h.libraryResonanceConfig().wearImmuneMaxGeneration());
@@ -348,6 +349,7 @@ public final class MenuTomePageActions {
         TomeLockData.clearExpired(updated);
         writeShelfStack(h, shelf, shelfPos, slot, updated);
         TomeParticleEffects.locateBeaconAt(h.world(), shelfPos, slot);
+        TableVisualEvents.onTomeRestore(h.world(), h.tableBlockPos(), shelfPos, slot, TableVisualEvents.COLOR_SACRED_GOLD);
         h.world().playSound(null, shelfPos, net.minecraft.sounds.SoundEvents.BEACON_POWER_SELECT, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.3F);
         int maxUses = TomeWearData.effectiveMaxUses(updated, h.libraryResonanceConfig().maxTomeUses(), h.libraryResonanceConfig().wearImmuneMaxGeneration());
         h.tomeActionMessage("message.chiseled_enchanting_table.tome_sanctify.restored", maxUses, maxUses);
@@ -467,6 +469,7 @@ public final class MenuTomePageActions {
         if (consumed > 0) {
             h.world().playSound(null, tablePos, net.minecraft.sounds.SoundEvents.BOOK_PAGE_TURN, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.05F);
             h.world().playSound(null, tablePos, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.2F);
+            TableVisualEvents.onSacrificePages(h.world(), tablePos);
             h.broadcastChanges();
         }
         if (h.isCleansePageUnlocked()) {

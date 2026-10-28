@@ -241,6 +241,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if(!itemReload.isDone() || client.getOverlay()!=null) return;
                 itemReload.join();
                 chiseled_enchanting_table.render.RainbowItemProbe.afterReload(client);
+                SensoryPolishProbe.verify(client, tablePos);
                 finish(client, "CLIENT SMOKE PASS: committed CJK text via real screen char events + preset click + server save/ack + reopen + real menu quick-move + overlay forwarding/focus release + persistent target after close");
             }
             default -> throw new AssertionError("bad phase " + phase);

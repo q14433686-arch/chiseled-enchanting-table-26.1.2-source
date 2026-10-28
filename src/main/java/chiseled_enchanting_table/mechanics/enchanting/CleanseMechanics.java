@@ -139,6 +139,9 @@ public final class CleanseMechanics {
         if (player.level() instanceof ServerLevel serverLevel) {
             BlockPos soundPos = tablePos != null ? tablePos : player.blockPosition();
             serverLevel.playSound(null, soundPos, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.55f, 1.05f);
+            if (remaining < refundPoints && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                chiseled_enchanting_table.menu.TableVisualEvents.onMendingGearRepaired(sp);
+            }
         }
     }
 
@@ -244,6 +247,7 @@ public final class CleanseMechanics {
         menu.setEnchantableSlot(resulting);
         InventoryUtils.insertItem(menu.player, extractedBook, Optional.empty());
         DisenchantmentApplication.playCleanseFeedback(menu, 1.22f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleanseExtractOrStrip(menu.world(), menu.tableBlockPos(), true);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
 
@@ -295,6 +299,9 @@ public final class CleanseMechanics {
         InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         DisenchantmentApplication.playCleanseFeedback(menu, 0.68f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleansePurgeCurse(
+            menu.world(), menu.tableBlockPos(), purged.size()
+        );
         Advancement.give(menu.player, "purge_curse");
     }
 }

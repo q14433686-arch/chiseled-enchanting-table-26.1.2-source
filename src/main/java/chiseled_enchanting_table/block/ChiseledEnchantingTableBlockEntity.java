@@ -174,6 +174,38 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         this.setChanged();
     }
 
+    private ItemStack lastSyncedDisplayItem = ItemStack.EMPTY;
+    private boolean lastSyncedRitualActive = false;
+    private long lastSyncedFreezeUntil = 0L;
+
+    @Override
+    public void setChanged() {
+        super.setChanged();
+        if (this.level != null && !this.level.isClientSide()) {
+            ItemStack curDisplay = visualDisplayStack();
+            boolean curRitual = hasActiveRitual();
+            long curFreeze = this.epiphanyFreezeUntilGameTime;
+            boolean itemChanged = curDisplay.isEmpty() != this.lastSyncedDisplayItem.isEmpty()
+                || (!curDisplay.isEmpty() && !ItemStack.isSameItemSameComponents(curDisplay, this.lastSyncedDisplayItem));
+            if (itemChanged || curRitual != this.lastSyncedRitualActive || curFreeze != this.lastSyncedFreezeUntil) {
+                this.lastSyncedDisplayItem = curDisplay.isEmpty() ? ItemStack.EMPTY : curDisplay.copyWithCount(1);
+                this.lastSyncedRitualActive = curRitual;
+                this.lastSyncedFreezeUntil = curFreeze;
+                BlockState s = getBlockState();
+                this.level.sendBlockUpdated(this.worldPosition, s, s, Block.UPDATE_CLIENTS);
+            }
+        }
+    }
+
+    /** Returns the target item currently resting on or actively inscribed on the table for 3D rendering. */
+    public ItemStack visualDisplayStack() {
+        ItemStack slotZero = getItem(ChiseledEnchantingTableScreenHandler.ENCHANTABLE_SLOT);
+        if (!slotZero.isEmpty()) {
+            return slotZero;
+        }
+        return hasActiveRitual() ? this.ritualTarget : ItemStack.EMPTY;
+    }
+
     // ---- Active Inscription Ritual state & progression ----
 
     public boolean hasActiveRitual() {
@@ -735,6 +767,13 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
         }
 
         this.setChanged();
+        chiseled_enchanting_table.menu.TableVisualEvents.onRitualPulse(
+            level,
+            pos,
+            completionKind == RitualCompletionKind.CATALYST_PERFECT
+                ? chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+                : chiseled_enchanting_table.menu.TableVisualEvents.COLOR_SACRED_GOLD
+        );
         syncOpenMenusWatchingTable(level, pos);
         return true;
     }
@@ -974,6 +1013,15 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
             if (blockEntity.ritualRemainingTicks <= 0L) {
                 blockEntity.completeActiveRitual(level, pos, null, RitualCompletionKind.NATURAL);
             } else if (level.getGameTime() % 20L == 0L) {
+                int emitted = 0;
+                for (TomeWearUndo undo : blockEntity.ritualTomeUndos) {
+                    if (undo == null || undo.shelfPos() == null || undo.slot() < 0) continue;
+                    chiseled_enchanting_table.menu.TableVisualEvents.onTomeTether(
+                        level, pos, undo.shelfPos(), undo.slot(),
+                        chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+                    );
+                    if (++emitted >= 4) break;
+                }
                 blockEntity.setChanged();
             }
         }
@@ -1003,17 +1051,19 @@ public class ChiseledEnchantingTableBlockEntity extends BlockEntity implements N
     private static void bookAnimationTick(Level level, BlockPos pos, BlockState state, ChiseledEnchantingTableBlockEntity blockEntity) {
         blockEntity.oOpen = blockEntity.open;
         blockEntity.oRot = blockEntity.rot;
+        boolean activeRitual = blockEntity.hasActiveRitual();
         Player player = level.getNearestPlayer(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 3.0D, false);
-        if (player != null || blockEntity.hasActiveRitual()) {
-            if (player != null) {
+        if (player != null || activeRitual) {
+            if (activeRitual) {
+                blockEntity.tRot += 0.22F;
+            } else {
                 double dx = player.getX() - (pos.getX() + 0.5D);
                 double dz = player.getZ() - (pos.getZ() + 0.5D);
                 blockEntity.tRot = (float) Mth.atan2(dz, dx);
-            } else {
-                blockEntity.tRot += 0.08F;
             }
-            blockEntity.open += 0.1F;
-            if (blockEntity.open < 0.5F || RANDOM.nextInt(40) == 0) {
+            blockEntity.open += activeRitual ? 0.18F : 0.1F;
+            int flipRoll = activeRitual ? 8 : 40;
+            if (blockEntity.open < 0.5F || RANDOM.nextInt(flipRoll) == 0) {
                 float previousFlipTarget = blockEntity.flipT;
                 do {
                     blockEntity.flipT += (float) (RANDOM.nextInt(4) - RANDOM.nextInt(4));

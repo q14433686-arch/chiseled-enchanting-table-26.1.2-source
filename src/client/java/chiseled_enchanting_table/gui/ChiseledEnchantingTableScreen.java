@@ -276,7 +276,7 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
     }
 
     @Override
-    protected void init() { super.init(); syncAndInitOverlays(); }
+    protected void init() { super.init(); GuiMicroEffects.resetModeTracking(); syncAndInitOverlays(); }
 
     @Override
     protected void repositionElements() { super.repositionElements(); syncAndInitOverlays(); }
@@ -812,6 +812,11 @@ public class ChiseledEnchantingTableScreen extends AbstractContainerScreen<Chise
         }
         layoutDirectory();
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        int modeSig = ((this.scrollContainer != null ? this.scrollContainer.tabMode().ordinal() : 0) << 2)
+            | (this.menu.isRitualActive() ? 1 : 0);
+        GuiMicroEffects.observeModeSignature(modeSig);
+        GuiMicroEffects.renderOverlays(ctx, this.leftPos, this.topPos, effectiveTablePos(),
+            this.menu, shouldShowSanctumPanel(), isInscribeTab());
         if (isInscribeTab() && this.scrollContainer != null) {
             if (this.scrollContainer.inscribeFilter.render(ctx, this.font,
                 this.leftPos + TomeDirectoryLayout.CONTENT_X, this.topPos + TomeDirectoryLayout.CONTENT_Y,

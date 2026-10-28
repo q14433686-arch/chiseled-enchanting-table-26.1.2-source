@@ -78,6 +78,10 @@ public final class EnchantCostSync {
             ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.TYPE,
             ChiseledEnchantingMenuPayloads.SyncTransformationStatePayload.CODEC
         );
+        PayloadTypeRegistry.clientboundPlay().register(
+            TableVisualEventPayload.TYPE,
+            TableVisualEventPayload.CODEC
+        );
 
         ServerPlayConnectionEvents.JOIN.register((listener, sender, server) -> {
             ServerPlayer player = listener.player;

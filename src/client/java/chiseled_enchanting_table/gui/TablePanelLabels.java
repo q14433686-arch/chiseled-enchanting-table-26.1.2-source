@@ -30,10 +30,11 @@ final class TablePanelLabels {
             return;
         }
 
-        int lx = PANEL_X + 10;
+        int joltX = GuiMicroEffects.currentPanelJoltX();
+        int lx = PANEL_X + 10 + joltX;
         int ly = PANEL_Y;
 
-        context.enableScissor(PANEL_X + 8, PANEL_Y + 8, PANEL_X + 111, PANEL_Y + 51);
+        context.enableScissor(PANEL_X + 8 + joltX, PANEL_Y + 8, PANEL_X + 111 + joltX, PANEL_Y + 51);
         try {
             if (!state.tooltips().isTomeTab() && !state.tooltips().isCleanseTab() && state.tooltips().menu().isRitualActive()) {
                 int queueCount = Math.max(1, state.tooltips().menu().queuedRitualSteps().size());

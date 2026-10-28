@@ -206,6 +206,18 @@ public final class EnchantmentApplication {
         );
 
         if (tablePos != null
+            && resolvedWear.shelfPos() != null
+            && resolvedWear.shelfSlot() >= 0) {
+            chiseled_enchanting_table.menu.TableVisualEvents.onTomeTether(
+                world,
+                tablePos,
+                resolvedWear.shelfPos(),
+                resolvedWear.shelfSlot(),
+                chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+            );
+        }
+
+        if (tablePos != null
             && world.getBlockEntity(tablePos) instanceof chiseled_enchanting_table.block.ChiseledEnchantingTableBlockEntity tableBe) {
             if (waitTicks > 0 || tableBe.hasActiveRitual()) {
                 int effectiveAddTicks = Math.max(20, waitTicks);
@@ -496,6 +508,9 @@ public final class EnchantmentApplication {
         handler.markInventoryChanged();
         handler.refreshLiveShelfState();
         player.awardStat(Stats.ENCHANT_ITEM);
-        world.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 2.0F, world.getRandom().nextFloat() * 0.1F + 0.9F);
+        world.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.95F, world.getRandom().nextFloat() * 0.1F + 0.95F);
+        chiseled_enchanting_table.menu.TableVisualEvents.onRitualPulse(
+            world, handler.tableBlockPos(), chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+        );
     }
 }

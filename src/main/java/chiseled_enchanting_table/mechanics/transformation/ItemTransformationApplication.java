@@ -81,7 +81,10 @@ public final class ItemTransformationApplication {
         Player player = handler.player;
         handler.markInventoryChanged();
         player.getInventory().setChanged();
-        handler.world().playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0F, 1.0F);
+        handler.world().playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 0.85F, 1.05F);
+        chiseled_enchanting_table.menu.TableVisualEvents.onArcanePulse(
+            handler.world(), handler.tableBlockPos(), chiseled_enchanting_table.menu.TableVisualEvents.COLOR_SACRED_GOLD
+        );
         Advancement.give(player, "transmute_item");
         if (rule.id().equals(ChiseledEnchantingTableData.BLANK_OVERWRITE_ID)) {
             Advancement.give(player, "blank_overwrite");
@@ -124,8 +127,11 @@ public final class ItemTransformationApplication {
             }
         }
         chiseled_enchanting_table.menu.EnchantCostSync.syncPlayerTransformationsNow(sp);
-        handler.world().playSound(null, sp.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0F, 1.25F);
-        handler.world().playSound(null, sp.blockPosition(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.BLOCKS, 0.9F, 1.2F);
+        handler.world().playSound(null, sp.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.85F, 1.25F);
+        handler.world().playSound(null, sp.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.BLOCKS, 0.85F, 1.18F);
+        chiseled_enchanting_table.menu.TableVisualEvents.onArcanePulse(
+            handler.world(), handler.tableBlockPos(), chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+        );
         sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket(
             net.minecraft.network.chat.Component.translatable(
                 "gui.chiseled_enchanting_table.discovery_locked.deciphered",

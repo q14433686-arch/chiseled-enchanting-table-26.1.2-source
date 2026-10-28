@@ -270,6 +270,7 @@ public final class RitualActionService {
         }
         Advancement.give(h.player, "soul_fed_ink");
         h.world().playSound(null, pos, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 1.0F, 0.85F);
+        chiseled_enchanting_table.menu.TableVisualEvents.onSacrificePages(h.world(), pos);
         return true;
     }
 
@@ -313,6 +314,10 @@ public final class RitualActionService {
                 ).withStyle(ChatFormatting.AQUA));
             }
         }
+        chiseled_enchanting_table.menu.TableVisualEvents.onSacrificePages(h.world(), pos);
+        chiseled_enchanting_table.menu.TableVisualEvents.onRitualPulse(
+            h.world(), pos, chiseled_enchanting_table.menu.TableVisualEvents.COLOR_JADE_MINT
+        );
         h.refreshLiveShelfState(true);
         h.pushRitualStateToViewer();
         h.broadcastChanges();
@@ -339,6 +344,9 @@ public final class RitualActionService {
             return false;
         }
         h.world().playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 0.9F, 1.35F);
+        chiseled_enchanting_table.menu.TableVisualEvents.onRitualPulse(
+            h.world(), pos, chiseled_enchanting_table.menu.TableVisualEvents.COLOR_ARCANE_VIOLET
+        );
         if (sp != null) {
             sendActionBar(sp, Component.translatable("gui.chiseled_enchanting_table.ritual.catalyst_completed")
                 .withStyle(ChatFormatting.LIGHT_PURPLE));
@@ -450,6 +458,13 @@ public final class RitualActionService {
                 shelf.setChanged();
                 var st = h.world().getBlockState(undo.shelfPos());
                 h.world().sendBlockUpdated(undo.shelfPos(), st, st, Block.UPDATE_ALL);
+                chiseled_enchanting_table.mechanics.resonance.TomeParticleEffects.endRodAt(
+                    h.world(), undo.shelfPos(), undo.slot()
+                );
+                chiseled_enchanting_table.menu.TableVisualEvents.onTomeRestore(
+                    h.world(), pos, undo.shelfPos(), undo.slot(),
+                    chiseled_enchanting_table.menu.TableVisualEvents.COLOR_SACRED_GOLD
+                );
             }
         }
         h.world().playSound(null, pos, SoundEvents.BEACON_DEACTIVATE, SoundSource.BLOCKS, 0.9F, 1.15F);

@@ -517,6 +517,7 @@ public final class DisenchantmentApplication {
         menu.setEnchantableSlot(resulting);
         awardRefundOrbs(menu, totalRefund);
         playCleanseFeedback(menu, 1.15f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleanseExtractOrStrip(menu.world(), menu.tableBlockPos(), false);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
 
@@ -559,6 +560,7 @@ public final class DisenchantmentApplication {
         menu.setEnchantableSlot(resulting);
         awardRefundOrbs(menu, refund);
         playCleanseFeedback(menu, 1.05f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleanseExtractOrStrip(menu.world(), menu.tableBlockPos(), false);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
 
@@ -595,6 +597,7 @@ public final class DisenchantmentApplication {
         InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         playCleanseFeedback(menu, 0.95f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleanseExtractOrStrip(menu.world(), menu.tableBlockPos(), false);
         Advancement.give(menu.player, "cleanse_enchantment");
     }
 
@@ -633,6 +636,7 @@ public final class DisenchantmentApplication {
         InkStainLore.reconcileAfterRemovalCleanse(resulting);
         menu.setEnchantableSlot(resulting);
         playCleanseFeedback(menu, 0.72f);
+        chiseled_enchanting_table.menu.TableVisualEvents.onCleansePurgeCurse(menu.world(), menu.tableBlockPos(), 1);
         Advancement.give(menu.player, "purge_curse");
     }
 
@@ -679,8 +683,8 @@ public final class DisenchantmentApplication {
         if (player.level() instanceof ServerLevel serverLevel) {
             BlockPos pos = menu.tableBlockPos();
             BlockPos soundPos = pos != null ? pos : player.blockPosition();
-            serverLevel.playSound(null, soundPos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.85f, pitch);
-            serverLevel.playSound(null, soundPos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.90f, 1.15f);
+            serverLevel.playSound(null, soundPos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.42f, pitch);
+            serverLevel.playSound(null, soundPos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.85f, 1.18f);
         }
     }
 }

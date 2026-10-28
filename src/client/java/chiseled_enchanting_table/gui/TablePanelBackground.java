@@ -21,7 +21,7 @@ final class TablePanelBackground {
         ctx.blit(BACKGROUND, i, j, i + 340, j + 166, 0.0f, 1.0f, 0.0f, 1.0f);
         renderModeTabs(state, ctx, i, j, mouseX, mouseY);
 
-        int px = i + PANEL_X;
+        int px = i + PANEL_X + GuiMicroEffects.currentPanelJoltX();
         int py = j + PANEL_Y;
         if (!state.showSanctum()) {
             return;
