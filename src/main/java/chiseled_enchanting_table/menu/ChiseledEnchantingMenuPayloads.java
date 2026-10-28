@@ -44,7 +44,9 @@ public final class ChiseledEnchantingMenuPayloads {
         DISENCHANT_ALL("disenchant_all"),
         DOWNGRADE_ENCHANTMENT("downgrade_enchantment"),
         STRIP_SINGLE_ENCHANTMENT("strip_single_enchantment"),
-        PURGE_CURSE("purge_curse");
+        EXTRACT_ENCHANTMENT_BOOK("extract_enchantment_book"),
+        PURGE_CURSE("purge_curse"),
+        PURGE_ALL_CURSES("purge_all_curses");
 
         private final String token;
 
@@ -989,11 +991,50 @@ public final class ChiseledEnchantingMenuPayloads {
         return Map.copyOf(map);
     }
 
+    public record TomeSlotRef(BlockPos shelf_pos, int slot) {
+        public static final int MAX_BATCH_SLOTS = 64;
+
+        public TomeSlotRef {
+            shelf_pos = shelf_pos == null ? BlockPos.ZERO : shelf_pos.immutable();
+            if (slot < 0 || slot > 5) {
+                throw new IllegalArgumentException("Invalid shelf slot: " + slot);
+            }
+        }
+
+        public static void writeList(RegistryFriendlyByteBuf buf, @Nullable List<TomeSlotRef> list) {
+            List<TomeSlotRef> safe = list == null ? List.of() : list;
+            if (safe.size() > MAX_BATCH_SLOTS) {
+                throw new IllegalArgumentException("Too many tome slot targets: " + safe.size());
+            }
+            buf.writeVarInt(safe.size());
+            for (TomeSlotRef ref : safe) {
+                buf.writeBlockPos(ref.shelf_pos());
+                buf.writeVarInt(ref.slot());
+            }
+        }
+
+        public static List<TomeSlotRef> readList(RegistryFriendlyByteBuf buf) {
+            int n = PayloadLimits.readCount(buf);
+            if (n > MAX_BATCH_SLOTS) {
+                throw new IllegalArgumentException("Too many tome slot targets: " + n);
+            }
+            if (n == 0) {
+                return List.of();
+            }
+            List<TomeSlotRef> out = new ArrayList<>(n);
+            for (int i = 0; i < n; i++) {
+                out.add(new TomeSlotRef(buf.readBlockPos(), buf.readVarInt()));
+            }
+            return List.copyOf(out);
+        }
+    }
+
     public record TomePageActionPayload(
         int containerId,
         Action action,
         BlockPos shelf_pos,
-        int slot
+        int slot,
+        List<TomeSlotRef> extra_targets
     ) implements CustomPacketPayload {
         public enum Action {
             LOCK_NEXT,
@@ -1001,7 +1042,10 @@ public final class ChiseledEnchantingMenuPayloads {
             LOCK_PERMANENT,
             UNLOCK,
             LOCK_ALL_FULL,
-            SACRIFICE_DEPLETED
+            SACRIFICE_DEPLETED,
+            MEND_ONE,
+            SANCTIFY_CATALYST,
+            LOCATE_PING
         }
 
         public TomePageActionPayload {
@@ -1015,6 +1059,18 @@ public final class ChiseledEnchantingMenuPayloads {
             if (slot < -1 || slot > 5) {
                 throw new IllegalArgumentException("Invalid shelf slot: " + slot);
             }
+            if (extra_targets == null || extra_targets.isEmpty()) {
+                extra_targets = List.of();
+            } else {
+                if (extra_targets.size() > TomeSlotRef.MAX_BATCH_SLOTS) {
+                    throw new IllegalArgumentException("Too many extra tome targets: " + extra_targets.size());
+                }
+                extra_targets = List.copyOf(extra_targets);
+            }
+        }
+
+        public TomePageActionPayload(int containerId, Action action, BlockPos shelf_pos, int slot) {
+            this(containerId, action, shelf_pos, slot, List.of());
         }
 
         public static final CustomPacketPayload.Type<TomePageActionPayload> TYPE =
@@ -1031,6 +1087,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeVarInt(action.ordinal());
             buf.writeBlockPos(shelf_pos);
             buf.writeVarInt(slot);
+            TomeSlotRef.writeList(buf, extra_targets);
         }
 
         private static TomePageActionPayload read(RegistryFriendlyByteBuf buf) {
@@ -1040,7 +1097,10 @@ public final class ChiseledEnchantingMenuPayloads {
             if (ordinal < 0 || ordinal >= values.length) {
                 throw new IllegalArgumentException("Invalid tome page action: " + ordinal);
             }
-            return new TomePageActionPayload(container, values[ordinal], buf.readBlockPos(), buf.readVarInt());
+            BlockPos primaryPos = buf.readBlockPos();
+            int primarySlot = buf.readVarInt();
+            List<TomeSlotRef> extras = TomeSlotRef.readList(buf);
+            return new TomePageActionPayload(container, values[ordinal], primaryPos, primarySlot, extras);
         }
 
         @Override
@@ -1053,8 +1113,12 @@ public final class ChiseledEnchantingMenuPayloads {
         int containerId,
         OptionType option_type,
         Identifier enchantment_id,
-        int enchantment_level
+        int enchantment_level,
+        int cost_option_index
     ) implements CustomPacketPayload {
+        public static final int AUTO_COST_OPTION = -1;
+        public static final int MAX_COST_OPTION_INDEX = 63;
+
         /**
          * Audit NET-03: decode-boundary validation lives in the compact constructor so no
          * construction path (wire or programmatic) can smuggle out-of-range values into
@@ -1074,18 +1138,25 @@ public final class ChiseledEnchantingMenuPayloads {
             if (enchantment_level < 0 || enchantment_level > PayloadLimits.MAX_ENCHANTMENT_LEVEL) {
                 throw new IllegalArgumentException("Invalid enchantment level: " + enchantment_level);
             }
+            if (cost_option_index < AUTO_COST_OPTION || cost_option_index > MAX_COST_OPTION_INDEX) {
+                throw new IllegalArgumentException("Invalid cost option index: " + cost_option_index);
+            }
         }
 
         public static final CustomPacketPayload.Type<ApplyEnchantmentPayload> APPLY_CHISELED_ENCHANTMENT_PAYLOAD_ID = new CustomPacketPayload.Type<>(APPLY_CHISELED_ENCHANTMENT_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, ApplyEnchantmentPayload> APPLY_CHISELED_ENCHANTMENT_CODEC =
             CustomPacketPayload.codec(ApplyEnchantmentPayload::write, ApplyEnchantmentPayload::read);
 
+        public ApplyEnchantmentPayload(int containerId, OptionType option_type, Identifier enchantment_id, int enchantment_level) {
+            this(containerId, option_type, enchantment_id, enchantment_level, AUTO_COST_OPTION);
+        }
+
         public ApplyEnchantmentPayload(OptionType option_type, Identifier enchantment_id, int enchantment_level) {
-            this(-1, option_type, enchantment_id, enchantment_level);
+            this(-1, option_type, enchantment_id, enchantment_level, AUTO_COST_OPTION);
         }
 
         public ApplyEnchantmentPayload(Identifier enchantment_id, int enchantment_level) {
-            this(-1, OptionType.ENCHANTMENT, enchantment_id, enchantment_level);
+            this(-1, OptionType.ENCHANTMENT, enchantment_id, enchantment_level, AUTO_COST_OPTION);
         }
 
         public boolean targets(int activeContainerId) {
@@ -1097,6 +1168,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeUtf(option_type.token());
             buf.writeInt(enchantment_level);
             buf.writeIdentifier(enchantment_id);
+            buf.writeVarInt(cost_option_index);
         }
 
         private static ApplyEnchantmentPayload read(RegistryFriendlyByteBuf buf) {
@@ -1104,7 +1176,8 @@ public final class ChiseledEnchantingMenuPayloads {
             OptionType optionType = OptionType.fromToken(buf.readUtf(PayloadLimits.MAX_OPTION_TOKEN_LENGTH));
             int enchantmentLevel = buf.readInt();
             Identifier enchantmentId = buf.readIdentifier();
-            return new ApplyEnchantmentPayload(containerId, optionType, enchantmentId, enchantmentLevel);
+            int costOptionIndex = buf.readVarInt();
+            return new ApplyEnchantmentPayload(containerId, optionType, enchantmentId, enchantmentLevel, costOptionIndex);
         }
 
         @Override
@@ -1174,14 +1247,53 @@ public final class ChiseledEnchantingMenuPayloads {
         }
     }
 
-    public record SkipRitualPayload(int containerId, long session, boolean sacrificeXp) implements CustomPacketPayload {
+    public record SkipRitualPayload(int containerId, long session, Action action) implements CustomPacketPayload {
+        public enum Action {
+            SACRIFICE_XP,
+            FUEL_BOOST,
+            CATALYST_INSTANT,
+            FORCE_RUSH,
+            SAFE_ABORT
+        }
+
+        public SkipRitualPayload {
+            if (containerId < PayloadLimits.NO_CONTAINER) {
+                throw new IllegalArgumentException("Invalid container id: " + containerId);
+            }
+            if (action == null) {
+                throw new IllegalArgumentException("Missing ritual action");
+            }
+        }
+
+        public SkipRitualPayload(int containerId, long session, boolean sacrificeXp) {
+            this(containerId, session, sacrificeXp ? Action.SACRIFICE_XP : Action.FORCE_RUSH);
+        }
+
+        public boolean sacrificeXp() {
+            return action == Action.SACRIFICE_XP;
+        }
+
         public static final CustomPacketPayload.Type<SkipRitualPayload> TYPE =
             new CustomPacketPayload.Type<>(SKIP_RITUAL_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, SkipRitualPayload> CODEC =
-            CustomPacketPayload.codec(
-                (payload, buf) -> { buf.writeVarInt(payload.containerId()); buf.writeLong(payload.session()); buf.writeBoolean(payload.sacrificeXp()); },
-                buf -> new SkipRitualPayload(buf.readVarInt(), buf.readLong(), buf.readBoolean())
-            );
+            CustomPacketPayload.codec(SkipRitualPayload::write, SkipRitualPayload::read);
+
+        private void write(RegistryFriendlyByteBuf buf) {
+            buf.writeVarInt(containerId);
+            buf.writeLong(session);
+            buf.writeVarInt(action.ordinal());
+        }
+
+        private static SkipRitualPayload read(RegistryFriendlyByteBuf buf) {
+            int cid = buf.readVarInt();
+            long sess = buf.readLong();
+            int ord = buf.readVarInt();
+            Action[] values = Action.values();
+            if (ord < 0 || ord >= values.length) {
+                throw new IllegalArgumentException("Invalid ritual action: " + ord);
+            }
+            return new SkipRitualPayload(cid, sess, values[ord]);
+        }
 
         @Override
         public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
@@ -1195,8 +1307,14 @@ public final class ChiseledEnchantingMenuPayloads {
         List<EnchantmentWithLevel> queuedSteps,
         boolean usedInfinityTome,
         boolean hasAnyMasterTome,
-        boolean ritualBlocked
+        boolean ritualBlocked,
+        List<TomeSlotRef> activeTomeSlots
     ) implements CustomPacketPayload {
+        public SyncRitualStatePayload {
+            queuedSteps = queuedSteps == null ? List.of() : List.copyOf(queuedSteps);
+            activeTomeSlots = activeTomeSlots == null ? List.of() : List.copyOf(activeTomeSlots);
+        }
+
         public static final CustomPacketPayload.Type<SyncRitualStatePayload> TYPE =
             new CustomPacketPayload.Type<>(SYNC_RITUAL_STATE_PACKET_ID);
         public static final StreamCodec<RegistryFriendlyByteBuf, SyncRitualStatePayload> CODEC =
@@ -1207,9 +1325,20 @@ public final class ChiseledEnchantingMenuPayloads {
             long session,
             List<EnchantmentWithLevel> queuedSteps,
             boolean usedInfinityTome,
+            boolean hasAnyMasterTome,
+            boolean ritualBlocked
+        ) {
+            this(containerId, session, queuedSteps, usedInfinityTome, hasAnyMasterTome, ritualBlocked, List.of());
+        }
+
+        public SyncRitualStatePayload(
+            int containerId,
+            long session,
+            List<EnchantmentWithLevel> queuedSteps,
+            boolean usedInfinityTome,
             boolean hasAnyMasterTome
         ) {
-            this(containerId, session, queuedSteps, usedInfinityTome, hasAnyMasterTome, false);
+            this(containerId, session, queuedSteps, usedInfinityTome, hasAnyMasterTome, false, List.of());
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
@@ -1224,6 +1353,7 @@ public final class ChiseledEnchantingMenuPayloads {
             buf.writeBoolean(usedInfinityTome);
             buf.writeBoolean(hasAnyMasterTome);
             buf.writeBoolean(ritualBlocked);
+            TomeSlotRef.writeList(buf, activeTomeSlots);
         }
 
         private static SyncRitualStatePayload read(RegistryFriendlyByteBuf buf) {
@@ -1238,7 +1368,8 @@ public final class ChiseledEnchantingMenuPayloads {
             boolean inf = buf.readBoolean();
             boolean tome = buf.readBoolean();
             boolean blocked = buf.readBoolean();
-            return new SyncRitualStatePayload(containerId, session, List.copyOf(list), inf, tome, blocked);
+            List<TomeSlotRef> activeSlots = TomeSlotRef.readList(buf);
+            return new SyncRitualStatePayload(containerId, session, list, inf, tome, blocked, activeSlots);
         }
 
         @Override

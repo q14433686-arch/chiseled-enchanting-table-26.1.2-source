@@ -52,6 +52,31 @@ public final class TransformationRowRenderer {
         List<ItemStack> additionalCosts,
         XpRequirement xpRequirement
     ) {
+        render(
+            ctx, client, dx, dy, dw, dh, isFocused, hovered, canEnchant,
+            primaryCostMet, additionalCostsMet, xpMet, outputName,
+            customSubtitle, customSubtitleColor, primaryCost, additionalCosts, xpRequirement, false
+        );
+    }
+
+    public static void render(
+        GuiGraphicsExtractor ctx,
+        Minecraft client,
+        int dx, int dy, int dw, int dh,
+        boolean isFocused,
+        boolean hovered,
+        boolean canEnchant,
+        boolean primaryCostMet,
+        List<Boolean> additionalCostsMet,
+        boolean xpMet,
+        String outputName,
+        @Nullable String customSubtitle,
+        int customSubtitleColor,
+        ItemStack primaryCost,
+        List<ItemStack> additionalCosts,
+        XpRequirement xpRequirement,
+        boolean cyclablePrimary
+    ) {
         RowRenderSupport.drawPlaque(
             ctx,
             dx,
@@ -69,7 +94,7 @@ public final class TransformationRowRenderer {
             int itemX = dx + RowRenderSupport.PRIMARY_COST_OFFSET_X;
             int itemY = RowRenderSupport.costIconY(dy, dh);
             if (!primaryCost.isEmpty()) {
-                RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet);
+                RowRenderSupport.drawPrimaryCost(ctx, client, primaryCost, itemX, itemY, primaryCostMet, cyclablePrimary);
             } else {
                 float midY = dy + dh * 0.5f;
                 RowRenderSupport.renderCenteredYText(ctx, client, "\u2714", itemX + 2, midY, 0.90f, 12, RowRenderSupport.LIGHT_GREEN);

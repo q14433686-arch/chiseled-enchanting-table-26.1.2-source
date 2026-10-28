@@ -1,5 +1,6 @@
 package chiseled_enchanting_table.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -16,12 +17,17 @@ import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
 /** A shared, viewport-aware presentation policy for table, configuration and guide hovers. */
 public final class TooltipPresentation {
+    private static boolean testForceDetails = false;
     private TooltipPresentation() {}
+    static void setForceDetailsForTest(boolean force) { testForceDetails = force; }
     public static boolean detailsRequested() {
-        // 26.1.2 adaptation: this line has no Screen.hasShiftDown() and no single-arg
-        // InputConstants.isKeyDown(int); the vanilla sneak KeyMapping state is queryable anywhere.
+        if (testForceDetails) return true;
+        // Query live GLFW window Shift state directly: vanilla KeyMapping#isDown() is reset via
+        // KeyMapping.releaseAll() whenever any Screen opens and stays false while screens are active.
         var mc = Minecraft.getInstance();
-        return mc != null && mc.options != null && mc.options.keyShift.isDown();
+        if (mc == null || mc.getWindow() == null) return false;
+        return InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_LSHIFT)
+            || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_RSHIFT);
     }
     public static void show(GuiGraphicsExtractor ctx, Font font, List<Component> source,
         Optional<TooltipComponent> image, int mouseX, int mouseY, Identifier style) {
