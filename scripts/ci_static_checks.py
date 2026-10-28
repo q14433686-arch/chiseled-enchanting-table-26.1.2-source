@@ -78,15 +78,15 @@ def check_locales() -> None:
 
 def check_gui_no_solid_fills() -> None:
     gui_dir = ROOT / "src/client/java/enchantment_fusion/gui"
-    tex_root = ROOT / "src/client/resources/assets/enchantment_fusion/textures"
-    sprite_re = re.compile(r'EnchantmentFusion\.id\(\s*"(gui/[^"]+\.png)"\s*\)')
+    assets_root = ROOT / "src/client/resources/assets/enchantment_fusion"
+    sprite_re = re.compile(r'EnchantmentFusion\.id\(\s*"([^"]+\.png)"\s*\)')
     for jf in gui_dir.rglob("*.java"):
         txt = jf.read_text(encoding="utf-8")
         if ".fill(" in txt:
             raise AssertionError(f"Forbidden solid-color .fill( placeholder in {jf}")
         for rel in sprite_re.findall(txt):
-            if not (tex_root / rel).is_file():
-                raise AssertionError(f"GUI sprite {rel} in {jf} missing PNG at {tex_root / rel}")
+            if not (assets_root / rel).is_file():
+                raise AssertionError(f"GUI sprite {rel} in {jf} missing PNG at {assets_root / rel}")
 
 
 def check_entrypoints() -> None:

@@ -46,7 +46,10 @@ with log.open("w", encoding="utf-8") as output:
             except subprocess.TimeoutExpired:
                 os.killpg(process.pid, signal.SIGKILL)
 
-print("\n".join(log.read_text(errors="replace").splitlines()[-100:]))
+log_text = log.read_text(errors="replace")
+print("\n".join(log_text.splitlines()[-100:]))
+if "Missing resource enchantment_fusion:" in log_text:
+    raise SystemExit("Client logged missing enchantment_fusion GUI/model resources; inspect client-smoke.log")
 result = run / "client-smoke-result.txt"
 if code != 0 or not result.exists() or not result.read_text(encoding="utf-8").startswith("CLIENT SMOKE PASS:"):
     raise SystemExit("Real client smoke did not pass; inspect client-smoke.log")
