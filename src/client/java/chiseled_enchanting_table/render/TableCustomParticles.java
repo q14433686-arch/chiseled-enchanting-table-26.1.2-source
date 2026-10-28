@@ -431,7 +431,7 @@ public final class TableCustomParticles {
                 for (int i = 0; i < 14; i++) {
                     double ang = (Math.PI * 2.0D * i) / 14.0D;
                     int col = rainbow
-                        ? RainbowCloth.sample((i / 14.0F) * RainbowCloth.PERIOD_TICKS)
+                        ? ChiseledEnchantingTableBlockEntityRenderer.clothColor((long) i * RainbowCloth.PERIOD / 14L, 0.0F)
                         : payload.argbColor();
                     push(new Particle(
                         tablePos,
