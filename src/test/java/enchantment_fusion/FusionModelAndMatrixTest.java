@@ -61,7 +61,7 @@ class FusionModelAndMatrixTest {
 
         FusedEnchantmentList afterRemoveFirst = withAb.removeAt(0);
         assertEquals(1, afterRemoveFirst.size());
-        assertEquals("schrodinger_pick", afterRemoveFirst.pairs().get(0).aberrantId());
+        assertEquals("schrodinger_pick", afterRemoveFirst.pairs().get(0).aberrationId());
     }
 
     @Test
