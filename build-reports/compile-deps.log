@@ -199,8 +199,6 @@ net.fabricmc.fabric-api:fabric-block-api-v1:3.0.3+ec56b6019e
     | org.gradle.status              | release  |              |
     | org.gradle.category            | library  | library      |
 ...[truncated 1003 lines total]...
-    | org.gradle.libraryelements     | jar      | classes      |
-    | org.gradle.usage               | java-api | java-api     |
     | org.gradle.dependency.bundling |          | external     |
     | org.gradle.jvm.environment     |          | standard-jvm |
     | org.gradle.jvm.version         |          | 25           |
@@ -1001,3 +999,5 @@ A web-based, searchable dependency report is available by adding the --scan opti
 == job status: success ==
 
 == job status: cancelled ==
+
+== job status: success ==
