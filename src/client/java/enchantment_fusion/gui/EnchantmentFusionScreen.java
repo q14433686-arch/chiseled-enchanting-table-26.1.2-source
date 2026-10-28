@@ -109,8 +109,8 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     @Override
     protected void init() {
         super.init();
-        if (this.grimoireOverlay != null && this.minecraft != null) {
-            this.grimoireOverlay.init(this.minecraft, this.width, this.height);
+        if (this.grimoireOverlay != null) {
+            this.grimoireOverlay.init(this.width, this.height);
         }
     }
 
@@ -120,7 +120,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         }
         int initCh = this.menu.activeTab() == FusionStationOperations.TAB_SOCKET ? 2 : 1;
         FusionGrimoireScreen overlay = new FusionGrimoireScreen(() -> this.grimoireOverlay = null, initCh);
-        overlay.init(this.minecraft, this.width, this.height);
+        overlay.init(this.width, this.height);
         this.grimoireOverlay = overlay;
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
     }
