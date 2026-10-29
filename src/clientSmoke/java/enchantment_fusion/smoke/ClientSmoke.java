@@ -487,8 +487,13 @@ public final class ClientSmoke implements ClientModInitializer {
                         sp.setShiftKeyDown(false);
 
                         // 0.6.0: Verify SPEAR_CHARGE_LANCE + ProjectilePathTracker trajectory cache & cleanup
-                        boolean lanceLaunched = enchantment_fusion.mechanics.FlyingBladeManager.launchChargeLance(
-                            sp.level(), sp, loyalSpear, 1.25F
+                        boolean lanceLaunched = enchantment_fusion.mechanics.FlyingBladeManager.launchLinearPhantomWeapon(
+                            sp.level(),
+                            sp,
+                            net.minecraft.world.InteractionHand.MAIN_HAND,
+                            loyalSpear,
+                            3,
+                            enchantment_fusion.mechanics.FlyingBladeManager.FlightStyle.SPEAR_CHARGE_LANCE
                         );
                         require(lanceLaunched, "Expected SPEAR_CHARGE_LANCE launch to succeed");
                         enchantment_fusion.mechanics.FlyingBladeManager.tickServer(server);
