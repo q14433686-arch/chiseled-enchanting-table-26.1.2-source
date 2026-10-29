@@ -168,7 +168,7 @@ final class FusionRuleEngineTest {
 
     @Test
     void allFortyThreeVanilla2612EnchantmentsHaveExplicitMatrixProfiles() {
-        var snap = FusionMatrixRegistry.current();
+        var snap = FusionMatrixRegistry.serverSnapshot();
         assertTrue(snap.profiles().size() >= 43, "Expected all 43 vanilla 26.1.2 matrix profiles including minecraft:lunge");
         assertTrue(snap.profiles().containsKey("minecraft:lunge"), "minecraft:lunge must be explicitly profiled");
         for (HostForm form : HostForm.values()) {

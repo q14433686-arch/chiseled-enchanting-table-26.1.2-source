@@ -411,7 +411,10 @@ public final class FusionMatrixRegistry {
                             }
                         }
                         if (g.size() >= 2) {
-                            parsedGroups.add(Collections.unmodifiableSet(g));
+                            Set<String> immutableGroup = Collections.unmodifiableSet(g);
+                            if (!parsedGroups.contains(immutableGroup)) {
+                                parsedGroups.add(immutableGroup);
+                            }
                         }
                     }
                 }
