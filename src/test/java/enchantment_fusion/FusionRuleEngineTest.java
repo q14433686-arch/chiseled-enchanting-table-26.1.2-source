@@ -155,7 +155,7 @@ final class FusionRuleEngineTest {
     }
 
     @Test
-    void allElevenLocalesShareIdenticalTranslationKeySetIncludingAll150SignaturesAnd115Transmutes() throws Exception {
+    void allElevenLocalesShareIdenticalTranslationKeySetIncludingAll150SignaturesAnd140Transmutes() throws Exception {
         List<String> locales = List.of(
             "de_de", "en_us", "es_es", "fr_fr", "it_it", "ja_jp",
             "ko_kr", "pt_br", "ru_ru", "zh_cn", "zh_tw"
@@ -169,7 +169,7 @@ final class FusionRuleEngineTest {
                 Set<String> keys = obj.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toSet());
                 if (baselineKeys == null) {
                     baselineKeys = keys;
-                    assertTrue(keys.size() >= 700, "Expected comprehensive 0.4.1 translation key set");
+                    assertTrue(keys.size() >= 780, "Expected comprehensive 0.5.0 translation key set");
                     for (var sig : SignaturePairs.allUniqueSignatures()) {
                         assertTrue(keys.contains(sig.titleKey()), "Missing signature title key: " + sig.titleKey());
                         assertTrue(keys.contains(sig.descKey()), "Missing signature desc key: " + sig.descKey());
@@ -178,7 +178,7 @@ final class FusionRuleEngineTest {
                         assertTrue(keys.contains(AberrantRegistry.titleKey(abId)), "Missing aberrant title key: " + abId);
                         assertTrue(keys.contains(AberrantRegistry.descKey(abId)), "Missing aberrant desc key: " + abId);
                     }
-                    assertEquals(115, CrossDomainTransmutations.allVariants().size());
+                    assertEquals(140, CrossDomainTransmutations.allVariants().size());
                     for (var tv : CrossDomainTransmutations.allVariants()) {
                         assertTrue(keys.contains(tv.titleKey()), "Missing transmute title key: " + tv.titleKey());
                         assertTrue(keys.contains(tv.descKey()), "Missing transmute desc key: " + tv.descKey());

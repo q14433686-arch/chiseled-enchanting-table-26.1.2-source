@@ -394,6 +394,50 @@ public final class ClientSmoke implements ClientModInitializer {
                             FusedPair.clean("minecraft:lunge", 3, "minecraft:wind_burst", 3),
                             "gale_vault_thrust", sp, sp.position(), true
                         );
+
+                        // 0.5.0: Verify real 3D Display.ItemDisplay Boomerang Flying Blade launch + tick + cleanup
+                        ItemStack flyingSword = new ItemStack(Items.DIAMOND_SWORD, 1);
+                        flyingSword.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:loyalty", 3));
+                        boolean launched = enchantment_fusion.mechanics.FlyingBladeManager.launchBoomerang(
+                            sp.level(), sp, flyingSword, 3
+                        );
+                        require(launched, "Expected FlyingBladeManager.launchBoomerang to succeed");
+                        require(
+                            enchantment_fusion.mechanics.FlyingBladeManager.hasActiveBoomerang(sp.getUUID()),
+                            "Expected active 3D boomerang tracked for player"
+                        );
+                        enchantment_fusion.mechanics.FlyingBladeManager.tickServer(server);
+                        enchantment_fusion.mechanics.FlyingBladeManager.flushAll(server);
+
+                        // 0.5.0: Verify CET Cleanse & Aberrant Purification operations end-to-end on real ItemStacks
+                        ItemStack abGear = new ItemStack(Items.DIAMOND_AXE, 1);
+                        abGear.set(
+                            FusionDataComponents.FUSED_PAIRS,
+                            FusedEnchantmentList.EMPTY.append(
+                                new FusedPair("minecraft:silk_touch", 1, "minecraft:fortune", 3, "ab_greedy_abyss")
+                            )
+                        );
+                        require(enchantment_fusion.compat.CetCleanseOperations.countAberrantFusions(abGear) == 1, "Expected 1 aberrant fusion");
+                        ItemStack purifiedGear = enchantment_fusion.compat.CetCleanseOperations.purifySingleAberrant(abGear, 0);
+                        require(purifiedGear != null && enchantment_fusion.compat.CetCleanseOperations.countAberrantFusions(purifiedGear) == 0,
+                            "Expected aberrant curse purified");
+                        require(enchantment_fusion.compat.CetCleanseOperations.countCleanFusions(purifiedGear) == 1,
+                            "Purifying aberrant must preserve pure [A ▷ B] fusion");
+
+                        var extractedPair = enchantment_fusion.compat.CetCleanseOperations.extractFusedPairToBook(purifiedGear, 0);
+                        require(extractedPair != null && extractedPair.extractedBook().is(enchantment_fusion.registry.FusionItems.FUSED_ENCHANTED_BOOK),
+                            "Expected clean fusion extracted onto FUSED_ENCHANTED_BOOK");
+                        require(enchantment_fusion.compat.CetCleanseOperations.countCleanFusions(extractedPair.updatedTarget()) == 0,
+                            "Expected Vessel Slot freed after extracting fused book");
+
+                        var extractedTrans = enchantment_fusion.compat.CetCleanseOperations.extractTransmutedToBook(
+                            pick.copy(), "minecraft:fire_aspect", sp.level().registryAccess()
+                        );
+                        require(extractedTrans != null && extractedTrans.extractedBook().is(Items.ENCHANTED_BOOK),
+                            "Expected transmuted single enchant restored onto vanilla ENCHANTED_BOOK");
+                        require(enchantment_fusion.compat.CetCleanseOperations.countTransmutedSingles(extractedTrans.updatedTarget()) == 0,
+                            "Expected TRANSMUTED_ENCHANTS emptied after extraction");
+
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
@@ -415,7 +459,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 resourceReloadFuture.join();
                 finish(
                     client,
-                    "CLIENT SMOKE PASS: 0.4.1 audit-hardened 2-tab GUI + TRANSMUTED_ENCHANTS isolation + 150 directional signatures + resource reload"
+                    "CLIENT SMOKE PASS: 0.5.0 3D flying blades + 140 cross-domain variants + CET cleanse/purge + orbital/GUI VFX + resource reload"
                 );
             }
             default -> throw new AssertionError("Unknown phase " + phase);
