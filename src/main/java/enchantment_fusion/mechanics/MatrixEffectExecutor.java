@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -24,8 +25,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -40,12 +43,15 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Executes Aberrant mutations, Handcrafted Signature Resonances, and the 8x14 Universal Cross-Domain Matrix
- * across any host equipment ("万物可铭刻").
+ * Executes Aberrant mutations, Handcrafted Signature Resonances, and the Directional
+ * Catalyst x Law Synergy Engine ({@code [A ▷ B] != [B ▷ A]}) across any host equipment ("万物可铭刻").
  */
 public final class MatrixEffectExecutor {
     private static final ThreadLocal<Boolean> IN_EXECUTION = ThreadLocal.withInitial(() -> Boolean.FALSE);
     private static final Map<String, Long> COOLDOWNS = new ConcurrentHashMap<>();
+    private static final EquipmentSlot[] ARMOR_SLOTS = {
+        EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+    };
 
     private MatrixEffectExecutor() {}
 
@@ -150,8 +156,14 @@ public final class MatrixEffectExecutor {
 
                 Holder<Enchantment> sHolder = FusionStationOperations.lookupEnchantment(registries, pair.secondaryId()).orElse(null);
                 PayloadType payload = snapshot.resolve(pair.secondaryId(), sHolder).payload();
-                float scale = Math.clamp(pair.secondaryLevel() * 0.45F * Math.clamp(chargeScale, 0.5F, 1.0F), 0.35F, 2.0F);
-                executePayload(level, player, hostStack, hostForm, payload, scale, targetEntity, originPos);
+                float catalystBoost = 1.0F + 0.14F * Math.max(1, pair.primaryLevel());
+                float lawScale = (0.60F + 0.35F * Math.max(1, pair.secondaryLevel()))
+                    * catalystBoost
+                    * Math.clamp(chargeScale, 0.6F, 1.0F);
+                float scale = Math.clamp(lawScale, 0.55F, 2.6F);
+                executeDirectionalSynergy(
+                    level, player, hostStack, hostForm, primaryProfile.trigger(), payload, scale, targetEntity, originPos
+                );
             }
         } finally {
             IN_EXECUTION.set(Boolean.FALSE);
@@ -178,148 +190,302 @@ public final class MatrixEffectExecutor {
         return uuid + "|" + primaryId + ">" + secondaryId;
     }
 
-    private static void executePayload(
+    /**
+     * Directional Catalyst x Law Synergy Engine:
+     * {@code catalystTrigger} shapes the spatial geometry (aoe ring vs forward beam vs reactive pulse),
+     * while {@code payload} supplies the arcane law, making {@code [A ▷ B]} and {@code [B ▷ A]} genuinely distinct.
+     */
+    private static void executeDirectionalSynergy(
         ServerLevel level,
         ServerPlayer player,
         ItemStack hostStack,
         HostForm hostForm,
+        TriggerType catalystTrigger,
         PayloadType payload,
         float scale,
         @Nullable LivingEntity target,
         Vec3 pos
     ) {
         boolean utility = (hostForm == HostForm.TOOL || hostForm == HostForm.ARMOR);
+        boolean wideCatalyst = (catalystTrigger == TriggerType.ON_SWEEP_OR_CLEAVE
+            || catalystTrigger == TriggerType.ON_DAMAGE_TAKEN
+            || catalystTrigger == TriggerType.ON_MOVEMENT_OR_LAND);
+        double aoeRadius = wideCatalyst ? 4.4D : 3.2D;
+
         switch (payload) {
             case PYRO -> {
                 if (target != null) {
-                    target.igniteForSeconds(Math.max(2.0F, 3.0F * scale));
+                    boolean alreadyBurning = target.isOnFire();
+                    target.igniteForSeconds(Math.max(3.0F, 3.2F * scale));
+                    if (alreadyBurning) {
+                        // Solar Cinder Detonation on burning targets!
+                        target.hurtServer(level, level.damageSources().magic(), 2.2F * scale);
+                        for (LivingEntity adj : nearbyHostiles(level, player, pos, aoeRadius, target)) {
+                            adj.igniteForSeconds(2.5F * scale);
+                            adj.hurtServer(level, level.damageSources().magic(), 1.4F * scale);
+                        }
+                        level.sendParticles(ParticleTypes.LAVA, pos.x, pos.y + 0.6D, pos.z, 6, 0.3D, 0.25D, 0.3D, 0.04D);
+                    }
+                } else if (hostForm == HostForm.ARMOR) {
+                    if (player.isOnFire()) player.clearFire();
+                    grantEffect(player, "fire_resistance", Math.round(70 * scale), 0);
+                    for (LivingEntity adj : nearbyHostiles(level, player, pos, aoeRadius, null)) {
+                        adj.igniteForSeconds(3.0F);
+                    }
+                } else if (utility) {
+                    if (player.isOnFire()) player.clearFire();
+                    grantEffect(player, "haste", Math.round(65 * scale), 0);
                 }
-                if (utility && player.isOnFire()) {
-                    player.clearFire();
-                }
-                level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 0.5D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.03D);
+                level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 0.5D, pos.z, 12, 0.35D, 0.25D, 0.35D, 0.04D);
             }
             case CRYO -> {
                 if (target != null) {
-                    target.setTicksFrozen(Math.min(300, target.getTicksFrozen() + Math.round(90 * scale)));
-                    grantEffect(target, "slowness", Math.round(50 * scale), 1);
+                    boolean wasChilled = target.getTicksFrozen() >= 60;
+                    target.setTicksFrozen(Math.min(350, target.getTicksFrozen() + Math.round(105 * scale)));
+                    grantEffect(target, "slowness", Math.round(65 * scale), 1);
+                    if (wasChilled) {
+                        // Shatter-Rime Resonance burst on chilled targets!
+                        target.hurtServer(level, level.damageSources().magic(), 2.6F * scale);
+                        level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.75F, 1.65F);
+                    }
+                } else if (hostForm == HostForm.ARMOR) {
+                    for (LivingEntity adj : nearbyHostiles(level, player, pos, aoeRadius, null)) {
+                        adj.setTicksFrozen(Math.min(300, adj.getTicksFrozen() + 95));
+                        grantEffect(adj, "slowness", 60, 1);
+                    }
                 }
                 if (player.mayBuild()) {
                     freezeNearbySurfaceWater(level, BlockPos.containing(pos));
                 }
-                level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.5D, pos.z, 10, 0.35D, 0.25D, 0.35D, 0.02D);
+                level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.5D, pos.z, 14, 0.4D, 0.25D, 0.4D, 0.03D);
             }
             case VOLT -> {
+                // Chain Arc Lightning jumping across nearby hostiles!
+                float arcDmg = (level.isThundering() || player.isInWaterOrRain()) ? 3.2F * scale : 2.1F * scale;
                 if (target != null) {
-                    float bonus = (level.isThundering() || target.isInWaterOrRain()) ? 3.5F * scale : 2.0F * scale;
-                    target.hurtServer(level, level.damageSources().magic(), bonus);
+                    target.hurtServer(level, level.damageSources().magic(), arcDmg);
                     grantEffect(target, "slowness", 30, 1);
-                } else if (utility) {
-                    grantEffect(player, "haste", Math.round(60 * scale), 0);
                 }
-                level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y + 0.6D, pos.z, 12, 0.3D, 0.3D, 0.3D, 0.08D);
-                level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.65F, 1.35F);
+                int maxJumps = wideCatalyst ? 3 : 2;
+                int jumped = 0;
+                Vec3 prevArcPos = pos.add(0.0D, 0.7D, 0.0D);
+                for (LivingEntity extra : nearbyHostiles(level, player, pos, aoeRadius + 1.2D, target)) {
+                    if (++jumped > maxJumps) break;
+                    extra.hurtServer(level, level.damageSources().magic(), arcDmg * 0.72F);
+                    Vec3 nextArcPos = extra.position().add(0.0D, 0.7D, 0.0D);
+                    spawnParticleBeam(level, ParticleTypes.ELECTRIC_SPARK, prevArcPos, nextArcPos, 5);
+                    prevArcPos = nextArcPos;
+                }
+                if (utility && target == null) {
+                    grantEffect(player, "haste", Math.round(75 * scale), 0);
+                    grantEffect(player, "speed", Math.round(55 * scale), 0);
+                }
+                level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y + 0.6D, pos.z, 14, 0.35D, 0.3D, 0.35D, 0.08D);
+                level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.65F, 1.42F);
             }
             case GALE -> {
                 if (hostForm == HostForm.TOOL) {
-                    pullNearbyDrops(level, player, pos, 5.0D);
+                    pullNearbyDrops(level, player, pos, 6.0D);
+                    grantEffect(player, "speed", 55, 0);
                 } else {
-                    AABB box = AABB.ofSize(pos, 5.0D, 3.0D, 5.0D);
-                    List<LivingEntity> nearby = level.getEntitiesOfClass(
-                        LivingEntity.class, box, e -> e != player && e.isAlive() && !e.isAlliedTo(player)
-                    );
-                    for (LivingEntity mob : nearby) {
-                        Vec3 push = mob.position().subtract(player.position()).normalize().scale(0.55D * scale);
-                        mob.push(push.x, 0.28D * scale, push.z);
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, aoeRadius + 0.8D, null)) {
+                        Vec3 push = mob.position().subtract(player.position()).normalize().scale(0.62D * scale);
+                        mob.push(push.x, 0.34D * Math.min(1.5F, scale), push.z);
+                    }
+                    if (!player.onGround() && player.fallDistance > 2.0F) {
+                        player.fallDistance *= 0.35F;
                     }
                 }
-                level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.4D, pos.z, 10, 0.4D, 0.2D, 0.4D, 0.05D);
+                level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.4D, pos.z, 14, 0.45D, 0.2D, 0.45D, 0.06D);
             }
             case TIDE -> {
-                if (target != null && (player.isInWaterOrRain() || target.isInWaterOrRain())) {
-                    target.hurtServer(level, level.damageSources().magic(), 2.2F * scale);
+                boolean wet = player.isInWaterOrRain() || (target != null && target.isInWaterOrRain());
+                if (target != null) {
+                    target.hurtServer(level, level.damageSources().magic(), (wet ? 2.8F : 1.7F) * scale);
+                    target.push(0.0D, 0.28D, 0.0D);
                 }
-                grantEffect(player, player.isInWater() ? "dolphins_grace" : "speed", Math.round(55 * scale), 0);
-                level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.4D, pos.z, 10, 0.3D, 0.2D, 0.3D, 0.06D);
+                if (player.isOnFire()) player.clearFire();
+                if (player.getAirSupply() < player.getMaxAirSupply()) {
+                    player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 35));
+                }
+                grantEffect(player, player.isInWater() ? "dolphins_grace" : "speed", Math.round(65 * scale), 0);
+                level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.4D, pos.z, 14, 0.35D, 0.25D, 0.35D, 0.07D);
             }
             case RETURN -> {
-                pullNearbyDrops(level, player, pos, 6.5D);
-                level.sendParticles(ParticleTypes.PORTAL, pos.x, pos.y + 0.5D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.05D);
+                pullNearbyDrops(level, player, pos, 7.0D);
+                if (target != null) {
+                    // Kinetic Tether: pulls distant target slightly closer or restores projectile ammo
+                    if (hostForm == HostForm.RANGED && level.getRandom().nextFloat() < 0.35F) {
+                        player.getInventory().placeItemBackInInventory(new ItemStack(Items.ARROW, 1));
+                    } else if (player.distanceToSqr(target) > 9.0D) {
+                        Vec3 tether = player.position().subtract(target.position()).normalize().scale(0.48D);
+                        target.push(tether.x, 0.18D, tether.z);
+                    }
+                }
+                level.sendParticles(ParticleTypes.PORTAL, pos.x, pos.y + 0.5D, pos.z, 10, 0.3D, 0.3D, 0.3D, 0.06D);
             }
             case PIERCE -> {
                 if (target != null) {
-                    target.hurtServer(level, level.damageSources().magic(), 2.0F * scale);
+                    if (target.isBlocking()) target.stopUsingItem();
+                    float armorBonus = target.getArmorValue() * 0.14F;
+                    target.hurtServer(level, level.damageSources().magic(), 2.1F * scale + armorBonus);
+                    // Linear Penetrating Lance hitting enemies behind the primary target!
+                    Vec3 dir = player.getLookAngle().normalize();
+                    Vec3 lanceEnd = pos.add(dir.scale(3.6D));
+                    spawnParticleBeam(level, ParticleTypes.CRIT, pos.add(0.0D, 0.8D, 0.0D), lanceEnd.add(0.0D, 0.8D, 0.0D), 6);
+                    for (LivingEntity back : nearbyHostiles(level, player, pos.add(dir.scale(2.0D)), 2.2D, target)) {
+                        back.hurtServer(level, level.damageSources().magic(), 1.9F * scale);
+                    }
+                } else if (hostForm == HostForm.ARMOR) {
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.2D, null)) {
+                        mob.hurtServer(level, level.damageSources().thorns(player), 1.8F * scale);
+                    }
                 } else if (utility) {
-                    grantEffect(player, "strength", 50, 0);
+                    grantEffect(player, "haste", 70, 0);
                 }
-                level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 0.6D, pos.z, 8, 0.2D, 0.2D, 0.2D, 0.08D);
+                level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 0.6D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.09D);
             }
             case SCATTER -> {
-                AABB area = AABB.ofSize(pos, 4.0D, 2.5D, 4.0D);
-                List<LivingEntity> splashTargets = level.getEntitiesOfClass(
-                    LivingEntity.class, area, e -> e != player && e != target && e.isAlive() && !e.isAlliedTo(player)
-                );
                 int hitCount = 0;
-                for (LivingEntity extra : splashTargets) {
+                for (LivingEntity extra : nearbyHostiles(level, player, pos, aoeRadius + 0.8D, target)) {
                     if (++hitCount > 3) break;
-                    extra.hurtServer(level, level.damageSources().playerAttack(player), 1.8F * scale);
+                    extra.hurtServer(level, level.damageSources().playerAttack(player), 2.1F * scale);
+                    spawnParticleBeam(
+                        level,
+                        ParticleTypes.ENCHANTED_HIT,
+                        pos.add(0.0D, 0.7D, 0.0D),
+                        extra.position().add(0.0D, 0.7D, 0.0D),
+                        4
+                    );
+                }
+                if (hitCount == 0 && target != null) {
+                    // Single-target convergence bonus when isolated!
+                    target.hurtServer(level, level.damageSources().magic(), 1.8F * scale);
                 }
                 level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.6D, pos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
             }
             case GRAVITY -> {
-                AABB slamBox = AABB.ofSize(pos, 5.5D, 2.5D, 5.5D);
-                List<LivingEntity> slammed = level.getEntitiesOfClass(
-                    LivingEntity.class, slamBox, e -> e != player && e.isAlive() && !e.isAlliedTo(player)
-                );
-                float slamDamage = Math.max(2.0F, (float) Math.min(10.0D, player.fallDistance * 0.8D + 2.2D * scale));
-                for (LivingEntity mob : slammed) {
+                // Gravity Implosion Well: pulls nearby enemies inward toward impact point & slams!
+                float slamDamage = Math.max(2.2F, (float) Math.min(12.0D, player.fallDistance * 0.85D + 2.3F * scale));
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, aoeRadius + 1.0D, null)) {
+                    Vec3 pullIn = pos.subtract(mob.position()).scale(0.32D);
+                    mob.push(pullIn.x, -0.18D, pullIn.z);
                     mob.hurtServer(level, level.damageSources().playerAttack(player), slamDamage);
-                    mob.push(0.0D, 0.32D, 0.0D);
+                    grantEffect(mob, "slowness", 40, 1);
                 }
-                level.sendParticles(ParticleTypes.POOF, pos.x, pos.y + 0.15D, pos.z, 12, 0.6D, 0.1D, 0.6D, 0.04D);
-                level.playSound(null, BlockPos.containing(pos), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.35F, 1.4F);
+                level.sendParticles(ParticleTypes.POOF, pos.x, pos.y + 0.15D, pos.z, 14, 0.65D, 0.12D, 0.65D, 0.04D);
+                level.playSound(null, BlockPos.containing(pos), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.35F, 1.38F);
             }
             case EDGE -> {
-                if (utility) {
-                    grantEffect(player, "haste", Math.round(55 * scale), 0);
+                if (target != null) {
+                    // Arcane Slash Crescent instead of plain Strength potion filler!
+                    target.hurtServer(level, level.damageSources().playerAttack(player), 1.9F * scale);
+                    if (wideCatalyst) {
+                        for (LivingEntity adj : nearbyHostiles(level, player, pos, 3.0D, target)) {
+                            adj.hurtServer(level, level.damageSources().playerAttack(player), 1.4F * scale);
+                        }
+                    }
+                    level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.75D, pos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+                } else if (hostForm == HostForm.ARMOR) {
+                    for (LivingEntity adj : nearbyHostiles(level, player, pos, 3.0D, null)) {
+                        adj.hurtServer(level, level.damageSources().thorns(player), 1.7F * scale);
+                    }
+                    level.sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX(), player.getY() + 0.8D, player.getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
                 } else {
-                    grantEffect(player, "strength", Math.round(45 * scale), 0);
+                    grantEffect(player, "haste", Math.round(70 * scale), 0);
                 }
-                level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.6D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.05D);
+                level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.6D, pos.z, 10, 0.28D, 0.25D, 0.28D, 0.06D);
             }
             case BANE -> {
                 if (target != null) {
-                    grantEffect(target, "slowness", Math.round(60 * scale), 1);
-                    target.hurtServer(level, level.damageSources().magic(), 1.8F * scale);
+                    var typeHolder = BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(target.getType());
+                    boolean cursedSpecies = typeHolder.is(EntityTypeTags.UNDEAD)
+                        || typeHolder.is(EntityTypeTags.ARTHROPOD)
+                        || typeHolder.is(EntityTypeTags.ILLAGER);
+                    float baneDmg = (cursedSpecies ? 3.2F : 2.0F) * scale;
+                    target.hurtServer(level, level.damageSources().magic(), baneDmg);
+                    grantEffect(target, "weakness", Math.round(70 * scale), 0);
+                    grantEffect(target, "slowness", Math.round(55 * scale), 1);
                 } else if (utility) {
-                    grantEffect(player, "resistance", 45, 0);
+                    grantEffect(player, "resistance", 65, 0);
                 }
-                level.sendParticles(ParticleTypes.WITCH, pos.x, pos.y + 0.5D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.02D);
+                level.sendParticles(ParticleTypes.WITCH, pos.x, pos.y + 0.5D, pos.z, 10, 0.3D, 0.25D, 0.3D, 0.03D);
             }
             case FORTUNE -> {
-                if (level.getRandom().nextFloat() < 0.35F * scale) {
-                    ExperienceOrb.award(level, pos, Math.max(1, Math.round(2 * scale)));
+                if (target != null && level.getRandom().nextFloat() < 0.32F) {
+                    // Lucky Critical Jackpot Strike!
+                    target.hurtServer(level, level.damageSources().magic(), 2.4F * scale);
+                    level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.70F, 1.58F);
                 }
-                if (hostForm == HostForm.TOOL && level.getRandom().nextFloat() < 0.08F * scale) {
-                    Item bonusItem = level.getRandom().nextBoolean() ? Items.FLINT : Items.AMETHYST_SHARD;
-                    ItemEntity drop = new ItemEntity(level, pos.x, pos.y + 0.3D, pos.z, new ItemStack(bonusItem, 1));
-                    level.addFreshEntity(drop);
+                if (level.getRandom().nextFloat() < Math.min(0.65F, 0.35F * scale)) {
+                    ExperienceOrb.award(level, pos, Math.max(1, Math.round(2.5F * scale)));
                 }
-                level.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.x, pos.y + 0.5D, pos.z, 5, 0.25D, 0.25D, 0.25D, 0.02D);
+                if (hostForm == HostForm.TOOL && level.getRandom().nextFloat() < Math.min(0.22F, 0.09F * scale)) {
+                    Item bonusItem = switch (level.getRandom().nextInt(3)) {
+                        case 0 -> Items.AMETHYST_SHARD;
+                        case 1 -> Items.LAPIS_LAZULI;
+                        default -> Items.GOLD_NUGGET;
+                    };
+                    level.addFreshEntity(new ItemEntity(level, pos.x, pos.y + 0.3D, pos.z, new ItemStack(bonusItem, 1)));
+                }
+                level.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.x, pos.y + 0.5D, pos.z, 6, 0.3D, 0.25D, 0.3D, 0.03D);
             }
             case AEGIS -> {
-                grantEffect(player, "absorption", Math.round(70 * scale), 0);
-                grantEffect(player, "resistance", Math.round(45 * scale), 0);
-                level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.6D, pos.z, 6, 0.25D, 0.3D, 0.25D, 0.02D);
+                grantEffect(player, "absorption", Math.round(90 * scale), 0);
+                grantEffect(player, "resistance", Math.round(55 * scale), 0);
+                for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 2.8D, null)) {
+                    Vec3 away = mob.position().subtract(player.position()).normalize().scale(0.42D);
+                    mob.push(away.x, 0.16D, away.z);
+                }
+                level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 0.8D, player.getZ(), 8, 0.3D, 0.35D, 0.3D, 0.03D);
             }
             case MEND -> {
-                if (hostStack.isDamaged()) {
-                    int repair = Math.max(1, Math.round(2 * scale));
-                    hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - repair));
+                // Repairs host item OR most-damaged worn armor; if all pristine, converts into Vitality Heal!
+                int repair = Math.max(1, Math.round(2.0F * scale));
+                if (!repairHostOrArmor(player, hostStack, repair)) {
+                    player.heal(Math.min(2.5F, 0.9F * scale));
+                    level.sendParticles(ParticleTypes.HEART, player.getX(), player.getY() + 1.15D, player.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.02D);
                 }
-                grantEffect(player, "speed", 40, 0);
-                level.sendParticles(ParticleTypes.ENCHANT, pos.x, pos.y + 0.8D, pos.z, 8, 0.3D, 0.3D, 0.3D, 0.05D);
+                level.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 0.9D, player.getZ(), 10, 0.3D, 0.3D, 0.3D, 0.05D);
             }
+        }
+    }
+
+    private static boolean repairHostOrArmor(ServerPlayer player, ItemStack hostStack, int amount) {
+        if (hostStack.isDamaged()) {
+            hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - amount));
+            return true;
+        }
+        for (EquipmentSlot slot : ARMOR_SLOTS) {
+            ItemStack piece = player.getItemBySlot(slot);
+            if (!piece.isEmpty() && piece.isDamaged()) {
+                piece.setDamageValue(Math.max(0, piece.getDamageValue() - amount));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<LivingEntity> nearbyHostiles(
+        ServerLevel level,
+        ServerPlayer player,
+        Vec3 center,
+        double radius,
+        @Nullable LivingEntity exclude
+    ) {
+        AABB box = AABB.ofSize(center, radius * 2.0D, 3.2D, radius * 2.0D);
+        return level.getEntitiesOfClass(
+            LivingEntity.class,
+            box,
+            e -> e != player && e != exclude && e.isAlive() && !e.isAlliedTo(player)
+        );
+    }
+
+    private static void spawnParticleBeam(ServerLevel level, ParticleOptions type, Vec3 from, Vec3 to, int steps) {
+        for (int i = 1; i <= steps; i++) {
+            double t = (double) i / (double) steps;
+            Vec3 p = from.lerp(to, t);
+            level.sendParticles(type, p.x, p.y, p.z, 1, 0.02D, 0.02D, 0.02D, 0.0D);
         }
     }
 

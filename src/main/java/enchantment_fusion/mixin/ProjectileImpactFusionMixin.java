@@ -2,6 +2,7 @@ package enchantment_fusion.mixin;
 
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
+import enchantment_fusion.mechanics.ProjectileLaunchWeaponAccess;
 import enchantment_fusion.model.TriggerType;
 import java.util.EnumSet;
 import java.util.Set;
@@ -11,8 +12,11 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.FishingRodItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -27,15 +31,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Hooks {@link Projectile#onHit(HitResult)} and snapshots the firing weapon at owner-bind / launch
  * without falling back to {@code shooter.getMainHandItem()} at impact time (EF-009 / EF-010):
  * <ul>
- *   <li>Retains {@code ef$launchWeapon} across piercing multi-hits.</li>
+ *   <li>Retains {@code ef$launchWeapon} across piercing multi-hits and exposes {@link ProjectileLaunchWeaponAccess}.</li>
  *   <li>Tridents dispatch both {@code ON_TRIDENT_CHANNEL} and {@code ON_PROJECTILE_IMPACT} (MIX-02).</li>
  *   <li>Fishing bobber hits do NOT fire reel-in signatures early (MIX-03).</li>
  * </ul>
  */
 @Mixin(Projectile.class)
-public abstract class ProjectileImpactFusionMixin {
+public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWeaponAccess {
     @Unique
     private ItemStack ef$launchWeapon = ItemStack.EMPTY;
+
+    @Override
+    public ItemStack ef$getLaunchWeapon() {
+        return this.ef$launchWeapon == null ? ItemStack.EMPTY : this.ef$launchWeapon;
+    }
+
+    @Override
+    public void ef$setLaunchWeapon(ItemStack weapon) {
+        this.ef$launchWeapon = (weapon == null || weapon.isEmpty()) ? ItemStack.EMPTY : weapon.copyWithCount(1);
+    }
 
     @Inject(method = "setOwner(Lnet/minecraft/world/entity/Entity;)V", at = @At("TAIL"))
     private void ef$captureLaunchWeaponOnOwnerBind(@Nullable Entity owner, CallbackInfo ci) {
@@ -45,18 +59,45 @@ public abstract class ProjectileImpactFusionMixin {
         }
         ItemStack firedFrom = self.getWeaponItem();
         if (firedFrom != null && !firedFrom.isEmpty()) {
-            this.ef$launchWeapon = firedFrom.copy();
-        } else if (self.getType() == EntityType.FISHING_BOBBER) {
+            this.ef$launchWeapon = firedFrom.copyWithCount(1);
+            return;
+        }
+        if (self.getType() == EntityType.FISHING_BOBBER) {
             ItemStack main = shooter.getMainHandItem();
             if (main.getItem() instanceof FishingRodItem) {
-                this.ef$launchWeapon = main.copy();
+                this.ef$launchWeapon = main.copyWithCount(1);
             } else {
                 ItemStack off = shooter.getOffhandItem();
                 if (off.getItem() instanceof FishingRodItem) {
-                    this.ef$launchWeapon = off.copy();
+                    this.ef$launchWeapon = off.copyWithCount(1);
                 }
             }
+            return;
         }
+        if (!this.ef$launchWeapon.isEmpty()) {
+            return;
+        }
+        ItemStack using = shooter.getUseItem();
+        if (!using.isEmpty() && isProjectileLauncher(using)) {
+            this.ef$launchWeapon = using.copyWithCount(1);
+            return;
+        }
+        ItemStack main = shooter.getMainHandItem();
+        if (isProjectileLauncher(main)) {
+            this.ef$launchWeapon = main.copyWithCount(1);
+        } else {
+            ItemStack off = shooter.getOffhandItem();
+            if (isProjectileLauncher(off)) {
+                this.ef$launchWeapon = off.copyWithCount(1);
+            }
+        }
+    }
+
+    @Unique
+    private static boolean isProjectileLauncher(ItemStack stack) {
+        return stack.getItem() instanceof BowItem
+            || stack.getItem() instanceof CrossbowItem
+            || stack.getItem() instanceof TridentItem;
     }
 
     @Inject(method = "onHit", at = @At("HEAD"))
@@ -65,7 +106,7 @@ public abstract class ProjectileImpactFusionMixin {
         if (self.level() instanceof ServerLevel) {
             ItemStack w = self.getWeaponItem();
             if (w != null && !w.isEmpty()) {
-                this.ef$launchWeapon = w.copy();
+                this.ef$launchWeapon = w.copyWithCount(1);
             }
         }
     }

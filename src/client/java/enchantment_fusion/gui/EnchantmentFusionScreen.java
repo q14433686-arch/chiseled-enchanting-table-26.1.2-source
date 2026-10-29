@@ -123,8 +123,9 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     @Override
     public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         super.extractBackground(ctx, mouseX, mouseY, partialTick);
-        int left = this.leftPos;
-        int top = this.topPos;
+        int left = this.leftPos + FusionGuiMicroEffects.currentShakeOffsetX();
+        int top = this.topPos + FusionGuiMicroEffects.currentShakeOffsetY();
+        FusionGuiMicroEffects.updateStationOrigin(this.leftPos, this.topPos);
         int tab = this.menu.activeTab();
 
         // GUI-03: Evaluate preview once per frame and share with tooltip pass
@@ -144,6 +145,9 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             left, top + 18, this.imageWidth, this.imageHeight - 18, 48, 48, 6
         );
         drawTabHeader(ctx, tab, true, mouseX, mouseY);
+
+        boolean highRisk = preview.economyQuote() != null && preview.economyQuote().highRiskTier();
+        FusionGuiMicroEffects.renderPedestalResonanceBackdrop(ctx, left, top, preview.executable(), highRisk);
 
         // 2. Left Workstation Pedestal Header & 4 Role-Specific Slot Bezels
         FusionGuiSkin.drawCenteredBoundedText(
@@ -664,6 +668,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         }
 
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        FusionGuiMicroEffects.stepAndRenderOverlayParticles(ctx);
         this.extractTooltip(ctx, mouseX, mouseY);
         if (this.hoveredSlot == null || !this.hoveredSlot.hasItem()) {
             renderHoverTooltips(ctx, mouseX, mouseY);
@@ -895,6 +900,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         if (button == 0 && SWAP_BTN.containsAt(left, top, mx, my)) {
             sendAction(StationAction.SWAP_ORDER, 0, 0, "");
             playClickSound(1.15F);
+            FusionGuiMicroEffects.triggerSwapPulse(left + SWAP_BTN.x() + 12, top + SWAP_BTN.y() + 12);
             return true;
         }
 
@@ -934,6 +940,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                         );
                     }
                     playClickSound(button == 0 ? 1.12F : 0.96F);
+                    FusionGuiMicroEffects.triggerCandidatePickSpark((int) mx, (int) my, button == 0);
                     return true;
                 }
             }

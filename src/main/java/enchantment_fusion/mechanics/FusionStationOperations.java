@@ -586,11 +586,8 @@ public final class FusionStationOperations {
             }
             FusionEconomyRules.deductFeeAndStabilizers(inv, player, quote, true);
             inv.setChanged();
-            playWorkstationSound(player, SoundEvents.FIRE_EXTINGUISH, 0.85F);
+            emitStationRitualEffect(inv, player, enchantment_fusion.menu.FusionNetworking.VISUAL_FUSE_FAIL);
             if (player instanceof ServerPlayer sp) {
-                if (sp.level() instanceof ServerLevel sl) {
-                    sl.sendParticles(ParticleTypes.LARGE_SMOKE, sp.getX(), sp.getY() + 1.0D, sp.getZ(), 10, 0.3D, 0.2D, 0.3D, 0.02D);
-                }
                 int halfXp = quote == null ? 0 : quote.halfChargedXp();
                 int halfMat = quote == null ? 0 : quote.halfChargedReagents();
                 sp.sendSystemMessage(
@@ -777,7 +774,13 @@ public final class FusionStationOperations {
             );
         }
         inv.setChanged();
-        playWorkstationSound(player, rolledFailure ? SoundEvents.ANVIL_DESTROY : SoundEvents.ENCHANTMENT_TABLE_USE, rolledFailure ? 0.9F : 1.05F);
+        emitStationRitualEffect(
+            inv,
+            player,
+            rolledFailure
+                ? enchantment_fusion.menu.FusionNetworking.VISUAL_FUSE_ABERRANT
+                : enchantment_fusion.menu.FusionNetworking.VISUAL_FUSE_SUCCESS
+        );
         return true;
     }
 
@@ -884,7 +887,7 @@ public final class FusionStationOperations {
             CompendiumDiscoveryTracker.recordDiscovery(serverPlayer, flipped.primaryId(), flipped.secondaryId());
         }
         inv.setChanged();
-        playWorkstationSound(player, SoundEvents.AMETHYST_BLOCK_CHIME, 1.15F);
+        emitStationRitualEffect(inv, player, enchantment_fusion.menu.FusionNetworking.VISUAL_FLIP_ORDER);
         return true;
     }
 
@@ -951,7 +954,7 @@ public final class FusionStationOperations {
             player.giveExperienceLevels(-xpCost);
         }
         inv.setChanged();
-        playWorkstationSound(player, SoundEvents.GRINDSTONE_USE, 1.2F);
+        emitStationRitualEffect(inv, player, enchantment_fusion.menu.FusionNetworking.VISUAL_SPLIT_EXTRACT);
         return true;
     }
 
@@ -1062,16 +1065,61 @@ public final class FusionStationOperations {
         EnchantmentHelper.setEnchantments(gear, mut.toImmutable());
     }
 
-    private static void removeGearVanillaEnchant(ItemStack gear, String enchantId) {
+    public static void removeGearVanillaEnchant(ItemStack gear, String enchantId) {
         ItemEnchantments current = gear.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(current);
         mut.removeIf(h -> h.unwrapKey().map(k -> k.identifier().toString().equals(enchantId)).orElse(false));
         EnchantmentHelper.setEnchantments(gear, mut.toImmutable());
     }
 
-    private static void playWorkstationSound(Player player, net.minecraft.sounds.SoundEvent sound, float pitch) {
-        if (!player.level().isClientSide()) {
-            player.level().playSound(null, player.blockPosition(), sound, SoundSource.BLOCKS, 0.75F, pitch);
+    private static void emitStationRitualEffect(Container inv, Player player, int visualKind) {
+        if (player == null || player.level().isClientSide() || !(player.level() instanceof ServerLevel sl)) {
+            return;
         }
+        net.minecraft.core.BlockPos pos = (inv instanceof net.minecraft.world.level.block.entity.BlockEntity be)
+            ? be.getBlockPos()
+            : player.blockPosition();
+        double cx = pos.getX() + 0.5D;
+        double cy = pos.getY() + 1.06D;
+        double cz = pos.getZ() + 0.5D;
+
+        switch (visualKind) {
+            case enchantment_fusion.menu.FusionNetworking.VISUAL_FUSE_SUCCESS -> {
+                sl.playSound(null, pos, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 0.85F, 1.06F);
+                sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.95F, 1.28F);
+                sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.65F, 1.12F);
+                sl.sendParticles(ParticleTypes.ENCHANT, cx, cy + 0.25D, cz, 32, 0.35D, 0.25D, 0.35D, 0.45D);
+                sl.sendParticles(ParticleTypes.END_ROD, cx, cy, cz, 14, 0.24D, 0.18D, 0.24D, 0.04D);
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, cx, cy, cz, 10, 0.22D, 0.14D, 0.22D, 0.06D);
+            }
+            case enchantment_fusion.menu.FusionNetworking.VISUAL_FUSE_ABERRANT -> {
+                sl.playSound(null, pos, SoundEvents.ANVIL_DESTROY, SoundSource.BLOCKS, 0.72F, 0.86F);
+                sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.95F, 0.58F);
+                sl.sendParticles(ParticleTypes.WITCH, cx, cy, cz, 26, 0.30D, 0.22D, 0.30D, 0.05D);
+                sl.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, cx, cy, cz, 16, 0.25D, 0.18D, 0.25D, 0.03D);
+                sl.sendParticles(ParticleTypes.LARGE_SMOKE, cx, cy, cz, 10, 0.28D, 0.18D, 0.28D, 0.02D);
+            }
+            case enchantment_fusion.menu.FusionNetworking.VISUAL_FUSE_FAIL -> {
+                sl.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.78F, 0.85F);
+                sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.55F, 0.65F);
+                sl.sendParticles(ParticleTypes.LARGE_SMOKE, cx, cy, cz, 14, 0.28D, 0.18D, 0.28D, 0.02D);
+                sl.sendParticles(ParticleTypes.CRIT, cx, cy, cz, 10, 0.24D, 0.16D, 0.24D, 0.04D);
+            }
+            case enchantment_fusion.menu.FusionNetworking.VISUAL_FLIP_ORDER -> {
+                sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.90F, 1.22F);
+                sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.65F, 1.38F);
+                sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, cx, cy, cz, 16, 0.25D, 0.14D, 0.25D, 0.05D);
+                sl.sendParticles(ParticleTypes.END_ROD, cx, cy, cz, 10, 0.22D, 0.14D, 0.22D, 0.03D);
+            }
+            case enchantment_fusion.menu.FusionNetworking.VISUAL_SPLIT_EXTRACT -> {
+                sl.playSound(null, pos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.72F, 1.22F);
+                sl.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.85F, 1.32F);
+                sl.sendParticles(ParticleTypes.ENCHANTED_HIT, cx, cy, cz, 18, 0.26D, 0.16D, 0.26D, 0.06D);
+                sl.sendParticles(ParticleTypes.END_ROD, cx, cy, cz, 10, 0.20D, 0.14D, 0.20D, 0.03D);
+                sl.sendParticles(ParticleTypes.CLOUD, cx, cy, cz, 6, 0.20D, 0.10D, 0.20D, 0.01D);
+            }
+            default -> {}
+        }
+        enchantment_fusion.menu.FusionNetworking.broadcastVisualEvent(sl, pos, visualKind);
     }
 }

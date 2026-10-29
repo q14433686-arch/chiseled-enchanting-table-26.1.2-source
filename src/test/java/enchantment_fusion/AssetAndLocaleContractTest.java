@@ -86,7 +86,10 @@ class AssetAndLocaleContractTest {
             Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/button_hover.png"),
             Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/button_disabled.png"),
             Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_gem_empty.png"),
-            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_gem_filled.png")
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vessel_gem_filled.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vfx_rune_halo.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vfx_arcane_spark.png"),
+            Path.of("src/client/resources/assets/enchantment_fusion/textures/gui/vfx_shockwave_ring.png")
         );
 
         for (Path png : requiredPngs) {

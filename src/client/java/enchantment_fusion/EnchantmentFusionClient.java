@@ -1,13 +1,16 @@
 package enchantment_fusion;
 
+import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.gui.EnchantmentFusionScreen;
 import enchantment_fusion.gui.FusionGrimoireScreen;
+import enchantment_fusion.gui.FusionGuiMicroEffects;
 import enchantment_fusion.gui.FusionTooltipRenderer;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.menu.FusionNetworking.CompendiumDeltaPayload;
 import enchantment_fusion.menu.FusionNetworking.CompendiumSyncPayload;
+import enchantment_fusion.menu.FusionNetworking.FusionVisualEventPayload;
 import enchantment_fusion.menu.FusionNetworking.MatrixSyncPayload;
 import enchantment_fusion.menu.FusionNetworking.OpenGrimoirePayload;
 import enchantment_fusion.registry.FusionBlockEntities;
@@ -42,13 +45,25 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
             ctx.client().execute(() -> CompendiumDiscoveryTracker.applyClientSync(payload.unlockedPairs()));
         });
         ClientPlayNetworking.registerGlobalReceiver(CompendiumDeltaPayload.TYPE, (payload, ctx) -> {
-            ctx.client().execute(() -> CompendiumDiscoveryTracker.applyClientDelta(payload.entryKey(), payload.stage()));
+            ctx.client().execute(() -> {
+                CompendiumDiscoveryTracker.applyClientDelta(payload.entryKey(), payload.stage());
+                FusionGuiMicroEffects.triggerDiscoveryGlow();
+            });
         });
         ClientPlayNetworking.registerGlobalReceiver(MatrixSyncPayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> FusionNetworking.applyClientMatrixSync(payload));
         });
         ClientPlayNetworking.registerGlobalReceiver(OpenGrimoirePayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> ctx.client().setScreen(new FusionGrimoireScreen(null, payload.initialChapter())));
+        });
+        ClientPlayNetworking.registerGlobalReceiver(FusionVisualEventPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> {
+                if (ctx.client().level != null
+                    && ctx.client().level.getBlockEntity(payload.blockPos()) instanceof EnchantmentFusionTableBlockEntity be) {
+                    be.triggerClientSurge(payload.eventKind());
+                }
+                FusionGuiMicroEffects.onServerVisualEvent(payload.eventKind());
+            });
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             CompendiumDiscoveryTracker.applyClientSync(List.of());

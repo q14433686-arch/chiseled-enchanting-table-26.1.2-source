@@ -240,6 +240,7 @@ public final class FusionGrimoireScreen extends Screen {
         }
 
         super.extractRenderState(ctx, mouseX, mouseY, partialTick);
+        FusionGuiMicroEffects.stepAndRenderOverlayParticles(ctx);
     }
 
     private String formatSearchTextWithCaret() {
@@ -338,6 +339,9 @@ public final class FusionGrimoireScreen extends Screen {
                 case CompendiumDiscoveryTracker.STATE_HEARD -> FusionGuiSkin.COLOR_INK_TEAL;
                 default -> FusionGuiSkin.COLOR_INK_MUTED;
             };
+            if (item.stage() >= CompendiumDiscoveryTracker.STATE_MASTERED) {
+                FusionGuiMicroEffects.renderGrimoireMasteredSeal(ctx, rx + rw - 13.0F, ry + 11.0F);
+            }
             FusionGuiSkin.drawLeftBoundedText(
                 ctx, this.font, Component.translatable(stageKey).getString(),
                 rx, ry, rw, 0.56F, stageCol
@@ -587,6 +591,7 @@ public final class FusionGrimoireScreen extends Screen {
                     this.selectedIndex = 0;
                     invalidateEntryCache();
                     playPageTurn(1.05F);
+                    FusionGuiMicroEffects.triggerGrimoireSparkle((int) mx, (int) my);
                     return true;
                 }
             }
@@ -604,6 +609,9 @@ public final class FusionGrimoireScreen extends Screen {
                 if (rowBox.contains(mx, my)) {
                     this.selectedIndex = idx;
                     playPageTurn(1.12F);
+                    if (filtered.get(idx).stage() >= CompendiumDiscoveryTracker.STATE_MASTERED) {
+                        FusionGuiMicroEffects.triggerGrimoireSparkle(bx + RIGHT_PAGE_X + RIGHT_PAGE_W - 14, by + PAGE_TOP_Y + 12);
+                    }
                     return true;
                 }
             }

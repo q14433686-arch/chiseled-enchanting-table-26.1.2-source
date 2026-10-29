@@ -78,6 +78,7 @@ public final class CrossDomainTransmutations {
         CHEST_ARMOR,
         LEG_ARMOR,
         FOOT_ARMOR,
+        ELYTRA,
         FISHING_ROD,
         TOTEM,
         GLASS_BOTTLE,
@@ -105,7 +106,7 @@ public final class CrossDomainTransmutations {
         }
 
         public boolean isArmorOrShield() {
-            return isArmor() || this == SHIELD;
+            return isArmor() || this == SHIELD || this == ELYTRA;
         }
     }
 
@@ -291,7 +292,33 @@ public final class CrossDomainTransmutations {
             {"lunge_dash_strike", "minecraft:lunge"},
             {"lunge_vault_shot", "minecraft:lunge"},
             {"lunge_wind_stride", "minecraft:lunge"},
-            {"lunge_tunnel_rush", "minecraft:lunge"}
+            {"lunge_tunnel_rush", "minecraft:lunge"},
+            // 39: 0.5.0 Complete Cross-Domain Equipment & Elytra / Fishing Rod Matrix
+            {"searing_bolt", "minecraft:fire_aspect"},
+            {"solar_brand", "minecraft:flame"},
+            {"ember_mantle", "minecraft:fire_aspect"},
+            {"boiling_cast", "minecraft:fire_aspect"},
+            {"tidal_carapace", "minecraft:aqua_affinity"},
+            {"abyssal_dredge", "minecraft:aqua_affinity"},
+            {"rime_aegis", "minecraft:frost_walker"},
+            {"ice_hole_angler", "minecraft:frost_walker"},
+            {"pelagic_stream", "minecraft:depth_strider"},
+            {"gill_membrane", "minecraft:respiration"},
+            {"updraft_plume", "minecraft:feather_falling"},
+            {"soul_excavator", "minecraft:soul_speed"},
+            {"briar_mattock", "minecraft:thorns"},
+            {"counter_volley", "minecraft:projectile_protection"},
+            {"slipstream_wings", "minecraft:efficiency"},
+            {"gentle_reel", "minecraft:silk_touch"},
+            {"crushing_edge", "minecraft:sharpness"},
+            {"whirlwind_hem", "minecraft:sweeping_edge"},
+            {"refracted_carapace", "minecraft:multishot"},
+            {"armor_needle", "minecraft:piercing"},
+            {"adrenaline_surge", "minecraft:quick_charge"},
+            {"sunder_plate", "minecraft:breach"},
+            {"jetstream_boost", "minecraft:wind_burst"},
+            {"storm_glider", "minecraft:riptide"},
+            {"auto_reel", "minecraft:loyalty"}
         };
         for (String[] d : defs) {
             ALL_VARIANTS.put(d[0], new TransmuteVariant(d[0], d[1]));
@@ -360,6 +387,9 @@ public final class CrossDomainTransmutations {
         if (stack.is(Items.GLASS_BOTTLE)) {
             return TargetRole.GLASS_BOTTLE;
         }
+        if (stack.is(Items.ELYTRA) || stack.has(DataComponents.GLIDER)) {
+            return TargetRole.ELYTRA;
+        }
         Item item = stack.getItem();
         if (item instanceof BowItem) return TargetRole.BOW;
         if (item instanceof CrossbowItem) return TargetRole.CROSSBOW;
@@ -372,7 +402,8 @@ public final class CrossDomainTransmutations {
         if (HostForm.isSpear(stack)) return TargetRole.SPEAR;
         if (stack.is(ItemTags.AXES)) return TargetRole.AXE;
         if (stack.is(ItemTags.PICKAXES) || stack.is(ItemTags.SHOVELS) || stack.is(ItemTags.HOES)
-            || stack.is(Items.SHEARS) || stack.is(Items.BRUSH)) {
+            || stack.is(Items.SHEARS) || stack.is(Items.BRUSH) || stack.is(Items.FLINT_AND_STEEL)
+            || stack.is(Items.CARROT_ON_A_STICK) || stack.is(Items.WARPED_FUNGUS_ON_A_STICK)) {
             return TargetRole.DIG_TOOL;
         }
         if (stack.is(ItemTags.HEAD_ARMOR)) return TargetRole.HEAD_ARMOR;
@@ -433,24 +464,33 @@ public final class CrossDomainTransmutations {
                 yield null;
             }
 
-            // 0a: Fire Aspect / Flame -> Pickaxe/Tool & Axe Auto-Smelt
+            // 0a: Fire Aspect / Flame -> Tools, Ranged/Melee, Fishing Rod & Armor
             case "minecraft:fire_aspect" -> {
                 if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.MACE) yield null;
                 if (role == TargetRole.AXE) yield "auto_smelt_axe";
                 if (role == TargetRole.DIG_TOOL) yield "auto_smelt_pick";
+                if (role.isRangedWeapon() || role == TargetRole.TRIDENT) yield "searing_bolt";
+                if (role == TargetRole.FISHING_ROD) yield "boiling_cast";
+                if (role.isArmorOrShield()) yield "ember_mantle";
                 yield null;
             }
             case "minecraft:flame" -> {
                 if (role == TargetRole.BOW) yield null;
                 if (role == TargetRole.AXE) yield "auto_smelt_axe";
                 if (role == TargetRole.DIG_TOOL) yield "auto_smelt_pick";
+                if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.MACE) yield "solar_brand";
+                if (role == TargetRole.CROSSBOW || role == TargetRole.TRIDENT) yield "searing_bolt";
+                if (role == TargetRole.FISHING_ROD) yield "boiling_cast";
+                if (role.isArmorOrShield()) yield "ember_mantle";
                 yield null;
             }
 
-            // 0b: Aqua Affinity -> Attack Weapons "沂水"
+            // 0b: Aqua Affinity -> Attack Weapons "沂水", Dredge Tools & Tidal Carapace
             case "minecraft:aqua_affinity" -> {
                 if (role == TargetRole.HEAD_ARMOR) yield null;
                 if (role.isAttackWeapon()) yield "yishui";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "abyssal_dredge";
+                if (role.isArmorOrShield()) yield "tidal_carapace";
                 yield null;
             }
 
@@ -459,6 +499,8 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.FOOT_ARMOR) yield null;
                 if (role == TargetRole.DIG_TOOL) yield "frost_seal";
                 if (role.isAttackWeapon()) yield "frost_edge";
+                if (role == TargetRole.FISHING_ROD) yield "ice_hole_angler";
+                if (role.isArmorOrShield()) yield "rime_aegis";
                 yield null;
             }
 
@@ -467,6 +509,7 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.FOOT_ARMOR) yield null;
                 if (role == TargetRole.DIG_TOOL) yield "current_anchor";
                 if (role.isAttackWeapon()) yield "wave_parting";
+                if (role.isArmorOrShield() || role == TargetRole.FISHING_ROD) yield "pelagic_stream";
                 yield null;
             }
 
@@ -475,6 +518,7 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.HEAD_ARMOR) yield null;
                 if (role.isRangedWeapon()) yield "steady_breath";
                 if (role.isMeleeWeapon()) yield "qi_breath";
+                if (role.isArmorOrShield() || role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "gill_membrane";
                 yield null;
             }
 
@@ -483,6 +527,7 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.FOOT_ARMOR) yield null;
                 if (role.isRangedWeapon()) yield "feather_flight";
                 if (role.isMeleeWeapon() || role == TargetRole.DIG_TOOL) yield "light_feather";
+                if (role.isArmorOrShield() || role == TargetRole.FISHING_ROD) yield "updraft_plume";
                 yield null;
             }
 
@@ -491,6 +536,7 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.FOOT_ARMOR) yield null;
                 if (role.isRangedWeapon()) yield "soul_seeker_arrow";
                 if (role.isMeleeWeapon()) yield "soul_chase";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "soul_excavator";
                 if (role.isArmorOrShield()) yield "soul_escape";
                 yield null;
             }
@@ -500,7 +546,7 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.LEG_ARMOR) yield null;
                 if (role.isMeleeWeapon()) yield "silent_blade";
                 if (role.isRangedWeapon()) yield "silent_arrow";
-                if (role == TargetRole.DIG_TOOL) yield "silent_pick";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "silent_pick";
                 if (role.isArmorOrShield()) yield "shroud_cloak";
                 yield null;
             }
@@ -511,6 +557,7 @@ public final class CrossDomainTransmutations {
                 if (role.isMeleeWeapon()) yield "serrated_hook";
                 if (role.isRangedWeapon()) yield "barbed_arrow";
                 if (role == TargetRole.SHIELD) yield "spiked_shield";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD || role == TargetRole.ELYTRA) yield "briar_mattock";
                 yield null;
             }
 
@@ -519,17 +566,17 @@ public final class CrossDomainTransmutations {
                 if (role.isArmor()) yield null;
                 if (role.isMeleeWeapon()) yield "blade_parry";
                 if (role.isRangedWeapon()) yield "bracer_guard";
-                if (role == TargetRole.DIG_TOOL) yield "miner_guard";
-                if (role == TargetRole.SHIELD) yield "bastion_shield";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "miner_guard";
+                if (role == TargetRole.SHIELD || role == TargetRole.ELYTRA) yield "bastion_shield";
                 yield null;
             }
 
             // 9: Fire Protection
             case "minecraft:fire_protection" -> {
                 if (role.isArmor()) yield null;
-                if (role == TargetRole.DIG_TOOL) yield "heat_shield_pick";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "heat_shield_pick";
                 if (role.isMeleeWeapon() || role.isRangedWeapon()) yield "flame_cut";
-                if (role == TargetRole.SHIELD) yield "fireproof_shield";
+                if (role == TargetRole.SHIELD || role == TargetRole.ELYTRA) yield "fireproof_shield";
                 yield null;
             }
 
@@ -538,15 +585,20 @@ public final class CrossDomainTransmutations {
                 if (role.isArmor()) yield null;
                 if (role.isMeleeWeapon()) yield "creeper_defuse";
                 if (role.isRangedWeapon()) yield "blast_breech";
-                if (role == TargetRole.DIG_TOOL || role == TargetRole.SHIELD) yield "blast_guard";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.SHIELD || role == TargetRole.ELYTRA || role == TargetRole.FISHING_ROD) {
+                    yield "blast_guard";
+                }
                 yield null;
             }
 
-            // 11: Projectile Protection (Melee + Shield only per user choice!)
+            // 11: Projectile Protection
             case "minecraft:projectile_protection" -> {
                 if (role.isArmor()) yield null;
                 if (role.isMeleeWeapon()) yield "arrow_deflect";
                 if (role == TargetRole.SHIELD) yield "arrow_catch_shield";
+                if (role.isRangedWeapon() || role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD || role == TargetRole.ELYTRA) {
+                    yield "counter_volley";
+                }
                 yield null;
             }
 
@@ -554,8 +606,9 @@ public final class CrossDomainTransmutations {
             case "minecraft:efficiency" -> {
                 if (role == TargetRole.DIG_TOOL || role == TargetRole.AXE) yield null;
                 if (role.isMeleeWeapon()) yield "swift_swing";
-                if (role == TargetRole.BOW) yield "rapid_draw";
-                if (role.isArmorOrShield()) yield "nimble_gear";
+                if (role.isRangedWeapon()) yield "rapid_draw";
+                if (role == TargetRole.FISHING_ROD || role == TargetRole.ELYTRA) yield "slipstream_wings";
+                if (role.isArmor() || role == TargetRole.SHIELD) yield "nimble_gear";
                 yield null;
             }
 
@@ -563,6 +616,7 @@ public final class CrossDomainTransmutations {
             case "minecraft:silk_touch" -> {
                 if (role == TargetRole.DIG_TOOL || role == TargetRole.AXE) yield null;
                 if (role.isAttackWeapon()) yield "intact_blade";
+                if (role == TargetRole.FISHING_ROD) yield "gentle_reel";
                 if (role.isArmorOrShield()) yield "featherstep_lining";
                 yield null;
             }
@@ -570,23 +624,24 @@ public final class CrossDomainTransmutations {
             // 14: Fortune ($3 Bill!)
             case "minecraft:fortune" -> {
                 if (role == TargetRole.DIG_TOOL || role == TargetRole.AXE) yield null;
-                if (role.isAttackWeapon() || role.isArmorOrShield()) yield "three_dollar_luck";
+                if (role.isAttackWeapon() || role.isArmorOrShield() || role == TargetRole.FISHING_ROD) yield "three_dollar_luck";
                 yield null;
             }
 
             // 15: Sharpness
             case "minecraft:sharpness" -> {
                 if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE) yield null;
+                if (role == TargetRole.MACE || role == TargetRole.FISHING_ROD || role == TargetRole.ELYTRA) yield "crushing_edge";
                 if (role == TargetRole.DIG_TOOL) yield "sharpened_tool";
                 if (role.isRangedWeapon() || role == TargetRole.TRIDENT) yield "broadhead_arrow";
-                if (role.isArmorOrShield()) yield "bladed_rim";
+                if (role.isArmor() || role == TargetRole.SHIELD) yield "bladed_rim";
                 yield null;
             }
 
             // 16: Smite
             case "minecraft:smite" -> {
                 if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.MACE) yield null;
-                if (role.isRangedWeapon() || role == TargetRole.TRIDENT) yield "holy_bolt";
+                if (role.isRangedWeapon() || role == TargetRole.TRIDENT || role == TargetRole.FISHING_ROD) yield "holy_bolt";
                 if (role == TargetRole.DIG_TOOL) yield "hallowed_pick";
                 if (role.isArmorOrShield()) yield "undead_ward";
                 yield null;
@@ -595,7 +650,7 @@ public final class CrossDomainTransmutations {
             // 17: Bane of Arthropods
             case "minecraft:bane_of_arthropods" -> {
                 if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.MACE) yield null;
-                if (role.isRangedWeapon() || role == TargetRole.TRIDENT) yield "arthropod_bolt";
+                if (role.isRangedWeapon() || role == TargetRole.TRIDENT || role == TargetRole.FISHING_ROD) yield "arthropod_bolt";
                 if (role == TargetRole.DIG_TOOL) yield "nest_purger";
                 if (role.isArmorOrShield()) yield "venom_ward";
                 yield null;
@@ -605,14 +660,13 @@ public final class CrossDomainTransmutations {
             case "minecraft:knockback", "minecraft:punch" -> {
                 if ("minecraft:knockback".equals(enchId) && (role == TargetRole.SWORD || role == TargetRole.SPEAR)) yield null;
                 if ("minecraft:punch".equals(enchId) && role == TargetRole.BOW) {
-                    // Punch on Bow is native, though Knockback on Bow / Punch on Sword/Spear/Crossbow transmutes!
                     yield null;
                 }
                 if (role == TargetRole.CROSSBOW || role == TargetRole.TRIDENT) yield "heavy_impact";
                 if (role == TargetRole.BOW || role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.MACE) {
                     yield role.isRangedWeapon() ? "recoil_jump" : "warding_shove";
                 }
-                if (role == TargetRole.DIG_TOOL) yield "warding_shove";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "warding_shove";
                 if (role.isArmorOrShield()) yield "repulse_guard";
                 yield null;
             }
@@ -624,13 +678,15 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.DIG_TOOL) yield "wide_reap";
                 if (role.isRangedWeapon()) yield "wind_cutter_arrow";
                 if (role == TargetRole.SHIELD) yield "shield_sweep";
+                if (role.isArmor() || role == TargetRole.ELYTRA || role == TargetRole.FISHING_ROD) yield "whirlwind_hem";
                 yield null;
             }
 
             // 20: Looting
             case "minecraft:looting" -> {
                 if (role == TargetRole.SWORD || role == TargetRole.SPEAR) yield null;
-                if (role.isRangedWeapon() || role == TargetRole.AXE || role == TargetRole.TRIDENT || role == TargetRole.MACE) {
+                if (role.isRangedWeapon() || role == TargetRole.AXE || role == TargetRole.TRIDENT
+                    || role == TargetRole.MACE || role == TargetRole.FISHING_ROD) {
                     yield "ranged_heavy_plunder";
                 }
                 if (role == TargetRole.DIG_TOOL) yield "forager_luck";
@@ -641,7 +697,7 @@ public final class CrossDomainTransmutations {
             // 21: Power
             case "minecraft:power" -> {
                 if (role == TargetRole.BOW) yield null;
-                if (role == TargetRole.CROSSBOW || role == TargetRole.TRIDENT) yield "mighty_bolt";
+                if (role == TargetRole.CROSSBOW || role == TargetRole.TRIDENT || role == TargetRole.FISHING_ROD) yield "mighty_bolt";
                 if (role.isMeleeWeapon()) yield "full_draw_cleave";
                 if (role == TargetRole.DIG_TOOL) yield "hardrock_breaker";
                 if (role.isArmorOrShield()) yield "titan_brace";
@@ -664,6 +720,7 @@ public final class CrossDomainTransmutations {
                 if (role.isMeleeWeapon()) yield "twin_shadow_slash";
                 if (role == TargetRole.DIG_TOOL) yield "trifork_mine";
                 if (role == TargetRole.SHIELD) yield "splinter_shield";
+                if (role.isArmor() || role == TargetRole.ELYTRA || role == TargetRole.FISHING_ROD) yield "refracted_carapace";
                 yield null;
             }
 
@@ -673,6 +730,7 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.BOW || role == TargetRole.TRIDENT) yield "sun_piercer";
                 if (role.isMeleeWeapon()) yield "skewer_thrust";
                 if (role == TargetRole.DIG_TOOL) yield "deep_bore";
+                if (role.isArmorOrShield() || role == TargetRole.FISHING_ROD) yield "armor_needle";
                 yield null;
             }
 
@@ -683,6 +741,7 @@ public final class CrossDomainTransmutations {
                 if (role.isMeleeWeapon()) yield "rapid_recovery";
                 if (role == TargetRole.SHIELD) yield "reflex_shield";
                 if (role == TargetRole.DIG_TOOL) yield "chain_tempo";
+                if (role.isArmor() || role == TargetRole.ELYTRA || role == TargetRole.FISHING_ROD) yield "adrenaline_surge";
                 yield null;
             }
 
@@ -692,7 +751,8 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.SWORD || role == TargetRole.SPEAR || role == TargetRole.AXE || role == TargetRole.MACE) yield "returning_blade_throw";
                 if (role.isRangedWeapon()) yield "boomerang_arrow";
                 if (role == TargetRole.DIG_TOOL) yield "auto_loot_return";
-                if (role.isArmorOrShield()) yield "void_homing";
+                if (role == TargetRole.FISHING_ROD || role == TargetRole.ELYTRA) yield "auto_reel";
+                if (role.isArmor() || role == TargetRole.SHIELD) yield "void_homing";
                 yield null;
             }
 
@@ -702,14 +762,15 @@ public final class CrossDomainTransmutations {
                 if (role.isMeleeWeapon()) yield "aqua_spiral_dash";
                 if (role.isRangedWeapon()) yield "hydro_propulsion";
                 if (role == TargetRole.DIG_TOOL) yield "torrent_mine";
-                if (role.isArmorOrShield()) yield "surge_ram";
+                if (role == TargetRole.ELYTRA || role == TargetRole.FISHING_ROD) yield "storm_glider";
+                if (role.isArmor() || role == TargetRole.SHIELD) yield "surge_ram";
                 yield null;
             }
 
             // 28: Channeling
             case "minecraft:channeling" -> {
                 if (role == TargetRole.TRIDENT) yield null;
-                if (role.isAttackWeapon()) yield "storm_rod_strike";
+                if (role.isAttackWeapon() || role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "storm_rod_strike";
                 if (role.isArmorOrShield()) yield "lightning_conductor_armor";
                 yield null;
             }
@@ -717,7 +778,7 @@ public final class CrossDomainTransmutations {
             // 29: Impaling
             case "minecraft:impaling" -> {
                 if (role == TargetRole.TRIDENT) yield null;
-                if (role.isAttackWeapon()) yield "drenched_bane";
+                if (role.isAttackWeapon() || role == TargetRole.FISHING_ROD) yield "drenched_bane";
                 if (role == TargetRole.DIG_TOOL) yield "prismarine_chisel";
                 if (role.isArmorOrShield()) yield "guardian_ward";
                 yield null;
@@ -726,7 +787,7 @@ public final class CrossDomainTransmutations {
             // 30: Density
             case "minecraft:density" -> {
                 if (role == TargetRole.MACE) yield null;
-                if (role.isMeleeWeapon() || role == TargetRole.DIG_TOOL) yield "heavy_plummet";
+                if (role.isMeleeWeapon() || role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "heavy_plummet";
                 if (role.isRangedWeapon()) yield "heavy_slug_arrow";
                 if (role.isArmorOrShield()) yield "anvil_stomp";
                 yield null;
@@ -737,6 +798,7 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.MACE) yield null;
                 if (role.isAttackWeapon()) yield "hard_breach";
                 if (role == TargetRole.DIG_TOOL) yield "shell_cracker";
+                if (role.isArmorOrShield() || role == TargetRole.FISHING_ROD) yield "sunder_plate";
                 yield null;
             }
 
@@ -745,7 +807,8 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.MACE) yield null;
                 if (role.isMeleeWeapon()) yield "pogo_gale_slash";
                 if (role.isRangedWeapon()) yield "wind_charge_arrow";
-                if (role.isArmorOrShield()) yield "gale_shield";
+                if (role == TargetRole.ELYTRA || role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "jetstream_boost";
+                if (role.isArmor() || role == TargetRole.SHIELD) yield "gale_shield";
                 yield null;
             }
 
@@ -770,8 +833,8 @@ public final class CrossDomainTransmutations {
 
             // 35: Curse of Binding
             case "minecraft:binding_curse" -> {
-                if (role.isArmor()) yield null;
-                if (role.isAttackWeapon() || role == TargetRole.DIG_TOOL || role == TargetRole.SHIELD) {
+                if (role.isArmor() || role == TargetRole.ELYTRA) yield null;
+                if (role.isAttackWeapon() || role == TargetRole.DIG_TOOL || role == TargetRole.SHIELD || role == TargetRole.FISHING_ROD) {
                     yield "sticky_root_curse";
                 }
                 yield null;
@@ -782,7 +845,7 @@ public final class CrossDomainTransmutations {
                 if (role == TargetRole.SPEAR) yield null;
                 if (role.isMeleeWeapon()) yield "lunge_dash_strike";
                 if (role.isRangedWeapon()) yield "lunge_vault_shot";
-                if (role == TargetRole.DIG_TOOL) yield "lunge_tunnel_rush";
+                if (role == TargetRole.DIG_TOOL || role == TargetRole.FISHING_ROD) yield "lunge_tunnel_rush";
                 if (role.isArmorOrShield()) yield "lunge_wind_stride";
                 yield null;
             }
@@ -933,8 +996,12 @@ public final class CrossDomainTransmutations {
             mult *= 5.0F;
         }
         int silentPickLv = getTransmutedLevel(tool, "silent_pick");
-        if (silentPickLv > 0 && player.isShiftKeyDown()) {
-            mult *= (1.0F + 0.25F * silentPickLv);
+        if (silentPickLv > 0) {
+            mult *= player.isShiftKeyDown() ? (1.15F + 0.25F * silentPickLv) : (1.08F + 0.12F * silentPickLv);
+        }
+        int dredgeLv = getTransmutedLevel(tool, "abyssal_dredge");
+        if (dredgeLv > 0 && player.isInWaterOrRain()) {
+            mult *= (1.35F + 0.20F * dredgeLv);
         }
         int powerLv = getTransmutedLevel(tool, "hardrock_breaker");
         if (powerLv > 0 && state.getBlock().defaultDestroyTime() >= 3.0F) {
@@ -1067,13 +1134,36 @@ public final class CrossDomainTransmutations {
             player.clearFire();
         }
 
-        // 2, 6 & 26: Depth Strider "定流" / Swift Sneak "静默镐" / Loyalty "归囊" pull drops straight to player
+        // 2, 6, 0b & 26: Depth Strider "定流" / Swift Sneak "静默镐" / Aqua Affinity "浚川利器" / Loyalty "归囊" pull drops straight to player
         if ((getTransmutedLevel(tool, "current_anchor") > 0 && player.isInWater())
-            || (getTransmutedLevel(tool, "silent_pick") > 0 && player.isShiftKeyDown())
+            || (getTransmutedLevel(tool, "abyssal_dredge") > 0 && player.isInWaterOrRain())
+            || getTransmutedLevel(tool, "silent_pick") > 0
             || getTransmutedLevel(tool, "auto_loot_return") > 0) {
-            for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, AABB.ofSize(Vec3.atCenterOf(pos), 3.5D, 3.5D, 3.5D), Entity::isAlive)) {
+            for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, AABB.ofSize(Vec3.atCenterOf(pos), 3.8D, 3.8D, 3.8D), Entity::isAlive)) {
                 drop.setNoPickUpDelay();
                 drop.setPos(player.getX(), player.getY() + 0.4D, player.getZ());
+            }
+        }
+
+        // 3: Respiration "鳃息护膜" — recover oxygen bubbles on submerged block harvest
+        int gillLv = getTransmutedLevel(tool, "gill_membrane");
+        if (gillLv > 0 && player.getAirSupply() < player.getMaxAirSupply()) {
+            player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 28 * gillLv));
+        }
+
+        // 5: Soul Speed "摄魂疾行" — surging Soul Stride speed on harvest
+        int soulExcLv = getTransmutedLevel(tool, "soul_excavator");
+        if (soulExcLv > 0) {
+            grantEffect(player, "speed", 45 + 15 * soulExcLv, Math.min(1, soulExcLv - 1));
+            level.sendParticles(ParticleTypes.SOUL, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 4, 0.2D, 0.2D, 0.2D, 0.02D);
+        }
+
+        // 7: Thorns "荆棘缠钩" — entangle & scratch nearby lunging hostiles while working
+        int briarLv = getTransmutedLevel(tool, "briar_mattock");
+        if (briarLv > 0) {
+            for (LivingEntity mob : nearbyHostiles(level, player, Vec3.atCenterOf(pos), 3.2D, null)) {
+                mob.hurtServer(level, level.damageSources().thorns(player), 1.2F + 0.7F * briarLv);
+                grantEffect(mob, "slowness", 35, 1);
             }
         }
 
@@ -1427,75 +1517,199 @@ public final class CrossDomainTransmutations {
                 grantEffect(target, "slowness", 35, 4);
                 target.setDeltaMovement(0.0D, Math.min(0.0D, target.getDeltaMovement().y), 0.0D);
             }
+
+            // 0a-Melee: Flame -> "阳炎烙刃" (solar fire brand + full-charge forward searing arc!)
+            int solarLv = getTransmutedLevel(weapon, "solar_brand");
+            if (solarLv > 0) {
+                target.igniteForSeconds(3.5F + 2.0F * solarLv);
+                if (fullCharge) {
+                    Vec3 ahead = pos.add(player.getLookAngle().normalize().scale(1.6D));
+                    for (LivingEntity extra : nearbyHostiles(level, player, ahead, 2.4D, target)) {
+                        extra.igniteForSeconds(3.0F + solarLv);
+                        extra.hurtServer(level, level.damageSources().magic(), 1.8F + 0.7F * solarLv);
+                    }
+                    level.sendParticles(ParticleTypes.FLAME, ahead.x, ahead.y + 0.7D, ahead.z, 12, 0.35D, 0.2D, 0.35D, 0.04D);
+                }
+            }
+
+            // 15-Mace: Sharpness -> "重锋锐击" (flat baseline edge crush even without high fall!)
+            int crushEdgeLv = getTransmutedLevel(weapon, "crushing_edge");
+            if (crushEdgeLv > 0) {
+                target.hurtServer(level, level.damageSources().playerAttack(player), 1.4F + 0.85F * crushEdgeLv);
+                level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.8D, pos.z, 6, 0.2D, 0.2D, 0.2D, 0.06D);
+            }
+        } finally {
+            IN_CUSTOM_COMBAT.set(Boolean.FALSE);
+        }
+    }
+
+    /**
+     * Applies weapon-resident cross-domain strike effects along the 3D flight path of {@code 飞剑掷斧}.
+     */
+    public static void onFlyingBladeHit(ServerLevel level, ServerPlayer player, ItemStack weapon, LivingEntity target) {
+        if (weapon.isEmpty() || Boolean.TRUE.equals(IN_CUSTOM_COMBAT.get())) {
+            return;
+        }
+        IN_CUSTOM_COMBAT.set(Boolean.TRUE);
+        try {
+            Vec3 pos = target.position();
+            RandomSource rng = level.getRandom();
+            if (getTransmutedLevel(weapon, "yishui") > 0 && (player.isInWaterOrRain() || target.isInWaterOrRain())) {
+                target.hurtServer(level, level.damageSources().magic(), 2.8F);
+            }
+            int frostLv = getTransmutedLevel(weapon, "frost_edge");
+            if (frostLv > 0) {
+                target.setTicksFrozen(Math.min(350, target.getTicksFrozen() + 65 * frostLv));
+                grantEffect(target, "slowness", 50, frostLv - 1);
+            }
+            int solarLv = getTransmutedLevel(weapon, "solar_brand");
+            if (solarLv > 0) {
+                target.igniteForSeconds(3.5F + 1.5F * solarLv);
+            }
+            int hookLv = getTransmutedLevel(weapon, "serrated_hook");
+            if (hookLv > 0) {
+                target.hurtServer(level, level.damageSources().magic(), 1.0F + 0.65F * hookLv);
+            }
+            int fortuneLv = getTransmutedLevel(weapon, "three_dollar_luck");
+            if (fortuneLv > 0 && rng.nextFloat() < (0.25F + 0.12F * fortuneLv)) {
+                triggerThreeDollarRoulette(level, player, target, fortuneLv);
+            }
+            int crushLv = getTransmutedLevel(weapon, "crushing_edge");
+            if (crushLv > 0) {
+                target.hurtServer(level, level.damageSources().playerAttack(player), 1.2F + 0.75F * crushLv);
+            }
+            if (getTransmutedLevel(weapon, "storm_rod_strike") > 0 && level.isThundering() && level.canSeeSky(target.blockPosition())) {
+                AberrantRegistry.spawnLightning(level, pos);
+            }
+            int impaleLv = getTransmutedLevel(weapon, "drenched_bane");
+            if (impaleLv > 0 && (target.isInWaterOrRain() || BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(target.getType()).is(EntityTypeTags.AQUATIC))) {
+                target.hurtServer(level, level.damageSources().magic(), 1.8F * impaleLv);
+            }
         } finally {
             IN_CUSTOM_COMBAT.set(Boolean.FALSE);
         }
     }
 
     // =========================================================================
-    // 4. Right-Click Active Skills & Consumable Unbreaking
+    // 4. Right-Click Active Skills, Fishing Reel & Consumable Unbreaking
     // =========================================================================
 
-    public static void onUseItem(ServerLevel level, ServerPlayer player, InteractionHand hand, ItemStack stack) {
-        if (stack.isEmpty()) return;
+    /**
+     * Client + Server check so {@code UseItemCallback} returns {@code InteractionResult.SUCCESS}
+     * (giving immediate arm swing and preventing offhand Shield/Food from swallowing weapon skills).
+     */
+    public static boolean hasReadyRightClickAbility(Player player, ItemStack stack) {
+        if (stack == null || stack.isEmpty() || player.getCooldowns().isOnCooldown(stack)) {
+            return false;
+        }
+        if (getTransmutedLevel(stack, "returning_blade_throw") > 0) return true;
+        if (getTransmutedLevel(stack, "phantom_trident") > 0) return true;
+        if (getTransmutedLevel(stack, "arrow_deflect") > 0) return true;
+        if (getTransmutedLevel(stack, "aqua_spiral_dash") > 0) return true;
+        if (getTransmutedLevel(stack, "pogo_gale_slash") > 0 && !player.isUnderWater()) return true;
+        if (getTransmutedLevel(stack, "jetstream_boost") > 0 && !(stack.getItem() instanceof FishingRodItem) && !player.isUnderWater()) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean onUseItem(ServerLevel level, ServerPlayer player, InteractionHand hand, ItemStack stack) {
+        if (stack.isEmpty()) return false;
         long now = level.getGameTime();
+        boolean activatedSkill = false;
 
-        // 11: Projectile Protection "拨矢" active right-click parry
-        int deflectLv = getTransmutedLevel(stack, "arrow_deflect");
-        if (deflectLv > 0 && player.isShiftKeyDown()) {
-            deflectNearbyProjectiles(level, player, 3.0D + 0.5D * deflectLv);
-        }
-
-        // 26: Loyalty "飞剑掷斧" (Sneak + Right-Click throws returning spectral blade/axe!)
+        // 26: Loyalty "飞剑掷斧" — Direct Right-Click launches a real 3D spinning weapon boomerang!
         int throwLv = getTransmutedLevel(stack, "returning_blade_throw");
-        if (throwLv > 0 && player.isShiftKeyDown() && checkActiveCooldown(player, now, 32)) {
-            Vec3 eye = player.getEyePosition();
-            Vec3 dir = player.getLookAngle().normalize();
-            double maxDist = 11.0D + 3.0D * throwLv;
-            for (double d = 1.5D; d <= maxDist; d += 1.2D) {
-                Vec3 p = eye.add(dir.scale(d));
-                level.sendParticles(ParticleTypes.SWEEP_ATTACK, p.x, p.y, p.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
-                for (LivingEntity hit : nearbyHostiles(level, player, p, 1.6D, null)) {
-                    hit.hurtServer(level, level.damageSources().playerAttack(player), 5.0F + throwLv * 1.2F);
-                }
-                for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, AABB.ofSize(p, 2.5D, 2.5D, 2.5D), Entity::isAlive)) {
-                    item.setNoPickUpDelay();
-                    item.setPos(player.getX(), player.getY() + 0.5D, player.getZ());
-                }
+        if (throwLv > 0 && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, Math.max(14, 34 - 5 * throwLv))) {
+            if (FlyingBladeManager.launchReturningBlade(level, player, hand, stack, throwLv)) {
+                CompendiumDiscoveryTracker.recordTransmuteProgress(player, "returning_blade_throw", CompendiumDiscoveryTracker.STATE_MASTERED);
+                player.getCooldowns().addCooldown(stack, Math.max(14, 34 - 5 * throwLv));
+                activatedSkill = true;
             }
-            damageItemSafely(stack, 1, player);
-            level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.8F, 1.15F);
         }
 
-        // 22: Infinity "幻影连投" on Trident (Sneak + Right-Click fires instant phantom trident beam without losing Trident!)
-        if (getTransmutedLevel(stack, "phantom_trident") > 0 && player.isShiftKeyDown() && checkActiveCooldown(player, now, 22)) {
-            Vec3 eye = player.getEyePosition();
-            Vec3 dir = player.getLookAngle().normalize();
-            for (double d = 1.5D; d <= 18.0D; d += 1.2D) {
-                Vec3 p = eye.add(dir.scale(d));
-                level.sendParticles(ParticleTypes.END_ROD, p.x, p.y, p.z, 2, 0.05D, 0.05D, 0.05D, 0.01D);
-                for (LivingEntity hit : nearbyHostiles(level, player, p, 1.5D, null)) {
-                    hit.hurtServer(level, level.damageSources().magic(), 7.5F);
-                }
+        // 22: Infinity "幻影连投" on Trident — Direct Right-Click launches a 3D glowing Phantom Trident without losing Trident!
+        int phantomLv = getTransmutedLevel(stack, "phantom_trident");
+        if (!activatedSkill && phantomLv > 0 && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, 18)) {
+            if (FlyingBladeManager.launchLinearPhantomWeapon(level, player, hand, stack, phantomLv, FlyingBladeManager.FlightStyle.PHANTOM_LANCE)) {
+                CompendiumDiscoveryTracker.recordTransmuteProgress(player, "phantom_trident", CompendiumDiscoveryTracker.STATE_MASTERED);
+                player.getCooldowns().addCooldown(stack, 18);
+                activatedSkill = true;
             }
-            level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_THROW.value(), SoundSource.PLAYERS, 0.8F, 1.2F);
         }
 
-        // 27: Riptide "水龙突刺 / 驭浪盾冲" in water or rain!
+        // 11: Projectile Protection "拨矢" — Direct Right-Click 360° sword-parry gale!
+        int deflectLv = getTransmutedLevel(stack, "arrow_deflect");
+        if (!activatedSkill && deflectLv > 0 && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, 18)) {
+            deflectNearbyProjectiles(level, player, 3.6D + 0.65D * deflectLv);
+            Vec3 front = player.getEyePosition().add(player.getLookAngle().scale(1.1D));
+            level.sendParticles(ParticleTypes.SWEEP_ATTACK, front.x, front.y - 0.2D, front.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.75F, 1.35F);
+            player.getCooldowns().addCooldown(stack, 18);
+            activatedSkill = true;
+        }
+
+        // 27: Riptide "水龙突刺 / 驭浪盾冲" — Direct Right-Click spiral surge (stronger in water/rain, mist-dash on dry land!)
         int dashLv = Math.max(getTransmutedLevel(stack, "aqua_spiral_dash"), getTransmutedLevel(stack, "surge_ram"));
-        if (dashLv > 0 && player.isInWaterOrRain() && checkActiveCooldown(player, now, 28)) {
-            Vec3 launch = player.getLookAngle().normalize().scale(1.1D + 0.32D * dashLv);
-            player.setDeltaMovement(launch.x, Math.max(0.25D, launch.y * 0.85D), launch.z);
+        if (!activatedSkill && dashLv > 0 && !(stack.getItem() instanceof ShieldItem && !player.isInWaterOrRain())
+            && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, 26)) {
+            boolean wet = player.isInWaterOrRain();
+            double scale = wet ? (1.20D + 0.34D * dashLv) : (0.76D + 0.16D * dashLv);
+            Vec3 launch = player.getLookAngle().normalize().scale(scale);
+            player.setDeltaMovement(launch.x, Math.max(0.24D, launch.y * 0.85D), launch.z);
             player.hurtMarked = true;
-            for (LivingEntity hit : nearbyHostiles(level, player, player.position().add(launch), 2.6D, null)) {
-                hit.hurtServer(level, level.damageSources().playerAttack(player), 4.5F + 1.5F * dashLv);
+            player.resetFallDistance();
+            for (LivingEntity hit : nearbyHostiles(level, player, player.position().add(launch), 2.8D, null)) {
+                hit.hurtServer(level, level.damageSources().playerAttack(player), (wet ? 4.8F : 3.2F) + 1.4F * dashLv);
             }
-            level.sendParticles(ParticleTypes.SPLASH, player.getX(), player.getY() + 0.8D, player.getZ(), 16, 0.4D, 0.3D, 0.4D, 0.1D);
+            level.sendParticles(ParticleTypes.SPLASH, player.getX(), player.getY() + 0.8D, player.getZ(), 18, 0.45D, 0.3D, 0.45D, 0.1D);
+            level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_2.value(), SoundSource.PLAYERS, 0.85F, wet ? 1.15F : 1.40F);
+            player.getCooldowns().addCooldown(stack, 26);
+            activatedSkill = true;
+        }
+
+        // 32: Wind Burst "踩头连斩 / 罡风助翼" — Direct Right-Click updraft vault / Elytra jetstream boost!
+        int pogoLv = getTransmutedLevel(stack, "pogo_gale_slash");
+        int jetLv = getTransmutedLevel(stack, "jetstream_boost");
+        int activeWindLv = Math.max(pogoLv, (stack.getItem() instanceof FishingRodItem) ? 0 : jetLv);
+        if (!activatedSkill && activeWindLv > 0 && !player.isUnderWater()
+            && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, 28)) {
+            Vec3 look = player.getLookAngle().normalize();
+            if (player.isFallFlying()) {
+                Vec3 cur = player.getDeltaMovement();
+                player.setDeltaMovement(cur.scale(0.45D).add(look.scale(1.15D + 0.25D * activeWindLv)));
+            } else {
+                player.setDeltaMovement(look.x * (0.55D + 0.12D * activeWindLv), Math.max(0.56D + 0.10D * activeWindLv, look.y * 0.75D), look.z * (0.55D + 0.12D * activeWindLv));
+            }
+            player.hurtMarked = true;
+            player.resetFallDistance();
+            level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.3D, player.getZ(), 16, 0.4D, 0.2D, 0.4D, 0.08D);
+            level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.80F, 0.85F);
+            player.getCooldowns().addCooldown(stack, 28);
+            activatedSkill = true;
+        }
+
+        // Elytra Jetpack while worn on CHEST when right-clicking with an empty or passive hand while gliding!
+        if (!activatedSkill && player.isFallFlying() && !player.isUnderWater()) {
+            ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
+            int wornJet = getTransmutedLevel(chest, "jetstream_boost");
+            int wornStorm = player.isInWaterOrRain() ? getTransmutedLevel(chest, "storm_glider") : 0;
+            int boostLv = Math.max(wornJet, wornStorm);
+            if (boostLv > 0 && !player.getCooldowns().isOnCooldown(chest) && checkActiveCooldown(player, now, 34)) {
+                Vec3 look = player.getLookAngle().normalize();
+                player.setDeltaMovement(player.getDeltaMovement().scale(0.5D).add(look.scale(1.10D + 0.24D * boostLv)));
+                player.hurtMarked = true;
+                player.getCooldowns().addCooldown(chest, 34);
+                level.sendParticles(
+                    wornStorm > 0 ? ParticleTypes.SPLASH : ParticleTypes.CLOUD,
+                    player.getX(), player.getY() + 0.5D, player.getZ(), 18, 0.4D, 0.3D, 0.4D, 0.08D
+                );
+                level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_2.value(), SoundSource.PLAYERS, 0.8F, 1.35F);
+                activatedSkill = true;
+            }
         }
 
         // 37a: Unbreaking on Instant Throwable Consumables ("经久省用" — EF-002):
-        // Verify on next server execution step that Item.use() ACTUALLY consumed 1 item from hand
-        // (prevents Ender Pearl / Wind Charge cooldown or non-gliding Firework click duping!).
         if (!stack.has(DataComponents.CONSUMABLE) && getTransmutedLevel(stack, "unbreaking_ration") > 0 && !player.getAbilities().instabuild) {
             Item expectedItem = stack.getItem();
             int countBefore = stack.getCount();
@@ -1508,6 +1722,135 @@ public final class CrossDomainTransmutations {
                     tryRefundRationItemImmediate(level, player, snapshot);
                 }
             });
+        }
+        return activatedSkill;
+    }
+
+    /**
+     * Executes Fishing Rod standalone cross-domain transmutations upon reeling in a bobber!
+     */
+    public static void onFishingReel(
+        ServerLevel level,
+        ServerPlayer player,
+        ItemStack rod,
+        @Nullable LivingEntity hookedMob,
+        Vec3 bobberPos
+    ) {
+        if (rod == null || rod.isEmpty()) return;
+        RandomSource rng = level.getRandom();
+
+        int boilLv = getTransmutedLevel(rod, "boiling_cast");
+        if (boilLv > 0) {
+            if (hookedMob != null) {
+                hookedMob.igniteForSeconds(3.0F + 2.0F * boilLv);
+                hookedMob.hurtServer(level, level.damageSources().magic(), 2.2F + 0.8F * boilLv);
+            }
+            level.getServer().execute(() -> {
+                AABB nearPlayer = player.getBoundingBox().inflate(3.5D);
+                for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, nearPlayer, e -> e.isAlive() && e.getAge() <= 4)) {
+                    Item cooked = mapRawFishToCooked(ie.getItem().getItem());
+                    if (cooked != null) {
+                        ie.setItem(new ItemStack(cooked, ie.getItem().getCount()));
+                    }
+                }
+            });
+            level.sendParticles(ParticleTypes.FLAME, bobberPos.x, bobberPos.y + 0.3D, bobberPos.z, 8, 0.25D, 0.2D, 0.25D, 0.03D);
+        }
+
+        int iceHoleLv = getTransmutedLevel(rod, "ice_hole_angler");
+        if (iceHoleLv > 0) {
+            if (hookedMob != null) {
+                hookedMob.setTicksFrozen(Math.min(350, hookedMob.getTicksFrozen() + 90 * iceHoleLv));
+                grantEffect(hookedMob, "slowness", 60, iceHoleLv - 1);
+            }
+            if (player.mayBuild()) {
+                AberrantRegistry.placeSingleFrostedIce(level, BlockPos.containing(bobberPos));
+            }
+            level.sendParticles(ParticleTypes.SNOWFLAKE, bobberPos.x, bobberPos.y + 0.4D, bobberPos.z, 10, 0.35D, 0.2D, 0.35D, 0.03D);
+        }
+
+        if (getTransmutedLevel(rod, "gentle_reel") > 0 && hookedMob != null && !(hookedMob instanceof Player)) {
+            hookedMob.resetFallDistance();
+            Vec3 gentle = player.position().add(player.getLookAngle().scale(1.4D));
+            hookedMob.teleportTo(gentle.x, gentle.y + 0.2D, gentle.z);
+        }
+
+        if (getTransmutedLevel(rod, "auto_reel") > 0 || getTransmutedLevel(rod, "abyssal_dredge") > 0) {
+            level.getServer().execute(() -> {
+                for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, AABB.ofSize(bobberPos, 6.0D, 4.0D, 6.0D), Entity::isAlive)) {
+                    ie.setNoPickUpDelay();
+                    ie.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+                }
+            });
+        }
+
+        int netLv = getTransmutedLevel(rod, "whirlwind_hem");
+        if (netLv > 0) {
+            for (LivingEntity nearby : nearbyHostiles(level, player, bobberPos, 2.8D + 0.5D * netLv, null)) {
+                Vec3 yank = player.position().subtract(nearby.position()).normalize().scale(0.65D);
+                nearby.push(yank.x, 0.28D, yank.z);
+                nearby.hurtServer(level, level.damageSources().playerAttack(player), 1.6F + 0.6F * netLv);
+            }
+            level.sendParticles(ParticleTypes.SWEEP_ATTACK, bobberPos.x, bobberPos.y + 0.5D, bobberPos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+
+        if (hookedMob != null) {
+            int crushLv = getTransmutedLevel(rod, "crushing_edge");
+            int mightyLv = getTransmutedLevel(rod, "mighty_bolt");
+            int needleLv = getTransmutedLevel(rod, "armor_needle");
+            float hookDmg = 1.5F * crushLv + 1.2F * mightyLv + 1.3F * needleLv;
+            if (hookDmg > 0.0F) {
+                hookedMob.hurtServer(level, level.damageSources().playerAttack(player), hookDmg);
+            }
+            int holyLv = getTransmutedLevel(rod, "holy_bolt");
+            if (holyLv > 0 && BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(hookedMob.getType()).is(EntityTypeTags.UNDEAD)) {
+                hookedMob.hurtServer(level, level.damageSources().magic(), 2.5F * holyLv);
+            }
+            int arthLv = getTransmutedLevel(rod, "arthropod_bolt");
+            if (arthLv > 0 && BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(hookedMob.getType()).is(EntityTypeTags.ARTHROPOD)) {
+                hookedMob.hurtServer(level, level.damageSources().magic(), 2.5F * arthLv);
+                grantEffect(hookedMob, "slowness", 60, 2);
+            }
+            int sunderLv = getTransmutedLevel(rod, "sunder_plate");
+            if (sunderLv > 0) {
+                if (hookedMob.isBlocking()) hookedMob.stopUsingItem();
+                grantEffect(hookedMob, "weakness", 60, Math.min(1, sunderLv - 1));
+            }
+            int fortuneLv = getTransmutedLevel(rod, "three_dollar_luck");
+            if (fortuneLv > 0 && rng.nextFloat() < 0.35F + 0.12F * fortuneLv) {
+                triggerThreeDollarRoulette(level, player, hookedMob, fortuneLv);
+            }
+            if (getTransmutedLevel(rod, "storm_rod_strike") > 0 && level.isThundering() && level.canSeeSky(hookedMob.blockPosition())) {
+                AberrantRegistry.spawnLightning(level, hookedMob.position());
+            }
+        }
+
+        int gillLv = getTransmutedLevel(rod, "gill_membrane");
+        if (gillLv > 0) {
+            player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 45 * gillLv));
+        }
+        int soulLv = getTransmutedLevel(rod, "soul_excavator");
+        if (soulLv > 0) {
+            grantEffect(player, "speed", 60, Math.min(1, soulLv - 1));
+        }
+        int adrenLv = getTransmutedLevel(rod, "adrenaline_surge");
+        if (adrenLv > 0) {
+            grantEffect(player, "haste", 70, Math.min(1, adrenLv - 1));
+        }
+        int stormGlide = getTransmutedLevel(rod, "storm_glider");
+        if (stormGlide > 0 && player.isInWaterOrRain()) {
+            Vec3 pull = bobberPos.subtract(player.position());
+            if (pull.lengthSqr() > 1.0D) {
+                Vec3 dash = pull.normalize().scale(0.85D + 0.20D * stormGlide);
+                player.push(dash.x, Math.max(0.24D, dash.y * 0.5D), dash.z);
+                player.hurtMarked = true;
+            }
+        }
+        int jetRodLv = getTransmutedLevel(rod, "jetstream_boost");
+        if (jetRodLv > 0 && !player.isUnderWater()) {
+            player.push(0.0D, 0.42D + 0.10D * jetRodLv, 0.0D);
+            player.hurtMarked = true;
+            player.resetFallDistance();
         }
     }
 
@@ -1554,7 +1897,10 @@ public final class CrossDomainTransmutations {
             if (getTransmutedLevel(weapon, "yishui") > 0 && shooter.isInWaterOrRain()) {
                 speedBoost *= 1.30D;
             }
-            int rapidDraw = Math.max(getTransmutedLevel(weapon, "rapid_draw"), getTransmutedLevel(weapon, "swift_draw"));
+            int rapidDraw = Math.max(
+                Math.max(getTransmutedLevel(weapon, "rapid_draw"), getTransmutedLevel(weapon, "swift_draw")),
+                getTransmutedLevel(weapon, "slipstream_wings")
+            );
             if (rapidDraw > 0) {
                 speedBoost *= (1.0D + 0.12D * rapidDraw);
             }
@@ -1570,14 +1916,18 @@ public final class CrossDomainTransmutations {
             int hydroLv = getTransmutedLevel(weapon, "hydro_propulsion");
             if (hydroLv > 0 && shooter.isInWaterOrRain()) {
                 speedBoost *= (1.0D + 0.15D * hydroLv);
-                if (shooter.isShiftKeyDown()) {
-                    Vec3 forward = shooter.getLookAngle().normalize().scale(0.65D + 0.2D * hydroLv);
-                    shooter.push(forward.x, 0.2D, forward.z);
-                    shooter.hurtMarked = true;
-                }
+                Vec3 forward = shooter.getLookAngle().normalize().scale(0.55D + 0.18D * hydroLv);
+                shooter.push(forward.x, 0.18D, forward.z);
+                shooter.hurtMarked = true;
             }
             if (speedBoost != 1.0D) {
                 proj.setDeltaMovement(proj.getDeltaMovement().scale(speedBoost));
+            }
+
+            // 11: Projectile Protection "偏导迎矢" — firing intercepts hostile projectiles approaching shooter!
+            int counterLv = getTransmutedLevel(weapon, "counter_volley");
+            if (counterLv > 0) {
+                deflectNearbyProjectiles(level, shooter, 3.2D + 0.6D * counterLv);
             }
 
             // 38: Lunge on Bow/Crossbow -> "跃射步" agile vault step on shot!
@@ -1592,9 +1942,9 @@ public final class CrossDomainTransmutations {
                 }
             }
 
-            // 18: Knockback/Punch "反冲跳" (Sneak + shoot downward to rocket-jump!)
+            // 18: Knockback/Punch "反冲跳" (Aim downward > 55 deg to rocket-jump directly!)
             int recoilLv = Math.max(getTransmutedLevel(weapon, "recoil_jump"), getTransmutedLevel(weapon, "heavy_impact"));
-            if (recoilLv > 0 && shooter.isShiftKeyDown() && shooter.getXRot() > 50.0F) {
+            if (recoilLv > 0 && shooter.getXRot() > 55.0F) {
                 Vec3 recoil = shooter.getLookAngle().normalize().scale(-0.75D - 0.22D * recoilLv);
                 shooter.setDeltaMovement(shooter.getDeltaMovement().add(recoil.x, Math.max(0.55D, recoil.y), recoil.z));
                 shooter.hurtMarked = true;
@@ -1650,7 +2000,7 @@ public final class CrossDomainTransmutations {
 
     public static void onProjectileImpact(
         ServerLevel level,
-        Projectile proj,
+        @Nullable Projectile proj,
         ServerPlayer shooter,
         ItemStack weapon,
         @Nullable LivingEntity target,
@@ -1658,8 +2008,21 @@ public final class CrossDomainTransmutations {
     ) {
         if (weapon.isEmpty()) return;
         RandomSource rng = level.getRandom();
+        Vec3 flightDir = (proj != null && proj.getDeltaMovement().lengthSqr() > 0.001D)
+            ? proj.getDeltaMovement().normalize()
+            : shooter.getLookAngle().normalize();
 
         if (target != null) {
+            int searLv = getTransmutedLevel(weapon, "searing_bolt");
+            if (searLv > 0) {
+                boolean wasBurning = target.isOnFire();
+                target.igniteForSeconds(3.5F + 2.0F * searLv);
+                if (wasBurning) {
+                    target.hurtServer(level, level.damageSources().magic(), 2.2F + 0.9F * searLv);
+                    level.sendParticles(ParticleTypes.LAVA, hitPos.x, hitPos.y + 0.6D, hitPos.z, 6, 0.25D, 0.25D, 0.25D, 0.04D);
+                }
+                level.sendParticles(ParticleTypes.FLAME, hitPos.x, hitPos.y + 0.6D, hitPos.z, 10, 0.25D, 0.25D, 0.25D, 0.03D);
+            }
             if (getTransmutedLevel(weapon, "yishui") > 0 && shooter.isInWaterOrRain()) {
                 target.hurtServer(level, level.damageSources().magic(), 2.8F);
             }
@@ -1674,7 +2037,7 @@ public final class CrossDomainTransmutations {
             int breechLv = getTransmutedLevel(weapon, "blast_breech");
             if (breechLv > 0) {
                 for (LivingEntity mob : nearbyHostiles(level, shooter, hitPos, 2.4D, null)) {
-                    mob.hurtServer(level, level.damageSources().explosion(shooter, proj), 1.4F + 0.5F * breechLv);
+                    mob.hurtServer(level, level.damageSources().explosion(shooter, proj != null ? proj : shooter), 1.4F + 0.5F * breechLv);
                 }
                 level.sendParticles(ParticleTypes.EXPLOSION, hitPos.x, hitPos.y + 0.4D, hitPos.z, 1, 0.1D, 0.1D, 0.1D, 0.0D);
             }
@@ -1733,7 +2096,7 @@ public final class CrossDomainTransmutations {
             int pierceBow = getTransmutedLevel(weapon, "sun_piercer");
             if (pierceBow > 0) {
                 if (target.isBlocking()) target.stopUsingItem();
-                Vec3 behind = hitPos.add(proj.getDeltaMovement().normalize().scale(2.2D));
+                Vec3 behind = hitPos.add(flightDir.scale(2.2D));
                 for (LivingEntity back : nearbyHostiles(level, shooter, behind, 2.2D, target)) {
                     back.hurtServer(level, level.damageSources().magic(), 2.5F + 0.6F * pierceBow);
                 }
@@ -1755,14 +2118,14 @@ public final class CrossDomainTransmutations {
 
         // 26: Loyalty "回旋收箭"
         int boomLv = getTransmutedLevel(weapon, "boomerang_arrow");
-        if (boomLv > 0 && proj.getType() == EntityType.ARROW && !shooter.getAbilities().instabuild && rng.nextFloat() < (0.30F + 0.18F * boomLv)) {
+        if (boomLv > 0 && proj != null && proj.getType() == EntityType.ARROW && !shooter.getAbilities().instabuild && rng.nextFloat() < (0.30F + 0.18F * boomLv)) {
             shooter.getInventory().placeItemBackInInventory(new ItemStack(Items.ARROW, 1));
             proj.discard();
         }
 
         // 32: Wind Burst "风弹跳矢" (non-destructive Wind Charge jump — disabled underwater!)
         int windArrowLv = getTransmutedLevel(weapon, "wind_charge_arrow");
-        if (windArrowLv > 0 && !proj.isInWater()) {
+        if (windArrowLv > 0 && (proj == null || !proj.isInWater())) {
             for (LivingEntity ent : level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(hitPos, 5.2D, 5.2D, 5.2D), Entity::isAlive)) {
                 Vec3 away = ent.position().add(0.0D, 0.5D, 0.0D).subtract(hitPos);
                 double d = Math.max(0.6D, away.length());
@@ -1951,6 +2314,65 @@ public final class CrossDomainTransmutations {
                 spawnItem(level, player.position(), new ItemStack(stolen, 1));
                 level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.7F, 1.5F);
             }
+
+            // 0.5.0 Complete Armor / Shield / Elytra Cross-Domain Passives
+            int emberLv = getTransmutedLevel(gear, "ember_mantle");
+            if (emberLv > 0) {
+                if (attacker != null && player.distanceToSqr(attacker) < 12.0D) {
+                    attacker.igniteForSeconds(2.5F + 1.5F * emberLv);
+                }
+                if (source.is(DamageTypeTags.IS_FIRE)) {
+                    grantEffect(player, "fire_resistance", 55, 0);
+                }
+            }
+            int rimeLv = getTransmutedLevel(gear, "rime_aegis");
+            if (rimeLv > 0) {
+                if (player.isOnFire()) player.clearFire();
+                if (attacker != null && player.distanceToSqr(attacker) < 12.0D) {
+                    attacker.setTicksFrozen(Math.min(320, attacker.getTicksFrozen() + 70 * rimeLv));
+                    grantEffect(attacker, "slowness", 50, rimeLv - 1);
+                }
+            }
+            int counterLv = getTransmutedLevel(gear, "counter_volley");
+            if (counterLv > 0 && source.is(DamageTypeTags.IS_PROJECTILE) && damageTaken > 0.5F) {
+                player.heal(damageTaken * Math.min(0.45F, 0.14F + 0.06F * counterLv));
+            }
+            int plumeLv = getTransmutedLevel(gear, "updraft_plume");
+            if (plumeLv > 0 && (source.is(DamageTypeTags.IS_FALL) || player.isFallFlying()) && damageTaken > 1.0F) {
+                player.heal(damageTaken * Math.min(0.55F, 0.18F + 0.08F * plumeLv));
+                grantEffect(player, "slow_falling", 50, 0);
+            }
+            int hemLv = getTransmutedLevel(gear, "whirlwind_hem");
+            if (hemLv > 0 && attacker != null && player.distanceToSqr(attacker) < 12.0D) {
+                for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 3.0D, null)) {
+                    mob.hurtServer(level, level.damageSources().thorns(player), 1.0F + 0.7F * hemLv);
+                }
+                level.sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX(), player.getY() + 0.8D, player.getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            }
+            int prismLv = getTransmutedLevel(gear, "refracted_carapace");
+            if (prismLv > 0 && damageTaken >= 1.5F) {
+                int hit = 0;
+                for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 5.0D, null)) {
+                    mob.hurtServer(level, level.damageSources().magic(), 1.8F + 0.7F * prismLv);
+                    level.sendParticles(ParticleTypes.END_ROD, mob.getX(), mob.getY() + 0.9D, mob.getZ(), 6, 0.2D, 0.2D, 0.2D, 0.05D);
+                    if (++hit >= 3) break;
+                }
+            }
+            int needleLv = getTransmutedLevel(gear, "armor_needle");
+            if (needleLv > 0 && attacker != null) {
+                if (attacker.isBlocking()) attacker.stopUsingItem();
+                attacker.hurtServer(level, level.damageSources().magic(), 1.2F + 0.55F * needleLv);
+            }
+            int adrenLv = getTransmutedLevel(gear, "adrenaline_surge");
+            if (adrenLv > 0 && damageTaken >= 1.5F) {
+                ACTIVE_SKILL_COOLDOWN.remove(player.getUUID());
+                grantEffect(player, "haste", 60, Math.min(1, adrenLv - 1));
+                grantEffect(player, "speed", 50, 0);
+            }
+            int sunderLv = getTransmutedLevel(gear, "sunder_plate");
+            if (sunderLv > 0 && attacker != null) {
+                grantEffect(attacker, "weakness", 65, Math.min(1, sunderLv - 1));
+            }
         }
     }
 
@@ -2093,8 +2515,9 @@ public final class CrossDomainTransmutations {
             }
         }
 
-        // 26: Loyalty "虚空归返" emergency player void rescue!
-        if (player.getY() < level.getMinY() - 6 && hasArmorOrShieldTransmute(player, "void_homing")
+        // 26: Loyalty "虚空归返 / 归鸿引线" emergency player void rescue!
+        if (player.getY() < level.getMinY() - 6
+            && (hasArmorOrShieldTransmute(player, "void_homing") || hasArmorOrShieldTransmute(player, "auto_reel"))
             && checkActiveCooldown(player, level.getGameTime(), 1200)) {
             int terrainY = level.getHeight(
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING,
@@ -2105,6 +2528,41 @@ public final class CrossDomainTransmutations {
             player.teleportTo(player.getX(), Math.max(level.getMinY() + 68, terrainY + 4), player.getZ());
             grantEffect(player, "slow_falling", 180, 0);
             level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.9F, 1.1F);
+        }
+
+        // 0.5.0 Aquatic & Elytra Flight Passives
+        if (player.isInWaterOrRain()) {
+            if (hasArmorOrShieldTransmute(player, "tidal_carapace") || hasArmorOrShieldTransmute(player, "gill_membrane")) {
+                player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 25));
+            }
+            if (player.isInWater() && hasArmorOrShieldTransmute(player, "pelagic_stream")) {
+                grantEffect(player, "dolphins_grace", 35, 0);
+            }
+        }
+        if (player.isFallFlying()) {
+            ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
+            int slipLv = getTransmutedLevel(chest, "slipstream_wings");
+            if (slipLv > 0 && player.getXRot() < 8.0F && player.getXRot() > -30.0F) {
+                Vec3 vel = player.getDeltaMovement();
+                if (vel.horizontalDistanceSqr() < 2.2D) {
+                    Vec3 nudge = player.getLookAngle().normalize().scale(0.06D + 0.025D * slipLv);
+                    player.setDeltaMovement(vel.add(nudge.x, 0.015D, nudge.z));
+                    player.hurtMarked = true;
+                }
+            }
+            int stormLv = getTransmutedLevel(chest, "storm_glider");
+            if (stormLv > 0 && player.isInWaterOrRain()) {
+                Vec3 boost = player.getLookAngle().normalize().scale(0.14D + 0.05D * stormLv);
+                player.setDeltaMovement(player.getDeltaMovement().add(boost));
+                player.hurtMarked = true;
+            }
+            int diveEdgeLv = getTransmutedLevel(chest, "crushing_edge");
+            if (diveEdgeLv > 0 && player.getDeltaMovement().lengthSqr() > 0.65D) {
+                for (LivingEntity hit : nearbyHostiles(level, player, player.position(), 2.0D, null)) {
+                    hit.hurtServer(level, level.damageSources().playerAttack(player), 2.5F + 1.2F * diveEdgeLv);
+                    level.sendParticles(ParticleTypes.SWEEP_ATTACK, hit.getX(), hit.getY() + 0.8D, hit.getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
+                }
+            }
         }
 
         // 12: Efficiency "利落" (speed compensation while shielding/eating)
@@ -2368,6 +2826,14 @@ public final class CrossDomainTransmutations {
             || b == Blocks.INFESTED_CRACKED_STONE_BRICKS || b == Blocks.INFESTED_CHISELED_STONE_BRICKS) {
             return Items.STONE_BRICKS;
         }
+        return null;
+    }
+
+    @Nullable
+    private static Item mapRawFishToCooked(Item raw) {
+        if (raw == Items.COD) return Items.COOKED_COD;
+        if (raw == Items.SALMON) return Items.COOKED_SALMON;
+        if (raw == Items.KELP) return Items.DRIED_KELP;
         return null;
     }
 

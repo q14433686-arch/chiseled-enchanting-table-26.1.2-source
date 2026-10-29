@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0] - 2026-10-29
+
+### Gameplay Overhaul — 3D Flying Blades, Full `43 × 15` Cross-Domain Coverage, Native `纂刻附魔台` Cleanse & Curse Purge, Directional Synergy Engine & Rich Inside/Outside-UI Audio-Visuals
+
+- **3D Boomerang Flying Blade Engine (`飞剑掷斧` / `FlyingBladeManager`) & Projectile Launch Snapshot**:
+  - Rebuilt `飞剑掷斧 (returning_blade_throw)` on Swords, Spears, Axes, and Maces into an immediate direct Right-Click active skill (`InteractionResult.SUCCESS` with arm swing + vanilla item cooldown overlay — zero hidden `Shift` requirement) that launches a visible spinning 3D weapon (`Display.ItemDisplay`) outbound and back to the owner's hand, slicing multiple enemies along both legs, preserving `invulnerableTime` around bonus hits, triggering on-hit enchantments/transmutations, and vacuuming nearby item drops & XP orbs back to the player.
+  - Added `ProjectileLaunchWeaponAccess` + `ProjectileImpactFusionMixin#setOwner` snapshot capture so Bow, Crossbow, and Trident projectiles reliably trigger cross-domain and fused launch/impact traits without relying on fragile main-hand state at impact time.
+- **Full `43 × 15` Standalone Cross-Domain Transmutation Coverage (`140` Variants)**:
+  - Removed undocumented `Shift + Right-Click` gates across melee active skills (`激流斩`, `回旋弧`, `虚空踏步`, `乱流升羽`, `喷流推进`) while safely yielding when the offhand holds a usable Shield, Food, Block, or Totem.
+  - Added `TargetRole.ELYTRA` and 25 new cross-domain variants (`炽焰燃矢`, `烈阳烙印`, `余烬火衣`, `沸水炙钩`, `潮汐甲胄`, `深渊打捞`, `凝霜寒甲`, `冰窟寒钓`, `远洋激流`, `鳃膜律动`, `乱流升羽`, `噬魂掘进`, `荆棘鹤嘴`, `反击散射`, `滑流掠影`, `巧手柔纶`, `碎岩重锋`, `旋风衣摆`, `折光棱甲`, `破甲穿针`, `怒涛回气`, `裂甲震壳`, `喷流推进`, `御雷巡翼`, `灵犀自钓`), covering all **43** `26.1.2` enchantments across Swords, Spears, Axes, Maces, Tridents, Bows, Crossbows, Dig Tools, Shields, Armor, **Elytra**, and **Fishing Rods**.
+- **Native Sister-Mod `纂刻附魔台` (`chiseled-enchanting-table`) Cleanse & Curse-Purge Integration**:
+  - Added `FusionMixinConfigPlugin` + 9 optional `@Pseudo` bridge mixins (`CetCleanseIds`, `CetCleanseOperations`, `CetCleanseServerBridge`, `CetCleanseClientBridge`) with zero hard dependency.
+  - **Aberrant Purification (`PURGE_CURSE` / `PURGE_ALL_CURSES`)**: `畸变词条` appear natively as purgeable curses inside `纂刻附魔台` and purify cleanly into pure `[A ▷ B]` binary fusions without destroying the underlying fusion!
+  - **Fused & Transmuted Cleanse (`EXTRACT_ENCHANTMENT_BOOK` / `STRIP_SINGLE_ENCHANTMENT` / `DOWNGRADE_ENCHANTMENT` / `DISENCHANT_ALL`)**: Clean `FUSED_PAIRS` extract onto `融合附魔书` (freeing a `◇` Vessel Slot), `融合附魔书` disenchants back to `minecraft:book`, and `异位化形` supports step-down, book restoration, targeted strip, and full disenchant with smart XP essence refunds and zero mirrored-primary duplication.
+- **Binary Fusion Redesign (`SignaturePairs` + Directional Catalyst × Law `MatrixEffectExecutor`)**:
+  - Eliminated `!hostStack.isDamaged()` dead-zone traps across `starlight_quiver`, `soul_siphon_mend`, `vital_siphon_shot`, `pristine_overcharge`, `spectral_condense`, and `overflow_edge` via dual-state integrity resonance; wired `沧溟飞剑` and `御风剑气` to physical 3D flying sword-qi projectiles; removed the `Shift` gate on `幻影回溯`; and upgraded buff-only signatures with visceral area/plunder/physical mechanics.
+  - Rewrote `MatrixEffectExecutor` into the **Directional Catalyst × Law Synergy Engine** (`primaryTrigger × secondaryPayload × HostForm`), replacing generic short potion fillers with physical cleave shockwaves, gale launches, frost-shatter bursts, lightning arcs, block-echo mining, and durability/vitality mending.
+- **Inside-UI & Outside-UI Pixel-Art Animations, Orbital 3D Rendering, Particles & Harmonic Audio**:
+  - Added 3 pixel-art UI VFX sprites (`vfx_rune_halo.png`, `vfx_arcane_spark.png`, `vfx_shockwave_ring.png`) and `FusionGuiMicroEffects` (rotating pedestal rune halos, converging slot motes, shockwave rings, physics spark bursts, damped ritual micro-shake, Grimoire mastered seals, and discovery glow chimes — zero `.fill(` calls).
+  - Upgraded `EnchantmentFusionTableRenderer` to 4-slot 3D orbital levitation + Ritual Surge vortex (`FusionVisualEventPayload`) and upgraded `EnchantmentFusionTableBlock#animateTick` with state-reactive orbital/aberrant particles and amethyst harmonic audio.
+  - Expanded all **11** locale files to **`781` keys** with 100% key parity.
+
 ## [0.4.1] - 2026-10-29
 
 ### Audit Remediation — Transaction Integrity, Clean Non-Native Isolation, 150 Directional Signatures, Honest Tiered Risk & Unified Terminology

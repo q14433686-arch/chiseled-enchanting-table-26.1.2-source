@@ -47,13 +47,17 @@ public final class MatrixRuntimeHooks {
     private MatrixRuntimeHooks() {}
 
     public static void init() {
-        ServerLifecycleEvents.SERVER_STOPPING.register(AberrantRegistry::flushAllCages);
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            AberrantRegistry.flushAllCages(server);
+            FlyingBladeManager.flushAll();
+        });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             MatrixEffectExecutor.clearCooldowns();
             SignaturePairs.clearRuntimeState();
             AberrantRegistry.clearRuntimeState();
             CrossDomainTransmutations.clearRuntimeState();
+            FlyingBladeManager.flushAll();
             PEAK_FALL_DISTANCE.clear();
         });
 
@@ -63,6 +67,7 @@ public final class MatrixRuntimeHooks {
             PEAK_FALL_DISTANCE.remove(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
+            FlyingBladeManager.onPlayerDisconnect(pid);
             MatrixEffectExecutor.onPlayerDisconnect(pid);
             CompendiumDiscoveryTracker.onPlayerDisconnect(pid);
         });
@@ -128,20 +133,29 @@ public final class MatrixRuntimeHooks {
             return InteractionResult.PASS;
         });
 
-        // Right-Click Item Use (MIX-03: Fishing Rod reel-in signatures fire strictly here on reel!)
+        // Right-Click Item Use (MIX-03: Fishing Rod reel-in signatures + direct 3D Returning Blade / Active Skills!)
         UseItemCallback.EVENT.register((player, world, hand) -> {
-            if (!world.isClientSide()
-                && !player.isSpectator()
-                && world instanceof ServerLevel serverLevel
-                && player instanceof ServerPlayer serverPlayer) {
-                ItemStack held = serverPlayer.getItemInHand(hand);
+            if (player.isSpectator()) {
+                return InteractionResult.PASS;
+            }
+            ItemStack held = player.getItemInHand(hand);
+            if (world.isClientSide()) {
+                if (CrossDomainTransmutations.hasReadyRightClickAbility(player, held)) {
+                    return InteractionResult.SUCCESS;
+                }
+                return InteractionResult.PASS;
+            }
+            if (world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 if (held.getItem() instanceof FishingRodItem && serverPlayer.fishing != null) {
                     FishingHook bobber = serverPlayer.fishing;
                     LivingEntity hookedMob = bobber.getHookedIn() instanceof LivingEntity liv ? liv : null;
                     boolean inWaterReel = bobber.isInWater() && hookedMob == null;
                     SignaturePairs.onFishingReel(serverLevel, serverPlayer, held, hookedMob, inWaterReel);
+                    CrossDomainTransmutations.onFishingReel(serverLevel, serverPlayer, held, hookedMob, bobber.position());
                 }
-                CrossDomainTransmutations.onUseItem(serverLevel, serverPlayer, hand, held);
+                if (CrossDomainTransmutations.onUseItem(serverLevel, serverPlayer, hand, held)) {
+                    return InteractionResult.SUCCESS;
+                }
             }
             return InteractionResult.PASS;
         });
@@ -206,8 +220,9 @@ public final class MatrixRuntimeHooks {
             }
         });
 
-        // Movement / Landing + Frosted Ice Cage Cracking + Gated Projectile Flight Physics (CPL-03)
+        // Movement / Landing + Frosted Ice Cage Cracking + 3D Flying Blades + Gated Projectile Flight Physics (CPL-03)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            FlyingBladeManager.tickServer(server);
             SignaturePairs.tickWorldDots(server);
             AberrantRegistry.tickFrostedCages(server);
             for (ServerLevel world : server.getAllLevels()) {
@@ -229,6 +244,9 @@ public final class MatrixRuntimeHooks {
                         p -> p.isAlive() && p.getOwner() == player && p.tickCount <= 160
                     )) {
                         ItemStack weapon = proj.getWeaponItem();
+                        if ((weapon == null || weapon.isEmpty()) && proj instanceof ProjectileLaunchWeaponAccess acc) {
+                            weapon = acc.ef$getLaunchWeapon();
+                        }
                         if (weapon != null && !weapon.isEmpty() && CrossDomainTransmutations.hasAnyTransmutedEnchants(weapon)) {
                             CrossDomainTransmutations.onProjectileTick(serverLevel, proj, player, weapon);
                         }

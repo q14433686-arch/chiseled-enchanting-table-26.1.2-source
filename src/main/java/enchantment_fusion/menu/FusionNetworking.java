@@ -232,6 +232,27 @@ public final class FusionNetworking {
         }
     }
 
+    public static final int VISUAL_FUSE_SUCCESS = 1;
+    public static final int VISUAL_FUSE_ABERRANT = 2;
+    public static final int VISUAL_FUSE_FAIL = 3;
+    public static final int VISUAL_FLIP_ORDER = 4;
+    public static final int VISUAL_SPLIT_EXTRACT = 5;
+
+    public record FusionVisualEventPayload(BlockPos blockPos, int eventKind) implements CustomPacketPayload {
+        public static final Type<FusionVisualEventPayload> TYPE =
+            new Type<>(EnchantmentFusion.id("visual_event"));
+        public static final StreamCodec<ByteBuf, FusionVisualEventPayload> STREAM_CODEC = StreamCodec.composite(
+            BlockPos.STREAM_CODEC, FusionVisualEventPayload::blockPos,
+            ByteBufCodecs.VAR_INT, FusionVisualEventPayload::eventKind,
+            FusionVisualEventPayload::new
+        );
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     private static final Map<UUID, long[]> ACTION_RATE_GUARD = new ConcurrentHashMap<>();
 
     private FusionNetworking() {}
@@ -242,6 +263,7 @@ public final class FusionNetworking {
         PayloadTypeRegistry.clientboundPlay().register(CompendiumDeltaPayload.TYPE, CompendiumDeltaPayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MatrixSyncPayload.TYPE, MatrixSyncPayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(OpenGrimoirePayload.TYPE, OpenGrimoirePayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(FusionVisualEventPayload.TYPE, FusionVisualEventPayload.STREAM_CODEC);
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ACTION_RATE_GUARD.remove(handler.getPlayer().getUUID());
@@ -317,6 +339,24 @@ public final class FusionNetworking {
     public static void sendOpenGrimoire(ServerPlayer player, int initialChapter) {
         if (ServerPlayNetworking.canSend(player, OpenGrimoirePayload.TYPE)) {
             ServerPlayNetworking.send(player, new OpenGrimoirePayload(initialChapter));
+        }
+    }
+
+    public static void broadcastVisualEvent(
+        net.minecraft.server.level.ServerLevel level,
+        BlockPos pos,
+        int eventKind
+    ) {
+        if (level == null || pos == null) {
+            return;
+        }
+        FusionVisualEventPayload payload = new FusionVisualEventPayload(pos, eventKind);
+        double maxDistSqr = 48.0D * 48.0D;
+        for (ServerPlayer sp : level.players()) {
+            if (sp.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= maxDistSqr
+                && ServerPlayNetworking.canSend(sp, FusionVisualEventPayload.TYPE)) {
+                ServerPlayNetworking.send(sp, payload);
+            }
         }
     }
 }

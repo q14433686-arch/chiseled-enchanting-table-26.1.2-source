@@ -556,8 +556,16 @@ public final class SignaturePairs {
             return true;
         }
         if ("blood_pact_curse".equals(sigId)) {
-            grantEffect(player, "absorption", 120, 0);
-            grantEffect(player, "resistance", 60, 0);
+            grantEffect(player, "absorption", 140, 0);
+            grantEffect(player, "resistance", 80, 0);
+            for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.8D, null)) {
+                mob.hurtServer(level, level.damageSources().magic(), 2.2F + 0.5F * sLv);
+                Vec3 drain = player.position().subtract(mob.position()).normalize().scale(0.35D);
+                mob.push(drain.x, 0.15D, drain.z);
+            }
+            player.heal(1.2F);
+            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, player.getX(), player.getY() + 0.9D, player.getZ(), 14, 0.4D, 0.3D, 0.4D, 0.04D);
+            level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.7F, 0.75F);
             return true;
         }
         if ("spirit_grapnel".equals(sigId)) {
@@ -765,37 +773,69 @@ public final class SignaturePairs {
                 return true;
             }
             case "bounty_jackpot" -> {
-                if (rng.nextFloat() < 0.18F + 0.05F * pLv) {
-                    Item jackpot = switch (rng.nextInt(3)) {
+                if (target != null) {
+                    target.hurtServer(level, level.damageSources().magic(), 1.6F + 0.45F * pLv);
+                }
+                if (rng.nextFloat() < 0.28F + 0.06F * pLv) {
+                    Item jackpot = switch (rng.nextInt(4)) {
                         case 0 -> Items.EMERALD;
                         case 1 -> Items.LAPIS_LAZULI;
+                        case 2 -> Items.AMETHYST_SHARD;
                         default -> Items.GOLD_NUGGET;
                     };
                     spawnItem(level, pos, new ItemStack(jackpot, 1));
-                    ExperienceOrb.award(level, pos, 2);
+                    ExperienceOrb.award(level, pos, 2 + sLv);
+                    level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.85F, 1.55F);
                 }
+                level.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.x, pos.y + 0.8D, pos.z, 8, 0.3D, 0.3D, 0.3D, 0.04D);
                 return true;
             }
             case "searing_feast", "alchemic_pyre", "concussive_plunder", "legion_plunder", "midas_cleave" -> {
-                if (target != null && ("searing_feast".equals(sigId) || "alchemic_pyre".equals(sigId))) {
-                    target.igniteForSeconds(5.0F);
+                if (target != null) {
+                    if ("searing_feast".equals(sigId) || "alchemic_pyre".equals(sigId)) {
+                        target.igniteForSeconds(5.0F);
+                        target.hurtServer(level, level.damageSources().magic(), 2.2F + 0.5F * pLv);
+                    } else if ("concussive_plunder".equals(sigId)) {
+                        Vec3 knock = target.position().subtract(player.position()).normalize().scale(0.85D);
+                        target.push(knock.x, 0.32D, knock.z);
+                        target.hurtServer(level, level.damageSources().playerAttack(player), 2.0F + 0.5F * pLv);
+                    } else {
+                        for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.2D, null)) {
+                            mob.hurtServer(level, level.damageSources().playerAttack(player), 1.8F + 0.45F * pLv);
+                        }
+                    }
                 }
-                if (rng.nextFloat() < 0.24F) {
+                if (rng.nextFloat() < 0.30F) {
                     Item bonus = switch (sigId) {
                         case "alchemic_pyre" -> rng.nextBoolean() ? Items.GOLD_NUGGET : Items.BLAZE_POWDER;
                         case "midas_cleave" -> rng.nextBoolean() ? Items.EMERALD : Items.AMETHYST_SHARD;
                         default -> Items.GOLD_NUGGET;
                     };
                     spawnItem(level, pos, new ItemStack(bonus, 1));
+                    ExperienceOrb.award(level, pos, 1 + sLv);
                 }
+                level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.7D, pos.z, 10, 0.3D, 0.25D, 0.3D, 0.06D);
                 return true;
             }
 
             // --- Batch 4 & 5: Ranged / Trident / Mace ---
             case "starlight_quiver", "soul_siphon_mend" -> {
-                if (target != null && hostStack.isDamaged() && fullChargeMelee) {
-                    hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 2));
-                    level.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 1.0D, player.getZ(), 8, 0.3D, 0.3D, 0.3D, 0.05D);
+                if (target != null) {
+                    if (hostStack.isDamaged()) {
+                        hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - (2 + sLv)));
+                    }
+                    // Excess starlight / soul energy ALWAYS discharges into combat damage & vitality!
+                    float integrity = hostStack.isDamageableItem()
+                        ? (1.0F - (float) hostStack.getDamageValue() / (float) Math.max(1, hostStack.getMaxDamage()))
+                        : 1.0F;
+                    float arcDmg = 2.0F + 0.55F * pLv + 1.4F * integrity;
+                    target.hurtServer(level, level.damageSources().magic(), arcDmg);
+                    if ("soul_siphon_mend".equals(sigId)) {
+                        player.heal(0.8F + 0.35F * sLv);
+                        level.sendParticles(ParticleTypes.SOUL, pos.x, pos.y + 0.8D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.04D);
+                    } else {
+                        level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.8D, pos.z, 10, 0.3D, 0.3D, 0.3D, 0.06D);
+                    }
                 }
                 return true;
             }
@@ -803,21 +843,24 @@ public final class SignaturePairs {
                 if (target != null) {
                     if (hostStack.isDamaged()) {
                         hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 2));
-                    } else {
-                        player.heal(1.0F + 0.3F * pLv);
                     }
-                    level.sendParticles(ParticleTypes.HEART, player.getX(), player.getY() + 1.1D, player.getZ(), 2, 0.2D, 0.2D, 0.2D, 0.02D);
+                    player.heal(1.2F + 0.35F * pLv);
+                    target.hurtServer(level, level.damageSources().magic(), 1.8F + 0.4F * sLv);
+                    level.sendParticles(ParticleTypes.HEART, player.getX(), player.getY() + 1.1D, player.getZ(), 3, 0.2D, 0.2D, 0.2D, 0.02D);
                 }
                 return true;
             }
             case "pristine_overcharge" -> {
                 if (target != null) {
-                    boolean pristine = !hostStack.isDamageableItem()
-                        || hostStack.getDamageValue() <= hostStack.getMaxDamage() / 10;
-                    if (pristine) {
-                        target.hurtServer(level, level.damageSources().magic(), 2.8F + 0.65F * sLv);
-                        level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.8D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.08D);
+                    float integrity = hostStack.isDamageableItem()
+                        ? (1.0F - (float) hostStack.getDamageValue() / (float) Math.max(1, hostStack.getMaxDamage()))
+                        : 1.0F;
+                    float bonus = 1.8F + 0.55F * sLv + 1.8F * integrity;
+                    target.hurtServer(level, level.damageSources().magic(), bonus);
+                    if (hostStack.isDamaged() && rng.nextFloat() < 0.45F) {
+                        hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 1));
                     }
+                    level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.8D, pos.z, 12, 0.25D, 0.25D, 0.25D, 0.08D);
                 }
                 return true;
             }
@@ -830,7 +873,16 @@ public final class SignaturePairs {
                 return true;
             }
             case "spectral_condense" -> {
-                if (!hostStack.isDamaged() && rng.nextFloat() < 0.22F) {
+                if (hostStack.isDamaged()) {
+                    hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 1));
+                }
+                if (target != null) {
+                    boolean marked = target.isCurrentlyGlowing();
+                    grantEffect(target, "glowing", 120, 0);
+                    target.hurtServer(level, level.damageSources().magic(), (marked ? 3.4F : 2.0F) + 0.5F * pLv);
+                    level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.9D, pos.z, 10, 0.25D, 0.3D, 0.25D, 0.05D);
+                }
+                if (rng.nextFloat() < 0.32F) {
                     player.getInventory().placeItemBackInInventory(new ItemStack(Items.SPECTRAL_ARROW, 1));
                 }
                 return true;
@@ -891,15 +943,24 @@ public final class SignaturePairs {
             }
             case "hydro_flying_sword", "flying_sword_qi" -> {
                 if (fullChargeMelee) {
+                    boolean hydro = "hydro_flying_sword".equals(sigId);
+                    FlyingBladeManager.launchLinearPhantomWeapon(
+                        level,
+                        player,
+                        net.minecraft.world.InteractionHand.MAIN_HAND,
+                        hostStack,
+                        Math.max(pLv, sLv),
+                        hydro ? FlyingBladeManager.FlightStyle.HYDRO_SWORD_QI : FlyingBladeManager.FlightStyle.PHANTOM_LANCE
+                    );
                     Vec3 look = player.getLookAngle().normalize();
                     for (int step = 2; step <= 6; step++) {
                         Vec3 p = player.getEyePosition().add(look.scale(step));
                         level.sendParticles(
-                            "hydro_flying_sword".equals(sigId) ? ParticleTypes.SPLASH : ParticleTypes.SWEEP_ATTACK,
+                            hydro ? ParticleTypes.SPLASH : ParticleTypes.SWEEP_ATTACK,
                             p.x, p.y, p.z, 3, 0.15D, 0.15D, 0.15D, 0.02D
                         );
-                        for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(p, 1.8D, 1.8D, 1.8D), e -> e != player && e.isAlive())) {
-                            mob.hurtServer(level, level.damageSources().playerAttack(player), 3.0F + 0.6F * pLv);
+                        for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class, AABB.ofSize(p, 1.8D, 1.8D, 1.8D), e -> e != player && e.isAlive() && !e.isAlliedTo(player))) {
+                            mob.hurtServer(level, level.damageSources().playerAttack(player), 2.6F + 0.55F * pLv);
                         }
                     }
                 }
@@ -909,14 +970,23 @@ public final class SignaturePairs {
                 long now = level.getGameTime();
                 Long exp = RIPTIDE_ANCHOR_EXPIRY.get(player.getUUID());
                 Vec3 anchor = RIPTIDE_ANCHORS.get(player.getUUID());
-                if (anchor != null && exp != null && now <= exp && player.isShiftKeyDown()) {
+                if (anchor != null && exp != null && now <= exp) {
                     RIPTIDE_ANCHORS.remove(player.getUUID());
                     RIPTIDE_ANCHOR_EXPIRY.remove(player.getUUID());
-                    player.teleportTo(anchor.x, anchor.y, anchor.z);
-                    level.sendParticles(ParticleTypes.SPLASH, anchor.x, anchor.y + 0.8D, anchor.z, 20, 0.3D, 0.4D, 0.3D, 0.08D);
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.0D, null)) {
+                        mob.hurtServer(level, level.damageSources().magic(), 3.2F + 0.6F * pLv);
+                        Vec3 snap = anchor.subtract(mob.position()).scale(0.35D);
+                        mob.push(snap.x, 0.25D, snap.z);
+                    }
+                    if (player.isShiftKeyDown()) {
+                        player.teleportTo(anchor.x, anchor.y, anchor.z);
+                    }
+                    level.sendParticles(ParticleTypes.SPLASH, anchor.x, anchor.y + 0.8D, anchor.z, 22, 0.35D, 0.4D, 0.35D, 0.08D);
+                    level.playSound(null, BlockPos.containing(pos), SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.85F, 1.35F);
                 } else {
                     RIPTIDE_ANCHORS.put(player.getUUID(), player.position());
-                    RIPTIDE_ANCHOR_EXPIRY.put(player.getUUID(), now + 60L);
+                    RIPTIDE_ANCHOR_EXPIRY.put(player.getUUID(), now + 80L);
+                    level.sendParticles(ParticleTypes.BUBBLE_POP, player.getX(), player.getY() + 0.6D, player.getZ(), 12, 0.3D, 0.3D, 0.3D, 0.04D);
                 }
                 return true;
             }
@@ -1054,12 +1124,20 @@ public final class SignaturePairs {
                 return true;
             }
             case "arrow_stride" -> {
-                grantEffect(player, "speed", 70, 1);
+                grantEffect(player, "speed", 90, 1);
+                Vec3 lateral = new Vec3(-player.getLookAngle().z, 0.16D, player.getLookAngle().x).normalize().scale(0.55D);
+                player.push(lateral.x, 0.14D, lateral.z);
+                player.hurtMarked = true;
+                level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.3D, player.getZ(), 10, 0.3D, 0.15D, 0.3D, 0.05D);
                 return true;
             }
             case "shakedown_thorns" -> {
-                if (target != null && rng.nextFloat() < 0.22F) {
-                    spawnItem(level, player.position(), new ItemStack(rng.nextBoolean() ? Items.GOLD_NUGGET : Items.EMERALD, 1));
+                if (target != null) {
+                    target.hurtServer(level, level.damageSources().thorns(player), 1.8F + 0.45F * pLv);
+                    if (rng.nextFloat() < 0.32F) {
+                        spawnItem(level, player.position(), new ItemStack(rng.nextBoolean() ? Items.GOLD_NUGGET : Items.EMERALD, 1));
+                        level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.75F, 1.55F);
+                    }
                 }
                 return true;
             }
@@ -1218,8 +1296,11 @@ public final class SignaturePairs {
             }
             case "soul_steal_haste" -> {
                 if (target != null) {
-                    grantEffect(target, "slowness", 60, 1);
-                    grantEffect(player, "speed", 70, 1);
+                    target.hurtServer(level, level.damageSources().magic(), 2.0F + 0.45F * pLv);
+                    grantEffect(target, "slowness", 70, 1);
+                    grantEffect(player, "speed", 90, 1);
+                    grantEffect(player, "haste", 90, 0);
+                    level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, pos.x, pos.y + 0.7D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.04D);
                 }
                 return true;
             }
@@ -1238,8 +1319,20 @@ public final class SignaturePairs {
                 return true;
             }
             case "overflow_edge" -> {
-                if (!hostStack.isDamaged() && target != null) {
-                    target.hurtServer(level, level.damageSources().magic(), 2.5F + 0.5F * sLv);
+                if (hostStack.isDamaged()) {
+                    hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 2));
+                }
+                if (target != null) {
+                    float integrity = hostStack.isDamageableItem()
+                        ? (1.0F - (float) hostStack.getDamageValue() / (float) Math.max(1, hostStack.getMaxDamage()))
+                        : 1.0F;
+                    float arcDmg = 2.0F + 0.55F * sLv + 1.5F * integrity;
+                    target.hurtServer(level, level.damageSources().magic(), arcDmg);
+                    for (LivingEntity extra : nearbyHostiles(level, player, pos, 3.0D, target)) {
+                        extra.hurtServer(level, level.damageSources().magic(), 1.6F + 0.35F * sLv);
+                    }
+                    level.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.x, pos.y + 0.8D, pos.z, 8, 0.3D, 0.3D, 0.3D, 0.05D);
+                    level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.8D, pos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
                 }
                 return true;
             }

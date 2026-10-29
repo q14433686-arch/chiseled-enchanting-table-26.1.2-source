@@ -35,6 +35,8 @@ public final class EnchantmentFusionTableBlockEntity extends BlockEntity impleme
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private @Nullable Component customName;
     public int animTicks;
+    public int surgeTicks;
+    public int surgeKind;
 
     public EnchantmentFusionTableBlockEntity(BlockPos pos, BlockState state) {
         super(FusionBlockEntities.ENCHANTMENT_FUSION_TABLE_BE, pos, state);
@@ -42,6 +44,40 @@ public final class EnchantmentFusionTableBlockEntity extends BlockEntity impleme
 
     public static void clientTick(Level level, BlockPos pos, BlockState state, EnchantmentFusionTableBlockEntity be) {
         be.animTicks++;
+        if (be.surgeTicks > 0) {
+            be.surgeTicks--;
+        }
+    }
+
+    public void triggerClientSurge(int kind) {
+        this.surgeKind = kind;
+        this.surgeTicks = (kind == 2) ? 36 : 28;
+    }
+
+    public int occupiedSlotCount() {
+        int count = 0;
+        for (ItemStack stack : items) {
+            if (!stack.isEmpty()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public boolean hasAberrantItem() {
+        for (ItemStack stack : items) {
+            if (stack.isEmpty()) continue;
+            var fused = stack.getOrDefault(
+                enchantment_fusion.registry.FusionDataComponents.FUSED_PAIRS,
+                enchantment_fusion.model.FusedEnchantmentList.EMPTY
+            );
+            for (var p : fused.pairs()) {
+                if (p.isAberrant()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public ItemStack displayStack() {

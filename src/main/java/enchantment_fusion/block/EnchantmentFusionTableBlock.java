@@ -139,11 +139,91 @@ public final class EnchantmentFusionTableBlock extends BaseEntityBlock {
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        if (random.nextInt(4) == 0) {
-            double x = pos.getX() + 0.5D + (random.nextDouble() - 0.5D) * 0.6D;
-            double y = pos.getY() + 1.02D;
-            double z = pos.getZ() + 0.5D + (random.nextDouble() - 0.5D) * 0.6D;
-            level.addParticle(ParticleTypes.ENCHANT, x, y, z, 0.0D, 0.05D, 0.0D);
+        int occupied = 0;
+        boolean aberrant = false;
+        boolean surging = false;
+        if (level.getBlockEntity(pos) instanceof EnchantmentFusionTableBlockEntity be) {
+            occupied = be.occupiedSlotCount();
+            aberrant = be.hasAberrantItem();
+            surging = be.surgeTicks > 0;
+        }
+
+        double cx = pos.getX() + 0.5D;
+        double cy = pos.getY() + 1.04D;
+        double cz = pos.getZ() + 0.5D;
+
+        if (occupied == 0 && !surging) {
+            if (random.nextInt(4) == 0) {
+                double x = cx + (random.nextDouble() - 0.5D) * 0.62D;
+                double z = cz + (random.nextDouble() - 0.5D) * 0.62D;
+                level.addParticle(ParticleTypes.ENCHANT, x, cy, z, 0.0D, 0.05D, 0.0D);
+            }
+            return;
+        }
+
+        // Orbital arcane motes scaled to loaded items
+        int moteRolls = surging ? 4 : Math.min(3, occupied);
+        for (int i = 0; i < moteRolls; i++) {
+            double angle = random.nextDouble() * Math.PI * 2.0D;
+            double radius = 0.28D + random.nextDouble() * 0.26D;
+            double px = cx + Math.cos(angle) * radius;
+            double pz = cz + Math.sin(angle) * radius;
+            double py = pos.getY() + 0.86D + random.nextDouble() * 0.36D;
+            level.addParticle(
+                ParticleTypes.ENCHANT,
+                cx, cy + 0.18D, cz,
+                (px - cx) * 1.4D, -0.08D, (pz - cz) * 1.4D
+            );
+        }
+
+        if (aberrant) {
+            if (random.nextInt(2) == 0) {
+                double x = cx + (random.nextDouble() - 0.5D) * 0.52D;
+                double z = cz + (random.nextDouble() - 0.5D) * 0.52D;
+                level.addParticle(ParticleTypes.WITCH, x, cy, z, 0.0D, 0.04D, 0.0D);
+            }
+            if (random.nextInt(4) == 0) {
+                level.addParticle(
+                    ParticleTypes.SOUL_FIRE_FLAME,
+                    cx + (random.nextDouble() - 0.5D) * 0.40D,
+                    cy - 0.05D,
+                    cz + (random.nextDouble() - 0.5D) * 0.40D,
+                    0.0D, 0.025D, 0.0D
+                );
+            }
+        } else if (occupied >= 2 || surging) {
+            if (random.nextInt(2) == 0) {
+                double angle = random.nextDouble() * Math.PI * 2.0D;
+                double r = 0.36D;
+                level.addParticle(
+                    ParticleTypes.END_ROD,
+                    cx + Math.cos(angle) * r,
+                    cy + 0.05D,
+                    cz + Math.sin(angle) * r,
+                    -Math.sin(angle) * 0.02D,
+                    0.02D,
+                    Math.cos(angle) * 0.02D
+                );
+            }
+            if (random.nextInt(32) == 0) {
+                level.playLocalSound(
+                    cx, cy, cz,
+                    net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_RESONATE,
+                    net.minecraft.sounds.SoundSource.BLOCKS,
+                    0.22F,
+                    0.95F + random.nextFloat() * 0.25F,
+                    false
+                );
+            }
+        } else if (random.nextInt(42) == 0) {
+            level.playLocalSound(
+                cx, cy, cz,
+                net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,
+                net.minecraft.sounds.SoundSource.BLOCKS,
+                0.20F,
+                1.10F + random.nextFloat() * 0.25F,
+                false
+            );
         }
     }
 }

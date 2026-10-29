@@ -63,6 +63,11 @@ public final class FusionGuiSkin {
     public static final Identifier SOCKET_FILLED = EnchantmentFusion.id("textures/gui/socket_card_filled.png");
     public static final Identifier SOCKET_ABERRANT = EnchantmentFusion.id("textures/gui/socket_card_aberrant.png");
 
+    // 0.5.0 Pixel-Art UI Micro-Effect Sprites
+    public static final Identifier VFX_RUNE_HALO = EnchantmentFusion.id("textures/gui/vfx_rune_halo.png");
+    public static final Identifier VFX_ARCANE_SPARK = EnchantmentFusion.id("textures/gui/vfx_arcane_spark.png");
+    public static final Identifier VFX_SHOCKWAVE_RING = EnchantmentFusion.id("textures/gui/vfx_shockwave_ring.png");
+
     public static final int COLOR_GOLD = 0xFFFFDF88;
     public static final int COLOR_CREAM = 0xFFF6EFE2;
     public static final int COLOR_CYAN = 0xFF7CF0FF;
