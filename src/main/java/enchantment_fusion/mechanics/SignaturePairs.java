@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -25,6 +26,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -34,6 +36,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -96,7 +99,14 @@ public final class SignaturePairs {
     private static final Map<UUID, Long> LOYAL_LIFELINE_COOLDOWN = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> SOUL_FIRE_TICKS = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> SKYFIRE_BOLT_TICKS = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> PERSISTENCE_STACKS = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> FORGED_QUILL_STACKS = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> TEMPERED_STEEL_STACKS = new ConcurrentHashMap<>();
+    private static final Map<UUID, KiteSnapback> KITE_SNAPBACK_MAP = new ConcurrentHashMap<>();
+    private static final Set<UUID> PLUCKED_LIVING_MOBS = java.util.Collections.newSetFromMap(new ConcurrentHashMap<>());
     private static final ThreadLocal<Boolean> IN_SIGNATURE_MINING = ThreadLocal.withInitial(() -> Boolean.FALSE);
+
+    private record KiteSnapback(UUID ownerId, net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension, Vec3 anchorPos, long triggerTick) {}
 
     static {
         // === Batch 1: Damage Trio (Sharpness x Smite x Bane of Arthropods) ===
@@ -274,6 +284,32 @@ public final class SignaturePairs {
         reg("tidal_harpoon_rush", "minecraft:lunge", "minecraft:riptide");
         reg("surge_skewer", "minecraft:riptide", "minecraft:lunge");
 
+        // === Batch 17: Emergent Wordplay & Trajectory Path-Cache Signatures (衍生语义共鸣) ===
+        reg("boomerang_lance", "minecraft:lunge", "minecraft:loyalty");
+        reg("shadow_recall_lunge", "minecraft:loyalty", "minecraft:lunge");
+        reg("hundred_step_skewer", "minecraft:lunge", "minecraft:piercing");
+        reg("armor_seam_rush", "minecraft:piercing", "minecraft:lunge");
+        reg("thunderbolt_cavalry", "minecraft:lunge", "minecraft:channeling");
+        reg("lightning_step_spear", "minecraft:channeling", "minecraft:lunge");
+        reg("kite_string_gale", "minecraft:wind_burst", "minecraft:loyalty");
+        reg("tailwind_return", "minecraft:loyalty", "minecraft:wind_burst");
+        reg("glazed_kiln_edge", "minecraft:fire_aspect", "minecraft:silk_touch");
+        reg("amber_embalm", "minecraft:silk_touch", "minecraft:fire_aspect");
+        reg("true_gold_refinery", "minecraft:fortune", "minecraft:fire_aspect");
+        reg("cinder_jackpot", "minecraft:fire_aspect", "minecraft:fortune");
+        reg("bitter_medicine_carapace", "minecraft:thorns", "minecraft:mending");
+        reg("forged_retaliation", "minecraft:mending", "minecraft:thorns");
+        reg("threading_needle", "minecraft:quick_charge", "minecraft:piercing");
+        reg("bamboo_split_momentum", "minecraft:piercing", "minecraft:quick_charge");
+        reg("moth_to_flame", "minecraft:lure", "minecraft:fire_aspect");
+        reg("beacon_bonfire", "minecraft:fire_aspect", "minecraft:lure");
+        reg("quench_temper_blade", "minecraft:aqua_affinity", "minecraft:fire_aspect");
+        reg("geyser_bore", "minecraft:fire_aspect", "minecraft:aqua_affinity");
+        reg("mirror_moon_sweep", "minecraft:sweeping_edge", "minecraft:silk_touch");
+        reg("paper_thin_cleave", "minecraft:silk_touch", "minecraft:sweeping_edge");
+        reg("tempered_anvil_heart", "minecraft:density", "minecraft:mending");
+        reg("heavy_xp_meteor", "minecraft:mending", "minecraft:density");
+
         // === Wildcard Secondary Rules ([X ▷ lure], [X ▷ binding_curse], [X ▷ vanishing_curse]) ===
         reg("spirit_grapnel", "*", "minecraft:lure");
         reg("blood_pact_curse", "*", "minecraft:binding_curse");
@@ -382,6 +418,10 @@ public final class SignaturePairs {
         LUCKY_GOLDEN_COOLDOWN.remove(playerId);
         PORCELAIN_BASTION_COOLDOWN.remove(playerId);
         LOYAL_LIFELINE_COOLDOWN.remove(playerId);
+        PERSISTENCE_STACKS.remove(playerId);
+        FORGED_QUILL_STACKS.remove(playerId);
+        TEMPERED_STEEL_STACKS.remove(playerId);
+        KITE_SNAPBACK_MAP.entrySet().removeIf(e -> playerId.equals(e.getValue().ownerId()));
     }
 
     public static void clearRuntimeState() {
@@ -398,6 +438,11 @@ public final class SignaturePairs {
         LOYAL_LIFELINE_COOLDOWN.clear();
         SOUL_FIRE_TICKS.clear();
         SKYFIRE_BOLT_TICKS.clear();
+        PERSISTENCE_STACKS.clear();
+        FORGED_QUILL_STACKS.clear();
+        TEMPERED_STEEL_STACKS.clear();
+        KITE_SNAPBACK_MAP.clear();
+        PLUCKED_LIVING_MOBS.clear();
     }
 
     public static void onFishingReel(
@@ -749,27 +794,75 @@ public final class SignaturePairs {
                 return true;
             }
             case "trophy_shockwave" -> {
-                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.8D, null)) {
-                    Vec3 push = mob.position().subtract(player.position()).normalize().scale(0.75D + 0.15D * sLv);
-                    mob.push(push.x, 0.28D, push.z);
-                }
-                if (rng.nextFloat() < 0.20F + 0.05F * pLv) {
-                    spawnItem(level, pos, new ItemStack(Items.GOLD_NUGGET, 1 + rng.nextInt(2)));
+                // [抢夺 ▷ 击退] 怀璧其罪：敌躯护甲与生命越丰厚，震飞力度越猛，沿缓存轨迹撞翻后方敌群并爆散买路财！
+                if (target != null) {
+                    double wealthMass = 1.0D + Math.min(1.3D, target.getArmorValue() * 0.05D + target.getMaxHealth() * 0.015D);
+                    Vec3 dir = target.position().subtract(player.position()).normalize();
+                    target.push(dir.x * (0.85D + 0.20D * sLv) * wealthMass, 0.34D, dir.z * (0.85D + 0.20D * sLv) * wealthMass);
+                    Vec3 bowlingEnd = pos.add(dir.scale(3.6D));
+                    int bowled = 0;
+                    for (LivingEntity behind : ProjectilePathTracker.querySweptSegmentHostiles(level, player, pos, bowlingEnd, 1.45D)) {
+                        if (behind == target) continue;
+                        behind.hurtServer(level, level.damageSources().playerAttack(player), 2.6F + 0.65F * pLv);
+                        behind.push(dir.x * 0.55D, 0.24D, dir.z * 0.55D);
+                        bowled++;
+                    }
+                    if (bowled > 0 || rng.nextFloat() < 0.25F + 0.06F * pLv) {
+                        spawnItem(level, pos, new ItemStack(bowled > 0 ? Items.EMERALD : Items.GOLD_NUGGET, 1 + Math.min(2, bowled)));
+                    }
                 }
                 return true;
             }
             case "reaping_gale" -> {
+                // [横扫之刃 ▷ 抢夺] 秋风扫叶：剑风如秋风席卷落叶，瞬间将8格内散落战利品与经验球卷入囊中，并斩杀残血杂兵！
                 if (fullChargeMelee) {
-                    int hits = 0;
-                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.6D, target)) {
-                        mob.hurtServer(level, level.damageSources().playerAttack(player), 1.8F + 0.5F * pLv);
-                        if (++hits >= 3) break;
+                    AABB vacuumBox = AABB.ofSize(player.position(), 15.0D, 6.0D, 15.0D);
+                    for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, vacuumBox, Entity::isAlive)) {
+                        item.setNoPickUpDelay();
+                        item.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
                     }
-                    grantEffect(player, "luck", 100, 0);
-                    if (rng.nextFloat() < 0.28F) {
-                        ExperienceOrb.award(level, pos, 1 + sLv);
+                    for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, vacuumBox, Entity::isAlive)) {
+                        orb.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+                    }
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.0D, null)) {
+                        float dmg = (mob.getHealth() <= mob.getMaxHealth() * 0.18F) ? (mob.getHealth() + 6.0F) : (2.0F + 0.5F * pLv);
+                        mob.hurtServer(level, level.damageSources().playerAttack(player), dmg);
+                    }
+                    level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.7D, pos.z, 3, 0.5D, 0.15D, 0.5D, 0.0D);
+                }
+                return true;
+            }
+            case "concussive_plunder" -> {
+                // [击退 ▷ 抢夺] 顺手牵羊：猛推震退敌寇的同时卸其防备（虚弱+迟缓），并逆向扯出一枚战利品与经验球飞入掌心！
+                if (target != null) {
+                    Vec3 knock = target.position().subtract(player.position()).normalize().scale(0.88D + 0.18D * pLv);
+                    target.push(knock.x, 0.30D, knock.z);
+                    grantEffect(target, "weakness", 80, 0);
+                    grantEffect(target, "slowness", 60, 0);
+                    target.hurtServer(level, level.damageSources().playerAttack(player), 2.1F + 0.5F * sLv);
+                    if (rng.nextFloat() < 0.34F) {
+                        ItemStack snatched = new ItemStack(rng.nextFloat() < 0.25F ? Items.EMERALD : Items.GOLD_NUGGET, 1);
+                        player.getInventory().placeItemBackInInventory(snatched);
+                        ExperienceOrb.award(level, player.position(), 1 + sLv);
                     }
                 }
+                return true;
+            }
+            case "legion_plunder" -> {
+                // [抢夺 ▷ 横扫之刃] 雁过拔毛：即便敌人未死，横扫擦身亦能从活体敌群身上薅下一份皮毛骨金（每只怪物限薅一次）！
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.6D, null)) {
+                    mob.hurtServer(level, level.damageSources().playerAttack(player), 1.8F + 0.45F * pLv);
+                    if (PLUCKED_LIVING_MOBS.add(mob.getUUID()) && rng.nextFloat() < 0.48F) {
+                        Item plucked = switch (rng.nextInt(4)) {
+                            case 0 -> Items.FEATHER;
+                            case 1 -> Items.LEATHER;
+                            case 2 -> Items.BONE;
+                            default -> Items.GOLD_NUGGET;
+                        };
+                        spawnItem(level, mob.position(), new ItemStack(plucked, 1));
+                    }
+                }
+                level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.7D, pos.z, 2, 0.4D, 0.1D, 0.4D, 0.0D);
                 return true;
             }
             case "bounty_jackpot" -> {
@@ -790,15 +883,11 @@ public final class SignaturePairs {
                 level.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.x, pos.y + 0.8D, pos.z, 8, 0.3D, 0.3D, 0.3D, 0.04D);
                 return true;
             }
-            case "searing_feast", "alchemic_pyre", "concussive_plunder", "legion_plunder", "midas_cleave" -> {
+            case "searing_feast", "alchemic_pyre", "midas_cleave" -> {
                 if (target != null) {
                     if ("searing_feast".equals(sigId) || "alchemic_pyre".equals(sigId)) {
                         target.igniteForSeconds(5.0F);
                         target.hurtServer(level, level.damageSources().magic(), 2.2F + 0.5F * pLv);
-                    } else if ("concussive_plunder".equals(sigId)) {
-                        Vec3 knock = target.position().subtract(player.position()).normalize().scale(0.85D);
-                        target.push(knock.x, 0.32D, knock.z);
-                        target.hurtServer(level, level.damageSources().playerAttack(player), 2.0F + 0.5F * pLv);
                     } else {
                         for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.2D, null)) {
                             mob.hurtServer(level, level.damageSources().playerAttack(player), 1.8F + 0.45F * pLv);
@@ -819,12 +908,40 @@ public final class SignaturePairs {
             }
 
             // --- Batch 4 & 5: Ranged / Trident / Mace ---
+            case "swift_draw_burst" -> {
+                // [快速装填 ▷ 力量] 寸劲崩云：极短距离内压缩爆发武学「寸劲」，近距命中破盾挑飞并迸发内劲高伤！
+                if (target != null) {
+                    boolean closeRange = player.distanceToSqr(target) <= 42.0D; // <= 6.5 blocks
+                    if (target.isBlocking()) {
+                        target.stopUsingItem();
+                    }
+                    float burst = closeRange ? (3.6F + 0.75F * sLv) : (1.8F + 0.35F * sLv);
+                    target.hurtServer(level, level.damageSources().magic(), burst);
+                    if (closeRange) {
+                        target.push(0.0D, 0.34D, 0.0D);
+                        level.sendParticles(ParticleTypes.EXPLOSION, pos.x, pos.y + 0.7D, pos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+                    }
+                }
+                grantEffect(player, "haste", 60, 0);
+                return true;
+            }
+            case "overdraw_snipe" -> {
+                // [力量 ▷ 快速装填] 满月连珠：满力命中标记靶心并返还拉弓节奏（急迫II+迅捷），连续命中靶心追加连珠贯伤！
+                if (target != null) {
+                    boolean alreadyMarked = target.isCurrentlyGlowing();
+                    grantEffect(target, "glowing", 100, 0);
+                    float bonus = (alreadyMarked ? 3.2F : 1.7F) + 0.45F * pLv + target.getArmorValue() * 0.14F;
+                    target.hurtServer(level, level.damageSources().magic(), bonus);
+                    grantEffect(player, "haste", 70, 1);
+                    grantEffect(player, "speed", 55 + 15 * sLv, 0);
+                }
+                return true;
+            }
             case "starlight_quiver", "soul_siphon_mend" -> {
                 if (target != null) {
                     if (hostStack.isDamaged()) {
                         hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - (2 + sLv)));
                     }
-                    // Excess starlight / soul energy ALWAYS discharges into combat damage & vitality!
                     float integrity = hostStack.isDamageableItem()
                         ? (1.0F - (float) hostStack.getDamageValue() / (float) Math.max(1, hostStack.getMaxDamage()))
                         : 1.0F;
@@ -864,14 +981,6 @@ public final class SignaturePairs {
                 }
                 return true;
             }
-            case "overdraw_snipe" -> {
-                if (target != null) {
-                    float bonus = 1.6F + 0.45F * pLv + target.getArmorValue() * 0.12F;
-                    target.hurtServer(level, level.damageSources().magic(), bonus);
-                    grantEffect(player, "speed", 50 + 15 * sLv, 0);
-                }
-                return true;
-            }
             case "spectral_condense" -> {
                 if (hostStack.isDamaged()) {
                     hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 1));
@@ -888,17 +997,29 @@ public final class SignaturePairs {
                 return true;
             }
             case "converging_volley" -> {
+                // [多重射击 ▷ 穿透] 万流归宗：多道散射劲力向主靶心暂缓存路径收束合流，突破无敌帧并聚拢旁侧敌影！
                 if (target != null) {
-                    hurtBypassingIframe(level, target, level.damageSources().magic(), 2.8F + 0.5F * sLv);
+                    hurtBypassingIframe(level, target, level.damageSources().magic(), 3.0F + 0.55F * sLv);
                 }
+                for (LivingEntity sideMob : nearbyHostiles(level, player, pos, 3.8D, target)) {
+                    Vec3 pull = pos.subtract(sideMob.position()).scale(0.38D);
+                    sideMob.push(pull.x, 0.14D, pull.z);
+                    hurtBypassingIframe(level, sideMob, level.damageSources().magic(), 1.9F + 0.35F * sLv);
+                }
+                level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.8D, pos.z, 10, 0.3D, 0.2D, 0.3D, 0.06D);
                 return true;
             }
             case "fission_warhead" -> {
+                // [穿透 ▷ 多重射击] 一叶分影：沿暂缓存路径贯穿首名目标后，自命中心裂变迸射出三道扇形追魂分影！
                 if (target != null) {
                     Vec3 forward = player.getLookAngle().normalize();
-                    Vec3 behind = pos.add(forward.scale(2.5D));
+                    Vec3 behind = pos.add(forward.scale(2.8D));
+                    ProjectilePathTracker.CachedFlightPath fanPath = ProjectilePathTracker.recordSyntheticCorridor(
+                        level, player, ProjectilePathTracker.classifyWeaponItem(hostStack), hostStack, pos, behind.add(forward.scale(2.5D)), 6
+                    );
+                    ProjectilePathTracker.schedulePathEcho(fanPath, 4L, 2.6F + 0.5F * pLv, false, true);
                     int count = 0;
-                    for (LivingEntity mob : nearbyHostiles(level, player, behind, 4.5D, target)) {
+                    for (LivingEntity mob : nearbyHostiles(level, player, behind, 4.6D, target)) {
                         mob.hurtServer(level, level.damageSources().magic(), 3.2F + 0.6F * pLv);
                         level.sendParticles(ParticleTypes.CRIT, mob.getX(), mob.getY() + 0.8D, mob.getZ(), 8, 0.2D, 0.2D, 0.2D, 0.1D);
                         if (++count >= 3) break;
@@ -921,10 +1042,14 @@ public final class SignaturePairs {
                 return true;
             }
             case "meteor_streak", "sunfire_barrage" -> {
+                // [无限 ▷ 火矢] 燎原星火：火种沿暂缓存弹道铺开并在近敌间跃迁蔓延！
                 if (target != null) {
-                    target.igniteForSeconds("sunfire_barrage".equals(sigId) ? 8.0F : 6.0F);
-                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 2.8D, target)) {
-                        mob.igniteForSeconds(4.0F);
+                    target.igniteForSeconds("sunfire_barrage".equals(sigId) ? 7.0F : 6.0F);
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, "sunfire_barrage".equals(sigId) ? 4.8D : 2.8D, target)) {
+                        mob.igniteForSeconds(5.0F);
+                        if ("sunfire_barrage".equals(sigId)) {
+                            mob.hurtServer(level, level.damageSources().onFire(), 1.8F);
+                        }
                     }
                 }
                 return true;
@@ -1249,19 +1374,34 @@ public final class SignaturePairs {
                 return true;
             }
             case "oxygen_drain_slash", "pressure_pierce_shot" -> {
+                // [水下呼吸 ▷ 锋利 / 力量] 屏息一闪 / 深压破甲箭：耗去自身少许屏息凝成真空绝息斩/箭，令目标缺氧盲目并承受窒息重创！
                 if (target != null) {
-                    int drain = "pressure_pierce_shot".equals(sigId) ? 130 : 110;
+                    int selfBreathCost = Math.min(20, Math.max(0, player.getAirSupply()));
+                    if (selfBreathCost > 0 && !player.isInWater()) {
+                        player.setAirSupply(player.getAirSupply() - selfBreathCost);
+                    }
+                    int drain = "pressure_pierce_shot".equals(sigId) ? 140 : 120;
                     int nextAir = target.getAirSupply() - drain;
                     target.setAirSupply(Math.max(-20, nextAir));
-                    float bonus = nextAir <= 0 ? (3.8F + 0.5F * pLv) : (1.6F + 0.35F * sLv);
+                    grantEffect(target, "weakness", 60, 0);
+                    float bonus = (nextAir <= 0 ? (4.0F + 0.55F * pLv) : (2.2F + 0.45F * sLv));
                     target.hurtServer(level, level.damageSources().drown(), bonus);
                 }
-                level.sendParticles(ParticleTypes.BUBBLE, pos.x, pos.y + 0.8D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.05D);
+                level.sendParticles(ParticleTypes.BUBBLE, pos.x, pos.y + 0.8D, pos.z, 12, 0.25D, 0.25D, 0.25D, 0.05D);
                 return true;
             }
             case "abyssal_full_breath" -> {
-                if (target != null && player.getAirSupply() >= player.getMaxAirSupply() - 10) {
-                    target.hurtServer(level, level.damageSources().magic(), 2.6F + 0.4F * sLv);
+                // [锋利 ▷ 水下呼吸] 吐纳剑气：满蓄一击吐出直线真空剑气走廊（暂缓存路径判定），并回满肺腑气息！
+                if (fullChargeMelee) {
+                    Vec3 start = player.getEyePosition();
+                    Vec3 end = start.add(player.getLookAngle().normalize().scale(5.5D + 0.5D * sLv));
+                    for (LivingEntity mob : ProjectilePathTracker.querySweptSegmentHostiles(level, player, start, end, 1.35D)) {
+                        mob.hurtServer(level, level.damageSources().magic(), 2.6F + 0.45F * pLv);
+                    }
+                    ProjectilePathTracker.recordSyntheticCorridor(
+                        level, player, ProjectilePathTracker.PathSourceKind.SWORD, hostStack, start, end, 6
+                    );
+                    level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.7D, pos.z, 10, 0.3D, 0.2D, 0.3D, 0.05D);
                 }
                 player.setAirSupply(player.getMaxAirSupply());
                 return true;
@@ -1383,18 +1523,72 @@ public final class SignaturePairs {
                 level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.7D, pos.z, 2, 0.35D, 0.1D, 0.35D, 0.0D);
                 return true;
             }
-            case "perpetual_craft", "eternal_bowstring" -> {
+            case "perpetual_craft" -> {
+                // [耐久 ▷ 效率] 磨杵成针：铁杵磨针，越挥越快越锋利！每次挥击修复1点耐久并叠针锋层数，满4层迸发穿心针芒！
                 if (hostStack.isDamaged() && rng.nextFloat() < 0.75F) {
                     hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 1));
                 }
-                if ("eternal_bowstring".equals(sigId)) {
-                    grantEffect(player, "haste", 50, 0);
+                int stacks = PERSISTENCE_STACKS.getOrDefault(player.getUUID(), 0) + 1;
+                grantEffect(player, "haste", 70, Math.min(2, stacks / 2));
+                if (stacks >= 4) {
+                    PERSISTENCE_STACKS.put(player.getUUID(), 0);
+                    Vec3 start = player.getEyePosition();
+                    Vec3 end = start.add(player.getLookAngle().normalize().scale(5.2D));
+                    for (LivingEntity mob : ProjectilePathTracker.querySweptSegmentHostiles(level, player, start, end, 1.25D)) {
+                        hurtBypassingIframe(level, mob, level.damageSources().magic(), 3.6F + 0.55F * sLv);
+                    }
+                    level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 0.8D, pos.z, 14, 0.3D, 0.2D, 0.3D, 0.08D);
+                } else {
+                    PERSISTENCE_STACKS.put(player.getUUID(), stacks);
                 }
                 return true;
             }
+            case "eternal_bowstring" -> {
+                // [无限 ▷ 耐久] 余音绕梁：弓弦长鸣，命中0.4秒后沿暂缓存飞行路径触发二次「余音回响」穿透残影伤害！
+                if (hostStack.isDamaged() && rng.nextFloat() < 0.75F) {
+                    hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 1));
+                }
+                grantEffect(player, "haste", 60, 0);
+                ProjectilePathTracker.CachedFlightPath echoCorridor = ProjectilePathTracker.recordSyntheticCorridor(
+                    level, player, ProjectilePathTracker.classifyWeaponItem(hostStack), hostStack,
+                    player.getEyePosition(), pos, 7
+                );
+                ProjectilePathTracker.schedulePathEcho(echoCorridor, 8L, 2.5F + 0.55F * sLv, false, false);
+                level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.75F, 1.65F);
+                return true;
+            }
             case "undying_hellfire" -> {
+                // [火矢 ▷ 无限] 薪火相传：不灭薪火印记，燃烧目标每次受击迸溅火种引燃近敌，倒下时将全部余火翻倍传予周遭敌群！
                 if (target != null) {
-                    target.igniteForSeconds(12.0F + 4.0F * sLv);
+                    target.igniteForSeconds(10.0F + 3.0F * sLv);
+                    for (LivingEntity near : nearbyHostiles(level, player, pos, 3.8D, target)) {
+                        near.igniteForSeconds(5.0F + sLv);
+                        near.hurtServer(level, level.damageSources().onFire(), 1.8F + 0.4F * pLv);
+                    }
+                    level.sendParticles(ParticleTypes.LAVA, pos.x, pos.y + 0.7D, pos.z, 6, 0.25D, 0.25D, 0.25D, 0.03D);
+                }
+                return true;
+            }
+            case "self_healing_lattice" -> {
+                // [效率 ▷ 耐久] 金缮百炼：器物受损痕迹化作金缮锋芒，已损耐久比例越高追加金缮破甲伤害越高，并自愈裂纹！
+                if (target != null && hostStack.isDamageableItem()) {
+                    float missingRatio = (float) hostStack.getDamageValue() / (float) Math.max(1, hostStack.getMaxDamage());
+                    float kintsugiBonus = 1.8F + 4.2F * missingRatio + 0.4F * pLv;
+                    target.hurtServer(level, level.damageSources().magic(), kintsugiBonus);
+                }
+                if (hostStack.isDamaged() && rng.nextFloat() < 0.50F) {
+                    hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - (1 + sLv / 2)));
+                }
+                return true;
+            }
+            case "velvet_shear" -> {
+                // [效率 ▷ 精准采集] 庖丁解牛：顺纹理游刃有余，战斗中直剖护甲缝隙造成无视护甲真伤且自身零磨损！
+                if (target != null) {
+                    float seamTrueDmg = 2.0F + target.getArmorValue() * 0.20F + 0.35F * pLv;
+                    target.hurtServer(level, level.damageSources().magic(), seamTrueDmg);
+                    if (hostStack.isDamaged()) {
+                        hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 1));
+                    }
                 }
                 return true;
             }
@@ -1577,6 +1771,356 @@ public final class SignaturePairs {
                 }
                 return true;
             }
+
+            // --- Batch 17: Emergent Wordplay & Trajectory Path-Cache Signatures (衍生语义共鸣) ---
+            case "boomerang_lance" -> {
+                // [突进 ▷ 忠诚] 回马金枪：突刺后枪影沿暂缓存路径逆向杀出一记回马枪，贯穿并拖回沿途敌影！
+                Vec3 start = player.getEyePosition();
+                Vec3 end = target != null ? pos.add(player.getLookAngle().normalize().scale(2.2D)) : start.add(player.getLookAngle().normalize().scale(6.5D));
+                ProjectilePathTracker.CachedFlightPath corridor = ProjectilePathTracker.recordSyntheticCorridor(
+                    level, player, ProjectilePathTracker.PathSourceKind.SPEAR, hostStack, start, end, 8
+                );
+                ProjectilePathTracker.schedulePathEcho(corridor, 6L, 3.4F + 0.75F * pLv, true, true);
+                level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.8D, pos.z, 12, 0.3D, 0.25D, 0.3D, 0.08D);
+                return true;
+            }
+            case "shadow_recall_lunge" -> {
+                // [忠诚 ▷ 突进] 人枪合一：投射飞矛/箭矢或远距命中后，主人沿缓存弹道瞬步追身突刺并获短暂抗性！
+                if (target != null && player.distanceToSqr(target) > 9.0D && player.distanceToSqr(target) <= 576.0D) {
+                    Vec3 behindDir = target.position().subtract(player.position()).normalize();
+                    Vec3 dest = target.position().subtract(behindDir.scale(1.4D));
+                    ProjectilePathTracker.recordSyntheticCorridor(
+                        level, player, ProjectilePathTracker.classifyWeaponItem(hostStack), hostStack,
+                        player.position().add(0.0D, 0.8D, 0.0D), dest.add(0.0D, 0.8D, 0.0D), 8
+                    );
+                    player.fallDistance = 0.0F;
+                    player.teleportTo(dest.x, dest.y + 0.1D, dest.z);
+                    grantEffect(player, "resistance", 45, 0);
+                    target.hurtServer(level, level.damageSources().playerAttack(player), 3.2F + 0.7F * sLv);
+                    level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.8F, 1.35F);
+                } else if (target != null) {
+                    target.hurtServer(level, level.damageSources().playerAttack(player), 2.4F + 0.6F * sLv);
+                }
+                return true;
+            }
+            case "hundred_step_skewer" -> {
+                // [突进 ▷ 穿透] 百步穿杨：贯出9格穿甲枪廊（暂缓存路径），沿线敌群全额破甲受创并被串聚至枪尖！
+                Vec3 start = player.getEyePosition();
+                Vec3 dir = player.getLookAngle().normalize();
+                Vec3 end = start.add(dir.scale(7.0D + 0.8D * sLv));
+                ProjectilePathTracker.recordSyntheticCorridor(
+                    level, player, ProjectilePathTracker.PathSourceKind.SPEAR, hostStack, start, end, 10
+                );
+                Vec3 gatherPoint = start.add(dir.scale(3.8D));
+                for (LivingEntity mob : ProjectilePathTracker.querySweptSegmentHostiles(level, player, start, end, 1.45D)) {
+                    hurtBypassingIframe(level, mob, level.damageSources().magic(), 2.8F + 0.65F * pLv + mob.getArmorValue() * 0.15F);
+                    Vec3 pull = gatherPoint.subtract(mob.position()).scale(0.36D);
+                    mob.push(pull.x, 0.12D, pull.z);
+                }
+                level.sendParticles(ParticleTypes.CRIT, gatherPoint.x, gatherPoint.y, gatherPoint.z, 14, 0.35D, 0.2D, 0.35D, 0.08D);
+                return true;
+            }
+            case "armor_seam_rush" -> {
+                // [穿透 ▷ 突进] 寻隙破绽：洞穿护甲缝隙标记破绽（发光+虚弱），冲刺突入时无视护甲重创！
+                if (target != null) {
+                    boolean marked = target.isCurrentlyGlowing();
+                    grantEffect(target, "glowing", 120, 0);
+                    grantEffect(target, "weakness", 80, 0);
+                    float seamDmg = (marked || player.isSprinting() ? 3.8F : 2.2F) + target.getArmorValue() * 0.22F + 0.5F * pLv;
+                    target.hurtServer(level, level.damageSources().magic(), seamDmg);
+                    Vec3 lunge = player.getLookAngle().normalize().scale(0.42D + 0.10D * sLv);
+                    player.push(lunge.x, 0.1D, lunge.z);
+                    player.hurtMarked = true;
+                }
+                return true;
+            }
+            case "thunderbolt_cavalry" -> {
+                // [突进 ▷ 引雷] 惊雷破阵：突刺化作7格雷霆驰道（暂缓存路径），沿雷轨劈落闪电并麻痹敌阵！
+                Vec3 start = player.getEyePosition();
+                Vec3 end = start.add(player.getLookAngle().normalize().scale(6.5D + 0.6D * pLv));
+                ProjectilePathTracker.CachedFlightPath corridor = ProjectilePathTracker.recordSyntheticCorridor(
+                    level, player, ProjectilePathTracker.PathSourceKind.SPEAR, hostStack, start, end, 8
+                );
+                ProjectilePathTracker.applyPathTrailEffect(
+                    level, player, corridor, ProjectilePathTracker.PathTrailStyle.VOLT_CHAIN, 1.2F
+                );
+                for (LivingEntity mob : ProjectilePathTracker.querySweptSegmentHostiles(level, player, start, end, 1.5D)) {
+                    mob.hurtServer(level, level.damageSources().lightningBolt(), 3.2F + 0.75F * pLv);
+                    grantEffect(mob, "slowness", 50, 1);
+                }
+                return true;
+            }
+            case "lightning_step_spear" -> {
+                // [引雷 ▷ 突进] 电光石火：雷光淬足疾掠，瞬间闪烁突进6格并在起落两端炸开雷鸣电弧！
+                if (fullChargeMelee || player.isSprinting()) {
+                    Vec3 origin = player.position();
+                    Vec3 dash = player.getLookAngle().normalize().scale(1.05D + 0.18D * sLv);
+                    player.push(dash.x, 0.18D, dash.z);
+                    player.hurtMarked = true;
+                    grantEffect(player, "speed", 80, 1);
+                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.8D, null)) {
+                        mob.hurtServer(level, level.damageSources().lightningBolt(), 3.0F + 0.8F * sLv);
+                        grantEffect(mob, "slowness", 45, 2);
+                    }
+                    level.sendParticles(ParticleTypes.ELECTRIC_SPARK, origin.x, origin.y + 0.8D, origin.z, 18, 0.35D, 0.35D, 0.35D, 0.12D);
+                    level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y + 0.8D, pos.z, 18, 0.35D, 0.35D, 0.35D, 0.12D);
+                }
+                return true;
+            }
+            case "kite_string_gale" -> {
+                // [风爆 ▷ 忠诚] 风筝牵引：先借狂风将目标高高掀飞，0.6秒后风筝丝线猛然收紧将其拽回锚点重摔！
+                if (target != null) {
+                    Vec3 away = target.position().subtract(player.position()).normalize().scale(0.95D + 0.2D * pLv);
+                    target.push(away.x, 0.68D + 0.10D * pLv, away.z);
+                    target.hurtMarked = true;
+                    KITE_SNAPBACK_MAP.put(
+                        target.getUUID(),
+                        new KiteSnapback(player.getUUID(), level.dimension(), pos, level.getGameTime() + 12L)
+                    );
+                    level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.6D, pos.z, 16, 0.35D, 0.25D, 0.35D, 0.08D);
+                }
+                return true;
+            }
+            case "tailwind_return" -> {
+                // [忠诚 ▷ 风爆] 乘风归来：命中卷起归风升流，清零自身摔落伤害并赐予迅捷与缓降御风之势！
+                player.fallDistance = 0.0F;
+                player.push(0.0D, 0.42D + 0.08D * sLv, 0.0D);
+                player.hurtMarked = true;
+                grantEffect(player, "speed", 90, 1);
+                grantEffect(player, "slow_falling", 65, 0);
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.6D, null)) {
+                    mob.hurtServer(level, level.damageSources().magic(), 2.2F + 0.55F * pLv);
+                }
+                level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.4D, player.getZ(), 14, 0.4D, 0.2D, 0.4D, 0.07D);
+                return true;
+            }
+            case "glazed_kiln_edge" -> {
+                // [火焰附加 ▷ 精准采集] 窑变琉璃：烈火将敌方甲胄烧结如脆琉璃，目标若已着火则触发琉璃碎甲真伤！
+                if (target != null) {
+                    boolean wasBurning = target.isOnFire();
+                    target.igniteForSeconds(5.0F + pLv);
+                    if (wasBurning) {
+                        float shatter = 3.2F + target.getArmorValue() * 0.24F + 0.6F * pLv;
+                        target.hurtServer(level, level.damageSources().magic(), shatter);
+                        level.playSound(null, target.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.9F, 1.7F);
+                    }
+                    level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 0.7D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.03D);
+                }
+                return true;
+            }
+            case "amber_embalm" -> {
+                // [精准采集 ▷ 火焰附加] 琥珀封烬：晶透松脂外封敌躯（重度迟缓），内锁暗烬灵魂火入水不灭！
+                if (target != null) {
+                    grantEffect(target, "slowness", 90, 2);
+                    SOUL_FIRE_TICKS.put(target.getUUID(), 100);
+                    target.hurtServer(level, level.damageSources().magic(), 2.4F + 0.65F * sLv);
+                    level.sendParticles(ParticleTypes.WAX_ON, pos.x, pos.y + 0.8D, pos.z, 12, 0.3D, 0.35D, 0.3D, 0.04D);
+                }
+                return true;
+            }
+            case "true_gold_refinery" -> {
+                // [时运 ▷ 火焰附加] 真金火炼：真金不怕火炼！自身着火或目标着火时淬炼暴击飙升，并清散自身烧伤赋予抗火！
+                if (player.isOnFire()) {
+                    grantEffect(player, "fire_resistance", 100, 0);
+                }
+                if (target != null) {
+                    boolean tempered = player.isOnFire() || target.isOnFire();
+                    target.igniteForSeconds(4.0F + sLv);
+                    target.hurtServer(level, level.damageSources().magic(), (tempered ? 3.8F : 2.0F) + 0.6F * pLv);
+                }
+                return true;
+            }
+            case "cinder_jackpot" -> {
+                // [火焰附加 ▷ 时运] 火中取栗：险中求富！攻击燃烧中目标或自身浴火作战时高概率爆出绿宝石与烈焰金财！
+                if (target != null) {
+                    boolean riskyFire = target.isOnFire() || player.isOnFire();
+                    target.igniteForSeconds(5.0F);
+                    target.hurtServer(level, level.damageSources().onFire(), 2.2F + 0.55F * pLv);
+                    if (riskyFire && rng.nextFloat() < 0.38F + 0.07F * sLv) {
+                        Item chestLoot = switch (rng.nextInt(4)) {
+                            case 0 -> Items.EMERALD;
+                            case 1 -> Items.BLAZE_POWDER;
+                            case 2 -> Items.GOLD_INGOT;
+                            default -> Items.GOLD_NUGGET;
+                        };
+                        spawnItem(level, pos, new ItemStack(chestLoot, 1));
+                        ExperienceOrb.award(level, pos, 2 + sLv);
+                    }
+                }
+                return true;
+            }
+            case "bitter_medicine_carapace" -> {
+                // [荆棘 ▷ 经验修补] 苦肉修身：苦肉计！受击反刺仇敌的同时，将痛楚转化为全身受损装备修复与生命再生！
+                if (target != null) {
+                    target.hurtServer(level, level.damageSources().thorns(player), 2.2F + 0.7F * pLv);
+                }
+                for (EquipmentSlot eqSlot : ALL_EQUIP_SLOTS) {
+                    ItemStack eq = player.getItemBySlot(eqSlot);
+                    if (!eq.isEmpty() && eq.isDamaged()) {
+                        eq.setDamageValue(Math.max(0, eq.getDamageValue() - (1 + pLv / 2)));
+                    }
+                }
+                grantEffect(player, "regeneration", 60, 0);
+                level.sendParticles(ParticleTypes.HAPPY_VILLAGER, player.getX(), player.getY() + 1.0D, player.getZ(), 8, 0.35D, 0.35D, 0.35D, 0.04D);
+                return true;
+            }
+            case "forged_retaliation" -> {
+                // [经验修补 ▷ 荆棘] 卧薪尝胆：平时修补积蓄最多8枚胆气飞刺，受击或重斩时一次性万刺齐发倾泻而出！
+                int stored = FORGED_QUILL_STACKS.getOrDefault(player.getUUID(), 0);
+                int release = Math.max(1, stored + 1);
+                FORGED_QUILL_STACKS.put(player.getUUID(), 0);
+                float volleyDmg = 1.6F + release * (0.85F + 0.20F * sLv);
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.4D, null)) {
+                    mob.hurtServer(level, level.damageSources().thorns(player), volleyDmg);
+                }
+                level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 0.8D, pos.z, 8 + release * 3, 0.45D, 0.3D, 0.45D, 0.14D);
+                return true;
+            }
+            case "threading_needle" -> {
+                // [快速装填 ▷ 穿透] 穿针引线：沿暂缓存弹道穿引灵丝，将沿线所有命中敌群一并缝聚拉拢至落点中心！
+                Vec3 start = player.getEyePosition();
+                List<LivingEntity> threaded = ProjectilePathTracker.querySweptSegmentHostiles(level, player, start, pos, 1.65D);
+                for (LivingEntity mob : threaded) {
+                    Vec3 stitch = pos.subtract(mob.position()).scale(0.52D);
+                    mob.push(stitch.x, 0.16D, stitch.z);
+                    mob.hurtServer(level, level.damageSources().magic(), 2.0F + 0.45F * sLv);
+                }
+                for (LivingEntity near : nearbyHostiles(level, player, pos, 3.8D, target)) {
+                    Vec3 stitch = pos.subtract(near.position()).scale(0.45D);
+                    near.push(stitch.x, 0.14D, stitch.z);
+                }
+                level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.7D, pos.z, 12, 0.35D, 0.25D, 0.35D, 0.04D);
+                return true;
+            }
+            case "bamboo_split_momentum" -> {
+                // [穿透 ▷ 快速装填] 势如破竹：破竹连贯之势，沿暂缓存路径每多波及一名敌人伤害递增20%，并赐极速连射节奏！
+                List<LivingEntity> line = ProjectilePathTracker.querySweptSegmentHostiles(level, player, player.getEyePosition(), pos.add(player.getLookAngle().scale(3.0D)), 1.45D);
+                int idx = 0;
+                for (LivingEntity mob : line) {
+                    float escal = (2.0F + 0.45F * pLv) * (1.0F + 0.20F * idx);
+                    hurtBypassingIframe(level, mob, level.damageSources().magic(), escal);
+                    idx++;
+                }
+                grantEffect(player, "haste", 70, Math.min(2, sLv - 1));
+                return true;
+            }
+            case "moth_to_flame" -> {
+                // [饵钓 ▷ 火焰附加] 飞蛾扑火：被点燃目标化作诱蛾火灯，牵引5.5格内敌群不由自主扑向火源共焚！
+                if (target != null) {
+                    target.igniteForSeconds(6.0F + sLv);
+                    for (LivingEntity moth : nearbyHostiles(level, player, pos, 5.5D, target)) {
+                        Vec3 lurePull = pos.subtract(moth.position()).normalize().scale(0.58D + 0.10D * pLv);
+                        moth.push(lurePull.x, 0.18D, lurePull.z);
+                        moth.igniteForSeconds(3.0F);
+                    }
+                    level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 1.0D, pos.z, 16, 0.35D, 0.45D, 0.35D, 0.04D);
+                }
+                return true;
+            }
+            case "beacon_bonfire" -> {
+                // [火焰附加 ▷ 饵钓] 烽火聚灵：命中点燃起烽火信标灼烧敌群，并将周遭散落战利品与经验球尽数牵引归主！
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.6D, null)) {
+                    mob.igniteForSeconds(4.0F + pLv);
+                    mob.hurtServer(level, level.damageSources().onFire(), 2.0F + 0.5F * pLv);
+                }
+                AABB lootBox = AABB.ofSize(pos, 12.0D, 6.0D, 12.0D);
+                for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, lootBox, Entity::isAlive)) {
+                    item.setNoPickUpDelay();
+                    item.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+                }
+                for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, lootBox, Entity::isAlive)) {
+                    orb.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+                }
+                level.sendParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, pos.x, pos.y + 0.8D, pos.z, 6, 0.25D, 0.4D, 0.25D, 0.02D);
+                return true;
+            }
+            case "quench_temper_blade" -> {
+                // [水下速掘 ▷ 火焰附加] 水火淬刃：铸剑师淬火之术！斩中着火目标瞬间冷水淬火（熄火化汽），爆发高额淬钢真伤并回铸2点耐久！
+                if (target != null) {
+                    if (target.isOnFire()) {
+                        int rem = target.getRemainingFireTicks();
+                        target.clearFire();
+                        float quenchDmg = Math.min(11.0F, 4.2F + 0.75F * sLv + rem * 0.03F);
+                        target.hurtServer(level, level.damageSources().magic(), quenchDmg);
+                        if (hostStack.isDamaged()) {
+                            hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 2));
+                        }
+                        level.playSound(null, target.blockPosition(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.85F, 1.35F);
+                        level.sendParticles(ParticleTypes.CLOUD, pos.x, pos.y + 0.8D, pos.z, 18, 0.35D, 0.35D, 0.35D, 0.06D);
+                    } else {
+                        target.igniteForSeconds(5.0F + sLv);
+                    }
+                }
+                return true;
+            }
+            case "geyser_bore" -> {
+                // [火焰附加 ▷ 水下速掘] 沸泉裂石：热胀冷缩间歇沸泉！战斗中喷涌高压沸水挑飞灼烫敌群！
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.4D, null)) {
+                    mob.igniteForSeconds(3.0F + pLv);
+                    mob.hurtServer(level, level.damageSources().magic(), 2.4F + 0.55F * pLv);
+                    mob.push(0.0D, 0.42D, 0.0D);
+                }
+                level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.6D, pos.z, 16, 0.35D, 0.3D, 0.35D, 0.08D);
+                level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 0.6D, pos.z, 8, 0.25D, 0.25D, 0.25D, 0.03D);
+                return true;
+            }
+            case "mirror_moon_sweep" -> {
+                // [横扫之刃 ▷ 精准采集] 镜花水月：挥击凝出无瑕镜面水月弧幕，将前方来袭弹射物原路折射弹回并令敌目眩发光！
+                AABB reflectBox = AABB.ofSize(player.getEyePosition().add(player.getLookAngle().scale(2.0D)), 5.0D, 3.5D, 5.0D);
+                Vec3 aim = player.getLookAngle().normalize();
+                for (Projectile proj : level.getEntitiesOfClass(Projectile.class, reflectBox, p -> p.isAlive() && p.getOwner() != player)) {
+                    double spd = Math.max(1.2D, proj.getDeltaMovement().length());
+                    proj.setOwner(player);
+                    proj.setDeltaMovement(aim.scale(spd));
+                    proj.hurtMarked = true;
+                }
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.6D, null)) {
+                    grantEffect(mob, "glowing", 100, 0);
+                    mob.hurtServer(level, level.damageSources().magic(), 2.2F + 0.55F * pLv);
+                }
+                level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y + 0.8D, pos.z, 12, 0.45D, 0.2D, 0.45D, 0.05D);
+                return true;
+            }
+            case "paper_thin_cleave" -> {
+                // [精准采集 ▷ 横扫之刃] 吹毛断发：刀锋精细入微，横扫绝不误伤同伴/宠物/村民，且对满血无瑕敌躯造成初见断发重创！
+                for (LivingEntity mob : nearbyHostiles(level, player, pos, 3.8D, null)) {
+                    if (mob != target && mob.getType().getCategory() != net.minecraft.world.entity.MobCategory.MONSTER) {
+                        continue;
+                    }
+                    boolean pristineTarget = mob.getHealth() >= mob.getMaxHealth() - 0.5F;
+                    float dmg = (pristineTarget ? 4.4F : 2.0F) + 0.6F * sLv;
+                    mob.hurtServer(level, level.damageSources().playerAttack(player), dmg);
+                }
+                level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.8D, pos.z, 2, 0.4D, 0.1D, 0.4D, 0.0D);
+                return true;
+            }
+            case "tempered_anvil_heart" -> {
+                // [致密 ▷ 经验修补] 千锤百炼：每次重锤锻打自动回铸1点耐久并叠百炼精钢层数（至多5层），层数越高重击越猛！
+                if (hostStack.isDamaged()) {
+                    hostStack.setDamageValue(Math.max(0, hostStack.getDamageValue() - 1));
+                }
+                int stacks = Math.min(5, TEMPERED_STEEL_STACKS.getOrDefault(player.getUUID(), 0) + 1);
+                TEMPERED_STEEL_STACKS.put(player.getUUID(), stacks);
+                if (target != null) {
+                    float anvilBonus = 1.6F + stacks * (0.65F + 0.15F * pLv);
+                    target.hurtServer(level, level.damageSources().playerAttack(player), anvilBonus);
+                }
+                level.playSound(null, BlockPos.containing(pos), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.32F, 1.55F + stacks * 0.06F);
+                return true;
+            }
+            case "heavy_xp_meteor" -> {
+                // [经验修补 ▷ 致密] 厚积薄发：自身经验等级沉淀为器身千钧底蕴，随经验等级追加沉重冲击波伤害！
+                float xpWeight = Math.min(7.5F, player.experienceLevel * 0.18F) + 1.2F + 0.45F * sLv;
+                if (target != null) {
+                    target.hurtServer(level, level.damageSources().playerAttack(player), xpWeight);
+                    target.push(0.0D, -0.25D, 0.0D);
+                }
+                for (LivingEntity splash : nearbyHostiles(level, player, pos, 2.8D, target)) {
+                    splash.hurtServer(level, level.damageSources().magic(), xpWeight * 0.5F);
+                }
+                level.sendParticles(ParticleTypes.HAPPY_VILLAGER, pos.x, pos.y + 0.6D, pos.z, 10, 0.35D, 0.25D, 0.35D, 0.05D);
+                return true;
+            }
             default -> {
                 return false;
             }
@@ -1584,7 +2128,7 @@ public final class SignaturePairs {
     }
 
     // =========================================================================
-    // 4. Block Harvest Execution
+    // 4. Block Harvest Execution (Pre-Drop Structural + Post-Destroy Real Drops)
     // =========================================================================
 
     public static void onBlockHarvested(
@@ -1609,31 +2153,8 @@ public final class SignaturePairs {
             String sigId = sigOpt.get().id();
 
             switch (sigId) {
-                case "raw_ore_geode" -> {
-                    Item bonusOre = bonusRawForOre(minedState.getBlock());
-                    if (bonusOre != null && rng.nextFloat() < 0.55F) {
-                        int count = 1 + rng.nextInt(Math.max(1, pair.secondaryLevel()));
-                        spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(bonusOre, count));
-                    }
-                }
-                case "smelt_fortune" -> {
-                    Item ingot = smeltedResultForBlock(minedState.getBlock());
-                    if (ingot != null) {
-                        int bonus = 1 + rng.nextInt(1 + Math.max(1, pair.primaryLevel()));
-                        spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(ingot, bonus));
-                        ExperienceOrb.award(level, Vec3.atCenterOf(pos), 2);
-                    }
-                }
-                case "molten_core_pick", "kiln_overdrive" -> {
-                    Item smelted = smeltedResultForBlock(minedState.getBlock());
-                    if (smelted != null) {
-                        spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(smelted, 1));
-                        ExperienceOrb.award(level, Vec3.atCenterOf(pos), 1);
-                        level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.2D, 0.2D, 0.2D, 0.02D);
-                    }
-                    if ("kiln_overdrive".equals(sigId)) {
-                        grantEffect(player, "haste", 70, 0);
-                    }
+                case "kiln_overdrive" -> {
+                    grantEffect(player, "haste", 70, 0);
                 }
                 case "controlled_demolition" -> {
                     grantEffect(player, "resistance", 60, 0);
@@ -1641,28 +2162,40 @@ public final class SignaturePairs {
                 }
                 case "velvet_shear" -> {
                     grantEffect(player, "haste", 80, 1);
-                    AABB box = AABB.ofSize(Vec3.atCenterOf(pos), 5.0D, 4.0D, 5.0D);
-                    for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, box, Entity::isAlive)) {
-                        item.setNoPickUpDelay();
-                        item.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
-                    }
                 }
-                case "magnetic_pick" -> {
-                    AABB box = AABB.ofSize(Vec3.atCenterOf(pos), 7.0D, 5.0D, 7.0D);
-                    for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, box, Entity::isAlive)) {
-                        item.setNoPickUpDelay();
-                        item.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
-                    }
-                }
-                case "gold_rush_haste", "pulse_prospect" -> {
+                case "gold_rush_haste" -> {
                     grantEffect(player, "haste", 90, 1);
                 }
+                case "pulse_prospect" -> {
+                    // [效率 ▷ 时运] 点石寻脉：高能勘探脉冲高亮周围矿脉方位并赋予急迫II！
+                    grantEffect(player, "haste", 100, 1);
+                    for (int dx = -4; dx <= 4; dx++) {
+                        for (int dy = -3; dy <= 3; dy++) {
+                            for (int dz = -4; dz <= 4; dz++) {
+                                BlockPos scan = pos.offset(dx, dy, dz);
+                                if (bonusRawForOre(level.getBlockState(scan).getBlock()) != null) {
+                                    level.sendParticles(
+                                        ParticleTypes.END_ROD,
+                                        scan.getX() + 0.5D, scan.getY() + 0.5D, scan.getZ() + 0.5D,
+                                        2, 0.1D, 0.1D, 0.1D, 0.0D
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                case "geyser_bore" -> {
+                    grantEffect(player, "haste", 80, 1);
+                    for (LivingEntity mob : nearbyHostiles(level, player, Vec3.atCenterOf(pos), 3.0D, null)) {
+                        mob.hurtServer(level, level.damageSources().onFire(), 2.0F);
+                    }
+                }
                 case "self_healing_lattice" -> {
-                    if (tool.isDamaged() && rng.nextFloat() < 0.35F) {
+                    if (tool.isDamaged() && rng.nextFloat() < 0.45F) {
                         tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
                     }
                 }
-                case "perpetual_craft", "eternal_bowstring", "overflow_plating" -> {
+                case "perpetual_craft", "eternal_bowstring", "overflow_plating", "tempered_anvil_heart" -> {
                     if (tool.isDamaged() && rng.nextFloat() < 0.75F) {
                         tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
                     }
@@ -1694,6 +2227,109 @@ public final class SignaturePairs {
         }
     }
 
+    /**
+     * Post-{@code Block#playerDestroy} drop hook invoked from {@code ServerPlayerGameModeHarvestMixin}
+     * AFTER vanilla loot drops have actually spawned in the world!
+     */
+    public static void onPostDestroyHarvestDrops(
+        ServerLevel level,
+        ServerPlayer player,
+        ItemStack tool,
+        BlockPos pos,
+        BlockState minedState
+    ) {
+        if (tool == null || tool.isEmpty() || player.isCreative()) {
+            return;
+        }
+        FusedEnchantmentList list = tool.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        if (list.isEmpty()) {
+            return;
+        }
+        CompendiumDiscoveryTracker.scanPlayerInventory(player);
+        RandomSource rng = level.getRandom();
+        boolean pullDropsToPlayer = false;
+
+        for (FusedPair pair : list.pairs()) {
+            Optional<SignatureEntry> sigOpt = resolve(pair);
+            if (sigOpt.isEmpty()) continue;
+            String sigId = sigOpt.get().id();
+
+            switch (sigId) {
+                case "raw_ore_geode" -> {
+                    Item bonusOre = bonusRawForOre(minedState.getBlock());
+                    if (bonusOre != null && rng.nextFloat() < 0.55F) {
+                        int count = 1 + rng.nextInt(Math.max(1, pair.secondaryLevel()));
+                        spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(bonusOre, count));
+                    }
+                }
+                case "smelt_fortune", "molten_core_pick", "kiln_overdrive", "true_gold_refinery", "glazed_kiln_edge", "geyser_bore" -> {
+                    if (!player.isShiftKeyDown()) {
+                        float xpMult = "smelt_fortune".equals(sigId) ? 1.5F : 1.0F;
+                        boolean smelted = CrossDomainTransmutations.smeltFreshBlockDropsInPlace(
+                            level, pos, minedState, xpMult
+                        );
+                        if (smelted) {
+                            if ("smelt_fortune".equals(sigId)) {
+                                Item ingot = smeltedResultForBlock(minedState.getBlock());
+                                if (ingot != null && rng.nextFloat() < 0.35F + 0.12F * pair.primaryLevel()) {
+                                    spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(ingot, 1));
+                                }
+                            } else if ("true_gold_refinery".equals(sigId) && rng.nextFloat() < 0.45F) {
+                                spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(Items.GOLD_NUGGET, 1 + rng.nextInt(3)));
+                            } else if ("glazed_kiln_edge".equals(sigId) && (minedState.is(Blocks.CLAY) || minedState.is(BlockTags.TERRACOTTA))) {
+                                spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(Items.MAGENTA_GLAZED_TERRACOTTA, 1));
+                            }
+                        }
+                    }
+                }
+                case "cinder_jackpot" -> {
+                    boolean nearHeat = player.isOnFire();
+                    if (!nearHeat) {
+                        for (Direction d : Direction.values()) {
+                            BlockState adj = level.getBlockState(pos.relative(d));
+                            if (adj.is(Blocks.LAVA) || adj.is(BlockTags.FIRE) || adj.is(Blocks.MAGMA_BLOCK)) {
+                                nearHeat = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (nearHeat && rng.nextFloat() < 0.35F + 0.08F * pair.secondaryLevel()) {
+                        spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(rng.nextBoolean() ? Items.EMERALD : Items.GOLD_NUGGET, 1));
+                    }
+                }
+                case "velvet_shear" -> {
+                    // [效率 ▷ 精准采集] 庖丁解牛（隔山取玉）：掘石时若紧贴矿石，直接沿岩缝将矿石剥离为原石而保留外层山体成石！
+                    pullDropsToPlayer = true;
+                    if (player.mayBuild() && !player.isShiftKeyDown() && bonusRawForOre(minedState.getBlock()) == null) {
+                        for (Direction dir : Direction.values()) {
+                            BlockPos adj = pos.relative(dir);
+                            BlockState adjState = level.getBlockState(adj);
+                            Item extractedOre = bonusRawForOre(adjState.getBlock());
+                            if (extractedOre != null) {
+                                Block hostRock = adjState.getBlock().getDescriptionId().contains("deepslate") ? Blocks.DEEPSLATE : Blocks.STONE;
+                                level.setBlockAndUpdate(adj, hostRock.defaultBlockState());
+                                spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(adjState.getBlock().asItem(), 1));
+                                level.playSound(null, adj, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.7F, 1.5F);
+                                break;
+                            }
+                        }
+                    }
+                }
+                case "magnetic_pick", "beacon_bonfire" -> {
+                    pullDropsToPlayer = true;
+                }
+            }
+        }
+
+        if (pullDropsToPlayer) {
+            AABB box = AABB.ofSize(Vec3.atCenterOf(pos), 7.5D, 5.5D, 7.5D);
+            for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, box, Entity::isAlive)) {
+                item.setNoPickUpDelay();
+                item.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+            }
+        }
+    }
+
     // =========================================================================
     // 5. Entity Kill Drops
     // =========================================================================
@@ -1701,6 +2337,7 @@ public final class SignaturePairs {
     public static void onEntityKilled(ServerLevel level, ServerPlayer killer, LivingEntity victim) {
         ItemStack weapon = killer.getMainHandItem();
         if (weapon.isEmpty()) return;
+        PLUCKED_LIVING_MOBS.remove(victim.getUUID());
         FusedEnchantmentList list = weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         for (FusedPair pair : list.pairs()) {
             Optional<SignatureEntry> sigOpt = resolve(pair);
@@ -1739,6 +2376,25 @@ public final class SignaturePairs {
                     killer.setAirSupply(killer.getMaxAirSupply());
                     killer.heal(2.0F);
                 }
+                case "undying_hellfire" -> {
+                    // 薪火相传：受火者倒下时余烬翻倍跃迁引燃6格内全部敌群！
+                    int bonusSec = Math.max(8, victim.getRemainingFireTicks() / 10);
+                    for (LivingEntity nextHost : nearbyHostiles(level, killer, victim.position(), 6.0D, victim)) {
+                        nextHost.igniteForSeconds(bonusSec);
+                        nextHost.hurtServer(level, level.damageSources().onFire(), 2.8F);
+                    }
+                    level.sendParticles(ParticleTypes.FLAME, victim.getX(), victim.getY() + 0.7D, victim.getZ(), 20, 0.5D, 0.4D, 0.5D, 0.08D);
+                }
+                case "amber_embalm" -> {
+                    // 琥珀封烬：封存目标毙命时爆散琥珀热晶溅伤周围并凝出蜜脾晶块！
+                    for (LivingEntity near : nearbyHostiles(level, killer, victim.position(), 3.6D, victim)) {
+                        near.hurtServer(level, level.damageSources().magic(), 3.2F);
+                        grantEffect(near, "slowness", 60, 1);
+                    }
+                    if (level.getRandom().nextFloat() < 0.30F) {
+                        spawnItem(level, victim.position(), new ItemStack(Items.HONEYCOMB, 1));
+                    }
+                }
             }
         }
     }
@@ -1770,10 +2426,18 @@ public final class SignaturePairs {
                         player.getInventory().placeItemBackInInventory(rescued);
                     }
                 }
-                case "furnace_aegis" -> {
+                case "furnace_aegis", "true_gold_refinery" -> {
                     if (player.isOnFire() || player.isInLava()) {
                         grantEffect(player, "fire_resistance", 40, 0);
-                        grantEffect(player, "regeneration", 40, 0);
+                        if ("furnace_aegis".equals(sigId)) {
+                            grantEffect(player, "regeneration", 40, 0);
+                        }
+                    }
+                }
+                case "forged_retaliation" -> {
+                    int cur = FORGED_QUILL_STACKS.getOrDefault(player.getUUID(), 0);
+                    if (cur < 8 && level.getGameTime() % 40L == 0L) {
+                        FORGED_QUILL_STACKS.put(player.getUUID(), cur + 1);
                     }
                 }
                 case "glacial_hearth" -> {
@@ -1846,6 +2510,33 @@ public final class SignaturePairs {
     }
 
     public static void tickWorldDots(MinecraftServer server) {
+        if (!KITE_SNAPBACK_MAP.isEmpty()) {
+            for (UUID targetId : new ArrayList<>(KITE_SNAPBACK_MAP.keySet())) {
+                KiteSnapback ks = KITE_SNAPBACK_MAP.get(targetId);
+                if (ks == null) continue;
+                ServerLevel dimLevel = server.getLevel(ks.dimension());
+                if (dimLevel == null) {
+                    KITE_SNAPBACK_MAP.remove(targetId);
+                    continue;
+                }
+                if (dimLevel.getGameTime() >= ks.triggerTick()) {
+                    KITE_SNAPBACK_MAP.remove(targetId);
+                    Entity ent = dimLevel.getEntity(targetId);
+                    if (ent instanceof LivingEntity liv && liv.isAlive()) {
+                        Vec3 yank = ks.anchorPos().subtract(liv.position());
+                        liv.setDeltaMovement(yank.scale(0.45D).add(0.0D, -0.55D, 0.0D));
+                        liv.hurtMarked = true;
+                        liv.hurtServer(dimLevel, dimLevel.damageSources().fall(), 3.6F);
+                        dimLevel.sendParticles(
+                            ParticleTypes.CRIT,
+                            liv.getX(), liv.getY() + 0.7D, liv.getZ(),
+                            12, 0.3D, 0.3D, 0.3D, 0.1D
+                        );
+                    }
+                }
+            }
+        }
+
         if (server.getTickCount() % 20 != 0) {
             return;
         }

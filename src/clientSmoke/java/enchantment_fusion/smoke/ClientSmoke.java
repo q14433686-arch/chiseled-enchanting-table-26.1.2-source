@@ -438,6 +438,71 @@ public final class ClientSmoke implements ClientModInitializer {
                         require(enchantment_fusion.compat.CetCleanseOperations.countTransmutedSingles(extractedTrans.updatedTarget()) == 0,
                             "Expected TRANSMUTED_ENCHANTS emptied after extraction");
 
+                        // 0.6.0: Verify real RecipeType.SMELTING auto-smelt on Fortune-multiplied Raw Iron drops
+                        var smeltedIron = CrossDomainTransmutations.resolveSmeltedStack(
+                            sp.level(), new ItemStack(Items.RAW_IRON, 3), Blocks.IRON_ORE
+                        );
+                        require(
+                            smeltedIron != null && smeltedIron.result().is(Items.IRON_INGOT) && smeltedIron.result().getCount() == 3,
+                            "Expected 3x RAW_IRON to smelt into 3x IRON_INGOT via live RecipeType.SMELTING"
+                        );
+                        require(
+                            CrossDomainTransmutations.resolveSmeltedStack(sp.level(), new ItemStack(Items.IRON_INGOT, 2), Blocks.IRON_ORE) == null,
+                            "Already-smelted ingots must not re-smelt"
+                        );
+
+                        // 0.6.0: Verify Vanilla Anvil strictly blocks Cross-Domain Inscription even when Creative instabuild == true
+                        boolean savedInstabuild = sp.getAbilities().instabuild;
+                        try {
+                            sp.getAbilities().instabuild = true;
+                            var fireAspectHolder = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+                                .getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("fire_aspect")));
+                            net.minecraft.world.inventory.AnvilMenu anvil = new net.minecraft.world.inventory.AnvilMenu(
+                                77, sp.getInventory(), net.minecraft.world.inventory.ContainerLevelAccess.create(sp.level(), sp.blockPosition())
+                            );
+                            anvil.getSlot(0).set(new ItemStack(Items.DIAMOND_PICKAXE));
+                            anvil.getSlot(1).set(FusionStationOperations.createSingleEnchantedBook(fireAspectHolder, 2));
+                            anvil.createResult();
+                            require(
+                                anvil.getSlot(2).getItem().isEmpty(),
+                                "Vanilla Anvil must NEVER perform Cross-Domain Inscription even in Creative Mode"
+                            );
+                        } finally {
+                            sp.getAbilities().instabuild = savedInstabuild;
+                        }
+
+                        // 0.6.0: Verify Spear preserves bare Right-Click for vanilla Hold-Charge and uses Sneak+Right-Click for active throw
+                        ItemStack loyalSpear = new ItemStack(Items.GOLDEN_SPEAR, 1);
+                        loyalSpear.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:loyalty", 3));
+                        sp.setShiftKeyDown(false);
+                        require(
+                            !CrossDomainTransmutations.hasReadyRightClickAbility(sp, loyalSpear),
+                            "Bare Right-Click on Spear must NOT be intercepted so vanilla Hold-Right-Click charging stays intact!"
+                        );
+                        sp.setShiftKeyDown(true);
+                        require(
+                            CrossDomainTransmutations.hasReadyRightClickAbility(sp, loyalSpear),
+                            "Sneak + Right-Click on Spear with Loyalty transmutation must trigger returning javelin throw!"
+                        );
+                        sp.setShiftKeyDown(false);
+
+                        // 0.6.0: Verify SPEAR_CHARGE_LANCE + ProjectilePathTracker trajectory cache & cleanup
+                        boolean lanceLaunched = enchantment_fusion.mechanics.FlyingBladeManager.launchChargeLance(
+                            sp.level(), sp, loyalSpear, 1.25F
+                        );
+                        require(lanceLaunched, "Expected SPEAR_CHARGE_LANCE launch to succeed");
+                        enchantment_fusion.mechanics.FlyingBladeManager.tickServer(server);
+                        require(
+                            enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() >= 1,
+                            "Expected ProjectilePathTracker to record active flight trajectory"
+                        );
+                        enchantment_fusion.mechanics.FlyingBladeManager.flushAll();
+                        enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
+                        require(
+                            enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 0,
+                            "Expected ProjectilePathTracker.flushAll() to clear cached paths"
+                        );
+
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
@@ -459,7 +524,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 resourceReloadFuture.join();
                 finish(
                     client,
-                    "CLIENT SMOKE PASS: 0.5.0 3D flying blades + 140 cross-domain variants + CET cleanse/purge + orbital/GUI VFX + resource reload"
+                    "CLIENT SMOKE PASS: 0.6.0 auto-smelt + anvil guard + Spear multi-trigger + trajectory path cache + 174 signatures + CET cleanse"
                 );
             }
             default -> throw new AssertionError("Unknown phase " + phase);

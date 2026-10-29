@@ -1,6 +1,8 @@
 package enchantment_fusion.mechanics;
 
+import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.TriggerType;
+import enchantment_fusion.registry.FusionDataComponents;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +15,7 @@ import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
@@ -29,7 +32,7 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Wires Fabric server lifecycle, damage/death interception, combat, mining, item usage,
- * fishing hooks, disconnect cleanup (CPL-02), and throttled world scans (CPL-03).
+ * fishing hooks, disconnect cleanup (CPL-02), and trajectory path caching ({@link ProjectilePathTracker}).
  */
 public final class MatrixRuntimeHooks {
     private static final EquipmentSlot[] ARMOR_AND_HAND_SLOTS = {
@@ -50,6 +53,7 @@ public final class MatrixRuntimeHooks {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             AberrantRegistry.flushAllCages(server);
             FlyingBladeManager.flushAll();
+            ProjectilePathTracker.flushAll();
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
@@ -58,6 +62,7 @@ public final class MatrixRuntimeHooks {
             AberrantRegistry.clearRuntimeState();
             CrossDomainTransmutations.clearRuntimeState();
             FlyingBladeManager.flushAll();
+            ProjectilePathTracker.flushAll();
             PEAK_FALL_DISTANCE.clear();
         });
 
@@ -68,6 +73,7 @@ public final class MatrixRuntimeHooks {
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
+            ProjectilePathTracker.onPlayerDisconnect(pid);
             MatrixEffectExecutor.onPlayerDisconnect(pid);
             CompendiumDiscoveryTracker.onPlayerDisconnect(pid);
         });
@@ -94,7 +100,7 @@ public final class MatrixRuntimeHooks {
             return true;
         });
 
-        // Melee Strike + Riptide Spin-Attack (MIX-02) + Pet Protection + Charge-Gated Dispatch (CPL-01)
+        // Melee Strike + Riptide Spin-Attack (MIX-02) + Pet Protection + Multi-Slot Stacking Dispatch
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             if (!world.isClientSide()
                 && !player.isSpectator()
@@ -107,7 +113,6 @@ public final class MatrixRuntimeHooks {
                 ItemStack weapon = serverPlayer.getItemInHand(hand);
                 float charge = serverPlayer.getAttackStrengthScale(0.5F);
                 boolean riptideSpin = serverPlayer.isAutoSpinAttack();
-                // CPL-01: Require >= 55% attack charge (or active Riptide spin) before firing bonus magic procs
                 if (charge < 0.55F && !riptideSpin) {
                     return InteractionResult.PASS;
                 }
@@ -121,7 +126,7 @@ public final class MatrixRuntimeHooks {
                 }
                 int savedInvuln = target.invulnerableTime;
                 try {
-                    MatrixEffectExecutor.dispatch(
+                    MatrixEffectExecutor.dispatchAcrossEquippedSlots(
                         serverLevel, serverPlayer, weapon, triggers, target, target.position(), fullCharge, charge
                     );
                     target.invulnerableTime = 0;
@@ -133,7 +138,7 @@ public final class MatrixRuntimeHooks {
             return InteractionResult.PASS;
         });
 
-        // Right-Click Item Use (MIX-03: Fishing Rod reel-in signatures + direct 3D Returning Blade / Active Skills!)
+        // Right-Click Item Use (Spears preserve vanilla Hold-Right-Click Charge; Sneak+Right-Click activates Spear javelin skills!)
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (player.isSpectator()) {
                 return InteractionResult.PASS;
@@ -166,21 +171,27 @@ public final class MatrixRuntimeHooks {
                 ItemStack tool = serverPlayer.getMainHandItem();
                 if (!CrossDomainTransmutations.onBeforeBlockBreak(serverLevel, serverPlayer, pos, state)) {
                     SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
-                    MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, tool, TriggerType.ON_BLOCK_HARVEST, null, Vec3.atCenterOf(pos));
-                    MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, tool, TriggerType.ON_UTILITY_CYCLE, null, Vec3.atCenterOf(pos));
+                    MatrixEffectExecutor.dispatchAcrossEquippedSlots(
+                        serverLevel, serverPlayer, tool,
+                        EnumSet.of(TriggerType.ON_BLOCK_HARVEST, TriggerType.ON_UTILITY_CYCLE),
+                        null, Vec3.atCenterOf(pos), true, 1.0F
+                    );
                     return false;
                 }
             }
             return true;
         });
 
-        // Post-Break Harvest (Auto-Smelt Pick, Charcoal Axe, 3x1 Excavate, Magnet, Matrix, etc.)
+        // Post-Break Block Structural Effects (3x1 / Vein Peel / Haste; drop smelting runs post-playerDestroy in ServerPlayerGameModeHarvestMixin!)
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
             if (!world.isClientSide() && world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 ItemStack tool = serverPlayer.getMainHandItem();
                 SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, tool, TriggerType.ON_BLOCK_HARVEST, null, Vec3.atCenterOf(pos));
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, tool, TriggerType.ON_UTILITY_CYCLE, null, Vec3.atCenterOf(pos));
+                MatrixEffectExecutor.dispatchAcrossEquippedSlots(
+                    serverLevel, serverPlayer, tool,
+                    EnumSet.of(TriggerType.ON_BLOCK_HARVEST, TriggerType.ON_UTILITY_CYCLE),
+                    null, Vec3.atCenterOf(pos), true, 1.0F
+                );
                 CrossDomainTransmutations.onAfterBlockBreak(serverLevel, serverPlayer, pos, state);
             }
         });
@@ -195,14 +206,11 @@ public final class MatrixRuntimeHooks {
                 try {
                     SignaturePairs.recordIncomingDamage(serverPlayer, damageTaken, serverLevel.getGameTime());
                     LivingEntity attacker = source.getEntity() instanceof LivingEntity liv ? liv : null;
-                    for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
-                        ItemStack equipped = serverPlayer.getItemBySlot(slot);
-                        if (!equipped.isEmpty()) {
-                            MatrixEffectExecutor.dispatch(
-                                serverLevel, serverPlayer, equipped, TriggerType.ON_DAMAGE_TAKEN, attacker, serverPlayer.position()
-                            );
-                        }
-                    }
+                    MatrixEffectExecutor.dispatchAcrossEquippedSlots(
+                        serverLevel, serverPlayer, serverPlayer.getMainHandItem(),
+                        EnumSet.of(TriggerType.ON_DAMAGE_TAKEN),
+                        attacker, serverPlayer.position(), true, 1.0F
+                    );
                     CrossDomainTransmutations.onAfterDamage(serverLevel, serverPlayer, source, damageTaken, blocked);
                 } finally {
                     IN_AFTER_DAMAGE.set(Boolean.FALSE);
@@ -215,14 +223,19 @@ public final class MatrixRuntimeHooks {
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
                 SignaturePairs.onEntityKilled(serverLevel, serverPlayer, entity);
                 ItemStack main = serverPlayer.getMainHandItem();
-                MatrixEffectExecutor.dispatch(serverLevel, serverPlayer, main, TriggerType.ON_UTILITY_CYCLE, entity, entity.position());
+                MatrixEffectExecutor.dispatchAcrossEquippedSlots(
+                    serverLevel, serverPlayer, main,
+                    EnumSet.of(TriggerType.ON_UTILITY_CYCLE),
+                    entity, entity.position(), true, 1.0F
+                );
                 CrossDomainTransmutations.onEntityKilled(serverLevel, serverPlayer, entity);
             }
         });
 
-        // Movement / Landing + Frosted Ice Cage Cracking + 3D Flying Blades + Gated Projectile Flight Physics (CPL-03)
+        // Movement / Landing + Frosted Ice Cage Cracking + 3D Flying Blades + Trajectory Path Cache
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             FlyingBladeManager.tickServer(server);
+            ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);
             AberrantRegistry.tickFrostedCages(server);
             for (ServerLevel world : server.getAllLevels()) {
@@ -233,22 +246,23 @@ public final class MatrixRuntimeHooks {
                 SignaturePairs.tickServerPlayer(serverLevel, player);
                 CrossDomainTransmutations.tickServerPlayer(serverLevel, player);
 
-                // CPL-03: Only scan nearby in-flight projectiles when player holds a ranged/trident weapon with transmutations
-                // (or on a 4-tick cadence for previously launched arrows whose weapon ItemStack is embedded on the projectile)
-                boolean holdsTransmutedRanged = isTransmutedRangedWeapon(player.getMainHandItem())
-                    || isTransmutedRangedWeapon(player.getOffhandItem());
-                if (holdsTransmutedRanged || serverLevel.getGameTime() % 4L == 0L) {
+                boolean holdsRelevantRanged = isTrajectoryRangedWeapon(player.getMainHandItem())
+                    || isTrajectoryRangedWeapon(player.getOffhandItem());
+                if (holdsRelevantRanged || serverLevel.getGameTime() % 2L == 0L) {
                     for (Projectile proj : serverLevel.getEntitiesOfClass(
                         Projectile.class,
-                        player.getBoundingBox().inflate(64.0D),
-                        p -> p.isAlive() && p.getOwner() == player && p.tickCount <= 160
+                        player.getBoundingBox().inflate(72.0D),
+                        p -> p.isAlive() && p.getOwner() == player && p.getType() != EntityType.FISHING_BOBBER && p.tickCount <= 180
                     )) {
                         ItemStack weapon = proj.getWeaponItem();
                         if ((weapon == null || weapon.isEmpty()) && proj instanceof ProjectileLaunchWeaponAccess acc) {
                             weapon = acc.ef$getLaunchWeapon();
                         }
-                        if (weapon != null && !weapon.isEmpty() && CrossDomainTransmutations.hasAnyTransmutedEnchants(weapon)) {
-                            CrossDomainTransmutations.onProjectileTick(serverLevel, proj, player, weapon);
+                        if (weapon != null && !weapon.isEmpty() && (hasCustomFusionOrTransmute(weapon) || playerHasAnyEquippedFusion(player))) {
+                            ProjectilePathTracker.recordProjectileStep(serverLevel, proj, player, weapon);
+                            if (CrossDomainTransmutations.hasAnyTransmutedEnchants(weapon)) {
+                                CrossDomainTransmutations.onProjectileTick(serverLevel, proj, player, weapon);
+                            }
                         }
                     }
                 }
@@ -259,25 +273,38 @@ public final class MatrixRuntimeHooks {
                 } else if (player.onGround()) {
                     Float peak = PEAK_FALL_DISTANCE.remove(id);
                     if (peak != null && peak >= 3.0F) {
-                        for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
-                            ItemStack gear = player.getItemBySlot(slot);
-                            if (!gear.isEmpty()) {
-                                MatrixEffectExecutor.dispatch(
-                                    serverLevel, player, gear, TriggerType.ON_MOVEMENT_OR_LAND, null, player.position()
-                                );
-                            }
-                        }
+                        MatrixEffectExecutor.dispatchAcrossEquippedSlots(
+                            serverLevel, player, player.getMainHandItem(),
+                            EnumSet.of(TriggerType.ON_MOVEMENT_OR_LAND),
+                            null, player.position(), true, 1.0F
+                        );
                     }
                 }
             }
         });
     }
 
-    private static boolean isTransmutedRangedWeapon(ItemStack stack) {
+    private static boolean hasCustomFusionOrTransmute(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        if (CrossDomainTransmutations.hasAnyTransmutedEnchants(stack)) return true;
+        return !stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).isEmpty();
+    }
+
+    private static boolean playerHasAnyEquippedFusion(ServerPlayer player) {
+        for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
+            ItemStack eq = player.getItemBySlot(slot);
+            if (!eq.isEmpty() && !eq.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isTrajectoryRangedWeapon(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
         boolean ranged = stack.getItem() instanceof BowItem
             || stack.getItem() instanceof CrossbowItem
             || stack.getItem() instanceof TridentItem;
-        return ranged && CrossDomainTransmutations.hasAnyTransmutedEnchants(stack);
+        return ranged && hasCustomFusionOrTransmute(stack);
     }
 }

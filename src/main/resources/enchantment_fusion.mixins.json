@@ -5,6 +5,7 @@
   "plugin": "enchantment_fusion.mixin.FusionMixinConfigPlugin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "AnvilCrossDomainGuardMixin",
     "CetCleanseMechanicsBridgeMixin",
     "CetCleanseQuotesBridgeMixin",
     "CetDisenchantBridgeMixin",
@@ -14,7 +15,8 @@
     "GrindstoneAberrationGuardMixin",
     "LivingEntityConsumableFusionMixin",
     "PlayerMiningFusionMixin",
-    "ProjectileImpactFusionMixin"
+    "ProjectileImpactFusionMixin",
+    "ServerPlayerGameModeHarvestMixin"
   ],
   "client": [
     "CetCleanseListPopulateMixin",

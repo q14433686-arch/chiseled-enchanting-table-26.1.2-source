@@ -1,6 +1,8 @@
 package enchantment_fusion.mechanics;
 
 import enchantment_fusion.data.FusionMatrixRegistry;
+import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
+import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
@@ -9,6 +11,7 @@ import enchantment_fusion.model.PayloadType;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,13 +47,17 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Executes Aberrant mutations, Handcrafted Signature Resonances, and the Directional
- * Catalyst x Law Synergy Engine ({@code [A ▷ B] != [B ▷ A]}) across any host equipment ("万物可铭刻").
+ * Catalyst x Law Synergy Engine ({@code [A ▷ B] != [B ▷ A]}) across any host equipment ("万物可铭刻"),
+ * supporting multi-pair ({@code ◇◇}) and multi-slot stacking while deduplicating identical pairs (BAL-02).
  */
 public final class MatrixEffectExecutor {
     private static final ThreadLocal<Boolean> IN_EXECUTION = ThreadLocal.withInitial(() -> Boolean.FALSE);
     private static final Map<String, Long> COOLDOWNS = new ConcurrentHashMap<>();
     private static final EquipmentSlot[] ARMOR_SLOTS = {
         EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+    };
+    private static final EquipmentSlot[] SECONDARY_EQUIP_SLOTS = {
+        EquipmentSlot.OFFHAND, EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
     };
 
     private MatrixEffectExecutor() {}
@@ -89,6 +96,36 @@ public final class MatrixEffectExecutor {
         dispatch(level, player, hostStack, EnumSet.of(firedTrigger), targetEntity, originPos, fullChargeMelee, 1.0F);
     }
 
+    /**
+     * Dispatches all fused pairs on {@code primaryHost} PLUS any distinct matching fused pairs equipped across
+     * Offhand and Armor slots, enabling true cross-slot enchantment stacking ("万物可铭刻 · 异种叠加，同种不叠").
+     */
+    public static void dispatchAcrossEquippedSlots(
+        ServerLevel level,
+        ServerPlayer player,
+        @Nullable ItemStack primaryHost,
+        Set<TriggerType> firedTriggers,
+        @Nullable LivingEntity targetEntity,
+        Vec3 originPos,
+        boolean fullChargeMelee,
+        float chargeScale
+    ) {
+        if (Boolean.TRUE.equals(IN_EXECUTION.get()) || firedTriggers == null || firedTriggers.isEmpty()) {
+            return;
+        }
+        Set<String> seenPairKeys = new HashSet<>();
+        if (primaryHost != null && !primaryHost.isEmpty()) {
+            dispatchInternal(level, player, primaryHost, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale, seenPairKeys, true);
+        }
+        for (EquipmentSlot slot : SECONDARY_EQUIP_SLOTS) {
+            ItemStack equipped = player.getItemBySlot(slot);
+            if (equipped.isEmpty() || equipped == primaryHost) {
+                continue;
+            }
+            dispatchInternal(level, player, equipped, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale, seenPairKeys, false);
+        }
+    }
+
     public static void dispatch(
         ServerLevel level,
         ServerPlayer player,
@@ -106,6 +143,21 @@ public final class MatrixEffectExecutor {
             || firedTriggers.isEmpty()) {
             return;
         }
+        dispatchInternal(level, player, hostStack, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale, new HashSet<>(), true);
+    }
+
+    private static void dispatchInternal(
+        ServerLevel level,
+        ServerPlayer player,
+        ItemStack hostStack,
+        Set<TriggerType> firedTriggers,
+        @Nullable LivingEntity targetEntity,
+        Vec3 originPos,
+        boolean fullChargeMelee,
+        float chargeScale,
+        Set<String> seenPairKeys,
+        boolean allowHostUniversalFallback
+    ) {
         FusedEnchantmentList list = hostStack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         if (list.isEmpty()) {
             return;
@@ -115,31 +167,41 @@ public final class MatrixEffectExecutor {
         FusionMatrixRegistry.Snapshot snapshot = FusionMatrixRegistry.current();
         long now = level.getGameTime();
         var registries = level.registryAccess();
+        boolean trajectoryEvent = firedTriggers.contains(TriggerType.ON_PROJECTILE_IMPACT)
+            || firedTriggers.contains(TriggerType.ON_TRIDENT_CHANNEL);
 
-        IN_EXECUTION.set(Boolean.TRUE);
-        try {
-            for (FusedPair pair : list.pairs()) {
-                Holder<Enchantment> pHolder = FusionStationOperations.lookupEnchantment(registries, pair.primaryId()).orElse(null);
-                FusionMatrixRegistry.MatrixProfile primaryProfile = snapshot.resolve(pair.primaryId(), pHolder);
+        for (FusedPair pair : list.pairs()) {
+            String dedupKey = pair.primaryId() + ">" + pair.secondaryId();
+            if (!seenPairKeys.add(dedupKey)) {
+                continue;
+            }
 
-                TriggerType matchedTrigger = null;
-                for (TriggerType ft : firedTriggers) {
-                    if (matchesUniversalHostTrigger(primaryProfile.trigger(), ft, hostForm)) {
-                        matchedTrigger = ft;
-                        break;
-                    }
+            Holder<Enchantment> pHolder = FusionStationOperations.lookupEnchantment(registries, pair.primaryId()).orElse(null);
+            FusionMatrixRegistry.MatrixProfile primaryProfile = snapshot.resolve(pair.primaryId(), pHolder);
+
+            TriggerType matchedTrigger = null;
+            for (TriggerType ft : firedTriggers) {
+                if (allowHostUniversalFallback
+                    ? matchesUniversalHostTrigger(primaryProfile.trigger(), ft, hostForm)
+                    : (primaryProfile.trigger() == ft)) {
+                    matchedTrigger = ft;
+                    break;
                 }
-                if (matchedTrigger == null) {
-                    continue;
-                }
+            }
+            if (matchedTrigger == null) {
+                continue;
+            }
 
-                String cdKey = cooldownKey(player.getUUID(), pair.primaryId(), pair.secondaryId());
-                long readyAt = COOLDOWNS.getOrDefault(cdKey, 0L);
-                if (now < readyAt) {
-                    continue;
-                }
-                COOLDOWNS.put(cdKey, now + Math.max(6, matchedTrigger.cooldownTicks()));
+            String cdKey = cooldownKey(player.getUUID(), pair.primaryId(), pair.secondaryId());
+            long readyAt = COOLDOWNS.getOrDefault(cdKey, 0L);
+            if (now < readyAt) {
+                continue;
+            }
+            COOLDOWNS.put(cdKey, now + Math.max(6, matchedTrigger.cooldownTicks()));
 
+            // Scope IN_EXECUTION per individual pair so Pair #1's hurtServer never suppresses sibling Pair #2!
+            IN_EXECUTION.set(Boolean.TRUE);
+            try {
                 if (pair.isAberrant()) {
                     AberrantRegistry.executeAberration(level, player, pair.aberrationId(), targetEntity, originPos);
                 }
@@ -162,11 +224,11 @@ public final class MatrixEffectExecutor {
                     * Math.clamp(chargeScale, 0.6F, 1.0F);
                 float scale = Math.clamp(lawScale, 0.55F, 2.6F);
                 executeDirectionalSynergy(
-                    level, player, hostStack, hostForm, primaryProfile.trigger(), payload, scale, targetEntity, originPos
+                    level, player, hostStack, hostForm, primaryProfile.trigger(), payload, scale, targetEntity, originPos, trajectoryEvent
                 );
+            } finally {
+                IN_EXECUTION.set(Boolean.FALSE);
             }
-        } finally {
-            IN_EXECUTION.set(Boolean.FALSE);
         }
     }
 
@@ -192,8 +254,8 @@ public final class MatrixEffectExecutor {
 
     /**
      * Directional Catalyst x Law Synergy Engine:
-     * {@code catalystTrigger} shapes the spatial geometry (aoe ring vs forward beam vs reactive pulse),
-     * while {@code payload} supplies the arcane law, making {@code [A ▷ B]} and {@code [B ▷ A]} genuinely distinct.
+     * {@code catalystTrigger} shapes the spatial geometry (aoe ring vs forward beam vs cached flight corridor),
+     * while {@code payload} supplies the emergent arcane law, making {@code [A ▷ B]} and {@code [B ▷ A]} distinct.
      */
     private static void executeDirectionalSynergy(
         ServerLevel level,
@@ -204,7 +266,8 @@ public final class MatrixEffectExecutor {
         PayloadType payload,
         float scale,
         @Nullable LivingEntity target,
-        Vec3 pos
+        Vec3 pos,
+        boolean trajectoryEvent
     ) {
         boolean utility = (hostForm == HostForm.TOOL || hostForm == HostForm.ARMOR);
         boolean wideCatalyst = (catalystTrigger == TriggerType.ON_SWEEP_OR_CLEAVE
@@ -212,13 +275,23 @@ public final class MatrixEffectExecutor {
             || catalystTrigger == TriggerType.ON_MOVEMENT_OR_LAND);
         double aoeRadius = wideCatalyst ? 4.4D : 3.2D;
 
+        CachedFlightPath cachedPath = null;
+        if (trajectoryEvent) {
+            Optional<CachedFlightPath> latest = ProjectilePathTracker.findLatestPathForOwner(player.getUUID(), level.dimension());
+            if (latest.isPresent() && (level.getGameTime() - latest.get().createdGameTime()) <= ProjectilePathTracker.ACTIVE_MAX_AGE_TICKS) {
+                cachedPath = latest.get();
+            }
+        }
+
         switch (payload) {
             case PYRO -> {
+                if (cachedPath != null) {
+                    ProjectilePathTracker.applyPathTrailEffect(level, player, cachedPath, PathTrailStyle.PYRO_WAKE, scale * 0.75F);
+                }
                 if (target != null) {
                     boolean alreadyBurning = target.isOnFire();
                     target.igniteForSeconds(Math.max(3.0F, 3.2F * scale));
                     if (alreadyBurning) {
-                        // Solar Cinder Detonation on burning targets!
                         target.hurtServer(level, level.damageSources().magic(), 2.2F * scale);
                         for (LivingEntity adj : nearbyHostiles(level, player, pos, aoeRadius, target)) {
                             adj.igniteForSeconds(2.5F * scale);
@@ -239,12 +312,14 @@ public final class MatrixEffectExecutor {
                 level.sendParticles(ParticleTypes.FLAME, pos.x, pos.y + 0.5D, pos.z, 12, 0.35D, 0.25D, 0.35D, 0.04D);
             }
             case CRYO -> {
+                if (cachedPath != null) {
+                    ProjectilePathTracker.applyPathTrailEffect(level, player, cachedPath, PathTrailStyle.CRYO_WAKE, scale * 0.75F);
+                }
                 if (target != null) {
                     boolean wasChilled = target.getTicksFrozen() >= 60;
                     target.setTicksFrozen(Math.min(350, target.getTicksFrozen() + Math.round(105 * scale)));
                     grantEffect(target, "slowness", Math.round(65 * scale), 1);
                     if (wasChilled) {
-                        // Shatter-Rime Resonance burst on chilled targets!
                         target.hurtServer(level, level.damageSources().magic(), 2.6F * scale);
                         level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.75F, 1.65F);
                     }
@@ -260,7 +335,9 @@ public final class MatrixEffectExecutor {
                 level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.5D, pos.z, 14, 0.4D, 0.25D, 0.4D, 0.03D);
             }
             case VOLT -> {
-                // Chain Arc Lightning jumping across nearby hostiles!
+                if (cachedPath != null) {
+                    ProjectilePathTracker.applyPathTrailEffect(level, player, cachedPath, PathTrailStyle.VOLT_CHAIN, scale * 0.80F);
+                }
                 float arcDmg = (level.isThundering() || player.isInWaterOrRain()) ? 3.2F * scale : 2.1F * scale;
                 if (target != null) {
                     target.hurtServer(level, level.damageSources().magic(), arcDmg);
@@ -284,6 +361,9 @@ public final class MatrixEffectExecutor {
                 level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.65F, 1.42F);
             }
             case GALE -> {
+                if (cachedPath != null) {
+                    ProjectilePathTracker.applyPathTrailEffect(level, player, cachedPath, PathTrailStyle.GALE_VACUUM_LINE, scale * 0.80F);
+                }
                 if (hostForm == HostForm.TOOL) {
                     pullNearbyDrops(level, player, pos, 6.0D);
                     grantEffect(player, "speed", 55, 0);
@@ -312,9 +392,11 @@ public final class MatrixEffectExecutor {
                 level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.4D, pos.z, 14, 0.35D, 0.25D, 0.35D, 0.07D);
             }
             case RETURN -> {
+                if (cachedPath != null) {
+                    ProjectilePathTracker.schedulePathEcho(cachedPath, 10L, 2.2F * scale, true, true);
+                }
                 pullNearbyDrops(level, player, pos, 7.0D);
                 if (target != null) {
-                    // Kinetic Tether: pulls distant target slightly closer or restores projectile ammo
                     if (hostForm == HostForm.RANGED && level.getRandom().nextFloat() < 0.35F) {
                         player.getInventory().placeItemBackInInventory(new ItemStack(Items.ARROW, 1));
                     } else if (player.distanceToSqr(target) > 9.0D) {
@@ -325,11 +407,13 @@ public final class MatrixEffectExecutor {
                 level.sendParticles(ParticleTypes.PORTAL, pos.x, pos.y + 0.5D, pos.z, 10, 0.3D, 0.3D, 0.3D, 0.06D);
             }
             case PIERCE -> {
+                if (cachedPath != null) {
+                    ProjectilePathTracker.schedulePathEcho(cachedPath, 8L, 2.0F * scale, false, true);
+                }
                 if (target != null) {
                     if (target.isBlocking()) target.stopUsingItem();
                     float armorBonus = target.getArmorValue() * 0.14F;
                     target.hurtServer(level, level.damageSources().magic(), 2.1F * scale + armorBonus);
-                    // Linear Penetrating Lance hitting enemies behind the primary target!
                     Vec3 dir = player.getLookAngle().normalize();
                     Vec3 lanceEnd = pos.add(dir.scale(3.6D));
                     spawnParticleBeam(level, ParticleTypes.CRIT, pos.add(0.0D, 0.8D, 0.0D), lanceEnd.add(0.0D, 0.8D, 0.0D), 6);
@@ -346,6 +430,9 @@ public final class MatrixEffectExecutor {
                 level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 0.6D, pos.z, 10, 0.25D, 0.25D, 0.25D, 0.09D);
             }
             case SCATTER -> {
+                if (cachedPath != null) {
+                    ProjectilePathTracker.schedulePathEcho(cachedPath, 9L, 1.8F * scale, false, false);
+                }
                 int hitCount = 0;
                 for (LivingEntity extra : nearbyHostiles(level, player, pos, aoeRadius + 0.8D, target)) {
                     if (++hitCount > 3) break;
@@ -359,13 +446,11 @@ public final class MatrixEffectExecutor {
                     );
                 }
                 if (hitCount == 0 && target != null) {
-                    // Single-target convergence bonus when isolated!
                     target.hurtServer(level, level.damageSources().magic(), 1.8F * scale);
                 }
                 level.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y + 0.6D, pos.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
             }
             case GRAVITY -> {
-                // Gravity Implosion Well: pulls nearby enemies inward toward impact point & slams!
                 float slamDamage = Math.max(2.2F, (float) Math.min(12.0D, player.fallDistance * 0.85D + 2.3F * scale));
                 for (LivingEntity mob : nearbyHostiles(level, player, pos, aoeRadius + 1.0D, null)) {
                     Vec3 pullIn = pos.subtract(mob.position()).scale(0.32D);
@@ -378,7 +463,6 @@ public final class MatrixEffectExecutor {
             }
             case EDGE -> {
                 if (target != null) {
-                    // Arcane Slash Crescent instead of plain Strength potion filler!
                     target.hurtServer(level, level.damageSources().playerAttack(player), 1.9F * scale);
                     if (wideCatalyst) {
                         for (LivingEntity adj : nearbyHostiles(level, player, pos, 3.0D, target)) {
@@ -413,7 +497,6 @@ public final class MatrixEffectExecutor {
             }
             case FORTUNE -> {
                 if (target != null && level.getRandom().nextFloat() < 0.32F) {
-                    // Lucky Critical Jackpot Strike!
                     target.hurtServer(level, level.damageSources().magic(), 2.4F * scale);
                     level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.70F, 1.58F);
                 }
@@ -440,7 +523,6 @@ public final class MatrixEffectExecutor {
                 level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 0.8D, player.getZ(), 8, 0.3D, 0.35D, 0.3D, 0.03D);
             }
             case MEND -> {
-                // Repairs host item OR most-damaged worn armor; if all pristine, converts into Vitality Heal!
                 int repair = Math.max(1, Math.round(2.0F * scale));
                 if (!repairHostOrArmor(player, hostStack, repair)) {
                     player.heal(Math.min(2.5F, 0.9F * scale));

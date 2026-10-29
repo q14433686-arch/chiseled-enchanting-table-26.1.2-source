@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.0] - 2026-10-29
+
+### Playtest Overhaul — Real Post-Destroy Auto-Smelt, Exclusive Fusion-Table Transmutation Guard, 174 Emergent Conceptual Signatures, Multi-Slot Stacking, Trajectory Path-Cache Engine & Multi-Mode Spear Triggers
+
+- **Post-`playerDestroy` Recipe-Driven Auto-Smelt (`ServerPlayerGameModeHarvestMixin` + `RecipeType.SMELTING`)**:
+  - Fixed the root cause of broken Auto-Smelt (`PlayerBlockBreakEvents.AFTER` firing right after `removeBlock(pos)` *before* `Block#playerDestroy` spawns `ItemEntity` drops, plus raw-item vs block-ID mismatches on `RAW_IRON`/`RAW_GOLD`/`RAW_COPPER`/`CLAY_BALL`).
+  - Hooked `ServerPlayerGameMode#destroyBlock` `@At("RETURN")` (`cir.getReturnValueZ() == true`) with re-entrant `ThreadLocal<Deque<HarvestSnapshot>>` safety so `auto_smelt_pick`, `auto_smelt_axe`, `smelt_fortune`, `molten_core_pick`, `kiln_overdrive`, `glazed_kiln_edge`, `true_gold_refinery`, and `geyser_bore` smelt real post-Fortune `ItemEntity` drops via live `RecipeType.SMELTING` (preserving Fortune counts, awarding smelting XP, skipping already-smelted ingots, and running drop magnets *after* smelting).
+- **Exclusive Fusion-Table Cross-Domain Guard (`AnvilCrossDomainGuardMixin` + `TRANSMUTED_ENCHANTS` Authority)**:
+  - Blocked Vanilla `AnvilMenu#createResult` (`priority = 1200`) from ever inscribing cross-domain enchantments (even under Creative `instabuild` bypass) or sacrificing `FUSED_PAIRS`/`TRANSMUTED_ENCHANTS` gear in the right anvil slot.
+  - Removed legacy `DataComponents.ENCHANTMENTS` cross-domain fallback from `CrossDomainTransmutations` and `FusionTooltipRenderer` so `化形铭刻` is 100% exclusive to `附魔融合台`.
+- **Emergent Wordplay Pairwise Redesign & Batch 17 (`150 → 174` Directional Signatures, `0` `regAlias`)**:
+  - Redesigned existing flat procs around genuine emergent conceptual meaning (`怀璧其罪`, `秋风扫叶`, `顺手牵羊`, `雁过拔毛`, `寸劲崩云`, `满月连珠`, `万流归宗`, `一叶分影`, `燎原星火`, `薪火相传`, `磨杵成针`, `余音绕梁`, `金缮百炼`, `庖丁解牛·隔山取玉`, `屏息一闪`, `吐纳剑气`, `点石寻脉`).
+  - Added 24 Batch 17 trajectory/Spear/idiom signatures (`回马金枪`, `人枪合一`, `百步穿杨`, `寻隙破绽`, `惊雷破阵`, `电光石火`, `风筝牵引`, `乘风归来`, `窑变琉璃`, `琥珀封烬`, `真金火炼`, `火中取栗`, `苦肉修身`, `卧薪尝胆`, `穿针引线`, `势如破竹`, `飞蛾扑火`, `烽火聚灵`, `水火淬刃`, `沸泉裂石`, `镜花水月`, `吹毛断发`, `千锤百炼`, `厚积薄发`) and expanded all **11** locale files to **`829` keys** with 100% parity.
+- **Full Stacking & Coexistence Across Enchantment Layers**:
+  - Audited and fixed stacking across native enchantments, multiple `0◇` `TRANSMUTED_ENCHANTS`, `2◇` `FUSED_PAIRS`, and all 6 equipped gear slots (`dispatchAcrossEquippedSlots`, per-pair recursion guard, per-skill `ACTIVE_SKILL_COOLDOWNS`, `invulnerableTime` save/restore around multi-proc combat, and native-only `isIncompatibleWithHost` gating).
+- **Temporary Trajectory Path-Cache Engine (`ProjectilePathTracker` · `路径暂缓存判定`)**:
+  - Added bounded sampled flight-corridor tracking (`POST_IMPACT_TTL_TICKS = 100`) across Arrows, Tridents, and projected/thrown Swords, Axes, and Spears, powering continuous swept-capsule hit detection, delayed forward/reverse path afterimages (`schedulePathEcho`), corridor wakes (`PYRO_WAKE`, `CRYO_WAKE`, `VOLT_CHAIN`, `GALE_VACUUM_LINE`, `SILK_TETHER`), and Cross-Path X-Slash Resonance (`双轨交错·十字斩`).
+- **Multi-Mode Spear Trigger Architecture (`#minecraft:spears` Vanilla Hold-Right-Click Preserved)**:
+  - Never intercepts bare Right-Click on `TargetRole.SPEAR` so vanilla Spear Hold-Right-Click couched charging (`按住右键蓄力架矛`) works 100% natively; distributed Spear effects across hold-charge sustain (projectile deflection / aquatic couched rush), `>= 10`-tick charged release (`SPEAR_CHARGE_LANCE` `贯冲枪芒`), sprint/airborne thrusts, jab strikes, and `Sneak + Right-Click` active javelin throws.
+
 ## [0.5.0] - 2026-10-29
 
 ### Gameplay Overhaul — 3D Flying Blades, Full `43 × 15` Cross-Domain Coverage, Native `纂刻附魔台` Cleanse & Curse Purge, Directional Synergy Engine & Rich Inside/Outside-UI Audio-Visuals

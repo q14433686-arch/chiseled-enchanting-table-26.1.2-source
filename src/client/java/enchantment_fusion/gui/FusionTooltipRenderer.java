@@ -14,24 +14,19 @@ import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.HostForm;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 /**
  * Renders Enchantment Fusion tooltips:
@@ -172,8 +167,8 @@ public final class FusionTooltipRenderer {
     }
 
     /**
-     * Renders cross-domain standalone enchantments from {@link FusionDataComponents#TRANSMUTED_ENCHANTS}
-     * (API-01) and replaces any legacy cross-domain lines in {@link DataComponents#ENCHANTMENTS}.
+     * Renders cross-domain standalone enchantments exclusively from {@link FusionDataComponents#TRANSMUTED_ENCHANTS}
+     * (API-01 / fusion_table_only_transmuted_name: Vanilla Anvil enchantments never become cross-domain transmutations).
      */
     private static boolean renderCrossDomainEnchantmentLines(
         ItemStack stack,
@@ -183,9 +178,6 @@ public final class FusionTooltipRenderer {
         boolean shift
     ) {
         boolean any = false;
-        Set<String> renderedIds = new HashSet<>();
-
-        // 1. Primary clean storage: TRANSMUTED_ENCHANTS (API-01)
         Map<String, Integer> transmuted = stack.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of());
         int insertCursor = Math.min(1, lines.size());
         for (Map.Entry<String, Integer> entry : transmuted.entrySet()) {
@@ -198,7 +190,6 @@ public final class FusionTooltipRenderer {
             if (varOpt.isEmpty()) {
                 continue;
             }
-            renderedIds.add(enchId);
             any = true;
             TransmuteVariant variant = varOpt.get();
             int maxLv = resolveMaxLevel(registries, enchId);
@@ -211,58 +202,6 @@ public final class FusionTooltipRenderer {
                     vanillaFull,
                     Component.translatable(variant.descKey())
                 ).withStyle(ChatFormatting.DARK_AQUA));
-            }
-        }
-
-        // 2. Legacy backward-compat fallback for pre-0.4.1 items that stored cross-domain enchants in ENCHANTMENTS
-        ItemEnchantments enchants = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        if (enchants.isEmpty()) {
-            return any;
-        }
-        for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
-            Holder<Enchantment> holder = entry.getKey();
-            int level = entry.getIntValue();
-            String enchId = holder.unwrapKey().map(k -> k.identifier().toString()).orElse("");
-            if (enchId.isEmpty() || renderedIds.contains(enchId) || fusedList.containsEnchantmentId(enchId)) {
-                continue;
-            }
-            Optional<TransmuteVariant> varOpt = CrossDomainTransmutations.resolve(stack, enchId);
-            if (varOpt.isEmpty()) {
-                continue;
-            }
-            any = true;
-            TransmuteVariant variant = varOpt.get();
-            Component vanillaFull = Enchantment.getFullname(holder, level);
-            Component transmutedLine = buildTransmutedDisplayName(variant, level, holder.value().getMaxLevel(), enchId);
-
-            int foundIdx = -1;
-            String targetText = vanillaFull.getString();
-            for (int i = 0; i < lines.size(); i++) {
-                if (lines.get(i).getString().equals(targetText)) {
-                    foundIdx = i;
-                    break;
-                }
-            }
-
-            if (foundIdx >= 0) {
-                lines.set(foundIdx, transmutedLine);
-                if (shift) {
-                    lines.add(foundIdx + 1, Component.translatable(
-                        "tooltip.enchantment_fusion.transmute_origin_desc",
-                        vanillaFull,
-                        Component.translatable(variant.descKey())
-                    ).withStyle(ChatFormatting.DARK_AQUA));
-                }
-            } else {
-                int insertAt = Math.min(1, lines.size());
-                lines.add(insertAt, transmutedLine);
-                if (shift) {
-                    lines.add(insertAt + 1, Component.translatable(
-                        "tooltip.enchantment_fusion.transmute_origin_desc",
-                        vanillaFull,
-                        Component.translatable(variant.descKey())
-                    ).withStyle(ChatFormatting.DARK_AQUA));
-                }
             }
         }
         return any;

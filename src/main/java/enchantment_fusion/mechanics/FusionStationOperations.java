@@ -262,7 +262,8 @@ public final class FusionStationOperations {
                         || allStandalone.contains(pair.secondaryId())) {
                         return new StationPreview(OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, pair, false, 0.0, 0, sel, manageXp);
                     }
-                    if (isIncompatibleWithHost(sTarget, targetFusions, allStandalone, pair.primaryId(), registries)) {
+                    Set<String> vanillaOnlyIds = readUnfusedVanillaEnchantIds(sTarget, targetFusions);
+                    if (isIncompatibleWithHost(sTarget, targetFusions, vanillaOnlyIds, pair.primaryId(), registries)) {
                         return new StationPreview(OperationKind.INVALID, false, RejectReason.EXCLUSIVE_ON_HOST, pair, false, 0.0, 0, sel, manageXp);
                     }
                     int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
@@ -294,12 +295,19 @@ public final class FusionStationOperations {
             }
             if (p != null && s != null) {
                 Set<String> blockingIds = readAllStandaloneEnchantIds(sTarget, targetFusions);
-                if (p.sourceSlot() == SLOT_TARGET) blockingIds.remove(p.id());
-                if (s.sourceSlot() == SLOT_TARGET) blockingIds.remove(s.id());
+                Set<String> vanillaBlockingIds = readUnfusedVanillaEnchantIds(sTarget, targetFusions);
+                if (p.sourceSlot() == SLOT_TARGET) {
+                    blockingIds.remove(p.id());
+                    vanillaBlockingIds.remove(p.id());
+                }
+                if (s.sourceSlot() == SLOT_TARGET) {
+                    blockingIds.remove(s.id());
+                    vanillaBlockingIds.remove(s.id());
+                }
 
                 boolean zeroXp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst);
                 boolean runtimeIncompatPair = !Enchantment.areCompatible(p.holder(), s.holder());
-                boolean incompatHost = isIncompatibleWithHost(sTarget, targetFusions, blockingIds, p.id(), registries);
+                boolean incompatHost = isIncompatibleWithHost(sTarget, targetFusions, vanillaBlockingIds, p.id(), registries);
                 PairEvaluation eval = FusionRuleEngine.evaluateFusion(
                     new EnchantInput(p.id(), p.level(), p.maxLevel()),
                     new EnchantInput(s.id(), s.level(), s.maxLevel()),
@@ -409,9 +417,12 @@ public final class FusionStationOperations {
             return false;
         }
         Holder<Enchantment> newHolder = newHolderOpt.get();
+        if (!newHolder.value().canEnchant(host)) {
+            return false;
+        }
         for (FusedPair fp : targetFusions.pairs()) {
             Optional<Holder<Enchantment>> ex = lookupEnchantment(registries, fp.primaryId());
-            if (ex.isPresent() && !Enchantment.areCompatible(newHolder, ex.get())) {
+            if (ex.isPresent() && ex.get().value().canEnchant(host) && !Enchantment.areCompatible(newHolder, ex.get())) {
                 return true;
             }
         }
@@ -457,13 +468,6 @@ public final class FusionStationOperations {
         if (Math.max(currentTransmuted, currentVanilla) >= clampedLv) {
             return Optional.of(new StationPreview(
                 OperationKind.INVALID, false, RejectReason.DUPLICATE_ON_HOST, null, false, 0.0, 0, sel, manageXp
-            ));
-        }
-        Set<String> otherIds = readAllStandaloneEnchantIds(sTarget, targetFusions);
-        otherIds.remove(bookCand.id());
-        if (isIncompatibleWithHost(sTarget, targetFusions, otherIds, bookCand.id(), registries)) {
-            return Optional.of(new StationPreview(
-                OperationKind.INVALID, false, RejectReason.EXCLUSIVE_ON_HOST, null, false, 0.0, 0, sel, manageXp
             ));
         }
 

@@ -3,6 +3,10 @@ package enchantment_fusion.mixin;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
 import enchantment_fusion.mechanics.ProjectileLaunchWeaponAccess;
+import enchantment_fusion.mechanics.ProjectilePathTracker;
+import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
+import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
+import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.model.TriggerType;
 import java.util.EnumSet;
 import java.util.Set;
@@ -20,6 +24,7 @@ import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -28,13 +33,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Hooks {@link Projectile#onHit(HitResult)} and snapshots the firing weapon at owner-bind / launch
- * without falling back to {@code shooter.getMainHandItem()} at impact time (EF-009 / EF-010):
- * <ul>
- *   <li>Retains {@code ef$launchWeapon} across piercing multi-hits and exposes {@link ProjectileLaunchWeaponAccess}.</li>
- *   <li>Tridents dispatch both {@code ON_TRIDENT_CHANNEL} and {@code ON_PROJECTILE_IMPACT} (MIX-02).</li>
- *   <li>Fishing bobber hits do NOT fire reel-in signatures early (MIX-03).</li>
- * </ul>
+ * Hooks {@link Projectile#onHit(HitResult)}, snapshots the firing weapon at owner-bind / launch,
+ * feeds Arrow &amp; Trident flight nodes into {@link ProjectilePathTracker} ({@code 路径暂缓存判定}),
+ * and dispatches multi-slot fusion reactions on impact (EF-009 / EF-010 / MIX-02 / MIX-03).
  */
 @Mixin(Projectile.class)
 public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWeaponAccess {
@@ -54,15 +55,13 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
     @Inject(method = "setOwner(Lnet/minecraft/world/entity/Entity;)V", at = @At("TAIL"))
     private void ef$captureLaunchWeaponOnOwnerBind(@Nullable Entity owner, CallbackInfo ci) {
         Projectile self = (Projectile) (Object) this;
-        if (!(self.level() instanceof ServerLevel) || !(owner instanceof ServerPlayer shooter)) {
+        if (!(self.level() instanceof ServerLevel serverLevel) || !(owner instanceof ServerPlayer shooter)) {
             return;
         }
         ItemStack firedFrom = self.getWeaponItem();
         if (firedFrom != null && !firedFrom.isEmpty()) {
             this.ef$launchWeapon = firedFrom.copyWithCount(1);
-            return;
-        }
-        if (self.getType() == EntityType.FISHING_BOBBER) {
+        } else if (self.getType() == EntityType.FISHING_BOBBER) {
             ItemStack main = shooter.getMainHandItem();
             if (main.getItem() instanceof FishingRodItem) {
                 this.ef$launchWeapon = main.copyWithCount(1);
@@ -73,23 +72,25 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
                 }
             }
             return;
-        }
-        if (!this.ef$launchWeapon.isEmpty()) {
-            return;
-        }
-        ItemStack using = shooter.getUseItem();
-        if (!using.isEmpty() && isProjectileLauncher(using)) {
-            this.ef$launchWeapon = using.copyWithCount(1);
-            return;
-        }
-        ItemStack main = shooter.getMainHandItem();
-        if (isProjectileLauncher(main)) {
-            this.ef$launchWeapon = main.copyWithCount(1);
-        } else {
-            ItemStack off = shooter.getOffhandItem();
-            if (isProjectileLauncher(off)) {
-                this.ef$launchWeapon = off.copyWithCount(1);
+        } else if (this.ef$launchWeapon.isEmpty()) {
+            ItemStack using = shooter.getUseItem();
+            if (!using.isEmpty() && isProjectileLauncher(using)) {
+                this.ef$launchWeapon = using.copyWithCount(1);
+            } else {
+                ItemStack main = shooter.getMainHandItem();
+                if (isProjectileLauncher(main)) {
+                    this.ef$launchWeapon = main.copyWithCount(1);
+                } else {
+                    ItemStack off = shooter.getOffhandItem();
+                    if (isProjectileLauncher(off)) {
+                        this.ef$launchWeapon = off.copyWithCount(1);
+                    }
+                }
             }
+        }
+
+        if (!this.ef$launchWeapon.isEmpty() && self.getType() != EntityType.FISHING_BOBBER) {
+            ProjectilePathTracker.recordProjectileStep(serverLevel, self, shooter, this.ef$launchWeapon);
         }
     }
 
@@ -127,11 +128,25 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
             return;
         }
 
+        Vec3 hitPos = hitResult.getLocation();
+        CachedFlightPath cachedPath = ProjectilePathTracker.recordStep(
+            self.getUUID(),
+            shooter.getUUID(),
+            serverLevel.dimension(),
+            ProjectilePathTracker.classifyProjectile(self),
+            weapon,
+            hitPos,
+            self.getDeltaMovement(),
+            serverLevel.getGameTime(),
+            self.isInWater()
+        );
+        ProjectilePathTracker.checkAndTriggerCrossPathResonance(serverLevel, shooter, cachedPath, 4.5F);
+        applyProjectilePathSignatures(serverLevel, shooter, weapon, cachedPath);
+
         LivingEntity target = (hitResult instanceof EntityHitResult ehr && ehr.getEntity() instanceof LivingEntity liv)
             ? liv
             : null;
 
-        // MIX-02: Thrown Tridents accept both ON_TRIDENT_CHANNEL and ON_PROJECTILE_IMPACT fusions!
         Set<TriggerType> triggers = (self.getType() == EntityType.TRIDENT)
             ? EnumSet.of(TriggerType.ON_TRIDENT_CHANNEL, TriggerType.ON_PROJECTILE_IMPACT)
             : EnumSet.of(TriggerType.ON_PROJECTILE_IMPACT);
@@ -140,14 +155,47 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
             int prevInv = target.invulnerableTime;
             target.invulnerableTime = 0;
             try {
-                MatrixEffectExecutor.dispatch(serverLevel, shooter, weapon, triggers, target, hitResult.getLocation(), true, 1.0F);
-                CrossDomainTransmutations.onProjectileImpact(serverLevel, self, shooter, weapon, target, hitResult.getLocation());
+                MatrixEffectExecutor.dispatchAcrossEquippedSlots(serverLevel, shooter, weapon, triggers, target, hitPos, true, 1.0F);
+                CrossDomainTransmutations.onProjectileImpact(serverLevel, self, shooter, weapon, target, hitPos);
             } finally {
                 target.invulnerableTime = prevInv;
             }
+            if (!self.isAlive()) {
+                ProjectilePathTracker.markPathCompleted(self.getUUID(), hitPos, serverLevel.getGameTime());
+            }
         } else if (hitResult instanceof BlockHitResult) {
-            MatrixEffectExecutor.dispatch(serverLevel, shooter, weapon, triggers, null, hitResult.getLocation(), true, 1.0F);
-            CrossDomainTransmutations.onProjectileImpact(serverLevel, self, shooter, weapon, null, hitResult.getLocation());
+            ProjectilePathTracker.markPathCompleted(self.getUUID(), hitPos, serverLevel.getGameTime());
+            MatrixEffectExecutor.dispatchAcrossEquippedSlots(serverLevel, shooter, weapon, triggers, null, hitPos, true, 1.0F);
+            CrossDomainTransmutations.onProjectileImpact(serverLevel, self, shooter, weapon, null, hitPos);
+        }
+    }
+
+    @Unique
+    private static void applyProjectilePathSignatures(
+        ServerLevel level,
+        ServerPlayer shooter,
+        ItemStack weapon,
+        CachedFlightPath path
+    ) {
+        if (SignaturePairs.stackHasSignature(weapon, "eternal_bowstring")
+            || SignaturePairs.playerHasEquippedSignature(shooter, "eternal_bowstring")) {
+            ProjectilePathTracker.schedulePathEcho(path, 12L, 3.6F, false, true);
+        }
+        if (SignaturePairs.stackHasSignature(weapon, "boomerang_lance")
+            || SignaturePairs.playerHasEquippedSignature(shooter, "boomerang_lance")) {
+            ProjectilePathTracker.schedulePathEcho(path, 9L, 4.0F, true, true);
+        }
+        if (SignaturePairs.stackHasSignature(weapon, "threading_needle")
+            || SignaturePairs.playerHasEquippedSignature(shooter, "threading_needle")) {
+            ProjectilePathTracker.applyPathTrailEffect(level, shooter, path, PathTrailStyle.SILK_TETHER, 1.15F);
+        }
+        if (SignaturePairs.stackHasSignature(weapon, "thunderbolt_cavalry")
+            || SignaturePairs.playerHasEquippedSignature(shooter, "thunderbolt_cavalry")) {
+            ProjectilePathTracker.applyPathTrailEffect(level, shooter, path, PathTrailStyle.VOLT_CHAIN, 1.2F);
+        }
+        if (SignaturePairs.stackHasSignature(weapon, "sunfire_barrage")
+            || SignaturePairs.playerHasEquippedSignature(shooter, "sunfire_barrage")) {
+            ProjectilePathTracker.applyPathTrailEffect(level, shooter, path, PathTrailStyle.PYRO_WAKE, 1.15F);
         }
     }
 }

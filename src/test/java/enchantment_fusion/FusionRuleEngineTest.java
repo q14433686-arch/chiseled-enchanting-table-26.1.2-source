@@ -83,8 +83,8 @@ final class FusionRuleEngineTest {
     }
 
     @Test
-    void allOneHundredFiftySignatureResonancesAreStrictlyUniqueAndDirectional() {
-        assertEquals(150, SignaturePairs.allUniqueSignatures().size(), "Expected 150 unique directional Signature Resonances");
+    void allOneHundredSeventyFourSignatureResonancesAreStrictlyUniqueAndDirectional() {
+        assertEquals(174, SignaturePairs.allUniqueSignatures().size(), "Expected 174 unique directional Signature Resonances");
         Set<String> ids = new HashSet<>();
         for (SignatureEntry entry : SignaturePairs.allUniqueSignatures()) {
             assertTrue(ids.add(entry.id()), "Duplicate Signature ID forbidden: " + entry.id());
@@ -105,6 +105,14 @@ final class FusionRuleEngineTest {
         assertEquals("fortune_grace", SignaturePairs.resolve("minecraft:protection", "minecraft:fortune").orElseThrow().id());
         assertEquals("concussive_plunder", SignaturePairs.resolve("minecraft:knockback", "minecraft:looting").orElseThrow().id());
         assertEquals("trophy_shockwave", SignaturePairs.resolve("minecraft:looting", "minecraft:knockback").orElseThrow().id());
+        assertEquals("boomerang_lance", SignaturePairs.resolve("minecraft:lunge", "minecraft:loyalty").orElseThrow().id());
+        assertEquals("shadow_recall_lunge", SignaturePairs.resolve("minecraft:loyalty", "minecraft:lunge").orElseThrow().id());
+        assertEquals("hundred_step_skewer", SignaturePairs.resolve("minecraft:lunge", "minecraft:piercing").orElseThrow().id());
+        assertEquals("armor_seam_rush", SignaturePairs.resolve("minecraft:piercing", "minecraft:lunge").orElseThrow().id());
+        assertEquals("quench_temper_blade", SignaturePairs.resolve("minecraft:aqua_affinity", "minecraft:fire_aspect").orElseThrow().id());
+        assertEquals("geyser_bore", SignaturePairs.resolve("minecraft:fire_aspect", "minecraft:aqua_affinity").orElseThrow().id());
+        assertEquals("mirror_moon_sweep", SignaturePairs.resolve("minecraft:sweeping_edge", "minecraft:silk_touch").orElseThrow().id());
+        assertEquals("paper_thin_cleave", SignaturePairs.resolve("minecraft:silk_touch", "minecraft:sweeping_edge").orElseThrow().id());
     }
 
     @Test
@@ -266,6 +274,28 @@ final class FusionRuleEngineTest {
         assertTrue(abSrc.contains("Blocks.FROSTED_ICE"));
         assertFalse(abSrc.contains("Blocks.PACKED_ICE"));
         assertFalse(sigSrc.contains("Blocks.ICE."));
+    }
+
+    @Test
+    void trajectoryPathTrackerSegmentGeometryIsExact() {
+        net.minecraft.world.phys.Vec3 a = new net.minecraft.world.phys.Vec3(0.0D, 1.0D, 0.0D);
+        net.minecraft.world.phys.Vec3 b = new net.minecraft.world.phys.Vec3(10.0D, 1.0D, 0.0D);
+        net.minecraft.world.phys.Vec3 midAbove = new net.minecraft.world.phys.Vec3(5.0D, 2.5D, 0.0D);
+        assertEquals(
+            2.25D,
+            enchantment_fusion.mechanics.ProjectilePathTracker.distancePointToSegmentSq(midAbove, a, b),
+            1e-6,
+            "Midpoint 1.5 blocks above [0..10] segment must have squared distance 2.25"
+        );
+
+        net.minecraft.world.phys.Vec3 c = new net.minecraft.world.phys.Vec3(5.0D, 0.5D, -4.0D);
+        net.minecraft.world.phys.Vec3 d = new net.minecraft.world.phys.Vec3(5.0D, 0.5D, 4.0D);
+        assertEquals(
+            0.25D,
+            enchantment_fusion.mechanics.ProjectilePathTracker.segmentsClosestDistanceSq(a, b, c, d),
+            1e-6,
+            "Crossing segments separated by 0.5 Y must report closest squared distance 0.25"
+        );
     }
 
     @Test

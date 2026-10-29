@@ -51,6 +51,10 @@ public abstract class PlayerMiningFusionMixin {
             && state.getDestroySpeed(self.level(), BlockPos.ZERO) >= 3.0F) {
             mult *= 1.85F;
         }
+        if (!tool.isEmpty() && SignaturePairs.stackHasSignature(tool, "geyser_bore")
+            && state.getDestroySpeed(self.level(), BlockPos.ZERO) >= 3.0F) {
+            mult *= 1.65F;
+        }
         if (!tool.isEmpty() && SignaturePairs.stackHasSignature(tool, "ocean_breath_mine") && self.isInWaterOrRain()) {
             mult *= 1.35F;
         }

@@ -49,6 +49,10 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
+import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.Block;
@@ -133,7 +137,9 @@ public final class CrossDomainTransmutations {
     private static final Map<UUID, Integer> LAST_PLAYER_XP = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> BOTTLE_XP_BUFFER = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> REPLENISH_XP_BUFFER = new ConcurrentHashMap<>();
-    private static final Map<UUID, Long> ACTIVE_SKILL_COOLDOWN = new ConcurrentHashMap<>();
+    private static final Map<String, Long> ACTIVE_SKILL_COOLDOWNS = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> SPEAR_CHARGE_TICKS = new ConcurrentHashMap<>();
+    private static final Map<UUID, ItemStack> SPEAR_CHARGE_WEAPON = new ConcurrentHashMap<>();
 
     static {
         // Pre-register every canonical TransmuteVariant ID for Compendium & Locale parity verification
@@ -339,7 +345,10 @@ public final class CrossDomainTransmutations {
         LAST_PLAYER_XP.remove(playerId);
         BOTTLE_XP_BUFFER.remove(playerId);
         REPLENISH_XP_BUFFER.remove(playerId);
-        ACTIVE_SKILL_COOLDOWN.remove(playerId);
+        SPEAR_CHARGE_TICKS.remove(playerId);
+        SPEAR_CHARGE_WEAPON.remove(playerId);
+        String prefix = playerId + "|";
+        ACTIVE_SKILL_COOLDOWNS.keySet().removeIf(k -> k.startsWith(prefix));
     }
 
     public static void clearRuntimeState() {
@@ -351,7 +360,9 @@ public final class CrossDomainTransmutations {
         LAST_PLAYER_XP.clear();
         BOTTLE_XP_BUFFER.clear();
         REPLENISH_XP_BUFFER.clear();
-        ACTIVE_SKILL_COOLDOWN.clear();
+        ACTIVE_SKILL_COOLDOWNS.clear();
+        SPEAR_CHARGE_TICKS.clear();
+        SPEAR_CHARGE_WEAPON.clear();
     }
 
     public static boolean isEligibleCrossHost(ItemStack stack) {
@@ -862,17 +873,15 @@ public final class CrossDomainTransmutations {
 
     public static boolean hasAnyTransmutedEnchants(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        if (!stack.getOrDefault(enchantment_fusion.registry.FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()).isEmpty()) {
-            return true;
-        }
-        return !stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).isEmpty();
+        return !stack.getOrDefault(enchantment_fusion.registry.FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()).isEmpty();
     }
 
     public static int getTransmutedLevel(ItemStack stack, String variantId) {
         if (stack == null || stack.isEmpty() || variantId == null) {
             return 0;
         }
-        // API-01: Primary source is TRANSMUTED_ENCHANTS; falls back to legacy ENCHANTMENTS for backward compatibility
+        // Strictly authoritative: ONLY FusionDataComponents.TRANSMUTED_ENCHANTS (written exclusively by 附魔融合台)
+        // activates cross-domain transmutations — Vanilla Anvil ENCHANTMENTS never trigger 异位化形!
         Map<String, Integer> transMap = stack.getOrDefault(
             enchantment_fusion.registry.FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()
         );
@@ -882,17 +891,6 @@ public final class CrossDomainTransmutations {
                 if (v.isPresent() && variantId.equals(v.get().id())) {
                     return Math.max(0, e.getValue());
                 }
-            }
-        }
-        ItemEnchantments enchs = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-        if (enchs.isEmpty()) {
-            return 0;
-        }
-        for (Holder<Enchantment> holder : enchs.keySet()) {
-            String eid = holder.unwrapKey().map(k -> k.identifier().toString()).orElse(null);
-            Optional<TransmuteVariant> v = resolve(eid, stack);
-            if (v.isPresent() && variantId.equals(v.get().id())) {
-                return enchs.getLevel(holder);
             }
         }
         return 0;
@@ -1062,59 +1060,155 @@ public final class CrossDomainTransmutations {
         return true;
     }
 
-    public static void onAfterBlockBreak(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
-        ItemStack tool = player.getMainHandItem();
-        if (tool.isEmpty()) return;
+    /**
+     * Runs strictly AFTER {@code block.playerDestroy(...)} at the tail of {@code ServerPlayerGameMode#destroyBlock},
+     * when Fortune-multiplied {@link ItemEntity} drops already exist in {@code level} at {@code age == 0}.
+     */
+    public static void onPostDestroyBlockDrops(
+        ServerLevel level,
+        ServerPlayer player,
+        BlockPos pos,
+        BlockState state,
+        ItemStack toolSnapshot
+    ) {
+        ItemStack tool = (toolSnapshot == null || toolSnapshot.isEmpty()) ? player.getMainHandItem() : toolSnapshot;
+        if (tool.isEmpty()) {
+            return;
+        }
 
-        // 0a-Axe & 0a-Pick (API-03 + BAL-09): Post-break in-place smelting of freshly dropped items (Sneak pauses!)
-        if (!player.isShiftKeyDown()) {
-            int axeLv = getTransmutedLevel(tool, "auto_smelt_axe");
-            if (axeLv > 0) {
-                RandomSource rng = level.getRandom();
-                AABB dropBox = AABB.ofSize(Vec3.atCenterOf(pos), 2.4D, 2.4D, 2.4D);
-                if (state.is(BlockTags.LOGS)) {
-                    float charcoalChance = axeLv >= 2 ? 1.0F : 0.60F; // BAL-09: Level I = 60%, Level II+ = 100%
-                    for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
-                        if (ie.getItem().is(ItemTags.LOGS) && rng.nextFloat() < charcoalChance) {
-                            ie.setItem(new ItemStack(Items.CHARCOAL, ie.getItem().getCount()));
-                            level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.25D, 0.25D, 0.25D, 0.02D);
-                        }
-                    }
-                } else if (state.is(BlockTags.PLANKS) || state.is(BlockTags.WOODEN_SLABS) || state.is(BlockTags.WOODEN_STAIRS) || state.is(BlockTags.WOODEN_FENCES)) {
-                    float ashChance = axeLv >= 2 ? 0.20F : 0.45F;
-                    float charcoalThreshold = axeLv >= 2 ? 0.85F : 0.78F;
-                    for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
-                        float roll = rng.nextFloat();
-                        if (roll < ashChance) {
-                            ie.discard();
-                            level.sendParticles(ParticleTypes.LARGE_SMOKE, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 8, 0.25D, 0.25D, 0.25D, 0.03D);
-                            level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.35F, 1.3F);
-                        } else if (roll < charcoalThreshold) {
-                            ie.setItem(new ItemStack(Items.CHARCOAL, 1));
-                            level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 5, 0.2D, 0.2D, 0.2D, 0.02D);
-                        }
+        // 1. Run binary-fusion harvest drop transformations first (smelt_fortune, molten_core_pick, raw_ore_geode, etc.)
+        SignaturePairs.onPostDestroyHarvestDrops(level, player, tool, pos, state);
+
+        // 2. Axe Charcoal Kiln ("炭化伐木"): Logs -> Charcoal (always active); Planks -> thermal char (Sneak pauses plank burn)
+        int axeLv = getTransmutedLevel(tool, "auto_smelt_axe");
+        if (axeLv > 0) {
+            RandomSource rng = level.getRandom();
+            AABB dropBox = new AABB(pos).inflate(1.9D);
+            if (state.is(BlockTags.LOGS)) {
+                float charcoalChance = axeLv >= 2 ? 1.0F : 0.65F;
+                boolean charred = false;
+                for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
+                    if (ie.getItem().is(ItemTags.LOGS) && rng.nextFloat() < charcoalChance) {
+                        int outCount = ie.getItem().getCount() + (axeLv >= 2 && rng.nextFloat() < 0.25F ? 1 : 0);
+                        ie.setItem(new ItemStack(Items.CHARCOAL, outCount));
+                        charred = true;
                     }
                 }
-            }
-
-            if (getTransmutedLevel(tool, "auto_smelt_pick") > 0) {
-                Item smelted = mapAutoSmeltOutput(state.getBlock());
-                if (smelted != null) {
-                    AABB dropBox = AABB.ofSize(Vec3.atCenterOf(pos), 2.4D, 2.4D, 2.4D);
-                    boolean smeltedAny = false;
-                    for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
-                        if (!ie.getItem().is(smelted)) {
-                            ie.setItem(new ItemStack(smelted, Math.max(1, ie.getItem().getCount())));
-                            smeltedAny = true;
-                        }
-                    }
-                    if (smeltedAny) {
-                        ExperienceOrb.award(level, Vec3.atCenterOf(pos), 1);
-                        level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.25D, 0.25D, 0.25D, 0.02D);
+                if (charred) {
+                    ExperienceOrb.award(level, Vec3.atCenterOf(pos), 1);
+                    level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 7, 0.25D, 0.25D, 0.25D, 0.02D);
+                }
+            } else if (!player.isShiftKeyDown()
+                && (state.is(BlockTags.PLANKS) || state.is(BlockTags.WOODEN_SLABS) || state.is(BlockTags.WOODEN_STAIRS) || state.is(BlockTags.WOODEN_FENCES))) {
+                float ashChance = axeLv >= 2 ? 0.20F : 0.40F;
+                float charcoalThreshold = axeLv >= 2 ? 0.85F : 0.78F;
+                for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
+                    float roll = rng.nextFloat();
+                    if (roll < ashChance) {
+                        ie.discard();
+                        level.sendParticles(ParticleTypes.LARGE_SMOKE, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 8, 0.25D, 0.25D, 0.25D, 0.03D);
+                        level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.35F, 1.3F);
+                    } else if (roll < charcoalThreshold) {
+                        ie.setItem(new ItemStack(Items.CHARCOAL, 1));
+                        level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 5, 0.2D, 0.2D, 0.2D, 0.02D);
                     }
                 }
             }
         }
+
+        // 3. Pickaxe / Tool Auto-Smelt ("自动熔炼"): Queries real RecipeType.SMELTING on actual post-Fortune ItemEntity drops!
+        if (getTransmutedLevel(tool, "auto_smelt_pick") > 0) {
+            smeltFreshBlockDropsInPlace(level, pos, state, 1.0F);
+        }
+
+        // 4. Post-smelt Drop Magnets ("归囊 / 静默镐 / 定流 / 浚川 / 磁吸灵镐") teleport smelted ingots & XP directly to player!
+        boolean magnetActive = (getTransmutedLevel(tool, "current_anchor") > 0 && player.isInWater())
+            || (getTransmutedLevel(tool, "abyssal_dredge") > 0 && player.isInWaterOrRain())
+            || getTransmutedLevel(tool, "silent_pick") > 0
+            || getTransmutedLevel(tool, "auto_loot_return") > 0
+            || SignaturePairs.stackHasSignature(tool, "magnetic_pick")
+            || SignaturePairs.playerHasEquippedSignature(player, "magnetic_pick");
+        if (magnetActive) {
+            AABB pullBox = new AABB(pos).inflate(2.4D);
+            for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, pullBox, e -> e.isAlive() && e.getAge() <= 3)) {
+                drop.setNoPickUpDelay();
+                drop.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+            }
+            for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, pullBox, Entity::isAlive)) {
+                orb.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+            }
+        }
+    }
+
+    /**
+     * Smelts freshly dropped {@link ItemEntity} stacks around {@code pos} using live {@link RecipeType#SMELTING}
+     * (covering all vanilla + modded ores, sand, clay, stone, kelp, sponge, ancient debris, etc.) while preserving
+     * Fortune-multiplied item counts!
+     */
+    public static boolean smeltFreshBlockDropsInPlace(
+        ServerLevel level,
+        BlockPos pos,
+        BlockState brokenState,
+        float xpMultiplier
+    ) {
+        AABB dropBox = new AABB(pos).inflate(1.9D);
+        List<ItemEntity> drops = level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2);
+        if (drops.isEmpty()) {
+            return false;
+        }
+        boolean smeltedAny = false;
+        float totalXp = 0.0F;
+        for (ItemEntity ie : drops) {
+            ItemStack rawStack = ie.getItem();
+            if (rawStack.isEmpty()) {
+                continue;
+            }
+            SmeltOutcome outcome = resolveSmeltedStack(level, rawStack, brokenState.getBlock());
+            if (outcome != null && !outcome.result().isEmpty()) {
+                ie.setItem(outcome.result());
+                smeltedAny = true;
+                totalXp += outcome.xp();
+            }
+        }
+        if (smeltedAny) {
+            int xpAward = Math.max(1, Math.round(totalXp * xpMultiplier));
+            ExperienceOrb.award(level, Vec3.atCenterOf(pos), xpAward);
+            level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 7, 0.25D, 0.25D, 0.25D, 0.02D);
+        }
+        return smeltedAny;
+    }
+
+    public record SmeltOutcome(ItemStack result, float xp) {}
+
+    @Nullable
+    public static SmeltOutcome resolveSmeltedStack(@Nullable ServerLevel level, ItemStack rawStack, @Nullable Block brokenBlock) {
+        if (rawStack == null || rawStack.isEmpty()) {
+            return null;
+        }
+        int inputCount = Math.max(1, rawStack.getCount());
+        if (level != null) {
+            SingleRecipeInput singleInput = new SingleRecipeInput(rawStack.copyWithCount(1));
+            Optional<RecipeHolder<SmeltingRecipe>> recipeOpt =
+                level.recipeAccess().getRecipeFor(RecipeType.SMELTING, singleInput, level);
+            if (recipeOpt.isPresent()) {
+                SmeltingRecipe recipe = recipeOpt.get().value();
+                ItemStack assembled = recipe.assemble(singleInput, level.registryAccess());
+                if (!assembled.isEmpty() && !ItemStack.isSameItem(assembled, rawStack)) {
+                    int outCount = Math.min(99, inputCount * Math.max(1, assembled.getCount()));
+                    return new SmeltOutcome(assembled.copyWithCount(outCount), Math.max(0.2F, recipe.experience()) * inputCount);
+                }
+            }
+        }
+        Item fallback = mapItemAutoSmeltFallback(rawStack.getItem(), brokenBlock);
+        if (fallback != null && !rawStack.is(fallback)) {
+            return new SmeltOutcome(new ItemStack(fallback, inputCount), 0.7F * inputCount);
+        }
+        return null;
+    }
+
+    public static void onAfterBlockBreak(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
+        ItemStack tool = player.getMainHandItem();
+        if (tool.isEmpty()) return;
 
         // 1. Frost Walker "封冻": seal adjacent water/lava into frosted ice / cobblestone!
         if (getTransmutedLevel(tool, "frost_seal") > 0) {
@@ -1132,17 +1226,6 @@ public final class CrossDomainTransmutations {
         // 9. Fire Protection "隔热": extinguish self while mining
         if (getTransmutedLevel(tool, "heat_shield_pick") > 0 && player.isOnFire()) {
             player.clearFire();
-        }
-
-        // 2, 6, 0b & 26: Depth Strider "定流" / Swift Sneak "静默镐" / Aqua Affinity "浚川利器" / Loyalty "归囊" pull drops straight to player
-        if ((getTransmutedLevel(tool, "current_anchor") > 0 && player.isInWater())
-            || (getTransmutedLevel(tool, "abyssal_dredge") > 0 && player.isInWaterOrRain())
-            || getTransmutedLevel(tool, "silent_pick") > 0
-            || getTransmutedLevel(tool, "auto_loot_return") > 0) {
-            for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, AABB.ofSize(Vec3.atCenterOf(pos), 3.8D, 3.8D, 3.8D), Entity::isAlive)) {
-                drop.setNoPickUpDelay();
-                drop.setPos(player.getX(), player.getY() + 0.4D, player.getZ());
-            }
         }
 
         // 3: Respiration "鳃息护膜" — recover oxygen bubbles on submerged block harvest
@@ -1538,6 +1621,19 @@ public final class CrossDomainTransmutations {
                 target.hurtServer(level, level.damageSources().playerAttack(player), 1.4F + 0.85F * crushEdgeLv);
                 level.sendParticles(ParticleTypes.ENCHANTED_HIT, pos.x, pos.y + 0.8D, pos.z, 6, 0.2D, 0.2D, 0.2D, 0.06D);
             }
+
+            // Spear Channel 3 (Sprint / Couched Thrust): Riptide "水龙突刺" triggers on sprint-thrust without stealing Hold-Right-Click!
+            if (classifyTarget(weapon) == TargetRole.SPEAR && fullCharge && player.isSprinting()) {
+                int spearDashLv = getTransmutedLevel(weapon, "aqua_spiral_dash");
+                if (spearDashLv > 0 && checkSkillCooldown(player, "spear_sprint_dash", level.getGameTime(), 24)) {
+                    boolean wet = player.isInWaterOrRain();
+                    Vec3 surge = player.getLookAngle().normalize().scale(wet ? (0.95D + 0.24D * spearDashLv) : (0.58D + 0.14D * spearDashLv));
+                    player.push(surge.x, 0.14D, surge.z);
+                    player.hurtMarked = true;
+                    target.hurtServer(level, level.damageSources().playerAttack(player), (wet ? 3.8F : 2.2F) + 1.1F * spearDashLv);
+                    level.sendParticles(ParticleTypes.SPLASH, pos.x, pos.y + 0.8D, pos.z, 14, 0.35D, 0.25D, 0.35D, 0.08D);
+                }
+            }
         } finally {
             IN_CUSTOM_COMBAT.set(Boolean.FALSE);
         }
@@ -1598,13 +1694,33 @@ public final class CrossDomainTransmutations {
      * Client + Server check so {@code UseItemCallback} returns {@code InteractionResult.SUCCESS}
      * (giving immediate arm swing and preventing offhand Shield/Food from swallowing weapon skills).
      */
+    /**
+     * Spear Right-Click Protection: Plain Right-Click &amp; Hold-Right-Click on {@link TargetRole#SPEAR}
+     * NEVER intercepts {@code UseItemCallback}, 100% preserving vanilla Spear Hold-Right-Click Charging!
+     * Active Spear javelin throws instead trigger on {@code Sneak + Right-Click}.
+     */
+    public static boolean canTriggerDirectRightClick(boolean playerSneaking, ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        if (classifyTarget(stack) == TargetRole.SPEAR) {
+            return playerSneaking;
+        }
+        return true;
+    }
+
     public static boolean hasReadyRightClickAbility(Player player, ItemStack stack) {
         if (stack == null || stack.isEmpty() || player.getCooldowns().isOnCooldown(stack)) {
             return false;
         }
+        if (!canTriggerDirectRightClick(player.isShiftKeyDown(), stack)) {
+            return false;
+        }
+        boolean isSpearSneak = classifyTarget(stack) == TargetRole.SPEAR;
         if (getTransmutedLevel(stack, "returning_blade_throw") > 0) return true;
         if (getTransmutedLevel(stack, "phantom_trident") > 0) return true;
-        if (getTransmutedLevel(stack, "arrow_deflect") > 0) return true;
+        // On Spears, arrow_deflect activates automatically while Hold-Right-Click charging!
+        if (!isSpearSneak && getTransmutedLevel(stack, "arrow_deflect") > 0) return true;
         if (getTransmutedLevel(stack, "aqua_spiral_dash") > 0) return true;
         if (getTransmutedLevel(stack, "pogo_gale_slash") > 0 && !player.isUnderWater()) return true;
         if (getTransmutedLevel(stack, "jetstream_boost") > 0 && !(stack.getItem() instanceof FishingRodItem) && !player.isUnderWater()) {
@@ -1617,42 +1733,48 @@ public final class CrossDomainTransmutations {
         if (stack.isEmpty()) return false;
         long now = level.getGameTime();
         boolean activatedSkill = false;
+        boolean isSpear = classifyTarget(stack) == TargetRole.SPEAR;
+        boolean allowWeaponActive = canTriggerDirectRightClick(player.isShiftKeyDown(), stack);
+        boolean itemReady = allowWeaponActive && !player.getCooldowns().isOnCooldown(stack);
+        int maxVisualCooldown = 0;
 
-        // 26: Loyalty "飞剑掷斧" — Direct Right-Click launches a real 3D spinning weapon boomerang!
+        // 26: Loyalty "飞剑掷斧 / 潜行回旋飞矛" — launches a real 3D weapon boomerang tracked in ProjectilePathTracker!
         int throwLv = getTransmutedLevel(stack, "returning_blade_throw");
-        if (throwLv > 0 && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, Math.max(14, 34 - 5 * throwLv))) {
-            if (FlyingBladeManager.launchReturningBlade(level, player, hand, stack, throwLv)) {
+        if (itemReady && throwLv > 0) {
+            int cd = Math.max(14, 34 - 5 * throwLv);
+            if (checkSkillCooldown(player, "returning_blade_throw", now, cd)
+                && FlyingBladeManager.launchReturningBlade(level, player, hand, stack, throwLv)) {
                 CompendiumDiscoveryTracker.recordTransmuteProgress(player, "returning_blade_throw", CompendiumDiscoveryTracker.STATE_MASTERED);
-                player.getCooldowns().addCooldown(stack, Math.max(14, 34 - 5 * throwLv));
+                maxVisualCooldown = Math.max(maxVisualCooldown, cd);
                 activatedSkill = true;
             }
         }
 
-        // 22: Infinity "幻影连投" on Trident — Direct Right-Click launches a 3D glowing Phantom Trident without losing Trident!
+        // 22: Infinity "幻影连投" on Trident — launches a 3D glowing Phantom Trident without losing Trident!
         int phantomLv = getTransmutedLevel(stack, "phantom_trident");
-        if (!activatedSkill && phantomLv > 0 && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, 18)) {
+        if (itemReady && phantomLv > 0 && checkSkillCooldown(player, "phantom_trident", now, 18)) {
             if (FlyingBladeManager.launchLinearPhantomWeapon(level, player, hand, stack, phantomLv, FlyingBladeManager.FlightStyle.PHANTOM_LANCE)) {
                 CompendiumDiscoveryTracker.recordTransmuteProgress(player, "phantom_trident", CompendiumDiscoveryTracker.STATE_MASTERED);
-                player.getCooldowns().addCooldown(stack, 18);
+                maxVisualCooldown = Math.max(maxVisualCooldown, 18);
                 activatedSkill = true;
             }
         }
 
-        // 11: Projectile Protection "拨矢" — Direct Right-Click 360° sword-parry gale!
+        // 11: Projectile Protection "拨矢" — 360° sword-parry gale (on Spears this triggers during Hold-Right-Click charge; can co-stack with飞剑!)
         int deflectLv = getTransmutedLevel(stack, "arrow_deflect");
-        if (!activatedSkill && deflectLv > 0 && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, 18)) {
+        if (itemReady && !isSpear && deflectLv > 0 && checkSkillCooldown(player, "arrow_deflect", now, 18)) {
             deflectNearbyProjectiles(level, player, 3.6D + 0.65D * deflectLv);
             Vec3 front = player.getEyePosition().add(player.getLookAngle().scale(1.1D));
             level.sendParticles(ParticleTypes.SWEEP_ATTACK, front.x, front.y - 0.2D, front.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
             level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.75F, 1.35F);
-            player.getCooldowns().addCooldown(stack, 18);
+            maxVisualCooldown = Math.max(maxVisualCooldown, 18);
             activatedSkill = true;
         }
 
-        // 27: Riptide "水龙突刺 / 驭浪盾冲" — Direct Right-Click spiral surge (stronger in water/rain, mist-dash on dry land!)
+        // 27: Riptide "水龙突刺 / 驭浪盾冲" — spiral surge (on Spears requires Sneak+Right-Click or Sprint-Jab!)
         int dashLv = Math.max(getTransmutedLevel(stack, "aqua_spiral_dash"), getTransmutedLevel(stack, "surge_ram"));
-        if (!activatedSkill && dashLv > 0 && !(stack.getItem() instanceof ShieldItem && !player.isInWaterOrRain())
-            && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, 26)) {
+        if (itemReady && dashLv > 0 && !(stack.getItem() instanceof ShieldItem && !player.isInWaterOrRain())
+            && checkSkillCooldown(player, "aqua_spiral_dash", now, 26)) {
             boolean wet = player.isInWaterOrRain();
             double scale = wet ? (1.20D + 0.34D * dashLv) : (0.76D + 0.16D * dashLv);
             Vec3 launch = player.getLookAngle().normalize().scale(scale);
@@ -1664,16 +1786,16 @@ public final class CrossDomainTransmutations {
             }
             level.sendParticles(ParticleTypes.SPLASH, player.getX(), player.getY() + 0.8D, player.getZ(), 18, 0.45D, 0.3D, 0.45D, 0.1D);
             level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_2.value(), SoundSource.PLAYERS, 0.85F, wet ? 1.15F : 1.40F);
-            player.getCooldowns().addCooldown(stack, 26);
+            maxVisualCooldown = Math.max(maxVisualCooldown, 26);
             activatedSkill = true;
         }
 
-        // 32: Wind Burst "踩头连斩 / 罡风助翼" — Direct Right-Click updraft vault / Elytra jetstream boost!
+        // 32: Wind Burst "踩头连斩 / 罡风助翼" — updraft vault / Elytra jetstream boost!
         int pogoLv = getTransmutedLevel(stack, "pogo_gale_slash");
         int jetLv = getTransmutedLevel(stack, "jetstream_boost");
         int activeWindLv = Math.max(pogoLv, (stack.getItem() instanceof FishingRodItem) ? 0 : jetLv);
-        if (!activatedSkill && activeWindLv > 0 && !player.isUnderWater()
-            && !player.getCooldowns().isOnCooldown(stack) && checkActiveCooldown(player, now, 28)) {
+        if (itemReady && activeWindLv > 0 && !player.isUnderWater()
+            && checkSkillCooldown(player, "pogo_gale_boost", now, 28)) {
             Vec3 look = player.getLookAngle().normalize();
             if (player.isFallFlying()) {
                 Vec3 cur = player.getDeltaMovement();
@@ -1685,17 +1807,22 @@ public final class CrossDomainTransmutations {
             player.resetFallDistance();
             level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.3D, player.getZ(), 16, 0.4D, 0.2D, 0.4D, 0.08D);
             level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.80F, 0.85F);
-            player.getCooldowns().addCooldown(stack, 28);
+            maxVisualCooldown = Math.max(maxVisualCooldown, 28);
             activatedSkill = true;
         }
 
-        // Elytra Jetpack while worn on CHEST when right-clicking with an empty or passive hand while gliding!
-        if (!activatedSkill && player.isFallFlying() && !player.isUnderWater()) {
+        if (maxVisualCooldown > 0) {
+            player.getCooldowns().addCooldown(stack, maxVisualCooldown);
+        }
+
+        // Elytra Jetpack while worn on CHEST (independent cooldown from weapon skills!)
+        if (player.isFallFlying() && !player.isUnderWater()) {
             ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
             int wornJet = getTransmutedLevel(chest, "jetstream_boost");
             int wornStorm = player.isInWaterOrRain() ? getTransmutedLevel(chest, "storm_glider") : 0;
             int boostLv = Math.max(wornJet, wornStorm);
-            if (boostLv > 0 && !player.getCooldowns().isOnCooldown(chest) && checkActiveCooldown(player, now, 34)) {
+            if (boostLv > 0 && !player.getCooldowns().isOnCooldown(chest)
+                && checkSkillCooldown(player, "worn_elytra_jet", now, 34)) {
                 Vec3 look = player.getLookAngle().normalize();
                 player.setDeltaMovement(player.getDeltaMovement().scale(0.5D).add(look.scale(1.10D + 0.24D * boostLv)));
                 player.hurtMarked = true;
@@ -2451,6 +2578,9 @@ public final class CrossDomainTransmutations {
     public static void tickServerPlayer(ServerLevel level, ServerPlayer player) {
         UUID pid = player.getUUID();
 
+        // Spear Channel 2 (Hold-Right-Click Charge Sustain & Charged Release — preserves 100% of vanilla Spear charging!)
+        tickSpearHoldChargeAndRelease(level, player);
+
         // 13: Silk Touch on Armor "护田轻衬" — prevent jumping from trampling farmland / turtle eggs!
         if (hasArmorTransmute(player, "featherstep_lining") && player.fallDistance > 0.4F && player.fallDistance < 3.0F) {
             BlockPos below = player.blockPosition().below();
@@ -2518,7 +2648,7 @@ public final class CrossDomainTransmutations {
         // 26: Loyalty "虚空归返 / 归鸿引线" emergency player void rescue!
         if (player.getY() < level.getMinY() - 6
             && (hasArmorOrShieldTransmute(player, "void_homing") || hasArmorOrShieldTransmute(player, "auto_reel"))
-            && checkActiveCooldown(player, level.getGameTime(), 1200)) {
+            && checkSkillCooldown(player, "void_homing_rescue", level.getGameTime(), 1200)) {
             int terrainY = level.getHeight(
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING,
                 player.getBlockX(),
@@ -2794,12 +2924,86 @@ public final class CrossDomainTransmutations {
             || getTransmutedLevel(player.getOffhandItem(), variantId) > 0;
     }
 
-    private static boolean checkActiveCooldown(ServerPlayer player, long now, int ticks) {
-        Long until = ACTIVE_SKILL_COOLDOWN.get(player.getUUID());
+    /**
+     * Spear Hold-Right-Click Charge Sustain &amp; Charged Release Engine:
+     * <ul>
+     *   <li>While holding vanilla Right-Click Spear charge: activates {@code 拨矢护幕 / 剑格} projectile deflection
+     *       and {@code 破浪架矛} aquatic couched momentum without cancelling vanilla charging.</li>
+     *   <li>Upon releasing a charged Spear ({@code >= 10} ticks): projects a 3D cached-path {@code 贯虹枪芒}
+     *       when bearing spear-projection transmutations or signatures!</li>
+     * </ul>
+     */
+    private static void tickSpearHoldChargeAndRelease(ServerLevel level, ServerPlayer player) {
+        UUID pid = player.getUUID();
+        ItemStack activeUse = player.isUsingItem() ? player.getUseItem() : ItemStack.EMPTY;
+        if (!activeUse.isEmpty() && classifyTarget(activeUse) == TargetRole.SPEAR) {
+            int ticks = Math.max(1, player.getTicksUsingItem());
+            SPEAR_CHARGE_TICKS.put(pid, ticks);
+            SPEAR_CHARGE_WEAPON.put(pid, activeUse.copyWithCount(1));
+
+            // Sustain A: Spinning spearhead projectile deflection while holding charge
+            int deflectLv = Math.max(getTransmutedLevel(activeUse, "arrow_deflect"), getTransmutedLevel(activeUse, "blade_parry"));
+            if ((deflectLv > 0 || SignaturePairs.stackHasSignature(activeUse, "mirror_moon_sweep")) && ticks >= 3 && ticks % 4 == 0) {
+                deflectNearbyProjectiles(level, player, 3.0D + 0.55D * Math.max(1, deflectLv));
+                Vec3 tip = player.getEyePosition().add(player.getLookAngle().scale(1.25D));
+                level.sendParticles(ParticleTypes.CRIT, tip.x, tip.y - 0.15D, tip.z, 2, 0.12D, 0.12D, 0.12D, 0.02D);
+            }
+
+            // Sustain B: Couched hydro-propulsion while holding Spear charge in water or rain
+            int wetRush = Math.max(getTransmutedLevel(activeUse, "aqua_spiral_dash"), getTransmutedLevel(activeUse, "wave_parting"));
+            if ((wetRush > 0 || SignaturePairs.stackHasSignature(activeUse, "tidal_harpoon_rush"))
+                && player.isInWaterOrRain() && ticks >= 5 && ticks % 8 == 0) {
+                Vec3 push = player.getLookAngle().normalize().scale(0.28D + 0.08D * Math.max(1, wetRush));
+                player.push(push.x, Math.max(0.02D, push.y * 0.3D), push.z);
+                player.hurtMarked = true;
+                level.sendParticles(ParticleTypes.SPLASH, player.getX(), player.getY() + 0.6D, player.getZ(), 5, 0.25D, 0.15D, 0.25D, 0.04D);
+            }
+
+            // Visual charge stage chime at 10 & 20 ticks when Spear carries release-projection traits
+            if ((ticks == 10 || ticks == 20) && hasSpearChargeReleaseProjection(activeUse, player)) {
+                Vec3 tip = player.getEyePosition().add(player.getLookAngle().scale(1.2D));
+                level.sendParticles(ParticleTypes.END_ROD, tip.x, tip.y - 0.15D, tip.z, 5, 0.08D, 0.08D, 0.08D, 0.03D);
+            }
+            return;
+        }
+
+        Integer prevTicks = SPEAR_CHARGE_TICKS.remove(pid);
+        ItemStack prevSpear = SPEAR_CHARGE_WEAPON.remove(pid);
+        if (prevTicks != null && prevTicks >= 10 && prevSpear != null && !prevSpear.isEmpty()) {
+            if (hasSpearChargeReleaseProjection(prevSpear, player)
+                && checkSkillCooldown(player, "spear_charge_release_lance", level.getGameTime(), 18)) {
+                int tier = prevTicks >= 22 ? 4 : (prevTicks >= 15 ? 3 : 2);
+                FlyingBladeManager.launchLinearPhantomWeapon(
+                    level, player, InteractionHand.MAIN_HAND, prevSpear, tier, FlyingBladeManager.FlightStyle.SPEAR_CHARGE_LANCE
+                );
+            }
+        }
+    }
+
+    private static boolean hasSpearChargeReleaseProjection(ItemStack spear, ServerPlayer player) {
+        if (getTransmutedLevel(spear, "unending_edge") > 0
+            || getTransmutedLevel(spear, "sun_piercer") > 0
+            || getTransmutedLevel(spear, "twin_shadow_slash") > 0
+            || getTransmutedLevel(spear, "storm_rod_strike") > 0
+            || getTransmutedLevel(spear, "full_draw_cleave") > 0) {
+            return true;
+        }
+        return SignaturePairs.stackHasSignature(spear, "flying_sword_qi")
+            || SignaturePairs.stackHasSignature(spear, "hydro_flying_sword")
+            || SignaturePairs.stackHasSignature(spear, "boomerang_lance")
+            || SignaturePairs.stackHasSignature(spear, "hundred_step_skewer")
+            || SignaturePairs.stackHasSignature(spear, "thunderbolt_cavalry")
+            || SignaturePairs.stackHasSignature(spear, "abyssal_full_breath")
+            || SignaturePairs.playerHasEquippedSignature(player, "hundred_step_skewer");
+    }
+
+    public static boolean checkSkillCooldown(ServerPlayer player, String skillKey, long now, int ticks) {
+        String key = player.getUUID() + "|" + skillKey;
+        Long until = ACTIVE_SKILL_COOLDOWNS.get(key);
         if (until != null && now < until) {
             return false;
         }
-        ACTIVE_SKILL_COOLDOWN.put(player.getUUID(), now + ticks);
+        ACTIVE_SKILL_COOLDOWNS.put(key, now + Math.max(1, ticks));
         return true;
     }
 
@@ -2838,16 +3042,27 @@ public final class CrossDomainTransmutations {
     }
 
     @Nullable
-    private static Item mapAutoSmeltOutput(Block b) {
-        if (b == Blocks.IRON_ORE || b == Blocks.DEEPSLATE_IRON_ORE) return Items.IRON_INGOT;
-        if (b == Blocks.GOLD_ORE || b == Blocks.DEEPSLATE_GOLD_ORE) return Items.GOLD_INGOT;
-        if (b == Blocks.COPPER_ORE || b == Blocks.DEEPSLATE_COPPER_ORE) return Items.COPPER_INGOT;
-        if (b == Blocks.ANCIENT_DEBRIS) return Items.NETHERITE_SCRAP;
-        if (b == Blocks.COBBLESTONE) return Items.STONE;
-        if (b == Blocks.COBBLED_DEEPSLATE) return Items.DEEPSLATE;
-        if (b == Blocks.SAND || b == Blocks.RED_SAND) return Items.GLASS;
-        if (b == Blocks.CLAY) return Items.BRICK;
-        if (b == Blocks.NETHERRACK) return Items.NETHER_BRICK;
+    public static Item mapItemAutoSmeltFallback(Item rawItem, @Nullable Block brokenBlock) {
+        if (rawItem == Items.RAW_IRON || rawItem == Items.IRON_ORE || rawItem == Items.DEEPSLATE_IRON_ORE) return Items.IRON_INGOT;
+        if (rawItem == Items.RAW_GOLD || rawItem == Items.GOLD_ORE || rawItem == Items.DEEPSLATE_GOLD_ORE) return Items.GOLD_INGOT;
+        if (rawItem == Items.RAW_COPPER || rawItem == Items.COPPER_ORE || rawItem == Items.DEEPSLATE_COPPER_ORE) return Items.COPPER_INGOT;
+        if (rawItem == Items.ANCIENT_DEBRIS) return Items.NETHERITE_SCRAP;
+        if (rawItem == Items.COBBLESTONE) return Items.STONE;
+        if (rawItem == Items.STONE) return Items.SMOOTH_STONE;
+        if (rawItem == Items.COBBLED_DEEPSLATE) return Items.DEEPSLATE;
+        if (rawItem == Items.SAND || rawItem == Items.RED_SAND) return Items.GLASS;
+        if (rawItem == Items.CLAY_BALL) return Items.BRICK;
+        if (rawItem == Items.CLAY) return Items.TERRACOTTA;
+        if (rawItem == Items.NETHERRACK) return Items.NETHER_BRICK;
+        if (rawItem == Items.WET_SPONGE) return Items.SPONGE;
+        if (rawItem == Items.CACTUS) return Items.GREEN_DYE;
+        if (rawItem == Items.KELP) return Items.DRIED_KELP;
+        if (brokenBlock != null) {
+            if (brokenBlock == Blocks.IRON_ORE || brokenBlock == Blocks.DEEPSLATE_IRON_ORE) return Items.IRON_INGOT;
+            if (brokenBlock == Blocks.GOLD_ORE || brokenBlock == Blocks.DEEPSLATE_GOLD_ORE) return Items.GOLD_INGOT;
+            if (brokenBlock == Blocks.COPPER_ORE || brokenBlock == Blocks.DEEPSLATE_COPPER_ORE) return Items.COPPER_INGOT;
+            if (brokenBlock == Blocks.ANCIENT_DEBRIS) return Items.NETHERITE_SCRAP;
+        }
         return null;
     }
 

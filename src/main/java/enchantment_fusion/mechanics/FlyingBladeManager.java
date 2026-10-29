@@ -1,5 +1,7 @@
 package enchantment_fusion.mechanics;
 
+import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
+import enchantment_fusion.mechanics.ProjectilePathTracker.PathSourceKind;
 import enchantment_fusion.model.TriggerType;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -19,6 +21,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -37,24 +41,27 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Server-authoritative 3D flying weapon engine powering {@code 飞剑掷斧 (returning_blade_throw)},
- * {@code 幻影连投 (phantom_trident)}, and {@code 飞剑剑气 / 驭水飞剑} binary signatures via live
- * {@link Display.ItemDisplay} entities with outbound/return arcs, wall ricochet, drop vacuum,
- * and full binary-fusion payload delivery.
+ * Server-authoritative 3D flying weapon engine powering {@code 飞剑掷斧 / 回旋飞矛 (returning_blade_throw)},
+ * {@code 幻影连投 (phantom_trident)}, Spear Hold-Charge Release Qi ({@link FlightStyle#SPEAR_CHARGE_LANCE}),
+ * and {@code 御剑飞芒 / 御水飞剑} binary signatures via live {@link Display.ItemDisplay} entities backed by
+ * {@link ProjectilePathTracker} temporary trajectory caching ({@code 路径暂缓存判定}).
  */
 public final class FlyingBladeManager {
     private static final List<ActiveFlight> ACTIVE_FLIGHTS = new ArrayList<>();
-    private static final int MAX_ACTIVE_PER_PLAYER = 3;
+    private static final int MAX_ACTIVE_PER_PLAYER = 4;
 
     public enum FlightStyle {
         BOOMERANG_BLADE,
         PHANTOM_LANCE,
-        HYDRO_SWORD_QI
+        HYDRO_SWORD_QI,
+        SPEAR_CHARGE_LANCE
     }
 
     private static final class ActiveFlight {
+        final UUID flightId;
         final UUID ownerId;
         final ResourceKey<Level> dimension;
+        final PathSourceKind sourceKind;
         final Display.ItemDisplay displayEntity;
         final ItemStack weaponSnapshot;
         final InteractionHand hand;
@@ -74,8 +81,10 @@ public final class FlyingBladeManager {
         float spinAngle;
 
         ActiveFlight(
+            UUID flightId,
             UUID ownerId,
             ResourceKey<Level> dimension,
+            PathSourceKind sourceKind,
             Display.ItemDisplay displayEntity,
             ItemStack weaponSnapshot,
             InteractionHand hand,
@@ -87,8 +96,10 @@ public final class FlyingBladeManager {
             int outboundMaxTicks,
             int hardMaxTicks
         ) {
+            this.flightId = flightId;
             this.ownerId = ownerId;
             this.dimension = dimension;
+            this.sourceKind = sourceKind;
             this.displayEntity = displayEntity;
             this.weaponSnapshot = weaponSnapshot;
             this.hand = hand;
@@ -128,16 +139,27 @@ public final class FlyingBladeManager {
         Vec3 start = owner.getEyePosition().add(owner.getLookAngle().scale(0.65D)).add(0.0D, -0.18D, 0.0D);
         Vec3 dir = owner.getLookAngle().normalize();
 
-        Display.ItemDisplay display = spawnWeaponDisplay(level, start, dir, weapon, 65.0F);
+        PathSourceKind sourceKind = ProjectilePathTracker.classifyWeaponItem(weapon);
+        float initialPitch = sourceKind == PathSourceKind.SPEAR ? (owner.getXRot() - 45.0F) : 65.0F;
+        Display.ItemDisplay display = spawnWeaponDisplay(level, start, dir, weapon, initialPitch);
         double maxDist = 14.0D + 4.0D * clampedLv;
         double speed = 1.65D + 0.16D * clampedLv;
         int outTicks = Math.max(7, (int) Math.round(maxDist / speed));
 
+        UUID flightId = UUID.randomUUID();
+        ItemStack snap = weapon.copyWithCount(1);
+        ProjectilePathTracker.recordStep(
+            flightId, owner.getUUID(), level.dimension(), sourceKind, snap,
+            start, dir.scale(speed), level.getGameTime(), owner.isInWater()
+        );
+
         ACTIVE_FLIGHTS.add(new ActiveFlight(
+            flightId,
             owner.getUUID(),
             level.dimension(),
+            sourceKind,
             display,
-            weapon.copyWithCount(1),
+            snap,
             hand,
             clampedLv,
             FlightStyle.BOOMERANG_BLADE,
@@ -170,16 +192,27 @@ public final class FlyingBladeManager {
         Vec3 start = owner.getEyePosition().add(owner.getLookAngle().scale(0.75D)).add(0.0D, -0.15D, 0.0D);
         Vec3 dir = owner.getLookAngle().normalize();
 
-        float pitchTilt = (style == FlightStyle.PHANTOM_LANCE) ? (owner.getXRot() - 45.0F) : 70.0F;
+        PathSourceKind sourceKind = ProjectilePathTracker.classifyWeaponItem(weapon);
+        boolean lanceOriented = (style == FlightStyle.PHANTOM_LANCE || style == FlightStyle.SPEAR_CHARGE_LANCE || sourceKind == PathSourceKind.SPEAR);
+        float pitchTilt = lanceOriented ? (owner.getXRot() - 45.0F) : 70.0F;
         Display.ItemDisplay display = spawnWeaponDisplay(level, start, dir, weapon, pitchTilt);
-        double speed = (style == FlightStyle.PHANTOM_LANCE) ? (2.15D + 0.15D * clampedLv) : (1.75D + 0.12D * clampedLv);
-        int outTicks = (style == FlightStyle.PHANTOM_LANCE) ? 13 : 10;
+        double speed = lanceOriented ? (2.15D + 0.16D * clampedLv) : (1.75D + 0.12D * clampedLv);
+        int outTicks = (style == FlightStyle.SPEAR_CHARGE_LANCE) ? 14 : (style == FlightStyle.PHANTOM_LANCE ? 13 : 10);
+
+        UUID flightId = UUID.randomUUID();
+        ItemStack snap = weapon.copyWithCount(1);
+        ProjectilePathTracker.recordStep(
+            flightId, owner.getUUID(), level.dimension(), sourceKind, snap,
+            start, dir.scale(speed), level.getGameTime(), owner.isInWater()
+        );
 
         ACTIVE_FLIGHTS.add(new ActiveFlight(
+            flightId,
             owner.getUUID(),
             level.dimension(),
+            sourceKind,
             display,
-            weapon.copyWithCount(1),
+            snap,
             hand,
             clampedLv,
             style,
@@ -237,6 +270,9 @@ public final class FlyingBladeManager {
             ServerLevel level = server.getLevel(f.dimension);
             ServerPlayer owner = server.getPlayerList().getPlayer(f.ownerId);
             if (level == null || owner == null || !owner.isAlive() || owner.level() != level || f.ageTicks >= f.hardMaxTicks) {
+                if (level != null) {
+                    ProjectilePathTracker.markPathCompleted(f.flightId, f.pos, level.getGameTime());
+                }
                 discardQuietly(f.displayEntity);
                 it.remove();
                 continue;
@@ -257,9 +293,7 @@ public final class FlyingBladeManager {
                 f.returning = true;
                 level.playSound(null, BlockPos.containing(f.pos), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.65F, 1.45F);
             }
-
             if (!f.returning) {
-                // Subtle outbound homing toward the nearest hostile near the flight axis
                 LivingEntity homing = findHomingTarget(level, owner, f.pos, f.dir);
                 if (homing != null) {
                     Vec3 toMob = homing.getBoundingBox().getCenter().subtract(f.pos).normalize();
@@ -285,8 +319,13 @@ public final class FlyingBladeManager {
                 double dist = toOwner.length();
                 double returnSpeed = f.speedPerTick * 1.18D + Math.min(1.2D, f.ageTicks * 0.03D);
                 if (dist <= Math.max(1.35D, returnSpeed)) {
-                    sweepSegmentCombat(level, owner, f, prevPos, handTarget);
+                    CachedFlightPath path = ProjectilePathTracker.recordStep(
+                        f.flightId, owner.getUUID(), level.dimension(), f.sourceKind, f.weaponSnapshot,
+                        handTarget, f.dir.scale(returnSpeed), level.getGameTime(), false
+                    );
+                    sweepSegmentCombat(level, owner, f, prevPos, handTarget, path);
                     deliverVacuumedDrops(level, owner, f);
+                    finalizeCachedPathReactions(level, owner, f, path, handTarget);
                     onBladeCaught(level, owner, f);
                     return false;
                 }
@@ -294,16 +333,21 @@ public final class FlyingBladeManager {
                 f.pos = f.pos.add(f.dir.scale(returnSpeed));
             }
         } else {
-            // Linear Phantom Trident / Sword-Qi Lance
+            // Linear Phantom Trident / Sword-Qi / Spear Hold-Charge Lance
             Vec3 candidateNext = f.pos.add(f.dir.scale(f.speedPerTick));
             BlockHitResult blockHit = level.clip(new ClipContext(
                 f.pos, candidateNext, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, owner
             ));
             if (blockHit.getType() == HitResult.Type.BLOCK) {
                 Vec3 hitLoc = blockHit.getLocation();
-                sweepSegmentCombat(level, owner, f, prevPos, hitLoc);
+                CachedFlightPath path = ProjectilePathTracker.recordStep(
+                    f.flightId, owner.getUUID(), level.dimension(), f.sourceKind, f.weaponSnapshot,
+                    hitLoc, f.dir.scale(f.speedPerTick), level.getGameTime(), false
+                );
+                sweepSegmentCombat(level, owner, f, prevPos, hitLoc, path);
+                finalizeCachedPathReactions(level, owner, f, path, hitLoc);
                 CrossDomainTransmutations.onProjectileImpact(level, null, owner, f.weaponSnapshot, null, hitLoc);
-                MatrixEffectExecutor.dispatch(
+                MatrixEffectExecutor.dispatchAcrossEquippedSlots(
                     level, owner, f.weaponSnapshot,
                     EnumSet.of(TriggerType.ON_TRIDENT_CHANNEL, TriggerType.ON_PROJECTILE_IMPACT),
                     null, hitLoc, true, 1.0F
@@ -314,43 +358,99 @@ public final class FlyingBladeManager {
             }
             f.pos = candidateNext;
             if (f.ageTicks >= f.outboundMaxTicks) {
-                sweepSegmentCombat(level, owner, f, prevPos, f.pos);
+                CachedFlightPath path = ProjectilePathTracker.recordStep(
+                    f.flightId, owner.getUUID(), level.dimension(), f.sourceKind, f.weaponSnapshot,
+                    f.pos, f.dir.scale(f.speedPerTick), level.getGameTime(), false
+                );
+                sweepSegmentCombat(level, owner, f, prevPos, f.pos, path);
+                finalizeCachedPathReactions(level, owner, f, path, f.pos);
                 level.sendParticles(ParticleTypes.ENCHANT, f.pos.x, f.pos.y, f.pos.z, 14, 0.25D, 0.25D, 0.25D, 0.1D);
                 return false;
             }
         }
 
-        // Update 3D display entity position & rapid spin
+        CachedFlightPath activePath = ProjectilePathTracker.recordStep(
+            f.flightId, owner.getUUID(), level.dimension(), f.sourceKind, f.weaponSnapshot,
+            f.pos, f.dir.scale(f.speedPerTick), level.getGameTime(), false
+        );
+
+        // Update 3D display entity position & weapon-appropriate orientation
         if (f.displayEntity.isAlive()) {
             f.displayEntity.setPos(f.pos.x, f.pos.y, f.pos.z);
-            if (f.style == FlightStyle.BOOMERANG_BLADE) {
+            if (f.style == FlightStyle.BOOMERANG_BLADE && f.sourceKind != PathSourceKind.SPEAR) {
                 f.spinAngle = (f.spinAngle + 48.0F) % 360.0F;
                 f.displayEntity.setYRot(f.spinAngle);
                 f.displayEntity.setXRot(72.0F);
             } else {
                 float yaw = (float) Math.toDegrees(Math.atan2(-f.dir.x, f.dir.z));
+                float pitch = (float) (-Math.toDegrees(Math.asin(Math.clamp(f.dir.y, -1.0D, 1.0D)))) - 45.0F;
                 f.spinAngle = (f.spinAngle + 32.0F) % 360.0F;
                 f.displayEntity.setYRot(yaw + (f.style == FlightStyle.HYDRO_SWORD_QI ? f.spinAngle : 0.0F));
+                if (f.sourceKind == PathSourceKind.SPEAR || f.style == FlightStyle.SPEAR_CHARGE_LANCE) {
+                    f.displayEntity.setXRot(pitch);
+                }
             }
         }
 
-        // Sword-qi / trident wake particles & cadence whoosh
         emitFlightTrailParticles(level, f);
         if (f.ageTicks % 4 == 0 && f.style == FlightStyle.BOOMERANG_BLADE) {
             level.playSound(null, BlockPos.containing(f.pos), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.35F, 1.55F);
         }
 
-        sweepSegmentCombat(level, owner, f, prevPos, f.pos);
+        sweepSegmentCombat(level, owner, f, prevPos, f.pos, activePath);
+        ProjectilePathTracker.checkAndTriggerCrossPathResonance(
+            level, owner, activePath, Math.max(3.5F, resolveWeaponAttackDamage(f.weaponSnapshot) * 0.55F)
+        );
         if (f.style == FlightStyle.BOOMERANG_BLADE) {
             captureAndTowDrops(level, f);
         }
         return true;
     }
 
+    private static void finalizeCachedPathReactions(
+        ServerLevel level,
+        ServerPlayer owner,
+        ActiveFlight f,
+        CachedFlightPath path,
+        Vec3 terminalPos
+    ) {
+        ProjectilePathTracker.markPathCompleted(f.flightId, terminalPos, level.getGameTime());
+        float rawAttack = resolveWeaponAttackDamage(f.weaponSnapshot);
+
+        // [无限 ▷ 耐久] 余音绕梁：沿暂缓存飞行路径延迟回放一道剑气/枪影残响！
+        if (SignaturePairs.stackHasSignature(f.weaponSnapshot, "eternal_bowstring")
+            || SignaturePairs.playerHasEquippedSignature(owner, "eternal_bowstring")) {
+            ProjectilePathTracker.schedulePathEcho(path, 12L, Math.max(3.0F, rawAttack * 0.48F), false, true);
+        }
+        // [突进 ▷ 忠诚] 回马金枪：飞行轨迹末端逆向回溯杀回马枪！
+        if (SignaturePairs.stackHasSignature(f.weaponSnapshot, "boomerang_lance")
+            || SignaturePairs.playerHasEquippedSignature(owner, "boomerang_lance")) {
+            ProjectilePathTracker.schedulePathEcho(path, 9L, Math.max(3.8F, rawAttack * 0.62F), true, true);
+        }
+        // [快速装填 ▷ 穿透] 穿针引线：将整条飞行路径贯穿的敌人串联牵引至终点！
+        if (SignaturePairs.stackHasSignature(f.weaponSnapshot, "threading_needle")
+            || SignaturePairs.playerHasEquippedSignature(owner, "threading_needle")) {
+            ProjectilePathTracker.applyPathTrailEffect(level, owner, path, ProjectilePathTracker.PathTrailStyle.SILK_TETHER, 1.15F);
+        }
+        // [突进 ▷ 引雷] 惊雷破阵：沿长矛/飞剑缓存路径依次引落雷弧！
+        if (SignaturePairs.stackHasSignature(f.weaponSnapshot, "thunderbolt_cavalry")
+            || SignaturePairs.playerHasEquippedSignature(owner, "thunderbolt_cavalry")) {
+            ProjectilePathTracker.applyPathTrailEffect(level, owner, path, ProjectilePathTracker.PathTrailStyle.VOLT_CHAIN, 1.25F);
+        }
+        // [无限 ▷ 火矢] 燎原星火：沿飞行缓存路径铺开星火走廊！
+        if (SignaturePairs.stackHasSignature(f.weaponSnapshot, "sunfire_barrage")
+            || SignaturePairs.playerHasEquippedSignature(owner, "sunfire_barrage")) {
+            ProjectilePathTracker.applyPathTrailEffect(level, owner, path, ProjectilePathTracker.PathTrailStyle.PYRO_WAKE, 1.15F);
+        }
+    }
+
     private static void emitFlightTrailParticles(ServerLevel level, ActiveFlight f) {
         if (f.style == FlightStyle.HYDRO_SWORD_QI) {
             level.sendParticles(ParticleTypes.SPLASH, f.pos.x, f.pos.y, f.pos.z, 5, 0.18D, 0.12D, 0.18D, 0.04D);
             level.sendParticles(ParticleTypes.BUBBLE_POP, f.pos.x, f.pos.y, f.pos.z, 3, 0.15D, 0.15D, 0.15D, 0.02D);
+        } else if (f.style == FlightStyle.SPEAR_CHARGE_LANCE) {
+            level.sendParticles(ParticleTypes.CRIT, f.pos.x, f.pos.y, f.pos.z, 4, 0.08D, 0.08D, 0.08D, 0.03D);
+            level.sendParticles(ParticleTypes.END_ROD, f.pos.x, f.pos.y, f.pos.z, 2, 0.06D, 0.06D, 0.06D, 0.01D);
         } else if (f.style == FlightStyle.PHANTOM_LANCE) {
             level.sendParticles(ParticleTypes.END_ROD, f.pos.x, f.pos.y, f.pos.z, 2, 0.06D, 0.06D, 0.06D, 0.01D);
             level.sendParticles(ParticleTypes.ENCHANTED_HIT, f.pos.x, f.pos.y, f.pos.z, 3, 0.10D, 0.10D, 0.10D, 0.02D);
@@ -368,46 +468,64 @@ public final class FlyingBladeManager {
         ServerPlayer owner,
         ActiveFlight f,
         Vec3 from,
-        Vec3 to
+        Vec3 to,
+        CachedFlightPath cachedPath
     ) {
-        AABB segBox = new AABB(from, to).inflate(1.25D, 0.95D, 1.25D);
-        List<LivingEntity> candidates = level.getEntitiesOfClass(
-            LivingEntity.class,
-            segBox,
-            e -> e != owner && e.isAlive() && !e.isAlliedTo(owner) && CrossDomainTransmutations.allowAttackTarget(owner, e)
-        );
-        if (candidates.isEmpty()) {
+        List<LivingEntity> swept = ProjectilePathTracker.querySweptSegmentHostiles(level, owner, from, to, 1.25D);
+        if (swept.isEmpty()) {
             return;
         }
         float rawAttack = resolveWeaponAttackDamage(f.weaponSnapshot);
-        float mult = f.returning ? (0.78F + 0.14F * f.level) : (0.90F + 0.15F * f.level);
+        float mult = f.returning ? (0.78F + 0.14F * f.level) : (0.92F + 0.15F * f.level);
         float finalDamage = Math.max(4.0F, rawAttack * mult);
 
-        Set<TriggerType> triggers = (f.style == FlightStyle.PHANTOM_LANCE)
-            ? EnumSet.of(TriggerType.ON_TRIDENT_CHANNEL, TriggerType.ON_PROJECTILE_IMPACT)
+        Set<TriggerType> triggers = (f.style == FlightStyle.PHANTOM_LANCE || f.style == FlightStyle.SPEAR_CHARGE_LANCE)
+            ? EnumSet.of(TriggerType.ON_TRIDENT_CHANNEL, TriggerType.ON_PROJECTILE_IMPACT, TriggerType.ON_MELEE_STRIKE)
             : EnumSet.of(TriggerType.ON_MELEE_STRIKE, TriggerType.ON_SWEEP_OR_CLEAVE);
 
-        for (LivingEntity target : candidates) {
+        for (LivingEntity target : swept) {
+            if (!CrossDomainTransmutations.allowAttackTarget(owner, target)) {
+                continue;
+            }
             Integer prevHitTick = f.entityHitTick.get(target.getUUID());
             if (prevHitTick != null && (f.ageTicks - prevHitTick) < 7) {
                 continue;
             }
             f.entityHitTick.put(target.getUUID(), f.ageTicks);
+            cachedPath.sweptHitEntities().add(target.getUUID());
             f.hitEnemiesCount++;
+
+            // [穿透 ▷ 快速装填] 势如破竹：沿路径每多贯穿一个敌人，伤害递增 18%！
+            float pierceRamp = 1.0F;
+            if (f.hitEnemiesCount > 1 && (SignaturePairs.stackHasSignature(f.weaponSnapshot, "bamboo_split_momentum")
+                || SignaturePairs.playerHasEquippedSignature(owner, "bamboo_split_momentum"))) {
+                pierceRamp += 0.18F * Math.min(5, f.hitEnemiesCount - 1);
+            }
 
             int savedInvuln = target.invulnerableTime;
             target.invulnerableTime = 0;
             try {
-                target.hurtServer(level, level.damageSources().playerAttack(owner), finalDamage);
+                target.hurtServer(level, level.damageSources().playerAttack(owner), finalDamage * pierceRamp);
                 target.invulnerableTime = 0;
-                MatrixEffectExecutor.dispatch(level, owner, f.weaponSnapshot, triggers, target, target.position(), true, 1.0F);
-                if (f.style == FlightStyle.PHANTOM_LANCE) {
+                MatrixEffectExecutor.dispatchAcrossEquippedSlots(
+                    level, owner, f.weaponSnapshot, triggers, target, target.position(), true, 1.0F
+                );
+                if (f.style == FlightStyle.PHANTOM_LANCE || f.style == FlightStyle.SPEAR_CHARGE_LANCE) {
                     CrossDomainTransmutations.onProjectileImpact(level, null, owner, f.weaponSnapshot, target, target.position());
                 } else {
                     CrossDomainTransmutations.onFlyingBladeHit(level, owner, f.weaponSnapshot, target);
                 }
             } finally {
                 target.invulnerableTime = savedInvuln;
+            }
+
+            // [忠诚 ▷ 突进] 人枪合一：投出的长矛/兵刃首次命中强敌时，主人沿缓存路径瞬步逼近并获短暂抗性！
+            if (f.hitEnemiesCount == 1 && (SignaturePairs.stackHasSignature(f.weaponSnapshot, "shadow_recall_lunge")
+                || SignaturePairs.playerHasEquippedSignature(owner, "shadow_recall_lunge"))) {
+                Vec3 stepDest = target.position().subtract(f.dir.scale(1.4D));
+                owner.teleportTo(stepDest.x, Math.max(owner.getY(), target.getY()), stepDest.z);
+                owner.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 40, 0));
+                level.playSound(null, owner.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.75F, 1.35F);
             }
 
             level.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 0.85D, target.getZ(), 10, 0.25D, 0.25D, 0.25D, 0.12D);
@@ -490,6 +608,15 @@ public final class FlyingBladeManager {
             owner.getX(), owner.getY() + 1.05D, owner.getZ(),
             10, 0.28D, 0.25D, 0.28D, 0.05D
         );
+        // [忠诚 ▷ 风爆] 乘风归来：兵刃沿缓存路径归手瞬间卷起归风升流，赋予迅捷 II 并清零摔落冲击！
+        if (SignaturePairs.stackHasSignature(f.weaponSnapshot, "tailwind_return")
+            || SignaturePairs.playerHasEquippedSignature(owner, "tailwind_return")) {
+            owner.fallDistance = 0.0F;
+            owner.addEffect(new MobEffectInstance(MobEffects.SPEED, 80, 1));
+            owner.push(0.0D, 0.36D, 0.0D);
+            owner.hurtMarked = true;
+            level.sendParticles(ParticleTypes.GUST_EMITTER_SMALL, owner.getX(), owner.getY() + 0.3D, owner.getZ(), 2, 0.2D, 0.1D, 0.2D, 0.0D);
+        }
         if (f.hitEnemiesCount > 0 && !owner.getAbilities().instabuild) {
             ItemStack inHand = owner.getItemInHand(f.hand);
             if (!inHand.isEmpty() && inHand.isDamageableItem() && ItemStack.isSameItem(inHand, f.weaponSnapshot)) {
