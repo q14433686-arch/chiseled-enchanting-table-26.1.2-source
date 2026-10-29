@@ -22,7 +22,11 @@ public final class FusionRuleEngine {
         ALREADY_MAX_VESSEL("gui.enchantment_fusion.reject.already_max_vessel"),
         OUTPUT_OCCUPIED("gui.enchantment_fusion.reject.output_occupied"),
         NOT_CROSS_DOMAIN("gui.enchantment_fusion.reject.not_cross_domain"),
-        STACK_MUST_BE_SINGLE("gui.enchantment_fusion.reject.stack_must_be_single");
+        STACK_MUST_BE_SINGLE("gui.enchantment_fusion.reject.stack_must_be_single"),
+        NEED_PURIFY_STABILIZERS("gui.enchantment_fusion.reject.need_purify_stabilizers"),
+        INSUFFICIENT_XP("gui.enchantment_fusion.reject.insufficient_xp"),
+        INSUFFICIENT_REAGENTS("gui.enchantment_fusion.reject.insufficient_reagents"),
+        TRANSMUTE_CAP_FULL("gui.enchantment_fusion.reject.transmute_cap_full");
 
         private final String langKey;
 
@@ -40,7 +44,8 @@ public final class FusionRuleEngine {
         int level,
         int maxLevel
     ) {
-        public EnchantInput(String id, int level, int maxLevel, boolean ignoredLegacyFitsHost) {
+        /** Compatibility overload ignoring legacy {@code nativeToHost} flag (DEAD-1). */
+        public EnchantInput(String id, int level, int maxLevel, boolean ignoredNativeToHost) {
             this(id, level, maxLevel);
         }
 
@@ -62,10 +67,34 @@ public final class FusionRuleEngine {
 
     private FusionRuleEngine() {}
 
+    public static PairEvaluation evaluateFusion(
+        EnchantInput primary,
+        EnchantInput secondary,
+        boolean targetingEquipment,
+        FusedEnchantmentList existingHostFusions,
+        Set<String> existingHostEnchantIds,
+        int maxHostVesselSlots,
+        boolean extraRuntimeIncompatiblePair,
+        boolean incompatibleWithExistingHost
+    ) {
+        return evaluateFusion(
+            FusionMatrixRegistry.serverSnapshot(),
+            primary,
+            secondary,
+            targetingEquipment,
+            existingHostFusions,
+            existingHostEnchantIds,
+            maxHostVesselSlots,
+            extraRuntimeIncompatiblePair,
+            incompatibleWithExistingHost
+        );
+    }
+
     /**
      * Evaluates creating or inscribing a fused pair {@code [A ▷ B]} onto a book or any equipment host.
      */
     public static PairEvaluation evaluateFusion(
+        FusionMatrixRegistry.Snapshot snapshot,
         EnchantInput primary,
         EnchantInput secondary,
         boolean targetingEquipment,
@@ -82,7 +111,7 @@ public final class FusionRuleEngine {
             return PairEvaluation.rejected(RejectReason.SAME_ENCHANTMENT);
         }
 
-        FusionMatrixRegistry.Snapshot matrix = FusionMatrixRegistry.current();
+        FusionMatrixRegistry.Snapshot matrix = snapshot != null ? snapshot : FusionMatrixRegistry.serverSnapshot();
         boolean repulsive = extraRuntimeIncompatiblePair || matrix.areRepulsiveExclusives(primary.id(), secondary.id());
         if (repulsive && (!primary.isAtMaxLevel() || !secondary.isAtMaxLevel())) {
             return PairEvaluation.rejected(RejectReason.REPULSIVE_REQUIRES_MAX_LEVEL);
@@ -104,8 +133,10 @@ public final class FusionRuleEngine {
             if (incompatibleWithExistingHost) {
                 return PairEvaluation.rejected(RejectReason.EXCLUSIVE_ON_HOST);
             }
+            // NUM-7: Check repulsive exclusivity against BOTH primaryId and secondaryId of existing host fusions
             for (FusedPair existingPair : hostList.pairs()) {
-                if (matrix.areRepulsiveExclusives(primary.id(), existingPair.primaryId())) {
+                if (matrix.areRepulsiveExclusives(primary.id(), existingPair.primaryId())
+                    || matrix.areRepulsiveExclusives(primary.id(), existingPair.secondaryId())) {
                     return PairEvaluation.rejected(RejectReason.EXCLUSIVE_ON_HOST);
                 }
             }
@@ -125,16 +156,14 @@ public final class FusionRuleEngine {
     }
 
     public static RejectReason canFlipPair(FusedPair existing) {
-        if (existing == null) {
-            return RejectReason.MISSING_INPUT;
-        }
-        if (existing.isAberrant()) {
-            return RejectReason.ABERRANT_LOCKED;
-        }
-        return RejectReason.NONE;
+        return rejectIfAberrantLocked(existing);
     }
 
     public static RejectReason canUnsocketOrSplitPair(FusedPair existing) {
+        return rejectIfAberrantLocked(existing);
+    }
+
+    private static RejectReason rejectIfAberrantLocked(FusedPair existing) {
         if (existing == null) {
             return RejectReason.MISSING_INPUT;
         }

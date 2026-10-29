@@ -2,14 +2,16 @@ package enchantment_fusion.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.EnchantmentFusion;
+import enchantment_fusion.model.PayloadType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
 
 /**
- * Pixel-art GUI sprite identifiers, shared {@link HitBox} geometry (GUI-01),
- * 9-slice blitter, and bounded text helpers for the Enchantment Fusion Table and Grimoire.
+ * Pixel-art GUI sprite identifiers, named 9-slice {@link NineSliceSprite} tokens (TXT-5),
+ * unified typography scale tokens (TXT-1 / TXT-2 / TXT-3), shared {@link HitBox} geometry (GUI-01),
+ * and client-only payload palette helpers (CPL-4) for the Enchantment Fusion Table and Grimoire.
  * Uses exclusively genuine pixel-art PNG textures.
  */
 public final class FusionGuiSkin {
@@ -27,6 +29,16 @@ public final class FusionGuiSkin {
             return mx >= gx && mx < gx + w && my >= gy && my < gy + h;
         }
     }
+
+    /**
+     * Self-describing 9-slice texture token bundling sprite ID, native dimensions, and corner border (TXT-5).
+     */
+    public record NineSliceSprite(Identifier sprite, int texW, int texH, int border) {}
+
+    /**
+     * Result of bounded text fitting, exposing whether truncation occurred so callers can offer full hover tooltips.
+     */
+    public record FittedText(String text, float scale, boolean truncated) {}
 
     public static final Identifier PANEL_FRAME = EnchantmentFusion.id("textures/gui/panel_frame.png");
     public static final Identifier GRIMOIRE_SPREAD = EnchantmentFusion.id("textures/gui/grimoire_spread.png");
@@ -58,15 +70,38 @@ public final class FusionGuiSkin {
     public static final Identifier ROW_SELECTED_A = EnchantmentFusion.id("textures/gui/row_selected_a.png");
     public static final Identifier ROW_SELECTED_B = EnchantmentFusion.id("textures/gui/row_selected_b.png");
 
-    // 96x40 ornate Vessel Slot socket cards (9-slice border = 8)
+    // 96x40 ornate Vessel Slot socket cards (9-slice border = 7)
     public static final Identifier SOCKET_EMPTY = EnchantmentFusion.id("textures/gui/socket_card_empty.png");
     public static final Identifier SOCKET_FILLED = EnchantmentFusion.id("textures/gui/socket_card_filled.png");
     public static final Identifier SOCKET_ABERRANT = EnchantmentFusion.id("textures/gui/socket_card_aberrant.png");
 
-    // 0.5.0 Pixel-Art UI Micro-Effect Sprites
+    // Pixel-Art UI Micro-Effect Sprites
     public static final Identifier VFX_RUNE_HALO = EnchantmentFusion.id("textures/gui/vfx_rune_halo.png");
     public static final Identifier VFX_ARCANE_SPARK = EnchantmentFusion.id("textures/gui/vfx_arcane_spark.png");
     public static final Identifier VFX_SHOCKWAVE_RING = EnchantmentFusion.id("textures/gui/vfx_shockwave_ring.png");
+
+    // Named 9-slice sprite tokens (TXT-5)
+    public static final NineSliceSprite SLICE_PANEL_MAIN = new NineSliceSprite(PANEL_FRAME, 48, 48, 6);
+    public static final NineSliceSprite SLICE_PANEL_INSET = new NineSliceSprite(PANEL_FRAME, 48, 48, 5);
+    public static final NineSliceSprite SLICE_BTN_NORMAL = new NineSliceSprite(BTN_NORMAL, 32, 32, 4);
+    public static final NineSliceSprite SLICE_BTN_HOVER = new NineSliceSprite(BTN_HOVER, 32, 32, 4);
+    public static final NineSliceSprite SLICE_BTN_DISABLED = new NineSliceSprite(BTN_DISABLED, 32, 32, 4);
+    public static final NineSliceSprite SLICE_ROW_UNSELECTED = new NineSliceSprite(ROW_UNSELECTED, 64, 18, 4);
+    public static final NineSliceSprite SLICE_ROW_HOVER = new NineSliceSprite(ROW_HOVER, 64, 18, 4);
+    public static final NineSliceSprite SLICE_ROW_SELECTED_A = new NineSliceSprite(ROW_SELECTED_A, 64, 18, 4);
+    public static final NineSliceSprite SLICE_ROW_SELECTED_B = new NineSliceSprite(ROW_SELECTED_B, 64, 18, 4);
+    public static final NineSliceSprite SLICE_SOCKET_EMPTY = new NineSliceSprite(SOCKET_EMPTY, 96, 40, 7);
+    public static final NineSliceSprite SLICE_SOCKET_FILLED = new NineSliceSprite(SOCKET_FILLED, 96, 40, 7);
+    public static final NineSliceSprite SLICE_SOCKET_ABERRANT = new NineSliceSprite(SOCKET_ABERRANT, 96, 40, 7);
+
+    // Unified named typography scale tokens & shadow threshold (TXT-1 / TXT-2 / TXT-3)
+    public static final float MIN_TEXT_SCALE = 0.54F;
+    public static final float SCALE_MICRO = 0.54F;
+    public static final float SCALE_SMALL = 0.58F;
+    public static final float SCALE_BODY = 0.64F;
+    public static final float SCALE_LABEL = 0.72F;
+    public static final float SCALE_TITLE = 0.85F;
+    public static final float SHADOW_MIN_SCALE = 0.75F;
 
     public static final int COLOR_GOLD = 0xFFFFDF88;
     public static final int COLOR_CREAM = 0xFFF6EFE2;
@@ -88,6 +123,29 @@ public final class FusionGuiSkin {
     private static final float GLYPH_HEIGHT = 8.0F;
 
     private FusionGuiSkin() {}
+
+    /** Client-only accent color mapping for secondary {@link PayloadType} domains (CPL-4). */
+    public static int payloadAccentArgb(PayloadType payload) {
+        if (payload == null) {
+            return COLOR_CREAM;
+        }
+        return switch (payload) {
+            case PYRO -> 0xFFFF7A36;
+            case CRYO -> 0xFF72E4FF;
+            case VOLT -> 0xFFFFEA5A;
+            case GALE -> 0xFFB8F7E6;
+            case TIDE -> 0xFF3FA9FF;
+            case RETURN -> 0xFF6CF2B5;
+            case PIERCE -> 0xFFFF6B8B;
+            case SCATTER -> 0xFFFFB454;
+            case GRAVITY -> 0xFFB388FF;
+            case EDGE -> 0xFFFFD56B;
+            case BANE -> 0xFFD67BFF;
+            case FORTUNE -> 0xFF7DFF7A;
+            case AEGIS -> 0xFF8CC8FF;
+            case MEND -> 0xFF9EFFB0;
+        };
+    }
 
     public static boolean isShiftHeld() {
         Minecraft mc = Minecraft.getInstance();
@@ -113,9 +171,13 @@ public final class FusionGuiSkin {
         ctx.blit(sprite, x, y, x + w, y + h, 0.0F, 1.0F, 0.0F, 1.0F);
     }
 
+    public static void drawNineSlice(GuiGraphicsExtractor ctx, NineSliceSprite slice, int x, int y, int w, int h) {
+        drawNineSlice(ctx, slice.sprite(), x, y, w, h, slice.texW(), slice.texH(), slice.border());
+    }
+
     /**
-     * Renders a pixel-art 9-slice frame (`panel_frame.png` 48x48 or `button_*.png` 32x32)
-     * so corner studs and borders stay 1:1 razor-sharp at any target rectangle size.
+     * Renders a pixel-art 9-slice frame preserving the 4 corner regions at 1:1 pixel ratio while
+     * stretching the 4 edge strips and interior body across {@code (w, h)} (TXT-5).
      */
     public static void drawNineSlice(
         GuiGraphicsExtractor ctx,
@@ -139,23 +201,19 @@ public final class FusionGuiSkin {
         int y1 = y + b;
         int y2 = y + h - b;
 
-        // 4 corners
         ctx.blit(sprite, x, y, x1, y1, 0.0F, u1, 0.0F, v1);
         ctx.blit(sprite, x2, y, x + w, y1, u2, 1.0F, 0.0F, v1);
         ctx.blit(sprite, x, y2, x1, y + h, 0.0F, u1, v2, 1.0F);
         ctx.blit(sprite, x2, y2, x + w, y + h, u2, 1.0F, v2, 1.0F);
 
-        // Top & bottom edges
         if (x2 > x1) {
             ctx.blit(sprite, x1, y, x2, y1, u1, u2, 0.0F, v1);
             ctx.blit(sprite, x1, y2, x2, y + h, u1, u2, v2, 1.0F);
         }
-        // Left & right edges
         if (y2 > y1) {
             ctx.blit(sprite, x, y1, x1, y2, 0.0F, u1, v1, v2);
             ctx.blit(sprite, x2, y1, x + w, y2, u2, 1.0F, v1, v2);
         }
-        // Center body
         if (x2 > x1 && y2 > y1) {
             ctx.blit(sprite, x1, y1, x2, y2, u1, u2, v1, v2);
         }
@@ -173,15 +231,40 @@ public final class FusionGuiSkin {
         float scale,
         int enabledColor
     ) {
-        Identifier sprite = !enabled ? BTN_DISABLED : (hovered ? BTN_HOVER : BTN_NORMAL);
+        NineSliceSprite slice = !enabled ? SLICE_BTN_DISABLED : (hovered ? SLICE_BTN_HOVER : SLICE_BTN_NORMAL);
         int gx = originX + box.x();
         int gy = originY + box.y();
-        drawNineSlice(ctx, sprite, gx, gy, box.w(), box.h(), 32, 32, 4);
+        drawNineSlice(ctx, slice, gx, gy, box.w(), box.h());
         drawCenteredBoundedText(
             ctx, font, label,
             gx + 3, box.w() - 6, gy + box.h() * 0.5F,
             scale, enabled ? enabledColor : COLOR_MUTED
         );
+    }
+
+    /**
+     * Unified text-fitting solver shared by centered and left-aligned bounded labels (TXT-1 / TXT-2).
+     * Never shrinks below {@link #MIN_TEXT_SCALE}; appends an ellipsis only after hitting the floor.
+     */
+    public static FittedText fitBoundedText(Font font, String text, int maxW, float maxScale) {
+        if (text == null || text.isEmpty() || maxW <= 4) {
+            return new FittedText("", MIN_TEXT_SCALE, false);
+        }
+        int rawW = font.width(text);
+        if (rawW <= 0) {
+            return new FittedText("", MIN_TEXT_SCALE, false);
+        }
+        float effectiveMax = Math.max(MIN_TEXT_SCALE, maxScale);
+        if (rawW * effectiveMax <= maxW) {
+            return new FittedText(text, effectiveMax, false);
+        }
+        float fit = (float) maxW / (float) rawW;
+        if (fit >= MIN_TEXT_SCALE) {
+            return new FittedText(text, fit, false);
+        }
+        int maxRaw = Math.max(8, Math.round((maxW / MIN_TEXT_SCALE) - font.width("\u2026")));
+        String clipped = font.plainSubstrByWidth(text, maxRaw) + "\u2026";
+        return new FittedText(clipped, MIN_TEXT_SCALE, true);
     }
 
     public static void drawCenteredBoundedText(
@@ -194,29 +277,13 @@ public final class FusionGuiSkin {
         float maxScale,
         int argbColor
     ) {
-        if (text == null || text.isEmpty() || boxW <= 4) {
+        FittedText fitted = fitBoundedText(font, text, boxW, maxScale);
+        if (fitted.text().isEmpty()) {
             return;
         }
-        int rawW = font.width(text);
-        if (rawW <= 0) {
-            return;
-        }
-        float minScale = 0.50F;
-        float scale = maxScale;
-        String shown = text;
-        if (rawW * scale > boxW) {
-            float fit = (float) boxW / (float) rawW;
-            if (fit >= minScale) {
-                scale = fit;
-            } else {
-                scale = minScale;
-                int maxRaw = Math.max(8, Math.round(maxWForEllipsis(boxW, scale, font)));
-                shown = font.plainSubstrByWidth(text, maxRaw) + "\u2026";
-            }
-        }
-        float drawX = boxX + (boxW - font.width(shown) * scale) * 0.5F;
-        float drawY = centerY - (GLYPH_HEIGHT * scale) * 0.5F;
-        drawScaledText(ctx, font, shown, drawX, drawY, scale, argbColor);
+        float drawX = boxX + (boxW - font.width(fitted.text()) * fitted.scale()) * 0.5F;
+        float drawY = centerY - (GLYPH_HEIGHT * fitted.scale()) * 0.5F;
+        drawScaledText(ctx, font, fitted.text(), drawX, drawY, fitted.scale(), argbColor);
     }
 
     public static void drawLeftBoundedText(
@@ -229,33 +296,17 @@ public final class FusionGuiSkin {
         float maxScale,
         int argbColor
     ) {
-        if (text == null || text.isEmpty() || maxW <= 4) {
+        FittedText fitted = fitBoundedText(font, text, maxW, maxScale);
+        if (fitted.text().isEmpty()) {
             return;
         }
-        int rawW = font.width(text);
-        if (rawW <= 0) {
-            return;
-        }
-        float minScale = 0.52F;
-        float scale = maxScale;
-        String shown = text;
-        if (rawW * scale > maxW) {
-            float fit = (float) maxW / (float) rawW;
-            if (fit >= minScale) {
-                scale = fit;
-            } else {
-                scale = minScale;
-                int maxRaw = Math.max(8, Math.round(maxWForEllipsis(maxW, scale, font)));
-                shown = font.plainSubstrByWidth(text, maxRaw) + "\u2026";
-            }
-        }
-        drawScaledText(ctx, font, shown, x, y, scale, argbColor);
+        drawScaledText(ctx, font, fitted.text(), x, y, fitted.scale(), argbColor);
     }
 
-    private static float maxWForEllipsis(int boxW, float scale, Font font) {
-        return (boxW / scale) - font.width("\u2026");
-    }
-
+    /**
+     * Automatically disables the 1px font drop-shadow below {@link #SHADOW_MIN_SCALE} so scaled-down
+     * CJK and Latin glyphs stay crisp instead of muddying into half-pixel shadow bleed (TXT-3).
+     */
     private static void drawScaledText(
         GuiGraphicsExtractor ctx,
         Font font,
@@ -269,7 +320,7 @@ public final class FusionGuiSkin {
         pose.pushMatrix();
         pose.translate(x, y);
         pose.scale(scale, scale);
-        ctx.text(font, text, 0, 0, argbColor, true);
+        ctx.text(font, text, 0, 0, argbColor, scale >= SHADOW_MIN_SCALE);
         pose.popMatrix();
     }
 }

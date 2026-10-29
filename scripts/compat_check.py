@@ -93,10 +93,39 @@ def check_recipes_and_loot() -> None:
     assert len(loot["pools"]) == 1
 
 
+def check_economy_json() -> None:
+    ep = ROOT / "src/main/resources/data/enchantment_fusion/enchantment_fusion/economy.json"
+    econ = json.loads(ep.read_text(encoding="utf-8"))
+    if econ.get("schema_version") != 2:
+        raise AssertionError(f"Expected economy.json schema_version=2, found {econ.get('schema_version')}")
+    ceiling_pairs = (
+        ("low_fail_chance", "fail_ceiling_low"),
+        ("mid_fail_chance", "fail_ceiling_mid"),
+        ("high_fail_chance", "fail_ceiling_high"),
+        ("repulsive_fail_chance", "fail_ceiling_repulsive"),
+        ("aberrant_socket_fail_chance", "fail_ceiling_socket"),
+    )
+    for base_k, ceil_k in ceiling_pairs:
+        base_v = float(econ[base_k])
+        ceil_v = float(econ[ceil_k])
+        if not (0.0 <= base_v <= ceil_v <= 1.0):
+            raise AssertionError(f"Invalid economy ceiling pair {base_k}={base_v} vs {ceil_k}={ceil_v}")
+    if not (0.0 <= float(econ["repulsive_min_floor"]) <= float(econ["repulsive_fail_chance"])):
+        raise AssertionError("repulsive_min_floor must be <= repulsive_fail_chance")
+    if not (0.0 <= float(econ["fail_ceiling_conversion"]) <= 1.0):
+        raise AssertionError("fail_ceiling_conversion out of [0, 1] range")
+    cooldowns = econ.get("trigger_cooldowns", {})
+    if set(cooldowns.keys()) != VALID_TRIGGERS:
+        raise AssertionError(f"trigger_cooldowns keys mismatch: {set(cooldowns.keys())} vs {VALID_TRIGGERS}")
+    if int(econ.get("purify_aberrant_stabilizers", 0)) < 1:
+        raise AssertionError("purify_aberrant_stabilizers must be >= 1")
+
+
 def main() -> int:
     check_matrix_json()
+    check_economy_json()
     check_recipes_and_loot()
-    print("ok: compat_check Tier 1 passed (8x14 matrix schema + 26.1.2 recipes/loot/tags)")
+    print("ok: compat_check Tier 1 passed (8x14 matrix + economy v2 schema + 26.1.2 recipes/loot/tags)")
     return 0
 
 

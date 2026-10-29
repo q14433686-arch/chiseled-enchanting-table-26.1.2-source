@@ -99,7 +99,7 @@ jobs:
         with:
           # artifact 名不能含 '/'，所以不能直接用 github.ref_name（arena/xxx 带斜杠，
           # 姊妹仓首跑就是这样失败的）。分支名在 run 页面本来就有，名字里只放 sha 前缀。
-          name: chiseled-enchanting-table-${{ github.sha }}
+          name: enchantment-fusion-${{ github.sha }}
           path: |
             build/libs/*.jar
             !build/libs/*-sources.jar

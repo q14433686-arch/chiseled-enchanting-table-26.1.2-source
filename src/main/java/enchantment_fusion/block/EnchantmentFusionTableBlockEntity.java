@@ -1,13 +1,16 @@
 package enchantment_fusion.block;
 
-import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.menu.FusionNetworking;
+import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.registry.FusionBlockEntities;
+import enchantment_fusion.registry.FusionDataComponents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
@@ -28,12 +31,15 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Persistent 4-slot container BlockEntity for the Enchantment Fusion Table.
+ * Deduplicates {@code sendBlockUpdated} via a 4-slot visual render signature so stack-count changes
+ * do not broadcast redundant chunk BE packets while keeping 3D orbital rendering &amp; ambient particles live (NET-02).
  */
 public final class EnchantmentFusionTableBlockEntity extends BlockEntity implements Container, Nameable {
     public static final int CONTAINER_SIZE = 4;
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private @Nullable Component customName;
+    private long lastSyncedVisualHash = Long.MIN_VALUE;
     public int animTicks;
     public int surgeTicks;
     public int surgeKind;
@@ -51,7 +57,7 @@ public final class EnchantmentFusionTableBlockEntity extends BlockEntity impleme
 
     public void triggerClientSurge(int kind) {
         this.surgeKind = kind;
-        this.surgeTicks = (kind == 2) ? 36 : 28;
+        this.surgeTicks = FusionNetworking.surgeTicksFor(kind);
     }
 
     public int occupiedSlotCount() {
@@ -68,25 +74,32 @@ public final class EnchantmentFusionTableBlockEntity extends BlockEntity impleme
         for (ItemStack stack : items) {
             if (stack.isEmpty()) continue;
             var fused = stack.getOrDefault(
-                enchantment_fusion.registry.FusionDataComponents.FUSED_PAIRS,
-                enchantment_fusion.model.FusedEnchantmentList.EMPTY
+                FusionDataComponents.FUSED_PAIRS,
+                FusedEnchantmentList.EMPTY
             );
-            for (var p : fused.pairs()) {
-                if (p.isAberrant()) {
-                    return true;
-                }
+            if (fused.hasAberration()) {
+                return true;
             }
         }
         return false;
     }
 
-    public ItemStack displayStack() {
-        ItemStack target = items.get(FusionStationOperations.SLOT_TARGET);
-        if (!target.isEmpty()) {
-            return target;
+    private long computeVisualHash() {
+        long h = 1469598103934665603L;
+        for (int i = 0; i < CONTAINER_SIZE; i++) {
+            ItemStack st = items.get(i);
+            h = (h ^ i) * 1099511628211L;
+            if (st.isEmpty()) {
+                h = (h ^ 0xFFL) * 1099511628211L;
+            } else {
+                int itemId = BuiltInRegistries.ITEM.getId(st.getItem());
+                boolean foil = st.hasFoil();
+                boolean aberrant = st.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).hasAberration();
+                long packed = ((long) itemId << 2) | (foil ? 2L : 0L) | (aberrant ? 1L : 0L);
+                h = (h ^ packed) * 1099511628211L;
+            }
         }
-        ItemStack primary = items.get(FusionStationOperations.SLOT_PRIMARY);
-        return primary;
+        return h;
     }
 
     @Override
@@ -136,7 +149,11 @@ public final class EnchantmentFusionTableBlockEntity extends BlockEntity impleme
     public void setChanged() {
         super.setChanged();
         if (this.level != null && !this.level.isClientSide()) {
-            this.level.sendBlockUpdated(this.worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+            long nextVisual = computeVisualHash();
+            if (nextVisual != this.lastSyncedVisualHash) {
+                this.lastSyncedVisualHash = nextVisual;
+                this.level.sendBlockUpdated(this.worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+            }
         }
     }
 
@@ -166,6 +183,7 @@ public final class EnchantmentFusionTableBlockEntity extends BlockEntity impleme
         this.items.clear();
         ContainerHelper.loadAllItems(input, this.items);
         this.customName = input.read("CustomName", net.minecraft.network.chat.ComponentSerialization.CODEC).orElse(null);
+        this.lastSyncedVisualHash = computeVisualHash();
     }
 
     @Override

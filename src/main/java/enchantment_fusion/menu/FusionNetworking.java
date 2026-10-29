@@ -4,13 +4,14 @@ import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.data.FusionMatrixRegistry.EconomyConfig;
 import enchantment_fusion.data.FusionMatrixRegistry.MatrixProfile;
-import enchantment_fusion.mechanics.FusionStationOperations.StationPreview;
+import enchantment_fusion.mechanics.FusionStationOperations.ActionResult;
 import enchantment_fusion.model.PayloadType;
 import enchantment_fusion.model.TriggerType;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,18 +30,22 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Explicit-wire-ID network protocol for the 2-Tab Enchantment Fusion Table:
  * <ul>
  *   <li>Stable explicit wire IDs instead of {@code enum.ordinal()} + per-tick server rate guard (NET-02 / EF-008).</li>
- *   <li>Expected candidate token verification on {@code EXECUTE_PRIMARY} against shared-table slot races (NET-03).</li>
- *   <li>Server-to-client {@link MatrixSyncPayload} for datapack profiles, exclusive groups & economy (NET-01).</li>
- *   <li>Bounded {@link CompendiumSyncPayload} + incremental {@link CompendiumDeltaPayload} (NET-05).</li>
+ *   <li>Expected candidate / pair token verification on {@code EXECUTE_PRIMARY}, {@code FLIP_SOCKET}, and {@code UNSOCKET_OR_SPLIT}
+ *       with localized rejection feedback (NET-03 / NET-1 / NET-5).</li>
+ *   <li>Versioned {@link MatrixSyncPayload} syncing full-curve {@link EconomyConfig} + trigger cooldowns (NET-01 / NUM-1 / NUM-2).</li>
+ *   <li>Bounded {@link CompendiumSyncPayload} + incremental {@link CompendiumDeltaPayload} (NET-05 / NET-3 / NET-4).</li>
  * </ul>
  */
 public final class FusionNetworking {
+    public static final int MATRIX_SYNC_PROTOCOL_VERSION = 2;
+
     public enum StationAction {
         SELECT_TAB(10),
         PICK_PRIMARY_A(11),
@@ -49,7 +54,8 @@ public final class FusionNetworking {
         EXECUTE_PRIMARY(14),
         FLIP_SOCKET(15),
         UNSOCKET_OR_SPLIT(16),
-        TOGGLE_SINGLE_MODE(17);
+        TOGGLE_SINGLE_MODE(17),
+        SWAP_SLOTS(18);
 
         private final int wireId;
 
@@ -112,10 +118,11 @@ public final class FusionNetworking {
     }
 
     public record CompendiumSyncPayload(List<String> unlockedPairs) implements CustomPacketPayload {
+        public static final int MAX_SYNC_ENTRIES = 4096;
         public static final Type<CompendiumSyncPayload> TYPE =
             new Type<>(EnchantmentFusion.id("compendium_sync"));
         public static final StreamCodec<ByteBuf, CompendiumSyncPayload> STREAM_CODEC =
-            ByteBufCodecs.stringUtf8(128).apply(ByteBufCodecs.list(4096))
+            ByteBufCodecs.stringUtf8(128).apply(ByteBufCodecs.list(MAX_SYNC_ENTRIES))
                 .map(CompendiumSyncPayload::new, CompendiumSyncPayload::unlockedPairs);
 
         @Override
@@ -139,7 +146,7 @@ public final class FusionNetworking {
         }
     }
 
-    public record MatrixSyncPayload(FusionMatrixRegistry.Snapshot snapshot) implements CustomPacketPayload {
+    public record MatrixSyncPayload(@Nullable FusionMatrixRegistry.Snapshot snapshot) implements CustomPacketPayload {
         public static final Type<MatrixSyncPayload> TYPE =
             new Type<>(EnchantmentFusion.id("matrix_sync"));
         public static final StreamCodec<FriendlyByteBuf, MatrixSyncPayload> STREAM_CODEC = StreamCodec.of(
@@ -148,7 +155,10 @@ public final class FusionNetworking {
         );
 
         private static void write(FriendlyByteBuf buf, MatrixSyncPayload payload) {
-            FusionMatrixRegistry.Snapshot snap = payload.snapshot();
+            buf.writeVarInt(MATRIX_SYNC_PROTOCOL_VERSION);
+            FusionMatrixRegistry.Snapshot snap = payload.snapshot() != null
+                ? payload.snapshot()
+                : FusionMatrixRegistry.serverSnapshot();
             Map<String, MatrixProfile> profiles = snap.profiles();
             buf.writeVarInt(profiles.size());
             for (Map.Entry<String, MatrixProfile> e : profiles.entrySet()) {
@@ -170,12 +180,63 @@ public final class FusionNetworking {
             buf.writeDouble(eco.highFailChance());
             buf.writeDouble(eco.repulsiveFailChance());
             buf.writeDouble(eco.repulsiveMinFloor());
+            buf.writeDouble(eco.aberrantSocketFailChance());
+            buf.writeDouble(eco.failCeilingLow());
+            buf.writeDouble(eco.failCeilingMid());
+            buf.writeDouble(eco.failCeilingHigh());
+            buf.writeDouble(eco.failCeilingRepulsive());
+            buf.writeDouble(eco.failCeilingConversion());
+            buf.writeDouble(eco.failCeilingSocket());
             buf.writeDouble(eco.stabilizerReductionRepulsive());
             buf.writeDouble(eco.stabilizerReductionNormal());
             buf.writeVarInt(eco.maxRepulsiveStabilizers());
+            buf.writeVarInt(eco.maxNormalStabilizers());
+            buf.writeVarInt(eco.maxLowStabilizers());
+            buf.writeDouble(eco.normalFailFeeRatio());
+            buf.writeVarInt(eco.repulsiveBaseXp());
+            buf.writeVarInt(eco.repulsiveMaxBonusXp());
+            buf.writeVarInt(eco.repulsiveMaxPairReagents());
+            buf.writeVarInt(eco.repulsiveDefaultReagents());
+            buf.writeVarInt(eco.highBaseXp());
+            buf.writeVarInt(eco.highMaxXp());
+            buf.writeVarInt(eco.highReagents());
+            buf.writeVarInt(eco.midBaseXp());
+            buf.writeVarInt(eco.midMinXp());
+            buf.writeVarInt(eco.midMaxXp());
+            buf.writeVarInt(eco.midMaxReagents());
+            buf.writeVarInt(eco.lowBaseXp());
+            buf.writeVarInt(eco.lowMinXp());
+            buf.writeVarInt(eco.lowMaxReagents());
+            buf.writeVarInt(eco.socketBookXp());
+            buf.writeVarInt(eco.topUpXp());
+            buf.writeVarInt(eco.expandVesselXp());
+            buf.writeVarInt(eco.manageFlipSplitXp());
+            buf.writeVarInt(eco.purifyAberrantXp());
+            buf.writeVarInt(eco.purifyAberrantStabilizers());
+            buf.writeDouble(eco.meleeMinCharge());
+            buf.writeDouble(eco.meleeFullCharge());
+
+            TriggerType[] allTriggers = TriggerType.values();
+            buf.writeVarInt(allTriggers.length);
+            for (TriggerType t : allTriggers) {
+                buf.writeUtf(t.name(), 64);
+                buf.writeVarInt(eco.cooldownTicksFor(t));
+            }
         }
 
         private static MatrixSyncPayload read(FriendlyByteBuf buf) {
+            int wireVersion = buf.readVarInt();
+            if (wireVersion != MATRIX_SYNC_PROTOCOL_VERSION) {
+                int skipped = buf.readableBytes();
+                buf.skipBytes(skipped);
+                EnchantmentFusion.LOGGER.warn(
+                    "Ignored MatrixSyncPayload with incompatible wire version {} (expected {}, skipped {} bytes)",
+                    wireVersion,
+                    MATRIX_SYNC_PROTOCOL_VERSION,
+                    skipped
+                );
+                return new MatrixSyncPayload(null);
+            }
             int pCount = Math.clamp(buf.readVarInt(), 0, 2048);
             Map<String, MatrixProfile> profiles = new HashMap<>(pCount);
             for (int i = 0; i < pCount; i++) {
@@ -196,20 +257,74 @@ public final class FusionNetworking {
                     groups.add(Collections.unmodifiableSet(g));
                 }
             }
+
+            double lowFail = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double midFail = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double highFail = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double repFail = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double repFloor = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double abSockFail = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double ceilLow = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double ceilMid = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double ceilHigh = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double ceilRep = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double ceilConv = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double ceilSock = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            double stabRep = Math.clamp(buf.readDouble(), 0.01, 1.0);
+            double stabNorm = Math.clamp(buf.readDouble(), 0.01, 1.0);
+            int maxRepStab = Math.clamp(buf.readVarInt(), 0, 16);
+            int maxNormStab = Math.clamp(buf.readVarInt(), 0, 16);
+            int maxLowStab = Math.clamp(buf.readVarInt(), 0, 16);
+            double failFeeRatio = Math.clamp(buf.readDouble(), 0.0, 1.0);
+            int repBaseXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int repBonusXp = Math.clamp(buf.readVarInt(), 0, 50);
+            int repMaxReag = Math.clamp(buf.readVarInt(), 0, 64);
+            int repDefReag = Math.clamp(buf.readVarInt(), 0, 64);
+            int highBaseXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int highMaxXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int highReag = Math.clamp(buf.readVarInt(), 0, 64);
+            int midBaseXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int midMinXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int midMaxXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int midMaxReag = Math.clamp(buf.readVarInt(), 0, 64);
+            int lowBaseXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int lowMinXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int lowMaxReag = Math.clamp(buf.readVarInt(), 0, 64);
+            int sockXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int topUpXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int expandXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int manageXp = Math.clamp(buf.readVarInt(), 0, 100);
+            int purifyXp = Math.clamp(buf.readVarInt(), 0, 200);
+            int purifyStab = Math.clamp(buf.readVarInt(), 1, 64);
+            double meleeMin = Math.clamp(buf.readDouble(), 0.05, 1.0);
+            double meleeFull = Math.clamp(buf.readDouble(), 0.10, 1.0);
+
+            int cdCount = Math.clamp(buf.readVarInt(), 0, 32);
+            Map<TriggerType, Integer> cooldowns = new EnumMap<>(EconomyConfig.DEFAULT_TRIGGER_COOLDOWNS);
+            for (int i = 0; i < cdCount; i++) {
+                TriggerType t = TriggerType.fromString(buf.readUtf(64), null);
+                int ticks = Math.clamp(buf.readVarInt(), 4, 1200);
+                if (t != null) {
+                    cooldowns.put(t, ticks);
+                }
+            }
+
             EconomyConfig eco = new EconomyConfig(
-                Math.clamp(buf.readDouble(), 0.0, 1.0),
-                Math.clamp(buf.readDouble(), 0.0, 1.0),
-                Math.clamp(buf.readDouble(), 0.0, 1.0),
-                Math.clamp(buf.readDouble(), 0.0, 1.0),
-                Math.clamp(buf.readDouble(), 0.0, 1.0),
-                Math.clamp(buf.readDouble(), 0.01, 1.0),
-                Math.clamp(buf.readDouble(), 0.01, 1.0),
-                Math.clamp(buf.readVarInt(), 0, 16)
+                lowFail, midFail, highFail, repFail, repFloor, abSockFail,
+                ceilLow, ceilMid, ceilHigh, ceilRep, ceilConv, ceilSock,
+                stabRep, stabNorm, maxRepStab, maxNormStab, maxLowStab, failFeeRatio,
+                repBaseXp, repBonusXp, repMaxReag, repDefReag,
+                highBaseXp, highMaxXp, highReag,
+                midBaseXp, midMinXp, midMaxXp, midMaxReag,
+                lowBaseXp, lowMinXp, lowMaxReag,
+                sockXp, topUpXp, expandXp, manageXp,
+                purifyXp, purifyStab,
+                meleeMin, meleeFull,
+                cooldowns
             );
             return new MatrixSyncPayload(new FusionMatrixRegistry.Snapshot(
                 Collections.unmodifiableMap(profiles),
                 Collections.unmodifiableList(groups),
-                eco.repulsiveFailChance(),
                 eco
             ));
         }
@@ -237,6 +352,14 @@ public final class FusionNetworking {
     public static final int VISUAL_FUSE_FAIL = 3;
     public static final int VISUAL_FLIP_ORDER = 4;
     public static final int VISUAL_SPLIT_EXTRACT = 5;
+
+    public static final int SURGE_TICKS_NORMAL = 28;
+    public static final int SURGE_TICKS_ABERRANT = 36;
+
+    /** Shared surge duration source of truth used by both BlockEntity and Renderer (CPL-4 / DEAD-3). */
+    public static int surgeTicksFor(int eventKind) {
+        return eventKind == VISUAL_FUSE_ABERRANT ? SURGE_TICKS_ABERRANT : SURGE_TICKS_NORMAL;
+    }
 
     public record FusionVisualEventPayload(BlockPos blockPos, int eventKind) implements CustomPacketPayload {
         public static final Type<FusionVisualEventPayload> TYPE =
@@ -292,17 +415,23 @@ public final class FusionNetworking {
                 if (action == null) {
                     return;
                 }
-                // Executions must bind to the candidate selection the player saw.
-                // Other inventory changes are still revalidated by the station operation.
-                if (action == StationAction.EXECUTE_PRIMARY && payload.expectedToken().isEmpty()) {
-                    player.sendSystemMessage(Component.translatable("message.enchantment_fusion.action_rejected").withStyle(ChatFormatting.RED), true);
+                boolean mutatesItem = action == StationAction.EXECUTE_PRIMARY
+                    || action == StationAction.FLIP_SOCKET
+                    || action == StationAction.UNSOCKET_OR_SPLIT;
+                if (mutatesItem && payload.expectedToken().isEmpty()) {
+                    player.sendSystemMessage(
+                        Component.translatable("message.enchantment_fusion.action_rejected").withStyle(ChatFormatting.RED),
+                        true
+                    );
                     return;
                 }
-                boolean ok = menu.performAction(player, action, payload.paramA(), payload.paramB(), payload.expectedToken());
-                if (!ok && action == StationAction.EXECUTE_PRIMARY) {
-                    StationPreview now = menu.computePreview();
-                    String key = !now.rejectReason().langKey().isEmpty()
-                        ? now.rejectReason().langKey()
+
+                ActionResult res = menu.performActionWithResult(
+                    player, action, payload.paramA(), payload.paramB(), payload.expectedToken()
+                );
+                if (!res.success() && mutatesItem) {
+                    String key = !res.reason().langKey().isEmpty()
+                        ? res.reason().langKey()
                         : "message.enchantment_fusion.action_rejected";
                     player.sendSystemMessage(Component.translatable(key).withStyle(ChatFormatting.RED), true);
                 }
@@ -313,8 +442,14 @@ public final class FusionNetworking {
     public static void sendCompendiumSync(ServerPlayer player, Collection<String> encodedStates) {
         if (ServerPlayNetworking.canSend(player, CompendiumSyncPayload.TYPE)) {
             List<String> copy = new ArrayList<>(encodedStates);
-            if (copy.size() > 4096) {
-                copy = copy.subList(0, 4096);
+            if (copy.size() > CompendiumSyncPayload.MAX_SYNC_ENTRIES) {
+                EnchantmentFusion.LOGGER.warn(
+                    "Truncating compendium sync for {} from {} entries to protocol cap {}",
+                    player.getScoreboardName(),
+                    copy.size(),
+                    CompendiumSyncPayload.MAX_SYNC_ENTRIES
+                );
+                copy = copy.subList(0, CompendiumSyncPayload.MAX_SYNC_ENTRIES);
             }
             ServerPlayNetworking.send(player, new CompendiumSyncPayload(copy));
         }
@@ -337,7 +472,7 @@ public final class FusionNetworking {
     }
 
     public static void applyClientMatrixSync(MatrixSyncPayload payload) {
-        if (payload != null) {
+        if (payload != null && payload.snapshot() != null) {
             FusionMatrixRegistry.setClientSnapshot(payload.snapshot());
         }
     }
@@ -357,9 +492,10 @@ public final class FusionNetworking {
             return;
         }
         FusionVisualEventPayload payload = new FusionVisualEventPayload(pos, eventKind);
+        Vec3 center = Vec3.atCenterOf(pos);
         double maxDistSqr = 48.0D * 48.0D;
         for (ServerPlayer sp : level.players()) {
-            if (sp.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= maxDistSqr
+            if (sp.distanceToSqr(center) <= maxDistSqr
                 && ServerPlayNetworking.canSend(sp, FusionVisualEventPayload.TYPE)) {
                 ServerPlayNetworking.send(sp, payload);
             }

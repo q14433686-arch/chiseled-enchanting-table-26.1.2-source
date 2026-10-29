@@ -80,6 +80,23 @@ final class FusionRuleEngineTest {
         );
         assertFalse(exclusiveBlocked.valid());
         assertEquals(RejectReason.EXCLUSIVE_ON_HOST, exclusiveBlocked.rejectReason());
+
+        // Existing socketed pair secondaryId must also enforce repulsive exclusivity on the host
+        FusedEnchantmentList hostWithSmiteSecondary = FusedEnchantmentList.EMPTY.append(
+            FusedPair.clean("minecraft:loyalty", 3, "minecraft:smite", 5)
+        );
+        PairEvaluation secondaryExclusiveBlocked = FusionRuleEngine.evaluateFusion(
+            new EnchantInput("minecraft:sharpness", 5, 5),
+            new EnchantInput("minecraft:fire_aspect", 2, 2),
+            true,
+            hostWithSmiteSecondary,
+            Set.of(),
+            2,
+            false,
+            false
+        );
+        assertFalse(secondaryExclusiveBlocked.valid());
+        assertEquals(RejectReason.EXCLUSIVE_ON_HOST, secondaryExclusiveBlocked.rejectReason());
     }
 
     @Test
@@ -261,6 +278,26 @@ final class FusionRuleEngineTest {
         var cheapConv = FusionEconomyRules.computeConversionQuote(1, 5, 1, 0, false);
         var rareConv = FusionEconomyRules.computeConversionQuote(1, 1, 8, 0, false);
         assertTrue(rareConv.xpLevels() > cheapConv.xpLevels());
+
+        // CPL-1: Native aberrant purification quote uses configured stabilizers & XP with 0% failure
+        var purifyQuote = FusionEconomyRules.computePurifyAberrantQuote(FusionMatrixRegistry.serverSnapshot().economy(), false);
+        assertEquals(25, purifyQuote.xpLevels());
+        assertEquals(3, purifyQuote.stabilizersUsed());
+        assertEquals(0.0, purifyQuote.failureChance(), 1e-6);
+
+        var cetCatalystPurify = FusionEconomyRules.computePurifyAberrantQuote(FusionMatrixRegistry.serverSnapshot().economy(), true);
+        assertEquals(0, cetCatalystPurify.xpLevels());
+        assertEquals(1, cetCatalystPurify.stabilizersUsed());
+
+        // Exact Identifier path matching in AberrantRegistry.pickAberration + CET mixin allowlist size
+        net.minecraft.util.RandomSource fixedRng = net.minecraft.util.RandomSource.create(42L);
+        assertEquals(AberrantRegistry.HOT_POTATO, AberrantRegistry.pickAberration("minecraft:fire_aspect", "minecraft:unbreaking", fixedRng));
+        assertNotEquals(
+            AberrantRegistry.HOT_POTATO,
+            AberrantRegistry.pickAberration("mymod:anti_fire_aspect_shield", "minecraft:channeling", fixedRng),
+            "Substring path matches like anti_fire_aspect_shield must not trigger HOT_POTATO over exact channeling"
+        );
+        assertEquals(9, enchantment_fusion.mixin.FusionMixinConfigPlugin.CET_GATED_MIXINS.size());
 
         // NET-05: Full + delta Compendium discovery sync
         CompendiumDiscoveryTracker.applyClientSync(List.of("sig/gale_vault_thrust=1"));

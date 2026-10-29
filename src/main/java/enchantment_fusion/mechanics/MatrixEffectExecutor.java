@@ -110,19 +110,52 @@ public final class MatrixEffectExecutor {
         boolean fullChargeMelee,
         float chargeScale
     ) {
+        dispatchAcrossEquippedSlots(
+            level, player, primaryHost, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale, false, 0
+        );
+    }
+
+    /**
+     * Dispatches all fused pairs on {@code primaryHost} PLUS any distinct matching fused pairs equipped across
+     * Offhand and Armor slots. When {@code capBonusHurtToSingleProc} is true (projectile impacts, MIX-02),
+     * {@code targetEntity.invulnerableTime} is restored immediately after the first bonus damage proc lands
+     * so secondary armor/offhand slots cannot multiply unrestricted burst damage in a single arrow hit.
+     */
+    public static void dispatchAcrossEquippedSlots(
+        ServerLevel level,
+        ServerPlayer player,
+        @Nullable ItemStack primaryHost,
+        Set<TriggerType> firedTriggers,
+        @Nullable LivingEntity targetEntity,
+        Vec3 originPos,
+        boolean fullChargeMelee,
+        float chargeScale,
+        boolean capBonusHurtToSingleProc,
+        int restoreInvulnTicksOnFirstHurt
+    ) {
         if (Boolean.TRUE.equals(IN_EXECUTION.get()) || firedTriggers == null || firedTriggers.isEmpty()) {
             return;
         }
+        float hpBaseline = targetEntity != null ? targetEntity.getHealth() : 0.0F;
         Set<String> seenPairKeys = new HashSet<>();
         if (primaryHost != null && !primaryHost.isEmpty()) {
-            dispatchInternal(level, player, primaryHost, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale, seenPairKeys, true);
+            dispatchInternal(
+                level, player, primaryHost, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale,
+                seenPairKeys, true, capBonusHurtToSingleProc, hpBaseline, restoreInvulnTicksOnFirstHurt
+            );
         }
         for (EquipmentSlot slot : SECONDARY_EQUIP_SLOTS) {
             ItemStack equipped = player.getItemBySlot(slot);
             if (equipped.isEmpty() || equipped == primaryHost) {
                 continue;
             }
-            dispatchInternal(level, player, equipped, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale, seenPairKeys, false);
+            if (capBonusHurtToSingleProc && targetEntity != null && targetEntity.getHealth() < hpBaseline) {
+                targetEntity.invulnerableTime = Math.max(targetEntity.invulnerableTime, restoreInvulnTicksOnFirstHurt);
+            }
+            dispatchInternal(
+                level, player, equipped, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale,
+                seenPairKeys, false, capBonusHurtToSingleProc, hpBaseline, restoreInvulnTicksOnFirstHurt
+            );
         }
     }
 
@@ -143,7 +176,10 @@ public final class MatrixEffectExecutor {
             || firedTriggers.isEmpty()) {
             return;
         }
-        dispatchInternal(level, player, hostStack, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale, new HashSet<>(), true);
+        dispatchInternal(
+            level, player, hostStack, firedTriggers, targetEntity, originPos, fullChargeMelee, chargeScale,
+            new HashSet<>(), true, false, 0.0F, 0
+        );
     }
 
     private static void dispatchInternal(
@@ -156,7 +192,10 @@ public final class MatrixEffectExecutor {
         boolean fullChargeMelee,
         float chargeScale,
         Set<String> seenPairKeys,
-        boolean allowHostUniversalFallback
+        boolean allowHostUniversalFallback,
+        boolean capBonusHurtToSingleProc,
+        float hpBaseline,
+        int restoreInvulnTicksOnFirstHurt
     ) {
         FusedEnchantmentList list = hostStack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         if (list.isEmpty()) {
@@ -197,7 +236,11 @@ public final class MatrixEffectExecutor {
             if (now < readyAt) {
                 continue;
             }
-            COOLDOWNS.put(cdKey, now + Math.max(6, matchedTrigger.cooldownTicks()));
+            COOLDOWNS.put(cdKey, now + Math.max(6, snapshot.economy().cooldownTicksFor(matchedTrigger)));
+
+            if (capBonusHurtToSingleProc && targetEntity != null && targetEntity.getHealth() < hpBaseline) {
+                targetEntity.invulnerableTime = Math.max(targetEntity.invulnerableTime, restoreInvulnTicksOnFirstHurt);
+            }
 
             // Scope IN_EXECUTION per individual pair so Pair #1's hurtServer never suppresses sibling Pair #2!
             IN_EXECUTION.set(Boolean.TRUE);

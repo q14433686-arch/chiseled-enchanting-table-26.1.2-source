@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.menu.FusionNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -63,7 +64,7 @@ public final class EnchantmentFusionTableRenderer
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTick, cameraPos, crumblingOverlay);
         state.hoverTicks = blockEntity.animTicks + partialTick;
         state.surgeKind = blockEntity.surgeKind;
-        float maxSurge = (blockEntity.surgeKind == 2) ? 36.0F : 28.0F;
+        float maxSurge = (float) FusionNetworking.surgeTicksFor(blockEntity.surgeKind);
         state.surgeProgress = blockEntity.surgeTicks > 0
             ? Mth.clamp((blockEntity.surgeTicks - partialTick) / maxSurge, 0.0F, 1.0F)
             : 0.0F;

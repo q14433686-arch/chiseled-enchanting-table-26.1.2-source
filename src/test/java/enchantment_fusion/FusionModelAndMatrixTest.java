@@ -51,6 +51,17 @@ class FusionModelAndMatrixTest {
         assertEquals(255, clamped.primaryLevel());
         assertEquals(1, clamped.secondaryLevel());
         assertEquals("", clamped.aberrationId());
+
+        // CPL-1 / NET-1: withoutAberration() strips aberrationId while preserving pure [A ▷ B], and fingerprint() distinguishes pairs
+        FusedPair mutated = new FusedPair("sharpness", 5, "minecraft:smite", 5, "blood_frenzy");
+        assertEquals("minecraft:sharpness", mutated.primaryId());
+        assertTrue(mutated.isAberrant());
+        FusedPair purified = mutated.withoutAberration();
+        assertFalse(purified.isAberrant());
+        assertEquals("minecraft:sharpness", purified.primaryId());
+        assertEquals("minecraft:smite", purified.secondaryId());
+        assertNotEquals(mutated.fingerprint(), purified.fingerprint());
+        assertNotEquals(ab.fingerprint(), ba.fingerprint());
     }
 
     @Test
@@ -122,5 +133,33 @@ class FusionModelAndMatrixTest {
         assertTrue(snapshot.areRepulsiveExclusives("minecraft:density", "minecraft:breach"));
         assertTrue(snapshot.areRepulsiveExclusives("minecraft:channeling", "minecraft:riptide"), "DATA-05: channeling x riptide must be repulsive");
         assertFalse(snapshot.areRepulsiveExclusives("minecraft:sharpness", "minecraft:loyalty"));
+    }
+
+    @Test
+    void economySchemaV2CeilingsCooldownsAndClientServerIsolation() {
+        var econ = snapshot.economy();
+        assertEquals(25, econ.purifyAberrantXp());
+        assertEquals(3, econ.purifyAberrantStabilizers());
+        assertEquals(0.55, econ.meleeMinCharge(), 1e-6);
+        assertEquals(0.90, econ.meleeFullCharge(), 1e-6);
+        assertEquals(8, econ.triggerCooldowns().size());
+        assertEquals(60, econ.triggerCooldowns().get(TriggerType.ON_DAMAGE_TAKEN));
+
+        // Configurable ceiling > default allows higher datapack failure chance when ceiling is raised
+        JsonObject customEcon = JsonParser.parseString(
+            "{\"schema_version\":2,\"fail_ceiling_mid\":0.80,\"mid_fail_chance\":0.72}"
+        ).getAsJsonObject();
+        var customSnap = FusionMatrixRegistry.parseFromJson(null, null, customEcon);
+        assertEquals(0.72, customSnap.economy().midFailChance(), 1e-6);
+
+        // Client snapshot override never mutates serverSnapshot()
+        try {
+            FusionMatrixRegistry.setClientSnapshot(customSnap);
+            assertEquals(0.18, FusionMatrixRegistry.serverSnapshot().economy().midFailChance(), 1e-6);
+            assertEquals(0.72, FusionMatrixRegistry.clientView().economy().midFailChance(), 1e-6);
+        } finally {
+            FusionMatrixRegistry.setClientSnapshot(null);
+        }
+        assertEquals(0.18, FusionMatrixRegistry.clientView().economy().midFailChance(), 1e-6);
     }
 }

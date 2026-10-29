@@ -1,21 +1,26 @@
 package enchantment_fusion.data;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import enchantment_fusion.EnchantmentFusion;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Reloads {@code matrix_profiles.json}, {@code repulsive_pairs.json}, and {@code economy.json}
- * atomically on server startup and {@code /reload}.
+ * atomically on server startup and {@code /reload}, merging all datapack layers bottom-up via
+ * {@link ResourceManager#getResourceStack(Identifier)} while honoring {@code "replace": true} (DATA-3).
  */
 public final class FusionDataLoader implements SimpleSynchronousResourceReloadListener {
     private static final Identifier RELOAD_ID = EnchantmentFusion.id("matrix_data");
@@ -38,9 +43,9 @@ public final class FusionDataLoader implements SimpleSynchronousResourceReloadLi
     @Override
     public void onResourceManagerReload(ResourceManager manager) {
         try {
-            JsonObject matrixObj = readJson(manager, MATRIX_PROFILES_PATH);
-            JsonObject repulsiveObj = readJson(manager, REPULSIVE_PAIRS_PATH);
-            JsonObject economyObj = readJson(manager, ECONOMY_PATH);
+            JsonObject matrixObj = readMergedJsonStack(manager, MATRIX_PROFILES_PATH);
+            JsonObject repulsiveObj = readMergedJsonStack(manager, REPULSIVE_PAIRS_PATH);
+            JsonObject economyObj = readMergedJsonStack(manager, ECONOMY_PATH);
             FusionMatrixRegistry.Snapshot staged = FusionMatrixRegistry.parseFromJson(matrixObj, repulsiveObj, economyObj);
             FusionMatrixRegistry.publish(staged);
             EnchantmentFusion.LOGGER.info(
@@ -53,13 +58,68 @@ public final class FusionDataLoader implements SimpleSynchronousResourceReloadLi
         }
     }
 
-    private static JsonObject readJson(ResourceManager manager, Identifier path) throws Exception {
-        Optional<Resource> res = manager.getResource(path);
-        if (res.isEmpty()) {
+    /**
+     * Merges a stack of JSON objects from lowest-priority pack to highest-priority pack (DATA-3).
+     * If a higher pack explicitly sets {@code "replace": true}, earlier pack layers are discarded cleanly.
+     */
+    public static @Nullable JsonObject mergeJsonLayers(List<JsonObject> layers) {
+        if (layers == null || layers.isEmpty()) {
             return null;
         }
-        try (var reader = new InputStreamReader(res.get().open(), StandardCharsets.UTF_8)) {
-            return JsonParser.parseReader(reader).getAsJsonObject();
+        JsonObject merged = new JsonObject();
+        for (JsonObject layer : layers) {
+            if (layer == null) {
+                continue;
+            }
+            boolean replaceLayer = layer.has("replace")
+                && layer.get("replace").isJsonPrimitive()
+                && layer.get("replace").getAsJsonPrimitive().isBoolean()
+                && layer.get("replace").getAsBoolean();
+            if (replaceLayer) {
+                merged = new JsonObject();
+            }
+            deepMergeInto(merged, layer, replaceLayer);
         }
+        return merged;
+    }
+
+    private static void deepMergeInto(JsonObject target, JsonObject overlay, boolean replaceLayer) {
+        for (Map.Entry<String, JsonElement> entry : overlay.entrySet()) {
+            String key = entry.getKey();
+            JsonElement val = entry.getValue();
+            if ("exclusive_groups".equals(key) && val.isJsonArray()) {
+                JsonArray incoming = val.getAsJsonArray();
+                if (replaceLayer || incoming.isEmpty() || !target.has(key) || !target.get(key).isJsonArray()) {
+                    target.add(key, incoming.deepCopy());
+                } else {
+                    JsonArray combined = target.getAsJsonArray(key).deepCopy();
+                    for (JsonElement item : incoming) {
+                        combined.add(item.deepCopy());
+                    }
+                    target.add(key, combined);
+                }
+            } else if (val.isJsonObject() && target.has(key) && target.get(key).isJsonObject()) {
+                deepMergeInto(target.getAsJsonObject(key), val.getAsJsonObject(), false);
+            } else {
+                target.add(key, val.deepCopy());
+            }
+        }
+    }
+
+    private static @Nullable JsonObject readMergedJsonStack(ResourceManager manager, Identifier path) throws Exception {
+        List<Resource> stack = manager.getResourceStack(path);
+        if (stack.isEmpty()) {
+            return null;
+        }
+        java.util.ArrayList<JsonObject> parsed = new java.util.ArrayList<>(stack.size());
+        for (Resource res : stack) {
+            try (var reader = new InputStreamReader(res.open(), StandardCharsets.UTF_8)) {
+                JsonElement root = JsonParser.parseReader(reader);
+                if (root != null && root.isJsonObject()) {
+                    parsed.add(root.getAsJsonObject());
+                }
+            }
+        }
+        return mergeJsonLayers(parsed);
     }
 }

@@ -37,6 +37,7 @@
     "fabric-api": ">=0.151.0"
   },
   "suggests": {
-    "chiseled-enchanting-table": "*"
+    "chiseled-enchanting-table": "*",
+    "chiseled_enchanting_table": "*"
   }
 }

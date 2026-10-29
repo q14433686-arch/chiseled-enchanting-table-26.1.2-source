@@ -199,8 +199,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 boolean escHandled = screen.keyPressed(new KeyEvent(256, 0, 0));
                 require(escHandled, "Escape should close embedded Grimoire overlay cleanly");
 
-                // Click [⇄] Swap-Order button (43..67, 48..72)
-                click(screen, b.getX() + 55, b.getY() + 60);
+                // Click [⇅] Swap-Order button (57..75, 51..69)
+                click(screen, b.getX() + 66, b.getY() + 60);
                 next(2, 10);
             }
             case 2 -> {
@@ -211,7 +211,7 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 55, b.getY() + 60);
+                click(screen, b.getX() + 66, b.getY() + 60);
                 next(3, 10);
             }
             case 3 -> {
@@ -418,6 +418,33 @@ public final class ClientSmoke implements ClientModInitializer {
                             )
                         );
                         require(enchantment_fusion.compat.CetCleanseOperations.countAberrantFusions(abGear) == 1, "Expected 1 aberrant fusion");
+
+                        // Verify native Enchantment Fusion Table aberrant purification recipe (Slot 3 + Stabilizers in Slot 2)
+                        var bePurify = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
+                        bePurify.setItem(0, ItemStack.EMPTY);
+                        bePurify.setItem(1, ItemStack.EMPTY);
+                        bePurify.setItem(2, new ItemStack(FusionItems.RESONANCE_STABILIZER, 4));
+                        bePurify.setItem(3, abGear.copy());
+                        sp.giveExperienceLevels(40);
+                        var purifyPreview = FusionStationOperations.inspect(
+                            bePurify, sp.level().registryAccess(), FusionStationOperations.TAB_FUSE, -1, -1
+                        );
+                        require(
+                            purifyPreview.kind() == FusionStationOperations.OperationKind.PURIFY_ABERRANT && purifyPreview.executable(),
+                            "Expected native PURIFY_ABERRANT preview when aberrant gear is in Slot 3 with Resonance Stabilizers"
+                        );
+                        var purifyRes = FusionStationOperations.executePrimaryWithReason(
+                            bePurify, sp, sp.level().registryAccess(), FusionStationOperations.TAB_FUSE, -1, -1, false, ""
+                        );
+                        require(purifyRes.success(), "Expected native PURIFY_ABERRANT execution to succeed");
+                        ItemStack nativelyPurified = bePurify.getItem(3);
+                        require(
+                            enchantment_fusion.compat.CetCleanseOperations.countAberrantFusions(nativelyPurified) == 0
+                                && enchantment_fusion.compat.CetCleanseOperations.countCleanFusions(nativelyPurified) == 1,
+                            "Native Fusion Table purification must strip aberration while preserving pure [A ▷ B]"
+                        );
+                        require(bePurify.getItem(2).getCount() == 1, "Expected 3 Resonance Stabilizers consumed from Slot 2");
+
                         ItemStack purifiedGear = enchantment_fusion.compat.CetCleanseOperations.purifySingleAberrant(abGear, 0);
                         require(purifiedGear != null && enchantment_fusion.compat.CetCleanseOperations.countAberrantFusions(purifiedGear) == 0,
                             "Expected aberrant curse purified");

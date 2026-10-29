@@ -1,10 +1,12 @@
 package enchantment_fusion;
 
+import enchantment_fusion.compat.CetSoftBridge;
 import enchantment_fusion.data.FusionDataLoader;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.FusionWorldLoot;
 import enchantment_fusion.mechanics.MatrixRuntimeHooks;
 import enchantment_fusion.menu.FusionNetworking;
+import enchantment_fusion.mixin.FusionMixinConfigPlugin;
 import enchantment_fusion.registry.FusionBlockEntities;
 import enchantment_fusion.registry.FusionBlocks;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -38,6 +40,16 @@ public final class EnchantmentFusion implements ModInitializer {
         FusionWorldLoot.init();
         CompendiumDiscoveryTracker.initServerHooks();
         MatrixRuntimeHooks.init();
+        if (CetSoftBridge.isCetLoaded()) {
+            int applied = FusionMixinConfigPlugin.appliedCetMixinCount();
+            if (applied == 0) {
+                LOGGER.warn(
+                    "Sister mod Chiseled Enchanting Table detected, yet 0 CET @Pseudo bridge mixins have applied so far; check sister-mod version compatibility."
+                );
+            } else {
+                LOGGER.info("Chiseled Enchanting Table soft-synergy bridge active ({} server/common mixins applied).", applied);
+            }
+        }
         LOGGER.info("Enchantment Fusion initialized (26.1.2 full 43-enchantment & Grimoire system ready).");
     }
 }

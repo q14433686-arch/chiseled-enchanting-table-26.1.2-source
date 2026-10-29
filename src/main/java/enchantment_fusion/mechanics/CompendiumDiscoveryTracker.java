@@ -103,7 +103,7 @@ public final class CompendiumDiscoveryTracker {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             ServerPlayer player = handler.getPlayer();
             FusionNetworking.sendMatrixSync(player);
-            scanPlayerInventory(player);
+            scanPlayerInventoryInternal(player, false);
             FusionNetworking.sendCompendiumSync(player, encodeStates(player.getUUID()));
         });
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
@@ -128,11 +128,15 @@ public final class CompendiumDiscoveryTracker {
     }
 
     public static void scanPlayerInventory(ServerPlayer player) {
+        scanPlayerInventoryInternal(player, true);
+    }
+
+    private static void scanPlayerInventoryInternal(ServerPlayer player, boolean sendNetworkUpdates) {
         Inventory inv = player.getInventory();
         Set<String> seenEnchants = SCANNED_ENCHANTS_CACHE.computeIfAbsent(
             player.getUUID(), k -> ConcurrentHashMap.newKeySet()
         );
-        boolean bulkChanged = false;
+        Map<String, Integer> newlyAdvanced = new HashMap<>();
 
         int size = inv.getContainerSize();
         for (int i = 0; i < size; i++) {
@@ -144,7 +148,7 @@ public final class CompendiumDiscoveryTracker {
                 for (Holder<Enchantment> h : stored.keySet()) {
                     String eid = h.unwrapKey().map(k -> k.identifier().toString()).orElse("");
                     if (!eid.isEmpty() && seenEnchants.add(eid)) {
-                        bulkChanged |= unlockHeardForEnchantment(player.getUUID(), eid);
+                        unlockHeardForEnchantment(player.getUUID(), eid, newlyAdvanced);
                     }
                 }
             }
@@ -154,7 +158,10 @@ public final class CompendiumDiscoveryTracker {
                 for (String eid : transmuted.keySet()) {
                     Optional<TransmuteVariant> tv = CrossDomainTransmutations.resolve(st, eid);
                     if (tv.isPresent()) {
-                        bulkChanged |= advanceStateInternal(player.getUUID(), transmuteKey(tv.get().id()), STATE_MASTERED);
+                        String tk = transmuteKey(tv.get().id());
+                        if (advanceStateInternal(player.getUUID(), tk, STATE_MASTERED)) {
+                            newlyAdvanced.put(tk, STATE_MASTERED);
+                        }
                     }
                 }
             }
@@ -162,38 +169,63 @@ public final class CompendiumDiscoveryTracker {
             FusedEnchantmentList fused = st.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
             if (!fused.isEmpty()) {
                 for (FusedPair pair : fused.pairs()) {
-                    bulkChanged |= advanceStateInternal(player.getUUID(), pairKey(pair), STATE_MASTERED);
+                    String pk = pairKey(pair);
+                    if (advanceStateInternal(player.getUUID(), pk, STATE_MASTERED)) {
+                        newlyAdvanced.put(pk, STATE_MASTERED);
+                    }
                     Optional<SignatureEntry> sig = SignaturePairs.resolve(pair);
                     if (sig.isPresent()) {
-                        bulkChanged |= advanceStateInternal(player.getUUID(), sigKey(sig.get().id()), STATE_MASTERED);
+                        String sk = sigKey(sig.get().id());
+                        if (advanceStateInternal(player.getUUID(), sk, STATE_MASTERED)) {
+                            newlyAdvanced.put(sk, STATE_MASTERED);
+                        }
                     }
                     if (pair.isAberrant()) {
-                        bulkChanged |= advanceStateInternal(player.getUUID(), aberrantKey(pair.aberrationId()), STATE_MASTERED);
+                        String ak = aberrantKey(pair.aberrationId());
+                        if (advanceStateInternal(player.getUUID(), ak, STATE_MASTERED)) {
+                            newlyAdvanced.put(ak, STATE_MASTERED);
+                        }
                     }
                 }
             }
         }
 
-        if (bulkChanged) {
+        if (!newlyAdvanced.isEmpty()) {
             dirtySave = true;
-            FusionNetworking.sendCompendiumSync(player, encodeStates(player.getUUID()));
+            if (sendNetworkUpdates) {
+                // NET-3: Prefer incremental delta packets over full 800-entry re-serialization
+                if (newlyAdvanced.size() <= 32) {
+                    for (Map.Entry<String, Integer> delta : newlyAdvanced.entrySet()) {
+                        FusionNetworking.sendCompendiumDelta(player, delta.getKey(), delta.getValue());
+                    }
+                } else {
+                    FusionNetworking.sendCompendiumSync(player, encodeStates(player.getUUID()));
+                }
+            }
         }
     }
 
-    private static boolean unlockHeardForEnchantment(UUID playerId, String enchantId) {
-        boolean changed = false;
+    private static void unlockHeardForEnchantment(UUID playerId, String enchantId, Map<String, Integer> newlyAdvanced) {
         for (SignatureEntry sig : SignaturePairs.allOrderedEntries()) {
             if (sig.primaryId().equals(enchantId) || sig.secondaryId().equals(enchantId)) {
-                changed |= advanceStateInternal(playerId, sigKey(sig.id()), STATE_HEARD);
-                changed |= advanceStateInternal(playerId, pairKey(sig.primaryId(), sig.secondaryId()), STATE_HEARD);
+                String sk = sigKey(sig.id());
+                if (advanceStateInternal(playerId, sk, STATE_HEARD)) {
+                    newlyAdvanced.merge(sk, STATE_HEARD, Math::max);
+                }
+                String pk = pairKey(sig.primaryId(), sig.secondaryId());
+                if (advanceStateInternal(playerId, pk, STATE_HEARD)) {
+                    newlyAdvanced.merge(pk, STATE_HEARD, Math::max);
+                }
             }
         }
         for (TransmuteVariant tv : CrossDomainTransmutations.allVariants()) {
             if (tv.sourceEnchantId().equals(enchantId)) {
-                changed |= advanceStateInternal(playerId, transmuteKey(tv.id()), STATE_HEARD);
+                String tk = transmuteKey(tv.id());
+                if (advanceStateInternal(playerId, tk, STATE_HEARD)) {
+                    newlyAdvanced.merge(tk, STATE_HEARD, Math::max);
+                }
             }
         }
-        return changed;
     }
 
     public static boolean advanceState(ServerPlayer player, String key, int targetState) {
@@ -371,12 +403,6 @@ public final class CompendiumDiscoveryTracker {
         return out;
     }
 
-    public static Set<String> getUnlockedFor(UUID playerUuid) {
-        return Collections.unmodifiableSet(
-            SERVER_STATES.computeIfAbsent(playerUuid, k -> new ConcurrentHashMap<>()).keySet()
-        );
-    }
-
     public static void applyClientSync(Iterable<String> encoded) {
         Map<String, Integer> next = new HashMap<>();
         for (String token : encoded) {
@@ -414,16 +440,6 @@ public final class CompendiumDiscoveryTracker {
 
     public static int clientStateVersionHash() {
         return CLIENT_STATES.hashCode();
-    }
-
-    public static int clientMasteredCount() {
-        int count = 0;
-        for (int v : CLIENT_STATES.values()) {
-            if (v >= STATE_MASTERED) {
-                count++;
-            }
-        }
-        return count;
     }
 
     public static boolean isClientDiscovered(String primaryId, String secondaryId) {

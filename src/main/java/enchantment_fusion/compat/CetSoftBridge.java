@@ -13,6 +13,12 @@ import net.minecraft.world.item.Items;
  *   <li>{@code chiseled_enchanting_table:arcane_catalyst} acts as a {@code 0-XP}, {@code 100%} Resonance Stabilizer.</li>
  *   <li>{@code chiseled_enchanting_table:cleansing_grit} acts as a {@code 0-XP} clean Splitter / Order-Flipper.</li>
  * </ul>
+ * <p>
+ * Identifier convention (TXT-12):
+ * <ul>
+ *   <li>{@link #CET_MOD_ID} ({@code "chiseled-enchanting-table"}): Primary Fabric {@code fabric.mod.json} ID of the sister mod.</li>
+ *   <li>{@link #CET_NAMESPACE} ({@code "chiseled_enchanting_table"}): Minecraft resource namespace &amp; Java root package of the sister mod (also accepted as an alternate Fabric mod ID).</li>
+ * </ul>
  */
 public final class CetSoftBridge {
     public static final String CET_MOD_ID = "chiseled-enchanting-table";

@@ -84,13 +84,6 @@ public final class VesselCapacityRules {
         return stack.getOrDefault(FusionDataComponents.VESSEL_BONUS, 0);
     }
 
-    public static int getUsedVesselSlots(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return 0;
-        }
-        return stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).size();
-    }
-
     public static boolean canExpandStack(ItemStack stack) {
         if (stack == null || stack.isEmpty() || !isPotentialEquipmentHost(stack)) {
             return false;

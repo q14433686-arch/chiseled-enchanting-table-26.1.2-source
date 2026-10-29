@@ -1,5 +1,7 @@
 package enchantment_fusion.mechanics;
 
+import enchantment_fusion.data.FusionMatrixRegistry;
+import enchantment_fusion.data.FusionMatrixRegistry.EconomyConfig;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -64,6 +66,7 @@ public final class MatrixRuntimeHooks {
             FlyingBladeManager.flushAll();
             ProjectilePathTracker.flushAll();
             PEAK_FALL_DISTANCE.clear();
+            FusionMatrixRegistry.setClientSnapshot(null);
         });
 
         // CPL-02: Evict per-player runtime caches on disconnect
@@ -110,13 +113,14 @@ public final class MatrixRuntimeHooks {
                 if (!CrossDomainTransmutations.allowAttackTarget(serverPlayer, target)) {
                     return InteractionResult.FAIL;
                 }
+                EconomyConfig eco = FusionMatrixRegistry.serverSnapshot().economy();
                 ItemStack weapon = serverPlayer.getItemInHand(hand);
                 float charge = serverPlayer.getAttackStrengthScale(0.5F);
                 boolean riptideSpin = serverPlayer.isAutoSpinAttack();
-                if (charge < 0.55F && !riptideSpin) {
+                if (charge < (float) eco.meleeMinCharge() && !riptideSpin) {
                     return InteractionResult.PASS;
                 }
-                boolean fullCharge = charge >= 0.90F || riptideSpin;
+                boolean fullCharge = charge >= (float) eco.meleeFullCharge() || riptideSpin;
                 Set<TriggerType> triggers = EnumSet.of(TriggerType.ON_MELEE_STRIKE);
                 if (fullCharge) {
                     triggers.add(TriggerType.ON_SWEEP_OR_CLEAVE);

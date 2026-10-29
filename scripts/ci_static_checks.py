@@ -73,6 +73,22 @@ def check_locales() -> None:
     if leaked_dead:
         raise AssertionError(f"Dead translation keys must remain purged: {sorted(leaked_dead)}")
 
+    def extract_specifiers(s: str) -> list[str]:
+        out: list[str] = []
+        i = 0
+        while i < len(s):
+            if s[i] == "%":
+                if i + 1 < len(s) and s[i + 1] == "%":
+                    i += 2
+                    continue
+                m = re.match(r"%(?:(\d+)\$)?([sd])", s[i:])
+                if m:
+                    out.append(m.group(0))
+                    i += len(m.group(0))
+                    continue
+            i += 1
+        return out
+
     for code in LOCALES:
         p = lang_dir / f"{code}.json"
         if not p.is_file():
@@ -87,6 +103,8 @@ def check_locales() -> None:
                 raise AssertionError(f"Invalid or newline-containing translation {code}:{k}")
             if any(ord(ch) > 0xFFFF for ch in v):
                 raise AssertionError(f"Non-BMP character in {code}:{k}")
+            if len(extract_specifiers(en_us[k])) != len(extract_specifiers(v)):
+                raise AssertionError(f"Format specifier count drift in {code}:{k}")
 
     zh_cn = json.loads((lang_dir / "zh_cn.json").read_text(encoding="utf-8"))
     zh_tw = json.loads((lang_dir / "zh_tw.json").read_text(encoding="utf-8"))

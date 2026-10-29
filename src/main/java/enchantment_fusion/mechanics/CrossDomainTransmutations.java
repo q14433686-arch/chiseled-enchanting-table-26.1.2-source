@@ -3067,12 +3067,6 @@ public final class CrossDomainTransmutations {
         return null;
     }
 
-    private static boolean isOreForFortuneSmelt(Block b) {
-        return b == Blocks.IRON_ORE || b == Blocks.DEEPSLATE_IRON_ORE
-            || b == Blocks.GOLD_ORE || b == Blocks.DEEPSLATE_GOLD_ORE
-            || b == Blocks.COPPER_ORE || b == Blocks.DEEPSLATE_COPPER_ORE;
-    }
-
     private static boolean isFarmAnimal(EntityType<?> type) {
         return type == EntityType.COW || type == EntityType.SHEEP || type == EntityType.PIG
             || type == EntityType.CHICKEN || type == EntityType.GOAT || type == EntityType.RABBIT

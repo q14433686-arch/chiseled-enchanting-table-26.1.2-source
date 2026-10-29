@@ -38,7 +38,8 @@ class UiReadabilityTest(unittest.TestCase):
         "tab_1": (120, 0, 104, 20),
         "btn_grimoire": (232, 0, 68, 18),
         "slot_primary": (17, 51, 18, 18),
-        "btn_swap": (43, 48, 24, 24),
+        "btn_swap_slots": (37, 51, 18, 18),
+        "btn_swap_order": (57, 51, 18, 18),
         "slot_secondary": (77, 51, 18, 18),
         "slot_catalyst": (47, 79, 18, 18),
         "slot_target": (47, 107, 18, 18),
@@ -100,6 +101,13 @@ class UiReadabilityTest(unittest.TestCase):
             self.assertIn("enableScissor", src)
             self.assertIn("disableScissor", src)
             self.assertNotIn(".fill(", src)
+
+        station_src = (ROOT / "src/client/java/enchantment_fusion/gui/EnchantmentFusionScreen.java").read_text(encoding="utf-8")
+        self.assertIn("SWAP_SLOTS_BTN", station_src)
+        self.assertIn("SWAP_ORDER_BTN", station_src)
+        grimoire_src = (ROOT / "src/client/java/enchantment_fusion/gui/FusionGrimoireScreen.java").read_text(encoding="utf-8")
+        self.assertIn("DETAIL_BODY_HEIGHT", grimoire_src)
+        self.assertIn("detailScroll", grimoire_src)
 
 
 if __name__ == "__main__":

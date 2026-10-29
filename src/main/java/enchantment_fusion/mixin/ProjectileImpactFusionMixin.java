@@ -153,12 +153,20 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
 
         if (target != null) {
             int prevInv = target.invulnerableTime;
+            float hpBefore = target.getHealth();
+            // MIX-02: Allow at most ONE bonus fusion damage proc to bypass the base projectile's invulnerableTime;
+            // once any fusion proc lands damage, invulnerableTime is immediately restored so secondary slots cannot stack infinite burst!
             target.invulnerableTime = 0;
             try {
-                MatrixEffectExecutor.dispatchAcrossEquippedSlots(serverLevel, shooter, weapon, triggers, target, hitPos, true, 1.0F);
+                MatrixEffectExecutor.dispatchAcrossEquippedSlots(
+                    serverLevel, shooter, weapon, triggers, target, hitPos, true, 1.0F, true, prevInv
+                );
+                if (target.getHealth() < hpBefore) {
+                    target.invulnerableTime = Math.max(target.invulnerableTime, prevInv);
+                }
                 CrossDomainTransmutations.onProjectileImpact(serverLevel, self, shooter, weapon, target, hitPos);
             } finally {
-                target.invulnerableTime = prevInv;
+                target.invulnerableTime = Math.max(target.invulnerableTime, prevInv);
             }
             if (!self.isAlive()) {
                 ProjectilePathTracker.markPathCompleted(self.getUUID(), hitPos, serverLevel.getGameTime());

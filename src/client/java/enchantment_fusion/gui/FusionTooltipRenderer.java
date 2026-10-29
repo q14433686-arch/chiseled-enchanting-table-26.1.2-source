@@ -131,6 +131,12 @@ public final class FusionTooltipRenderer {
                 if (shift) {
                     lines.add(Component.translatable(AberrantRegistry.descKey(pair.aberrationId()))
                         .withStyle(ChatFormatting.GOLD));
+                    var econ = FusionMatrixRegistry.clientView().economy();
+                    lines.add(Component.translatable(
+                        "tooltip.enchantment_fusion.aberrant_native_purify",
+                        econ.purifyAberrantStabilizers(),
+                        econ.purifyAberrantXp()
+                    ).withStyle(ChatFormatting.AQUA));
                 }
                 lines.add(Component.translatable(
                     CetSoftBridge.isCetLoaded()
@@ -266,7 +272,7 @@ public final class FusionTooltipRenderer {
     }
 
     public static Component buildMatrixSentence(FusedPair pair, HostForm hostForm) {
-        FusionMatrixRegistry.Snapshot snap = FusionMatrixRegistry.current();
+        FusionMatrixRegistry.Snapshot snap = FusionMatrixRegistry.clientView();
         var trig = snap.resolve(pair.primaryId()).trigger();
         var pay = snap.resolve(pair.secondaryId()).payload();
         return Component.translatable(
@@ -277,7 +283,7 @@ public final class FusionTooltipRenderer {
     }
 
     public static Component buildClueSentence(FusedPair pair) {
-        FusionMatrixRegistry.Snapshot snap = FusionMatrixRegistry.current();
+        FusionMatrixRegistry.Snapshot snap = FusionMatrixRegistry.clientView();
         var trig = snap.resolve(pair.primaryId()).trigger();
         var pay = snap.resolve(pair.secondaryId()).payload();
         return Component.translatable(
