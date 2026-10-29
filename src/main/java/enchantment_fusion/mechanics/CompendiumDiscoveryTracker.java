@@ -290,7 +290,6 @@ public final class CompendiumDiscoveryTracker {
             }
         }
 
-        record Candidate(String key, String pairMirrorKey, Component title, int curState) {}
         List<Candidate> unknownPool = new ArrayList<>();
         List<Candidate> heardPool = new ArrayList<>();
 
@@ -347,21 +346,16 @@ public final class CompendiumDiscoveryTracker {
         return false;
     }
 
-    private static void unlockCandidateWithDelta(ServerPlayer player, Record candRec, int stage) {
+    private record Candidate(String key, String pairMirrorKey, Component title, int curState) {}
+
+    private static void unlockCandidateWithDelta(ServerPlayer player, Candidate candidate, int stage) {
         UUID pid = player.getUUID();
-        if (candRec != null) {
-            try {
-                String k = (String) candRec.getClass().getDeclaredMethod("key").invoke(candRec);
-                String mirror = (String) candRec.getClass().getDeclaredMethod("pairMirrorKey").invoke(candRec);
-                if (advanceStateInternal(pid, k, stage)) {
-                    FusionNetworking.sendCompendiumDelta(player, k, stage);
-                }
-                if (mirror != null && advanceStateInternal(pid, mirror, stage)) {
-                    FusionNetworking.sendCompendiumDelta(player, mirror, stage);
-                }
-            } catch (ReflectiveOperationException ignored) {
-                FusionNetworking.sendCompendiumSync(player, encodeStates(pid));
-            }
+        if (advanceStateInternal(pid, candidate.key(), stage)) {
+            FusionNetworking.sendCompendiumDelta(player, candidate.key(), stage);
+        }
+        String mirror = candidate.pairMirrorKey();
+        if (mirror != null && advanceStateInternal(pid, mirror, stage)) {
+            FusionNetworking.sendCompendiumDelta(player, mirror, stage);
         }
     }
 
@@ -452,19 +446,34 @@ public final class CompendiumDiscoveryTracker {
             String raw = Files.readString(path, StandardCharsets.UTF_8);
             JsonObject root = JsonParser.parseString(raw).getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
-                UUID uuid = UUID.fromString(entry.getKey());
-                Map<String, Integer> states = new ConcurrentHashMap<>();
-                JsonElement val = entry.getValue();
-                if (val.isJsonArray()) {
-                    for (JsonElement elem : val.getAsJsonArray()) {
-                        states.put(elem.getAsString(), STATE_MASTERED);
+                try {
+                    UUID uuid = UUID.fromString(entry.getKey());
+                    Map<String, Integer> states = new ConcurrentHashMap<>();
+                    JsonElement val = entry.getValue();
+                    if (val.isJsonArray()) {
+                        for (JsonElement elem : val.getAsJsonArray()) {
+                            try {
+                                states.put(elem.getAsString(), STATE_MASTERED);
+                            } catch (RuntimeException ex) {
+                                EnchantmentFusion.LOGGER.warn("Invalid compendium entry for {}: {}", uuid, ex.toString());
+                            }
+                        }
+                    } else if (val.isJsonObject()) {
+                        for (Map.Entry<String, JsonElement> kv : val.getAsJsonObject().entrySet()) {
+                            try {
+                                states.put(kv.getKey(), Math.clamp(kv.getValue().getAsInt(), STATE_UNKNOWN, STATE_MASTERED));
+                            } catch (RuntimeException ex) {
+                                EnchantmentFusion.LOGGER.warn("Invalid compendium entry {} for {}: {}", kv.getKey(), uuid, ex.toString());
+                            }
+                        }
+                    } else {
+                        EnchantmentFusion.LOGGER.warn("Invalid compendium player record: {}", entry.getKey());
+                        continue;
                     }
-                } else if (val.isJsonObject()) {
-                    for (Map.Entry<String, JsonElement> kv : val.getAsJsonObject().entrySet()) {
-                        states.put(kv.getKey(), Math.clamp(kv.getValue().getAsInt(), STATE_UNKNOWN, STATE_MASTERED));
-                    }
+                    SERVER_STATES.put(uuid, states);
+                } catch (RuntimeException ex) {
+                    EnchantmentFusion.LOGGER.warn("Invalid compendium player record {}: {}", entry.getKey(), ex.toString());
                 }
-                SERVER_STATES.put(uuid, states);
             }
         } catch (Exception ex) {
             EnchantmentFusion.LOGGER.warn("[EnchantmentFusion] Failed to read compendium file {}: {}", path, ex.toString());
