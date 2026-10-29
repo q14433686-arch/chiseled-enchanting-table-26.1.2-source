@@ -398,16 +398,16 @@ public final class ClientSmoke implements ClientModInitializer {
                         // 0.5.0: Verify real 3D Display.ItemDisplay Boomerang Flying Blade launch + tick + cleanup
                         ItemStack flyingSword = new ItemStack(Items.DIAMOND_SWORD, 1);
                         flyingSword.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:loyalty", 3));
-                        boolean launched = enchantment_fusion.mechanics.FlyingBladeManager.launchBoomerang(
-                            sp.level(), sp, flyingSword, 3
+                        boolean launched = enchantment_fusion.mechanics.FlyingBladeManager.launchReturningBlade(
+                            sp.level(), sp, net.minecraft.world.InteractionHand.MAIN_HAND, flyingSword, 3
                         );
-                        require(launched, "Expected FlyingBladeManager.launchBoomerang to succeed");
-                        require(
-                            enchantment_fusion.mechanics.FlyingBladeManager.hasActiveBoomerang(sp.getUUID()),
-                            "Expected active 3D boomerang tracked for player"
-                        );
+                        require(launched, "Expected FlyingBladeManager.launchReturningBlade to succeed");
                         enchantment_fusion.mechanics.FlyingBladeManager.tickServer(server);
-                        enchantment_fusion.mechanics.FlyingBladeManager.flushAll(server);
+                        enchantment_fusion.mechanics.FlyingBladeManager.flushAll();
+                        require(
+                            enchantment_fusion.mechanics.FlyingBladeManager.canLaunchFor(sp.getUUID()),
+                            "Expected FlyingBladeManager.flushAll() to clear active flights"
+                        );
 
                         // 0.5.0: Verify CET Cleanse & Aberrant Purification operations end-to-end on real ItemStacks
                         ItemStack abGear = new ItemStack(Items.DIAMOND_AXE, 1);
