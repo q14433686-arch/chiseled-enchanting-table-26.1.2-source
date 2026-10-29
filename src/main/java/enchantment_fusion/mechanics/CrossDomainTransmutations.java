@@ -1192,7 +1192,7 @@ public final class CrossDomainTransmutations {
                 level.recipeAccess().getRecipeFor(RecipeType.SMELTING, singleInput, level);
             if (recipeOpt.isPresent()) {
                 SmeltingRecipe recipe = recipeOpt.get().value();
-                ItemStack assembled = recipe.assemble(singleInput, level.registryAccess());
+                ItemStack assembled = recipe.assemble(singleInput);
                 if (!assembled.isEmpty() && !ItemStack.isSameItem(assembled, rawStack)) {
                     int outCount = Math.min(99, inputCount * Math.max(1, assembled.getCount()));
                     return new SmeltOutcome(assembled.copyWithCount(outCount), Math.max(0.2F, recipe.experience()) * inputCount);
@@ -2492,7 +2492,8 @@ public final class CrossDomainTransmutations {
             }
             int adrenLv = getTransmutedLevel(gear, "adrenaline_surge");
             if (adrenLv > 0 && damageTaken >= 1.5F) {
-                ACTIVE_SKILL_COOLDOWN.remove(player.getUUID());
+                String prefix = player.getUUID().toString() + ":";
+                ACTIVE_SKILL_COOLDOWNS.keySet().removeIf(k -> k.startsWith(prefix));
                 grantEffect(player, "haste", 60, Math.min(1, adrenLv - 1));
                 grantEffect(player, "speed", 50, 0);
             }
