@@ -973,7 +973,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         if (button == 0
             && EXEC_BTN.containsAt(left, top, mx, my)
             && preview.executable() && canAffordPreview(preview)) {
-            sendAction(StationAction.EXECUTE_PRIMARY, 0, 0, "");
+            sendAction(StationAction.EXECUTE_PRIMARY, 0, 0, preview.selection().buildSelectionToken());
             playClickSound(1.0F);
             return true;
         }

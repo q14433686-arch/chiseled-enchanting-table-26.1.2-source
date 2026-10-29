@@ -13,6 +13,7 @@ import enchantment_fusion.registry.FusionItems;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -163,6 +164,10 @@ public final class FusionStationOperations {
             appendBookEnchantments(inv.getItem(SLOT_PRIMARY), SLOT_PRIMARY, out);
             appendBookEnchantments(inv.getItem(SLOT_SECONDARY), SLOT_SECONDARY, out);
         }
+        // ItemEnchantments does not promise iteration order across network round trips.
+        out.sort(Comparator.comparingInt(EnchantCandidate::sourceSlot)
+            .thenComparing(EnchantCandidate::id)
+            .thenComparingInt(EnchantCandidate::level));
         return out;
     }
 

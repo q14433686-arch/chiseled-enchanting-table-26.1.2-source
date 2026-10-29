@@ -131,16 +131,10 @@ public final class FusionMatrixRegistry {
                     }
                 }
             }
-            // 3. Overflow-safe deterministic floorMod fallback when queried by bare ID without registry context (API-06)
-            int h = enchantmentId == null ? 0 : enchantmentId.hashCode();
-            TriggerType[] triggers = TriggerType.values();
-            PayloadType[] payloads = PayloadType.values();
-            TriggerType finalT = inferredTrigger != null
-                ? inferredTrigger
-                : triggers[Math.floorMod(h, triggers.length)];
-            PayloadType finalP = inferredPayload != null
-                ? inferredPayload
-                : payloads[Math.floorMod(h / triggers.length, payloads.length)];
+            // Unclassified third-party enchantments use a predictable, conservative utility
+            // profile. Datapack profiles and explicit tags remain authoritative.
+            TriggerType finalT = inferredTrigger != null ? inferredTrigger : TriggerType.ON_UTILITY_CYCLE;
+            PayloadType finalP = inferredPayload != null ? inferredPayload : PayloadType.MEND;
             return new MatrixProfile(finalT, finalP);
         }
 

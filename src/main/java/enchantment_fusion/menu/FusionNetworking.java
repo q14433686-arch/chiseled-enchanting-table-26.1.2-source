@@ -97,7 +97,7 @@ public final class FusionNetworking {
             ByteBufCodecs.VAR_INT, StationActionPayload::actionWireId,
             ByteBufCodecs.VAR_INT, StationActionPayload::paramA,
             ByteBufCodecs.VAR_INT, StationActionPayload::paramB,
-            ByteBufCodecs.stringUtf8(256), StationActionPayload::expectedToken,
+            ByteBufCodecs.stringUtf8(512), StationActionPayload::expectedToken,
             StationActionPayload::new
         );
 
@@ -290,6 +290,12 @@ public final class FusionNetworking {
 
                 StationAction action = StationAction.fromWireId(payload.actionWireId());
                 if (action == null) {
+                    return;
+                }
+                // Executions must bind to the candidate selection the player saw.
+                // Other inventory changes are still revalidated by the station operation.
+                if (action == StationAction.EXECUTE_PRIMARY && payload.expectedToken().isEmpty()) {
+                    player.sendSystemMessage(Component.translatable("message.enchantment_fusion.action_rejected").withStyle(ChatFormatting.RED), true);
                     return;
                 }
                 boolean ok = menu.performAction(player, action, payload.paramA(), payload.paramB(), payload.expectedToken());

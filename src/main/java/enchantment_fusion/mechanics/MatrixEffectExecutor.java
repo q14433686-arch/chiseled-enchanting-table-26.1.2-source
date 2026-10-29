@@ -164,7 +164,7 @@ public final class MatrixEffectExecutor {
         }
 
         HostForm hostForm = HostForm.resolve(hostStack);
-        FusionMatrixRegistry.Snapshot snapshot = FusionMatrixRegistry.current();
+        FusionMatrixRegistry.Snapshot snapshot = FusionMatrixRegistry.serverSnapshot();
         long now = level.getGameTime();
         var registries = level.registryAccess();
         boolean trajectoryEvent = firedTriggers.contains(TriggerType.ON_PROJECTILE_IMPACT)

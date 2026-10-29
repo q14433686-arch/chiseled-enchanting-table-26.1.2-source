@@ -106,6 +106,9 @@ class FusionModelAndMatrixTest {
         assertNotNull(modA.trigger());
         assertNotNull(modA.payload());
         assertEquals(modA, modA2, "Fallback profile for third-party enchantments must be deterministic");
+        assertEquals(TriggerType.ON_UTILITY_CYCLE, modA.trigger());
+        assertEquals(PayloadType.MEND, modA.payload());
+        assertEquals(modA, snapshot.resolve("other_mod:unclassified"));
         assertTrue(modA.payload().effectKey(HostForm.MELEE).startsWith("fusion.enchantment_fusion.effect."));
     }
 
