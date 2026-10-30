@@ -20,7 +20,6 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -86,7 +85,7 @@ public final class MeleeTacticsSignatures {
                     target.setTicksFrozen(Math.min(320, target.getTicksFrozen() + 180));
                     level.playSound(null, target.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.85F, 1.45F);
                     if (rng.nextFloat() < 0.25F && player.mayBuild()) {
-                        AberrantRegistry.placeIceCage3x3x3(level, target.blockPosition(), Blocks.GLASS.defaultBlockState(), false);
+                        AberrantRegistry.placeFrostedIceCage3x3x3(level, target.blockPosition(), false);
                     }
                 }
                 return true;

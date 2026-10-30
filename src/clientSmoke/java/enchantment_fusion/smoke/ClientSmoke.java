@@ -261,6 +261,103 @@ public final class ClientSmoke implements ClientModInitializer {
         }
     }
 
+    private void exerciseExtraMining(ServerPlayer sp) {
+        var level = sp.level();
+        var oldMode = sp.gameMode.getGameModeForPlayer();
+        ItemStack oldHand = sp.getMainHandItem();
+        boolean wasSneaking = sp.isShiftKeyDown();
+        var saved = new java.util.LinkedHashMap<BlockPos, BlockState>();
+        java.util.function.BiConsumer<BlockPos, BlockState> set = (pos, state) -> {
+            saved.putIfAbsent(pos, level.getBlockState(pos));
+            level.setBlockAndUpdate(pos, state);
+        };
+        BlockPos center = tablePos.above(32);
+        var side = sp.getDirection().getClockWise();
+        var denied = new java.util.HashSet<BlockPos>();
+        var observedEvents = new java.util.concurrent.atomic.AtomicInteger();
+        net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
+            if (player == sp && pos.distManhattan(center) <= 2) observedEvents.incrementAndGet();
+            return player != sp || !denied.contains(pos);
+        });
+        java.util.function.Supplier<ItemStack> pickFactory = () -> {
+            ItemStack pick = new ItemStack(Items.DIAMOND_PICKAXE);
+            pick.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:multishot", 1));
+            pick.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
+                FusedPair.clean("minecraft:multishot", 1, "minecraft:efficiency", 2)));
+            return pick;
+        };
+        java.util.function.IntSupplier diamondDrops = () -> level.getEntitiesOfClass(
+            net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(center).inflate(4),
+            e -> e.isAlive() && e.getItem().is(Items.DIAMOND)).stream().mapToInt(e -> e.getItem().getCount()).sum();
+        try {
+            sp.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+            sp.setShiftKeyDown(false);
+            ItemStack pick = pickFactory.get();
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, pick);
+            for (int offset = -2; offset <= 2; offset++) set.accept(center.relative(side, offset), Blocks.DIAMOND_ORE.defaultBlockState());
+            int dropsBefore = diamondDrops.getAsInt();
+            require(sp.gameMode.destroyBlock(center), "Center ore must be mined normally");
+            require(level.getBlockState(center.relative(side, -1)).isAir() && level.getBlockState(center.relative(side, 1)).isAir(),
+                "Signature and transmutation must mine both adjacent blocks");
+            require(level.getBlockState(center.relative(side, -2)).is(Blocks.DIAMOND_ORE)
+                && level.getBlockState(center.relative(side, 2)).is(Blocks.DIAMOND_ORE), "Area mining must not recurse");
+            require(pick.getDamageValue() == 3, "Center and two additional ores must each wear the real tool");
+            require(diamondDrops.getAsInt() - dropsBefore >= 3, "Extra ore must use the real tool's loot path");
+            require(observedEvents.get() >= 3, "Extra breaks must fire Fabric player-break events");
+
+            for (int offset = -1; offset <= 1; offset++) set.accept(center.relative(side, offset), Blocks.DIAMOND_ORE.defaultBlockState());
+            ItemStack protectedPick = pickFactory.get();
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, protectedPick);
+            BlockPos protectedPos = center.relative(side, -1);
+            denied.add(protectedPos);
+            require(sp.gameMode.destroyBlock(center), "Center break must succeed when an adjacent block is denied");
+            require(level.getBlockState(protectedPos).is(Blocks.DIAMOND_ORE), "Fabric break cancellation must protect an adjacent block");
+            require(level.getBlockState(center.relative(side, 1)).isAir(), "Another permitted adjacent block must still break");
+            require(protectedPick.getDamageValue() == 2, "A cancelled extra break must not wear the tool");
+            denied.clear();
+            require(!enchantment_fusion.mechanics.ExtraBlockHarvest.isActive(), "Cancelled break must release the recursion guard");
+
+            for (int offset = -1; offset <= 1; offset++) set.accept(center.relative(side, offset), Blocks.DIAMOND_ORE.defaultBlockState());
+            ItemStack finalUse = pickFactory.get();
+            finalUse.setDamageValue(finalUse.getMaxDamage() - 1);
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, finalUse);
+            dropsBefore = diamondDrops.getAsInt();
+            require(sp.gameMode.destroyBlock(center), "Almost-broken tool must still mine the center");
+            require(diamondDrops.getAsInt() > dropsBefore, "The center ore must drop before the tool breaks");
+            require(level.getBlockState(center.relative(side, -1)).is(Blocks.DIAMOND_ORE)
+                && level.getBlockState(center.relative(side, 1)).is(Blocks.DIAMOND_ORE),
+                "Additional breaks must stop when the original tool breaks");
+
+            ItemStack chestPick = pickFactory.get();
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, chestPick);
+            for (int offset = -1; offset <= 1; offset++) set.accept(center.relative(side, offset), Blocks.CHEST.defaultBlockState());
+            require(sp.gameMode.destroyBlock(center), "Center container must be mineable");
+            require(level.getBlockState(center.relative(side, -1)).is(Blocks.CHEST)
+                && level.getBlockState(center.relative(side, 1)).is(Blocks.CHEST), "Extra mining must skip block entities");
+
+            BlockPos farm = center.above(5);
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                set.accept(farm.offset(dx, -1, dz), Blocks.FARMLAND.defaultBlockState());
+                set.accept(farm.offset(dx, 0, dz), Blocks.AIR.defaultBlockState());
+            }
+            var mature = Blocks.WHEAT.defaultBlockState().setValue(net.minecraft.world.level.block.CropBlock.AGE, 7);
+            var immature = Blocks.WHEAT.defaultBlockState().setValue(net.minecraft.world.level.block.CropBlock.AGE, 2);
+            set.accept(farm, mature); set.accept(farm.east(), mature); set.accept(farm.west(), immature);
+            ItemStack hoe = new ItemStack(Items.DIAMOND_HOE);
+            hoe.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:sweeping_edge", 1));
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, hoe);
+            require(sp.gameMode.destroyBlock(farm), "Center crop must be mineable");
+            require(level.getBlockState(farm.east()).isAir(), "Wide reap must harvest adjacent mature crops");
+            require(level.getBlockState(farm.west()).is(Blocks.WHEAT), "Wide reap must preserve immature adjacent crops");
+        } finally {
+            denied.clear();
+            saved.forEach(level::setBlockAndUpdate);
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, oldHand);
+            sp.setShiftKeyDown(wasSneaking);
+            sp.setGameMode(oldMode);
+        }
+    }
+
     private void exerciseLifelineAnchors(ServerPlayer sp) {
         var level = sp.level();
         var originalPos = sp.position();
@@ -981,6 +1078,7 @@ public final class ClientSmoke implements ClientModInitializer {
 
                         exerciseLiveConfig(sp);
                         exerciseFrostAndSneakSmelt(sp);
+                        exerciseExtraMining(sp);
                         exerciseLifelineAnchors(sp);
                         exerciseLoyaltyRiptide(sp);
                         // Start another no-risk ritual with no menu open. It must finish on server ticks.

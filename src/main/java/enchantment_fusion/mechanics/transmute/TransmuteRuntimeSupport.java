@@ -46,7 +46,6 @@ public final class TransmuteRuntimeSupport {
     public static final Map<UUID, Integer> SPEAR_CHARGE_TICKS = new ConcurrentHashMap<>();
     public static final Map<UUID, ItemStack> SPEAR_CHARGE_WEAPON = new ConcurrentHashMap<>();
 
-    public static final ThreadLocal<Boolean> IN_MULTI_BREAK = ThreadLocal.withInitial(() -> Boolean.FALSE);
     public static final ThreadLocal<Boolean> IN_CUSTOM_COMBAT = ThreadLocal.withInitial(() -> Boolean.FALSE);
     public static final ThreadLocal<Boolean> IN_FAN_LAUNCH = ThreadLocal.withInitial(() -> Boolean.FALSE);
 

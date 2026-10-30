@@ -4,6 +4,7 @@ import static enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.*;
 
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
+import enchantment_fusion.mechanics.ExtraBlockHarvest;
 import enchantment_fusion.mechanics.ProjectilePathTracker;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -220,22 +221,15 @@ public final class MiningFishingSignatures {
                 }
                 case "ocean_breath_mine" -> player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 45));
                 case "rock_splitter_pick", "triple_excavate", "vein_peel" -> {
-                    if (player.mayBuild() && !player.isShiftKeyDown() && !Boolean.TRUE.equals(IN_SIGNATURE_MINING.get())) {
-                        IN_SIGNATURE_MINING.set(Boolean.TRUE);
-                        try {
+                    if (player.mayBuild() && !player.isShiftKeyDown() && !ExtraBlockHarvest.isActive()) {
+                        ExtraBlockHarvest.defer(() -> {
                             Direction side = player.getDirection().getClockWise();
                             for (int offset : new int[]{-1, 1}) {
+                                if (!ExtraBlockHarvest.hasOriginalTool(player, tool)) break;
                                 BlockPos adj = pos.relative(side, offset);
-                                BlockState adjState = level.getBlockState(adj);
-                                if (adjState.is(minedState.getBlock())
-                                    && level.getBlockEntity(adj) == null
-                                    && adjState.getDestroySpeed(level, adj) >= 0.0F) {
-                                    level.destroyBlock(adj, true, player);
-                                }
+                                ExtraBlockHarvest.tryBreak(level, player, tool, adj, st -> st.is(minedState.getBlock()));
                             }
-                        } finally {
-                            IN_SIGNATURE_MINING.set(Boolean.FALSE);
-                        }
+                        });
                     }
                 }
                 default -> {}

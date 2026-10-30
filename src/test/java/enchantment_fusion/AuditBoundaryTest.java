@@ -107,6 +107,13 @@ class AuditBoundaryTest {
             "{\"signatures\":{\"test\":{\"primary\":\"sharpness\",\"secondary\":\"smite\"}}}").getAsJsonObject());
         assertTrue(sigs.directMap().containsKey("minecraft:sharpness>minecraft:smite"));
 
+        assertThrows(IllegalArgumentException.class, () -> SignatureCatalog.parseFromJson(JsonParser.parseString(
+            "{\"signatures\":{\"a\":{\"primary\":\"sharpness\",\"secondary\":\"smite\"},"
+                + "\"b\":{\"primary\":\"minecraft:sharpness\",\"secondary\":\"minecraft:smite\"}}}").getAsJsonObject()));
+        assertThrows(IllegalArgumentException.class, () -> SignatureCatalog.parseFromJson(JsonParser.parseString(
+            "{\"signatures\":{\"a\":{\"primary\":\"*\",\"secondary\":\"lure\"},"
+                + "\"b\":{\"primary\":\"*\",\"secondary\":\"minecraft:lure\"}}}").getAsJsonObject()));
+
         var trans = TransmuteCatalog.parseFromJson(JsonParser.parseString(
             "{\"variants\":{\"a\":{\"source\":\"punch\",\"roles\":[\"CROSSBOW\"]}}}").getAsJsonObject());
         var byRole = trans.matrix().get("minecraft:punch");

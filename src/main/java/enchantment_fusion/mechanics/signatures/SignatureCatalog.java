@@ -100,9 +100,14 @@ public final class SignatureCatalog {
             secondary = FusedPair.canonicalizeEnchantId(secondary);
             SignatureEntry entry = new SignatureEntry(id, primary, secondary);
             if ("*".equals(primary)) {
-                wildcards.put(secondary, entry);
+                if (wildcards.putIfAbsent(secondary, entry) != null) {
+                    throw new IllegalArgumentException("Duplicate wildcard signature for " + secondary);
+                }
             } else {
-                direct.put(primary + ">" + secondary, entry);
+                String key = primary + ">" + secondary;
+                if (direct.putIfAbsent(key, entry) != null) {
+                    throw new IllegalArgumentException("Duplicate directional signature for " + key);
+                }
             }
             ordered.add(entry);
             domains.put(id, domain);

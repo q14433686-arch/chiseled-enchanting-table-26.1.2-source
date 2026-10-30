@@ -206,6 +206,8 @@ public final class AberrantRegistry {
         }
     }
 
+    /** Compatibility shim: the legacy state was always ignored; cages use temporary frost. */
+    @Deprecated
     public static void placeIceCage3x3x3(ServerLevel level, BlockPos center, BlockState ignoredLegacyState, boolean solidCore) {
         placeFrostedIceCage3x3x3(level, center, solidCore);
     }

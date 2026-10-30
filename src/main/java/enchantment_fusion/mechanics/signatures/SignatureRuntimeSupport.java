@@ -82,7 +82,6 @@ public final class SignatureRuntimeSupport {
     public static final Map<UUID, ConvergingArrowState> CONVERGING_ARROWS = new ConcurrentHashMap<>();
     public static final Set<UUID> FISSION_SPLIT_PROCESSED = Collections.newSetFromMap(new ConcurrentHashMap<>());
     public static final Set<UUID> PLUCKED_LIVING_MOBS = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    public static final ThreadLocal<Boolean> IN_SIGNATURE_MINING = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     private SignatureRuntimeSupport() {}
 

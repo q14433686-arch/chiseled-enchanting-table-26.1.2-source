@@ -5,6 +5,7 @@ import static enchantment_fusion.mechanics.transmute.TransmuteCatalog.getTransmu
 import static enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport.*;
 
 import enchantment_fusion.mechanics.AberrantRegistry;
+import enchantment_fusion.mechanics.ExtraBlockHarvest;
 import enchantment_fusion.mechanics.TemporaryFrostEffects;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.SmeltOutcome;
 import enchantment_fusion.mechanics.SignaturePairs;
@@ -251,17 +252,10 @@ public final class MiningFishingTransmutes {
             }
         }
         int blastGuardLv = getTransmutedLevel(tool, "blast_guard");
-        if (blastGuardLv > 0 && !Boolean.TRUE.equals(IN_MULTI_BREAK.get()) && level.getRandom().nextFloat() < 0.16F * blastGuardLv) {
-            IN_MULTI_BREAK.set(Boolean.TRUE);
-            try {
-                BlockPos adj = pos.relative(Direction.getRandom(level.getRandom()));
-                BlockState adjSt = level.getBlockState(adj);
-                if (adjSt.is(BlockTags.BASE_STONE_OVERWORLD) || adjSt.is(Blocks.COBBLESTONE) || adjSt.is(Blocks.NETHERRACK)) {
-                    level.destroyBlock(adj, true, player);
-                }
-            } finally {
-                IN_MULTI_BREAK.set(Boolean.FALSE);
-            }
+        if (blastGuardLv > 0 && !ExtraBlockHarvest.isActive() && level.getRandom().nextFloat() < 0.16F * blastGuardLv) {
+            BlockPos adj = pos.relative(Direction.getRandom(level.getRandom()));
+            ExtraBlockHarvest.defer(() -> ExtraBlockHarvest.tryBreak(level, player, tool, adj,
+                st -> st.is(BlockTags.BASE_STONE_OVERWORLD) || st.is(Blocks.COBBLESTONE) || st.is(Blocks.NETHERRACK)));
         }
         int tunnelLv = getTransmutedLevel(tool, "lunge_tunnel_rush");
         if (tunnelLv > 0) {
@@ -299,38 +293,37 @@ public final class MiningFishingTransmutes {
             spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(prize, 1));
         }
 
-        if (!player.isShiftKeyDown() && !Boolean.TRUE.equals(IN_MULTI_BREAK.get())) {
-            IN_MULTI_BREAK.set(Boolean.TRUE);
-            try {
-                if (getTransmutedLevel(tool, "wide_reap") > 0
-                    && (state.is(BlockTags.CROPS) || state.is(BlockTags.LEAVES) || state.is(Blocks.SHORT_GRASS) || state.is(Blocks.TALL_GRASS) || state.is(Blocks.SNOW))) {
-                    for (int dx = -1; dx <= 1; dx++) {
-                        for (int dz = -1; dz <= 1; dz++) {
-                            if (dx == 0 && dz == 0) continue;
-                            BlockPos adj = pos.offset(dx, 0, dz);
-                            if (level.getBlockState(adj).is(state.getBlock())) level.destroyBlock(adj, true, player);
+        if (!player.isShiftKeyDown() && !ExtraBlockHarvest.isActive()) {
+            int wide = getTransmutedLevel(tool, "wide_reap");
+            int trifork = getTransmutedLevel(tool, "trifork_mine");
+            int bore = getTransmutedLevel(tool, "deep_bore");
+            if (wide > 0 || trifork > 0 || bore > 0) {
+                ExtraBlockHarvest.defer(() -> {
+                    if (wide > 0 && (state.is(BlockTags.CROPS) || state.is(BlockTags.LEAVES)
+                        || state.is(Blocks.SHORT_GRASS) || state.is(Blocks.TALL_GRASS) || state.is(Blocks.SNOW))) {
+                        for (int dx = -1; dx <= 1; dx++) {
+                            for (int dz = -1; dz <= 1; dz++) {
+                                if (dx == 0 && dz == 0) continue;
+                                BlockPos adj = pos.offset(dx, 0, dz);
+                                ExtraBlockHarvest.tryBreak(level, player, tool, adj,
+                                    st -> st.is(state.getBlock()) && ExtraBlockHarvest.isMatureCropOrNonCrop(st));
+                            }
+                        }
+                    } else if (trifork > 0 || wide > 0) {
+                        Direction right = player.getDirection().getClockWise();
+                        for (int offset : new int[]{-1, 1}) {
+                            BlockPos adj = pos.relative(right, offset);
+                            ExtraBlockHarvest.tryBreak(level, player, tool, adj, st -> st.is(state.getBlock()));
                         }
                     }
-                } else if (getTransmutedLevel(tool, "trifork_mine") > 0 || getTransmutedLevel(tool, "wide_reap") > 0) {
-                    Direction right = player.getDirection().getClockWise();
-                    for (int s : new int[]{-1, 1}) {
-                        BlockPos adj = pos.relative(right, s);
-                        BlockState adjSt = level.getBlockState(adj);
-                        if (adjSt.is(state.getBlock()) && adjSt.getDestroySpeed(level, adj) >= 0.0F) level.destroyBlock(adj, true, player);
+                    if (bore > 0) {
+                        Direction forward = Direction.orderedByNearest(player)[0];
+                        for (int distance = 1; distance <= Math.min(2, bore); distance++) {
+                            BlockPos deeper = pos.relative(forward, distance);
+                            if (!ExtraBlockHarvest.tryBreak(level, player, tool, deeper, st -> st.is(state.getBlock()))) break;
+                        }
                     }
-                }
-                int boreLv = getTransmutedLevel(tool, "deep_bore");
-                if (boreLv > 0) {
-                    Direction forward = Direction.orderedByNearest(player)[0];
-                    for (int d = 1; d <= Math.min(2, boreLv); d++) {
-                        BlockPos deeper = pos.relative(forward, d);
-                        BlockState deepSt = level.getBlockState(deeper);
-                        if (deepSt.is(state.getBlock()) && deepSt.getDestroySpeed(level, deeper) >= 0.0F) level.destroyBlock(deeper, true, player);
-                        else break;
-                    }
-                }
-            } finally {
-                IN_MULTI_BREAK.set(Boolean.FALSE);
+                });
             }
         }
     }
