@@ -171,7 +171,7 @@ def main() -> int:
     check_locales()
     check_gui_no_solid_fills()
     check_signature_directionality()
-    print("ok: static checks passed (entrypoints, mixins, 11-locale parity & terminology, pixel-art GUI, 100% directional signatures)")
+    print("ok: static checks passed (entrypoints, mixins, 11-locale parity & terminology, pixel-art GUI, no legacy symmetric-alias helper)")
     return 0
 
 

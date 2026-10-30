@@ -1026,7 +1026,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             } else {
                 risk = Component.translatable("gui.enchantment_fusion.tip.risk_high", failPct);
             }
-            lines.add(risk.withStyle(ChatFormatting.RED));
+            lines.add(risk.copy().withStyle(ChatFormatting.RED));
         } else {
             lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_normal", failPct, feeSpendPct)
                 .withStyle(ChatFormatting.YELLOW));
