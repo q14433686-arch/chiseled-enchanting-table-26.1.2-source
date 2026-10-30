@@ -3,6 +3,7 @@ package enchantment_fusion.mechanics.signatures;
 import static enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.*;
 
 import enchantment_fusion.mechanics.AberrantRegistry;
+import enchantment_fusion.mechanics.TemporaryFrostEffects;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog.EquippedSignature;
 import enchantment_fusion.model.FusedPair;
 import java.util.Map;
@@ -416,6 +417,7 @@ public final class ArmorCurseSignatures {
                     }
                 }
                 case "permafrost_wake" -> {
+                    TemporaryFrostEffects.placeWake(level, player, eq.pair().primaryLevel());
                     player.clearFire();
                     for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 2.8D, null)) {
                         mob.setTicksFrozen(Math.min(300, mob.getTicksFrozen() + 50));

@@ -90,6 +90,7 @@ public final class TransmuteCatalog {
         JsonObject varObj = root.getAsJsonObject("variants");
         for (Map.Entry<String, JsonElement> entry : varObj.entrySet()) {
             String id = entry.getKey();
+            if (id != null && id.length() > 128) throw new IllegalArgumentException("Catalog ID too long: " + id);
             if (id == null || id.isBlank() || !entry.getValue().isJsonObject()) continue;
             JsonObject def = entry.getValue().getAsJsonObject();
             String source = def.has("source") ? def.get("source").getAsString() : "";
@@ -98,12 +99,13 @@ public final class TransmuteCatalog {
             Set<TargetRole> roles = parseRoleArray(def.getAsJsonArray("roles"));
             if (source.isBlank() || roles.isEmpty()) continue;
 
+            source = FusedPair.canonicalizeEnchantId(source);
             TransmuteVariant primaryVariant = new TransmuteVariant(id, source);
             variants.add(primaryVariant);
             domains.put(id, domain);
             RoleBinding binding = new RoleBinding(primaryVariant, reqDmg);
             for (TargetRole role : roles) {
-                matrix.computeIfAbsent(source, k -> new EnumMap<>(TargetRole.class)).put(role, binding);
+                addBinding(matrix, source, role, binding);
             }
 
             if (def.has("extra_sources") && def.get("extra_sources").isJsonArray()) {
@@ -111,23 +113,36 @@ public final class TransmuteCatalog {
                     ? def.getAsJsonObject("extra_source_roles")
                     : null;
                 for (JsonElement extraEl : def.getAsJsonArray("extra_sources")) {
-                    String extraSource = extraEl.getAsString();
-                    Set<TargetRole> extraRoles = (overrideRolesObj != null && overrideRolesObj.has(extraSource))
-                        ? parseRoleArray(overrideRolesObj.getAsJsonArray(extraSource))
+                    String rawSource = extraEl.getAsString();
+                    Set<TargetRole> extraRoles = (overrideRolesObj != null && overrideRolesObj.has(rawSource))
+                        ? parseRoleArray(overrideRolesObj.getAsJsonArray(rawSource))
                         : roles;
                     if (extraRoles.isEmpty()) continue;
+                    String extraSource = FusedPair.canonicalizeEnchantId(rawSource);
                     RoleBinding aliasBinding = new RoleBinding(new TransmuteVariant(id, extraSource), reqDmg);
                     for (TargetRole r : extraRoles) {
-                        matrix.computeIfAbsent(extraSource, k -> new EnumMap<>(TargetRole.class)).put(r, aliasBinding);
+                        addBinding(matrix, extraSource, r, aliasBinding);
                     }
                 }
             }
         }
+        Map<String, Map<TargetRole, RoleBinding>> frozen = new LinkedHashMap<>();
+        matrix.forEach((source, byRole) -> frozen.put(source, Collections.unmodifiableMap(new EnumMap<>(byRole))));
         return new Snapshot(
-            Collections.unmodifiableMap(matrix),
+            Collections.unmodifiableMap(frozen),
             Collections.unmodifiableList(variants),
             Collections.unmodifiableMap(domains)
         );
+    }
+
+    private static void addBinding(Map<String, Map<TargetRole, RoleBinding>> matrix, String source,
+                                   TargetRole role, RoleBinding binding) {
+        Map<TargetRole, RoleBinding> roles = matrix.computeIfAbsent(source, k -> new EnumMap<>(TargetRole.class));
+        RoleBinding previous = roles.putIfAbsent(role, binding);
+        if (previous != null && !previous.variant().id().equals(binding.variant().id())) {
+            throw new IllegalArgumentException("Conflicting transmutations for " + source + " / " + role
+                + ": " + previous.variant().id() + " and " + binding.variant().id());
+        }
     }
 
     private static Set<TargetRole> parseRoleArray(@Nullable JsonArray arr) {

@@ -3,6 +3,7 @@ package enchantment_fusion.registry;
 import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.block.EnchantmentFusionTableBlock;
 import enchantment_fusion.block.TemporaryFrostBlock;
+import enchantment_fusion.block.TemporaryFrostPathBlock;
 import java.util.function.Function;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,11 +28,16 @@ public final class FusionBlocks {
             .strength(4.5F, 1200.0F)
     );
 
-    // Not an IceBlock: only the mod's ephemeral cages use this state. Vanilla Frost Walker
-    // ice keeps its normal water-producing behaviour.
+    // Not IceBlocks: our ephemeral cages, seals and paths cannot generate water.
+    // Vanilla Frost Walker ice keeps its normal behaviour.
     public static final Block TEMPORARY_FROST = register(
         "temporary_frost", TemporaryFrostBlock::new,
         BlockBehaviour.Properties.ofFullCopy(Blocks.FROSTED_ICE).noLootTable()
+    );
+
+    public static final Block TEMPORARY_FROST_PATH = register(
+        "temporary_frost_path", TemporaryFrostPathBlock::new,
+        BlockBehaviour.Properties.ofFullCopy(Blocks.FROSTED_ICE).noOcclusion().noLootTable()
     );
 
     private FusionBlocks() {}

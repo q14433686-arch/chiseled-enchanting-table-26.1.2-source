@@ -8,6 +8,8 @@ import enchantment_fusion.mechanics.FusionStationOperations.ActionResult;
 import enchantment_fusion.model.PayloadType;
 import enchantment_fusion.model.TriggerType;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.DecoderException;
+import io.netty.handler.codec.EncoderException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +47,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class FusionNetworking {
     public static final int MATRIX_SYNC_PROTOCOL_VERSION = 2;
+    // A directional pair may contain two 128-character enchantment IDs plus separators.
+    public static final int MAX_COMPENDIUM_KEY_CHARS = 512;
 
     public enum StationAction {
         SELECT_TAB(10),
@@ -124,7 +128,7 @@ public final class FusionNetworking {
         public static final Type<CompendiumSyncPayload> TYPE =
             new Type<>(EnchantmentFusion.id("compendium_sync"));
         public static final StreamCodec<ByteBuf, CompendiumSyncPayload> STREAM_CODEC =
-            ByteBufCodecs.stringUtf8(128).apply(ByteBufCodecs.list(MAX_SYNC_ENTRIES))
+            ByteBufCodecs.stringUtf8(MAX_COMPENDIUM_KEY_CHARS).apply(ByteBufCodecs.list(MAX_SYNC_ENTRIES))
                 .map(CompendiumSyncPayload::new, CompendiumSyncPayload::unlockedPairs);
 
         @Override
@@ -137,7 +141,7 @@ public final class FusionNetworking {
         public static final Type<CompendiumDeltaPayload> TYPE =
             new Type<>(EnchantmentFusion.id("compendium_delta"));
         public static final StreamCodec<ByteBuf, CompendiumDeltaPayload> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.stringUtf8(128), CompendiumDeltaPayload::entryKey,
+            ByteBufCodecs.stringUtf8(MAX_COMPENDIUM_KEY_CHARS), CompendiumDeltaPayload::entryKey,
             ByteBufCodecs.VAR_INT, CompendiumDeltaPayload::stage,
             CompendiumDeltaPayload::new
         );
@@ -149,6 +153,10 @@ public final class FusionNetworking {
     }
 
     public record MatrixSyncPayload(@Nullable FusionMatrixRegistry.Snapshot snapshot) implements CustomPacketPayload {
+        public static final int MAX_PROFILES = 2048;
+        public static final int MAX_GROUPS = 256;
+        public static final int MAX_GROUP_MEMBERS = 64;
+        public static final int MAX_COOLDOWNS = 32;
         public static final Type<MatrixSyncPayload> TYPE =
             new Type<>(EnchantmentFusion.id("matrix_sync"));
         public static final StreamCodec<FriendlyByteBuf, MatrixSyncPayload> STREAM_CODEC = StreamCodec.of(
@@ -156,11 +164,39 @@ public final class FusionNetworking {
             MatrixSyncPayload::read
         );
 
+        /** Reject an unsynchronizable datapack before publishing it or writing any bytes. */
+        public static void validateSnapshot(FusionMatrixRegistry.Snapshot snapshot) {
+            if (snapshot.profiles().size() > MAX_PROFILES || snapshot.exclusiveGroups().size() > MAX_GROUPS
+                || TriggerType.values().length > MAX_COOLDOWNS) {
+                throw new IllegalArgumentException("matrix snapshot exceeds protocol count limits");
+            }
+            for (String id : snapshot.profiles().keySet()) validateWireId(id);
+            for (Set<String> group : snapshot.exclusiveGroups()) {
+                if (group.size() > MAX_GROUP_MEMBERS) throw new IllegalArgumentException("exclusive group too large");
+                for (String id : group) validateWireId(id);
+            }
+        }
+
+        private static void validateWireId(String id) {
+            if (id == null || id.length() > 128) throw new IllegalArgumentException("matrix identifier exceeds protocol limit");
+        }
+
+        private static int readCount(FriendlyByteBuf buf, int max, String field) {
+            int count = buf.readVarInt();
+            if (count < 0 || count > max) throw new DecoderException("Invalid " + field + " count: " + count);
+            return count;
+        }
+
         private static void write(FriendlyByteBuf buf, MatrixSyncPayload payload) {
-            buf.writeVarInt(MATRIX_SYNC_PROTOCOL_VERSION);
             FusionMatrixRegistry.Snapshot snap = payload.snapshot() != null
                 ? payload.snapshot()
                 : FusionMatrixRegistry.serverSnapshot();
+            try {
+                validateSnapshot(snap);
+            } catch (IllegalArgumentException ex) {
+                throw new EncoderException(ex.getMessage(), ex);
+            }
+            buf.writeVarInt(MATRIX_SYNC_PROTOCOL_VERSION);
             Map<String, MatrixProfile> profiles = snap.profiles();
             buf.writeVarInt(profiles.size());
             for (Map.Entry<String, MatrixProfile> e : profiles.entrySet()) {
@@ -239,7 +275,7 @@ public final class FusionNetworking {
                 );
                 return new MatrixSyncPayload(null);
             }
-            int pCount = Math.clamp(buf.readVarInt(), 0, 2048);
+            int pCount = readCount(buf, MAX_PROFILES, "profile");
             Map<String, MatrixProfile> profiles = new HashMap<>(pCount);
             for (int i = 0; i < pCount; i++) {
                 String key = buf.readUtf(128);
@@ -247,10 +283,10 @@ public final class FusionNetworking {
                 PayloadType pay = PayloadType.fromString(buf.readUtf(64), PayloadType.EDGE);
                 profiles.put(key, new MatrixProfile(trig, pay));
             }
-            int gCount = Math.clamp(buf.readVarInt(), 0, 256);
+            int gCount = readCount(buf, MAX_GROUPS, "group");
             List<Set<String>> groups = new ArrayList<>(gCount);
             for (int i = 0; i < gCount; i++) {
-                int sz = Math.clamp(buf.readVarInt(), 0, 64);
+                int sz = readCount(buf, MAX_GROUP_MEMBERS, "group member");
                 Set<String> g = new HashSet<>(sz);
                 for (int j = 0; j < sz; j++) {
                     g.add(buf.readUtf(128));
@@ -301,7 +337,7 @@ public final class FusionNetworking {
             double meleeMin = Math.clamp(buf.readDouble(), 0.05, 1.0);
             double meleeFull = Math.clamp(buf.readDouble(), 0.10, 1.0);
 
-            int cdCount = Math.clamp(buf.readVarInt(), 0, 32);
+            int cdCount = readCount(buf, MAX_COOLDOWNS, "cooldown");
             Map<TriggerType, Integer> cooldowns = new EnumMap<>(EconomyConfig.DEFAULT_TRIGGER_COOLDOWNS);
             for (int i = 0; i < cdCount; i++) {
                 TriggerType t = TriggerType.fromString(buf.readUtf(64), null);
@@ -446,7 +482,11 @@ public final class FusionNetworking {
 
     public static void sendCompendiumSync(ServerPlayer player, Collection<String> encodedStates) {
         if (ServerPlayNetworking.canSend(player, CompendiumSyncPayload.TYPE)) {
-            List<String> copy = new ArrayList<>(encodedStates);
+            List<String> copy = new ArrayList<>();
+            for (String state : encodedStates) {
+                if (state != null && state.length() <= MAX_COMPENDIUM_KEY_CHARS) copy.add(state);
+                else EnchantmentFusion.LOGGER.warn("Skipping an oversized compendium entry for {}", player.getScoreboardName());
+            }
             if (copy.size() > CompendiumSyncPayload.MAX_SYNC_ENTRIES) {
                 EnchantmentFusion.LOGGER.warn(
                     "Truncating compendium sync for {} from {} entries to protocol cap {}",
@@ -461,6 +501,10 @@ public final class FusionNetworking {
     }
 
     public static void sendCompendiumDelta(ServerPlayer player, String entryKey, int stage) {
+        if (entryKey == null || entryKey.length() > MAX_COMPENDIUM_KEY_CHARS) {
+            EnchantmentFusion.LOGGER.warn("Skipping an oversized compendium delta for {}", player.getScoreboardName());
+            return;
+        }
         if (ServerPlayNetworking.canSend(player, CompendiumDeltaPayload.TYPE)) {
             ServerPlayNetworking.send(player, new CompendiumDeltaPayload(entryKey, stage));
         }

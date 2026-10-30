@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "enchantment_fusion:block/temporary_frost_path_0"
+    },
+    "age=1": {
+      "model": "enchantment_fusion:block/temporary_frost_path_1"
+    },
+    "age=2": {
+      "model": "enchantment_fusion:block/temporary_frost_path_2"
+    },
+    "age=3": {
+      "model": "enchantment_fusion:block/temporary_frost_path_3"
+    }
+  }
+}

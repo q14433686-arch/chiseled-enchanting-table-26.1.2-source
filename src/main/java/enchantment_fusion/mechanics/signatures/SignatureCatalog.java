@@ -85,6 +85,7 @@ public final class SignatureCatalog {
         JsonObject sigObj = root.getAsJsonObject("signatures");
         for (Map.Entry<String, JsonElement> e : sigObj.entrySet()) {
             String id = e.getKey();
+            if (id != null && id.length() > 128) throw new IllegalArgumentException("Catalog ID too long: " + id);
             if (id == null || id.isBlank() || !e.getValue().isJsonObject()) {
                 continue;
             }
@@ -95,6 +96,8 @@ public final class SignatureCatalog {
             if (primary.isBlank() || secondary.isBlank()) {
                 continue;
             }
+            primary = "*".equals(primary) ? primary : FusedPair.canonicalizeEnchantId(primary);
+            secondary = FusedPair.canonicalizeEnchantId(secondary);
             SignatureEntry entry = new SignatureEntry(id, primary, secondary);
             if ("*".equals(primary)) {
                 wildcards.put(secondary, entry);

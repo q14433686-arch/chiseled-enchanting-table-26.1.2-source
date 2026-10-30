@@ -5,6 +5,7 @@ import static enchantment_fusion.mechanics.transmute.TransmuteCatalog.getTransmu
 import static enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport.*;
 
 import enchantment_fusion.mechanics.AberrantRegistry;
+import enchantment_fusion.mechanics.TemporaryFrostEffects;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.SmeltOutcome;
 import enchantment_fusion.mechanics.SignaturePairs;
 import java.util.List;
@@ -109,10 +110,8 @@ public final class MiningFishingTransmutes {
         ItemStack tool = (toolSnapshot == null || toolSnapshot.isEmpty()) ? player.getMainHandItem() : toolSnapshot;
         if (tool.isEmpty()) return;
 
-        SignaturePairs.onPostDestroyHarvestDrops(level, player, tool, pos, state);
-
         int axeLv = getTransmutedLevel(tool, "auto_smelt_axe");
-        if (axeLv > 0) {
+        if (axeLv > 0 && !player.isShiftKeyDown()) {
             RandomSource rng = level.getRandom();
             AABB dropBox = new AABB(pos).inflate(1.9D);
             if (state.is(BlockTags.LOGS)) {
@@ -129,8 +128,8 @@ public final class MiningFishingTransmutes {
                     ExperienceOrb.award(level, Vec3.atCenterOf(pos), 1);
                     level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 7, 0.25D, 0.25D, 0.25D, 0.02D);
                 }
-            } else if (!player.isShiftKeyDown()
-                && (state.is(BlockTags.PLANKS) || state.is(BlockTags.WOODEN_SLABS) || state.is(BlockTags.WOODEN_STAIRS) || state.is(BlockTags.WOODEN_FENCES))) {
+            } else if (state.is(BlockTags.PLANKS) || state.is(BlockTags.WOODEN_SLABS)
+                || state.is(BlockTags.WOODEN_STAIRS) || state.is(BlockTags.WOODEN_FENCES)) {
                 float ashChance = axeLv >= 2 ? 0.20F : 0.40F;
                 float charcoalThreshold = axeLv >= 2 ? 0.85F : 0.78F;
                 for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
@@ -147,7 +146,7 @@ public final class MiningFishingTransmutes {
             }
         }
 
-        if (getTransmutedLevel(tool, "auto_smelt_pick") > 0) {
+        if (!player.isShiftKeyDown() && getTransmutedLevel(tool, "auto_smelt_pick") > 0) {
             smeltFreshBlockDropsInPlace(level, pos, state, 1.0F);
         }
 
@@ -224,12 +223,7 @@ public final class MiningFishingTransmutes {
         if (tool.isEmpty()) return;
 
         if (getTransmutedLevel(tool, "frost_seal") > 0) {
-            for (Direction dir : Direction.values()) {
-                BlockPos adj = pos.relative(dir);
-                BlockState adjState = level.getBlockState(adj);
-                if (adjState.is(Blocks.WATER)) level.setBlockAndUpdate(adj, Blocks.FROSTED_ICE.defaultBlockState());
-                else if (adjState.is(Blocks.LAVA)) level.setBlockAndUpdate(adj, Blocks.COBBLESTONE.defaultBlockState());
-            }
+            TemporaryFrostEffects.sealAdjacentFluids(level, player, pos);
         }
         if (getTransmutedLevel(tool, "heat_shield_pick") > 0 && player.isOnFire()) {
             player.clearFire();

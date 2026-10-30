@@ -762,12 +762,12 @@ public final class FusionGrimoireScreen extends Screen {
             }
             if (key == InputConstants.KEY_LEFT) {
                 this.searchSelectAll = false;
-                this.searchCaret = Math.max(0, this.searchCaret - 1);
+                if (this.searchCaret > 0) this.searchCaret = this.searchQuery.offsetByCodePoints(this.searchCaret, -1);
                 return true;
             }
             if (key == InputConstants.KEY_RIGHT) {
                 this.searchSelectAll = false;
-                this.searchCaret = Math.min(this.searchQuery.length(), this.searchCaret + 1);
+                if (this.searchCaret < this.searchQuery.length()) this.searchCaret = this.searchQuery.offsetByCodePoints(this.searchCaret, 1);
                 return true;
             }
             if (key == InputConstants.KEY_HOME) {
@@ -784,9 +784,9 @@ public final class FusionGrimoireScreen extends Screen {
                 if (this.searchSelectAll) {
                     updateSearchText("", 0);
                 } else if (this.searchCaret > 0 && !this.searchQuery.isEmpty()) {
-                    String next = this.searchQuery.substring(0, this.searchCaret - 1)
-                        + this.searchQuery.substring(this.searchCaret);
-                    updateSearchText(next, this.searchCaret - 1);
+                    int start = this.searchQuery.offsetByCodePoints(this.searchCaret, -1);
+                    String next = this.searchQuery.substring(0, start) + this.searchQuery.substring(this.searchCaret);
+                    updateSearchText(next, start);
                 }
                 return true;
             }
@@ -794,8 +794,8 @@ public final class FusionGrimoireScreen extends Screen {
                 if (this.searchSelectAll) {
                     updateSearchText("", 0);
                 } else if (this.searchCaret < this.searchQuery.length()) {
-                    String next = this.searchQuery.substring(0, this.searchCaret)
-                        + this.searchQuery.substring(this.searchCaret + 1);
+                    int end = this.searchQuery.offsetByCodePoints(this.searchCaret, 1);
+                    String next = this.searchQuery.substring(0, this.searchCaret) + this.searchQuery.substring(end);
                     updateSearchText(next, this.searchCaret);
                 }
                 return true;
@@ -855,7 +855,8 @@ public final class FusionGrimoireScreen extends Screen {
     public boolean charTyped(CharacterEvent event) {
         if (this.searchFocused) {
             int cp = event.codepoint();
-            if (cp >= 32 && cp <= 0xFFFF && cp != 127) {
+            if (Character.isValidCodePoint(cp) && cp >= 32 && cp != 127
+                && !(cp >= Character.MIN_SURROGATE && cp <= Character.MAX_SURROGATE)) {
                 insertAtSearchCaret(Character.toString(cp));
             }
             return true;
@@ -870,7 +871,9 @@ public final class FusionGrimoireScreen extends Screen {
         if (room <= 0) {
             return;
         }
-        String chunk = text.length() <= room ? text : text.substring(0, room);
+        int end = Math.min(text.length(), room);
+        if (end < text.length() && end > 0 && Character.isHighSurrogate(text.charAt(end - 1))) end--;
+        String chunk = text.substring(0, end);
         String next = base.substring(0, pos) + chunk + base.substring(pos);
         updateSearchText(next, pos + chunk.length());
     }
@@ -890,11 +893,12 @@ public final class FusionGrimoireScreen extends Screen {
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < raw.length() && sb.length() < MAX_SEARCH_LEN; i++) {
-            char c = raw.charAt(i);
-            if (c >= 32 && c != 127) {
-                sb.append(c);
-            }
+        for (int i = 0; i < raw.length();) {
+            int cp = raw.codePointAt(i);
+            i += Character.charCount(cp);
+            if (cp < 32 || cp == 127 || (cp >= Character.MIN_SURROGATE && cp <= Character.MAX_SURROGATE)) continue;
+            if (sb.length() + Character.charCount(cp) > MAX_SEARCH_LEN) break;
+            sb.appendCodePoint(cp);
         }
         return sb.toString();
     }

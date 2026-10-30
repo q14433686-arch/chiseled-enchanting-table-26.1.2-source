@@ -125,6 +125,7 @@ class CrossDomainMatrixCompletenessTest {
         assertEquals("sun_piercer", CrossDomainTransmutations.resolveForRole("minecraft:piercing", TargetRole.BOW, true).orElseThrow().id());
         assertEquals("swift_draw", CrossDomainTransmutations.resolveForRole("minecraft:quick_charge", TargetRole.BOW, true).orElseThrow().id());
         assertEquals("warding_shove", CrossDomainTransmutations.resolveForRole("minecraft:punch", TargetRole.SWORD, true).orElseThrow().id());
+        assertEquals("recoil_jump", CrossDomainTransmutations.resolveForRole("minecraft:punch", TargetRole.CROSSBOW, true).orElseThrow().id());
 
         for (TransmuteVariant tv : CrossDomainTransmutations.allVariants()) {
             assertTrue(enUs.has(tv.titleKey()), "Missing title key " + tv.titleKey());

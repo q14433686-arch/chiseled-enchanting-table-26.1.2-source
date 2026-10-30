@@ -3,6 +3,7 @@ package enchantment_fusion.data;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.PayloadType;
 import enchantment_fusion.model.TriggerType;
 import java.util.ArrayList;
@@ -362,7 +363,7 @@ public final class FusionMatrixRegistry {
         if (matrixObj != null && matrixObj.has("profiles") && matrixObj.get("profiles").isJsonObject()) {
             JsonObject rawProfiles = matrixObj.getAsJsonObject("profiles");
             for (Map.Entry<String, JsonElement> entry : rawProfiles.entrySet()) {
-                String key = entry.getKey().trim();
+                String key = FusedPair.canonicalizeEnchantId(entry.getKey());
                 if (entry.getValue().isJsonNull()) {
                     mergedProfiles.remove(key);
                     continue;
@@ -406,7 +407,7 @@ public final class FusionMatrixRegistry {
                             if (idEl != null && idEl.isJsonPrimitive()) {
                                 String trimmed = idEl.getAsString().trim();
                                 if (!trimmed.isEmpty()) {
-                                    g.add(trimmed);
+                                    g.add(FusedPair.canonicalizeEnchantId(trimmed));
                                 }
                             }
                         }

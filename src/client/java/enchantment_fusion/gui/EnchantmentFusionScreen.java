@@ -1059,11 +1059,8 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (this.grimoireOverlay != null) {
-            if (event.key() == 256) {
-                this.grimoireOverlay = null;
-                FusionGuiMicroEffects.playUiSound(SoundEvents.BOOK_PAGE_TURN, 0.9F, 0.7F);
-                return true;
-            }
+            // Let the book handle Escape consistently in standalone and embedded mode:
+            // clear an active search first, then close the overlay without closing the table.
             return this.grimoireOverlay.keyPressed(event);
         }
 

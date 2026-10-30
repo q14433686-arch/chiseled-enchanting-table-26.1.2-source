@@ -9,6 +9,8 @@ import com.google.gson.JsonParser;
 import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
+import enchantment_fusion.menu.FusionNetworking.MatrixSyncPayload;
+import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
 import enchantment_fusion.model.PayloadType;
@@ -24,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -119,7 +120,6 @@ public final class FusionConfigStore {
             else setPath(nextOverrides, file, path, value);
             validateOverrides(state.base(), nextOverrides);
             Prepared prepared = prepare(state.base(), nextOverrides);
-            validateRelationships(prepared.effective());
             String serialized = GSON.toJson(nextOverrides);
             if (serialized.length() > MAX_DOCUMENT_CHARS || prepared.effective().toString().length() > MAX_DOCUMENT_CHARS) {
                 throw new IllegalArgumentException("configuration too large");
@@ -139,6 +139,10 @@ public final class FusionConfigStore {
     private static Prepared prepare(JsonObject base, JsonObject overrides) {
         JsonObject effective = base.deepCopy();
         mergeOverrides(effective, overrides);
+        if (effective.toString().length() > MAX_DOCUMENT_CHARS) {
+            throw new IllegalArgumentException("configuration exceeds sync limit");
+        }
+        validateRelationships(effective);
         // Unlike normal datapack layers, the UI's array override is an absolute replacement,
         // including built-in exclusive groups. Reset restores normal datapack merge semantics.
         JsonObject repulsiveOverride = object(overrides, "repulsive_pairs");
@@ -148,6 +152,7 @@ public final class FusionConfigStore {
         }
         FusionMatrixRegistry.Snapshot matrix = FusionMatrixRegistry.parseFromJson(
             object(effective, "matrix_profiles"), object(effective, "repulsive_pairs"), object(effective, "economy"));
+        MatrixSyncPayload.validateSnapshot(matrix);
         SignatureCatalog.Snapshot signatures = SignatureCatalog.parseFromJson(object(effective, "signatures"));
         TransmuteCatalog.Snapshot transmutes = TransmuteCatalog.parseFromJson(object(effective, "transmutations"));
         return new Prepared(effective, matrix, signatures, transmutes);
@@ -279,8 +284,8 @@ public final class FusionConfigStore {
             if (key.equals("trigger") && TriggerType.fromString(text, null) == null) throw new IllegalArgumentException("unknown trigger");
             if (key.equals("payload") && PayloadType.fromString(text, null) == null) throw new IllegalArgumentException("unknown payload");
             if ((key.equals("primary") || key.equals("secondary") || key.equals("source"))
-                && !(key.equals("primary") && text.equals("*")) && Identifier.tryParse(text) == null) {
-                throw new IllegalArgumentException("invalid identifier");
+                && !(key.equals("primary") && text.equals("*"))) {
+                FusedPair.canonicalizeEnchantId(text);
             }
         } else throw new IllegalArgumentException("unsupported type");
     }
@@ -306,9 +311,10 @@ public final class FusionConfigStore {
     }
 
     private static void validateIdentifier(JsonElement value) {
-        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString() || Identifier.tryParse(value.getAsString()) == null) {
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
             throw new IllegalArgumentException("invalid identifier");
         }
+        FusedPair.canonicalizeEnchantId(value.getAsString());
     }
 
     private static void validateRelationships(JsonObject docs) {
@@ -332,7 +338,9 @@ public final class FusionConfigStore {
                 if (!entry.getValue().isJsonObject()) continue;
                 JsonObject definition = entry.getValue().getAsJsonObject();
                 if (!definition.has("primary") || !definition.has("secondary")) continue;
-                String a = definition.get("primary").getAsString(), b = definition.get("secondary").getAsString();
+                String rawPrimary = definition.get("primary").getAsString();
+                String a = "*".equals(rawPrimary) ? rawPrimary : FusedPair.canonicalizeEnchantId(rawPrimary);
+                String b = FusedPair.canonicalizeEnchantId(definition.get("secondary").getAsString());
                 if (a.equals(b) || !used.add(a + ">" + b)) throw new IllegalArgumentException("duplicate signature pair");
             }
         }

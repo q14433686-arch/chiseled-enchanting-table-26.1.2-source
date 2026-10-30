@@ -38,7 +38,11 @@ public record FusedPair(
         if (parsed == null) {
             throw new IllegalArgumentException("Invalid enchantment identifier: " + raw);
         }
-        return parsed.toString();
+        String canonical = parsed.toString();
+        if (canonical.length() > MAX_ENCHANT_ID_LENGTH) {
+            throw new IllegalArgumentException("Canonical enchantment identifier exceeds " + MAX_ENCHANT_ID_LENGTH + " characters: " + raw);
+        }
+        return canonical;
     }
 
     public static String canonicalizeAberrationId(String raw) {

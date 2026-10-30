@@ -21,7 +21,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
  * water when broken or melted. Age and the scheduled tick are saved with the chunk,
  * so unloading/restarting cannot turn a cage into water.
  */
-public final class TemporaryFrostBlock extends HalfTransparentBlock {
+public class TemporaryFrostBlock extends HalfTransparentBlock {
     public static final MapCodec<TemporaryFrostBlock> CODEC = simpleCodec(TemporaryFrostBlock::new);
     public static final IntegerProperty AGE = BlockStateProperties.AGE_3;
 

@@ -141,13 +141,124 @@ public final class ClientSmoke implements ClientModInitializer {
 
         List<String> sourcePath = List.of("variants", "auto_smelt_pick", "source");
         require(enchantment_fusion.config.FusionConfigStore.update("transmutations", sourcePath,
-            new com.google.gson.JsonPrimitive("minecraft:breach"), false, enchantment_fusion.config.FusionConfigStore.revision()).success(),
+            new com.google.gson.JsonPrimitive("breach"), false, enchantment_fusion.config.FusionConfigStore.revision()).success(),
             "Transmutation override must save");
         require("auto_smelt_pick".equals(CrossDomainTransmutations.resolve(new ItemStack(Items.DIAMOND_PICKAXE), "minecraft:breach").orElseThrow().id()),
             "Transmutation catalog must update immediately");
         require(enchantment_fusion.config.FusionConfigStore.update("transmutations", sourcePath,
             null, true, enchantment_fusion.config.FusionConfigStore.revision()).success(), "Transmutation reset must succeed");
         require(fingerprint.equals(enchantment_fusion.config.FusionConfigStore.rulesFingerprint()), "Reset must restore datapack rules");
+        String originalFile = Files.readString(overridesPath);
+        try {
+            Files.writeString(overridesPath, "{\"economy\":{\"melee_min_charge\":0.95,\"melee_full_charge\":0.9}}");
+            new enchantment_fusion.data.FusionDataLoader().onResourceManagerReload(server.getResourceManager());
+            var eco = enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().economy();
+            require(eco.meleeMinCharge() <= eco.meleeFullCharge(), "Conflicting on-disk overrides must not load");
+            require(Files.readString(overridesPath).contains("0.95"), "Invalid overrides must be preserved for repair");
+        } finally {
+            Files.writeString(overridesPath, originalFile);
+            new enchantment_fusion.data.FusionDataLoader().onResourceManagerReload(server.getResourceManager());
+        }
+    }
+
+    private void exerciseFrostAndSneakSmelt(ServerPlayer sp) {
+        var level = sp.level();
+        var oldHand = sp.getMainHandItem();
+        boolean wasSneaking = sp.isShiftKeyDown();
+        var originalPos = sp.position();
+        var saved = new java.util.LinkedHashMap<BlockPos, BlockState>();
+        java.util.function.BiConsumer<BlockPos, BlockState> set = (pos, state) -> {
+            saved.putIfAbsent(pos, level.getBlockState(pos));
+            level.setBlockAndUpdate(pos, state);
+        };
+        var spawned = new java.util.ArrayList<net.minecraft.world.entity.Entity>();
+        try {
+            BlockPos seal = tablePos.above(10);
+            set.accept(seal, Blocks.AIR.defaultBlockState());
+            set.accept(seal.east(), Blocks.WATER.defaultBlockState());
+            set.accept(seal.west(), Blocks.LAVA.defaultBlockState());
+            ItemStack frostPick = new ItemStack(Items.DIAMOND_PICKAXE);
+            frostPick.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:frost_walker", 1));
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, frostPick);
+            CrossDomainTransmutations.onAfterBlockBreak(level, sp, seal, Blocks.STONE.defaultBlockState());
+            require(level.getBlockState(seal).is(FusionBlocks.TEMPORARY_FROST), "Water must be sealed in the mined air cell");
+            require(level.getBlockState(seal.east()).is(Blocks.WATER), "Frost seal must preserve the original water");
+            require(level.getBlockState(seal.west()).is(Blocks.COBBLESTONE), "Frost seal must still turn lava into cobblestone");
+            level.destroyBlock(seal, false);
+            require(level.getBlockState(seal).isAir(), "Broken frost seal must not produce water");
+            require(level.getBlockState(seal.east()).is(Blocks.WATER), "Breaking the seal must not remove the original water");
+
+            BlockPos testDrops = tablePos.above(13);
+            ItemStack pick = new ItemStack(Items.DIAMOND_PICKAXE);
+            pick.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:fire_aspect", 2));
+            var raw = new net.minecraft.world.entity.item.ItemEntity(level, testDrops.getX() + 0.5, testDrops.getY(),
+                testDrops.getZ() + 0.5, new ItemStack(Items.RAW_IRON));
+            level.addFreshEntity(raw); spawned.add(raw);
+            sp.setShiftKeyDown(true);
+            enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
+                level, sp, testDrops, Blocks.IRON_ORE.defaultBlockState(), pick);
+            require(raw.getItem().is(Items.RAW_IRON), "Sneaking must pause pickaxe auto-smelting");
+            sp.setShiftKeyDown(false);
+            enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
+                level, sp, testDrops, Blocks.IRON_ORE.defaultBlockState(), pick);
+            require(raw.getItem().is(Items.IRON_INGOT), "Pickaxe auto-smelting must resume when not sneaking");
+            raw.discard();
+
+            ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
+            axe.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:fire_aspect", 2));
+            var log = new net.minecraft.world.entity.item.ItemEntity(level, testDrops.getX() + 0.5, testDrops.getY(),
+                testDrops.getZ() + 0.5, new ItemStack(Items.OAK_LOG));
+            level.addFreshEntity(log); spawned.add(log);
+            sp.setShiftKeyDown(true);
+            enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
+                level, sp, testDrops, Blocks.OAK_LOG.defaultBlockState(), axe);
+            require(log.getItem().is(Items.OAK_LOG), "Sneaking must pause axe charcoal production");
+            sp.setShiftKeyDown(false);
+            enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
+                level, sp, testDrops, Blocks.OAK_LOG.defaultBlockState(), axe);
+            require(log.getItem().is(Items.CHARCOAL), "Axe charcoal production must resume when not sneaking");
+            log.discard();
+
+            BlockPos feet = tablePos.above(16);
+            sp.teleportTo(feet.getX() + 0.5, feet.getY(), feet.getZ() + 0.5);
+            BlockPos first = feet.east(), second = feet.east(2), occupied = feet.west(2), lower = feet.south(2).below();
+            for (BlockPos top : List.of(first, second, occupied, lower, feet)) {
+                set.accept(top, Blocks.AIR.defaultBlockState());
+                set.accept(top.below(), Blocks.WATER.defaultBlockState());
+            }
+            var swimmer = new net.minecraft.world.entity.monster.zombie.Zombie(level);
+            swimmer.setPos(occupied.getX() + 0.5, occupied.getY(), occupied.getZ() + 0.5);
+            level.addFreshEntity(swimmer); spawned.add(swimmer);
+            sp.setShiftKeyDown(true);
+            enchantment_fusion.mechanics.TemporaryFrostEffects.placeWake(level, sp, 2);
+            require(level.getBlockState(first).isAir(), "Sneaking must pause new ice paths");
+            sp.setShiftKeyDown(false);
+            enchantment_fusion.mechanics.TemporaryFrostEffects.placeWake(level, sp, 2);
+            require(level.getBlockState(first).is(FusionBlocks.TEMPORARY_FROST_PATH), "Wake must place a path above water");
+            require(level.getBlockState(second).is(FusionBlocks.TEMPORARY_FROST_PATH), "Wake must extend across adjacent water");
+            require(level.getBlockState(lower).is(FusionBlocks.TEMPORARY_FROST_PATH), "Wake must reach water one block below shore");
+            require(level.getBlockState(occupied).isAir() && level.getBlockState(feet).isAir(), "Wake must not intersect living entities");
+            require(level.getBlockState(first.below()).is(Blocks.WATER), "Wake must preserve water sources");
+            double height = level.getBlockState(first).getCollisionShape(level, first).max(net.minecraft.core.Direction.Axis.Y);
+            require(Math.abs(height - 0.125) < 1e-6, "Ice path collision must match the two-pixel model");
+            var walker = new net.minecraft.world.entity.monster.zombie.Zombie(level);
+            walker.setPos(first.getX() + 0.5, first.getY() + 0.5, first.getZ() + 0.5);
+            level.addFreshEntity(walker); spawned.add(walker);
+            walker.move(net.minecraft.world.entity.MoverType.SELF, new net.minecraft.world.phys.Vec3(0, -0.7, 0));
+            require(Math.abs(walker.getY() - (first.getY() + 0.125)) < 1e-4, "Entity must land on thin ice collision");
+            double beforeX = walker.getX();
+            walker.move(net.minecraft.world.entity.MoverType.SELF, new net.minecraft.world.phys.Vec3(1, 0, 0));
+            require(walker.getX() > beforeX + 0.9, "Entity must move across adjacent thin-ice tiles");
+            level.destroyBlock(first, false);
+            require(level.getBlockState(first).isAir() && level.getBlockState(first.below()).is(Blocks.WATER),
+                "Breaking thin ice must leave air above the unchanged water");
+        } finally {
+            spawned.forEach(net.minecraft.world.entity.Entity::discard);
+            saved.forEach(level::setBlockAndUpdate);
+            sp.teleportTo(originalPos.x, originalPos.y, originalPos.z);
+            sp.setShiftKeyDown(wasSneaking);
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, oldHand);
+        }
     }
 
     private static void exerciseLoyaltyRiptide(ServerPlayer sp) {
@@ -383,8 +494,23 @@ public final class ClientSmoke implements ClientModInitializer {
                 // Open top-right embedded Fusion Grimoire button (279..297, 8..24) — container MUST remain open!
                 click(screen, b.getX() + 288, b.getY() + 16);
                 require(client.screen instanceof EnchantmentFusionScreen, "Embedded Grimoire must not replace EnchantmentFusionScreen");
-                boolean escHandled = screen.keyPressed(new KeyEvent(256, 0, 0));
-                require(escHandled, "Escape should close embedded Grimoire overlay cleanly");
+                Rect2i book = screen.guiBounds();
+                click(screen, book.getX() + 32, book.getY() + 40);
+                var overlayField = EnchantmentFusionScreen.class.getDeclaredField("grimoireOverlay");
+                overlayField.setAccessible(true);
+                Object overlay = overlayField.get(screen);
+                var queryField = overlay.getClass().getDeclaredField("searchQuery");
+                queryField.setAccessible(true);
+                screen.charTyped(new net.minecraft.client.input.CharacterEvent(0x1F3AE));
+                screen.charTyped(new net.minecraft.client.input.CharacterEvent('A'));
+                screen.keyPressed(new KeyEvent(InputConstants.KEY_LEFT, 0, 0));
+                screen.keyPressed(new KeyEvent(InputConstants.KEY_BACKSPACE, 0, 0));
+                require("A".equals(queryField.get(overlay)), "Search must delete a whole supplementary Unicode character");
+                require(screen.keyPressed(new KeyEvent(256, 0, 0)), "Escape should clear search");
+                require(overlayField.get(screen) != null && "".equals(queryField.get(overlay)),
+                    "First Escape must clear search without closing the embedded Grimoire");
+                require(screen.keyPressed(new KeyEvent(256, 0, 0)), "Second Escape should close embedded Grimoire");
+                require(overlayField.get(screen) == null, "Escape must close the overlay, not the station");
 
                 // Toggle in-panel Synergy Popover badge (253..277, 8..24) open & closed (never expands into JEI/REI!)
                 click(screen, b.getX() + 265, b.getY() + 16);
@@ -804,6 +930,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
 
                         exerciseLiveConfig(sp);
+                        exerciseFrostAndSneakSmelt(sp);
                         exerciseLoyaltyRiptide(sp);
                         // Start another no-risk ritual with no menu open. It must finish on server ticks.
                         var enchantments = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
