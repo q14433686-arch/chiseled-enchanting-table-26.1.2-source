@@ -404,9 +404,6 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                             failReason = preview.rejectReason() != RejectReason.NONE
                                 ? preview.rejectReason()
                                 : RejectReason.MISSING_INPUT;
-                        } else if (expectedToken != null && !expectedToken.isEmpty()
-                            && !expectedToken.equals(preview.expectedExecuteToken())) {
-                            failReason = RejectReason.STALE_SELECTION;
                         } else {
                             tableBe.beginRitual(
                                 sp,
