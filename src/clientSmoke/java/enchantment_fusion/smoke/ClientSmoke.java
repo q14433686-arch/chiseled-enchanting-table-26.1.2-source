@@ -1252,14 +1252,14 @@ public final class ClientSmoke implements ClientModInitializer {
                         serverReadyFlag = true;
                     } catch (Throwable t) { serverFailure = t; }
                 });
-                next(28, 1);
+                next(40, 1);
             }
-            case 28 -> {
+            case 40 -> {
                 if (!serverReadyFlag) return;
                 // Wait for actual entity movement/collisions, rather than simulating ticks.
-                next(29, 35);
+                next(41, 35);
             }
-            case 29 -> {
+            case 41 -> {
                 var server = client.getSingleplayerServer();
                 serverReadyFlag = false;
                 server.execute(() -> {
@@ -1268,13 +1268,13 @@ public final class ClientSmoke implements ClientModInitializer {
                         serverReadyFlag = true;
                     } catch (Throwable t) { serverFailure = t; }
                 });
-                next(30, 1);
+                next(42, 1);
             }
-            case 30 -> {
+            case 42 -> {
                 if (!serverReadyFlag) return;
-                next(31, 35);
+                next(43, 35);
             }
-            case 31 -> {
+            case 43 -> {
                 var server = client.getSingleplayerServer();
                 serverReadyFlag = false;
                 server.execute(() -> {
@@ -1283,9 +1283,9 @@ public final class ClientSmoke implements ClientModInitializer {
                         serverReadyFlag = true;
                     } catch (Throwable t) { serverFailure = t; }
                 });
-                next(32, 1);
+                next(44, 1);
             }
-            case 32 -> {
+            case 44 -> {
                 if (!serverReadyFlag) return;
                 finish(client, "CLIENT SMOKE PASS: rituals, frost, live configuration, Grimoire and redesigned fire/knockback");
             }
