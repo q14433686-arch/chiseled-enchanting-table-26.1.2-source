@@ -6,6 +6,7 @@ import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.TemporaryFrostEffects;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog.EquippedSignature;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.registry.FusionBlocks;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -105,8 +106,9 @@ public final class ArmorCurseSignatures {
         EquippedSignature loyal = unique.get("loyal_lifeline");
         if (loyal != null && (isVoidFall || player.getY() < level.getMinY() + 2)) {
             long readyAt = LOYAL_LIFELINE_COOLDOWN.getOrDefault(player.getUUID(), 0L);
-            Vec3 safe = LAST_SAFE_GROUND.get(player.getUUID());
-            if (safe != null && now >= readyAt) {
+            SafeGround anchor = LAST_SAFE_GROUND.get(player.getUUID());
+            if (now >= readyAt && isSafeLifelineAnchor(level, player, anchor)) {
+                Vec3 safe = anchor.position();
                 LOYAL_LIFELINE_COOLDOWN.put(player.getUUID(), now + 600L);
                 player.setHealth(Math.max(2.0F, player.getHealth()));
                 player.fallDistance = 0.0F;
@@ -368,9 +370,27 @@ public final class ArmorCurseSignatures {
         }
     }
 
+    private static boolean isSafeLifelineAnchor(ServerLevel level, ServerPlayer player, @Nullable SafeGround anchor) {
+        if (anchor == null || !level.dimension().equals(anchor.dimension())) return false;
+        Vec3 safe = anchor.position();
+        BlockPos feet = BlockPos.containing(safe);
+        BlockPos below = BlockPos.containing(safe.x, safe.y - 0.05D, safe.z);
+        BlockPos arrival = BlockPos.containing(safe.add(0.0D, 0.5D, 0.0D));
+        if (!level.isInWorldBounds(arrival) || !level.isLoaded(feet) || !level.isLoaded(below)
+            || !level.getWorldBorder().isWithinBounds(arrival) || !level.getFluidState(feet).isEmpty()) return false;
+        BlockState support = level.getBlockState(below);
+        if (support.is(FusionBlocks.TEMPORARY_FROST) || support.is(FusionBlocks.TEMPORARY_FROST_PATH)
+            || support.is(Blocks.MAGMA_BLOCK) || support.is(Blocks.CACTUS)) return false;
+        Vec3 offset = safe.subtract(player.position());
+        AABB standing = player.getBoundingBox().move(offset);
+        // The old floor may have been mined away, or a wall placed at the arrival point.
+        return !level.noCollision(player, standing.move(0.0D, -0.10D, 0.0D))
+            && level.noCollision(player, standing.move(0.0D, 0.5D, 0.0D));
+    }
+
     public static void tickServerPlayer(ServerLevel level, ServerPlayer player) {
         if (player.onGround() && player.getY() > level.getMinY() + 2) {
-            LAST_SAFE_GROUND.put(player.getUUID(), player.position());
+            LAST_SAFE_GROUND.put(player.getUUID(), new SafeGround(level.dimension(), player.position()));
         }
         if (level.getGameTime() % 10L != 0L) {
             return;

@@ -12,12 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
@@ -153,13 +155,31 @@ public final class FusionConfigScreen extends Screen {
     }
 
     private String labelFor(Field field) {
-        // Economy labels are translated; all other paths retain their exact datapack IDs.
-        if (field.file().equals("economy") && field.path().size() == 1) {
-            String key = "config.enchantment_fusion.field." + field.path().getFirst();
+        List<String> path = field.path();
+        if (field.file().equals("economy") && path.size() == 1) {
+            String key = "config.enchantment_fusion.field." + path.getFirst();
             String translated = Component.translatable(key).getString();
-            if (!translated.equals(key)) return translated + " (" + field.path().getFirst() + ")";
+            if (!translated.equals(key)) return translated + " (" + path.getFirst() + ")";
         }
-        return field.pathText();
+        if (field.file().equals("economy") && path.size() == 2 && path.getFirst().equals("trigger_cooldowns")) {
+            String trigger = path.getLast();
+            String triggerKey = "fusion.enchantment_fusion.trigger." + trigger.toLowerCase(Locale.ROOT);
+            String name = Component.translatable(triggerKey).getString();
+            return Component.translatable("config.enchantment_fusion.cooldown", name).getString() + " (" + trigger + ")";
+        }
+        String propertyName = path.contains("extra_source_roles") ? "extra_source_roles" : path.getLast();
+        String propertyKey = "config.enchantment_fusion.property." + propertyName;
+        String property = Component.translatable(propertyKey).getString();
+        if (property.equals(propertyKey)) property = propertyName;
+        if (path.size() >= 3 && (field.file().equals("signatures") || field.file().equals("transmutations"))) {
+            String id = path.get(1);
+            String prefix = field.file().equals("signatures") ? "signature.enchantment_fusion." : "transmute.enchantment_fusion.";
+            String titleKey = prefix + id + ".title";
+            String title = Component.translatable(titleKey).getString();
+            if (title.equals(titleKey)) title = id;
+            return title + " · " + property + " (" + field.pathText() + ")";
+        }
+        return property + " (" + field.pathText() + ")";
     }
 
     private String clip(String text, int maxWidth) {
@@ -246,7 +266,7 @@ public final class FusionConfigScreen extends Screen {
         String count = (page + 1) + " / " + (maxPage() + 1);
         ctx.centeredText(font, count, x + panelWidth / 2, navigationY + 6, 0xFFD5CDBB);
         String fieldText = selected == null ? Component.translatable("config.enchantment_fusion.select").getString()
-            : selected.pathText() + (selected.overridden() ? " *" : "");
+            : labelFor(selected) + (selected.overridden() ? " *" : "");
         ctx.text(font, clip(fieldText, panelWidth), x, navigationY + 25, 0xFFFFE4AA, false);
         String hint;
         if (!FusionConfigClient.synced() && status.equals("unavailable")) {
@@ -261,6 +281,26 @@ public final class FusionConfigScreen extends Screen {
         else hint = Component.translatable("config.enchantment_fusion.override_hint").getString();
         ctx.text(font, clip(hint, panelWidth), x, navigationY + 61, 0xFFBBBBBB, false);
         super.extractRenderState(ctx, mouseX, mouseY, delta);
+        String tooltip = null;
+        if (mouseX >= x && mouseX < x + panelWidth) {
+            if (mouseY >= navigationY + 25 && mouseY < navigationY + 35) tooltip = fieldText;
+            else if (mouseY >= navigationY + 61 && mouseY < navigationY + 71) tooltip = hint;
+            else if (mouseY >= listY && mouseY < listY + rowCount * 19) {
+                int row = (mouseY - listY) / 19;
+                List<Field> fields = filtered();
+                int index = page * rowCount + row;
+                if (index < fields.size()) {
+                    Field field = fields.get(index);
+                    String value = printable(field.value());
+                    if (value.length() > 300) value = value.substring(0, 300) + "…";
+                    tooltip = labelFor(field) + " = " + value;
+                }
+            }
+        }
+        if (tooltip != null && !tooltip.isEmpty()) {
+            ctx.setTooltipForNextFrame(font, font.split(Component.literal(tooltip), Math.max(120, Math.min(300, width - 32))),
+                Optional.empty(), DefaultTooltipPositioner.INSTANCE, mouseX, mouseY, false, null);
+        }
     }
 
     @Override public void onClose() { Minecraft.getInstance().setScreen(parent); }

@@ -38,6 +38,8 @@ import org.jetbrains.annotations.Nullable;
  * across all modular Signature domain handlers.
  */
 public final class SignatureRuntimeSupport {
+    public record SafeGround(ResourceKey<Level> dimension, Vec3 position) {}
+
     public record KiteSnapback(
         UUID ownerId,
         ResourceKey<Level> dimension,
@@ -63,7 +65,7 @@ public final class SignatureRuntimeSupport {
     public static final List<BlightCloudZone> ACTIVE_BLIGHT_CLOUDS = Collections.synchronizedList(new ArrayList<>());
 
     public static final Map<UUID, Integer> NEUROTOXIN_STACKS = new ConcurrentHashMap<>();
-    public static final Map<UUID, Vec3> LAST_SAFE_GROUND = new ConcurrentHashMap<>();
+    public static final Map<UUID, SafeGround> LAST_SAFE_GROUND = new ConcurrentHashMap<>();
     public static final Map<UUID, Float> RECENT_DAMAGE_TAKEN = new ConcurrentHashMap<>();
     public static final Map<UUID, Long> RECENT_DAMAGE_UNTIL = new ConcurrentHashMap<>();
     public static final Map<UUID, Long> GLASS_SHIELD_COOLDOWN = new ConcurrentHashMap<>();

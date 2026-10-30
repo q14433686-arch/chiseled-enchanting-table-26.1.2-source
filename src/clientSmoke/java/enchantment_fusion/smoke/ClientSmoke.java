@@ -261,6 +261,53 @@ public final class ClientSmoke implements ClientModInitializer {
         }
     }
 
+    private void exerciseLifelineAnchors(ServerPlayer sp) {
+        var level = sp.level();
+        var originalPos = sp.position();
+        ItemStack oldBoots = sp.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET);
+        var state = enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.LAST_SAFE_GROUND;
+        var cooldowns = enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.LOYAL_LIFELINE_COOLDOWN;
+        var oldAnchor = state.get(sp.getUUID());
+        var oldCooldown = cooldowns.get(sp.getUUID());
+        BlockPos support = tablePos.above(20), feet = support.above(), head = feet.above(2);
+        BlockState oldSupport = level.getBlockState(support), oldFeet = level.getBlockState(feet), oldHead = level.getBlockState(head);
+        ItemStack boots = new ItemStack(Items.DIAMOND_BOOTS);
+        boots.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
+            FusedPair.clean("minecraft:protection", 1, "minecraft:loyalty", 1)));
+        sp.setItemSlot(net.minecraft.world.entity.EquipmentSlot.FEET, boots);
+        var safe = new net.minecraft.world.phys.Vec3(feet.getX() + 0.5D, feet.getY(), feet.getZ() + 0.5D);
+        try {
+            cooldowns.remove(sp.getUUID());
+            level.setBlockAndUpdate(support, Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(feet, Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(head, Blocks.AIR.defaultBlockState());
+            state.put(sp.getUUID(), new enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.SafeGround(
+                net.minecraft.world.level.Level.NETHER, safe));
+            require(enchantment_fusion.mechanics.signatures.ArmorCurseSignatures.allowPlayerDeath(sp, level.damageSources().fellOutOfWorld()),
+                "Lifeline must not use an anchor from a different dimension");
+            state.put(sp.getUUID(), new enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.SafeGround(level.dimension(), safe));
+            level.setBlockAndUpdate(support, Blocks.AIR.defaultBlockState());
+            require(enchantment_fusion.mechanics.signatures.ArmorCurseSignatures.allowPlayerDeath(sp, level.damageSources().fellOutOfWorld()),
+                "Lifeline must not use an anchor whose floor was removed");
+            level.setBlockAndUpdate(support, Blocks.STONE.defaultBlockState());
+            level.setBlockAndUpdate(head, Blocks.STONE.defaultBlockState());
+            require(enchantment_fusion.mechanics.signatures.ArmorCurseSignatures.allowPlayerDeath(sp, level.damageSources().fellOutOfWorld()),
+                "Lifeline must not teleport into a blocked destination");
+            level.setBlockAndUpdate(head, Blocks.AIR.defaultBlockState());
+            require(!enchantment_fusion.mechanics.signatures.ArmorCurseSignatures.allowPlayerDeath(sp, level.damageSources().fellOutOfWorld()),
+                "A safe same-dimension anchor must still save the player");
+            require(sp.position().distanceToSqr(safe.add(0, 0.5, 0)) < 1e-6, "Lifeline must return to the anchor");
+            require(boots.getDamageValue() == 20, "Successful lifeline must consume 20 durability");
+            require(cooldowns.containsKey(sp.getUUID()), "Successful lifeline must start its cooldown");
+        } finally {
+            level.setBlockAndUpdate(support, oldSupport); level.setBlockAndUpdate(feet, oldFeet); level.setBlockAndUpdate(head, oldHead);
+            sp.teleportTo(originalPos.x, originalPos.y, originalPos.z);
+            sp.setItemSlot(net.minecraft.world.entity.EquipmentSlot.FEET, oldBoots);
+            if (oldAnchor == null) state.remove(sp.getUUID()); else state.put(sp.getUUID(), oldAnchor);
+            if (oldCooldown == null) cooldowns.remove(sp.getUUID()); else cooldowns.put(sp.getUUID(), oldCooldown);
+        }
+    }
+
     private static void exerciseLoyaltyRiptide(ServerPlayer sp) {
         ItemStack trident = new ItemStack(Items.TRIDENT);
         trident.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
@@ -739,6 +786,9 @@ public final class ClientSmoke implements ClientModInitializer {
                         AberrantRegistry.placeSingleFrostedIce(sp.level(), meltingIce);
                         sp.level().setBlockAndUpdate(meltingIce, sp.level().getBlockState(meltingIce)
                             .setValue(enchantment_fusion.block.TemporaryFrostBlock.AGE, 3));
+                        BlockPos meltingPath = tablePos.above(5).east(3);
+                        sp.level().setBlockAndUpdate(meltingPath, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState()
+                            .setValue(enchantment_fusion.block.TemporaryFrostBlock.AGE, 3));
 
                         sp.closeContainer();
                         require(be.getItem(3).is(Items.DIAMOND_PICKAXE), "Closing menu must persist pickaxe inside table BlockEntity");
@@ -931,6 +981,7 @@ public final class ClientSmoke implements ClientModInitializer {
 
                         exerciseLiveConfig(sp);
                         exerciseFrostAndSneakSmelt(sp);
+                        exerciseLifelineAnchors(sp);
                         exerciseLoyaltyRiptide(sp);
                         // Start another no-risk ritual with no menu open. It must finish on server ticks.
                         var enchantments = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
@@ -962,9 +1013,11 @@ public final class ClientSmoke implements ClientModInitializer {
                     try {
                         ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
                         var be = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
-                        if (!be.hasActiveRitual() && sp.level().getBlockState(tablePos.above(5)).isAir()) {
+                        if (!be.hasActiveRitual() && sp.level().getBlockState(tablePos.above(5)).isAir()
+                            && sp.level().getBlockState(tablePos.above(5).east(3)).isAir()) {
                             require(be.getItem(3).is(FusionItems.FUSED_ENCHANTED_BOOK), "Ritual must complete after closing the UI");
                             require(sp.level().getBlockState(tablePos.above(5)).isAir(), "Melted frost must not produce water");
+                            require(sp.level().getBlockState(tablePos.above(5).east(3)).isAir(), "Melted thin ice must not produce water");
                             closedRitualFinished = true;
                         }
                         serverReadyFlag = true;
