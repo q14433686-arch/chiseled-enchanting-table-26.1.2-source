@@ -14,9 +14,13 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 
 /**
- * Pure pixel-art sprite micro-particle, rotating rune-halo, shockwave ring, and harmonic audio
- * engine for {@link EnchantmentFusionScreen} and {@link FusionGrimoireScreen}.
- * Renders exclusively via {@link GuiGraphicsExtractor#blit} and JOML {@code Matrix3x2fStack}.
+ * Pure PNG sprite micro-animation &amp; visual feedback engine tuned for the
+ * {@code 384 x 218} Cutaway Split-Wing Fusion Altar:
+ * <ul>
+ *   <li>Counter-rotating rune halos behind Left Wing Pedestal &amp; Center Cutaway Viewport</li>
+ *   <li>Converging gold/cyan arcane sparks during the 2.0s channeling sequence</li>
+ *   <li>Climax shockwave rings bursting from the Center 3D Altar Arch &amp; Output Pedestal</li>
+ * </ul>
  */
 public final class FusionGuiMicroEffects {
     private static final class SpriteParticle {
@@ -25,13 +29,13 @@ public final class FusionGuiMicroEffects {
         float y;
         float vx;
         float vy;
-        float gravity;
-        float baseSize;
-        float endSize;
+        final float gravity;
+        final float baseSize;
+        final float endSize;
         float angle;
-        float spin;
-        long bornMs;
-        long durationMs;
+        final float spin;
+        final long bornMs;
+        final long durationMs;
 
         SpriteParticle(
             Identifier sprite,
@@ -58,18 +62,17 @@ public final class FusionGuiMicroEffects {
             this.angle = angle;
             this.spin = spin;
             this.bornMs = bornMs;
-            this.durationMs = Math.max(80L, durationMs);
+            this.durationMs = durationMs;
         }
     }
 
     private static final List<SpriteParticle> PARTICLES = new ArrayList<>();
     private static long lastFrameMs = System.currentTimeMillis();
+    private static long lastAmbientMoteMs = 0L;
+
     private static long shakeUntilMs = 0L;
     private static float shakeAmplitude = 0.0F;
     private static long grimoireBadgeGlowUntilMs = 0L;
-    private static long lastAmbientMoteMs = 0L;
-
-    // Anchor coordinates recorded during the most recent EnchantmentFusionScreen render pass
     private static int stationOriginX = 0;
     private static int stationOriginY = 0;
 
@@ -78,6 +81,22 @@ public final class FusionGuiMicroEffects {
     public static void updateStationOrigin(int leftPos, int topPos) {
         stationOriginX = leftPos;
         stationOriginY = topPos;
+    }
+
+    public static void notifyDiscoveryUnlocked() {
+        grimoireBadgeGlowUntilMs = System.currentTimeMillis() + 6500L;
+    }
+
+    public static void triggerDiscoveryGlow() {
+        notifyDiscoveryUnlocked();
+        playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.42F, 0.75F);
+        if (Minecraft.getInstance().screen instanceof EnchantmentFusionScreen) {
+            spawnSparkBurst(stationOriginX + 369, stationOriginY + 16, 8, 52.0F, 520L);
+        }
+    }
+
+    public static void onServerVisualEvent(int eventKind) {
+        triggerStationFeedback(eventKind, stationOriginX, stationOriginY);
     }
 
     public static int currentShakeOffsetX() {
@@ -98,37 +117,29 @@ public final class FusionGuiMicroEffects {
         return Math.round(Mth.cos(now * 0.125F) * shakeAmplitude * 0.75F * Mth.clamp(decay, 0.0F, 1.0F));
     }
 
-    public static void triggerDiscoveryGlow() {
-        grimoireBadgeGlowUntilMs = System.currentTimeMillis() + 2600L;
-        playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.42F, 0.75F);
-        if (Minecraft.getInstance().screen instanceof EnchantmentFusionScreen) {
-            spawnSparkBurst(stationOriginX + 266, stationOriginY + 9, 8, 52.0F, 520L);
-        }
-    }
-
-    public static void onServerVisualEvent(int eventKind) {
+    public static void triggerStationFeedback(int eventKind, int stationOriginX, int stationOriginY) {
         if (!(Minecraft.getInstance().screen instanceof EnchantmentFusionScreen)) {
             return;
         }
-        int pedX = stationOriginX + 56;
-        int pedY = stationOriginY + 88;
-        int outY = stationOriginY + 116;
-        int execX = stationOriginX + 267;
-        int execY = stationOriginY + 109;
+        int pedX = stationOriginX + 58;
+        int pedY = stationOriginY + 82;
+        int outY = stationOriginY + 110;
+        int archCenterX = stationOriginX + 174;
+        int archCenterY = stationOriginY + 65;
 
         switch (eventKind) {
             case FusionNetworking.VISUAL_FUSE_SUCCESS -> {
-                spawnShockwave(pedX, outY, 16.0F, 68.0F, 480L, 2.2F);
-                spawnShockwave(execX, execY, 14.0F, 52.0F, 400L, -2.5F);
-                spawnSparkBurst(pedX, outY, 16, 86.0F, 640L);
-                spawnSparkBurst(execX, execY, 10, 64.0F, 500L);
+                spawnShockwave(archCenterX, archCenterY, 18.0F, 88.0F, 520L, 2.6F);
+                spawnShockwave(pedX, outY, 14.0F, 64.0F, 440L, -2.5F);
+                spawnSparkBurst(archCenterX, archCenterY, 18, 96.0F, 660L);
+                spawnSparkBurst(pedX, outY, 12, 74.0F, 520L);
                 triggerShake(2.2F, 190L);
             }
             case FusionNetworking.VISUAL_FUSE_ABERRANT -> {
-                spawnShockwave(pedX, outY, 18.0F, 82.0F, 600L, -4.4F);
-                spawnShockwave(pedX, pedY, 12.0F, 58.0F, 500L, 4.0F);
-                spawnSparkBurst(pedX, outY, 22, 105.0F, 720L);
-                triggerShake(4.2F, 300L);
+                spawnShockwave(archCenterX, archCenterY, 20.0F, 98.0F, 620L, -4.4F);
+                spawnShockwave(pedX, outY, 16.0F, 72.0F, 520L, 4.0F);
+                spawnSparkBurst(archCenterX, archCenterY, 24, 112.0F, 740L);
+                triggerShake(4.0F, 290L);
             }
             case FusionNetworking.VISUAL_FUSE_FAIL -> {
                 spawnShockwave(pedX, pedY, 24.0F, 8.0F, 320L, 3.0F);
@@ -136,9 +147,9 @@ public final class FusionGuiMicroEffects {
                 triggerShake(2.8F, 220L);
             }
             case FusionNetworking.VISUAL_FLIP_ORDER -> {
-                spawnShockwave(stationOriginX + 55, stationOriginY + 60, 12.0F, 54.0F, 420L, 3.8F);
-                spawnSparkBurst(stationOriginX + 26, stationOriginY + 60, 7, 50.0F, 440L);
-                spawnSparkBurst(stationOriginX + 86, stationOriginY + 60, 7, 50.0F, 440L);
+                spawnShockwave(stationOriginX + 58, stationOriginY + 52, 12.0F, 54.0F, 420L, 3.8F);
+                spawnSparkBurst(stationOriginX + 27, stationOriginY + 52, 7, 50.0F, 440L);
+                spawnSparkBurst(stationOriginX + 90, stationOriginY + 52, 7, 50.0F, 440L);
             }
             case FusionNetworking.VISUAL_SPLIT_EXTRACT -> {
                 spawnShockwave(pedX, outY, 12.0F, 56.0F, 420L, -3.0F);
@@ -170,59 +181,68 @@ public final class FusionGuiMicroEffects {
         int left,
         int top,
         boolean executable,
-        boolean highRisk
+        boolean highRiskOrChanneling
     ) {
+        stationOriginX = left;
+        stationOriginY = top;
         long now = System.currentTimeMillis();
         float tSec = (now % 60000L) / 1000.0F;
+        boolean channeling = FusionRitualDirector.isChanneling();
 
-        if (executable) {
-            float speed = highRisk ? 1.65F : 0.78F;
+        if (executable || channeling) {
+            float speed = channeling ? 3.2F : (highRiskOrChanneling ? 1.65F : 0.78F);
             float angle = tSec * speed;
-            float breath = 1.0F + 0.08F * Mth.sin(tSec * (highRisk ? 5.2F : 2.8F));
+            float breath = 1.0F + 0.08F * Mth.sin(tSec * (channeling ? 8.5F : 2.8F));
 
-            // Halo behind Catalyst / Output core
             drawRotatedSprite(
                 ctx, FusionGuiSkin.VFX_RUNE_HALO,
-                left + 56.0F, top + 116.0F,
-                38.0F * breath, angle
+                left + 58.0F, top + 109.0F,
+                36.0F * breath, angle
             );
-            // Counter-rotating smaller halo behind Swap core
             drawRotatedSprite(
                 ctx, FusionGuiSkin.VFX_RUNE_HALO,
-                left + 55.0F, top + 60.0F,
+                left + 58.0F, top + 52.0F,
                 26.0F * breath, -angle * 1.25F
             );
 
-            // Emit subtle converging arcane motes from Slot A & Slot B toward Output
-            if (now - lastAmbientMoteMs >= (highRisk ? 110L : 190L) && PARTICLES.size() < 64) {
+            if (channeling) {
+                float p = FusionRitualDirector.channelProgress();
+                drawRotatedSprite(
+                    ctx, FusionGuiSkin.VFX_RUNE_HALO,
+                    left + 174.0F, top + 115.0F,
+                    (18.0F + 20.0F * p) * breath, angle * 1.6F
+                );
+            }
+
+            long interval = channeling ? 55L : (highRiskOrChanneling ? 115L : 195L);
+            if (now - lastAmbientMoteMs >= interval && PARTICLES.size() < 76) {
                 lastAmbientMoteMs = now;
                 ThreadLocalRandom rng = ThreadLocalRandom.current();
                 boolean fromLeft = rng.nextBoolean();
-                float sx = left + (fromLeft ? 26.0F : 86.0F) + (rng.nextFloat() - 0.5F) * 6.0F;
-                float sy = top + 60.0F + (rng.nextFloat() - 0.5F) * 6.0F;
-                float tx = left + 56.0F;
-                float ty = top + 116.0F;
+                float sx = left + (fromLeft ? 27.0F : 90.0F) + (rng.nextFloat() - 0.5F) * 6.0F;
+                float sy = top + 52.0F + (rng.nextFloat() - 0.5F) * 6.0F;
+                float tx = channeling ? (left + 174.0F) : (left + 58.0F);
+                float ty = channeling ? (top + 65.0F) : (top + 109.0F);
                 PARTICLES.add(new SpriteParticle(
                     FusionGuiSkin.VFX_ARCANE_SPARK,
                     sx, sy,
-                    (tx - sx) * 1.85F,
-                    (ty - sy) * 1.85F,
+                    (tx - sx) * (channeling ? 2.4F : 1.85F),
+                    (ty - sy) * (channeling ? 2.4F : 1.85F),
                     0.0F,
-                    8.5F, 2.5F,
+                    channeling ? 10.5F : 8.5F, 2.0F,
                     rng.nextFloat() * Mth.TWO_PI,
-                    3.2F,
+                    3.6F,
                     now,
-                    520L
+                    channeling ? 420L : 520L
                 ));
             }
         }
 
-        // Glow halo on Top-Right Grimoire button right after a new discovery!
         if (now < grimoireBadgeGlowUntilMs) {
             float pulse = 1.0F + 0.14F * Mth.sin(tSec * 6.0F);
             drawRotatedSprite(
                 ctx, FusionGuiSkin.VFX_RUNE_HALO,
-                left + 241.0F, top + 9.0F,
+                left + 369.0F, top + 16.0F,
                 22.0F * pulse, tSec * 1.8F
             );
         }
@@ -338,7 +358,7 @@ public final class FusionGuiMicroEffects {
 
     public static void playUiSound(SoundEvent sound, float pitch, float volume) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.getSoundManager() != null) {
+        if (mc != null) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(sound, pitch, volume));
         }
     }

@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "enchantment_fusion:block/enchantment_fusion_table"
+    "model": "enchantment_fusion:item/enchantment_fusion_table"
   }
 }

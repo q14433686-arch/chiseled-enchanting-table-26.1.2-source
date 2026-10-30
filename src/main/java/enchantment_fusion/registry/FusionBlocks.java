@@ -20,6 +20,7 @@ public final class FusionBlocks {
             .mapColor(MapColor.DEEPSLATE)
             .instrument(NoteBlockInstrument.BASEDRUM)
             .requiresCorrectToolForDrops()
+            .noOcclusion()
             .lightLevel(state -> 7)
             .strength(4.5F, 1200.0F)
     );

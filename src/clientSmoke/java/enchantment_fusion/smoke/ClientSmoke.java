@@ -193,14 +193,18 @@ public final class ClientSmoke implements ClientModInitializer {
                     msg -> System.out.println("Saved fusion UI screenshot: " + msg.getString())
                 );
                 Rect2i b = screen.guiBounds();
-                // Open top-right embedded Fusion Grimoire button — container MUST remain open!
-                click(screen, b.getX() + 266, b.getY() + 9);
+                // Open top-right embedded Fusion Grimoire button (360..378, 8..26) — container MUST remain open!
+                click(screen, b.getX() + 369, b.getY() + 16);
                 require(client.screen instanceof EnchantmentFusionScreen, "Embedded Grimoire must not replace EnchantmentFusionScreen");
                 boolean escHandled = screen.keyPressed(new KeyEvent(256, 0, 0));
                 require(escHandled, "Escape should close embedded Grimoire overlay cleanly");
 
-                // Click [⇅] Swap-Order button (57..75, 51..69)
-                click(screen, b.getX() + 66, b.getY() + 60);
+                // Toggle Smart Context Drawer pull-tab (382..406, 16..60) open & closed
+                click(screen, b.getX() + 394, b.getY() + 36);
+                click(screen, b.getX() + 394, b.getY() + 36);
+
+                // Left-Click Central [⇄] Swap Medallion (46..70, 40..64) -> swaps [A ▷ B] order
+                click(screen, b.getX() + 58, b.getY() + 52);
                 next(2, 10);
             }
             case 2 -> {
@@ -211,7 +215,7 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 66, b.getY() + 60);
+                click(screen, b.getX() + 58, b.getY() + 52);
                 next(3, 10);
             }
             case 3 -> {
@@ -221,8 +225,9 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                // Click primary execute button (237..298, 97..121)
-                click(screen, b.getX() + 267, b.getY() + 108);
+                // Click primary 2.0s ritual button twice (1st starts channeling, 2nd skips immediately!)
+                click(screen, b.getX() + 308, b.getY() + 106);
+                click(screen, b.getX() + 308, b.getY() + 106);
                 next(4, 14);
             }
             case 4 -> {
@@ -261,9 +266,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (!screen.getMenu().getSlot(3).getItem().is(Items.DIAMOND_HELMET)) {
                     return;
                 }
-                Rect2i b = screen.guiBounds();
-                // Switch to Tab 1 (② 器魂铭刻, 120..224, 0..20)
-                click(screen, b.getX() + 172, b.getY() + 10);
+                // Auto-Morphs automatically to Gear Inscription Mode when Diamond Helmet is in Slot 3!
                 next(6, 10);
             }
             case 6 -> {
@@ -272,7 +275,8 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 267, b.getY() + 108);
+                click(screen, b.getX() + 308, b.getY() + 106);
+                click(screen, b.getX() + 308, b.getY() + 106);
                 next(7, 14);
             }
             case 7 -> {
@@ -285,8 +289,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 int stabilizersBeforeFlip = screen.getMenu().getSlot(2).getItem().getCount();
                 require(stabilizersBeforeFlip > 0, "Expected leftover Resonance Stabilizers in Slot 2 before Flip");
                 Rect2i b = screen.guiBounds();
-                // Click inline [⇄] Flip button on Socket Card 0 (246..268, 37..54)
-                click(screen, b.getX() + 257, b.getY() + 45);
+                // Click inline [⇄] Flip button on Socket Card 0 (339..355, 28..42)
+                click(screen, b.getX() + 347, b.getY() + 35);
                 next(8, 14);
             }
             case 8 -> {
@@ -342,7 +346,8 @@ public final class ClientSmoke implements ClientModInitializer {
                     "Expected Auto-Smelt Pickaxe preview for Fire Aspect II on Diamond Pickaxe"
                 );
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 267, b.getY() + 108);
+                click(screen, b.getX() + 308, b.getY() + 106);
+                click(screen, b.getX() + 308, b.getY() + 106);
                 next(10, 14);
             }
             case 10 -> {

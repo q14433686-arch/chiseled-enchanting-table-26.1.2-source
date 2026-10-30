@@ -7,12 +7,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 
 /**
- * Pixel-art GUI sprite identifiers, named 9-slice {@link NineSliceSprite} tokens (TXT-5),
- * unified typography scale tokens (TXT-1 / TXT-2 / TXT-3), shared {@link HitBox} geometry (GUI-01),
- * and client-only payload palette helpers (CPL-4) for the Enchantment Fusion Table and Grimoire.
- * Uses exclusively genuine pixel-art PNG textures.
+ * Altar-matched Obsidian + Bone-Silver + Amethyst GUI skin, sprite identifiers,
+ * named 9-slice {@link NineSliceSprite} tokens (TXT-5), unified typography scale tokens (TXT-1~3),
+ * zero-fill UV-clipped conduit beam blitters, and bounded text helpers.
+ * Uses exclusively genuine pixel-art PNG textures (zero solid rectangle draw calls).
  */
 public final class FusionGuiSkin {
     /**
@@ -41,7 +42,23 @@ public final class FusionGuiSkin {
     public record FittedText(String text, float scale, boolean truncated) {}
 
     public static final Identifier PANEL_FRAME = EnchantmentFusion.id("textures/gui/panel_frame.png");
+    public static final Identifier DRAWER_PANEL = EnchantmentFusion.id("textures/gui/drawer_panel.png");
+    public static final Identifier DRAWER_TAB_BADGE = EnchantmentFusion.id("textures/gui/drawer_tab_badge.png");
+    public static final Identifier VIEWPORT_ARCH = EnchantmentFusion.id("textures/gui/viewport_arch_frame.png");
     public static final Identifier GRIMOIRE_SPREAD = EnchantmentFusion.id("textures/gui/grimoire_spread.png");
+
+    public static final Identifier MINI_BRAZIER_IDLE = EnchantmentFusion.id("textures/gui/mini_brazier_idle.png");
+    public static final Identifier MINI_BRAZIER_LIT_A = EnchantmentFusion.id("textures/gui/mini_brazier_lit_a.png");
+    public static final Identifier MINI_BRAZIER_LIT_B = EnchantmentFusion.id("textures/gui/mini_brazier_lit_b.png");
+
+    public static final Identifier CONDUIT_TRACK = EnchantmentFusion.id("textures/gui/conduit_track_dark.png");
+    public static final Identifier CONDUIT_GOLD = EnchantmentFusion.id("textures/gui/conduit_beam_gold.png");
+    public static final Identifier CONDUIT_CYAN = EnchantmentFusion.id("textures/gui/conduit_beam_cyan.png");
+    public static final Identifier CONDUIT_AMETHYST = EnchantmentFusion.id("textures/gui/conduit_beam_amethyst.png");
+    public static final Identifier RITUAL_PROGRESS_FILL = EnchantmentFusion.id("textures/gui/ritual_progress_fill.png");
+
+    public static final Identifier CLIMAX_BANNER_SIG = EnchantmentFusion.id("textures/gui/climax_banner_sig.png");
+    public static final Identifier CLIMAX_BANNER_ABERRANT = EnchantmentFusion.id("textures/gui/climax_banner_aberrant.png");
 
     public static final Identifier SLOT_PRIMARY = EnchantmentFusion.id("textures/gui/slot_primary.png");
     public static final Identifier SLOT_SECONDARY = EnchantmentFusion.id("textures/gui/slot_secondary.png");
@@ -83,6 +100,7 @@ public final class FusionGuiSkin {
     // Named 9-slice sprite tokens (TXT-5)
     public static final NineSliceSprite SLICE_PANEL_MAIN = new NineSliceSprite(PANEL_FRAME, 48, 48, 6);
     public static final NineSliceSprite SLICE_PANEL_INSET = new NineSliceSprite(PANEL_FRAME, 48, 48, 5);
+    public static final NineSliceSprite SLICE_DRAWER_PANEL = new NineSliceSprite(DRAWER_PANEL, 48, 48, 6);
     public static final NineSliceSprite SLICE_BTN_NORMAL = new NineSliceSprite(BTN_NORMAL, 32, 32, 4);
     public static final NineSliceSprite SLICE_BTN_HOVER = new NineSliceSprite(BTN_HOVER, 32, 32, 4);
     public static final NineSliceSprite SLICE_BTN_DISABLED = new NineSliceSprite(BTN_DISABLED, 32, 32, 4);
@@ -90,12 +108,12 @@ public final class FusionGuiSkin {
     public static final NineSliceSprite SLICE_ROW_HOVER = new NineSliceSprite(ROW_HOVER, 64, 18, 4);
     public static final NineSliceSprite SLICE_ROW_SELECTED_A = new NineSliceSprite(ROW_SELECTED_A, 64, 18, 4);
     public static final NineSliceSprite SLICE_ROW_SELECTED_B = new NineSliceSprite(ROW_SELECTED_B, 64, 18, 4);
-    public static final NineSliceSprite SLICE_SOCKET_EMPTY = new NineSliceSprite(SOCKET_EMPTY, 96, 40, 7);
-    public static final NineSliceSprite SLICE_SOCKET_FILLED = new NineSliceSprite(SOCKET_FILLED, 96, 40, 7);
-    public static final NineSliceSprite SLICE_SOCKET_ABERRANT = new NineSliceSprite(SOCKET_ABERRANT, 96, 40, 7);
+    public static final NineSliceSprite SLICE_SOCKET_EMPTY = new NineSliceSprite(SOCKET_EMPTY, 96, 40, 6);
+    public static final NineSliceSprite SLICE_SOCKET_FILLED = new NineSliceSprite(SOCKET_FILLED, 96, 40, 6);
+    public static final NineSliceSprite SLICE_SOCKET_ABERRANT = new NineSliceSprite(SOCKET_ABERRANT, 96, 40, 6);
 
     // Unified named typography scale tokens & shadow threshold (TXT-1 / TXT-2 / TXT-3)
-    public static final float MIN_TEXT_SCALE = 0.54F;
+    public static final float MIN_TEXT_SCALE = 0.50F;
     public static final float SCALE_MICRO = 0.54F;
     public static final float SCALE_SMALL = 0.58F;
     public static final float SCALE_BODY = 0.64F;
@@ -110,15 +128,15 @@ public final class FusionGuiSkin {
     public static final int COLOR_GREEN = 0xFF8CFFB0;
     public static final int COLOR_WARN = 0xFFFFB86C;
     public static final int COLOR_RED = 0xFFFF7A7A;
-    public static final int COLOR_MUTED = 0xFFB5AC9E;
+    public static final int COLOR_MUTED = 0xFFB5A9CE;
 
-    // Warm dark sepia & illuminated inks for the parchment pages of grimoire_spread.png
-    public static final int COLOR_INK_TITLE = 0xFF3A2210;
-    public static final int COLOR_INK_BODY = 0xFF4E331B;
-    public static final int COLOR_INK_GOLD = 0xFF8C5308;
-    public static final int COLOR_INK_TEAL = 0xFF165B63;
-    public static final int COLOR_INK_PURPLE = 0xFF5D2675;
-    public static final int COLOR_INK_MUTED = 0xFF7B6752;
+    // Luminous Star-Codex Inks matching the dark Obsidian & Amethyst grimoire_spread.png
+    public static final int COLOR_INK_TITLE = 0xFFFFDF88;
+    public static final int COLOR_INK_BODY = 0xFFEAE2F8;
+    public static final int COLOR_INK_GOLD = 0xFFFFC95C;
+    public static final int COLOR_INK_TEAL = 0xFF7CF0FF;
+    public static final int COLOR_INK_PURPLE = 0xFFE3B2FF;
+    public static final int COLOR_INK_MUTED = 0xFFA296BE;
 
     private static final float GLYPH_HEIGHT = 8.0F;
 
@@ -169,6 +187,65 @@ public final class FusionGuiSkin {
 
     public static void drawSprite(GuiGraphicsExtractor ctx, Identifier sprite, int x, int y, int w, int h) {
         ctx.blit(sprite, x, y, x + w, y + h, 0.0F, 1.0F, 0.0F, 1.0F);
+    }
+
+    /**
+     * Renders a horizontal flowing pixel-art conduit beam clipped by {@code progress} (0..1).
+     */
+    public static void drawConduitH(
+        GuiGraphicsExtractor ctx,
+        Identifier beamSprite,
+        int x,
+        int y,
+        int w,
+        int h,
+        float progress,
+        boolean rightToLeft
+    ) {
+        drawSprite(ctx, CONDUIT_TRACK, x, y, w, h);
+        float p = Mth.clamp(progress, 0.0F, 1.0F);
+        int fillW = Math.round(w * p);
+        if (fillW <= 0) {
+            return;
+        }
+        float uShift = (System.currentTimeMillis() % 1200L) / 1200.0F;
+        if (rightToLeft) {
+            int sx = x + (w - fillW);
+            ctx.blit(beamSprite, sx, y, sx + fillW, y + h, uShift, uShift + p, 0.0F, 1.0F);
+        } else {
+            ctx.blit(beamSprite, x, y, x + fillW, y + h, -uShift, p - uShift, 0.0F, 1.0F);
+        }
+    }
+
+    /**
+     * Renders a vertical flowing pixel-art conduit beam clipped top-to-bottom by {@code progress} (0..1).
+     */
+    public static void drawConduitV(
+        GuiGraphicsExtractor ctx,
+        Identifier beamSprite,
+        int x,
+        int y,
+        int w,
+        int h,
+        float progress
+    ) {
+        drawSprite(ctx, CONDUIT_TRACK, x, y, w, h);
+        float p = Mth.clamp(progress, 0.0F, 1.0F);
+        int fillH = Math.round(h * p);
+        if (fillH <= 0) {
+            return;
+        }
+        ctx.blit(beamSprite, x, y, x + w, y + fillH, 0.0F, 1.0F, 0.0F, p);
+    }
+
+    public static void drawMiniBrazier(GuiGraphicsExtractor ctx, int x, int y, boolean lit, boolean rapid) {
+        if (!lit) {
+            drawSprite(ctx, MINI_BRAZIER_IDLE, x, y, 14, 14);
+            return;
+        }
+        long period = rapid ? 110L : 210L;
+        boolean alt = ((System.currentTimeMillis() / period) & 1L) == 1L;
+        drawSprite(ctx, alt ? MINI_BRAZIER_LIT_B : MINI_BRAZIER_LIT_A, x, y, 14, 14);
     }
 
     public static void drawNineSlice(GuiGraphicsExtractor ctx, NineSliceSprite slice, int x, int y, int w, int h) {

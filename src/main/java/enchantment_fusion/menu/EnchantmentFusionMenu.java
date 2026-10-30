@@ -32,32 +32,33 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Container menu for the 2-Tab Enchantment Fusion Table (308 x 214 layout + top-right Grimoire button):
+ * Container menu for the Cutaway Split-Wing Auto-Morphing Enchantment Fusion Altar ({@code 384 x 218}):
  * <ul>
- *   <li>Slot 0 ({@code 18, 52}): A · Primary Book / Material Slot</li>
- *   <li>Slot 1 ({@code 78, 52}): B · Secondary Book / Material Slot</li>
- *   <li>Slot 2 ({@code 48, 80}): Optional Resonance Stabilizer / Reagent / Split Catalyst</li>
- *   <li>Slot 3 ({@code 48, 108}): Output Fused Book (Tab 0) / Host Equipment or Special Relic (Tab 1)</li>
+ *   <li>Left Wing ({@code 0..116}): Slot 0 Primary [A], [⇄] Medallion, Slot 1 Secondary [B],
+ *       Slot 2 Catalyst, Slot 3 Host Gear / Output Book</li>
+ *   <li>Center Archway ({@code 116..232}): Open 3D Cutaway Viewport framing the live 3D Fusion Altar</li>
+ *   <li>Right Wing ({@code 232..384}): Auto-Morphing Resonance Panel + Smart Context Drawer Tab</li>
+ *   <li>Bottom Pedestal ({@code 103..281}): Player 3x9 Inventory + Hotbar</li>
  * </ul>
  * Syncs {@code uiState[0..3]} ({@code activeTab}, {@code selectedPrimaryA}, {@code selectedSecondaryB},
  * and independent {@code singleOnlyMode}) without sentinel overloading (GUI-3 / GUI-4).
  */
 public final class EnchantmentFusionMenu extends AbstractContainerMenu {
-    public static final int GUI_WIDTH = 308;
-    public static final int GUI_HEIGHT = 214;
-    public static final int TAB_BAR_H = 20;
+    public static final int GUI_WIDTH = 384;
+    public static final int GUI_HEIGHT = 218;
+    public static final int TAB_BAR_H = 0;
 
     public static final int SLOT_PRIMARY_X = 18;
-    public static final int SLOT_PRIMARY_Y = 52;
-    public static final int SLOT_SECONDARY_X = 78;
-    public static final int SLOT_SECONDARY_Y = 52;
-    public static final int SLOT_CATALYST_X = 48;
-    public static final int SLOT_CATALYST_Y = 80;
-    public static final int SLOT_TARGET_X = 48;
-    public static final int SLOT_TARGET_Y = 108;
+    public static final int SLOT_PRIMARY_Y = 44;
+    public static final int SLOT_SECONDARY_X = 82;
+    public static final int SLOT_SECONDARY_Y = 44;
+    public static final int SLOT_CATALYST_X = 50;
+    public static final int SLOT_CATALYST_Y = 73;
+    public static final int SLOT_TARGET_X = 50;
+    public static final int SLOT_TARGET_Y = 101;
 
-    public static final int PLAYER_INV_X = 74;
-    public static final int PLAYER_INV_Y = 132;
+    public static final int PLAYER_INV_X = 111;
+    public static final int PLAYER_INV_Y = 136;
 
     public static final int NO_SELECTION = -1;
     public static final int DATA_ACTIVE_TAB = 0;
@@ -133,11 +134,35 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
             @Override
             public void setChanged() {
                 super.setChanged();
+                if (slotIndex == FusionStationOperations.SLOT_TARGET) {
+                    EnchantmentFusionMenu.this.syncAutoMorphMode();
+                }
                 if (affectsCandidates && !EnchantmentFusionMenu.this.player.level().isClientSide()) {
                     EnchantmentFusionMenu.this.pruneStaleSelectionIndices();
                 }
             }
         };
+    }
+
+    private void syncAutoMorphMode() {
+        if (this.player.level().isClientSide()) {
+            return;
+        }
+        ItemStack host = this.stationInv.getItem(FusionStationOperations.SLOT_TARGET);
+        int desired = CrossDomainTransmutations.isEligibleCrossDomainHost(host)
+            ? FusionStationOperations.TAB_SOCKET
+            : FusionStationOperations.TAB_FUSE;
+        if (this.uiState.get(DATA_ACTIVE_TAB) != desired) {
+            this.uiState.set(DATA_ACTIVE_TAB, desired);
+            this.uiState.set(DATA_PRIMARY_IDX, NO_SELECTION);
+            this.uiState.set(DATA_SECONDARY_IDX, NO_SELECTION);
+        }
+    }
+
+    @Override
+    public void broadcastChanges() {
+        syncAutoMorphMode();
+        super.broadcastChanges();
     }
 
     private void pruneStaleSelectionIndices() {
@@ -159,6 +184,10 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
 
     public Container stationContainer() {
         return stationInv;
+    }
+
+    public Player viewer() {
+        return player;
     }
 
     public int activeTab() {
@@ -196,10 +225,14 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     public StationPreview computePreview() {
         HolderLookup.Provider registries = player.level().registryAccess();
         FusionMatrixRegistry.Snapshot snap = FusionMatrixRegistry.snapshotFor(player.level().isClientSide());
+        ItemStack host = stationInv.getItem(FusionStationOperations.SLOT_TARGET);
+        int effectiveTab = CrossDomainTransmutations.isEligibleCrossDomainHost(host)
+            ? FusionStationOperations.TAB_SOCKET
+            : activeTab();
         return FusionStationOperations.inspect(
             stationInv,
             registries,
-            activeTab(),
+            effectiveTab,
             preferredPrimaryIndex(),
             preferredSecondaryIndex(),
             singleOnlyMode(),
@@ -219,6 +252,7 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         String expectedToken
     ) {
         HolderLookup.Provider registries = actor.level().registryAccess();
+        syncAutoMorphMode();
         boolean changed = false;
         RejectReason failReason = RejectReason.NONE;
 
@@ -393,6 +427,7 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         } else {
             slot.setChanged();
         }
+        syncAutoMorphMode();
         return copy;
     }
 
