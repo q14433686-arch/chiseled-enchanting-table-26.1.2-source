@@ -235,7 +235,8 @@ public final class MatrixEffectExecutor {
             // A weak melee swing or a full flight quota cannot launch the water blade.
             // Do not consume the pair cooldown until it can actually fire.
             if (sigOpt.isPresent() && "hydro_flying_sword".equals(sigOpt.get().id())
-                && (!fullChargeMelee || !FlyingBladeManager.canLaunchFor(player.getUUID()))) {
+                && (!fullChargeMelee || FlyingBladeManager.isHandlingHydroFlight()
+                    || !FlyingBladeManager.canLaunchFor(player.getUUID()))) {
                 continue;
             }
             String cdKey = cooldownKey(player.getUUID(), pair.primaryId(), pair.secondaryId());

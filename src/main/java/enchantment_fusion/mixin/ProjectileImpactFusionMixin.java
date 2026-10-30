@@ -16,6 +16,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.FishingRodItem;
@@ -58,7 +59,7 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
         if (!(self.level() instanceof ServerLevel serverLevel) || !(owner instanceof ServerPlayer shooter)) {
             return;
         }
-        ItemStack firedFrom = self.getWeaponItem();
+        ItemStack firedFrom = ef$actualWeapon(self);
         if (firedFrom != null && !firedFrom.isEmpty()) {
             this.ef$launchWeapon = firedFrom.copyWithCount(1);
         } else if (self.getType() == EntityType.FISHING_BOBBER) {
@@ -112,7 +113,7 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
         }
         ItemStack weapon = this.ef$launchWeapon;
         if (weapon == null || weapon.isEmpty()) {
-            ItemStack w = self.getWeaponItem();
+            ItemStack w = ef$actualWeapon(self);
             if (w != null && !w.isEmpty()) {
                 weapon = w.copyWithCount(1);
                 this.ef$launchWeapon = weapon;
@@ -126,6 +127,17 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
     }
 
     @Unique
+    private static @Nullable ItemStack ef$actualWeapon(Projectile projectile) {
+        // Thrown tridents carry the actual trident in the pickup stack; their ordinary
+        // getWeaponItem() can be null. This also survives chunk save/reload and switching hands.
+        if (projectile instanceof ThrownTrident trident) {
+            ItemStack thrown = trident.getPickupItemStackOrigin();
+            if (thrown != null && !thrown.isEmpty()) return thrown;
+        }
+        return projectile.getWeaponItem();
+    }
+
+    @Unique
     private static boolean isProjectileLauncher(ItemStack stack) {
         return stack.getItem() instanceof BowItem
             || stack.getItem() instanceof CrossbowItem
@@ -136,7 +148,7 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
     private void ef$refreshWeaponFromVanillaBeforeHit(HitResult hitResult, CallbackInfo ci) {
         Projectile self = (Projectile) (Object) this;
         if (self.level() instanceof ServerLevel) {
-            ItemStack w = self.getWeaponItem();
+            ItemStack w = ef$actualWeapon(self);
             if (w != null && !w.isEmpty()) {
                 this.ef$launchWeapon = w.copyWithCount(1);
             }

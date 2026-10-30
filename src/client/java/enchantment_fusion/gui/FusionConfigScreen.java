@@ -43,7 +43,8 @@ public final class FusionConfigScreen extends Screen {
         this.parent = parent;
         this.local = Minecraft.getInstance().level == null;
         if (local) FusionConfigClient.openLocal();
-        else FusionConfigClient.request();
+        else if (ClientPlayNetworking.canSend(FusionConfigNetworking.RequestPayload.TYPE)) FusionConfigClient.request();
+        else status = "unavailable";
     }
 
     @Override
@@ -248,7 +249,9 @@ public final class FusionConfigScreen extends Screen {
             : selected.pathText() + (selected.overridden() ? " *" : "");
         ctx.text(font, clip(fieldText, panelWidth), x, navigationY + 25, 0xFFFFE4AA, false);
         String hint;
-        if (!FusionConfigClient.synced()) hint = Component.translatable("config.enchantment_fusion.waiting").getString();
+        if (!FusionConfigClient.synced() && status.equals("unavailable")) {
+            hint = Component.translatable("config.enchantment_fusion.status.unavailable").getString();
+        } else if (!FusionConfigClient.synced()) hint = Component.translatable("config.enchantment_fusion.waiting").getString();
         else if (!FusionConfigClient.canEdit()) hint = Component.translatable("config.enchantment_fusion.read_only").getString();
         else if (!status.isEmpty()) {
             String key = "config.enchantment_fusion.status." + status;

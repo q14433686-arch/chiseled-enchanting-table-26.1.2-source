@@ -102,6 +102,9 @@ public final class ClientSmoke implements ClientModInitializer {
             .resolve("enchantment_fusion/overrides.json");
         require(Files.isRegularFile(overridesPath) && Files.readString(overridesPath).contains("low_fail_chance"),
             "Config override must persist on disk");
+        new enchantment_fusion.data.FusionDataLoader().onResourceManagerReload(server.getResourceManager());
+        require(Math.abs(enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().economy().lowFailChance() - 0.12) < 0.0001,
+            "Persisted overrides must survive a datapack reload");
         require(!enchantment_fusion.config.FusionConfigStore.update("economy", List.of("low_fail_chance"),
             new com.google.gson.JsonPrimitive(0.2), false, initialRevision).success(), "Stale changes must be rejected");
         require(!enchantment_fusion.config.FusionConfigStore.update("economy", List.of("low_fail_chance"),
@@ -154,14 +157,55 @@ public final class ClientSmoke implements ClientModInitializer {
         enchantment_fusion.mechanics.MatrixEffectExecutor.clearCooldowns();
         enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
         var triggers = java.util.EnumSet.of(enchantment_fusion.model.TriggerType.ON_TRIDENT_CHANNEL);
-        enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(sp.level(), sp, trident, triggers, null, sp.position(), false, 0.6F);
-        require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 0,
-            "A weak swing must not launch a blade or consume the full-charge cooldown");
-        enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(sp.level(), sp, trident, triggers, null, sp.position(), true, 1.0F);
-        require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() > 0,
-            "A fully charged Loyalty/Riptide trigger must launch a real visible blade");
-        enchantment_fusion.mechanics.FlyingBladeManager.flushAll();
-        enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
+        float previousYaw = sp.getYRot(), previousPitch = sp.getXRot();
+        sp.setYRot(0); sp.setXRot(0);
+        BlockPos obstacle = BlockPos.containing(sp.getEyePosition().add(0, 0, 2));
+        BlockState oldObstacle = sp.level().getBlockState(obstacle);
+        sp.level().setBlockAndUpdate(obstacle, Blocks.STONE.defaultBlockState());
+        try {
+            enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(sp.level(), sp, trident, triggers, null, sp.position(), false, 0.6F);
+            require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 0,
+                "A weak swing must not launch a blade or consume the full-charge cooldown");
+            enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(sp.level(), sp, trident, triggers, null, sp.position(), true, 1.0F);
+            require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 1,
+                "A fully charged Loyalty/Riptide trigger must launch a real visible blade");
+            // Simulate an especially short configured cooldown before a block impact. The
+            // generated blade must not recursively launch itself on its own impact.
+            enchantment_fusion.mechanics.MatrixEffectExecutor.clearCooldowns();
+            enchantment_fusion.mechanics.FlyingBladeManager.tickServer(sp.level().getServer());
+            var impactPath = enchantment_fusion.mechanics.ProjectilePathTracker.findLatestPathForOwner(sp.getUUID(), sp.level().dimension()).orElseThrow();
+            require(impactPath.isCompleted(), "The test blade must hit the test block");
+            require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 1,
+                "A water blade must not recursively create another water blade on impact");
+
+            enchantment_fusion.mechanics.FlyingBladeManager.flushAll();
+            enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
+            enchantment_fusion.mechanics.MatrixEffectExecutor.clearCooldowns();
+            // The actual thrown trident, rather than whatever the player currently holds,
+            // carries the fusion. Exercise the real projectile mixin and block impact path.
+            ItemStack priorHand = sp.getMainHandItem().copy();
+            sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            try {
+                var thrown = new net.minecraft.world.entity.projectile.arrow.ThrownTrident(sp.level(), sp, trident);
+                var weaponAccess = (enchantment_fusion.mechanics.ProjectileLaunchWeaponAccess) (Object) thrown;
+                require(!weaponAccess.ef$getLaunchWeapon().getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).isEmpty(),
+                    "Thrown trident must capture its own fused item even with empty hands");
+                thrown.shoot(0, 0, 1, 3.0F, 0.0F);
+                sp.level().addFreshEntity(thrown);
+                int pathsBeforeImpact = enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount();
+                thrown.tick();
+                require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() > pathsBeforeImpact,
+                    "A real fused trident hitting a block must launch the water blade");
+                thrown.discard();
+            } finally {
+                sp.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, priorHand);
+            }
+        } finally {
+            sp.level().setBlockAndUpdate(obstacle, oldObstacle);
+            enchantment_fusion.mechanics.FlyingBladeManager.flushAll();
+            enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
+            sp.setYRot(previousYaw); sp.setXRot(previousPitch);
+        }
 
         ItemStack reverse = new ItemStack(Items.TRIDENT);
         reverse.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(

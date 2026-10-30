@@ -230,6 +230,10 @@ public final class MatrixRuntimeHooks {
 
         // Entity Kill hooks
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            if (entity instanceof ServerPlayer deadPlayer) {
+                MirageSnapbackSkill.onPlayerDisconnect(deadPlayer.getUUID());
+                ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
+            }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
                 SignaturePairs.onEntityKilled(serverLevel, serverPlayer, entity);
                 ItemStack main = serverPlayer.getMainHandItem();

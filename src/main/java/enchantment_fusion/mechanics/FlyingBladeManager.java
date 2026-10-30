@@ -48,6 +48,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class FlyingBladeManager {
     private static final List<ActiveFlight> ACTIVE_FLIGHTS = new ArrayList<>();
+    private static final ThreadLocal<Boolean> IN_HYDRO_FLIGHT = ThreadLocal.withInitial(() -> false);
     private static final int MAX_ACTIVE_PER_PLAYER = 4;
 
     public enum FlightStyle {
@@ -117,6 +118,11 @@ public final class FlyingBladeManager {
     }
 
     private FlyingBladeManager() {}
+
+    /** True only while resolving a water blade's own impact; it must not spawn itself again. */
+    public static boolean isHandlingHydroFlight() {
+        return IN_HYDRO_FLIGHT.get();
+    }
 
     public static synchronized boolean canLaunchFor(UUID playerId) {
         int count = 0;
@@ -286,9 +292,11 @@ public final class FlyingBladeManager {
         if (ACTIVE_FLIGHTS.isEmpty()) {
             return;
         }
-        Iterator<ActiveFlight> it = ACTIVE_FLIGHTS.iterator();
-        while (it.hasNext()) {
-            ActiveFlight f = it.next();
+        // Impacts can synchronously trigger another signature that launches a flight. Iterate a
+        // snapshot so reentrant additions/removals cannot invalidate an ArrayList iterator; new
+        // flights begin ticking next tick and still count against the per-player limit immediately.
+        for (ActiveFlight f : List.copyOf(ACTIVE_FLIGHTS)) {
+            if (!ACTIVE_FLIGHTS.contains(f)) continue;
             ServerLevel level = server.getLevel(f.dimension);
             ServerPlayer owner = server.getPlayerList().getPlayer(f.ownerId);
             if (level == null || owner == null || !owner.isAlive() || owner.level() != level || f.ageTicks >= f.hardMaxTicks) {
@@ -296,12 +304,18 @@ public final class FlyingBladeManager {
                     ProjectilePathTracker.markPathCompleted(f.flightId, f.pos, level.getGameTime());
                 }
                 discardQuietly(f.displayEntity);
-                it.remove();
+                ACTIVE_FLIGHTS.remove(f);
                 continue;
             }
-            if (!tickSingleFlight(level, owner, f)) {
-                discardQuietly(f.displayEntity);
-                it.remove();
+            boolean previousHydro = IN_HYDRO_FLIGHT.get();
+            try {
+                if (f.style == FlightStyle.HYDRO_SWORD_QI) IN_HYDRO_FLIGHT.set(true);
+                if (!tickSingleFlight(level, owner, f)) {
+                    discardQuietly(f.displayEntity);
+                    ACTIVE_FLIGHTS.remove(f);
+                }
+            } finally {
+                IN_HYDRO_FLIGHT.set(previousHydro);
             }
         }
     }
