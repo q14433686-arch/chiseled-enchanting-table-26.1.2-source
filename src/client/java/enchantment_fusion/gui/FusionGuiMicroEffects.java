@@ -168,14 +168,18 @@ public final class FusionGuiMicroEffects {
                 spawnSparkBurst(stageX, stageY, 22, 110.0F, 740L);
                 triggerShake(4.2F, 300L);
             }
-            case FusionNetworking.VISUAL_FUSE_FLUCTUATED -> {
+            case FusionNetworking.VISUAL_FUSE_FAIL -> {
                 spawnShockwave(stageX, stageY, 14.0F, 50.0F, 360L, -2.0F);
                 spawnSparkBurst(stageX, stageY, 8, 52.0F, 420L);
                 triggerShake(2.4F, 210L);
             }
-            case FusionNetworking.VISUAL_UTILITY_DONE -> {
-                spawnShockwave(stageX, stageY, 12.0F, 48.0F, 340L, 2.4F);
-                spawnSparkBurst(outX, outY, 8, 54.0F, 400L);
+            case FusionNetworking.VISUAL_FLIP_ORDER -> {
+                spawnShockwave(stageX, stageY, 12.0F, 46.0F, 320L, 3.6F);
+                spawnSparkBurst(stageX, stageY, 8, 50.0F, 360L);
+            }
+            case FusionNetworking.VISUAL_SPLIT_EXTRACT -> {
+                spawnShockwave(stageX, stageY, 12.0F, 52.0F, 360L, -2.8F);
+                spawnSparkBurst(outX, outY, 10, 58.0F, 420L);
             }
             default -> {}
         }
