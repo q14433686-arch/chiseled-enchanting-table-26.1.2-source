@@ -183,6 +183,16 @@ public final class ClientSmoke implements ClientModInitializer {
         sp.getCooldowns().removeCooldown(sp.getCooldowns().getCooldownGroup(reverse));
     }
 
+    private static Object configField(enchantment_fusion.gui.FusionConfigScreen screen, String name) throws Exception {
+        var field = enchantment_fusion.gui.FusionConfigScreen.class.getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(screen);
+    }
+
+    private static void clickWidget(Screen screen, net.minecraft.client.gui.components.AbstractWidget widget) {
+        click(screen, widget.getX() + widget.getWidth() / 2.0, widget.getY() + widget.getHeight() / 2.0);
+    }
+
     private static void click(Screen screen, double x, double y) {
         boolean handled = screen.mouseClicked(
             new MouseButtonEvent(x, y, new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0)),
@@ -767,10 +777,46 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 resourceReloadFuture.join();
-                finish(
-                    client,
-                    "CLIENT SMOKE PASS: 0.6.0 304x218 Live-Stage GUI + Bow fan_volley/sun_piercer/swift_draw + 150 signatures + 116 transmutations"
-                );
+                client.setScreen(new enchantment_fusion.gui.FusionConfigScreen(null));
+                next(20, 8);
+            }
+            case 20 -> {
+                if (!(client.screen instanceof enchantment_fusion.gui.FusionConfigScreen screen)
+                    || !enchantment_fusion.config.FusionConfigClient.synced()
+                    || enchantment_fusion.config.FusionConfigClient.revision() != enchantment_fusion.config.FusionConfigStore.revision()
+                    || !enchantment_fusion.config.FusionConfigClient.canEdit()) return;
+                @SuppressWarnings("unchecked")
+                var rows = (List<net.minecraft.client.gui.components.Button>) configField(screen, "rows");
+                require(!rows.isEmpty() && rows.getFirst().visible, "Config UI must show editable fields");
+                clickWidget(screen, rows.getFirst());
+                next(21, 4);
+            }
+            case 21 -> {
+                var screen = (enchantment_fusion.gui.FusionConfigScreen) client.screen;
+                var input = (net.minecraft.client.gui.components.EditBox) configField(screen, "valueBox");
+                input.setValue("0.12");
+                var save = (net.minecraft.client.gui.components.Button) configField(screen, "saveButton");
+                require(save.active, "Singleplayer owner must be able to save in the config UI");
+                clickWidget(screen, save);
+                next(22, 8);
+            }
+            case 22 -> {
+                if (Math.abs(enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().economy().lowFailChance() - 0.12) > 0.0001
+                    || enchantment_fusion.config.FusionConfigClient.revision() != enchantment_fusion.config.FusionConfigStore.revision()) return;
+                next(23, 4);
+            }
+            case 23 -> {
+                var screen = (enchantment_fusion.gui.FusionConfigScreen) client.screen;
+                var reset = (net.minecraft.client.gui.components.Button) configField(screen, "resetButton");
+                require(reset.active, "Saved override must be resettable in the UI");
+                clickWidget(screen, reset);
+                next(24, 8);
+            }
+            case 24 -> {
+                if (Math.abs(enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().economy().lowFailChance()) > 0.0001
+                    || enchantment_fusion.config.FusionConfigClient.revision() != enchantment_fusion.config.FusionConfigStore.revision()) return;
+                client.screen.onClose();
+                finish(client, "CLIENT SMOKE PASS: server-owned rituals, temporary frost, Loyalty/Riptide skills and live configuration");
             }
             default -> throw new AssertionError("Unknown phase " + phase);
         }

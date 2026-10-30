@@ -306,11 +306,16 @@ final class FusionRuleEngineTest {
         CompendiumDiscoveryTracker.applyClientDelta("sig/gale_vault_thrust", 2);
         assertEquals(2, CompendiumDiscoveryTracker.clientState("sig/gale_vault_thrust"));
 
-        // Freezing effects must use Blocks.FROSTED_ICE
+        // Mod-created frost uses its own scheduled block: breaking/melting never creates water,
+        // and existing water is not overwritten. Vanilla Frost Walker ice is left alone.
         String abSrc = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/AberrantRegistry.java"), StandardCharsets.UTF_8);
+        String frostSrc = Files.readString(Path.of("src/main/java/enchantment_fusion/block/TemporaryFrostBlock.java"), StandardCharsets.UTF_8);
         String sigSrc = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/SignaturePairs.java"), StandardCharsets.UTF_8);
-        assertTrue(abSrc.contains("Blocks.FROSTED_ICE"));
-        assertFalse(abSrc.contains("Blocks.PACKED_ICE"));
+        assertTrue(abSrc.contains("FusionBlocks.TEMPORARY_FROST"));
+        assertTrue(abSrc.contains("if (!current.isAir()) return"));
+        assertTrue(frostSrc.contains("Blocks.AIR.defaultBlockState()"));
+        assertFalse(frostSrc.contains("Blocks.WATER"));
+        assertFalse(frostSrc.contains("extends IceBlock"));
         assertFalse(sigSrc.contains("Blocks.ICE."));
     }
 
@@ -341,6 +346,12 @@ final class FusionRuleEngineTest {
         try (var stream = Files.walk(Path.of("src/main/java"))) {
             for (Path javaFile : stream.filter(p -> p.toString().endsWith(".java")).toList()) {
                 String src = Files.readString(javaFile, StandardCharsets.UTF_8);
+                // These two BlockState API calls are unrelated to Map.Entry.setValue.
+                // Strip only the exact, reviewed calls; keep the broad guard everywhere else.
+                if (javaFile.endsWith(Path.of("enchantment_fusion/block/TemporaryFrostBlock.java"))) {
+                    src = src.replace("stateDefinition.any().setValue(AGE, 0)", "")
+                        .replace("state.setValue(AGE, age + 1)", "");
+                }
                 assertFalse(
                     src.contains(".setValue("),
                     "Forbidden Map.Entry.setValue() (crashes ConcurrentHashMap.entrySet().removeIf on Java 25): " + javaFile

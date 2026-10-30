@@ -1339,6 +1339,14 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         super.onClose();
     }
 
+    @Override
+    public void removed() {
+        // Also clear client-only animation state on forced menu closure, death, or disconnect.
+        // The server transaction remains owned by the block entity.
+        FusionRitualDirector.cancel();
+        super.removed();
+    }
+
     private void sendAction(StationAction action, int index, String token) {
         ClientPlayNetworking.send(
             new StationActionPayload(this.menu.containerId, action, index, 0, token == null ? "" : token)
