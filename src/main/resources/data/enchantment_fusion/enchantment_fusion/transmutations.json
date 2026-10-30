@@ -566,7 +566,12 @@
       ],
       "extra_sources": [
         "minecraft:punch"
-      ]
+      ],
+      "extra_source_roles": {
+        "minecraft:punch": [
+          "CROSSBOW"
+        ]
+      }
     },
     "warding_shove": {
       "source": "minecraft:knockback",

@@ -100,8 +100,8 @@ final class FusionRuleEngineTest {
     }
 
     @Test
-    void allOneHundredSeventyFourSignatureResonancesAreStrictlyUniqueAndDirectional() {
-        assertEquals(174, SignaturePairs.allUniqueSignatures().size(), "Expected 174 unique directional Signature Resonances");
+    void allOneHundredFiftyCuratedSignatureResonancesAreStrictlyUniqueAndDirectional() {
+        assertEquals(150, SignaturePairs.allUniqueSignatures().size(), "Expected 150 curated directional Signature Resonances");
         Set<String> ids = new HashSet<>();
         for (SignatureEntry entry : SignaturePairs.allUniqueSignatures()) {
             assertTrue(ids.add(entry.id()), "Duplicate Signature ID forbidden: " + entry.id());
