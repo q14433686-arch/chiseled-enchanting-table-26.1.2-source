@@ -13,6 +13,8 @@ A Fabric enchanting mod with ordered fusion (`[A ▷ B]` is not necessarily `[B 
 
 The bundled data has **150 signature entries** (147 exact ordered pairs and 3 wildcard rules) and **116 transmutation variants**. Other valid ordered pairs can use the trigger/payload matrix; not every reversed pair has its own signature. Datapacks and server overrides can change the active rules.
 
+The first fully redesigned pair is **Fire Aspect × Knockback**: Fire ▷ Knockback converts a wall impact into a heat burst; Knockback ▷ Fire leaves a temporary wake along the target's actual movement. These two directions replace their vanilla primary effect rather than stacking it; other pairs retain their current rules. Existing equipment is normalized as it reaches a player's inventory, preserving the pair and levels. See the [design record](docs/FUSION_REDESIGN.md).
+
 ## Install / 安装
 
 Install Fabric Loader and Fabric API for 26.1.2, then put `enchantment-fusion-0.6.0.jar` in `mods/`. For multiplayer, install the same mod build on **both client and server**. Mod Menu, JEI/REI and the sister mod **Chiseled Enchanting Table（纂刻附魔台）** are optional; consult their own version compatibility before combining them. GitHub Actions builds provide downloadable artifacts while they remain available.

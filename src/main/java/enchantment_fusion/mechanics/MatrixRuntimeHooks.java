@@ -4,6 +4,8 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.data.FusionMatrixRegistry.EconomyConfig;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.mechanics.signatures.MirageSnapbackSkill;
+import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
+import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.EnumSet;
@@ -119,6 +121,7 @@ public final class MatrixRuntimeHooks {
                 }
                 EconomyConfig eco = FusionMatrixRegistry.serverSnapshot().economy();
                 ItemStack weapon = serverPlayer.getItemInHand(hand);
+                FusionStationOperations.normalizeRedesignedPrimary(weapon, serverLevel.registryAccess());
                 float charge = serverPlayer.getAttackStrengthScale(0.5F);
                 boolean riptideSpin = serverPlayer.isAutoSpinAttack();
                 if (charge < (float) eco.meleeMinCharge() && !riptideSpin) {
@@ -152,6 +155,9 @@ public final class MatrixRuntimeHooks {
                 return InteractionResult.PASS;
             }
             ItemStack held = player.getItemInHand(hand);
+            if (world instanceof ServerLevel serverLevel && player instanceof ServerPlayer) {
+                FusionStationOperations.normalizeRedesignedPrimary(held, serverLevel.registryAccess());
+            }
             if (world.isClientSide()) {
                 if (MirageSnapbackSkill.canUse(player, held)
                     || CrossDomainTransmutations.hasReadyRightClickAbility(player, held)) {
@@ -208,6 +214,12 @@ public final class MatrixRuntimeHooks {
 
         // Post-Damage Counter
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
+            if (!blocked && damageTaken > 0.0F && entity.level() instanceof ServerLevel level
+                && source.getEntity() instanceof ServerPlayer attacker && source.getDirectEntity() == attacker
+                && !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
+                && !MatrixEffectExecutor.isExecuting() && !Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get())) {
+                FlameKineticEffects.confirm(level, attacker, entity);
+            }
             if (Boolean.TRUE.equals(IN_AFTER_DAMAGE.get())) {
                 return;
             }
@@ -248,6 +260,7 @@ public final class MatrixRuntimeHooks {
 
         // Movement / Landing + 3D Flying Blades + Trajectory Path Cache
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            FlameKineticEffects.tickServer(server);
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);
@@ -256,6 +269,17 @@ public final class MatrixRuntimeHooks {
             }
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 if (!(player.level() instanceof ServerLevel serverLevel)) continue;
+                boolean normalized = false;
+                for (EquipmentSlot slot : ARMOR_AND_HAND_SLOTS) {
+                    normalized |= FusionStationOperations.normalizeRedesignedPrimary(player.getItemBySlot(slot), serverLevel.registryAccess());
+                }
+                if (serverLevel.getGameTime() % 20L == 0L) {
+                    var inventory = player.getInventory();
+                    for (int i = 0; i < inventory.getContainerSize(); i++) {
+                        normalized |= FusionStationOperations.normalizeRedesignedPrimary(inventory.getItem(i), serverLevel.registryAccess());
+                    }
+                }
+                if (normalized) player.getInventory().setChanged();
                 SignaturePairs.tickServerPlayer(serverLevel, player);
                 CrossDomainTransmutations.tickServerPlayer(serverLevel, player);
 

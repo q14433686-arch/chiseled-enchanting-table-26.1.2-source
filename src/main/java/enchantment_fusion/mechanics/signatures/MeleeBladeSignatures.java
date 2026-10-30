@@ -127,32 +127,9 @@ public final class MeleeBladeSignatures {
                 level.sendParticles(ParticleTypes.SOUL, pos.x, pos.y + 0.7D, pos.z, 12, 0.3D, 0.35D, 0.3D, 0.03D);
                 return true;
             }
-            case "blast_flare" -> {
-                if (target != null) {
-                    Vec3 dir = target.position().subtract(player.position()).normalize().scale(0.85D + 0.25D * sLv);
-                    target.push(dir.x, 0.35D, dir.z);
-                    target.igniteForSeconds(4.0F * pLv);
-                    for (LivingEntity extra : nearbyHostiles(level, player, pos, 3.2D, target)) {
-                        extra.igniteForSeconds(3.0F);
-                    }
-                }
-                level.sendParticles(ParticleTypes.LAVA, pos.x, pos.y + 0.4D, pos.z, 8, 0.3D, 0.2D, 0.3D, 0.05D);
-                return true;
-            }
-            case "blazing_furrow" -> {
-                if (target != null) {
-                    Vec3 dir = target.position().subtract(player.position()).normalize();
-                    target.push(dir.x * (0.7D + 0.25D * pLv), 0.28D, dir.z * (0.7D + 0.25D * pLv));
-                    target.igniteForSeconds(4.0F);
-                    if (player.mayBuild() && !player.isShiftKeyDown()) {
-                        for (int step = 1; step <= 3; step++) {
-                            BlockPos firePos = BlockPos.containing(pos.add(dir.scale(step)));
-                            if (level.getBlockState(firePos).isAir() && !level.getBlockState(firePos.below()).isAir()) {
-                                level.setBlockAndUpdate(firePos, Blocks.FIRE.defaultBlockState());
-                            }
-                        }
-                    }
-                }
+            case "blast_flare", "blazing_furrow" -> {
+                if (!FlameKineticEffects.matches(pair, sigId)) return false;
+                if (target != null) FlameKineticEffects.activate(level, player, target, pair, sigId);
                 return true;
             }
             case "wildfire_arc" -> {

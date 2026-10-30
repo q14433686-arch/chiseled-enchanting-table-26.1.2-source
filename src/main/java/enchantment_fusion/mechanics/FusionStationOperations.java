@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.FusionEconomyRules.EconomyQuote;
 import enchantment_fusion.mechanics.FusionRuleEngine.EnchantInput;
 import enchantment_fusion.mechanics.FusionRuleEngine.PairEvaluation;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
+import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -1054,11 +1055,13 @@ public final class FusionStationOperations {
 
         if (VesselCapacityRules.isPotentialEquipmentHost(target)) {
             removeGearVanillaEnchant(target, oldPair.primaryId());
-            lookupEnchantment(registries, flipped.primaryId()).ifPresent(h -> {
-                if (h.value().canEnchant(target)) {
-                    setGearVanillaEnchantLevel(target, h, flipped.primaryLevel());
-                }
-            });
+            if (!replacesNativePrimary(flipped)) {
+                lookupEnchantment(registries, flipped.primaryId()).ifPresent(h -> {
+                    if (h.value().canEnchant(target)) {
+                        setGearVanillaEnchantLevel(target, h, flipped.primaryLevel());
+                    }
+                });
+            }
             syncGlintOverride(target);
         }
 
@@ -1233,12 +1236,50 @@ public final class FusionStationOperations {
     public static void applyFusedPairToGear(ItemStack gear, FusedPair pair, HolderLookup.Provider registries) {
         FusedEnchantmentList existing = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         gear.set(FusionDataComponents.FUSED_PAIRS, existing.append(pair));
-        lookupEnchantment(registries, pair.primaryId()).ifPresent(h -> {
-            if (h.value().canEnchant(gear)) {
-                setGearVanillaEnchantLevel(gear, h, pair.primaryLevel());
-            }
-        });
+        if (!replacesNativePrimary(pair)) {
+            lookupEnchantment(registries, pair.primaryId()).ifPresent(h -> {
+                if (h.value().canEnchant(gear)) {
+                    setGearVanillaEnchantLevel(gear, h, pair.primaryLevel());
+                }
+            });
+        } else {
+            // In-place fusion can start from a primary already on the item.
+            removeGearVanillaEnchant(gear, pair.primaryId());
+        }
         syncGlintOverride(gear);
+    }
+
+    /** Only explicitly redesigned ordered pairs suppress the old vanilla primary. */
+    public static boolean replacesNativePrimary(FusedPair pair) {
+        return SignaturePairs.resolve(pair).map(entry -> FlameKineticEffects.matches(pair, entry.id())).orElse(false);
+    }
+
+    /**
+     * Migrate legacy equipment when it reaches a player's inventory/equipment. FusedPair
+     * remains authoritative; unrelated enchantments are untouched. If a datapack removes
+     * this particular redesign later, restore the native primary representation.
+     */
+    public static boolean normalizeRedesignedPrimary(ItemStack gear, HolderLookup.Provider registries) {
+        if (gear == null || gear.isEmpty()) return false;
+        FusedEnchantmentList pairs = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        boolean changed = false;
+        for (FusedPair pair : pairs.pairs()) {
+            if (!FlameKineticEffects.isDefaultPair(pair)) continue;
+            Optional<Holder<Enchantment>> holder = lookupEnchantment(registries, pair.primaryId());
+            if (holder.isEmpty()) continue;
+            int current = gear.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(holder.get());
+            if (replacesNativePrimary(pair)) {
+                if (current > 0) {
+                    removeGearVanillaEnchant(gear, pair.primaryId());
+                    changed = true;
+                }
+            } else if (current == 0 && holder.get().value().canEnchant(gear)) {
+                setGearVanillaEnchantLevel(gear, holder.get(), pair.primaryLevel());
+                changed = true;
+            }
+        }
+        if (changed) syncGlintOverride(gear);
+        return changed;
     }
 
     public static void syncGlintOverride(ItemStack stack) {

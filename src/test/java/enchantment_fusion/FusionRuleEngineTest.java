@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
 import enchantment_fusion.mechanics.FusionEconomyRules;
 import enchantment_fusion.mechanics.FusionEconomyRules.ReagentKind;
 import enchantment_fusion.mechanics.FusionRuleEngine;
+import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.FusionRuleEngine.EnchantInput;
 import enchantment_fusion.mechanics.FusionRuleEngine.PairEvaluation;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
@@ -54,7 +55,7 @@ final class FusionRuleEngineTest {
             assertFalse(SignaturePairs.isCombatTriggerEligible(id, false, false, true), id);
             assertTrue(SignaturePairs.isCombatTriggerEligible(id, true, false, true), id);
         }
-        for (String id : List.of("clear_sky_thunder", "thunder_iaido")) {
+        for (String id : List.of("clear_sky_thunder", "thunder_iaido", "blast_flare", "blazing_furrow")) {
             assertFalse(SignaturePairs.isCombatTriggerEligible(id, true, false, false), id);
             assertFalse(SignaturePairs.isCombatTriggerEligible(id, false, false, true), id);
             assertTrue(SignaturePairs.isCombatTriggerEligible(id, true, false, true), id);
@@ -66,6 +67,20 @@ final class FusionRuleEngineTest {
         }
         assertTrue(SignaturePairs.isCombatTriggerEligible("rising_dragon_leap", false, false, true),
             "Partial hits still have an independent damage effect");
+    }
+
+    @Test
+    void onlyTheConfirmedFireKnockbackPairReplacesVanillaPrimary() {
+        FusedPair forward = FusedPair.clean("minecraft:fire_aspect", 2, "minecraft:knockback", 2);
+        FusedPair reverse = forward.flipped();
+        assertTrue(FusionStationOperations.replacesNativePrimary(forward));
+        assertTrue(FusionStationOperations.replacesNativePrimary(reverse));
+        assertFalse(FusionStationOperations.replacesNativePrimary(
+            FusedPair.clean("minecraft:fire_aspect", 2, "minecraft:frost_walker", 2)),
+            "The liked Fire/Frost pair has not been redesigned");
+        assertFalse(FusionStationOperations.replacesNativePrimary(
+            FusedPair.clean("minecraft:sharpness", 2, "minecraft:smite", 2)),
+            "Unreviewed pairs must preserve their existing primary behavior");
     }
 
     @Test

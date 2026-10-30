@@ -3,6 +3,7 @@ package enchantment_fusion.mechanics;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
 import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
+import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
@@ -69,6 +70,19 @@ public final class MatrixEffectExecutor {
         if (playerId == null) return;
         String prefix = playerId + "|";
         COOLDOWNS.keySet().removeIf(k -> k.startsWith(prefix));
+    }
+
+    public static boolean isExecuting() {
+        return Boolean.TRUE.equals(IN_EXECUTION.get());
+    }
+
+    /** Charge a deferred signature only after its corresponding vanilla attack did damage. */
+    public static boolean acquireDeferredCooldown(ServerLevel level, ServerPlayer player, FusedPair pair, TriggerType trigger) {
+        String key = cooldownKey(player.getUUID(), pair.primaryId(), pair.secondaryId());
+        long now = level.getGameTime();
+        if (now < COOLDOWNS.getOrDefault(key, 0L)) return false;
+        COOLDOWNS.put(key, now + Math.max(6, FusionMatrixRegistry.serverSnapshot().economy().cooldownTicksFor(trigger)));
+        return true;
     }
 
     public static void dispatch(
@@ -230,6 +244,12 @@ public final class MatrixEffectExecutor {
             }
 
             Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
+            boolean redesignedMelee = sigOpt.isPresent() && FlameKineticEffects.matches(pair, sigOpt.get().id());
+            // This confirmed design requires an actual full-charge melee hit, including
+            // on aberrant pairs. Other triggers must not silently spend its cooldown.
+            if (redesignedMelee && (matchedTrigger != TriggerType.ON_MELEE_STRIKE || !fullChargeMelee || targetEntity == null)) {
+                continue;
+            }
             // Do not charge a clean signature for partial/no-target hits that cannot perform
             // any of its effects. Aberrant pairs can still have an independent mutation.
             if (!pair.isAberrant() && sigOpt.isPresent()
@@ -247,6 +267,12 @@ public final class MatrixEffectExecutor {
             String cdKey = cooldownKey(player.getUUID(), pair.primaryId(), pair.secondaryId());
             long readyAt = COOLDOWNS.getOrDefault(cdKey, 0L);
             if (now < readyAt) {
+                continue;
+            }
+            if (redesignedMelee) {
+                // AttackEntityCallback precedes vanilla damage. Defer both the effect and
+                // cooldown until an unblocked hit is confirmed by AFTER_DAMAGE.
+                FlameKineticEffects.prepare(level, player, targetEntity, pair, sigOpt.get().id(), matchedTrigger);
                 continue;
             }
             COOLDOWNS.put(cdKey, now + Math.max(6, snapshot.economy().cooldownTicksFor(matchedTrigger)));

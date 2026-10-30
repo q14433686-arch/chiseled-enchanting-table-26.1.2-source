@@ -2,6 +2,7 @@ package enchantment_fusion.mechanics;
 
 import enchantment_fusion.mechanics.signatures.ArmorCurseSignatures;
 import enchantment_fusion.mechanics.signatures.ElementalSpearMaceSignatures;
+import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.MeleeBladeSignatures;
 import enchantment_fusion.mechanics.signatures.MeleeTacticsSignatures;
 import enchantment_fusion.mechanics.signatures.MiningFishingSignatures;
@@ -58,7 +59,7 @@ public final class SignaturePairs {
         return switch (signatureId) {
             case "reaping_gale", "phantom_triple_slash", "flying_sword_qi", "hydro_flying_sword",
                 "arc_lightning_cleave", "gale_vault_thrust", "sky_spear_dive", "blazing_dragoon" -> fullCharge;
-            case "clear_sky_thunder", "thunder_iaido" -> fullCharge && hasTarget;
+            case "clear_sky_thunder", "thunder_iaido", "blast_flare", "blazing_furrow" -> fullCharge && hasTarget;
             case "land_water_dragon", "lightning_step_spear" -> fullCharge || sprinting;
             default -> true;
         };
@@ -95,10 +96,12 @@ public final class SignaturePairs {
 
     public static void onPlayerDisconnect(UUID playerId) {
         SignatureRuntimeSupport.onPlayerDisconnect(playerId);
+        FlameKineticEffects.onPlayerDisconnect(playerId);
     }
 
     public static void clearRuntimeState() {
         SignatureRuntimeSupport.clearRuntimeState();
+        FlameKineticEffects.clear();
     }
 
     public static void tickProjectile(ServerLevel level, Projectile proj) {

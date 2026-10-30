@@ -66,6 +66,7 @@ public final class ClientSmoke implements ClientModInitializer {
     private volatile boolean closedRitualFinished = false;
     private volatile Throwable serverFailure = null;
     private CompletableFuture<Void> resourceReloadFuture;
+    private final FlameFusionProbe flameProbe = new FlameFusionProbe();
 
     @Override
     public void onInitializeClient() {
@@ -1243,7 +1244,50 @@ public final class ClientSmoke implements ClientModInitializer {
                 require(client.screen.keyPressed(new KeyEvent(InputConstants.KEY_ESCAPE, 0, 0)),
                     "Escape must close the standalone Grimoire");
                 require(client.screen == null, "Standalone Grimoire must return to the world");
-                finish(client, "CLIENT SMOKE PASS: server-owned rituals, temporary frost, live configuration and standalone/embedded Grimoire rendering");
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.start(server.getPlayerList().getPlayers().getFirst(), tablePos);
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(28, 1);
+            }
+            case 28 -> {
+                if (!serverReadyFlag) return;
+                // Wait for actual entity movement/collisions, rather than simulating ticks.
+                next(29, 35);
+            }
+            case 29 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.checkPressureAndStartWake();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(30, 1);
+            }
+            case 30 -> {
+                if (!serverReadyFlag) return;
+                next(31, 35);
+            }
+            case 31 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.checkWakeAndClose();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(32, 1);
+            }
+            case 32 -> {
+                if (!serverReadyFlag) return;
+                finish(client, "CLIENT SMOKE PASS: rituals, frost, live configuration, Grimoire and redesigned fire/knockback");
             }
             default -> throw new AssertionError("Unknown phase " + phase);
         }
