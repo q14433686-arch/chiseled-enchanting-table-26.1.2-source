@@ -789,11 +789,15 @@ public final class FusionStationOperations {
                 finalPair = cleanPair;
                 sTarget.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(abIdx, cleanPair));
                 if (VesselCapacityRules.isPotentialEquipmentHost(sTarget)) {
-                    lookupEnchantment(registries, cleanPair.primaryId()).ifPresent(h -> {
-                        if (h.value().canEnchant(sTarget)) {
-                            setGearVanillaEnchantLevel(sTarget, h, cleanPair.primaryLevel());
-                        }
-                    });
+                    if (replacesNativePrimary(cleanPair)) {
+                        removeGearVanillaEnchant(sTarget, cleanPair.primaryId());
+                    } else {
+                        lookupEnchantment(registries, cleanPair.primaryId()).ifPresent(h -> {
+                            if (h.value().canEnchant(sTarget)) {
+                                setGearVanillaEnchantLevel(sTarget, h, cleanPair.primaryLevel());
+                            }
+                        });
+                    }
                 }
                 syncGlintOverride(sTarget);
             }
@@ -907,9 +911,14 @@ public final class FusionStationOperations {
                             if (!consumeCandidatesAtomically(inv, List.of(donor))) {
                                 return ActionResult.failed(RejectReason.MISSING_INPUT);
                             }
-                            sTarget.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(i, old.withPrimaryLevel(nextLvl)));
-                            if (VesselCapacityRules.isPotentialEquipmentHost(sTarget) && donor.holder().value().canEnchant(sTarget)) {
-                                setGearVanillaEnchantLevel(sTarget, donor.holder(), nextLvl);
+                            FusedPair upgraded = old.withPrimaryLevel(nextLvl);
+                            sTarget.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(i, upgraded));
+                            if (VesselCapacityRules.isPotentialEquipmentHost(sTarget)) {
+                                if (replacesNativePrimary(upgraded)) {
+                                    removeGearVanillaEnchant(sTarget, upgraded.primaryId());
+                                } else if (donor.holder().value().canEnchant(sTarget)) {
+                                    setGearVanillaEnchantLevel(sTarget, donor.holder(), nextLvl);
+                                }
                             }
                             syncGlintOverride(sTarget);
                             upgradedAny = true;
@@ -920,6 +929,7 @@ public final class FusionStationOperations {
                                 return ActionResult.failed(RejectReason.MISSING_INPUT);
                             }
                             sTarget.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(i, old.withSecondaryLevel(nextLvl)));
+                            normalizeRedesignedPrimary(sTarget, registries);
                             syncGlintOverride(sTarget);
                             upgradedAny = true;
                             break;

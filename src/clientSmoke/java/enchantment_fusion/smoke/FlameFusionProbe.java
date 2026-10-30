@@ -161,6 +161,7 @@ final class FlameFusionProbe {
             && legacy.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(sharp) == 1,
             "Flip must not restore the vanilla primary or remove unrelated enchants");
 
+        exerciseStationMaintenance(sp, fire, knock, sharp);
         target = zombie(1.5D, 0.5D);
         witness = zombie(3.3D, 2.1D);
         ally = zombie(3.0D, 2.9D);
@@ -184,6 +185,60 @@ final class FlameFusionProbe {
         sp.attack(target);
         require(target.getHealth() < oldHealth, "The real player attack must deal damage");
         require(!target.isOnFire(), "Pressure must wait until the real damage event and server tick");
+    }
+
+    private void exerciseStationMaintenance(ServerPlayer sp, net.minecraft.core.Holder<Enchantment> fire,
+                                            net.minecraft.core.Holder<Enchantment> knock,
+                                            net.minecraft.core.Holder<Enchantment> sharp) {
+        sp.giveExperienceLevels(40);
+        FusedPair low = FusedPair.clean("minecraft:fire_aspect", 1, "minecraft:knockback", 1);
+        for (FusedPair pair : List.of(low, low.flipped())) {
+            var primary = pair.primaryId().equals("minecraft:fire_aspect") ? fire : knock;
+            ItemStack gear = new ItemStack(Items.DIAMOND_SWORD);
+            gear.enchant(primary, 1); // Legacy mirror must also be removed by the operation.
+            gear.enchant(sharp, 1);
+            gear.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(pair));
+            var inv = new net.minecraft.world.SimpleContainer(4);
+            inv.setItem(FusionStationOperations.SLOT_TARGET, gear);
+            inv.setItem(FusionStationOperations.SLOT_PRIMARY, FusionStationOperations.createSingleEnchantedBook(primary, 2));
+            var preview = FusionStationOperations.inspect(inv, level.registryAccess(), FusionStationOperations.TAB_SOCKET, -1, -1);
+            require(preview.kind() == FusionStationOperations.OperationKind.TOP_UP_LEVEL, "Expected real fusion level top-up");
+            require(FusionStationOperations.executePrimaryOperation(inv, sp, level.registryAccess(),
+                FusionStationOperations.TAB_SOCKET, -1, -1), "Primary top-up must succeed");
+            require(gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().getFirst().primaryLevel() == 2,
+                "Top-up must retain the upgraded fused level");
+            require(gear.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary) == 0
+                && gear.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(sharp) == 1,
+                "Top-up must not restore a redesigned vanilla primary or remove other enchantments");
+        }
+        ItemStack unreviewed = new ItemStack(Items.DIAMOND_SWORD);
+        FusionStationOperations.applyFusedPairToGear(unreviewed,
+            FusedPair.clean("minecraft:sharpness", 1, "minecraft:knockback", 1), level.registryAccess());
+        var otherInv = new net.minecraft.world.SimpleContainer(4);
+        otherInv.setItem(FusionStationOperations.SLOT_TARGET, unreviewed);
+        otherInv.setItem(FusionStationOperations.SLOT_PRIMARY, FusionStationOperations.createSingleEnchantedBook(sharp, 2));
+        require(FusionStationOperations.executePrimaryOperation(otherInv, sp, level.registryAccess(),
+            FusionStationOperations.TAB_SOCKET, -1, -1), "Unreviewed fusion top-up must succeed");
+        require(unreviewed.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(sharp) == 2,
+            "Unreviewed pairs must keep their native primary after top-up");
+        ItemStack cursed = new ItemStack(Items.DIAMOND_SWORD);
+        cursed.enchant(fire, 2);
+        cursed.enchant(sharp, 1);
+        cursed.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
+            new FusedPair("minecraft:fire_aspect", 2, "minecraft:knockback", 2, "ab_greedy_abyss")));
+        var purify = new net.minecraft.world.SimpleContainer(4);
+        purify.setItem(FusionStationOperations.SLOT_TARGET, cursed);
+        purify.setItem(FusionStationOperations.SLOT_CATALYST,
+            new ItemStack(enchantment_fusion.registry.FusionItems.RESONANCE_STABILIZER, 4));
+        require(FusionStationOperations.inspect(purify, level.registryAccess(), FusionStationOperations.TAB_FUSE, -1, -1).kind()
+            == FusionStationOperations.OperationKind.PURIFY_ABERRANT, "Expected real aberrant purification");
+        require(FusionStationOperations.executePrimaryOperation(purify, sp, level.registryAccess(),
+            FusionStationOperations.TAB_FUSE, -1, -1), "Purification must succeed");
+        require(!cursed.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().getFirst().isAberrant(),
+            "Purification must clear the aberration");
+        require(cursed.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(fire) == 0
+            && cursed.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(sharp) == 1,
+            "Purification must not restore the vanilla primary or remove unrelated enchantments");
     }
 
     private void exercisePvpFilter() {
