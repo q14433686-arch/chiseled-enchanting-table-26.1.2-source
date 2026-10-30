@@ -39,8 +39,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -386,9 +384,7 @@ public final class MatrixEffectExecutor {
                         grantEffect(adj, "slowness", 60, 1);
                     }
                 }
-                if (player.mayBuild()) {
-                    freezeNearbySurfaceWater(level, BlockPos.containing(pos));
-                }
+                TemporaryFrostEffects.placeSurfacePatch(level, player, BlockPos.containing(pos));
                 level.sendParticles(ParticleTypes.SNOWFLAKE, pos.x, pos.y + 0.5D, pos.z, 14, 0.4D, 0.25D, 0.4D, 0.03D);
             }
             case VOLT -> {
@@ -633,18 +629,6 @@ public final class MatrixEffectExecutor {
         for (ItemEntity itemEntity : level.getEntitiesOfClass(ItemEntity.class, box, Entity::isAlive)) {
             itemEntity.setNoPickUpDelay();
             itemEntity.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
-        }
-    }
-
-    private static void freezeNearbySurfaceWater(ServerLevel level, BlockPos center) {
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                BlockPos waterPos = center.offset(dx, -1, dz);
-                BlockState state = level.getBlockState(waterPos);
-                if (state.is(Blocks.WATER) && state.getFluidState().isSource() && level.getBlockState(waterPos.above()).isAir()) {
-                    AberrantRegistry.placeSingleFrostedIce(level, waterPos);
-                }
-            }
         }
     }
 

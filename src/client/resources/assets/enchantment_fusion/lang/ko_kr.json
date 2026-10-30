@@ -58,7 +58,7 @@
   "fusion.enchantment_fusion.effect.pyro.combat": "ignites foes in searing flames",
   "fusion.enchantment_fusion.effect.pyro.utility": "sears targets and quenches wearer fire",
   "fusion.enchantment_fusion.effect.cryo.combat": "inflicts deep frost and slowness",
-  "fusion.enchantment_fusion.effect.cryo.utility": "chills nearby water and slows threats",
+  "fusion.enchantment_fusion.effect.cryo.utility": "creates temporary ice above water and can freeze targets",
   "fusion.enchantment_fusion.effect.volt.combat": "calls down arcing lightning damage",
   "fusion.enchantment_fusion.effect.volt.utility": "pulses arc haste and static shock",
   "fusion.enchantment_fusion.effect.gale.combat": "unleashes a knockback wind burst",
@@ -518,8 +518,8 @@
   "gui.enchantment_fusion.btn.grimoire": "비전서",
   "gui.enchantment_fusion.tip.grimoire_btn": "Open the double-page Fusion Grimoire in-place without closing the table.",
   "gui.enchantment_fusion.tip.fee_detail": "Fee: %s XP Lv + %s %s (Available: %s)",
-  "gui.enchantment_fusion.tip.risk_high": "Instability Risk: %s%% (Failure mutates into Aberrant Fusion or Curse; Stabilizers lower to %s%% floor)",
-  "gui.enchantment_fusion.tip.risk_normal": "Fluctuation Chance: %s%% (No books or gear lost on failure, %s%% fee spent; Stabilizers reach 100%%)",
+  "gui.enchantment_fusion.tip.risk_high": "Instability: %s%% (Failure creates or changes an aberration)",
+  "gui.enchantment_fusion.tip.risk_normal": "Fluctuation: %s%% (Books and gear remain; %s%% of the fee is spent. Stabilizers reduce risk.)",
   "gui.enchantment_fusion.tip.risk_zero": "Resonance Stabilized: 100% Success Guaranteed",
   "gui.enchantment_fusion.grimoire.chapter.overview": "Principles",
   "gui.enchantment_fusion.grimoire.chapter.signatures": "Binary Fusions",
@@ -847,5 +847,7 @@
   "config.enchantment_fusion.property.extra_source_roles": "Targets for additional source",
   "config.enchantment_fusion.property.require_damageable": "Requires durability",
   "config.enchantment_fusion.property.exclusive_groups": "Exclusive groups",
-  "config.enchantment_fusion.cooldown": "Cooldown: %s"
+  "config.enchantment_fusion.cooldown": "Cooldown: %s",
+  "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
+  "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)"
 }

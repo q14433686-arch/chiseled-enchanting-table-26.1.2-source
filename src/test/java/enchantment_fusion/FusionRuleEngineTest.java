@@ -259,6 +259,26 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void documentedDefaultRiskBranchesMatchTheActualQuote() {
+        var eco = FusionMatrixRegistry.EconomyConfig.DEFAULT;
+        var mid = FusionEconomyRules.computeSynthesisQuote(eco,
+            "minecraft:sharpness", 3, 5, "minecraft:loyalty", 3, 3, false, false, 1, false);
+        assertEquals(0.02, mid.failureChance(), 1e-9, "Level sum 6 needs more than one crystal for zero risk");
+        var highSignature = FusionEconomyRules.computeSynthesisQuote(eco,
+            "minecraft:sharpness", 5, 5, "minecraft:loyalty", 3, 3, false, true, 0, false);
+        var highOrdinary = FusionEconomyRules.computeSynthesisQuote(eco,
+            "minecraft:sharpness", 5, 5, "minecraft:loyalty", 3, 3, false, false, 0, false);
+        assertEquals(0.28, highSignature.failureChance(), 1e-9);
+        assertEquals(0.22, highOrdinary.failureChance(), 1e-9);
+        double[] repulsiveRisks = {0.45, 0.32, 0.19, 0.08};
+        for (int crystals = 0; crystals < repulsiveRisks.length; crystals++) {
+            var quote = FusionEconomyRules.computeSynthesisQuote(eco,
+                "minecraft:sharpness", 5, 5, "minecraft:smite", 5, 5, true, true, crystals, false);
+            assertEquals(repulsiveRisks[crystals], quote.failureChance(), 1e-9);
+        }
+    }
+
+    @Test
     void safeLowTierMin8RepulsiveFloorNeededStabilizersAndDeltaDiscovery() throws Exception {
         // EF-003 / BAL-04: Low-tier synthesis has 0% failure and consumes 0 stabilizers
         var lowQuote = FusionEconomyRules.computeSynthesisQuote(

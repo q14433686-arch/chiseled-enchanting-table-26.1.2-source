@@ -58,7 +58,7 @@
   "fusion.enchantment_fusion.effect.pyro.combat": "點燃目標並迸發灼熱火舌",
   "fusion.enchantment_fusion.effect.pyro.utility": "灼燒來犯之敵並熄滅自身火焰",
   "fusion.enchantment_fusion.effect.cryo.combat": "施加深度凍傷與遲緩",
-  "fusion.enchantment_fusion.effect.cryo.utility": "凝結周圍淺水並遲滯敵群",
+  "fusion.enchantment_fusion.effect.cryo.utility": "在水面上方生成暫時薄冰，並可凍結目標",
   "fusion.enchantment_fusion.effect.volt.combat": "降下感電雷弧造成法術傷害",
   "fusion.enchantment_fusion.effect.volt.utility": "激發急迫脈衝並震麻目標",
   "fusion.enchantment_fusion.effect.gale.combat": "掀起旋風氣流擊退周圍敵群",
@@ -518,8 +518,8 @@
   "gui.enchantment_fusion.btn.grimoire": "融合秘典",
   "gui.enchantment_fusion.tip.grimoire_btn": "就地展開《融合秘典》雙頁圖鑑（不關閉融合台、不掉落槽內物品）",
   "gui.enchantment_fusion.tip.fee_detail": "耗費：%s 級經驗 + %s×%s（背包/催化槽現有：%s）",
-  "gui.enchantment_fusion.tip.risk_high": "失穩風險：%s%%（失敗將凝為畸變詞條或沾染詛咒；共鳴穩定晶最低可壓至 %s%%）",
-  "gui.enchantment_fusion.tip.risk_normal": "波動機率：%s%%（失敗絕不損毀書卷或裝備，僅扣 %s%% 資費；放入共鳴穩定晶可達 100%%）",
+  "gui.enchantment_fusion.tip.risk_high": "失穩風險：%s%%（失敗會產生或改變畸變詞條）",
+  "gui.enchantment_fusion.tip.risk_normal": "波動機率：%s%%（失敗保留書卷和裝備，按 %s%% 扣除資費；穩定晶可降低風險）",
   "gui.enchantment_fusion.tip.risk_zero": "共鳴完全穩固：成功率 100%",
   "gui.enchantment_fusion.grimoire.chapter.overview": "法則總綱",
   "gui.enchantment_fusion.grimoire.chapter.signatures": "簽名共鳴",
@@ -847,5 +847,7 @@
   "config.enchantment_fusion.property.extra_source_roles": "額外來源的目標",
   "config.enchantment_fusion.property.require_damageable": "需要耐久",
   "config.enchantment_fusion.property.exclusive_groups": "互斥組",
-  "config.enchantment_fusion.cooldown": "冷卻：%s"
+  "config.enchantment_fusion.cooldown": "冷卻：%s",
+  "gui.enchantment_fusion.tip.risk_repulsive": "互斥失穩風險：%s%%（失敗會產生畸變詞條；普通穩定晶減免最低至 %s%%）",
+  "gui.enchantment_fusion.tip.risk_conversion": "化形失穩風險：%s%%（失敗會消耗附魔書並對裝備施加消失詛咒）"
 }

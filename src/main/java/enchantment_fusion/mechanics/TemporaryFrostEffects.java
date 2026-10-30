@@ -60,19 +60,31 @@ public final class TemporaryFrostEffects {
                 if (dx * dx + dz * dz > radius * radius) continue;
                 // Include the next lower surface so a one-block drop from shore is usable.
                 for (int dy = -2; dy <= -1; dy++) {
-                    BlockPos water = feet.offset(dx, dy, dz);
-                    BlockPos top = water.above();
-                    if (!level.hasChunkAt(water) || !mayModify(level, player, top)) continue;
-                    BlockState state = level.getBlockState(water);
-                    if (!state.is(Blocks.WATER) || !state.getFluidState().isSource()
-                        || !level.getBlockState(top).isAir()) continue;
-                    AABB thinIce = new AABB(top.getX(), top.getY(), top.getZ(),
-                        top.getX() + 1.0D, top.getY() + 0.125D, top.getZ() + 1.0D);
-                    if (clearOfLivingEntities(level, thinIce)) {
-                        level.setBlockAndUpdate(top, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState());
-                    }
+                    placeThinIceAbove(level, player, feet.offset(dx, dy, dz));
                 }
             }
+        }
+    }
+
+    /** Small CRYO matrix patch around the event, without replacing water or trapping swimmers. */
+    public static void placeSurfacePatch(ServerLevel level, ServerPlayer player, BlockPos center) {
+        if (!player.mayBuild() || player.isShiftKeyDown()) return;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                placeThinIceAbove(level, player, center.offset(dx, -1, dz));
+            }
+        }
+    }
+
+    private static void placeThinIceAbove(ServerLevel level, ServerPlayer player, BlockPos water) {
+        BlockPos top = water.above();
+        if (!level.hasChunkAt(water) || !mayModify(level, player, top)) return;
+        BlockState state = level.getBlockState(water);
+        if (!state.is(Blocks.WATER) || !state.getFluidState().isSource() || !level.getBlockState(top).isAir()) return;
+        AABB thinIce = new AABB(top.getX(), top.getY(), top.getZ(),
+            top.getX() + 1.0D, top.getY() + 0.125D, top.getZ() + 1.0D);
+        if (clearOfLivingEntities(level, thinIce)) {
+            level.setBlockAndUpdate(top, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState());
         }
     }
 }

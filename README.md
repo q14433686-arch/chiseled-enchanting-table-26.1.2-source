@@ -1,44 +1,54 @@
-# Enchantment Fusion (融合附魔)
+# Enchantment Fusion（融合附魔）
 
 ![Enchantment Fusion icon](./icon.png)
 
 **Current version:** `0.6.0`
 **Target:** Minecraft `26.1.2`, Fabric Loader `>=0.19.3`, Fabric API `0.151.0+26.1.2`, Java `>=25`.
 
-📖 **Full Game Design Document (完整玩法与系统设计定稿): [`docs/GDD.md`](docs/GDD.md)**
+A Fabric enchanting mod with ordered fusion (`[A ▷ B]` is not necessarily `[B ▷ A]`), equipment inscription, single-enchantment cross-domain transmutations, and an in-game Fusion Grimoire.
 
-**Enchantment Fusion (`enchantment_fusion`)** is a Vanilla+ enchanting mod built around **order-sensitive binary enchantment fusion (`[A ▷ B] ≠ [B ▷ A]`)**, **Trajectory Path-Cache Mechanics (`路径暂缓存判定`)**, and **Cross-Domain Transmutations (`异位化形`)** without breaking vanilla enchantment level caps:
+- **[玩法与规则说明 / Game design](docs/GDD.md)** — recipes, operation, economy, configuration and technical boundaries.
+- **[审计与建议 / Audit notes](docs/AUDIT_NOTES.md)** — verified fixes, remaining risks, hard-coded values and test coverage.
+- **[术语表 / Glossary](docs/GLOSSARY.md)**
 
-- **Universal Host Inscription (`万物皆可铭刻`) + 174 Unique Emergent Signature Resonances (`衍生语义共鸣`)** — **Any** fused pair (`[A ▷ B]` or `[B ▷ A]`) can be inscribed onto **any** weapon, spear, tool, bow/crossbow, trident, mace, armor piece, or fishing rod within `1–2` **`◇` Vessel Slots (`器魂槽`)** (Gold gear including `Golden Spear` naturally holds `2◇`). Features **174 unique directional Signature Resonances** crafted around emergent conceptual wordplay across all **43** vanilla `26.1.2` enchantments including `minecraft:lunge` (`突进`) — every reversed order `[B ▷ A]` yields a distinct mechanic (`回马金枪 / 人枪合一`, `怀璧其罪 / 顺手牵羊`, `秋风扫叶 / 雁过拔毛`, `庖丁解牛`, `余音绕梁`, `薪火相传`, `真金火炼 / 火中取栗`, `苦肉修身 / 卧薪尝胆`, `穿针引线 / 势如破竹`, `水火淬刃 / 沸泉裂石`, `镜花水月 / 吹毛断发`), with full multi-slot & multi-enchantment stacking across equipped gear.
-- **Temporary Trajectory Path-Cache Engine (`路径暂缓存判定`) & Multi-Mode Spear Triggers (`矛多模态触发`)** — Launched Arrows, Tridents, and projected/thrown Swords, Axes, and Spears record sampled flight corridors with swept-capsule hit detection, delayed path afterimages (`余音回响 / 回马金枪`), elemental trail wakes, silk-tether stitching, and cross-path X-slash resonance (`双轨交错·十字斩`). Spears (`#minecraft:spears`) **preserve 100% of vanilla Hold-Right-Click couched charging (`按住右键蓄力`)** by splitting effects across hold-charge sustain/release (`贯冲枪芒`), sprint/airborne thrusts, jab strikes, and `Sneak + Right-Click` active javelin throws.
-- **Cross-Domain Transmutations (`异位化形` · 140 Variants · `0◇` Vessel Slots · Exclusive to `附魔融合台`)** — Vanilla Anvils strictly obey native compatibility and can **never** perform `化形铭刻` (even in Creative Mode); inscribing a **single** non-native Enchanted Book belongs exclusively to **`附魔融合台` Tab ② (`器魂铭刻`)** at **`0` `◇` Vessel Slots** and stacks freely alongside native enchantments and binary fusions! Covers all **43** vanilla enchantments across Swords, Spears, Axes, Maces, Tridents, Bows, Crossbows, Dig Tools, Shields, Armor, **Elytra**, and **Fishing Rods** — including post-`playerDestroy` `RecipeType.SMELTING` **「自动熔炼 / 炭火熔伐」** (preserving Fortune drop counts!), direct Right-Click **3D Boomerang Flying Blades (`飞剑掷斧`)**, **`沸水炙钩 / 灵犀自钓`**, **`御雷巡翼 / 乱流升羽`**, **`沂水`**, **`锯刃`**, and **`三美金 ($3 Bill)`**:
-  - **`火焰附加 / 火矢` on Tools & Axes** — **「自动熔炼」** smelts real post-Fortune ore/clay/sand/stone/debris drops via live furnace recipes, and **「炭火熔伐」** smelts felled Logs into Charcoal (`60% / 100%` by level; hold **Sneak** to pause smelting!).
-  - **`水下速掘` on Weapons, Spears & Bows** — **「沂水」**: standing in water or rain extends attack reach (`+1.5` blocks) and boosts wet-combat damage.
-  - **`灵魂疾行` / `荆棘` / `时运` / `突进` Cross-Domain** — **「追魂步 / 幽魂脱兔 / 引魂矢」**, **「锯刃」** (bleed + yanks **all** hit monsters including Creepers toward you!), **「三美金 ($3 Bill)」** random proc roulette, and **`26.1.2` `突进` (`寸步突刺 / 跃射步 / 疾行突步 / 掘进冲刺`)**.
-  - **Special Non-Damageable Relics (`不死图腾` / `玻璃瓶` / Consumables)** — **`耐久`** grants **「裂而不碎」** (`10% / 18% / 25%` non-bypassing Totem save without shattering) & consumption-verified **「经久省用」**; **`经验修补`** grants **「凝灵成瓶」** (`Glass Bottle` → `Bottle o' Enchanting`), **「汲灵增殖」** (`+1` consumable count), & **「汲灵愈体」**.
-- **Cutaway Split-Wing Hollow-Viewport Altar (`384×218`) + 2.0s Skippable Ritual + Context Synergy Drawer + Obsidian Star-Codex `《融合秘典》` (`360×224`)**:
-  1. **Center Unblurred 3D Altar Viewport & 2.0s Skippable Ritual (`FusionRitualDirector`)** — Leaves a crystal-clear `116×118` archway at the center of the UI framing the live 3D Fusion Altar (levitating amethyst crystal core + counter-rotating shards, 4 corner purple braziers, gold/cyan swirling trajectory ribbons, and LabPBR emissive textures). Clicking Execute channels Gold/Cyan conduits with ascending amethyst chimes while accelerating the 3D crystal to `720°/s` and flaring the braziers `1.52×` — **click again or press Space/Enter to skip immediately** for zero-friction batch crafting!
-  2. **Auto-Morphing Right Wing & Dual-Mode Swap Medallion (`[⇄]`)** — Automatically morphs between **Book Synthesis** (condense `Fused Enchanted Books` without a blank book + inline fingerprint-verified **Flip / Split** controls) and **Gear Inscription** (`1–2` `◇/◇◇` Vessel Slots, 2-in-1 gear fusion, and `[Single / 双附]` toggle chip for `0◇` Cross-Domain Transmutations). The central `24×24` Swap Medallion reverses `[A ▷ B] ↔ [B ▷ A]` on **Left-Click** and physically swaps `Slot A ↔ Slot B` on **Right-Click / `Shift+Click`**.
-  3. **Smart Context Synergy Drawer (`FusionContextDrawer`) & Three-Stage Star-Codex Grimoire** — Pull out the right-edge `Codex / 秘卷` badge to inspect Signature & Transmutation recipes matching the items currently in the altar and **auto-pick `[A ▷ B]` in one click**, or expand the full Obsidian Star-Codex Grimoire (`未知 → 初识 → 通晓`) with scrollable right-page descriptions and full keyboard navigation.
-- **Full-Curve Datapack Economy (`economy.json` v2), Native Aberrant Purification & `纂刻附魔台` Cleanse Integration** — Low-tier synthesis has **`0%` default failure**; mid-tier fluctuations **never destroy books or gear**; max-level repulsive clashes can mutate into 6 double-edged Aberrant Fusions (`畸变词条`), with reagents drawn from the Catalyst Slot first and Player Inventory second (shown transparently in hover tooltips). Aberrant items can be purified **natively at the Enchantment Fusion Table** (`Slot 3` + `3× Resonance Stabilizer` in `Slot 2` + `25` XP Levels, configurable in `economy.json`, stripping the aberration while keeping pure `[A ▷ B]`) **or** via sister mod **`纂刻附魔台` (*Chiseled Enchanting Table*)**'s **Curse Purge & Cleanse** rituals (which also support Book Extraction, Step-Down, Targeted Strip, and Full Disenchant). Includes 4-slot 3D orbital levitation on `附魔融合台` and pixel-art rune halos, shockwave rings, and spark particles inside both UIs.
+The bundled data has **150 signature entries** (147 exact ordered pairs and 3 wildcard rules) and **116 transmutation variants**. Other valid ordered pairs can use the trigger/payload matrix; not every reversed pair has its own signature. Datapacks and server overrides can change the active rules.
+
+## Install / 安装
+
+Install Fabric Loader and Fabric API for 26.1.2, then put `enchantment-fusion-0.6.0.jar` in `mods/`. For multiplayer, install the same mod build on **both client and server**. Mod Menu, JEI/REI and the sister mod **Chiseled Enchanting Table（纂刻附魔台）** are optional; consult their own version compatibility before combining them. GitHub Actions builds provide downloadable artifacts while they remain available.
+
+## Start playing / 快速开始
+
+1. Craft an **Enchantment Fusion Table（附魔融合台）**. The 3×3 recipe is:
+
+   | Amethyst Shard | Book | Amethyst Shard |
+   | :---: | :---: | :---: |
+   | Lapis Block | Anvil (any `#minecraft:anvil`) | Lapis Block |
+   | Polished Deepslate | Polished Deepslate | Polished Deepslate |
+
+2. Put enchanted books in the A/B slots and select their order. With the target/output slot empty, synthesize a Fused Enchanted Book; place an eligible item in that slot to work on equipment. Some combinations are rejected for compatibility, capacity or level reasons. The altar's preview is authoritative about the current price and risk.
+3. The **Single** mode inscribes a supported non-native enchantment as a cross-domain transmutation; a fused pair uses a vessel slot. Most eligible equipment starts with `1◇`, and items in the `innate_two_vessel_items` tag start with `2◇` (gold equipment is included by default). Other eligible equipment can gain one slot, up to `2◇` total.
+4. Craft the **Fusion Grimoire（融合秘典）** with a Book, Lapis Lazuli and Amethyst Shard, or open its in-table view to look up the active rules.
+
+The swap control reverses the selected order with a left click; right click or Shift-left-click swaps the physical input slots. In-progress rituals belong to the server: **Esc closes the table without cancelling**. Reopen it to view progress; the initiator can click again or press Space/Enter to skip, or Shift-click the action button to cancel. Inputs are locked while it runs; unloaded chunks pause it, and owner logout or death cancels without consuming inputs.
+
+## Risk, frost and harvesting / 风险、霜冰与挖掘
+
+- Default synthesis risk depends on whether a pair is exclusive, at maximum levels, a signature, and its level sum. Normal fluctuations keep the books and gear but charge part of the fee. High-risk fusion can produce an aberration; high-risk single transmutation failure instead consumes the book and can apply Curse of Vanishing. The default mutually-exclusive base risk is **45%**, with an **8%** ordinary-stabilizer floor. See the [economy table](docs/GDD.md#default-economy) rather than extrapolating from one number.
+- An aberration can be purified at this table: leave A/B empty, put the affected book or equipment in the target slot and, by default, supply **3 Resonance Stabilizers and 25 XP levels**. Costs are configurable. The optional sister-mod integration provides another route when compatible.
+- Mod-created temporary frost replaces **air only** and neither breaking nor natural decay creates water. Adjacent original water can still flow naturally after a seal disappears. Frost seal leaves water intact, but adjacent lava **permanently becomes cobblestone**. The thin ice wake is placed above source water, not in it; sneak or enter the water to stop placing new path blocks.
+- Extra-area mining uses the player's normal per-block break path, so real tool/loot rules and durability apply; it skips block entities. Sneak to pause the multi-block mining skills. Wide Reap extends only to crops that can be confirmed mature. Other world-changing effects and third-party protection mods still need the compatibility testing described in the [audit notes](docs/AUDIT_NOTES.md#已确认的剩余风险).
 
 ## In-game configuration / 游戏内配置
 
-- In a world or on a server, run **`/fusion config`**. If Mod Menu is installed, its configuration button opens the same screen; Mod Menu is optional. The singleplayer owner and server operators can save, while other players can inspect the server's values in read-only mode.
-- The five categories edit existing economy/cooldown, trigger/payload, exclusive-group, signature and transmutation fields from the active datapacks. Search accepts field paths; `*` marks a local override. Numbers are entered as numbers (probabilities use `0–1`; cooldowns use game ticks), booleans as `true`/`false`, and arrays as JSON. Array edits replace the entire list, including the built-in exclusive groups; **Use datapack** removes the selected override. For safety the screen cannot create or delete datapack entries or edit schema/`replace` markers.
-- Overrides are written on the **server** to `config/enchantment_fusion/overrides.json`, atomically, and take precedence over merged datapacks. Changes are validated and applied immediately; authoritative economy/matrix rules and signature/transmutation catalogs are synchronized to connected clients. `/reload` rereads datapacks and the override file. In the title screen, Mod Menu edits this installation's bundled defaults/overrides; a world loads its own datapacks when started.
-- 游戏内输入 **`/fusion config`**，或通过可选的 Mod Menu 打开配置。单人世界服主和服务器管理员可以保存，其他玩家只能查看；`*` 表示覆盖，**使用数据包值**会移除该项覆盖。配置保存在服务器，保存后立即生效并同步客户端。互斥组等数组须输入完整 JSON 数组。
+Run **`/fusion config`**, or open the same screen through optional Mod Menu. The singleplayer owner and authorized server operators can save; other players can inspect server rules read-only. Server permission is checked for every update.
 
-## Rituals and temporary frost / 仪式与临时霜冰
+The five categories expose existing economy/cooldown, matrix profile, exclusive-group, signature and transmutation fields. Search accepts field paths; hovering over a clipped row or hint shows more text. `*` marks an override; **Use datapack** removes it. Probabilities use `0–1`, cooldowns use ticks, booleans use `true`/`false`, and arrays require a complete JSON array. The screen edits existing fields only, not arbitrary new datapack entries or code-defined skill behavior.
 
-A started ritual belongs to the server: closing the table UI does not cancel it. Reopen the table to view progress; the initiator may click again (or press Space/Enter) to skip, or Shift-click the action button to cancel. The table inputs are locked until completion or cancellation. An unloaded chunk pauses the timer; logout/death cancels without consuming the inputs. If the rules or inputs change, the pending transaction is rejected rather than silently charging a different price. Temporary frost only replaces air, never existing water, and neither breaking nor melting it produces water.
+Overrides are written on the **server** to `config/enchantment_fusion/overrides.json`, validated, applied immediately and synchronized to connected clients. `/reload` rereads datapacks and overrides. Invalid overrides are retained on disk for repair and are not partially applied. The title-screen Mod Menu edits that installation's bundled defaults/overrides; world datapacks are loaded when a world starts.
 
-启动仪式后可以关闭界面，服务器会继续执行；重新打开可查看进度，发起者可再次点击或按空格/回车跳过，Shift+点击操作按钮取消。区块卸载时计时暂停，玩家离线或死亡时安全取消。临时霜冰只放置在空气中，碎裂和融化都不会产生水。
-
-## Installation
-
-Grab `enchantment-fusion-0.6.0.jar` from GitHub Actions build artifacts and place it in `mods/` alongside Fabric API `0.151.0+26.1.2`.
+游戏内输入 **`/fusion config`**，或通过可选 Mod Menu 打开；单人世界主人及有权限的管理员可保存，其他玩家只读。修改保存在服务端，校验后立即生效并同步；`*` 表示覆盖，**使用数据包值**可撤销覆盖。数组输入须是完整 JSON 数组。
 
 ## License
 
-MIT License — see [`LICENSE`](LICENSE).
+MIT — see [`LICENSE`](LICENSE).

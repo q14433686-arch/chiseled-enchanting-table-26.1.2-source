@@ -1010,19 +1010,35 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             ).withStyle(ChatFormatting.LIGHT_PURPLE));
         }
 
-        int failPct = Math.round((float) (q.failureChance() * 100.0D));
         var econ = FusionMatrixRegistry.snapshotFor(true).economy();
-        int minFloorPct = Math.round((float) (econ.repulsiveMinFloor() * 100.0D));
-        int feeSpendPct = Math.round((float) (econ.normalFailFeeRatio() * 100.0D));
-        if (q.highRiskTier()) {
-            lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_high", failPct, minFloorPct)
-                .withStyle(ChatFormatting.RED));
-        } else if (failPct > 0) {
+        String failPct = formatPercent(q.failureChance());
+        String minFloorPct = formatPercent(econ.repulsiveMinFloor());
+        String feeSpendPct = formatPercent(econ.normalFailFeeRatio());
+        // Match the server's roll threshold, not an integer-rounded display percentage.
+        if (q.failureChance() <= 0.0005D) {
+            lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_zero").withStyle(ChatFormatting.GREEN));
+        } else if (q.highRiskTier()) {
+            Component risk;
+            if (preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS) {
+                risk = Component.translatable("gui.enchantment_fusion.tip.risk_conversion", failPct);
+            } else if (preview.repulsive() && (preview.kind() == OperationKind.FUSE_BOOKS || preview.kind() == OperationKind.FUSE_ONTO_GEAR)) {
+                risk = Component.translatable("gui.enchantment_fusion.tip.risk_repulsive", failPct, minFloorPct);
+            } else {
+                risk = Component.translatable("gui.enchantment_fusion.tip.risk_high", failPct);
+            }
+            lines.add(risk.withStyle(ChatFormatting.RED));
+        } else {
             lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_normal", failPct, feeSpendPct)
                 .withStyle(ChatFormatting.YELLOW));
-        } else {
-            lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_zero").withStyle(ChatFormatting.GREEN));
         }
+    }
+
+    private static String formatPercent(double probability) {
+        double percent = Math.clamp(probability, 0.0D, 1.0D) * 100.0D;
+        if (percent > 0.0D && percent < 0.1D) return "<0.1";
+        if (percent < 100.0D && percent > 99.9D) return ">99.9";
+        String formatted = String.format(java.util.Locale.ROOT, "%.1f", percent);
+        return formatted.endsWith(".0") ? formatted.substring(0, formatted.length() - 2) : formatted;
     }
 
     private Component explainPrimaryDisabledReason(StationPreview preview) {

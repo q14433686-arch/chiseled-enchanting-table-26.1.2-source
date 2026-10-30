@@ -87,6 +87,15 @@ public final class ClientSmoke implements ClientModInitializer {
         }
     }
 
+    private static void exerciseRiskFormatting() throws Exception {
+        var formatter = EnchantmentFusionScreen.class.getDeclaredMethod("formatPercent", double.class);
+        formatter.setAccessible(true);
+        require("<0.1".equals(formatter.invoke(null, 0.0006D)), "Tiny nonzero risks must not display as zero");
+        require("18".equals(formatter.invoke(null, 0.18D)), "Ordinary risk must remain readable");
+        require(">99.9".equals(formatter.invoke(null, 0.9996D)), "Almost-certain risk must not display as 100%");
+        require("100".equals(formatter.invoke(null, 1.0D)), "Certain risk must display as 100%");
+    }
+
     private static void exerciseLiveConfig(ServerPlayer sp) throws Exception {
         var server = sp.level().getServer();
         require(enchantment_fusion.config.FusionConfigNetworking.canEdit(server, sp), "Singleplayer owner must be able to configure");
@@ -252,6 +261,15 @@ public final class ClientSmoke implements ClientModInitializer {
             level.destroyBlock(first, false);
             require(level.getBlockState(first).isAir() && level.getBlockState(first.below()).is(Blocks.WATER),
                 "Breaking thin ice must leave air above the unchanged water");
+            ItemStack matrixFrost = new ItemStack(Items.DIAMOND_CHESTPLATE);
+            matrixFrost.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
+                FusedPair.clean("minecraft:unbreaking", 1, "minecraft:frost_walker", 1)));
+            enchantment_fusion.mechanics.MatrixEffectExecutor.clearCooldowns();
+            enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(level, sp, matrixFrost,
+                enchantment_fusion.model.TriggerType.ON_MOVEMENT_OR_LAND, null,
+                net.minecraft.world.phys.Vec3.atLowerCornerOf(first));
+            require(level.getBlockState(first).is(FusionBlocks.TEMPORARY_FROST_PATH)
+                && level.getBlockState(first.below()).is(Blocks.WATER), "Generic CRYO payload must make a water-preserving ice patch");
         } finally {
             spawned.forEach(net.minecraft.world.entity.Entity::discard);
             saved.forEach(level::setBlockAndUpdate);
@@ -1076,6 +1094,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         }
                         enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
 
+                        exerciseRiskFormatting();
                         exerciseLiveConfig(sp);
                         exerciseFrostAndSneakSmelt(sp);
                         exerciseExtraMining(sp);
