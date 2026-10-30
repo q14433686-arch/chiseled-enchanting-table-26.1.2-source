@@ -48,6 +48,27 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void combatSignaturePreconditionsRejectNoOpHitsWithoutBlockingPartialEffects() {
+        for (String id : List.of("reaping_gale", "phantom_triple_slash", "flying_sword_qi",
+            "hydro_flying_sword", "arc_lightning_cleave", "gale_vault_thrust", "sky_spear_dive", "blazing_dragoon")) {
+            assertFalse(SignaturePairs.isCombatTriggerEligible(id, false, false, true), id);
+            assertTrue(SignaturePairs.isCombatTriggerEligible(id, true, false, true), id);
+        }
+        for (String id : List.of("clear_sky_thunder", "thunder_iaido")) {
+            assertFalse(SignaturePairs.isCombatTriggerEligible(id, true, false, false), id);
+            assertFalse(SignaturePairs.isCombatTriggerEligible(id, false, false, true), id);
+            assertTrue(SignaturePairs.isCombatTriggerEligible(id, true, false, true), id);
+        }
+        for (String id : List.of("land_water_dragon", "lightning_step_spear")) {
+            assertFalse(SignaturePairs.isCombatTriggerEligible(id, false, false, true), id);
+            assertTrue(SignaturePairs.isCombatTriggerEligible(id, false, true, true), id);
+            assertTrue(SignaturePairs.isCombatTriggerEligible(id, true, false, true), id);
+        }
+        assertTrue(SignaturePairs.isCombatTriggerEligible("rising_dragon_leap", false, false, true),
+            "Partial hits still have an independent damage effect");
+    }
+
+    @Test
     void vesselSlotCapacityRespectsGoldInnateTagAndHardTwoSlotCeiling() {
         assertEquals(1, VesselCapacityRules.computeMaxSlots(false, 0));
         assertEquals(2, VesselCapacityRules.computeMaxSlots(false, 1));

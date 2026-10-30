@@ -50,6 +50,25 @@ public final class SignaturePairs {
 
     private SignaturePairs() {}
 
+    /** Preconditions that make the entire combat signature a no-op when unsatisfied.
+     * Evaluate before charging its cooldown, so a partial hit cannot suppress the next eligible hit.
+     * Signatures with an independent partial-hit effect are deliberately not listed here.
+     */
+    public static boolean isCombatTriggerEligible(String signatureId, boolean fullCharge, boolean sprinting, boolean hasTarget) {
+        return switch (signatureId) {
+            case "reaping_gale", "phantom_triple_slash", "flying_sword_qi", "hydro_flying_sword",
+                "arc_lightning_cleave", "gale_vault_thrust", "sky_spear_dive", "blazing_dragoon" -> fullCharge;
+            case "clear_sky_thunder", "thunder_iaido" -> fullCharge && hasTarget;
+            case "land_water_dragon", "lightning_step_spear" -> fullCharge || sprinting;
+            default -> true;
+        };
+    }
+
+    public static boolean launchesFlyingWeapon(String signatureId) {
+        return "hydro_flying_sword".equals(signatureId) || "flying_sword_qi".equals(signatureId)
+            || "phantom_triple_slash".equals(signatureId);
+    }
+
     public static List<SignatureEntry> allUniqueSignatures() {
         return SignatureCatalog.allUniqueSignatures();
     }

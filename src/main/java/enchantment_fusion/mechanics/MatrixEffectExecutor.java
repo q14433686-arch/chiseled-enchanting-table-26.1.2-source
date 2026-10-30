@@ -232,12 +232,19 @@ public final class MatrixEffectExecutor {
             }
 
             Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
-            // A weak melee swing or a full flight quota cannot launch the water blade.
-            // Do not consume the pair cooldown until it can actually fire.
-            if (sigOpt.isPresent() && "hydro_flying_sword".equals(sigOpt.get().id())
-                && (!fullChargeMelee || FlyingBladeManager.isHandlingHydroFlight()
-                    || !FlyingBladeManager.canLaunchFor(player.getUUID()))) {
+            // Do not charge a clean signature for partial/no-target hits that cannot perform
+            // any of its effects. Aberrant pairs can still have an independent mutation.
+            if (!pair.isAberrant() && sigOpt.isPresent()
+                && !SignaturePairs.isCombatTriggerEligible(
+                    sigOpt.get().id(), fullChargeMelee, player.isSprinting(), targetEntity != null)) {
                 continue;
+            }
+            // Synthetic flight impacts may run other effects but must never form chains of
+            // self-generating water/phantom weapons. Preserve cooldown when a quota blocks a blade.
+            if (sigOpt.isPresent() && SignaturePairs.launchesFlyingWeapon(sigOpt.get().id())) {
+                if (FlyingBladeManager.isHandlingGeneratedFlight()) continue;
+                if (("hydro_flying_sword".equals(sigOpt.get().id()) || "flying_sword_qi".equals(sigOpt.get().id()))
+                    && !FlyingBladeManager.canLaunchFor(player.getUUID())) continue;
             }
             String cdKey = cooldownKey(player.getUUID(), pair.primaryId(), pair.secondaryId());
             long readyAt = COOLDOWNS.getOrDefault(cdKey, 0L);

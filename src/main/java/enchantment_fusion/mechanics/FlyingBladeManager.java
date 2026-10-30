@@ -48,7 +48,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public final class FlyingBladeManager {
     private static final List<ActiveFlight> ACTIVE_FLIGHTS = new ArrayList<>();
-    private static final ThreadLocal<Boolean> IN_HYDRO_FLIGHT = ThreadLocal.withInitial(() -> false);
+    private static final ThreadLocal<Boolean> IN_GENERATED_FLIGHT = ThreadLocal.withInitial(() -> false);
     private static final int MAX_ACTIVE_PER_PLAYER = 4;
 
     public enum FlightStyle {
@@ -119,9 +119,9 @@ public final class FlyingBladeManager {
 
     private FlyingBladeManager() {}
 
-    /** True only while resolving a water blade's own impact; it must not spawn itself again. */
-    public static boolean isHandlingHydroFlight() {
-        return IN_HYDRO_FLIGHT.get();
+    /** Generated weapon impacts may trigger other effects, but must not generate more weapons. */
+    public static boolean isHandlingGeneratedFlight() {
+        return IN_GENERATED_FLIGHT.get();
     }
 
     public static synchronized boolean canLaunchFor(UUID playerId) {
@@ -307,15 +307,15 @@ public final class FlyingBladeManager {
                 ACTIVE_FLIGHTS.remove(f);
                 continue;
             }
-            boolean previousHydro = IN_HYDRO_FLIGHT.get();
+            boolean previousFlight = IN_GENERATED_FLIGHT.get();
             try {
-                if (f.style == FlightStyle.HYDRO_SWORD_QI) IN_HYDRO_FLIGHT.set(true);
+                IN_GENERATED_FLIGHT.set(true);
                 if (!tickSingleFlight(level, owner, f)) {
                     discardQuietly(f.displayEntity);
                     ACTIVE_FLIGHTS.remove(f);
                 }
             } finally {
-                IN_HYDRO_FLIGHT.set(previousHydro);
+                IN_GENERATED_FLIGHT.set(previousFlight);
             }
         }
     }
@@ -507,6 +507,18 @@ public final class FlyingBladeManager {
         Vec3 to,
         CachedFlightPath cachedPath
     ) {
+        // The Flying Sword Qi signature promises to bring nearby drops back. Unlike a
+        // boomerang, a linear phantom never returns, so collect along its swept path.
+        if (f.style == FlightStyle.PHANTOM_LANCE && SignaturePairs.stackHasSignature(f.weaponSnapshot, "flying_sword_qi")) {
+            AABB corridor = new AABB(from, to).inflate(2.0D, 1.6D, 2.0D);
+            for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, corridor, Entity::isAlive)) {
+                item.setNoPickUpDelay();
+                item.teleportTo(owner.getX(), owner.getY() + 0.4D, owner.getZ());
+            }
+            for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, corridor, Entity::isAlive)) {
+                orb.teleportTo(owner.getX(), owner.getY() + 0.4D, owner.getZ());
+            }
+        }
         List<LivingEntity> swept = ProjectilePathTracker.querySweptSegmentHostiles(level, owner, from, to, 1.25D);
         if (swept.isEmpty()) {
             return;

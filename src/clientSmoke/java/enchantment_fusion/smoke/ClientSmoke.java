@@ -163,6 +163,41 @@ public final class ClientSmoke implements ClientModInitializer {
         BlockState oldObstacle = sp.level().getBlockState(obstacle);
         sp.level().setBlockAndUpdate(obstacle, Blocks.STONE.defaultBlockState());
         try {
+            // A partial hit must not spend the flying sword's cooldown; its generated
+            // hit must not recursively fire another sword, and must recover nearby drops.
+            ItemStack qiSword = new ItemStack(Items.DIAMOND_SWORD);
+            qiSword.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
+                FusedPair.clean("minecraft:sharpness", 3, "minecraft:loyalty", 3)));
+            var zombie = new net.minecraft.world.entity.monster.zombie.Zombie(sp.level());
+            zombie.setPos(sp.getX(), sp.getY(), sp.getZ() + 1.5D);
+            sp.level().addFreshEntity(zombie);
+            var drop = new net.minecraft.world.entity.item.ItemEntity(sp.level(), sp.getX() + 0.5D,
+                sp.getY() + 1.0D, sp.getZ() + 1.5D, new ItemStack(Items.DIAMOND));
+            sp.level().addFreshEntity(drop);
+            try {
+                enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(
+                    sp.level(), sp, qiSword, enchantment_fusion.model.TriggerType.ON_MELEE_STRIKE, null, sp.position(), false);
+                require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 0,
+                    "Partial hit must not fire a full-charge-only flying sword");
+                enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(
+                    sp.level(), sp, qiSword, enchantment_fusion.model.TriggerType.ON_MELEE_STRIKE, null, sp.position(), true);
+                require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 1,
+                    "Partial hit must not consume the cooldown for a subsequent charged flying sword");
+                float healthBefore = zombie.getHealth();
+                enchantment_fusion.mechanics.MatrixEffectExecutor.clearCooldowns();
+                enchantment_fusion.mechanics.FlyingBladeManager.tickServer(sp.level().getServer());
+                require(zombie.getHealth() < healthBefore, "The test flying sword must actually hit the zombie");
+                require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 1,
+                    "A generated flying sword must not recursively fire another sword on impact");
+                require(drop.position().distanceToSqr(sp.position().add(0, 0.4D, 0)) < 0.01D,
+                    "Flying Sword Qi must return drops collected along its path");
+            } finally {
+                zombie.discard();
+                drop.discard();
+                enchantment_fusion.mechanics.FlyingBladeManager.flushAll();
+                enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
+                enchantment_fusion.mechanics.MatrixEffectExecutor.clearCooldowns();
+            }
             enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(sp.level(), sp, trident, triggers, null, sp.position(), false, 0.6F);
             require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 0,
                 "A weak swing must not launch a blade or consume the full-charge cooldown");
