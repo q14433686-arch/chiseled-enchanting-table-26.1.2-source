@@ -1279,13 +1279,85 @@ public final class ClientSmoke implements ClientModInitializer {
                 serverReadyFlag = false;
                 server.execute(() -> {
                     try {
-                        flameProbe.checkWakeAndClose();
+                        flameProbe.checkWakeBeforeExpiry();
                         serverReadyFlag = true;
                     } catch (Throwable t) { serverFailure = t; }
                 });
                 next(44, 1);
             }
             case 44 -> {
+                if (!serverReadyFlag) return;
+                next(45, 65);
+            }
+            case 45 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.spawnAfterWakeExpiry();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(46, 1);
+            }
+            case 46 -> {
+                if (!serverReadyFlag) return;
+                next(47, 8);
+            }
+            case 47 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.checkExpiryAndStartOpenPressure();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(48, 1);
+            }
+            case 48 -> {
+                if (!serverReadyFlag) return;
+                next(49, 50);
+            }
+            case 49 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.checkOpenAndStartTeleportWake();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(50, 1);
+            }
+            case 50 -> {
+                if (!serverReadyFlag) return;
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.teleportWakeTarget();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(51, 1);
+            }
+            case 51 -> {
+                if (!serverReadyFlag) return;
+                next(52, 12);
+            }
+            case 52 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.checkTeleportAndClose();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(53, 1);
+            }
+            case 53 -> {
                 if (!serverReadyFlag) return;
                 finish(client, "CLIENT SMOKE PASS: rituals, frost, live configuration, Grimoire and redesigned fire/knockback");
             }

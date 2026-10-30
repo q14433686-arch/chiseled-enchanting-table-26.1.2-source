@@ -46,6 +46,10 @@ final class FlameFusionProbe {
     private ServerPlayer player;
     private Vec3 oldPos;
     private ItemStack oldHand;
+    private ItemStack oldInventorySlot;
+    private ItemStack queuedLegacy;
+    private net.minecraft.core.Holder<Enchantment> fireHolder;
+    private net.minecraft.core.Holder<Enchantment> sharpHolder;
     private BlockPos base;
     private Zombie target;
     private Zombie witness;
@@ -97,7 +101,7 @@ final class FlameFusionProbe {
         scoreboard.addPlayerToTeam(sp.getScoreboardName(), smokeTeam);
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !denied.contains(entity.getUUID()));
 
-        for (int x = -1; x <= 10; x++) for (int z = -3; z <= 3; z++) {
+        for (int x = -1; x <= 13; x++) for (int z = -3; z <= 3; z++) {
             set(base.offset(x, -1, z), Blocks.STONE.defaultBlockState());
             for (int y = 0; y <= 3; y++) set(base.offset(x, y, z), Blocks.AIR.defaultBlockState());
         }
@@ -111,6 +115,15 @@ final class FlameFusionProbe {
         var fire = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("fire_aspect")));
         var knock = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("knockback")));
         var sharp = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("sharpness")));
+        fireHolder = fire;
+        sharpHolder = sharp;
+        oldInventorySlot = sp.getInventory().getItem(9);
+        queuedLegacy = new ItemStack(Items.DIAMOND_SWORD);
+        queuedLegacy.enchant(fire, 2);
+        queuedLegacy.enchant(sharp, 1);
+        queuedLegacy.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(PRESSURE));
+        sp.getInventory().setItem(9, queuedLegacy);
+        exercisePvpFilter();
         ItemStack fresh = new ItemStack(Items.DIAMOND_SWORD);
         FusionStationOperations.applyFusedPairToGear(fresh, PRESSURE, level.registryAccess());
         require(fresh.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(fire) == 0,
@@ -164,13 +177,49 @@ final class FlameFusionProbe {
         require(!target.hurtServer(level, level.damageSources().playerAttack(sp), 1.0F), "Fabric cancellation fixture must reject damage");
         denied.clear();
         target.invulnerableTime = 0;
-        MatrixEffectExecutor.dispatch(level, sp, fresh, TriggerType.ON_MELEE_STRIKE, target, target.position(), true);
-        require(target.hurtServer(level, level.damageSources().playerAttack(sp), 1.0F),
-            "A cancelled or partial hit must not consume the next full-hit cooldown");
+        float oldHealth = target.getHealth();
+        require(sp.getAttackStrengthScale(0.5F) >= 0.9F, "The real attack fixture must be fully charged");
+        net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.invoker().interact(
+            sp, level, InteractionHand.MAIN_HAND, target, null);
+        sp.attack(target);
+        require(target.getHealth() < oldHealth, "The real player attack must deal damage");
         require(!target.isOnFire(), "Pressure must wait until the real damage event and server tick");
     }
 
+    private void exercisePvpFilter() {
+        // A second server-side Player instance exercises the actual PvP/game-rule and
+        // scoreboard branches without claiming to simulate a second network client.
+        var server = level.getServer();
+        var other = new ServerPlayer(server, level,
+            new com.mojang.authlib.GameProfile(UUID.randomUUID(), "EfProbe"),
+            net.minecraft.server.level.ClientInformation.createDefault());
+        other.getAbilities().invulnerable = false;
+        var rules = level.getGameRules();
+        boolean oldPvp = level.isPvpAllowed();
+        try {
+            var canAffect = enchantment_fusion.mechanics.signatures.FlameKineticEffects.class.getDeclaredMethod(
+                "canAffect", ServerPlayer.class, net.minecraft.world.entity.LivingEntity.class, boolean.class);
+            canAffect.setAccessible(true);
+            rules.set(net.minecraft.world.level.gamerules.GameRules.PVP, false, server);
+            require(!(boolean) canAffect.invoke(null, player, other, false), "PvP-disabled players must be excluded");
+            rules.set(net.minecraft.world.level.gamerules.GameRules.PVP, true, server);
+            require((boolean) canAffect.invoke(null, player, other, false), "A permitted hostile player must be eligible");
+            level.getScoreboard().addPlayerToTeam(other.getScoreboardName(), smokeTeam);
+            require(!(boolean) canAffect.invoke(null, player, other, false), "Allied players must remain excluded");
+            level.getScoreboard().removePlayerFromTeam(other.getScoreboardName());
+            other.getAbilities().invulnerable = true;
+            require(!(boolean) canAffect.invoke(null, player, other, false), "Creative/invulnerable players must be excluded");
+        } catch (ReflectiveOperationException ex) {
+            throw new AssertionError("PvP filter fixture failed", ex);
+        } finally {
+            rules.set(net.minecraft.world.level.gamerules.GameRules.PVP, oldPvp, server);
+        }
+    }
+
     void checkPressureAndStartWake() {
+        var auto = queuedLegacy.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        require(auto.getLevel(fireHolder) == 0 && auto.getLevel(sharpHolder) == 1,
+            "Legacy equipment in the player inventory must migrate automatically, preserving other enchantments");
         require(target.isOnFire(), "The confirmed full hit must ignite its primary target");
         require(witness.getHealth() < witness.getMaxHealth() && witness.isOnFire(),
             "A genuine wall collision must burst onto a hostile: target=" + target.position()
@@ -195,17 +244,61 @@ final class FlameFusionProbe {
         require(target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F), "Wake fixture must damage normally");
     }
 
-    void checkWakeAndClose() {
+    void checkWakeBeforeExpiry() {
+        require(witness.isOnFire(), "A hostile crossing the real wake must ignite");
+        require(witness.getX() > witnessStartX + 0.05D || witness.getDeltaMovement().x > 0.05D,
+            "Wake must push the hostile along the target's path");
+        require(!ally.isOnFire(), "The wake must not ignite allied hostiles");
+        require(!bystander.isOnFire(), "The wake must not ignite passive bystanders");
+        witness.discard(); ally.discard(); bystander.discard();
+    }
+
+    void spawnAfterWakeExpiry() {
+        // The client has waited long enough for even the last segment to expire.
+        witness = zombie(2.9D, 1.25D);
+    }
+
+    void checkExpiryAndStartOpenPressure() {
+        require(!witness.isOnFire(), "A wake must expire rather than ignite a late arrival forever");
+        target.discard(); witness.discard();
+        MatrixEffectExecutor.clearCooldowns();
+        target = zombie(1.5D, 0.5D);
+        witness = zombie(3.3D, 2.1D);
+        ItemStack pressure = new ItemStack(Items.DIAMOND_SWORD);
+        FusionStationOperations.applyFusedPairToGear(pressure, PRESSURE, level.registryAccess());
+        player.setItemInHand(InteractionHand.MAIN_HAND, pressure);
+        MatrixEffectExecutor.dispatch(level, player, pressure, TriggerType.ON_MELEE_STRIKE, target, target.position(), true);
+        require(target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F), "Open-space pressure fixture must damage normally");
+    }
+
+    void checkOpenAndStartTeleportWake() {
+        require(target.isOnFire(), "Open-space pressure should still ignite the primary target");
+        require(!witness.isOnFire() && witness.getHealth() == witness.getMaxHealth(),
+            "Without a wall collision, pressure must not produce an area burst");
+        target.discard(); witness.discard();
+        MatrixEffectExecutor.clearCooldowns();
+        target = zombie(1.5D, 0.5D);
+        witness = zombie(8.5D, 0.5D);
+        ItemStack reverse = new ItemStack(Items.DIAMOND_SWORD);
+        FusionStationOperations.applyFusedPairToGear(reverse, WAKE, level.registryAccess());
+        player.setItemInHand(InteractionHand.MAIN_HAND, reverse);
+        MatrixEffectExecutor.dispatch(level, player, reverse, TriggerType.ON_MELEE_STRIKE, target, target.position(), true);
+        require(target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F), "Teleport-wake fixture must damage normally");
+    }
+
+    void teleportWakeTarget() {
+        require(target.getX() < base.getX() + 7.0D, "Teleport fixture must jump before the target reaches the gap");
+        target.teleportTo(base.getX() + 12.5D, base.getY(), base.getZ() + 0.5D);
+        target.setDeltaMovement(Vec3.ZERO);
+    }
+
+    void checkTeleportAndClose() {
         try {
-            require(witness.isOnFire(), "A hostile crossing the real wake must ignite");
-            require(witness.getX() > witnessStartX + 0.05D || witness.getDeltaMovement().x > 0.05D,
-                "Wake must push the hostile along the target's path");
-            require(!ally.isOnFire(), "The wake must not ignite allied hostiles");
-            require(!bystander.isOnFire(), "The wake must not ignite passive bystanders");
+            require(!witness.isOnFire(), "A teleport must not create a burning corridor across the gap");
             for (BlockPos pos : saved.keySet()) {
                 require(!level.getBlockState(pos).is(Blocks.FIRE), "Neither signature may place a fire block");
             }
-            System.out.println("FIRE FUSION BOUNDARY PASS: migration, cancelled/partial hits, wall collision and directional wake");
+            System.out.println("FIRE FUSION BOUNDARY PASS: migration, real/cancelled/partial hits, PvP, allies, wall/no-wall, expiry and teleport");
         } finally {
             denied.clear();
             spawned.forEach(Entity::discard);
@@ -215,7 +308,9 @@ final class FlameFusionProbe {
             player.teleportTo(oldPos.x, oldPos.y, oldPos.z);
             player.setDeltaMovement(Vec3.ZERO);
             player.setItemInHand(InteractionHand.MAIN_HAND, oldHand);
+            player.getInventory().setItem(9, oldInventorySlot);
             MatrixEffectExecutor.clearCooldowns();
         }
     }
+
 }

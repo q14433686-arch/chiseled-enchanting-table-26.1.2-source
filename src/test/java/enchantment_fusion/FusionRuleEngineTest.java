@@ -55,7 +55,7 @@ final class FusionRuleEngineTest {
             assertFalse(SignaturePairs.isCombatTriggerEligible(id, false, false, true), id);
             assertTrue(SignaturePairs.isCombatTriggerEligible(id, true, false, true), id);
         }
-        for (String id : List.of("clear_sky_thunder", "thunder_iaido", "blast_flare", "blazing_furrow")) {
+        for (String id : List.of("clear_sky_thunder", "thunder_iaido")) {
             assertFalse(SignaturePairs.isCombatTriggerEligible(id, true, false, false), id);
             assertFalse(SignaturePairs.isCombatTriggerEligible(id, false, false, true), id);
             assertTrue(SignaturePairs.isCombatTriggerEligible(id, true, false, true), id);

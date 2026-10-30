@@ -247,7 +247,8 @@ public final class MatrixEffectExecutor {
             boolean redesignedMelee = sigOpt.isPresent() && FlameKineticEffects.matches(pair, sigOpt.get().id());
             // This confirmed design requires an actual full-charge melee hit, including
             // on aberrant pairs. Other triggers must not silently spend its cooldown.
-            if (redesignedMelee && (matchedTrigger != TriggerType.ON_MELEE_STRIKE || !fullChargeMelee || targetEntity == null)) {
+            if (redesignedMelee && (matchedTrigger != TriggerType.ON_MELEE_STRIKE || !fullChargeMelee
+                || chargeScale < snapshot.economy().meleeFullCharge() || targetEntity == null)) {
                 continue;
             }
             // Do not charge a clean signature for partial/no-target hits that cannot perform

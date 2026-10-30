@@ -111,7 +111,7 @@ public final class FlameKineticEffects {
         }
     }
 
-    /** Immediate activation for already-dispatched non-melee trigger contexts. */
+    /** Apply the effect after a confirmed full-charge melee hit. */
     public static void activate(ServerLevel level, ServerPlayer player, LivingEntity target, FusedPair pair, String signature) {
         if (!matches(pair, signature) || !canAffect(player, target, true)) return;
         int fireLevel = Math.min(5, FIRE.equals(pair.primaryId()) ? pair.primaryLevel() : pair.secondaryLevel());
