@@ -14,7 +14,8 @@ if run.exists() or not world.is_dir():
 
 shutil.copytree(world, run / "saves/audit-world")
 (run / "options.txt").write_text(
-    "onboardAccessibility:false\nlang:zh_cn\nguiScale:2\nmaxFps:60\nenableVsync:false\n",
+    "onboardAccessibility:false\nlang:zh_cn\nguiScale:2\nmaxFps:60\nenableVsync:false\n"
+    "menuBackgroundBlurriness:5\n",
     encoding="utf-8",
 )
 

@@ -3,6 +3,7 @@ package enchantment_fusion.smoke;
 import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.gui.EnchantmentFusionScreen;
+import enchantment_fusion.gui.FusionGrimoireScreen;
 import enchantment_fusion.gui.FusionTooltipRenderer;
 import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
@@ -656,7 +657,14 @@ public final class ClientSmoke implements ClientModInitializer {
                 // Open top-right embedded Fusion Grimoire button (279..297, 8..24) — container MUST remain open!
                 click(screen, b.getX() + 288, b.getY() + 16);
                 require(client.screen instanceof EnchantmentFusionScreen, "Embedded Grimoire must not replace EnchantmentFusionScreen");
-                Rect2i book = screen.guiBounds();
+                // Leave the overlay open for real rendered frames, rather than closing it in the opening tick.
+                next(30, 10);
+            }
+            case 30 -> {
+                require(client.screen instanceof EnchantmentFusionScreen, "Embedded Grimoire must keep the station open");
+                EnchantmentFusionScreen screen = (EnchantmentFusionScreen) client.screen;
+                Rect2i b = screen.guiBounds();
+                Rect2i book = b;
                 click(screen, book.getX() + 32, book.getY() + 40);
                 var overlayField = EnchantmentFusionScreen.class.getDeclaredField("grimoireOverlay");
                 overlayField.setAccessible(true);
@@ -673,6 +681,7 @@ public final class ClientSmoke implements ClientModInitializer {
                     "First Escape must clear search without closing the embedded Grimoire");
                 require(screen.keyPressed(new KeyEvent(256, 0, 0)), "Second Escape should close embedded Grimoire");
                 require(overlayField.get(screen) == null, "Escape must close the overlay, not the station");
+                b = screen.guiBounds();
 
                 // Toggle in-panel Synergy Popover badge (253..277, 8..24) open & closed (never expands into JEI/REI!)
                 click(screen, b.getX() + 265, b.getY() + 16);
@@ -1194,7 +1203,47 @@ public final class ClientSmoke implements ClientModInitializer {
                 if (Math.abs(enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().economy().lowFailChance()) > 0.0001
                     || enchantment_fusion.config.FusionConfigClient.revision() != enchantment_fusion.config.FusionConfigStore.revision()) return;
                 client.screen.onClose();
-                finish(client, "CLIENT SMOKE PASS: server-owned rituals, temporary frost, Loyalty/Riptide skills and live configuration");
+                require(client.options.getMenuBackgroundBlurriness() >= 1,
+                    "Standalone Grimoire regression requires menu background blur to be enabled");
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
+                        require(FusionItems.FUSION_GRIMOIRE.use(sp.level(), sp, net.minecraft.world.InteractionHand.MAIN_HAND)
+                            == net.minecraft.world.InteractionResult.SUCCESS, "Using the Grimoire must succeed");
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(25, 1);
+            }
+            case 25 -> {
+                // The normal item-use packet must open the standalone screen on the real client.
+                if (!serverReadyFlag || !(client.screen instanceof FusionGrimoireScreen)) return;
+                next(26, 12);
+            }
+            case 26 -> {
+                require(client.screen instanceof FusionGrimoireScreen, "Standalone Grimoire must remain open after rendering");
+                var screen = (FusionGrimoireScreen) client.screen;
+                var leftField = FusionGrimoireScreen.class.getDeclaredField("bookLeft");
+                var topField = FusionGrimoireScreen.class.getDeclaredField("bookTop");
+                var chapterField = FusionGrimoireScreen.class.getDeclaredField("activeChapter");
+                leftField.setAccessible(true);
+                topField.setAccessible(true);
+                chapterField.setAccessible(true);
+                int left = leftField.getInt(screen);
+                int top = topField.getInt(screen);
+                click(screen, left + 24 + FusionGrimoireScreen.CHAPTER_TAB_W + 4 + 6, top - 15 + 8);
+                require(chapterField.get(screen) == FusionGrimoireScreen.Chapter.SIGNATURES,
+                    "Standalone Grimoire chapter tabs must remain clickable");
+                next(27, 10);
+            }
+            case 27 -> {
+                require(client.screen instanceof FusionGrimoireScreen, "Standalone Grimoire must render after changing chapters");
+                require(client.screen.keyPressed(new KeyEvent(InputConstants.KEY_ESCAPE, 0, 0)),
+                    "Escape must close the standalone Grimoire");
+                require(client.screen == null, "Standalone Grimoire must return to the world");
+                finish(client, "CLIENT SMOKE PASS: server-owned rituals, temporary frost, live configuration and standalone/embedded Grimoire rendering");
             }
             default -> throw new AssertionError("Unknown phase " + phase);
         }
