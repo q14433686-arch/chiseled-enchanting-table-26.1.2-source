@@ -49,7 +49,10 @@ final class FlameFusionProbe {
     private BlockPos base;
     private Zombie target;
     private Zombie witness;
+    private Zombie ally;
     private Cow bystander;
+    private net.minecraft.world.scores.PlayerTeam oldTeam;
+    private net.minecraft.world.scores.PlayerTeam smokeTeam;
     private double witnessStartX;
 
     private static void require(boolean value, String message) {
@@ -63,7 +66,9 @@ final class FlameFusionProbe {
 
     private Zombie zombie(double x, double z) {
         Zombie zombie = new Zombie(level);
-        zombie.setNoAi(true);
+        // NoAI also disables vanilla velocity integration; remove goals instead so
+        // the test sees real knockback, collisions and travel without random wandering.
+        zombie.removeAllGoals(goal -> true);
         zombie.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
         zombie.setPos(base.getX() + x, base.getY(), base.getZ() + z);
         level.addFreshEntity(zombie);
@@ -86,6 +91,10 @@ final class FlameFusionProbe {
         this.oldPos = sp.position();
         this.oldHand = sp.getMainHandItem();
         this.base = table.above(45).east(4);
+        var scoreboard = level.getScoreboard();
+        oldTeam = scoreboard.getPlayersTeam(sp.getScoreboardName());
+        smokeTeam = scoreboard.addPlayerTeam("ef_smoke");
+        scoreboard.addPlayerToTeam(sp.getScoreboardName(), smokeTeam);
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !denied.contains(entity.getUUID()));
 
         for (int x = -1; x <= 10; x++) for (int z = -3; z <= 3; z++) {
@@ -117,6 +126,18 @@ final class FlameFusionProbe {
         require(migrated.getLevel(fire) == 0 && migrated.getLevel(sharp) == 1, "Migration must preserve unrelated enchantments");
         require(legacy.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().getFirst().equals(PRESSURE),
             "Migration must preserve the ordered pair");
+        try {
+            enchantment_fusion.mechanics.signatures.SignatureCatalog.publish(
+                new enchantment_fusion.mechanics.signatures.SignatureCatalog.Snapshot(Map.of(), Map.of(), List.of(), Map.of()));
+            require(FusionStationOperations.normalizeRedesignedPrimary(legacy, level.registryAccess()),
+                "Removing the redesign mapping must restore the old primary representation");
+            require(legacy.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(fire) == 2,
+                "Restoration must preserve the original primary level");
+        } finally {
+            enchantment_fusion.mechanics.signatures.SignatureCatalog.reloadFromJson(null);
+        }
+        require(FusionStationOperations.normalizeRedesignedPrimary(legacy, level.registryAccess()),
+            "Reloading the redesign must re-normalize existing equipment");
         var inv = new net.minecraft.world.SimpleContainer(4);
         inv.setItem(FusionStationOperations.SLOT_TARGET, legacy);
         inv.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.LAPIS_LAZULI));
@@ -129,6 +150,8 @@ final class FlameFusionProbe {
 
         target = zombie(1.5D, 0.5D);
         witness = zombie(3.3D, 2.1D);
+        ally = zombie(3.0D, 2.9D);
+        level.getScoreboard().addPlayerToTeam(ally.getScoreboardName(), smokeTeam);
         bystander = cow(3.3D, -1.2D);
         sp.setItemInHand(InteractionHand.MAIN_HAND, fresh);
         MatrixEffectExecutor.clearCooldowns();
@@ -149,14 +172,20 @@ final class FlameFusionProbe {
 
     void checkPressureAndStartWake() {
         require(target.isOnFire(), "The confirmed full hit must ignite its primary target");
-        require(witness.getHealth() < witness.getMaxHealth() && witness.isOnFire(), "A genuine wall collision must burst onto a hostile");
+        require(witness.getHealth() < witness.getMaxHealth() && witness.isOnFire(),
+            "A genuine wall collision must burst onto a hostile: target=" + target.position()
+                + " velocity=" + target.getDeltaMovement() + " collision=" + target.horizontalCollision
+                + " witness=" + witness.position() + " health=" + witness.getHealth() + " burning=" + witness.isOnFire());
+        require(!ally.isOnFire() && ally.getHealth() == ally.getMaxHealth(), "The burst must not harm allied hostiles");
         require(bystander.getHealth() == bystander.getMaxHealth() && !bystander.isOnFire(), "The burst must not harm passive bystanders");
         require(level.getBlockState(base.offset(4, 1, 0)).is(Blocks.STONE), "Heat pressure must not destroy the wall");
         for (int y = 0; y <= 2; y++) for (int z = -1; z <= 1; z++) set(base.offset(4, y, z), Blocks.AIR.defaultBlockState());
-        target.discard(); witness.discard(); bystander.discard();
+        target.discard(); witness.discard(); ally.discard(); bystander.discard();
         target = zombie(1.5D, 0.5D);
         witness = zombie(2.9D, 1.25D);
-        bystander = cow(2.9D, -0.25D);
+        ally = zombie(2.4D, -0.25D);
+        level.getScoreboard().addPlayerToTeam(ally.getScoreboardName(), smokeTeam);
+        bystander = cow(3.5D, -1.0D);
         witnessStartX = witness.getX();
         ItemStack reverse = new ItemStack(Items.DIAMOND_SWORD);
         FusionStationOperations.applyFusedPairToGear(reverse, WAKE, level.registryAccess());
@@ -171,6 +200,7 @@ final class FlameFusionProbe {
             require(witness.isOnFire(), "A hostile crossing the real wake must ignite");
             require(witness.getX() > witnessStartX + 0.05D || witness.getDeltaMovement().x > 0.05D,
                 "Wake must push the hostile along the target's path");
+            require(!ally.isOnFire(), "The wake must not ignite allied hostiles");
             require(!bystander.isOnFire(), "The wake must not ignite passive bystanders");
             for (BlockPos pos : saved.keySet()) {
                 require(!level.getBlockState(pos).is(Blocks.FIRE), "Neither signature may place a fire block");
@@ -179,6 +209,8 @@ final class FlameFusionProbe {
         } finally {
             denied.clear();
             spawned.forEach(Entity::discard);
+            level.getScoreboard().removePlayerTeam(smokeTeam);
+            if (oldTeam != null) level.getScoreboard().addPlayerToTeam(player.getScoreboardName(), oldTeam);
             saved.forEach(level::setBlockAndUpdate);
             player.teleportTo(oldPos.x, oldPos.y, oldPos.z);
             player.setDeltaMovement(Vec3.ZERO);
