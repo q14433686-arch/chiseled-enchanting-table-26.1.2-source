@@ -162,6 +162,9 @@ public final class FusionGrimoireScreen extends Screen {
         }
 
         FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.GRIMOIRE_SPREAD, bx, by, BOOK_W, BOOK_H);
+        for (int clasp = 0; clasp < 5; clasp++) {
+            FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.VESSEL_FILLED, bx + BOOK_W / 2 - 6, by + 28 + clasp * 38, 12, 12);
+        }
         renderChapterTab(ctx, this.activeChapter.ordinal(), this.activeChapter, true, mouseX, mouseY);
 
         // Top-right Close [X] button on the upper leather corner

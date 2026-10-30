@@ -123,9 +123,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     }
 
     public EnchantmentFusionScreen(EnchantmentFusionMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title);
-        this.imageWidth = EnchantmentFusionMenu.GUI_WIDTH;
-        this.imageHeight = EnchantmentFusionMenu.GUI_HEIGHT;
+        super(menu, playerInventory, title, EnchantmentFusionMenu.GUI_WIDTH, EnchantmentFusionMenu.GUI_HEIGHT);
     }
 
     @Override
@@ -183,7 +181,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     }
 
     @Override
-    protected void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
         // Deliberately omit super.extractBackground while viewing the altar so the 3D world
         // inside the Center Cutaway Viewport remains crystal-clear and unblurred!
         if (this.grimoireOverlay != null) {
@@ -1488,28 +1486,9 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     }
 
     private static String rejectKey(RejectReason reason) {
-        if (reason == null) {
+        if (reason == null || reason == RejectReason.NONE || reason.langKey().isEmpty()) {
             return "gui.enchantment_fusion.reject.invalid_combination";
         }
-        return switch (reason) {
-            case MISSING_INPUT -> "gui.enchantment_fusion.reject.missing_input";
-            case IDENTICAL_PAIR -> "gui.enchantment_fusion.reject.identical_pair";
-            case BOTH_CURSES -> "gui.enchantment_fusion.reject.both_curses";
-            case UNREGISTERED_PRIMARY -> "gui.enchantment_fusion.reject.unregistered_primary";
-            case UNREGISTERED_SECONDARY -> "gui.enchantment_fusion.reject.unregistered_secondary";
-            case NO_ACTIVE_TRIGGER -> "gui.enchantment_fusion.reject.no_active_trigger";
-            case NO_SECONDARY_PAYLOAD -> "gui.enchantment_fusion.reject.no_secondary_payload";
-            case HOST_FULL -> "gui.enchantment_fusion.reject.host_full";
-            case DUPLICATE_ON_HOST -> "gui.enchantment_fusion.reject.duplicate_on_host";
-            case EXCLUSIVE_ON_HOST -> "gui.enchantment_fusion.reject.exclusive_on_host";
-            case ABERRANT_LOCKED -> "gui.enchantment_fusion.reject.aberrant_locked";
-            case ALREADY_EXPANDED -> "gui.enchantment_fusion.reject.already_expanded";
-            case ALREADY_MAX_LEVEL -> "gui.enchantment_fusion.reject.already_max_level";
-            case INSUFFICIENT_XP -> "gui.enchantment_fusion.reject.insufficient_xp";
-            case INSUFFICIENT_REAGENTS -> "gui.enchantment_fusion.reject.insufficient_reagents";
-            case NEED_PURIFY_STABILIZERS -> "gui.enchantment_fusion.reject.need_purify_stabilizers";
-            case TRANSMUTE_CAP_FULL -> "gui.enchantment_fusion.reject.transmute_cap_full";
-            default -> "gui.enchantment_fusion.reject.invalid_combination";
-        };
+        return reason.langKey();
     }
 }
