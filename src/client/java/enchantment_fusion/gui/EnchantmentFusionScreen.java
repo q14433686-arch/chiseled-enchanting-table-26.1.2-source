@@ -943,17 +943,17 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     }
 
     private void appendAberrantPurifyHintLines(List<Component> lines) {
-        var econ = FusionMatrixRegistry.snapshotForSide(true).economy();
+        var econ = FusionMatrixRegistry.snapshotFor(true).economy();
         lines.add(Component.translatable(
             "tooltip.enchantment_fusion.aberrant_native_purify",
             econ.purifyAberrantStabilizers(),
             econ.purifyAberrantXp()
         ).withStyle(ChatFormatting.GOLD));
         lines.add(Component.translatable(
-            CetSoftBridge.isSisterModLoaded()
+            CetSoftBridge.isCetLoaded()
                 ? "tooltip.enchantment_fusion.aberrant_cet_active"
                 : "tooltip.enchantment_fusion.aberrant_cet_required"
-        ).withStyle(CetSoftBridge.isSisterModLoaded() ? ChatFormatting.AQUA : ChatFormatting.YELLOW));
+        ).withStyle(CetSoftBridge.isCetLoaded() ? ChatFormatting.AQUA : ChatFormatting.YELLOW));
     }
 
     private void appendFlipOrSplitHoverLines(List<Component> lines, BookManageState mState, boolean isFlip) {
@@ -1006,7 +1006,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         }
 
         int failPct = Math.round((float) (q.failureChance() * 100.0D));
-        var econ = FusionMatrixRegistry.snapshotForSide(true).economy();
+        var econ = FusionMatrixRegistry.snapshotFor(true).economy();
         int minFloorPct = Math.round((float) (econ.repulsiveMinFloor() * 100.0D));
         int feeSpendPct = Math.round((float) (econ.normalFailFeeRatio() * 100.0D));
         if (q.highRiskTier()) {
@@ -1038,7 +1038,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             return Component.translatable("gui.enchantment_fusion.tip.manage_need_book");
         }
         if (mState.isAberrant()) {
-            var econ = FusionMatrixRegistry.snapshotForSide(true).economy();
+            var econ = FusionMatrixRegistry.snapshotFor(true).economy();
             return Component.translatable(
                 "tooltip.enchantment_fusion.aberrant_native_purify",
                 econ.purifyAberrantStabilizers(),
@@ -1345,10 +1345,10 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
     private static String primaryActionLabelKey(OperationKind kind) {
         return switch (kind) {
-            case FUSE_NEW_BOOK -> "gui.enchantment_fusion.btn.fuse";
+            case FUSE_BOOKS -> "gui.enchantment_fusion.btn.fuse";
             case SOCKET_FUSED_BOOK -> "gui.enchantment_fusion.btn.inscribe";
-            case FUSE_INTO_GEAR -> "gui.enchantment_fusion.btn.fuse_gear";
-            case UPGRADE_GEAR_PAIR -> "gui.enchantment_fusion.btn.top_up";
+            case FUSE_ONTO_GEAR -> "gui.enchantment_fusion.btn.fuse_gear";
+            case TOP_UP_LEVEL -> "gui.enchantment_fusion.btn.top_up";
             case EXPAND_VESSEL -> "gui.enchantment_fusion.btn.expand_vessel";
             case INSCRIBE_SINGLE_CROSS -> "gui.enchantment_fusion.btn.inscribe_cross";
             case PURIFY_ABERRANT -> "gui.enchantment_fusion.btn.purify";

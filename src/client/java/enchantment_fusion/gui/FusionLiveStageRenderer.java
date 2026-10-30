@@ -185,7 +185,7 @@ public final class FusionLiveStageRenderer {
                 ribbonActivity
             );
         }
-        if (!slotB.isEmpty() || (channeling && activeOp == OperationKind.FUSE_NEW_BOOK)) {
+        if (!slotB.isEmpty() || (channeling && activeOp == OperationKind.FUSE_BOOKS)) {
             float sway = Mth.cos(tSec * 2.6F) * 4.5F;
             FusionGuiSkin.drawContinuousBezierRibbon(
                 ctx, FusionGuiSkin.CONDUIT_CYAN,
@@ -337,7 +337,7 @@ public final class FusionLiveStageRenderer {
                     drawScaledStageItem(ctx, slotTarget, cx, apexY, 1.02F + 0.18F * ch, Mth.sin(ch * Mth.TWO_PI * 2.0F) * 0.08F);
                 }
             }
-            case SOCKET_FUSED_BOOK, FUSE_INTO_GEAR, UPGRADE_GEAR_PAIR -> {
+            case SOCKET_FUSED_BOOK, FUSE_ONTO_GEAR, TOP_UP_LEVEL -> {
                 // Scene 2: Host gear hovers on throne while Rune Plate descends from top arch and stamps into ◇ gem
                 if (!slotTarget.isEmpty()) {
                     float impactDip = ch > 0.78F ? Mth.sin(((ch - 0.78F) / 0.22F) * Mth.PI) * 3.5F : 0.0F;
@@ -419,7 +419,7 @@ public final class FusionLiveStageRenderer {
             if (!slotTarget.isEmpty()) {
                 float bob = Mth.sin(tSec * 2.5F) * 2.0F;
                 drawScaledStageItem(ctx, slotTarget, cx, apexY + bob, 1.04F, 0.0F);
-            } else if (preview.executable() && preview.kind() == OperationKind.FUSE_NEW_BOOK) {
+            } else if (preview.executable() && preview.kind() == OperationKind.FUSE_BOOKS) {
                 float pulse = 0.78F + 0.08F * Mth.sin(tSec * 3.6F);
                 drawScaledStageItem(ctx, fusedBookDisplay(), cx, apexY - 2.0F, pulse, 0.0F);
             }

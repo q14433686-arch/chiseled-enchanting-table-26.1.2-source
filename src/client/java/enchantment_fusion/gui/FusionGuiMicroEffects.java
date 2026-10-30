@@ -91,6 +91,10 @@ public final class FusionGuiMicroEffects {
         }
     }
 
+    public static void triggerGrimoireSparkle(int x, int y) {
+        spawnSparkBurst(x, y, 7, 46.0F, 420L);
+    }
+
     public static void onServerVisualEvent(int eventKind) {
         triggerStationFeedback(eventKind, stationOriginX, stationOriginY);
     }

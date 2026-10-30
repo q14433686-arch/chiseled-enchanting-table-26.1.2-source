@@ -123,7 +123,7 @@ public final class FusionContextDrawer {
             ));
         }
 
-        if (hostRole != TargetRole.NONE) {
+        if (hostRole != TargetRole.OTHER) {
             boolean dmg = hostStack.isDamageableItem();
             for (String enchId : presentIds) {
                 Optional<TransmuteVariant> tvOpt = CrossDomainTransmutations.resolveForRole(enchId, hostRole, dmg);

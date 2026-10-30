@@ -597,7 +597,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 resourceReloadFuture.join();
                 finish(
                     client,
-                    "CLIENT SMOKE PASS: 0.6.0 auto-smelt + anvil guard + Spear multi-trigger + trajectory path cache + 174 signatures + CET cleanse"
+                    "CLIENT SMOKE PASS: 0.6.0 304x218 Live-Stage GUI + Bow fan_volley/sun_piercer/swift_draw + 150 signatures + 116 transmutations"
                 );
             }
             default -> throw new AssertionError("Unknown phase " + phase);

@@ -134,6 +134,7 @@ public final class FusionGuiSkin {
     public static final int COLOR_GREEN = 0xFF8CFFB0;
     public static final int COLOR_WARN = 0xFFFFB86C;
     public static final int COLOR_RED = 0xFFFF7A7A;
+    public static final int COLOR_CRIMSON = COLOR_RED;
     public static final int COLOR_MUTED = 0xFFB5A9CE;
 
     // Luminous Star-Codex Inks matching the dark Obsidian & Amethyst grimoire_spread.png
@@ -189,6 +190,14 @@ public final class FusionGuiSkin {
             || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_RCONTROL)
             || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_LSUPER)
             || InputConstants.isKeyDown(mc.getWindow(), InputConstants.KEY_RSUPER);
+    }
+
+    public static boolean isShiftDown() {
+        return isShiftHeld();
+    }
+
+    public static boolean isCtrlOrCmdDown() {
+        return isCtrlOrCmdHeld();
     }
 
     public static void drawSprite(GuiGraphicsExtractor ctx, Identifier sprite, int x, int y, int w, int h) {
@@ -447,6 +456,24 @@ public final class FusionGuiSkin {
             return;
         }
         drawScaledText(ctx, font, fitted.text(), x, y, fitted.scale(), argbColor);
+    }
+
+    public static void drawRightBoundedText(
+        GuiGraphicsExtractor ctx,
+        Font font,
+        String text,
+        int rightX,
+        int y,
+        int maxW,
+        float maxScale,
+        int argbColor
+    ) {
+        FittedText fitted = fitBoundedText(font, text, maxW, maxScale);
+        if (fitted.text().isEmpty()) {
+            return;
+        }
+        float drawX = rightX - font.width(fitted.text()) * fitted.scale();
+        drawScaledText(ctx, font, fitted.text(), drawX, y, fitted.scale(), argbColor);
     }
 
     /**

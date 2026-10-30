@@ -53,7 +53,7 @@ public final class FusionRitualDirector {
 
         channeling = true;
         startMs = System.currentTimeMillis();
-        activeKind = kind == null ? OperationKind.FUSE_NEW_BOOK : kind;
+        activeKind = kind == null ? OperationKind.FUSE_BOOKS : kind;
         activeDurationMs = switch (activeKind) {
             case EXPAND_VESSEL -> 1450L;
             case INSCRIBE_SINGLE_CROSS -> 1550L;
@@ -71,7 +71,7 @@ public final class FusionRitualDirector {
 
     private static void playStartSound(OperationKind kind) {
         switch (kind) {
-            case SOCKET_FUSED_BOOK, FUSE_INTO_GEAR, UPGRADE_GEAR_PAIR -> {
+            case SOCKET_FUSED_BOOK, FUSE_ONTO_GEAR, TOP_UP_LEVEL -> {
                 FusionGuiMicroEffects.playUiSound(SoundEvents.ANVIL_PLACE, 1.48F, 0.28F);
                 FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.05F, 0.72F);
             }
@@ -119,7 +119,7 @@ public final class FusionRitualDirector {
     private static void playStageSound(OperationKind kind, int stage) {
         float pitch = 0.96F + stage * 0.18F;
         switch (kind) {
-            case SOCKET_FUSED_BOOK, FUSE_INTO_GEAR, UPGRADE_GEAR_PAIR ->
+            case SOCKET_FUSED_BOOK, FUSE_ONTO_GEAR, TOP_UP_LEVEL ->
                 FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_CLUSTER_PLACE, pitch + 0.1F, 0.58F);
             case EXPAND_VESSEL ->
                 FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.82F + stage * 0.22F, 0.65F);
@@ -150,7 +150,7 @@ public final class FusionRitualDirector {
                 FusionGuiMicroEffects.playUiSound(SoundEvents.RESPAWN_ANCHOR_CHARGE, 1.35F, 0.55F);
                 FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.40F, 0.85F);
             }
-            case SOCKET_FUSED_BOOK, FUSE_INTO_GEAR, UPGRADE_GEAR_PAIR -> {
+            case SOCKET_FUSED_BOOK, FUSE_ONTO_GEAR, TOP_UP_LEVEL -> {
                 FusionGuiMicroEffects.playUiSound(SoundEvents.SMITHING_TABLE_USE, 1.22F, 0.62F);
                 FusionGuiMicroEffects.playUiSound(SoundEvents.ENCHANTMENT_TABLE_USE, 1.18F, 0.72F);
             }
