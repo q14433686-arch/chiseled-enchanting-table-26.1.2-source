@@ -55,7 +55,7 @@ public final class FusionDataLoader implements SimpleSynchronousResourceReloadLi
             JsonObject signaturesObj = readMergedJsonStack(manager, SIGNATURES_PATH);
             JsonObject transmutesObj = readMergedJsonStack(manager, TRANSMUTATIONS_PATH);
             FusionMatrixRegistry.Snapshot staged = FusionMatrixRegistry.parseFromJson(matrixObj, repulsiveObj, economyObj);
-            FusionMatrixRegistry.publish(staged);
+            FusionMatrixRegistry.publishFromReload(staged);
             SignatureCatalog.reloadFromJson(signaturesObj);
             TransmuteCatalog.reloadFromJson(transmutesObj);
             EnchantmentFusion.LOGGER.info(

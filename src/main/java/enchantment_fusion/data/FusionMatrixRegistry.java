@@ -3,6 +3,7 @@ package enchantment_fusion.data;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import enchantment_fusion.config.ModRuntimeConfig;
 import enchantment_fusion.model.PayloadType;
 import enchantment_fusion.model.TriggerType;
 import java.util.ArrayList;
@@ -313,7 +314,8 @@ public final class FusionMatrixRegistry {
         }
     }
 
-    private static volatile Snapshot serverActive = createBuiltInSnapshot();
+    private static volatile Snapshot datapackBase = createBuiltInSnapshot();
+    private static volatile Snapshot serverActive = datapackBase;
     private static volatile @Nullable Snapshot clientOverride = null;
 
     private FusionMatrixRegistry() {}
@@ -336,7 +338,27 @@ public final class FusionMatrixRegistry {
 
     public static void publish(Snapshot next) {
         if (next != null) {
+            datapackBase = next;
             serverActive = next;
+        }
+    }
+
+    /** Publishes a datapack reload snapshot while honoring {@link ModRuntimeConfig}'s override toggle. */
+    public static void publishFromReload(Snapshot next) {
+        if (next != null) {
+            datapackBase = next;
+            refreshRuntimeConfigOverlay();
+        }
+    }
+
+    /** Rebuilds {@link #serverActive} whenever {@link ModRuntimeConfig} changes in-game or from disk. */
+    public static void refreshRuntimeConfigOverlay() {
+        Snapshot base = datapackBase;
+        ModRuntimeConfig.Snapshot cfg = ModRuntimeConfig.localSnapshot();
+        if (cfg != null && cfg.overrideDatapacks()) {
+            serverActive = new Snapshot(base.profiles(), base.exclusiveGroups(), cfg.economy());
+        } else {
+            serverActive = base;
         }
     }
 

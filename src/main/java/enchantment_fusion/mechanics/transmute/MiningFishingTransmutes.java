@@ -227,7 +227,7 @@ public final class MiningFishingTransmutes {
             for (Direction dir : Direction.values()) {
                 BlockPos adj = pos.relative(dir);
                 BlockState adjState = level.getBlockState(adj);
-                if (adjState.is(Blocks.WATER)) level.setBlockAndUpdate(adj, Blocks.FROSTED_ICE.defaultBlockState());
+                if (adjState.is(Blocks.WATER)) enchantment_fusion.mechanics.AberrantRegistry.placeSingleFrostedIce(level, adj);
                 else if (adjState.is(Blocks.LAVA)) level.setBlockAndUpdate(adj, Blocks.COBBLESTONE.defaultBlockState());
             }
         }

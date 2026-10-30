@@ -1,6 +1,8 @@
 package enchantment_fusion;
 
 import enchantment_fusion.compat.CetSoftBridge;
+import enchantment_fusion.config.ModConfigNetworking;
+import enchantment_fusion.config.ModRuntimeConfig;
 import enchantment_fusion.data.FusionDataLoader;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.FusionWorldLoot;
@@ -30,12 +32,14 @@ public final class EnchantmentFusion implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ModRuntimeConfig.bootstrap();
         FusionDataComponents.init();
         FusionBlocks.init();
         FusionItems.init();
         FusionBlockEntities.init();
         FusionMenus.init();
         FusionNetworking.init();
+        ModConfigNetworking.init();
         FusionDataLoader.init();
         FusionWorldLoot.init();
         CompendiumDiscoveryTracker.initServerHooks();

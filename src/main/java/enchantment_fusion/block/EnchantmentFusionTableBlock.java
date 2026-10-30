@@ -71,9 +71,13 @@ public final class EnchantmentFusionTableBlock extends BaseEntityBlock {
         BlockState state,
         BlockEntityType<T> type
     ) {
-        return level.isClientSide()
-            ? createTickerHelper(type, FusionBlockEntities.ENCHANTMENT_FUSION_TABLE_BE, EnchantmentFusionTableBlockEntity::clientTick)
-            : null;
+        return createTickerHelper(
+            type,
+            FusionBlockEntities.ENCHANTMENT_FUSION_TABLE_BE,
+            level.isClientSide()
+                ? EnchantmentFusionTableBlockEntity::clientTick
+                : EnchantmentFusionTableBlockEntity::serverTick
+        );
     }
 
     @Override

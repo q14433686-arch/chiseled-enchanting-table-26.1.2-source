@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import enchantment_fusion.EnchantmentFusion;
+import enchantment_fusion.config.ModRuntimeConfig;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TransmuteVariant;
 import enchantment_fusion.mechanics.VesselCapacityRules;
@@ -230,6 +231,7 @@ public final class TransmuteCatalog {
         if (byRole == null) return Optional.empty();
         RoleBinding b = byRole.get(role);
         if (b == null || (b.requireDamageable() && !damageable)) return Optional.empty();
+        if (ModRuntimeConfig.isTransmutationDisabled(b.variant().id())) return Optional.empty();
         return Optional.of(b.variant());
     }
 

@@ -7,12 +7,12 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Operation-aware skippable Arcane Ritual Director synchronizing:
+ * Operation-aware Arcane Ritual Director synchronizing:
  * <ul>
- *   <li>Operation-specific soundscapes &amp; channeling durations (Book Fuse, Gear Socket,
- *       Cross-Domain Transmute, Vessel Expand, Aberrant Purify)</li>
+ *   <li>Server-authoritative background rituals on {@code EnchantmentFusionTableBlockEntity}
+ *       (allowing players to close the UI mid-ritual while the 3D altar finishes in world space)</li>
+ *   <li>Fallback client-local ritual timing when background rituals are disabled</li>
  *   <li>Live 3D Stage choreography in {@link FusionLiveStageRenderer}</li>
- *   <li>3D World Fusion Altar crystal acceleration, 4-brazier eruption, and inward orbital spiral</li>
  *   <li>Instant second-click / Spacebar / Enter skip for rapid batch crafting</li>
  * </ul>
  */
@@ -21,6 +21,9 @@ public final class FusionRitualDirector {
     public static final long CLIMAX_BANNER_MS = 1550L;
 
     private static boolean channeling = false;
+    private static boolean serverDriven = false;
+    private static float serverProgress = 0.0F;
+    private static long serverPendingGraceUntilMs = 0L;
     private static long startMs = 0L;
     private static long activeDurationMs = DEFAULT_RITUAL_MS;
     private static OperationKind activeKind = OperationKind.NONE;
@@ -34,8 +37,95 @@ public final class FusionRitualDirector {
     private static String climaxTitle = "";
     private static boolean climaxAberrant = false;
     private static OperationKind climaxKind = OperationKind.NONE;
+    private static boolean climaxSawOutput = false;
 
     private FusionRitualDirector() {}
+
+    /**
+     * Starts or skips a server-authoritative background ritual on the altar BlockEntity.
+     */
+    public static void triggerOrSkipServerRitual(
+        boolean menuAlreadyChanneling,
+        OperationKind kind,
+        String selectionToken,
+        String previewTitle,
+        boolean highRiskOrAberrant,
+        BlockPos tablePos,
+        Runnable startPacketSender,
+        Runnable skipPacketSender
+    ) {
+        if (menuAlreadyChanneling || (serverDriven && channeling)) {
+            OperationKind finished = activeKind != OperationKind.NONE ? activeKind : (kind != null ? kind : OperationKind.FUSE_BOOKS);
+            String title = !pendingRevealTitle.isEmpty() ? pendingRevealTitle : (previewTitle == null ? "" : previewTitle);
+            cancel();
+            showClimaxBanner(finished, title, highRiskOrAberrant);
+            skipPacketSender.run();
+            return;
+        }
+        channeling = true;
+        serverDriven = true;
+        serverProgress = 0.02F;
+        serverPendingGraceUntilMs = System.currentTimeMillis() + 450L;
+        activeKind = kind == null ? OperationKind.FUSE_BOOKS : kind;
+        boundToken = selectionToken == null ? "" : selectionToken;
+        pendingRevealTitle = previewTitle == null ? "" : previewTitle;
+        pendingAberrant = highRiskOrAberrant;
+        chimedStage = 0;
+        activeTablePos = tablePos != null ? tablePos.immutable() : null;
+        playStartSound(activeKind);
+        startPacketSender.run();
+    }
+
+    /**
+     * Synchronizes UI stage progress with {@code EnchantmentFusionMenu}'s synced BlockEntity ritual data,
+     * and dismisses post-climax item echoes immediately once the player removes the result from Slot 3.
+     */
+    public static void syncFromServerMenu(
+        boolean serverActive,
+        float syncedProgress,
+        OperationKind syncedKind,
+        boolean syncedHighRisk,
+        String fallbackTitle,
+        BlockPos tablePos,
+        boolean targetSlotHasItem
+    ) {
+        if (hasActiveClimaxBanner()) {
+            if (targetSlotHasItem) {
+                climaxSawOutput = true;
+            } else if (climaxSawOutput) {
+                dismissClimax();
+            }
+        }
+
+        if (serverActive) {
+            channeling = true;
+            serverDriven = true;
+            serverProgress = Math.max(0.02F, syncedProgress);
+            activeKind = syncedKind != null ? syncedKind : OperationKind.FUSE_BOOKS;
+            pendingAberrant = syncedHighRisk;
+            if (pendingRevealTitle.isEmpty() && fallbackTitle != null) {
+                pendingRevealTitle = fallbackTitle;
+            }
+            activeTablePos = tablePos != null ? tablePos.immutable() : null;
+            return;
+        }
+
+        if (serverDriven && channeling) {
+            if (System.currentTimeMillis() < serverPendingGraceUntilMs) {
+                return;
+            }
+            OperationKind finished = activeKind;
+            String reveal = pendingRevealTitle;
+            boolean ab = pendingAberrant;
+            cancel();
+            if (!reveal.isEmpty()) {
+                showClimaxBanner(finished, reveal, ab);
+                if (targetSlotHasItem) {
+                    climaxSawOutput = true;
+                }
+            }
+        }
+    }
 
     public static void triggerOrSkip(
         OperationKind kind,
@@ -46,12 +136,13 @@ public final class FusionRitualDirector {
         Runnable commitAction
     ) {
         String safeToken = selectionToken == null ? "" : selectionToken;
-        if (channeling && safeToken.equals(boundToken)) {
+        if (channeling && !serverDriven && safeToken.equals(boundToken)) {
             completeAndCommit(commitAction);
             return;
         }
 
         channeling = true;
+        serverDriven = false;
         startMs = System.currentTimeMillis();
         activeKind = kind == null ? OperationKind.FUSE_BOOKS : kind;
         activeDurationMs = switch (activeKind) {
@@ -95,7 +186,7 @@ public final class FusionRitualDirector {
     }
 
     public static void updateFrame(String liveSelectionToken, boolean stillExecutable, Runnable commitAction) {
-        if (!channeling) {
+        if (!channeling || serverDriven) {
             return;
         }
         String safeLive = liveSelectionToken == null ? "" : liveSelectionToken;
@@ -135,10 +226,15 @@ public final class FusionRitualDirector {
         boolean ab = pendingAberrant;
         OperationKind finishedKind = activeKind;
         cancel();
+        showClimaxBanner(finishedKind, reveal, ab);
+        commitAction.run();
+    }
 
-        climaxTitle = reveal;
+    private static void showClimaxBanner(OperationKind finishedKind, String reveal, boolean ab) {
+        climaxTitle = reveal == null ? "" : reveal;
         climaxAberrant = ab;
         climaxKind = finishedKind;
+        climaxSawOutput = false;
         climaxUntilMs = System.currentTimeMillis() + CLIMAX_BANNER_MS;
 
         switch (finishedKind) {
@@ -159,11 +255,19 @@ public final class FusionRitualDirector {
                 FusionGuiMicroEffects.playUiSound(SoundEvents.ENCHANTMENT_TABLE_USE, ab ? 0.78F : 1.12F, 0.75F);
             }
         }
-        commitAction.run();
+    }
+
+    public static void dismissClimax() {
+        climaxUntilMs = 0L;
+        climaxTitle = "";
+        climaxSawOutput = false;
     }
 
     public static void cancel() {
         channeling = false;
+        serverDriven = false;
+        serverProgress = 0.0F;
+        serverPendingGraceUntilMs = 0L;
         boundToken = "";
         chimedStage = 0;
         activeKind = OperationKind.NONE;
@@ -174,6 +278,10 @@ public final class FusionRitualDirector {
         return channeling;
     }
 
+    public static boolean isServerDrivenChanneling() {
+        return channeling && serverDriven;
+    }
+
     public static OperationKind activeOperationKind() {
         return channeling ? activeKind : OperationKind.NONE;
     }
@@ -181,6 +289,9 @@ public final class FusionRitualDirector {
     public static float channelProgress() {
         if (!channeling) {
             return 0.0F;
+        }
+        if (serverDriven) {
+            return Mth.clamp(serverProgress, 0.0F, 1.0F);
         }
         long elapsed = System.currentTimeMillis() - startMs;
         return Mth.clamp((float) elapsed / (float) Math.max(200L, activeDurationMs), 0.0F, 1.0F);

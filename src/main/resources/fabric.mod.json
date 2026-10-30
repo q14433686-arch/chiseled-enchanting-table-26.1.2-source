@@ -20,6 +20,9 @@
     "client": [
       "enchantment_fusion.EnchantmentFusionClient"
     ],
+    "modmenu": [
+      "enchantment_fusion.compat.modmenu.EnchantmentFusionModMenuPlugin"
+    ],
     "jei_mod_plugin": [
       "enchantment_fusion.compat.jei.EnchantmentFusionJeiPlugin"
     ],
@@ -37,6 +40,7 @@
     "fabric-api": ">=0.151.0"
   },
   "suggests": {
+    "modmenu": "*",
     "chiseled-enchanting-table": "*",
     "chiseled_enchanting_table": "*"
   }

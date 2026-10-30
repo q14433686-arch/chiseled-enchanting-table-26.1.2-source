@@ -72,6 +72,8 @@ public final class FusionGuiSkin {
     public static final Identifier BTN_NORMAL = EnchantmentFusion.id("textures/gui/button_normal.png");
     public static final Identifier BTN_HOVER = EnchantmentFusion.id("textures/gui/button_hover.png");
     public static final Identifier BTN_DISABLED = EnchantmentFusion.id("textures/gui/button_disabled.png");
+    public static final Identifier BTN_CONFIG = EnchantmentFusion.id("textures/gui/btn_config.png");
+    public static final Identifier BTN_CONFIG_HOVER = EnchantmentFusion.id("textures/gui/btn_config_hover.png");
 
     public static final Identifier VESSEL_EMPTY = EnchantmentFusion.id("textures/gui/vessel_gem_empty.png");
     public static final Identifier VESSEL_FILLED = EnchantmentFusion.id("textures/gui/vessel_gem_filled.png");

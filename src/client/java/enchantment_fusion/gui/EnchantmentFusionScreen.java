@@ -1,6 +1,7 @@
 package enchantment_fusion.gui;
 
 import enchantment_fusion.compat.CetSoftBridge;
+import enchantment_fusion.config.ModRuntimeConfig;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.gui.FusionGuiSkin.FittedText;
 import enchantment_fusion.gui.FusionGuiSkin.HitBox;
@@ -76,6 +77,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     public static final int RIGHT_INNER_W = 102;
 
     // Interactive HitBoxes (relative to leftPos, topPos)
+    public static final HitBox CONFIG_BTN = new HitBox(75, 8, 13, 13);
     public static final HitBox SWAP_BTN = new HitBox(38, 29, 20, 20);
     public static final HitBox GRIMOIRE_BTN = new HitBox(279, 8, 18, 16);
     public static final HitBox EXEC_BTN = new HitBox(193, 96, 102, 18);
@@ -92,6 +94,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     private @Nullable Boolean lastObservedGearMode = null;
     private final FusionContextDrawer contextDrawer = new FusionContextDrawer();
     private @Nullable FusionGrimoireScreen grimoireOverlay = null;
+    private @Nullable EnchantmentFusionConfigScreen configOverlay = null;
     private @Nullable StationPreview cachedFramePreview = null;
     private @Nullable Component disabledFeedbackText = null;
     private long disabledFeedbackUntilMs = 0L;
@@ -122,9 +125,20 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         if (this.grimoireOverlay != null && this.minecraft != null) {
             this.grimoireOverlay.init(this.width, this.height);
         }
+        if (this.configOverlay != null && this.minecraft != null) {
+            this.configOverlay.init(this.width, this.height);
+        }
     }
 
     public Rect2i guiBounds() {
+        if (this.configOverlay != null) {
+            return new Rect2i(
+                (this.width - EnchantmentFusionConfigScreen.PANEL_W) / 2,
+                (this.height - EnchantmentFusionConfigScreen.PANEL_H) / 2 + 6,
+                EnchantmentFusionConfigScreen.PANEL_W,
+                EnchantmentFusionConfigScreen.PANEL_H
+            );
+        }
         if (this.grimoireOverlay != null) {
             return new Rect2i(
                 (this.width - FusionGrimoireScreen.BOOK_W) / 2,
@@ -165,13 +179,28 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         if (this.minecraft == null) {
             return;
         }
-        FusionRitualDirector.cancel();
+        if (!ModRuntimeConfig.clientView().backgroundRitualEnabled()) {
+            FusionRitualDirector.cancel();
+        }
+        this.configOverlay = null;
         this.contextDrawer.close();
         int initCh = isGearModeActive() ? 2 : 1;
         FusionGrimoireScreen overlay = new FusionGrimoireScreen(() -> this.grimoireOverlay = null, initCh);
         overlay.init(this.width, this.height);
         this.grimoireOverlay = overlay;
         FusionGuiMicroEffects.playUiSound(SoundEvents.BOOK_PAGE_TURN, 1.0F, 0.85F);
+    }
+
+    private void openEmbeddedConfig() {
+        if (this.minecraft == null) {
+            return;
+        }
+        this.grimoireOverlay = null;
+        this.contextDrawer.close();
+        EnchantmentFusionConfigScreen overlay = new EnchantmentFusionConfigScreen(this, () -> this.configOverlay = null);
+        overlay.init(this.width, this.height);
+        this.configOverlay = overlay;
+        FusionGuiMicroEffects.playUiSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.08F, 0.75F);
     }
 
     private boolean canSwapPhysicalSlots() {
@@ -208,6 +237,16 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         boolean gearMode = isGearModeActive();
 
         String execToken = preview.expectedExecuteToken();
+        boolean targetHasItem = !this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET).isEmpty();
+        FusionRitualDirector.syncFromServerMenu(
+            this.menu.isServerRitualChanneling(),
+            this.menu.serverRitualProgress(),
+            this.menu.serverRitualKind(),
+            this.menu.serverRitualHighRisk(),
+            preview.executable() ? buildPreviewTitleLine(preview, registries) : "",
+            this.menu.tableBlockPos(),
+            targetHasItem
+        );
         FusionRitualDirector.updateFrame(
             execToken,
             preview.executable(),
@@ -321,8 +360,13 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             : Component.translatable("gui.enchantment_fusion.pedestal.fuse_roles").getString();
         FusionGuiSkin.drawCenteredBoundedText(
             ctx, this.font, pedTitle,
-            left + 8, 80, top + 14.0F,
+            left + 8, 65, top + 14.0F,
             0.56F, FusionGuiSkin.COLOR_GOLD
+        );
+        boolean hovCfg = CONFIG_BTN.containsAt(left, top, mouseX, mouseY);
+        FusionGuiSkin.drawSprite(
+            ctx, hovCfg ? FusionGuiSkin.BTN_CONFIG_HOVER : FusionGuiSkin.BTN_CONFIG,
+            left + CONFIG_BTN.x(), top + CONFIG_BTN.y(), CONFIG_BTN.w(), CONFIG_BTN.h()
         );
 
         boolean hasSlot0 = !this.menu.stationContainer().getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty();
@@ -744,6 +788,11 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
+        if (this.configOverlay != null) {
+            super.extractRenderState(ctx, -1000, -1000, partialTick);
+            this.configOverlay.extractRenderState(ctx, mouseX, mouseY, partialTick);
+            return;
+        }
         if (this.grimoireOverlay != null) {
             super.extractRenderState(ctx, -1000, -1000, partialTick);
             this.grimoireOverlay.extractRenderState(ctx, mouseX, mouseY, partialTick);
@@ -775,7 +824,10 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             return;
         }
 
-        if (lines.isEmpty() && GRIMOIRE_BTN.containsAt(left, top, mouseX, mouseY)) {
+        if (lines.isEmpty() && CONFIG_BTN.containsAt(left, top, mouseX, mouseY)) {
+            lines.add(Component.translatable("gui.enchantment_fusion.config.title").withStyle(ChatFormatting.GOLD));
+            lines.add(Component.translatable("gui.enchantment_fusion.config.tip.btn").withStyle(ChatFormatting.GRAY));
+        } else if (lines.isEmpty() && GRIMOIRE_BTN.containsAt(left, top, mouseX, mouseY)) {
             lines.add(Component.translatable("item.enchantment_fusion.fusion_grimoire").withStyle(ChatFormatting.GOLD));
             lines.add(Component.translatable("gui.enchantment_fusion.tip.grimoire_btn").withStyle(ChatFormatting.GRAY));
         } else if (lines.isEmpty() && SWAP_BTN.containsAt(left, top, mouseX, mouseY)) {
@@ -1053,6 +1105,9 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.keyPressed(event);
+        }
         if (this.grimoireOverlay != null) {
             if (event.key() == 256) {
                 this.grimoireOverlay = null;
@@ -1067,22 +1122,24 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             return true;
         }
 
-        if (event.key() == 256 && FusionRitualDirector.isChanneling()) {
+        // Only eat ESC to cancel when background altar rituals are disabled; otherwise ESC closes UI
+        // cleanly while EnchantmentFusionTableBlockEntity finishes channeling on the altar!
+        if (event.key() == 256
+            && FusionRitualDirector.isChanneling()
+            && !FusionRitualDirector.isServerDrivenChanneling()
+            && !ModRuntimeConfig.clientView().backgroundRitualEnabled()) {
             FusionRitualDirector.cancel();
             return true;
         }
 
         if ((event.key() == 32 || event.key() == 257 || event.key() == 335) && FusionRitualDirector.isChanneling()) {
             StationPreview preview = this.menu.computePreview();
-            String token = preview.expectedExecuteToken();
-            FusionRitualDirector.triggerOrSkip(
-                preview.kind(),
-                token,
-                "",
-                false,
-                this.menu.tableBlockPos(),
-                () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, token)
-            );
+            launchOrSkipPrimaryRitual(preview);
+            return true;
+        }
+
+        if (FusionGuiSkin.isCtrlOrCmdDown() && event.key() == 79) { // Ctrl + O -> Config
+            openEmbeddedConfig();
             return true;
         }
 
@@ -1114,6 +1171,9 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
     @Override
     public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.charTyped(event);
+        }
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.charTyped(event);
         }
@@ -1121,7 +1181,26 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     }
 
     @Override
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.mouseDragged(event, dragX, dragY);
+        }
+        return super.mouseDragged(event, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.mouseReleased(event);
+        }
+        return super.mouseReleased(event);
+    }
+
+    @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.mouseClicked(event, doubleClick);
+        }
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.mouseClicked(event, doubleClick);
         }
@@ -1131,6 +1210,12 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         int btn = event.button();
         StationPreview preview = this.menu.computePreview();
         boolean gearMode = isGearModeActive();
+
+        // 0. Top-Left Config Gear Button [⚙]
+        if (btn == 0 && CONFIG_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
+            openEmbeddedConfig();
+            return true;
+        }
 
         // 1. In-Panel Synergy Codex Badge & Popover
         if (btn == 0 && this.contextDrawer.mouseClicked(
@@ -1302,6 +1387,20 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         boolean highRisk = preview.economyQuote() != null && preview.economyQuote().highRiskTier();
         String execToken = preview.expectedExecuteToken();
 
+        if (ModRuntimeConfig.clientView().backgroundRitualEnabled()) {
+            FusionRitualDirector.triggerOrSkipServerRitual(
+                this.menu.isServerRitualChanneling(),
+                preview.kind(),
+                execToken,
+                revealTitle,
+                highRisk,
+                this.menu.tableBlockPos(),
+                () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, execToken),
+                () -> sendAction(StationAction.EXECUTE_PRIMARY, 1, execToken)
+            );
+            return;
+        }
+
         FusionRitualDirector.triggerOrSkip(
             preview.kind(),
             execToken,
@@ -1314,6 +1413,9 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
     @Override
     public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
+        if (this.configOverlay != null) {
+            return this.configOverlay.mouseScrolled(mx, my, scrollX, scrollY);
+        }
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.mouseScrolled(mx, my, scrollX, scrollY);
         }

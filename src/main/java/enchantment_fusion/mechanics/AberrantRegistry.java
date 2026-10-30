@@ -285,7 +285,9 @@ public final class AberrantRegistry {
             level.setBlockAndUpdate(imm, Blocks.FROSTED_ICE.defaultBlockState());
             int delay = Mth.nextInt(level.getRandom(), 24, 48);
             long now = level.getGameTime();
-            level.scheduleTick(imm, Blocks.FROSTED_ICE, delay);
+            if (!enchantment_fusion.config.ModRuntimeConfig.active().frostedIceNoWater()) {
+                level.scheduleTick(imm, Blocks.FROSTED_ICE, delay);
+            }
             if (TRACKED_FROSTED_ICE.size() < 4096) {
                 String cellKey = level.dimension().identifier() + "@" + imm.asLong();
                 TRACKED_FROSTED_ICE.put(
@@ -294,6 +296,13 @@ public final class AberrantRegistry {
                 );
             }
         }
+    }
+
+    public static void clearTrackedFrostedIce(net.minecraft.world.level.Level level, BlockPos pos) {
+        if (level == null || pos == null) {
+            return;
+        }
+        TRACKED_FROSTED_ICE.remove(level.dimension().identifier() + "@" + pos.asLong());
     }
 
     /**
@@ -337,7 +346,10 @@ public final class AberrantRegistry {
                     new TrackedFrostedCell(cell.dimension(), cell.pos(), cell.wasWater(), nextStage, now + delay, cell.createdAtTick())
                 );
             } else {
-                level.setBlockAndUpdate(cell.pos(), cell.wasWater() ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState());
+                boolean restoreWater = cell.wasWater()
+                    && (!enchantment_fusion.config.ModRuntimeConfig.active().frostedIceNoWater()
+                        || level.getBlockState(cell.pos().below()).is(Blocks.WATER));
+                level.setBlockAndUpdate(cell.pos(), restoreWater ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState());
                 level.sendParticles(
                     ParticleTypes.SNOWFLAKE,
                     cell.pos().getX() + 0.5D, cell.pos().getY() + 0.5D, cell.pos().getZ() + 0.5D,

@@ -1,7 +1,12 @@
 package enchantment_fusion;
 
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
+import enchantment_fusion.config.ModConfigNetworking;
+import enchantment_fusion.config.ModConfigNetworking.OpenConfigPayload;
+import enchantment_fusion.config.ModConfigNetworking.SyncRuntimeConfigPayload;
+import enchantment_fusion.config.ModRuntimeConfig;
 import enchantment_fusion.data.FusionMatrixRegistry;
+import enchantment_fusion.gui.EnchantmentFusionConfigScreen;
 import enchantment_fusion.gui.EnchantmentFusionScreen;
 import enchantment_fusion.gui.FusionGrimoireScreen;
 import enchantment_fusion.gui.FusionGuiMicroEffects;
@@ -56,6 +61,19 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(OpenGrimoirePayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> ctx.client().setScreen(new FusionGrimoireScreen(null, payload.initialChapter())));
         });
+        ClientPlayNetworking.registerGlobalReceiver(SyncRuntimeConfigPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> {
+                try {
+                    ModConfigNetworking.setClientCanEdit(payload.canEdit());
+                    ModRuntimeConfig.setClientOverride(ModConfigNetworking.snapshotFromJsonString(payload.json()));
+                } catch (RuntimeException ex) {
+                    EnchantmentFusion.LOGGER.warn("Failed to apply synced runtime config", ex);
+                }
+            });
+        });
+        ClientPlayNetworking.registerGlobalReceiver(OpenConfigPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> ctx.client().setScreen(new EnchantmentFusionConfigScreen(ctx.client().screen)));
+        });
         ClientPlayNetworking.registerGlobalReceiver(FusionVisualEventPayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> {
                 if (ctx.client().level != null
@@ -68,6 +86,8 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             CompendiumDiscoveryTracker.applyClientSync(List.of());
             FusionMatrixRegistry.setClientSnapshot(null);
+            ModRuntimeConfig.setClientOverride(null);
+            ModConfigNetworking.setClientCanEdit(true);
         });
     }
 }

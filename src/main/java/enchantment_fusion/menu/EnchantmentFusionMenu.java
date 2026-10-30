@@ -2,6 +2,7 @@ package enchantment_fusion.menu;
 
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.compat.CetSoftBridge;
+import enchantment_fusion.config.ModRuntimeConfig;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
@@ -65,7 +66,11 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     public static final int DATA_PRIMARY_IDX = 1;
     public static final int DATA_SECONDARY_IDX = 2;
     public static final int DATA_SINGLE_MODE = 3;
-    public static final int UI_DATA_COUNT = 4;
+    public static final int DATA_RITUAL_TICKS = 4;
+    public static final int DATA_RITUAL_DURATION = 5;
+    public static final int DATA_RITUAL_OP = 6;
+    public static final int DATA_RITUAL_HIGH_RISK = 7;
+    public static final int UI_DATA_COUNT = 8;
 
     private final Container stationInv;
     private final ContainerLevelAccess access;
@@ -162,9 +167,44 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     @Override
     public void broadcastChanges() {
         syncAutoMorphMode();
+        if (!this.player.level().isClientSide()
+            && this.stationInv instanceof EnchantmentFusionTableBlockEntity tableBe) {
+            this.uiState.set(DATA_RITUAL_TICKS, tableBe.ritualTicks());
+            this.uiState.set(DATA_RITUAL_DURATION, tableBe.ritualDurationTicks());
+            this.uiState.set(DATA_RITUAL_OP, tableBe.ritualOpOrdinal());
+            this.uiState.set(DATA_RITUAL_HIGH_RISK, tableBe.isRitualHighRisk() ? 1 : 0);
+        }
         super.broadcastChanges();
     }
 
+    public void onBackgroundRitualFinished() {
+        this.uiState.set(DATA_PRIMARY_IDX, NO_SELECTION);
+        this.uiState.set(DATA_SECONDARY_IDX, NO_SELECTION);
+        this.broadcastChanges();
+    }
+
+    public boolean isServerRitualChanneling() {
+        int dur = uiState.get(DATA_RITUAL_DURATION);
+        return dur > 0 && uiState.get(DATA_RITUAL_TICKS) < dur;
+    }
+
+    public float serverRitualProgress() {
+        int dur = uiState.get(DATA_RITUAL_DURATION);
+        if (dur <= 0) {
+            return 0.0F;
+        }
+        return net.minecraft.util.Mth.clamp(uiState.get(DATA_RITUAL_TICKS) / (float) dur, 0.0F, 1.0F);
+    }
+
+    public FusionStationOperations.OperationKind serverRitualKind() {
+        int ord = uiState.get(DATA_RITUAL_OP);
+        var vals = FusionStationOperations.OperationKind.values();
+        return (ord >= 0 && ord < vals.length) ? vals[ord] : FusionStationOperations.OperationKind.FUSE_BOOKS;
+    }
+
+    public boolean serverRitualHighRisk() {
+        return uiState.get(DATA_RITUAL_HIGH_RISK) != 0;
+    }
     private void pruneStaleSelectionIndices() {
         List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(this.stationInv, activeTab());
         int n = cands.size();
@@ -256,6 +296,12 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
         boolean changed = false;
         RejectReason failReason = RejectReason.NONE;
 
+        if (action != StationAction.EXECUTE_PRIMARY
+            && this.stationInv instanceof EnchantmentFusionTableBlockEntity cancelBe
+            && cancelBe.isRitualActive()) {
+            cancelBe.cancelRitual();
+        }
+
         switch (action) {
             case SELECT_TAB -> {
                 int clamped = Math.clamp(paramA, 0, 1);
@@ -332,6 +378,50 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 }
             }
             case EXECUTE_PRIMARY -> {
+                if (this.stationInv instanceof EnchantmentFusionTableBlockEntity tableBe
+                    && actor instanceof net.minecraft.server.level.ServerPlayer sp
+                    && actor.level() instanceof net.minecraft.server.level.ServerLevel serverLevel
+                    && ModRuntimeConfig.localSnapshot().backgroundRitualEnabled()) {
+                    if (tableBe.isRitualActive() && (paramA == 1 || tableBe.matchesRitualToken(expectedToken))) {
+                        ActionResult skipRes = tableBe.completeRitualNow(serverLevel, sp);
+                        changed = skipRes.success();
+                        failReason = skipRes.reason();
+                        if (changed) {
+                            uiState.set(DATA_PRIMARY_IDX, NO_SELECTION);
+                            uiState.set(DATA_SECONDARY_IDX, NO_SELECTION);
+                        }
+                    } else {
+                        StationPreview preview = FusionStationOperations.inspect(
+                            stationInv,
+                            registries,
+                            activeTab(),
+                            preferredPrimaryIndex(),
+                            preferredSecondaryIndex(),
+                            singleOnlyMode(),
+                            FusionMatrixRegistry.serverSnapshot()
+                        );
+                        if (!preview.executable()) {
+                            failReason = preview.rejectReason() != RejectReason.NONE
+                                ? preview.rejectReason()
+                                : RejectReason.MISSING_INPUT;
+                        } else if (expectedToken != null && !expectedToken.isEmpty()
+                            && !expectedToken.equals(preview.expectedExecuteToken())) {
+                            failReason = RejectReason.STALE_SELECTION;
+                        } else {
+                            tableBe.beginRitual(
+                                sp,
+                                activeTab(),
+                                preferredPrimaryIndex(),
+                                preferredSecondaryIndex(),
+                                singleOnlyMode(),
+                                preview.expectedExecuteToken(),
+                                preview
+                            );
+                            changed = true;
+                        }
+                    }
+                    break;
+                }
                 ActionResult exec = FusionStationOperations.executePrimaryWithReason(
                     stationInv,
                     actor,

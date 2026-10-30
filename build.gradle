@@ -122,6 +122,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_25
 }
 
+tasks.withType(Jar).configureEach {
+    // Compile-only ModMenu API shim: never ship com.terraformersmc.* in binary or sources JARs.
+    exclude 'com/terraformersmc/**'
+}
+
 jar {
     inputs.property "archivesName", project.base.archivesName
 

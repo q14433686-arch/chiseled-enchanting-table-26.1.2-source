@@ -109,7 +109,10 @@ public final class EnchantmentFusionTableRenderer
         state.surgeProgress = blockEntity.surgeTicks > 0
             ? Mth.clamp((blockEntity.surgeTicks - partialTick) / maxSurge, 0.0F, 1.0F)
             : 0.0F;
-        state.channelProgress = FusionRitualDirector.activeChannelProgressForTable(blockEntity.getBlockPos());
+        state.channelProgress = Math.max(
+            blockEntity.clientRitualProgress(partialTick),
+            FusionRitualDirector.activeChannelProgressForTable(blockEntity.getBlockPos())
+        );
 
         boolean nowActive = blockEntity.occupiedSlotCount() > 0 || blockEntity.surgeTicks > 0 || state.channelProgress > 0.0F;
         long posKey = blockEntity.getBlockPos().asLong();

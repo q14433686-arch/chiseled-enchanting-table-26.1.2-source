@@ -256,7 +256,7 @@ public final class FusionLiveStageRenderer {
         FusionGuiSkin.drawRotatedSprite(ctx, FusionGuiSkin.STAGE_YINYANG_RING, cx, apexY, 48.0F, 48.0F, angle);
 
         ItemStack leftActor = !slotA.isEmpty() ? slotA : (!slotTarget.isEmpty() ? slotTarget : new ItemStack(Items.ENCHANTED_BOOK));
-        ItemStack rightActor = !slotB.isEmpty() ? slotB : fusedBookDisplay();
+        ItemStack rightActor = !slotB.isEmpty() ? slotB : (!slotTarget.isEmpty() ? slotTarget : leftActor);
         float rx = Mth.cos(angle) * 19.0F;
         float ry = Mth.sin(angle) * 9.0F;
         drawScaledStageItem(ctx, leftActor, cx - rx, apexY - ry, 0.86F, 0.0F);
@@ -343,9 +343,11 @@ public final class FusionLiveStageRenderer {
                     float impactDip = ch > 0.78F ? Mth.sin(((ch - 0.78F) / 0.22F) * Mth.PI) * 3.5F : 0.0F;
                     drawScaledStageItem(ctx, slotTarget, cx, apexY + 6.0F + impactDip, 1.12F, 0.0F);
                 }
-                ItemStack sigilBook = !slotA.isEmpty() ? slotA : fusedBookDisplay();
-                float stampY = Mth.lerp(ch * ch, apexY - 22.0F, apexY + 4.0F);
-                drawScaledStageItem(ctx, sigilBook, cx, stampY, 0.82F * (1.0F - 0.25F * ch), 0.0F);
+                ItemStack sigilBook = !slotA.isEmpty() ? slotA : (!slotB.isEmpty() ? slotB : ItemStack.EMPTY);
+                if (!sigilBook.isEmpty()) {
+                    float stampY = Mth.lerp(ch * ch, apexY - 22.0F, apexY + 4.0F);
+                    drawScaledStageItem(ctx, sigilBook, cx, stampY, 0.82F * (1.0F - 0.25F * ch), 0.0F);
+                }
                 FusionGuiSkin.drawSprite(
                     ctx, ch > 0.75F ? FusionGuiSkin.VESSEL_FILLED : FusionGuiSkin.VESSEL_EMPTY,
                     cx - 5, altarY + 4, 10, 10
@@ -372,9 +374,10 @@ public final class FusionLiveStageRenderer {
         float cp = FusionRitualDirector.climaxProgress();
         float ring = 22.0F + cp * 38.0F;
         FusionGuiSkin.drawRotatedSprite(ctx, FusionGuiSkin.VFX_SHOCKWAVE_RING, cx, apexY, ring, ring, cp * 2.4F);
-        ItemStack result = !slotTarget.isEmpty() ? slotTarget : fusedBookDisplay();
-        float bob = Mth.sin(tSec * 4.0F) * 2.0F;
-        drawScaledStageItem(ctx, result, cx, apexY + bob, 1.15F - 0.12F * cp, 0.0F);
+        if (!slotTarget.isEmpty()) {
+            float bob = Mth.sin(tSec * 4.0F) * 2.0F;
+            drawScaledStageItem(ctx, slotTarget, cx, apexY + bob, 1.15F - 0.12F * cp, 0.0F);
+        }
     }
 
     private static void renderIdleLiveActors(

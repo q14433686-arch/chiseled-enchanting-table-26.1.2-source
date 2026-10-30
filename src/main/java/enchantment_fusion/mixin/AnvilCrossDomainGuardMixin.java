@@ -1,5 +1,6 @@
 package enchantment_fusion.mixin;
 
+import enchantment_fusion.config.ModRuntimeConfig;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -47,6 +48,9 @@ public abstract class AnvilCrossDomainGuardMixin extends ItemCombinerMenu {
 
     @Inject(method = "createResult", at = @At("TAIL"))
     private void ef$blockVanillaAnvilCrossDomainInscription(CallbackInfo ci) {
+        if (!ModRuntimeConfig.active().blockVanillaAnvilCrossDomain()) {
+            return;
+        }
         ItemStack left = this.inputSlots.getItem(0);
         ItemStack right = this.inputSlots.getItem(1);
         ItemStack result = this.resultSlots.getItem(0);
