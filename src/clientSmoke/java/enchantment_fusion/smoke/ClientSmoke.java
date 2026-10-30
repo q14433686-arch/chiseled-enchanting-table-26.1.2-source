@@ -1351,13 +1351,43 @@ public final class ClientSmoke implements ClientModInitializer {
                 serverReadyFlag = false;
                 server.execute(() -> {
                     try {
-                        flameProbe.checkTeleportAndClose();
+                        flameProbe.checkTeleportAndStartShield();
                         serverReadyFlag = true;
                     } catch (Throwable t) { serverFailure = t; }
                 });
                 next(53, 1);
             }
             case 53 -> {
+                if (!serverReadyFlag) return;
+                next(54, 10);
+            }
+            case 54 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.checkShieldAndStrike();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(55, 1);
+            }
+            case 55 -> {
+                if (!serverReadyFlag) return;
+                next(56, 5);
+            }
+            case 56 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        flameProbe.checkShieldAndClose();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(57, 1);
+            }
+            case 57 -> {
                 if (!serverReadyFlag) return;
                 finish(client, "CLIENT SMOKE PASS: rituals, frost, live configuration, Grimoire and redesigned fire/knockback");
             }

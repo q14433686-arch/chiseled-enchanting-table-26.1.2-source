@@ -347,13 +347,42 @@ final class FlameFusionProbe {
         target.setDeltaMovement(Vec3.ZERO);
     }
 
-    void checkTeleportAndClose() {
+    void checkTeleportAndStartShield() {
+        require(!witness.isOnFire(), "A teleport must not create a burning corridor across the gap");
+        target.discard(); witness.discard();
+        MatrixEffectExecutor.clearCooldowns();
+        target = zombie(1.5D, 0.5D);
+        target.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.SHIELD));
+        target.setYRot(90.0F);
+        target.setYBodyRot(90.0F);
+        target.setYHeadRot(90.0F);
+        target.startUsingItem(InteractionHand.OFF_HAND);
+        ItemStack pressure = new ItemStack(Items.DIAMOND_SWORD);
+        FusionStationOperations.applyFusedPairToGear(pressure, PRESSURE, level.registryAccess());
+        player.setItemInHand(InteractionHand.MAIN_HAND, pressure);
+    }
+
+    void checkShieldAndStrike() {
+        require(target.isBlocking(), "The shield fixture must really be in the blocking state");
+        ItemStack pressure = player.getMainHandItem();
+        float before = target.getHealth();
+        MatrixEffectExecutor.dispatch(level, player, pressure, TriggerType.ON_MELEE_STRIKE, target, target.position(), true);
+        require(!target.hurtServer(level, level.damageSources().playerAttack(player), 2.0F), "The shield must block the attack");
+        require(target.getHealth() == before && !target.isOnFire(), "A blocked attack must not trigger pressure");
+        target.stopUsingItem();
+        target.invulnerableTime = 0;
+        MatrixEffectExecutor.dispatch(level, player, pressure, TriggerType.ON_MELEE_STRIKE, target, target.position(), true);
+        require(target.hurtServer(level, level.damageSources().playerAttack(player), 2.0F),
+            "A blocked attack must not consume the next full-hit cooldown");
+    }
+
+    void checkShieldAndClose() {
         try {
-            require(!witness.isOnFire(), "A teleport must not create a burning corridor across the gap");
+            require(target.isOnFire(), "A successful hit after blocking must still activate pressure");
             for (BlockPos pos : saved.keySet()) {
                 require(!level.getBlockState(pos).is(Blocks.FIRE), "Neither signature may place a fire block");
             }
-            System.out.println("FIRE FUSION BOUNDARY PASS: migration, real/cancelled/partial hits, PvP, allies, wall/no-wall, expiry and teleport");
+            System.out.println("FIRE FUSION BOUNDARY PASS: migration, real/cancelled/partial/blocked hits, PvP, allies, wall/no-wall, expiry and teleport");
         } finally {
             denied.clear();
             spawned.forEach(Entity::discard);
