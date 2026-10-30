@@ -149,8 +149,9 @@ public final class FusionGrimoireScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
-        this.extractBackground(ctx, mouseX, mouseY, partialTick);
-
+        // Screen.extractRenderStateWithTooltipAndSubtitles already extracted the standalone
+        // background. Embedded books are drawn over the parent screen's background. Asking
+        // for it here a second time can request two blurs in one frame and crash 26.1.2.
         int bx = this.bookLeft;
         int by = this.bookTop;
 
