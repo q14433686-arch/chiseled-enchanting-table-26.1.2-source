@@ -76,30 +76,6 @@ public final class ElementalSpearMaceSignatures {
                 }
                 return true;
             }
-            case "mirage_snapback" -> {
-                long now = level.getGameTime();
-                Long exp = RIPTIDE_ANCHOR_EXPIRY.get(player.getUUID());
-                Vec3 anchor = RIPTIDE_ANCHORS.get(player.getUUID());
-                if (anchor != null && exp != null && now <= exp) {
-                    RIPTIDE_ANCHORS.remove(player.getUUID());
-                    RIPTIDE_ANCHOR_EXPIRY.remove(player.getUUID());
-                    for (LivingEntity mob : nearbyHostiles(level, player, pos, 4.0D, null)) {
-                        mob.hurtServer(level, level.damageSources().magic(), 3.2F + 0.6F * pLv);
-                        Vec3 snap = anchor.subtract(mob.position()).scale(0.35D);
-                        mob.push(snap.x, 0.25D, snap.z);
-                    }
-                    if (player.isShiftKeyDown()) {
-                        player.teleportTo(anchor.x, anchor.y, anchor.z);
-                    }
-                    level.sendParticles(ParticleTypes.SPLASH, anchor.x, anchor.y + 0.8D, anchor.z, 22, 0.35D, 0.4D, 0.35D, 0.08D);
-                    level.playSound(null, BlockPos.containing(pos), SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.85F, 1.35F);
-                } else {
-                    RIPTIDE_ANCHORS.put(player.getUUID(), player.position());
-                    RIPTIDE_ANCHOR_EXPIRY.put(player.getUUID(), now + 80L);
-                    level.sendParticles(ParticleTypes.BUBBLE_POP, player.getX(), player.getY() + 0.6D, player.getZ(), 12, 0.3D, 0.3D, 0.3D, 0.04D);
-                }
-                return true;
-            }
             case "clear_sky_thunder", "thunder_iaido" -> {
                 if (fullChargeMelee && target != null && level.canSeeSky(target.blockPosition())) {
                     AberrantRegistry.spawnLightning(level, target.position());

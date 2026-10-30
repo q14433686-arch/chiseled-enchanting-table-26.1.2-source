@@ -209,9 +209,8 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
         String execToken = preview.expectedExecuteToken();
         FusionRitualDirector.updateFrame(
-            execToken,
-            preview.executable(),
-            () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, execToken)
+            preview.kind(), execToken, buildPreviewTitleLine(preview, registries), this.menu.tableBlockPos(),
+            this.menu.isRitualRunning(), this.menu.ritualRemainingTicks(), this.menu.ritualTotalTicks()
         );
 
         this.contextDrawer.rebuildIfChanged(
@@ -584,7 +583,8 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             );
             FusionGuiSkin.drawCenteredBoundedText(
                 ctx, this.font,
-                Component.translatable("gui.enchantment_fusion.ritual.channeling").getString(),
+                Component.translatable(this.menu.isRitualRunning() && !this.menu.isRitualOwner()
+                    ? "gui.enchantment_fusion.ritual.other_owner" : "gui.enchantment_fusion.ritual.channeling").getString(),
                 left + EXEC_BTN.x() + 4, EXEC_BTN.w() - 8,
                 top + EXEC_BTN.y() + EXEC_BTN.h() * 0.45F,
                 0.54F, FusionGuiSkin.COLOR_GOLD
@@ -791,6 +791,11 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             appendFlipOrSplitHoverLines(lines, evaluateBookManage(preview), BOOK_FLIP_BTN.containsAt(left, top, mouseX, mouseY));
         } else if (lines.isEmpty() && appendHoveredPickerRowTooltip(lines, registries, preview.selection(), gearMode, mouseX, mouseY)) {
             // Handled
+        } else if (lines.isEmpty() && EXEC_BTN.containsAt(left, top, mouseX, mouseY)
+            && FusionRitualDirector.isChanneling()) {
+            lines.add(Component.translatable(this.menu.isRitualOwner()
+                ? "gui.enchantment_fusion.ritual.controls" : "gui.enchantment_fusion.ritual.other_owner")
+                .withStyle(ChatFormatting.AQUA));
         } else if (lines.isEmpty() && EXEC_BTN.containsAt(left, top, mouseX, mouseY)
             && preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS
             && preview.previewTransmute() != null
@@ -1067,22 +1072,14 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             return true;
         }
 
-        if (event.key() == 256 && FusionRitualDirector.isChanneling()) {
-            FusionRitualDirector.cancel();
-            return true;
-        }
-
         if ((event.key() == 32 || event.key() == 257 || event.key() == 335) && FusionRitualDirector.isChanneling()) {
             StationPreview preview = this.menu.computePreview();
             String token = preview.expectedExecuteToken();
-            FusionRitualDirector.triggerOrSkip(
-                preview.kind(),
-                token,
-                "",
-                false,
-                this.menu.tableBlockPos(),
-                () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, token)
-            );
+            if (!this.menu.isRitualRunning() || this.menu.isRitualOwner()) {
+                FusionRitualDirector.triggerOrSkip(preview.kind(), token, "", false, this.menu.tableBlockPos(),
+                    () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, token),
+                    () -> sendAction(StationAction.SKIP_RITUAL, 0, ""));
+            }
             return true;
         }
 
@@ -1281,7 +1278,11 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
             // Primary Ritual Execute / Skip Button
             if (btn == 0 && EXEC_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
-                if (preview.executable() || FusionRitualDirector.isChanneling()) {
+                if (FusionRitualDirector.isChanneling() && this.menu.isRitualRunning() && !this.menu.isRitualOwner()) {
+                    notifyDisabledClick(Component.translatable("gui.enchantment_fusion.ritual.other_owner"));
+                } else if (FusionRitualDirector.isChanneling() && FusionGuiSkin.isShiftDown()) {
+                    sendAction(StationAction.CANCEL_RITUAL, 0, "");
+                } else if (preview.executable() || FusionRitualDirector.isChanneling()) {
                     launchOrSkipPrimaryRitual(preview);
                 } else {
                     notifyDisabledClick(explainPrimaryDisabledReason(preview));
@@ -1308,7 +1309,8 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             revealTitle,
             highRisk,
             this.menu.tableBlockPos(),
-            () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, execToken)
+            () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, execToken),
+            () -> sendAction(StationAction.SKIP_RITUAL, 0, "")
         );
     }
 

@@ -2,8 +2,12 @@ package enchantment_fusion;
 
 import enchantment_fusion.block.EnchantmentFusionTableBlockEntity;
 import enchantment_fusion.data.FusionMatrixRegistry;
+import enchantment_fusion.config.FusionConfigClient;
+import enchantment_fusion.config.FusionConfigNetworking;
+import enchantment_fusion.gui.FusionConfigScreen;
 import enchantment_fusion.gui.EnchantmentFusionScreen;
 import enchantment_fusion.gui.FusionGrimoireScreen;
+import enchantment_fusion.gui.FusionRitualDirector;
 import enchantment_fusion.gui.FusionGuiMicroEffects;
 import enchantment_fusion.gui.FusionTooltipRenderer;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
@@ -20,6 +24,9 @@ import java.util.List;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
@@ -40,6 +47,23 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
             EnchantmentFusionTableRenderer::new
         );
         FusionTooltipRenderer.register();
+
+        ClientPlayNetworking.registerGlobalReceiver(FusionConfigNetworking.SyncPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> FusionConfigClient.apply(payload));
+        });
+        // Open after the chat screen has finished closing, not in the command callback itself.
+        boolean[] openConfigNextTick = {false};
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(
+            ClientCommands.literal("fusion").then(ClientCommands.literal("config").executes(ctx -> {
+                openConfigNextTick[0] = true;
+                return 1;
+            }))));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (openConfigNextTick[0]) {
+                openConfigNextTick[0] = false;
+                client.setScreen(new FusionConfigScreen(null));
+            }
+        });
 
         ClientPlayNetworking.registerGlobalReceiver(CompendiumSyncPayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> CompendiumDiscoveryTracker.applyClientSync(payload.unlockedPairs()));
@@ -62,12 +86,14 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
                     && ctx.client().level.getBlockEntity(payload.blockPos()) instanceof EnchantmentFusionTableBlockEntity be) {
                     be.triggerClientSurge(payload.eventKind());
                 }
+                FusionRitualDirector.onServerResult(payload.blockPos(), payload.eventKind());
                 FusionGuiMicroEffects.onServerVisualEvent(payload.eventKind());
             });
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             CompendiumDiscoveryTracker.applyClientSync(List.of());
             FusionMatrixRegistry.setClientSnapshot(null);
+            FusionConfigClient.disconnect();
         });
     }
 }

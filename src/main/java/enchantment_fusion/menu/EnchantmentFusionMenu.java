@@ -19,6 +19,7 @@ import enchantment_fusion.registry.FusionMenus;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -65,7 +66,10 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     public static final int DATA_PRIMARY_IDX = 1;
     public static final int DATA_SECONDARY_IDX = 2;
     public static final int DATA_SINGLE_MODE = 3;
-    public static final int UI_DATA_COUNT = 4;
+    public static final int DATA_RITUAL_REMAINING = 4;
+    public static final int DATA_RITUAL_TOTAL = 5;
+    public static final int DATA_RITUAL_OWNER = 6;
+    public static final int UI_DATA_COUNT = 7;
 
     private final Container stationInv;
     private final ContainerLevelAccess access;
@@ -132,6 +136,12 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     private Slot createStationSlot(int slotIndex, int x, int y, boolean affectsCandidates) {
         return new Slot(this.stationInv, slotIndex, x, y) {
             @Override
+            public boolean mayPlace(ItemStack stack) { return !isRitualRunning(); }
+
+            @Override
+            public boolean mayPickup(Player player) { return !isRitualRunning(); }
+
+            @Override
             public void setChanged() {
                 super.setChanged();
                 if (slotIndex == FusionStationOperations.SLOT_TARGET) {
@@ -162,6 +172,11 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     @Override
     public void broadcastChanges() {
         syncAutoMorphMode();
+        if (!this.player.level().isClientSide() && this.stationInv instanceof EnchantmentFusionTableBlockEntity be) {
+            uiState.set(DATA_RITUAL_REMAINING, be.ritualRemainingTicks());
+            uiState.set(DATA_RITUAL_TOTAL, be.ritualTotalTicks());
+            uiState.set(DATA_RITUAL_OWNER, be.ownsRitual(this.player.getUUID()) ? 1 : 0);
+        }
         super.broadcastChanges();
     }
 
@@ -177,6 +192,17 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
             uiState.set(DATA_SECONDARY_IDX, NO_SELECTION);
         }
     }
+
+    public boolean isRitualRunning() {
+        if (!player.level().isClientSide() && stationInv instanceof EnchantmentFusionTableBlockEntity be) {
+            return be.hasActiveRitual();
+        }
+        return uiState.get(DATA_RITUAL_REMAINING) > 0;
+    }
+
+    public int ritualRemainingTicks() { return Math.max(0, uiState.get(DATA_RITUAL_REMAINING)); }
+    public int ritualTotalTicks() { return Math.max(0, uiState.get(DATA_RITUAL_TOTAL)); }
+    public boolean isRitualOwner() { return uiState.get(DATA_RITUAL_OWNER) != 0; }
 
     public BlockPos tableBlockPos() {
         return tablePos;
@@ -253,6 +279,9 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     ) {
         HolderLookup.Provider registries = actor.level().registryAccess();
         syncAutoMorphMode();
+        if (isRitualRunning() && action != StationAction.SKIP_RITUAL && action != StationAction.CANCEL_RITUAL) {
+            return ActionResult.failed(RejectReason.MISSING_INPUT);
+        }
         boolean changed = false;
         RejectReason failReason = RejectReason.NONE;
 
@@ -332,22 +361,31 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 }
             }
             case EXECUTE_PRIMARY -> {
-                ActionResult exec = FusionStationOperations.executePrimaryWithReason(
-                    stationInv,
-                    actor,
-                    registries,
-                    activeTab(),
-                    preferredPrimaryIndex(),
-                    preferredSecondaryIndex(),
-                    singleOnlyMode(),
-                    expectedToken
-                );
+                ActionResult exec;
+                if (stationInv instanceof EnchantmentFusionTableBlockEntity be && actor instanceof ServerPlayer serverPlayer) {
+                    exec = be.startRitual(serverPlayer, activeTab(), preferredPrimaryIndex(),
+                        preferredSecondaryIndex(), singleOnlyMode(), expectedToken);
+                } else {
+                    // Retain the standalone container operation for pure rule/integration tests.
+                    exec = FusionStationOperations.executePrimaryWithReason(stationInv, actor, registries,
+                        activeTab(), preferredPrimaryIndex(), preferredSecondaryIndex(), singleOnlyMode(), expectedToken);
+                }
                 changed = exec.success();
                 failReason = exec.reason();
+            }
+            case SKIP_RITUAL -> {
+                ActionResult skip = stationInv instanceof EnchantmentFusionTableBlockEntity be && actor instanceof ServerPlayer sp
+                    ? be.skipRitual(sp) : ActionResult.failed(RejectReason.MISSING_INPUT);
+                changed = skip.success();
+                failReason = skip.reason();
                 if (changed) {
                     uiState.set(DATA_PRIMARY_IDX, NO_SELECTION);
                     uiState.set(DATA_SECONDARY_IDX, NO_SELECTION);
                 }
+            }
+            case CANCEL_RITUAL -> {
+                changed = stationInv instanceof EnchantmentFusionTableBlockEntity be && be.cancelRitual(actor.getUUID());
+                if (!changed) failReason = RejectReason.MISSING_INPUT;
             }
             case FLIP_SOCKET -> {
                 ActionResult flip = FusionStationOperations.executeFlipSocketWithReason(
@@ -374,6 +412,7 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
+        if (isRitualRunning()) return ItemStack.EMPTY;
         Slot slot = this.slots.get(index);
         if (slot == null || !slot.hasItem()) {
             return ItemStack.EMPTY;

@@ -1,6 +1,7 @@
 package enchantment_fusion;
 
 import enchantment_fusion.compat.CetSoftBridge;
+import enchantment_fusion.config.FusionConfigNetworking;
 import enchantment_fusion.data.FusionDataLoader;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.FusionWorldLoot;
@@ -36,6 +37,7 @@ public final class EnchantmentFusion implements ModInitializer {
         FusionBlockEntities.init();
         FusionMenus.init();
         FusionNetworking.init();
+        FusionConfigNetworking.init();
         FusionDataLoader.init();
         FusionWorldLoot.init();
         CompendiumDiscoveryTracker.initServerHooks();

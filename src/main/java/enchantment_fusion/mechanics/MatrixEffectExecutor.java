@@ -231,6 +231,13 @@ public final class MatrixEffectExecutor {
                 continue;
             }
 
+            Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
+            // A weak melee swing or a full flight quota cannot launch the water blade.
+            // Do not consume the pair cooldown until it can actually fire.
+            if (sigOpt.isPresent() && "hydro_flying_sword".equals(sigOpt.get().id())
+                && (!fullChargeMelee || !FlyingBladeManager.canLaunchFor(player.getUUID()))) {
+                continue;
+            }
             String cdKey = cooldownKey(player.getUUID(), pair.primaryId(), pair.secondaryId());
             long readyAt = COOLDOWNS.getOrDefault(cdKey, 0L);
             if (now < readyAt) {
@@ -249,7 +256,6 @@ public final class MatrixEffectExecutor {
                     AberrantRegistry.executeAberration(level, player, pair.aberrationId(), targetEntity, originPos);
                 }
 
-                Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
                 if (sigOpt.isPresent()) {
                     boolean handled = SignaturePairs.executeSignatureCombat(
                         level, player, hostStack, pair, sigOpt.get().id(), targetEntity, originPos, fullChargeMelee

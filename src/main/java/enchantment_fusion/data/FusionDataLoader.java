@@ -5,8 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import enchantment_fusion.EnchantmentFusion;
-import enchantment_fusion.mechanics.signatures.SignatureCatalog;
-import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
+import enchantment_fusion.config.FusionConfigStore;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -54,10 +53,14 @@ public final class FusionDataLoader implements SimpleSynchronousResourceReloadLi
             JsonObject economyObj = readMergedJsonStack(manager, ECONOMY_PATH);
             JsonObject signaturesObj = readMergedJsonStack(manager, SIGNATURES_PATH);
             JsonObject transmutesObj = readMergedJsonStack(manager, TRANSMUTATIONS_PATH);
-            FusionMatrixRegistry.Snapshot staged = FusionMatrixRegistry.parseFromJson(matrixObj, repulsiveObj, economyObj);
-            FusionMatrixRegistry.publish(staged);
-            SignatureCatalog.reloadFromJson(signaturesObj);
-            TransmuteCatalog.reloadFromJson(transmutesObj);
+            JsonObject base = new JsonObject();
+            if (matrixObj != null) base.add("matrix_profiles", matrixObj);
+            if (repulsiveObj != null) base.add("repulsive_pairs", repulsiveObj);
+            if (economyObj != null) base.add("economy", economyObj);
+            if (signaturesObj != null) base.add("signatures", signaturesObj);
+            if (transmutesObj != null) base.add("transmutations", transmutesObj);
+            FusionConfigStore.reload(base);
+            FusionMatrixRegistry.Snapshot staged = FusionMatrixRegistry.serverSnapshot();
             EnchantmentFusion.LOGGER.info(
                 "Loaded Enchantment Fusion matrix ({} profiles, {} exclusive groups)",
                 staged.profiles().size(),

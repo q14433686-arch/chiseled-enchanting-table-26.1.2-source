@@ -122,6 +122,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_25
 }
 
+// Minimal compile-time Mod Menu API shim; the actual API is provided by Mod Menu.
+tasks.withType(Jar).configureEach {
+    exclude 'com/terraformersmc/**'
+}
+
 jar {
     inputs.property "archivesName", project.base.archivesName
 

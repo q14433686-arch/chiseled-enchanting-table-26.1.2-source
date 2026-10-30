@@ -1267,9 +1267,11 @@ public final class FusionStationOperations {
     }
 
     private static void emitStationRitualEffect(Container inv, Player player, int visualKind) {
-        if (player == null || player.level().isClientSide() || !(player.level() instanceof ServerLevel sl)) {
-            return;
-        }
+        if (player == null || player.level().isClientSide()) return;
+        ServerLevel sl = (inv instanceof net.minecraft.world.level.block.entity.BlockEntity be
+            && be.getLevel() instanceof ServerLevel stationLevel) ? stationLevel
+            : (player.level() instanceof ServerLevel playerLevel ? playerLevel : null);
+        if (sl == null) return;
         net.minecraft.core.BlockPos pos = (inv instanceof net.minecraft.world.level.block.entity.BlockEntity be)
             ? be.getBlockPos()
             : player.blockPosition();

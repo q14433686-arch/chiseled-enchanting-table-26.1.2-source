@@ -372,9 +372,12 @@ public final class FusionLiveStageRenderer {
         float cp = FusionRitualDirector.climaxProgress();
         float ring = 22.0F + cp * 38.0F;
         FusionGuiSkin.drawRotatedSprite(ctx, FusionGuiSkin.VFX_SHOCKWAVE_RING, cx, apexY, ring, ring, cp * 2.4F);
-        ItemStack result = !slotTarget.isEmpty() ? slotTarget : fusedBookDisplay();
-        float bob = Mth.sin(tSec * 4.0F) * 2.0F;
-        drawScaledStageItem(ctx, result, cx, apexY + bob, 1.15F - 0.12F * cp, 0.0F);
+        // The echo is visual only: never invent a book when the real output was taken
+        // (or when the operation produced/modified a different item).
+        if (!slotTarget.isEmpty()) {
+            float bob = Mth.sin(tSec * 4.0F) * 2.0F;
+            drawScaledStageItem(ctx, slotTarget, cx, apexY + bob, 1.15F - 0.12F * cp, 0.0F);
+        }
     }
 
     private static void renderIdleLiveActors(

@@ -3,6 +3,7 @@ package enchantment_fusion.mechanics;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.data.FusionMatrixRegistry.EconomyConfig;
 import enchantment_fusion.model.FusedEnchantmentList;
+import enchantment_fusion.mechanics.signatures.MirageSnapbackSkill;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.EnumSet;
@@ -47,13 +48,13 @@ public final class MatrixRuntimeHooks {
     };
 
     private static final Map<UUID, Float> PEAK_FALL_DISTANCE = new ConcurrentHashMap<>();
+    private static final Set<UUID> ACTIVE_RIPTIDE_SPINS = ConcurrentHashMap.newKeySet();
     private static final ThreadLocal<Boolean> IN_AFTER_DAMAGE = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     private MatrixRuntimeHooks() {}
 
     public static void init() {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            AberrantRegistry.flushAllCages(server);
             FlyingBladeManager.flushAll();
             ProjectilePathTracker.flushAll();
         });
@@ -61,11 +62,12 @@ public final class MatrixRuntimeHooks {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             MatrixEffectExecutor.clearCooldowns();
             SignaturePairs.clearRuntimeState();
-            AberrantRegistry.clearRuntimeState();
             CrossDomainTransmutations.clearRuntimeState();
             FlyingBladeManager.flushAll();
             ProjectilePathTracker.flushAll();
             PEAK_FALL_DISTANCE.clear();
+            ACTIVE_RIPTIDE_SPINS.clear();
+            MirageSnapbackSkill.clearRuntimeState();
             FusionMatrixRegistry.setClientSnapshot(null);
         });
 
@@ -73,6 +75,8 @@ public final class MatrixRuntimeHooks {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             UUID pid = handler.getPlayer().getUUID();
             PEAK_FALL_DISTANCE.remove(pid);
+            ACTIVE_RIPTIDE_SPINS.remove(pid);
+            MirageSnapbackSkill.onPlayerDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -149,12 +153,14 @@ public final class MatrixRuntimeHooks {
             }
             ItemStack held = player.getItemInHand(hand);
             if (world.isClientSide()) {
-                if (CrossDomainTransmutations.hasReadyRightClickAbility(player, held)) {
+                if (MirageSnapbackSkill.canUse(player, held)
+                    || CrossDomainTransmutations.hasReadyRightClickAbility(player, held)) {
                     return InteractionResult.SUCCESS;
                 }
                 return InteractionResult.PASS;
             }
             if (world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
+                if (MirageSnapbackSkill.use(serverLevel, serverPlayer, held)) return InteractionResult.SUCCESS;
                 if (held.getItem() instanceof FishingRodItem && serverPlayer.fishing != null) {
                     FishingHook bobber = serverPlayer.fishing;
                     LivingEntity hookedMob = bobber.getHookedIn() instanceof LivingEntity liv ? liv : null;
@@ -236,12 +242,11 @@ public final class MatrixRuntimeHooks {
             }
         });
 
-        // Movement / Landing + Frosted Ice Cage Cracking + 3D Flying Blades + Trajectory Path Cache
+        // Movement / Landing + 3D Flying Blades + Trajectory Path Cache
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);
-            AberrantRegistry.tickFrostedCages(server);
             for (ServerLevel world : server.getAllLevels()) {
                 CrossDomainTransmutations.tickWorldItems(world);
             }
@@ -249,6 +254,21 @@ public final class MatrixRuntimeHooks {
                 if (!(player.level() instanceof ServerLevel serverLevel)) continue;
                 SignaturePairs.tickServerPlayer(serverLevel, player);
                 CrossDomainTransmutations.tickServerPlayer(serverLevel, player);
+
+                // Vanilla spin attacks do not necessarily pass through AttackEntityCallback.
+                // Dispatch once at the actual start of a Riptide launch, not every spin tick.
+                if (player.isAutoSpinAttack()) {
+                    if (ACTIVE_RIPTIDE_SPINS.add(player.getUUID())) {
+                        ItemStack main = player.getMainHandItem();
+                        ItemStack spinWeapon = main.getItem() instanceof TridentItem ? main : player.getOffhandItem();
+                        if (spinWeapon.getItem() instanceof TridentItem) {
+                            MatrixEffectExecutor.dispatchAcrossEquippedSlots(serverLevel, player, spinWeapon,
+                                EnumSet.of(TriggerType.ON_TRIDENT_CHANNEL), null, player.position(), true, 1.0F);
+                        }
+                    }
+                } else {
+                    ACTIVE_RIPTIDE_SPINS.remove(player.getUUID());
+                }
 
                 boolean holdsRelevantRanged = isTrajectoryRangedWeapon(player.getMainHandItem())
                     || isTrajectoryRangedWeapon(player.getOffhandItem());

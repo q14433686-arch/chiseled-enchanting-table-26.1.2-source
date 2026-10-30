@@ -63,8 +63,6 @@ public final class SignatureRuntimeSupport {
     public static final List<BlightCloudZone> ACTIVE_BLIGHT_CLOUDS = Collections.synchronizedList(new ArrayList<>());
 
     public static final Map<UUID, Integer> NEUROTOXIN_STACKS = new ConcurrentHashMap<>();
-    public static final Map<UUID, Vec3> RIPTIDE_ANCHORS = new ConcurrentHashMap<>();
-    public static final Map<UUID, Long> RIPTIDE_ANCHOR_EXPIRY = new ConcurrentHashMap<>();
     public static final Map<UUID, Vec3> LAST_SAFE_GROUND = new ConcurrentHashMap<>();
     public static final Map<UUID, Float> RECENT_DAMAGE_TAKEN = new ConcurrentHashMap<>();
     public static final Map<UUID, Long> RECENT_DAMAGE_UNTIL = new ConcurrentHashMap<>();
@@ -87,8 +85,7 @@ public final class SignatureRuntimeSupport {
     private SignatureRuntimeSupport() {}
 
     public static void onPlayerDisconnect(UUID playerId) {
-        RIPTIDE_ANCHORS.remove(playerId);
-        RIPTIDE_ANCHOR_EXPIRY.remove(playerId);
+
         LAST_SAFE_GROUND.remove(playerId);
         RECENT_DAMAGE_TAKEN.remove(playerId);
         RECENT_DAMAGE_UNTIL.remove(playerId);
@@ -104,8 +101,7 @@ public final class SignatureRuntimeSupport {
 
     public static void clearRuntimeState() {
         NEUROTOXIN_STACKS.clear();
-        RIPTIDE_ANCHORS.clear();
-        RIPTIDE_ANCHOR_EXPIRY.clear();
+
         LAST_SAFE_GROUND.clear();
         RECENT_DAMAGE_TAKEN.clear();
         RECENT_DAMAGE_UNTIL.clear();

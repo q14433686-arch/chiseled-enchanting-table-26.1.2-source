@@ -134,6 +134,8 @@ public final class SignaturePairs {
         Vec3 pos,
         boolean fullChargeMelee
     ) {
+        // This signature is an explicitly activated skill, not an invisible melee toggle.
+        if ("mirage_snapback".equals(sigId)) return true;
         CompendiumDiscoveryTracker.recordDiscovery(player, pair.primaryId(), pair.secondaryId());
         if (MeleeBladeSignatures.executeCombat(level, player, hostStack, pair, sigId, target, pos, fullChargeMelee)) {
             return true;

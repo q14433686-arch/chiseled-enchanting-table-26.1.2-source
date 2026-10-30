@@ -70,6 +70,7 @@ public final class FlyingBladeManager {
         final double speedPerTick;
         final int outboundMaxTicks;
         final int hardMaxTicks;
+        final float damageMultiplier;
         final Map<UUID, Integer> entityHitTick = new HashMap<>();
         final List<UUID> carriedDrops = new ArrayList<>();
 
@@ -94,7 +95,8 @@ public final class FlyingBladeManager {
             Vec3 initialDir,
             double speedPerTick,
             int outboundMaxTicks,
-            int hardMaxTicks
+            int hardMaxTicks,
+            float damageMultiplier
         ) {
             this.flightId = flightId;
             this.ownerId = ownerId;
@@ -110,6 +112,7 @@ public final class FlyingBladeManager {
             this.speedPerTick = speedPerTick;
             this.outboundMaxTicks = outboundMaxTicks;
             this.hardMaxTicks = hardMaxTicks;
+            this.damageMultiplier = damageMultiplier;
         }
     }
 
@@ -167,7 +170,8 @@ public final class FlyingBladeManager {
             dir,
             speed,
             outTicks,
-            outTicks * 3 + 18
+            outTicks * 3 + 18,
+            1.0F
         ));
 
         level.playSound(null, owner.blockPosition(), SoundEvents.TRIDENT_THROW.value(), SoundSource.PLAYERS, 0.95F, 1.32F);
@@ -211,7 +215,9 @@ public final class FlyingBladeManager {
         boolean lanceOriented = (style == FlightStyle.PHANTOM_LANCE || style == FlightStyle.SPEAR_CHARGE_LANCE || sourceKind == PathSourceKind.SPEAR);
         float pitchTilt = lanceOriented ? (owner.getXRot() - 45.0F) : 70.0F;
         Display.ItemDisplay display = spawnWeaponDisplay(level, start, dir, weapon, pitchTilt);
+        boolean hydroSurge = style == FlightStyle.HYDRO_SWORD_QI && owner.isInWaterOrRain();
         double speed = lanceOriented ? (2.15D + 0.16D * clampedLv) : (1.75D + 0.12D * clampedLv);
+        if (hydroSurge) speed *= 2.0D;
         int outTicks = (style == FlightStyle.SPEAR_CHARGE_LANCE) ? 14 : (style == FlightStyle.PHANTOM_LANCE ? 13 : 10);
 
         UUID flightId = UUID.randomUUID();
@@ -235,7 +241,8 @@ public final class FlyingBladeManager {
             dir,
             speed,
             outTicks,
-            outTicks + 2
+            outTicks + 2,
+            hydroSurge ? 2.0F : 1.0F
         ));
 
         level.playSound(
@@ -492,7 +499,7 @@ public final class FlyingBladeManager {
         }
         float rawAttack = resolveWeaponAttackDamage(f.weaponSnapshot);
         float mult = f.returning ? (0.78F + 0.14F * f.level) : (0.92F + 0.15F * f.level);
-        float finalDamage = Math.max(4.0F, rawAttack * mult);
+        float finalDamage = Math.max(4.0F, rawAttack * mult) * f.damageMultiplier;
 
         Set<TriggerType> triggers = (f.style == FlightStyle.PHANTOM_LANCE || f.style == FlightStyle.SPEAR_CHARGE_LANCE)
             ? EnumSet.of(TriggerType.ON_TRIDENT_CHANNEL, TriggerType.ON_PROJECTILE_IMPACT, TriggerType.ON_MELEE_STRIKE)

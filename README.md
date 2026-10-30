@@ -22,6 +22,19 @@
   3. **Smart Context Synergy Drawer (`FusionContextDrawer`) & Three-Stage Star-Codex Grimoire** — Pull out the right-edge `Codex / 秘卷` badge to inspect Signature & Transmutation recipes matching the items currently in the altar and **auto-pick `[A ▷ B]` in one click**, or expand the full Obsidian Star-Codex Grimoire (`未知 → 初识 → 通晓`) with scrollable right-page descriptions and full keyboard navigation.
 - **Full-Curve Datapack Economy (`economy.json` v2), Native Aberrant Purification & `纂刻附魔台` Cleanse Integration** — Low-tier synthesis has **`0%` default failure**; mid-tier fluctuations **never destroy books or gear**; max-level repulsive clashes can mutate into 6 double-edged Aberrant Fusions (`畸变词条`), with reagents drawn from the Catalyst Slot first and Player Inventory second (shown transparently in hover tooltips). Aberrant items can be purified **natively at the Enchantment Fusion Table** (`Slot 3` + `3× Resonance Stabilizer` in `Slot 2` + `25` XP Levels, configurable in `economy.json`, stripping the aberration while keeping pure `[A ▷ B]`) **or** via sister mod **`纂刻附魔台` (*Chiseled Enchanting Table*)**'s **Curse Purge & Cleanse** rituals (which also support Book Extraction, Step-Down, Targeted Strip, and Full Disenchant). Includes 4-slot 3D orbital levitation on `附魔融合台` and pixel-art rune halos, shockwave rings, and spark particles inside both UIs.
 
+## In-game configuration / 游戏内配置
+
+- In a world or on a server, run **`/fusion config`**. If Mod Menu is installed, its configuration button opens the same screen; Mod Menu is optional. The singleplayer owner and server operators can save, while other players can inspect the server's values in read-only mode.
+- The five categories edit existing economy/cooldown, trigger/payload, exclusive-group, signature and transmutation fields from the active datapacks. Search accepts field paths; `*` marks a local override. Numbers are entered as numbers (probabilities use `0–1`), booleans as `true`/`false`, and arrays as JSON. Array edits replace the entire list, including the built-in exclusive groups; **Use datapack** removes the selected override. For safety the screen cannot create or delete datapack entries or edit schema/`replace` markers.
+- Overrides are written on the **server** to `config/enchantment_fusion/overrides.json`, atomically, and take precedence over merged datapacks. Changes are validated and applied immediately; authoritative economy/matrix rules and signature/transmutation catalogs are synchronized to connected clients. `/reload` rereads datapacks and the override file. In the title screen, Mod Menu edits this installation's bundled defaults/overrides; a world loads its own datapacks when started.
+- 游戏内输入 **`/fusion config`**，或通过可选的 Mod Menu 打开配置。单人世界服主和服务器管理员可以保存，其他玩家只能查看；`*` 表示覆盖，**使用数据包值**会移除该项覆盖。配置保存在服务器，保存后立即生效并同步客户端。互斥组等数组须输入完整 JSON 数组。
+
+## Rituals and temporary frost / 仪式与临时霜冰
+
+A started ritual belongs to the server: closing the table UI does not cancel it. Reopen the table to view progress; the initiator may click again (or press Space/Enter) to skip, or Shift-click the action button to cancel. The table inputs are locked until completion or cancellation. An unloaded chunk pauses the timer; logout/death cancels without consuming the inputs. If the rules or inputs change, the pending transaction is rejected rather than silently charging a different price. Temporary frost only replaces air, never existing water, and neither breaking nor melting it produces water.
+
+启动仪式后可以关闭界面，服务器会继续执行；重新打开可查看进度，发起者可再次点击或按空格/回车跳过，Shift+点击操作按钮取消。区块卸载时计时暂停，玩家离线或死亡时安全取消。临时霜冰只放置在空气中，碎裂和融化都不会产生水。
+
 ## Installation
 
 Grab `enchantment-fusion-0.6.0.jar` from GitHub Actions build artifacts and place it in `mods/` alongside Fabric API `0.151.0+26.1.2`.

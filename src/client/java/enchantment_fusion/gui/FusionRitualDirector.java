@@ -1,6 +1,7 @@
 package enchantment_fusion.gui;
 
 import enchantment_fusion.mechanics.FusionStationOperations.OperationKind;
+import enchantment_fusion.menu.FusionNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
@@ -26,7 +27,9 @@ public final class FusionRitualDirector {
     private static OperationKind activeKind = OperationKind.NONE;
     private static String boundToken = "";
     private static String pendingRevealTitle = "";
-    private static boolean pendingAberrant = false;
+    private static boolean serverObserved = false;
+    private static boolean skipRequested = false;
+    private static long requestMs = 0L;
     private static int chimedStage = 0;
     private static @Nullable BlockPos activeTablePos = null;
 
@@ -43,11 +46,15 @@ public final class FusionRitualDirector {
         String previewTitle,
         boolean highRiskOrAberrant,
         BlockPos tablePos,
-        Runnable commitAction
+        Runnable startAction,
+        Runnable skipAction
     ) {
         String safeToken = selectionToken == null ? "" : selectionToken;
-        if (channeling && safeToken.equals(boundToken)) {
-            completeAndCommit(commitAction);
+        if (channeling) {
+            if (!skipRequested) {
+                skipRequested = true;
+                skipAction.run();
+            }
             return;
         }
 
@@ -62,11 +69,14 @@ public final class FusionRitualDirector {
         };
         boundToken = safeToken;
         pendingRevealTitle = previewTitle == null ? "" : previewTitle;
-        pendingAberrant = highRiskOrAberrant;
+        serverObserved = false;
+        skipRequested = false;
+        requestMs = startMs;
         chimedStage = 0;
         activeTablePos = tablePos != null ? tablePos.immutable() : null;
 
         playStartSound(activeKind);
+        startAction.run();
     }
 
     private static void playStartSound(OperationKind kind) {
@@ -94,26 +104,51 @@ public final class FusionRitualDirector {
         }
     }
 
-    public static void updateFrame(String liveSelectionToken, boolean stillExecutable, Runnable commitAction) {
-        if (!channeling) {
-            return;
+    /** Reflect the server timer, including when a player reopens a running table. */
+    public static void updateFrame(OperationKind kind, String token, String title, BlockPos tablePos,
+                                   boolean serverRunning, int remaining, int total) {
+        if (serverRunning && total > 0) {
+            if (!channeling) {
+                channeling = true;
+                activeKind = kind;
+                boundToken = token == null ? "" : token;
+                pendingRevealTitle = title == null ? "" : title;
+                activeTablePos = tablePos == null ? null : tablePos.immutable();
+                chimedStage = 0;
+                skipRequested = false;
+            }
+            serverObserved = true;
+            activeDurationMs = total * 50L;
+            startMs = System.currentTimeMillis() - Math.max(0, total - remaining) * 50L;
+        } else if (channeling && (serverObserved || System.currentTimeMillis() - requestMs > 1000L)) {
+            // The server completed/rejected/cancelled the job. No client-side commit.
+            channeling = false;
+            serverObserved = false;
+            skipRequested = false;
         }
-        String safeLive = liveSelectionToken == null ? "" : liveSelectionToken;
-        if (!stillExecutable || !safeLive.equals(boundToken)) {
-            cancel();
-            return;
-        }
-
-        float p = channelProgress();
-        int stage = (int) (p * 4.0F);
+        if (!channeling) return;
+        int stage = (int) (channelProgress() * 4.0F);
         if (stage > chimedStage && stage < 4) {
             chimedStage = stage;
             playStageSound(activeKind, stage);
         }
+    }
 
-        if (p >= 1.0F) {
-            completeAndCommit(commitAction);
+    /** A climax is displayed only for a server-confirmed success, never for a rejected roll. */
+    public static void onServerResult(BlockPos pos, int eventKind) {
+        if (activeTablePos == null || !activeTablePos.equals(pos)
+            || eventKind < FusionNetworking.VISUAL_FUSE_SUCCESS || eventKind > FusionNetworking.VISUAL_FUSE_FAIL) return;
+        channeling = false;
+        serverObserved = false;
+        skipRequested = false;
+        if (eventKind == FusionNetworking.VISUAL_FUSE_FAIL) {
+            climaxUntilMs = 0L;
+            return;
         }
+        climaxTitle = pendingRevealTitle;
+        climaxAberrant = eventKind == FusionNetworking.VISUAL_FUSE_ABERRANT;
+        climaxKind = activeKind;
+        climaxUntilMs = System.currentTimeMillis() + CLIMAX_BANNER_MS;
     }
 
     private static void playStageSound(OperationKind kind, int stage) {
@@ -130,44 +165,16 @@ public final class FusionRitualDirector {
         }
     }
 
-    private static void completeAndCommit(Runnable commitAction) {
-        String reveal = pendingRevealTitle;
-        boolean ab = pendingAberrant;
-        OperationKind finishedKind = activeKind;
-        cancel();
-
-        climaxTitle = reveal;
-        climaxAberrant = ab;
-        climaxKind = finishedKind;
-        climaxUntilMs = System.currentTimeMillis() + CLIMAX_BANNER_MS;
-
-        switch (finishedKind) {
-            case PURIFY_ABERRANT -> {
-                FusionGuiMicroEffects.playUiSound(SoundEvents.TOTEM_USE, 1.48F, 0.32F);
-                FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.55F, 0.85F);
-            }
-            case EXPAND_VESSEL -> {
-                FusionGuiMicroEffects.playUiSound(SoundEvents.RESPAWN_ANCHOR_CHARGE, 1.35F, 0.55F);
-                FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.40F, 0.85F);
-            }
-            case SOCKET_FUSED_BOOK, FUSE_ONTO_GEAR, TOP_UP_LEVEL -> {
-                FusionGuiMicroEffects.playUiSound(SoundEvents.SMITHING_TABLE_USE, 1.22F, 0.62F);
-                FusionGuiMicroEffects.playUiSound(SoundEvents.ENCHANTMENT_TABLE_USE, 1.18F, 0.72F);
-            }
-            default -> {
-                FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_BLOCK_RESONATE, ab ? 0.68F : 1.24F, 0.85F);
-                FusionGuiMicroEffects.playUiSound(SoundEvents.ENCHANTMENT_TABLE_USE, ab ? 0.78F : 1.12F, 0.75F);
-            }
-        }
-        commitAction.run();
-    }
-
     public static void cancel() {
         channeling = false;
         boundToken = "";
         chimedStage = 0;
         activeKind = OperationKind.NONE;
         activeTablePos = null;
+        serverObserved = false;
+        skipRequested = false;
+        pendingRevealTitle = "";
+        climaxUntilMs = 0L;
     }
 
     public static boolean isChanneling() {

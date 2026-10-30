@@ -62,6 +62,7 @@ public final class ClientSmoke implements ClientModInitializer {
     private boolean finished = false;
     private BlockPos tablePos;
     private volatile boolean serverReadyFlag = false;
+    private volatile boolean closedRitualFinished = false;
     private volatile Throwable serverFailure = null;
     private CompletableFuture<Void> resourceReloadFuture;
 
@@ -84,6 +85,102 @@ public final class ClientSmoke implements ClientModInitializer {
         if (!condition) {
             throw new AssertionError(msg);
         }
+    }
+
+    private static void exerciseLiveConfig(ServerPlayer sp) throws Exception {
+        var server = sp.level().getServer();
+        require(enchantment_fusion.config.FusionConfigNetworking.canEdit(server, sp), "Singleplayer owner must be able to configure");
+        long initialRevision = enchantment_fusion.config.FusionConfigStore.revision();
+        String fingerprint = enchantment_fusion.config.FusionConfigStore.rulesFingerprint();
+        var saved = enchantment_fusion.config.FusionConfigStore.update("economy", List.of("low_fail_chance"),
+            new com.google.gson.JsonPrimitive(0.12), false, initialRevision);
+        require(saved.success(), "Economy config must save");
+        require(Math.abs(enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().economy().lowFailChance() - 0.12) < 0.0001,
+            "Saved economy value must affect the live server snapshot");
+        require(!fingerprint.equals(enchantment_fusion.config.FusionConfigStore.rulesFingerprint()), "Rule fingerprint must change");
+        Path overridesPath = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()
+            .resolve("enchantment_fusion/overrides.json");
+        require(Files.isRegularFile(overridesPath) && Files.readString(overridesPath).contains("low_fail_chance"),
+            "Config override must persist on disk");
+        require(!enchantment_fusion.config.FusionConfigStore.update("economy", List.of("low_fail_chance"),
+            new com.google.gson.JsonPrimitive(0.2), false, initialRevision).success(), "Stale changes must be rejected");
+        require(!enchantment_fusion.config.FusionConfigStore.update("economy", List.of("low_fail_chance"),
+            new com.google.gson.JsonPrimitive(2.0), false, enchantment_fusion.config.FusionConfigStore.revision()).success(),
+            "Out-of-range probability must be rejected");
+        require(enchantment_fusion.config.FusionConfigStore.update("economy", List.of("low_fail_chance"),
+            null, true, enchantment_fusion.config.FusionConfigStore.revision()).success(), "Economy reset must succeed");
+
+        require(enchantment_fusion.config.FusionConfigStore.update("matrix_profiles", List.of("profiles", "minecraft:loyalty", "trigger"),
+            new com.google.gson.JsonPrimitive("ON_MELEE_STRIKE"), false, enchantment_fusion.config.FusionConfigStore.revision()).success(),
+            "Trigger override must save");
+        require(enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().resolve("minecraft:loyalty").trigger()
+            == enchantment_fusion.model.TriggerType.ON_MELEE_STRIKE, "Trigger override must affect server snapshot");
+        require(enchantment_fusion.config.FusionConfigStore.update("matrix_profiles", List.of("profiles", "minecraft:loyalty", "trigger"),
+            null, true, enchantment_fusion.config.FusionConfigStore.revision()).success(), "Trigger reset must succeed");
+
+        var groups = com.google.gson.JsonParser.parseString("[[\"minecraft:sharpness\",\"minecraft:loyalty\"]]");
+        require(enchantment_fusion.config.FusionConfigStore.update("repulsive_pairs", List.of("exclusive_groups"), groups,
+            false, enchantment_fusion.config.FusionConfigStore.revision()).success(), "Exclusive array override must save");
+        require(enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().areRepulsiveExclusives("minecraft:sharpness", "minecraft:loyalty"),
+            "Exclusive override must affect the live rules");
+        require(!enchantment_fusion.data.FusionMatrixRegistry.serverSnapshot().areRepulsiveExclusives("minecraft:loyalty", "minecraft:riptide"),
+            "Exclusive array override must replace built-ins, not append them");
+        require(enchantment_fusion.config.FusionConfigStore.update("repulsive_pairs", List.of("exclusive_groups"),
+            null, true, enchantment_fusion.config.FusionConfigStore.revision()).success(), "Exclusive reset must succeed");
+
+        require(enchantment_fusion.config.FusionConfigStore.update("signatures", List.of("signatures", "sanctified_execute", "domain"),
+            new com.google.gson.JsonPrimitive("smoke_domain"), false, enchantment_fusion.config.FusionConfigStore.revision()).success(),
+            "Signature override must save");
+        require("smoke_domain".equals(enchantment_fusion.mechanics.signatures.SignatureCatalog.domainOf("sanctified_execute")),
+            "Signature catalog must update immediately");
+        require(enchantment_fusion.config.FusionConfigStore.update("signatures", List.of("signatures", "sanctified_execute", "domain"),
+            null, true, enchantment_fusion.config.FusionConfigStore.revision()).success(), "Signature reset must succeed");
+
+        List<String> sourcePath = List.of("variants", "auto_smelt_pick", "source");
+        require(enchantment_fusion.config.FusionConfigStore.update("transmutations", sourcePath,
+            new com.google.gson.JsonPrimitive("minecraft:breach"), false, enchantment_fusion.config.FusionConfigStore.revision()).success(),
+            "Transmutation override must save");
+        require("auto_smelt_pick".equals(CrossDomainTransmutations.resolve(new ItemStack(Items.DIAMOND_PICKAXE), "minecraft:breach").orElseThrow().id()),
+            "Transmutation catalog must update immediately");
+        require(enchantment_fusion.config.FusionConfigStore.update("transmutations", sourcePath,
+            null, true, enchantment_fusion.config.FusionConfigStore.revision()).success(), "Transmutation reset must succeed");
+        require(fingerprint.equals(enchantment_fusion.config.FusionConfigStore.rulesFingerprint()), "Reset must restore datapack rules");
+    }
+
+    private static void exerciseLoyaltyRiptide(ServerPlayer sp) {
+        ItemStack trident = new ItemStack(Items.TRIDENT);
+        trident.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
+            FusedPair.clean("minecraft:loyalty", 3, "minecraft:riptide", 3)));
+        enchantment_fusion.mechanics.MatrixEffectExecutor.clearCooldowns();
+        enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
+        var triggers = java.util.EnumSet.of(enchantment_fusion.model.TriggerType.ON_TRIDENT_CHANNEL);
+        enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(sp.level(), sp, trident, triggers, null, sp.position(), false, 0.6F);
+        require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 0,
+            "A weak swing must not launch a blade or consume the full-charge cooldown");
+        enchantment_fusion.mechanics.MatrixEffectExecutor.dispatch(sp.level(), sp, trident, triggers, null, sp.position(), true, 1.0F);
+        require(enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() > 0,
+            "A fully charged Loyalty/Riptide trigger must launch a real visible blade");
+        enchantment_fusion.mechanics.FlyingBladeManager.flushAll();
+        enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
+
+        ItemStack reverse = new ItemStack(Items.TRIDENT);
+        reverse.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
+            FusedPair.clean("minecraft:riptide", 3, "minecraft:loyalty", 3)));
+        sp.setShiftKeyDown(false);
+        require(!enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.canUse(sp, reverse),
+            "Normal use must remain vanilla");
+        sp.setShiftKeyDown(true);
+        net.minecraft.world.phys.Vec3 anchor = sp.position();
+        require(enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.use(sp.level(), sp, reverse),
+            "Sneak-use must set the anchor and dash");
+        sp.teleportTo(anchor.x + 3.0, anchor.y, anchor.z);
+        sp.getCooldowns().removeCooldown(sp.getCooldowns().getCooldownGroup(reverse));
+        require(enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.use(sp.level(), sp, reverse),
+            "Second sneak-use must return to a safe anchor");
+        require(sp.position().distanceToSqr(anchor) < 0.01, "Return must reach the anchor");
+        sp.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+        sp.setShiftKeyDown(false);
+        sp.getCooldowns().removeCooldown(sp.getCooldowns().getCooldownGroup(reverse));
     }
 
     private static void click(Screen screen, double x, double y) {
@@ -227,9 +324,38 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                // Click primary 2.0s ritual button twice (1st starts channeling, 2nd skips immediately!)
+                // Start, close the actual menu, and reopen while the server-owned ritual runs.
                 click(screen, b.getX() + 244, b.getY() + 105);
-                click(screen, b.getX() + 244, b.getY() + 105);
+                screen.onClose();
+                next(13, 8);
+            }
+            case 13 -> {
+                var server = client.getSingleplayerServer();
+                serverReadyFlag = false;
+                server.execute(() -> {
+                    try {
+                        ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
+                        var be = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
+                        require(be.hasActiveRitual(), "Closing the UI must not cancel the server ritual");
+                        require(!be.canPlaceItem(0, new ItemStack(Items.STONE)), "Inputs must be locked during a ritual");
+                        require(be.removeItem(0, 1).isEmpty(), "Items cannot be removed during a ritual");
+                        var state = sp.level().getBlockState(tablePos);
+                        sp.openMenu(state.getMenuProvider(sp.level(), tablePos));
+                        sp.containerMenu.broadcastChanges();
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(14, 8);
+            }
+            case 14 -> {
+                if (!serverReadyFlag || !(client.screen instanceof EnchantmentFusionScreen screen)) return;
+                if (screen.getMenu().getSlot(3).getItem().is(FusionItems.FUSED_ENCHANTED_BOOK)) {
+                    next(4, 2); // The timer already completed while the UI was closed.
+                    return;
+                }
+                if (!screen.getMenu().isRitualRunning()) return;
+                Rect2i b = screen.guiBounds();
+                click(screen, b.getX() + 244, b.getY() + 105); // owner can still skip after reopening
                 next(4, 14);
             }
             case 4 -> {
@@ -383,9 +509,21 @@ public final class ClientSmoke implements ClientModInitializer {
                         sp.level().setBlockAndUpdate(icePos, Blocks.AIR.defaultBlockState());
                         AberrantRegistry.placeSingleFrostedIce(sp.level(), icePos);
                         require(
-                            sp.level().getBlockState(icePos).is(Blocks.FROSTED_ICE),
-                            "Freezing effects must place vanilla Blocks.FROSTED_ICE"
+                            sp.level().getBlockState(icePos).is(FusionBlocks.TEMPORARY_FROST),
+                            "Freezing effects must use the non-water-producing temporary frost block"
                         );
+                        sp.level().destroyBlock(icePos, false);
+                        require(sp.level().getBlockState(icePos).isAir(), "Broken temporary frost must not become water");
+                        BlockPos existingWater = tablePos.above(7).east(4);
+                        sp.level().setBlockAndUpdate(existingWater, Blocks.WATER.defaultBlockState());
+                        AberrantRegistry.placeSingleFrostedIce(sp.level(), existingWater);
+                        require(sp.level().getBlockState(existingWater).is(Blocks.WATER), "Existing water must not be deleted");
+                        sp.level().setBlockAndUpdate(existingWater, Blocks.AIR.defaultBlockState());
+                        BlockPos meltingIce = tablePos.above(5);
+                        sp.level().setBlockAndUpdate(meltingIce, Blocks.AIR.defaultBlockState());
+                        AberrantRegistry.placeSingleFrostedIce(sp.level(), meltingIce);
+                        sp.level().setBlockAndUpdate(meltingIce, sp.level().getBlockState(meltingIce)
+                            .setValue(enchantment_fusion.block.TemporaryFrostBlock.AGE, 3));
 
                         sp.closeContainer();
                         require(be.getItem(3).is(Items.DIAMOND_PICKAXE), "Closing menu must persist pickaxe inside table BlockEntity");
@@ -576,17 +714,51 @@ public final class ClientSmoke implements ClientModInitializer {
                         }
                         enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
 
+                        exerciseLiveConfig(sp);
+                        exerciseLoyaltyRiptide(sp);
+                        // Start another no-risk ritual with no menu open. It must finish on server ticks.
+                        var enchantments = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+                        var sharpness = enchantments.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("sharpness")));
+                        var loyalty = enchantments.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("loyalty")));
+                        be.setItem(0, FusionStationOperations.createSingleEnchantedBook(sharpness, 1));
+                        be.setItem(1, FusionStationOperations.createSingleEnchantedBook(loyalty, 1));
+                        be.setItem(2, ItemStack.EMPTY);
+                        be.setItem(3, ItemStack.EMPTY);
+                        var closedPreview = FusionStationOperations.inspect(be, sp.level().registryAccess(), FusionStationOperations.TAB_FUSE, -1, -1);
+                        require(closedPreview.executable(), "Closed-menu ritual preview must be executable");
+                        require(be.startRitual(sp, FusionStationOperations.TAB_FUSE, -1, -1, false, closedPreview.expectedExecuteToken()).success(),
+                            "Closed-menu ritual must start");
+                        require(be.cancelRitual(sp.getUUID()) && !be.hasActiveRitual(), "Owner must be able to cancel without consuming inputs");
+                        require(be.startRitual(sp, FusionStationOperations.TAB_FUSE, -1, -1, false, closedPreview.expectedExecuteToken()).success(),
+                            "Ritual must restart after cancellation");
                         serverReadyFlag = true;
                     } catch (Throwable t) {
                         serverFailure = t;
                     }
                 });
-                next(11, 28);
+                next(11, 60);
             }
             case 11 -> {
-                if (!serverReadyFlag) {
-                    return;
-                }
+                if (!serverReadyFlag) return;
+                serverReadyFlag = false;
+                var server = client.getSingleplayerServer();
+                server.execute(() -> {
+                    try {
+                        ServerPlayer sp = server.getPlayerList().getPlayers().getFirst();
+                        var be = (EnchantmentFusionTableBlockEntity) sp.level().getBlockEntity(tablePos);
+                        if (!be.hasActiveRitual() && sp.level().getBlockState(tablePos.above(5)).isAir()) {
+                            require(be.getItem(3).is(FusionItems.FUSED_ENCHANTED_BOOK), "Ritual must complete after closing the UI");
+                            require(sp.level().getBlockState(tablePos.above(5)).isAir(), "Melted frost must not produce water");
+                            closedRitualFinished = true;
+                        }
+                        serverReadyFlag = true;
+                    } catch (Throwable t) { serverFailure = t; }
+                });
+                next(15, 5);
+            }
+            case 15 -> {
+                if (!serverReadyFlag) return;
+                if (!closedRitualFinished) { next(11, 10); return; }
                 resourceReloadFuture = client.reloadResourcePacks();
                 next(12, 8);
             }

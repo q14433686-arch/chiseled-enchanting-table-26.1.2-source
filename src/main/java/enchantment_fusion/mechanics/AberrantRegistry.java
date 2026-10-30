@@ -1,29 +1,22 @@
 package enchantment_fusion.mechanics;
 
-import enchantment_fusion.EnchantmentFusion;
-import java.util.ArrayList;
+import enchantment_fusion.registry.FusionBlocks;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -32,8 +25,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * 6 double-edged Aberrant Fusions produced when repulsive mutually-exclusive max-level
  * enchantments destabilize or when high-tier synthesis suffers an unstable failure.
- * Also manages temporary {@code Blocks.FROSTED_ICE} prisons &amp; snares with unloaded-chunk retention
- * and shutdown cleanup (EF-012 / NUM-5 / NUM-6).
+ * Also places temporary frost prisons and snares without changing vanilla frosted ice.
  */
 public final class AberrantRegistry {
     public static final String BLOOD_FRENZY = "blood_frenzy";
@@ -59,61 +51,10 @@ public final class AberrantRegistry {
     private static final Set<String> HOT_POTATO_PATHS = Set.of("fire_protection", "fire_aspect", "flame");
     private static final Set<String> RECOIL_SKID_PATHS = Set.of("blast_protection", "projectile_protection", "protection", "lunge");
 
-    public record TrackedFrostedCell(
-        ResourceKey<Level> dimension,
-        BlockPos pos,
-        boolean wasWater,
-        int stage,
-        long nextStepTick,
-        long createdAtTick
-    ) {}
-
-    private static final Map<String, TrackedFrostedCell> TRACKED_FROSTED_ICE = new ConcurrentHashMap<>();
-
     private AberrantRegistry() {}
 
     public static List<String> allIds() {
         return ALL_IDS;
-    }
-
-    public static void clearRuntimeState() {
-        TRACKED_FROSTED_ICE.clear();
-    }
-
-    /**
-     * Restores all loaded {@code Blocks.FROSTED_ICE} cells on shutdown while retaining any unloaded
-     * entries instead of blindly dropping them before chunk save completes (NUM-6).
-     */
-    public static void flushAllCages(MinecraftServer server) {
-        if (TRACKED_FROSTED_ICE.isEmpty()) {
-            return;
-        }
-        int retainedUnloaded = 0;
-        for (Map.Entry<String, TrackedFrostedCell> entry : new ArrayList<>(TRACKED_FROSTED_ICE.entrySet())) {
-            TrackedFrostedCell cell = entry.getValue();
-            ServerLevel level = server.getLevel(cell.dimension());
-            if (level == null) {
-                TRACKED_FROSTED_ICE.remove(entry.getKey());
-                continue;
-            }
-            if (!level.isLoaded(cell.pos())) {
-                retainedUnloaded++;
-                continue;
-            }
-            if (level.getBlockState(cell.pos()).is(Blocks.FROSTED_ICE)) {
-                level.setBlockAndUpdate(
-                    cell.pos(),
-                    cell.wasWater() ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState()
-                );
-            }
-            TRACKED_FROSTED_ICE.remove(entry.getKey());
-        }
-        if (retainedUnloaded > 0) {
-            EnchantmentFusion.LOGGER.debug(
-                "Retained {} unloaded frosted-ice cage cells across server stop; vanilla scheduled ticks will melt them on reload",
-                retainedUnloaded
-            );
-        }
     }
 
     public static String pickRandomAberration(RandomSource rng) {
@@ -277,75 +218,12 @@ public final class AberrantRegistry {
         placeSingleFrostedIce(level, center.west());
     }
 
-    public static void placeSingleFrostedIce(ServerLevel level, BlockPos p) {
-        BlockState cur = level.getBlockState(p);
-        boolean wasWater = cur.is(Blocks.WATER) && cur.getFluidState().isSource();
-        if (cur.isAir() || cur.canBeReplaced() || wasWater) {
-            BlockPos imm = p.immutable();
-            level.setBlockAndUpdate(imm, Blocks.FROSTED_ICE.defaultBlockState());
-            int delay = Mth.nextInt(level.getRandom(), 24, 48);
-            long now = level.getGameTime();
-            level.scheduleTick(imm, Blocks.FROSTED_ICE, delay);
-            if (TRACKED_FROSTED_ICE.size() < 4096) {
-                String cellKey = level.dimension().identifier() + "@" + imm.asLong();
-                TRACKED_FROSTED_ICE.put(
-                    cellKey,
-                    new TrackedFrostedCell(level.dimension(), imm, wasWater, 0, now + delay, now)
-                );
-            }
-        }
-    }
-
-    /**
-     * Advances tracked {@code Blocks.FROSTED_ICE} cells through vanilla's 4 cracking states
-     * even in dark caves; retains temporarily unloaded chunks until reloaded (EF-012).
-     */
-    public static void tickFrostedCages(MinecraftServer server) {
-        if (TRACKED_FROSTED_ICE.isEmpty() || server.getTickCount() % 10 != 0) {
-            return;
-        }
-        List<BlockState> states = Blocks.FROSTED_ICE.getStateDefinition().getPossibleStates();
-        for (Map.Entry<String, TrackedFrostedCell> entry : new ArrayList<>(TRACKED_FROSTED_ICE.entrySet())) {
-            String key = entry.getKey();
-            TrackedFrostedCell cell = entry.getValue();
-            ServerLevel level = server.getLevel(cell.dimension());
-            if (level == null) {
-                TRACKED_FROSTED_ICE.remove(key);
-                continue;
-            }
-            long now = level.getGameTime();
-            if (!level.isLoaded(cell.pos())) {
-                if (now - cell.createdAtTick() > 18000L) {
-                    TRACKED_FROSTED_ICE.remove(key);
-                }
-                continue;
-            }
-            if (now < cell.nextStepTick()) {
-                continue;
-            }
-            BlockState cur = level.getBlockState(cell.pos());
-            if (!cur.is(Blocks.FROSTED_ICE)) {
-                TRACKED_FROSTED_ICE.remove(key);
-                continue;
-            }
-            int nextStage = cell.stage() + 1;
-            if (nextStage < states.size()) {
-                level.setBlockAndUpdate(cell.pos(), states.get(nextStage));
-                int delay = Mth.nextInt(level.getRandom(), 20, 36);
-                TRACKED_FROSTED_ICE.put(
-                    key,
-                    new TrackedFrostedCell(cell.dimension(), cell.pos(), cell.wasWater(), nextStage, now + delay, cell.createdAtTick())
-                );
-            } else {
-                level.setBlockAndUpdate(cell.pos(), cell.wasWater() ? Blocks.WATER.defaultBlockState() : Blocks.AIR.defaultBlockState());
-                level.sendParticles(
-                    ParticleTypes.SNOWFLAKE,
-                    cell.pos().getX() + 0.5D, cell.pos().getY() + 0.5D, cell.pos().getZ() + 0.5D,
-                    4, 0.25D, 0.25D, 0.25D, 0.02D
-                );
-                TRACKED_FROSTED_ICE.remove(key);
-            }
-        }
+    public static void placeSingleFrostedIce(ServerLevel level, BlockPos pos) {
+        BlockState current = level.getBlockState(pos);
+        // Never overwrite existing water, plants or another player's blocks. In particular,
+        // avoiding water sources means the effect cannot delete water or recreate it on breaking.
+        if (!current.isAir()) return;
+        level.setBlockAndUpdate(pos, FusionBlocks.TEMPORARY_FROST.defaultBlockState());
     }
 
     public static void spawnLightning(ServerLevel level, Vec3 pos) {

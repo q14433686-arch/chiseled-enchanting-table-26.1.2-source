@@ -112,6 +112,11 @@ public final class SignatureCatalog {
         );
     }
 
+    /** Publish a previously parsed snapshot, so configuration changes can be staged first. */
+    public static void publish(Snapshot snapshot) {
+        if (snapshot != null) activeSnapshot = snapshot;
+    }
+
     public static void reloadFromJson(@Nullable JsonObject mergedRoot) {
         if (mergedRoot == null) {
             activeSnapshot = loadClasspathDefault();
