@@ -1,0 +1,756 @@
+{
+  "schema_version": 1,
+  "replace": false,
+  "signatures": {
+    "sanctified_execute": {
+      "primary": "minecraft:sharpness",
+      "secondary": "minecraft:smite",
+      "domain": "melee"
+    },
+    "radiant_shockwave": {
+      "primary": "minecraft:smite",
+      "secondary": "minecraft:sharpness",
+      "domain": "melee"
+    },
+    "hamstring_rend": {
+      "primary": "minecraft:sharpness",
+      "secondary": "minecraft:bane_of_arthropods",
+      "domain": "melee"
+    },
+    "neurotoxin_bleed": {
+      "primary": "minecraft:bane_of_arthropods",
+      "secondary": "minecraft:sharpness",
+      "domain": "melee"
+    },
+    "blight_halo": {
+      "primary": "minecraft:smite",
+      "secondary": "minecraft:bane_of_arthropods",
+      "domain": "melee"
+    },
+    "soul_cocoon": {
+      "primary": "minecraft:bane_of_arthropods",
+      "secondary": "minecraft:smite",
+      "domain": "melee"
+    },
+    "blast_flare": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:knockback",
+      "domain": "melee"
+    },
+    "blazing_furrow": {
+      "primary": "minecraft:knockback",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "wildfire_arc": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:sweeping_edge",
+      "domain": "melee"
+    },
+    "soulburn_detonate": {
+      "primary": "minecraft:sweeping_edge",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "cyclone_repulse": {
+      "primary": "minecraft:knockback",
+      "secondary": "minecraft:sweeping_edge",
+      "domain": "melee"
+    },
+    "gale_vortex": {
+      "primary": "minecraft:sweeping_edge",
+      "secondary": "minecraft:knockback",
+      "domain": "melee"
+    },
+    "searing_feast": {
+      "primary": "minecraft:looting",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "alchemic_pyre": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:looting",
+      "domain": "melee"
+    },
+    "concussive_plunder": {
+      "primary": "minecraft:knockback",
+      "secondary": "minecraft:looting",
+      "domain": "melee"
+    },
+    "trophy_shockwave": {
+      "primary": "minecraft:looting",
+      "secondary": "minecraft:knockback",
+      "domain": "melee"
+    },
+    "legion_plunder": {
+      "primary": "minecraft:looting",
+      "secondary": "minecraft:sweeping_edge",
+      "domain": "melee"
+    },
+    "reaping_gale": {
+      "primary": "minecraft:sweeping_edge",
+      "secondary": "minecraft:looting",
+      "domain": "melee"
+    },
+    "raw_ore_geode": {
+      "primary": "minecraft:silk_touch",
+      "secondary": "minecraft:fortune",
+      "domain": "mining_utility"
+    },
+    "smelt_fortune": {
+      "primary": "minecraft:fortune",
+      "secondary": "minecraft:silk_touch",
+      "domain": "mining_utility"
+    },
+    "pulse_prospect": {
+      "primary": "minecraft:efficiency",
+      "secondary": "minecraft:fortune",
+      "domain": "mining_utility"
+    },
+    "vein_peel": {
+      "primary": "minecraft:efficiency",
+      "secondary": "minecraft:silk_touch",
+      "domain": "mining_utility"
+    },
+    "velvet_shear": {
+      "primary": "minecraft:silk_touch",
+      "secondary": "minecraft:efficiency",
+      "domain": "mining_utility"
+    },
+    "overflow_plating": {
+      "primary": "minecraft:mending",
+      "secondary": "minecraft:unbreaking",
+      "domain": "armor_curse"
+    },
+    "self_healing_lattice": {
+      "primary": "minecraft:unbreaking",
+      "secondary": "minecraft:mending",
+      "domain": "armor_curse"
+    },
+    "starlight_quiver": {
+      "primary": "minecraft:infinity",
+      "secondary": "minecraft:mending",
+      "domain": "ranged"
+    },
+    "spectral_condense": {
+      "primary": "minecraft:mending",
+      "secondary": "minecraft:infinity",
+      "domain": "ranged"
+    },
+    "converging_volley": {
+      "primary": "minecraft:multishot",
+      "secondary": "minecraft:piercing",
+      "domain": "ranged"
+    },
+    "fission_warhead": {
+      "primary": "minecraft:piercing",
+      "secondary": "minecraft:multishot",
+      "domain": "ranged"
+    },
+    "explosive_flare_arrow": {
+      "primary": "minecraft:flame",
+      "secondary": "minecraft:punch",
+      "domain": "ranged"
+    },
+    "meteor_streak": {
+      "primary": "minecraft:punch",
+      "secondary": "minecraft:flame",
+      "domain": "ranged"
+    },
+    "swift_draw_burst": {
+      "primary": "minecraft:quick_charge",
+      "secondary": "minecraft:power",
+      "domain": "ranged"
+    },
+    "overdraw_snipe": {
+      "primary": "minecraft:power",
+      "secondary": "minecraft:quick_charge",
+      "domain": "ranged"
+    },
+    "hydro_flying_sword": {
+      "primary": "minecraft:loyalty",
+      "secondary": "minecraft:riptide",
+      "domain": "spear_trident_mace"
+    },
+    "mirage_snapback": {
+      "primary": "minecraft:riptide",
+      "secondary": "minecraft:loyalty",
+      "domain": "spear_trident_mace"
+    },
+    "clear_sky_thunder": {
+      "primary": "minecraft:channeling",
+      "secondary": "minecraft:riptide",
+      "domain": "spear_trident_mace"
+    },
+    "thunder_avatar": {
+      "primary": "minecraft:riptide",
+      "secondary": "minecraft:channeling",
+      "domain": "spear_trident_mace"
+    },
+    "meteor_crush": {
+      "primary": "minecraft:wind_burst",
+      "secondary": "minecraft:density",
+      "domain": "spear_trident_mace"
+    },
+    "crushing_updraft": {
+      "primary": "minecraft:density",
+      "secondary": "minecraft:wind_burst",
+      "domain": "spear_trident_mace"
+    },
+    "armor_shatter": {
+      "primary": "minecraft:density",
+      "secondary": "minecraft:breach",
+      "domain": "spear_trident_mace"
+    },
+    "ground_gust": {
+      "primary": "minecraft:breach",
+      "secondary": "minecraft:wind_burst",
+      "domain": "spear_trident_mace"
+    },
+    "furnace_aegis": {
+      "primary": "minecraft:protection",
+      "secondary": "minecraft:fire_protection",
+      "domain": "armor_curse"
+    },
+    "searing_counter": {
+      "primary": "minecraft:fire_protection",
+      "secondary": "minecraft:protection",
+      "domain": "armor_curse"
+    },
+    "reactive_plate": {
+      "primary": "minecraft:protection",
+      "secondary": "minecraft:blast_protection",
+      "domain": "armor_curse"
+    },
+    "kinetic_payback": {
+      "primary": "minecraft:blast_protection",
+      "secondary": "minecraft:protection",
+      "domain": "armor_curse"
+    },
+    "deflection_field": {
+      "primary": "minecraft:protection",
+      "secondary": "minecraft:projectile_protection",
+      "domain": "armor_curse"
+    },
+    "arrow_stride": {
+      "primary": "minecraft:projectile_protection",
+      "secondary": "minecraft:protection",
+      "domain": "armor_curse"
+    },
+    "pyro_thorns": {
+      "primary": "minecraft:thorns",
+      "secondary": "minecraft:fire_protection",
+      "domain": "armor_curse"
+    },
+    "cinder_backlash": {
+      "primary": "minecraft:fire_protection",
+      "secondary": "minecraft:thorns",
+      "domain": "armor_curse"
+    },
+    "blast_thorns": {
+      "primary": "minecraft:thorns",
+      "secondary": "minecraft:blast_protection",
+      "domain": "armor_curse"
+    },
+    "concussion_shrapnel": {
+      "primary": "minecraft:blast_protection",
+      "secondary": "minecraft:thorns",
+      "domain": "armor_curse"
+    },
+    "sniper_thorns": {
+      "primary": "minecraft:thorns",
+      "secondary": "minecraft:projectile_protection",
+      "domain": "armor_curse"
+    },
+    "ricochet_ward": {
+      "primary": "minecraft:projectile_protection",
+      "secondary": "minecraft:thorns",
+      "domain": "armor_curse"
+    },
+    "tide_breaker_dive": {
+      "primary": "minecraft:depth_strider",
+      "secondary": "minecraft:frost_walker",
+      "domain": "armor_curse"
+    },
+    "permafrost_wake": {
+      "primary": "minecraft:frost_walker",
+      "secondary": "minecraft:depth_strider",
+      "domain": "armor_curse"
+    },
+    "magma_basalt_step": {
+      "primary": "minecraft:frost_walker",
+      "secondary": "minecraft:fire_protection",
+      "domain": "armor_curse"
+    },
+    "glacial_hearth": {
+      "primary": "minecraft:fire_protection",
+      "secondary": "minecraft:frost_walker",
+      "domain": "armor_curse"
+    },
+    "frost_meteor_fall": {
+      "primary": "minecraft:feather_falling",
+      "secondary": "minecraft:frost_walker",
+      "domain": "armor_curse"
+    },
+    "feather_rime_glide": {
+      "primary": "minecraft:frost_walker",
+      "secondary": "minecraft:feather_falling",
+      "domain": "armor_curse"
+    },
+    "soul_stride_landing": {
+      "primary": "minecraft:feather_falling",
+      "secondary": "minecraft:soul_speed",
+      "domain": "armor_curse"
+    },
+    "phantom_assassin_step": {
+      "primary": "minecraft:soul_speed",
+      "secondary": "minecraft:swift_sneak",
+      "domain": "armor_curse"
+    },
+    "abyssal_sight": {
+      "primary": "minecraft:respiration",
+      "secondary": "minecraft:aqua_affinity",
+      "domain": "mining_utility"
+    },
+    "ocean_breath_mine": {
+      "primary": "minecraft:aqua_affinity",
+      "secondary": "minecraft:respiration",
+      "domain": "mining_utility"
+    },
+    "tidal_double_catch": {
+      "primary": "minecraft:luck_of_the_sea",
+      "secondary": "minecraft:lure",
+      "domain": "mining_utility"
+    },
+    "raging_hook": {
+      "primary": "minecraft:lure",
+      "secondary": "minecraft:luck_of_the_sea",
+      "domain": "mining_utility"
+    },
+    "thunder_iaido": {
+      "primary": "minecraft:sharpness",
+      "secondary": "minecraft:channeling",
+      "domain": "melee"
+    },
+    "arc_lightning_cleave": {
+      "primary": "minecraft:sweeping_edge",
+      "secondary": "minecraft:channeling",
+      "domain": "melee"
+    },
+    "phantom_triple_slash": {
+      "primary": "minecraft:sharpness",
+      "secondary": "minecraft:multishot",
+      "domain": "melee"
+    },
+    "flying_sword_qi": {
+      "primary": "minecraft:sharpness",
+      "secondary": "minecraft:loyalty",
+      "domain": "melee"
+    },
+    "midas_cleave": {
+      "primary": "minecraft:sharpness",
+      "secondary": "minecraft:fortune",
+      "domain": "melee"
+    },
+    "bounty_jackpot": {
+      "primary": "minecraft:looting",
+      "secondary": "minecraft:fortune",
+      "domain": "melee"
+    },
+    "rising_dragon_leap": {
+      "primary": "minecraft:sharpness",
+      "secondary": "minecraft:feather_falling",
+      "domain": "melee"
+    },
+    "blood_vengeance": {
+      "primary": "minecraft:sharpness",
+      "secondary": "minecraft:thorns",
+      "domain": "melee"
+    },
+    "molten_core_pick": {
+      "primary": "minecraft:efficiency",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "mining_utility"
+    },
+    "magnetic_pick": {
+      "primary": "minecraft:efficiency",
+      "secondary": "minecraft:loyalty",
+      "domain": "mining_utility"
+    },
+    "rock_splitter_pick": {
+      "primary": "minecraft:efficiency",
+      "secondary": "minecraft:sweeping_edge",
+      "domain": "mining_utility"
+    },
+    "controlled_demolition": {
+      "primary": "minecraft:efficiency",
+      "secondary": "minecraft:blast_protection",
+      "domain": "mining_utility"
+    },
+    "gale_guardian_armor": {
+      "primary": "minecraft:protection",
+      "secondary": "minecraft:wind_burst",
+      "domain": "armor_curse"
+    },
+    "zephyr_cushion": {
+      "primary": "minecraft:feather_falling",
+      "secondary": "minecraft:wind_burst",
+      "domain": "armor_curse"
+    },
+    "steam_scald": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:frost_walker",
+      "domain": "melee"
+    },
+    "scald_plume_arrow": {
+      "primary": "minecraft:flame",
+      "secondary": "minecraft:frost_walker",
+      "domain": "ranged"
+    },
+    "frostfire_cage": {
+      "primary": "minecraft:frost_walker",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "permafrost_brand_arrow": {
+      "primary": "minecraft:frost_walker",
+      "secondary": "minecraft:flame",
+      "domain": "ranged"
+    },
+    "superconduct_shatter": {
+      "primary": "minecraft:channeling",
+      "secondary": "minecraft:frost_walker",
+      "domain": "melee"
+    },
+    "aurora_thunder_prison": {
+      "primary": "minecraft:frost_walker",
+      "secondary": "minecraft:channeling",
+      "domain": "melee"
+    },
+    "plasma_overload": {
+      "primary": "minecraft:channeling",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "thunder_pyre_lance": {
+      "primary": "minecraft:channeling",
+      "secondary": "minecraft:flame",
+      "domain": "ranged"
+    },
+    "skyfire_lightning": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:channeling",
+      "domain": "melee"
+    },
+    "solar_arc_arrow": {
+      "primary": "minecraft:flame",
+      "secondary": "minecraft:channeling",
+      "domain": "ranged"
+    },
+    "hydrothermal_wake": {
+      "primary": "minecraft:depth_strider",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "armor_curse"
+    },
+    "flame_tornado": {
+      "primary": "minecraft:wind_burst",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "blizzard_squall": {
+      "primary": "minecraft:wind_burst",
+      "secondary": "minecraft:frost_walker",
+      "domain": "melee"
+    },
+    "nether_soul_fire": {
+      "primary": "minecraft:soul_speed",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "pristine_trophy": {
+      "primary": "minecraft:silk_touch",
+      "secondary": "minecraft:sharpness",
+      "domain": "melee"
+    },
+    "curated_harvest": {
+      "primary": "minecraft:silk_touch",
+      "secondary": "minecraft:looting",
+      "domain": "melee"
+    },
+    "crystal_snare": {
+      "primary": "minecraft:silk_touch",
+      "secondary": "minecraft:knockback",
+      "domain": "melee"
+    },
+    "frost_spike_armor": {
+      "primary": "minecraft:thorns",
+      "secondary": "minecraft:frost_walker",
+      "domain": "armor_curse"
+    },
+    "ice_thorn_trail": {
+      "primary": "minecraft:frost_walker",
+      "secondary": "minecraft:thorns",
+      "domain": "armor_curse"
+    },
+    "loyal_lifeline": {
+      "primary": "minecraft:protection",
+      "secondary": "minecraft:loyalty",
+      "domain": "armor_curse"
+    },
+    "homing_plume": {
+      "primary": "minecraft:feather_falling",
+      "secondary": "minecraft:loyalty",
+      "domain": "armor_curse"
+    },
+    "overflow_edge": {
+      "primary": "minecraft:mending",
+      "secondary": "minecraft:sharpness",
+      "domain": "melee"
+    },
+    "fortune_grace": {
+      "primary": "minecraft:protection",
+      "secondary": "minecraft:fortune",
+      "domain": "armor_curse"
+    },
+    "lucky_golden_body": {
+      "primary": "minecraft:fortune",
+      "secondary": "minecraft:protection",
+      "domain": "armor_curse"
+    },
+    "triple_excavate": {
+      "primary": "minecraft:multishot",
+      "secondary": "minecraft:efficiency",
+      "domain": "mining_utility"
+    },
+    "rapid_bowstring": {
+      "primary": "minecraft:efficiency",
+      "secondary": "minecraft:multishot",
+      "domain": "ranged"
+    },
+    "land_water_dragon": {
+      "primary": "minecraft:riptide",
+      "secondary": "minecraft:sharpness",
+      "domain": "spear_trident_mace"
+    },
+    "maelstrom_vault": {
+      "primary": "minecraft:riptide",
+      "secondary": "minecraft:wind_burst",
+      "domain": "spear_trident_mace"
+    },
+    "snap_crescent_draw": {
+      "primary": "minecraft:quick_charge",
+      "secondary": "minecraft:sweeping_edge",
+      "domain": "melee"
+    },
+    "shield_piercer": {
+      "primary": "minecraft:piercing",
+      "secondary": "minecraft:sharpness",
+      "domain": "melee"
+    },
+    "perpetual_craft": {
+      "primary": "minecraft:infinity",
+      "secondary": "minecraft:efficiency",
+      "domain": "mining_utility"
+    },
+    "eternal_bowstring": {
+      "primary": "minecraft:infinity",
+      "secondary": "minecraft:unbreaking",
+      "domain": "ranged"
+    },
+    "undying_hellfire": {
+      "primary": "minecraft:infinity",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "sunfire_barrage": {
+      "primary": "minecraft:infinity",
+      "secondary": "minecraft:flame",
+      "domain": "ranged"
+    },
+    "shakedown_thorns": {
+      "primary": "minecraft:looting",
+      "secondary": "minecraft:thorns",
+      "domain": "armor_curse"
+    },
+    "extortion_carapace": {
+      "primary": "minecraft:thorns",
+      "secondary": "minecraft:looting",
+      "domain": "armor_curse"
+    },
+    "glass_holy_shield": {
+      "primary": "minecraft:silk_touch",
+      "secondary": "minecraft:protection",
+      "domain": "armor_curse"
+    },
+    "porcelain_bastion": {
+      "primary": "minecraft:protection",
+      "secondary": "minecraft:silk_touch",
+      "domain": "armor_curse"
+    },
+    "gale_vault_thrust": {
+      "primary": "minecraft:lunge",
+      "secondary": "minecraft:wind_burst",
+      "domain": "spear_trident_mace"
+    },
+    "sky_spear_dive": {
+      "primary": "minecraft:wind_burst",
+      "secondary": "minecraft:lunge",
+      "domain": "spear_trident_mace"
+    },
+    "blazing_dragoon": {
+      "primary": "minecraft:lunge",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "spear_trident_mace"
+    },
+    "searing_charge": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:lunge",
+      "domain": "spear_trident_mace"
+    },
+    "tidal_harpoon_rush": {
+      "primary": "minecraft:lunge",
+      "secondary": "minecraft:riptide",
+      "domain": "spear_trident_mace"
+    },
+    "surge_skewer": {
+      "primary": "minecraft:riptide",
+      "secondary": "minecraft:lunge",
+      "domain": "spear_trident_mace"
+    },
+    "boomerang_lance": {
+      "primary": "minecraft:lunge",
+      "secondary": "minecraft:loyalty",
+      "domain": "spear_trident_mace"
+    },
+    "shadow_recall_lunge": {
+      "primary": "minecraft:loyalty",
+      "secondary": "minecraft:lunge",
+      "domain": "spear_trident_mace"
+    },
+    "hundred_step_skewer": {
+      "primary": "minecraft:lunge",
+      "secondary": "minecraft:piercing",
+      "domain": "spear_trident_mace"
+    },
+    "armor_seam_rush": {
+      "primary": "minecraft:piercing",
+      "secondary": "minecraft:lunge",
+      "domain": "spear_trident_mace"
+    },
+    "thunderbolt_cavalry": {
+      "primary": "minecraft:lunge",
+      "secondary": "minecraft:channeling",
+      "domain": "spear_trident_mace"
+    },
+    "lightning_step_spear": {
+      "primary": "minecraft:channeling",
+      "secondary": "minecraft:lunge",
+      "domain": "spear_trident_mace"
+    },
+    "kite_string_gale": {
+      "primary": "minecraft:wind_burst",
+      "secondary": "minecraft:loyalty",
+      "domain": "spear_trident_mace"
+    },
+    "tailwind_return": {
+      "primary": "minecraft:loyalty",
+      "secondary": "minecraft:wind_burst",
+      "domain": "spear_trident_mace"
+    },
+    "glazed_kiln_edge": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:silk_touch",
+      "domain": "mining_utility"
+    },
+    "amber_embalm": {
+      "primary": "minecraft:silk_touch",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "true_gold_refinery": {
+      "primary": "minecraft:fortune",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "mining_utility"
+    },
+    "cinder_jackpot": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:fortune",
+      "domain": "mining_utility"
+    },
+    "bitter_medicine_carapace": {
+      "primary": "minecraft:thorns",
+      "secondary": "minecraft:mending",
+      "domain": "armor_curse"
+    },
+    "forged_retaliation": {
+      "primary": "minecraft:mending",
+      "secondary": "minecraft:thorns",
+      "domain": "armor_curse"
+    },
+    "threading_needle": {
+      "primary": "minecraft:quick_charge",
+      "secondary": "minecraft:piercing",
+      "domain": "ranged"
+    },
+    "bamboo_split_momentum": {
+      "primary": "minecraft:piercing",
+      "secondary": "minecraft:quick_charge",
+      "domain": "ranged"
+    },
+    "moth_to_flame": {
+      "primary": "minecraft:lure",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "beacon_bonfire": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:lure",
+      "domain": "melee"
+    },
+    "quench_temper_blade": {
+      "primary": "minecraft:aqua_affinity",
+      "secondary": "minecraft:fire_aspect",
+      "domain": "melee"
+    },
+    "geyser_bore": {
+      "primary": "minecraft:fire_aspect",
+      "secondary": "minecraft:aqua_affinity",
+      "domain": "mining_utility"
+    },
+    "mirror_moon_sweep": {
+      "primary": "minecraft:sweeping_edge",
+      "secondary": "minecraft:silk_touch",
+      "domain": "melee"
+    },
+    "paper_thin_cleave": {
+      "primary": "minecraft:silk_touch",
+      "secondary": "minecraft:sweeping_edge",
+      "domain": "melee"
+    },
+    "tempered_anvil_heart": {
+      "primary": "minecraft:density",
+      "secondary": "minecraft:mending",
+      "domain": "spear_trident_mace"
+    },
+    "heavy_xp_meteor": {
+      "primary": "minecraft:mending",
+      "secondary": "minecraft:density",
+      "domain": "spear_trident_mace"
+    },
+    "spirit_grapnel": {
+      "primary": "*",
+      "secondary": "minecraft:lure",
+      "domain": "armor_curse"
+    },
+    "blood_pact_curse": {
+      "primary": "*",
+      "secondary": "minecraft:binding_curse",
+      "domain": "armor_curse"
+    },
+    "soulburn_elegy_curse": {
+      "primary": "*",
+      "secondary": "minecraft:vanishing_curse",
+      "domain": "armor_curse"
+    }
+  }
+}

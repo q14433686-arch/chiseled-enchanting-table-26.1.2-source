@@ -92,10 +92,16 @@ public final class FusionGuiSkin {
     public static final Identifier SOCKET_FILLED = EnchantmentFusion.id("textures/gui/socket_card_filled.png");
     public static final Identifier SOCKET_ABERRANT = EnchantmentFusion.id("textures/gui/socket_card_aberrant.png");
 
-    // Pixel-Art UI Micro-Effect Sprites
+    // Pixel-Art UI Micro-Effect & Live Stage Sprites
     public static final Identifier VFX_RUNE_HALO = EnchantmentFusion.id("textures/gui/vfx_rune_halo.png");
     public static final Identifier VFX_ARCANE_SPARK = EnchantmentFusion.id("textures/gui/vfx_arcane_spark.png");
     public static final Identifier VFX_SHOCKWAVE_RING = EnchantmentFusion.id("textures/gui/vfx_shockwave_ring.png");
+    public static final Identifier STAGE_BACKDROP = EnchantmentFusion.id("textures/gui/stage_backdrop.png");
+    public static final Identifier STAGE_ALTAR_PEDESTAL = EnchantmentFusion.id("textures/gui/stage_altar_pedestal.png");
+    public static final Identifier STAGE_YINYANG_RING = EnchantmentFusion.id("textures/gui/stage_yinyang_ring.png");
+    public static final Identifier STAGE_PURIFY_TRIAD = EnchantmentFusion.id("textures/gui/stage_purify_triad.png");
+    public static final Identifier STAGE_SPLIT_CLEAVE = EnchantmentFusion.id("textures/gui/stage_split_cleave.png");
+    public static final Identifier STAGE_SCULK_RING = EnchantmentFusion.id("textures/gui/stage_sculk_ring.png");
 
     // Named 9-slice sprite tokens (TXT-5)
     public static final NineSliceSprite SLICE_PANEL_MAIN = new NineSliceSprite(PANEL_FRAME, 48, 48, 6);
@@ -187,6 +193,69 @@ public final class FusionGuiSkin {
 
     public static void drawSprite(GuiGraphicsExtractor ctx, Identifier sprite, int x, int y, int w, int h) {
         ctx.blit(sprite, x, y, x + w, y + h, 0.0F, 1.0F, 0.0F, 1.0F);
+    }
+
+    public static void drawRotatedSprite(
+        GuiGraphicsExtractor ctx,
+        Identifier sprite,
+        float centerX,
+        float centerY,
+        float width,
+        float height,
+        float angleRad
+    ) {
+        int iw = Math.max(2, Math.round(width));
+        int ih = Math.max(2, Math.round(height));
+        ctx.pose().pushMatrix();
+        ctx.pose().translate(centerX, centerY);
+        if (Math.abs(angleRad) > 0.001F) {
+            ctx.pose().rotate(angleRad);
+        }
+        ctx.pose().translate(-iw * 0.5F, -ih * 0.5F);
+        drawSprite(ctx, sprite, 0, 0, iw, ih);
+        ctx.pose().popMatrix();
+    }
+
+    /**
+     * Draws a continuous, overlap-stitched quadratic Bezier silk ribbon inside the Live Stage using
+     * {@code beamSprite} so consecutive links form a smooth, gap-free flowing band.
+     */
+    public static void drawContinuousBezierRibbon(
+        GuiGraphicsExtractor ctx,
+        Identifier beamSprite,
+        float x0, float y0,
+        float cx, float cy,
+        float x1, float y1,
+        float thickness,
+        float activeProgress
+    ) {
+        float limit = Mth.clamp(activeProgress, 0.0F, 1.0F);
+        if (limit <= 0.02F) {
+            return;
+        }
+        int steps = 16;
+        int maxStep = Math.max(1, Math.round(steps * limit));
+        float prevX = x0;
+        float prevY = y0;
+        for (int i = 1; i <= maxStep; i++) {
+            float t = i / (float) steps;
+            float inv = 1.0F - t;
+            float nx = inv * inv * x0 + 2.0F * inv * t * cx + t * t * x1;
+            float ny = inv * inv * y0 + 2.0F * inv * t * cy + t * t * y1;
+            float dx = nx - prevX;
+            float dy = ny - prevY;
+            float segLen = Mth.sqrt(dx * dx + dy * dy);
+            if (segLen > 0.2F) {
+                float midX = 0.5F * (prevX + nx);
+                float midY = 0.5F * (prevY + ny);
+                float ang = (float) Mth.atan2(dy, dx);
+                float taper = 0.55F + 0.55F * Mth.sin(t * Mth.PI);
+                // Slight +2.2px length overlap guarantees zero subpixel gaps along curved turns
+                drawRotatedSprite(ctx, beamSprite, midX, midY, segLen + 2.4F, Math.max(2.0F, thickness * taper), ang);
+            }
+            prevX = nx;
+            prevY = ny;
+        }
     }
 
     /**

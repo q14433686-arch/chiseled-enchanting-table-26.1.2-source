@@ -185,12 +185,27 @@ public final class FlyingBladeManager {
         int powerTier,
         FlightStyle style
     ) {
+        return launchAngledPhantomWeapon(level, owner, hand, weapon, powerTier, style, 0.0F);
+    }
+
+    public static synchronized boolean launchAngledPhantomWeapon(
+        ServerLevel level,
+        ServerPlayer owner,
+        InteractionHand hand,
+        ItemStack weapon,
+        int powerTier,
+        FlightStyle style,
+        float yawOffsetDeg
+    ) {
         if (weapon == null || weapon.isEmpty() || !canLaunchFor(owner.getUUID())) {
             return false;
         }
         int clampedLv = Math.clamp(powerTier, 1, 5);
-        Vec3 start = owner.getEyePosition().add(owner.getLookAngle().scale(0.75D)).add(0.0D, -0.15D, 0.0D);
         Vec3 dir = owner.getLookAngle().normalize();
+        if (Math.abs(yawOffsetDeg) > 0.01F) {
+            dir = dir.yRot((float) Math.toRadians(-yawOffsetDeg)).normalize();
+        }
+        Vec3 start = owner.getEyePosition().add(dir.scale(0.75D)).add(0.0D, -0.15D, 0.0D);
 
         PathSourceKind sourceKind = ProjectilePathTracker.classifyWeaponItem(weapon);
         boolean lanceOriented = (style == FlightStyle.PHANTOM_LANCE || style == FlightStyle.SPEAR_CHARGE_LANCE || sourceKind == PathSourceKind.SPEAR);

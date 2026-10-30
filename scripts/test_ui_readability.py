@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Static UI readability, non-overlap, texture-skin, and locale bounds check for
-Enchantment Fusion's Cutaway Split-Wing Auto-Morphing Altar UI & Obsidian Star-Codex Grimoire.
+Static UI readability, non-overlap, JEI/REI compact width (<=304px), texture-skin,
+and locale bounds check for Enchantment Fusion's 304x218 Split-Wing Live-Stage Altar UI
+& Obsidian Star-Codex Grimoire.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ GUI_DIR = ROOT / "src/client/java/enchantment_fusion/gui"
 STATION_SCREEN = GUI_DIR / "EnchantmentFusionScreen.java"
 GRIMOIRE_SCREEN = GUI_DIR / "FusionGrimoireScreen.java"
 CONTEXT_DRAWER = GUI_DIR / "FusionContextDrawer.java"
-MENU_JAVA = ROOT / "src/main/java/enchantment_fusion/menu/EnchantmentFusionMenu.java"
+LIVE_STAGE = GUI_DIR / "FusionLiveStageRenderer.java"
 ASSETS = ROOT / "src/client/resources/assets/enchantment_fusion"
 
 
@@ -35,36 +36,40 @@ def main() -> int:
         if ".fill(" in src:
             errors.append(f"{java_path.name} still contains solid .fill(...) rectangle draws")
 
-    for clipped_screen in (STATION_SCREEN, GRIMOIRE_SCREEN, CONTEXT_DRAWER):
+    for clipped_screen in (STATION_SCREEN, GRIMOIRE_SCREEN, CONTEXT_DRAWER, LIVE_STAGE):
         src = clipped_screen.read_text(encoding="utf-8")
         if "enableScissor" not in src or "disableScissor" not in src:
-            errors.append(f"{clipped_screen.name} missing enableScissor/disableScissor text clipping")
+            errors.append(f"{clipped_screen.name} missing enableScissor/disableScissor clipping")
 
     # 2. Verify all GUI PNG sprites referenced in FusionGuiSkin exist on disk
     skin_src = (GUI_DIR / "FusionGuiSkin.java").read_text(encoding="utf-8")
     referenced_pngs = re.findall(r'EnchantmentFusion\.id\("([^"]+\.png)"\)', skin_src)
-    if len(referenced_pngs) < 25:
-        errors.append(f"Expected >= 25 GUI sprite PNGs in FusionGuiSkin.java, found {len(referenced_pngs)}")
+    if len(referenced_pngs) < 30:
+        errors.append(f"Expected >= 30 GUI sprite PNGs in FusionGuiSkin.java, found {len(referenced_pngs)}")
     for rel in referenced_pngs:
         if not (ASSETS / rel).is_file():
             errors.append(f"Missing GUI texture asset: assets/enchantment_fusion/{rel}")
 
-    # 3. Verify 384x218 Cutaway Split-Wing Auto-Morphing Altar fits cleanly in 427x240 (GUI scale 3 @ 1280x720)
-    station_w, station_h = 384, 218
+    # 3. Verify compact JEI/REI-safe 304x218 Split-Wing Live-Stage Altar & in-panel popover
+    station_w, station_h = 304, 218
     grimoire_w, grimoire_h = 360, 224
     min_scaled_w, min_scaled_h = 427, 240
-    if station_w + 24 > min_scaled_w or station_h > min_scaled_h:
-        errors.append(f"Station GUI + drawer pull-tab ({station_w + 24}x{station_h}) exceeds {min_scaled_w}x{min_scaled_h}")
+    if station_w > 304 or station_h > min_scaled_h:
+        errors.append(f"Station GUI ({station_w}x{station_h}) exceeds compact 304px JEI/REI budget")
     if grimoire_w > min_scaled_w or grimoire_h > min_scaled_h:
         errors.append(f"Grimoire GUI ({grimoire_w}x{grimoire_h}) exceeds {min_scaled_w}x{min_scaled_h}")
 
-    # 4. Verify non-overlapping structural wings + archway + inventory pedestal
+    # Popover must stay strictly within 0..304 width so right-side JEI/REI is never occluded
+    popover_box = (94, 25, 204, 91)
+    if popover_box[0] < 0 or popover_box[0] + popover_box[2] > station_w:
+        errors.append(f"Synergy Popover {popover_box} overflows 0..{station_w} station width")
+
+    # 4. Verify non-overlapping structural wings + live stage + inventory pedestal
     wings = {
-        "left_wing": (0, 6, 116, 120),
-        "center_cutaway_arch": (116, 6, 116, 118),
-        "right_wing": (232, 6, 152, 120),
-        "bottom_inv_pedestal": (103, 128, 178, 88),
-        "drawer_pull_tab": (384, 16, 22, 44),
+        "left_wing": (4, 6, 88, 112),
+        "center_live_stage": (94, 4, 92, 116),
+        "right_wing": (188, 6, 112, 112),
+        "bottom_inv_pedestal": (63, 121, 178, 95),
     }
     wing_items = list(wings.items())
     for i in range(len(wing_items)):
@@ -76,41 +81,36 @@ def main() -> int:
 
     # 5. Verify non-overlapping controls inside Left Wing, Book Mode, and Gear Mode
     left_controls = {
-        "brazier_tl": (5, 9, 14, 14),
-        "title": (20, 11, 76, 10),
-        "brazier_tr": (97, 9, 14, 14),
-        "slot_primary": (17, 43, 18, 18),
-        "swap_medallion": (46, 40, 24, 24),
-        "slot_secondary": (81, 43, 18, 18),
-        "slot_catalyst": (49, 72, 18, 18),
-        "slot_target": (49, 100, 18, 18),
+        "title": (8, 10, 80, 10),
+        "slot_primary": (13, 31, 18, 18),
+        "swap_medallion": (38, 29, 20, 20),
+        "slot_secondary": (63, 31, 18, 18),
+        "slot_catalyst": (13, 77, 18, 18),
+        "slot_target": (63, 77, 18, 18),
     }
     book_mode_controls = {
-        "brazier_rl": (237, 9, 14, 14),
-        "header": (252, 11, 88, 10),
-        "brazier_rr": (342, 9, 14, 14),
-        "grimoire_btn": (361, 9, 17, 15),
-        "cand_row_0": (240, 27, 136, 16),
-        "cand_row_1": (240, 44, 136, 16),
-        "preview_or_manage_card": (240, 63, 136, 29),
-        "ritual_exec_btn": (240, 95, 136, 23),
+        "header": (193, 9, 58, 14),
+        "synergy_badge": (253, 8, 24, 16),
+        "grimoire_btn": (279, 8, 18, 16),
+        "cand_row_0": (193, 27, 102, 15),
+        "cand_row_1": (193, 44, 102, 15),
+        "preview_or_manage_card": (193, 62, 102, 32),
+        "ritual_exec_btn": (193, 96, 102, 18),
     }
     gear_mode_controls = {
-        "brazier_rl": (237, 9, 14, 14),
-        "header": (254, 11, 62, 10),
-        "vessel_gems": (316, 11, 25, 12),
-        "brazier_rr": (342, 9, 14, 14),
-        "grimoire_btn": (361, 9, 17, 15),
-        "socket_0_text": (245, 28, 91, 14),
-        "socket_0_flip": (339, 28, 16, 14),
-        "socket_0_unsocket": (357, 28, 16, 14),
-        "socket_1_text": (245, 45, 91, 14),
-        "socket_1_flip": (339, 45, 16, 14),
-        "socket_1_unsocket": (357, 45, 16, 14),
-        "gear_cand_row": (240, 65, 104, 16),
-        "single_mode_chip": (346, 65, 30, 16),
-        "status_line": (242, 84, 132, 9),
-        "ritual_exec_btn": (240, 95, 136, 23),
+        "header": (193, 9, 58, 14),
+        "synergy_badge": (253, 8, 24, 16),
+        "grimoire_btn": (279, 8, 18, 16),
+        "socket_0_text": (193, 28, 66, 14),
+        "socket_0_flip": (261, 28, 15, 14),
+        "socket_0_unsocket": (278, 28, 15, 14),
+        "socket_1_text": (193, 45, 66, 14),
+        "socket_1_flip": (261, 45, 15, 14),
+        "socket_1_unsocket": (278, 45, 15, 14),
+        "gear_cand_row": (193, 63, 74, 15),
+        "single_mode_chip": (269, 63, 26, 15),
+        "status_line": (193, 80, 102, 12),
+        "ritual_exec_btn": (193, 96, 102, 18),
     }
 
     for group_name, boxes in (
@@ -147,7 +147,7 @@ def main() -> int:
         return 1
 
     print(
-        f"UI READABILITY PASS: {len(referenced_pngs)} sprites verified, Cutaway Split-Wing 384x218 + Grimoire 360x224 "
+        f"UI READABILITY PASS: {len(referenced_pngs)} sprites verified, Compact Split-Wing Live-Stage 304x218 + Grimoire 360x224 "
         "non-overlapping, 11 locales BMP-safe."
     )
     return 0

@@ -1,6 +1,5 @@
 package enchantment_fusion.gui;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import enchantment_fusion.compat.CetSoftBridge;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.gui.FusionGuiSkin.FittedText;
@@ -8,8 +7,6 @@ import enchantment_fusion.gui.FusionGuiSkin.HitBox;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.FusionEconomyRules;
 import enchantment_fusion.mechanics.FusionEconomyRules.EconomyQuote;
-import enchantment_fusion.mechanics.FusionEconomyRules.ReagentKind;
-import enchantment_fusion.mechanics.FusionEconomyRules.ReagentSourceBreakdown;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.FusionStationOperations.EnchantCandidate;
@@ -34,78 +31,68 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
-import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Cutaway Split-Wing Auto-Morphing Enchantment Fusion Altar Screen ({@code 384 x 218}):
+ * Compact Split-Wing Live-Stage Enchantment Fusion Altar ({@code 304 x 218}):
  * <ul>
- *   <li><b>Center Cutaway Viewport ({@code 116..232})</b>: Leaves the live 3D Fusion Altar unblurred
- *       and clearly visible through a sculpted Obsidian-Silver arch during the ritual</li>
- *   <li><b>Auto-Morphing Right Wing ({@code 232..384})</b>: Eliminates manual top tabs and duplicate
- *       Flip/Split toolbars, morphing automatically between Book Synthesis and Gear Inscription</li>
- *   <li><b>2.0s Skippable Ritual ({@link FusionRitualDirector})</b>: Synchronizes Gold/Cyan UI conduit
- *       channeling with 3D altar crystal acceleration &amp; purple brazier eruption; second click skips immediately</li>
- *   <li><b>Smart Context Synergy Drawer ({@link FusionContextDrawer})</b>: Slide-out side drawer showing
- *       matched Signature/Transmute synergies for currently loaded items with 1-click auto-selection</li>
- *   <li><b>Audit Enhancements</b>: Native Aberrant Purification ({@link OperationKind#PURIFY_ABERRANT}),
- *       dual-mode Swap Medallion (Left-click {@code [A ▷ B]} order / Right-click or Shift+Click Slot 0↔1),
- *       Reagent Slot-vs-Backpack breakdown tooltips, and pair-fingerprint race protection</li>
+ *   <li><b>Left Input Pedestal</b> ({@code 4..92, 6..118}): Slot 0 [A], Dual-Mode Swap Medallion,
+ *       Slot 1 [B], Slot 2 Catalyst, Slot 3 Target/Output, and flowing conduits</li>
+ *   <li><b>Center Real-Time 3D Live Stage</b> ({@code 96..184, 6..118}): Scissored live stage rendering
+ *       the 3D Altar, floating crystal, continuous Gold/Cyan ribbons, and 8 bespoke operation animations</li>
+ *   <li><b>Right Auto-Morphing Wing</b> ({@code 188..300, 6..118}): Seamless Book Synthesis &lt;-&gt; Gear
+ *       Inscription panel + In-Panel Synergy Codex Popover + Obsidian Star-Codex Grimoire</li>
  * </ul>
+ * Sized at {@code 304px} wide so JEI and REI sidebars never collide even at GUI Scale 3/4.
  */
 public final class EnchantmentFusionScreen extends AbstractContainerScreen<EnchantmentFusionMenu> {
-    public static final int LEFT_WING_X = 0;
+    public static final int LEFT_WING_X = 4;
     public static final int LEFT_WING_Y = 6;
-    public static final int LEFT_WING_W = 116;
-    public static final int LEFT_WING_H = 120;
+    public static final int LEFT_WING_W = 88;
+    public static final int LEFT_WING_H = 112;
 
-    public static final int ARCH_X = 116;
-    public static final int ARCH_Y = 6;
-    public static final int ARCH_W = 116;
-    public static final int ARCH_H = 118;
+    public static final int STAGE_X = 96;
+    public static final int STAGE_Y = 6;
+    public static final int STAGE_W = 88;
+    public static final int STAGE_H = 112;
 
-    public static final int RIGHT_WING_X = 232;
+    public static final int RIGHT_WING_X = 188;
     public static final int RIGHT_WING_Y = 6;
-    public static final int RIGHT_WING_W = 152;
-    public static final int RIGHT_WING_H = 120;
+    public static final int RIGHT_WING_W = 112;
+    public static final int RIGHT_WING_H = 112;
 
-    public static final int RIGHT_INNER_X = 240;
-    public static final int RIGHT_INNER_W = 136;
+    public static final int RIGHT_INNER_X = 193;
+    public static final int RIGHT_INNER_W = 102;
 
-    public static final int INV_PEDESTAL_X = 103;
-    public static final int INV_PEDESTAL_Y = 128;
-    public static final int INV_PEDESTAL_W = 178;
-    public static final int INV_PEDESTAL_H = 88;
+    // Interactive HitBoxes (relative to leftPos, topPos)
+    public static final HitBox SWAP_BTN = new HitBox(38, 29, 20, 20);
+    public static final HitBox GRIMOIRE_BTN = new HitBox(279, 8, 18, 16);
+    public static final HitBox EXEC_BTN = new HitBox(193, 96, 102, 18);
 
-    public static final HitBox SWAP_BTN = new HitBox(46, 40, 24, 24);
-    public static final HitBox GRIMOIRE_BTN = new HitBox(360, 8, 18, 18);
-    public static final HitBox EXEC_BTN = new HitBox(240, 95, 136, 23);
-    public static final HitBox BOOK_PREVIEW_BOX = new HitBox(RIGHT_INNER_X, 63, RIGHT_INNER_W, 29);
+    // Book Synthesis Mode HitBoxes
+    public static final HitBox BOOK_FLIP_BTN = new HitBox(193, 62, 49, 14);
+    public static final HitBox BOOK_SPLIT_BTN = new HitBox(246, 62, 49, 14);
+    public static final HitBox BOOK_PREVIEW_BOX = new HitBox(193, 62, 102, 32);
 
-    // Book Mode single inline management buttons
-    public static final HitBox BOOK_FLIP_BTN = new HitBox(243, 73, 63, 16);
-    public static final HitBox BOOK_SPLIT_BTN = new HitBox(310, 73, 63, 16);
-
-    // Gear Mode single-enchantment toggle chip next to candidate row
-    public static final HitBox SINGLE_MODE_BTN = new HitBox(346, 65, 30, 16);
+    // Gear Inscription Mode HitBoxes
+    public static final HitBox SINGLE_MODE_BTN = new HitBox(269, 63, 26, 15);
 
     private int candidateScroll = 0;
-    private @Nullable StationPreview cachedFramePreview = null;
-    private @Nullable FusionGrimoireScreen grimoireOverlay = null;
+    private @Nullable Boolean lastObservedGearMode = null;
     private final FusionContextDrawer contextDrawer = new FusionContextDrawer();
-    private int lastSyncedHostMode = -1;
-
+    private @Nullable FusionGrimoireScreen grimoireOverlay = null;
+    private @Nullable StationPreview cachedFramePreview = null;
     private @Nullable Component disabledFeedbackText = null;
     private long disabledFeedbackUntilMs = 0L;
 
@@ -115,7 +102,9 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         boolean secondaryOccupied,
         boolean enoughXp,
         int xpCost,
-        String pairFingerprint
+        String pairFingerprint,
+        ItemStack splitLeftSample,
+        ItemStack splitRightSample
     ) {
         boolean canExecute() {
             return hasBook && !isAberrant && !secondaryOccupied && enoughXp;
@@ -137,26 +126,20 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
 
     public Rect2i guiBounds() {
         if (this.grimoireOverlay != null) {
-            return new Rect2i((this.width - 360) / 2, (this.height - 224) / 2 + 6, 360, 224);
+            return new Rect2i(
+                (this.width - FusionGrimoireScreen.BOOK_W) / 2,
+                (this.height - FusionGrimoireScreen.BOOK_H) / 2 + 6,
+                FusionGrimoireScreen.BOOK_W,
+                FusionGrimoireScreen.BOOK_H
+            );
         }
-        if (this.contextDrawer.isExpanded()) {
-            HitBox db = this.contextDrawer.drawerBounds(this.leftPos, this.topPos, this.imageWidth, this.width);
-            int maxRight = Math.max(this.leftPos + this.imageWidth + FusionContextDrawer.TAB_W, db.x() + db.w());
-            return new Rect2i(this.leftPos, this.topPos, maxRight - this.leftPos, this.imageHeight);
-        }
-        return new Rect2i(this.leftPos, this.topPos, this.imageWidth + FusionContextDrawer.TAB_W, this.imageHeight);
+        return new Rect2i(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
     }
 
-    private void openEmbeddedGrimoire() {
-        if (this.minecraft == null) {
-            return;
-        }
-        FusionRitualDirector.cancel();
-        int initialChapter = isGearModeActive() ? 1 : 0;
-        FusionGrimoireScreen overlay = new FusionGrimoireScreen(() -> this.grimoireOverlay = null, initialChapter);
-        overlay.init(this.width, this.height);
-        this.grimoireOverlay = overlay;
-        FusionGuiMicroEffects.playUiSound(SoundEvents.BOOK_PAGE_TURN, 1.0F, 0.85F);
+    @Nullable
+    private static HolderLookup.Provider currentRegistries() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc != null && mc.level != null ? mc.level.registryAccess() : null;
     }
 
     private boolean isGearModeActive() {
@@ -165,605 +148,30 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     }
 
     private void ensureAutoMorphedTab() {
-        int desired = isGearModeActive() ? FusionStationOperations.TAB_SOCKET : FusionStationOperations.TAB_FUSE;
-        if (this.menu.activeTab() != desired && this.lastSyncedHostMode != desired) {
-            this.lastSyncedHostMode = desired;
-            this.candidateScroll = 0;
-            sendAction(StationAction.SELECT_TAB, desired, 0, "");
-        } else if (this.menu.activeTab() == desired) {
-            this.lastSyncedHostMode = desired;
-        }
-    }
-
-    @Override
-    protected void extractLabels(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
-        // Rendered inside obsidian-silver wing frames with pixel bounding and scissor clipping.
-    }
-
-    @Override
-    public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
-        // Deliberately omit super.extractBackground while viewing the altar so the 3D world
-        // inside the Center Cutaway Viewport remains crystal-clear and unblurred!
-        if (this.grimoireOverlay != null) {
-            super.extractBackground(ctx, mouseX, mouseY, partialTick);
-        }
-
-        ensureAutoMorphedTab();
-        StationPreview preview = this.menu.computePreview();
-        this.cachedFramePreview = preview;
         boolean gearMode = isGearModeActive();
-        HolderLookup.Provider registries = currentRegistries();
-        if (registries == null) {
-            registries = this.menu.viewer().level().registryAccess();
+        if (this.lastObservedGearMode != null && this.lastObservedGearMode != gearMode) {
+            FusionLiveStageRenderer.triggerModeMorph();
+            FusionGuiMicroEffects.playUiSound(SoundEvents.BOOK_PAGE_TURN, gearMode ? 1.15F : 0.95F, 0.45F);
         }
+        this.lastObservedGearMode = gearMode;
 
-        boolean readyToExecute = preview.executable() && canAffordPreview(preview);
-        boolean highRisk = preview.repulsive() || preview.instabilityChance() >= 0.20;
-        String liveToken = preview.expectedExecuteToken();
-        FusionRitualDirector.updateFrame(
-            liveToken,
-            readyToExecute,
-            () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, 0, liveToken)
-        );
-
-        int shakeX = FusionGuiMicroEffects.currentShakeOffsetX();
-        int shakeY = FusionGuiMicroEffects.currentShakeOffsetY();
-        int left = this.leftPos + shakeX;
-        int top = this.topPos + shakeY;
-
-        boolean channeling = FusionRitualDirector.isChanneling();
-        float channelProg = FusionRitualDirector.channelProgress();
-
-        // 1. Left & Right Obsidian-Silver Altar Wings + Bottom Player Inventory Pedestal
-        FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_PANEL_MAIN, left + LEFT_WING_X, top + LEFT_WING_Y, LEFT_WING_W, LEFT_WING_H);
-        FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_PANEL_MAIN, left + RIGHT_WING_X, top + RIGHT_WING_Y, RIGHT_WING_W, RIGHT_WING_H);
-        FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_PANEL_MAIN, left + INV_PEDESTAL_X, top + INV_PEDESTAL_Y, INV_PEDESTAL_W, INV_PEDESTAL_H);
-
-        // 2. Center Cutaway 3D Viewport Archway + Central Ritual Conduit Bridge
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.VIEWPORT_ARCH, left + ARCH_X, top + ARCH_Y, ARCH_W, ARCH_H);
-        float bridgeFill = channeling ? channelProg : (readyToExecute ? 0.24F : 0.0F);
-        FusionGuiSkin.drawConduitH(ctx, FusionGuiSkin.CONDUIT_GOLD, left + 124, top + 113, 50, 5, bridgeFill, false);
-        FusionGuiSkin.drawConduitH(ctx, FusionGuiSkin.CONDUIT_CYAN, left + 174, top + 113, 50, 5, bridgeFill, true);
-
-        if (FusionRitualDirector.hasActiveClimaxBanner()) {
-            var banner = FusionRitualDirector.isClimaxAberrant()
-                ? FusionGuiSkin.CLIMAX_BANNER_ABERRANT
-                : FusionGuiSkin.CLIMAX_BANNER_SIG;
-            FusionGuiSkin.drawSprite(ctx, banner, left + 120, top + 10, 108, 17);
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font, FusionRitualDirector.climaxBannerTitle(),
-                left + 124, 100, top + 18.5F,
-                0.56F, FusionRitualDirector.isClimaxAberrant() ? FusionGuiSkin.COLOR_RED : FusionGuiSkin.COLOR_GOLD
-            );
-        } else if (this.disabledFeedbackText != null && System.currentTimeMillis() < this.disabledFeedbackUntilMs) {
-            FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.CLIMAX_BANNER_ABERRANT, left + 120, top + 10, 108, 17);
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font, this.disabledFeedbackText.getString(),
-                left + 124, 100, top + 18.5F,
-                0.52F, FusionGuiSkin.COLOR_WARN
-            );
+        int desiredTab = gearMode ? FusionStationOperations.TAB_SOCKET : FusionStationOperations.TAB_FUSE;
+        if (this.menu.activeTab() != desiredTab) {
+            sendAction(StationAction.SELECT_TAB, desiredTab, "");
         }
-
-        // 3. 4-Corner Miniature Purple Braziers (matching the 3D Altar's 4 corner braziers!)
-        boolean braziersLit = readyToExecute || channeling;
-        FusionGuiSkin.drawMiniBrazier(ctx, left + 5, top + 9, braziersLit, channeling);
-        FusionGuiSkin.drawMiniBrazier(ctx, left + 97, top + 9, braziersLit, channeling);
-        FusionGuiSkin.drawMiniBrazier(ctx, left + 237, top + 9, braziersLit, channeling);
-        FusionGuiSkin.drawMiniBrazier(ctx, left + 342, top + 9, braziersLit, channeling);
-
-        // 4. Ambient Pedestal Rune Halo & Motes
-        FusionGuiMicroEffects.renderPedestalResonanceBackdrop(
-            ctx, left, top, readyToExecute, highRisk || channeling
-        );
-
-        // 5. Left Wing Energy Conduits + Role-Coded Slot Frames + [⇄] Medallion
-        renderLeftWingPedestal(ctx, left, top, preview, mouseX, mouseY, channeling, channelProg);
-
-        // 6. Top-Right Full Grimoire Quick Button (renders actual Fusion Grimoire item icon!)
-        int gx = left + GRIMOIRE_BTN.x();
-        int gy = top + GRIMOIRE_BTN.y();
-        FusionGuiSkin.drawNineSlice(
-            ctx,
-            GRIMOIRE_BTN.containsAt(left, top, mouseX, mouseY) ? FusionGuiSkin.SLICE_BTN_HOVER : FusionGuiSkin.SLICE_BTN_NORMAL,
-            gx, gy, GRIMOIRE_BTN.w(), GRIMOIRE_BTN.h()
-        );
-        ctx.item(new ItemStack(FusionItems.FUSION_GRIMOIRE), gx + 1, gy + 1);
-
-        // 7. Player Inventory Slot Frames
-        for (int i = 4; i < this.menu.slots.size(); i++) {
-            Slot s = this.menu.slots.get(i);
-            FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_DEFAULT, left + s.x - 1, top + s.y - 1, 18, 18);
-        }
-
-        // 8. Scissor-Clipped Auto-Morphing Right Wing
-        ctx.enableScissor(
-            left + RIGHT_WING_X + 5, top + RIGHT_WING_Y + 5,
-            left + RIGHT_WING_X + RIGHT_WING_W - 5, top + RIGHT_WING_Y + RIGHT_WING_H - 5
-        );
-        try {
-            if (gearMode) {
-                renderGearInscriptionWing(ctx, left, top, preview, registries, mouseX, mouseY, channeling, channelProg, highRisk);
-            } else {
-                renderBookSynthesisWing(ctx, left, top, preview, registries, mouseX, mouseY, channeling, channelProg, highRisk);
-            }
-        } finally {
-            ctx.disableScissor();
-        }
-
-        // 9. Smart Contextual Synergy Drawer (Right Pull-Tab + Slide-Out Panel)
-        this.contextDrawer.render(
-            ctx, this.font, this.leftPos, this.topPos, this.imageWidth, this.width,
-            preview.selection().candidates(), registries, mouseX, mouseY
-        );
     }
 
-    private void renderLeftWingPedestal(
-        GuiGraphicsExtractor ctx,
-        int left,
-        int top,
-        StationPreview preview,
-        int mouseX,
-        int mouseY,
-        boolean channeling,
-        float channelProg
-    ) {
-        FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font,
-            Component.translatable("block.enchantment_fusion.enchantment_fusion_table").getString(),
-            left + 20, 76, top + 16.0F,
-            0.58F, FusionGuiSkin.COLOR_GOLD
-        );
-
-        String roleGuide = preview.selection().primary() != null && preview.selection().secondary() != null
-            ? "[A] \u25B7 [B]"
-            : Component.translatable("gui.enchantment_fusion.pedestal.fuse_roles").getString();
-        FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font, roleGuide,
-            left + 8, 100, top + 31.0F,
-            0.52F, FusionGuiSkin.COLOR_MUTED
-        );
-
-        boolean hasA = preview.selection().primary() != null;
-        boolean hasB = preview.selection().secondary() != null;
-        float topFlow = channeling ? Math.min(1.0F, channelProg * 1.45F) : (hasA ? 0.55F : 0.0F);
-        float secFlow = channeling ? Math.min(1.0F, channelProg * 1.45F) : (hasB ? 0.55F : 0.0F);
-        float coreFlow = channeling ? clamp01((channelProg - 0.25F) * 1.35F) : (preview.executable() ? 0.45F : 0.0F);
-
-        // Gold [A] -> Catalyst conduit
-        FusionGuiSkin.drawConduitV(ctx, FusionGuiSkin.CONDUIT_GOLD, left + 25, top + 62, 4, 15, topFlow);
-        FusionGuiSkin.drawConduitH(ctx, FusionGuiSkin.CONDUIT_GOLD, left + 25, top + 77, 24, 4, topFlow, false);
-
-        // Cyan [B] -> Catalyst conduit
-        FusionGuiSkin.drawConduitV(ctx, FusionGuiSkin.CONDUIT_CYAN, left + 89, top + 62, 4, 15, secFlow);
-        FusionGuiSkin.drawConduitH(ctx, FusionGuiSkin.CONDUIT_CYAN, left + 69, top + 77, 24, 4, secFlow, true);
-
-        // Amethyst Catalyst -> Target Pedestal conduit
-        FusionGuiSkin.drawConduitV(ctx, FusionGuiSkin.CONDUIT_AMETHYST, left + 56, top + 91, 4, 9, coreFlow);
-
-        // 4 Workstation Slot Frames
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_PRIMARY, left + EnchantmentFusionMenu.SLOT_PRIMARY_X - 1, top + EnchantmentFusionMenu.SLOT_PRIMARY_Y - 1, 18, 18);
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_SECONDARY, left + EnchantmentFusionMenu.SLOT_SECONDARY_X - 1, top + EnchantmentFusionMenu.SLOT_SECONDARY_Y - 1, 18, 18);
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_CATALYST, left + EnchantmentFusionMenu.SLOT_CATALYST_X - 1, top + EnchantmentFusionMenu.SLOT_CATALYST_Y - 1, 18, 18);
-        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_DEFAULT, left + EnchantmentFusionMenu.SLOT_TARGET_X - 1, top + EnchantmentFusionMenu.SLOT_TARGET_Y - 1, 18, 18);
-
-        // Central [⇄] Swap Medallion (Left-click = [A ▷ B] order, Right-click / Shift+Click = physical Slot 0↔1)
-        boolean canSwapAny = canSwapPhysicalSlots() || canSwapSelectionOrder(preview);
-        var swapSprite = !canSwapAny
-            ? FusionGuiSkin.BTN_SWAP_DISABLED
-            : (SWAP_BTN.containsAt(left, top, mouseX, mouseY) ? FusionGuiSkin.BTN_SWAP_HOVER : FusionGuiSkin.BTN_SWAP_NORMAL);
-        FusionGuiSkin.drawSprite(ctx, swapSprite, left + SWAP_BTN.x(), top + SWAP_BTN.y(), SWAP_BTN.w(), SWAP_BTN.h());
-    }
-
-    private void renderBookSynthesisWing(
-        GuiGraphicsExtractor ctx,
-        int left,
-        int top,
-        StationPreview preview,
-        HolderLookup.Provider registries,
-        int mouseX,
-        int mouseY,
-        boolean channeling,
-        float channelProg,
-        boolean highRisk
-    ) {
-        FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font,
-            "\u25C6 " + Component.translatable("gui.enchantment_fusion.tab.fuse").getString(),
-            left + 252, 88, top + 16.0F,
-            0.60F, FusionGuiSkin.COLOR_GOLD
-        );
-
-        // Candidate Picker Rows (2 spacious rows at Y=27..60, W=136)
-        renderCandidatePickerRows(ctx, left, top, 27, 2, RIGHT_INNER_W, preview.selection(), registries, mouseX, mouseY, false);
-
-        // Outcome Preview OR Single Inline Fused-Book Management Card (Y=63..91)
-        FusionGuiSkin.drawNineSlice(
-            ctx,
-            highRisk ? FusionGuiSkin.SLICE_SOCKET_ABERRANT : FusionGuiSkin.SLICE_SOCKET_EMPTY,
-            left + BOOK_PREVIEW_BOX.x(), top + BOOK_PREVIEW_BOX.y(), BOOK_PREVIEW_BOX.w(), BOOK_PREVIEW_BOX.h()
-        );
-
-        BookManageState mState = evaluateBookManage(preview);
-        if (!preview.executable() && mState.hasBook() && !mState.isAberrant()) {
-            ItemStack manageable = FusionStationOperations.resolveManageableStack(this.menu.stationContainer());
-            FusedEnchantmentList mList = manageable.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-            FusedPair topPair = mList.pairs().getFirst();
-            String title = FusionTooltipRenderer.buildPairDisplayName(registries, topPair).getString();
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font, title,
-                left + RIGHT_INNER_X + 4, RIGHT_INNER_W - 8, top + 68.5F,
-                0.52F, topPair.isAberrant() ? FusionGuiSkin.COLOR_RED : FusionGuiSkin.COLOR_AMETHYST
-            );
-            FusionGuiSkin.drawButtonBox(
-                ctx, this.font, left, top, BOOK_FLIP_BTN,
-                mState.canExecute(), BOOK_FLIP_BTN.containsAt(left, top, mouseX, mouseY),
-                Component.translatable("gui.enchantment_fusion.btn.flip").getString(),
-                0.54F, FusionGuiSkin.COLOR_CYAN
-            );
-            FusionGuiSkin.drawButtonBox(
-                ctx, this.font, left, top, BOOK_SPLIT_BTN,
-                mState.canExecute(), BOOK_SPLIT_BTN.containsAt(left, top, mouseX, mouseY),
-                Component.translatable("gui.enchantment_fusion.btn.split").getString(),
-                0.54F, FusionGuiSkin.COLOR_GOLD
-            );
-        } else {
-            String headline = resolveOutcomeHeadline(preview, registries);
-            int headColor = preview.kind() == OperationKind.INVALID
-                ? FusionGuiSkin.COLOR_RED
-                : (preview.kind() == OperationKind.PURIFY_ABERRANT
-                    ? FusionGuiSkin.COLOR_GREEN
-                    : (highRisk ? FusionGuiSkin.COLOR_WARN : (preview.executable() ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_MUTED)));
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font, headline,
-                left + RIGHT_INNER_X + 4, RIGHT_INNER_W - 8, top + 71.0F,
-                0.56F, headColor
-            );
-
-            String sub;
-            if (preview.executable()) {
-                sub = formatCompactEconomyLine(preview);
-            } else if (preview.rejectReason() == RejectReason.NEED_PURIFY_STABILIZERS) {
-                sub = Component.translatable("gui.enchantment_fusion.preview.purify_hint").getString();
-            } else if (preview.kind() == OperationKind.INVALID) {
-                sub = Component.translatable("gui.enchantment_fusion.preview.try_swap_hint").getString();
-            } else {
-                sub = Component.translatable("gui.enchantment_fusion.picker.click_ab_tip").getString();
-            }
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font, sub,
-                left + RIGHT_INNER_X + 4, RIGHT_INNER_W - 8, top + 83.5F,
-                0.51F, preview.executable() && !canAffordPreview(preview) ? FusionGuiSkin.COLOR_RED : FusionGuiSkin.COLOR_MUTED
-            );
-        }
-
-        renderRitualExecuteButton(ctx, left, top, preview, mouseX, mouseY, channeling, channelProg, highRisk);
-    }
-
-    private void renderGearInscriptionWing(
-        GuiGraphicsExtractor ctx,
-        int left,
-        int top,
-        StationPreview preview,
-        HolderLookup.Provider registries,
-        int mouseX,
-        int mouseY,
-        boolean channeling,
-        float channelProg,
-        boolean highRisk
-    ) {
-        FusionGuiSkin.drawLeftBoundedText(
-            ctx, this.font,
-            "\u25C6 " + Component.translatable("gui.enchantment_fusion.tab.socket").getString(),
-            left + 254, top + 12, 62,
-            0.58F, FusionGuiSkin.COLOR_CYAN
-        );
-        renderVesselDiamonds(ctx, left + 316, top + 11);
-
-        ItemStack host = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
-        boolean hasGear = VesselCapacityRules.isPotentialEquipmentHost(host);
-        int maxSlots = hasGear ? VesselCapacityRules.getMaxVesselSlots(host) : 1;
-        FusedEnchantmentList socketed = hasGear
-            ? host.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY)
-            : FusedEnchantmentList.EMPTY;
-
-        for (int idx = 0; idx < 2; idx++) {
-            int sy = 27 + idx * 17;
-            boolean unlocked = hasGear && idx < maxSlots;
-            FusedPair pair = (unlocked && idx < socketed.size()) ? socketed.pairs().get(idx) : null;
-
-            var cardSlice = pair == null
-                ? FusionGuiSkin.SLICE_SOCKET_EMPTY
-                : (pair.isAberrant() ? FusionGuiSkin.SLICE_SOCKET_ABERRANT : FusionGuiSkin.SLICE_SOCKET_FILLED);
-            FusionGuiSkin.drawNineSlice(ctx, cardSlice, left + RIGHT_INNER_X, top + sy, RIGHT_INNER_W, 16);
-
-            if (!hasGear) {
-                if (idx == 0) {
-                    FusionGuiSkin.drawLeftBoundedText(
-                        ctx, this.font,
-                        Component.translatable("gui.enchantment_fusion.socket.special_cross_host").getString(),
-                        left + RIGHT_INNER_X + 6, top + sy + 4, RIGHT_INNER_W - 12,
-                        0.54F, FusionGuiSkin.COLOR_CYAN
-                    );
-                } else if (preview.previewTransmute() != null && preview.singleCandidate() != null) {
-                    String tName = FusionTooltipRenderer.buildTransmutedDisplayName(
-                        preview.previewTransmute(),
-                        Math.min(preview.singleCandidate().maxLevel(), preview.singleCandidate().level()),
-                        preview.singleCandidate().maxLevel(),
-                        preview.singleCandidate().id()
-                    ).getString();
-                    FusionGuiSkin.drawLeftBoundedText(
-                        ctx, this.font, "\u25C6 " + tName,
-                        left + RIGHT_INNER_X + 6, top + sy + 4, RIGHT_INNER_W - 12,
-                        0.54F, FusionGuiSkin.COLOR_GOLD
-                    );
-                }
-            } else if (!unlocked) {
-                FusionGuiSkin.drawLeftBoundedText(
-                    ctx, this.font,
-                    Component.translatable("gui.enchantment_fusion.socket.locked_expand_hint").getString(),
-                    left + RIGHT_INNER_X + 6, top + sy + 4, RIGHT_INNER_W - 12,
-                    0.53F, FusionGuiSkin.COLOR_MUTED
-                );
-            } else if (pair == null) {
-                if (idx == 0 && preview.previewTransmute() != null && preview.singleCandidate() != null) {
-                    String tName = FusionTooltipRenderer.buildTransmutedDisplayName(
-                        preview.previewTransmute(),
-                        Math.min(preview.singleCandidate().maxLevel(), preview.singleCandidate().level()),
-                        preview.singleCandidate().maxLevel(),
-                        preview.singleCandidate().id()
-                    ).getString();
-                    FusionGuiSkin.drawLeftBoundedText(
-                        ctx, this.font, "\u25C6 " + tName,
-                        left + RIGHT_INNER_X + 6, top + sy + 4, RIGHT_INNER_W - 12,
-                        0.55F, FusionGuiSkin.COLOR_GOLD
-                    );
-                } else {
-                    FusionGuiSkin.drawLeftBoundedText(
-                        ctx, this.font,
-                        Component.translatable("gui.enchantment_fusion.socket.empty_ready", idx + 1).getString(),
-                        left + RIGHT_INNER_X + 6, top + sy + 4, RIGHT_INNER_W - 12,
-                        0.54F, FusionGuiSkin.COLOR_CREAM
-                    );
-                }
-            } else {
-                String label = FusionTooltipRenderer.buildPairDisplayName(registries, pair).getString();
-                FusionGuiSkin.drawLeftBoundedText(
-                    ctx, this.font, label,
-                    left + RIGHT_INNER_X + 5, top + sy + 4, 91,
-                    0.54F, pair.isAberrant() ? FusionGuiSkin.COLOR_RED : FusionGuiSkin.COLOR_AMETHYST
-                );
-
-                boolean manageable = !pair.isAberrant() && canAffordXp(preview.manageXpCost());
-                HitBox flipBox = socketFlipBox(idx);
-                HitBox unsockBox = socketUnsocketBox(idx);
-                FusionGuiSkin.drawButtonBox(
-                    ctx, this.font, left, top, flipBox,
-                    manageable, flipBox.containsAt(left, top, mouseX, mouseY),
-                    "\u21C4", 0.56F, FusionGuiSkin.COLOR_CYAN
-                );
-                FusionGuiSkin.drawButtonBox(
-                    ctx, this.font, left, top, unsockBox,
-                    manageable, unsockBox.containsAt(left, top, mouseX, mouseY),
-                    "\u25C6", 0.54F, FusionGuiSkin.COLOR_GOLD
-                );
-            }
-        }
-
-        // Candidate Picker Row (Y=65, W=104) + Disjoint [单附] Toggle Chip (X=346, W=30)
-        renderCandidatePickerRows(ctx, left, top, 65, 1, 104, preview.selection(), registries, mouseX, mouseY, true);
-        boolean singleMode = this.menu.singleOnlyMode();
-        boolean hovSingle = SINGLE_MODE_BTN.containsAt(left, top, mouseX, mouseY);
-        var singleSlice = singleMode
-            ? FusionGuiSkin.SLICE_ROW_SELECTED_A
-            : (hovSingle ? FusionGuiSkin.SLICE_BTN_HOVER : FusionGuiSkin.SLICE_BTN_NORMAL);
-        FusionGuiSkin.drawNineSlice(
-            ctx, singleSlice,
-            left + SINGLE_MODE_BTN.x(), top + SINGLE_MODE_BTN.y(), SINGLE_MODE_BTN.w(), SINGLE_MODE_BTN.h()
-        );
-        String singleLabel = Component.translatable(
-            singleMode ? "gui.enchantment_fusion.btn.single_mode_on" : "gui.enchantment_fusion.btn.single_mode_off"
-        ).getString();
-        FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font, singleLabel,
-            left + SINGLE_MODE_BTN.x() + 2, SINGLE_MODE_BTN.w() - 4, top + SINGLE_MODE_BTN.y() + 8.0F,
-            0.50F, singleMode ? FusionGuiSkin.COLOR_GOLD : FusionGuiSkin.COLOR_CREAM
-        );
-
-        // Outcome / Economy Line (Y=84..93)
-        String statusLine;
-        if (preview.executable()) {
-            statusLine = resolveOutcomeHeadline(preview, registries) + " \u00B7 " + formatCompactEconomyLine(preview);
-        } else if (preview.rejectReason() == RejectReason.NEED_PURIFY_STABILIZERS) {
-            statusLine = Component.translatable("gui.enchantment_fusion.preview.purify_hint").getString();
-        } else {
-            statusLine = resolveOutcomeHeadline(preview, registries);
-        }
-        FusionGuiSkin.drawCenteredBoundedText(
-            ctx, this.font, statusLine,
-            left + RIGHT_INNER_X + 2, RIGHT_INNER_W - 4, top + 88.0F,
-            0.52F, preview.executable() ? (canAffordPreview(preview) ? FusionGuiSkin.COLOR_GREEN : FusionGuiSkin.COLOR_RED) : FusionGuiSkin.COLOR_MUTED
-        );
-
-        renderRitualExecuteButton(ctx, left, top, preview, mouseX, mouseY, channeling, channelProg, highRisk);
-    }
-
-    private void renderRitualExecuteButton(
-        GuiGraphicsExtractor ctx,
-        int left,
-        int top,
-        StationPreview preview,
-        int mouseX,
-        int mouseY,
-        boolean channeling,
-        float channelProg,
-        boolean highRisk
-    ) {
-        boolean ready = preview.executable() && canAffordPreview(preview);
-        boolean hovered = EXEC_BTN.containsAt(left, top, mouseX, mouseY);
-        int gx = left + EXEC_BTN.x();
-        int gy = top + EXEC_BTN.y();
-
-        if (channeling) {
-            FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_BTN_HOVER, gx, gy, EXEC_BTN.w(), EXEC_BTN.h());
-            FusionGuiSkin.drawConduitH(ctx, FusionGuiSkin.RITUAL_PROGRESS_FILL, gx + 4, gy + 4, EXEC_BTN.w() - 8, EXEC_BTN.h() - 8, channelProg, false);
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font,
-                Component.translatable("gui.enchantment_fusion.ritual.channeling").getString(),
-                gx + 4, EXEC_BTN.w() - 8, gy + EXEC_BTN.h() * 0.5F,
-                0.58F, FusionGuiSkin.COLOR_GOLD
-            );
+    private void openEmbeddedGrimoire() {
+        if (this.minecraft == null) {
             return;
         }
-
-        FusionGuiSkin.drawNineSlice(
-            ctx,
-            !ready ? FusionGuiSkin.SLICE_BTN_DISABLED : (hovered ? FusionGuiSkin.SLICE_BTN_HOVER : FusionGuiSkin.SLICE_BTN_NORMAL),
-            gx, gy, EXEC_BTN.w(), EXEC_BTN.h()
-        );
-        String label = "\u25C6 " + Component.translatable(primaryActionLabelKey(preview.kind())).getString();
-        if (preview.executable()) {
-            EconomyQuote q = preview.economyQuote();
-            int succPct = q != null ? (int) Math.round((1.0 - q.failureChance()) * 100.0) : 100;
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font, label,
-                gx + 4, EXEC_BTN.w() - 8, gy + 7.5F,
-                0.56F, ready ? (highRisk ? FusionGuiSkin.COLOR_WARN : FusionGuiSkin.COLOR_GOLD) : FusionGuiSkin.COLOR_MUTED
-            );
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font, preview.xpCost() + "Lv \u00B7 " + succPct + "%",
-                gx + 4, EXEC_BTN.w() - 8, gy + 16.5F,
-                0.50F, ready ? FusionGuiSkin.COLOR_GREEN : FusionGuiSkin.COLOR_RED
-            );
-        } else {
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font, label,
-                gx + 4, EXEC_BTN.w() - 8, gy + EXEC_BTN.h() * 0.5F,
-                0.58F, FusionGuiSkin.COLOR_MUTED
-            );
-        }
-    }
-
-    private void renderCandidatePickerRows(
-        GuiGraphicsExtractor ctx,
-        int left,
-        int top,
-        int startY,
-        int visibleRows,
-        int rowW,
-        ResolvedSelection sel,
-        HolderLookup.Provider registries,
-        int mouseX,
-        int mouseY,
-        boolean gearMode
-    ) {
-        List<EnchantCandidate> list = sel.candidates();
-        if (list.isEmpty()) {
-            FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_ROW_UNSELECTED, left + RIGHT_INNER_X, top + startY, rowW, visibleRows * 17 - 1);
-            String emptyKey = gearMode
-                ? "gui.enchantment_fusion.picker.empty_gear"
-                : "gui.enchantment_fusion.picker.empty_books";
-            FusionGuiSkin.drawCenteredBoundedText(
-                ctx, this.font,
-                Component.translatable(emptyKey).getString(),
-                left + RIGHT_INNER_X + 6, rowW - 12, top + startY + (visibleRows * 17 - 1) * 0.5F,
-                0.54F, FusionGuiSkin.COLOR_MUTED
-            );
-            return;
-        }
-
-        int maxScroll = Math.max(0, list.size() - visibleRows);
-        candidateScroll = Math.max(0, Math.min(candidateScroll, maxScroll));
-
-        for (int r = 0; r < visibleRows; r++) {
-            int idx = candidateScroll + r;
-            int ry = startY + r * 17;
-            if (idx >= list.size()) {
-                FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_ROW_UNSELECTED, left + RIGHT_INNER_X, top + ry, rowW, 16);
-                continue;
-            }
-
-            EnchantCandidate cand = list.get(idx);
-            boolean isA = idx == sel.primaryIndex();
-            boolean isB = idx == sel.secondaryIndex();
-            HitBox rowBox = new HitBox(RIGHT_INNER_X, ry, rowW, 16);
-            boolean hov = rowBox.containsAt(left, top, mouseX, mouseY);
-
-            var rowSlice = isA
-                ? FusionGuiSkin.SLICE_ROW_SELECTED_A
-                : (isB ? FusionGuiSkin.SLICE_ROW_SELECTED_B : (hov ? FusionGuiSkin.SLICE_ROW_HOVER : FusionGuiSkin.SLICE_ROW_UNSELECTED));
-            FusionGuiSkin.drawNineSlice(ctx, rowSlice, left + rowBox.x(), top + rowBox.y(), rowBox.w(), rowBox.h());
-
-            String rolePrefix = isA ? "[A] " : (isB ? "[B] " : "\u00B7 ");
-            String srcBadge = cand.sourceSlot() == FusionStationOperations.SLOT_TARGET ? "\u25C6 " : "";
-            String enchName = FusionTooltipRenderer.formatEnchantmentWithLevel(registries, cand.id(), cand.level()).getString();
-            FusionGuiSkin.drawLeftBoundedText(
-                ctx, this.font, rolePrefix + srcBadge + enchName,
-                left + rowBox.x() + 5, top + rowBox.y() + 4, rowBox.w() - 10,
-                0.56F, isA ? FusionGuiSkin.COLOR_GOLD : (isB ? FusionGuiSkin.COLOR_CYAN : FusionGuiSkin.COLOR_CREAM)
-            );
-        }
-    }
-
-    private void renderVesselDiamonds(GuiGraphicsExtractor ctx, int startX, int y) {
-        ItemStack target = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
-        if (!VesselCapacityRules.isPotentialEquipmentHost(target)) {
-            return;
-        }
-        int maxSlots = VesselCapacityRules.getMaxVesselSlots(target);
-        FusedEnchantmentList list = target.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-        for (int i = 0; i < Math.min(2, maxSlots); i++) {
-            var sprite = (i < list.size()) ? FusionGuiSkin.VESSEL_FILLED : FusionGuiSkin.VESSEL_EMPTY;
-            FusionGuiSkin.drawSprite(ctx, sprite, startX + i * 13, y, 12, 12);
-        }
-    }
-
-    private String resolveOutcomeHeadline(StationPreview preview, HolderLookup.Provider registries) {
-        if (preview.kind() == OperationKind.INVALID) {
-            return Component.translatable(rejectKey(preview.rejectReason())).getString();
-        }
-        if (preview.kind() == OperationKind.PURIFY_ABERRANT && preview.previewPair() != null) {
-            return "\u25C6 " + Component.translatable("gui.enchantment_fusion.btn.purify").getString()
-                + ": " + FusionTooltipRenderer.buildPairDisplayName(registries, preview.previewPair()).getString();
-        }
-        if (preview.previewTransmute() != null && preview.singleCandidate() != null) {
-            return "\u25C6 " + FusionTooltipRenderer.buildTransmutedDisplayName(
-                preview.previewTransmute(),
-                Math.min(preview.singleCandidate().maxLevel(), preview.singleCandidate().level()),
-                preview.singleCandidate().maxLevel(),
-                preview.singleCandidate().id()
-            ).getString();
-        }
-        if (preview.kind() == OperationKind.EXPAND_VESSEL) {
-            return "\u25C6 " + Component.translatable("gui.enchantment_fusion.btn.expand_vessel").getString();
-        }
-        FusedPair pair = preview.previewPair();
-        if (pair != null) {
-            return FusionTooltipRenderer.buildPairDisplayName(registries, pair).getString();
-        }
-        return Component.translatable("gui.enchantment_fusion.preview.idle_title").getString();
-    }
-
-    private String formatCompactEconomyLine(StationPreview preview) {
-        EconomyQuote q = preview.economyQuote();
-        if (q == null || q.reagent() == ReagentKind.NONE) {
-            return Component.translatable("gui.enchantment_fusion.preview.xp_cost", preview.xpCost()).getString();
-        }
-        int succPct = (int) Math.round((1.0 - q.failureChance()) * 100.0);
-        return q.xpLevels() + "Lv + " + q.reagentCount() + "\u00D7"
-            + Component.translatable(q.reagent().translationKey()).getString()
-            + " (" + succPct + "%)";
-    }
-
-    private BookManageState evaluateBookManage(StationPreview preview) {
-        ItemStack manageable = FusionStationOperations.resolveManageableStack(this.menu.stationContainer());
-        FusedEnchantmentList mList = manageable.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-        boolean hasBook = manageable.is(FusionItems.FUSED_ENCHANTED_BOOK) && !mList.isEmpty();
-        FusedPair firstPair = hasBook ? mList.pairs().getFirst() : null;
-        boolean aberrant = firstPair != null && firstPair.isAberrant();
-        String fp = firstPair != null ? firstPair.fingerprint() : "";
-        boolean secBusy = !this.menu.stationContainer().getItem(FusionStationOperations.SLOT_SECONDARY).isEmpty() && preview.executable();
-        boolean xpOk = canAffordXp(preview.manageXpCost());
-        return new BookManageState(hasBook, aberrant, secBusy, xpOk, preview.manageXpCost(), fp);
+        FusionRitualDirector.cancel();
+        this.contextDrawer.close();
+        int initCh = isGearModeActive() ? 2 : 1;
+        FusionGrimoireScreen overlay = new FusionGrimoireScreen(() -> this.grimoireOverlay = null, initCh);
+        overlay.init(this.width, this.height);
+        this.grimoireOverlay = overlay;
+        FusionGuiMicroEffects.playUiSound(SoundEvents.BOOK_PAGE_TURN, 1.0F, 0.85F);
     }
 
     private boolean canSwapPhysicalSlots() {
@@ -772,26 +180,567 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     }
 
     private boolean canSwapSelectionOrder(StationPreview preview) {
-        return !this.menu.singleOnlyMode()
-            && preview.selection().primaryIndex() >= 0
-            && preview.selection().secondaryIndex() >= 0;
+        return !this.menu.singleOnlyMode() && preview.selection().candidates().size() >= 2;
+    }
+
+    private void notifyDisabledClick(Component reason) {
+        this.disabledFeedbackText = reason;
+        this.disabledFeedbackUntilMs = System.currentTimeMillis() + 2200L;
+        FusionGuiMicroEffects.playUiSound(SoundEvents.NOTE_BLOCK_BASS.value(), 0.72F, 0.65F);
+    }
+
+    @Override
+    protected void extractLabels(GuiGraphicsExtractor ctx, int mouseX, int mouseY) {
+        // Bounded labels rendered inside extractBackground.
+    }
+
+    @Override
+    public void extractBackground(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
+        ensureAutoMorphedTab();
+        FusionGuiMicroEffects.updateStationOrigin(this.leftPos, this.topPos);
+
+        StationPreview preview = this.menu.computePreview();
+        this.cachedFramePreview = preview;
+        HolderLookup.Provider registries = currentRegistries();
+        if (registries == null) {
+            registries = this.menu.viewer().level().registryAccess();
+        }
+        boolean gearMode = isGearModeActive();
+
+        String execToken = preview.expectedExecuteToken();
+        FusionRitualDirector.updateFrame(
+            execToken,
+            preview.executable(),
+            () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, execToken)
+        );
+
+        this.contextDrawer.rebuildIfChanged(
+            preview.selection().candidates(),
+            this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET),
+            registries
+        );
+
+        int shakeX = FusionGuiMicroEffects.currentShakeOffsetX();
+        int shakeY = FusionGuiMicroEffects.currentShakeOffsetY();
+        int left = this.leftPos + shakeX;
+        int top = this.topPos + shakeY;
+
+        boolean highRisk = preview.economyQuote() != null && preview.economyQuote().highRiskTier();
+        float chProg = FusionRitualDirector.channelProgress();
+
+        // 1. Left Input Pedestal + Right Auto-Morphing Wing + Bottom Player Inventory
+        FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_PANEL_MAIN, left + LEFT_WING_X, top + LEFT_WING_Y, LEFT_WING_W, LEFT_WING_H);
+        FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_PANEL_MAIN, left + RIGHT_WING_X, top + RIGHT_WING_Y, RIGHT_WING_W, RIGHT_WING_H);
+        FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_PANEL_MAIN, left + 63, top + 121, 178, 95);
+
+        FusionGuiMicroEffects.renderPedestalResonanceBackdrop(ctx, left, top, preview.executable(), highRisk, chProg);
+
+        // 2. Center Real-Time 3D Live Fusion Stage + Ornate Obsidian Archway Frame
+        FusionLiveStageRenderer.renderStage(
+            ctx,
+            left + STAGE_X, top + STAGE_Y, STAGE_W, STAGE_H,
+            this.menu, preview, gearMode
+        );
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.VIEWPORT_ARCH, left + 94, top + 4, 92, 116);
+
+        if (chProg > 0.0F) {
+            FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.CONDUIT_TRACK, left + 104, top + 110, 72, 4);
+            int barW = Math.max(1, Math.round(70 * chProg));
+            FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.RITUAL_PROGRESS_FILL, left + 105, top + 111, barW, 2);
+        }
+
+        // 3. Left Pedestal Slots, Conduits & Dual-Mode Swap Medallion
+        renderLeftPedestal(ctx, left, top, mouseX, mouseY, preview, gearMode, chProg);
+
+        // 4. Right Auto-Morphing Control Wing (scissored inside bezel so Scene 8 Mode Morph slides cleanly!)
+        int morphSlideX = FusionLiveStageRenderer.currentRightWingMorphOffsetX(gearMode);
+        ctx.enableScissor(left + RIGHT_WING_X + 2, top + 8, left + RIGHT_WING_X + RIGHT_WING_W - 2, top + 116);
+        if (gearMode) {
+            renderRightWingGearMode(ctx, left + morphSlideX, top, mouseX, mouseY, preview, registries);
+        } else {
+            renderRightWingBookMode(ctx, left + morphSlideX, top, mouseX, mouseY, preview, registries);
+        }
+        ctx.disableScissor();
+
+        // 5. Top-Right Synergy Badge + Embedded Grimoire Icon Button
+        this.contextDrawer.renderBadge(ctx, this.font, left, top, mouseX, mouseY);
+        renderGrimoireButton(ctx, left, top, mouseX, mouseY);
+
+        // 6. Climax Reveal Banner / Disabled Feedback Banner across the Stage Header
+        if (FusionRitualDirector.hasActiveClimaxBanner()) {
+            boolean ab = FusionRitualDirector.isClimaxAberrant();
+            FusionGuiSkin.drawNineSlice(
+                ctx,
+                new FusionGuiSkin.NineSliceSprite(
+                    ab ? FusionGuiSkin.CLIMAX_BANNER_ABERRANT : FusionGuiSkin.CLIMAX_BANNER_SIG,
+                    64, 18, 4
+                ),
+                left + 98, top + 9, 84, 15
+            );
+            FusionGuiSkin.drawCenteredBoundedText(
+                ctx, this.font, FusionRitualDirector.climaxBannerTitle(),
+                left + 101, 78, top + 16.5F,
+                0.56F, ab ? FusionGuiSkin.COLOR_CRIMSON : FusionGuiSkin.COLOR_GOLD
+            );
+        } else if (this.disabledFeedbackText != null && System.currentTimeMillis() < this.disabledFeedbackUntilMs) {
+            FusionGuiSkin.drawNineSlice(
+                ctx,
+                new FusionGuiSkin.NineSliceSprite(FusionGuiSkin.CLIMAX_BANNER_ABERRANT, 64, 18, 4),
+                left + 96, top + 9, 88, 15
+            );
+            FusionGuiSkin.drawCenteredBoundedText(
+                ctx, this.font, this.disabledFeedbackText.getString(),
+                left + 99, 82, top + 16.5F,
+                0.52F, FusionGuiSkin.COLOR_CRIMSON
+            );
+        }
+
+        // 7. Player Inventory Title
+        FusionGuiSkin.drawLeftBoundedText(
+            ctx, this.font, this.playerInventoryTitle.getString(),
+            left + 71, top + 125, 110,
+            FusionGuiSkin.SCALE_SMALL, FusionGuiSkin.COLOR_CREAM
+        );
+
+        // 8. In-Panel Synergy Codex Popover (strictly inside 304px bounds!)
+        this.contextDrawer.renderPopover(ctx, this.font, left, top, mouseX, mouseY);
+    }
+
+    private void renderLeftPedestal(
+        GuiGraphicsExtractor ctx,
+        int left,
+        int top,
+        int mouseX,
+        int mouseY,
+        StationPreview preview,
+        boolean gearMode,
+        float chProg
+    ) {
+        String pedTitle = gearMode
+            ? Component.translatable("gui.enchantment_fusion.pedestal.gear_roles").getString()
+            : Component.translatable("gui.enchantment_fusion.pedestal.fuse_roles").getString();
+        FusionGuiSkin.drawCenteredBoundedText(
+            ctx, this.font, pedTitle,
+            left + 8, 80, top + 14.0F,
+            0.56F, FusionGuiSkin.COLOR_GOLD
+        );
+
+        boolean hasSlot0 = !this.menu.stationContainer().getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty();
+        boolean hasSlot1 = !this.menu.stationContainer().getItem(FusionStationOperations.SLOT_SECONDARY).isEmpty();
+        boolean hasCat = !this.menu.stationContainer().getItem(FusionStationOperations.SLOT_CATALYST).isEmpty();
+
+        float goldFill = chProg > 0.0F ? clamp01(chProg * 1.4F) : (hasSlot0 ? (preview.executable() ? 0.55F : 0.25F) : 0.0F);
+        float cyanFill = chProg > 0.0F ? clamp01(chProg * 1.4F) : (hasSlot1 ? (preview.executable() ? 0.55F : 0.25F) : 0.0F);
+        float catFill = chProg > 0.0F ? clamp01((chProg - 0.25F) / 0.75F) : (hasCat ? 0.45F : 0.0F);
+
+        // Conduits linking Slots 0/1/2/3 into the Center Live Stage
+        FusionGuiSkin.drawConduitV(ctx, FusionGuiSkin.CONDUIT_GOLD, left + 20, top + 49, 4, 28, goldFill);
+        FusionGuiSkin.drawConduitV(ctx, FusionGuiSkin.CONDUIT_CYAN, left + 70, top + 49, 4, 28, cyanFill);
+        FusionGuiSkin.drawConduitH(ctx, FusionGuiSkin.CONDUIT_AMETHYST, left + 31, top + 84, 32, 4, catFill, false);
+        FusionGuiSkin.drawConduitH(ctx, FusionGuiSkin.CONDUIT_GOLD, left + 81, top + 38, 15, 4, goldFill, false);
+        FusionGuiSkin.drawConduitH(ctx, FusionGuiSkin.CONDUIT_AMETHYST, left + 81, top + 84, 15, 4, Math.max(goldFill, catFill), false);
+
+        // 4 Slot Bezels matching EnchantmentFusionMenu coordinates (14,32), (64,32), (14,78), (64,78)
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_PRIMARY, left + 13, top + 31, 18, 18);
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_SECONDARY, left + 63, top + 31, 18, 18);
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_CATALYST, left + 13, top + 77, 18, 18);
+        FusionGuiSkin.drawSprite(ctx, FusionGuiSkin.SLOT_DEFAULT, left + 63, top + 77, 18, 18);
+
+        // Dual-Mode Swap Medallion [⇄] at (38, 29, 20, 20)
+        boolean swapEnabled = !FusionRitualDirector.isChanneling()
+            && (canSwapSelectionOrder(preview) || canSwapPhysicalSlots());
+        boolean hovSwap = SWAP_BTN.containsAt(left, top, mouseX, mouseY);
+        var swapTex = !swapEnabled
+            ? FusionGuiSkin.BTN_SWAP_DISABLED
+            : (hovSwap ? FusionGuiSkin.BTN_SWAP_HOVER : FusionGuiSkin.BTN_SWAP_NORMAL);
+        FusionGuiSkin.drawSprite(ctx, swapTex, left + SWAP_BTN.x(), top + SWAP_BTN.y(), SWAP_BTN.w(), SWAP_BTN.h());
+
+        String s0 = Component.translatable(
+            gearMode ? "gui.enchantment_fusion.slot.inlay_book" : "gui.enchantment_fusion.slot.primary_short"
+        ).getString();
+        String s1 = Component.translatable(
+            gearMode ? "gui.enchantment_fusion.slot.aux_book" : "gui.enchantment_fusion.slot.secondary_short"
+        ).getString();
+        String s2 = Component.translatable("gui.enchantment_fusion.slot.catalyst_short").getString();
+        String s3 = Component.translatable(
+            gearMode ? "gui.enchantment_fusion.slot.host_gear" : "gui.enchantment_fusion.slot.output_book"
+        ).getString();
+
+        FusionGuiSkin.drawCenteredBoundedText(ctx, this.font, s0, left + 6, 32, top + 25.0F, 0.50F, FusionGuiSkin.COLOR_GOLD);
+        FusionGuiSkin.drawCenteredBoundedText(ctx, this.font, s1, left + 56, 32, top + 25.0F, 0.50F, FusionGuiSkin.COLOR_CYAN);
+        FusionGuiSkin.drawCenteredBoundedText(ctx, this.font, s2, left + 6, 32, top + 100.0F, 0.50F, FusionGuiSkin.COLOR_MUTED);
+        FusionGuiSkin.drawCenteredBoundedText(ctx, this.font, s3, left + 56, 32, top + 100.0F, 0.50F, FusionGuiSkin.COLOR_CREAM);
+    }
+
+    private void renderRightWingBookMode(
+        GuiGraphicsExtractor ctx,
+        int left,
+        int top,
+        int mouseX,
+        int mouseY,
+        StationPreview preview,
+        HolderLookup.Provider registries
+    ) {
+        FusionGuiSkin.drawLeftBoundedText(
+            ctx, this.font,
+            "\u25C6 " + Component.translatable("gui.enchantment_fusion.tab.fuse").getString(),
+            left + RIGHT_INNER_X, top + 12, 58,
+            0.58F, FusionGuiSkin.COLOR_GOLD
+        );
+
+        renderCandidateRows(ctx, left, top, mouseX, mouseY, preview.selection(), registries, 27, 2, RIGHT_INNER_W);
+
+        BookManageState mState = evaluateBookManage(preview);
+        if (!preview.executable() && mState.hasBook() && !mState.isAberrant()) {
+            FusionGuiSkin.drawButtonBox(
+                ctx, this.font, left, top, BOOK_FLIP_BTN,
+                mState.canExecute(), BOOK_FLIP_BTN.containsAt(left, top, mouseX, mouseY),
+                Component.translatable("gui.enchantment_fusion.btn.flip").getString(),
+                0.56F, FusionGuiSkin.COLOR_GOLD
+            );
+            FusionGuiSkin.drawButtonBox(
+                ctx, this.font, left, top, BOOK_SPLIT_BTN,
+                mState.canExecute(), BOOK_SPLIT_BTN.containsAt(left, top, mouseX, mouseY),
+                Component.translatable("gui.enchantment_fusion.btn.split").getString(),
+                0.56F, FusionGuiSkin.COLOR_CYAN
+            );
+            FusionGuiSkin.drawCenteredBoundedText(
+                ctx, this.font,
+                Component.translatable("gui.enchantment_fusion.preview.xp_cost", mState.xpCost()).getString(),
+                left + RIGHT_INNER_X, RIGHT_INNER_W, top + 85.0F,
+                0.52F, mState.enoughXp() ? FusionGuiSkin.COLOR_GREEN : FusionGuiSkin.COLOR_CRIMSON
+            );
+        } else {
+            FusionGuiSkin.drawNineSlice(
+                ctx, FusionGuiSkin.SLICE_PANEL_INSET,
+                left + BOOK_PREVIEW_BOX.x(), top + BOOK_PREVIEW_BOX.y(),
+                BOOK_PREVIEW_BOX.w(), BOOK_PREVIEW_BOX.h()
+            );
+            String headline = buildPreviewTitleLine(preview, registries);
+            int headCol = preview.executable()
+                ? FusionGuiSkin.COLOR_GOLD
+                : (preview.rejectReason() == RejectReason.NONE ? FusionGuiSkin.COLOR_CREAM : FusionGuiSkin.COLOR_CRIMSON);
+            FusionGuiSkin.drawLeftBoundedText(
+                ctx, this.font, headline,
+                left + BOOK_PREVIEW_BOX.x() + 4, top + BOOK_PREVIEW_BOX.y() + 5,
+                BOOK_PREVIEW_BOX.w() - 8, 0.56F, headCol
+            );
+            String sub = preview.executable()
+                ? buildCostSummaryLine(preview)
+                : (preview.rejectReason() == RejectReason.NEED_PURIFY_STABILIZERS
+                    ? Component.translatable("gui.enchantment_fusion.preview.purify_hint").getString()
+                    : Component.translatable("gui.enchantment_fusion.picker.click_ab_tip").getString());
+            FusionGuiSkin.drawLeftBoundedText(
+                ctx, this.font, sub,
+                left + BOOK_PREVIEW_BOX.x() + 4, top + BOOK_PREVIEW_BOX.y() + 18,
+                BOOK_PREVIEW_BOX.w() - 8, 0.50F,
+                preview.executable() ? FusionGuiSkin.COLOR_GREEN : FusionGuiSkin.COLOR_MUTED
+            );
+        }
+
+        renderPrimaryRitualButton(ctx, left, top, mouseX, mouseY, preview);
+    }
+
+    private void renderRightWingGearMode(
+        GuiGraphicsExtractor ctx,
+        int left,
+        int top,
+        int mouseX,
+        int mouseY,
+        StationPreview preview,
+        HolderLookup.Provider registries
+    ) {
+        ItemStack host = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
+        int maxSlots = VesselCapacityRules.getMaxVesselSlots(host);
+        FusedEnchantmentList socketed = host.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+
+        FusionGuiSkin.drawLeftBoundedText(
+            ctx, this.font,
+            "\u25C6 " + Component.translatable("gui.enchantment_fusion.tab.socket").getString(),
+            left + RIGHT_INNER_X, top + 12, 58,
+            0.58F, FusionGuiSkin.COLOR_GOLD
+        );
+
+        for (int idx = 0; idx < 2; idx++) {
+            int cy = top + 27 + idx * 17;
+            if (maxSlots == 0) {
+                if (idx == 0) {
+                    FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_SOCKET_FILLED, left + RIGHT_INNER_X, cy, RIGHT_INNER_W, 33);
+                    FusionGuiSkin.drawCenteredBoundedText(
+                        ctx, this.font,
+                        Component.translatable("gui.enchantment_fusion.socket.special_cross_host").getString(),
+                        left + RIGHT_INNER_X + 4, RIGHT_INNER_W - 8, cy + 16.5F,
+                        0.52F, FusionGuiSkin.COLOR_CYAN
+                    );
+                }
+                continue;
+            }
+            if (idx >= maxSlots) {
+                FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_SOCKET_EMPTY, left + RIGHT_INNER_X, cy, RIGHT_INNER_W, 16);
+                FusionGuiSkin.drawLeftBoundedText(
+                    ctx, this.font,
+                    Component.translatable("gui.enchantment_fusion.socket.locked_expand_hint").getString(),
+                    left + RIGHT_INNER_X + 5, cy + 4, RIGHT_INNER_W - 10,
+                    0.50F, FusionGuiSkin.COLOR_MUTED
+                );
+                continue;
+            }
+            if (idx < socketed.size()) {
+                FusedPair p = socketed.pairs().get(idx);
+                var cardSlice = p.isAberrant() ? FusionGuiSkin.SLICE_SOCKET_ABERRANT : FusionGuiSkin.SLICE_SOCKET_FILLED;
+                FusionGuiSkin.drawNineSlice(ctx, cardSlice, left + RIGHT_INNER_X, cy, RIGHT_INNER_W, 16);
+                String pairName = FusionTooltipRenderer.buildPairDisplayName(registries, p).getString();
+                FusionGuiSkin.drawLeftBoundedText(
+                    ctx, this.font, pairName,
+                    left + RIGHT_INNER_X + 4, cy + 4, 62,
+                    0.52F, p.isAberrant() ? FusionGuiSkin.COLOR_CRIMSON : FusionGuiSkin.COLOR_GOLD
+                );
+                boolean canAct = !p.isAberrant()
+                    && this.menu.viewer().experienceLevel >= preview.manageXpCost()
+                    && !FusionRitualDirector.isChanneling();
+                HitBox flipBox = socketFlipBox(idx);
+                HitBox unsockBox = socketUnsocketBox(idx);
+                FusionGuiSkin.drawButtonBox(
+                    ctx, this.font, left, top, flipBox,
+                    canAct, flipBox.containsAt(left, top, mouseX, mouseY),
+                    "\u21C4", 0.52F, FusionGuiSkin.COLOR_GOLD
+                );
+                FusionGuiSkin.drawButtonBox(
+                    ctx, this.font, left, top, unsockBox,
+                    canAct, unsockBox.containsAt(left, top, mouseX, mouseY),
+                    "\u2715", 0.52F, FusionGuiSkin.COLOR_CRIMSON
+                );
+            } else {
+                FusionGuiSkin.drawNineSlice(ctx, FusionGuiSkin.SLICE_SOCKET_EMPTY, left + RIGHT_INNER_X, cy, RIGHT_INNER_W, 16);
+                FusionGuiSkin.drawLeftBoundedText(
+                    ctx, this.font,
+                    Component.translatable("gui.enchantment_fusion.socket.empty_ready", idx + 1).getString(),
+                    left + RIGHT_INNER_X + 5, cy + 4, RIGHT_INNER_W - 10,
+                    0.50F, FusionGuiSkin.COLOR_MUTED
+                );
+            }
+        }
+
+        renderCandidateRows(ctx, left, top, mouseX, mouseY, preview.selection(), registries, 63, 1, 74);
+
+        boolean singleActive = this.menu.singleOnlyMode();
+        boolean hovSingle = SINGLE_MODE_BTN.containsAt(left, top, mouseX, mouseY);
+        var modeSlice = singleActive
+            ? FusionGuiSkin.SLICE_ROW_SELECTED_B
+            : (hovSingle ? FusionGuiSkin.SLICE_ROW_HOVER : FusionGuiSkin.SLICE_ROW_UNSELECTED);
+        FusionGuiSkin.drawNineSlice(
+            ctx, modeSlice,
+            left + SINGLE_MODE_BTN.x(), top + SINGLE_MODE_BTN.y(),
+            SINGLE_MODE_BTN.w(), SINGLE_MODE_BTN.h()
+        );
+        String chipLabel = Component.translatable(
+            singleActive ? "gui.enchantment_fusion.mode.single_short" : "gui.enchantment_fusion.mode.pair_short"
+        ).getString();
+        FusionGuiSkin.drawCenteredBoundedText(
+            ctx, this.font, chipLabel,
+            left + SINGLE_MODE_BTN.x() + 2, SINGLE_MODE_BTN.w() - 4,
+            top + SINGLE_MODE_BTN.y() + 7.5F,
+            0.50F, singleActive ? FusionGuiSkin.COLOR_CYAN : FusionGuiSkin.COLOR_MUTED
+        );
+
+        String statusLine = preview.executable()
+            ? buildPreviewTitleLine(preview, registries) + " \u00B7 " + buildCostSummaryLine(preview)
+            : (preview.rejectReason() == RejectReason.NEED_PURIFY_STABILIZERS
+                ? Component.translatable("gui.enchantment_fusion.preview.purify_hint").getString()
+                : buildPreviewTitleLine(preview, registries));
+        int statusCol = preview.executable()
+            ? FusionGuiSkin.COLOR_GREEN
+            : (preview.rejectReason() == RejectReason.NONE ? FusionGuiSkin.COLOR_MUTED : FusionGuiSkin.COLOR_CRIMSON);
+        FusionGuiSkin.drawLeftBoundedText(
+            ctx, this.font, statusLine,
+            left + RIGHT_INNER_X, top + 82, RIGHT_INNER_W,
+            0.52F, statusCol
+        );
+
+        renderPrimaryRitualButton(ctx, left, top, mouseX, mouseY, preview);
+    }
+
+    private void renderPrimaryRitualButton(
+        GuiGraphicsExtractor ctx,
+        int left,
+        int top,
+        int mouseX,
+        int mouseY,
+        StationPreview preview
+    ) {
+        boolean ch = FusionRitualDirector.isChanneling();
+        boolean hovExec = EXEC_BTN.containsAt(left, top, mouseX, mouseY);
+
+        if (ch) {
+            FusionGuiSkin.drawNineSlice(
+                ctx, FusionGuiSkin.SLICE_BTN_HOVER,
+                left + EXEC_BTN.x(), top + EXEC_BTN.y(), EXEC_BTN.w(), EXEC_BTN.h()
+            );
+            int fillW = Math.max(2, Math.round((EXEC_BTN.w() - 4) * FusionRitualDirector.channelProgress()));
+            FusionGuiSkin.drawSprite(
+                ctx, FusionGuiSkin.RITUAL_PROGRESS_FILL,
+                left + EXEC_BTN.x() + 2, top + EXEC_BTN.y() + EXEC_BTN.h() - 4,
+                fillW, 2
+            );
+            FusionGuiSkin.drawCenteredBoundedText(
+                ctx, this.font,
+                Component.translatable("gui.enchantment_fusion.ritual.channeling").getString(),
+                left + EXEC_BTN.x() + 4, EXEC_BTN.w() - 8,
+                top + EXEC_BTN.y() + EXEC_BTN.h() * 0.45F,
+                0.54F, FusionGuiSkin.COLOR_GOLD
+            );
+        } else {
+            String label = "\u25C6 " + Component.translatable(primaryActionLabelKey(preview.kind())).getString();
+            FusionGuiSkin.drawButtonBox(
+                ctx, this.font, left, top, EXEC_BTN,
+                preview.executable(), hovExec,
+                label, 0.58F, FusionGuiSkin.COLOR_GOLD
+            );
+        }
+    }
+
+    private void renderCandidateRows(
+        GuiGraphicsExtractor ctx,
+        int left,
+        int top,
+        int mouseX,
+        int mouseY,
+        ResolvedSelection sel,
+        HolderLookup.Provider registries,
+        int startY,
+        int visibleRows,
+        int rowW
+    ) {
+        List<EnchantCandidate> list = sel.candidates();
+        if (list.isEmpty()) {
+            FusionGuiSkin.drawNineSlice(
+                ctx, FusionGuiSkin.SLICE_ROW_UNSELECTED,
+                left + RIGHT_INNER_X, top + startY, rowW, visibleRows * 16 - 1
+            );
+            String emptyKey = visibleRows == 1
+                ? "gui.enchantment_fusion.picker.empty_gear"
+                : "gui.enchantment_fusion.picker.empty_books";
+            FusionGuiSkin.drawCenteredBoundedText(
+                ctx, this.font,
+                Component.translatable(emptyKey).getString(),
+                left + RIGHT_INNER_X + 4, rowW - 8,
+                top + startY + (visibleRows * 16) * 0.48F,
+                0.52F, FusionGuiSkin.COLOR_MUTED
+            );
+            return;
+        }
+
+        int maxScroll = Math.max(0, list.size() - visibleRows);
+        this.candidateScroll = Math.max(0, Math.min(this.candidateScroll, maxScroll));
+
+        for (int r = 0; r < visibleRows; r++) {
+            int idx = this.candidateScroll + r;
+            if (idx >= list.size()) {
+                break;
+            }
+            EnchantCandidate cand = list.get(idx);
+            HitBox rowBox = new HitBox(RIGHT_INNER_X, startY + r * 17, rowW, 15);
+            boolean isA = idx == sel.primaryIndex();
+            boolean isB = idx == sel.secondaryIndex();
+            boolean hov = rowBox.containsAt(left, top, mouseX, mouseY);
+
+            var slice = isA ? FusionGuiSkin.SLICE_ROW_SELECTED_A
+                : (isB ? FusionGuiSkin.SLICE_ROW_SELECTED_B
+                    : (hov ? FusionGuiSkin.SLICE_ROW_HOVER : FusionGuiSkin.SLICE_ROW_UNSELECTED));
+            FusionGuiSkin.drawNineSlice(ctx, slice, left + rowBox.x(), top + rowBox.y(), rowBox.w(), rowBox.h());
+
+            String rolePrefix = isA ? "[A] " : (isB ? "[B] " : "\u00B7 ");
+            String srcBadge = cand.sourceSlot() == FusionStationOperations.SLOT_TARGET ? "\u25C6" : "";
+            String enchName = FusionTooltipRenderer.formatEnchantmentWithLevel(registries, cand.id(), cand.level()).getString();
+            int textColor = isA ? FusionGuiSkin.COLOR_GOLD : (isB ? FusionGuiSkin.COLOR_CYAN : FusionGuiSkin.COLOR_CREAM);
+            FusionGuiSkin.drawLeftBoundedText(
+                ctx, this.font,
+                rolePrefix + srcBadge + enchName,
+                left + rowBox.x() + 4, top + rowBox.y() + 4,
+                rowBox.w() - (maxScroll > 0 && r == 0 ? 18 : 8),
+                0.52F, textColor
+            );
+        }
+
+        if (maxScroll > 0) {
+            String ind = (this.candidateScroll + 1) + "/" + list.size();
+            FusionGuiSkin.drawRightBoundedText(
+                ctx, this.font, ind,
+                left + RIGHT_INNER_X + rowW - 3, top + startY + 4, 20,
+                0.48F, FusionGuiSkin.COLOR_MUTED
+            );
+        }
+    }
+
+    private void renderGrimoireButton(GuiGraphicsExtractor ctx, int left, int top, int mouseX, int mouseY) {
+        boolean hov = GRIMOIRE_BTN.containsAt(left, top, mouseX, mouseY);
+        FusionGuiSkin.drawNineSlice(
+            ctx, hov ? FusionGuiSkin.SLICE_BTN_HOVER : FusionGuiSkin.SLICE_BTN_NORMAL,
+            left + GRIMOIRE_BTN.x(), top + GRIMOIRE_BTN.y(), GRIMOIRE_BTN.w(), GRIMOIRE_BTN.h()
+        );
+        ctx.pose().pushMatrix();
+        ctx.pose().translate(left + GRIMOIRE_BTN.x() + 9.0F, top + GRIMOIRE_BTN.y() + 8.0F);
+        ctx.pose().scale(0.75F, 0.75F);
+        ctx.item(new ItemStack(FusionItems.FUSION_GRIMOIRE), -8, -8);
+        ctx.pose().popMatrix();
+    }
+
+    private String buildPreviewTitleLine(StationPreview preview, HolderLookup.Provider registries) {
+        if (preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS
+            && preview.previewTransmute() != null
+            && preview.singleCandidate() != null) {
+            return "\u2726 " + Component.translatable(preview.previewTransmute().titleKey()).getString();
+        }
+        if (preview.kind() == OperationKind.PURIFY_ABERRANT && preview.previewPair() != null) {
+            return "\u25C6 " + Component.translatable("gui.enchantment_fusion.btn.purify").getString();
+        }
+        if (preview.previewPair() != null) {
+            return FusionTooltipRenderer.buildPairDisplayName(registries, preview.previewPair()).getString();
+        }
+        if (preview.kind() == OperationKind.EXPAND_VESSEL) {
+            return "\u25C6 " + Component.translatable("gui.enchantment_fusion.btn.expand_vessel").getString();
+        }
+        if (preview.rejectReason() != RejectReason.NONE) {
+            return Component.translatable(rejectKey(preview.rejectReason())).getString();
+        }
+        return Component.translatable("gui.enchantment_fusion.preview.idle_title").getString();
+    }
+
+    private String buildCostSummaryLine(StationPreview preview) {
+        EconomyQuote q = preview.economyQuote();
+        if (q == null) {
+            return Component.translatable("gui.enchantment_fusion.preview.xp_cost", preview.xpCost()).getString();
+        }
+        return q.xpLevels() + "Lv \u00B7 " + q.reagentCount() + "x "
+            + Component.translatable(q.reagent().translationKey()).getString();
+    }
+
+    private BookManageState evaluateBookManage(StationPreview preview) {
+        ItemStack out = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
+        boolean hasFused = out.is(FusionItems.FUSED_ENCHANTED_BOOK);
+        FusedEnchantmentList list = out.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        if (!hasFused || list.isEmpty()) {
+            return new BookManageState(false, false, false, false, preview.manageXpCost(), "", ItemStack.EMPTY, ItemStack.EMPTY);
+        }
+        FusedPair first = list.pairs().get(0);
+        boolean ab = list.hasAberration();
+        boolean secOcc = !this.menu.stationContainer().getItem(FusionStationOperations.SLOT_SECONDARY).isEmpty();
+        boolean xpOk = this.menu.viewer().experienceLevel >= preview.manageXpCost();
+        ItemStack bookSample = new ItemStack(Items.ENCHANTED_BOOK);
+        return new BookManageState(true, ab, secOcc, xpOk, preview.manageXpCost(), first.fingerprint(), bookSample, bookSample);
     }
 
     public static HitBox socketFlipBox(int socketIndex) {
-        return new HitBox(339, 28 + socketIndex * 17, 16, 14);
+        return new HitBox(261, 28 + socketIndex * 17, 15, 14);
     }
 
     public static HitBox socketUnsocketBox(int socketIndex) {
-        return new HitBox(357, 28 + socketIndex * 17, 16, 14);
+        return new HitBox(278, 28 + socketIndex * 17, 15, 14);
     }
 
     private static float clamp01(float v) {
         return v < 0.0F ? 0.0F : (v > 1.0F ? 1.0F : v);
     }
-
-    // =========================================================================
-    // Render State + Modal Grimoire Overlay + Hover Tooltips
-    // =========================================================================
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor ctx, int mouseX, int mouseY, float partialTick) {
@@ -820,10 +769,11 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         int left = this.leftPos;
         int top = this.topPos;
 
-        this.contextDrawer.appendHoverTooltip(
-            lines, left, top, this.imageWidth, this.width,
-            preview.selection().candidates(), registries, mouseX, mouseY
-        );
+        this.contextDrawer.appendHoverTooltip(lines, left, top, mouseX, mouseY);
+        if (this.contextDrawer.isExpanded() && this.contextDrawer.popoverBox(left, top).contains(mouseX, mouseY)) {
+            flushTooltip(ctx, lines, mouseX, mouseY);
+            return;
+        }
 
         if (lines.isEmpty() && GRIMOIRE_BTN.containsAt(left, top, mouseX, mouseY)) {
             lines.add(Component.translatable("item.enchantment_fusion.fusion_grimoire").withStyle(ChatFormatting.GOLD));
@@ -840,7 +790,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             && (BOOK_FLIP_BTN.containsAt(left, top, mouseX, mouseY) || BOOK_SPLIT_BTN.containsAt(left, top, mouseX, mouseY))) {
             appendFlipOrSplitHoverLines(lines, evaluateBookManage(preview), BOOK_FLIP_BTN.containsAt(left, top, mouseX, mouseY));
         } else if (lines.isEmpty() && appendHoveredPickerRowTooltip(lines, registries, preview.selection(), gearMode, mouseX, mouseY)) {
-            // Handled by candidate row truncation hover
+            // Handled
         } else if (lines.isEmpty() && EXEC_BTN.containsAt(left, top, mouseX, mouseY)
             && preview.kind() == OperationKind.INSCRIBE_SINGLE_CROSS
             && preview.previewTransmute() != null
@@ -897,14 +847,15 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 FusedPair p = socketed.pairs().get(idx);
                 HitBox flipBox = socketFlipBox(idx);
                 HitBox unsockBox = socketUnsocketBox(idx);
+                HitBox cardBox = new HitBox(RIGHT_INNER_X, 27 + idx * 17, RIGHT_INNER_W, 16);
                 if (flipBox.containsAt(left, top, mouseX, mouseY) || unsockBox.containsAt(left, top, mouseX, mouseY)) {
-                    boolean isFlip = flipBox.containsAt(left, top, mouseX, mouseY);
-                    lines.add(Component.translatable(
-                        isFlip ? "gui.enchantment_fusion.btn.flip" : "gui.enchantment_fusion.btn.unsocket"
-                    ).withStyle(ChatFormatting.GOLD));
+                    String key = flipBox.containsAt(left, top, mouseX, mouseY)
+                        ? "gui.enchantment_fusion.btn.flip"
+                        : "gui.enchantment_fusion.btn.unsocket";
+                    lines.add(Component.translatable(key).withStyle(ChatFormatting.GOLD));
                     if (p.isAberrant()) {
                         appendAberrantPurifyHintLines(lines);
-                    } else if (!canAffordXp(preview.manageXpCost())) {
+                    } else if (this.menu.viewer().experienceLevel < preview.manageXpCost()) {
                         lines.add(Component.translatable("gui.enchantment_fusion.tip.manage_need_xp", preview.manageXpCost())
                             .withStyle(ChatFormatting.RED));
                     } else {
@@ -912,11 +863,8 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                             .withStyle(ChatFormatting.GREEN));
                     }
                     break;
-                }
-                HitBox textBox = new HitBox(RIGHT_INNER_X, 27 + idx * 17, 96, 16);
-                if (textBox.containsAt(left, top, mouseX, mouseY)) {
-                    lines.add(FusionTooltipRenderer.buildPairDisplayName(registries, p).copy()
-                        .withStyle(p.isAberrant() ? ChatFormatting.RED : ChatFormatting.LIGHT_PURPLE));
+                } else if (cardBox.containsAt(left, top, mouseX, mouseY)) {
+                    lines.add(FusionTooltipRenderer.buildPairDisplayName(registries, p));
                     lines.add(FusionTooltipRenderer.buildEffectSummary(p, HostForm.resolve(host)).copy()
                         .withStyle(ChatFormatting.AQUA));
                     if (p.isAberrant()) {
@@ -927,25 +875,30 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             }
         } else if (lines.isEmpty() && this.hoveredSlot != null && !this.hoveredSlot.hasItem() && this.hoveredSlot.index < 4) {
             String slotTipKey = switch (this.hoveredSlot.index) {
-                case 0 -> "gui.enchantment_fusion.tip.slot_primary";
-                case 1 -> "gui.enchantment_fusion.tip.slot_secondary";
+                case 0 -> gearMode ? "gui.enchantment_fusion.tip.slot_primary_gear" : "gui.enchantment_fusion.tip.slot_primary";
+                case 1 -> gearMode ? "gui.enchantment_fusion.tip.slot_secondary_gear" : "gui.enchantment_fusion.tip.slot_secondary";
                 case 2 -> "gui.enchantment_fusion.tip.slot_catalyst";
-                default -> "gui.enchantment_fusion.tip.slot_target_fuse";
+                default -> gearMode ? "gui.enchantment_fusion.tip.slot_target_gear" : "gui.enchantment_fusion.tip.slot_target_fuse";
             };
             lines.add(Component.translatable(slotTipKey).withStyle(ChatFormatting.GRAY));
         }
 
-        if (!lines.isEmpty()) {
-            List<FormattedCharSequence> wrapped = new ArrayList<>();
-            int maxTipWidth = Math.max(160, Math.min(250, ctx.guiWidth() - 32));
-            for (Component c : lines) {
-                wrapped.addAll(this.font.split(c, maxTipWidth));
-            }
-            ctx.setTooltipForNextFrame(
-                this.font, wrapped, Optional.empty(),
-                DefaultTooltipPositioner.INSTANCE, mouseX, mouseY, false, null
-            );
+        flushTooltip(ctx, lines, mouseX, mouseY);
+    }
+
+    private void flushTooltip(GuiGraphicsExtractor ctx, List<Component> lines, int mouseX, int mouseY) {
+        if (lines.isEmpty()) {
+            return;
         }
+        List<FormattedCharSequence> wrapped = new ArrayList<>();
+        int maxTipWidth = Math.max(160, Math.min(250, ctx.guiWidth() - 32));
+        for (Component c : lines) {
+            wrapped.addAll(this.font.split(c, maxTipWidth));
+        }
+        ctx.setTooltipForNextFrame(
+            this.font, wrapped, Optional.empty(),
+            DefaultTooltipPositioner.INSTANCE, mouseX, mouseY, false, null
+        );
     }
 
     private boolean appendHoveredPickerRowTooltip(
@@ -961,56 +914,51 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             return false;
         }
         int visibleRows = gearMode ? 1 : 2;
-        int startY = gearMode ? 65 : 27;
-        int rowW = gearMode ? 104 : RIGHT_INNER_W;
-        int scroll = Math.max(0, Math.min(candidateScroll, Math.max(0, list.size() - visibleRows)));
+        int startY = gearMode ? 63 : 27;
+        int rowW = gearMode ? 74 : RIGHT_INNER_W;
+        int scroll = Math.max(0, Math.min(this.candidateScroll, Math.max(0, list.size() - visibleRows)));
         for (int r = 0; r < visibleRows; r++) {
             int idx = scroll + r;
             if (idx >= list.size()) break;
-            HitBox rowBox = new HitBox(RIGHT_INNER_X, startY + r * 17, rowW, 16);
+            HitBox rowBox = new HitBox(RIGHT_INNER_X, startY + r * 17, rowW, 15);
             if (rowBox.containsAt(this.leftPos, this.topPos, mouseX, mouseY)) {
                 EnchantCandidate cand = list.get(idx);
                 boolean isA = idx == sel.primaryIndex();
                 boolean isB = idx == sel.secondaryIndex();
                 String rolePrefix = isA ? "[A] " : (isB ? "[B] " : "\u00B7 ");
-                String srcBadge = cand.sourceSlot() == FusionStationOperations.SLOT_TARGET ? "\u25C6 " : "";
+                String srcBadge = cand.sourceSlot() == FusionStationOperations.SLOT_TARGET ? "\u25C6" : "";
                 Component fullLabel = FusionTooltipRenderer.formatEnchantmentWithLevel(registries, cand.id(), cand.level());
                 FittedText fitted = FusionGuiSkin.fitBoundedText(
                     this.font, rolePrefix + srcBadge + fullLabel.getString(),
-                    rowBox.w() - 10, 0.56F
+                    rowBox.w() - 10, 0.52F
                 );
                 if (fitted.truncated()) {
                     lines.add(fullLabel.copy().withStyle(isA ? ChatFormatting.GOLD : (isB ? ChatFormatting.AQUA : ChatFormatting.WHITE)));
                     lines.add(Component.translatable("gui.enchantment_fusion.picker.click_ab_tip").withStyle(ChatFormatting.GRAY));
                     return true;
                 }
-                return false;
             }
         }
         return false;
     }
 
     private void appendAberrantPurifyHintLines(List<Component> lines) {
-        var econ = FusionMatrixRegistry.clientView().economy();
+        var econ = FusionMatrixRegistry.snapshotForSide(true).economy();
         lines.add(Component.translatable(
             "tooltip.enchantment_fusion.aberrant_native_purify",
             econ.purifyAberrantStabilizers(),
             econ.purifyAberrantXp()
-        ).withStyle(ChatFormatting.AQUA));
+        ).withStyle(ChatFormatting.GOLD));
         lines.add(Component.translatable(
-            CetSoftBridge.isCetLoaded()
+            CetSoftBridge.isSisterModLoaded()
                 ? "tooltip.enchantment_fusion.aberrant_cet_active"
                 : "tooltip.enchantment_fusion.aberrant_cet_required"
-        ).withStyle(ChatFormatting.RED));
+        ).withStyle(CetSoftBridge.isSisterModLoaded() ? ChatFormatting.AQUA : ChatFormatting.YELLOW));
     }
 
     private void appendFlipOrSplitHoverLines(List<Component> lines, BookManageState mState, boolean isFlip) {
-        lines.add(Component.translatable(
-            isFlip ? "gui.enchantment_fusion.btn.flip" : "gui.enchantment_fusion.btn.split"
-        ).withStyle(ChatFormatting.GOLD));
-        lines.add(Component.translatable(
-            isFlip ? "gui.enchantment_fusion.tip.book_flip_explain" : "gui.enchantment_fusion.tip.book_split_explain"
-        ).withStyle(ChatFormatting.GRAY));
+        lines.add(Component.translatable(isFlip ? "gui.enchantment_fusion.btn.flip" : "gui.enchantment_fusion.btn.split")
+            .withStyle(ChatFormatting.GOLD));
         if (!mState.hasBook()) {
             lines.add(Component.translatable("gui.enchantment_fusion.tip.manage_need_book").withStyle(ChatFormatting.RED));
         } else if (mState.isAberrant()) {
@@ -1027,89 +975,70 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     private void appendEconomyTooltipLines(List<Component> lines, StationPreview preview) {
         EconomyQuote q = preview.economyQuote();
         if (q == null) {
+            lines.add(Component.translatable("gui.enchantment_fusion.preview.xp_cost", preview.xpCost())
+                .withStyle(ChatFormatting.GREEN));
             return;
         }
-        var econ = FusionMatrixRegistry.clientView().economy();
-        if (q.reagent() != ReagentKind.NONE && q.reagentCount() > 0) {
-            int have = this.minecraft != null && this.minecraft.player != null
-                ? FusionEconomyRules.countAvailableReagent(this.menu.stationContainer(), this.minecraft.player, q.reagent())
-                : 0;
-            boolean ok = canAffordPreview(preview);
+        lines.add(Component.translatable("gui.enchantment_fusion.preview.xp_cost", q.xpLevels())
+            .withStyle(ChatFormatting.GREEN));
+
+        if (q.reagentCount() > 0) {
+            Player viewer = this.menu.viewer();
+            var src = FusionEconomyRules.inspectReagentSources(
+                this.menu.stationContainer(), viewer, q.reagent(), q.reagentCount()
+            );
+            Component reagentName = Component.translatable(q.reagent().translationKey());
+            ChatFormatting col = src.totalAvailable() >= q.reagentCount() ? ChatFormatting.AQUA : ChatFormatting.RED;
             lines.add(Component.translatable(
                 "gui.enchantment_fusion.tip.fee_detail",
-                q.xpLevels(),
-                q.reagentCount(),
-                Component.translatable(q.reagent().translationKey()),
-                Math.min(999, have)
-            ).withStyle(ok ? ChatFormatting.GREEN : ChatFormatting.RED));
-
-            if (this.minecraft != null && this.minecraft.player != null) {
-                ReagentSourceBreakdown src = FusionEconomyRules.inspectReagentSources(
-                    this.menu.stationContainer(), this.minecraft.player, q.reagent(), q.reagentCount()
-                );
-                lines.add(Component.translatable(
-                    "gui.enchantment_fusion.tip.reagent_source",
-                    src.takenFromSlot(),
-                    src.takenFromBackpack()
-                ).withStyle(ChatFormatting.GRAY));
-            }
+                q.xpLevels(), q.reagentCount(), reagentName, src.totalAvailable()
+            ).withStyle(col));
+            lines.add(Component.translatable(
+                "gui.enchantment_fusion.tip.reagent_source",
+                src.takenFromSlot(), src.takenFromBackpack()
+            ).withStyle(ChatFormatting.GRAY));
         }
-        int failPct = (int) Math.round(q.failureChance() * 100.0);
-        if (failPct > 0) {
-            if (q.highRiskTier()) {
-                int minFloorPct = (int) Math.round(econ.repulsiveMinFloor() * 100.0);
-                lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_high", failPct, minFloorPct)
-                    .withStyle(ChatFormatting.LIGHT_PURPLE));
-            } else {
-                int feeSpendPct = (int) Math.round(econ.normalFailFeeRatio() * 100.0);
-                lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_normal", failPct, feeSpendPct)
-                    .withStyle(ChatFormatting.YELLOW));
-            }
+        if (q.stabilizersUsed() > 0) {
+            lines.add(Component.translatable(
+                "gui.enchantment_fusion.preview.stabilizer_used",
+                q.stabilizersUsed()
+            ).withStyle(ChatFormatting.LIGHT_PURPLE));
+        }
+
+        int failPct = Math.round((float) (q.failureChance() * 100.0D));
+        var econ = FusionMatrixRegistry.snapshotForSide(true).economy();
+        int minFloorPct = Math.round((float) (econ.repulsiveMinFloor() * 100.0D));
+        int feeSpendPct = Math.round((float) (econ.normalFailFeeRatio() * 100.0D));
+        if (q.highRiskTier()) {
+            lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_high", failPct, minFloorPct)
+                .withStyle(ChatFormatting.RED));
+        } else if (failPct > 0) {
+            lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_normal", failPct, feeSpendPct)
+                .withStyle(ChatFormatting.YELLOW));
         } else {
             lines.add(Component.translatable("gui.enchantment_fusion.tip.risk_zero").withStyle(ChatFormatting.GREEN));
         }
     }
 
-    private void notifyDisabledClick(Component reason) {
-        playClickSound(0.55F);
-        if (reason != null) {
-            this.disabledFeedbackText = reason;
-            this.disabledFeedbackUntilMs = System.currentTimeMillis() + 2400L;
-        }
-    }
-
     private Component explainPrimaryDisabledReason(StationPreview preview) {
-        if (!preview.executable()) {
-            if (preview.kind() == OperationKind.INVALID) {
-                return Component.translatable(rejectKey(preview.rejectReason()));
-            }
+        if (preview.rejectReason() != RejectReason.NONE) {
+            return Component.translatable(rejectKey(preview.rejectReason()));
+        }
+        if (preview.kind() == OperationKind.NONE) {
             return Component.translatable("gui.enchantment_fusion.preview.idle_title");
         }
-        if (!canAffordXp(preview.xpCost())) {
+        if (this.menu.viewer().experienceLevel < preview.xpCost()) {
             return Component.translatable("gui.enchantment_fusion.tip.manage_need_xp", preview.xpCost());
-        }
-        EconomyQuote q = preview.economyQuote();
-        if (q != null && q.reagent() != ReagentKind.NONE && q.reagentCount() > 0) {
-            int have = this.minecraft != null && this.minecraft.player != null
-                ? FusionEconomyRules.countAvailableReagent(this.menu.stationContainer(), this.minecraft.player, q.reagent())
-                : 0;
-            return Component.translatable(
-                "gui.enchantment_fusion.tip.fee_detail",
-                q.xpLevels(),
-                q.reagentCount(),
-                Component.translatable(q.reagent().translationKey()),
-                have
-            );
         }
         return Component.translatable("gui.enchantment_fusion.reject.invalid_combination");
     }
 
-    private Component explainBookManageDisabledReason(BookManageState mState) {
+    private Component explainManageDisabledReason(BookManageState mState) {
         if (!mState.hasBook()) {
             return Component.translatable("gui.enchantment_fusion.tip.manage_need_book");
         }
         if (mState.isAberrant()) {
-            var econ = FusionMatrixRegistry.clientView().economy();
+            var econ = FusionMatrixRegistry.snapshotForSide(true).economy();
             return Component.translatable(
                 "tooltip.enchantment_fusion.aberrant_native_purify",
                 econ.purifyAberrantStabilizers(),
@@ -1122,296 +1051,61 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         return Component.translatable("gui.enchantment_fusion.tip.manage_need_xp", mState.xpCost());
     }
 
-    // =========================================================================
-    // Input Routing (Drawer -> Ritual -> Dual-Mode Medallion -> Picker -> Sockets)
-    // =========================================================================
-
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (this.grimoireOverlay != null) {
-            return this.grimoireOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
-        }
-        int delta = scrollY > 0 ? -1 : (scrollY < 0 ? 1 : 0);
-        if (delta == 0) {
-            return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
-        }
-        StationPreview preview = this.menu.computePreview();
-        HolderLookup.Provider registries = currentRegistries();
-        if (registries == null) {
-            registries = this.menu.viewer().level().registryAccess();
-        }
-        if (this.contextDrawer.mouseScrolled(
-            this.leftPos, this.topPos, this.imageWidth, this.width,
-            preview.selection().candidates(), registries, mouseX, mouseY, delta
-        )) {
-            return true;
-        }
-
-        boolean gearMode = isGearModeActive();
-        int visibleRows = gearMode ? 1 : 2;
-        int listY = gearMode ? 65 : 27;
-        if (new HitBox(RIGHT_INNER_X, listY, RIGHT_INNER_W, visibleRows * 17).containsAt(this.leftPos, this.topPos, mouseX, mouseY)) {
-            int max = Math.max(0, preview.selection().candidates().size() - visibleRows);
-            candidateScroll = Math.max(0, Math.min(max, candidateScroll + delta));
-            return true;
-        }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
-    }
-
-    @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (this.grimoireOverlay != null) {
-            return this.grimoireOverlay.mouseClicked(event, isDoubleClick);
-        }
-
-        double mx = event.x();
-        double my = event.y();
-        int button = event.button();
-        int left = this.leftPos;
-        int top = this.topPos;
-        StationPreview preview = this.menu.computePreview();
-        HolderLookup.Provider registries = currentRegistries();
-        if (registries == null) {
-            registries = this.menu.viewer().level().registryAccess();
-        }
-        boolean gearMode = isGearModeActive();
-
-        // 0. Smart Contextual Synergy Drawer (Pull-tab & 1-click recipe auto-pick)
-        if (button == 0 && this.contextDrawer.mouseClicked(
-            left, top, this.imageWidth, this.width,
-            preview.selection().candidates(), registries, mx, my,
-            this::openEmbeddedGrimoire,
-            (cand, isPrimary) -> {
-                FusionRitualDirector.cancel();
-                EnchantCandidate curA = preview.selection().primary();
-                EnchantCandidate curB = preview.selection().secondary();
-                if (isPrimary) {
-                    if (curA == null || !cand.selectionToken().equals(curA.selectionToken())) {
-                        sendAction(StationAction.PICK_PRIMARY_A, 0, 0, cand.selectionToken());
-                    }
-                } else {
-                    if (this.menu.singleOnlyMode()) {
-                        sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, 0, "");
-                    }
-                    if (curB == null || !cand.selectionToken().equals(curB.selectionToken()) || this.menu.singleOnlyMode()) {
-                        sendAction(StationAction.PICK_SECONDARY_B, 0, 0, cand.selectionToken());
-                    }
-                }
-            }
-        )) {
-            return true;
-        }
-
-        // 1. Top-Right Embedded Grimoire Button
-        if (button == 0 && GRIMOIRE_BTN.containsAt(left, top, mx, my)) {
-            openEmbeddedGrimoire();
-            return true;
-        }
-
-        // 2. Central [⇄] Swap Medallion (Left-click = [A ▷ B] order; Right-click or Shift+Left-click = Slot 0↔1)
-        if ((button == 0 || button == 1) && SWAP_BTN.containsAt(left, top, mx, my)) {
-            FusionRitualDirector.cancel();
-            boolean swapPhysical = (button == 1) || FusionGuiSkin.isShiftHeld();
-            if (swapPhysical) {
-                if (canSwapPhysicalSlots()) {
-                    sendAction(StationAction.SWAP_SLOTS, 0, 0, "");
-                    playClickSound(1.15F);
-                    FusionGuiMicroEffects.triggerSwapPulse(left + SWAP_BTN.x() + 12, top + SWAP_BTN.y() + 12);
-                } else {
-                    notifyDisabledClick(Component.translatable("gui.enchantment_fusion.tip.swap_slots.empty"));
-                }
-            } else {
-                if (canSwapSelectionOrder(preview)) {
-                    sendAction(StationAction.SWAP_ORDER, 0, 0, "");
-                    playClickSound(1.15F);
-                    FusionGuiMicroEffects.triggerSwapPulse(left + SWAP_BTN.x() + 12, top + SWAP_BTN.y() + 12);
-                } else {
-                    notifyDisabledClick(Component.translatable("gui.enchantment_fusion.tip.swap_order.disabled"));
-                }
-            }
-            return true;
-        }
-
-        // 3. Gear Mode: Single-Enchantment Toggle & Inline Vessel Socket [⇄] / [◆] Buttons
-        if (button == 0 && gearMode) {
-            if (SINGLE_MODE_BTN.containsAt(left, top, mx, my)) {
-                FusionRitualDirector.cancel();
-                sendAction(StationAction.TOGGLE_SINGLE_MODE, this.menu.singleOnlyMode() ? 0 : 1, 0, "");
-                playClickSound(1.06F);
-                return true;
-            }
-            ItemStack host = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
-            FusedEnchantmentList socketed = host.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-            for (int s = 0; s < Math.min(2, socketed.size()); s++) {
-                FusedPair p = socketed.pairs().get(s);
-                boolean hitFlip = socketFlipBox(s).containsAt(left, top, mx, my);
-                boolean hitUnsock = socketUnsocketBox(s).containsAt(left, top, mx, my);
-                if (hitFlip || hitUnsock) {
-                    FusionRitualDirector.cancel();
-                    if (p.isAberrant()) {
-                        var econ = FusionMatrixRegistry.clientView().economy();
-                        notifyDisabledClick(Component.translatable(
-                            "tooltip.enchantment_fusion.aberrant_native_purify",
-                            econ.purifyAberrantStabilizers(),
-                            econ.purifyAberrantXp()
-                        ));
-                    } else if (!canAffordXp(preview.manageXpCost())) {
-                        notifyDisabledClick(Component.translatable("gui.enchantment_fusion.tip.manage_need_xp", preview.manageXpCost()));
-                    } else if (hitFlip) {
-                        sendAction(StationAction.FLIP_SOCKET, s, 0, p.fingerprint());
-                        playClickSound(1.12F);
-                    } else {
-                        sendAction(StationAction.UNSOCKET_OR_SPLIT, s, 0, p.fingerprint());
-                        playClickSound(0.95F);
-                    }
-                    return true;
-                }
-            }
-        }
-
-        // 4. Book Mode: Single Inline Fused-Book [Flip] / [Split] Buttons (with pair fingerprint)
-        if (button == 0 && !gearMode && !preview.executable()) {
-            BookManageState mState = evaluateBookManage(preview);
-            if (mState.hasBook() && !mState.isAberrant()) {
-                if (BOOK_FLIP_BTN.containsAt(left, top, mx, my)) {
-                    FusionRitualDirector.cancel();
-                    if (mState.canExecute()) {
-                        sendAction(StationAction.FLIP_SOCKET, 0, 0, mState.pairFingerprint());
-                        playClickSound(1.10F);
-                    } else {
-                        notifyDisabledClick(explainBookManageDisabledReason(mState));
-                    }
-                    return true;
-                }
-                if (BOOK_SPLIT_BTN.containsAt(left, top, mx, my)) {
-                    FusionRitualDirector.cancel();
-                    if (mState.canExecute()) {
-                        sendAction(StationAction.UNSOCKET_OR_SPLIT, 0, 0, mState.pairFingerprint());
-                        playClickSound(0.95F);
-                    } else {
-                        notifyDisabledClick(explainBookManageDisabledReason(mState));
-                    }
-                    return true;
-                }
-            }
-        }
-
-        // 5. Candidate Picker Row Clicks (Left=Primary [A], Right=Secondary [B], Shift+Left=Single)
-        if (button == 0 || button == 1) {
-            int visibleRows = gearMode ? 1 : 2;
-            int startY = gearMode ? 65 : 27;
-            int rowW = gearMode ? 104 : RIGHT_INNER_W;
-            List<EnchantCandidate> cands = preview.selection().candidates();
-            int curScroll = Math.max(0, Math.min(candidateScroll, Math.max(0, cands.size() - visibleRows)));
-
-            for (int r = 0; r < visibleRows; r++) {
-                int idx = curScroll + r;
-                if (idx >= cands.size()) break;
-                HitBox rowBox = new HitBox(RIGHT_INNER_X, startY + r * 17, rowW, 16);
-                if (rowBox.containsAt(left, top, mx, my)) {
-                    FusionRitualDirector.cancel();
-                    EnchantCandidate cand = cands.get(idx);
-                    if (button == 0 && gearMode && FusionGuiSkin.isShiftHeld()) {
-                        sendAction(StationAction.PICK_PRIMARY_A, idx, 0, cand.selectionToken());
-                        if (!this.menu.singleOnlyMode()) {
-                            sendAction(StationAction.TOGGLE_SINGLE_MODE, 1, 0, "");
-                        }
-                    } else {
-                        if (button == 1 && this.menu.singleOnlyMode()) {
-                            sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, 0, "");
-                        }
-                        sendAction(
-                            button == 0 ? StationAction.PICK_PRIMARY_A : StationAction.PICK_SECONDARY_B,
-                            idx, 0, cand.selectionToken()
-                        );
-                    }
-                    playClickSound(button == 0 ? 1.12F : 0.96F);
-                    FusionGuiMicroEffects.triggerCandidatePickSpark((int) mx, (int) my, button == 0);
-                    return true;
-                }
-            }
-        }
-
-        // 6. Primary 2.0s Skippable Ritual Execute Button (1st click channels, 2nd click skips immediately!)
-        if (button == 0 && EXEC_BTN.containsAt(left, top, mx, my)) {
-            triggerOrNotifyPrimaryRitual(preview, registries);
-            return true;
-        }
-
-        return super.mouseClicked(event, isDoubleClick);
-    }
-
-    private void triggerOrNotifyPrimaryRitual(StationPreview preview, HolderLookup.Provider registries) {
-        if (preview.executable() && canAffordPreview(preview)) {
-            String token = preview.expectedExecuteToken();
-            String reveal = resolveOutcomeHeadline(preview, registries);
-            boolean highRisk = preview.repulsive() || preview.instabilityChance() >= 0.20;
-            FusionRitualDirector.triggerOrSkip(
-                token,
-                reveal,
-                highRisk,
-                this.menu.tableBlockPos(),
-                () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, 0, token)
-            );
-        } else {
-            notifyDisabledClick(explainPrimaryDisabledReason(preview));
-        }
-    }
-
-    @Override
-    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-        if (this.grimoireOverlay != null) {
-            return this.grimoireOverlay.mouseDragged(event, dragX, dragY);
-        }
-        return super.mouseDragged(event, dragX, dragY);
-    }
-
-    @Override
-    public boolean mouseReleased(MouseButtonEvent event) {
-        if (this.grimoireOverlay != null) {
-            return this.grimoireOverlay.mouseReleased(event);
-        }
-        return super.mouseReleased(event);
-    }
-
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (this.grimoireOverlay != null) {
+            if (event.key() == 256) {
+                this.grimoireOverlay = null;
+                FusionGuiMicroEffects.playUiSound(SoundEvents.BOOK_PAGE_TURN, 0.9F, 0.7F);
+                return true;
+            }
             return this.grimoireOverlay.keyPressed(event);
         }
-        int key = event.key();
-        if (FusionGuiSkin.isCtrlOrCmdHeld() && key == InputConstants.KEY_G) {
+
+        if (event.key() == 256 && this.contextDrawer.isExpanded()) {
+            this.contextDrawer.close();
+            return true;
+        }
+
+        if (event.key() == 256 && FusionRitualDirector.isChanneling()) {
+            FusionRitualDirector.cancel();
+            return true;
+        }
+
+        if ((event.key() == 32 || event.key() == 257 || event.key() == 335) && FusionRitualDirector.isChanneling()) {
+            StationPreview preview = this.menu.computePreview();
+            String token = preview.expectedExecuteToken();
+            FusionRitualDirector.triggerOrSkip(
+                preview.kind(),
+                token,
+                "",
+                false,
+                this.menu.tableBlockPos(),
+                () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, token)
+            );
+            return true;
+        }
+
+        if (FusionGuiSkin.isCtrlOrCmdDown() && event.key() == 71) { // Ctrl + G -> Grimoire
             openEmbeddedGrimoire();
             return true;
         }
-        if ((key == InputConstants.KEY_SPACE || key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER)
-            && FusionRitualDirector.isChanneling()) {
+
+        if (event.key() == 257 || event.key() == 335) { // Enter -> Start Ritual
             StationPreview preview = this.menu.computePreview();
-            if (preview.executable() && canAffordPreview(preview)) {
-                HolderLookup.Provider registries = currentRegistries();
-                if (registries == null) {
-                    registries = this.menu.viewer().level().registryAccess();
-                }
-                triggerOrNotifyPrimaryRitual(preview, registries);
+            if (preview.executable()) {
+                launchOrSkipPrimaryRitual(preview);
                 return true;
             }
         }
-        if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
+
+        if (event.key() == 265 || event.key() == 264) {
             StationPreview preview = this.menu.computePreview();
-            HolderLookup.Provider registries = currentRegistries();
-            if (registries == null) {
-                registries = this.menu.viewer().level().registryAccess();
-            }
-            triggerOrNotifyPrimaryRitual(preview, registries);
-            return true;
-        }
-        if (key == InputConstants.KEY_UP || key == InputConstants.KEY_DOWN) {
             int visibleRows = isGearModeActive() ? 1 : 2;
-            int total = this.menu.computePreview().selection().candidates().size();
-            if (total > visibleRows) {
-                int max = Math.max(0, total - visibleRows);
-                int delta = key == InputConstants.KEY_UP ? -1 : 1;
-                candidateScroll = Math.max(0, Math.min(max, candidateScroll + delta));
+            int maxScroll = Math.max(0, preview.selection().candidates().size() - visibleRows);
+            if (maxScroll > 0) {
+                int delta = event.key() == 265 ? -1 : 1;
+                this.candidateScroll = Math.max(0, Math.min(maxScroll, this.candidateScroll + delta));
                 return true;
             }
         }
@@ -1419,67 +1113,244 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     }
 
     @Override
-    public boolean keyReleased(KeyEvent event) {
-        if (this.grimoireOverlay != null) {
-            return this.grimoireOverlay.keyReleased(event);
-        }
-        return super.keyReleased(event);
-    }
-
-    @Override
-    public boolean charTyped(CharacterEvent event) {
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
         if (this.grimoireOverlay != null) {
             return this.grimoireOverlay.charTyped(event);
         }
         return super.charTyped(event);
     }
 
-    private @Nullable HolderLookup.Provider currentRegistries() {
-        return this.minecraft != null && this.minecraft.level != null
-            ? this.minecraft.level.registryAccess()
-            : null;
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (this.grimoireOverlay != null) {
+            return this.grimoireOverlay.mouseClicked(event, doubleClick);
+        }
+
+        double mx = event.x();
+        double my = event.y();
+        int btn = event.button();
+        StationPreview preview = this.menu.computePreview();
+        boolean gearMode = isGearModeActive();
+
+        // 1. In-Panel Synergy Codex Badge & Popover
+        if (btn == 0 && this.contextDrawer.mouseClicked(
+            mx, my, this.leftPos, this.topPos,
+            preview.selection().candidates(),
+            (idx, secondary) -> sendAction(secondary ? StationAction.PICK_SECONDARY_B : StationAction.PICK_PRIMARY_A, idx, ""),
+            () -> {
+                if (gearMode && !this.menu.singleOnlyMode()) {
+                    sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
+                }
+            },
+            () -> {
+                if (this.menu.singleOnlyMode()) {
+                    sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
+                }
+            },
+            this::openEmbeddedGrimoire
+        )) {
+            return true;
+        }
+
+        // 2. Top-Right Embedded Grimoire Button
+        if (btn == 0 && GRIMOIRE_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
+            openEmbeddedGrimoire();
+            return true;
+        }
+
+        // 3. Dual-Mode Swap Medallion [⇄]: Left = Swap [A ▷ B] Order, Right or Shift+Left = Swap Physical Slots!
+        if (SWAP_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
+            if (FusionRitualDirector.isChanneling()) {
+                return true;
+            }
+            boolean swapSlotsRequested = (btn == 1) || (btn == 0 && FusionGuiSkin.isShiftDown());
+            if (swapSlotsRequested) {
+                if (canSwapPhysicalSlots()) {
+                    FusionGuiMicroEffects.triggerFlipFeedback(this.leftPos, this.topPos, true);
+                    sendAction(StationAction.SWAP_SLOTS, 0, "");
+                } else {
+                    notifyDisabledClick(Component.translatable("gui.enchantment_fusion.tip.swap_slots.empty"));
+                }
+                return true;
+            }
+            if (btn == 0) {
+                if (canSwapSelectionOrder(preview)) {
+                    FusionGuiMicroEffects.triggerFlipFeedback(this.leftPos, this.topPos, false);
+                    sendAction(StationAction.SWAP_ORDER, 0, "");
+                } else {
+                    notifyDisabledClick(Component.translatable("gui.enchantment_fusion.tip.swap_order.disabled"));
+                }
+                return true;
+            }
+        }
+
+        if (btn == 0 || btn == 1) {
+            if (!gearMode) {
+                BookManageState mState = evaluateBookManage(preview);
+                if (!preview.executable() && mState.hasBook() && !mState.isAberrant()) {
+                    if (BOOK_FLIP_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
+                        if (btn == 0 && mState.canExecute()) {
+                            FusionGuiMicroEffects.triggerFlipFeedback(this.leftPos, this.topPos, false);
+                            sendAction(StationAction.FLIP_SOCKET, 0, mState.pairFingerprint());
+                        } else if (btn == 0) {
+                            notifyDisabledClick(explainManageDisabledReason(mState));
+                        }
+                        return true;
+                    }
+                    if (BOOK_SPLIT_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
+                        if (btn == 0 && mState.canExecute()) {
+                            FusionGuiMicroEffects.triggerSplitFeedback(
+                                this.leftPos, this.topPos, mState.splitLeftSample(), mState.splitRightSample()
+                            );
+                            sendAction(StationAction.UNSOCKET_OR_SPLIT, 0, mState.pairFingerprint());
+                        } else if (btn == 0) {
+                            notifyDisabledClick(explainManageDisabledReason(mState));
+                        }
+                        return true;
+                    }
+                }
+            } else {
+                ItemStack host = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
+                FusedEnchantmentList socketed = host.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+                for (int idx = 0; idx < Math.min(2, socketed.size()); idx++) {
+                    FusedPair p = socketed.pairs().get(idx);
+                    boolean canAct = !p.isAberrant()
+                        && this.menu.viewer().experienceLevel >= preview.manageXpCost()
+                        && !FusionRitualDirector.isChanneling();
+                    if (socketFlipBox(idx).containsAt(this.leftPos, this.topPos, mx, my)) {
+                        if (btn == 0 && canAct) {
+                            FusionGuiMicroEffects.triggerFlipFeedback(this.leftPos, this.topPos, false);
+                            sendAction(StationAction.FLIP_SOCKET, idx, p.fingerprint());
+                        } else if (btn == 0) {
+                            notifyDisabledClick(p.isAberrant()
+                                ? Component.translatable("gui.enchantment_fusion.preview.purify_hint")
+                                : Component.translatable("gui.enchantment_fusion.tip.manage_need_xp", preview.manageXpCost()));
+                        }
+                        return true;
+                    }
+                    if (socketUnsocketBox(idx).containsAt(this.leftPos, this.topPos, mx, my)) {
+                        if (btn == 0 && canAct) {
+                            ItemStack fusedSample = new ItemStack(FusionItems.FUSED_ENCHANTED_BOOK);
+                            FusionGuiMicroEffects.triggerSplitFeedback(this.leftPos, this.topPos, host, fusedSample);
+                            sendAction(StationAction.UNSOCKET_OR_SPLIT, idx, p.fingerprint());
+                        } else if (btn == 0) {
+                            notifyDisabledClick(p.isAberrant()
+                                ? Component.translatable("gui.enchantment_fusion.preview.purify_hint")
+                                : Component.translatable("gui.enchantment_fusion.tip.manage_need_xp", preview.manageXpCost()));
+                        }
+                        return true;
+                    }
+                }
+
+                if (btn == 0 && SINGLE_MODE_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
+                    FusionRitualDirector.cancel();
+                    FusionGuiMicroEffects.playUiSound(SoundEvents.UI_BUTTON_CLICK.value(), 1.15F, 0.65F);
+                    sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
+                    return true;
+                }
+            }
+
+            // Candidate Picker Rows
+            int visibleRows = gearMode ? 1 : 2;
+            int startY = gearMode ? 63 : 27;
+            int rowW = gearMode ? 74 : RIGHT_INNER_W;
+            List<EnchantCandidate> cands = preview.selection().candidates();
+            for (int r = 0; r < visibleRows; r++) {
+                int idx = this.candidateScroll + r;
+                if (idx >= cands.size()) break;
+                HitBox rowBox = new HitBox(RIGHT_INNER_X, startY + r * 17, rowW, 15);
+                if (rowBox.containsAt(this.leftPos, this.topPos, mx, my)) {
+                    FusionRitualDirector.cancel();
+                    FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_CLUSTER_STEP, btn == 1 ? 1.25F : 1.0F, 0.7F);
+                    if (btn == 0 && gearMode && FusionGuiSkin.isShiftDown()) {
+                        if (!this.menu.singleOnlyMode()) {
+                            sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
+                        }
+                        sendAction(StationAction.PICK_PRIMARY_A, idx, "");
+                    } else if (btn == 1) {
+                        if (this.menu.singleOnlyMode()) {
+                            sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
+                        }
+                        sendAction(StationAction.PICK_SECONDARY_B, idx, "");
+                    } else {
+                        sendAction(StationAction.PICK_PRIMARY_A, idx, "");
+                    }
+                    return true;
+                }
+            }
+
+            // Primary Ritual Execute / Skip Button
+            if (btn == 0 && EXEC_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
+                if (preview.executable() || FusionRitualDirector.isChanneling()) {
+                    launchOrSkipPrimaryRitual(preview);
+                } else {
+                    notifyDisabledClick(explainPrimaryDisabledReason(preview));
+                }
+                return true;
+            }
+        }
+
+        return super.mouseClicked(event, doubleClick);
     }
 
-    private void sendAction(StationAction action, int paramA, int paramB, String expectedToken) {
-        if (ClientPlayNetworking.canSend(StationActionPayload.TYPE)) {
-            ClientPlayNetworking.send(new StationActionPayload(
-                this.menu.containerId,
-                action.wireId(),
-                paramA,
-                paramB,
-                expectedToken == null ? "" : expectedToken
-            ));
+    private void launchOrSkipPrimaryRitual(StationPreview preview) {
+        HolderLookup.Provider registries = currentRegistries();
+        if (registries == null) {
+            registries = this.menu.viewer().level().registryAccess();
         }
+        String revealTitle = buildPreviewTitleLine(preview, registries);
+        boolean highRisk = preview.economyQuote() != null && preview.economyQuote().highRiskTier();
+        String execToken = preview.expectedExecuteToken();
+
+        FusionRitualDirector.triggerOrSkip(
+            preview.kind(),
+            execToken,
+            revealTitle,
+            highRisk,
+            this.menu.tableBlockPos(),
+            () -> sendAction(StationAction.EXECUTE_PRIMARY, 0, execToken)
+        );
     }
 
-    private static void playClickSound(float pitch) {
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, pitch));
+    @Override
+    public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
+        if (this.grimoireOverlay != null) {
+            return this.grimoireOverlay.mouseScrolled(mx, my, scrollX, scrollY);
+        }
+        if (this.contextDrawer.mouseScrolled(mx, my, scrollY, this.leftPos, this.topPos)) {
+            return true;
+        }
+        StationPreview preview = this.menu.computePreview();
+        int visibleRows = isGearModeActive() ? 1 : 2;
+        int maxScroll = Math.max(0, preview.selection().candidates().size() - visibleRows);
+        if (maxScroll > 0 && mx >= this.leftPos + RIGHT_WING_X && mx <= this.leftPos + RIGHT_WING_X + RIGHT_WING_W) {
+            int delta = scrollY > 0 ? -1 : 1;
+            this.candidateScroll = Math.max(0, Math.min(maxScroll, this.candidateScroll + delta));
+            return true;
+        }
+        return super.mouseScrolled(mx, my, scrollX, scrollY);
     }
 
-    private boolean canAffordXp(int cost) {
-        if (this.minecraft == null || this.minecraft.player == null) {
-            return false;
-        }
-        return this.minecraft.player.getAbilities().instabuild || this.minecraft.player.experienceLevel >= cost;
+    @Override
+    public void onClose() {
+        FusionRitualDirector.cancel();
+        super.onClose();
     }
 
-    private boolean canAffordPreview(StationPreview preview) {
-        if (this.minecraft == null || this.minecraft.player == null) {
-            return false;
-        }
-        if (!canAffordXp(preview.xpCost())) {
-            return false;
-        }
-        return FusionEconomyRules.canAfford(this.menu.stationContainer(), this.minecraft.player, preview.economyQuote());
+    private void sendAction(StationAction action, int index, String token) {
+        ClientPlayNetworking.send(
+            new StationActionPayload(this.menu.containerId, action, index, 0, token == null ? "" : token)
+        );
     }
 
     private static String primaryActionLabelKey(OperationKind kind) {
         return switch (kind) {
-            case EXPAND_VESSEL -> "gui.enchantment_fusion.btn.expand_vessel";
-            case TOP_UP_LEVEL -> "gui.enchantment_fusion.btn.top_up";
+            case FUSE_NEW_BOOK -> "gui.enchantment_fusion.btn.fuse";
             case SOCKET_FUSED_BOOK -> "gui.enchantment_fusion.btn.inscribe";
+            case FUSE_INTO_GEAR -> "gui.enchantment_fusion.btn.fuse_gear";
+            case UPGRADE_GEAR_PAIR -> "gui.enchantment_fusion.btn.top_up";
+            case EXPAND_VESSEL -> "gui.enchantment_fusion.btn.expand_vessel";
             case INSCRIBE_SINGLE_CROSS -> "gui.enchantment_fusion.btn.inscribe_cross";
-            case FUSE_ONTO_GEAR -> "gui.enchantment_fusion.btn.fuse_gear";
             case PURIFY_ABERRANT -> "gui.enchantment_fusion.btn.purify";
             default -> "gui.enchantment_fusion.btn.fuse";
         };

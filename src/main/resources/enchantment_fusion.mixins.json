@@ -5,6 +5,7 @@
   "plugin": "enchantment_fusion.mixin.FusionMixinConfigPlugin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "AbstractArrowAccessor",
     "AnvilCrossDomainGuardMixin",
     "CetCleanseMechanicsBridgeMixin",
     "CetCleanseQuotesBridgeMixin",

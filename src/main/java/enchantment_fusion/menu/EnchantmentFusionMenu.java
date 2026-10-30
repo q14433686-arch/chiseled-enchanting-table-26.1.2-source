@@ -32,32 +32,32 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Container menu for the Cutaway Split-Wing Auto-Morphing Enchantment Fusion Altar ({@code 384 x 218}):
+ * Container menu for the Compact Split-Wing Live-Stage Enchantment Fusion Altar ({@code 304 x 218}):
  * <ul>
- *   <li>Left Wing ({@code 0..116}): Slot 0 Primary [A], [⇄] Medallion, Slot 1 Secondary [B],
+ *   <li>Left Wing ({@code 4..92}): Slot 0 Primary [A], [⇄] Medallion, Slot 1 Secondary [B],
  *       Slot 2 Catalyst, Slot 3 Host Gear / Output Book</li>
- *   <li>Center Archway ({@code 116..232}): Open 3D Cutaway Viewport framing the live 3D Fusion Altar</li>
- *   <li>Right Wing ({@code 232..384}): Auto-Morphing Resonance Panel + Smart Context Drawer Tab</li>
- *   <li>Bottom Pedestal ({@code 103..281}): Player 3x9 Inventory + Hotbar</li>
+ *   <li>Center Live Stage ({@code 96..184}): Scissored Real-Time 3D Fusion Altar &amp; 8-Scene Stage Renderer</li>
+ *   <li>Right Wing ({@code 188..300}): Auto-Morphing Resonance Panel + In-Panel Synergy Codex Popover</li>
+ *   <li>Bottom Pedestal ({@code 63..241}): Player 3x9 Inventory + Hotbar</li>
  * </ul>
  * Syncs {@code uiState[0..3]} ({@code activeTab}, {@code selectedPrimaryA}, {@code selectedSecondaryB},
  * and independent {@code singleOnlyMode}) without sentinel overloading (GUI-3 / GUI-4).
  */
 public final class EnchantmentFusionMenu extends AbstractContainerMenu {
-    public static final int GUI_WIDTH = 384;
+    public static final int GUI_WIDTH = 304;
     public static final int GUI_HEIGHT = 218;
     public static final int TAB_BAR_H = 0;
 
-    public static final int SLOT_PRIMARY_X = 18;
-    public static final int SLOT_PRIMARY_Y = 44;
-    public static final int SLOT_SECONDARY_X = 82;
-    public static final int SLOT_SECONDARY_Y = 44;
-    public static final int SLOT_CATALYST_X = 50;
-    public static final int SLOT_CATALYST_Y = 73;
-    public static final int SLOT_TARGET_X = 50;
-    public static final int SLOT_TARGET_Y = 101;
+    public static final int SLOT_PRIMARY_X = 14;
+    public static final int SLOT_PRIMARY_Y = 32;
+    public static final int SLOT_SECONDARY_X = 64;
+    public static final int SLOT_SECONDARY_Y = 32;
+    public static final int SLOT_CATALYST_X = 14;
+    public static final int SLOT_CATALYST_Y = 78;
+    public static final int SLOT_TARGET_X = 64;
+    public static final int SLOT_TARGET_Y = 78;
 
-    public static final int PLAYER_INV_X = 111;
+    public static final int PLAYER_INV_X = 71;
     public static final int PLAYER_INV_Y = 136;
 
     public static final int NO_SELECTION = -1;

@@ -193,18 +193,20 @@ public final class ClientSmoke implements ClientModInitializer {
                     msg -> System.out.println("Saved fusion UI screenshot: " + msg.getString())
                 );
                 Rect2i b = screen.guiBounds();
-                // Open top-right embedded Fusion Grimoire button (360..378, 8..26) — container MUST remain open!
-                click(screen, b.getX() + 369, b.getY() + 16);
+                require(b.getWidth() == 304 && b.getHeight() == 218, "Expected compact 304x218 Split-Wing Live-Stage bounds");
+                // Open top-right embedded Fusion Grimoire button (279..297, 8..24) — container MUST remain open!
+                click(screen, b.getX() + 288, b.getY() + 16);
                 require(client.screen instanceof EnchantmentFusionScreen, "Embedded Grimoire must not replace EnchantmentFusionScreen");
                 boolean escHandled = screen.keyPressed(new KeyEvent(256, 0, 0));
                 require(escHandled, "Escape should close embedded Grimoire overlay cleanly");
 
-                // Toggle Smart Context Drawer pull-tab (382..406, 16..60) open & closed
-                click(screen, b.getX() + 394, b.getY() + 36);
-                click(screen, b.getX() + 394, b.getY() + 36);
+                // Toggle in-panel Synergy Popover badge (253..277, 8..24) open & closed (never expands into JEI/REI!)
+                click(screen, b.getX() + 265, b.getY() + 16);
+                require(screen.guiBounds().getWidth() == 304, "Synergy popover must stay inside 304px bounds");
+                click(screen, b.getX() + 265, b.getY() + 16);
 
-                // Left-Click Central [⇄] Swap Medallion (46..70, 40..64) -> swaps [A ▷ B] order
-                click(screen, b.getX() + 58, b.getY() + 52);
+                // Left-Click Central [⇄] Swap Medallion (38..58, 29..49) -> swaps [A ▷ B] order
+                click(screen, b.getX() + 48, b.getY() + 39);
                 next(2, 10);
             }
             case 2 -> {
@@ -215,7 +217,7 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 58, b.getY() + 52);
+                click(screen, b.getX() + 48, b.getY() + 39);
                 next(3, 10);
             }
             case 3 -> {
@@ -226,8 +228,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 }
                 Rect2i b = screen.guiBounds();
                 // Click primary 2.0s ritual button twice (1st starts channeling, 2nd skips immediately!)
-                click(screen, b.getX() + 308, b.getY() + 106);
-                click(screen, b.getX() + 308, b.getY() + 106);
+                click(screen, b.getX() + 244, b.getY() + 105);
+                click(screen, b.getX() + 244, b.getY() + 105);
                 next(4, 14);
             }
             case 4 -> {
@@ -275,8 +277,8 @@ public final class ClientSmoke implements ClientModInitializer {
                     return;
                 }
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 308, b.getY() + 106);
-                click(screen, b.getX() + 308, b.getY() + 106);
+                click(screen, b.getX() + 244, b.getY() + 105);
+                click(screen, b.getX() + 244, b.getY() + 105);
                 next(7, 14);
             }
             case 7 -> {
@@ -289,8 +291,8 @@ public final class ClientSmoke implements ClientModInitializer {
                 int stabilizersBeforeFlip = screen.getMenu().getSlot(2).getItem().getCount();
                 require(stabilizersBeforeFlip > 0, "Expected leftover Resonance Stabilizers in Slot 2 before Flip");
                 Rect2i b = screen.guiBounds();
-                // Click inline [⇄] Flip button on Socket Card 0 (339..355, 28..42)
-                click(screen, b.getX() + 347, b.getY() + 35);
+                // Click inline [⇄] Flip button on Socket Card 0 (261..276, 28..42)
+                click(screen, b.getX() + 268, b.getY() + 35);
                 next(8, 14);
             }
             case 8 -> {
@@ -346,8 +348,8 @@ public final class ClientSmoke implements ClientModInitializer {
                     "Expected Auto-Smelt Pickaxe preview for Fire Aspect II on Diamond Pickaxe"
                 );
                 Rect2i b = screen.guiBounds();
-                click(screen, b.getX() + 308, b.getY() + 106);
-                click(screen, b.getX() + 308, b.getY() + 106);
+                click(screen, b.getX() + 244, b.getY() + 105);
+                click(screen, b.getX() + 244, b.getY() + 105);
                 next(10, 14);
             }
             case 10 -> {
@@ -539,6 +541,40 @@ public final class ClientSmoke implements ClientModInitializer {
                             enchantment_fusion.mechanics.ProjectilePathTracker.cachedPathCount() == 0,
                             "Expected ProjectilePathTracker.flushAll() to clear cached paths"
                         );
+
+                        // 0.6.0 Overhaul: Verify Bow fan_volley spawns 3 real arrows (2 flanking CREATIVE_ONLY),
+                        // sun_piercer sets real Arrow pierceLevel, and swift_draw accelerates draw speed!
+                        ItemStack fanBow = new ItemStack(Items.BOW, 1);
+                        fanBow.set(
+                            FusionDataComponents.TRANSMUTED_ENCHANTS,
+                            Map.of("minecraft:multishot", 1, "minecraft:piercing", 2, "minecraft:quick_charge", 3)
+                        );
+                        require(
+                            CrossDomainTransmutations.getEffectiveUseSpeedBoost(fanBow) == 3,
+                            "Expected Bow swift_draw III to report 3x draw acceleration boost"
+                        );
+                        net.minecraft.world.entity.projectile.arrow.Arrow centerArrow = new net.minecraft.world.entity.projectile.arrow.Arrow(
+                            sp.level(), sp, new ItemStack(Items.ARROW), fanBow.copyWithCount(1)
+                        );
+                        centerArrow.shootFromRotation(sp, sp.getXRot(), sp.getYRot(), 0.0F, 3.0F, 0.0F);
+                        sp.level().addFreshEntity(centerArrow);
+                        var spawnedArrows = sp.level().getEntitiesOfClass(
+                            net.minecraft.world.entity.projectile.arrow.Arrow.class,
+                            sp.getBoundingBox().inflate(8.0D),
+                            a -> a.isAlive() && a.getOwner() == sp
+                        );
+                        require(
+                            spawnedArrows.size() == 3,
+                            "Expected Bow fan_volley to spawn 3 real Arrow entities (1 center + 2 flanking), got " + spawnedArrows.size()
+                        );
+                        require(
+                            centerArrow.getPierceLevel() >= 2,
+                            "Expected Bow sun_piercer II to grant real AbstractArrow pierceLevel >= 2, got " + centerArrow.getPierceLevel()
+                        );
+                        for (var a : spawnedArrows) {
+                            a.discard();
+                        }
+                        enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
 
                         serverReadyFlag = true;
                     } catch (Throwable t) {

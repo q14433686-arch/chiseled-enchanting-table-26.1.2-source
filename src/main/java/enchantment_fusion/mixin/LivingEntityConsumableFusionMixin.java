@@ -22,8 +22,33 @@ public abstract class LivingEntityConsumableFusionMixin {
     @Shadow
     protected ItemStack useItem;
 
+    @Shadow
+    protected int useItemRemaining;
+
+    @Shadow
+    public abstract boolean isUsingItem();
+
     @Unique
     private ItemStack ef$consumableSnapshot = ItemStack.EMPTY;
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void ef$accelerateBowAndShieldUseSpeed(CallbackInfo ci) {
+        if (!this.isUsingItem() || this.useItem.isEmpty() || this.useItemRemaining <= 2) {
+            return;
+        }
+        int boostLv = CrossDomainTransmutations.getEffectiveUseSpeedBoost(this.useItem);
+        if (boostLv <= 0) {
+            return;
+        }
+        LivingEntity self = (LivingEntity) (Object) this;
+        int tc = self.tickCount;
+        boolean stepExtra = boostLv >= 3
+            || (boostLv == 2 && (tc & 1) == 0)
+            || (boostLv == 1 && (tc & 3) == 0);
+        if (stepExtra) {
+            this.useItemRemaining = Math.max(1, this.useItemRemaining - 1);
+        }
+    }
 
     @Inject(method = "completeUsingItem", at = @At("HEAD"))
     private void ef$beforeCompleteUsingItem(CallbackInfo ci) {

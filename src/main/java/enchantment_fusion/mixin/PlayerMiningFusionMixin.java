@@ -39,24 +39,20 @@ public abstract class PlayerMiningFusionMixin {
         ItemStack tool = self.getMainHandItem();
 
         float mult = 1.0F;
-        if (ef$hasEquippedSignature(self, "boundless_mining")) {
+        if (ef$hasEquippedSignature(self, "ocean_breath_mine")) {
             if (!self.onGround()) {
                 mult *= 5.0F;
             }
             if (self.isEyeInFluid(FluidTags.WATER)) {
                 mult *= 5.0F;
             }
-        }
-        if (!tool.isEmpty() && SignaturePairs.stackHasSignature(tool, "liquid_cutter")
-            && state.getDestroySpeed(self.level(), BlockPos.ZERO) >= 3.0F) {
-            mult *= 1.85F;
+            if (self.isInWaterOrRain()) {
+                mult *= 1.35F;
+            }
         }
         if (!tool.isEmpty() && SignaturePairs.stackHasSignature(tool, "geyser_bore")
             && state.getDestroySpeed(self.level(), BlockPos.ZERO) >= 3.0F) {
             mult *= 1.65F;
-        }
-        if (!tool.isEmpty() && SignaturePairs.stackHasSignature(tool, "ocean_breath_mine") && self.isInWaterOrRain()) {
-            mult *= 1.35F;
         }
         if (!tool.isEmpty() && SignaturePairs.stackHasSignature(tool, "soulburn_elegy_curse")) {
             mult *= 1.25F;

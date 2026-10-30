@@ -67,7 +67,7 @@ public final class EnchantmentFusionTableRenderer
             new ItemStackRenderState(),
             new ItemStackRenderState()
         };
-        public List<FusionAltarVfx.BillboardQuad> vfxQuads = List.of();
+        public FusionAltarVfx.AltarVfxBatch vfxBatch = FusionAltarVfx.AltarVfxBatch.EMPTY;
         public int satelliteCount;
         public float hoverTicks;
         public float surgeProgress;
@@ -217,7 +217,7 @@ public final class EnchantmentFusionTableRenderer
             }
         }
 
-        state.vfxQuads = FusionAltarVfx.extractQuads(
+        state.vfxBatch = FusionAltarVfx.extractBatch(
             blockEntity.getBlockPos(),
             state.hoverTicks,
             state.activeBlend,
@@ -338,7 +338,7 @@ public final class EnchantmentFusionTableRenderer
             }
         }
 
-        // 4. Rising Gold/Cyan Trajectory Ribbon Particles & Brazier Flame/Spark Billboards
-        FusionAltarVfx.submitQuads(poseStack, collector, state.vfxQuads);
+        // 4. Continuous Rising Gold/Cyan Ribbon Mesh & Brazier Flame/Spark Billboards
+        FusionAltarVfx.submitBatch(poseStack, collector, state.vfxBatch);
     }
 }

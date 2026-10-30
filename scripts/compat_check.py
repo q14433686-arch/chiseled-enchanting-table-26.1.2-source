@@ -121,11 +121,39 @@ def check_economy_json() -> None:
         raise AssertionError("purify_aberrant_stabilizers must be >= 1")
 
 
+def check_signatures_and_transmutations_json() -> None:
+    sp = ROOT / "src/main/resources/data/enchantment_fusion/enchantment_fusion/signatures.json"
+    tp = ROOT / "src/main/resources/data/enchantment_fusion/enchantment_fusion/transmutations.json"
+    sigs = json.loads(sp.read_text(encoding="utf-8"))
+    trans = json.loads(tp.read_text(encoding="utf-8"))
+    if sigs.get("schema_version") != 1 or len(sigs.get("signatures", {})) < 140:
+        raise AssertionError("signatures.json schema_version=1 & >= 140 curated signatures required")
+    if trans.get("schema_version") != 1 or len(trans.get("variants", {})) < 110:
+        raise AssertionError("transmutations.json schema_version=1 & >= 110 curated variants required")
+
+    for sub in (
+        ROOT / "src/main/java/enchantment_fusion/mechanics/signatures",
+        ROOT / "src/main/java/enchantment_fusion/mechanics/transmute",
+    ):
+        for jf in sorted(sub.glob("*.java")):
+            n = len(jf.read_text(encoding="utf-8").splitlines())
+            if n >= 500:
+                raise AssertionError(f"Domain handler exceeds 500-line budget ({n}): {jf}")
+    for facade in (
+        ROOT / "src/main/java/enchantment_fusion/mechanics/SignaturePairs.java",
+        ROOT / "src/main/java/enchantment_fusion/mechanics/CrossDomainTransmutations.java",
+    ):
+        n = len(facade.read_text(encoding="utf-8").splitlines())
+        if n >= 500:
+            raise AssertionError(f"Facade exceeds 500-line budget ({n}): {facade}")
+
+
 def main() -> int:
     check_matrix_json()
     check_economy_json()
+    check_signatures_and_transmutations_json()
     check_recipes_and_loot()
-    print("ok: compat_check Tier 1 passed (8x14 matrix + economy v2 schema + 26.1.2 recipes/loot/tags)")
+    print("ok: compat_check Tier 1 passed (8x14 matrix + economy v2 + curated signatures/transmutations + <500L handlers)")
     return 0
 
 

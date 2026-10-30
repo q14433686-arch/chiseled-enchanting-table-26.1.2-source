@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import enchantment_fusion.EnchantmentFusion;
+import enchantment_fusion.mechanics.signatures.SignatureCatalog;
+import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -30,6 +32,10 @@ public final class FusionDataLoader implements SimpleSynchronousResourceReloadLi
         EnchantmentFusion.id("enchantment_fusion/repulsive_pairs.json");
     private static final Identifier ECONOMY_PATH =
         EnchantmentFusion.id("enchantment_fusion/economy.json");
+    private static final Identifier SIGNATURES_PATH =
+        EnchantmentFusion.id("enchantment_fusion/signatures.json");
+    private static final Identifier TRANSMUTATIONS_PATH =
+        EnchantmentFusion.id("enchantment_fusion/transmutations.json");
 
     public static void init() {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new FusionDataLoader());
@@ -46,8 +52,12 @@ public final class FusionDataLoader implements SimpleSynchronousResourceReloadLi
             JsonObject matrixObj = readMergedJsonStack(manager, MATRIX_PROFILES_PATH);
             JsonObject repulsiveObj = readMergedJsonStack(manager, REPULSIVE_PAIRS_PATH);
             JsonObject economyObj = readMergedJsonStack(manager, ECONOMY_PATH);
+            JsonObject signaturesObj = readMergedJsonStack(manager, SIGNATURES_PATH);
+            JsonObject transmutesObj = readMergedJsonStack(manager, TRANSMUTATIONS_PATH);
             FusionMatrixRegistry.Snapshot staged = FusionMatrixRegistry.parseFromJson(matrixObj, repulsiveObj, economyObj);
             FusionMatrixRegistry.publish(staged);
+            SignatureCatalog.reloadFromJson(signaturesObj);
+            TransmuteCatalog.reloadFromJson(transmutesObj);
             EnchantmentFusion.LOGGER.info(
                 "Loaded Enchantment Fusion matrix ({} profiles, {} exclusive groups)",
                 staged.profiles().size(),

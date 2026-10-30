@@ -194,7 +194,8 @@ final class FusionRuleEngineTest {
                 Set<String> keys = obj.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toSet());
                 if (baselineKeys == null) {
                     baselineKeys = keys;
-                    assertTrue(keys.size() >= 780, "Expected comprehensive 0.5.0 translation key set");
+                    assertTrue(keys.size() >= 750, "Expected comprehensive 0.6.0 curated translation key set");
+                    assertEquals(150, SignaturePairs.allUniqueSignatures().size());
                     for (var sig : SignaturePairs.allUniqueSignatures()) {
                         assertTrue(keys.contains(sig.titleKey()), "Missing signature title key: " + sig.titleKey());
                         assertTrue(keys.contains(sig.descKey()), "Missing signature desc key: " + sig.descKey());
@@ -203,7 +204,7 @@ final class FusionRuleEngineTest {
                         assertTrue(keys.contains(AberrantRegistry.titleKey(abId)), "Missing aberrant title key: " + abId);
                         assertTrue(keys.contains(AberrantRegistry.descKey(abId)), "Missing aberrant desc key: " + abId);
                     }
-                    assertEquals(140, CrossDomainTransmutations.allVariants().size());
+                    assertEquals(116, CrossDomainTransmutations.allVariants().size());
                     for (var tv : CrossDomainTransmutations.allVariants()) {
                         assertTrue(keys.contains(tv.titleKey()), "Missing transmute title key: " + tv.titleKey());
                         assertTrue(keys.contains(tv.descKey()), "Missing transmute desc key: " + tv.descKey());

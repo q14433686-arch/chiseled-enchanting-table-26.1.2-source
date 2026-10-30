@@ -118,6 +118,9 @@ def check_locales() -> None:
                 raise AssertionError(f"Forbidden legacy term '{bad}' in zh_cn:{k}")
 
     pat = re.compile(r'translatable\(\s*"([^"]+)"')
+    ns_lit_pat = re.compile(
+        r'"((?:gui|tooltip|signature|transmute|item|block|effect|advancements)\.enchantment_fusion\.[a-z0-9_.-]+)"'
+    )
     for src_dir in (ROOT / "src/main/java", ROOT / "src/client/java"):
         for jf in src_dir.rglob("*.java"):
             txt = jf.read_text(encoding="utf-8")
@@ -125,6 +128,12 @@ def check_locales() -> None:
                 key = m.group(1)
                 if key not in expected:
                     raise AssertionError(f"Unlocalized key {key} referenced in {jf}")
+            for m in ns_lit_pat.finditer(txt):
+                key = m.group(1)
+                if key.endswith("."):
+                    continue
+                if key not in expected:
+                    raise AssertionError(f"Unlocalized literal key {key} referenced in {jf}")
 
 
 def check_gui_no_solid_fills() -> None:

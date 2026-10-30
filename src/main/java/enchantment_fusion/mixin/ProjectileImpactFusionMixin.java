@@ -94,6 +94,37 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
         }
     }
 
+    @Inject(method = "shoot(DDDFF)V", at = @At("TAIL"))
+    private void ef$afterProjectileShot(
+        double x,
+        double y,
+        double z,
+        float velocity,
+        float inaccuracy,
+        CallbackInfo ci
+    ) {
+        Projectile self = (Projectile) (Object) this;
+        if (!(self.level() instanceof ServerLevel serverLevel) || !(self.getOwner() instanceof ServerPlayer shooter)) {
+            return;
+        }
+        if (self.getType() == EntityType.FISHING_BOBBER) {
+            return;
+        }
+        ItemStack weapon = this.ef$launchWeapon;
+        if (weapon == null || weapon.isEmpty()) {
+            ItemStack w = self.getWeaponItem();
+            if (w != null && !w.isEmpty()) {
+                weapon = w.copyWithCount(1);
+                this.ef$launchWeapon = weapon;
+            }
+        }
+        if (weapon != null && !weapon.isEmpty()) {
+            CrossDomainTransmutations.onProjectileLaunched(
+                serverLevel, self, shooter, weapon, x, y, z, velocity, inaccuracy
+            );
+        }
+    }
+
     @Unique
     private static boolean isProjectileLauncher(ItemStack stack) {
         return stack.getItem() instanceof BowItem

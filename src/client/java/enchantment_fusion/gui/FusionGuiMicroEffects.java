@@ -14,13 +14,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 
 /**
- * Pure PNG sprite micro-animation &amp; visual feedback engine tuned for the
- * {@code 384 x 218} Cutaway Split-Wing Fusion Altar:
- * <ul>
- *   <li>Counter-rotating rune halos behind Left Wing Pedestal &amp; Center Cutaway Viewport</li>
- *   <li>Converging gold/cyan arcane sparks during the 2.0s channeling sequence</li>
- *   <li>Climax shockwave rings bursting from the Center 3D Altar Arch &amp; Output Pedestal</li>
- * </ul>
+ * Pure PNG sprite micro-animation &amp; visual feedback engine tuned for the compact
+ * {@code 304 x 218} Split-Wing Live-Stage Fusion Altar, featuring bespoke particle &amp; sound
+ * choreography per station operation.
  */
 public final class FusionGuiMicroEffects {
     private static final class SpriteParticle {
@@ -91,7 +87,7 @@ public final class FusionGuiMicroEffects {
         notifyDiscoveryUnlocked();
         playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.42F, 0.75F);
         if (Minecraft.getInstance().screen instanceof EnchantmentFusionScreen) {
-            spawnSparkBurst(stationOriginX + 369, stationOriginY + 16, 8, 52.0F, 520L);
+            spawnSparkBurst(stationOriginX + 288, stationOriginY + 16, 8, 52.0F, 520L);
         }
     }
 
@@ -117,133 +113,123 @@ public final class FusionGuiMicroEffects {
         return Math.round(Mth.cos(now * 0.125F) * shakeAmplitude * 0.75F * Mth.clamp(decay, 0.0F, 1.0F));
     }
 
-    public static void triggerStationFeedback(int eventKind, int stationOriginX, int stationOriginY) {
+    /** Instant UI &amp; stage feedback when the player triggers Flip / Swap Order / Swap Slots. */
+    public static void triggerFlipFeedback(int originX, int originY, boolean physicalSlotSwap) {
+        FusionLiveStageRenderer.triggerInstantFlip();
+        int swapX = originX + 48;
+        int swapY = originY + 39;
+        int stageX = originX + 140;
+        int stageY = originY + 48;
+        spawnShockwave(swapX, swapY, 10.0F, 34.0F, 280L, physicalSlotSwap ? -4.5F : 4.5F);
+        spawnSparkBurst(stageX, stageY, 7, 46.0F, 340L);
+        playUiSound(
+            physicalSlotSwap ? SoundEvents.BOOK_PAGE_TURN : SoundEvents.AMETHYST_CLUSTER_STEP,
+            physicalSlotSwap ? 1.18F : 1.34F,
+            0.72F
+        );
+    }
+
+    /** Instant UI &amp; stage feedback when the player splits a Fused Book or unsockets a Vessel gem. */
+    public static void triggerSplitFeedback(int originX, int originY, net.minecraft.world.item.ItemStack a, net.minecraft.world.item.ItemStack b) {
+        FusionLiveStageRenderer.triggerInstantSplit(a, b);
+        int stageX = originX + 140;
+        int stageY = originY + 48;
+        spawnShockwave(stageX, stageY, 8.0F, 48.0F, 360L, -3.2F);
+        spawnSparkBurst(stageX - 14, stageY, 6, 54.0F, 420L);
+        spawnSparkBurst(stageX + 14, stageY, 6, 54.0F, 420L);
+        playUiSound(SoundEvents.SHEEP_SHEAR, 1.38F, 0.48F);
+        playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.26F, 0.68F);
+    }
+
+    public static void triggerStationFeedback(int eventKind, int originX, int originY) {
         if (!(Minecraft.getInstance().screen instanceof EnchantmentFusionScreen)) {
             return;
         }
-        int pedX = stationOriginX + 58;
-        int pedY = stationOriginY + 82;
-        int outY = stationOriginY + 110;
-        int archCenterX = stationOriginX + 174;
-        int archCenterY = stationOriginY + 65;
+        int outX = originX + 72;
+        int outY = originY + 86;
+        int stageX = originX + 140;
+        int stageY = originY + 50;
 
         switch (eventKind) {
             case FusionNetworking.VISUAL_FUSE_SUCCESS -> {
-                spawnShockwave(archCenterX, archCenterY, 18.0F, 88.0F, 520L, 2.6F);
-                spawnShockwave(pedX, outY, 14.0F, 64.0F, 440L, -2.5F);
-                spawnSparkBurst(archCenterX, archCenterY, 18, 96.0F, 660L);
-                spawnSparkBurst(pedX, outY, 12, 74.0F, 520L);
-                triggerShake(2.2F, 190L);
+                spawnShockwave(stageX, stageY, 16.0F, 76.0F, 500L, 2.6F);
+                spawnShockwave(outX, outY, 12.0F, 52.0F, 420L, -2.5F);
+                spawnSparkBurst(stageX, stageY, 16, 86.0F, 620L);
+                spawnSparkBurst(outX, outY, 10, 64.0F, 480L);
+                triggerShake(2.0F, 180L);
             }
             case FusionNetworking.VISUAL_FUSE_ABERRANT -> {
-                spawnShockwave(archCenterX, archCenterY, 20.0F, 98.0F, 620L, -4.4F);
-                spawnShockwave(pedX, outY, 16.0F, 72.0F, 520L, 4.0F);
-                spawnSparkBurst(archCenterX, archCenterY, 24, 112.0F, 740L);
-                triggerShake(4.0F, 290L);
+                spawnShockwave(stageX, stageY, 18.0F, 88.0F, 600L, -4.4F);
+                spawnShockwave(outX, outY, 14.0F, 64.0F, 500L, 4.0F);
+                spawnSparkBurst(stageX, stageY, 22, 110.0F, 740L);
+                triggerShake(4.2F, 300L);
             }
-            case FusionNetworking.VISUAL_FUSE_FAIL -> {
-                spawnShockwave(pedX, pedY, 24.0F, 8.0F, 320L, 3.0F);
-                spawnSparkBurst(pedX, pedY, 9, 48.0F, 420L);
-                triggerShake(2.8F, 220L);
+            case FusionNetworking.VISUAL_FUSE_FLUCTUATED -> {
+                spawnShockwave(stageX, stageY, 14.0F, 50.0F, 360L, -2.0F);
+                spawnSparkBurst(stageX, stageY, 8, 52.0F, 420L);
+                triggerShake(2.4F, 210L);
             }
-            case FusionNetworking.VISUAL_FLIP_ORDER -> {
-                spawnShockwave(stationOriginX + 58, stationOriginY + 52, 12.0F, 54.0F, 420L, 3.8F);
-                spawnSparkBurst(stationOriginX + 27, stationOriginY + 52, 7, 50.0F, 440L);
-                spawnSparkBurst(stationOriginX + 90, stationOriginY + 52, 7, 50.0F, 440L);
-            }
-            case FusionNetworking.VISUAL_SPLIT_EXTRACT -> {
-                spawnShockwave(pedX, outY, 12.0F, 56.0F, 420L, -3.0F);
-                spawnSparkBurst(pedX, outY, 12, 72.0F, 520L);
+            case FusionNetworking.VISUAL_UTILITY_DONE -> {
+                spawnShockwave(stageX, stageY, 12.0F, 48.0F, 340L, 2.4F);
+                spawnSparkBurst(outX, outY, 8, 54.0F, 400L);
             }
             default -> {}
         }
     }
 
-    public static void triggerSwapPulse(int centerX, int centerY) {
-        spawnShockwave(centerX, centerY, 10.0F, 44.0F, 340L, 4.5F);
-        spawnSparkBurst(centerX - 28, centerY, 5, 42.0F, 360L);
-        spawnSparkBurst(centerX + 28, centerY, 5, 42.0F, 360L);
-        playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.32F, 0.70F);
-    }
-
-    public static void triggerCandidatePickSpark(int rowCenterX, int rowCenterY, boolean isPrimary) {
-        spawnSparkBurst(rowCenterX, rowCenterY, 5, 36.0F, 320L);
-        playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, isPrimary ? 1.18F : 1.36F, 0.55F);
-    }
-
-    public static void triggerGrimoireSparkle(int centerX, int centerY) {
-        spawnSparkBurst(centerX, centerY, 6, 40.0F, 420L);
-        playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.28F, 0.50F);
-    }
-
     public static void renderPedestalResonanceBackdrop(
         GuiGraphicsExtractor ctx,
-        int left,
-        int top,
+        int leftPos,
+        int topPos,
         boolean executable,
-        boolean highRiskOrChanneling
+        boolean highRisk,
+        float channelProgress
     ) {
-        stationOriginX = left;
-        stationOriginY = top;
         long now = System.currentTimeMillis();
         float tSec = (now % 60000L) / 1000.0F;
-        boolean channeling = FusionRitualDirector.isChanneling();
 
-        if (executable || channeling) {
-            float speed = channeling ? 3.2F : (highRiskOrChanneling ? 1.65F : 0.78F);
-            float angle = tSec * speed;
-            float breath = 1.0F + 0.08F * Mth.sin(tSec * (channeling ? 8.5F : 2.8F));
+        int pedCenterX = leftPos + 48;
+        int pedCenterY = topPos + 62;
+        int stageCenterX = leftPos + 140;
+        int stageCenterY = topPos + 50;
 
-            drawRotatedSprite(
-                ctx, FusionGuiSkin.VFX_RUNE_HALO,
-                left + 58.0F, top + 109.0F,
-                36.0F * breath, angle
-            );
-            drawRotatedSprite(
-                ctx, FusionGuiSkin.VFX_RUNE_HALO,
-                left + 58.0F, top + 52.0F,
-                26.0F * breath, -angle * 1.25F
-            );
+        float spinSpeed = channelProgress > 0.0F
+            ? 2.8F + channelProgress * 4.5F
+            : (executable ? (highRisk ? 1.55F : 0.80F) : 0.24F);
+        float pulse = executable ? (1.0F + 0.06F * Mth.sin(tSec * (highRisk ? 6.5F : 2.8F))) : 0.90F;
+        float size = (executable ? 46.0F : 36.0F) * pulse;
 
-            if (channeling) {
-                float p = FusionRitualDirector.channelProgress();
-                drawRotatedSprite(
-                    ctx, FusionGuiSkin.VFX_RUNE_HALO,
-                    left + 174.0F, top + 115.0F,
-                    (18.0F + 20.0F * p) * breath, angle * 1.6F
-                );
-            }
+        drawRotatedSprite(ctx, FusionGuiSkin.VFX_RUNE_HALO, pedCenterX, pedCenterY, size, tSec * spinSpeed);
 
-            long interval = channeling ? 55L : (highRiskOrChanneling ? 115L : 195L);
-            if (now - lastAmbientMoteMs >= interval && PARTICLES.size() < 76) {
-                lastAmbientMoteMs = now;
-                ThreadLocalRandom rng = ThreadLocalRandom.current();
-                boolean fromLeft = rng.nextBoolean();
-                float sx = left + (fromLeft ? 27.0F : 90.0F) + (rng.nextFloat() - 0.5F) * 6.0F;
-                float sy = top + 52.0F + (rng.nextFloat() - 0.5F) * 6.0F;
-                float tx = channeling ? (left + 174.0F) : (left + 58.0F);
-                float ty = channeling ? (top + 65.0F) : (top + 109.0F);
-                PARTICLES.add(new SpriteParticle(
-                    FusionGuiSkin.VFX_ARCANE_SPARK,
-                    sx, sy,
-                    (tx - sx) * (channeling ? 2.4F : 1.85F),
-                    (ty - sy) * (channeling ? 2.4F : 1.85F),
-                    0.0F,
-                    channeling ? 10.5F : 8.5F, 2.0F,
-                    rng.nextFloat() * Mth.TWO_PI,
-                    3.6F,
-                    now,
-                    channeling ? 420L : 520L
-                ));
-            }
+        long emitInterval = channelProgress > 0.0F ? 55L : (highRisk ? 130L : 260L);
+        if ((executable || channelProgress > 0.0F) && now - lastAmbientMoteMs > emitInterval && PARTICLES.size() < 64) {
+            lastAmbientMoteMs = now;
+            ThreadLocalRandom rng = ThreadLocalRandom.current();
+            float ang = rng.nextFloat() * Mth.TWO_PI;
+            float rad = 18.0F + rng.nextFloat() * 14.0F;
+            float sx = stageCenterX + Mth.cos(ang) * rad;
+            float sy = stageCenterY + Mth.sin(ang) * rad * 0.75F;
+            PARTICLES.add(new SpriteParticle(
+                FusionGuiSkin.VFX_ARCANE_SPARK,
+                sx, sy,
+                (stageCenterX - sx) * (0.8F + channelProgress * 2.2F),
+                (stageCenterY - sy) * (0.8F + channelProgress * 2.2F) - 8.0F,
+                channelProgress > 0.0F ? 0.0F : -10.0F,
+                8.0F + channelProgress * 3.5F,
+                2.0F,
+                rng.nextFloat() * Mth.TWO_PI,
+                (rng.nextBoolean() ? 1.0F : -1.0F) * 2.4F,
+                now,
+                channelProgress > 0.0F ? 360L : 650L
+            ));
         }
 
         if (now < grimoireBadgeGlowUntilMs) {
-            float pulse = 1.0F + 0.14F * Mth.sin(tSec * 6.0F);
+            float glowPulse = 1.0F + 0.14F * Mth.sin(tSec * 7.0F);
             drawRotatedSprite(
                 ctx, FusionGuiSkin.VFX_RUNE_HALO,
-                left + 369.0F, top + 16.0F,
-                22.0F * pulse, tSec * 1.8F
+                leftPos + 288, topPos + 16,
+                20.0F * glowPulse, -tSec * 2.0F
             );
         }
     }
@@ -344,22 +330,19 @@ public final class FusionGuiMicroEffects {
         float size,
         float angleRad
     ) {
-        int intSize = Math.max(2, Math.round(size));
-        float half = intSize * 0.5F;
-        ctx.pose().pushMatrix();
-        ctx.pose().translate(centerX, centerY);
-        if (Math.abs(angleRad) > 0.001F) {
-            ctx.pose().rotate(angleRad);
-        }
-        ctx.pose().translate(-half, -half);
-        FusionGuiSkin.drawSprite(ctx, sprite, 0, 0, intSize, intSize);
-        ctx.pose().popMatrix();
+        FusionGuiSkin.drawRotatedSprite(ctx, sprite, centerX, centerY, size, size, angleRad);
     }
 
     public static void playUiSound(SoundEvent sound, float pitch, float volume) {
         Minecraft mc = Minecraft.getInstance();
         if (mc != null) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(sound, pitch, volume));
+        }
+    }
+
+    public static void playUiSound(net.minecraft.core.Holder<SoundEvent> soundHolder, float pitch, float volume) {
+        if (soundHolder != null) {
+            playUiSound(soundHolder.value(), pitch, volume);
         }
     }
 }

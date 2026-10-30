@@ -1,19 +1,24 @@
 package enchantment_fusion.compat.jei;
 
 import enchantment_fusion.EnchantmentFusion;
+import enchantment_fusion.gui.EnchantmentFusionScreen;
 import enchantment_fusion.registry.FusionBlocks;
 import enchantment_fusion.registry.FusionItems;
 import java.util.List;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.gui.handlers.IGuiContainerHandler;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Optional JEI integration registering workstation, book, stabilizer, grimoire, and page info guides when JEI is present.
+ * Optional JEI integration registering workstation, book, stabilizer, grimoire, and page info guides,
+ * plus exact active bounds of {@link EnchantmentFusionScreen} so JEI's right-side overlay never overlaps.
  */
 @JeiPlugin
 public final class EnchantmentFusionJeiPlugin implements IModPlugin {
@@ -22,6 +27,16 @@ public final class EnchantmentFusionJeiPlugin implements IModPlugin {
     @Override
     public Identifier getPluginUid() {
         return PLUGIN_UID;
+    }
+
+    @Override
+    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        registration.addGuiContainerHandler(EnchantmentFusionScreen.class, new IGuiContainerHandler<>() {
+            @Override
+            public List<Rect2i> getGuiExtraAreas(EnchantmentFusionScreen containerScreen) {
+                return List.of(containerScreen.guiBounds());
+            }
+        });
     }
 
     @Override

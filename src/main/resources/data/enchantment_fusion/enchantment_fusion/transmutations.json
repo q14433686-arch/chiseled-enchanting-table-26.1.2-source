@@ -1,0 +1,1144 @@
+{
+  "schema_version": 1,
+  "replace": false,
+  "variants": {
+    "unbreaking_totem": {
+      "source": "minecraft:unbreaking",
+      "domain": "relic_consumable",
+      "roles": [
+        "TOTEM"
+      ]
+    },
+    "unbreaking_ration": {
+      "source": "minecraft:unbreaking",
+      "domain": "relic_consumable",
+      "roles": [
+        "CONSUMABLE"
+      ]
+    },
+    "mending_xp_bottle": {
+      "source": "minecraft:mending",
+      "domain": "relic_consumable",
+      "roles": [
+        "GLASS_BOTTLE"
+      ]
+    },
+    "mending_vitality": {
+      "source": "minecraft:mending",
+      "domain": "relic_consumable",
+      "roles": [
+        "TOTEM"
+      ]
+    },
+    "mending_replenish": {
+      "source": "minecraft:mending",
+      "domain": "relic_consumable",
+      "roles": [
+        "CONSUMABLE"
+      ]
+    },
+    "auto_smelt_axe": {
+      "source": "minecraft:fire_aspect",
+      "domain": "mining_fishing",
+      "roles": [
+        "AXE"
+      ],
+      "extra_sources": [
+        "minecraft:flame"
+      ]
+    },
+    "auto_smelt_pick": {
+      "source": "minecraft:fire_aspect",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ],
+      "extra_sources": [
+        "minecraft:flame"
+      ]
+    },
+    "boiling_cast": {
+      "source": "minecraft:fire_aspect",
+      "domain": "mining_fishing",
+      "roles": [
+        "FISHING_ROD"
+      ],
+      "extra_sources": [
+        "minecraft:flame"
+      ]
+    },
+    "ember_mantle": {
+      "source": "minecraft:fire_aspect",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ],
+      "extra_sources": [
+        "minecraft:flame"
+      ]
+    },
+    "yishui": {
+      "source": "minecraft:aqua_affinity",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "abyssal_dredge": {
+      "source": "minecraft:aqua_affinity",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL",
+        "FISHING_ROD"
+      ]
+    },
+    "tidal_carapace": {
+      "source": "minecraft:aqua_affinity",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "frost_seal": {
+      "source": "minecraft:frost_walker",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "frost_edge": {
+      "source": "minecraft:frost_walker",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "ice_hole_angler": {
+      "source": "minecraft:frost_walker",
+      "domain": "mining_fishing",
+      "roles": [
+        "FISHING_ROD"
+      ]
+    },
+    "rime_aegis": {
+      "source": "minecraft:frost_walker",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "current_anchor": {
+      "source": "minecraft:depth_strider",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "wave_parting": {
+      "source": "minecraft:depth_strider",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "pelagic_stream": {
+      "source": "minecraft:depth_strider",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "gill_membrane": {
+      "source": "minecraft:respiration",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA",
+        "DIG_TOOL"
+      ]
+    },
+    "feather_flight": {
+      "source": "minecraft:feather_falling",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "light_feather": {
+      "source": "minecraft:feather_falling",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT",
+        "DIG_TOOL"
+      ]
+    },
+    "updraft_plume": {
+      "source": "minecraft:feather_falling",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "soul_seeker_arrow": {
+      "source": "minecraft:soul_speed",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "soul_chase": {
+      "source": "minecraft:soul_speed",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "soul_excavator": {
+      "source": "minecraft:soul_speed",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "soul_escape": {
+      "source": "minecraft:soul_speed",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "silent_blade": {
+      "source": "minecraft:swift_sneak",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "silent_arrow": {
+      "source": "minecraft:swift_sneak",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "shroud_cloak": {
+      "source": "minecraft:swift_sneak",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "serrated_hook": {
+      "source": "minecraft:thorns",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "barbed_arrow": {
+      "source": "minecraft:thorns",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "spiked_shield": {
+      "source": "minecraft:thorns",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "SHIELD"
+      ]
+    },
+    "briar_mattock": {
+      "source": "minecraft:thorns",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL",
+        "ELYTRA"
+      ]
+    },
+    "blade_parry": {
+      "source": "minecraft:protection",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "bastion_shield": {
+      "source": "minecraft:protection",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "heat_shield_pick": {
+      "source": "minecraft:fire_protection",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "flame_cut": {
+      "source": "minecraft:fire_protection",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "fireproof_shield": {
+      "source": "minecraft:fire_protection",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "creeper_defuse": {
+      "source": "minecraft:blast_protection",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "blast_breech": {
+      "source": "minecraft:blast_protection",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "blast_guard": {
+      "source": "minecraft:blast_protection",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "DIG_TOOL",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "arrow_deflect": {
+      "source": "minecraft:projectile_protection",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "arrow_catch_shield": {
+      "source": "minecraft:projectile_protection",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "SHIELD"
+      ]
+    },
+    "counter_volley": {
+      "source": "minecraft:projectile_protection",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW",
+        "ELYTRA"
+      ]
+    },
+    "swift_swing": {
+      "source": "minecraft:efficiency",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "slipstream_wings": {
+      "source": "minecraft:efficiency",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "ELYTRA",
+        "FISHING_ROD"
+      ]
+    },
+    "intact_blade": {
+      "source": "minecraft:silk_touch",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "MACE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "gentle_reel": {
+      "source": "minecraft:silk_touch",
+      "domain": "mining_fishing",
+      "roles": [
+        "FISHING_ROD"
+      ]
+    },
+    "featherstep_lining": {
+      "source": "minecraft:silk_touch",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "three_dollar_luck": {
+      "source": "minecraft:fortune",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "MACE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW",
+        "FISHING_ROD",
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "bladed_rim": {
+      "source": "minecraft:sharpness",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD"
+      ]
+    },
+    "holy_bolt": {
+      "source": "minecraft:smite",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW",
+        "TRIDENT"
+      ]
+    },
+    "undead_ward": {
+      "source": "minecraft:smite",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "arthropod_bolt": {
+      "source": "minecraft:bane_of_arthropods",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW",
+        "TRIDENT"
+      ]
+    },
+    "nest_purger": {
+      "source": "minecraft:bane_of_arthropods",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "venom_ward": {
+      "source": "minecraft:bane_of_arthropods",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "recoil_jump": {
+      "source": "minecraft:knockback",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ],
+      "extra_sources": [
+        "minecraft:punch"
+      ]
+    },
+    "warding_shove": {
+      "source": "minecraft:knockback",
+      "domain": "melee_spear",
+      "roles": [
+        "AXE",
+        "MACE",
+        "DIG_TOOL",
+        "FISHING_ROD"
+      ],
+      "extra_sources": [
+        "minecraft:punch"
+      ],
+      "extra_source_roles": {
+        "minecraft:punch": [
+          "SWORD",
+          "SPEAR",
+          "AXE",
+          "MACE",
+          "TRIDENT",
+          "CROSSBOW",
+          "DIG_TOOL",
+          "FISHING_ROD"
+        ]
+      }
+    },
+    "repulse_guard": {
+      "source": "minecraft:knockback",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ],
+      "extra_sources": [
+        "minecraft:punch"
+      ]
+    },
+    "heavy_cleave": {
+      "source": "minecraft:sweeping_edge",
+      "domain": "melee_spear",
+      "roles": [
+        "SPEAR",
+        "AXE",
+        "TRIDENT",
+        "MACE"
+      ]
+    },
+    "wide_reap": {
+      "source": "minecraft:sweeping_edge",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "wind_cutter_arrow": {
+      "source": "minecraft:sweeping_edge",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "shield_sweep": {
+      "source": "minecraft:sweeping_edge",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "SHIELD"
+      ]
+    },
+    "whirlwind_hem": {
+      "source": "minecraft:sweeping_edge",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "ELYTRA"
+      ]
+    },
+    "forager_luck": {
+      "source": "minecraft:looting",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "pickpocket_guard": {
+      "source": "minecraft:looting",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "full_draw_cleave": {
+      "source": "minecraft:power",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "endless_crossbow": {
+      "source": "minecraft:infinity",
+      "domain": "ranged",
+      "roles": [
+        "CROSSBOW"
+      ]
+    },
+    "phantom_trident": {
+      "source": "minecraft:infinity",
+      "domain": "melee_spear",
+      "roles": [
+        "TRIDENT"
+      ]
+    },
+    "unending_edge": {
+      "source": "minecraft:infinity",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "DIG_TOOL",
+        "SHIELD",
+        "ELYTRA",
+        "FISHING_ROD",
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR"
+      ],
+      "require_damageable": true
+    },
+    "fan_volley": {
+      "source": "minecraft:multishot",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "TRIDENT"
+      ]
+    },
+    "twin_shadow_slash": {
+      "source": "minecraft:multishot",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE"
+      ]
+    },
+    "trifork_mine": {
+      "source": "minecraft:multishot",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "splinter_shield": {
+      "source": "minecraft:multishot",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "SHIELD"
+      ]
+    },
+    "refracted_carapace": {
+      "source": "minecraft:multishot",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "ELYTRA"
+      ]
+    },
+    "sun_piercer": {
+      "source": "minecraft:piercing",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "TRIDENT"
+      ]
+    },
+    "skewer_thrust": {
+      "source": "minecraft:piercing",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE"
+      ]
+    },
+    "deep_bore": {
+      "source": "minecraft:piercing",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "swift_draw": {
+      "source": "minecraft:quick_charge",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "TRIDENT"
+      ]
+    },
+    "reflex_shield": {
+      "source": "minecraft:quick_charge",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "SHIELD"
+      ]
+    },
+    "chain_tempo": {
+      "source": "minecraft:quick_charge",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "returning_blade_throw": {
+      "source": "minecraft:loyalty",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE"
+      ]
+    },
+    "boomerang_arrow": {
+      "source": "minecraft:loyalty",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "auto_loot_return": {
+      "source": "minecraft:loyalty",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "auto_reel": {
+      "source": "minecraft:loyalty",
+      "domain": "mining_fishing",
+      "roles": [
+        "FISHING_ROD",
+        "ELYTRA"
+      ]
+    },
+    "void_homing": {
+      "source": "minecraft:loyalty",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD"
+      ]
+    },
+    "aqua_spiral_dash": {
+      "source": "minecraft:riptide",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE"
+      ]
+    },
+    "hydro_propulsion": {
+      "source": "minecraft:riptide",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "torrent_mine": {
+      "source": "minecraft:riptide",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "storm_glider": {
+      "source": "minecraft:riptide",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "ELYTRA"
+      ]
+    },
+    "surge_ram": {
+      "source": "minecraft:riptide",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD"
+      ]
+    },
+    "storm_rod_strike": {
+      "source": "minecraft:channeling",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "BOW",
+        "CROSSBOW",
+        "DIG_TOOL",
+        "FISHING_ROD"
+      ]
+    },
+    "lightning_conductor_armor": {
+      "source": "minecraft:channeling",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "drenched_bane": {
+      "source": "minecraft:impaling",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "BOW",
+        "CROSSBOW",
+        "FISHING_ROD"
+      ]
+    },
+    "prismarine_chisel": {
+      "source": "minecraft:impaling",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "guardian_ward": {
+      "source": "minecraft:impaling",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "heavy_plummet": {
+      "source": "minecraft:density",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "TRIDENT",
+        "DIG_TOOL"
+      ]
+    },
+    "heavy_slug_arrow": {
+      "source": "minecraft:density",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "anvil_stomp": {
+      "source": "minecraft:density",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "hard_breach": {
+      "source": "minecraft:breach",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "pogo_gale_slash": {
+      "source": "minecraft:wind_burst",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "TRIDENT"
+      ]
+    },
+    "wind_charge_arrow": {
+      "source": "minecraft:wind_burst",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "jetstream_boost": {
+      "source": "minecraft:wind_burst",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "ELYTRA",
+        "DIG_TOOL"
+      ]
+    },
+    "gale_shield": {
+      "source": "minecraft:wind_burst",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD"
+      ]
+    },
+    "ocean_bounty": {
+      "source": "minecraft:luck_of_the_sea",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "sand_panning": {
+      "source": "minecraft:luck_of_the_sea",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "lure_hook_arrow": {
+      "source": "minecraft:lure",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "taunt_blade": {
+      "source": "minecraft:lure",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "shepherd_lure": {
+      "source": "minecraft:lure",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "monster_beacon": {
+      "source": "minecraft:lure",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    },
+    "sticky_root_curse": {
+      "source": "minecraft:binding_curse",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "SPEAR",
+        "AXE",
+        "MACE",
+        "TRIDENT",
+        "BOW",
+        "CROSSBOW",
+        "DIG_TOOL",
+        "SHIELD",
+        "FISHING_ROD"
+      ]
+    },
+    "lunge_dash_strike": {
+      "source": "minecraft:lunge",
+      "domain": "melee_spear",
+      "roles": [
+        "SWORD",
+        "AXE",
+        "MACE",
+        "TRIDENT"
+      ]
+    },
+    "lunge_vault_shot": {
+      "source": "minecraft:lunge",
+      "domain": "ranged",
+      "roles": [
+        "BOW",
+        "CROSSBOW"
+      ]
+    },
+    "lunge_tunnel_rush": {
+      "source": "minecraft:lunge",
+      "domain": "mining_fishing",
+      "roles": [
+        "DIG_TOOL"
+      ]
+    },
+    "lunge_wind_stride": {
+      "source": "minecraft:lunge",
+      "domain": "armor_shield_elytra",
+      "roles": [
+        "HEAD_ARMOR",
+        "CHEST_ARMOR",
+        "LEG_ARMOR",
+        "FOOT_ARMOR",
+        "SHIELD",
+        "ELYTRA"
+      ]
+    }
+  }
+}
