@@ -1103,13 +1103,15 @@ public final class ClientSmoke implements ClientModInitializer {
                         // Start another no-risk ritual with no menu open. It must finish on server ticks.
                         var enchantments = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                         var sharpness = enchantments.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("sharpness")));
-                        var loyalty = enchantments.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("loyalty")));
+                        var knockback = enchantments.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("knockback")));
                         be.setItem(0, FusionStationOperations.createSingleEnchantedBook(sharpness, 1));
-                        be.setItem(1, FusionStationOperations.createSingleEnchantedBook(loyalty, 1));
+                        be.setItem(1, FusionStationOperations.createSingleEnchantedBook(knockback, 1));
                         be.setItem(2, ItemStack.EMPTY);
                         be.setItem(3, ItemStack.EMPTY);
                         var closedPreview = FusionStationOperations.inspect(be, sp.level().registryAccess(), FusionStationOperations.TAB_FUSE, -1, -1);
                         require(closedPreview.executable(), "Closed-menu ritual preview must be executable");
+                        require(closedPreview.economyQuote() != null && closedPreview.economyQuote().failureChance() <= 0.0005D,
+                            "Closed-menu ritual fixture must be deterministic and have no failure roll");
                         require(be.startRitual(sp, FusionStationOperations.TAB_FUSE, -1, -1, false, closedPreview.expectedExecuteToken()).success(),
                             "Closed-menu ritual must start");
                         require(be.cancelRitual(sp.getUUID()) && !be.hasActiveRitual(), "Owner must be able to cancel without consuming inputs");
