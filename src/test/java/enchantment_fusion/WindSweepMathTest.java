@@ -9,6 +9,7 @@ import enchantment_fusion.model.FusionCarrier;
 import java.io.InputStream;
 import java.util.Set;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.entity.player.Player;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
@@ -37,6 +38,20 @@ final class WindSweepMathTest {
         assertTrue(WindSweepSkills.supportsCarrier(Set.of(FusionCarrier.SWORD), WindSweepSkills.CORE));
         assertFalse(WindSweepSkills.supportsCarrier(Set.of(FusionCarrier.AXE), WindSweepSkills.CORE));
         assertFalse(WindSweepSkills.supportsCarrier(Set.of(FusionCarrier.BOW), WindSweepSkills.EYE));
+    }
+    @Test void bothPlayerAttackPathsCallTheKnockbackHook() throws Exception {
+        try (InputStream input = Player.class.getResourceAsStream("/net/minecraft/world/entity/player/Player.class")) {
+            assertNotNull(input); ClassNode node = new ClassNode(); new ClassReader(input).accept(node, ClassReader.SKIP_FRAMES);
+            for (String name : Set.of("attack", "stabAttack")) {
+                var methods = node.methods.stream().filter(m -> m.name.equals(name)).toList();
+                assertEquals(1, methods.size());
+                int calls = 0;
+                for (var insn : methods.getFirst().instructions) if (insn instanceof MethodInsnNode call
+                    && call.name.equals("getKnockback") && call.owner.equals("net/minecraft/world/entity/player/Player")
+                    && call.desc.equals("(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)F")) calls++;
+                assertEquals(1, calls, name + " must expose the selected mixin call");
+            }
+        }
     }
     @Test void targetVersionHasTheRealSwingHandler() throws Exception {
         try (InputStream input = ServerGamePacketListenerImpl.class.getResourceAsStream("/net/minecraft/server/network/ServerGamePacketListenerImpl.class")) {

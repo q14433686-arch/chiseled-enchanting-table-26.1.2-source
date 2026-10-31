@@ -61,7 +61,7 @@ public final class WindSweepSkills {
     }
     public static final class Attack {
         final @Nullable Attack previous; final Player player; final ItemStack weapon; final Entity target; final @Nullable Gear gear;
-        @Nullable DamageSource source; boolean damaged;
+        @Nullable DamageSource source, replayedSource; boolean damaged;
         Attack(@Nullable Attack previous, Player player, ItemStack weapon, Entity target) {
             this.previous = previous; this.player = player; this.weapon = weapon; this.target = target;
             this.gear = player instanceof ServerPlayer && player.getMainHandItem() == weapon ? selected(weapon) : null;
@@ -69,9 +69,9 @@ public final class WindSweepSkills {
     }
     public static final class Hit {
         final @Nullable Attack frame; final @Nullable LivingEntity target; final @Nullable DamageSource source;
-        final float health, absorption;
-        Hit(@Nullable Attack frame, @Nullable LivingEntity target, @Nullable DamageSource source) {
-            this.frame = frame; this.target = target; this.source = source;
+        final float health, absorption; final boolean qualified;
+        Hit(@Nullable Attack frame, @Nullable LivingEntity target, @Nullable DamageSource source, boolean qualified) {
+            this.frame = frame; this.target = target; this.source = source; this.qualified = qualified;
             this.health = target == null ? 0 : target.getHealth(); this.absorption = target == null ? 0 : target.getAbsorptionAmount();
         }
     }
@@ -126,12 +126,12 @@ public final class WindSweepSkills {
         Attack frame = CURRENT.get();
         if (!(player instanceof ServerPlayer owner) || frame == null || frame.player != player || frame.weapon != stack
             || frame.target != entity || frame.gear == null || !ready(owner) || !owns(owner, frame.gear)
-            || !(entity instanceof LivingEntity living) || !target(owner, living) || !direct(owner, source)) return new Hit(null, null, null);
-        return new Hit(frame, living, source);
+            || !(entity instanceof LivingEntity living) || source.getEntity() != owner || source.getDirectEntity() != owner) return new Hit(null, null, null, false);
+        return new Hit(frame, living, source, target(owner, living) && direct(owner, source));
     }
     public static void afterDamage(Hit hit, boolean accepted) {
         Attack frame = hit.frame; LivingEntity victim = hit.target;
-        if (!accepted || frame == null || victim == null || CURRENT.get() != frame || !(frame.player instanceof ServerPlayer owner)
+        if (!accepted || !hit.qualified || frame == null || victim == null || CURRENT.get() != frame || !(frame.player instanceof ServerPlayer owner)
             || !ready(owner) || owner.getMainHandItem() != frame.weapon || frame.gear == null || !owns(owner, frame.gear)
             || hit.source == null || !direct(owner, hit.source)) return;
         float loss = Math.max(0, hit.health - victim.getHealth()) + Math.max(0, hit.absorption - victim.getAbsorptionAmount());
@@ -142,19 +142,31 @@ public final class WindSweepSkills {
             && frame.gear != null && player instanceof ServerPlayer owner && ready(owner)
             && owner.getMainHandItem() == frame.weapon && owns(owner, frame.gear) && entity instanceof LivingEntity living && target(owner, living);
     }
-    /** Non-native weapons replay the actual Knockback data-pack effect once. */
-    public static float adjustKnockback(Player player, Entity target, float vanilla) {
+    /** Reapply a non-native primary exactly where vanilla calculates the knockback value.
+     * This preserves deliberate hits on passive/nonliving targets and non-damaging spear pushes,
+     * without allowing those targets to become automatic wind eyes. */
+    public static float replayKnockback(Player player, Entity target, DamageSource source, float vanilla) {
         Attack frame = CURRENT.get();
-        if (!usable(frame, player, target) || !KNOCKBACK.equals(frame.gear.pair().primaryId())) return vanilla;
-        // A legacy item containing multiple Knockback pairs can already have replayed it in the momentum hook.
-        if (MomentumSealSkills.selected(frame.weapon) != null) return vanilla;
-        ServerPlayer owner = (ServerPlayer) player; ServerLevel level = owner.level();
+        if (frame == null || frame.player != player || frame.target != target || frame.gear == null
+            || !KNOCKBACK.equals(frame.gear.pair().primaryId()) || !(player instanceof ServerPlayer owner)
+            || owner.getMainHandItem() != frame.weapon || !owns(owner, frame.gear)
+            || source.getEntity() != owner || source.getDirectEntity() != owner || !Float.isFinite(vanilla)) return vanilla;
+        ServerLevel level = owner.level();
         Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(level.registryAccess(), KNOCKBACK).orElse(null);
         if (enchantment == null || frame.weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(enchantment) > 0) return vanilla;
-        MutableFloat value = new MutableFloat(0.0F);
-        enchantment.value().modifyKnockback(level, frame.gear.pair().primaryLevel(), frame.weapon, target, frame.source, value);
-        float extra = value.floatValue() / 2.0F;
-        return Float.isFinite(extra) ? Math.max(0.0F, vanilla + extra) : vanilla;
+        // LivingEntity.getKnockback divides the data-pack result by two. Start from its
+        // current full value so additive, multiplicative and set effects all behave sensibly.
+        MutableFloat value = new MutableFloat(vanilla * 2.0F);
+        enchantment.value().modifyKnockback(level, frame.gear.pair().primaryLevel(), frame.weapon, target, source, value);
+        float result = value.floatValue() / 2.0F;
+        if (!Float.isFinite(result)) return vanilla;
+        frame.replayedSource = source;
+        return result;
+    }
+    /** Avoid replaying the same primary twice on old, manually assembled duplicate pairs. */
+    public static boolean alreadyReplayed(Player player, ItemStack weapon, Entity target, DamageSource source) {
+        Attack frame = CURRENT.get();
+        return frame != null && frame.player == player && frame.weapon == weapon && frame.target == target && frame.replayedSource == source;
     }
     /** Called before vanilla restores a player's server velocity after sending its knockback packet. */
     public static void afterKnockback(Player player, LivingEntity victim, Vec3 before) {

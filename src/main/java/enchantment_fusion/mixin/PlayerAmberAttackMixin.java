@@ -177,9 +177,15 @@ public abstract class PlayerAmberAttackMixin {
     }
 
     @WrapOperation(method = {"attack", "stabAttack"}, at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/player/Player;getKnockback(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)F"))
+    private float ef$windPrimaryKnockback(Player player, Entity target, DamageSource source, Operation<Float> original) {
+        return WindSweepSkills.replayKnockback(player, target, source, original.call(player, target, source));
+    }
+
+    @WrapOperation(method = {"attack", "stabAttack"}, at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/player/Player;causeExtraKnockback(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/phys/Vec3;)V"))
     private void ef$momentumCause(Player player, Entity target, float amount, Vec3 oldMovement, Operation<Void> original) {
-        float adjusted = WindSweepSkills.adjustKnockback(player, target, MomentumSealSkills.adjustKnockback(player, target, amount));
+        float adjusted = MomentumSealSkills.adjustKnockback(player, target, amount);
         try {
             original.call(player, target, adjusted, oldMovement);
         } finally {

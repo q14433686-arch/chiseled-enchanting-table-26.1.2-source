@@ -60,6 +60,7 @@ final class WindSweepProbe {
             neighbor.setPos(origin.getX() + 4D, origin.getY(), origin.getZ() + 0.5D);
             axeTarget.setPos(origin.getX() + 6D, origin.getY(), origin.getZ() + 2D);
             villager.setNoAi(true); villager.setPos(origin.getX() + 4D, origin.getY(), origin.getZ() + 1.1D);
+            villager.getAttribute(Attributes.MAX_HEALTH).setBaseValue(200); villager.setHealth(200);
             for (var entity : List.of(primary, neighbor, axeTarget, villager)) require(level.addFreshEntity(entity), "Fixture target must enter world");
             ItemStack sword = fused(level, Items.DIAMOND_SWORD, pair); player.setItemSlot(EquipmentSlot.MAINHAND, sword);
             deny.add(primary.getUUID()); primary.invulnerableTime = 0; player.attack(primary); deny.clear();
@@ -74,6 +75,19 @@ final class WindSweepProbe {
                 axeTarget.setDeltaMovement(Vec3.ZERO); axeTarget.invulnerableTime = 0; player.resetAttackStrengthTicker(); player.attack(axeTarget);
                 require(axeTarget.getDeltaMovement().horizontalDistanceSqr() > 0.0001D,
                     "A non-native axe must replay the Knockback primary");
+                int existingEyes = size("EYES");
+                villager.setDeltaMovement(Vec3.ZERO); villager.invulnerableTime = 0; player.resetAttackStrengthTicker(); player.attack(villager);
+                require(villager.getDeltaMovement().horizontalDistanceSqr() > 0.0001D && size("EYES") == existingEyes,
+                    "A deliberate hit on a villager retains native knockback, but never creates an automatic eye");
+                ItemStack enchantedAxe = player.getMainHandItem(); float health = axeTarget.getHealth();
+                player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_AXE));
+                axeTarget.setDeltaMovement(Vec3.ZERO); player.stabAttack(EquipmentSlot.MAINHAND, axeTarget, 0, false, true, false);
+                double ordinaryPush = axeTarget.getDeltaMovement().horizontalDistanceSqr();
+                player.setItemSlot(EquipmentSlot.MAINHAND, enchantedAxe); axeTarget.setDeltaMovement(Vec3.ZERO);
+                player.stabAttack(EquipmentSlot.MAINHAND, axeTarget, 0, false, true, false);
+                require(axeTarget.getHealth() == health && axeTarget.getDeltaMovement().horizontalDistanceSqr() > ordinaryPush
+                    && size("EYES") == existingEyes,
+                    "A no-damage stab must replay Knockback but cannot create an eye");
             } else {
                 require(size("CORES") == 1, "A real sword sweep must create a core");
                 neighbor.setDeltaMovement(Vec3.ZERO); villager.setDeltaMovement(Vec3.ZERO); WindSweepSkills.tickServer(level.getServer());

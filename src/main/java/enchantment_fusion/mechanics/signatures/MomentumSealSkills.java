@@ -122,6 +122,7 @@ public final class MomentumSealSkills {
     public static float adjustKnockback(Player player, Entity target, float vanilla) {
         Attack frame = CURRENT.get();
         if (!usable(frame, player, target)) return vanilla;
+        if (WindSweepSkills.alreadyReplayed(player, frame.weapon, target, frame.source)) return vanilla;
         ServerPlayer owner = (ServerPlayer) player;
         ServerLevel level = owner.level();
         Holder<Enchantment> knockback = FusionStationOperations.lookupEnchantment(level.registryAccess(), KNOCKBACK).orElse(null);
