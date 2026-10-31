@@ -172,7 +172,8 @@ public final class FireTradeoffSkills {
     /** Called after normal armor/resistance/enchantment mitigation but before absorption and health. */
     public static float afterMagic(ServerPlayer player, DamageSource source, float beforeMagic, float afterMagic) {
         if (!eligible(player) || !source.is(DamageTypeTags.IS_FIRE) || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
-            || source.is(DamageTypeTags.BYPASSES_ENCHANTMENTS) || !Float.isFinite(beforeMagic) || !Float.isFinite(afterMagic)
+            || source.is(DamageTypeTags.BYPASSES_EFFECTS) || source.is(DamageTypeTags.BYPASSES_ENCHANTMENTS)
+            || !Float.isFinite(beforeMagic) || !Float.isFinite(afterMagic)
             || Boolean.TRUE.equals(SETTLING_WEAR.get())) return afterMagic;
         Gear accumulator = first(player, false);
         float mitigated = Math.max(0.0F, beforeMagic - afterMagic);
