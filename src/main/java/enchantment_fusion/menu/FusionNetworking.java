@@ -5,6 +5,7 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.data.FusionMatrixRegistry.EconomyConfig;
 import enchantment_fusion.data.FusionMatrixRegistry.MatrixProfile;
 import enchantment_fusion.mechanics.FusionStationOperations.ActionResult;
+import enchantment_fusion.model.FusionCarrier;
 import enchantment_fusion.model.PayloadType;
 import enchantment_fusion.model.TriggerType;
 import io.netty.buffer.ByteBuf;
@@ -46,7 +47,7 @@ import org.jetbrains.annotations.Nullable;
  * </ul>
  */
 public final class FusionNetworking {
-    public static final int MATRIX_SYNC_PROTOCOL_VERSION = 2;
+    public static final int MATRIX_SYNC_PROTOCOL_VERSION = 3;
     // A directional pair may contain two 128-character enchantment IDs plus separators.
     public static final int MAX_COMPENDIUM_KEY_CHARS = 512;
 
@@ -170,7 +171,14 @@ public final class FusionNetworking {
                 || TriggerType.values().length > MAX_COOLDOWNS) {
                 throw new IllegalArgumentException("matrix snapshot exceeds protocol count limits");
             }
-            for (String id : snapshot.profiles().keySet()) validateWireId(id);
+            for (Map.Entry<String, MatrixProfile> entry : snapshot.profiles().entrySet()) {
+                validateWireId(entry.getKey());
+                MatrixProfile profile = entry.getValue();
+                if (profile == null || profile.trigger() == null || profile.payload() == null
+                    || profile.fusionHosts().size() > FusionCarrier.values().length) {
+                    throw new IllegalArgumentException("invalid matrix profile");
+                }
+            }
             for (Set<String> group : snapshot.exclusiveGroups()) {
                 if (group.size() > MAX_GROUP_MEMBERS) throw new IllegalArgumentException("exclusive group too large");
                 for (String id : group) validateWireId(id);
@@ -203,6 +211,10 @@ public final class FusionNetworking {
                 buf.writeUtf(e.getKey(), 128);
                 buf.writeUtf(e.getValue().trigger().name(), 64);
                 buf.writeUtf(e.getValue().payload().name(), 64);
+                buf.writeBoolean(e.getValue().explicitFusionMeaning());
+                List<FusionCarrier> hosts = e.getValue().fusionHosts().stream().sorted().toList();
+                buf.writeVarInt(hosts.size());
+                for (FusionCarrier host : hosts) buf.writeUtf(host.name(), 64);
             }
             List<Set<String>> groups = snap.exclusiveGroups();
             buf.writeVarInt(groups.size());
@@ -264,7 +276,7 @@ public final class FusionNetworking {
 
         private static MatrixSyncPayload read(FriendlyByteBuf buf) {
             int wireVersion = buf.readVarInt();
-            if (wireVersion != MATRIX_SYNC_PROTOCOL_VERSION) {
+            if (wireVersion != MATRIX_SYNC_PROTOCOL_VERSION && wireVersion != 2) {
                 int skipped = buf.readableBytes();
                 buf.skipBytes(skipped);
                 EnchantmentFusion.LOGGER.warn(
@@ -281,7 +293,23 @@ public final class FusionNetworking {
                 String key = buf.readUtf(128);
                 TriggerType trig = TriggerType.fromString(buf.readUtf(64), TriggerType.ON_MELEE_STRIKE);
                 PayloadType pay = PayloadType.fromString(buf.readUtf(64), PayloadType.EDGE);
-                profiles.put(key, new MatrixProfile(trig, pay));
+                boolean explicitMeaning = false;
+                Set<FusionCarrier> hosts = java.util.EnumSet.noneOf(FusionCarrier.class);
+                if (wireVersion >= 3) {
+                    explicitMeaning = buf.readBoolean();
+                    int count = readCount(buf, FusionCarrier.values().length, "fusion host");
+                    for (int h = 0; h < count; h++) {
+                        String name = buf.readUtf(64);
+                        try {
+                            if (!hosts.add(FusionCarrier.valueOf(name))) throw new DecoderException("Duplicate fusion host: " + name);
+                        } catch (IllegalArgumentException ex) {
+                            throw new DecoderException("Unknown fusion host: " + name, ex);
+                        }
+                    }
+                }
+                if (profiles.put(key, new MatrixProfile(trig, pay, explicitMeaning, hosts)) != null) {
+                    throw new DecoderException("Duplicate matrix profile: " + key);
+                }
             }
             int gCount = readCount(buf, MAX_GROUPS, "group");
             List<Set<String>> groups = new ArrayList<>(gCount);

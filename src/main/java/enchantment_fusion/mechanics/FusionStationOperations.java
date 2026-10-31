@@ -335,7 +335,7 @@ public final class FusionStationOperations {
                     if (isIncompatibleWithHost(sTarget, targetFusions, vanillaOnlyIds, pair.primaryId(), snap, registries)) {
                         return new StationPreview(OperationKind.INVALID, false, RejectReason.EXCLUSIVE_ON_HOST, pair, false, 0.0, 0, sel, manageXp);
                     }
-                    RejectReason carrier = DirectionalHostRules.validateNewOrChanged(sTarget, pair);
+                    RejectReason carrier = DirectionalHostRules.validateNewOrChanged(sTarget, pair, snap);
                     if (carrier != RejectReason.NONE) {
                         return new StationPreview(OperationKind.INVALID, false, carrier, pair, false, 0.0, 0, sel, manageXp);
                     }
@@ -350,7 +350,7 @@ public final class FusionStationOperations {
             }
 
             // 3. Top-up an existing socketed pair on Gear using a higher-level book in Slot 0/1
-            Optional<StationPreview> topUp = checkTopUp(sTarget, targetFusions, sPrimary, sSecondary, sel, manageXp, eco);
+            Optional<StationPreview> topUp = checkTopUp(sTarget, targetFusions, sPrimary, sSecondary, sel, manageXp, eco, snap);
             if (topUp.isPresent()) {
                 return topUp.get();
             }
@@ -380,6 +380,12 @@ public final class FusionStationOperations {
                     vanillaBlockingIds.remove(s.id());
                 }
 
+                FusedPair proposed = FusedPair.clean(p.id(), p.level(), s.id(), s.level());
+                RejectReason carrier = DirectionalHostRules.validateNewOrChanged(sTarget, proposed, snap);
+                if (carrier != RejectReason.NONE) {
+                    // Two selected enchantments must not silently turn into a single inscription.
+                    return new StationPreview(OperationKind.INVALID, false, carrier, proposed, false, 0.0, 0, gearSel, manageXp);
+                }
                 boolean zeroXp = CetSoftBridge.isZeroXpCetStabilizer(sCatalyst);
                 boolean runtimeIncompatPair = !Enchantment.areCompatible(p.holder(), s.holder());
                 boolean incompatHost = isIncompatibleWithHost(sTarget, targetFusions, vanillaBlockingIds, p.id(), snap, registries);
@@ -402,11 +408,6 @@ public final class FusionStationOperations {
                         }
                     }
                     return new StationPreview(OperationKind.INVALID, false, eval.rejectReason(), null, false, 0.0, 0, gearSel, manageXp);
-                }
-                RejectReason carrier = DirectionalHostRules.validateNewOrChanged(sTarget, eval.resultingPair());
-                if (carrier != RejectReason.NONE) {
-                    // Do not silently turn a rejected two-enchantment fusion into a single inscription.
-                    return new StationPreview(OperationKind.INVALID, false, carrier, eval.resultingPair(), false, 0.0, 0, gearSel, manageXp);
                 }
                 int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
                 boolean isSig = SignaturePairs.resolve(eval.resultingPair()).isPresent();
@@ -445,7 +446,7 @@ public final class FusionStationOperations {
         // === TAB 0: Book Fusion -> Output Fused Enchanted Book into Slot 3 ===
         if (sTarget.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
             FusedEnchantmentList bookFusions = sTarget.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-            Optional<StationPreview> topUp = checkTopUp(sTarget, bookFusions, sPrimary, sSecondary, sel, manageXp, eco);
+            Optional<StationPreview> topUp = checkTopUp(sTarget, bookFusions, sPrimary, sSecondary, sel, manageXp, eco, snap);
             if (topUp.isPresent()) {
                 return topUp.get();
             }
@@ -625,7 +626,8 @@ public final class FusionStationOperations {
         ItemStack sSecondary,
         ResolvedSelection sel,
         int manageXp,
-        EconomyConfig eco
+        EconomyConfig eco,
+        FusionMatrixRegistry.Snapshot snap
     ) {
         if (targetFusions.isEmpty()) {
             return Optional.empty();
@@ -640,7 +642,7 @@ public final class FusionStationOperations {
                 if (existing.primaryId().equals(donor.id()) && clampedDonor > existing.primaryLevel()) {
                     FusedPair upgraded = existing.withPrimaryLevel(clampedDonor);
                     RejectReason carrier = VesselCapacityRules.isPotentialEquipmentHost(sTarget)
-                        ? DirectionalHostRules.validateNewOrChanged(sTarget, upgraded) : RejectReason.NONE;
+                        ? DirectionalHostRules.validateNewOrChanged(sTarget, upgraded, snap) : RejectReason.NONE;
                     if (carrier != RejectReason.NONE) {
                         return Optional.of(new StationPreview(OperationKind.INVALID, false, carrier, upgraded,
                             false, 0.0, 0, sel, manageXp));
@@ -653,7 +655,7 @@ public final class FusionStationOperations {
                 if (existing.secondaryId().equals(donor.id()) && clampedDonor > existing.secondaryLevel()) {
                     FusedPair upgraded = existing.withSecondaryLevel(clampedDonor);
                     RejectReason carrier = VesselCapacityRules.isPotentialEquipmentHost(sTarget)
-                        ? DirectionalHostRules.validateNewOrChanged(sTarget, upgraded) : RejectReason.NONE;
+                        ? DirectionalHostRules.validateNewOrChanged(sTarget, upgraded, snap) : RejectReason.NONE;
                     if (carrier != RejectReason.NONE) {
                         return Optional.of(new StationPreview(OperationKind.INVALID, false, carrier, upgraded,
                             false, 0.0, 0, sel, manageXp));
@@ -1068,7 +1070,7 @@ public final class FusionStationOperations {
         FusionMatrixRegistry.Snapshot snap = FusionMatrixRegistry.serverSnapshot();
         FusedPair flipped = oldPair.flipped();
         if (VesselCapacityRules.isPotentialEquipmentHost(target)) {
-            RejectReason carrier = DirectionalHostRules.validateNewOrChanged(target, flipped);
+            RejectReason carrier = DirectionalHostRules.validateNewOrChanged(target, flipped, snap);
             if (carrier != RejectReason.NONE) {
                 return ActionResult.failed(carrier);
             }

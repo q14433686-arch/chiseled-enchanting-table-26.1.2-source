@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.FusionCarrier;
 import enchantment_fusion.model.PayloadType;
 import enchantment_fusion.model.TriggerType;
 import java.util.ArrayList;
@@ -36,7 +37,21 @@ public final class FusionMatrixRegistry {
     private static final Logger LOGGER = LoggerFactory.getLogger("enchantment_fusion");
     public static final int SUPPORTED_ECONOMY_SCHEMA_VERSION = 2;
 
-    public record MatrixProfile(TriggerType trigger, PayloadType payload) {}
+    public record MatrixProfile(TriggerType trigger, PayloadType payload,
+                                boolean explicitFusionMeaning, Set<FusionCarrier> fusionHosts) {
+        public MatrixProfile {
+            fusionHosts = fusionHosts == null ? Set.of() : Set.copyOf(fusionHosts);
+        }
+
+        /** Legacy/built-in profiles have no explicit third-party carrier declaration. */
+        public MatrixProfile(TriggerType trigger, PayloadType payload) {
+            this(trigger, payload, false, Set.of());
+        }
+
+        public boolean classifiedForFusion() {
+            return explicitFusionMeaning && !fusionHosts.isEmpty();
+        }
+    }
 
     public record EconomyConfig(
         double lowFailChance,
@@ -314,8 +329,15 @@ public final class FusionMatrixRegistry {
         }
     }
 
+    // Exact built-in IDs, not a namespace check: a datapack may add a non-vanilla
+    // enchantment in the minecraft namespace and it must still be classified.
+    private static final Set<String> VANILLA_ENCHANTMENT_IDS = Set.copyOf(createBuiltInSnapshot().profiles().keySet());
     private static volatile Snapshot serverActive = createBuiltInSnapshot();
     private static volatile @Nullable Snapshot clientOverride = null;
+
+    public static boolean isBuiltInVanillaEnchantment(String id) {
+        return id != null && VANILLA_ENCHANTMENT_IDS.contains(id);
+    }
 
     private FusionMatrixRegistry() {}
 
@@ -374,15 +396,15 @@ public final class FusionMatrixRegistry {
                     mergedProfiles.remove(key);
                     continue;
                 }
-                TriggerType trig = TriggerType.fromString(
-                    readString(p, "trigger", null),
-                    TriggerType.ON_MELEE_STRIKE
-                );
-                PayloadType pay = PayloadType.fromString(
-                    readString(p, "payload", null),
-                    PayloadType.EDGE
-                );
-                mergedProfiles.put(key, new MatrixProfile(trig, pay));
+                TriggerType explicitTrigger = TriggerType.fromString(readString(p, "trigger", null), null);
+                PayloadType explicitPayload = PayloadType.fromString(readString(p, "payload", null), null);
+                // Keep legacy runtime inference/defaults for old items, but do not regard
+                // missing or invalid fields as an explicit third-party classification.
+                TriggerType trig = explicitTrigger != null ? explicitTrigger : TriggerType.ON_MELEE_STRIKE;
+                PayloadType pay = explicitPayload != null ? explicitPayload : PayloadType.EDGE;
+                Set<FusionCarrier> hosts = parseFusionHosts(p);
+                mergedProfiles.put(key, new MatrixProfile(trig, pay,
+                    explicitTrigger != null && explicitPayload != null, hosts));
             }
         }
 
@@ -530,6 +552,27 @@ public final class FusionMatrixRegistry {
             fullCharge,
             cooldowns
         );
+    }
+
+    private static Set<FusionCarrier> parseFusionHosts(JsonObject profile) {
+        if (!profile.has("fusion_hosts")) return Set.of();
+        JsonElement element = profile.get("fusion_hosts");
+        if (!element.isJsonArray() || element.getAsJsonArray().size() > FusionCarrier.values().length) {
+            throw new IllegalArgumentException("fusion_hosts must be a bounded array");
+        }
+        Set<FusionCarrier> hosts = java.util.EnumSet.noneOf(FusionCarrier.class);
+        for (JsonElement entry : element.getAsJsonArray()) {
+            if (!entry.isJsonPrimitive() || !entry.getAsJsonPrimitive().isString()) {
+                throw new IllegalArgumentException("fusion_hosts entries must be strings");
+            }
+            try {
+                FusionCarrier host = FusionCarrier.valueOf(entry.getAsString());
+                if (!hosts.add(host)) throw new IllegalArgumentException("duplicate fusion host " + host);
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("invalid fusion host: " + entry, ex);
+            }
+        }
+        return Set.copyOf(hosts);
     }
 
     private static boolean readBool(@Nullable JsonObject obj, String key, boolean def) {

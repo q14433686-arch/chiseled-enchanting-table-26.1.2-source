@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.google.gson.JsonParser;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
+import enchantment_fusion.mechanics.DirectionalHostRules;
+import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
 import enchantment_fusion.menu.FusionNetworking;
@@ -12,6 +14,7 @@ import enchantment_fusion.menu.FusionNetworking.CompendiumDeltaPayload;
 import enchantment_fusion.menu.FusionNetworking.CompendiumSyncPayload;
 import enchantment_fusion.menu.FusionNetworking.MatrixSyncPayload;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.FusionCarrier;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
@@ -79,6 +82,92 @@ class AuditBoundaryTest {
         for (int i = 0; i <= MatrixSyncPayload.MAX_GROUP_MEMBERS; i++) oversizedGroup.add("test:" + i);
         assertThrows(IllegalArgumentException.class, () -> MatrixSyncPayload.validateSnapshot(
             new FusionMatrixRegistry.Snapshot(Map.of(), List.of(oversizedGroup), snapshot.economy())));
+    }
+
+    @Test
+    void thirdPartyFusionNeedsExplicitMeaningAndFusionHostsWhileVanillaDoesNot() {
+        FusedPair pair = FusedPair.clean("example:storm_edge", 1, "minecraft:silk_touch", 1);
+        var defaults = FusionMatrixRegistry.createBuiltInSnapshot();
+        assertEquals(RejectReason.UNCLASSIFIED_ENCHANTMENT,
+            DirectionalHostRules.validateClassifications(pair, Set.of(FusionCarrier.SWORD), defaults));
+        assertTrue(FusionMatrixRegistry.isBuiltInVanillaEnchantment("minecraft:silk_touch"));
+        assertFalse(FusionMatrixRegistry.isBuiltInVanillaEnchantment("minecraft:datapack_custom"));
+
+        var incomplete = FusionMatrixRegistry.parseFromJson(JsonParser.parseString(
+            "{\"profiles\":{\"example:storm_edge\":{\"trigger\":\"ON_MELEE_STRIKE\",\"payload\":\"VOLT\"}}}"
+        ).getAsJsonObject(), null);
+        assertEquals(RejectReason.UNCLASSIFIED_ENCHANTMENT,
+            DirectionalHostRules.validateClassifications(pair, Set.of(FusionCarrier.SWORD), incomplete));
+        var invalidMeaning = FusionMatrixRegistry.parseFromJson(JsonParser.parseString(
+            "{\"profiles\":{\"example:storm_edge\":{\"trigger\":\"unknown\",\"payload\":\"VOLT\",\"fusion_hosts\":[\"SWORD\"]}}}"
+        ).getAsJsonObject(), null);
+        assertEquals(RejectReason.UNCLASSIFIED_ENCHANTMENT,
+            DirectionalHostRules.validateClassifications(pair, Set.of(FusionCarrier.SWORD), invalidMeaning));
+        var classified = FusionMatrixRegistry.parseFromJson(JsonParser.parseString(
+            "{\"profiles\":{\"example:storm_edge\":{\"trigger\":\"ON_MELEE_STRIKE\",\"payload\":\"VOLT\",\"fusion_hosts\":[\"SWORD\",\"AXE\"]}}}"
+        ).getAsJsonObject(), null);
+        assertEquals(RejectReason.NONE, DirectionalHostRules.validateClassifications(pair, Set.of(FusionCarrier.SWORD), classified));
+        assertEquals(RejectReason.NONE, DirectionalHostRules.validateClassifications(pair.flipped(), Set.of(FusionCarrier.AXE), classified));
+        assertEquals(RejectReason.UNSUPPORTED_DIRECTION_HOST,
+            DirectionalHostRules.validateClassifications(pair, Set.of(FusionCarrier.PICKAXE), classified));
+        assertEquals(RejectReason.NONE, DirectionalHostRules.validateClassifications(pair,
+            Set.of(FusionCarrier.PICKAXE, FusionCarrier.SWORD), classified), "A hybrid item's explicit capability must count");
+        assertThrows(IllegalArgumentException.class, () -> FusionMatrixRegistry.parseFromJson(JsonParser.parseString(
+            "{\"profiles\":{\"example:storm_edge\":{\"fusion_hosts\":[\"TYPO\"]}}}"
+        ).getAsJsonObject(), null));
+        assertThrows(IllegalArgumentException.class, () -> FusionMatrixRegistry.parseFromJson(JsonParser.parseString(
+            "{\"profiles\":{\"example:storm_edge\":{\"fusion_hosts\":[\"AXE\",\"AXE\"]}}}"
+        ).getAsJsonObject(), null));
+    }
+
+    @Test
+    void matrixWireIncludesThirdPartyCarriersAndRejectsMalformedHostCounts() {
+        var classified = FusionMatrixRegistry.parseFromJson(JsonParser.parseString(
+            "{\"profiles\":{\"example:storm_edge\":{\"trigger\":\"ON_MELEE_STRIKE\",\"payload\":\"VOLT\",\"fusion_hosts\":[\"SWORD\",\"AXE\"]}}}"
+        ).getAsJsonObject(), null);
+        FriendlyByteBuf data = buffer();
+        try {
+            MatrixSyncPayload.STREAM_CODEC.encode(data, new MatrixSyncPayload(classified));
+            var decoded = MatrixSyncPayload.STREAM_CODEC.decode(data).snapshot();
+            assertNotNull(decoded);
+            assertEquals(classified.profiles(), decoded.profiles());
+            assertTrue(decoded.profiles().get("example:storm_edge").classifiedForFusion());
+        } finally { data.release(); }
+        FriendlyByteBuf malformed = buffer();
+        try {
+            malformed.writeVarInt(FusionNetworking.MATRIX_SYNC_PROTOCOL_VERSION);
+            malformed.writeVarInt(1);
+            malformed.writeUtf("example:storm_edge", 128);
+            malformed.writeUtf("ON_MELEE_STRIKE", 64);
+            malformed.writeUtf("VOLT", 64);
+            malformed.writeBoolean(true);
+            malformed.writeVarInt(FusionCarrier.values().length + 1);
+            assertThrows(DecoderException.class, () -> MatrixSyncPayload.STREAM_CODEC.decode(malformed));
+        } finally { malformed.release(); }
+    }
+
+    @Test
+    void matrixWireReadsVersionTwoProfilesAsUnclassified() {
+        var full = FusionMatrixRegistry.createBuiltInSnapshot();
+        var profile = full.profiles().get("minecraft:sharpness");
+        var one = new FusionMatrixRegistry.Snapshot(Map.of("example:legacy", profile), List.of(), full.economy());
+        FriendlyByteBuf modern = buffer();
+        FriendlyByteBuf old = buffer();
+        try {
+            MatrixSyncPayload.STREAM_CODEC.encode(modern, new MatrixSyncPayload(one));
+            assertEquals(3, modern.readVarInt());
+            assertEquals(1, modern.readVarInt());
+            String id = modern.readUtf(128), trigger = modern.readUtf(64), payload = modern.readUtf(64);
+            assertFalse(modern.readBoolean());
+            assertEquals(0, modern.readVarInt());
+            old.writeVarInt(2); old.writeVarInt(1);
+            old.writeUtf(id, 128); old.writeUtf(trigger, 64); old.writeUtf(payload, 64);
+            old.writeBytes(modern);
+            var decoded = MatrixSyncPayload.STREAM_CODEC.decode(old).snapshot();
+            assertNotNull(decoded);
+            assertFalse(decoded.profiles().get("example:legacy").classifiedForFusion());
+            assertEquals(0, old.readableBytes());
+        } finally { modern.release(); old.release(); }
     }
 
     @Test

@@ -747,6 +747,7 @@
   "gui.enchantment_fusion.reject.need_purify_stabilizers": "需在催化槽放入足量共鳴穩定晶方可淨化畸變詞條",
   "gui.enchantment_fusion.reject.transmute_cap_full": "目標載體所載異位化形詞條數量已達上限",
   "gui.enchantment_fusion.reject.unsupported_direction_host": "此方向不適用於這件載體；請查看融合效果的適用裝備",
+  "gui.enchantment_fusion.reject.unclassified_enchantment": "第三方附魔尚未設定融合含義及適用載體；請先新增資料包設定",
   "gui.enchantment_fusion.ritual.channeling": "◆ 聚魔共鳴中… (再點秒成)",
   "message.enchantment_fusion.mirage_anchor": "幻影錨點已留下：4秒內再次潛行+右鍵返回。",
   "message.enchantment_fusion.mirage_return": "幻影折返！",

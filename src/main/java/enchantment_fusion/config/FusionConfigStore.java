@@ -11,6 +11,7 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
 import enchantment_fusion.menu.FusionNetworking.MatrixSyncPayload;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.FusionCarrier;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
 import enchantment_fusion.model.PayloadType;
@@ -302,6 +303,13 @@ public final class FusionConfigStore {
             for (JsonElement role : array) {
                 if (!role.isJsonPrimitive() || !role.getAsJsonPrimitive().isString()) throw new IllegalArgumentException("invalid role");
                 TargetRole.valueOf(role.getAsString());
+            }
+        } else if (key.equals("fusion_hosts") && file.equals("matrix_profiles")) {
+            if (array.size() > FusionCarrier.values().length) throw new IllegalArgumentException("too many fusion hosts");
+            Set<FusionCarrier> seen = java.util.EnumSet.noneOf(FusionCarrier.class);
+            for (JsonElement role : array) {
+                if (!role.isJsonPrimitive() || !role.getAsJsonPrimitive().isString()) throw new IllegalArgumentException("invalid fusion host");
+                if (!seen.add(FusionCarrier.valueOf(role.getAsString()))) throw new IllegalArgumentException("duplicate fusion host");
             }
         } else if (key.equals("extra_sources")) {
             for (JsonElement source : array) validateIdentifier(source);

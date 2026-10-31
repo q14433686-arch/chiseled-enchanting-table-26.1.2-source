@@ -747,6 +747,7 @@
   "gui.enchantment_fusion.reject.need_purify_stabilizers": "Requires Resonance Stabilizers in Catalyst Slot to purify Aberrant lock",
   "gui.enchantment_fusion.reject.transmute_cap_full": "Target already holds the maximum number of Transmuted enchantments",
   "gui.enchantment_fusion.reject.unsupported_direction_host": "This ordered fusion does not support that item; see its supported carriers",
+  "gui.enchantment_fusion.reject.unclassified_enchantment": "This third-party enchantment needs datapack fusion meaning and supported carriers",
   "gui.enchantment_fusion.ritual.channeling": "◆ Channeling... (Click to Skip)",
   "message.enchantment_fusion.mirage_anchor": "Mirage anchor set: sneak-right-click again within 4 seconds to return.",
   "message.enchantment_fusion.mirage_return": "Mirage snapback!",
