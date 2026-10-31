@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "[Affilatezza ▷ Punizione] Un colpo carico su un non morto rivela un punto debole dall’altro lato. Aggiralo e colpisci ancora carico per danni extra e lentezza.",
   "signature.enchantment_fusion.radiant_shockwave.title": "Lama d’anime",
   "signature.enchantment_fusion.radiant_shockwave.desc": "[Punizione ▷ Affilatezza] Le uccisioni di non morti accumulano anime. Il prossimo colpo carico a vuoto o colpo da mischia efficace libera una lama penetrante.",
-  "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
-  "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
+  "signature.enchantment_fusion.hamstring_rend.title": "Passo spezzato",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[Affilatezza ▷ Flagello degli artropodi] Un colpo caricato marca un artropode ostile. Se si muove o salta, inciampa ed espone un punto debole per un altro colpo caricato.",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "Filo tagliente",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[Flagello degli artropodi ▷ Affilatezza] Ferire un artropode ostile crea un filo temporaneo. Giragli attorno per colpire gli altri nemici visibili; i muri spezzano il filo.",
   "signature.enchantment_fusion.blight_halo.title": "Rete di anime residue",
   "signature.enchantment_fusion.blight_halo.desc": "[Anatema ▷ Rovina degli artropodi] Uccidere direttamente un non morto lascia una rete virtuale temporanea che rallenta i nemici visibili, senza piazzare blocchi.",
   "signature.enchantment_fusion.soul_cocoon.title": "Bozzolo di pressione spirituale",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "I vecchi oggetti mantengono gli effetti; per quelli nuovi servono arco/balestra o attrezzo da scavo secondo la direzione.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "I vecchi oggetti mantengono gli effetti; il confine usa armi da mischia, le micce una spazzata di spada.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "I vecchi oggetti mantengono gli effetti; l’occhio usa armi da mischia, il nucleo una spazzata di spada.",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "I vecchi oggetti mantengono gli effetti; le nuove tecniche d’anima usano armi da mischia."
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "I vecchi oggetti mantengono gli effetti; le nuove tecniche d’anima usano armi da mischia.",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "Il vecchio oggetto mantiene l’effetto; le nuove tecniche usano armi da mischia."
 }

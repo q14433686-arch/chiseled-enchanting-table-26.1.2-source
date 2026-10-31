@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "[Afiação ▷ Julgamento] Um golpe carregado em um morto-vivo revela um ponto fraco do outro lado. Contorne e acerte carregado de novo para causar dano extra e lentidão.",
   "signature.enchantment_fusion.radiant_shockwave.title": "Lâmina de almas",
   "signature.enchantment_fusion.radiant_shockwave.desc": "[Julgamento ▷ Afiação] Abater mortos-vivos acumula almas. O próximo golpe carregado no ar ou golpe corpo a corpo efetivo libera uma lâmina penetrante.",
-  "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
-  "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
+  "signature.enchantment_fusion.hamstring_rend.title": "Passo partido",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[Afiação ▷ Ruína dos artrópodes] Um golpe totalmente carregado marca um artrópode hostil. Se ele se mover ou saltar, tropeça e expõe um ponto fraco para outro golpe carregado.",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "Fio cortante",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[Ruína dos artrópodes ▷ Afiação] Ferir um artrópode hostil cria um fio temporário. Contorne-o para cortar outros inimigos visíveis; paredes rompem o fio.",
   "signature.enchantment_fusion.blight_halo.title": "Teia de almas residuais",
   "signature.enchantment_fusion.blight_halo.desc": "[Julgamento ▷ Ruína dos artrópodes] Abater diretamente um morto-vivo deixa uma teia virtual temporária que desacelera inimigos visíveis, sem colocar blocos.",
   "signature.enchantment_fusion.soul_cocoon.title": "Casulo de pressão espiritual",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Itens antigos mantêm seus efeitos; novos exigem arco/besta ou ferramenta de mineração conforme a direção.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "O item antigo mantém o efeito; a fronteira usa armas corpo a corpo e o pavio exige varredura de espada.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "O item antigo mantém o efeito; o olho usa armas corpo a corpo e o núcleo exige varredura de espada.",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "O item antigo mantém o efeito; as novas técnicas de alma usam armas corpo a corpo."
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "O item antigo mantém o efeito; as novas técnicas de alma usam armas corpo a corpo.",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "O item antigo mantém o efeito; as novas técnicas usam armas corpo a corpo."
 }

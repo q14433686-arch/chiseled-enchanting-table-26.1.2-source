@@ -117,6 +117,11 @@ public final class SoulThreadSkills {
         }
         return null;
     }
+    /** Whether this handler will replay this primary on the exact selected legacy pair. */
+    public static boolean replaysPrimary(ItemStack weapon, String primary) {
+        Gear gear = selected(weapon);
+        return gear != null && primary.equals(gear.pair().primaryId());
+    }
     private static boolean owns(ServerPlayer player, Gear gear) {
         if (gear.stack().isEmpty() || !gear.stack().getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().contains(gear.pair())
             || !SignatureCatalog.resolve(gear.pair()).map(e -> applies(gear.pair(), gear.stack(), e.id())).orElse(false)) return false;

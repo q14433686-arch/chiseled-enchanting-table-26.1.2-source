@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "[Tranchant ▷ Châtiment] Un coup chargé sur un mort-vivant révèle une faiblesse de l’autre côté. Contournez-le et frappez chargé pour des dégâts supplémentaires et un ralentissement.",
   "signature.enchantment_fusion.radiant_shockwave.title": "Lame des âmes",
   "signature.enchantment_fusion.radiant_shockwave.desc": "[Châtiment ▷ Tranchant] Tuer des morts-vivants accumule des âmes. Le prochain coup chargé dans le vide ou coup de mêlée effectif libère une lame pénétrante.",
-  "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
-  "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
+  "signature.enchantment_fusion.hamstring_rend.title": "Foulée rompue",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[Tranchant ▷ Fléau des arthropodes] Un coup chargé marque un arthropode hostile. S’il bouge ou saute, il trébuche et expose un point faible pour un autre coup chargé.",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "Fil tranchant",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[Fléau des arthropodes ▷ Tranchant] Blesser un arthropode hostile crée un fil temporaire. Tournez autour de lui pour couper les autres ennemis visibles ; les murs rompent le fil.",
   "signature.enchantment_fusion.blight_halo.title": "Toile des âmes résiduelles",
   "signature.enchantment_fusion.blight_halo.desc": "[Châtiment ▷ Fléau des arthropodes] Tuer directement un mort-vivant laisse une toile virtuelle temporaire qui ralentit les ennemis visibles, sans placer de blocs.",
   "signature.enchantment_fusion.soul_cocoon.title": "Cocon de pression spirituelle",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Les anciens supports gardent leurs effets ; les nouveaux exigent un arc/une arbalète ou un outil de minage selon le sens.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "L’ancien support garde son effet ; la frontière utilise une arme de mêlée, la mèche un balayage d’épée.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "L’ancien support garde son effet ; l’œil utilise une arme de mêlée, le noyau un balayage d’épée.",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "L’ancien support garde son effet ; les nouvelles techniques d’âme utilisent une arme de mêlée."
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "L’ancien support garde son effet ; les nouvelles techniques d’âme utilisent une arme de mêlée.",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "L’ancien support garde son effet ; les nouvelles techniques utilisent une arme de mêlée."
 }

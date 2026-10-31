@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "【鋒利 ▷ 不死剋星】滿蓄命中亡靈後，在另一側顯現弱點；繞到對側再次滿蓄命中，造成額外傷害並短暫遲緩。",
   "signature.enchantment_fusion.radiant_shockwave.title": "積魂貫斬",
   "signature.enchantment_fusion.radiant_shockwave.desc": "【不死剋星 ▷ 鋒利】擊殺亡靈積攢魂鋒；下次滿蓄揮空或有效近戰命中時，向前釋放貫穿靈刃。",
-  "signature.enchantment_fusion.hamstring_rend.title": "斷筋破甲",
-  "signature.enchantment_fusion.hamstring_rend.desc": "止住目標並施加緩速；目標原本移動或騰空時額外受到傷害。",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "神經劇毒",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "疊滿3層蛛毒印記後引爆神經毒素，造成無視護甲的真實流血傷害。",
+  "signature.enchantment_fusion.hamstring_rend.title": "斷節絆行",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[鋒利 ▷ 節肢剋星] 滿蓄命中敵對節肢生物後留下斷節印；目標繼續移動或跳躍時絆停並暴露破綻，再次滿蓄命中造成額外傷害。",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "繞絲切割",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[節肢剋星 ▷ 鋒利] 實際命中敵對節肢生物後連起短暫虛擬絲線。繞著它移動，掃到其他可見敵人時切傷；隔牆會斷線。",
   "signature.enchantment_fusion.blight_halo.title": "殘魂織網",
   "signature.enchantment_fusion.blight_halo.desc": "【不死剋星 ▷ 節肢殺手】直接擊殺不死生物後留下短暫虛擬魂網，牽制可見敵人；不放置方塊。",
   "signature.enchantment_fusion.soul_cocoon.title": "縛繭蓄壓",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "舊載體保留原效果；新裝載按方向使用弓／弩或採掘工具。",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "舊載體保留原效果；新餘燼界使用近戰武器，引信需要劍的真實橫掃。",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "舊載體保留原效果；新風眼使用近戰武器，風核需要劍的真實橫掃。",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "舊載體保留原效果；新的破魂和靈刃使用近戰武器。"
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "舊載體保留原效果；新的破魂和靈刃使用近戰武器。",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "舊載體保留原效果；新的斷節和絲線使用近戰武器。"
 }

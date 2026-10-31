@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "【ダメージ増加 ▷ アンデッド特効】十分に溜めてアンデッドを攻撃すると反対側に弱点が現れる。回り込んで再び溜めて攻撃すると追加ダメージと鈍足を与える。",
   "signature.enchantment_fusion.radiant_shockwave.title": "蓄魂貫斬",
   "signature.enchantment_fusion.radiant_shockwave.desc": "【アンデッド特効 ▷ ダメージ増加】アンデッドの討伐で魂を蓄える。次の十分に溜めた空振りか有効な近接攻撃で、前方に貫通する霊刃を放つ。",
-  "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
-  "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
+  "signature.enchantment_fusion.hamstring_rend.title": "節断ちの足止め",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[ダメージ増加 ▷ 虫特効] 最大溜めで敵対する節足動物に命中すると印が付き、移動やジャンプでつまずき弱点を露出。再び最大溜めで命中すると追加ダメージ。",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "糸巡りの斬撃",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[虫特効 ▷ ダメージ増加] 敵対する節足動物にダメージを与えると短時間の糸を張る。周囲を回って見える他の敵を斬る。壁で糸は切れる。",
   "signature.enchantment_fusion.blight_halo.title": "残魂の網",
   "signature.enchantment_fusion.blight_halo.desc": "【聖なる力 ▷ 虫殺し】アンデッドを直接倒すと、見える敵を鈍らせる短命の仮想魂網を残す。ブロックは置かない。",
   "signature.enchantment_fusion.soul_cocoon.title": "魂繭の蓄圧",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "旧装備の効果は維持。新たな装着には方向に応じ弓・クロスボウか採掘道具が必要。",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "旧装備は旧効果を維持。新しい境界は近接武器、導火線は剣の範囲攻撃が必要。",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "旧装備は旧効果を維持。風眼は近接武器、風核は剣の範囲攻撃が必要。",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "旧装備は旧効果を維持。新しい魂の技は近接武器を使う。"
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "旧装備は旧効果を維持。新しい魂の技は近接武器を使う。",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "旧装備は旧効果を維持。新しい足止めと糸は近接武器を使う。"
 }

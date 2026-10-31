@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "[Filo ▷ Castigo] Un golpe cargado a un no muerto revela un punto débil al otro lado. Rodéalo y golpea cargado de nuevo para causar daño extra y ralentizar.",
   "signature.enchantment_fusion.radiant_shockwave.title": "Filo de almas",
   "signature.enchantment_fusion.radiant_shockwave.desc": "[Castigo ▷ Filo] Derrotar no muertos acumula almas. El siguiente golpe cargado al aire o golpe cuerpo a cuerpo efectivo libera una hoja penetrante hacia delante.",
-  "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
-  "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
+  "signature.enchantment_fusion.hamstring_rend.title": "Paso quebrado",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[Filo ▷ Perdición de los artrópodos] Un golpe cargado marca a un artrópodo hostil. Si se mueve o salta, tropieza y expone un punto débil para otro golpe cargado.",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "Hilo cortante",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[Perdición de los artrópodos ▷ Filo] Dañar a un artrópodo hostil crea un hilo temporal. Rodéalo para cortar a otros enemigos visibles; las paredes rompen el hilo.",
   "signature.enchantment_fusion.blight_halo.title": "Red de almas residuales",
   "signature.enchantment_fusion.blight_halo.desc": "[Castigo ▷ Perdición de artrópodos] Al matar directamente a un no muerto queda una red virtual temporal que ralentiza enemigos visibles; no coloca bloques.",
   "signature.enchantment_fusion.soul_cocoon.title": "Capullo de presión anímica",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Los objetos antiguos conservan sus efectos; los nuevos requieren arco/ballesta o herramienta de minería según la dirección.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "El objeto antiguo conserva su efecto; el límite usa armas cuerpo a cuerpo y la mecha requiere barrido de espada.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "El objeto antiguo conserva su efecto; el ojo usa armas cuerpo a cuerpo y el núcleo exige barrido de espada.",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades de alma usan armas cuerpo a cuerpo."
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades de alma usan armas cuerpo a cuerpo.",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades usan armas cuerpo a cuerpo."
 }

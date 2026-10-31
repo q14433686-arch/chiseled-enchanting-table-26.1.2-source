@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "【날카로움 ▷ 강타】완전 충전 공격으로 언데드를 맞히면 반대편에 약점이 나타납니다. 돌아가 다시 완전 충전해 맞히면 추가 피해와 둔화를 줍니다.",
   "signature.enchantment_fusion.radiant_shockwave.title": "영혼 관통 베기",
   "signature.enchantment_fusion.radiant_shockwave.desc": "【강타 ▷ 날카로움】언데드를 처치해 영혼을 모읍니다. 다음 완전 충전 헛스윙이나 유효 근접 공격에서 관통하는 영혼 칼날을 내보냅니다.",
-  "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
-  "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
+  "signature.enchantment_fusion.hamstring_rend.title": "마디 걸음 끊기",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[날카로움 ▷ 살충] 완전 충전 공격으로 적대적인 절지동물을 표시합니다. 대상이 움직이거나 뛰면 걸려 넘어져 약점이 드러나며, 다시 완전 충전 공격을 하면 추가 피해를 줍니다.",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "실 선회 베기",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[살충 ▷ 날카로움] 적대적인 절지동물에게 피해를 주면 잠시 실이 이어집니다. 주위를 돌아 보이는 다른 적을 베며, 벽에 막히면 실이 끊어집니다.",
   "signature.enchantment_fusion.blight_halo.title": "잔혼 거미줄",
   "signature.enchantment_fusion.blight_halo.desc": "【강타 ▷ 살충】언데드를 직접 처치하면 보이는 적을 느리게 하는 일시적인 가상 영혼 거미줄을 남깁니다. 블록은 놓지 않습니다.",
   "signature.enchantment_fusion.soul_cocoon.title": "영혼 고치 압력",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "기존 장비의 효과는 유지됩니다. 새로 부착하려면 방향에 맞는 활/쇠뇌 또는 채굴 도구가 필요합니다.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 새 경계는 근접 무기, 도화선은 검의 휩쓸기가 필요합니다.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 바람눈은 근접 무기, 바람핵은 검의 휩쓸기가 필요합니다.",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "기존 장비는 기존 효과를 유지하며 새 영혼 기술에는 근접 무기가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "기존 장비는 기존 효과를 유지하며 새 영혼 기술에는 근접 무기가 필요합니다.",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "기존 장비는 기존 효과를 유지하며 새 걸림과 실 기술에는 근접 무기가 필요합니다."
 }

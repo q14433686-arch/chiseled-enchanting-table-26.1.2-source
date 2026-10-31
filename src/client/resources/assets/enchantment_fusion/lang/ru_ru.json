@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "[Острота ▷ Небесная кара] Полностью заряженный удар по нежити открывает слабое место с другой стороны. Обойдите и снова ударьте с зарядом для дополнительного урона и замедления.",
   "signature.enchantment_fusion.radiant_shockwave.title": "Накопленный клинок душ",
   "signature.enchantment_fusion.radiant_shockwave.desc": "[Небесная кара ▷ Острота] Убийства нежити накапливают души. Следующий заряженный взмах в пустоту или успешный удар выпускает пронзающий клинок.",
-  "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
-  "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
+  "signature.enchantment_fusion.hamstring_rend.title": "Подсечённый шаг",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[Острота ▷ Бич членистоногих] Полностью заряженный удар помечает враждебное членистоногое. При движении или прыжке оно спотыкается и открывает слабое место для следующего заряженного удара.",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "Режущая нить",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[Бич членистоногих ▷ Острота] Урон враждебному членистоногому создаёт временную нить. Обходите цель, чтобы задеть других видимых врагов; стены разрывают нить.",
   "signature.enchantment_fusion.blight_halo.title": "Паутина остаточных душ",
   "signature.enchantment_fusion.blight_halo.desc": "[Небесная кара ▷ Бич членистоногих] Прямое убийство нежити оставляет временную виртуальную паутину, замедляющую видимых врагов; блоки не создаются.",
   "signature.enchantment_fusion.soul_cocoon.title": "Давление душ в коконе",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Старые предметы сохраняют эффекты; для новых нужны лук/арбалет или инструмент добычи согласно направлению.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Старый предмет сохраняет эффект; границе нужно оружие ближнего боя, фитилям — размашистый удар мечом.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "Старый предмет сохраняет эффект; глазу нужно оружие ближнего боя, ядру — размашистый удар мечом.",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "Старый предмет сохраняет эффект; новым приёмам души нужно оружие ближнего боя."
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "Старый предмет сохраняет эффект; новым приёмам души нужно оружие ближнего боя.",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "Старый предмет сохраняет эффект; новым приёмам нужно оружие ближнего боя."
 }

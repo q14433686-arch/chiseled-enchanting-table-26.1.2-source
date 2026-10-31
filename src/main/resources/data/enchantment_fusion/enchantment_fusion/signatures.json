@@ -18,12 +18,16 @@
     "hamstring_rend": {
       "primary": "minecraft:sharpness",
       "secondary": "minecraft:bane_of_arthropods",
-      "domain": "melee"
+      "domain": "melee",
+      "mark_ticks": 100,
+      "opening_ticks": 60
     },
     "neurotoxin_bleed": {
       "primary": "minecraft:bane_of_arthropods",
       "secondary": "minecraft:sharpness",
-      "domain": "melee"
+      "domain": "melee",
+      "thread_ticks": 100,
+      "thread_range_tenths": 90
     },
     "blight_halo": {
       "primary": "minecraft:smite",

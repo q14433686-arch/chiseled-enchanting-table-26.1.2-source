@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "[Sharpness ▷ Smite] A fully charged hit on an undead enemy reveals a weak point on its far side. Circle around and strike fully again for extra damage and brief slowing.",
   "signature.enchantment_fusion.radiant_shockwave.title": "Stored Soul Blade",
   "signature.enchantment_fusion.radiant_shockwave.desc": "[Smite ▷ Sharpness] Killing undead stores soul edges. Your next fully charged air swing or damaging melee hit releases a piercing blade ahead.",
-  "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
-  "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
+  "signature.enchantment_fusion.hamstring_rend.title": "Severed Stride",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[Sharpness ▷ Bane of Arthropods] A full-strength hit marks a hostile arthropod. If it moves or jumps, it trips and exposes a weak point; another full-strength hit consumes it for bonus damage.",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "Circling Thread",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[Bane of Arthropods ▷ Sharpness] A damaging hit on a hostile arthropod creates a temporary thread. Circle it to cut other visible enemies; walls break the thread.",
   "signature.enchantment_fusion.blight_halo.title": "Lingering Soul Web",
   "signature.enchantment_fusion.blight_halo.desc": "[Smite ▷ Bane of Arthropods] Directly kill an undead mob to leave a temporary virtual web that slows visible enemies; places no blocks.",
   "signature.enchantment_fusion.soul_cocoon.title": "Pressurized Soul Cocoon",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "This legacy carrier keeps its old effects; new installations require a bow/crossbow or a mining tool for the matching direction.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "This legacy carrier keeps its old effects; the new boundary uses melee weapons and the fuse requires a sword sweep.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "This legacy carrier keeps its old effects; the wind eye uses melee weapons and the core requires a sword sweep.",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "This legacy carrier keeps its old effects; the new soul skills use melee weapons."
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "This legacy carrier keeps its old effects; the new soul skills use melee weapons.",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "This legacy carrier keeps its old effects; the new trip and thread use melee weapons."
 }

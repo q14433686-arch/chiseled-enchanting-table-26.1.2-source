@@ -123,10 +123,10 @@
   "signature.enchantment_fusion.sanctified_execute.desc": "【锋利 ▷ 亡灵杀手】满蓄命中亡灵后，在另一侧显现弱点；绕到对侧再次满蓄命中，造成额外伤害并短暂迟缓。",
   "signature.enchantment_fusion.radiant_shockwave.title": "积魂贯斩",
   "signature.enchantment_fusion.radiant_shockwave.desc": "【亡灵杀手 ▷ 锋利】击杀亡灵积攒魂锋；下次满蓄挥空或有效近战命中时，向前释放贯穿灵刃。",
-  "signature.enchantment_fusion.hamstring_rend.title": "断筋破甲",
-  "signature.enchantment_fusion.hamstring_rend.desc": "止住目标并施加迟缓；目标原本移动或腾空时额外受到伤害。",
-  "signature.enchantment_fusion.neurotoxin_bleed.title": "神经剧毒",
-  "signature.enchantment_fusion.neurotoxin_bleed.desc": "叠满3层蛛毒印记后引爆神经毒素，造成无视护甲的真实流血伤害。",
+  "signature.enchantment_fusion.hamstring_rend.title": "断节绊行",
+  "signature.enchantment_fusion.hamstring_rend.desc": "[锋利 ▷ 节肢杀手] 满蓄命中敌对节肢生物后留下断节印；目标继续移动或跳跃时绊停并暴露破绽，再次满蓄命中造成额外伤害。",
+  "signature.enchantment_fusion.neurotoxin_bleed.title": "绕丝切割",
+  "signature.enchantment_fusion.neurotoxin_bleed.desc": "[节肢杀手 ▷ 锋利] 实际命中敌对节肢生物后连起短暂虚拟丝线。绕着它移动，扫到其他可见敌人时切伤；隔墙会断线。",
   "signature.enchantment_fusion.blight_halo.title": "残魂织网",
   "signature.enchantment_fusion.blight_halo.desc": "【亡灵杀手 ▷ 节肢杀手】直接击杀亡灵生物后留下短暂虚拟魂网，牵制可见敌人；不放置方块。",
   "signature.enchantment_fusion.soul_cocoon.title": "缚茧蓄压",
@@ -999,5 +999,6 @@
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "旧载体保留原效果；新装载按方向使用弓/弩或采掘工具。",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "旧载体保留原效果；新余烬界使用近战武器，引信需要剑的真实横扫。",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "旧载体保留原效果；新风眼使用近战武器，风核需要剑的真实横扫。",
-  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "旧载体保留原效果；新的破魂和灵刃使用近战武器。"
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "旧载体保留原效果；新的破魂和灵刃使用近战武器。",
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "旧载体保留原效果；新的断节和丝线使用近战武器。"
 }

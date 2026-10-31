@@ -191,10 +191,13 @@ public final class SoulBladeSkills {
         owner.level().sendParticles(ParticleTypes.SOUL, owner.getX(), owner.getY(0.6D), owner.getZ(), 8, 0.18D, 0.25D, 0.18D, 0.02D);
         CompendiumDiscoveryTracker.recordDiscovery(owner, SMITE, SHARP);
     }
+    /** Whether this handler will replay this primary on the exact selected legacy pair. */
+    public static boolean replaysPrimary(ItemStack weapon, String primary) {
+        Gear gear = selected(weapon);
+        return gear != null && primary.equals(gear.pair().primaryId());
+    }
     private static boolean primaryReplayedBySoulThread(ItemStack weapon, String primary) {
-        for (FusedPair pair : weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs())
-            if (primary.equals(pair.primaryId()) && SignatureCatalog.resolve(pair).map(e -> SoulThreadSkills.applies(pair, weapon, e.id())).orElse(false)) return true;
-        return false;
+        return SoulThreadSkills.replaysPrimary(weapon, primary);
     }
     /** Preserve the native data-pack main enchantment; add a prepared weakpoint bonus before vanilla damage. */
     public static float modifyDamage(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source, float vanilla) {

@@ -27,6 +27,7 @@ import enchantment_fusion.mechanics.signatures.FireThornsSkills;
 import enchantment_fusion.mechanics.signatures.FireSweepSkills;
 import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
+import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -100,6 +101,7 @@ public final class MatrixRuntimeHooks {
             FireSweepSkills.clear();
             WindSweepSkills.clear();
             SoulBladeSkills.clear();
+            SegmentThreadSkills.clear();
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             AmberSealSkill.onEntityUnload(entity);
@@ -152,6 +154,7 @@ public final class MatrixRuntimeHooks {
             FireSweepSkills.onDisconnect(pid);
             WindSweepSkills.onDisconnect(pid);
             SoulBladeSkills.onDisconnect(pid);
+            SegmentThreadSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -379,6 +382,7 @@ public final class MatrixRuntimeHooks {
             FireSweepSkills.tickServer(server);
             WindSweepSkills.tickServer(server);
             SoulBladeSkills.tickServer(server);
+            SegmentThreadSkills.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
             AmberSealSkill.tickServer(server);
             UnderwaterMiningSkills.tickServer(server);
