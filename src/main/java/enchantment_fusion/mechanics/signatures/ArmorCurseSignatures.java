@@ -472,8 +472,13 @@ public final class ArmorCurseSignatures {
                 }
                 case "abyssal_sight" -> {
                     if (player.isInWater()) {
+                        // Night vision does not duplicate the chosen ability. Free water breathing
+                        // would erase its oxygen cost; retain that legacy effect only on old,
+                        // unsupported carriers instead of changing their behavior or item data.
                         grantEffect(player, "night_vision", 240, 0);
-                        grantEffect(player, "water_breathing", 30, 0);
+                        if (!UnderwaterMiningSkills.applies(eq.pair(), eq.stack(), sigId)) {
+                            grantEffect(player, "water_breathing", 30, 0);
+                        }
                     }
                 }
                 case "rapid_bowstring", "swift_draw_burst" -> {

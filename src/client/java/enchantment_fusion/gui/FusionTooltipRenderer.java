@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.CrossDomainTransmutations.TransmuteVariant;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.mechanics.VesselCapacityRules;
+import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.HostForm;
@@ -124,6 +125,10 @@ public final class FusionTooltipRenderer {
             Component primaryLabel = formatEnchantmentWithLevel(registries, pair.primaryId(), pair.primaryLevel());
             Component secondaryLabel = formatEnchantmentWithLevel(registries, pair.secondaryId(), pair.secondaryLevel());
             Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
+            boolean legacyUnderwaterCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && ((UnderwaterMiningSkills.isSpendPair(pair) && UnderwaterMiningSkills.SPEND_SIGNATURE.equals(sigOpt.get().id()))
+                    || (UnderwaterMiningSkills.isBubblePair(pair) && UnderwaterMiningSkills.BUBBLE_SIGNATURE.equals(sigOpt.get().id())))
+                && !UnderwaterMiningSkills.applies(pair, stack, sigOpt.get().id());
 
             if (pair.isAberrant()) {
                 Component abTitle = Component.translatable(AberrantRegistry.titleKey(pair.aberrationId()));
@@ -156,7 +161,7 @@ public final class FusionTooltipRenderer {
                     primaryLabel,
                     secondaryLabel
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
-                if (shift) {
+                if (shift && !legacyUnderwaterCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -168,6 +173,10 @@ public final class FusionTooltipRenderer {
                 if (shift) {
                     lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
                 }
+            }
+            if (legacyUnderwaterCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_underwater_carrier")
+                    .withStyle(ChatFormatting.GOLD));
             }
         }
 

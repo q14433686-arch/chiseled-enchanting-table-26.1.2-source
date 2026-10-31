@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.FusionWorldLoot;
 import enchantment_fusion.mechanics.MatrixRuntimeHooks;
 import enchantment_fusion.mechanics.transmute.ReplenishTracker;
 import enchantment_fusion.menu.FusionNetworking;
+import enchantment_fusion.menu.FusionSkillNetworking;
 import enchantment_fusion.mixin.FusionMixinConfigPlugin;
 import enchantment_fusion.registry.FusionBlockEntities;
 import enchantment_fusion.registry.FusionBlocks;
@@ -39,6 +40,7 @@ public final class EnchantmentFusion implements ModInitializer {
         FusionBlockEntities.init();
         FusionMenus.init();
         FusionNetworking.init();
+        FusionSkillNetworking.init();
         FusionConfigNetworking.init();
         FusionDataLoader.init();
         FusionWorldLoot.init();

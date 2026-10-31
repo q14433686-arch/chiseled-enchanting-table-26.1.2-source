@@ -221,10 +221,10 @@
   "signature.enchantment_fusion.soul_stride_landing.desc": "无视地形触发灵魂疾行，落地瞬间衔接近战突进步伐。",
   "signature.enchantment_fusion.phantom_assassin_step.title": "幽影刺客",
   "signature.enchantment_fusion.phantom_assassin_step.desc": "潜行移速大幅跃升至奔跑水准，悄无声息贴近猎物。",
-  "signature.enchantment_fusion.abyssal_sight.title": "深海明眸",
-  "signature.enchantment_fusion.abyssal_sight.desc": "潜入水中自动获得澄澈夜视与绵长呼吸，海底亮如白昼。",
-  "signature.enchantment_fusion.ocean_breath_mine.title": "海神吐纳",
-  "signature.enchantment_fusion.ocean_breath_mine.desc": "无视浮空与水下5倍挖掘减速，雨水中挖掘提速并在掘进时回复氧气泡。",
+  "signature.enchantment_fusion.abyssal_sight.title": "耗息疾掘",
+  "signature.enchantment_fusion.abyssal_sight.desc": "水下穿戴头盔或手持镐、斧、锹、锄时，按融合技能键（默认 G，可在按键设置修改），消耗氧气换取短暂水下高速采掘。保留夜视和原版水下呼吸；旧的免费水下呼吸药水效果被替换。",
+  "signature.enchantment_fusion.ocean_breath_mine.title": "掘出气泡",
+  "signature.enchantment_fusion.ocean_breath_mine.desc": "穿戴头盔或使用镐、斧、锹、锄在水下真正挖掘后产生短暂上浮的虚拟气泡，游过去可补氧；气泡仅归采掘者，数量受限。保留旧采掘速度加成和原版水下速掘。",
   "signature.enchantment_fusion.tidal_double_catch.title": "双鲤戏珠",
   "signature.enchantment_fusion.tidal_double_catch.desc": "垂钓或采集时受海神眷顾，双倍馈赠宝藏与经验。",
   "signature.enchantment_fusion.raging_hook.title": "怒海狂钩",
@@ -863,5 +863,9 @@
   "message.enchantment_fusion.guard_damage_unavailable": "忠诚护主已救命，但处决伤害类型不可用。",
   "death.attack.enchantment_fusion_loyalty_guard": "%1$s 被 %2$s 的忠诚护主处决了",
   "death.attack.enchantment_fusion_loyalty_guard.item": "%1$s 被 %2$s 用 %3$s 的忠诚护主处决了",
-  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s 在与 %2$s 战斗时被忠诚护主处决了"
+  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s 在与 %2$s 战斗时被忠诚护主处决了",
+  "key.category.enchantment_fusion.abilities": "融合附魔",
+  "key.enchantment_fusion.activate_skill": "释放融合主动技能",
+  "message.enchantment_fusion.breath_not_enough": "剩余氧气不足，需要保留一部分呼吸余量。",
+  "tooltip.enchantment_fusion.legacy_underwater_carrier": "旧载体：保留旧效果；无法在该装备上新装此方向的采掘技能。"
 }

@@ -4,6 +4,7 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
+import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -39,6 +40,11 @@ public final class DirectionalHostRules {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         String signature = SignatureCatalog.resolve(pair).map(e -> e.id()).orElse("");
+        boolean underwaterRedesign = (UnderwaterMiningSkills.isSpendPair(pair) && signature.equals(UnderwaterMiningSkills.SPEND_SIGNATURE))
+            || (UnderwaterMiningSkills.isBubblePair(pair) && signature.equals(UnderwaterMiningSkills.BUBBLE_SIGNATURE));
+        if (underwaterRedesign && !UnderwaterMiningSkills.supportsCarrier(actual)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
         if (pair.primaryId().equals("minecraft:fire_aspect") && pair.secondaryId().equals("minecraft:aqua_affinity")
             && signature.equals("geyser_bore")
             && actual.stream().noneMatch(Set.of(FusionCarrier.PICKAXE, FusionCarrier.AXE, FusionCarrier.SHOVEL, FusionCarrier.HOE)::contains)) {

@@ -6,6 +6,7 @@ import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
+import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
@@ -86,6 +87,17 @@ public final class MatrixEffectExecutor {
         if (now < COOLDOWNS.getOrDefault(key, 0L)) return false;
         COOLDOWNS.put(key, now + Math.max(6, FusionMatrixRegistry.serverSnapshot().economy().cooldownTicksFor(trigger)));
         return true;
+    }
+
+    /** A redesigned skill can retain its aberration without recursively dispatching a fusion. */
+    public static void runDeferredAberration(ServerLevel level, ServerPlayer player, FusedPair pair, Vec3 pos) {
+        if (!pair.isAberrant() || Boolean.TRUE.equals(IN_EXECUTION.get())) return;
+        IN_EXECUTION.set(Boolean.TRUE);
+        try {
+            AberrantRegistry.executeAberration(level, player, pair.aberrationId(), null, pos);
+        } finally {
+            IN_EXECUTION.set(Boolean.FALSE);
+        }
     }
 
     public static void dispatch(
@@ -247,8 +259,10 @@ public final class MatrixEffectExecutor {
             }
 
             Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
-            // The selected Loyalty ▷ Protection design is exclusively a lethal-damage rescue.
+            // These redesigned skills have dedicated triggers; generic dispatch would grant
+            // unrelated bonuses and/or spend a cooldown before their real action happens.
             if (sigOpt.isPresent() && LoyaltyGuard.matches(pair, sigOpt.get().id())) continue;
+            if (sigOpt.isPresent() && UnderwaterMiningSkills.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && GlazedStrikeEffect.applies(pair, hostStack, sigOpt.get().id())) {
                 // Only the actual weapon used for the attack may prime this redesigned skill;
                 // an unrelated held/worn copy must not trigger it from a different host.

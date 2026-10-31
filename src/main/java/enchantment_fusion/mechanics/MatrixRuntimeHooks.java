@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.MirageSnapbackSkill;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
+import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -61,6 +62,7 @@ public final class MatrixRuntimeHooks {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             FlyingBladeManager.flushAll();
             ProjectilePathTracker.flushAll();
+            UnderwaterMiningSkills.clear(server);
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
@@ -83,6 +85,7 @@ public final class MatrixRuntimeHooks {
             ACTIVE_RIPTIDE_SPINS.remove(pid);
             MirageSnapbackSkill.onPlayerDisconnect(pid);
             GlazedStrikeEffect.onPlayerDisconnect(pid);
+            UnderwaterMiningSkills.onPlayerDisconnect(handler.getPlayer());
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -206,6 +209,7 @@ public final class MatrixRuntimeHooks {
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
             if (!world.isClientSide() && world instanceof ServerLevel serverLevel && player instanceof ServerPlayer serverPlayer) {
                 ItemStack tool = serverPlayer.getMainHandItem();
+                UnderwaterMiningSkills.onMined(serverLevel, serverPlayer, pos);
                 SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
                 MatrixEffectExecutor.dispatchAcrossEquippedSlots(
                     serverLevel, serverPlayer, tool,
@@ -260,6 +264,7 @@ public final class MatrixRuntimeHooks {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             if (entity instanceof ServerPlayer deadPlayer) {
                 MirageSnapbackSkill.onPlayerDisconnect(deadPlayer.getUUID());
+                UnderwaterMiningSkills.onPlayerDisconnect(deadPlayer);
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -278,6 +283,7 @@ public final class MatrixRuntimeHooks {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             FlameKineticEffects.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
+            UnderwaterMiningSkills.tickServer(server);
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);

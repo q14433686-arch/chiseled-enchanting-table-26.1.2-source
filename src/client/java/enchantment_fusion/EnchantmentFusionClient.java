@@ -12,6 +12,7 @@ import enchantment_fusion.gui.FusionGuiMicroEffects;
 import enchantment_fusion.gui.FusionTooltipRenderer;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.menu.FusionNetworking;
+import enchantment_fusion.menu.FusionSkillNetworking;
 import enchantment_fusion.menu.FusionNetworking.CompendiumDeltaPayload;
 import enchantment_fusion.menu.FusionNetworking.CompendiumSyncPayload;
 import enchantment_fusion.menu.FusionNetworking.FusionVisualEventPayload;
@@ -28,10 +29,13 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.screens.MenuScreens;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Client entrypoint registering the pixel-art Fusion Table screen, floating BlockEntity renderer,
@@ -48,6 +52,17 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
             EnchantmentFusionTableRenderer::new
         );
         FusionTooltipRenderer.register();
+        KeyMapping.Category skillCategory = KeyMapping.Category.register(EnchantmentFusion.id("abilities"));
+        KeyMapping skillKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+            "key.enchantment_fusion.activate_skill", GLFW.GLFW_KEY_G, skillCategory));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (skillKey.consumeClick()) {
+                if (client.player != null && client.screen == null
+                    && ClientPlayNetworking.canSend(FusionSkillNetworking.ActivatePayload.TYPE)) {
+                    ClientPlayNetworking.send(FusionSkillNetworking.ActivatePayload.INSTANCE);
+                }
+            }
+        });
 
         ClientPlayNetworking.registerGlobalReceiver(FusionConfigNetworking.SyncPayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> FusionConfigClient.apply(payload));

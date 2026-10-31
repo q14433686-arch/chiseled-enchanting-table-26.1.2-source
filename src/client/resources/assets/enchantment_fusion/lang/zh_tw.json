@@ -221,10 +221,10 @@
   "signature.enchantment_fusion.soul_stride_landing.desc": "無視地形觸發靈魂疾行，落地瞬間銜接近戰突進步伐。",
   "signature.enchantment_fusion.phantom_assassin_step.title": "幽影刺客",
   "signature.enchantment_fusion.phantom_assassin_step.desc": "潛行移速大幅躍升至奔跑水準，悄無聲息贴近獵物。",
-  "signature.enchantment_fusion.abyssal_sight.title": "深海明眸",
-  "signature.enchantment_fusion.abyssal_sight.desc": "潛入水中自動獲得澄澈夜視与綿長呼吸，海底亮如白晝。",
-  "signature.enchantment_fusion.ocean_breath_mine.title": "海神吐納",
-  "signature.enchantment_fusion.ocean_breath_mine.desc": "無視浮空與水下5倍挖掘減速，雨水中挖掘提速並在掘進時回復氧氣泡。",
+  "signature.enchantment_fusion.abyssal_sight.title": "Breath-Fueled Mining",
+  "signature.enchantment_fusion.abyssal_sight.desc": "While wearing a helmet or holding a pickaxe, axe, shovel or hoe underwater, press the fusion skill key (G by default, rebindable) to spend air for faster underwater mining. Keeps night vision and native Respiration; the old free Water Breathing bonus is replaced.",
+  "signature.enchantment_fusion.ocean_breath_mine.title": "Mining Air Bubbles",
+  "signature.enchantment_fusion.ocean_breath_mine.desc": "With a worn helmet or the mining tool, real underwater mining releases a temporary rising bubble; swim into it to regain air. Bubbles belong to the miner and are limited. Existing mining-speed bonuses and native Aqua Affinity remain.",
   "signature.enchantment_fusion.tidal_double_catch.title": "雙鯉戲珠",
   "signature.enchantment_fusion.tidal_double_catch.desc": "垂釣或採集時受海神眷顧，雙倍饋贈寶藏与經驗。",
   "signature.enchantment_fusion.raging_hook.title": "怒海狂鉤",
@@ -863,5 +863,9 @@
   "message.enchantment_fusion.guard_damage_unavailable": "忠誠護主已救命，但處決傷害類型不可用。",
   "death.attack.enchantment_fusion_loyalty_guard": "%1$s 被 %2$s 的忠誠護主處決了",
   "death.attack.enchantment_fusion_loyalty_guard.item": "%1$s 被 %2$s 用 %3$s 的忠誠護主處決了",
-  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s 在與 %2$s 戰鬥時被忠誠護主處決了"
+  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s 在與 %2$s 戰鬥時被忠誠護主處決了",
+  "key.category.enchantment_fusion.abilities": "Enchantment Fusion",
+  "key.enchantment_fusion.activate_skill": "Activate fusion skill",
+  "message.enchantment_fusion.breath_not_enough": "Not enough air to activate; a breathing reserve is required.",
+  "tooltip.enchantment_fusion.legacy_underwater_carrier": "Legacy carrier: previous behavior remains; the new mining skill cannot be installed here."
 }

@@ -220,7 +220,13 @@ public final class MiningFishingSignatures {
                 case "perpetual_craft", "eternal_bowstring", "overflow_plating", "tempered_anvil_heart" -> {
                     if (tool.isDamaged() && rng.nextFloat() < 0.75F) tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
                 }
-                case "ocean_breath_mine" -> player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 45));
+                case "ocean_breath_mine" -> {
+                    // The new direction creates a collectable bubble only after a real break;
+                    // unsupported legacy gear keeps its old instant-air behavior.
+                    if (!UnderwaterMiningSkills.applies(pair, tool, sigId)) {
+                        player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 45));
+                    }
+                }
                 case "rock_splitter_pick", "triple_excavate", "vein_peel" -> {
                     if (player.mayBuild() && !player.isShiftKeyDown() && !ExtraBlockHarvest.isActive()) {
                         ExtraBlockHarvest.defer(() -> {

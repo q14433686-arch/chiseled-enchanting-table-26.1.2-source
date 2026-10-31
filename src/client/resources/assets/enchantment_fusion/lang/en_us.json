@@ -221,10 +221,10 @@
   "signature.enchantment_fusion.soul_stride_landing.desc": "Cushions landings into a burst of Soul Speed across any terrain.",
   "signature.enchantment_fusion.phantom_assassin_step.title": "Phantom Assassin Step",
   "signature.enchantment_fusion.phantom_assassin_step.desc": "Boosts sneaking mobility to swift assassin pace without alerting foes.",
-  "signature.enchantment_fusion.abyssal_sight.title": "Abyssal Sight",
-  "signature.enchantment_fusion.abyssal_sight.desc": "Grants crystal-clear underwater Night Vision and extended Water Breathing.",
-  "signature.enchantment_fusion.ocean_breath_mine.title": "Ocean Breath Mine",
-  "signature.enchantment_fusion.ocean_breath_mine.desc": "Negates airborne and underwater mining penalties, accelerates wet mining, and restores air bubbles per block.",
+  "signature.enchantment_fusion.abyssal_sight.title": "Breath-Fueled Mining",
+  "signature.enchantment_fusion.abyssal_sight.desc": "While wearing a helmet or holding a pickaxe, axe, shovel or hoe underwater, press the fusion skill key (G by default, rebindable) to spend air for faster underwater mining. Keeps night vision and native Respiration; the old free Water Breathing bonus is replaced.",
+  "signature.enchantment_fusion.ocean_breath_mine.title": "Mining Air Bubbles",
+  "signature.enchantment_fusion.ocean_breath_mine.desc": "With a worn helmet or the mining tool, real underwater mining releases a temporary rising bubble; swim into it to regain air. Bubbles belong to the miner and are limited. Existing mining-speed bonuses and native Aqua Affinity remain.",
   "signature.enchantment_fusion.tidal_double_catch.title": "Tidal Double Catch",
   "signature.enchantment_fusion.tidal_double_catch.desc": "Blesses your catches and harvests with bonus sea luck and twin spoils.",
   "signature.enchantment_fusion.raging_hook.title": "Raging Hook",
@@ -863,5 +863,9 @@
   "message.enchantment_fusion.guard_damage_unavailable": "Loyalty rescue saved you, but its execution damage type is unavailable.",
   "death.attack.enchantment_fusion_loyalty_guard": "%1$s was judged by %2$s’s last stand",
   "death.attack.enchantment_fusion_loyalty_guard.item": "%1$s was judged by %2$s using %3$s",
-  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s was judged while fighting %2$s"
+  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s was judged while fighting %2$s",
+  "key.category.enchantment_fusion.abilities": "Enchantment Fusion",
+  "key.enchantment_fusion.activate_skill": "Activate fusion skill",
+  "message.enchantment_fusion.breath_not_enough": "Not enough air to activate; a breathing reserve is required.",
+  "tooltip.enchantment_fusion.legacy_underwater_carrier": "Legacy carrier: previous behavior remains; the new mining skill cannot be installed here."
 }

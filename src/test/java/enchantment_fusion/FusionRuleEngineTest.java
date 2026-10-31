@@ -70,6 +70,35 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void underwaterMiningDirectionsUseActionsRatherThanVanillaEnchantabilityIntersection() {
+        var spend = FusedPair.clean("minecraft:respiration", 3, "minecraft:aqua_affinity", 1);
+        var bubbles = spend.flipped();
+        assertTrue(enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.isSpendPair(spend));
+        assertFalse(enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.isSpendPair(bubbles));
+        assertTrue(enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.isBubblePair(bubbles));
+        assertEquals("abyssal_sight", SignaturePairs.resolve(spend).orElseThrow().id());
+        assertEquals("ocean_breath_mine", SignaturePairs.resolve(bubbles).orElseThrow().id());
+        for (var role : List.of(enchantment_fusion.model.FusionCarrier.HEAD_ARMOR,
+            enchantment_fusion.model.FusionCarrier.PICKAXE, enchantment_fusion.model.FusionCarrier.AXE,
+            enchantment_fusion.model.FusionCarrier.SHOVEL, enchantment_fusion.model.FusionCarrier.HOE)) {
+            assertTrue(enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.supportsCarrier(Set.of(role)), role.name());
+        }
+        for (var role : List.of(enchantment_fusion.model.FusionCarrier.SHIELD,
+            enchantment_fusion.model.FusionCarrier.SWORD, enchantment_fusion.model.FusionCarrier.BOW,
+            enchantment_fusion.model.FusionCarrier.CHEST_ARMOR)) {
+            assertFalse(enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.supportsCarrier(Set.of(role)), role.name());
+        }
+        assertEquals(40, enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.airCost(300));
+        assertEquals(20, enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.airReserve(300));
+        assertTrue(enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.airCost(20)
+            + enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.airReserve(20) < 20);
+        assertTrue(enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.boostDuration(2)
+            > enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.boostDuration(1));
+        assertTrue(enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.bubbleAir(2)
+            > enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills.bubbleAir(1));
+    }
+
+    @Test
     void singleSelectionKeepsTheSelectedDonorAndPairModeKeepsBoth() {
         var first = new FusionStationOperations.EnchantCandidate(0, null, "minecraft:mending", 1, 1);
         var second = new FusionStationOperations.EnchantCandidate(1, null, "minecraft:efficiency", 5, 5);
