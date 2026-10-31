@@ -134,7 +134,7 @@ public final class HarvestDropCapture {
         // Ordinary unenchanted mining should not produce a mod warning merely for a large loot table.
         if (frame.overflowed && !frame.overflowWarned) {
             frame.overflowWarned = true;
-            frame.breaker.displayClientMessage(Component.translatable("message.enchantment_fusion.harvest_limit"), true);
+            frame.breaker.sendSystemMessage(Component.translatable("message.enchantment_fusion.harvest_limit"), true);
         }
     }
 
@@ -145,7 +145,7 @@ public final class HarvestDropCapture {
         Frame frame = frames.peekFirst();
         if (frame.level == level && !frame.smeltOverflowWarned) {
             frame.smeltOverflowWarned = true;
-            frame.breaker.displayClientMessage(Component.translatable("message.enchantment_fusion.smelt_overflow"), true);
+            frame.breaker.sendSystemMessage(Component.translatable("message.enchantment_fusion.smelt_overflow"), true);
         }
     }
 
