@@ -175,7 +175,7 @@ final class EchoReserveProbe {
             require(DurabilityReserveSkills.activate(player) && !armed(player, hand) && armed(player, helmet),
                 "Cycling back must cancel only the selected item's reservation");
             ItemStack copy = helmet.copy(); player.setItemSlot(EquipmentSlot.HEAD, copy);
-            DurabilityReserveSkills.tickServer(level.getServer());
+            DurabilityReserveSkills.tickPlayer(player);
             require(!armed(player, copy) && !armed(player, helmet), "A replacement copy must not inherit the original item's reserve");
         } finally {
             DurabilityReserveSkills.onDisconnect(player.getUUID());
