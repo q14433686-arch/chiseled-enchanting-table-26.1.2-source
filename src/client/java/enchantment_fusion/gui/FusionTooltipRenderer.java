@@ -12,6 +12,8 @@ import enchantment_fusion.mechanics.VesselCapacityRules;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills;
+import enchantment_fusion.mechanics.signatures.AmberSealSkill;
+import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.HostForm;
@@ -143,6 +145,11 @@ public final class FusionTooltipRenderer {
                 && ((FrostWakeDiveSkills.isWakePair(pair) && FrostWakeDiveSkills.WAKE.equals(sigOpt.get().id()))
                     || (FrostWakeDiveSkills.isDivePair(pair) && FrostWakeDiveSkills.DIVE.equals(sigOpt.get().id())))
                 && !FrostWakeDiveSkills.applies(pair, stack, sigOpt.get().id());
+            boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
+                        && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
+                    || (AmberSealSkill.isPair(pair) && AmberSealSkill.SIGNATURE.equals(sigOpt.get().id())
+                        && !AmberSealSkill.applies(pair, stack, sigOpt.get().id())));
 
             if (pair.isAberrant()) {
                 Component abTitle = Component.translatable(AberrantRegistry.titleKey(pair.aberrationId()));
@@ -175,7 +182,8 @@ public final class FusionTooltipRenderer {
                     primaryLabel,
                     secondaryLabel
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
-                if (shift && !legacyUnderwaterCarrier && !legacyFrostFallCarrier && !legacyFrostWakeCarrier) {
+                if (shift && !legacyUnderwaterCarrier && !legacyFrostFallCarrier && !legacyFrostWakeCarrier
+                    && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -200,8 +208,13 @@ public final class FusionTooltipRenderer {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_frost_wake_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
+            if (legacyGlazeAmberCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_glaze_amber_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
             if (shift && !legacyFrostFallCarrier && !legacyUnderwaterCarrier && sigOpt.isPresent()
                 && (FrostFallSkills.applies(pair, stack, sigOpt.get().id())
+                    || AmberSealSkill.applies(pair, stack, sigOpt.get().id())
                     || (UnderwaterMiningSkills.isSpendPair(pair) && UnderwaterMiningSkills.applies(pair, stack, sigOpt.get().id())))) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
                     Component.keybind("key.enchantment_fusion.activate_skill"),

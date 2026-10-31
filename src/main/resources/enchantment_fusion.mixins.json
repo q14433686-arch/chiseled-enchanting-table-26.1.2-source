@@ -19,6 +19,7 @@
     "LivingEntityConsumableFusionMixin",
     "LivingEntityFrostProtectionMixin",
     "NativeFrostWaterWriteMixin",
+    "PlayerAmberAttackMixin",
     "PlayerExperienceFusionMixin",
     "PlayerFrostLandingMixin",
     "PlayerMiningFusionMixin",

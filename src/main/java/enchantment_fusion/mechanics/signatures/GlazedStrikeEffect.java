@@ -3,16 +3,17 @@ package enchantment_fusion.mechanics.signatures;
 import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
-import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.FusionCarrier;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceKey;
@@ -41,6 +42,8 @@ public final class GlazedStrikeEffect {
     public static final String SIGNATURE = "glazed_kiln_edge";
     private static final String FIRE = "minecraft:fire_aspect";
     private static final String SILK = "minecraft:silk_touch";
+    private static final Set<FusionCarrier> WEAPON_CARRIERS = Set.of(
+        FusionCarrier.SWORD, FusionCarrier.AXE, FusionCarrier.SPEAR, FusionCarrier.MACE);
     private static final int MAX_PENDING = 256;
 
     private record AttackKey(UUID owner, UUID target, ResourceKey<Level> dimension) {}
@@ -61,6 +64,11 @@ public final class GlazedStrikeEffect {
         return role == TargetRole.SWORD || role == TargetRole.AXE || role == TargetRole.SPEAR || role == TargetRole.MACE;
     }
 
+    /** Fusion carriers can have several roles; do not reject a sword/tool hybrid by a single-role priority. */
+    public static boolean supportsCarrier(Set<FusionCarrier> roles) {
+        return roles != null && roles.stream().anyMatch(WEAPON_CARRIERS::contains);
+    }
+
     public static boolean isPair(FusedPair pair) {
         return pair != null && FIRE.equals(pair.primaryId()) && SILK.equals(pair.secondaryId());
     }
@@ -68,7 +76,7 @@ public final class GlazedStrikeEffect {
     /** A datapack can replace the signature mapping; do not seize a different mapping's pair. */
     public static boolean applies(FusedPair pair, ItemStack weapon, String signature) {
         return isPair(pair) && SIGNATURE.equals(signature) && weapon != null && !weapon.isEmpty()
-            && isEligibleRole(TransmuteCatalog.classifyTarget(weapon));
+            && supportsCarrier(FusionCarrier.classify(weapon));
     }
 
     public static boolean canAffect(ServerPlayer player, LivingEntity target) {

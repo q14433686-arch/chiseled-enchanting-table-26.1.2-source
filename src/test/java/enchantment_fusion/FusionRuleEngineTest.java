@@ -489,6 +489,29 @@ final class FusionRuleEngineTest {
             assertFalse(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.isEligibleRole(role), role.name());
         }
         assertEquals("glazed_kiln_edge", SignaturePairs.resolve(fireSilk).orElseThrow().id());
+        assertTrue(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.supportsCarrier(
+            java.util.Set.of(enchantment_fusion.model.FusionCarrier.SWORD, enchantment_fusion.model.FusionCarrier.PICKAXE)),
+            "A hybrid should not lose its weapon capability to the unrelated single-role priority");
+        assertFalse(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.supportsCarrier(
+            java.util.Set.of(enchantment_fusion.model.FusionCarrier.PICKAXE, enchantment_fusion.model.FusionCarrier.SHIELD)));
+    }
+
+    @Test
+    void amberSealUsesReverseDirectionAndBoundedFireAccounting() {
+        var pair = FusedPair.clean("minecraft:silk_touch", 1, "minecraft:fire_aspect", 2);
+        assertTrue(enchantment_fusion.mechanics.signatures.AmberSealSkill.isPair(pair));
+        assertFalse(enchantment_fusion.mechanics.signatures.AmberSealSkill.isPair(pair.flipped()));
+        assertEquals("amber_embalm", SignaturePairs.resolve(pair).orElseThrow().id());
+        assertEquals(100, enchantment_fusion.mechanics.signatures.AmberSealSkill.lifetimeTicks(1));
+        assertEquals(180, enchantment_fusion.mechanics.signatures.AmberSealSkill.lifetimeTicks(255));
+        assertEquals(75, enchantment_fusion.mechanics.signatures.AmberSealSkill.restorableFire(100, 25));
+        assertEquals(0, enchantment_fusion.mechanics.signatures.AmberSealSkill.restorableFire(100, Long.MAX_VALUE));
+        assertEquals(Integer.MAX_VALUE, enchantment_fusion.mechanics.signatures.AmberSealSkill.restorableFire(Integer.MAX_VALUE, -1));
+        assertEquals(0, enchantment_fusion.mechanics.signatures.AmberSealSkill.restorableFire(-1, 0));
+        assertEquals(5.4F, enchantment_fusion.mechanics.signatures.AmberSealSkill.shockDamage(1, 2, 100), 1e-5F);
+        assertEquals(19.4F, enchantment_fusion.mechanics.signatures.AmberSealSkill.shockDamage(255, 255, Integer.MAX_VALUE), 1e-5F);
+        assertEquals(1.8D, enchantment_fusion.mechanics.signatures.AmberSealSkill.shockRadius(1), 1e-9);
+        assertEquals(2.6D, enchantment_fusion.mechanics.signatures.AmberSealSkill.shockRadius(255), 1e-9);
     }
 
     @Test

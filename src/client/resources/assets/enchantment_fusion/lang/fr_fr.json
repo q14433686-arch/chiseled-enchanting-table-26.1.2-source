@@ -702,8 +702,8 @@
   "signature.enchantment_fusion.tailwind_return.desc": "[Loyalty ▷ Wind Burst] Raises a homecoming updraft on hit, clearing fall damage while granting Speed II and Slow Falling!",
   "signature.enchantment_fusion.glazed_kiln_edge.title": "Burning Glaze Shatter",
   "signature.enchantment_fusion.glazed_kiln_edge.desc": "[Fire Aspect ▷ Silk Touch] A fully charged confirmed hit on an already burning target deals armor-bypassing bonus damage from any direction. Swords, axes, spears and maces; vanilla Fire Aspect remains. Legacy other carriers keep their old effect.",
-  "signature.enchantment_fusion.amber_embalm.title": "Amber-Sealed Ember",
-  "signature.enchantment_fusion.amber_embalm.desc": "[Silk Touch ▷ Fire Aspect] Encases foes in heavy amber resin (Slowness III) trapping unquenchable soul-embers within that shatter on death!",
+  "signature.enchantment_fusion.amber_embalm.title": "Amber Flame Seal",
+  "signature.enchantment_fusion.amber_embalm.desc": "[Silk Touch ▷ Fire Aspect] Main-hand sword, axe, spear or mace: confirmed hits ignite. Aim at a burning target and activate to seal its remaining fire and slow it; hit again for one small heat-crystal shock. Activate again to cancel. Native Silk Touch remains where applicable.",
   "signature.enchantment_fusion.true_gold_refinery.title": "True Gold Fears No Fire",
   "signature.enchantment_fusion.true_gold_refinery.desc": "[Fortune ▷ Fire Aspect] Grants Fire Resistance while burning, boosts fiery crits, and auto-refines mined ores into ingots with bonus gold nuggets!",
   "signature.enchantment_fusion.cinder_jackpot.title": "Chestnuts from the Fire",
@@ -890,5 +890,12 @@
   "tooltip.enchantment_fusion.active_skill_keys": "Activate: %1$s · Switch equipped skills: %2$s",
   "gui.enchantment_fusion.retained.selected": "Entry %1$s/%2$s: %3$s",
   "gui.enchantment_fusion.retained.wait_sync": "Waiting for the server to sync the target item revision; update the server if this persists.",
-  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "Legacy carrier: previous ice-path/dive behavior remains; new fusions require worn boots."
+  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "Legacy carrier: previous ice-path/dive behavior remains; new fusions require worn boots.",
+  "skill.enchantment_fusion.amber_seal": "Amber flame seal",
+  "message.enchantment_fusion.amber_no_target": "Aim at an eligible burning target within six blocks, without a wall in the way. Water, rain or lava prevents sealing.",
+  "message.enchantment_fusion.amber_cooldown": "Amber seal is cooling down.",
+  "message.enchantment_fusion.amber_unavailable": "The target is already sealed, the seal limit is reached, or its speed modifier is unavailable.",
+  "message.enchantment_fusion.amber_sealed": "Flame sealed. Hit the target to shatter it, or use the skill again to cancel.",
+  "message.enchantment_fusion.amber_cancelled": "Amber seal cancelled; any naturally remaining fire is restored where safe.",
+  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "Legacy carrier: the previous effect remains; the redesigned glaze and amber skills require a sword, axe, spear or mace."
 }

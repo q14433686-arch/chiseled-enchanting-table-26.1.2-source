@@ -1,6 +1,7 @@
 package enchantment_fusion.mechanics;
 
 import enchantment_fusion.mechanics.signatures.ArmorCurseSignatures;
+import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.ElementalSpearMaceSignatures;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.MeleeBladeSignatures;
@@ -203,7 +204,13 @@ public final class SignaturePairs {
         SignatureRuntimeSupport.PLUCKED_LIVING_MOBS.remove(victim.getUUID());
         FusedEnchantmentList list = weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         for (FusedPair pair : list.pairs()) {
-            resolve(pair).ifPresent(sig -> MeleeTacticsSignatures.onEntityKilled(level, killer, victim, sig.id()));
+            resolve(pair).ifPresent(sig -> {
+                // The redesigned weapon seal releases on a confirmed hit, including a lethal
+                // hit. Do not also run its old on-kill damage/honey; legacy carriers keep it.
+                if (!AmberSealSkill.applies(pair, weapon, sig.id())) {
+                    MeleeTacticsSignatures.onEntityKilled(level, killer, victim, sig.id());
+                }
+            });
         }
     }
 

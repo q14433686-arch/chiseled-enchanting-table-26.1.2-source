@@ -4,6 +4,7 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
 import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
+import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills;
@@ -276,6 +277,7 @@ public final class MatrixEffectExecutor {
             if (sigOpt.isPresent() && LoyaltyGuard.matches(pair, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && UnderwaterMiningSkills.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && FrostFallSkills.applies(pair, hostStack, sigOpt.get().id())) continue;
+            if (sigOpt.isPresent() && AmberSealSkill.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && GlazedStrikeEffect.applies(pair, hostStack, sigOpt.get().id())) {
                 // Only the actual weapon used for the attack may prime this redesigned skill;
                 // an unrelated held/worn copy must not trigger it from a different host.

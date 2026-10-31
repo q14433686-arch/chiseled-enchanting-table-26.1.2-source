@@ -702,8 +702,8 @@
   "signature.enchantment_fusion.tailwind_return.desc": "【忠诚 ▷ 风爆】命中卷起归风升流托举身形，清零摔落伤害并赋予迅捷II与缓降御风之势！",
   "signature.enchantment_fusion.glazed_kiln_edge.title": "燃烧碎釉",
   "signature.enchantment_fusion.glazed_kiln_edge.desc": "【火焰附加 ▷ 精准采集】剑、斧、长矛或重锤对已燃烧的目标满蓄真实命中时，从任意方向追加破甲伤害；保留原版火焰附加。旧版其他载体保留旧效果。",
-  "signature.enchantment_fusion.amber_embalm.title": "琥珀封烬",
-  "signature.enchantment_fusion.amber_embalm.desc": "【精准采集 ▷ 火焰附加】晶透松脂外封敌躯（重度迟缓），内锁灵魂暗烬入水不灭，目标倒下时爆散琥珀热晶溅伤周遭！",
+  "signature.enchantment_fusion.amber_embalm.title": "琥珀焰封",
+  "signature.enchantment_fusion.amber_embalm.desc": "【精准采集 ▷ 火焰附加】主手持剑、斧、长矛或重锤；真实命中点燃目标，瞄准燃烧目标使用技能封存余火并减速，再次命中释放一次小范围热晶冲击。再用技能可撤销；可原生附着的精准采集保留。",
   "signature.enchantment_fusion.true_gold_refinery.title": "真金火炼",
   "signature.enchantment_fusion.true_gold_refinery.desc": "【时运 ▷ 火焰附加】真金不怕火炼：浴火自动获抗火护体并大幅增幅淬火暴击；采矿自动熔炼成锭并额外迸出真金粒！",
   "signature.enchantment_fusion.cinder_jackpot.title": "火中取栗",
@@ -890,5 +890,12 @@
   "tooltip.enchantment_fusion.active_skill_keys": "释放：%1$s · 切换已装备技能：%2$s",
   "gui.enchantment_fusion.retained.selected": "第 %1$s/%2$s 项：%3$s",
   "gui.enchantment_fusion.retained.wait_sync": "等待服务器同步目标装备版本；若一直等待，请更新服务端。",
-  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "旧载体：保留旧冰路/潜泳效果；新融合仅可安装在穿戴的靴子上。"
+  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "旧载体：保留旧冰路/潜泳效果；新融合仅可安装在穿戴的靴子上。",
+  "skill.enchantment_fusion.amber_seal": "琥珀焰封",
+  "message.enchantment_fusion.amber_no_target": "请瞄准六格内无方块遮挡的合格燃烧目标；水、雨或岩浆中无法封火。",
+  "message.enchantment_fusion.amber_cooldown": "琥珀焰封正在冷却。",
+  "message.enchantment_fusion.amber_unavailable": "目标已被封存、同时封存数已满，或其减速属性被占用。",
+  "message.enchantment_fusion.amber_sealed": "余火已封存：命中目标可碎封，再用技能可撤销。",
+  "message.enchantment_fusion.amber_cancelled": "琥珀焰封已撤销；在安全条件下恢复自然剩余的燃烧时间。",
+  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "旧版载体：保留原有效果；新版碎釉与琥珀技能需要剑、斧、长矛或重锤。"
 }

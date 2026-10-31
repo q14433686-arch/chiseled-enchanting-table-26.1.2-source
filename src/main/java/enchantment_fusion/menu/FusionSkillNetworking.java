@@ -2,6 +2,7 @@ package enchantment_fusion.menu;
 
 import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
+import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -37,7 +38,8 @@ public final class FusionSkillNetworking {
     private enum Skill {
         BREATH("skill.enchantment_fusion.breath_mining"),
         FROST_WAVE("skill.enchantment_fusion.frost_wave"),
-        FROST_STEP("skill.enchantment_fusion.frost_step");
+        FROST_STEP("skill.enchantment_fusion.frost_step"),
+        AMBER_SEAL("skill.enchantment_fusion.amber_seal");
         final String translation;
         Skill(String translation) { this.translation = translation; }
     }
@@ -48,10 +50,11 @@ public final class FusionSkillNetworking {
     private FusionSkillNetworking() {}
 
     private static List<Skill> equippedSkills(ServerPlayer player) {
-        List<Skill> skills = new ArrayList<>(3);
+        List<Skill> skills = new ArrayList<>(4);
         if (UnderwaterMiningSkills.hasEquippedSpend(player)) skills.add(Skill.BREATH);
         if (FrostFallSkills.find(player, true) != null) skills.add(Skill.FROST_WAVE);
         if (FrostFallSkills.find(player, false) != null) skills.add(Skill.FROST_STEP);
+        if (AmberSealSkill.hasEquipped(player)) skills.add(Skill.AMBER_SEAL);
         return skills;
     }
 
@@ -98,6 +101,7 @@ public final class FusionSkillNetworking {
             case BREATH -> UnderwaterMiningSkills.activate(player);
             case FROST_WAVE -> FrostFallSkills.releaseWave(player);
             case FROST_STEP -> FrostFallSkills.createAirStep(player);
+            case AMBER_SEAL -> AmberSealSkill.activate(player);
         }
     }
 

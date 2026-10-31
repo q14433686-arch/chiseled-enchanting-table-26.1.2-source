@@ -702,8 +702,8 @@
   "signature.enchantment_fusion.tailwind_return.desc": "【忠誠 ▷ 風爆】命中捲起歸風升流托舉身形，清零摔落傷害並賦予迅捷II與緩降御風之勢！",
   "signature.enchantment_fusion.glazed_kiln_edge.title": "燃燒碎釉",
   "signature.enchantment_fusion.glazed_kiln_edge.desc": "【火焰附加 ▷ 絲綢之觸】劍、斧、長矛或重錘對已燃燒的目標滿蓄真實命中時，從任意方向追加破甲傷害；保留原版火焰附加。舊版其他載體保留舊效果。",
-  "signature.enchantment_fusion.amber_embalm.title": "琥珀封燼",
-  "signature.enchantment_fusion.amber_embalm.desc": "【絲綢之觸 ▷ 火焰附加】晶透松脂外封敵軀（重度緩速），內鎖靈魂暗燼入水不滅，目標倒下時爆散琥珀熱晶濺傷周遭！",
+  "signature.enchantment_fusion.amber_embalm.title": "琥珀焰封",
+  "signature.enchantment_fusion.amber_embalm.desc": "【絲綢之觸 ▷ 火焰附加】主手持劍、斧、長矛或重錘；實際命中點燃目標，瞄準燃燒目標使用技能封存餘火並減速，再次命中釋放一次小範圍熱晶衝擊。再用技能可撤銷；可原生附著的絲綢之觸保留。",
   "signature.enchantment_fusion.true_gold_refinery.title": "真金火煉",
   "signature.enchantment_fusion.true_gold_refinery.desc": "【幸運 ▷ 火焰附加】真金不怕火煉：浴火自動獲抗火護體並大幅增幅淬火暴擊；採礦自動熔煉成錠並額外迸出真金粒！",
   "signature.enchantment_fusion.cinder_jackpot.title": "火中取栗",
@@ -890,5 +890,12 @@
   "tooltip.enchantment_fusion.active_skill_keys": "Activate: %1$s · Switch equipped skills: %2$s",
   "gui.enchantment_fusion.retained.selected": "Entry %1$s/%2$s: %3$s",
   "gui.enchantment_fusion.retained.wait_sync": "Waiting for the server to sync the target item revision; update the server if this persists.",
-  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "Legacy carrier: previous ice-path/dive behavior remains; new fusions require worn boots."
+  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "Legacy carrier: previous ice-path/dive behavior remains; new fusions require worn boots.",
+  "skill.enchantment_fusion.amber_seal": "琥珀焰封",
+  "message.enchantment_fusion.amber_no_target": "請瞄準六格內無方塊遮擋的合格燃燒目標；水、雨或熔岩中無法封火。",
+  "message.enchantment_fusion.amber_cooldown": "琥珀焰封正在冷卻。",
+  "message.enchantment_fusion.amber_unavailable": "目標已被封存、同時封存數已滿，或其減速屬性被占用。",
+  "message.enchantment_fusion.amber_sealed": "餘火已封存：命中目標可碎封，再用技能可撤銷。",
+  "message.enchantment_fusion.amber_cancelled": "琥珀焰封已撤銷；在安全條件下恢復自然剩餘的燃燒時間。",
+  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "舊版載體：保留原有效果；新版碎釉與琥珀技能需要劍、斧、長矛或重錘。"
 }

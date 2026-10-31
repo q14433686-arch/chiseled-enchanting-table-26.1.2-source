@@ -5,6 +5,7 @@ import enchantment_fusion.data.FusionMatrixRegistry.EconomyConfig;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.mechanics.signatures.MirageSnapbackSkill;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
+import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -65,7 +67,9 @@ public final class MatrixRuntimeHooks {
             FlyingBladeManager.flushAll();
             ProjectilePathTracker.flushAll();
             UnderwaterMiningSkills.clear(server);
+            AmberSealSkill.clear();
         });
+        ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> AmberSealSkill.onEntityUnload(entity));
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             MatrixEffectExecutor.clearCooldowns();
@@ -88,6 +92,7 @@ public final class MatrixRuntimeHooks {
             ACTIVE_RIPTIDE_SPINS.remove(pid);
             MirageSnapbackSkill.onPlayerDisconnect(pid);
             GlazedStrikeEffect.onPlayerDisconnect(pid);
+            AmberSealSkill.onPlayerDisconnect(pid);
             FrostFallSkills.onPlayerDisconnect(pid);
             UnderwaterMiningSkills.onPlayerDisconnect(handler.getPlayer());
             SignaturePairs.onPlayerDisconnect(pid);
@@ -235,12 +240,13 @@ public final class MatrixRuntimeHooks {
 
         // Post-Damage Counter
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
+            AmberSealSkill.afterDamage(entity, source, damageTaken, blocked);
             if (entity instanceof ServerPlayer player) FrostLandingCapture.confirm(player, source, blocked);
             if (!blocked && damageTaken > 0.0F && entity.level() instanceof ServerLevel level
                 && source.getEntity() instanceof ServerPlayer attacker && source.getDirectEntity() == attacker
                 && !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
                 && !MatrixEffectExecutor.isExecuting() && !GlazedStrikeEffect.isApplyingBonus()
-                && !LoyaltyGuard.isExecuting()
+                && !AmberSealSkill.isApplyingBurst() && !LoyaltyGuard.isExecuting()
                 && !Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get())) {
                 FlameKineticEffects.confirm(level, attacker, entity);
                 GlazedStrikeEffect.confirm(level, attacker, entity);
@@ -267,6 +273,7 @@ public final class MatrixRuntimeHooks {
 
         // Entity Kill hooks
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            AmberSealSkill.afterDeath(entity, damageSource);
             if (entity instanceof ServerPlayer deadPlayer) {
                 MirageSnapbackSkill.onPlayerDisconnect(deadPlayer.getUUID());
                 UnderwaterMiningSkills.onPlayerDisconnect(deadPlayer);
@@ -289,6 +296,7 @@ public final class MatrixRuntimeHooks {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             FlameKineticEffects.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
+            AmberSealSkill.tickServer(server);
             UnderwaterMiningSkills.tickServer(server);
             FrostFallSkills.tickServer(server);
             FlyingBladeManager.tickServer(server);
