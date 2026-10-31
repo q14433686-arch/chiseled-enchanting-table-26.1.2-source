@@ -27,7 +27,8 @@ DRAFT = "FUSION_AUTONOMOUS_DRAFT.md"
 TRANSMUTATION = "TRANSMUTATION_DRAFT.md"
 REDESIGN = "FUSION_REDESIGN.md"
 GLOBAL = "FUSION_GLOBAL_DESIGN.md"
-DOC_FILES = [COVERAGE, FALLBACK, INDEX, FAMILY, DRAFT, TRANSMUTATION, REDESIGN, GLOBAL]
+SEMANTIC = "FUSION_SEMANTIC_COMBINATION.md"
+DOC_FILES = [COVERAGE, FALLBACK, INDEX, FAMILY, DRAFT, TRANSMUTATION, REDESIGN, GLOBAL, SEMANTIC]
 
 EXPECTED = Counter({"专属": 184, "副位通配": 124, "已选模板": 124, "代设计": 402, "候选推广": 0, "总设初稿": 972})
 FAMILIES = {
@@ -357,6 +358,7 @@ def main() -> None:
         (family, ["正反同效", "旧装备不符合新范围时保留原数据和旧效果", "横刈额外范围只收成熟作物", "安全薄冰消失不生成水"]),
         (section53, ["玩家和真实武器都只有一份", "不生成额外箭", "仅可移除模组自己的临时薄冰", "不产水", "不换装备"]),
         (read_doc(TRANSMUTATION), ["经验照常获得，同时积累补给进度", "所有原水受保护", "岩浆永久变圆石"]),
+        (read_doc(SEMANTIC), ["不是机械拼字", "未取代 53.10", "不需要先受到爆炸", "不破地形、不产水"]),
     ]:
         for phrase in required:
             check(phrase in text, f"missing safety/decision marker: {phrase}")
