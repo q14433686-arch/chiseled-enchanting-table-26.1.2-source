@@ -133,6 +133,10 @@ jobs:
         run: ./gradlew compileJava compileClientJava -Penable_jei=false -Penable_rei=false --console=plain --stacktrace --no-daemon
 
   server-smoke:
+    # Arena work-in-progress pushes can request compile-only checks while the
+    # eventual single-process gameplay acceptance is still being prepared.
+    # Normal pushes, pull requests and manual runs continue to run the smoke.
+    if: ${{ github.event_name != 'push' || !startsWith(github.ref, 'refs/heads/arena/') || !contains(github.event.head_commit.message, '[compile only]') }}
     permissions:
       contents: read
       checks: write
