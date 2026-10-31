@@ -29,12 +29,24 @@ public final class DirectionalHostRules {
 
     public static RejectReason validateNewOrChanged(ItemStack host, FusedPair pair, FusionMatrixRegistry.Snapshot snapshot) {
         if (host == null || host.isEmpty() || pair == null || snapshot == null) return RejectReason.MISSING_INPUT;
-        RejectReason classification = validateClassifications(pair, FusionCarrier.classify(host), snapshot);
+        Set<FusionCarrier> actual = FusionCarrier.classify(host);
+        RejectReason classification = validateClassifications(pair, actual, snapshot);
         if (classification != RejectReason.NONE) return classification;
 
         boolean glazedMapping = GlazedStrikeEffect.isPair(pair)
             && SignatureCatalog.resolve(pair).map(e -> GlazedStrikeEffect.SIGNATURE.equals(e.id())).orElse(false);
         if (glazedMapping && !GlazedStrikeEffect.isEligibleRole(TransmuteCatalog.classifyTarget(host))) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        String signature = SignatureCatalog.resolve(pair).map(e -> e.id()).orElse("");
+        if (pair.primaryId().equals("minecraft:fire_aspect") && pair.secondaryId().equals("minecraft:aqua_affinity")
+            && signature.equals("geyser_bore")
+            && actual.stream().noneMatch(Set.of(FusionCarrier.PICKAXE, FusionCarrier.AXE, FusionCarrier.SHOVEL, FusionCarrier.HOE)::contains)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        if (pair.primaryId().equals("minecraft:aqua_affinity") && pair.secondaryId().equals("minecraft:fire_aspect")
+            && signature.equals("quench_temper_blade")
+            && actual.stream().noneMatch(Set.of(FusionCarrier.SWORD, FusionCarrier.AXE)::contains)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         return RejectReason.NONE;
