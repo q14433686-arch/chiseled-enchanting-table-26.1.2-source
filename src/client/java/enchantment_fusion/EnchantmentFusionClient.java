@@ -55,11 +55,19 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
         KeyMapping.Category skillCategory = KeyMapping.Category.register(EnchantmentFusion.id("abilities"));
         KeyMapping skillKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.enchantment_fusion.activate_skill", GLFW.GLFW_KEY_G, skillCategory));
+        KeyMapping cycleKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+            "key.enchantment_fusion.cycle_skill", GLFW.GLFW_KEY_V, skillCategory));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (skillKey.consumeClick()) {
                 if (client.player != null && client.screen == null
                     && ClientPlayNetworking.canSend(FusionSkillNetworking.ActivatePayload.TYPE)) {
                     ClientPlayNetworking.send(FusionSkillNetworking.ActivatePayload.INSTANCE);
+                }
+            }
+            while (cycleKey.consumeClick()) {
+                if (client.player != null && client.screen == null
+                    && ClientPlayNetworking.canSend(FusionSkillNetworking.CyclePayload.TYPE)) {
+                    ClientPlayNetworking.send(FusionSkillNetworking.CyclePayload.INSTANCE);
                 }
             }
         });

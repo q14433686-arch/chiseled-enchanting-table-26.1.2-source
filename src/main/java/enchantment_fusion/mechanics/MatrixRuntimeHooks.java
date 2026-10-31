@@ -6,6 +6,8 @@ import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.mechanics.signatures.MirageSnapbackSkill;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
+import enchantment_fusion.mechanics.signatures.FrostFallSkills;
+import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
@@ -75,6 +77,7 @@ public final class MatrixRuntimeHooks {
             ACTIVE_RIPTIDE_SPINS.clear();
             MirageSnapbackSkill.clearRuntimeState();
             GlazedStrikeEffect.clear();
+            FrostFallSkills.clear();
             FusionMatrixRegistry.setClientSnapshot(null);
         });
 
@@ -85,6 +88,7 @@ public final class MatrixRuntimeHooks {
             ACTIVE_RIPTIDE_SPINS.remove(pid);
             MirageSnapbackSkill.onPlayerDisconnect(pid);
             GlazedStrikeEffect.onPlayerDisconnect(pid);
+            FrostFallSkills.onPlayerDisconnect(pid);
             UnderwaterMiningSkills.onPlayerDisconnect(handler.getPlayer());
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
@@ -231,6 +235,7 @@ public final class MatrixRuntimeHooks {
 
         // Post-Damage Counter
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
+            if (entity instanceof ServerPlayer player) FrostLandingCapture.confirm(player, source, blocked);
             if (!blocked && damageTaken > 0.0F && entity.level() instanceof ServerLevel level
                 && source.getEntity() instanceof ServerPlayer attacker && source.getDirectEntity() == attacker
                 && !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
@@ -265,6 +270,7 @@ public final class MatrixRuntimeHooks {
             if (entity instanceof ServerPlayer deadPlayer) {
                 MirageSnapbackSkill.onPlayerDisconnect(deadPlayer.getUUID());
                 UnderwaterMiningSkills.onPlayerDisconnect(deadPlayer);
+                FrostFallSkills.onPlayerDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -284,6 +290,7 @@ public final class MatrixRuntimeHooks {
             FlameKineticEffects.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
             UnderwaterMiningSkills.tickServer(server);
+            FrostFallSkills.tickServer(server);
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);

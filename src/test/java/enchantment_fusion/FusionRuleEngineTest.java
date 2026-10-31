@@ -99,6 +99,37 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void frostFallDirectionsUseWornBootsAndAreOrdered() {
+        var wave = FusedPair.clean("minecraft:feather_falling", 4, "minecraft:frost_walker", 2);
+        var step = wave.flipped();
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostFallSkills.isWavePair(wave));
+        assertFalse(enchantment_fusion.mechanics.signatures.FrostFallSkills.isWavePair(step));
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostFallSkills.isStepPair(step));
+        assertEquals("frost_meteor_fall", SignaturePairs.resolve(wave).orElseThrow().id());
+        assertEquals("feather_rime_glide", SignaturePairs.resolve(step).orElseThrow().id());
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostFallSkills.supportsCarrier(
+            Set.of(enchantment_fusion.model.FusionCarrier.FOOT_ARMOR)));
+        for (var role : List.of(enchantment_fusion.model.FusionCarrier.SWORD,
+            enchantment_fusion.model.FusionCarrier.SHIELD, enchantment_fusion.model.FusionCarrier.HEAD_ARMOR,
+            enchantment_fusion.model.FusionCarrier.CHEST_ARMOR)) {
+            assertFalse(enchantment_fusion.mechanics.signatures.FrostFallSkills.supportsCarrier(Set.of(role)), role.name());
+        }
+    }
+
+    @Test
+    void frostAttributionUsesOnlyTheActualMarginalProtectionAfterVanillasCap() {
+        assertEquals(4.8F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 5.2F, 12, 12), 0.0001F);
+        assertEquals(2.0F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 2, 25, 10), 0.0001F,
+            "Other protection already provides 15 points; only five of Feather Falling remain marginal");
+        assertEquals(0.0F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 2, 32, 12), 0.0001F,
+            "Other protection already reaches the cap");
+        assertEquals(1.0F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 9, 12, 12), 0.0001F,
+            "Never attribute more than the actually observed total reduction");
+        assertEquals(0.0F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(Float.NaN, 1, 12, 12));
+        assertEquals(0.0F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 2, 12, 0));
+    }
+
+    @Test
     void singleSelectionKeepsTheSelectedDonorAndPairModeKeepsBoth() {
         var first = new FusionStationOperations.EnchantCandidate(0, null, "minecraft:mending", 1, 1);
         var second = new FusionStationOperations.EnchantCandidate(1, null, "minecraft:efficiency", 5, 5);

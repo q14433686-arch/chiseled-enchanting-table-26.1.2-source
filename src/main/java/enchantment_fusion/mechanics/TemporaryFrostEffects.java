@@ -87,6 +87,49 @@ public final class TemporaryFrostEffects {
         return level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
     }
 
+    /**
+     * Aerial frost steps occupy only previously empty air beneath the wearer's feet. Each
+     * individual cell is independently permission-, chunk-, border- and collision-checked;
+     * water and other pre-existing blocks are never replaced. The normal dry decay applies.
+     * Returns the number actually placed, so a rejected placement cannot consume a step.
+     */
+    public static int placeAirStep(ServerLevel level, ServerPlayer player, int frostLevel) {
+        if (!player.mayBuild() || player.onGround() || player.isInWater()) return 0;
+        BlockPos center = BlockPos.containing(player.getX(), player.getY() - 0.125D, player.getZ());
+        int radius = frostLevel >= 2 ? 1 : 0;
+        int placed = 0;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                BlockPos pos = center.offset(dx, 0, dz);
+                if (!mayModify(level, player, pos)) continue;
+                BlockState before = level.getBlockState(pos);
+                if (!before.isAir() || !before.getFluidState().isEmpty()) continue;
+                AABB thin = new AABB(pos.getX(), pos.getY(), pos.getZ(),
+                    pos.getX() + 1.0D, pos.getY() + 0.125D, pos.getZ() + 1.0D);
+                if (!clearOfLivingEntities(level, thin)) continue;
+                if (level.setBlockAndUpdate(pos, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState())) placed++;
+            }
+        }
+        return placed;
+    }
+
+    /** Does the player's supporting surface contain one of our thin temporary paths? */
+    public static boolean standingOnTemporaryPath(ServerLevel level, ServerPlayer player) {
+        AABB box = player.getBoundingBox();
+        int y = (int) Math.floor(box.minY - 0.01D);
+        int minX = (int) Math.floor(box.minX + 0.001D);
+        int maxX = (int) Math.floor(box.maxX - 0.001D);
+        int minZ = (int) Math.floor(box.minZ + 0.001D);
+        int maxZ = (int) Math.floor(box.maxZ - 0.001D);
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                BlockPos pos = new BlockPos(x, y, z);
+                if (level.hasChunkAt(pos) && level.getBlockState(pos).is(FusionBlocks.TEMPORARY_FROST_PATH)) return true;
+            }
+        }
+        return false;
+    }
+
     /** Small CRYO matrix patch around the event, without replacing water or trapping swimmers. */
     public static void placeSurfacePatch(ServerLevel level, ServerPlayer player, BlockPos center) {
         if (!player.mayBuild() || player.isShiftKeyDown()) return;

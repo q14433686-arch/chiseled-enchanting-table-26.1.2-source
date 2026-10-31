@@ -135,6 +135,11 @@ public final class UnderwaterMiningSkills {
         return best;
     }
 
+    /** Used by the server skill selector; environmental conditions are checked only on activation. */
+    public static boolean hasEquippedSpend(ServerPlayer player) {
+        return find(player, true) != null;
+    }
+
     /** Invoked from a server-validated key packet. Returns false without paying when it cannot start. */
     public static boolean activate(ServerPlayer player) {
         if (!(player.level() instanceof ServerLevel level) || !player.isAlive() || player.isSpectator()
