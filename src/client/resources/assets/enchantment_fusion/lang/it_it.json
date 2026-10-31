@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "[Aspetto di fuoco ▷ Lama sferzante] Un colpo da mischia completamente carico ed efficace traccia una breve linea virtuale; chi la attraversa brucia, senza blocchi di fuoco.",
   "signature.enchantment_fusion.soulburn_detonate.title": "Micce di incendio",
   "signature.enchantment_fusion.soulburn_detonate.desc": "[Lama sferzante ▷ Aspetto di fuoco] Una vera spazzata di spada marca i nemici feriti. Colpirne uno innesca in sequenza le micce vicine.",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "Occhio di vento mobile",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "[Contraccolpo ▷ Lama sferzante] Un colpo che danneggia e respinge davvero crea sul nemico un occhio mobile che attira i nemici vicini.",
+  "signature.enchantment_fusion.gale_vortex.title": "Nucleo di vento detonante",
+  "signature.enchantment_fusion.gale_vortex.desc": "[Lama sferzante ▷ Contraccolpo] Una vera spazzata di spada lascia davanti un nucleo che attira. Miralo e colpisci ancora per respingere i nemici.",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Il vecchio oggetto mantiene l’effetto; la nuova abilità richiede un’arma da mischia nella mano principale.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Il vecchio oggetto conserva l’effetto; servono armatura danneggiabile o scudo impugnato.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "I vecchi oggetti mantengono gli effetti; per quelli nuovi servono arco/balestra o attrezzo da scavo secondo la direzione.",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "I vecchi oggetti mantengono gli effetti; il confine usa armi da mischia, le micce una spazzata di spada."
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "I vecchi oggetti mantengono gli effetti; il confine usa armi da mischia, le micce una spazzata di spada.",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "I vecchi oggetti mantengono gli effetti; l’occhio usa armi da mischia, il nucleo una spazzata di spada."
 }

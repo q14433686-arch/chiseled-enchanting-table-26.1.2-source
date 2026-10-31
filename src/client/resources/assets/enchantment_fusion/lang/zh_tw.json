@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "【火焰附加 ▷ 橫掃之刃】滿蓄近戰造成有效傷害後畫出短暫虛擬餘燼線；敵人穿過時被點燃，不放火方塊。",
   "signature.enchantment_fusion.soulburn_detonate.title": "燎原引信",
   "signature.enchantment_fusion.soulburn_detonate.desc": "【橫掃之刃 ▷ 火焰附加】劍的真實橫掃為受傷敵人留下引信；再次命中其中一個，沿附近引信依次引爆。",
-  "signature.enchantment_fusion.cyclone_repulse.title": "旋风震退",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "橫掃化作360度环形氣浪，将貼身圍攻的怪物盡數震開。",
-  "signature.enchantment_fusion.gale_vortex.title": "聚风劍渦",
-  "signature.enchantment_fusion.gale_vortex.desc": "揮擊卷起向心氣旋，将前方扇形散怪聚攏至劍鋒中心。",
+  "signature.enchantment_fusion.cyclone_repulse.title": "移動風眼",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "【擊退 ▷ 橫掃之刃】造成有效傷害並實際擊退敵人後，讓目標成為短暫移動風眼，吸引附近敵人。",
+  "signature.enchantment_fusion.gale_vortex.title": "引爆風核",
+  "signature.enchantment_fusion.gale_vortex.desc": "【橫掃之刃 ▷ 擊退】劍的真實橫掃在前方留下吸引敵人的風核；瞄準風核再次揮擊，將敵人彈開。",
   "signature.enchantment_fusion.searing_feast.title": "炙烤盛宴",
   "signature.enchantment_fusion.searing_feast.desc": "擊殺生物直接掉落熟食，並有機率使熟肉產出翻倍。",
   "signature.enchantment_fusion.alchemic_pyre.title": "煉金火葬",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "舊載體保留原效果；新魂網技能需要主手近戰武器。",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "舊載體保留原效果；新荊棘技能適合可損傷護甲或手持盾牌。",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "舊載體保留原效果；新裝載按方向使用弓／弩或採掘工具。",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "舊載體保留原效果；新餘燼界使用近戰武器，引信需要劍的真實橫掃。"
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "舊載體保留原效果；新餘燼界使用近戰武器，引信需要劍的真實橫掃。",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "舊載體保留原效果；新風眼使用近戰武器，風核需要劍的真實橫掃。"
 }

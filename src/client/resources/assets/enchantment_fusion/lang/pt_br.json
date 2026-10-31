@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "[Aspecto flamejante ▷ Alcance] Um golpe corpo a corpo carregado que causa dano traça uma breve linha virtual. Inimigos que a cruzam queimam, sem blocos de fogo.",
   "signature.enchantment_fusion.soulburn_detonate.title": "Pavios de incêndio",
   "signature.enchantment_fusion.soulburn_detonate.desc": "[Alcance ▷ Aspecto flamejante] Uma varredura real de espada marca inimigos feridos. Atingir uma marca acende as marcas próximas em sequência.",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "Olho de vento móvel",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "[Repulsão ▷ Alcance] Um golpe que causa dano e empurra de verdade torna o inimigo um olho móvel que atrai outros inimigos.",
+  "signature.enchantment_fusion.gale_vortex.title": "Núcleo de vento detonante",
+  "signature.enchantment_fusion.gale_vortex.desc": "[Alcance ▷ Repulsão] Uma varredura real de espada deixa à frente um núcleo que atrai inimigos. Mire nele e golpeie de novo para afastá-los.",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "O item antigo mantém o efeito; a nova habilidade exige arma corpo a corpo na mão principal.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "O item antigo mantém o efeito; as novas habilidades usam armadura danificável ou escudo na mão.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Itens antigos mantêm seus efeitos; novos exigem arco/besta ou ferramenta de mineração conforme a direção.",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "O item antigo mantém o efeito; a fronteira usa armas corpo a corpo e o pavio exige varredura de espada."
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "O item antigo mantém o efeito; a fronteira usa armas corpo a corpo e o pavio exige varredura de espada.",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "O item antigo mantém o efeito; o olho usa armas corpo a corpo e o núcleo exige varredura de espada."
 }

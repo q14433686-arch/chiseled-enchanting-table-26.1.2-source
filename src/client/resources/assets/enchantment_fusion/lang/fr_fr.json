@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "[Aura de feu ▷ Affilage] Un coup de mêlée chargé et effectif trace une courte ligne virtuelle. Les ennemis qui la traversent brûlent, sans bloc de feu.",
   "signature.enchantment_fusion.soulburn_detonate.title": "Mèches incendiaires",
   "signature.enchantment_fusion.soulburn_detonate.desc": "[Affilage ▷ Aura de feu] Un vrai balayage d’épée marque les ennemis blessés. Frapper une marque déclenche une chaîne parmi les marques voisines.",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "Œil de vent mobile",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "[Recul ▷ Affilage] Un coup qui blesse et repousse réellement transforme brièvement l’ennemi en œil mobile attirant ses voisins.",
+  "signature.enchantment_fusion.gale_vortex.title": "Noyau de vent détonant",
+  "signature.enchantment_fusion.gale_vortex.desc": "[Affilage ▷ Recul] Un vrai balayage d’épée laisse devant soi un noyau attractif. Visez-le et frappez à nouveau pour repousser les ennemis.",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "L’ancien support conserve son effet ; la nouvelle capacité exige une arme de mêlée en main principale.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "L’ancien support conserve son effet ; les nouvelles capacités exigent une armure endommageable ou un bouclier tenu.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Les anciens supports gardent leurs effets ; les nouveaux exigent un arc/une arbalète ou un outil de minage selon le sens.",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "L’ancien support garde son effet ; la frontière utilise une arme de mêlée, la mèche un balayage d’épée."
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "L’ancien support garde son effet ; la frontière utilise une arme de mêlée, la mèche un balayage d’épée.",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "L’ancien support garde son effet ; l’œil utilise une arme de mêlée, le noyau un balayage d’épée."
 }

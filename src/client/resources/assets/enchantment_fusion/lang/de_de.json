@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "[Verbrennung ▷ Schwungkraft] Ein voll aufgeladener, wirksamer Nahkampftreffer zieht eine kurze virtuelle Linie. Gegner beim Überqueren brennen; keine Feuerblöcke.",
   "signature.enchantment_fusion.soulburn_detonate.title": "Flächenbrand-Zündschnüre",
   "signature.enchantment_fusion.soulburn_detonate.desc": "[Schwungkraft ▷ Verbrennung] Ein echter Schwertschwung markiert verletzte Gegner. Ein weiterer Treffer zündet nahe Markierungen nacheinander.",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "Wanderndes Windauge",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "[Rückstoß ▷ Schwungkraft] Ein Treffer mit Schaden und echtem Rückstoß macht den Gegner kurz zum beweglichen Windauge und zieht Feinde an.",
+  "signature.enchantment_fusion.gale_vortex.title": "Zündbarer Windkern",
+  "signature.enchantment_fusion.gale_vortex.desc": "[Schwungkraft ▷ Rückstoß] Ein echter Schwertschwung erzeugt vorne einen ziehenden Kern. Ziele darauf und schwinge erneut, um Feinde wegzustoßen.",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Alter Träger behält seinen Effekt; die neuen Fähigkeiten benötigen eine Nahkampfwaffe in der Haupthand.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Alter Träger behält seinen Effekt; nötig sind beschädigbare Rüstung oder ein gehaltener Schild.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Alte Träger behalten ihre Wirkung; neue benötigen je nach Richtung Bogen/Armbrust oder Abbauwerkzeug.",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Alte Träger behalten ihren Effekt; die Grenze nutzt Nahkampfwaffen, die Zündschnur einen Schwertschwung."
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Alte Träger behalten ihren Effekt; die Grenze nutzt Nahkampfwaffen, die Zündschnur einen Schwertschwung.",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "Alte Träger behalten ihren Effekt; das Auge nutzt Nahkampfwaffen, der Kern einen Schwertschwung."
 }

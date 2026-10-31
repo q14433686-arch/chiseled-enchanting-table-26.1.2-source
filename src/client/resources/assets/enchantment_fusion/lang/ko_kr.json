@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "【발화 ▷ 휩쓸기】완전 충전 근접 공격으로 실제 피해를 주면 짧은 가상 잔불 선을 그립니다. 적이 통과하면 점화되며 불 블록은 생기지 않습니다.",
   "signature.enchantment_fusion.soulburn_detonate.title": "들불 도화선",
   "signature.enchantment_fusion.soulburn_detonate.desc": "【휩쓸기 ▷ 발화】검의 실제 휩쓸기로 피해를 입은 적에게 도화선을 남깁니다. 표시된 적을 다시 맞히면 주변 도화선이 차례로 폭발합니다.",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "이동하는 바람눈",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "【밀치기 ▷ 휩쓸기】실제 피해와 밀치기에 성공하면 대상이 잠시 바람눈이 되어 주변 적을 끌어당깁니다.",
+  "signature.enchantment_fusion.gale_vortex.title": "폭발하는 바람핵",
+  "signature.enchantment_fusion.gale_vortex.desc": "【휩쓸기 ▷ 밀치기】검의 실제 휩쓸기로 앞에 적을 끄는 바람핵을 남깁니다. 바람핵을 겨냥해 다시 휘두르면 적을 밀어냅니다.",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 주 손의 근접 무기가 필요합니다.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 내구도 있는 방어구나 손에 든 방패가 필요합니다.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "기존 장비의 효과는 유지됩니다. 새로 부착하려면 방향에 맞는 활/쇠뇌 또는 채굴 도구가 필요합니다.",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 새 경계는 근접 무기, 도화선은 검의 휩쓸기가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 새 경계는 근접 무기, 도화선은 검의 휩쓸기가 필요합니다.",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 바람눈은 근접 무기, 바람핵은 검의 휩쓸기가 필요합니다."
 }

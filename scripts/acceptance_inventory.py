@@ -21,6 +21,8 @@ from verify_fusion_designs import ROOT, category, parse_coverage, read_doc
 DIRECTION_FIXTURES = {
     ("fire_aspect", "sweeping_edge"): ("02-fire-sweep", True),
     ("sweeping_edge", "fire_aspect"): ("02-sweep-fire", True),
+    ("knockback", "sweeping_edge"): ("03-knockback-sweep", True),
+    ("sweeping_edge", "knockback"): ("03-sweep-knockback", True),
     ("fire_aspect", "knockback"): ("01-fire-knockback", False),
     ("knockback", "fire_aspect"): ("01-fire-knockback", False),
     ("mending", "unbreaking"): ("05-mending-unbreaking", True),

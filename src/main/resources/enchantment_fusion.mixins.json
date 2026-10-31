@@ -49,6 +49,7 @@
     "ServerExplosionBlastDefenseMixin",
     "ServerLevelHarvestCaptureMixin",
     "ServerPlayerGameModeHarvestMixin",
+    "ServerSwingWindCoreMixin",
     "TridentChargeHeavyCrushMixin",
     "TridentHeavyCrushMixin",
     "VibrationSoulStepMixin"

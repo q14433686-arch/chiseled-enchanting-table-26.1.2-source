@@ -16,6 +16,8 @@ final class AcceptanceReport {
         plan("compat-aberration", "09/11 aberration dispatch, target and cooldown fixture", "Not reached if game setup fails.");
         plan("02-fire-sweep", "Fire Aspect ▷ Sweeping Edge: real attack, crossing and primary-effect fixture", "Not reached if setup fails.");
         plan("02-sweep-fire", "Sweeping Edge ▷ Fire Aspect: real sweep, fuse and delayed-chain scheduling fixture", "Not reached if setup fails.");
+        plan("03-knockback-sweep", "Knockback ▷ Sweeping Edge: attack, resisted knockback and moving eye fixture", "Not reached if setup fails.");
+        plan("03-sweep-knockback", "Sweeping Edge ▷ Knockback: real sweep, pull and simulated aimed swing release fixture", "Not reached if setup fails.");
         plan("common-format", "Risk text formatting", "Not reached if an earlier setup/UI assertion fails.");
         plan("common-config", "Server configuration save/validation", "Not reached if setup fails.");
         plan("common-frost-smelt", "Frost/water and crouching smelt fixtures", "Not reached if setup fails.");
@@ -69,6 +71,7 @@ final class AcceptanceReport {
         plan("15-loyalty-riptide", "Legacy loyalty/riptide fixture", "Not reached if setup fails.");
         plan("01-fire-knockback", "Multi-tick fire/knockback integration sequence", "Not reached if an earlier phase fails.");
         plan("02-runtime-compat", "02 natural sweep timing, delayed chain damage, PvP, walls, datapacks and protection mods", "Not covered by the prepared single-player attack fixture.");
+        plan("03-runtime-compat", "03 real client swing packets, natural knockback/movement, PvP, walls and protection mods", "Not covered by the simulated input and timing fixture.");
         plan("05-runtime-compat", "05 real restart, unusual item formats, external mod cancellation and multiplayer synchronization", "Not covered by the prepared single-player server fixture.");
         plan("16-runtime-compat", "16 natural blast push, multiplayer PvP, totems and protection-mod compatibility", "Not covered by the prepared single-player server fixture.");
         plan("39.1-runtime-compat", "39.1 real draw/throw, client rocket sync, multiplayer PvP, totems and protection mods", "Not covered by the prepared fixture.");

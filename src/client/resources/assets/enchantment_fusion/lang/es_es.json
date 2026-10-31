@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "[Aspecto ígneo ▷ Barrido] Un golpe cuerpo a cuerpo cargado y efectivo traza una breve línea virtual; los enemigos que la cruzan arden, sin colocar fuego.",
   "signature.enchantment_fusion.soulburn_detonate.title": "Mechas de incendio",
   "signature.enchantment_fusion.soulburn_detonate.desc": "[Barrido ▷ Aspecto ígneo] Un barrido real de espada marca a los enemigos heridos. Golpear otra vez a uno enciende una cadena de marcas cercanas.",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "Ojo de viento móvil",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "[Empuje ▷ Barrido] Un golpe que causa daño y empuja realmente convierte al enemigo en un ojo móvil que atrae a otros enemigos.",
+  "signature.enchantment_fusion.gale_vortex.title": "Núcleo de viento detonante",
+  "signature.enchantment_fusion.gale_vortex.desc": "[Barrido ▷ Empuje] Un barrido real de espada deja delante un núcleo que atrae enemigos. Apunta y vuelve a blandir para dispersarlos.",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "El objeto antiguo conserva su efecto; la nueva habilidad requiere un arma cuerpo a cuerpo en la mano principal.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades requieren armadura dañable o escudo en mano.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Los objetos antiguos conservan sus efectos; los nuevos requieren arco/ballesta o herramienta de minería según la dirección.",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "El objeto antiguo conserva su efecto; el límite usa armas cuerpo a cuerpo y la mecha requiere barrido de espada."
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "El objeto antiguo conserva su efecto; el límite usa armas cuerpo a cuerpo y la mecha requiere barrido de espada.",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "El objeto antiguo conserva su efecto; el ojo usa armas cuerpo a cuerpo y el núcleo exige barrido de espada."
 }

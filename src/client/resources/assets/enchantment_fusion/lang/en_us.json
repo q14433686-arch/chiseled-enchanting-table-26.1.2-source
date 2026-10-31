@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "[Fire Aspect ▷ Sweeping Edge] A fully charged, damaging melee hit draws a short virtual line. Enemies that cross it ignite; no fire blocks.",
   "signature.enchantment_fusion.soulburn_detonate.title": "Wildfire Fuses",
   "signature.enchantment_fusion.soulburn_detonate.desc": "[Sweeping Edge ▷ Fire Aspect] A real sword sweep marks damaged enemies. Hit a marked enemy again to ignite a short chain through nearby marks.",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "Moving Wind Eye",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "[Knockback ▷ Sweeping Edge] A real damaging hit that pushes an enemy turns it into a short-lived moving eye, pulling nearby enemies toward it.",
+  "signature.enchantment_fusion.gale_vortex.title": "Detonating Wind Core",
+  "signature.enchantment_fusion.gale_vortex.desc": "[Sweeping Edge ▷ Knockback] A real sword sweep leaves a pulling wind core ahead. Aim at it and swing again to push enemies outward.",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "This legacy carrier keeps its old effect; the new soul skills require a held melee weapon.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Legacy carrier keeps its old effect; the new thorn skills use damageable armor or a held shield.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "This legacy carrier keeps its old effects; new installations require a bow/crossbow or a mining tool for the matching direction.",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "This legacy carrier keeps its old effects; the new boundary uses melee weapons and the fuse requires a sword sweep."
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "This legacy carrier keeps its old effects; the new boundary uses melee weapons and the fuse requires a sword sweep.",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "This legacy carrier keeps its old effects; the wind eye uses melee weapons and the core requires a sword sweep."
 }

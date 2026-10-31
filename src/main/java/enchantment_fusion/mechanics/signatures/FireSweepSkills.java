@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
@@ -39,10 +38,8 @@ import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -188,21 +185,6 @@ public final class FireSweepSkills {
             victim.getZ(), 6, 0.15D, 0.2D, 0.15D, 0.01D);
         CompendiumDiscoveryTracker.recordDiscovery(owner, SWEEP, FIRE);
     }
-    private static boolean clearPath(ServerLevel level, ServerPlayer owner, Vec3 from, Vec3 to) {
-        if (!Double.isFinite(from.x) || !Double.isFinite(from.y) || !Double.isFinite(from.z)
-            || !Double.isFinite(to.x) || !Double.isFinite(to.y) || !Double.isFinite(to.z)) return false;
-        // All callers have bounded paths. Refuse even a partial ray through an unloaded
-        // chunk instead of allowing the block query to load terrain or cross unseen walls.
-        BlockPos start = BlockPos.containing(from), end = BlockPos.containing(to);
-        int minX = Math.min(start.getX(), end.getX()) >> 4, maxX = Math.max(start.getX(), end.getX()) >> 4;
-        int minZ = Math.min(start.getZ(), end.getZ()) >> 4, maxZ = Math.max(start.getZ(), end.getZ()) >> 4;
-        if (maxX - minX > 2 || maxZ - minZ > 2) return false;
-        for (int x = minX; x <= maxX; x++) for (int z = minZ; z <= maxZ; z++) {
-            if (!level.hasChunkAt(new BlockPos(x << 4, start.getY(), z << 4))) return false;
-        }
-        return level.clipIncludingBorder(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, owner))
-            .getType() == HitResult.Type.MISS;
-    }
     private static void startChain(ServerPlayer owner, Gear gear, FuseMark start, Vec3 startPosition, boolean killedRoot) {
         ServerLevel level = owner.level(); long now = level.getGameTime();
         int firstDelay = param(FUSE, "first_delay_ticks", 10, 1, 40), step = param(FUSE, "step_delay_ticks", 3, 1, 20);
@@ -221,7 +203,7 @@ public final class FireSweepSkills {
                 Entity entity = level.getEntity(candidate.key().target());
                 if (!(entity instanceof LivingEntity living) || !eligible(owner, living)) continue;
                 Vec3 to = living.getBoundingBox().getCenter(); double distance = point.distanceToSqr(to);
-                if (distance <= best && clearPath(level, owner, point, to)) { best = distance; next = candidate; }
+                if (distance <= best && VirtualCombatSight.clear(level, owner, point, to)) { best = distance; next = candidate; }
             }
             cursor = point; current = next;
         }
@@ -258,7 +240,7 @@ public final class FireSweepSkills {
                 && Math.abs(position.y - line.center.y) <= 2.0D
                 && FireSweepMath.crosses(old.x, old.z, position.x, position.z, line.center.x, line.center.z,
                     line.forward.x, line.forward.z, line.halfLength, 4.0D)
-                && clearPath(level, owner, line.center.add(0, 0.5D, 0), victim.getBoundingBox().getCenter())) {
+                && VirtualCombatSight.clear(level, owner, line.center.add(0, 0.5D, 0), victim.getBoundingBox().getCenter())) {
                 line.affected.add(id);
                 if (!victim.fireImmune()) victim.igniteForSeconds(param(LINE, "ignition_seconds", 3, 1, 20));
             }
@@ -282,7 +264,7 @@ public final class FireSweepSkills {
         if (burst.killedRoot() && (entity == null || !entity.isAlive())) return burst.from();
         if (!(entity instanceof LivingEntity victim) || !eligible(owner, victim)
             || burst.from().distanceToSqr(victim.getBoundingBox().getCenter()) > burst.range() * burst.range()
-            || !clearPath(level, owner, burst.from(), victim.getBoundingBox().getCenter())) return null;
+            || !VirtualCombatSight.clear(level, owner, burst.from(), victim.getBoundingBox().getCenter())) return null;
         float damage = Math.min(12.0F, 2.0F + Math.clamp(burst.gear().pair().secondaryLevel(), 1, 10));
         DamageSource fire = new DamageSource(level.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(DamageTypes.IN_FIRE), owner);
         if (!victim.hurtServer(level, fire, damage)) return null;

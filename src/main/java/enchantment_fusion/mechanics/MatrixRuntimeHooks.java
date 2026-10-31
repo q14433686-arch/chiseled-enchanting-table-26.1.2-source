@@ -25,6 +25,7 @@ import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
 import enchantment_fusion.mechanics.signatures.FireSweepSkills;
+import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -96,6 +97,7 @@ public final class MatrixRuntimeHooks {
             SoulThreadSkills.clear();
             FireThornsSkills.clear();
             FireSweepSkills.clear();
+            WindSweepSkills.clear();
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             AmberSealSkill.onEntityUnload(entity);
@@ -146,6 +148,7 @@ public final class MatrixRuntimeHooks {
             SoulThreadSkills.onDisconnect(pid);
             FireThornsSkills.onDisconnect(pid);
             FireSweepSkills.onDisconnect(pid);
+            WindSweepSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -349,6 +352,7 @@ public final class MatrixRuntimeHooks {
                 SoulThreadSkills.onDisconnect(deadPlayer.getUUID());
                 FireThornsSkills.onDisconnect(deadPlayer.getUUID());
                 FireSweepSkills.onDisconnect(deadPlayer.getUUID());
+                WindSweepSkills.onDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -369,6 +373,7 @@ public final class MatrixRuntimeHooks {
             SoulThreadSkills.tickServer(server);
             FireThornsSkills.tickServer(server);
             FireSweepSkills.tickServer(server);
+            WindSweepSkills.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
             AmberSealSkill.tickServer(server);
             UnderwaterMiningSkills.tickServer(server);

@@ -68,12 +68,19 @@
     "cyclone_repulse": {
       "primary": "minecraft:knockback",
       "secondary": "minecraft:sweeping_edge",
-      "domain": "melee"
+      "domain": "melee",
+      "lifetime_ticks": 80,
+      "radius_tenths": 30,
+      "pull_force_hundredths": 12
     },
     "gale_vortex": {
       "primary": "minecraft:sweeping_edge",
       "secondary": "minecraft:knockback",
-      "domain": "melee"
+      "domain": "melee",
+      "lifetime_ticks": 80,
+      "radius_tenths": 30,
+      "pull_force_hundredths": 12,
+      "burst_force_hundredths": 85
     },
     "searing_feast": {
       "primary": "minecraft:looting",

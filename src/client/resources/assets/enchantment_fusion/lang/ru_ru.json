@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "[Заговор огня ▷ Разящий клинок] Полностью заряженный успешный удар создаёт короткую виртуальную линию; пересекающие её враги загораются, блоки огня не ставятся.",
   "signature.enchantment_fusion.soulburn_detonate.title": "Огненные фитили",
   "signature.enchantment_fusion.soulburn_detonate.desc": "[Разящий клинок ▷ Заговор огня] Настоящий размашистый удар мечом помечает раненых врагов. Следующий удар по метке последовательно взрывает соседние.",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "Подвижный глаз бури",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "[Отдача ▷ Разящий клинок] Удар, действительно ранивший и отбросивший врага, ненадолго превращает его в подвижный вихрь, притягивающий других.",
+  "signature.enchantment_fusion.gale_vortex.title": "Взрывное ядро ветра",
+  "signature.enchantment_fusion.gale_vortex.desc": "[Разящий клинок ▷ Отдача] Настоящий размашистый удар мечом создаёт впереди притягивающее ядро. Прицельтесь и взмахните снова, чтобы отбросить врагов.",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Старый предмет сохраняет эффект; новые умения требуют оружие ближнего боя в основной руке.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Старый предмет сохраняет эффект; нужны изнашиваемая броня или щит в руке.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Старые предметы сохраняют эффекты; для новых нужны лук/арбалет или инструмент добычи согласно направлению.",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Старый предмет сохраняет эффект; границе нужно оружие ближнего боя, фитилям — размашистый удар мечом."
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Старый предмет сохраняет эффект; границе нужно оружие ближнего боя, фитилям — размашистый удар мечом.",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "Старый предмет сохраняет эффект; глазу нужно оружие ближнего боя, ядру — размашистый удар мечом."
 }

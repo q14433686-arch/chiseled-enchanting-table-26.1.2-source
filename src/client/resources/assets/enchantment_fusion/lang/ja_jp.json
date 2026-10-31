@@ -139,10 +139,10 @@
   "signature.enchantment_fusion.wildfire_arc.desc": "【火属性 ▷ 範囲ダメージ増加】十分に溜めた近接攻撃が実際に命中すると短い仮想の残火線を描く。通過した敵を着火し、火ブロックは置かない。",
   "signature.enchantment_fusion.soulburn_detonate.title": "野火の導火線",
   "signature.enchantment_fusion.soulburn_detonate.desc": "【範囲ダメージ増加 ▷ 火属性】剣の実際の範囲攻撃で傷ついた敵に導火線を付ける。再び命中すると近くの印を順に爆発させる。",
-  "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
-  "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
-  "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
-  "signature.enchantment_fusion.gale_vortex.desc": "Draws nearby monsters inward toward your blade edge with a vortex pull.",
+  "signature.enchantment_fusion.cyclone_repulse.title": "移動する風眼",
+  "signature.enchantment_fusion.cyclone_repulse.desc": "【ノックバック ▷ 範囲ダメージ増加】実際にダメージと吹き飛ばしを与えた敵が短時間の風眼となり、周囲の敵を引き寄せる。",
+  "signature.enchantment_fusion.gale_vortex.title": "炸裂する風核",
+  "signature.enchantment_fusion.gale_vortex.desc": "【範囲ダメージ増加 ▷ ノックバック】剣の範囲攻撃で前方に引力のある風核を残す。狙ってもう一度振ると敵を弾き飛ばす。",
   "signature.enchantment_fusion.searing_feast.title": "Searing Feast",
   "signature.enchantment_fusion.searing_feast.desc": "Slain creatures drop cooked meat with a chance for double portions.",
   "signature.enchantment_fusion.alchemic_pyre.title": "Alchemic Pyre",
@@ -997,5 +997,6 @@
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "旧装備は旧効果を維持。新しい魂網はメインハンドの近接武器が必要。",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "旧装備は旧効果を維持。新効果は耐久のある防具か手持ちの盾が必要。",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "旧装備の効果は維持。新たな装着には方向に応じ弓・クロスボウか採掘道具が必要。",
-  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "旧装備は旧効果を維持。新しい境界は近接武器、導火線は剣の範囲攻撃が必要。"
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "旧装備は旧効果を維持。新しい境界は近接武器、導火線は剣の範囲攻撃が必要。",
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "旧装備は旧効果を維持。風眼は近接武器、風核は剣の範囲攻撃が必要。"
 }
